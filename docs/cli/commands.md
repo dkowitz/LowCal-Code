@@ -124,6 +124,22 @@ Slash commands provide meta-level control over the CLI itself.
 - **`/auth`**
   - **Description:** Open a dialog that lets you change the authentication method.
 
+  Extended behavior:
+
+  The `/auth` dialog now supports four built-in provider options:
+
+  1. QWEN OAuth — recommended; performs device/browser OAuth and manages tokens automatically.
+  2. OpenRouter — for OpenAI-compatible hosted endpoints. Selecting this will pre-populate the provider's base URL and prompt you to enter an API key.
+  3. LM Studio — for local LM Studio instances. Selecting this will pre-populate the LM Studio base URL and provide a dummy API key (local models typically don't require a real API key).
+  4. OpenAI — the classic OpenAI-compatible flow. Selecting this will prompt you for an API key, a base URL, and (optionally) a model.
+
+  After selecting OpenRouter or LM Studio, the CLI will fetch available models from the provider's `/v1/models` endpoint and open the model selection dialog. You can also open the model selection directly with the standalone `/model` command (see below).
+
+  Notes on behavior:
+  - When the CLI fetches available models it polls the provider's `/v1/models` endpoint (with a small timeout). If the provider responds, you'll be shown a list of models to choose from.
+  - When you select a new model, any previously loaded model is unloaded first. The CLI then loads the new model and sends a small warm-up query to the model to reduce first-request latency.
+  - LM Studio selections will have a pre-filled, dummy API key to simplify local development.
+
 - **`/approval-mode`**
   - **Description:** Change the approval mode for tool usage.
   - **Usage:** `/approval-mode [mode] [--session|--project|--user]`
@@ -138,6 +154,14 @@ Slash commands provide meta-level control over the CLI itself.
 
 - **`/about`**
   - **Description:** Show version info. Please share this information when filing issues.
+
+- **`/model`**
+  - **Description:** Open a model selection dialog for the current authentication provider.
+  - **Behavior:**
+    - For QWEN OAuth, the dialog shows Qwen-provided models.
+    - For OpenRouter and LM Studio (OpenAI-compatible providers), the CLI polls the provider's `/v1/models` endpoint to present a live list of available models.
+    - For OpenAI, if `OPENAI_MODEL` is present in the environment it will be offered; if a custom `OPENAI_BASE_URL` is configured the CLI will attempt to poll `/v1/models` from that base URL as well.
+  - **Model switching:** Selecting a model unloads any previously loaded model and then loads the new one. A short warm-up query is sent after loading to prime the model.
 
 - **`/agents`**
   - **Description:** Manage specialized AI subagents for focused tasks. Subagents are independent AI assistants configured with specific expertise and tool access.
