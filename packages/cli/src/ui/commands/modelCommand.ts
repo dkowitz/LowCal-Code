@@ -23,8 +23,15 @@ function getAvailableModelsForAuthType(authType: AuthType): AvailableModel[] {
     case AuthType.QWEN_OAUTH:
       return AVAILABLE_MODELS_QWEN;
     case AuthType.USE_OPENAI: {
+      // If a model is explicitly set via OPENAI_MODEL, return that.
       const openAIModel = getOpenAIAvailableModelFromEnv();
-      return openAIModel ? [openAIModel] : [];
+      if (openAIModel) return [openAIModel];
+
+      // If an OpenAI-compatible base URL is provided, assume models are available
+      const baseUrl = process.env['OPENAI_BASE_URL']?.trim();
+      if (baseUrl) return [{ id: baseUrl, label: baseUrl }];
+
+      return [];
     }
     default:
       // For other auth types, return empty array for now

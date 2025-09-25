@@ -18,6 +18,7 @@ import { type LoadedSettings, SettingScope } from '../../config/settings.js';
 import { Colors } from '../colors.js';
 import { useKeypress } from '../hooks/useKeypress.js';
 import { OpenAIKeyPrompt } from './OpenAIKeyPrompt.js';
+import { ProviderKeyPrompt } from './ProviderKeyPrompt.js';
 import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
 
 interface AuthDialogProps {
@@ -47,8 +48,14 @@ export function AuthDialog({
     initialErrorMessage || null,
   );
   const [showOpenAIKeyPrompt, setShowOpenAIKeyPrompt] = useState(false);
+  const [showProviderPrompt, setShowProviderPrompt] = useState<
+    | { provider: 'openrouter' | 'lmstudio' }
+    | null
+  >(null);
   const items = [
     { label: 'Qwen OAuth', value: AuthType.QWEN_OAUTH },
+    { label: 'OpenRouter (OpenAI-compatible)', value: 'openrouter' },
+    { label: 'LM Studio (local)', value: 'lmstudio' },
     { label: 'OpenAI', value: AuthType.USE_OPENAI },
   ];
 
@@ -74,7 +81,23 @@ export function AuthDialog({
     }),
   );
 
-  const handleAuthSelect = (authMethod: AuthType) => {
+  const handleAuthSelect = (value: any) => {
+    // Support both AuthType values and provider strings
+    if (value === 'openrouter') {
+      // Pre-populate OpenRouter base url and ask for API key
+      setShowProviderPrompt({ provider: 'openrouter' });
+      setErrorMessage(null);
+      return;
+    }
+
+    if (value === 'lmstudio') {
+      // Pre-populate LM Studio base url and a dummy API key
+      setShowProviderPrompt({ provider: 'lmstudio' });
+      setErrorMessage(null);
+      return;
+    }
+
+    const authMethod = value as AuthType;
     const error = validateAuthMethod(authMethod);
     if (error) {
       if (
@@ -102,6 +125,20 @@ export function AuthDialog({
     setOpenAIModel(model);
     setShowOpenAIKeyPrompt(false);
     onSelect(AuthType.USE_OPENAI, SettingScope.User);
+  };
+
+  const handleProviderSubmit = (apiKey: string, baseUrl: string) => {
+    // Use the OpenAI env vars for OpenRouter/LM Studio since they are OpenAI-compatible
+    setOpenAIApiKey(apiKey || '');
+    setOpenAIBaseUrl(baseUrl);
+    // Treat provider as OpenAI-compatible provider
+    onSelect(AuthType.USE_OPENAI, SettingScope.User);
+    setShowProviderPrompt(null);
+  };
+
+  const handleProviderCancel = () => {
+    setShowProviderPrompt(null);
+    setErrorMessage('Provider configuration canceled.');
   };
 
   const handleOpenAIKeyCancel = () => {
@@ -139,6 +176,22 @@ export function AuthDialog({
       <OpenAIKeyPrompt
         onSubmit={handleOpenAIKeySubmit}
         onCancel={handleOpenAIKeyCancel}
+      />
+    );
+  }
+
+  if (showProviderPrompt) {
+    const provider = showProviderPrompt.provider;
+    const prepopulated =
+      provider === 'openrouter'
+        ? { baseUrl: 'https://openrouter.ai/api/v1', apiKey: '' }
+        : { baseUrl: 'http://127.0.0.1:8080', apiKey: 'lmstudio-dummy-key' };
+    return (
+      <ProviderKeyPrompt
+        prepopulatedBaseUrl={prepopulated.baseUrl}
+        prepopulatedApiKey={prepopulated.apiKey}
+        onSubmit={handleProviderSubmit}
+        onCancel={handleProviderCancel}
       />
     );
   }

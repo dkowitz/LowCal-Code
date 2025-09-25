@@ -21,6 +21,11 @@ export declare function getFilteredQwenModels(visionModelPreviewEnabled: boolean
  */
 export declare function getOpenAIAvailableModelFromEnv(): AvailableModel | null;
 /**
+ * Query an OpenAI-compatible server for available models (/v1/models).
+ * Returns an array of AvailableModel or empty on error.
+ */
+export declare function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: string): Promise<AvailableModel[]>;
+/**
 /**
  * Hard code the default vision model as a string literal,
  * until our coding model supports multimodal.

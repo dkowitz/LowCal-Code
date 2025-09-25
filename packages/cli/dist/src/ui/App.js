@@ -41,7 +41,7 @@ import { QuitConfirmationDialog } from './components/QuitConfirmationDialog.js';
 import { RadioButtonSelect } from './components/shared/RadioButtonSelect.js';
 import { ModelSelectionDialog } from './components/ModelSelectionDialog.js';
 import { ModelSwitchDialog, } from './components/ModelSwitchDialog.js';
-import { getOpenAIAvailableModelFromEnv, getFilteredQwenModels, } from './models/availableModels.js';
+import { getOpenAIAvailableModelFromEnv, getFilteredQwenModels, fetchOpenAICompatibleModels, } from './models/availableModels.js';
 import { processVisionSwitchOutcome } from './hooks/useVisionAutoSwitch.js';
 import { AgentCreationWizard, AgentsManagerDialog, } from './components/subagents/index.js';
 import { Colors } from './colors.js';
@@ -163,6 +163,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const { showWorkspaceMigrationDialog, workspaceExtensions, onWorkspaceMigrationDialogOpen, onWorkspaceMigrationDialogClose, } = useWorkspaceMigration(settings);
     // Model selection dialog states
     const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = useState(false);
+    const [availableModelsForDialog, setAvailableModelsForDialog] = useState([]);
     const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = useState(false);
     const [visionSwitchResolver, setVisionSwitchResolver] = useState(null);
     useEffect(() => {
@@ -412,13 +413,43 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         }
     }, [visionSwitchResolver]);
     const handleModelSelectionOpen = useCallback(() => {
-        setIsModelSelectionDialogOpen(true);
+        (async () => {
+            // Determine models based on current auth configuration
+            const contentGeneratorConfig = config.getContentGeneratorConfig();
+            if (!contentGeneratorConfig) {
+                setAvailableModelsForDialog([]);
+                setIsModelSelectionDialogOpen(true);
+                return;
+            }
+            // If using OpenAI-compatible provider and a baseUrl is configured, poll it
+            if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
+                const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
+                const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
+                if (baseUrl) {
+                    const models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
+                    if (models.length > 0) {
+                        setAvailableModelsForDialog(models);
+                        setIsModelSelectionDialogOpen(true);
+                        return;
+                    }
+                }
+                // Fallback to single model from env if present
+                const openAIModel = getOpenAIAvailableModelFromEnv();
+                setAvailableModelsForDialog(openAIModel ? [openAIModel] : []);
+                setIsModelSelectionDialogOpen(true);
+                return;
+            }
+            // Default behavior for QWEN OAuth
+            setAvailableModelsForDialog(getFilteredQwenModels(settings.merged.experimental?.visionModelPreview ?? true));
+            setIsModelSelectionDialogOpen(true);
+        })();
     }, []);
     const handleModelSelectionClose = useCallback(() => {
         setIsModelSelectionDialogOpen(false);
     }, []);
     const handleModelSelect = useCallback(async (modelId) => {
         try {
+            // Unload previous model by setting new model (config.setModel will reinitialize client)
             await config.setModel(modelId);
             setCurrentModel(modelId);
             setIsModelSelectionDialogOpen(false);
@@ -426,6 +457,16 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 type: MessageType.INFO,
                 text: `Switched model to \`${modelId}\` for this session.`,
             }, Date.now());
+            // Send a small warm-up query to prime the model (non-blocking)
+            try {
+                const gemini = config.getGeminiClient();
+                if (gemini) {
+                    void gemini.generateContent([{ role: 'user', parts: [{ text: 'Say hello.' }] }], {}, new AbortController().signal, modelId).catch(() => { });
+                }
+            }
+            catch (e) {
+                // ignore warm-up errors
+            }
         }
         catch (error) {
             console.error('Failed to switch model:', error);
@@ -435,22 +476,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             }, Date.now());
         }
     }, [config, setCurrentModel, addItem]);
-    const getAvailableModelsForCurrentAuth = useCallback(() => {
-        const contentGeneratorConfig = config.getContentGeneratorConfig();
-        if (!contentGeneratorConfig)
-            return [];
-        const visionModelPreviewEnabled = settings.merged.experimental?.visionModelPreview ?? true;
-        switch (contentGeneratorConfig.authType) {
-            case AuthType.QWEN_OAUTH:
-                return getFilteredQwenModels(visionModelPreviewEnabled);
-            case AuthType.USE_OPENAI: {
-                const openAIModel = getOpenAIAvailableModelFromEnv();
-                return openAIModel ? [openAIModel] : [];
-            }
-            default:
-                return [];
-        }
-    }, [config, settings.merged.experimental?.visionModelPreview]);
+    // available models for dialog are populated via handleModelSelectionOpen
     // Core hooks and processors
     const { vimEnabled: vimModeEnabled, vimMode, toggleVimEnabled, } = useVimMode();
     const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation);
@@ -816,7 +842,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                         setAuthError('Authentication timed out. Please try again.');
                                         cancelAuthentication();
                                         openAuthDialog();
-                                    } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: getAvailableModelsForCurrentAuth(), currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : showPrivacyNotice ? (_jsx(PrivacyNotice, { onExit: () => setShowPrivacyNotice(false), config: config })) : (_jsxs(_Fragment, { children: [_jsx(LoadingIndicator, { thought: streamingState === StreamingState.WaitingForConfirmation ||
+                                    } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: availableModelsForDialog, currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : showPrivacyNotice ? (_jsx(PrivacyNotice, { onExit: () => setShowPrivacyNotice(false), config: config })) : (_jsxs(_Fragment, { children: [_jsx(LoadingIndicator, { thought: streamingState === StreamingState.WaitingForConfirmation ||
                                         config.getAccessibility()?.disableLoadingPhrases ||
                                         config.getScreenReader()
                                         ? undefined

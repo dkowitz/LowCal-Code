@@ -27,6 +27,33 @@ export function getOpenAIAvailableModelFromEnv() {
     return id ? { id, label: id } : null;
 }
 /**
+ * Query an OpenAI-compatible server for available models (/v1/models).
+ * Returns an array of AvailableModel or empty on error.
+ */
+export async function fetchOpenAICompatibleModels(baseUrl, apiKey) {
+    try {
+        const url = baseUrl.replace(/\/*$/, '') + '/v1/models';
+        const headers = {
+            'Content-Type': 'application/json',
+        };
+        if (apiKey)
+            headers['Authorization'] = `Bearer ${apiKey}`;
+        const resp = await fetch(url, { headers, method: 'GET' });
+        if (!resp.ok)
+            return [];
+        const data = await resp.json();
+        // OpenAI responses typically have "data" array with id fields
+        const models = Array.isArray(data?.data) ? data.data : [];
+        return models
+            .map((m) => ({ id: m.id || m.name, label: m.id || m.name }))
+            .filter((m) => !!m.id);
+    }
+    catch (e) {
+        // swallow errors and return empty list
+        return [];
+    }
+}
+/**
 /**
  * Hard code the default vision model as a string literal,
  * until our coding model supports multimodal.

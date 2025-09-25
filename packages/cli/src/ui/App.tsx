@@ -61,6 +61,7 @@ import {
 import {
   getOpenAIAvailableModelFromEnv,
   getFilteredQwenModels,
+  fetchOpenAICompatibleModels,
   type AvailableModel,
 } from './models/availableModels.js';
 import { processVisionSwitchOutcome } from './hooks/useVisionAutoSwitch.js';
@@ -262,6 +263,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   // Model selection dialog states
   const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] =
     useState(false);
+  const [availableModelsForDialog, setAvailableModelsForDialog] =
+    useState<AvailableModel[]>([]);
   const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] =
     useState(false);
   const [visionSwitchResolver, setVisionSwitchResolver] = useState<{
@@ -644,7 +647,38 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   );
 
   const handleModelSelectionOpen = useCallback(() => {
-    setIsModelSelectionDialogOpen(true);
+    (async () => {
+      // Determine models based on current auth configuration
+      const contentGeneratorConfig = config.getContentGeneratorConfig();
+      if (!contentGeneratorConfig) {
+        setAvailableModelsForDialog([]);
+        setIsModelSelectionDialogOpen(true);
+        return;
+      }
+
+      // If using OpenAI-compatible provider and a baseUrl is configured, poll it
+      if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
+        const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
+        const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
+        if (baseUrl) {
+          const models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
+          if (models.length > 0) {
+            setAvailableModelsForDialog(models);
+            setIsModelSelectionDialogOpen(true);
+            return;
+          }
+        }
+        // Fallback to single model from env if present
+        const openAIModel = getOpenAIAvailableModelFromEnv();
+        setAvailableModelsForDialog(openAIModel ? [openAIModel] : []);
+        setIsModelSelectionDialogOpen(true);
+        return;
+      }
+
+      // Default behavior for QWEN OAuth
+      setAvailableModelsForDialog(getFilteredQwenModels(settings.merged.experimental?.visionModelPreview ?? true));
+      setIsModelSelectionDialogOpen(true);
+    })();
   }, []);
 
   const handleModelSelectionClose = useCallback(() => {
@@ -654,7 +688,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const handleModelSelect = useCallback(
     async (modelId: string) => {
       try {
-        await config.setModel(modelId);
+  // Unload previous model by setting new model (config.setModel will reinitialize client)
+  await config.setModel(modelId);
         setCurrentModel(modelId);
         setIsModelSelectionDialogOpen(false);
         addItem(
@@ -664,6 +699,15 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           },
           Date.now(),
         );
+        // Send a small warm-up query to prime the model (non-blocking)
+        try {
+          const gemini = config.getGeminiClient();
+          if (gemini) {
+            void gemini.generateContent([{ role: 'user', parts: [{ text: 'Say hello.' }] }], {}, new AbortController().signal, modelId).catch(() => {});
+          }
+        } catch (e) {
+          // ignore warm-up errors
+        }
       } catch (error) {
         console.error('Failed to switch model:', error);
         addItem(
@@ -678,24 +722,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     [config, setCurrentModel, addItem],
   );
 
-  const getAvailableModelsForCurrentAuth = useCallback((): AvailableModel[] => {
-    const contentGeneratorConfig = config.getContentGeneratorConfig();
-    if (!contentGeneratorConfig) return [];
-
-    const visionModelPreviewEnabled =
-      settings.merged.experimental?.visionModelPreview ?? true;
-
-    switch (contentGeneratorConfig.authType) {
-      case AuthType.QWEN_OAUTH:
-        return getFilteredQwenModels(visionModelPreviewEnabled);
-      case AuthType.USE_OPENAI: {
-        const openAIModel = getOpenAIAvailableModelFromEnv();
-        return openAIModel ? [openAIModel] : [];
-      }
-      default:
-        return [];
-    }
-  }, [config, settings.merged.experimental?.visionModelPreview]);
+  // available models for dialog are populated via handleModelSelectionOpen
 
   // Core hooks and processors
   const {
@@ -1438,7 +1465,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             </Box>
           ) : isModelSelectionDialogOpen ? (
             <ModelSelectionDialog
-              availableModels={getAvailableModelsForCurrentAuth()}
+              availableModels={availableModelsForDialog}
               currentModel={currentModel}
               onSelect={handleModelSelect}
               onCancel={handleModelSelectionClose}
