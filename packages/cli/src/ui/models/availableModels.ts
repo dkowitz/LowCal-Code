@@ -77,6 +77,30 @@ export async function fetchOpenAICompatibleModels(
 }
 
 /**
+ * Query LM Studio for the currently loaded model.
+ * Returns the model id or null if not found.
+ */
+export async function getLMStudioLoadedModel(
+  baseUrl: string,
+): Promise<string | null> {
+  try {
+    // LM Studio endpoint is /api/v0/models, not /v1
+    const url = baseUrl.replace(/\/v1\/?$/, '') + '/api/v0/models';
+    const resp = await fetch(url, { method: 'GET' });
+    if (!resp.ok) {
+      return null;
+    }
+    const data = await resp.json();
+    const models: any[] = Array.isArray(data?.data) ? data.data : [];
+    const loadedModel = models.find((m) => m.state === 'loaded');
+    return loadedModel?.id || null;
+  } catch (e) {
+    // swallow errors and return null
+    return null;
+  }
+}
+
+/**
 /**
  * Hard code the default vision model as a string literal,
  * until our coding model supports multimodal.

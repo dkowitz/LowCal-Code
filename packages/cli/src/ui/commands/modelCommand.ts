@@ -14,11 +14,14 @@ import type {
 import { CommandKind } from './types.js';
 import {
   AVAILABLE_MODELS_QWEN,
+  fetchOpenAICompatibleModels,
   getOpenAIAvailableModelFromEnv,
   type AvailableModel,
 } from '../models/availableModels.js';
 
-function getAvailableModelsForAuthType(authType: AuthType): AvailableModel[] {
+async function getAvailableModelsForAuthType(
+  authType: AuthType,
+): Promise<AvailableModel[]> {
   switch (authType) {
     case AuthType.QWEN_OAUTH:
       return AVAILABLE_MODELS_QWEN;
@@ -29,7 +32,10 @@ function getAvailableModelsForAuthType(authType: AuthType): AvailableModel[] {
 
       // If an OpenAI-compatible base URL is provided, assume models are available
       const baseUrl = process.env['OPENAI_BASE_URL']?.trim();
-      if (baseUrl) return [{ id: baseUrl, label: baseUrl }];
+      if (baseUrl) {
+        const apiKey = process.env['OPENAI_API_KEY']?.trim();
+        return await fetchOpenAICompatibleModels(baseUrl, apiKey);
+      }
 
       return [];
     }
@@ -76,7 +82,7 @@ export const modelCommand: SlashCommand = {
       };
     }
 
-    const availableModels = getAvailableModelsForAuthType(authType);
+    const availableModels = await getAvailableModelsForAuthType(authType);
 
     if (availableModels.length === 0) {
       return {

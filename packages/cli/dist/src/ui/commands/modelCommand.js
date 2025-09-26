@@ -5,8 +5,8 @@
  */
 import { AuthType } from '@qwen-code/qwen-code-core';
 import { CommandKind } from './types.js';
-import { AVAILABLE_MODELS_QWEN, getOpenAIAvailableModelFromEnv, } from '../models/availableModels.js';
-function getAvailableModelsForAuthType(authType) {
+import { AVAILABLE_MODELS_QWEN, fetchOpenAICompatibleModels, getOpenAIAvailableModelFromEnv, } from '../models/availableModels.js';
+async function getAvailableModelsForAuthType(authType) {
     switch (authType) {
         case AuthType.QWEN_OAUTH:
             return AVAILABLE_MODELS_QWEN;
@@ -17,8 +17,10 @@ function getAvailableModelsForAuthType(authType) {
                 return [openAIModel];
             // If an OpenAI-compatible base URL is provided, assume models are available
             const baseUrl = process.env['OPENAI_BASE_URL']?.trim();
-            if (baseUrl)
-                return [{ id: baseUrl, label: baseUrl }];
+            if (baseUrl) {
+                const apiKey = process.env['OPENAI_API_KEY']?.trim();
+                return await fetchOpenAICompatibleModels(baseUrl, apiKey);
+            }
             return [];
         }
         default:
@@ -57,7 +59,7 @@ export const modelCommand = {
                 content: 'Authentication type not available.',
             };
         }
-        const availableModels = getAvailableModelsForAuthType(authType);
+        const availableModels = await getAvailableModelsForAuthType(authType);
         if (availableModels.length === 0) {
             return {
                 type: 'message',

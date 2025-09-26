@@ -26,6 +26,11 @@ export declare function getOpenAIAvailableModelFromEnv(): AvailableModel | null;
  */
 export declare function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: string): Promise<AvailableModel[]>;
 /**
+ * Query LM Studio for the currently loaded model.
+ * Returns the model id or null if not found.
+ */
+export declare function getLMStudioLoadedModel(baseUrl: string): Promise<string | null>;
+/**
 /**
  * Hard code the default vision model as a string literal,
  * until our coding model supports multimodal.

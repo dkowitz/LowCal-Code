@@ -62,6 +62,7 @@ import {
   getOpenAIAvailableModelFromEnv,
   getFilteredQwenModels,
   fetchOpenAICompatibleModels,
+  getLMStudioLoadedModel,
   type AvailableModel,
 } from './models/availableModels.js';
 import { processVisionSwitchOutcome } from './hooks/useVisionAutoSwitch.js';
@@ -231,6 +232,34 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     config.isTrustedFolder(),
   );
   const [currentModel, setCurrentModel] = useState(config.getModel());
+  const [lmStudioModel, setLmStudioModel] = useState<string | null>(null);
+
+  useEffect(() => {
+    const authType = settings.merged.security?.auth?.selectedType;
+    const baseUrl = process.env['OPENAI_BASE_URL'];
+    let interval: NodeJS.Timeout | undefined = undefined;
+
+    if (
+      authType === AuthType.USE_OPENAI &&
+      baseUrl?.includes('127.0.0.1')
+    ) {
+      const fetchLmStudioModel = async () => {
+        if (baseUrl) {
+          const loadedModel = await getLMStudioLoadedModel(baseUrl);
+          setLmStudioModel(loadedModel);
+        }
+      };
+
+      fetchLmStudioModel(); // Initial fetch
+      interval = setInterval(fetchLmStudioModel, 5000); // Poll every 5 seconds
+    }
+
+    return () => {
+      if (interval) {
+        clearInterval(interval);
+      }
+    };
+  }, [settings.merged.security?.auth?.selectedType, JSON.stringify(process.env)]);
   const [shellModeActive, setShellModeActive] = useState(false);
   const [showErrorDetails, setShowErrorDetails] = useState<boolean>(false);
   const [showToolDescriptions, setShowToolDescriptions] =
@@ -1658,7 +1687,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           )}
           {!settings.merged.ui?.hideFooter && (
             <Footer
-              model={currentModel}
+              model={lmStudioModel || currentModel}
               targetDir={config.getTargetDir()}
               debugMode={config.getDebugMode()}
               branchName={branchName}
