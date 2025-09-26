@@ -164,6 +164,8 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     // Model selection dialog states
     const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = useState(false);
     const [availableModelsForDialog, setAvailableModelsForDialog] = useState([]);
+    const [allAvailableModels, setAllAvailableModels] = useState([]);
+    const [isFetchingModels, setIsFetchingModels] = useState(false);
     const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = useState(false);
     const [visionSwitchResolver, setVisionSwitchResolver] = useState(null);
     useEffect(() => {
@@ -414,36 +416,49 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     }, [visionSwitchResolver]);
     const handleModelSelectionOpen = useCallback(() => {
         (async () => {
-            // Determine models based on current auth configuration
+            if (allAvailableModels.length > 0) {
+                setAvailableModelsForDialog(allAvailableModels);
+                setIsModelSelectionDialogOpen(true);
+                return;
+            }
+            if (isFetchingModels) {
+                return;
+            }
+            setIsFetchingModels(true);
             const contentGeneratorConfig = config.getContentGeneratorConfig();
             if (!contentGeneratorConfig) {
                 setAvailableModelsForDialog([]);
                 setIsModelSelectionDialogOpen(true);
+                setIsFetchingModels(false);
                 return;
             }
-            // If using OpenAI-compatible provider and a baseUrl is configured, poll it
-            if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
-                const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
-                const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
-                if (baseUrl) {
-                    const models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
-                    if (models.length > 0) {
-                        setAvailableModelsForDialog(models);
-                        setIsModelSelectionDialogOpen(true);
-                        return;
+            let models = [];
+            try {
+                if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
+                    const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
+                    const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
+                    if (baseUrl) {
+                        models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
+                    }
+                    const openAIModel = getOpenAIAvailableModelFromEnv();
+                    if (openAIModel) {
+                        if (!models.find(m => m.id === openAIModel.id)) {
+                            models.push(openAIModel);
+                        }
                     }
                 }
-                // Fallback to single model from env if present
-                const openAIModel = getOpenAIAvailableModelFromEnv();
-                setAvailableModelsForDialog(openAIModel ? [openAIModel] : []);
+                else {
+                    models = getFilteredQwenModels(settings.merged.experimental?.visionModelPreview ?? true);
+                }
+                setAllAvailableModels(models);
+                setAvailableModelsForDialog(models);
                 setIsModelSelectionDialogOpen(true);
-                return;
             }
-            // Default behavior for QWEN OAuth
-            setAvailableModelsForDialog(getFilteredQwenModels(settings.merged.experimental?.visionModelPreview ?? true));
-            setIsModelSelectionDialogOpen(true);
+            finally {
+                setIsFetchingModels(false);
+            }
         })();
-    }, []);
+    }, [allAvailableModels, config, settings.merged.experimental?.visionModelPreview, isFetchingModels]);
     const handleModelSelectionClose = useCallback(() => {
         setIsModelSelectionDialogOpen(false);
     }, []);

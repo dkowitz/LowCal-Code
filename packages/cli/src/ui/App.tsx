@@ -265,6 +265,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     useState(false);
   const [availableModelsForDialog, setAvailableModelsForDialog] =
     useState<AvailableModel[]>([]);
+  const [allAvailableModels, setAllAvailableModels] = useState<AvailableModel[]>([]);
+  const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] =
     useState(false);
   const [visionSwitchResolver, setVisionSwitchResolver] = useState<{
@@ -648,38 +650,52 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const handleModelSelectionOpen = useCallback(() => {
     (async () => {
-      // Determine models based on current auth configuration
+      if (allAvailableModels.length > 0) {
+        setAvailableModelsForDialog(allAvailableModels);
+        setIsModelSelectionDialogOpen(true);
+        return;
+      }
+
+      if (isFetchingModels) {
+        return;
+      }
+
+      setIsFetchingModels(true);
+
       const contentGeneratorConfig = config.getContentGeneratorConfig();
       if (!contentGeneratorConfig) {
         setAvailableModelsForDialog([]);
         setIsModelSelectionDialogOpen(true);
+        setIsFetchingModels(false);
         return;
       }
 
-      // If using OpenAI-compatible provider and a baseUrl is configured, poll it
-      if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
-        const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
-        const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
-        if (baseUrl) {
-          const models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
-          if (models.length > 0) {
-            setAvailableModelsForDialog(models);
-            setIsModelSelectionDialogOpen(true);
-            return;
+      let models: AvailableModel[] = [];
+      try {
+        if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
+          const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
+          const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
+          if (baseUrl) {
+            models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
           }
+          const openAIModel = getOpenAIAvailableModelFromEnv();
+          if (openAIModel) {
+            if (!models.find(m => m.id === openAIModel.id)) {
+              models.push(openAIModel);
+            }
+          }
+        } else {
+          models = getFilteredQwenModels(settings.merged.experimental?.visionModelPreview ?? true);
         }
-        // Fallback to single model from env if present
-        const openAIModel = getOpenAIAvailableModelFromEnv();
-        setAvailableModelsForDialog(openAIModel ? [openAIModel] : []);
+        
+        setAllAvailableModels(models);
+        setAvailableModelsForDialog(models);
         setIsModelSelectionDialogOpen(true);
-        return;
+      } finally {
+        setIsFetchingModels(false);
       }
-
-      // Default behavior for QWEN OAuth
-      setAvailableModelsForDialog(getFilteredQwenModels(settings.merged.experimental?.visionModelPreview ?? true));
-      setIsModelSelectionDialogOpen(true);
     })();
-  }, []);
+  }, [allAvailableModels, config, settings.merged.experimental?.visionModelPreview, isFetchingModels]);
 
   const handleModelSelectionClose = useCallback(() => {
     setIsModelSelectionDialogOpen(false);

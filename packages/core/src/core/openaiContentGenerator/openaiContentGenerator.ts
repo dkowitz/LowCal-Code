@@ -18,12 +18,15 @@ import type { ContentGeneratorConfig } from '../contentGenerator.js';
 
 export class OpenAIContentGenerator implements ContentGenerator {
   protected pipeline: ContentGenerationPipeline;
+  protected provider: OpenAICompatibleProvider;
 
   constructor(
     contentGeneratorConfig: ContentGeneratorConfig,
     cliConfig: Config,
     provider: OpenAICompatibleProvider,
   ) {
+    this.provider = provider;
+    
     // Create pipeline configuration
     const pipelineConfig: PipelineConfig = {
       cliConfig,
@@ -40,6 +43,13 @@ export class OpenAIContentGenerator implements ContentGenerator {
     };
 
     this.pipeline = new ContentGenerationPipeline(pipelineConfig);
+  }
+
+  /**
+   * Get the provider used by this content generator
+   */
+  getProvider(): OpenAICompatibleProvider {
+    return this.provider;
   }
 
   /**

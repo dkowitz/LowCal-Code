@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { OpenAIContentGenerator } from './openaiContentGenerator.js';
-import { DashScopeOpenAICompatibleProvider, OpenRouterOpenAICompatibleProvider, DefaultOpenAICompatibleProvider, } from './provider/index.js';
+import { DashScopeOpenAICompatibleProvider, OpenRouterOpenAICompatibleProvider, LMStudioOpenAICompatibleProvider, DefaultOpenAICompatibleProvider, } from './provider/index.js';
 export { OpenAIContentGenerator } from './openaiContentGenerator.js';
 export { ContentGenerationPipeline } from './pipeline.js';
 export { DashScopeOpenAICompatibleProvider, OpenRouterOpenAICompatibleProvider, } from './provider/index.js';
@@ -21,6 +21,10 @@ export function createOpenAIContentGenerator(contentGeneratorConfig, cliConfig) 
  */
 export function determineProvider(contentGeneratorConfig, cliConfig) {
     const config = contentGeneratorConfig || cliConfig.getContentGeneratorConfig();
+    // Check for LM Studio provider
+    if (LMStudioOpenAICompatibleProvider.isLMStudioProvider(config)) {
+        return new LMStudioOpenAICompatibleProvider(contentGeneratorConfig, cliConfig);
+    }
     // Check for DashScope provider
     if (DashScopeOpenAICompatibleProvider.isDashScopeProvider(config)) {
         return new DashScopeOpenAICompatibleProvider(contentGeneratorConfig, cliConfig);

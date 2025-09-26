@@ -118,7 +118,7 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         const provider = showProviderPrompt.provider;
         const prepopulated = provider === 'openrouter'
             ? { baseUrl: 'https://openrouter.ai/api/v1', apiKey: '' }
-            : { baseUrl: 'http://127.0.0.1:8080', apiKey: 'lmstudio-dummy-key' };
+            : { baseUrl: 'http://127.0.0.1:1234/v1', apiKey: 'lmstudio-dummy-key' };
         return (_jsx(ProviderKeyPrompt, { prepopulatedBaseUrl: prepopulated.baseUrl, prepopulatedApiKey: prepopulated.apiKey, onSubmit: handleProviderSubmit, onCancel: handleProviderCancel }));
     }
     return (_jsxs(Box, { borderStyle: "round", borderColor: Colors.Gray, flexDirection: "column", padding: 1, width: "100%", children: [_jsx(Text, { bold: true, children: "Get started" }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { children: "How would you like to authenticate for this project?" }) }), _jsx(Box, { marginTop: 1, children: _jsx(RadioButtonSelect, { items: items, initialIndex: initialAuthIndex, onSelect: handleAuthSelect }) }), errorMessage && (_jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.AccentRed, children: errorMessage }) })), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.AccentPurple, children: "(Use Enter to Set Auth)" }) }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { children: "Terms of Services and Privacy Notice for Qwen Code" }) }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.AccentBlue, children: 'https://github.com/QwenLM/Qwen3-Coder/blob/main/README.md' }) })] }));

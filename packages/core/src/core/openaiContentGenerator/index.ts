@@ -13,6 +13,7 @@ import { OpenAIContentGenerator } from './openaiContentGenerator.js';
 import {
   DashScopeOpenAICompatibleProvider,
   OpenRouterOpenAICompatibleProvider,
+  LMStudioOpenAICompatibleProvider,
   type OpenAICompatibleProvider,
   DefaultOpenAICompatibleProvider,
 } from './provider/index.js';
@@ -52,6 +53,14 @@ export function determineProvider(
 ): OpenAICompatibleProvider {
   const config =
     contentGeneratorConfig || cliConfig.getContentGeneratorConfig();
+
+  // Check for LM Studio provider
+  if (LMStudioOpenAICompatibleProvider.isLMStudioProvider(config)) {
+    return new LMStudioOpenAICompatibleProvider(
+      contentGeneratorConfig,
+      cliConfig,
+    );
+  }
 
   // Check for DashScope provider
   if (DashScopeOpenAICompatibleProvider.isDashScopeProvider(config)) {

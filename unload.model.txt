@@ -1,0 +1,101 @@
+I've investigated the code and can now provide a detailed explanation of how the /model command unloads the currently loaded model in LM Studio before loading a new one.
+
+The process doesn't involve an explicit "unload" command. Instead, the tool implicitly unloads the model by re-initializing the chat with a new configuration. Here's a step-by-step 
+breakdown of the process and the relevant code:
+
+1. Config.setModel() is Called
+
+When you select a new model from the dialog triggered by the /model command, the setModel method in the Config class is called. This method is located in 
+packages/core/src/config/config.ts.
+
+Its primary responsibilities are:
+
+1. Updating the contentGeneratorConfig with the new model ID.
+2. Calling geminiClient.reinitialize() to apply the new configuration.
+
+Here is the setModel method:
+
+1 // from /home/atmandk/qwen-local/packages/core/src/config/config.ts
+2 
+3   setModel(newModel: string): void {
+4     if (this.contentGeneratorConfig) {
+5       this.contentGeneratorConfig.model = newModel;
+6     }
+7 
+8     // Reinitialize chat with updated configuration while preserving history
+9     const geminiClient = this.getGeminiClient();
+10     if (geminiClient && geminiClient.isInitialized()) {
+11       // Use async operation but don't await to avoid blocking
+12       geminiClient.reinitialize().catch((error) => {
+13         console.error(
+14           'Failed to reinitialize chat with updated config:',
+15           error,
+16         );
+17       });
+18     }
+19   }
+
+2. GeminiClient.reinitialize() Re-Initializes the Chat
+
+The reinitialize method in the GeminiClient class (located in packages/core/src/core/client.ts) is responsible for orchestrating the model switch. It does this by:
+
+1. Preserving the existing chat history.
+2. Calling this.initialize() with the updated configuration, which includes the new model.
+
+Here is the reinitialize method:
+
+1 // from /home/atmandk/qwen-local/packages/core/src/core/client.ts
+2 
+3   async reinitialize(): Promise<void> {
+4     if (!this.chat) {
+5       return;
+6     }
+7 
+8     // Preserve the current chat history (excluding environment context)
+9     const currentHistory = this.getHistory();
+10     // Remove the initial environment context (first 2 messages: user env + model acknowledgment)
+11     const userHistory = currentHistory.slice(2);
+12 
+13     // Get current content generator config and reinitialize with preserved history
+14     const contentGeneratorConfig = this.config.getContentGeneratorConfig();
+15     if (contentGeneratorConfig) {
+16       await this.initialize(contentGeneratorConfig, userHistory);
+17     }
+18   }
+
+3. GeminiClient.initialize() Creates New Instances
+
+The initialize method in GeminiClient is where the "unloading" and "loading" actually happens. It:
+
+1. Creates a new ContentGenerator instance by calling createContentGenerator(). This new instance is configured with the new model.
+2. Creates a new GeminiChat instance by calling this.startChat(). This new chat instance uses the new ContentGenerator.
+
+The old ContentGenerator and GeminiChat objects, which were connected to the previous model, are discarded and eventually garbage-collected. This process of creating new instances 
+effectively unloads the old model and loads the new one without an explicit "unload" command.
+
+Here is the initialize method:
+
+1 // from /home/atmandk/qwen-local/packages/core/src/core/client.ts
+2 
+3   async initialize(
+4     contentGeneratorConfig: ContentGeneratorConfig,
+5     extraHistory?: Content[],
+6   ) {
+7     this.contentGenerator = await createContentGenerator(
+8       contentGeneratorConfig,
+9       this.config,
+10       this.config.getSessionId(),
+11     );
+12     /**
+13      * Always take the model from contentGeneratorConfig to initialize,
+14      * despite the `this.config.contentGeneratorConfig` is not updated yet because in
+15      * `Config` it will not be updated until the initialization is successful.
+16      */
+17     this.chat = await this.startChat(
+18       extraHistory || [],
+19       contentGeneratorConfig.model,
+20     );
+21   }
+
+In summary, the tool unloads the old model by replacing the objects that manage the connection to the model with new instances configured for the newly selected model.
+

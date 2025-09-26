@@ -48,7 +48,15 @@ export async function fetchOpenAICompatibleModels(
   apiKey?: string,
 ): Promise<AvailableModel[]> {
   try {
-    const url = baseUrl.replace(/\/*$/, '') + '/v1/models';
+    // Normalize the base URL to avoid double /v1 paths
+    // If baseUrl already ends with /v1, don't add another /v1
+    let url: string;
+    if (baseUrl.endsWith('/v1')) {
+      url = baseUrl + '/models';
+    } else {
+      url = baseUrl.replace(/\/*$/, '') + '/v1/models';
+    }
+    
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };

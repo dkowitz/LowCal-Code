@@ -15,6 +15,11 @@ export function RadioButtonSelect({ items, initialIndex = 0, onSelect, onHighlig
     const [numberInput, setNumberInput] = useState('');
     const numberInputTimer = useRef(null);
     useEffect(() => {
+        if (activeIndex >= items.length) {
+            setActiveIndex(0);
+        }
+    }, [items, activeIndex]);
+    useEffect(() => {
         const newScrollOffset = Math.max(0, Math.min(activeIndex - maxItemsToShow + 1, items.length - maxItemsToShow));
         if (activeIndex < scrollOffset) {
             setScrollOffset(activeIndex);

@@ -48,6 +48,8 @@ import type {
 } from './contentGenerator.js';
 import { AuthType, createContentGenerator } from './contentGenerator.js';
 import { GeminiChat } from './geminiChat.js';
+import { OpenAIContentGenerator } from './openaiContentGenerator/openaiContentGenerator.js';
+import { LMStudioOpenAICompatibleProvider } from './openaiContentGenerator/provider/lmstudio.js';
 import {
   getCompressionPrompt,
   getCoreSystemPrompt,
@@ -240,6 +242,19 @@ export class GeminiClient {
   async reinitialize(): Promise<void> {
     if (!this.chat) {
       return;
+    }
+
+    // If we're using LM Studio, try to explicitly unload the current model
+    if (this.contentGenerator instanceof OpenAIContentGenerator) {
+      const provider = this.contentGenerator.getProvider();
+      if (provider instanceof LMStudioOpenAICompatibleProvider) {
+        try {
+          // Attempt to unload the current model in LM Studio
+          await provider.unloadModel();
+        } catch (error) {
+          console.debug('Failed to unload LM Studio model:', error);
+        }
+      }
     }
 
     // Preserve the current chat history (excluding environment context)

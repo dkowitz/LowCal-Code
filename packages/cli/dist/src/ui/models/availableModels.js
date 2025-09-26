@@ -32,7 +32,15 @@ export function getOpenAIAvailableModelFromEnv() {
  */
 export async function fetchOpenAICompatibleModels(baseUrl, apiKey) {
     try {
-        const url = baseUrl.replace(/\/*$/, '') + '/v1/models';
+        // Normalize the base URL to avoid double /v1 paths
+        // If baseUrl already ends with /v1, don't add another /v1
+        let url;
+        if (baseUrl.endsWith('/v1')) {
+            url = baseUrl + '/models';
+        }
+        else {
+            url = baseUrl.replace(/\/*$/, '') + '/v1/models';
+        }
         const headers = {
             'Content-Type': 'application/json',
         };

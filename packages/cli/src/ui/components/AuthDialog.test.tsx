@@ -223,7 +223,7 @@ describe('AuthDialog', () => {
       );
 
       // This is a bit brittle, but it's the best way to check which item is selected.
-      expect(lastFrame()).toContain('● 2. OpenAI');
+      expect(lastFrame()).toContain('● 4. OpenAI');
     });
 
     it('should fall back to default if QWEN_DEFAULT_AUTH_TYPE is not set', () => {

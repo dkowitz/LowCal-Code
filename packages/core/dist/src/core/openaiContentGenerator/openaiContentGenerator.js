@@ -5,7 +5,9 @@ import { EnhancedErrorHandler } from './errorHandler.js';
 import { getDefaultTokenizer } from '../../utils/request-tokenizer/index.js';
 export class OpenAIContentGenerator {
     pipeline;
+    provider;
     constructor(contentGeneratorConfig, cliConfig, provider) {
+        this.provider = provider;
         // Create pipeline configuration
         const pipelineConfig = {
             cliConfig,
@@ -15,6 +17,12 @@ export class OpenAIContentGenerator {
             errorHandler: new EnhancedErrorHandler((error, request) => this.shouldSuppressErrorLogging(error, request)),
         };
         this.pipeline = new ContentGenerationPipeline(pipelineConfig);
+    }
+    /**
+     * Get the provider used by this content generator
+     */
+    getProvider() {
+        return this.provider;
     }
     /**
      * Hook for subclasses to customize error handling behavior

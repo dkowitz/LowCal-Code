@@ -65,6 +65,12 @@ export function RadioButtonSelect<T>({
   const [scrollOffset, setScrollOffset] = useState(0);
   const [numberInput, setNumberInput] = useState('');
   const numberInputTimer = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (activeIndex >= items.length) {
+      setActiveIndex(0);
+    }
+  }, [items, activeIndex]);
   useEffect(() => {
     const newScrollOffset = Math.max(
       0,

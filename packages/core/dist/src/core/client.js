@@ -21,6 +21,8 @@ import { retryWithBackoff } from '../utils/retry.js';
 import { flatMapTextParts } from '../utils/partUtils.js';
 import { AuthType, createContentGenerator } from './contentGenerator.js';
 import { GeminiChat } from './geminiChat.js';
+import { OpenAIContentGenerator } from './openaiContentGenerator/openaiContentGenerator.js';
+import { LMStudioOpenAICompatibleProvider } from './openaiContentGenerator/provider/lmstudio.js';
 import { getCompressionPrompt, getCoreSystemPrompt, getCustomSystemPrompt, getPlanModeSystemReminder, getSubagentSystemReminder, } from './prompts.js';
 import { tokenLimit } from './tokenLimits.js';
 import { CompressionStatus, GeminiEventType, Turn } from './turn.js';
@@ -162,6 +164,19 @@ export class GeminiClient {
     async reinitialize() {
         if (!this.chat) {
             return;
+        }
+        // If we're using LM Studio, try to explicitly unload the current model
+        if (this.contentGenerator instanceof OpenAIContentGenerator) {
+            const provider = this.contentGenerator.getProvider();
+            if (provider instanceof LMStudioOpenAICompatibleProvider) {
+                try {
+                    // Attempt to unload the current model in LM Studio
+                    await provider.unloadModel();
+                }
+                catch (error) {
+                    console.debug('Failed to unload LM Studio model:', error);
+                }
+            }
         }
         // Preserve the current chat history (excluding environment context)
         const currentHistory = this.getHistory();

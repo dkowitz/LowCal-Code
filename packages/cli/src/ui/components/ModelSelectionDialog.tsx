@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
+import React, { useState } from 'react';
 import { Box, Text } from 'ink';
 import { Colors } from '../colors.js';
 import {
@@ -13,6 +13,7 @@ import {
 } from './shared/RadioButtonSelect.js';
 import { useKeypress } from '../hooks/useKeypress.js';
 import type { AvailableModel } from '../models/availableModels.js';
+import { TextInput } from './shared/TextInput.js';
 
 export interface ModelSelectionDialogProps {
   availableModels: AvailableModel[];
@@ -27,6 +28,8 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
   onSelect,
   onCancel,
 }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+
   useKeypress(
     (key) => {
       if (key.name === 'escape') {
@@ -36,7 +39,13 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
     { isActive: true },
   );
 
-  const options: Array<RadioSelectItem<string>> = availableModels.map(
+  const filteredModels = availableModels.filter(
+    (model) =>
+      model.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      model.id.toLowerCase().includes(searchQuery.toLowerCase()),
+  );
+
+  const options: Array<RadioSelectItem<string>> = filteredModels.map(
     (model) => {
       const visionIndicator = model.isVision ? ' [Vision]' : '';
       const currentIndicator = model.id === currentModel ? ' (current)' : '';
@@ -49,7 +58,7 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
 
   const initialIndex = Math.max(
     0,
-    availableModels.findIndex((model) => model.id === currentModel),
+    filteredModels.findIndex((model) => model.id === currentModel),
   );
 
   const handleSelect = (modelId: string) => {
@@ -68,6 +77,14 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
       <Box flexDirection="column" marginBottom={1}>
         <Text bold>Select Model</Text>
         <Text>Choose a model for this session:</Text>
+      </Box>
+
+      <Box marginBottom={1}>
+        <TextInput
+          value={searchQuery}
+          onChange={setSearchQuery}
+          placeholder="Search models..."
+        />
       </Box>
 
       <Box marginBottom={1}>

@@ -276,11 +276,11 @@ export declare const envVariableSchema: z.ZodObject<{
     name: z.ZodString;
     value: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    name: string;
     value: string;
+    name: string;
 }, {
-    name: string;
     value: string;
+    name: string;
 }>;
 export declare const mcpServerSchema: z.ZodObject<{
     args: z.ZodArray<z.ZodString, "many">;
@@ -289,26 +289,26 @@ export declare const mcpServerSchema: z.ZodObject<{
         name: z.ZodString;
         value: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        name: string;
         value: string;
+        name: string;
     }, {
-        name: string;
         value: string;
+        name: string;
     }>, "many">;
     name: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     name: string;
     env: {
-        name: string;
         value: string;
+        name: string;
     }[];
     command: string;
     args: string[];
 }, {
     name: string;
     env: {
-        name: string;
         value: string;
+        name: string;
     }[];
     command: string;
     args: string[];
@@ -448,26 +448,26 @@ export declare const newSessionRequestSchema: z.ZodObject<{
             name: z.ZodString;
             value: z.ZodString;
         }, "strip", z.ZodTypeAny, {
-            name: string;
             value: string;
+            name: string;
         }, {
-            name: string;
             value: string;
+            name: string;
         }>, "many">;
         name: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
     }, {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
@@ -476,8 +476,8 @@ export declare const newSessionRequestSchema: z.ZodObject<{
     mcpServers: {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
@@ -487,8 +487,8 @@ export declare const newSessionRequestSchema: z.ZodObject<{
     mcpServers: {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
@@ -504,26 +504,26 @@ export declare const loadSessionRequestSchema: z.ZodObject<{
             name: z.ZodString;
             value: z.ZodString;
         }, "strip", z.ZodTypeAny, {
-            name: string;
             value: string;
+            name: string;
         }, {
-            name: string;
             value: string;
+            name: string;
         }>, "many">;
         name: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
     }, {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
@@ -533,8 +533,8 @@ export declare const loadSessionRequestSchema: z.ZodObject<{
     mcpServers: {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
@@ -545,8 +545,8 @@ export declare const loadSessionRequestSchema: z.ZodObject<{
     mcpServers: {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
@@ -8568,26 +8568,26 @@ export declare const agentRequestSchema: z.ZodUnion<[z.ZodObject<{
             name: z.ZodString;
             value: z.ZodString;
         }, "strip", z.ZodTypeAny, {
-            name: string;
             value: string;
+            name: string;
         }, {
-            name: string;
             value: string;
+            name: string;
         }>, "many">;
         name: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
     }, {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
@@ -8596,8 +8596,8 @@ export declare const agentRequestSchema: z.ZodUnion<[z.ZodObject<{
     mcpServers: {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
@@ -8607,8 +8607,8 @@ export declare const agentRequestSchema: z.ZodUnion<[z.ZodObject<{
     mcpServers: {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
@@ -8623,26 +8623,26 @@ export declare const agentRequestSchema: z.ZodUnion<[z.ZodObject<{
             name: z.ZodString;
             value: z.ZodString;
         }, "strip", z.ZodTypeAny, {
-            name: string;
             value: string;
+            name: string;
         }, {
-            name: string;
             value: string;
+            name: string;
         }>, "many">;
         name: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
     }, {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
@@ -8652,8 +8652,8 @@ export declare const agentRequestSchema: z.ZodUnion<[z.ZodObject<{
     mcpServers: {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];
@@ -8664,8 +8664,8 @@ export declare const agentRequestSchema: z.ZodUnion<[z.ZodObject<{
     mcpServers: {
         name: string;
         env: {
-            name: string;
             value: string;
+            name: string;
         }[];
         command: string;
         args: string[];

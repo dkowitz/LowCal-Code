@@ -6,7 +6,12 @@ import { ContentGenerationPipeline } from './pipeline.js';
 import type { ContentGeneratorConfig } from '../contentGenerator.js';
 export declare class OpenAIContentGenerator implements ContentGenerator {
     protected pipeline: ContentGenerationPipeline;
+    protected provider: OpenAICompatibleProvider;
     constructor(contentGeneratorConfig: ContentGeneratorConfig, cliConfig: Config, provider: OpenAICompatibleProvider);
+    /**
+     * Get the provider used by this content generator
+     */
+    getProvider(): OpenAICompatibleProvider;
     /**
      * Hook for subclasses to customize error handling behavior
      * @param error The error that occurred
