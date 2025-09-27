@@ -459,6 +459,33 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     setCorgiMode((prev) => !prev);
   }, []);
 
+  const toggleYoloMode = useCallback(() => {
+    if (!config) return;
+    const currentMode = config.getApprovalMode();
+    const newMode =
+      currentMode === ApprovalMode.YOLO
+        ? ApprovalMode.DEFAULT
+        : ApprovalMode.YOLO;
+    try {
+      config.setApprovalMode(newMode);
+      addItem(
+        {
+          type: MessageType.INFO,
+          text: `Approval mode set to: ${newMode}`,
+        },
+        Date.now(),
+      );
+    } catch (e) {
+      addItem(
+        {
+          type: MessageType.ERROR,
+          text: e instanceof Error ? e.message : String(e),
+        },
+        Date.now(),
+      );
+    }
+  }, [config, addItem]);
+
   const performMemoryRefresh = useCallback(async () => {
     addItem(
       {
@@ -1038,13 +1065,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         if (Object.keys(mcpServers || {}).length > 0) {
           handleSlashCommand(newValue ? '/mcp desc' : '/mcp nodesc');
         }
-      } else if (
-        keyMatchers[Command.TOGGLE_IDE_CONTEXT_DETAIL](key) &&
+      } else if (keyMatchers[Command.TOGGLE_IDE_CONTEXT_DETAIL](key) &&
         config.getIdeMode() &&
         ideContextState
       ) {
         // Show IDE status when in IDE mode and context is available.
         handleSlashCommand('/ide status');
+      } else if (keyMatchers[Command.TOGGLE_YOLO_MODE](key)) {
+        toggleYoloMode();
       } else if (keyMatchers[Command.QUIT](key)) {
         // When authenticating, let AuthInProgress component handle Ctrl+C.
         if (isAuthenticating) {

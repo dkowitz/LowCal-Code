@@ -150,7 +150,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         const authType = settings.merged.security?.auth?.selectedType;
         const baseUrl = process.env['OPENAI_BASE_URL'];
         let interval = undefined;
-        console.log(`[Polling Debug] authType: ${authType}, baseUrl: ${baseUrl}`);
         if (authType === AuthType.USE_OPENAI &&
             baseUrl?.includes('127.0.0.1')) {
             const fetchLmStudioModel = async () => {
@@ -278,6 +277,27 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const toggleCorgiMode = useCallback(() => {
         setCorgiMode((prev) => !prev);
     }, []);
+    const toggleYoloMode = useCallback(() => {
+        if (!config)
+            return;
+        const currentMode = config.getApprovalMode();
+        const newMode = currentMode === ApprovalMode.YOLO
+            ? ApprovalMode.DEFAULT
+            : ApprovalMode.YOLO;
+        try {
+            config.setApprovalMode(newMode);
+            addItem({
+                type: MessageType.INFO,
+                text: `Approval mode set to: ${newMode}`,
+            }, Date.now());
+        }
+        catch (e) {
+            addItem({
+                type: MessageType.ERROR,
+                text: e instanceof Error ? e.message : String(e),
+            }, Date.now());
+        }
+    }, [config, addItem]);
     const performMemoryRefresh = useCallback(async () => {
         addItem({
             type: MessageType.INFO,
@@ -671,6 +691,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             ideContextState) {
             // Show IDE status when in IDE mode and context is available.
             handleSlashCommand('/ide status');
+        }
+        else if (keyMatchers[Command.TOGGLE_YOLO_MODE](key)) {
+            toggleYoloMode();
         }
         else if (keyMatchers[Command.QUIT](key)) {
             // When authenticating, let AuthInProgress component handle Ctrl+C.

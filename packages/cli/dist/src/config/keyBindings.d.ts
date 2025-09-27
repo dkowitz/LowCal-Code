@@ -32,6 +32,7 @@ export declare enum Command {
     QUIT = "quit",
     EXIT = "exit",
     SHOW_MORE_LINES = "showMoreLines",
+    TOGGLE_YOLO_MODE = "toggleYoloMode",
     REVERSE_SEARCH = "reverseSearch",
     SUBMIT_REVERSE_SEARCH = "submitReverseSearch",
     ACCEPT_SUGGESTION_REVERSE_SEARCH = "acceptSuggestionReverseSearch"

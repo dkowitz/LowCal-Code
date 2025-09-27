@@ -51,6 +51,9 @@ export enum Command {
   EXIT = 'exit',
   SHOW_MORE_LINES = 'showMoreLines',
 
+  // YOLO mode
+  TOGGLE_YOLO_MODE = 'toggleYoloMode',
+
   // Shell commands
   REVERSE_SEARCH = 'reverseSearch',
   SUBMIT_REVERSE_SEARCH = 'submitReverseSearch',
@@ -172,6 +175,9 @@ export const defaultKeyBindings: KeyBindingConfig = {
   [Command.EXIT]: [{ key: 'd', ctrl: true }],
   // Original: key.ctrl && key.name === 's'
   [Command.SHOW_MORE_LINES]: [{ key: 's', ctrl: true }],
+
+  // YOLO mode
+  [Command.TOGGLE_YOLO_MODE]: [{ key: 'y', ctrl: true }],
 
   // Shell commands
   // Original: key.ctrl && key.name === 'r'

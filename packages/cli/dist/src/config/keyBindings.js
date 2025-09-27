@@ -42,6 +42,8 @@ export var Command;
     Command["QUIT"] = "quit";
     Command["EXIT"] = "exit";
     Command["SHOW_MORE_LINES"] = "showMoreLines";
+    // YOLO mode
+    Command["TOGGLE_YOLO_MODE"] = "toggleYoloMode";
     // Shell commands
     Command["REVERSE_SEARCH"] = "reverseSearch";
     Command["SUBMIT_REVERSE_SEARCH"] = "submitReverseSearch";
@@ -129,6 +131,8 @@ export const defaultKeyBindings = {
     [Command.EXIT]: [{ key: 'd', ctrl: true }],
     // Original: key.ctrl && key.name === 's'
     [Command.SHOW_MORE_LINES]: [{ key: 's', ctrl: true }],
+    // YOLO mode
+    [Command.TOGGLE_YOLO_MODE]: [{ key: 'y', ctrl: true }],
     // Shell commands
     // Original: key.ctrl && key.name === 'r'
     [Command.REVERSE_SEARCH]: [{ key: 'r', ctrl: true }],

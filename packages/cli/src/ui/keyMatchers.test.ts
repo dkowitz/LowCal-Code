@@ -61,6 +61,7 @@ describe('keyMatchers', () => {
       key.name === 'return' && !key.ctrl,
     [Command.ACCEPT_SUGGESTION_REVERSE_SEARCH]: (key: Key) =>
       key.name === 'tab',
+    [Command.TOGGLE_YOLO_MODE]: (key: Key) => key.ctrl && key.name === 'y',
   };
 
   // Test data for each command with positive and negative test cases
@@ -225,6 +226,13 @@ describe('keyMatchers', () => {
       command: Command.SHOW_MORE_LINES,
       positive: [createKey('s', { ctrl: true })],
       negative: [createKey('s'), createKey('l', { ctrl: true })],
+    },
+
+    // YOLO mode
+    {
+      command: Command.TOGGLE_YOLO_MODE,
+      positive: [createKey('y', { ctrl: true })],
+      negative: [createKey('y'), createKey('u', { ctrl: true })],
     },
 
     // Shell commands
