@@ -16,6 +16,7 @@ import { corgiCommand } from '../ui/commands/corgiCommand.js';
 import { docsCommand } from '../ui/commands/docsCommand.js';
 import { directoryCommand } from '../ui/commands/directoryCommand.js';
 import { editorCommand } from '../ui/commands/editorCommand.js';
+import { exportCommand } from '../ui/commands/exportCommand.js';
 import { extensionsCommand } from '../ui/commands/extensionsCommand.js';
 import { helpCommand } from '../ui/commands/helpCommand.js';
 import { ideCommand } from '../ui/commands/ideCommand.js';
@@ -34,7 +35,6 @@ import { themeCommand } from '../ui/commands/themeCommand.js';
 import { toolsCommand } from '../ui/commands/toolsCommand.js';
 import { vimCommand } from '../ui/commands/vimCommand.js';
 import { setupGithubCommand } from '../ui/commands/setupGithubCommand.js';
-import { exportCommand } from '../ui/commands/exportCommand.js';
 /**
  * Loads the core, hard-coded slash commands that are an integral part
  * of the Gemini CLI application.
@@ -66,6 +66,7 @@ export class BuiltinCommandLoader {
             docsCommand,
             directoryCommand,
             editorCommand,
+            exportCommand,
             extensionsCommand,
             helpCommand,
             ideCommand(this.config),
@@ -85,7 +86,6 @@ export class BuiltinCommandLoader {
             vimCommand,
             setupGithubCommand,
             terminalSetupCommand,
-            exportCommand,
         ];
         return allDefinitions.filter((cmd) => cmd !== null);
     }
