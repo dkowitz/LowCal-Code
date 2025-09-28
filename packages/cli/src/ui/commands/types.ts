@@ -11,6 +11,7 @@ import type { Config, GitService, Logger } from '@qwen-code/qwen-code-core';
 import type { LoadedSettings } from '../../config/settings.js';
 import type { UseHistoryManagerReturn } from '../hooks/useHistoryManager.js';
 import type { SessionStatsState } from '../contexts/SessionContext.js';
+import type { SessionLoggingController } from '../../services/SessionMarkdownLogger.js';
 
 // Grouped dependencies for clarity and easier mocking
 export interface CommandContext {
@@ -30,6 +31,7 @@ export interface CommandContext {
     settings: LoadedSettings;
     git: GitService | undefined;
     logger: Logger;
+    logging: SessionLoggingController;
   };
   // UI state and history management
   ui: {

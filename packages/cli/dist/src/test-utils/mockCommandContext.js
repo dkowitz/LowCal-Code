@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { vi } from 'vitest';
+import { createMockLoggingController } from './mockLoggingController.js';
 /**
  * Creates a deep, fully-typed mock of the CommandContext for use in tests.
  * All functions are pre-mocked with `vi.fn()`.
@@ -32,6 +33,7 @@ export const createMockCommandContext = (overrides = {}) => {
                 loadCheckpoint: vi.fn().mockResolvedValue([]),
                 // eslint-disable-next-line @typescript-eslint/no-explicit-any
             }, // Cast because Logger is a class.
+            logging: createMockLoggingController(),
         },
         ui: {
             addItem: vi.fn(),

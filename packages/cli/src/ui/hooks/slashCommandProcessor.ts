@@ -29,11 +29,16 @@ import type {
 } from '../types.js';
 import { MessageType } from '../types.js';
 import type { LoadedSettings } from '../../config/settings.js';
-import { type CommandContext, type SlashCommand } from '../commands/types.js';
+import {
+  type CommandContext,
+  type SlashCommand,
+  type SlashCommandActionReturn,
+} from '../commands/types.js';
 import { CommandService } from '../../services/CommandService.js';
 import { BuiltinCommandLoader } from '../../services/BuiltinCommandLoader.js';
 import { FileCommandLoader } from '../../services/FileCommandLoader.js';
 import { McpPromptLoader } from '../../services/McpPromptLoader.js';
+import type { SessionLoggingController } from '../../services/SessionMarkdownLogger.js';
 
 /**
  * Hook to define and process slash commands (e.g., /help, /clear).
@@ -61,6 +66,7 @@ export const useSlashCommandProcessor = (
   setIsProcessing: (isProcessing: boolean) => void,
   setGeminiMdFileCount: (count: number) => void,
   _showQuitConfirmation: () => void,
+  loggingController: SessionLoggingController,
 ) => {
   const session = useSessionStats();
   const [commands, setCommands] = useState<readonly SlashCommand[]>([]);
@@ -187,6 +193,7 @@ export const useSlashCommandProcessor = (
         settings,
         git: gitService,
         logger,
+        logging: loggingController,
       },
       ui: {
         addItem,
@@ -228,6 +235,7 @@ export const useSlashCommandProcessor = (
       sessionShellAllowlist,
       setGeminiMdFileCount,
       reloadCommands,
+      loggingController,
       history,
     ],
   );
@@ -340,6 +348,15 @@ export const useSlashCommandProcessor = (
       try {
         if (commandToExecute) {
           const args = parts.slice(pathIndex).join(' ');
+          const invocationTimestamp = new Date().toISOString();
+          const startTime = Date.now();
+
+          void loggingController.logCommandInvocation({
+            timestamp: invocationTimestamp,
+            rawCommand: trimmed,
+            canonicalPath: resolvedCommandPath,
+            args,
+          });
 
           if (commandToExecute.action) {
             const fullCommandContext: CommandContext = {
@@ -363,10 +380,34 @@ export const useSlashCommandProcessor = (
                 ]),
               };
             }
-            const result = await commandToExecute.action(
-              fullCommandContext,
-              args,
-            );
+            let result: SlashCommandActionReturn | void;
+            try {
+              result = await commandToExecute.action(
+                fullCommandContext,
+                args,
+              );
+              const duration = Date.now() - startTime;
+              void loggingController.logCommandResult({
+                timestamp: new Date().toISOString(),
+                canonicalPath: resolvedCommandPath,
+                rawCommand: trimmed,
+                outcome: result ? result.type : 'void',
+                durationMs: duration,
+              });
+            } catch (error) {
+              const duration = Date.now() - startTime;
+              void loggingController.logCommandResult({
+                timestamp: new Date().toISOString(),
+                canonicalPath: resolvedCommandPath,
+                rawCommand: trimmed,
+                outcome: 'error',
+                durationMs: duration,
+                details: {
+                  message: error instanceof Error ? error.message : String(error),
+                },
+              });
+              throw error;
+            }
 
             if (result) {
               switch (result.type) {
@@ -431,9 +472,11 @@ export const useSlashCommandProcessor = (
                     ?.getGeminiClient()
                     ?.setHistory(result.clientHistory);
                   fullCommandContext.ui.clear();
-                  result.history.forEach((item, index) => {
+                  result.history.forEach(
+                    (item: HistoryItemWithoutId, index: number) => {
                     fullCommandContext.ui.addItem(item, index);
-                  });
+                    },
+                  );
                   return { type: 'handled' };
                 }
                 case 'quit_confirmation':
@@ -672,6 +715,7 @@ export const useSlashCommandProcessor = (
       setConfirmationRequest,
       openModelSelectionDialog,
       session.stats,
+      loggingController,
     ],
   );
 

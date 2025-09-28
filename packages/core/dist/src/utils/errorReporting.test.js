@@ -7,25 +7,29 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import fs from 'node:fs/promises';
 import os from 'node:os';
 import path from 'node:path';
-import { reportError } from './errorReporting.js';
+import { reportError, setErrorReportListener, } from './errorReporting.js';
 describe('reportError', () => {
     let consoleErrorSpy;
     let testDir;
-    const MOCK_TIMESTAMP = '2025-01-01T00-00-00-000Z';
+    const MOCK_TIMESTAMP_ISO = '2025-01-01T00:00:00.000Z';
+    const MOCK_TIMESTAMP_SANITIZED = MOCK_TIMESTAMP_ISO.replace(/[:.]/g, '-');
     beforeEach(async () => {
         // Create a temporary directory for logs
         testDir = await fs.mkdtemp(path.join(os.tmpdir(), 'gemini-report-test-'));
         vi.resetAllMocks();
         consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => { });
-        vi.spyOn(Date.prototype, 'toISOString').mockReturnValue(MOCK_TIMESTAMP);
+        vi.spyOn(Date.prototype, 'toISOString').mockReturnValue(MOCK_TIMESTAMP_ISO);
     });
     afterEach(async () => {
         vi.restoreAllMocks();
+        setErrorReportListener();
         // Clean up the temporary directory
         await fs.rm(testDir, { recursive: true, force: true });
     });
-    const getExpectedReportPath = (type) => path.join(testDir, `gemini-client-error-${type}-${MOCK_TIMESTAMP}.json`);
+    const getExpectedReportPath = (type) => path.join(testDir, `gemini-client-error-${type}-${MOCK_TIMESTAMP_SANITIZED}.json`);
     it('should generate a report and log the path', async () => {
+        const listener = vi.fn();
+        setErrorReportListener(listener);
         const error = new Error('Test error');
         error.stack = 'Test stack';
         const baseMessage = 'An error occurred.';
@@ -42,6 +46,17 @@ describe('reportError', () => {
         });
         // Verify the console log
         expect(consoleErrorSpy).toHaveBeenCalledWith(`${baseMessage} Full report available at: ${expectedReportPath}`);
+        expect(listener).toHaveBeenCalledWith({
+            baseMessage,
+            type,
+            reportPath: expectedReportPath,
+            timestamp: MOCK_TIMESTAMP_ISO,
+            writeSucceeded: true,
+            report: {
+                error: { message: 'Test error', stack: 'Test stack' },
+                context,
+            },
+        });
     });
     it('should handle errors that are plain objects with a message property', async () => {
         const error = { message: 'Test plain object error' };
@@ -70,6 +85,8 @@ describe('reportError', () => {
         expect(consoleErrorSpy).toHaveBeenCalledWith(`${baseMessage} Full report available at: ${expectedReportPath}`);
     });
     it('should log fallback message if writing report fails', async () => {
+        const listener = vi.fn();
+        setErrorReportListener(listener);
         const error = new Error('Main error');
         const baseMessage = 'Failed operation.';
         const context = ['some context'];
@@ -79,8 +96,21 @@ describe('reportError', () => {
         expect(consoleErrorSpy).toHaveBeenCalledWith(`${baseMessage} Additionally, failed to write detailed error report:`, expect.any(Error));
         expect(consoleErrorSpy).toHaveBeenCalledWith('Original error that triggered report generation:', error);
         expect(consoleErrorSpy).toHaveBeenCalledWith('Original context:', context);
+        expect(listener).toHaveBeenCalledWith({
+            baseMessage,
+            type,
+            reportPath: undefined,
+            timestamp: MOCK_TIMESTAMP_ISO,
+            writeSucceeded: false,
+            report: {
+                error: { message: 'Main error', stack: error.stack },
+                context,
+            },
+        });
     });
     it('should handle stringification failure of report content (e.g. BigInt in context)', async () => {
+        const listener = vi.fn();
+        setErrorReportListener(listener);
         const error = new Error('Main error');
         error.stack = 'Main stack';
         const baseMessage = 'Failed operation with BigInt.';
@@ -111,6 +141,16 @@ describe('reportError', () => {
             error: { message: error.message, stack: error.stack },
         });
         expect(consoleErrorSpy).toHaveBeenCalledWith(`${baseMessage} Partial report (excluding context) available at: ${expectedMinimalReportPath}`);
+        expect(listener).toHaveBeenCalledWith({
+            baseMessage,
+            type,
+            reportPath: expectedMinimalReportPath,
+            timestamp: MOCK_TIMESTAMP_ISO,
+            writeSucceeded: true,
+            report: {
+                error: { message: 'Main error', stack: 'Main stack' },
+            },
+        });
     });
     it('should generate a report without context if context is not provided', async () => {
         const error = new Error('Error without context');

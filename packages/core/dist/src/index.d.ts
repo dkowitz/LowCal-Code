@@ -43,6 +43,7 @@ export * from './utils/ignorePatterns.js';
 export * from './utils/partUtils.js';
 export * from './utils/subagentGenerator.js';
 export * from './utils/projectSummary.js';
+export { setErrorReportListener, type ErrorReportEvent, type ErrorReportData, } from './utils/errorReporting.js';
 export * from './services/fileDiscoveryService.js';
 export * from './services/gitService.js';
 export * from './services/chatRecordingService.js';

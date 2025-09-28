@@ -10,10 +10,11 @@ import { ToolConfirmationOutcome } from '@qwen-code/qwen-code-core';
 import type { HistoryItemWithoutId, HistoryItem, SlashCommandProcessorResult } from '../types.js';
 import type { LoadedSettings } from '../../config/settings.js';
 import { type CommandContext, type SlashCommand } from '../commands/types.js';
+import type { SessionLoggingController } from '../../services/SessionMarkdownLogger.js';
 /**
  * Hook to define and process slash commands (e.g., /help, /clear).
  */
-export declare const useSlashCommandProcessor: (config: Config | null, settings: LoadedSettings, addItem: UseHistoryManagerReturn["addItem"], clearItems: UseHistoryManagerReturn["clearItems"], loadHistory: UseHistoryManagerReturn["loadHistory"], history: UseHistoryManagerReturn["history"], refreshStatic: () => void, onDebugMessage: (message: string) => void, openThemeDialog: () => void, openAuthDialog: () => void, openEditorDialog: () => void, toggleCorgiMode: () => void, setQuittingMessages: (message: HistoryItem[]) => void, openPrivacyNotice: () => void, openSettingsDialog: () => void, openModelSelectionDialog: () => void, openSubagentCreateDialog: () => void, openAgentsManagerDialog: () => void, toggleVimEnabled: () => Promise<boolean>, setIsProcessing: (isProcessing: boolean) => void, setGeminiMdFileCount: (count: number) => void, _showQuitConfirmation: () => void) => {
+export declare const useSlashCommandProcessor: (config: Config | null, settings: LoadedSettings, addItem: UseHistoryManagerReturn["addItem"], clearItems: UseHistoryManagerReturn["clearItems"], loadHistory: UseHistoryManagerReturn["loadHistory"], history: UseHistoryManagerReturn["history"], refreshStatic: () => void, onDebugMessage: (message: string) => void, openThemeDialog: () => void, openAuthDialog: () => void, openEditorDialog: () => void, toggleCorgiMode: () => void, setQuittingMessages: (message: HistoryItem[]) => void, openPrivacyNotice: () => void, openSettingsDialog: () => void, openModelSelectionDialog: () => void, openSubagentCreateDialog: () => void, openAgentsManagerDialog: () => void, toggleVimEnabled: () => Promise<boolean>, setIsProcessing: (isProcessing: boolean) => void, setGeminiMdFileCount: (count: number) => void, _showQuitConfirmation: () => void, loggingController: SessionLoggingController) => {
     handleSlashCommand: (rawQuery: PartListUnion, oneTimeShellAllowlist?: Set<string>, overwriteConfirmed?: boolean) => Promise<SlashCommandProcessorResult | false>;
     slashCommands: readonly SlashCommand[];
     pendingHistoryItems: HistoryItemWithoutId[];

@@ -10,6 +10,7 @@ import type { Config, GitService, Logger } from '@qwen-code/qwen-code-core';
 import type { LoadedSettings } from '../../config/settings.js';
 import type { UseHistoryManagerReturn } from '../hooks/useHistoryManager.js';
 import type { SessionStatsState } from '../contexts/SessionContext.js';
+import type { SessionLoggingController } from '../../services/SessionMarkdownLogger.js';
 export interface CommandContext {
     invocation?: {
         /** The raw, untrimmed input string from the user. */
@@ -24,6 +25,7 @@ export interface CommandContext {
         settings: LoadedSettings;
         git: GitService | undefined;
         logger: Logger;
+        logging: SessionLoggingController;
     };
     ui: {
         /** Adds a new item to the history display. */

@@ -13,6 +13,7 @@ import type { Config } from '@qwen-code/qwen-code-core';
 import type { Logger } from '@qwen-code/qwen-code-core';
 import type { GitService } from '@qwen-code/qwen-code-core';
 import type { SessionStatsState } from '../contexts/SessionContext.js';
+import { createMockLoggingController } from '../../test-utils/mockLoggingController.js';
 
 vi.mock('node:fs', async () => {
   const actual = await vi.importActual('node:fs');
@@ -41,6 +42,7 @@ describe('exportCommand', () => {
   let mockGitService: Partial<GitService>;
   let mockLogger: Partial<Logger>;
   let mockSessionStats: SessionStatsState;
+  let mockLogging: ReturnType<typeof createMockLoggingController>;
 
   beforeEach(() => {
     mockAddItem = vi.fn();
@@ -61,6 +63,7 @@ describe('exportCommand', () => {
       lastPromptTokenCount: 0,
       promptCount: 0,
     };
+    mockLogging = createMockLoggingController();
 
     vi.mocked(require('node:fs')).writeFileSync = mockWriteFileSync;
     vi.mocked(require('node:path')).join = mockPathJoin;
@@ -71,6 +74,7 @@ describe('exportCommand', () => {
         settings: mockSettings as LoadedSettings,
         git: mockGitService as GitService,
         logger: mockLogger as Logger,
+        logging: mockLogging,
       },
       ui: {
         addItem: mockAddItem,

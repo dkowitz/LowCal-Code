@@ -19,7 +19,7 @@ import { McpPromptLoader } from '../../services/McpPromptLoader.js';
 /**
  * Hook to define and process slash commands (e.g., /help, /clear).
  */
-export const useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation) => {
+export const useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController) => {
     const session = useSessionStats();
     const [commands, setCommands] = useState([]);
     const [reloadTrigger, setReloadTrigger] = useState(0);
@@ -125,6 +125,7 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
             settings,
             git: gitService,
             logger,
+            logging: loggingController,
         },
         ui: {
             addItem,
@@ -165,6 +166,7 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
         sessionShellAllowlist,
         setGeminiMdFileCount,
         reloadCommands,
+        loggingController,
         history,
     ]);
     useEffect(() => {
@@ -248,6 +250,14 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
         try {
             if (commandToExecute) {
                 const args = parts.slice(pathIndex).join(' ');
+                const invocationTimestamp = new Date().toISOString();
+                const startTime = Date.now();
+                void loggingController.logCommandInvocation({
+                    timestamp: invocationTimestamp,
+                    rawCommand: trimmed,
+                    canonicalPath: resolvedCommandPath,
+                    args,
+                });
                 if (commandToExecute.action) {
                     const fullCommandContext = {
                         ...commandContext,
@@ -269,7 +279,32 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
                             ]),
                         };
                     }
-                    const result = await commandToExecute.action(fullCommandContext, args);
+                    let result;
+                    try {
+                        result = await commandToExecute.action(fullCommandContext, args);
+                        const duration = Date.now() - startTime;
+                        void loggingController.logCommandResult({
+                            timestamp: new Date().toISOString(),
+                            canonicalPath: resolvedCommandPath,
+                            rawCommand: trimmed,
+                            outcome: result ? result.type : 'void',
+                            durationMs: duration,
+                        });
+                    }
+                    catch (error) {
+                        const duration = Date.now() - startTime;
+                        void loggingController.logCommandResult({
+                            timestamp: new Date().toISOString(),
+                            canonicalPath: resolvedCommandPath,
+                            rawCommand: trimmed,
+                            outcome: 'error',
+                            durationMs: duration,
+                            details: {
+                                message: error instanceof Error ? error.message : String(error),
+                            },
+                        });
+                        throw error;
+                    }
                     if (result) {
                         switch (result.type) {
                             case 'tool':
@@ -535,6 +570,7 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
         setConfirmationRequest,
         openModelSelectionDialog,
         session.stats,
+        loggingController,
     ]);
     return {
         handleSlashCommand,

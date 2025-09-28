@@ -5,6 +5,7 @@
  */
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { exportCommand } from './exportCommand.js';
+import { createMockLoggingController } from '../../test-utils/mockLoggingController.js';
 vi.mock('node:fs', async () => {
     const actual = await vi.importActual('node:fs');
     return {
@@ -30,6 +31,7 @@ describe('exportCommand', () => {
     let mockGitService;
     let mockLogger;
     let mockSessionStats;
+    let mockLogging;
     beforeEach(() => {
         mockAddItem = vi.fn();
         mockWriteFileSync = vi.fn();
@@ -48,6 +50,7 @@ describe('exportCommand', () => {
             lastPromptTokenCount: 0,
             promptCount: 0,
         };
+        mockLogging = createMockLoggingController();
         vi.mocked(require('node:fs')).writeFileSync = mockWriteFileSync;
         vi.mocked(require('node:path')).join = mockPathJoin;
         mockContext = {
@@ -56,6 +59,7 @@ describe('exportCommand', () => {
                 settings: mockSettings,
                 git: mockGitService,
                 logger: mockLogger,
+                logging: mockLogging,
             },
             ui: {
                 addItem: mockAddItem,

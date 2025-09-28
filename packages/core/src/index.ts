@@ -50,6 +50,11 @@ export * from './utils/ignorePatterns.js';
 export * from './utils/partUtils.js';
 export * from './utils/subagentGenerator.js';
 export * from './utils/projectSummary.js';
+export {
+  setErrorReportListener,
+  type ErrorReportEvent,
+  type ErrorReportData,
+} from './utils/errorReporting.js';
 
 // Export services
 export * from './services/fileDiscoveryService.js';

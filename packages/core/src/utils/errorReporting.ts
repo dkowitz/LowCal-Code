@@ -9,10 +9,27 @@ import os from 'node:os';
 import path from 'node:path';
 import type { Content } from '@google/genai';
 
-interface ErrorReportData {
+export interface ErrorReportData {
   error: { message: string; stack?: string } | { message: string };
   context?: unknown;
   additionalInfo?: Record<string, unknown>;
+}
+
+export interface ErrorReportEvent {
+  baseMessage: string;
+  type: string;
+  reportPath?: string;
+  timestamp: string;
+  report: ErrorReportData;
+  writeSucceeded: boolean;
+}
+
+type ErrorReportListener = (event: ErrorReportEvent) => void;
+
+let errorReportListener: ErrorReportListener | undefined;
+
+export function setErrorReportListener(listener?: ErrorReportListener): void {
+  errorReportListener = listener;
 }
 
 /**
@@ -29,9 +46,26 @@ export async function reportError(
   type = 'general',
   reportingDir = os.tmpdir(), // for testing
 ): Promise<void> {
-  const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-  const reportFileName = `gemini-client-error-${type}-${timestamp}.json`;
+  const isoTimestamp = new Date().toISOString();
+  const sanitizedTimestamp = isoTimestamp.replace(/[:.]/g, '-');
+  const reportFileName = `gemini-client-error-${type}-${sanitizedTimestamp}.json`;
   const reportPath = path.join(reportingDir, reportFileName);
+
+  const notifyListener = (
+    overrides: Partial<ErrorReportEvent> & { writeSucceeded: boolean },
+  ) => {
+    if (!errorReportListener) {
+      return;
+    }
+    errorReportListener({
+      baseMessage,
+      type,
+      reportPath,
+      timestamp: isoTimestamp,
+      report: reportContent,
+      ...overrides,
+    });
+  };
 
   let errorToReport: { message: string; stack?: string };
   if (error instanceof Error) {
@@ -78,11 +112,20 @@ export async function reportError(
       console.error(
         `${baseMessage} Partial report (excluding context) available at: ${reportPath}`,
       );
+      notifyListener({
+        report: { error: errorToReport },
+        writeSucceeded: true,
+      });
     } catch (minimalWriteError) {
       console.error(
         `${baseMessage} Failed to write even a minimal error report:`,
         minimalWriteError,
       );
+      notifyListener({
+        report: { error: errorToReport },
+        reportPath: undefined,
+        writeSucceeded: false,
+      });
     }
     return;
   }
@@ -90,6 +133,7 @@ export async function reportError(
   try {
     await fs.writeFile(reportPath, stringifiedReportContent);
     console.error(`${baseMessage} Full report available at: ${reportPath}`);
+    notifyListener({ writeSucceeded: true });
   } catch (writeError) {
     console.error(
       `${baseMessage} Additionally, failed to write detailed error report:`,
@@ -114,5 +158,6 @@ export async function reportError(
         }
       }
     }
+    notifyListener({ writeSucceeded: false, reportPath: undefined });
   }
 }

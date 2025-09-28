@@ -9,6 +9,7 @@ import type { CommandContext } from '../ui/commands/types.js';
 import type { LoadedSettings } from '../config/settings.js';
 import type { GitService } from '@qwen-code/qwen-code-core';
 import type { SessionStatsState } from '../ui/contexts/SessionContext.js';
+import { createMockLoggingController } from './mockLoggingController.js';
 
 // A utility type to make all properties of an object, and its nested objects, partial.
 type DeepPartial<T> = T extends object
@@ -47,6 +48,7 @@ export const createMockCommandContext = (
         loadCheckpoint: vi.fn().mockResolvedValue([]),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any, // Cast because Logger is a class.
+      logging: createMockLoggingController(),
     },
     ui: {
       addItem: vi.fn(),

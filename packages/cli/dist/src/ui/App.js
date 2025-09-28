@@ -19,6 +19,7 @@ import { useQuitConfirmation } from './hooks/useQuitConfirmation.js';
 import { useWelcomeBack } from './hooks/useWelcomeBack.js';
 import { useDialogClose } from './hooks/useDialogClose.js';
 import { useSlashCommandProcessor } from './hooks/slashCommandProcessor.js';
+import { useSessionLoggingController } from './hooks/useSessionLoggingController.js';
 import { useSubagentCreateDialog } from './hooks/useSubagentCreateDialog.js';
 import { useAgentsManagerDialog } from './hooks/useAgentsManagerDialog.js';
 import { useAutoAcceptIndicator } from './hooks/useAutoAcceptIndicator.js';
@@ -130,6 +131,11 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         registerCleanup(consolePatcher.cleanup);
     }, [handleNewMessage, config]);
     const { stats: sessionStats } = useSessionStats();
+    const sessionLoggingController = useSessionLoggingController({
+        history,
+        config,
+        sessionStats,
+    });
     const [staticNeedsRefresh, setStaticNeedsRefresh] = useState(false);
     const [staticKey, setStaticKey] = useState(0);
     const refreshStatic = useCallback(() => {
@@ -537,7 +543,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     // available models for dialog are populated via handleModelSelectionOpen
     // Core hooks and processors
     const { vimEnabled: vimModeEnabled, vimMode, toggleVimEnabled, } = useVimMode();
-    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation);
+    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController);
     const buffer = useTextBuffer({
         initialText: '',
         viewport: { height: 10, width: inputWidth },

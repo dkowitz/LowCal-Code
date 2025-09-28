@@ -33,6 +33,7 @@ import { useQuitConfirmation } from './hooks/useQuitConfirmation.js';
 import { useWelcomeBack } from './hooks/useWelcomeBack.js';
 import { useDialogClose } from './hooks/useDialogClose.js';
 import { useSlashCommandProcessor } from './hooks/slashCommandProcessor.js';
+import { useSessionLoggingController } from './hooks/useSessionLoggingController.js';
 import { useSubagentCreateDialog } from './hooks/useSubagentCreateDialog.js';
 import { useAgentsManagerDialog } from './hooks/useAgentsManagerDialog.js';
 import { useAutoAcceptIndicator } from './hooks/useAutoAcceptIndicator.js';
@@ -214,6 +215,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   }, [handleNewMessage, config]);
 
   const { stats: sessionStats } = useSessionStats();
+  const sessionLoggingController = useSessionLoggingController({
+    history,
+    config,
+    sessionStats,
+  });
   const [staticNeedsRefresh, setStaticNeedsRefresh] = useState(false);
   const [staticKey, setStaticKey] = useState(0);
   const refreshStatic = useCallback(() => {
@@ -834,6 +840,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     setIsProcessing,
     setGeminiMdFileCount,
     showQuitConfirmation,
+    sessionLoggingController,
   );
 
   const buffer = useTextBuffer({

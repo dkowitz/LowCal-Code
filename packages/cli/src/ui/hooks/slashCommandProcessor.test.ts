@@ -88,6 +88,7 @@ import {
   ToolConfirmationOutcome,
   type IdeClient,
 } from '@qwen-code/qwen-code-core';
+import { createMockLoggingController } from '../../test-utils/mockLoggingController.js';
 
 function createTestCommand(
   overrides: Partial<SlashCommand>,
@@ -138,6 +139,8 @@ describe('useSlashCommandProcessor', () => {
     mockFileLoadCommands.mockResolvedValue(Object.freeze(fileCommands));
     mockMcpLoadCommands.mockResolvedValue(Object.freeze(mcpCommands));
 
+    const loggingController = createMockLoggingController();
+
     const { result } = renderHook(() =>
       useSlashCommandProcessor(
         mockConfig,
@@ -162,6 +165,7 @@ describe('useSlashCommandProcessor', () => {
         setIsProcessing,
         vi.fn(), // setGeminiMdFileCount
         vi.fn(), // _showQuitConfirmation
+        loggingController,
       ),
     );
 
@@ -910,6 +914,7 @@ describe('useSlashCommandProcessor', () => {
   describe('Lifecycle', () => {
     it('should abort command loading when the hook unmounts', () => {
       const abortSpy = vi.spyOn(AbortController.prototype, 'abort');
+      const loggingController = createMockLoggingController();
       const { unmount } = renderHook(() =>
         useSlashCommandProcessor(
           mockConfig,
@@ -934,6 +939,7 @@ describe('useSlashCommandProcessor', () => {
           vi.fn(), // setIsProcessing
           vi.fn(), // setGeminiMdFileCount
           vi.fn(), // _showQuitConfirmation
+          loggingController,
         ),
       );
 
