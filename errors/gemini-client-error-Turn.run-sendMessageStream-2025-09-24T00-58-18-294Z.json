@@ -1,0 +1,949 @@
+{
+  "error": {
+    "message": "terminated",
+    "stack": "TypeError: terminated\n    at Fetch.onAborted (node:internal/deps/undici/undici:11736:53)\n    at Fetch.emit (node:events:508:28)\n    at Fetch.terminate (node:internal/deps/undici/undici:10895:14)\n    at Object.onError (node:internal/deps/undici/undici:11858:38)\n    at Request.onError (node:internal/deps/undici/undici:2567:31)\n    at Object.errorRequest (node:internal/deps/undici/undici:1482:17)\n    at Socket.onHttpSocketClose (node:internal/deps/undici/undici:6953:14)\n    at Socket.emit (node:events:520:35)\n    at TCP.<anonymous> (node:net:346:12)"
+  },
+  "context": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "This is the Qwen Code. We are setting up the context for our chat.\nToday's date is Wednesday, September 24, 2025 (formatted according to the user's locale).\nMy operating system is: linux\nI'm currently working in the directory: /home/atmandk\nHere is the folder structure of the current working directories:\n\nShowing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.\n\n/home/atmandk/\n├───.bash_history\n├───.bash_logout\n├───.bashrc\n├───.git-credentials\n├───.gitconfig\n├───.lesshst\n├───.lmstudio-home-pointer\n├───.profile\n├───.python_history\n├───.sudo_as_admin_successful\n├───Jailbreak (to be applied to System Prompt).txt\n├───.bash_completions/\n├───.cache/\n├───.codex/\n├───.config/\n├───.docker/\n├───.gemini/\n├───.gnupg/\n├───.ipython/\n├───.lmstudio/\n└───..."
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Got it. Thanks for the context!"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "Ok, I've got two different copies of the Qwen Code repo that I'm working on.  In ./qwen-local is a version that I've modified extensively - to the point that I broke it.  The modifications were aimed at converting Qwen Code to being fully local, using LM Studio as the default backend LLM server.  I implemented several userful new commands, but then I tinkered too much with the core logic and broke it beyond repair.  So I started a new repo with a fresh copy that I'm calling LowCal coder, it's located in ./LowCal.  What I want you to do is extract some of the good features from ./qwen-local and implement them into ./LowCal.  The first one is the /model command - it uses LM Studio's /v1/ endpoint to fetch all available models and lets the user switch between models at will.  It also unloads the current model before loading the new one, and always displays the currently loaded model in the status bar (even if the user changes it within LM Studio itself, without using the /model command).  In ./qwen-local, you can read QWEN.md, GEMINI.md, AGENTS.md, and README.md for comprehensive overviews of the package, as well as any other files you need to accomplish the task.  Let's go!"
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "functionCall": {
+            "id": "503819757",
+            "name": "glob",
+            "args": {
+              "pattern": "**",
+              "path": "/home/atmandk/qwen-local"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "Please try again."
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "I'll help you extract the /model command functionality from your broken qwen-local repo and implement it into the new LowCal repo. Let me first explore both repositories to understand their structure and locate the relevant code.\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "499527875",
+            "name": "list_directory",
+            "args": {
+              "path": "/home/atmandk/qwen-local"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "499527875",
+            "name": "list_directory",
+            "response": {
+              "output": "Directory listing for /home/atmandk/qwen-local:\n[DIR] .allstar\n[DIR] .aoneci\n[DIR] .gcp\n[DIR] .git\n[DIR] .github\n[DIR] .qwen\n[DIR] .vscode\n[DIR] bundle\n[DIR] docs\n[DIR] eslint-rules\n[DIR] integration-tests\n[DIR] node_modules\n[DIR] packages\n[DIR] scripts\n.editorconfig\n.gitattributes\n.gitignore\n.md\n.npmrc\n.nvmrc\n.prettierignore\n.prettierrc.json\n.yamllint.yml\nAGENTS.md\nCHANGELOG.md\nCONTRIBUTING.md\nconversation.md\nDockerfile\nesbuild.config.js\neslint.config.js\nGEMINI.md\nLICENSE\nMakefile\npackage-lock.json\npackage.json\nQWEN.md\nREADME.md\nSECURITY.md\ntsconfig.json\nvitest.config.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "functionCall": {
+            "id": "368874479",
+            "name": "list_directory",
+            "args": {
+              "path": "/home/atmandk/LowCal"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "368874479",
+            "name": "list_directory",
+            "response": {
+              "output": "Directory listing for /home/atmandk/LowCal:\n[DIR] .allstar\n[DIR] .aoneci\n[DIR] .gcp\n[DIR] .git\n[DIR] .github\n[DIR] .vscode\n[DIR] bundle\n[DIR] docs\n[DIR] eslint-rules\n[DIR] integration-tests\n[DIR] node_modules\n[DIR] packages\n[DIR] scripts\n.editorconfig\n.gitattributes\n.gitignore\n.npmrc\n.nvmrc\n.prettierignore\n.prettierrc.json\n.yamllint.yml\nCHANGELOG.md\nCONTRIBUTING.md\nDockerfile\nesbuild.config.js\neslint.config.js\nLICENSE\nMakefile\npackage-lock.json\npackage.json\nREADME.md\nSECURITY.md\ntsconfig.json\nvitest.config.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me look at the packages directory in both repositories to understand how they're structured:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "928717811",
+            "name": "list_directory",
+            "args": {
+              "path": "/home/atmandk/qwen-local/packages"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "928717811",
+            "name": "list_directory",
+            "response": {
+              "output": "Directory listing for /home/atmandk/qwen-local/packages:\n[DIR] cli\n[DIR] core\n[DIR] test-utils\n[DIR] vscode-ide-companion"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "functionCall": {
+            "id": "710634619",
+            "name": "list_directory",
+            "args": {
+              "path": "/home/atmandk/LowCal/packages"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "710634619",
+            "name": "list_directory",
+            "response": {
+              "output": "Directory listing for /home/atmandk/LowCal/packages:\n[DIR] cli\n[DIR] core\n[DIR] test-utils\n[DIR] vscode-ide-companion"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me check the CLI package in both repositories to understand how commands are implemented:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "295147739",
+            "name": "list_directory",
+            "args": {
+              "path": "/home/atmandk/qwen-local/packages/cli"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "295147739",
+            "name": "list_directory",
+            "response": {
+              "output": "Directory listing for /home/atmandk/qwen-local/packages/cli:\n[DIR] coverage\n[DIR] dist\n[DIR] node_modules\n[DIR] src\nindex.ts\njunit.xml\npackage.json\ntest-setup.ts\ntsconfig.json\nvitest.config.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "functionCall": {
+            "id": "499868101",
+            "name": "list_directory",
+            "args": {
+              "path": "/home/atmandk/LowCal/packages/cli"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "499868101",
+            "name": "list_directory",
+            "response": {
+              "output": "Directory listing for /home/atmandk/LowCal/packages/cli:\n[DIR] dist\n[DIR] node_modules\n[DIR] src\nindex.ts\npackage.json\ntest-setup.ts\ntsconfig.json\nvitest.config.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me examine the source code in both CLI packages to understand how commands are structured:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "454313513",
+            "name": "list_directory",
+            "args": {
+              "path": "/home/atmandk/qwen-local/packages/cli/src"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "454313513",
+            "name": "list_directory",
+            "response": {
+              "output": "Directory listing for /home/atmandk/qwen-local/packages/cli/src:\n[DIR] commands\n[DIR] config\n[DIR] generated\n[DIR] patches\n[DIR] services\n[DIR] test-utils\n[DIR] ui\n[DIR] utils\n[DIR] zed-integration\ngemini.test.tsx\ngemini.tsx\nnonInteractiveCli.test.ts\nnonInteractiveCli.ts\nvalidateNonInterActiveAuth.test.ts\nvalidateNonInterActiveAuth.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "functionCall": {
+            "id": "713206299",
+            "name": "list_directory",
+            "args": {
+              "path": "/home/atmandk/LowCal/packages/cli/src"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "713206299",
+            "name": "list_directory",
+            "response": {
+              "output": "Directory listing for /home/atmandk/LowCal/packages/cli/src:\n[DIR] commands\n[DIR] config\n[DIR] generated\n[DIR] patches\n[DIR] services\n[DIR] test-utils\n[DIR] ui\n[DIR] utils\n[DIR] zed-integration\ngemini.test.tsx\ngemini.tsx\nnonInteractiveCli.test.ts\nnonInteractiveCli.ts\nvalidateNonInterActiveAuth.test.ts\nvalidateNonInterActiveAuth.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me look at the commands directory in both repositories to find the model command:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "945341619",
+            "name": "list_directory",
+            "args": {
+              "path": "/home/atmandk/qwen-local/packages/cli/src/commands"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "945341619",
+            "name": "list_directory",
+            "response": {
+              "output": "Directory listing for /home/atmandk/qwen-local/packages/cli/src/commands:\n[DIR] extensions\n[DIR] mcp\nextensions.tsx\nmcp.test.ts\nmcp.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "functionCall": {
+            "id": "246318781",
+            "name": "list_directory",
+            "args": {
+              "path": "/home/atmandk/LowCal/packages/cli/src/commands"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "246318781",
+            "name": "list_directory",
+            "response": {
+              "output": "Directory listing for /home/atmandk/LowCal/packages/cli/src/commands:\n[DIR] extensions\n[DIR] mcp\nextensions.tsx\nmcp.test.ts\nmcp.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me check the README and other documentation files to understand how the model command works:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "505249900",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/README.md"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "505249900",
+            "name": "read_file",
+            "response": {
+              "output": "# Qwen Code\n\n<div align=\"center\">\n\n![Qwen Code Screenshot](./docs/assets/qwen-screenshot.png)\n\n[![npm version](https://img.shields.io/npm/v/@qwen-code/qwen-code.svg)](https://www.npmjs.com/package/@qwen-code/qwen-code)\n[![License](https://img.shields.io/github/license/QwenLM/qwen-code.svg)](./LICENSE)\n[![Node.js Version](https://img.shields.io/badge/node-%3E%3D20.0.0-brightgreen.svg)](https://nodejs.org/)\n[![Downloads](https://img.shields.io/npm/dm/@qwen-code/qwen-code.svg)](https://www.npmjs.com/package/@qwen-code/qwen-code)\n\n**AI-powered command-line workflow tool for developers**\n\n[Installation](#installation) • [Quick Start](#quick-start) • [Features](#key-features) • [Documentation](./docs/) • [Contributing](./CONTRIBUTING.md)\n\n</div>\n\n<div align=\"center\">\n  \n  <a href=\"https://qwenlm.github.io/qwen-code-docs/de/\">Deutsch</a> | \n  <a href=\"https://qwenlm.github.io/qwen-code-docs/fr\">français</a> | \n  <a href=\"https://qwenlm.github.io/qwen-code-docs/ja/\">日本語</a> | \n  <a href=\"https://qwenlm.github.io/qwen-code-docs/ru\">Русский</a> | \n  <a href=\"https://qwenlm.github.io/qwen-code-docs/zh/\">中文</a>\n  \n</div>\n\nQwen Code is a powerful command-line AI workflow tool adapted from [**Gemini CLI**](https://github.com/google-gemini/gemini-cli) ([details](./README.gemini.md)), specifically optimized for [Qwen3-Coder](https://github.com/QwenLM/Qwen3-Coder) models. It enhances your development workflow with advanced code understanding, automated tasks, and intelligent assistance.\n\n> This fork defaults to a fully local setup powered by LM Studio. Configure any OpenAI-compatible endpoint if you prefer a different backend.\n\n## 💡 Local-First Setup\n\nQwen Code now defaults to running entirely against a local OpenAI-compatible server such as [LM Studio](https://lmstudio.ai/).\n\n### 🔌 LM Studio (Default)\n\n- Launch LM Studio and enable the OpenAI-compatible server (`http://127.0.0.1:1234/v1` by default).\n- Start `qwen` and select the **OpenAI-compatible (LM Studio default)** auth option.\n- Provide your LM Studio endpoint (and API key if you configured one) when prompted, or set `OPENAI_BASE_URL` / `OPENAI_API_KEY` in `.env`.\n\n### 🌐 Other OpenAI-Compatible Providers\n\n- Point `OPENAI_BASE_URL` and `OPENAI_API_KEY` to any OpenAI-compatible service (Ollama, OpenRouter, OpenAI, etc.).\n- Switch providers at any time with `/auth` or by updating environment variables.\n\nFor detailed setup instructions, see [Authorization](#authorization).\n\n> [!NOTE]\n> Local deployments stay on your machine. Remote providers may incur network usage and follow their own quotas.\n\n## Key Features\n\n- **Code Understanding & Editing** - Query and edit large codebases beyond traditional context window limits\n- **Workflow Automation** - Automate operational tasks like handling pull requests and complex rebases\n- **Enhanced Parser** - Adapted parser specifically optimized for Qwen-Coder models\n- **Local Web Search** - Run `/search` using DuckDuckGo out of the box, or switch to Tavily with an API key for richer answers\n\n## Installation\n\n### Prerequisites\n\nEnsure you have [Node.js version 20](https://nodejs.org/en/download) or higher installed.\n\n```bash\ncurl -qL https://www.npmjs.com/install.sh | sh\n```\n\n### Install from npm\n\n```bash\nnpm install -g @qwen-code/qwen-code@latest\nqwen --version\n```\n\n### Install from source\n\n```bash\ngit clone https://github.com/QwenLM/qwen-code.git\ncd qwen-code\nnpm install\nnpm install -g .\n```\n\n### Install globally with Homebrew (macOS/Linux)\n\n```bash\nbrew install qwen-code\n```\n\n## Quick Start\n\n```bash\n# Start Qwen Code\nqwen\n\n# Example commands\n> Explain this codebase structure\n> Help me refactor this function\n> Generate unit tests for this module\n```\n\n### Session Management\n\nControl your token usage with configurable session limits to optimize costs and performance.\n\n#### Configure Session Token Limit\n\nCreate or edit `.qwen/settings.json` in your home directory:\n\n```json\n{\n  \"sessionTokenLimit\": 32000\n}\n```\n\n#### Session Commands\n\n- **`/compress`** - Compress conversation history to continue within token limits\n- **`/clear`** - Clear all conversation history and start fresh\n- **`/stats`** - Check current token usage and limits\n\n> 📝 **Note**: Session token limit applies to a single conversation, not cumulative API calls.\n\n### Web Search\n\n- **`/search <query>`** - Run a web search using the configured provider (DuckDuckGo by default).\n- **`/search-engine`** - Open a quick selector to switch between DuckDuckGo and Tavily (requires a Tavily API key).\n\n### Authorization\n\nChoose your preferred authentication method based on your needs:\n\n#### 1. LM Studio (Local Default)\n\n1. Install and launch [LM Studio](https://lmstudio.ai/).\n2. Enable the OpenAI-compatible server (default URL: `http://127.0.0.1:1234/v1`).\n3. Start `qwen`, choose the LM Studio option, and follow the prompts to supply the base URL and optional key.\n\nEnvironment variable example:\n\n```bash\nexport OPENAI_BASE_URL=\"http://127.0.0.1:1234/v1\"\nexport OPENAI_API_KEY=\"lmstudio\" # placeholder when auth is disabled\nexport OPENAI_MODEL=\"LMStudio/lmstudio-default\"\n```\n\nProject `.env` example:\n\n```env\nOPENAI_BASE_URL=http://127.0.0.1:1234/v1\nOPENAI_API_KEY=lmstudio\nOPENAI_MODEL=LMStudio/lmstudio-default\n```\n\n#### 2. Custom OpenAI-Compatible API\n\nPoint Qwen Code at any OpenAI-compatible endpoint:\n\n```bash\nexport OPENAI_API_KEY=\"your_api_key\"\nexport OPENAI_BASE_URL=\"https://your-provider.example.com/v1\"\nexport OPENAI_MODEL=\"provider/model-name\"\n```\n\n- Works with OpenRouter, Ollama, OpenAI, and self-hosted gateways.\n- Use `/auth` to re-run the selection dialog after changing environment variables.\n- Check your provider's documentation for quotas, pricing, and usage policies.\n\n## Usage Examples\n\n### 🔍 Explore Codebases\n\n```bash\ncd your-project/\nqwen\n\n# Architecture analysis\n> Describe the main pieces of this system's architecture\n> What are the key dependencies and how do they interact?\n> Find all API endpoints and their authentication methods\n```\n\n### 💻 Code Development\n\n```bash\n# Refactoring\n> Refactor this function to improve readability and performance\n> Convert this class to use dependency injection\n> Split this large module into smaller, focused components\n\n# Code generation\n> Create a REST API endpoint for user management\n> Generate unit tests for the authentication module\n> Add error handling to all database operations\n```\n\n### 🔄 Automate Workflows\n\n```bash\n# Git automation\n> Analyze git commits from the last 7 days, grouped by feature\n> Create a changelog from recent commits\n> Find all TODO comments and create GitHub issues\n\n# File operations\n> Convert all images in this directory to PNG format\n> Rename all test files to follow the *.test.ts pattern\n> Find and remove all console.log statements\n```\n\n### 🐛 Debugging & Analysis\n\n```bash\n# Performance analysis\n> Identify performance bottlenecks in this React component\n> Find all N+1 query problems in the codebase\n\n# Security audit\n> Check for potential SQL injection vulnerabilities\n> Find all hardcoded credentials or API keys\n```\n\n## Popular Tasks\n\n### 📚 Understand New Codebases\n\n```text\n> What are the core business logic components?\n> What security mechanisms are in place?\n> How does the data flow through the system?\n> What are the main design patterns used?\n> Generate a dependency graph for this module\n```\n\n### 🔨 Code Refactoring & Optimization\n\n```text\n> What parts of this module can be optimized?\n> Help me refactor this class to follow SOLID principles\n> Add proper error handling and logging\n> Convert callbacks to async/await pattern\n> Implement caching for expensive operations\n```\n\n### 📝 Documentation & Testing\n\n```text\n> Generate comprehensive JSDoc comments for all public APIs\n> Write unit tests with edge cases for this component\n> Create API documentation in OpenAPI format\n> Add inline comments explaining complex algorithms\n> Generate a README for this module\n```\n\n### 🚀 Development Acceleration\n\n```text\n> Set up a new Express server with authentication\n> Create a React component with TypeScript and tests\n> Implement a rate limiter middleware\n> Add database migrations for new schema\n> Configure CI/CD pipeline for this project\n```\n\n## Commands & Shortcuts\n\n### Session Commands\n\n- `/help` - Display available commands\n- `/clear` - Clear conversation history\n- `/compress` - Compress history to save tokens\n- `/stats` - Show current session information\n- `/exit` or `/quit` - Exit Qwen Code\n\n### Keyboard Shortcuts\n\n- `Ctrl+C` - Cancel current operation\n- `Ctrl+D` - Exit (on empty line)\n- `Up/Down` - Navigate command history\n\n## Benchmark Results\n\n### Terminal-Bench Performance\n\n| Agent     | Model              | Accuracy |\n| --------- | ------------------ | -------- |\n| Qwen Code | Qwen3-Coder-480A35 | 37.5%    |\n| Qwen Code | Qwen3-Coder-30BA3B | 31.3%    |\n\n## Development & Contributing\n\nSee [CONTRIBUTING.md](./CONTRIBUTING.md) to learn how to contribute to the project.\n\nFor detailed authentication setup, see the [authentication guide](./docs/cli/authentication.md).\n\n## Troubleshooting\n\nIf you encounter issues, check the [troubleshooting guide](docs/troubleshooting.md).\n\n## Acknowledgments\n\nThis project is based on [Google Gemini CLI](https://github.com/google-gemini/gemini-cli). We acknowledge and appreciate the excellent work of the Gemini CLI team. Our main contribution focuses on parser-level adaptations to better support Qwen-Coder models.\n\n## License\n\n[LICENSE](./LICENSE)\n\n## Star History\n\n[![Star History Chart](https://api.star-history.com/svg?repos=QwenLM/qwen-code&type=Date)](https://www.star-history.com/#QwenLM/qwen-code&Date)\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me check the QWEN.md file to understand more about how commands are implemented:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "310224719",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/QWEN.md"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "310224719",
+            "name": "read_file",
+            "response": {
+              "output": "# Qwen Code\n\n## Project Summary\nQwen Code is an AI‑powered command‑line workflow tool built on top of the Gemini CLI. It is tuned for **Qwen3‑Coder** models and provides advanced code understanding, automated refactoring, test generation, and DevOps utilities.\n\n- **Language:** TypeScript (Node.js ≥ 20) – ESM modules\n- **Workspace layout:** `packages/*` for optional sub‑packages; main CLI lives in the root\n- **Build system:** Custom esbuild scripts (`esbuild.config.js`, `scripts/build.js`)\n- **Testing framework:** Vitest (workspace aware)\n- **Linting/Formatting:** ESLint + Prettier\n- **Type checking:** TypeScript compiler via `npm run typecheck`\n- **CLI entry point:** `bundle/gemini.js` exposed as the `qwen` binary\n\n## Building, Running & Testing\n| Task | Command | Description |\n|------|---------|-------------|\n| Install dependencies | `npm ci` | Clean install based on lockfile |\n| Build CLI | `npm run build` | Compiles TypeScript, bundles assets, creates `bundle/gemini.js` |\n| Start REPL | `npm start` | Runs `scripts/start.js`, launching the interactive session |\n| Debug | `npm run debug` | Starts with Node inspector (`--inspect‑brk`) |\n| Run tests | `npm test` | Executes Vitest across workspaces (if present) |\n| CI Test Suite | `npm run test:ci` | Runs all unit, integration and terminal‑bench tests |\n| Lint | `npm run lint` | ESLint check for `.ts/.tsx` files and integration tests |\n| Format | `npm run format` | Prettier formatting across the repo |\n| Type check | `npm run typecheck` | Full TS compilation without emitting files |\n| Bundle | `npm run bundle` | Generates distributable CLI (`bundle/gemini.js`) |\n\n> **Tip:** The repository defines a `preflight` script that runs the full safety net (`clean`, `ci install`, `format`, `lint:ci`, `build`, `typecheck`, `test:ci`). Use it before committing large changes.\n\n## Development Conventions\n- **ESM modules** (`\"type\": \"module\"`) with NodeNext resolution.\n- **Strict TypeScript settings** – see `tsconfig.json` (noImplicitAny, strictNullChecks, etc.).\n- **Workspace aware scripts** – many npm scripts use `--workspaces` to target all packages.\n- **Testing** – Vitest is used; tests reside alongside source files or in `integration-tests/`.\n- **Linting rules** are defined in `eslint.config.js`; they enforce import ordering, React hooks rules, and license headers.\n- **Formatting** follows Prettier configuration (`.prettierrc.json`).\n\n## Key Scripts (excerpt)\n```bash\n# Build & start\nnpm run build && npm run start\n\n# Test all workspaces\nnpm test\n\n# Lint with auto‑fix\nnpm run lint:fix\n\n# Type check all packages\nnpm run typecheck --workspaces\n```\n\n## Contributing\nSee [CONTRIBUTING.md](./CONTRIBUTING.md) for guidelines on coding style, testing, and pull request workflow.\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me look at the model command implementation in the qwen-local repository:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "454926238",
+            "name": "search_file_content",
+            "args": {
+              "pattern": "/model",
+              "path": "/home/atmandk/qwen-local/packages/cli/src"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "454926238",
+            "name": "search_file_content",
+            "response": {
+              "output": "Found 20 matches for pattern \"/model\" in path \"/home/atmandk/qwen-local/packages/cli/src\" (showing first 20 of 28+ total matches):\n---\nFile: services/FileCommandLoader.test.ts\nL870: raw: '/model_led 1.2.0 added \"a feature\"',\nL880: 'This is the instruction.\\n\\n/model_led 1.2.0 added \"a feature\"';\n---\nFile: services/BuiltinCommandLoader.ts\nL38: import { modelCommand } from '../ui/commands/modelCommand.js';\n---\nFile: services/BuiltinCommandLoader.test.ts\nL59: vi.mock('../ui/commands/modelCommand.js', () => ({\n---\nFile: ui/App.tsx\nL55: import { ModelSelectionDialog } from './components/ModelSelectionDialog.js';\nL59: } from './components/ModelSwitchDialog.js';\nL64: } from './models/availableModels.js';\n---\nFile: config/settingsSchema.ts\nL341: 'Maximum number of user/model/tool turns to keep in a session. -1 means unlimited.',\n---\nFile: ui/models/availableModels.ts\nL65: const detailUrl = new URL(`/v1/models/${encodeURIComponent(id)}`, baseUrl);\nL116: const response = await fetch(new URL('/v1/models', baseUrl));\n---\nFile: ui/models/availableModels.test.ts\nL71: expect(String(url)).toContain('/v1/models/detail-model');\n---\nFile: ui/hooks/useVisionAutoSwitch.ts\nL10: import { VisionSwitchOutcome } from '../components/ModelSwitchDialog.js';\nL14: } from '../models/availableModels.js';\nL183: • Use /model set ${vlModelId} to switch to a vision-capable model\n---\nFile: ui/hooks/useVisionAutoSwitch.test.ts\nL18: import { VisionSwitchOutcome } from '../components/ModelSwitchDialog.js';\nL20: import { getDefaultVisionModel } from '../models/availableModels.js';\nL141: `• Use /model set ${vl} to switch to a vision-capable model\\n` +\n---\nFile: ui/hooks/slashCommandProcessor.test.ts\nL412: await result.current.handleSlashCommand('/modelcmd');\n---\nFile: ui/components/ModelSwitchDialog.test.tsx\nL10: import { ModelSwitchDialog, VisionSwitchOutcome } from './ModelSwitchDialog.js';\n---\nFile: ui/components/ModelStatsDisplay.test.tsx\nL9: import { ModelStatsDisplay } from './ModelStatsDisplay.js';\n---\n\nWARNING: Results truncated to prevent context overflow. To see more results:\n- Use a more specific pattern to reduce matches\n- Add file filters with the 'include' parameter (e.g., \"*.js\", \"src/**\")\n- Specify a narrower 'path' to search in a subdirectory\n- Increase 'maxResults' parameter if you need more matches (current: 20)"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me look at the model command implementation specifically:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "497584848",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/packages/cli/src/ui/commands/modelCommand.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "497584848",
+            "name": "read_file",
+            "response": {
+              "output": "/**\n * @license\n * Copyright 2025 Qwen\n * SPDX-License-Identifier: Apache-2.0\n */\n\n\nimport type {\n  SlashCommand,\n  CommandContext,\n  OpenDialogActionReturn,\n  MessageActionReturn,\n} from './types.js';\nimport { CommandKind } from './types.js';\nimport {\n  fetchOpenAIModels,\n} from '../models/availableModels.js';\n\nexport const modelCommand: SlashCommand = {\n  name: 'model',\n  description: 'Switch the model for this session',\n  kind: CommandKind.BUILT_IN,\n  action: async (\n    context: CommandContext,\n  ): Promise<OpenDialogActionReturn | MessageActionReturn> => {\n    const { services } = context;\n    const { config } = services;\n\n    if (!config) {\n      return {\n        type: 'message',\n        messageType: 'error',\n        content: 'Configuration not available.',\n      };\n    }\n\n    const contentGeneratorConfig = config.getContentGeneratorConfig();\n    if (!contentGeneratorConfig) {\n      return {\n        type: 'message',\n        messageType: 'error',\n        content: 'Content generator configuration not available.',\n      };\n    }\n\n    const authType = contentGeneratorConfig.authType;\n    if (!authType) {\n      return {\n        type: 'message',\n        messageType: 'error',\n        content: 'Authentication type not available.',\n      };\n    }\n\n    const availableModels = await fetchOpenAIModels();\n\n    if (availableModels.length === 0) {\n      return {\n        type: 'message',\n        messageType: 'error',\n        content: `No models available for the current authentication type (${authType}).`,\n      };\n    }\n\n    // Trigger model selection dialog\n    return {\n      type: 'dialog',\n      dialog: 'model',\n    };\n  },\n};\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me also check the availableModels.ts file to understand how models are fetched:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "236160438",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/packages/cli/src/ui/models/availableModels.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "236160438",
+            "name": "read_file",
+            "response": {
+              "output": "/**\n * @license\n * Copyright 2025 Qwen\n * SPDX-License-Identifier: Apache-2.0\n */\n\nimport type { ModelMetadata } from '@qwen-code/qwen-code-core';\n\nexport type AvailableModel = {\n  id: string;\n  label: string;\n  isVision?: boolean;\n  contextWindow?: number;\n  promptWindow?: number;\n  tokenizer?: string;\n};\n\ntype RawModel = {\n  id: string;\n  [key: string]: unknown;\n};\n\nfunction coerceInteger(value: unknown): number | undefined {\n  if (typeof value === 'number' && Number.isFinite(value)) {\n    return Math.floor(value);\n  }\n  if (typeof value === 'string') {\n    const parsed = Number.parseInt(value, 10);\n    if (!Number.isNaN(parsed)) {\n      return parsed;\n    }\n  }\n  return undefined;\n}\n\nfunction extractContextMetadata(model: RawModel): Pick<AvailableModel, 'contextWindow' | 'promptWindow' | 'tokenizer'> {\n  const directContext =\n    coerceInteger(model['context_window']) ??\n    coerceInteger(model['context_length']) ??\n    coerceInteger(model['max_context_tokens']) ??\n    coerceInteger(model['max_total_tokens']);\n  const promptWindow =\n    coerceInteger(model['max_input_tokens']) ??\n    coerceInteger(model['prompt_window']) ??\n    coerceInteger(model['max_prompt_tokens']);\n  const tokenizer =\n    typeof model['tokenizer'] === 'string'\n      ? (model['tokenizer'] as string)\n      : typeof model['encoding'] === 'string'\n        ? (model['encoding'] as string)\n        : undefined;\n\n  return {\n    contextWindow: directContext ?? undefined,\n    promptWindow: promptWindow ?? undefined,\n    tokenizer,\n  };\n}\n\nasync function fetchModelDetails(\n  baseUrl: string,\n  id: string,\n): Promise<Partial<AvailableModel>> {\n  try {\n    const detailUrl = new URL(`/v1/models/${encodeURIComponent(id)}`, baseUrl);\n    const response = await fetch(detailUrl);\n    if (!response.ok) return {};\n    const detail = (await response.json()) as RawModel;\n    return extractContextMetadata(detail);\n  } catch {\n    return {};\n  }\n}\n\nasync function enrichModelMetadata(\n  baseUrl: string,\n  rawModel: RawModel,\n): Promise<AvailableModel> {\n  const base: AvailableModel = {\n    id: rawModel.id,\n    label: rawModel.id,\n    isVision: isVisionModel(rawModel.id),\n    ...extractContextMetadata(rawModel),\n  };\n\n  if (base.contextWindow || base.promptWindow || base.tokenizer) {\n    return base;\n  }\n\n  const details = await fetchModelDetails(baseUrl, rawModel.id);\n  return {\n    ...base,\n    ...details,\n  };\n}\n\nfunction toMetadata(model: AvailableModel): ModelMetadata | undefined {\n  const { contextWindow, promptWindow, tokenizer } = model;\n  if (contextWindow || promptWindow || tokenizer) {\n    return { contextWindow, promptWindow, tokenizer };\n  }\n  return undefined;\n}\n\n/**\n * Currently we use the single model of `OPENAI_MODEL` in the env.\n * In the future, after settings.json is updated, we will allow users to configure this themselves.\n */\nexport async function fetchOpenAIModels(): Promise<AvailableModel[]> {\n  const baseUrl = process.env['OPENAI_BASE_URL'];\n  if (!baseUrl) {\n    return [];\n  }\n\n  try {\n    const response = await fetch(new URL('/v1/models', baseUrl));\n    if (!response.ok) {\n      return [];\n    }\n\n    const json = await response.json();\n    if (!json?.data || json.data.length === 0) {\n      return [];\n    }\n\n    const models: AvailableModel[] = [];\n    for (const rawModel of json.data as RawModel[]) {\n      if (!rawModel?.id) continue;\n      models.push(await enrichModelMetadata(baseUrl, rawModel));\n    }\n\n    return models;\n  } catch {\n    // Ignore errors to keep CLI resilient when the local server restarts\n    return [];\n  }\n}\n\nexport function modelsToMetadata(models: AvailableModel[]): Record<string, ModelMetadata> {\n  const entries: [string, ModelMetadata][] = [];\n  for (const model of models) {\n    const metadata = toMetadata(model);\n    if (metadata) {\n      entries.push([model.id, metadata]);\n    }\n  }\n  return Object.fromEntries(entries);\n}\n\nexport function getOpenAIAvailableModelFromEnv(): AvailableModel | null {\n  const id = process.env['OPENAI_MODEL']?.trim();\n  return id ? { id, label: id, isVision: isVisionModel(id) } : null;\n}\n\n/**\n * Hard code the default vision model as a string literal,\n * until our coding model supports multimodal.\n */\nexport function getDefaultVisionModel(): string {\n  return 'lmstudio-vision';\n}\n\nexport function isVisionModel(modelId: string): boolean {\n  return /vision|vl/i.test(modelId);\n}\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Now let me check how the model selection dialog works:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "418367601",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/packages/cli/src/ui/components/ModelSelectionDialog.tsx"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "418367601",
+            "name": "read_file",
+            "response": {
+              "output": "/**\n * @license\n * Copyright 2025 Qwen\n * SPDX-License-Identifier: Apache-2.0\n */\n\nimport type React from 'react';\nimport { Box, Text } from 'ink';\nimport { Colors } from '../colors.js';\nimport {\n  RadioButtonSelect,\n  type RadioSelectItem,\n} from './shared/RadioButtonSelect.js';\nimport { useKeypress } from '../hooks/useKeypress.js';\nimport type { AvailableModel } from '../models/availableModels.js';\n\nexport interface ModelSelectionDialogProps {\n  availableModels: AvailableModel[];\n  currentModel: string;\n  onSelect: (modelId: string) => void;\n  onCancel: () => void;\n}\n\nexport const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({\n  availableModels,\n  currentModel,\n  onSelect,\n  onCancel,\n}) => {\n  useKeypress(\n    (key) => {\n      if (key.name === 'escape') {\n        onCancel();\n      }\n    },\n    { isActive: true },\n  );\n\n  const options: Array<RadioSelectItem<string>> = availableModels.map(\n    (model) => {\n      const visionIndicator = model.isVision ? ' [Vision]' : '';\n      const contextLimit = model.contextWindow ?? model.promptWindow;\n      const contextIndicator = contextLimit\n        ? ` • ${contextLimit.toLocaleString()} ctx`\n        : '';\n      const currentIndicator = model.id === currentModel ? ' (current)' : '';\n      return {\n        label: `${model.label}${visionIndicator}${contextIndicator}${currentIndicator}`,\n        value: model.id,\n      };\n    },\n  );\n\n  const initialIndex = Math.max(\n    0,\n    availableModels.findIndex((model) => model.id === currentModel),\n  );\n\n  const handleSelect = (modelId: string) => {\n    onSelect(modelId);\n  };\n\n  return (\n    <Box\n      flexDirection=\"column\"\n      borderStyle=\"round\"\n      borderColor={Colors.AccentBlue}\n      padding={1}\n      width=\"100%\"\n      marginLeft={1}\n    >\n      <Box flexDirection=\"column\" marginBottom={1}>\n        <Text bold>Select Model</Text>\n        <Text>Choose a model for this session:</Text>\n      </Box>\n\n      <Box marginBottom={1}>\n        <RadioButtonSelect\n          items={options}\n          initialIndex={initialIndex}\n          onSelect={handleSelect}\n          isFocused\n        />\n      </Box>\n\n      <Box>\n        <Text color={Colors.Gray}>Press Enter to select, Esc to cancel</Text>\n      </Box>\n    </Box>\n  );\n};\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me also check how the model switching is handled in the core package:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "885373999",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/packages/core/src/index.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "885373999",
+            "name": "read_file",
+            "response": {
+              "output": "/**\n * @license\n * Copyright 2025 Google LLC\n * SPDX-License-Identifier: Apache-2.0\n */\n\n// Export config\nexport * from './config/config.js';\nexport * from './config/models.js';\n\n// Export Core Logic\nexport * from './core/client.js';\nexport * from './core/contentGenerator.js';\nexport * from './core/loggingContentGenerator.js';\nexport * from './core/geminiChat.js';\nexport * from './core/logger.js';\nexport * from './core/prompts.js';\nexport * from './core/tokenLimits.js';\nexport * from './core/turn.js';\nexport * from './core/geminiRequest.js';\nexport * from './core/coreToolScheduler.js';\nexport * from './core/nonInteractiveToolExecutor.js';\n\nexport * from './code_assist/codeAssist.js';\nexport * from './code_assist/oauth2.js';\nexport * from './code_assist/server.js';\nexport * from './code_assist/types.js';\n\n// Export utilities\nexport * from './utils/paths.js';\nexport * from './utils/schemaValidator.js';\nexport * from './utils/errors.js';\nexport * from './utils/getFolderStructure.js';\nexport * from './utils/memoryDiscovery.js';\nexport * from './utils/gitIgnoreParser.js';\nexport * from './utils/gitUtils.js';\nexport * from './utils/editor.js';\nexport * from './utils/quotaErrorDetection.js';\nexport * from './utils/fileUtils.js';\nexport * from './utils/retry.js';\nexport * from './utils/shell-utils.js';\nexport * from './utils/systemEncoding.js';\nexport * from './utils/textUtils.js';\nexport * from './utils/formatters.js';\nexport * from './utils/generateContentResponseUtilities.js';\nexport * from './utils/filesearch/fileSearch.js';\nexport * from './utils/errorParsing.js';\nexport * from './utils/workspaceContext.js';\nexport * from './utils/ignorePatterns.js';\nexport * from './utils/partUtils.js';\nexport * from './utils/subagentGenerator.js';\nexport * from './utils/projectSummary.js';\n\n// Export services\nexport * from './services/fileDiscoveryService.js';\nexport * from './services/gitService.js';\nexport * from './services/chatRecordingService.js';\nexport * from './services/fileSystemService.js';\n\n// Export IDE specific logic\nexport * from './ide/ide-client.js';\nexport * from './ide/ideContext.js';\nexport * from './ide/ide-installer.js';\nexport { getIdeInfo, DetectedIde } from './ide/detect-ide.js';\nexport { type IdeInfo } from './ide/detect-ide.js';\nexport * from './ide/constants.js';\n\n// Export Shell Execution Service\nexport * from './services/shellExecutionService.js';\n\n// Export base tool definitions\nexport * from './tools/tools.js';\nexport * from './tools/tool-error.js';\nexport * from './tools/tool-registry.js';\n\n// Export subagents (Phase 1)\nexport * from './subagents/index.js';\n\n// Export prompt logic\nexport * from './prompts/mcp-prompts.js';\n\n// Export specific tool logic\nexport * from './tools/read-file.js';\nexport * from './tools/ls.js';\nexport * from './tools/grep.js';\nexport * from './tools/ripGrep.js';\nexport * from './tools/glob.js';\nexport * from './tools/edit.js';\nexport * from './tools/write-file.js';\nexport * from './tools/web-fetch.js';\nexport * from './tools/memoryTool.js';\nexport * from './tools/shell.js';\nexport * from './tools/web-search.js';\nexport * from './tools/read-many-files.js';\nexport * from './tools/mcp-client.js';\nexport * from './tools/mcp-tool.js';\n\n// MCP OAuth\nexport { MCPOAuthProvider } from './mcp/oauth-provider.js';\nexport type {\n  OAuthToken,\n  OAuthCredentials,\n} from './mcp/token-storage/types.js';\nexport { MCPOAuthTokenStorage } from './mcp/oauth-token-storage.js';\nexport type { MCPOAuthConfig } from './mcp/oauth-provider.js';\nexport type {\n  OAuthAuthorizationServerMetadata,\n  OAuthProtectedResourceMetadata,\n} from './mcp/oauth-utils.js';\nexport { OAuthUtils } from './mcp/oauth-utils.js';\n\n// Export telemetry functions\nexport * from './telemetry/index.js';\nexport { sessionId } from './utils/session.js';\nexport * from './utils/browser.js';\n// OpenAI Logging Utilities\nexport { OpenAILogger, openaiLogger } from './utils/openaiLogger.js';\nexport { Storage } from './config/storage.js';\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me check how the model switching is handled in the services:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "436856780",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/packages/cli/src/services/BuiltinCommandLoader.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "436856780",
+            "name": "read_file",
+            "response": {
+              "output": "/**\n * @license\n * Copyright 2025 Google LLC\n * SPDX-License-Identifier: Apache-2.0\n */\n\nimport type { ICommandLoader } from './types.js';\nimport type { SlashCommand } from '../ui/commands/types.js';\nimport type { Config } from '@qwen-code/qwen-code-core';\nimport { aboutCommand } from '../ui/commands/aboutCommand.js';\nimport { authCommand } from '../ui/commands/authCommand.js';\nimport { bugCommand } from '../ui/commands/bugCommand.js';\nimport { chatCommand } from '../ui/commands/chatCommand.js';\nimport { clearCommand } from '../ui/commands/clearCommand.js';\nimport { compressCommand } from '../ui/commands/compressCommand.js';\nimport { copyCommand } from '../ui/commands/copyCommand.js';\nimport { corgiCommand } from '../ui/commands/corgiCommand.js';\nimport { docsCommand } from '../ui/commands/docsCommand.js';\nimport { directoryCommand } from '../ui/commands/directoryCommand.js';\nimport { editorCommand } from '../ui/commands/editorCommand.js';\nimport { extensionsCommand } from '../ui/commands/extensionsCommand.js';\nimport { helpCommand } from '../ui/commands/helpCommand.js';\nimport { ideCommand } from '../ui/commands/ideCommand.js';\nimport { initCommand } from '../ui/commands/initCommand.js';\nimport { mcpCommand } from '../ui/commands/mcpCommand.js';\nimport { memoryCommand } from '../ui/commands/memoryCommand.js';\nimport { privacyCommand } from '../ui/commands/privacyCommand.js';\nimport { quitCommand, quitConfirmCommand } from '../ui/commands/quitCommand.js';\nimport { restoreCommand } from '../ui/commands/restoreCommand.js';\nimport { statsCommand } from '../ui/commands/statsCommand.js';\nimport { summaryCommand } from '../ui/commands/summaryCommand.js';\nimport { themeCommand } from '../ui/commands/themeCommand.js';\nimport { toolsCommand } from '../ui/commands/toolsCommand.js';\nimport { settingsCommand } from '../ui/commands/settingsCommand.js';\nimport { vimCommand } from '../ui/commands/vimCommand.js';\nimport { setupGithubCommand } from '../ui/commands/setupGithubCommand.js';\nimport { terminalSetupCommand } from '../ui/commands/terminalSetupCommand.js';\nimport { modelCommand } from '../ui/commands/modelCommand.js';\nimport { agentsCommand } from '../ui/commands/agentsCommand.js';\nimport { searchCommand } from '../ui/commands/searchCommand.js';\nimport { searchEngineCommand } from '../ui/commands/searchEngineCommand.js';\nimport { exportCommand } from '../ui/commands/exportCommand.js';\n\n/**\n * Loads the core, hard-coded slash commands that are an integral part\n * of the Gemini CLI application.\n */\nexport class BuiltinCommandLoader implements ICommandLoader {\n  constructor(private config: Config | null) {}\n\n  /**\n   * Gathers all raw built-in command definitions, injects dependencies where\n   * needed (e.g., config) and filters out any that are not available.\n   *\n   * @param _signal An AbortSignal (unused for this synchronous loader).\n   * @returns A promise that resolves to an array of `SlashCommand` objects.\n   */\n  async loadCommands(_signal: AbortSignal): Promise<SlashCommand[]> {\n    const allDefinitions: Array<SlashCommand | null> = [\n      aboutCommand,\n      agentsCommand,\n      authCommand,\n      bugCommand,\n      chatCommand,\n      clearCommand,\n      compressCommand,\n      copyCommand,\n      corgiCommand,\n      docsCommand,\n      directoryCommand,\n      editorCommand,\n      extensionsCommand,\n      helpCommand,\n      ideCommand(this.config),\n      initCommand,\n      mcpCommand,\n      memoryCommand,\n      modelCommand,\n      privacyCommand,\n      exportCommand,\n      searchCommand,\n      searchEngineCommand,\n      quitCommand,\n      quitConfirmCommand,\n      restoreCommand(this.config),\n      statsCommand,\n      summaryCommand,\n      themeCommand,\n      toolsCommand,\n      settingsCommand,\n      vimCommand,\n      setupGithubCommand,\n      terminalSetupCommand,\n    ];\n\n    return allDefinitions.filter((cmd): cmd is SlashCommand => cmd !== null);\n  }\n}\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Now let me check how the status bar displays current model information:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "165210294",
+            "name": "search_file_content",
+            "args": {
+              "path": "/home/atmandk/qwen-local/packages/cli/src",
+              "pattern": "status.*model|model.*status"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "165210294",
+            "name": "search_file_content",
+            "response": {
+              "output": "Found 1 match for pattern \"status.*model|model.*status\" in path \"/home/atmandk/qwen-local/packages/cli/src\":\n---\nFile: ui/hooks/useGeminiStream.ts\nL1900: const { status: processingStatus, toolCallRequests, text: modelText } = await processGeminiStreamEvents(\n---"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me look at the App.tsx file to understand how the UI is structured:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "469076690",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/packages/cli/src/ui/App.tsx",
+              "limit": 200
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "469076690",
+            "name": "read_file",
+            "response": {
+              "output": "\nIMPORTANT: The file content has been truncated.\nStatus: Showing lines 1-200 of 1678 total lines.\nAction: To read more of the file, you can use the 'offset' and 'limit' parameters in a subsequent 'read_file' call. For example, to read the next section of the file, use offset: 200.\n\n--- FILE CONTENT (truncated) ---\n/**\n * @license\n * Copyright 2025 Google LLC\n * SPDX-License-Identifier: Apache-2.0\n */\n\nimport { useCallback, useEffect, useMemo, useState, useRef } from 'react';\nimport {\n  Box,\n  type DOMElement,\n  measureElement,\n  Static,\n  Text,\n  useStdin,\n  useStdout,\n} from 'ink';\nimport {\n  StreamingState,\n  type HistoryItem,\n  MessageType,\n  ToolCallStatus,\n  type HistoryItemWithoutId,\n} from './types.js';\nimport { useTerminalSize } from './hooks/useTerminalSize.js';\nimport { useGeminiStream } from './hooks/useGeminiStream.js';\nimport { useLoadingIndicator } from './hooks/useLoadingIndicator.js';\nimport { useThemeCommand } from './hooks/useThemeCommand.js';\nimport { useAuthCommand } from './hooks/useAuthCommand.js';\n\nimport { useFolderTrust } from './hooks/useFolderTrust.js';\nimport { useEditorSettings } from './hooks/useEditorSettings.js';\nimport { useQuitConfirmation } from './hooks/useQuitConfirmation.js';\nimport { useWelcomeBack } from './hooks/useWelcomeBack.js';\nimport { useDialogClose } from './hooks/useDialogClose.js';\nimport { useSlashCommandProcessor } from './hooks/slashCommandProcessor.js';\nimport { useSubagentCreateDialog } from './hooks/useSubagentCreateDialog.js';\nimport { useAgentsManagerDialog } from './hooks/useAgentsManagerDialog.js';\nimport { useAutoAcceptIndicator } from './hooks/useAutoAcceptIndicator.js';\nimport { useMessageQueue } from './hooks/useMessageQueue.js';\nimport { useConsoleMessages } from './hooks/useConsoleMessages.js';\nimport { Header } from './components/Header.js';\nimport { LoadingIndicator } from './components/LoadingIndicator.js';\nimport { AutoAcceptIndicator } from './components/AutoAcceptIndicator.js';\nimport { ShellModeIndicator } from './components/ShellModeIndicator.js';\nimport { InputPrompt } from './components/InputPrompt.js';\nimport { Footer } from './components/Footer.js';\nimport { ThemeDialog } from './components/ThemeDialog.js';\nimport { AuthDialog } from './components/AuthDialog.js';\nimport { AuthInProgress } from './components/AuthInProgress.js';\nimport { EditorSettingsDialog } from './components/EditorSettingsDialog.js';\nimport { FolderTrustDialog } from './components/FolderTrustDialog.js';\nimport { ShellConfirmationDialog } from './components/ShellConfirmationDialog.js';\nimport { QuitConfirmationDialog } from './components/QuitConfirmationDialog.js';\nimport { RadioButtonSelect } from './components/shared/RadioButtonSelect.js';\nimport { ModelSelectionDialog } from './components/ModelSelectionDialog.js';\nimport {\n  ModelSwitchDialog,\n  type VisionSwitchOutcome,\n} from './components/ModelSwitchDialog.js';\nimport {\n  fetchOpenAIModels,\n  modelsToMetadata,\n  type AvailableModel,\n} from './models/availableModels.js';\nimport { processVisionSwitchOutcome } from './hooks/useVisionAutoSwitch.js';\nimport {\n  AgentCreationWizard,\n  AgentsManagerDialog,\n} from './components/subagents/index.js';\nimport { Colors } from './colors.js';\nimport { loadHierarchicalGeminiMemory } from '../config/config.js';\nimport type { LoadedSettings } from '../config/settings.js';\nimport { SettingScope } from '../config/settings.js';\nimport { Tips } from './components/Tips.js';\nimport { ConsolePatcher } from './utils/ConsolePatcher.js';\nimport { registerCleanup } from '../utils/cleanup.js';\nimport { DetailedMessagesDisplay } from './components/DetailedMessagesDisplay.js';\nimport { HistoryItemDisplay } from './components/HistoryItemDisplay.js';\nimport { ContextSummaryDisplay } from './components/ContextSummaryDisplay.js';\nimport { useHistory } from './hooks/useHistoryManager.js';\nimport process from 'node:process';\nimport type { EditorType, Config, IdeContext } from '@qwen-code/qwen-code-core';\nimport {\n  ApprovalMode,\n  getAllGeminiMdFilenames,\n  isEditorAvailable,\n  getErrorMessage,\n  AuthType,\n  logFlashFallback,\n  FlashFallbackEvent,\n  ideContext,\n  isProQuotaExceededError,\n  isGenericQuotaExceededError,\n  UserTierId,\n} from '@qwen-code/qwen-code-core';\nimport type { IdeIntegrationNudgeResult } from './IdeIntegrationNudge.js';\nimport { IdeIntegrationNudge } from './IdeIntegrationNudge.js';\nimport { validateAuthMethod } from '../config/auth.js';\nimport { useLogger } from './hooks/useLogger.js';\nimport { StreamingContext } from './contexts/StreamingContext.js';\nimport {\n  SessionStatsProvider,\n  useSessionStats,\n} from './contexts/SessionContext.js';\nimport { useGitBranchName } from './hooks/useGitBranchName.js';\nimport { useFocus } from './hooks/useFocus.js';\nimport { useBracketedPaste } from './hooks/useBracketedPaste.js';\nimport { useTextBuffer } from './components/shared/text-buffer.js';\nimport { useVimMode, VimModeProvider } from './contexts/VimModeContext.js';\nimport { useVim } from './hooks/vim.js';\nimport type { Key } from './hooks/useKeypress.js';\nimport { useKeypress } from './hooks/useKeypress.js';\nimport { KeypressProvider } from './contexts/KeypressContext.js';\nimport { useKittyKeyboardProtocol } from './hooks/useKittyKeyboardProtocol.js';\nimport { keyMatchers, Command } from './keyMatchers.js';\nimport * as fs from 'node:fs';\nimport { UpdateNotification } from './components/UpdateNotification.js';\nimport type { UpdateObject } from './utils/updateCheck.js';\nimport ansiEscapes from 'ansi-escapes';\nimport { OverflowProvider } from './contexts/OverflowContext.js';\nimport { ShowMoreLines } from './components/ShowMoreLines.js';\nimport { PrivacyNotice } from './privacy/PrivacyNotice.js';\nimport { useSettingsCommand } from './hooks/useSettingsCommand.js';\nimport { SettingsDialog } from './components/SettingsDialog.js';\nimport { SearchEngineDialog } from './components/SearchEngineDialog.js';\nimport { setUpdateHandler } from '../utils/handleAutoUpdate.js';\nimport { appEvents, AppEvent } from '../utils/events.js';\nimport { isNarrowWidth } from './utils/isNarrowWidth.js';\nimport { useWorkspaceMigration } from './hooks/useWorkspaceMigration.js';\nimport { WorkspaceMigrationDialog } from './components/WorkspaceMigrationDialog.js';\nimport { WelcomeBackDialog } from './components/WelcomeBackDialog.js';\n\n// Maximum number of queued messages to display in UI to prevent performance issues\nconst MAX_DISPLAYED_QUEUED_MESSAGES = 3;\n\ninterface AppProps {\n  config: Config;\n  settings: LoadedSettings;\n  startupWarnings?: string[];\n  version: string;\n}\n\nfunction isToolExecuting(pendingHistoryItems: HistoryItemWithoutId[]) {\n  return pendingHistoryItems.some((item) => {\n    if (item && item.type === 'tool_group') {\n      return item.tools.some(\n        (tool) => ToolCallStatus.Executing === tool.status,\n      );\n    }\n    return false;\n  });\n}\n\nexport const AppWrapper = (props: AppProps) => {\n  const kittyProtocolStatus = useKittyKeyboardProtocol();\n  const nodeMajorVersion = parseInt(process.versions.node.split('.')[0], 10);\n  return (\n    <KeypressProvider\n      kittyProtocolEnabled={kittyProtocolStatus.enabled}\n      pasteWorkaround={process.platform === 'win32' || nodeMajorVersion < 20}\n      config={props.config}\n      debugKeystrokeLogging={\n        props.settings.merged.general?.debugKeystrokeLogging\n      }\n    >\n      <SessionStatsProvider>\n        <VimModeProvider settings={props.settings}>\n          <App {...props} />\n        </VimModeProvider>\n      </SessionStatsProvider>\n    </KeypressProvider>\n  );\n};\n\nconst App = ({ config, settings, startupWarnings = [], version }: AppProps) => {\n  const isFocused = useFocus();\n  useBracketedPaste();\n  const [updateInfo, setUpdateInfo] = useState<UpdateObject | null>(null);\n  const { stdout } = useStdout();\n  const nightly = version.includes('nightly');\n  const { history, addItem, clearItems, loadHistory } = useHistory();\n\n  const [idePromptAnswered, setIdePromptAnswered] = useState(false);\n  const currentIDE = config.getIdeClient().getCurrentIde();\n  useEffect(() => {\n    registerCleanup(() => config.getIdeClient().disconnect());\n  }, [config]);\n  const shouldShowIdePrompt =\n    currentIDE &&\n    !config.getIdeMode() &&\n    !settings.merged.ide?.hasSeenNudge &&\n    !idePromptAnswered;\n\n  useEffect(() => {\n    const cleanup = setUpdateHandler(addItem, setUpdateInfo);\n    return cleanup;\n  }, [addItem]);\n\n  const {\n    consoleMessages,"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me read more of the App.tsx file to understand how status is displayed:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "446707351",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/packages/cli/src/ui/App.tsx",
+              "offset": 200,
+              "limit": 300
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "446707351",
+            "name": "read_file",
+            "response": {
+              "output": "\nIMPORTANT: The file content has been truncated.\nStatus: Showing lines 201-500 of 1678 total lines.\nAction: To read more of the file, you can use the 'offset' and 'limit' parameters in a subsequent 'read_file' call. For example, to read the next section of the file, use offset: 500.\n\n--- FILE CONTENT (truncated) ---\n    handleNewMessage,\n    clearConsoleMessages: clearConsoleMessagesState,\n  } = useConsoleMessages();\n\n  useEffect(() => {\n    const consolePatcher = new ConsolePatcher({\n      onNewMessage: handleNewMessage,\n      debugMode: config.getDebugMode(),\n    });\n    consolePatcher.patch();\n    registerCleanup(consolePatcher.cleanup);\n  }, [handleNewMessage, config]);\n\n  const { stats: sessionStats } = useSessionStats();\n  const [staticNeedsRefresh, setStaticNeedsRefresh] = useState(false);\n  const [staticKey, setStaticKey] = useState(0);\n  const refreshStatic = useCallback(() => {\n    stdout.write(ansiEscapes.clearTerminal);\n    setStaticKey((prev) => prev + 1);\n  }, [setStaticKey, stdout]);\n\n  const [geminiMdFileCount, setGeminiMdFileCount] = useState<number>(0);\n  const [debugMessage, setDebugMessage] = useState<string>('');\n  const [themeError, setThemeError] = useState<string | null>(null);\n  const [authError, setAuthError] = useState<string | null>(null);\n  const [editorError, setEditorError] = useState<string | null>(null);\n  const [footerHeight, setFooterHeight] = useState<number>(0);\n  const [corgiMode, setCorgiMode] = useState(false);\n  const [isTrustedFolderState, setIsTrustedFolder] = useState(\n    config.isTrustedFolder(),\n  );\n  const [currentModel, setCurrentModel] = useState(config.getModel());\n  const [availableOpenAIModels, setAvailableOpenAIModels] = useState<AvailableModel[]>([]);\n  \n  const [shellModeActive, setShellModeActive] = useState(false);\n  const [showErrorDetails, setShowErrorDetails] = useState<boolean>(false);\n  const [showToolDescriptions, setShowToolDescriptions] =\n    useState<boolean>(false);\n\n  const [ctrlCPressedOnce, setCtrlCPressedOnce] = useState(false);\n  const [quittingMessages, setQuittingMessages] = useState<\n    HistoryItem[] | null\n  >(null);\n  const ctrlCTimerRef = useRef<NodeJS.Timeout | null>(null);\n  const [ctrlDPressedOnce, setCtrlDPressedOnce] = useState(false);\n  const ctrlDTimerRef = useRef<NodeJS.Timeout | null>(null);\n  const [constrainHeight, setConstrainHeight] = useState<boolean>(true);\n  const [showPrivacyNotice, setShowPrivacyNotice] = useState<boolean>(false);\n  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] =\n    useState<boolean>(false);\n  const [userTier, setUserTier] = useState<UserTierId | undefined>(undefined);\n  const [ideContextState, setIdeContextState] = useState<\n    IdeContext | undefined\n  >();\n  const [showEscapePrompt, setShowEscapePrompt] = useState(false);\n  const [isProcessing, setIsProcessing] = useState<boolean>(false);\n  const searchFallbackWarnedRef = useRef(false);\n  const {\n    showWorkspaceMigrationDialog,\n    workspaceExtensions,\n    onWorkspaceMigrationDialogOpen,\n    onWorkspaceMigrationDialogClose,\n  } = useWorkspaceMigration(settings);\n\n  // Model selection dialog states\n  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] =\n    useState(false);\n  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] =\n    useState(false);\n  const initialSearchEngineProvider =\n    config.getRequestedWebSearchProvider() ?? config.getWebSearchProvider();\n  const [searchEngineDialogInitialProvider, setSearchEngineDialogInitialProvider] =\n    useState<'duckduckgo' | 'tavily'>(initialSearchEngineProvider);\n  const [isSearchEngineDialogOpen, setIsSearchEngineDialogOpen] = useState(\n    settings.merged.tools?.webSearch?.provider === undefined,\n  );\n  const [visionSwitchResolver, setVisionSwitchResolver] = useState<{\n    resolve: (result: {\n      modelOverride?: string;\n      persistSessionModel?: string;\n      showGuidance?: boolean;\n    }) => void;\n    reject: () => void;\n  } | null>(null);\n\n  useEffect(() => {\n    const unsubscribe = ideContext.subscribeToIdeContext(setIdeContextState);\n    // Set the initial value\n    setIdeContextState(ideContext.getIdeContext());\n    return unsubscribe;\n  }, []);\n\n  useEffect(() => {\n    const openDebugConsole = () => {\n      setShowErrorDetails(true);\n      setConstrainHeight(false); // Make sure the user sees the full message.\n    };\n    appEvents.on(AppEvent.OpenDebugConsole, openDebugConsole);\n\n    const logErrorHandler = (errorMessage: unknown) => {\n      handleNewMessage({\n        type: 'error',\n        content: String(errorMessage),\n        count: 1,\n      });\n    };\n    appEvents.on(AppEvent.LogError, logErrorHandler);\n\n    return () => {\n      appEvents.off(AppEvent.OpenDebugConsole, openDebugConsole);\n      appEvents.off(AppEvent.LogError, logErrorHandler);\n    };\n  }, [handleNewMessage]);\n\n  useEffect(() => {\n    if (searchFallbackWarnedRef.current) {\n      return;\n    }\n    const requestedProvider = settings.merged.tools?.webSearch?.provider;\n    const effectiveProvider = config.getWebSearchProvider();\n    const hasTavilyKey = Boolean((config.getTavilyApiKey() || '').trim());\n    if (requestedProvider === 'tavily' && effectiveProvider === 'duckduckgo' && !hasTavilyKey) {\n      searchFallbackWarnedRef.current = true;\n      addItem(\n        {\n          type: MessageType.INFO,\n          text: 'Tavily API key not found. Web search will use DuckDuckGo until a key is configured.',\n        },\n        Date.now(),\n      );\n    }\n  }, [addItem, config, settings.merged.tools?.webSearch?.provider]);\n\n  const openPrivacyNotice = useCallback(() => {\n    setShowPrivacyNotice(true);\n  }, []);\n\n  const handleEscapePromptChange = useCallback((showPrompt: boolean) => {\n    setShowEscapePrompt(showPrompt);\n  }, []);\n\n  const handleSearchEngineDialogOpen = useCallback(() => {\n    setSearchEngineDialogInitialProvider(\n      config.getRequestedWebSearchProvider() ??\n        config.getWebSearchProvider(),\n    );\n    setIsSearchEngineDialogOpen(true);\n  }, [config]);\n\n  const handleSearchEngineDialogClose = useCallback(() => {\n    if (settings.merged.tools?.webSearch?.provider === undefined) {\n      const defaultProvider =\n        config.getRequestedWebSearchProvider() ??\n        config.getWebSearchProvider();\n      settings.setValue(\n        SettingScope.User,\n        'tools.webSearch.provider',\n        defaultProvider,\n      );\n    }\n    setIsSearchEngineDialogOpen(false);\n  }, [config, settings]);\n\n  const handleSearchEngineSelect = useCallback(\n    (provider: 'duckduckgo' | 'tavily') => {\n      const rawKey = config.getTavilyApiKey();\n      const hasTavilyKey = Boolean(rawKey && rawKey.trim().length > 0);\n\n      const finalProvider =\n        provider === 'tavily' && !hasTavilyKey ? 'duckduckgo' : provider;\n\n      settings.setValue(\n        SettingScope.User,\n        'tools.webSearch.provider',\n        finalProvider,\n      );\n      config.setWebSearchProvider(finalProvider);\n      setSearchEngineDialogInitialProvider(finalProvider);\n      setIsSearchEngineDialogOpen(false);\n\n      if (provider === 'tavily' && !hasTavilyKey) {\n        addItem(\n          {\n            type: MessageType.INFO,\n            text: 'Tavily API key not found. Using DuckDuckGo until a Tavily key is configured (settings → tavilyApiKey or TAVILY_API_KEY env).',\n          },\n          Date.now(),\n        );\n      } else {\n        const label = finalProvider === 'tavily' ? 'Tavily' : 'DuckDuckGo';\n        addItem(\n          {\n            type: MessageType.INFO,\n            text: `Web search provider set to ${label}.`,\n          },\n          Date.now(),\n        );\n      }\n    },\n    [config, settings, addItem],\n  );\n\n  const initialPromptSubmitted = useRef(false);\n\n  const errorCount = useMemo(\n    () =>\n      consoleMessages\n        .filter((msg) => msg.type === 'error')\n        .reduce((total, msg) => total + msg.count, 0),\n    [consoleMessages],\n  );\n\n  const {\n    isThemeDialogOpen,\n    openThemeDialog,\n    handleThemeSelect,\n    handleThemeHighlight,\n  } = useThemeCommand(settings, setThemeError, addItem);\n\n  const { isSettingsDialogOpen, openSettingsDialog, closeSettingsDialog } =\n    useSettingsCommand();\n\n  const {\n    isSubagentCreateDialogOpen,\n    openSubagentCreateDialog,\n    closeSubagentCreateDialog,\n  } = useSubagentCreateDialog();\n\n  const {\n    isAgentsManagerDialogOpen,\n    openAgentsManagerDialog,\n    closeAgentsManagerDialog,\n  } = useAgentsManagerDialog();\n\n  const { isFolderTrustDialogOpen, handleFolderTrustSelect, isRestarting } =\n    useFolderTrust(settings, setIsTrustedFolder);\n\n  const { showQuitConfirmation, handleQuitConfirmationSelect } =\n    useQuitConfirmation();\n\n  const {\n    isAuthDialogOpen,\n    openAuthDialog,\n    handleAuthSelect,\n    isAuthenticating,\n    cancelAuthentication,\n  } = useAuthCommand(settings, setAuthError, config);\n\n  useEffect(() => {\n    if (\n      settings.merged.security?.auth?.selectedType &&\n      !settings.merged.security?.auth?.useExternal\n    ) {\n      const error = validateAuthMethod(\n        settings.merged.security.auth.selectedType,\n      );\n      if (error) {\n        setAuthError(error);\n        openAuthDialog();\n      }\n    }\n  }, [\n    settings.merged.security?.auth?.selectedType,\n    settings.merged.security?.auth?.useExternal,\n    openAuthDialog,\n    setAuthError,\n  ]);\n\n  // Sync user tier from config when authentication changes\n  useEffect(() => {\n    // Only sync when not currently authenticating\n    if (!isAuthenticating) {\n      setUserTier(config.getGeminiClient()?.getUserTier());\n    }\n  }, [config, isAuthenticating]);\n\n\n\n  const {\n    isEditorDialogOpen,\n    openEditorDialog,\n    handleEditorSelect,\n    exitEditorDialog,\n  } = useEditorSettings(settings, setEditorError, addItem);\n\n  const toggleCorgiMode = useCallback(() => {\n    setCorgiMode((prev) => !prev);\n  }, []);\n\n  const performMemoryRefresh = useCallback(async () => {\n    addItem(\n      {\n        type: MessageType.INFO,\n        text: 'Refreshing hierarchical memory (QWEN.md or other context files)...',\n      },\n      Date.now(),\n    );\n    try {\n      const { memoryContent, fileCount } = await loadHierarchicalGeminiMemory(\n        process.cwd(),"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me continue reading to find how the model information is displayed in the footer:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "897824903",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/packages/cli/src/ui/App.tsx",
+              "limit": 300,
+              "offset": 500
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "897824903",
+            "name": "read_file",
+            "response": {
+              "output": "\nIMPORTANT: The file content has been truncated.\nStatus: Showing lines 501-800 of 1678 total lines.\nAction: To read more of the file, you can use the 'offset' and 'limit' parameters in a subsequent 'read_file' call. For example, to read the next section of the file, use offset: 800.\n\n--- FILE CONTENT (truncated) ---\n        settings.merged.context?.loadMemoryFromIncludeDirectories\n          ? config.getWorkspaceContext().getDirectories()\n          : [],\n        config.getDebugMode(),\n        config.getFileService(),\n        settings.merged,\n        config.getExtensionContextFilePaths(),\n        settings.merged.context?.importFormat || 'tree', // Use setting or default to 'tree'\n        config.getFileFilteringOptions(),\n      );\n\n      config.setUserMemory(memoryContent);\n      config.setGeminiMdFileCount(fileCount);\n      setGeminiMdFileCount(fileCount);\n\n      addItem(\n        {\n          type: MessageType.INFO,\n          text: `Memory refreshed successfully. ${memoryContent.length > 0 ? `Loaded ${memoryContent.length} characters from ${fileCount} file(s).` : 'No memory content found.'}`,\n        },\n        Date.now(),\n      );\n      if (config.getDebugMode()) {\n        console.log(\n          `[DEBUG] Refreshed memory content in config: ${memoryContent.substring(0, 200)}...`,\n        );\n      }\n    } catch (error) {\n      const errorMessage = getErrorMessage(error);\n      addItem(\n        {\n          type: MessageType.ERROR,\n          text: `Error refreshing memory: ${errorMessage}`,\n        },\n        Date.now(),\n      );\n      console.error('Error refreshing memory:', error);\n    }\n  }, [config, addItem, settings.merged]);\n\n  useEffect(() => {\n    const fetchAndSetModels = async () => {\n      const models = await fetchOpenAIModels();\n      setAvailableOpenAIModels(models);\n      config.setDiscoveredModelMetadata(modelsToMetadata(models));\n      if (models.length > 0 && !process.env['OPENAI_MODEL']) {\n        config.setModel(models[0].id);\n        setCurrentModel(models[0].id);\n      }\n    };\n\n    fetchAndSetModels();\n    const interval = setInterval(fetchAndSetModels, 5000);\n\n    return () => clearInterval(interval);\n  }, [config]);\n\n  // Set up Flash fallback handler\n  useEffect(() => {\n    const flashFallbackHandler = async (\n      currentModel: string,\n      fallbackModel: string,\n      error?: unknown,\n    ): Promise<boolean> => {\n      let message: string;\n\n      if (\n        config.getContentGeneratorConfig().authType ===\n        AuthType.LOGIN_WITH_GOOGLE\n      ) {\n        // Use actual user tier if available; otherwise, default to FREE tier behavior (safe default)\n        const isPaidTier =\n          userTier === UserTierId.LEGACY || userTier === UserTierId.STANDARD;\n\n        // Check if this is a Pro quota exceeded error\n        if (error && isProQuotaExceededError(error)) {\n          if (isPaidTier) {\n            message = `⚡ You have reached your daily ${currentModel} quota limit.\n⚡ Automatically switching from ${currentModel} to ${fallbackModel} for the remainder of this session.\n⚡ To continue accessing the ${currentModel} model today, consider using /auth to switch to using a paid API key from AI Studio at https://aistudio.google.com/apikey`;\n          } else {\n            message = `⚡ You have reached your daily ${currentModel} quota limit.\n⚡ Automatically switching from ${currentModel} to ${fallbackModel} for the remainder of this session.\n⚡ To increase your limits, upgrade to a Gemini Code Assist Standard or Enterprise plan with higher limits at https://goo.gle/set-up-gemini-code-assist\n⚡ Or you can utilize a Gemini API Key. See: https://goo.gle/gemini-cli-docs-auth#gemini-api-key\n⚡ You can switch authentication methods by typing /auth`;\n          }\n        } else if (error && isGenericQuotaExceededError(error)) {\n          if (isPaidTier) {\n            message = `⚡ You have reached your daily quota limit.\n⚡ Automatically switching from ${currentModel} to ${fallbackModel} for the remainder of this session.\n⚡ To continue accessing the ${currentModel} model today, consider using /auth to switch to using a paid API key from AI Studio at https://aistudio.google.com/apikey`;\n          } else {\n            message = `⚡ You have reached your daily quota limit.\n⚡ Automatically switching from ${currentModel} to ${fallbackModel} for the remainder of this session.\n⚡ To increase your limits, upgrade to a Gemini Code Assist Standard or Enterprise plan with higher limits at https://goo.gle/set-up-gemini-code-assist\n⚡ Or you can utilize a Gemini API Key. See: https://goo.gle/gemini-cli-docs-auth#gemini-api-key\n⚡ You can switch authentication methods by typing /auth`;\n          }\n        } else {\n          if (isPaidTier) {\n            // Default fallback message for other cases (like consecutive 429s)\n            message = `⚡ Automatically switching from ${currentModel} to ${fallbackModel} for faster responses for the remainder of this session.\n⚡ Possible reasons for this are that you have received multiple consecutive capacity errors or you have reached your daily ${currentModel} quota limit\n⚡ To continue accessing the ${currentModel} model today, consider using /auth to switch to using a paid API key from AI Studio at https://aistudio.google.com/apikey`;\n          } else {\n            // Default fallback message for other cases (like consecutive 429s)\n            message = `⚡ Automatically switching from ${currentModel} to ${fallbackModel} for faster responses for the remainder of this session.\n⚡ Possible reasons for this are that you have received multiple consecutive capacity errors or you have reached your daily ${currentModel} quota limit\n⚡ To increase your limits, upgrade to a Gemini Code Assist Standard or Enterprise plan with higher limits at https://goo.gle/set-up-gemini-code-assist\n⚡ Or you can utilize a Gemini API Key. See: https://goo.gle/gemini-cli-docs-auth#gemini-api-key\n⚡ You can switch authentication methods by typing /auth`;\n          }\n        }\n\n        // Add message to UI history\n        addItem(\n          {\n            type: MessageType.INFO,\n            text: message,\n          },\n          Date.now(),\n        );\n\n        // Set the flag to prevent tool continuation\n        setModelSwitchedFromQuotaError(true);\n        // Set global quota error flag to prevent Flash model calls\n        config.setQuotaErrorOccurred(true);\n      }\n\n      // Switch model for future use but return false to stop current retry\n      config.setModel(fallbackModel);\n      config.setFallbackMode(true);\n      logFlashFallback(\n        config,\n        new FlashFallbackEvent(config.getContentGeneratorConfig().authType!),\n      );\n      return false; // Don't continue with current prompt\n    };\n\n    config.setFlashFallbackHandler(flashFallbackHandler);\n  }, [config, addItem, userTier]);\n\n  // Terminal and UI setup\n  const { rows: terminalHeight, columns: terminalWidth } = useTerminalSize();\n  const isNarrow = isNarrowWidth(terminalWidth);\n  const { stdin, setRawMode } = useStdin();\n  const isInitialMount = useRef(true);\n\n  const widthFraction = 0.9;\n  const inputWidth = Math.max(\n    20,\n    Math.floor(terminalWidth * widthFraction) - 3,\n  );\n  const suggestionsWidth = Math.max(20, Math.floor(terminalWidth * 0.8));\n\n  // Utility callbacks\n  const isValidPath = useCallback((filePath: string): boolean => {\n    try {\n      return fs.existsSync(filePath) && fs.statSync(filePath).isFile();\n    } catch (_e) {\n      return false;\n    }\n  }, []);\n\n  const getPreferredEditor = useCallback(() => {\n    const editorType = settings.merged.general?.preferredEditor;\n    const isValidEditor = isEditorAvailable(editorType);\n    if (!isValidEditor) {\n      openEditorDialog();\n      return;\n    }\n    return editorType as EditorType;\n  }, [settings, openEditorDialog]);\n\n  const onAuthError = useCallback(() => {\n    setAuthError('reauth required');\n    openAuthDialog();\n  }, [openAuthDialog, setAuthError]);\n\n  // Vision switch handler for auto-switch functionality\n  const handleVisionSwitchRequired = useCallback(\n    async (_query: unknown) =>\n      new Promise<{ modelOverride?: string; persistSessionModel?: string; showGuidance?: boolean }>(\n        (resolve, reject) => {\n          setVisionSwitchResolver({ resolve, reject });\n          setIsVisionSwitchDialogOpen(true);\n        },\n      ),\n    [],\n  );\n\n  const handleVisionSwitchSelect = useCallback(\n    (outcome: VisionSwitchOutcome) => {\n      setIsVisionSwitchDialogOpen(false);\n      if (visionSwitchResolver) {\n        const result = processVisionSwitchOutcome(outcome);\n        visionSwitchResolver.resolve(result);\n        setVisionSwitchResolver(null);\n      }\n    },\n    [visionSwitchResolver],\n  );\n\n  const handleModelSelectionOpen = useCallback(() => {\n    setIsModelSelectionDialogOpen(true);\n  }, []);\n\n  const handleModelSelectionClose = useCallback(() => {\n    setIsModelSelectionDialogOpen(false);\n  }, []);\n\n  const getAvailableModelsForCurrentAuth = useCallback((): AvailableModel[] => {\n    const contentGeneratorConfig = config.getContentGeneratorConfig();\n    if (!contentGeneratorConfig) return [];\n\n    switch (contentGeneratorConfig.authType) {\n      case AuthType.USE_OPENAI: {\n        return availableOpenAIModels;\n      }\n      default:\n        return [];\n    }\n  }, [config, availableOpenAIModels]);\n\n  // Core hooks and processors\n  const { vimEnabled: vimModeEnabled, vimMode, toggleVimEnabled } =\n    useVimMode();\n\n  const {\n    handleSlashCommand,\n    slashCommands,\n    pendingHistoryItems: pendingSlashCommandHistoryItems,\n    commandContext,\n    shellConfirmationRequest,\n    confirmationRequest,\n    quitConfirmationRequest,\n  } = useSlashCommandProcessor(\n    config,\n    settings,\n    addItem,\n    clearItems,\n    loadHistory,\n    () => history,\n    refreshStatic,\n    setDebugMessage,\n    openThemeDialog,\n    openAuthDialog,\n    openEditorDialog,\n    toggleCorgiMode,\n    setQuittingMessages,\n    openPrivacyNotice,\n    openSettingsDialog,\n    handleModelSelectionOpen,\n    handleSearchEngineDialogOpen,\n    openSubagentCreateDialog,\n    openAgentsManagerDialog,\n    toggleVimEnabled,\n    setIsProcessing,\n    setGeminiMdFileCount,\n    showQuitConfirmation,\n  );\n\n  const buffer = useTextBuffer({\n    initialText: '',\n    viewport: { height: 10, width: inputWidth },\n    stdin,\n    setRawMode,\n    isValidPath,\n    shellModeActive,\n  });\n\n  const [userMessages, setUserMessages] = useState<string[]>([]);\n\n  // Stable reference for cancel handler to avoid circular dependency\n  const cancelHandlerRef = useRef<() => void>(() => {});\n\n  const {\n    streamingState,\n    submitQuery,\n    initError,\n    pendingHistoryItems: pendingGeminiHistoryItems,\n    thought,\n    cancelOngoingRequest,\n  } = useGeminiStream(\n    config.getGeminiClient(),\n    history,\n    addItem,\n    config,\n    setDebugMessage,\n    handleSlashCommand,\n    shellModeActive,\n    getPreferredEditor,\n    onAuthError,\n    performMemoryRefresh,\n    modelSwitchedFromQuotaError,\n    setModelSwitchedFromQuotaError,\n    refreshStatic,\n    () => cancelHandlerRef.current(),\n    settings.merged.experimental?.visionModelPreview ?? false,"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me continue reading to find the footer component:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "920419519",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/packages/cli/src/ui/App.tsx",
+              "limit": 300,
+              "offset": 800
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "920419519",
+            "name": "read_file",
+            "response": {
+              "output": "\nIMPORTANT: The file content has been truncated.\nStatus: Showing lines 801-1100 of 1678 total lines.\nAction: To read more of the file, you can use the 'offset' and 'limit' parameters in a subsequent 'read_file' call. For example, to read the next section of the file, use offset: 1100.\n\n--- FILE CONTENT (truncated) ---\n    handleVisionSwitchRequired,\n  );\n\n  const handleModelSelect = useCallback(\n    (modelId: string) => {\n      config.setModel(modelId);\n      setCurrentModel(modelId);\n      setIsModelSelectionDialogOpen(false);\n      addItem(\n        {\n          type: MessageType.INFO,\n          text: `Switched model to \\`${modelId}\\` for this session.`,\n        },\n        Date.now(),\n      );\n      submitQuery('hello');\n    },\n    [config, setCurrentModel, addItem, submitQuery],\n  );\n\n  \n\n  \n\n  const pendingHistoryItems = useMemo(\n    () =>\n      [...pendingSlashCommandHistoryItems, ...pendingGeminiHistoryItems].map(\n        (item, index) => ({\n          ...item,\n          id: index,\n        }),\n      ),\n    [pendingSlashCommandHistoryItems, pendingGeminiHistoryItems],\n  );\n\n  // Welcome back functionality\n  const {\n    welcomeBackInfo,\n    showWelcomeBackDialog,\n    welcomeBackChoice,\n    handleWelcomeBackSelection,\n    handleWelcomeBackClose,\n  } = useWelcomeBack(config, submitQuery, buffer, settings.merged);\n\n  // Dialog close functionality\n  const { closeAnyOpenDialog } = useDialogClose({\n    isThemeDialogOpen,\n    handleThemeSelect,\n    isAuthDialogOpen,\n    handleAuthSelect,\n    selectedAuthType: settings.merged.security?.auth?.selectedType,\n    isEditorDialogOpen,\n    exitEditorDialog,\n    isSettingsDialogOpen,\n    closeSettingsDialog,\n    isFolderTrustDialogOpen,\n    showPrivacyNotice,\n    setShowPrivacyNotice,\n    showWelcomeBackDialog,\n    handleWelcomeBackClose,\n    quitConfirmationRequest,\n  });\n\n  // Message queue for handling input during streaming\n  const { messageQueue, addMessage, clearQueue, getQueuedMessagesText } =\n    useMessageQueue({\n      streamingState,\n      submitQuery,\n    });\n\n  // Update the cancel handler with message queue support\n  cancelHandlerRef.current = useCallback(() => {\n    if (isToolExecuting(pendingHistoryItems)) {\n      buffer.setText(''); // Just clear the prompt\n      return;\n    }\n\n    const lastUserMessage = userMessages.at(-1);\n    let textToSet = lastUserMessage || '';\n\n    // Append queued messages if any exist\n    const queuedText = getQueuedMessagesText();\n    if (queuedText) {\n      textToSet = textToSet ? `${textToSet}\\n\\n${queuedText}` : queuedText;\n      clearQueue();\n    }\n\n    if (textToSet) {\n      buffer.setText(textToSet);\n    }\n  }, [\n    buffer,\n    userMessages,\n    getQueuedMessagesText,\n    clearQueue,\n    pendingHistoryItems,\n  ]);\n\n  // Input handling - queue messages for processing\n  const handleFinalSubmit = useCallback(\n    (submittedValue: string) => {\n      addMessage(submittedValue);\n    },\n    [addMessage],\n  );\n\n  const handleIdePromptComplete = useCallback(\n    (result: IdeIntegrationNudgeResult) => {\n      if (result.userSelection === 'yes') {\n        if (result.isExtensionPreInstalled) {\n          handleSlashCommand('/ide enable');\n        } else {\n          handleSlashCommand('/ide install');\n        }\n        settings.setValue(\n          SettingScope.User,\n          'hasSeenIdeIntegrationNudge',\n          true,\n        );\n      } else if (result.userSelection === 'dismiss') {\n        settings.setValue(\n          SettingScope.User,\n          'hasSeenIdeIntegrationNudge',\n          true,\n        );\n      }\n      setIdePromptAnswered(true);\n    },\n    [handleSlashCommand, settings],\n  );\n\n  const { handleInput: vimHandleInput } = useVim(buffer, handleFinalSubmit);\n\n  const { elapsedTime, currentLoadingPhrase } =\n    useLoadingIndicator(streamingState);\n  const showAutoAcceptIndicator = useAutoAcceptIndicator({ config, addItem });\n\n  const handleExit = useCallback(\n    (\n      pressedOnce: boolean,\n      setPressedOnce: (value: boolean) => void,\n      timerRef: ReturnType<typeof useRef<NodeJS.Timeout | null>>,\n    ) => {\n      // Fast double-press: Direct quit (preserve user habit)\n      if (pressedOnce) {\n        if (timerRef.current) {\n          clearTimeout(timerRef.current);\n        }\n        // Exit directly without showing confirmation dialog\n        handleSlashCommand('/quit');\n        return;\n      }\n\n      // First press: Prioritize cleanup tasks\n\n      // Special case: If quit-confirm dialog is open, Ctrl+C means \"quit immediately\"\n      if (quitConfirmationRequest) {\n        handleSlashCommand('/quit');\n        return;\n      }\n\n      // 1. Close other dialogs (highest priority)\n      if (closeAnyOpenDialog()) {\n        return; // Dialog closed, end processing\n      }\n\n      // 2. Cancel ongoing requests\n      if (streamingState === StreamingState.Responding) {\n        cancelOngoingRequest?.();\n        return; // Request cancelled, end processing\n      }\n\n      // 3. Clear input buffer (if has content)\n      if (buffer.text.length > 0) {\n        buffer.setText('');\n        return; // Input cleared, end processing\n      }\n\n      // All cleanup tasks completed, show quit confirmation dialog\n      handleSlashCommand('/quit-confirm');\n    },\n    [\n      handleSlashCommand,\n      quitConfirmationRequest,\n      closeAnyOpenDialog,\n      streamingState,\n      cancelOngoingRequest,\n      buffer,\n    ],\n  );\n\n  const handleGlobalKeypress = useCallback(\n    (key: Key) => {\n      // Debug log keystrokes if enabled\n      if (settings.merged.general?.debugKeystrokeLogging) {\n        console.log('[DEBUG] Keystroke:', JSON.stringify(key));\n      }\n\n      let enteringConstrainHeightMode = false;\n      if (!constrainHeight) {\n        enteringConstrainHeightMode = true;\n        setConstrainHeight(true);\n      }\n\n      if (keyMatchers[Command.SHOW_ERROR_DETAILS](key)) {\n        setShowErrorDetails((prev) => !prev);\n      } else if (keyMatchers[Command.TOGGLE_TOOL_DESCRIPTIONS](key)) {\n        const newValue = !showToolDescriptions;\n        setShowToolDescriptions(newValue);\n\n        const mcpServers = config.getMcpServers();\n        if (Object.keys(mcpServers || {}).length > 0) {\n          handleSlashCommand(newValue ? '/mcp desc' : '/mcp nodesc');\n        }\n      } else if (\n        keyMatchers[Command.TOGGLE_IDE_CONTEXT_DETAIL](key) &&\n        config.getIdeMode() &&\n        ideContextState\n      ) {\n        // Show IDE status when in IDE mode and context is available.\n        handleSlashCommand('/ide status');\n      } else if (keyMatchers[Command.QUIT](key)) {\n        // When authenticating, let AuthInProgress component handle Ctrl+C.\n        if (isAuthenticating) {\n          return;\n        }\n        handleExit(ctrlCPressedOnce, setCtrlCPressedOnce, ctrlCTimerRef);\n      } else if (keyMatchers[Command.EXIT](key)) {\n        if (buffer.text.length > 0) {\n          return;\n        }\n        handleExit(ctrlDPressedOnce, setCtrlDPressedOnce, ctrlDTimerRef);\n      } else if (\n        keyMatchers[Command.SHOW_MORE_LINES](key) &&\n        !enteringConstrainHeightMode\n      ) {\n        setConstrainHeight(false);\n      }\n    },\n    [\n      constrainHeight,\n      setConstrainHeight,\n      setShowErrorDetails,\n      showToolDescriptions,\n      setShowToolDescriptions,\n      config,\n      ideContextState,\n      handleExit,\n      ctrlCPressedOnce,\n      setCtrlCPressedOnce,\n      ctrlCTimerRef,\n      buffer.text.length,\n      ctrlDPressedOnce,\n      setCtrlDPressedOnce,\n      ctrlDTimerRef,\n      handleSlashCommand,\n      isAuthenticating,\n      settings.merged.general?.debugKeystrokeLogging,\n    ],\n  );\n\n  useKeypress(handleGlobalKeypress, {\n    isActive: true,\n  });\n\n  useEffect(() => {\n    if (config) {\n      setGeminiMdFileCount(config.getGeminiMdFileCount());\n    }\n  }, [config, config.getGeminiMdFileCount]);\n\n  const logger = useLogger(config.storage);\n\n  useEffect(() => {\n    const fetchUserMessages = async () => {\n      const pastMessagesRaw = (await logger?.getPreviousUserMessages()) || []; // Newest first\n\n      const currentSessionUserMessages = history\n        .filter(\n          (item): item is HistoryItem & { type: 'user'; text: string } =>\n            item.type === 'user' &&\n            typeof item.text === 'string' &&\n            item.text.trim() !== '',\n        )\n        .map((item) => item.text)\n        .reverse(); // Newest first, to match pastMessagesRaw sorting\n\n      // Combine, with current session messages being more recent\n      const combinedMessages = [\n        ...currentSessionUserMessages,\n        ...pastMessagesRaw,\n      ];\n\n      // Deduplicate consecutive identical messages from the combined list (still newest first)\n      const deduplicatedMessages: string[] = [];\n      if (combinedMessages.length > 0) {\n        deduplicatedMessages.push(combinedMessages[0]); // Add the newest one unconditionally\n        for (let i = 1; i < combinedMessages.length; i++) {\n          if (combinedMessages[i] !== combinedMessages[i - 1]) {\n            deduplicatedMessages.push(combinedMessages[i]);"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me continue reading to find the footer component:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "221113528",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/packages/cli/src/ui/App.tsx",
+              "limit": 300,
+              "offset": 1100
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "221113528",
+            "name": "read_file",
+            "response": {
+              "output": "\nIMPORTANT: The file content has been truncated.\nStatus: Showing lines 1101-1400 of 1678 total lines.\nAction: To read more of the file, you can use the 'offset' and 'limit' parameters in a subsequent 'read_file' call. For example, to read the next section of the file, use offset: 1400.\n\n--- FILE CONTENT (truncated) ---\n          }\n        }\n      }\n      // Reverse to oldest first for useInputHistory\n      setUserMessages(deduplicatedMessages.reverse());\n    };\n    fetchUserMessages();\n  }, [history, logger]);\n\n  const isInputActive =\n    (streamingState === StreamingState.Idle ||\n      streamingState === StreamingState.Responding) &&\n    !initError &&\n    !isProcessing &&\n    !showWelcomeBackDialog;\n\n  const handleClearScreen = useCallback(() => {\n    clearItems();\n    clearConsoleMessagesState();\n    console.clear();\n    refreshStatic();\n  }, [clearItems, clearConsoleMessagesState, refreshStatic]);\n\n  const mainControlsRef = useRef<DOMElement>(null);\n  const pendingHistoryItemRef = useRef<DOMElement>(null);\n\n  useEffect(() => {\n    if (mainControlsRef.current) {\n      const fullFooterMeasurement = measureElement(mainControlsRef.current);\n      setFooterHeight(fullFooterMeasurement.height);\n    }\n  }, [terminalHeight, consoleMessages, showErrorDetails]);\n\n  const staticExtraHeight = /* margins and padding */ 3;\n  const availableTerminalHeight = useMemo(\n    () => terminalHeight - footerHeight - staticExtraHeight,\n    [terminalHeight, footerHeight],\n  );\n\n  useEffect(() => {\n    // skip refreshing Static during first mount\n    if (isInitialMount.current) {\n      isInitialMount.current = false;\n      return;\n    }\n\n    // debounce so it doesn't fire up too often during resize\n    const handler = setTimeout(() => {\n      setStaticNeedsRefresh(false);\n      refreshStatic();\n    }, 300);\n\n    return () => {\n      clearTimeout(handler);\n    };\n  }, [terminalWidth, terminalHeight, refreshStatic]);\n\n  useEffect(() => {\n    if (streamingState === StreamingState.Idle && staticNeedsRefresh) {\n      setStaticNeedsRefresh(false);\n      refreshStatic();\n    }\n  }, [streamingState, refreshStatic, staticNeedsRefresh]);\n\n  const filteredConsoleMessages = useMemo(() => {\n    if (config.getDebugMode()) {\n      return consoleMessages;\n    }\n    return consoleMessages.filter((msg) => msg.type !== 'debug');\n  }, [consoleMessages, config]);\n\n  const branchName = useGitBranchName(config.getTargetDir());\n\n  const contextFileNames = useMemo(() => {\n    const fromSettings = settings.merged.context?.fileName;\n    if (fromSettings) {\n      return Array.isArray(fromSettings) ? fromSettings : [fromSettings];\n    }\n    return getAllGeminiMdFilenames();\n  }, [settings.merged.context?.fileName]);\n\n  const initialPrompt = useMemo(() => config.getQuestion(), [config]);\n  const geminiClient = config.getGeminiClient();\n\n  useEffect(() => {\n    if (\n      initialPrompt &&\n      !initialPromptSubmitted.current &&\n      !isAuthenticating &&\n      !isAuthDialogOpen &&\n      !isThemeDialogOpen &&\n      !isEditorDialogOpen &&\n      !isModelSelectionDialogOpen &&\n      !isVisionSwitchDialogOpen &&\n      !isSubagentCreateDialogOpen &&\n      !showPrivacyNotice &&\n      !showWelcomeBackDialog &&\n      welcomeBackChoice !== 'restart' &&\n      geminiClient?.isInitialized?.()\n    ) {\n      submitQuery(initialPrompt);\n      initialPromptSubmitted.current = true;\n    }\n  }, [\n    initialPrompt,\n    submitQuery,\n    isAuthenticating,\n    isAuthDialogOpen,\n    isThemeDialogOpen,\n    isEditorDialogOpen,\n    isSubagentCreateDialogOpen,\n    showPrivacyNotice,\n    showWelcomeBackDialog,\n    welcomeBackChoice,\n    geminiClient,\n    isModelSelectionDialogOpen,\n    isVisionSwitchDialogOpen,\n  ]);\n\n  if (quittingMessages) {\n    return (\n      <Box flexDirection=\"column\" marginBottom={1}>\n        {quittingMessages.map((item) => (\n          <HistoryItemDisplay\n            key={item.id}\n            availableTerminalHeight={\n              constrainHeight ? availableTerminalHeight : undefined\n            }\n            terminalWidth={terminalWidth}\n            item={item}\n            isPending={false}\n            config={config}\n          />\n        ))}\n      </Box>\n    );\n  }\n\n  const mainAreaWidth = Math.floor(terminalWidth * 0.9);\n  const debugConsoleMaxHeight = Math.floor(Math.max(terminalHeight * 0.2, 5));\n  // Arbitrary threshold to ensure that items in the static area are large\n  // enough but not too large to make the terminal hard to use.\n  const staticAreaMaxItemHeight = Math.max(terminalHeight * 4, 100);\n  const placeholder = vimModeEnabled\n    ? \"  Press 'i' for INSERT mode and 'Esc' for NORMAL mode.\"\n    : '  Type your message or @path/to/file';\n\n  return (\n    <StreamingContext.Provider value={streamingState}>\n      <Box flexDirection=\"column\" width=\"90%\">\n        {/*\n         * The Static component is an Ink intrinsic in which there can only be 1 per application.\n         * Because of this restriction we're hacking it slightly by having a 'header' item here to\n         * ensure that it's statically rendered.\n         *\n         * Background on the Static Item: Anything in the Static component is written a single time\n         * to the console. Think of it like doing a console.log and then never using ANSI codes to\n         * clear that content ever again. Effectively it has a moving frame that every time new static\n         * content is set it'll flush content to the terminal and move the area which it's \"clearing\"\n         * down a notch. Without Static the area which gets erased and redrawn continuously grows.\n         */}\n        <Static\n          key={staticKey}\n          items={[ \n            <Box flexDirection=\"column\" key=\"header\">\n              {!(\n                settings.merged.ui?.hideBanner || config.getScreenReader()\n              ) && <Header version={version} nightly={nightly} />}\n              {!(settings.merged.ui?.hideTips || config.getScreenReader()) && (\n                <Tips config={config} />\n              )}\n            </Box>,\n            ...history.map((h) => (\n              <HistoryItemDisplay\n                terminalWidth={mainAreaWidth}\n                availableTerminalHeight={staticAreaMaxItemHeight}\n                key={h.id}\n                item={h}\n                isPending={false}\n                config={config}\n                commands={slashCommands}\n              />\n            )),\n          ]}\n        >\n          {(item) => item}\n        </Static>\n        <OverflowProvider>\n          <Box ref={pendingHistoryItemRef} flexDirection=\"column\">\n            {pendingHistoryItems.map((item) => (\n              <HistoryItemDisplay\n                key={item.id}\n                availableTerminalHeight={\n                  constrainHeight ? availableTerminalHeight : undefined\n                }\n                terminalWidth={mainAreaWidth}\n                item={item}\n                isPending={true}\n                config={config}\n                isFocused={!isEditorDialogOpen}\n              />\n            ))}\n            <ShowMoreLines constrainHeight={constrainHeight} />\n          </Box>\n        </OverflowProvider>\n\n        <Box flexDirection=\"column\" ref={mainControlsRef}>\n          {/* Move UpdateNotification to render update notification above input area */}\n          {updateInfo && <UpdateNotification message={updateInfo.message} />}\n          {startupWarnings.length > 0 && (\n            <Box\n              borderStyle=\"round\"\n              borderColor={Colors.AccentYellow}\n              paddingX={1}\n              marginY={1}\n              flexDirection=\"column\"\n            >\n              {startupWarnings.map((warning, index) => (\n                <Text key={index} color={Colors.AccentYellow}>\n                  {warning}\n                </Text>\n              ))}\n            </Box>\n          )}\n          {showWelcomeBackDialog && welcomeBackInfo?.hasHistory && (\n            <WelcomeBackDialog\n              welcomeBackInfo={welcomeBackInfo}\n              onSelect={handleWelcomeBackSelection}\n              onClose={handleWelcomeBackClose}\n            />\n          )}\n          {showWorkspaceMigrationDialog ? (\n            <WorkspaceMigrationDialog\n              workspaceExtensions={workspaceExtensions}\n              onOpen={onWorkspaceMigrationDialogOpen}\n              onClose={onWorkspaceMigrationDialogClose}\n            />\n          ) : shouldShowIdePrompt && currentIDE ? (\n            <IdeIntegrationNudge\n              ide={currentIDE}\n              onComplete={handleIdePromptComplete}\n            />\n          ) : isFolderTrustDialogOpen ? (\n            <FolderTrustDialog\n              onSelect={handleFolderTrustSelect}\n              isRestarting={isRestarting}\n            />\n          ) : quitConfirmationRequest ? (\n            <QuitConfirmationDialog\n              onSelect={(choice) => {\n                const result = handleQuitConfirmationSelect(choice);\n                if (result?.shouldQuit) {\n                  quitConfirmationRequest.onConfirm(true, result.action);\n                } else {\n                  quitConfirmationRequest.onConfirm(false);\n                }\n              }}\n            />\n          ) : shellConfirmationRequest ? (\n            <ShellConfirmationDialog request={shellConfirmationRequest} />\n          ) : confirmationRequest ? (\n            <Box flexDirection=\"column\">\n              {confirmationRequest.prompt}\n              <Box paddingY={1}>\n                <RadioButtonSelect\n                  isFocused={!!confirmationRequest}\n                  items={[\n                    { label: 'Yes', value: true },\n                    { label: 'No', value: false },\n                  ]}\n                  onSelect={(value: boolean) => {\n                    confirmationRequest.onConfirm(value);\n                  }}\n                />\n              </Box>\n            </Box>\n          ) : isThemeDialogOpen ? (\n            <Box flexDirection=\"column\">\n              {themeError && (\n                <Box marginBottom={1}>\n                  <Text color={Colors.AccentRed}>{themeError}</Text>\n                </Box>\n              )}\n              <ThemeDialog\n                onSelect={handleThemeSelect}\n                onHighlight={handleThemeHighlight}\n                settings={settings}\n                availableTerminalHeight={\n                  constrainHeight\n                    ? terminalHeight - staticExtraHeight\n                    : undefined\n                }\n                terminalWidth={mainAreaWidth}\n              />\n            </Box>\n          ) : isSettingsDialogOpen ? (\n            <Box flexDirection=\"column\">\n              <SettingsDialog\n                settings={settings}\n                onSelect={() => closeSettingsDialog()}"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me continue reading to find the footer component:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "519762171",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/packages/cli/src/ui/App.tsx",
+              "limit": 300,
+              "offset": 1400
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "519762171",
+            "name": "read_file",
+            "response": {
+              "output": "\nIMPORTANT: The file content has been truncated.\nStatus: Showing lines 1401-1678 of 1678 total lines.\nAction: To read more of the file, you can use the 'offset' and 'limit' parameters in a subsequent 'read_file' call. For example, to read the next section of the file, use offset: 1678.\n\n--- FILE CONTENT (truncated) ---\n                onRestartRequest={() => process.exit(0)}\n              />\n            </Box>\n          ) : isSubagentCreateDialogOpen ? (\n            <Box flexDirection=\"column\">\n              <AgentCreationWizard\n                onClose={closeSubagentCreateDialog}\n                config={config}\n              />\n            </Box>\n          ) : isAgentsManagerDialogOpen ? (\n            <Box flexDirection=\"column\">\n              <AgentsManagerDialog\n                onClose={closeAgentsManagerDialog}\n                config={config}\n              />\n            </Box>\n          ) : isAuthenticating ? (\n            <>\n\n            <AuthInProgress\n                  onTimeout={() => {\n                    setAuthError('Authentication timed out. Please try again.');\n                    cancelAuthentication();\n                    openAuthDialog();\n                  }}\n                />\n              {showErrorDetails && (\n                <OverflowProvider>\n                  <Box flexDirection=\"column\">\n                    <DetailedMessagesDisplay\n                      messages={filteredConsoleMessages}\n                      maxHeight={\n                        constrainHeight ? debugConsoleMaxHeight : undefined\n                      }\n                      width={inputWidth}\n                    />\n                    <ShowMoreLines constrainHeight={constrainHeight} />\n                  </Box>\n                </OverflowProvider>\n              )}\n            </>\n          ) : isAuthDialogOpen ? (\n            <Box flexDirection=\"column\">\n              <AuthDialog\n                onSelect={handleAuthSelect}\n                settings={settings}\n                initialErrorMessage={authError}\n              />\n            </Box>\n          ) : isSearchEngineDialogOpen ? (\n            <Box flexDirection=\"column\">\n              <SearchEngineDialog\n                onSelect={handleSearchEngineSelect}\n                onCancel={handleSearchEngineDialogClose}\n                initialProvider={searchEngineDialogInitialProvider}\n                tavilyApiKeyConfigured={Boolean(\n                  (config.getTavilyApiKey() || '').trim().length > 0,\n                )}\n              />\n            </Box>\n          ) : isEditorDialogOpen ? (\n            <Box flexDirection=\"column\">\n              {editorError && (\n                <Box marginBottom={1}>\n                  <Text color={Colors.AccentRed}>{editorError}</Text>\n                </Box>\n              )}\n              <EditorSettingsDialog\n                onSelect={handleEditorSelect}\n                settings={settings}\n                onExit={exitEditorDialog}\n              />\n            </Box>\n          ) : isModelSelectionDialogOpen ? (\n            <ModelSelectionDialog\n              availableModels={getAvailableModelsForCurrentAuth()}\n              currentModel={currentModel}\n              onSelect={handleModelSelect}\n              onCancel={handleModelSelectionClose}\n            />\n          ) : isVisionSwitchDialogOpen ? (\n            <ModelSwitchDialog onSelect={handleVisionSwitchSelect} />\n          ) : showPrivacyNotice ? (\n            <PrivacyNotice\n              onExit={() => setShowPrivacyNotice(false)}\n              config={config}\n            />\n          ) : (\n            <>\n              <LoadingIndicator\n                thought={\n                  streamingState === StreamingState.WaitingForConfirmation ||\n                  config.getAccessibility()?.disableLoadingPhrases ||\n                  config.getScreenReader()\n                    ? undefined\n                    : thought\n                }\n                currentLoadingPhrase={\n                  config.getAccessibility()?.disableLoadingPhrases ||\n                  config.getScreenReader()\n                    ? undefined\n                    : currentLoadingPhrase\n                }\n                elapsedTime={elapsedTime}\n              />\n\n              {/* Display queued messages below loading indicator */}\n              {messageQueue.length > 0 && (\n                <Box flexDirection=\"column\" marginTop={1}>\n                  {messageQueue\n                    .slice(0, MAX_DISPLAYED_QUEUED_MESSAGES)\n                    .map((message, index) => {\n                      // Ensure multi-line messages are collapsed for the preview.\n                      // Replace all whitespace (including newlines) with a single space.\n                      const preview = message.replace(/\\s+/g, ' ');\n\n                      return (\n                        // Ensure the Box takes full width so truncation calculates correctly\n                        <Box key={index} paddingLeft={2} width=\"100%\">\n                          {/* Use wrap=\"truncate\" to ensure it fits the terminal width and doesn't wrap */}\n                          <Text dimColor wrap=\"truncate\">\n                            {preview}\n                          </Text>\n                        </Box>\n                      );\n                    })}\n                  {messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && (\n                    <Box paddingLeft={2}>\n                      <Text dimColor>\n                        ... (+\n                        {messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES}\n                        more)\n                      </Text>\n                    </Box>\n                  )}\n                </Box>\n              )}\n\n              <Box\n                marginTop={1}\n                justifyContent=\"space-between\"\n                width=\"100%\"\n                flexDirection={isNarrow ? 'column' : 'row'}\n                alignItems={isNarrow ? 'flex-start' : 'center'}\n              >\n                <Box>\n                  {process.env['GEMINI_SYSTEM_MD'] && (\n                    <Text color={Colors.AccentRed}>|⌐■_■| </Text>\n                  )}\n                  {ctrlCPressedOnce ? (\n                    <Text color={Colors.AccentYellow}>\n                      Press Ctrl+C again to confirm exit.\n                    </Text>\n                  ) : ctrlDPressedOnce ? (\n                    <Text color={Colors.AccentYellow}>\n                      Press Ctrl+D again to exit.\n                    </Text>\n                  ) : showEscapePrompt ? (\n                    <Text color={Colors.Gray}>Press Esc again to clear.</Text>\n                  ) : (\n                    <ContextSummaryDisplay\n                      ideContext={ideContextState}\n                      geminiMdFileCount={geminiMdFileCount}\n                      contextFileNames={contextFileNames}\n                      mcpServers={config.getMcpServers()}\n                      blockedMcpServers={config.getBlockedMcpServers()}\n                      showToolDescriptions={showToolDescriptions}\n                    />\n                  )}\n                </Box>\n                <Box paddingTop={isNarrow ? 1 : 0}>\n                  {showAutoAcceptIndicator !== ApprovalMode.DEFAULT &&\n                    !shellModeActive && (\n                      <AutoAcceptIndicator\n                        approvalMode={showAutoAcceptIndicator}\n                      />\n                    )}\n                  {shellModeActive && <ShellModeIndicator />}\n                </Box>\n              </Box>\n\n              {showErrorDetails && (\n                <OverflowProvider>\n                  <Box flexDirection=\"column\">\n                    <DetailedMessagesDisplay\n                      messages={filteredConsoleMessages}\n                      maxHeight={\n                        constrainHeight ? debugConsoleMaxHeight : undefined\n                      }\n                      width={inputWidth}\n                    />\n                    <ShowMoreLines constrainHeight={constrainHeight} />\n                  </Box>\n                </OverflowProvider>\n              )}\n\n              {isInputActive && (\n                <InputPrompt\n                  buffer={buffer}\n                  inputWidth={inputWidth}\n                  suggestionsWidth={suggestionsWidth}\n                  onSubmit={handleFinalSubmit}\n                  userMessages={userMessages}\n                  onClearScreen={handleClearScreen}\n                  config={config}\n                  slashCommands={slashCommands}\n                  commandContext={commandContext}\n                  shellModeActive={shellModeActive}\n                  setShellModeActive={setShellModeActive}\n                  onEscapePromptChange={handleEscapePromptChange}\n                  focus={isFocused}\n                  vimHandleInput={vimHandleInput}\n                  placeholder={placeholder}\n                />\n              )}\n            </>\n          )}\n\n          {initError && streamingState !== StreamingState.Responding && (\n            <Box\n              borderStyle=\"round\"\n              borderColor={Colors.AccentRed}\n              paddingX={1}\n              marginBottom={1}\n            >\n              {history.find(\n                (item) =>\n                  item.type === 'error' && item.text?.includes(initError),\n              )?.text ? (\n                <Text color={Colors.AccentRed}>\n                  {\n                    history.find(\n                      (item) =>\n                        item.type === 'error' && item.text?.includes(initError),\n                    )?.text\n                  }\n                </Text>\n              ) : (\n                <>\n                  <Text color={Colors.AccentRed}>\n                    Initialization Error: {initError}\n                  </Text>\n                  <Text color={Colors.AccentRed}>\n                    {' '}Please check API key and configuration.\n                  </Text>\n                </>\n              )}\n            </Box>\n          )}\n          {!settings.merged.ui?.hideFooter && (\n            <Footer\n              model={currentModel}\n              targetDir={config.getTargetDir()}\n              debugMode={config.getDebugMode()}\n              branchName={branchName}\n              debugMessage={debugMessage}\n              corgiMode={corgiMode}\n              errorCount={errorCount}\n              showErrorDetails={showErrorDetails}\n              showMemoryUsage={\n                config.getDebugMode() ||\n                settings.merged.ui?.showMemoryUsage ||\n                false\n              }\n              promptTokenCount={sessionStats.lastPromptTokenCount}\n              nightly={nightly}\n              vimMode={vimModeEnabled ? vimMode : undefined}\n              isTrustedFolder={isTrustedFolderState}\n              contextLimit={config.getEffectiveTokenLimit(currentModel)}\n            />\n          )}\n        </Box>\n      </Box>\n    </StreamingContext.Provider>\n  );\n};\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Now I need to check the Footer component to understand how it displays model information:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "965968624",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/qwen-local/packages/cli/src/ui/components/Footer.tsx"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "965968624",
+            "name": "read_file",
+            "response": {
+              "output": "/**\n * @license\n * Copyright 2025 Google LLC\n * SPDX-License-Identifier: Apache-2.0\n */\n\nimport type React from 'react';\nimport { Box, Text } from 'ink';\nimport { theme } from '../semantic-colors.js';\nimport { shortenPath, tildeifyPath } from '@qwen-code/qwen-code-core';\nimport { ConsoleSummaryDisplay } from './ConsoleSummaryDisplay.js';\nimport process from 'node:process';\nimport path from 'node:path';\nimport Gradient from 'ink-gradient';\nimport { MemoryUsageDisplay } from './MemoryUsageDisplay.js';\nimport { ContextUsageDisplay } from './ContextUsageDisplay.js';\nimport { DebugProfiler } from './DebugProfiler.js';\n\nimport { useTerminalSize } from '../hooks/useTerminalSize.js';\nimport { isNarrowWidth } from '../utils/isNarrowWidth.js';\n\ninterface FooterProps {\n  model: string;\n  targetDir: string;\n  branchName?: string;\n  debugMode: boolean;\n  debugMessage: string;\n  corgiMode: boolean;\n  errorCount: number;\n  showErrorDetails: boolean;\n  showMemoryUsage?: boolean;\n  promptTokenCount: number;\n  nightly: boolean;\n  vimMode?: string;\n  isTrustedFolder?: boolean;\n  contextLimit?: number;\n}\n\nexport const Footer: React.FC<FooterProps> = ({\n  model,\n  targetDir,\n  branchName,\n  debugMode,\n  debugMessage,\n  corgiMode,\n  errorCount,\n  showErrorDetails,\n  showMemoryUsage,\n  promptTokenCount,\n  nightly,\n  vimMode,\n  isTrustedFolder,\n  contextLimit,\n}) => {\n  const { columns: terminalWidth } = useTerminalSize();\n\n  const isNarrow = isNarrowWidth(terminalWidth);\n\n  // Adjust path length based on terminal width\n  const pathLength = Math.max(20, Math.floor(terminalWidth * 0.4));\n  const displayPath = isNarrow\n    ? path.basename(tildeifyPath(targetDir))\n    : shortenPath(tildeifyPath(targetDir), pathLength);\n\n  return (\n    <Box\n      justifyContent=\"space-between\"\n      width=\"100%\"\n      flexDirection={isNarrow ? 'column' : 'row'}\n      alignItems={isNarrow ? 'flex-start' : 'center'}\n    >\n      <Box>\n        {debugMode && <DebugProfiler />}\n        {vimMode && <Text color={theme.text.secondary}>[{vimMode}] </Text>}\n        {nightly ? (\n          <Gradient colors={theme.ui.gradient}>\n            <Text>\n              {displayPath}\n              {branchName && <Text> ({branchName}*)</Text>}\n            </Text>\n          </Gradient>\n        ) : (\n          <Text color={theme.text.link}>\n            {displayPath}\n            {branchName && (\n              <Text color={theme.text.secondary}> ({branchName}*)</Text>\n            )}\n          </Text>\n        )}\n        {debugMode && (\n          <Text color={theme.status.error}>\n            {' ' + (debugMessage || '--debug')}\n          </Text>\n        )}\n      </Box>\n\n      {/* Middle Section: Centered Trust/Sandbox Info */}\n      <Box\n        flexGrow={isNarrow ? 0 : 1}\n        alignItems=\"center\"\n        justifyContent={isNarrow ? 'flex-start' : 'center'}\n        display=\"flex\"\n        paddingX={isNarrow ? 0 : 1}\n        paddingTop={isNarrow ? 1 : 0}\n      >\n        {isTrustedFolder === false ? (\n          <Text color={theme.status.warning}>untrusted</Text>\n        ) : process.env['SANDBOX'] &&\n          process.env['SANDBOX'] !== 'sandbox-exec' ? (\n          <Text color=\"green\">\n            {process.env['SANDBOX'].replace(/^gemini-(?:cli-)?/, '')}\n          </Text>\n        ) : process.env['SANDBOX'] === 'sandbox-exec' ? (\n          <Text color={theme.status.warning}>\n            macOS Seatbelt{' '}\n            <Text color={theme.text.secondary}>\n              ({process.env['SEATBELT_PROFILE']})\n            </Text>\n          </Text>\n        ) : (\n          <Text color={theme.status.error}>\n            no sandbox <Text color={theme.text.secondary}>(see /docs)</Text>\n          </Text>\n        )}\n      </Box>\n\n      {/* Right Section: Gemini Label and Console Summary */}\n      <Box alignItems=\"center\" paddingTop={isNarrow ? 1 : 0}>\n        <Text color={theme.text.accent}>\n          {isNarrow ? '' : ' '}\n          {model}{' '}\n          <ContextUsageDisplay\n            promptTokenCount={promptTokenCount}\n            model={model}\n            contextLimit={contextLimit}\n          />\n        </Text>\n        {corgiMode && (\n          <Text>\n            <Text color={theme.ui.symbol}>| </Text>\n            <Text color={theme.status.error}>▼</Text>\n            <Text color={theme.text.primary}>(´</Text>\n            <Text color={theme.status.error}>ᴥ</Text>\n            <Text color={theme.text.primary}>`)</Text>\n            <Text color={theme.status.error}>▼ </Text>\n          </Text>\n        )}\n        {!showErrorDetails && errorCount > 0 && (\n          <Box>\n            <Text color={theme.ui.symbol}>| </Text>\n            <ConsoleSummaryDisplay errorCount={errorCount} />\n          </Box>\n        )}\n        {showMemoryUsage && <MemoryUsageDisplay />}\n      </Box>\n    </Box>\n  );\n};\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Now I have a good understanding of how the model command works in qwen-local. Let me also check what's already implemented in LowCal to understand what needs to be added:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "249505851",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/LowCal/packages/cli/src/ui/commands/modelCommand.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "249505851",
+            "name": "read_file",
+            "response": {
+              "output": "/**\n * @license\n * Copyright 2025 Qwen\n * SPDX-License-Identifier: Apache-2.0\n */\n\nimport { AuthType } from '@qwen-code/qwen-code-core';\nimport type {\n  SlashCommand,\n  CommandContext,\n  OpenDialogActionReturn,\n  MessageActionReturn,\n} from './types.js';\nimport { CommandKind } from './types.js';\nimport {\n  AVAILABLE_MODELS_QWEN,\n  getOpenAIAvailableModelFromEnv,\n  type AvailableModel,\n} from '../models/availableModels.js';\n\nfunction getAvailableModelsForAuthType(authType: AuthType): AvailableModel[] {\n  switch (authType) {\n    case AuthType.QWEN_OAUTH:\n      return AVAILABLE_MODELS_QWEN;\n    case AuthType.USE_OPENAI: {\n      const openAIModel = getOpenAIAvailableModelFromEnv();\n      return openAIModel ? [openAIModel] : [];\n    }\n    default:\n      // For other auth types, return empty array for now\n      // This can be expanded later according to the design doc\n      return [];\n  }\n}\n\nexport const modelCommand: SlashCommand = {\n  name: 'model',\n  description: 'Switch the model for this session',\n  kind: CommandKind.BUILT_IN,\n  action: async (\n    context: CommandContext,\n  ): Promise<OpenDialogActionReturn | MessageActionReturn> => {\n    const { services } = context;\n    const { config } = services;\n\n    if (!config) {\n      return {\n        type: 'message',\n        messageType: 'error',\n        content: 'Configuration not available.',\n      };\n    }\n\n    const contentGeneratorConfig = config.getContentGeneratorConfig();\n    if (!contentGeneratorConfig) {\n      return {\n        type: 'message',\n        messageType: 'error',\n        content: 'Content generator configuration not available.',\n      };\n    }\n\n    const authType = contentGeneratorConfig.authType;\n    if (!authType) {\n      return {\n        type: 'message',\n        messageType: 'error',\n        content: 'Authentication type not available.',\n      };\n    }\n\n    const availableModels = getAvailableModelsForAuthType(authType);\n\n    if (availableModels.length === 0) {\n      return {\n        type: 'message',\n        messageType: 'error',\n        content: `No models available for the current authentication type (${authType}).`,\n      };\n    }\n\n    // Trigger model selection dialog\n    return {\n      type: 'dialog',\n      dialog: 'model',\n    };\n  },\n};\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Let me also check the availableModels.ts file in LowCal to see what's already there:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "748776539",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/LowCal/packages/cli/src/ui/models/availableModels.ts"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "functionResponse": {
+            "id": "748776539",
+            "name": "read_file",
+            "response": {
+              "output": "/**\n * @license\n * Copyright 2025 Qwen\n * SPDX-License-Identifier: Apache-2.0\n */\n\nexport type AvailableModel = {\n  id: string;\n  label: string;\n  isVision?: boolean;\n};\n\nexport const AVAILABLE_MODELS_QWEN: AvailableModel[] = [\n  { id: 'qwen3-coder-plus', label: 'qwen3-coder-plus' },\n  { id: 'qwen-vl-max-latest', label: 'qwen-vl-max', isVision: true },\n];\n\n/**\n * Get available Qwen models filtered by vision model preview setting\n */\nexport function getFilteredQwenModels(\n  visionModelPreviewEnabled: boolean,\n): AvailableModel[] {\n  if (visionModelPreviewEnabled) {\n    return AVAILABLE_MODELS_QWEN;\n  }\n  return AVAILABLE_MODELS_QWEN.filter((model) => !model.isVision);\n}\n\n/**\n * Currently we use the single model of `OPENAI_MODEL` in the env.\n * In the future, after settings.json is updated, we will allow users to configure this themselves.\n */\nexport function getOpenAIAvailableModelFromEnv(): AvailableModel | null {\n  const id = process.env['OPENAI_MODEL']?.trim();\n  return id ? { id, label: id } : null;\n}\n\n/**\n/**\n * Hard code the default vision model as a string literal,\n * until our coding model supports multimodal.\n */\nexport function getDefaultVisionModel(): string {\n  return 'qwen-vl-max-latest';\n}\n\nexport function isVisionModel(modelId: string): boolean {\n  return AVAILABLE_MODELS_QWEN.some(\n    (model) => model.id === modelId && model.isVision,\n  );\n}\n"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Now I'll check how the BuiltinCommandLoader in LowCal looks:\n\n"
+        },
+        {
+          "functionCall": {
+            "id": "179343274",
+            "name": "read_file",
+            "args": {
+              "absolute_path": "/home/atmandk/LowCal/packages/cli/src/services/BuiltinCommandLoader.ts"
+            }
+          }
+        }
+      ]
+    },
+    [
+      {
+        "functionResponse": {
+          "id": "179343274",
+          "name": "read_file",
+          "response": {
+            "output": "/**\n * @license\n * Copyright 2025 Google LLC\n * SPDX-License-Identifier: Apache-2.0\n */\n\nimport type { ICommandLoader } from './types.js';\nimport type { SlashCommand } from '../ui/commands/types.js';\nimport type { Config } from '@qwen-code/qwen-code-core';\nimport { aboutCommand } from '../ui/commands/aboutCommand.js';\nimport { authCommand } from '../ui/commands/authCommand.js';\nimport { bugCommand } from '../ui/commands/bugCommand.js';\nimport { chatCommand } from '../ui/commands/chatCommand.js';\nimport { clearCommand } from '../ui/commands/clearCommand.js';\nimport { compressCommand } from '../ui/commands/compressCommand.js';\nimport { copyCommand } from '../ui/commands/copyCommand.js';\nimport { corgiCommand } from '../ui/commands/corgiCommand.js';\nimport { docsCommand } from '../ui/commands/docsCommand.js';\nimport { directoryCommand } from '../ui/commands/directoryCommand.js';\nimport { editorCommand } from '../ui/commands/editorCommand.js';\nimport { extensionsCommand } from '../ui/commands/extensionsCommand.js';\nimport { helpCommand } from '../ui/commands/helpCommand.js';\nimport { ideCommand } from '../ui/commands/ideCommand.js';\nimport { initCommand } from '../ui/commands/initCommand.js';\nimport { mcpCommand } from '../ui/commands/mcpCommand.js';\nimport { memoryCommand } from '../ui/commands/memoryCommand.js';\nimport { privacyCommand } from '../ui/commands/privacyCommand.js';\nimport { quitCommand, quitConfirmCommand } from '../ui/commands/quitCommand.js';\nimport { restoreCommand } from '../ui/commands/restoreCommand.js';\nimport { statsCommand } from '../ui/commands/statsCommand.js';\nimport { summaryCommand } from '../ui/commands/summaryCommand.js';\nimport { themeCommand } from '../ui/commands/themeCommand.js';\nimport { toolsCommand } from '../ui/commands/toolsCommand.js';\nimport { settingsCommand } from '../ui/commands/settingsCommand.js';\nimport { vimCommand } from '../ui/commands/vimCommand.js';\nimport { setupGithubCommand } from '../ui/commands/setupGithubCommand.js';\nimport { terminalSetupCommand } from '../ui/commands/terminalSetupCommand.js';\nimport { modelCommand } from '../ui/commands/modelCommand.js';\nimport { agentsCommand } from '../ui/commands/agentsCommand.js';\n\n/**\n * Loads the core, hard-coded slash commands that are an integral part\n * of the Gemini CLI application.\n */\nexport class BuiltinCommandLoader implements ICommandLoader {\n  constructor(private config: Config | null) {}\n\n  /**\n   * Gathers all raw built-in command definitions, injects dependencies where\n   * needed (e.g., config) and filters out any that are not available.\n   *\n   * @param _signal An AbortSignal (unused for this synchronous loader).\n   * @returns A promise that resolves to an array of `SlashCommand` objects.\n   */\n  async loadCommands(_signal: AbortSignal): Promise<SlashCommand[]> {\n    const allDefinitions: Array<SlashCommand | null> = [\n      aboutCommand,\n      agentsCommand,\n      authCommand,\n      bugCommand,\n      chatCommand,\n      clearCommand,\n      compressCommand,\n      copyCommand,\n      corgiCommand,\n      docsCommand,\n      directoryCommand,\n      editorCommand,\n      extensionsCommand,\n      helpCommand,\n      ideCommand(this.config),\n      initCommand,\n      mcpCommand,\n      memoryCommand,\n      modelCommand,\n      privacyCommand,\n      quitCommand,\n      quitConfirmCommand,\n      restoreCommand(this.config),\n      statsCommand,\n      summaryCommand,\n      themeCommand,\n      toolsCommand,\n      settingsCommand,\n      vimCommand,\n      setupGithubCommand,\n      terminalSetupCommand,\n    ];\n\n    return allDefinitions.filter((cmd): cmd is SlashCommand => cmd !== null);\n  }\n}\n"
+          }
+        }
+      }
+    ]
+  ]
+}

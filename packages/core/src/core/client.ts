@@ -4,15 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type {
-  Content,
-  EmbedContentParameters,
-  FunctionDeclaration,
-  GenerateContentConfig,
-  GenerateContentResponse,
-  PartListUnion,
-  Schema,
-  Tool,
+import {
+  createUserContent,
+  type Content,
+  type EmbedContentParameters,
+  type FunctionDeclaration,
+  type GenerateContentConfig,
+  type GenerateContentResponse,
+  type PartListUnion,
+  type Schema,
+  type Tool,
 } from '@google/genai';
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
 import type { UserTierId } from '../code_assist/types.js';
@@ -60,6 +61,10 @@ import {
 import { tokenLimit } from './tokenLimits.js';
 import type { ChatCompressionInfo, ServerGeminiStreamEvent } from './turn.js';
 import { CompressionStatus, GeminiEventType, Turn } from './turn.js';
+import {
+  TokenBudgetExceededError,
+  TokenBudgetManager,
+} from './tokenBudgetManager.js';
 
 function isThinkingSupported(model: string) {
   if (model.startsWith('gemini-2.5')) return true;
@@ -127,6 +132,7 @@ export class GeminiClient {
   private lastPromptId: string;
   private lastSentIdeContext: IdeContext | undefined;
   private forceFullIdeContext = true;
+  private tokenBudgetManager?: TokenBudgetManager;
 
   /**
    * At any point in this conversation, was compression triggered without
@@ -153,6 +159,9 @@ export class GeminiClient {
       this.config,
       this.config.getSessionId(),
     );
+    this.tokenBudgetManager = new TokenBudgetManager(
+      this.getContentGenerator(),
+    );
     /**
      * Always take the model from contentGeneratorConfig to initialize,
      * despite the `this.config.contentGeneratorConfig` is not updated yet because in
@@ -169,6 +178,13 @@ export class GeminiClient {
       throw new Error('Content generator not initialized');
     }
     return this.contentGenerator;
+  }
+
+  private getTokenBudgetManager(): TokenBudgetManager {
+    if (!this.tokenBudgetManager) {
+      throw new Error('Token budget manager not initialized');
+    }
+    return this.tokenBudgetManager;
   }
 
   getUserTier(): UserTierId | undefined {
@@ -590,6 +606,8 @@ export class GeminiClient {
       }
     }
 
+    await this.ensureRequestWithinBudget(prompt_id, request);
+
     // Prevent context updates from being sent while a tool call is
     // waiting for a response. The Qwen API requires that a functionResponse
     // part from the user immediately follows a functionCall part from the model
@@ -703,6 +721,67 @@ export class GeminiClient {
       }
     }
     return turn;
+  }
+
+  private async ensureRequestWithinBudget(
+    promptId: string,
+    userMessage: PartListUnion,
+  ): Promise<void> {
+    const model = this.config.getModel();
+    if (!model) {
+      return;
+    }
+
+    const manager = this.getTokenBudgetManager();
+
+    const buildPreview = () => {
+      const historySnapshot = this.getChat().getHistory(true);
+      const userContent = createUserContent(userMessage);
+      return [...historySnapshot, userContent];
+    };
+
+    const compressionStrategies: Array<{
+      force: boolean;
+      preserveFraction?: number;
+    }> = [
+      { force: false },
+      { force: true, preserveFraction: 0.25 },
+      { force: true, preserveFraction: 0.2 },
+    ];
+
+    for (let attempt = 0; attempt <= compressionStrategies.length; attempt++) {
+      const previewContents = buildPreview();
+      const snapshot = await manager.evaluate(model, previewContents);
+
+      if (snapshot.fitsWithinEffective) {
+        return;
+      }
+
+      const outOfHardLimit = !snapshot.withinHardLimit;
+      if (attempt >= compressionStrategies.length) {
+        const message = outOfHardLimit
+          ? `Request would exceed the model's context window (${snapshot.tokens.toLocaleString()} > ${snapshot.limit.toLocaleString()} tokens).`
+          : `Request would exceed the safe context budget (${snapshot.tokens.toLocaleString()} > ${snapshot.effectiveLimit.toLocaleString()} tokens).`;
+        throw new TokenBudgetExceededError(message, snapshot);
+      }
+
+      const strategy = compressionStrategies[attempt];
+      const compressionResult = await this.tryCompressChat(promptId, strategy.force, {
+        preserveFraction: strategy.preserveFraction,
+      });
+
+      if (
+        compressionResult.compressionStatus ===
+          CompressionStatus.COMPRESSION_FAILED_TOKEN_COUNT_ERROR ||
+        compressionResult.compressionStatus ===
+          CompressionStatus.COMPRESSION_FAILED_INFLATED_TOKEN_COUNT
+      ) {
+        throw new TokenBudgetExceededError(
+          `Unable to compress history to fit within the context window (${snapshot.tokens.toLocaleString()} tokens).`,
+          snapshot,
+        );
+      }
+    }
   }
 
   async generateJson(
@@ -896,6 +975,7 @@ export class GeminiClient {
   async tryCompressChat(
     prompt_id: string,
     force: boolean = false,
+    options: { preserveFraction?: number } = {},
   ): Promise<ChatCompressionInfo> {
     const curatedHistory = this.getChat().getHistory(true);
 
@@ -945,9 +1025,14 @@ export class GeminiClient {
       }
     }
 
+    const preserveFraction = Math.min(
+      Math.max(options.preserveFraction ?? COMPRESSION_PRESERVE_THRESHOLD, 0.05),
+      0.8,
+    );
+
     let compressBeforeIndex = findIndexAfterFraction(
       curatedHistory,
-      1 - COMPRESSION_PRESERVE_THRESHOLD,
+      1 - preserveFraction,
     );
     // Find the first user message after the index. This is the start of the next turn.
     while (

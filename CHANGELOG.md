@@ -2,6 +2,7 @@
 
 ## 0.0.13
 
+- Added preflight token budget enforcement with automatic chat compression retries to avoid context-window failures.
 - Added YOLO mode support for automatic vision model switching with CLI arguments and environment variables.
 - Fixed ripgrep lazy loading to resolve VS Code IDE companion startup issues.
 - Fixed authentication hang when selecting Qwen OAuth.
