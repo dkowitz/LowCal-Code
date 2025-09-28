@@ -44,6 +44,7 @@ export const useSlashCommandProcessor = (
   addItem: UseHistoryManagerReturn['addItem'],
   clearItems: UseHistoryManagerReturn['clearItems'],
   loadHistory: UseHistoryManagerReturn['loadHistory'],
+  history: UseHistoryManagerReturn['history'],
   refreshStatic: () => void,
   onDebugMessage: (message: string) => void,
   openThemeDialog: () => void,
@@ -195,6 +196,7 @@ export const useSlashCommandProcessor = (
           refreshStatic();
         },
         loadHistory,
+        getHistory: () => [...history],
         setDebugMessage: onDebugMessage,
         pendingItem: pendingCompressionItem,
         setPendingItem: setPendingCompressionItem,
@@ -226,6 +228,7 @@ export const useSlashCommandProcessor = (
       sessionShellAllowlist,
       setGeminiMdFileCount,
       reloadCommands,
+      history,
     ],
   );
 

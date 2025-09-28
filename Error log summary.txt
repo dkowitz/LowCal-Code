@@ -1,0 +1,86 @@
+Error‑log summary
+
+   1 {
+   2   "error": {
+   3     "message": "terminated",
+   4     "stack": "TypeError: terminated\n    at Fetch.onAborted (node:internal/deps/undici/undici:11736:53)\n    at Fetch.emit (node:events:508:28)\n    at Fetch.terminate 
+     (node:internal/deps/undici/undici:10895:14)\n    …"
+   5   },
+   6   "context": [ … ]
+   7 }
+
+  What the stack trace tells us
+
+
+  ┌────────────────────────────────────────┬────────────────────────────────────────────────────────────────────────────────────────────────────┐
+  │ Stack frame                            │ Meaning                                                                                            │
+  ├────────────────────────────────────────┼────────────────────────────────────────────────────────────────────────────────────────────────────┤
+  │ Fetch.onAborted – undici internal code │ The HTTP request made by undici (the low‑level fetch implementation used by Node 18+) was aborted. │
+  │ Fetch.emit → Fetch.terminate           │ After the abort event, the fetch object propagates a termination error.                            │
+  │ Object.onError / Request.onError       │ The underlying Request object received an error from the network layer.                            │
+  │ Socket.onHttpSocketClose               │ The TCP socket was closed before the request could finish.                                         │
+  └────────────────────────────────────────┴────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+
+  In short: the HTTP request that the client (your CLI) issued was cut off, and Node turned this into a TypeError: terminated.
+
+  Likely origins in the LowCal codebase
+
+   1. LM Studio model loading / unloading
+     The /model command eventually calls provider.loadModel() (or similar) which performs an HTTP request to LM Studio’s local OpenAI‑compatible endpoint (http://127.0.0.1:1234/v1).
+      - If a large model is already resident, the request can take seconds while LM Studio streams the new model into memory.
+      - The CLI uses undici under the hood (via fetch) to talk to that endpoint.
+
+   2. Client‑side timeout / abort
+     The CLI sets a default fetch timeout (often 30 s). When the request exceeds this limit, undici aborts the socket, producing exactly the “terminated” error we see.
+
+   3. Network‑level interruption
+     LM Studio runs as a local server; if it crashes or restarts while the CLI is loading a model, the TCP connection closes abruptly, again triggering onAborted.
+
+   4. Concurrent requests
+     The current implementation does not unload an existing model before issuing a new load request. Two overlapping HTTP calls can race: the first may be aborted when the second
+  starts, leading to the same stack trace.
+
+  Why this shows up only after selecting LM Studio
+
+   - Other providers (OpenAI, Azure) use cloud endpoints that respond quickly; the abort timeout is rarely hit.
+   - LM Studio’s local endpoint streams large binary payloads, making it the only provider where a long‑running request can exceed the client timeout.
+
+  How to fix / mitigate
+
+
+  ┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┬────────────────────────────────────────────────┐
+  │ Fix                                                                                                                         │ What it does                                   │
+  ├─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┼────────────────────────────────────────────────┤
+  │ Increase fetch timeout – e.g. fetch(url, { timeout: 120_000 })                                                              │ Gives LM Studio more time to stream the mod... │
+  │ Explicit unload before load – call await provider.unloadModel() (or the SDK’s .unload()) prior to loadModel()               │ Guarantees only one request is active, prev... │
+  │ Retry on abort – catch TypeError: terminated and retry the load once or twice                                               │ Handles transient socket closures without s... │
+  │ Graceful cancellation handling – listen for AbortSignal from the CLI and propagate it to LM Studio, then wait for a clea... │                                                │
+  │ Add health‑check before loading – ping http://127.0.0.1:1234/v1/models to ensure LM Studio is up; if not, surface a clea... │                                                │
+  └─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┴────────────────────────────────────────────────┘
+
+
+  Recommended immediate change
+
+  In `packages/core/src/core/openaiContentGenerator/provider/lmstudio.ts` (the provider implementation you already have an unloadModel() stub for):
+
+   1. Expose a public `unloadCurrentModel(): Promise<void>` that calls the SDK’s .unload() method (or sends a DELETE request to /v1/models/{modelId} if LM Studio supports it).
+   2. In `packages/cli/src/ui/commands/modelCommand.ts`, before invoking the provider’s loadModel(...), do:
+
+   1 if (provider instanceof LMStudioOpenAICompatibleProvider) {
+   2   await provider.unloadCurrentModel(); // ensure previous model is cleared
+   3 }
+   4 await provider.loadModel(selectedModel);
+
+   3. Wrap the load call in a try/catch that specifically checks for error.message === 'terminated' and retries once with an increased timeout.
+
+  Why the error log matters
+
+  The stack trace points to network‑level abort, not a bug inside your business logic. Fixing it requires:
+
+   - Managing request lifetimes (timeouts, cancellations) correctly.
+   - Ensuring only one LM Studio model load runs at any time (unload first).
+   - Providing clearer user feedback when the underlying LM Studio server is unreachable or slow.
+
+  Implementing the above will eliminate the “terminated” error and give users a smoother experience when switching models in LM Studio.
+

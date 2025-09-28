@@ -817,6 +817,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     addItem,
     clearItems,
     loadHistory,
+    history,
     refreshStatic,
     setDebugMessage,
     openThemeDialog,

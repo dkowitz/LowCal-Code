@@ -19,7 +19,7 @@ import { McpPromptLoader } from '../../services/McpPromptLoader.js';
 /**
  * Hook to define and process slash commands (e.g., /help, /clear).
  */
-export const useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation) => {
+export const useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation) => {
     const session = useSessionStats();
     const [commands, setCommands] = useState([]);
     const [reloadTrigger, setReloadTrigger] = useState(0);
@@ -134,6 +134,7 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
                 refreshStatic();
             },
             loadHistory,
+            getHistory: () => [...history],
             setDebugMessage: onDebugMessage,
             pendingItem: pendingCompressionItem,
             setPendingItem: setPendingCompressionItem,
@@ -164,6 +165,7 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
         sessionShellAllowlist,
         setGeminiMdFileCount,
         reloadCommands,
+        history,
     ]);
     useEffect(() => {
         if (!config) {

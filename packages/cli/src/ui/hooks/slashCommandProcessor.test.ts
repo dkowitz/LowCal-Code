@@ -78,6 +78,7 @@ import type {
 import { CommandKind } from '../commands/types.js';
 import type { LoadedSettings } from '../../config/settings.js';
 import { MessageType } from '../types.js';
+import type { HistoryItem } from '../types.js';
 import { BuiltinCommandLoader } from '../../services/BuiltinCommandLoader.js';
 import { FileCommandLoader } from '../../services/FileCommandLoader.js';
 import { McpPromptLoader } from '../../services/McpPromptLoader.js';
@@ -131,6 +132,7 @@ describe('useSlashCommandProcessor', () => {
     fileCommands: SlashCommand[] = [],
     mcpCommands: SlashCommand[] = [],
     setIsProcessing = vi.fn(),
+    historyOverride: HistoryItem[] = [],
   ) => {
     mockBuiltinLoadCommands.mockResolvedValue(Object.freeze(builtinCommands));
     mockFileLoadCommands.mockResolvedValue(Object.freeze(fileCommands));
@@ -143,6 +145,7 @@ describe('useSlashCommandProcessor', () => {
         mockAddItem,
         mockClearItems,
         mockLoadHistory,
+        historyOverride,
         vi.fn(), // refreshStatic
         vi.fn(), // onDebugMessage
         mockOpenThemeDialog, // openThemeDialog
@@ -914,6 +917,7 @@ describe('useSlashCommandProcessor', () => {
           mockAddItem,
           mockClearItems,
           mockLoadHistory,
+          [],
           vi.fn(), // refreshStatic
           vi.fn(), // onDebugMessage
           vi.fn(), // openThemeDialog
