@@ -73,6 +73,7 @@ import {
 } from './components/subagents/index.js';
 import { Colors } from './colors.js';
 import { loadHierarchicalGeminiMemory } from '../config/config.js';
+import { setOpenAIModel } from '../config/auth.js';
 import type { LoadedSettings } from '../config/settings.js';
 import { SettingScope } from '../config/settings.js';
 import { Tips } from './components/Tips.js';
@@ -246,18 +247,27 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   useEffect(() => {
     const savedModel = settings.merged.model?.name;
     if (savedModel && savedModel !== config.getModel()) {
-      // setModel is async-capable; we don't block startup on it but ensure
-      // the UI shows the saved model immediately.
       void (async () => {
         try {
           await config.setModel(savedModel);
           setCurrentModel(savedModel);
+          if (settings.merged.security?.auth?.providerId === 'openrouter') {
+            try {
+              setOpenAIModel(savedModel);
+            } catch (err) {
+              console.warn('Failed to persist OpenRouter model to .env:', err);
+            }
+          }
         } catch (e) {
           console.warn('Failed to restore saved model from settings:', e);
         }
       })();
     }
-  }, [config, settings.merged.model?.name]);
+  }, [
+    config,
+    settings.merged.model?.name,
+    settings.merged.security?.auth?.providerId,
+  ]);
 
   useEffect(() => {
     const authType = settings.merged.security?.auth?.selectedType;
@@ -285,6 +295,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       }
     };
   }, [settings.merged.security?.auth?.selectedType, JSON.stringify(process.env)]);
+
+  useEffect(() => {
+    const providerId = settings.merged.security?.auth?.providerId;
+    if (providerId !== 'lmstudio') {
+      setLmStudioModel(null);
+    }
+  }, [settings.merged.security?.auth?.providerId]);
   const [shellModeActive, setShellModeActive] = useState(false);
   const [showErrorDetails, setShowErrorDetails] = useState<boolean>(false);
   const [showToolDescriptions, setShowToolDescriptions] =
@@ -799,6 +816,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   // Unload previous model by setting new model (config.setModel will reinitialize client)
   await config.setModel(modelId);
         setCurrentModel(modelId);
+        if (settings.merged.security?.auth?.providerId === 'openrouter') {
+          try {
+            setOpenAIModel(modelId);
+          } catch (err) {
+            console.warn('Failed to persist OpenRouter model to .env:', err);
+          }
+        }
         // Persist selected model to user settings so it is restored on next startup.
         try {
           settings.setValue(SettingScope.User, 'model.name', modelId);

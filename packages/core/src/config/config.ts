@@ -289,7 +289,7 @@ export class Config {
   private readonly proxy: string | undefined;
   private readonly cwd: string;
   private readonly bugCommand: BugCommandSettings | undefined;
-  private readonly model: string;
+  private model: string;
   private readonly extensionContextFilePaths: string[];
   private readonly noBrowser: boolean;
   private readonly folderTrustFeature: boolean;
@@ -540,6 +540,8 @@ export class Config {
     },
   ): Promise<void> {
     const oldModel = this.getModel();
+
+    this.model = newModel;
 
     if (this.contentGeneratorConfig) {
       this.contentGeneratorConfig.model = newModel;

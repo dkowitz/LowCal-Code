@@ -188,4 +188,32 @@ describe('createContentGeneratorConfig', () => {
     expect(config.apiKey).toBeUndefined();
     expect(config.vertexai).toBeUndefined();
   });
+
+  it('should retain the config model for OpenAI when OPENAI_MODEL is not set', async () => {
+    vi.stubEnv('OPENAI_API_KEY', 'env-openai-key');
+    delete process.env['OPENAI_MODEL'];
+    mockConfig.getModel = vi.fn().mockReturnValue('persisted-model');
+
+    const config = await createContentGeneratorConfig(
+      mockConfig,
+      AuthType.USE_OPENAI,
+    );
+
+    expect(config.apiKey).toBe('env-openai-key');
+    expect(config.model).toBe('persisted-model');
+  });
+
+  it('should prefer OPENAI_MODEL when provided', async () => {
+    vi.stubEnv('OPENAI_API_KEY', 'env-openai-key');
+    vi.stubEnv('OPENAI_MODEL', 'env-model');
+    mockConfig.getModel = vi.fn().mockReturnValue('persisted-model');
+
+    const config = await createContentGeneratorConfig(
+      mockConfig,
+      AuthType.USE_OPENAI,
+    );
+
+    expect(config.apiKey).toBe('env-openai-key');
+    expect(config.model).toBe('env-model');
+  });
 });

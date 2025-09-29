@@ -14,6 +14,7 @@ interface ProviderKeyPromptProps {
   prepopulatedApiKey: string;
   onSubmit: (apiKey: string, baseUrl: string) => void;
   onCancel: () => void;
+  hideApiKeyInput?: boolean;
 }
 
 export function ProviderKeyPrompt({
@@ -21,11 +22,13 @@ export function ProviderKeyPrompt({
   prepopulatedApiKey,
   onSubmit,
   onCancel,
+  hideApiKeyInput = false,
 }: ProviderKeyPromptProps): React.JSX.Element {
   const [apiKey, setApiKey] = useState(prepopulatedApiKey || '');
   const [baseUrl, setBaseUrl] = useState(prepopulatedBaseUrl || '');
+  const allowApiKeyInput = !hideApiKeyInput;
   const [currentField, setCurrentField] = useState<'apiKey' | 'baseUrl'>(
-    prepopulatedApiKey ? 'baseUrl' : 'apiKey',
+    allowApiKeyInput && !prepopulatedApiKey ? 'apiKey' : 'baseUrl',
   );
 
   useInput((input, key) => {
@@ -41,14 +44,18 @@ export function ProviderKeyPrompt({
       .join('');
 
     if (cleanInput.length > 0) {
-      if (currentField === 'apiKey') setApiKey((p) => p + cleanInput);
-      else setBaseUrl((p) => p + cleanInput);
+      if (currentField === 'apiKey') {
+        if (allowApiKeyInput) setApiKey((p) => p + cleanInput);
+      } else setBaseUrl((p) => p + cleanInput);
       return;
     }
 
     if (input.includes('\n') || input.includes('\r')) {
-      if (currentField === 'apiKey') setCurrentField('baseUrl');
-      else onSubmit(apiKey.trim(), baseUrl.trim());
+      if (currentField === 'apiKey' && allowApiKeyInput) setCurrentField('baseUrl');
+      else onSubmit(
+        allowApiKeyInput ? apiKey.trim() : prepopulatedApiKey.trim(),
+        baseUrl.trim(),
+      );
       return;
     }
 
@@ -57,18 +64,19 @@ export function ProviderKeyPrompt({
       return;
     }
 
-    if (key.tab) {
+    if (key.tab && allowApiKeyInput) {
       setCurrentField((c) => (c === 'apiKey' ? 'baseUrl' : 'apiKey'));
       return;
     }
 
-    if (key.upArrow || key.downArrow) {
+    if ((key.upArrow || key.downArrow) && allowApiKeyInput) {
       setCurrentField((c) => (c === 'apiKey' ? 'baseUrl' : 'apiKey'));
       return;
     }
 
     if (key.backspace || key.delete) {
-      if (currentField === 'apiKey') setApiKey((p) => p.slice(0, -1));
+      if (currentField === 'apiKey' && allowApiKeyInput)
+        setApiKey((p) => p.slice(0, -1));
       else setBaseUrl((p) => p.slice(0, -1));
       return;
     }
@@ -88,20 +96,29 @@ export function ProviderKeyPrompt({
       <Box marginTop={1}>
         <Text>
           Enter the provider base URL and API key (if required). For LM Studio
-          the API key is optional and a dummy key is prefilled.
+          the API key is managed automatically with a dummy value.
         </Text>
       </Box>
 
-      <Box marginTop={1} flexDirection="row">
-        <Box width={12}>
-          <Text color={currentField === 'apiKey' ? Colors.AccentBlue : Colors.Gray}>
-            API Key:
-          </Text>
+      {allowApiKeyInput && (
+        <Box marginTop={1} flexDirection="row">
+          <Box width={12}>
+            <Text
+              color={
+                currentField === 'apiKey' ? Colors.AccentBlue : Colors.Gray
+              }
+            >
+              API Key:
+            </Text>
+          </Box>
+          <Box flexGrow={1}>
+            <Text>
+              {currentField === 'apiKey' ? '> ' : '  '}
+              {apiKey || ' '}
+            </Text>
+          </Box>
         </Box>
-        <Box flexGrow={1}>
-          <Text>{currentField === 'apiKey' ? '> ' : '  '}{apiKey || ' '}</Text>
-        </Box>
-      </Box>
+      )}
 
       <Box marginTop={1} flexDirection="row">
         <Box width={12}>

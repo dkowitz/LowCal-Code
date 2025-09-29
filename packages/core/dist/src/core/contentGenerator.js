@@ -57,7 +57,9 @@ export function createContentGeneratorConfig(config, authType) {
     if (authType === AuthType.USE_OPENAI && openaiApiKey) {
         contentGeneratorConfig.apiKey = openaiApiKey;
         contentGeneratorConfig.baseUrl = openaiBaseUrl;
-        contentGeneratorConfig.model = openaiModel || DEFAULT_QWEN_MODEL;
+        if (openaiModel && openaiModel.length > 0) {
+            contentGeneratorConfig.model = openaiModel;
+        }
         return contentGeneratorConfig;
     }
     if (authType === AuthType.QWEN_OAUTH) {

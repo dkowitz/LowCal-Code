@@ -286,6 +286,47 @@ describe('Settings Loading and Merging', () => {
       });
     });
 
+    it('should restore selected auth type when provider data is persisted in V1 format', () => {
+      const expectedUserSettingsPath = USER_SETTINGS_PATH;
+      (mockFsExistsSync as Mock).mockImplementation(
+        (p: fs.PathLike) => p === expectedUserSettingsPath,
+      );
+
+      const userSettingsContent = {
+        selectedAuthType: 'openai',
+        security: {
+          auth: {
+            providerId: 'openrouter',
+            providers: {
+              openrouter: {
+                apiKey: 'sk-test',
+                baseUrl: 'https://openrouter.ai/api/v1',
+              },
+            },
+          },
+        },
+      } satisfies Record<string, unknown>;
+
+      (fs.readFileSync as Mock).mockImplementation((p: fs.PathOrFileDescriptor) => {
+        if (p === expectedUserSettingsPath) {
+          return JSON.stringify(userSettingsContent);
+        }
+        return '{}';
+      });
+
+      const settings = loadSettings(MOCK_WORKSPACE_DIR);
+
+      expect(settings.user.settings.security?.auth?.selectedType).toBe('openai');
+      expect(settings.user.settings.security?.auth?.providerId).toBe('openrouter');
+      expect(
+        settings.user.settings.security?.auth?.providers?.openrouter?.baseUrl,
+      ).toBe('https://openrouter.ai/api/v1');
+      expect(
+        settings.user.settings.security?.auth?.providers?.openrouter?.apiKey,
+      ).toBe('sk-test');
+      expect(settings.merged.security?.auth?.selectedType).toBe('openai');
+    });
+
     it('should load workspace settings if only workspace file exists', () => {
       (mockFsExistsSync as Mock).mockImplementation(
         (p: fs.PathLike) => p === MOCK_WORKSPACE_SETTINGS_PATH,
@@ -2182,6 +2223,40 @@ describe('Settings Loading and Merging', () => {
         folderTrust: true,
         selectedAuthType: 'oauth',
         autoConfigureMaxOldSpaceSize: true,
+      });
+    });
+
+    it('should preserve security auth provider configuration', () => {
+      const v2Settings = {
+        security: {
+          auth: {
+            selectedType: 'openai',
+            providerId: 'openrouter',
+            providers: {
+              openrouter: {
+                baseUrl: 'https://openrouter.ai/api/v1',
+                apiKey: 'sk-test',
+              },
+            },
+          },
+        },
+      } satisfies Record<string, unknown>;
+
+      const v1Settings = migrateSettingsToV1(v2Settings);
+
+      expect(v1Settings).toEqual({
+        selectedAuthType: 'openai',
+        security: {
+          auth: {
+            providerId: 'openrouter',
+            providers: {
+              openrouter: {
+                baseUrl: 'https://openrouter.ai/api/v1',
+                apiKey: 'sk-test',
+              },
+            },
+          },
+        },
       });
     });
 

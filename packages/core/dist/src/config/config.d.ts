@@ -213,7 +213,7 @@ export declare class Config {
     private readonly proxy;
     private readonly cwd;
     private readonly bugCommand;
-    private readonly model;
+    private model;
     private readonly extensionContextFilePaths;
     private readonly noBrowser;
     private readonly folderTrustFeature;

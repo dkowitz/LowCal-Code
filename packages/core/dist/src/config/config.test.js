@@ -302,6 +302,20 @@ describe('Server Config (config.ts)', () => {
             expect(mockNewClient.setHistory).toHaveBeenCalledWith(mockExistingHistory, { stripThoughts: false });
         });
     });
+    describe('setModel', () => {
+        it('updates fallback model when content generator config is unavailable', async () => {
+            const config = new Config({
+                ...baseParams,
+                model: 'initial-model',
+            });
+            config['geminiClient'] = {
+                isInitialized: () => false,
+            };
+            await config.setModel('openrouter/model');
+            config['contentGeneratorConfig'] = undefined;
+            expect(config.getModel()).toBe('openrouter/model');
+        });
+    });
     it('Config constructor should store userMemory correctly', () => {
         const config = new Config(baseParams);
         expect(config.getUserMemory()).toBe(USER_MEMORY);

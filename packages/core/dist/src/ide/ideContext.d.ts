@@ -236,8 +236,8 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
             }[] | undefined;
         } | undefined;
     };
-    jsonrpc: "2.0";
     method: "ide/contextUpdate";
+    jsonrpc: "2.0";
 }, {
     params: {
         workspaceState?: {
@@ -253,8 +253,8 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
             }[] | undefined;
         } | undefined;
     };
-    jsonrpc: "2.0";
     method: "ide/contextUpdate";
+    jsonrpc: "2.0";
 }>;
 export declare const IdeDiffAcceptedNotificationSchema: z.ZodObject<{
     jsonrpc: z.ZodLiteral<"2.0">;
@@ -263,26 +263,26 @@ export declare const IdeDiffAcceptedNotificationSchema: z.ZodObject<{
         filePath: z.ZodString;
         content: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        filePath: string;
         content: string;
+        filePath: string;
     }, {
-        filePath: string;
         content: string;
+        filePath: string;
     }>;
 }, "strip", z.ZodTypeAny, {
     params: {
-        filePath: string;
         content: string;
+        filePath: string;
     };
-    jsonrpc: "2.0";
     method: "ide/diffAccepted";
+    jsonrpc: "2.0";
 }, {
     params: {
-        filePath: string;
         content: string;
+        filePath: string;
     };
-    jsonrpc: "2.0";
     method: "ide/diffAccepted";
+    jsonrpc: "2.0";
 }>;
 export declare const IdeDiffClosedNotificationSchema: z.ZodObject<{
     jsonrpc: z.ZodLiteral<"2.0">;
@@ -302,15 +302,15 @@ export declare const IdeDiffClosedNotificationSchema: z.ZodObject<{
         filePath: string;
         content?: string | undefined;
     };
-    jsonrpc: "2.0";
     method: "ide/diffClosed";
+    jsonrpc: "2.0";
 }, {
     params: {
         filePath: string;
         content?: string | undefined;
     };
-    jsonrpc: "2.0";
     method: "ide/diffClosed";
+    jsonrpc: "2.0";
 }>;
 export declare const CloseDiffResponseSchema: z.ZodEffects<z.ZodObject<{
     content: z.ZodArray<z.ZodObject<{

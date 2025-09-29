@@ -348,6 +348,7 @@ export class Config {
     }
     async setModel(newModel, options) {
         const oldModel = this.getModel();
+        this.model = newModel;
         if (this.contentGeneratorConfig) {
             this.contentGeneratorConfig.model = newModel;
         }

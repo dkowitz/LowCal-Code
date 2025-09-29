@@ -393,6 +393,25 @@ describe('Server Config (config.ts)', () => {
     });
   });
 
+  describe('setModel', () => {
+    it('updates fallback model when content generator config is unavailable', async () => {
+      const config = new Config({
+        ...baseParams,
+        model: 'initial-model',
+      });
+
+      config['geminiClient'] = {
+        isInitialized: () => false,
+      } as unknown as GeminiClient;
+
+      await config.setModel('openrouter/model');
+
+      config['contentGeneratorConfig'] = undefined as unknown as ContentGeneratorConfig;
+
+      expect(config.getModel()).toBe('openrouter/model');
+    });
+  });
+
   it('Config constructor should store userMemory correctly', () => {
     const config = new Config(baseParams);
 

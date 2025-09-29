@@ -10,6 +10,9 @@ import { useKeypress } from '../hooks/useKeypress.js';
 import { OpenAIKeyPrompt } from './OpenAIKeyPrompt.js';
 import { ProviderKeyPrompt } from './ProviderKeyPrompt.js';
 import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
+const OPENROUTER_DEFAULT_BASE_URL = 'https://openrouter.ai/api/v1';
+const LM_STUDIO_DEFAULT_BASE_URL = 'http://127.0.0.1:1234/v1';
+const LM_STUDIO_DUMMY_KEY = 'lmstudio-local-key';
 function parseDefaultAuthType(defaultAuthType) {
     if (defaultAuthType &&
         Object.values(AuthType).includes(defaultAuthType)) {
@@ -21,6 +24,47 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
     const [errorMessage, setErrorMessage] = useState(initialErrorMessage || null);
     const [showOpenAIKeyPrompt, setShowOpenAIKeyPrompt] = useState(false);
     const [showProviderPrompt, setShowProviderPrompt] = useState(null);
+    const storedProviderId = settings.merged.security?.auth?.providerId;
+    const providerSettings = settings.merged.security?.auth?.providers || {};
+    const persistSelectedAuthType = (authType) => {
+        try {
+            settings.setValue(SettingScope.User, 'security.auth.selectedType', authType);
+        }
+        catch (e) {
+            // ignore persistence failures; continue flow
+        }
+    };
+    const persistProviderId = (providerId) => {
+        try {
+            settings.setValue(SettingScope.User, 'security.auth.providerId', providerId);
+        }
+        catch (e) {
+            // ignore persistence failures; continue flow
+        }
+    };
+    const persistProviderSetting = (provider, key, value) => {
+        if (typeof value === 'undefined') {
+            return;
+        }
+        try {
+            settings.setValue(SettingScope.User, `security.auth.providers.${provider}.${key}`, value);
+        }
+        catch (e) {
+            // ignore persistence failures; continue flow
+        }
+    };
+    const snapshotOpenRouterCredentials = () => {
+        const currentBaseUrl = process.env['OPENAI_BASE_URL'];
+        const currentApiKey = process.env['OPENAI_API_KEY'];
+        if (currentBaseUrl &&
+            (storedProviderId === 'openrouter' ||
+                currentBaseUrl.includes('openrouter'))) {
+            persistProviderSetting('openrouter', 'baseUrl', currentBaseUrl);
+        }
+        if (currentApiKey && currentApiKey !== LM_STUDIO_DUMMY_KEY) {
+            persistProviderSetting('openrouter', 'apiKey', currentApiKey);
+        }
+    };
     const items = [
         { label: 'Qwen OAuth', value: AuthType.QWEN_OAUTH },
         { label: 'OpenRouter (OpenAI-compatible)', value: 'openrouter' },
@@ -39,44 +83,83 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         openaiBaseUrl.includes('lmstudio')) {
         detectedProvider = 'lmstudio';
     }
-    const initialAuthIndex = Math.max(0, items.findIndex((item) => {
-        // If the user has an explicit stored auth selection in settings, prefer it.
-        const stored = settings.merged.security?.auth?.selectedType;
-        if (stored) {
-            // If the stored type is the generic OpenAI auth but we can detect a
-            // specific OpenAI-compatible provider from OPENAI_BASE_URL, prefer
-            // selecting that provider option in the dialog so the UI reflects
-            // the concrete provider (OpenRouter / LM Studio) the user previously
-            // configured.
-            if (stored === AuthType.USE_OPENAI && detectedProvider) {
-                return item.value === detectedProvider;
+    const storedAuthType = settings.merged.security?.auth?.selectedType;
+    let preferredValue = null;
+    if (storedAuthType) {
+        if (storedAuthType === AuthType.USE_OPENAI) {
+            if (storedProviderId) {
+                preferredValue =
+                    storedProviderId === 'openai'
+                        ? AuthType.USE_OPENAI
+                        : storedProviderId;
             }
-            return item.value === stored;
+            else if (detectedProvider) {
+                preferredValue = detectedProvider;
+            }
+            else {
+                preferredValue = AuthType.USE_OPENAI;
+            }
         }
-        // Otherwise, if we detected a provider from OPENAI_BASE_URL, select that.
-        if (detectedProvider) {
-            return item.value === detectedProvider;
+        else {
+            preferredValue = storedAuthType;
         }
+    }
+    if (!preferredValue && storedProviderId) {
+        preferredValue =
+            storedProviderId === 'openai'
+                ? AuthType.USE_OPENAI
+                : storedProviderId;
+    }
+    if (!preferredValue && detectedProvider) {
+        preferredValue = detectedProvider;
+    }
+    if (!preferredValue) {
         const defaultAuthType = parseDefaultAuthType(process.env['QWEN_DEFAULT_AUTH_TYPE']);
         if (defaultAuthType) {
-            return item.value === defaultAuthType;
+            preferredValue = defaultAuthType;
         }
-        if (process.env['GEMINI_API_KEY']) {
-            return item.value === AuthType.USE_GEMINI;
-        }
-        return item.value === AuthType.LOGIN_WITH_GOOGLE;
-    }));
+    }
+    if (!preferredValue && process.env['GEMINI_API_KEY']) {
+        preferredValue = AuthType.USE_GEMINI;
+    }
+    if (!preferredValue) {
+        preferredValue = AuthType.LOGIN_WITH_GOOGLE;
+    }
+    const initialAuthIndex = Math.max(0, items.findIndex((item) => item.value === preferredValue));
     const handleAuthSelect = (value) => {
         // Support both AuthType values and provider strings
         if (value === 'openrouter') {
-            // Pre-populate OpenRouter base url and ask for API key
-            setShowProviderPrompt({ provider: 'openrouter' });
+            const openrouterConfig = providerSettings['openrouter'] || {};
+            const baseUrl = openrouterConfig.baseUrl ||
+                (process.env['OPENAI_BASE_URL']?.includes('openrouter')
+                    ? process.env['OPENAI_BASE_URL']
+                    : OPENROUTER_DEFAULT_BASE_URL);
+            const apiKey = openrouterConfig.apiKey ||
+                (storedProviderId === 'openrouter'
+                    ? process.env['OPENAI_API_KEY'] || ''
+                    : '');
+            setShowProviderPrompt({
+                provider: 'openrouter',
+                baseUrl,
+                apiKey,
+            });
             setErrorMessage(null);
             return;
         }
         if (value === 'lmstudio') {
-            // Pre-populate LM Studio base url and a dummy API key
-            setShowProviderPrompt({ provider: 'lmstudio' });
+            snapshotOpenRouterCredentials();
+            const lmStudioConfig = providerSettings['lmstudio'] || {};
+            const baseUrl = lmStudioConfig.baseUrl ||
+                (process.env['OPENAI_BASE_URL']?.includes('127.0.0.1') ||
+                    process.env['OPENAI_BASE_URL']?.includes('localhost')
+                    ? process.env['OPENAI_BASE_URL']
+                    : LM_STUDIO_DEFAULT_BASE_URL);
+            setShowProviderPrompt({
+                provider: 'lmstudio',
+                baseUrl,
+                apiKey: LM_STUDIO_DUMMY_KEY,
+                hideApiKeyInput: true,
+            });
             setErrorMessage(null);
             return;
         }
@@ -94,15 +177,18 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         }
         else {
             setErrorMessage(null);
-            // Persist the chosen auth type so it will be restored on next startup.
-            try {
-                // Persist the chosen auth type in the nested settings path so
-                // downstream code reads it from `security.auth.selectedType` on
-                // startup.
-                settings.setValue(SettingScope.User, 'security.auth.selectedType', authMethod);
+            persistSelectedAuthType(authMethod);
+            if (authMethod === AuthType.USE_OPENAI) {
+                persistProviderId('openai');
+                if (process.env['OPENAI_BASE_URL']) {
+                    persistProviderSetting('openai', 'baseUrl', process.env['OPENAI_BASE_URL']);
+                }
+                if (process.env['OPENAI_API_KEY']) {
+                    persistProviderSetting('openai', 'apiKey', process.env['OPENAI_API_KEY']);
+                }
             }
-            catch (e) {
-                // Ignore errors persisting settings; still proceed with selection.
+            else {
+                persistProviderId(undefined);
             }
             onSelect(authMethod, SettingScope.User);
         }
@@ -111,6 +197,10 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         const apiKeyPath = setOpenAIApiKey(apiKey);
         const baseUrlPath = setOpenAIBaseUrl(baseUrl);
         const modelPath = setOpenAIModel(model);
+        persistSelectedAuthType(AuthType.USE_OPENAI);
+        persistProviderId('openai');
+        persistProviderSetting('openai', 'apiKey', apiKey);
+        persistProviderSetting('openai', 'baseUrl', baseUrl);
         try {
             appEvents.emit(AppEvent.ShowInfo, `Saved OpenAI credentials to: ${apiKeyPath}`);
             // Also show base url and model file locations (often same file)
@@ -128,28 +218,56 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         onSelect(AuthType.USE_OPENAI, SettingScope.User);
     };
     const handleProviderSubmit = (apiKey, baseUrl) => {
-        // Use the OpenAI env vars for OpenRouter/LM Studio since they are OpenAI-compatible
-        const apiKeyPath = setOpenAIApiKey(apiKey || '');
-        const baseUrlPath = setOpenAIBaseUrl(baseUrl);
-        try {
-            appEvents.emit(AppEvent.ShowInfo, `Saved provider credentials to: ${apiKeyPath}`);
-            if (baseUrlPath !== apiKeyPath) {
-                appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_BASE_URL to: ${baseUrlPath}`);
+        if (!showProviderPrompt) {
+            setShowProviderPrompt(null);
+            return;
+        }
+        const provider = showProviderPrompt.provider;
+        const trimmedBaseUrl = baseUrl.trim();
+        if (provider === 'openrouter') {
+            const normalizedBaseUrl = trimmedBaseUrl ||
+                showProviderPrompt.baseUrl ||
+                OPENROUTER_DEFAULT_BASE_URL;
+            const safeApiKey = apiKey.trim();
+            const apiKeyPath = setOpenAIApiKey(safeApiKey);
+            const baseUrlPath = setOpenAIBaseUrl(normalizedBaseUrl);
+            persistSelectedAuthType(AuthType.USE_OPENAI);
+            persistProviderId('openrouter');
+            persistProviderSetting('openrouter', 'apiKey', safeApiKey);
+            persistProviderSetting('openrouter', 'baseUrl', normalizedBaseUrl);
+            try {
+                appEvents.emit(AppEvent.ShowInfo, `Saved provider credentials to: ${apiKeyPath}`);
+                if (baseUrlPath !== apiKeyPath) {
+                    appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_BASE_URL to: ${baseUrlPath}`);
+                }
             }
+            catch (e) {
+                // ignore emissions
+            }
+            onSelect(AuthType.USE_OPENAI, SettingScope.User);
         }
-        catch (e) {
-            // ignore
+        else {
+            // LM Studio branch
+            const normalizedBaseUrl = trimmedBaseUrl ||
+                showProviderPrompt.baseUrl ||
+                LM_STUDIO_DEFAULT_BASE_URL;
+            const dummyKey = LM_STUDIO_DUMMY_KEY;
+            const apiKeyPath = setOpenAIApiKey(dummyKey);
+            const baseUrlPath = setOpenAIBaseUrl(normalizedBaseUrl);
+            persistSelectedAuthType(AuthType.USE_OPENAI);
+            persistProviderId('lmstudio');
+            persistProviderSetting('lmstudio', 'baseUrl', normalizedBaseUrl);
+            try {
+                appEvents.emit(AppEvent.ShowInfo, `Configured LM Studio credentials in: ${apiKeyPath}`);
+                if (baseUrlPath !== apiKeyPath) {
+                    appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_BASE_URL to: ${baseUrlPath}`);
+                }
+            }
+            catch (e) {
+                // ignore emissions
+            }
+            onSelect(AuthType.USE_OPENAI, SettingScope.User);
         }
-        // Treat provider as OpenAI-compatible provider
-        try {
-            // Treat provider as OpenAI-compatible provider; persist the selected
-            // auth type to the nested setting path so it is restored on next run.
-            settings.setValue(SettingScope.User, 'security.auth.selectedType', AuthType.USE_OPENAI);
-        }
-        catch (e) {
-            // ignore
-        }
-        onSelect(AuthType.USE_OPENAI, SettingScope.User);
         setShowProviderPrompt(null);
     };
     const handleProviderCancel = () => {
@@ -183,17 +301,14 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
     }
     if (showProviderPrompt) {
         const provider = showProviderPrompt.provider;
-        // Prepopulate provider prompt using any existing OPENAI env vars.
-        const prepopulated = provider === 'openrouter'
-            ? {
-                baseUrl: process.env['OPENAI_BASE_URL'] || 'https://openrouter.ai/api/v1',
-                apiKey: process.env['OPENAI_API_KEY'] || '',
-            }
-            : {
-                baseUrl: process.env['OPENAI_BASE_URL'] || 'http://127.0.0.1:1234/v1',
-                apiKey: process.env['OPENAI_API_KEY'] || 'lmstudio-dummy-key',
-            };
-        return (_jsx(ProviderKeyPrompt, { prepopulatedBaseUrl: prepopulated.baseUrl, prepopulatedApiKey: prepopulated.apiKey, onSubmit: handleProviderSubmit, onCancel: handleProviderCancel }));
+        const baseUrl = showProviderPrompt.baseUrl ||
+            (provider === 'openrouter'
+                ? OPENROUTER_DEFAULT_BASE_URL
+                : LM_STUDIO_DEFAULT_BASE_URL);
+        const apiKey = provider === 'openrouter'
+            ? showProviderPrompt.apiKey
+            : showProviderPrompt.apiKey || LM_STUDIO_DUMMY_KEY;
+        return (_jsx(ProviderKeyPrompt, { prepopulatedBaseUrl: baseUrl, prepopulatedApiKey: apiKey, hideApiKeyInput: showProviderPrompt.hideApiKeyInput, onSubmit: handleProviderSubmit, onCancel: handleProviderCancel }));
     }
     return (_jsxs(Box, { borderStyle: "round", borderColor: Colors.Gray, flexDirection: "column", padding: 1, width: "100%", children: [_jsx(Text, { bold: true, children: "Get started" }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { children: "How would you like to authenticate for this project?" }) }), _jsx(Box, { marginTop: 1, children: _jsx(RadioButtonSelect, { items: items, initialIndex: initialAuthIndex, onSelect: handleAuthSelect }) }), errorMessage && (_jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.AccentRed, children: errorMessage }) })), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.AccentPurple, children: "(Use Enter to Set Auth)" }) }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { children: "Terms of Services and Privacy Notice for Qwen Code" }) }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: Colors.AccentBlue, children: 'https://github.com/QwenLM/Qwen3-Coder/blob/main/README.md' }) })] }));
 }

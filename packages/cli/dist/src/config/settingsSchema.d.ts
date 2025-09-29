@@ -631,6 +631,104 @@ export declare const SETTINGS_SCHEMA: {
                         readonly description: "The currently selected authentication type.";
                         readonly showInDialog: false;
                     };
+                    readonly providerId: {
+                        readonly type: "string";
+                        readonly label: "Selected Auth Provider";
+                        readonly category: "Security";
+                        readonly requiresRestart: true;
+                        readonly default: string | undefined;
+                        readonly description: "Identifier for the selected OpenAI-compatible provider (e.g. lmstudio, openrouter).";
+                        readonly showInDialog: false;
+                    };
+                    readonly providers: {
+                        readonly type: "object";
+                        readonly label: "Auth Providers";
+                        readonly category: "Security";
+                        readonly requiresRestart: false;
+                        readonly default: Record<string, unknown>;
+                        readonly description: "Per-provider authentication settings.";
+                        readonly showInDialog: false;
+                        readonly properties: {
+                            readonly openrouter: {
+                                readonly type: "object";
+                                readonly label: "OpenRouter Settings";
+                                readonly category: "Security";
+                                readonly requiresRestart: false;
+                                readonly default: Record<string, unknown>;
+                                readonly description: "Stored configuration for OpenRouter.";
+                                readonly showInDialog: false;
+                                readonly properties: {
+                                    readonly baseUrl: {
+                                        readonly type: "string";
+                                        readonly label: "OpenRouter Base URL";
+                                        readonly category: "Security";
+                                        readonly requiresRestart: false;
+                                        readonly default: string | undefined;
+                                        readonly description: "Previously used OpenRouter base URL.";
+                                        readonly showInDialog: false;
+                                    };
+                                    readonly apiKey: {
+                                        readonly type: "string";
+                                        readonly label: "OpenRouter API Key";
+                                        readonly category: "Security";
+                                        readonly requiresRestart: false;
+                                        readonly default: string | undefined;
+                                        readonly description: "Stored OpenRouter API key for reuse.";
+                                        readonly showInDialog: false;
+                                    };
+                                };
+                            };
+                            readonly lmstudio: {
+                                readonly type: "object";
+                                readonly label: "LM Studio Settings";
+                                readonly category: "Security";
+                                readonly requiresRestart: false;
+                                readonly default: Record<string, unknown>;
+                                readonly description: "Stored configuration for LM Studio.";
+                                readonly showInDialog: false;
+                                readonly properties: {
+                                    readonly baseUrl: {
+                                        readonly type: "string";
+                                        readonly label: "LM Studio Base URL";
+                                        readonly category: "Security";
+                                        readonly requiresRestart: false;
+                                        readonly default: string | undefined;
+                                        readonly description: "Previously used LM Studio base URL.";
+                                        readonly showInDialog: false;
+                                    };
+                                };
+                            };
+                            readonly openai: {
+                                readonly type: "object";
+                                readonly label: "OpenAI Settings";
+                                readonly category: "Security";
+                                readonly requiresRestart: false;
+                                readonly default: Record<string, unknown>;
+                                readonly description: "Stored configuration for OpenAI.";
+                                readonly showInDialog: false;
+                                readonly properties: {
+                                    readonly baseUrl: {
+                                        readonly type: "string";
+                                        readonly label: "OpenAI Base URL";
+                                        readonly category: "Security";
+                                        readonly requiresRestart: false;
+                                        readonly default: string | undefined;
+                                        readonly description: "Previously used OpenAI base URL.";
+                                        readonly showInDialog: false;
+                                    };
+                                    readonly apiKey: {
+                                        readonly type: "string";
+                                        readonly label: "OpenAI API Key";
+                                        readonly category: "Security";
+                                        readonly requiresRestart: false;
+                                        readonly default: string | undefined;
+                                        readonly description: "Stored OpenAI API key for reuse.";
+                                        readonly showInDialog: false;
+                                    };
+                                };
+                            };
+                        };
+                    };
                     readonly useExternal: {
                         readonly type: "boolean";
                         readonly label: "Use External Auth";

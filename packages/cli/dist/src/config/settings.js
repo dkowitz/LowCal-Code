@@ -137,7 +137,23 @@ function migrateSettingsToV2(flatSettings) {
     }
     // Carry over any unrecognized keys
     for (const remainingKey of flatKeys) {
-        v2Settings[remainingKey] = flatSettings[remainingKey];
+        const remainingValue = flatSettings[remainingKey];
+        if (remainingValue === undefined) {
+            continue;
+        }
+        const existingValue = v2Settings[remainingKey];
+        if (existingValue &&
+            typeof existingValue === 'object' &&
+            existingValue !== null &&
+            !Array.isArray(existingValue) &&
+            typeof remainingValue === 'object' &&
+            remainingValue !== null &&
+            !Array.isArray(remainingValue)) {
+            v2Settings[remainingKey] = mergePlainObjects(existingValue, remainingValue);
+        }
+        else {
+            v2Settings[remainingKey] = remainingValue;
+        }
     }
     return v2Settings;
 }
@@ -152,39 +168,88 @@ function getNestedProperty(obj, path) {
     }
     return current;
 }
-const REVERSE_MIGRATION_MAP = Object.fromEntries(Object.entries(MIGRATION_MAP).map(([key, value]) => [value, key]));
-// Dynamically determine the top-level keys from the V2 settings structure.
-const KNOWN_V2_CONTAINERS = new Set(Object.values(MIGRATION_MAP).map((path) => path.split('.')[0]));
-export function migrateSettingsToV1(v2Settings) {
-    const v1Settings = {};
-    const v2Keys = new Set(Object.keys(v2Settings));
-    for (const [newPath, oldKey] of Object.entries(REVERSE_MIGRATION_MAP)) {
-        const value = getNestedProperty(v2Settings, newPath);
-        if (value !== undefined) {
-            v1Settings[oldKey] = value;
-            v2Keys.delete(newPath.split('.')[0]);
+function deleteNestedProperty(obj, path) {
+    const keys = path.split('.');
+    if (keys.length === 0) {
+        return;
+    }
+    const stack = [];
+    let current = obj;
+    for (let i = 0; i < keys.length - 1; i++) {
+        if (!current) {
+            return;
+        }
+        const key = keys[i];
+        const value = current[key];
+        if (typeof value !== 'object' ||
+            value === null ||
+            Array.isArray(value)) {
+            return;
+        }
+        stack.push({ parent: current, key });
+        current = value;
+    }
+    const lastKey = keys[keys.length - 1];
+    if (!current || !(lastKey in current)) {
+        return;
+    }
+    delete current[lastKey];
+    for (let i = stack.length - 1; i >= 0; i--) {
+        const { parent, key } = stack[i];
+        const child = parent[key];
+        if (child &&
+            typeof child === 'object' &&
+            !Array.isArray(child) &&
+            Object.keys(child).length === 0) {
+            delete parent[key];
+        }
+        else {
+            break;
         }
     }
-    // Preserve mcpServers at the top level
-    if (v2Settings['mcpServers']) {
-        v1Settings['mcpServers'] = v2Settings['mcpServers'];
-        v2Keys.delete('mcpServers');
+}
+function mergePlainObjects(target, source) {
+    const result = { ...target };
+    for (const [key, value] of Object.entries(source)) {
+        const existing = result[key];
+        if (existing &&
+            typeof existing === 'object' &&
+            existing !== null &&
+            !Array.isArray(existing) &&
+            typeof value === 'object' &&
+            value !== null &&
+            !Array.isArray(value)) {
+            result[key] = mergePlainObjects(existing, value);
+        }
+        else {
+            result[key] = value;
+        }
     }
-    // Carry over any unrecognized keys
-    for (const remainingKey of v2Keys) {
-        const value = v2Settings[remainingKey];
+    return result;
+}
+const REVERSE_MIGRATION_MAP = Object.fromEntries(Object.entries(MIGRATION_MAP).map(([key, value]) => [value, key]));
+export function migrateSettingsToV1(v2Settings) {
+    const v1Settings = {};
+    const remainingSettings = JSON.parse(JSON.stringify(v2Settings));
+    for (const [newPath, oldKey] of Object.entries(REVERSE_MIGRATION_MAP)) {
+        const value = getNestedProperty(v2Settings, newPath);
         if (value === undefined) {
             continue;
         }
-        // Don't carry over empty objects that were just containers for migrated settings.
-        if (KNOWN_V2_CONTAINERS.has(remainingKey) &&
-            typeof value === 'object' &&
+        v1Settings[oldKey] = value;
+        deleteNestedProperty(remainingSettings, newPath);
+    }
+    for (const [key, value] of Object.entries(remainingSettings)) {
+        if (value === undefined) {
+            continue;
+        }
+        if (typeof value === 'object' &&
             value !== null &&
             !Array.isArray(value) &&
             Object.keys(value).length === 0) {
             continue;
         }
-        v1Settings[remainingKey] = value;
+        v1Settings[key] = value;
     }
     return v1Settings;
 }
