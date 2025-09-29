@@ -8,6 +8,7 @@ export var AppEvent;
 (function (AppEvent) {
     AppEvent["OpenDebugConsole"] = "open-debug-console";
     AppEvent["LogError"] = "log-error";
+    AppEvent["ShowInfo"] = "show-info";
 })(AppEvent || (AppEvent = {}));
 export const appEvents = new EventEmitter();
 //# sourceMappingURL=events.js.map

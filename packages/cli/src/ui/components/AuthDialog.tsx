@@ -14,6 +14,7 @@ import {
   setOpenAIModel,
   validateAuthMethod,
 } from '../../config/auth.js';
+import { appEvents, AppEvent } from '../../utils/events.js';
 import { type LoadedSettings, SettingScope } from '../../config/settings.js';
 import { Colors } from '../colors.js';
 import { useKeypress } from '../hooks/useKeypress.js';
@@ -161,17 +162,40 @@ export function AuthDialog({
     baseUrl: string,
     model: string,
   ) => {
-    setOpenAIApiKey(apiKey);
-    setOpenAIBaseUrl(baseUrl);
-    setOpenAIModel(model);
+    const apiKeyPath = setOpenAIApiKey(apiKey);
+    const baseUrlPath = setOpenAIBaseUrl(baseUrl);
+    const modelPath = setOpenAIModel(model);
+    try {
+      appEvents.emit(
+        AppEvent.ShowInfo,
+        `Saved OpenAI credentials to: ${apiKeyPath}`,
+      );
+      // Also show base url and model file locations (often same file)
+      if (baseUrlPath !== apiKeyPath) {
+        appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_BASE_URL to: ${baseUrlPath}`);
+      }
+      if (modelPath !== apiKeyPath && modelPath !== baseUrlPath) {
+        appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_MODEL to: ${modelPath}`);
+      }
+    } catch (e) {
+      // ignore emission errors
+    }
     setShowOpenAIKeyPrompt(false);
     onSelect(AuthType.USE_OPENAI, SettingScope.User);
   };
 
   const handleProviderSubmit = (apiKey: string, baseUrl: string) => {
     // Use the OpenAI env vars for OpenRouter/LM Studio since they are OpenAI-compatible
-    setOpenAIApiKey(apiKey || '');
-    setOpenAIBaseUrl(baseUrl);
+    const apiKeyPath = setOpenAIApiKey(apiKey || '');
+    const baseUrlPath = setOpenAIBaseUrl(baseUrl);
+    try {
+      appEvents.emit(AppEvent.ShowInfo, `Saved provider credentials to: ${apiKeyPath}`);
+      if (baseUrlPath !== apiKeyPath) {
+        appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_BASE_URL to: ${baseUrlPath}`);
+      }
+    } catch (e) {
+      // ignore
+    }
     // Treat provider as OpenAI-compatible provider
     try {
       // Treat provider as OpenAI-compatible provider; persist the selected

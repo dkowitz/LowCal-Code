@@ -235,9 +235,20 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             });
         };
         appEvents.on(AppEvent.LogError, logErrorHandler);
+        const showInfoHandler = (payload) => {
+            try {
+                const text = String(payload);
+                addItem({ type: MessageType.INFO, text }, Date.now());
+            }
+            catch (e) {
+                // ignore
+            }
+        };
+        appEvents.on(AppEvent.ShowInfo, showInfoHandler);
         return () => {
             appEvents.off(AppEvent.OpenDebugConsole, openDebugConsole);
             appEvents.off(AppEvent.LogError, logErrorHandler);
+            appEvents.off(AppEvent.ShowInfo, showInfoHandler);
         };
     }, [handleNewMessage]);
     const openPrivacyNotice = useCallback(() => {

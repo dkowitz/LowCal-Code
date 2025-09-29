@@ -355,9 +355,20 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     };
     appEvents.on(AppEvent.LogError, logErrorHandler);
 
+    const showInfoHandler = (payload: unknown) => {
+      try {
+        const text = String(payload);
+        addItem({ type: MessageType.INFO, text }, Date.now());
+      } catch (e) {
+        // ignore
+      }
+    };
+    appEvents.on(AppEvent.ShowInfo, showInfoHandler);
+
     return () => {
       appEvents.off(AppEvent.OpenDebugConsole, openDebugConsole);
       appEvents.off(AppEvent.LogError, logErrorHandler);
+      appEvents.off(AppEvent.ShowInfo, showInfoHandler);
     };
   }, [handleNewMessage]);
 

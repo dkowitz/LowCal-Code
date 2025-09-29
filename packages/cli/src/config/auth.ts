@@ -66,7 +66,12 @@ function getEnvFilePath(): string {
   let currentDir = path.resolve(process.cwd());
   while (true) {
     const geminiEnvPath = path.join(currentDir, GEMINI_DIR, '.env');
-    if (fs.existsSync(geminiEnvPath)) return geminiEnvPath;
+    const geminiDirPath = path.join(currentDir, GEMINI_DIR);
+    // Prefer a project-level GEMINI_DIR/.env if the GEMINI_DIR exists in the
+    // workspace even if the .env file hasn't been created yet. This makes the
+    // CLI write credentials into the workspace-scoped .qwen/.env when the
+    // workspace is present.
+    if (fs.existsSync(geminiEnvPath) || fs.existsSync(geminiDirPath)) return geminiEnvPath;
     const envPath = path.join(currentDir, '.env');
     if (fs.existsSync(envPath)) return envPath;
     const parent = path.dirname(currentDir);
@@ -81,7 +86,7 @@ function getEnvFilePath(): string {
   return homeEnv;
 }
 
-function setEnvVarAndPersist(key: string, value: string) {
+function setEnvVarAndPersist(key: string, value: string): string {
   process.env[key] = value;
   const envPath = getEnvFilePath();
   let lines: string[] = [];
@@ -89,7 +94,7 @@ function setEnvVarAndPersist(key: string, value: string) {
     lines = fs.readFileSync(envPath, 'utf-8').split(/\r?\n/);
   }
   let found = false;
-  const newLines = lines.map(line => {
+  const newLines = lines.map((line) => {
     if (line.startsWith(key + '=')) {
       found = true;
       return `${key}=${value}`;
@@ -101,16 +106,17 @@ function setEnvVarAndPersist(key: string, value: string) {
   }
   fs.mkdirSync(path.dirname(envPath), { recursive: true });
   fs.writeFileSync(envPath, newLines.filter(Boolean).join('\n'), 'utf-8');
+  return envPath;
 }
 
-export const setOpenAIApiKey = (apiKey: string): void => {
-  setEnvVarAndPersist('OPENAI_API_KEY', apiKey);
+export const setOpenAIApiKey = (apiKey: string): string => {
+  return setEnvVarAndPersist('OPENAI_API_KEY', apiKey);
 };
 
-export const setOpenAIBaseUrl = (baseUrl: string): void => {
-  setEnvVarAndPersist('OPENAI_BASE_URL', baseUrl);
+export const setOpenAIBaseUrl = (baseUrl: string): string => {
+  return setEnvVarAndPersist('OPENAI_BASE_URL', baseUrl);
 };
 
-export const setOpenAIModel = (model: string): void => {
-  setEnvVarAndPersist('OPENAI_MODEL', model);
+export const setOpenAIModel = (model: string): string => {
+  return setEnvVarAndPersist('OPENAI_MODEL', model);
 };

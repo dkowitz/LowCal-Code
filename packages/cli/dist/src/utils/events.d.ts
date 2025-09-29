@@ -6,6 +6,7 @@
 import { EventEmitter } from 'node:events';
 export declare enum AppEvent {
     OpenDebugConsole = "open-debug-console",
-    LogError = "log-error"
+    LogError = "log-error",
+    ShowInfo = "show-info"
 }
 export declare const appEvents: EventEmitter<[never]>;

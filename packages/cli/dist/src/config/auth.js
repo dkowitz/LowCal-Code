@@ -76,7 +76,7 @@ function setEnvVarAndPersist(key, value) {
         lines = fs.readFileSync(envPath, 'utf-8').split(/\r?\n/);
     }
     let found = false;
-    const newLines = lines.map(line => {
+    const newLines = lines.map((line) => {
         if (line.startsWith(key + '=')) {
             found = true;
             return `${key}=${value}`;
@@ -88,14 +88,15 @@ function setEnvVarAndPersist(key, value) {
     }
     fs.mkdirSync(path.dirname(envPath), { recursive: true });
     fs.writeFileSync(envPath, newLines.filter(Boolean).join('\n'), 'utf-8');
+    return envPath;
 }
 export const setOpenAIApiKey = (apiKey) => {
-    setEnvVarAndPersist('OPENAI_API_KEY', apiKey);
+    return setEnvVarAndPersist('OPENAI_API_KEY', apiKey);
 };
 export const setOpenAIBaseUrl = (baseUrl) => {
-    setEnvVarAndPersist('OPENAI_BASE_URL', baseUrl);
+    return setEnvVarAndPersist('OPENAI_BASE_URL', baseUrl);
 };
 export const setOpenAIModel = (model) => {
-    setEnvVarAndPersist('OPENAI_MODEL', model);
+    return setEnvVarAndPersist('OPENAI_MODEL', model);
 };
 //# sourceMappingURL=auth.js.map
