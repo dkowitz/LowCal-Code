@@ -16,6 +16,8 @@ import { resolvePath } from '../utils/resolvePath.js';
 import { getCliVersion } from '../utils/version.js';
 import { annotateActiveExtensions } from './extension.js';
 import { loadSandboxConfig } from './sandboxConfig.js';
+import { setOpenAIApiKey, setOpenAIBaseUrl } from './auth.js';
+import { appEvents, AppEvent } from '../utils/events.js';
 import { isWorkspaceTrusted } from './trustedFolders.js';
 // Simple console logger for now - replace with actual logger if available
 const logger = {
@@ -273,11 +275,35 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
     const activeExtensions = extensions.filter((_, i) => allExtensions[i].isActive);
     // Handle OpenAI API key from command line
     if (argv.openaiApiKey) {
-        process.env['OPENAI_API_KEY'] = argv.openaiApiKey;
+        try {
+            const envPath = setOpenAIApiKey(argv.openaiApiKey);
+            // Notify UI about where credentials were saved (App.tsx listens to ShowInfo)
+            try {
+                appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_API_KEY to: ${envPath}`);
+            }
+            catch (e) {
+                // ignore
+            }
+        }
+        catch (e) {
+            // Fall back to setting runtime env if persistence fails
+            process.env['OPENAI_API_KEY'] = argv.openaiApiKey;
+        }
     }
     // Handle OpenAI base URL from command line
     if (argv.openaiBaseUrl) {
-        process.env['OPENAI_BASE_URL'] = argv.openaiBaseUrl;
+        try {
+            const envPath = setOpenAIBaseUrl(argv.openaiBaseUrl);
+            try {
+                appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_BASE_URL to: ${envPath}`);
+            }
+            catch (e) {
+                // ignore
+            }
+        }
+        catch (e) {
+            process.env['OPENAI_BASE_URL'] = argv.openaiBaseUrl;
+        }
     }
     // Handle Tavily API key from command line
     if (argv.tavilyApiKey) {

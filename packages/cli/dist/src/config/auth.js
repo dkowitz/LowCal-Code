@@ -51,7 +51,12 @@ function getEnvFilePath() {
     let currentDir = path.resolve(process.cwd());
     while (true) {
         const geminiEnvPath = path.join(currentDir, GEMINI_DIR, '.env');
-        if (fs.existsSync(geminiEnvPath))
+        const geminiDirPath = path.join(currentDir, GEMINI_DIR);
+        // Prefer a project-level GEMINI_DIR/.env if the GEMINI_DIR exists in the
+        // workspace even if the .env file hasn't been created yet. This makes the
+        // CLI write credentials into the workspace-scoped .qwen/.env when the
+        // workspace is present.
+        if (fs.existsSync(geminiEnvPath) || fs.existsSync(geminiDirPath))
             return geminiEnvPath;
         const envPath = path.join(currentDir, '.env');
         if (fs.existsSync(envPath))
