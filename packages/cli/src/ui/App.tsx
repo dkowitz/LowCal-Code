@@ -240,6 +240,25 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const [currentModel, setCurrentModel] = useState(config.getModel());
   const [lmStudioModel, setLmStudioModel] = useState<string | null>(null);
 
+  // If the user has a saved model in settings, ensure the config and UI
+  // reflect it on startup. This will restore the last-used model across
+  // restarts.
+  useEffect(() => {
+    const savedModel = settings.merged.model?.name;
+    if (savedModel && savedModel !== config.getModel()) {
+      // setModel is async-capable; we don't block startup on it but ensure
+      // the UI shows the saved model immediately.
+      void (async () => {
+        try {
+          await config.setModel(savedModel);
+          setCurrentModel(savedModel);
+        } catch (e) {
+          console.warn('Failed to restore saved model from settings:', e);
+        }
+      })();
+    }
+  }, [config, settings.merged.model?.name]);
+
   useEffect(() => {
     const authType = settings.merged.security?.auth?.selectedType;
     const baseUrl = process.env['OPENAI_BASE_URL'];
@@ -769,6 +788,12 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   // Unload previous model by setting new model (config.setModel will reinitialize client)
   await config.setModel(modelId);
         setCurrentModel(modelId);
+        // Persist selected model to user settings so it is restored on next startup.
+        try {
+          settings.setValue(SettingScope.User, 'model.name', modelId);
+        } catch (e) {
+          console.warn('Failed to persist selected model to settings:', e);
+        }
         setIsModelSelectionDialogOpen(false);
         addItem(
           {

@@ -269,6 +269,27 @@ function mergeSettings(
   workspace: Settings,
   isTrusted: boolean,
 ): Settings {
+  // Normalize legacy `model` stored as a flat string to the newer shape
+  // { model: { name: string } } so downstream code can always read
+  // settings.model?.name.
+  function normalizeLegacyModel(s: Settings | undefined): Settings | undefined {
+    if (!s) return s;
+    try {
+      const asAny = s as any;
+      if (typeof asAny.model === 'string') {
+        return { ...s, model: { ...(s.model as any ? {} : {}), name: asAny.model } } as Settings;
+      }
+    } catch (_e) {
+      // ignore
+    }
+    return s;
+  }
+
+  system = normalizeLegacyModel(system) || ({} as Settings);
+  systemDefaults = normalizeLegacyModel(systemDefaults) || ({} as Settings);
+  user = normalizeLegacyModel(user) || ({} as Settings);
+  workspace = normalizeLegacyModel(workspace) || ({} as Settings);
+
   const safeWorkspace = isTrusted ? workspace : ({} as Settings);
 
   // folderTrust is not supported at workspace level.

@@ -298,20 +298,20 @@ export declare const mcpServerSchema: z.ZodObject<{
     name: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     name: string;
-    args: string[];
     env: {
         name: string;
         value: string;
     }[];
     command: string;
+    args: string[];
 }, {
     name: string;
-    args: string[];
     env: {
         name: string;
         value: string;
     }[];
     command: string;
+    args: string[];
 }>;
 export declare const promptCapabilitiesSchema: z.ZodObject<{
     audio: z.ZodOptional<z.ZodBoolean>;
@@ -361,13 +361,13 @@ export declare const authMethodSchema: z.ZodObject<{
     id: z.ZodString;
     name: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    id: string;
     name: string;
     description: string | null;
+    id: string;
 }, {
-    id: string;
     name: string;
     description: string | null;
+    id: string;
 }>;
 export declare const clientResponseSchema: z.ZodUnion<[z.ZodNull, z.ZodObject<{
     content: z.ZodString;
@@ -457,41 +457,41 @@ export declare const newSessionRequestSchema: z.ZodObject<{
         name: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }, {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     mcpServers: {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }[];
     cwd: string;
 }, {
     mcpServers: {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }[];
     cwd: string;
 }>;
@@ -513,43 +513,43 @@ export declare const loadSessionRequestSchema: z.ZodObject<{
         name: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }, {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }>, "many">;
     sessionId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     mcpServers: {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }[];
     cwd: string;
     sessionId: string;
 }, {
     mcpServers: {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }[];
     cwd: string;
     sessionId: string;
@@ -590,13 +590,13 @@ export declare const initializeResponseSchema: z.ZodObject<{
         id: z.ZodString;
         name: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        id: string;
         name: string;
         description: string | null;
+        id: string;
     }, {
-        id: string;
         name: string;
         description: string | null;
+        id: string;
     }>, "many">;
     protocolVersion: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
@@ -609,9 +609,9 @@ export declare const initializeResponseSchema: z.ZodObject<{
         } | undefined;
     };
     authMethods: {
-        id: string;
         name: string;
         description: string | null;
+        id: string;
     }[];
     protocolVersion: number;
 }, {
@@ -624,9 +624,9 @@ export declare const initializeResponseSchema: z.ZodObject<{
         } | undefined;
     };
     authMethods: {
-        id: string;
         name: string;
         description: string | null;
+        id: string;
     }[];
     protocolVersion: number;
 }>;
@@ -647,16 +647,16 @@ export declare const contentBlockSchema: z.ZodUnion<[z.ZodObject<{
     text: z.ZodString;
     type: z.ZodLiteral<"text">;
 }, "strip", z.ZodTypeAny, {
-    text: string;
     type: "text";
+    text: string;
     annotations?: {
         priority?: number | null | undefined;
         audience?: ("user" | "assistant")[] | null | undefined;
         lastModified?: string | null | undefined;
     } | null | undefined;
 }, {
-    text: string;
     type: "text";
+    text: string;
     annotations?: {
         priority?: number | null | undefined;
         audience?: ("user" | "assistant")[] | null | undefined;
@@ -870,16 +870,16 @@ export declare const toolCallContentSchema: z.ZodUnion<[z.ZodObject<{
         text: z.ZodString;
         type: z.ZodLiteral<"text">;
     }, "strip", z.ZodTypeAny, {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
             lastModified?: string | null | undefined;
         } | null | undefined;
     }, {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -1079,8 +1079,8 @@ export declare const toolCallContentSchema: z.ZodUnion<[z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     type: "content";
     content: {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -1137,8 +1137,8 @@ export declare const toolCallContentSchema: z.ZodUnion<[z.ZodObject<{
 }, {
     type: "content";
     content: {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -1227,16 +1227,16 @@ export declare const toolCallSchema: z.ZodObject<{
             text: z.ZodString;
             type: z.ZodLiteral<"text">;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
                 lastModified?: string | null | undefined;
             } | null | undefined;
         }, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -1436,8 +1436,8 @@ export declare const toolCallSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         type: "content";
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -1494,8 +1494,8 @@ export declare const toolCallSchema: z.ZodObject<{
     }, {
         type: "content";
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -1588,8 +1588,8 @@ export declare const toolCallSchema: z.ZodObject<{
     content?: ({
         type: "content";
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -1662,8 +1662,8 @@ export declare const toolCallSchema: z.ZodObject<{
     content?: ({
         type: "content";
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -1769,16 +1769,16 @@ export declare const promptRequestSchema: z.ZodObject<{
         text: z.ZodString;
         type: z.ZodLiteral<"text">;
     }, "strip", z.ZodTypeAny, {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
             lastModified?: string | null | undefined;
         } | null | undefined;
     }, {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -1977,8 +1977,8 @@ export declare const promptRequestSchema: z.ZodObject<{
     sessionId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     prompt: ({
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -2035,8 +2035,8 @@ export declare const promptRequestSchema: z.ZodObject<{
     sessionId: string;
 }, {
     prompt: ({
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -2110,16 +2110,16 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
         text: z.ZodString;
         type: z.ZodLiteral<"text">;
     }, "strip", z.ZodTypeAny, {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
             lastModified?: string | null | undefined;
         } | null | undefined;
     }, {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -2318,8 +2318,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     sessionUpdate: z.ZodLiteral<"user_message_chunk">;
 }, "strip", z.ZodTypeAny, {
     content: {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -2376,8 +2376,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     sessionUpdate: "user_message_chunk";
 }, {
     content: {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -2450,16 +2450,16 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
         text: z.ZodString;
         type: z.ZodLiteral<"text">;
     }, "strip", z.ZodTypeAny, {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
             lastModified?: string | null | undefined;
         } | null | undefined;
     }, {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -2658,8 +2658,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     sessionUpdate: z.ZodLiteral<"agent_message_chunk">;
 }, "strip", z.ZodTypeAny, {
     content: {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -2716,8 +2716,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     sessionUpdate: "agent_message_chunk";
 }, {
     content: {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -2790,16 +2790,16 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
         text: z.ZodString;
         type: z.ZodLiteral<"text">;
     }, "strip", z.ZodTypeAny, {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
             lastModified?: string | null | undefined;
         } | null | undefined;
     }, {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -2998,8 +2998,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     sessionUpdate: z.ZodLiteral<"agent_thought_chunk">;
 }, "strip", z.ZodTypeAny, {
     content: {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -3056,8 +3056,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     sessionUpdate: "agent_thought_chunk";
 }, {
     content: {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -3131,16 +3131,16 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
             text: z.ZodString;
             type: z.ZodLiteral<"text">;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
                 lastModified?: string | null | undefined;
             } | null | undefined;
         }, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -3340,8 +3340,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         type: "content";
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -3398,8 +3398,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     }, {
         type: "content";
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -3494,8 +3494,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     content?: ({
         type: "content";
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -3569,8 +3569,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     content?: ({
         type: "content";
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -3654,16 +3654,16 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
             text: z.ZodString;
             type: z.ZodLiteral<"text">;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
                 lastModified?: string | null | undefined;
             } | null | undefined;
         }, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -3863,8 +3863,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         type: "content";
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -3921,8 +3921,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     }, {
         type: "content";
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -4016,8 +4016,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     content?: ({
         type: "content";
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -4091,8 +4091,8 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     content?: ({
         type: "content";
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -4224,13 +4224,13 @@ export declare const agentResponseSchema: z.ZodUnion<[z.ZodObject<{
         id: z.ZodString;
         name: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        id: string;
         name: string;
         description: string | null;
+        id: string;
     }, {
-        id: string;
         name: string;
         description: string | null;
+        id: string;
     }>, "many">;
     protocolVersion: z.ZodNumber;
 }, "strip", z.ZodTypeAny, {
@@ -4243,9 +4243,9 @@ export declare const agentResponseSchema: z.ZodUnion<[z.ZodObject<{
         } | undefined;
     };
     authMethods: {
-        id: string;
         name: string;
         description: string | null;
+        id: string;
     }[];
     protocolVersion: number;
 }, {
@@ -4258,9 +4258,9 @@ export declare const agentResponseSchema: z.ZodUnion<[z.ZodObject<{
         } | undefined;
     };
     authMethods: {
-        id: string;
         name: string;
         description: string | null;
+        id: string;
     }[];
     protocolVersion: number;
 }>, z.ZodNull, z.ZodObject<{
@@ -4310,16 +4310,16 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
                 text: z.ZodString;
                 type: z.ZodLiteral<"text">;
             }, "strip", z.ZodTypeAny, {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
                     lastModified?: string | null | undefined;
                 } | null | undefined;
             }, {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -4519,8 +4519,8 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
         }, "strip", z.ZodTypeAny, {
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -4577,8 +4577,8 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
         }, {
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -4671,8 +4671,8 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -4745,8 +4745,8 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -4827,8 +4827,8 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -4909,8 +4909,8 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -5038,16 +5038,16 @@ export declare const sessionNotificationSchema: z.ZodObject<{
             text: z.ZodString;
             type: z.ZodLiteral<"text">;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
                 lastModified?: string | null | undefined;
             } | null | undefined;
         }, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -5246,8 +5246,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         sessionUpdate: z.ZodLiteral<"user_message_chunk">;
     }, "strip", z.ZodTypeAny, {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -5304,8 +5304,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         sessionUpdate: "user_message_chunk";
     }, {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -5378,16 +5378,16 @@ export declare const sessionNotificationSchema: z.ZodObject<{
             text: z.ZodString;
             type: z.ZodLiteral<"text">;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
                 lastModified?: string | null | undefined;
             } | null | undefined;
         }, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -5586,8 +5586,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         sessionUpdate: z.ZodLiteral<"agent_message_chunk">;
     }, "strip", z.ZodTypeAny, {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -5644,8 +5644,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         sessionUpdate: "agent_message_chunk";
     }, {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -5718,16 +5718,16 @@ export declare const sessionNotificationSchema: z.ZodObject<{
             text: z.ZodString;
             type: z.ZodLiteral<"text">;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
                 lastModified?: string | null | undefined;
             } | null | undefined;
         }, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -5926,8 +5926,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         sessionUpdate: z.ZodLiteral<"agent_thought_chunk">;
     }, "strip", z.ZodTypeAny, {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -5984,8 +5984,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         sessionUpdate: "agent_thought_chunk";
     }, {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -6059,16 +6059,16 @@ export declare const sessionNotificationSchema: z.ZodObject<{
                 text: z.ZodString;
                 type: z.ZodLiteral<"text">;
             }, "strip", z.ZodTypeAny, {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
                     lastModified?: string | null | undefined;
                 } | null | undefined;
             }, {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -6268,8 +6268,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         }, "strip", z.ZodTypeAny, {
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -6326,8 +6326,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         }, {
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -6422,8 +6422,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -6497,8 +6497,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -6582,16 +6582,16 @@ export declare const sessionNotificationSchema: z.ZodObject<{
                 text: z.ZodString;
                 type: z.ZodLiteral<"text">;
             }, "strip", z.ZodTypeAny, {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
                     lastModified?: string | null | undefined;
                 } | null | undefined;
             }, {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -6791,8 +6791,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         }, "strip", z.ZodTypeAny, {
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -6849,8 +6849,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         }, {
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -6944,8 +6944,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -7019,8 +7019,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -7120,8 +7120,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
     sessionId: string;
     update: {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -7178,8 +7178,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         sessionUpdate: "user_message_chunk";
     } | {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -7236,8 +7236,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         sessionUpdate: "agent_message_chunk";
     } | {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -7301,8 +7301,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -7375,8 +7375,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -7454,8 +7454,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
     sessionId: string;
     update: {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -7512,8 +7512,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         sessionUpdate: "user_message_chunk";
     } | {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -7570,8 +7570,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         sessionUpdate: "agent_message_chunk";
     } | {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -7635,8 +7635,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -7709,8 +7709,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -7846,16 +7846,16 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
                 text: z.ZodString;
                 type: z.ZodLiteral<"text">;
             }, "strip", z.ZodTypeAny, {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
                     lastModified?: string | null | undefined;
                 } | null | undefined;
             }, {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -8055,8 +8055,8 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
         }, "strip", z.ZodTypeAny, {
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -8113,8 +8113,8 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
         }, {
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -8207,8 +8207,8 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -8281,8 +8281,8 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -8363,8 +8363,8 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -8445,8 +8445,8 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -8577,41 +8577,41 @@ export declare const agentRequestSchema: z.ZodUnion<[z.ZodObject<{
         name: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }, {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     mcpServers: {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }[];
     cwd: string;
 }, {
     mcpServers: {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }[];
     cwd: string;
 }>, z.ZodObject<{
@@ -8632,43 +8632,43 @@ export declare const agentRequestSchema: z.ZodUnion<[z.ZodObject<{
         name: z.ZodString;
     }, "strip", z.ZodTypeAny, {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }, {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }>, "many">;
     sessionId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     mcpServers: {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }[];
     cwd: string;
     sessionId: string;
 }, {
     mcpServers: {
         name: string;
-        args: string[];
         env: {
             name: string;
             value: string;
         }[];
         command: string;
+        args: string[];
     }[];
     cwd: string;
     sessionId: string;
@@ -8690,16 +8690,16 @@ export declare const agentRequestSchema: z.ZodUnion<[z.ZodObject<{
         text: z.ZodString;
         type: z.ZodLiteral<"text">;
     }, "strip", z.ZodTypeAny, {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
             lastModified?: string | null | undefined;
         } | null | undefined;
     }, {
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -8898,8 +8898,8 @@ export declare const agentRequestSchema: z.ZodUnion<[z.ZodObject<{
     sessionId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
     prompt: ({
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -8956,8 +8956,8 @@ export declare const agentRequestSchema: z.ZodUnion<[z.ZodObject<{
     sessionId: string;
 }, {
     prompt: ({
-        text: string;
         type: "text";
+        text: string;
         annotations?: {
             priority?: number | null | undefined;
             audience?: ("user" | "assistant")[] | null | undefined;
@@ -9033,16 +9033,16 @@ export declare const agentNotificationSchema: z.ZodObject<{
             text: z.ZodString;
             type: z.ZodLiteral<"text">;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
                 lastModified?: string | null | undefined;
             } | null | undefined;
         }, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -9241,8 +9241,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         sessionUpdate: z.ZodLiteral<"user_message_chunk">;
     }, "strip", z.ZodTypeAny, {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -9299,8 +9299,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         sessionUpdate: "user_message_chunk";
     }, {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -9373,16 +9373,16 @@ export declare const agentNotificationSchema: z.ZodObject<{
             text: z.ZodString;
             type: z.ZodLiteral<"text">;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
                 lastModified?: string | null | undefined;
             } | null | undefined;
         }, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -9581,8 +9581,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         sessionUpdate: z.ZodLiteral<"agent_message_chunk">;
     }, "strip", z.ZodTypeAny, {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -9639,8 +9639,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         sessionUpdate: "agent_message_chunk";
     }, {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -9713,16 +9713,16 @@ export declare const agentNotificationSchema: z.ZodObject<{
             text: z.ZodString;
             type: z.ZodLiteral<"text">;
         }, "strip", z.ZodTypeAny, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
                 lastModified?: string | null | undefined;
             } | null | undefined;
         }, {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -9921,8 +9921,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         sessionUpdate: z.ZodLiteral<"agent_thought_chunk">;
     }, "strip", z.ZodTypeAny, {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -9979,8 +9979,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         sessionUpdate: "agent_thought_chunk";
     }, {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -10054,16 +10054,16 @@ export declare const agentNotificationSchema: z.ZodObject<{
                 text: z.ZodString;
                 type: z.ZodLiteral<"text">;
             }, "strip", z.ZodTypeAny, {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
                     lastModified?: string | null | undefined;
                 } | null | undefined;
             }, {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -10263,8 +10263,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         }, "strip", z.ZodTypeAny, {
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -10321,8 +10321,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         }, {
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -10417,8 +10417,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -10492,8 +10492,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -10577,16 +10577,16 @@ export declare const agentNotificationSchema: z.ZodObject<{
                 text: z.ZodString;
                 type: z.ZodLiteral<"text">;
             }, "strip", z.ZodTypeAny, {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
                     lastModified?: string | null | undefined;
                 } | null | undefined;
             }, {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -10786,8 +10786,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         }, "strip", z.ZodTypeAny, {
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -10844,8 +10844,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         }, {
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -10939,8 +10939,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -11014,8 +11014,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -11115,8 +11115,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
     sessionId: string;
     update: {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -11173,8 +11173,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         sessionUpdate: "user_message_chunk";
     } | {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -11231,8 +11231,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         sessionUpdate: "agent_message_chunk";
     } | {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -11296,8 +11296,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -11370,8 +11370,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -11449,8 +11449,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
     sessionId: string;
     update: {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -11507,8 +11507,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         sessionUpdate: "user_message_chunk";
     } | {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -11565,8 +11565,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         sessionUpdate: "agent_message_chunk";
     } | {
         content: {
-            text: string;
             type: "text";
+            text: string;
             annotations?: {
                 priority?: number | null | undefined;
                 audience?: ("user" | "assistant")[] | null | undefined;
@@ -11630,8 +11630,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;
@@ -11704,8 +11704,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         content?: ({
             type: "content";
             content: {
-                text: string;
                 type: "text";
+                text: string;
                 annotations?: {
                     priority?: number | null | undefined;
                     audience?: ("user" | "assistant")[] | null | undefined;

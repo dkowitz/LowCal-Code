@@ -42,13 +42,60 @@ export const validateAuthMethod = (authMethod) => {
     }
     return 'Invalid auth method selected.';
 };
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { homedir } from 'node:os';
+import { GEMINI_CONFIG_DIR as GEMINI_DIR } from '@qwen-code/qwen-code-core';
+function getEnvFilePath() {
+    // Search upward from cwd for a project .env or .qwen/.env, otherwise use home fallback.
+    let currentDir = path.resolve(process.cwd());
+    while (true) {
+        const geminiEnvPath = path.join(currentDir, GEMINI_DIR, '.env');
+        if (fs.existsSync(geminiEnvPath))
+            return geminiEnvPath;
+        const envPath = path.join(currentDir, '.env');
+        if (fs.existsSync(envPath))
+            return envPath;
+        const parent = path.dirname(currentDir);
+        if (!parent || parent === currentDir)
+            break;
+        currentDir = parent;
+    }
+    // Fallbacks in home directory
+    const homeGeminiEnv = path.join(homedir(), GEMINI_DIR, '.env');
+    if (fs.existsSync(homeGeminiEnv))
+        return homeGeminiEnv;
+    const homeEnv = path.join(homedir(), '.env');
+    return homeEnv;
+}
+function setEnvVarAndPersist(key, value) {
+    process.env[key] = value;
+    const envPath = getEnvFilePath();
+    let lines = [];
+    if (fs.existsSync(envPath)) {
+        lines = fs.readFileSync(envPath, 'utf-8').split(/\r?\n/);
+    }
+    let found = false;
+    const newLines = lines.map(line => {
+        if (line.startsWith(key + '=')) {
+            found = true;
+            return `${key}=${value}`;
+        }
+        return line;
+    });
+    if (!found) {
+        newLines.push(`${key}=${value}`);
+    }
+    fs.mkdirSync(path.dirname(envPath), { recursive: true });
+    fs.writeFileSync(envPath, newLines.filter(Boolean).join('\n'), 'utf-8');
+}
 export const setOpenAIApiKey = (apiKey) => {
-    process.env['OPENAI_API_KEY'] = apiKey;
+    setEnvVarAndPersist('OPENAI_API_KEY', apiKey);
 };
 export const setOpenAIBaseUrl = (baseUrl) => {
-    process.env['OPENAI_BASE_URL'] = baseUrl;
+    setEnvVarAndPersist('OPENAI_BASE_URL', baseUrl);
 };
 export const setOpenAIModel = (model) => {
-    process.env['OPENAI_MODEL'] = model;
+    setEnvVarAndPersist('OPENAI_MODEL', model);
 };
 //# sourceMappingURL=auth.js.map

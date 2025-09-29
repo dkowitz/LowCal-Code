@@ -189,6 +189,27 @@ export function migrateSettingsToV1(v2Settings) {
     return v1Settings;
 }
 function mergeSettings(system, systemDefaults, user, workspace, isTrusted) {
+    // Normalize legacy `model` stored as a flat string to the newer shape
+    // { model: { name: string } } so downstream code can always read
+    // settings.model?.name.
+    function normalizeLegacyModel(s) {
+        if (!s)
+            return s;
+        try {
+            const asAny = s;
+            if (typeof asAny.model === 'string') {
+                return { ...s, model: { ...(s.model ? {} : {}), name: asAny.model } };
+            }
+        }
+        catch (_e) {
+            // ignore
+        }
+        return s;
+    }
+    system = normalizeLegacyModel(system) || {};
+    systemDefaults = normalizeLegacyModel(systemDefaults) || {};
+    user = normalizeLegacyModel(user) || {};
+    workspace = normalizeLegacyModel(workspace) || {};
     const safeWorkspace = isTrusted ? workspace : {};
     // folderTrust is not supported at workspace level.
     const { security, ...restOfWorkspace } = safeWorkspace;
