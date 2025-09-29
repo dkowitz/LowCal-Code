@@ -147,6 +147,7 @@ describe('Gemini Client (client.ts)', () => {
                 models: {
                     generateContent: mockGenerateContentFn,
                     embedContent: mockEmbedContentFn,
+                    countTokens: vi.fn().mockResolvedValue({ totalTokens: 0 }),
                 },
             };
             return mock;
@@ -751,6 +752,9 @@ describe('Gemini Client (client.ts)', () => {
         });
     });
     describe('sendMessageStream', () => {
+        beforeEach(() => {
+            vi.mocked(tokenLimit).mockReturnValue(131_072);
+        });
         it('injects a plan mode reminder before user queries when approval mode is PLAN', async () => {
             const mockStream = (async function* () { })();
             mockTurnRunFn.mockReturnValue(mockStream);

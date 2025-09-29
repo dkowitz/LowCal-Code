@@ -57,6 +57,7 @@ export enum GeminiEventType {
   LoopDetected = 'loop_detected',
   Citation = 'citation',
   Retry = 'retry',
+  TokenBudgetWarning = 'token_budget_warning',
 }
 
 export type ServerGeminiRetryEvent = {
@@ -76,6 +77,12 @@ export interface SessionTokenLimitExceededValue {
   currentTokens: number;
   limit: number;
   message: string;
+}
+
+export interface TokenBudgetWarningValue {
+  tokens: number;
+  limit: number;
+  effectiveLimit: number;
 }
 
 export interface ToolCallRequestInfo {
@@ -181,6 +188,11 @@ export type ServerGeminiLoopDetectedEvent = {
   type: GeminiEventType.LoopDetected;
 };
 
+export type ServerGeminiTokenBudgetWarningEvent = {
+  type: GeminiEventType.TokenBudgetWarning;
+  value: TokenBudgetWarningValue;
+};
+
 // The original union type, now composed of the individual types
 export type ServerGeminiStreamEvent =
   | ServerGeminiContentEvent
@@ -195,6 +207,7 @@ export type ServerGeminiStreamEvent =
   | ServerGeminiSessionTokenLimitExceededEvent
   | ServerGeminiFinishedEvent
   | ServerGeminiLoopDetectedEvent
+  | ServerGeminiTokenBudgetWarningEvent
   | ServerGeminiRetryEvent;
 
 // A turn manages the agentic loop turn within the server context.

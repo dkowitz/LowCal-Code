@@ -27,7 +27,8 @@ export declare enum GeminiEventType {
     Finished = "finished",
     LoopDetected = "loop_detected",
     Citation = "citation",
-    Retry = "retry"
+    Retry = "retry",
+    TokenBudgetWarning = "token_budget_warning"
 }
 export type ServerGeminiRetryEvent = {
     type: GeminiEventType.Retry;
@@ -43,6 +44,11 @@ export interface SessionTokenLimitExceededValue {
     currentTokens: number;
     limit: number;
     message: string;
+}
+export interface TokenBudgetWarningValue {
+    tokens: number;
+    limit: number;
+    effectiveLimit: number;
 }
 export interface ToolCallRequestInfo {
     callId: string;
@@ -126,7 +132,11 @@ export type ServerGeminiFinishedEvent = {
 export type ServerGeminiLoopDetectedEvent = {
     type: GeminiEventType.LoopDetected;
 };
-export type ServerGeminiStreamEvent = ServerGeminiContentEvent | ServerGeminiToolCallRequestEvent | ServerGeminiToolCallResponseEvent | ServerGeminiToolCallConfirmationEvent | ServerGeminiUserCancelledEvent | ServerGeminiErrorEvent | ServerGeminiChatCompressedEvent | ServerGeminiThoughtEvent | ServerGeminiMaxSessionTurnsEvent | ServerGeminiSessionTokenLimitExceededEvent | ServerGeminiFinishedEvent | ServerGeminiLoopDetectedEvent | ServerGeminiRetryEvent;
+export type ServerGeminiTokenBudgetWarningEvent = {
+    type: GeminiEventType.TokenBudgetWarning;
+    value: TokenBudgetWarningValue;
+};
+export type ServerGeminiStreamEvent = ServerGeminiContentEvent | ServerGeminiToolCallRequestEvent | ServerGeminiToolCallResponseEvent | ServerGeminiToolCallConfirmationEvent | ServerGeminiUserCancelledEvent | ServerGeminiErrorEvent | ServerGeminiChatCompressedEvent | ServerGeminiThoughtEvent | ServerGeminiMaxSessionTurnsEvent | ServerGeminiSessionTokenLimitExceededEvent | ServerGeminiFinishedEvent | ServerGeminiLoopDetectedEvent | ServerGeminiTokenBudgetWarningEvent | ServerGeminiRetryEvent;
 export declare class Turn {
     private readonly chat;
     private readonly prompt_id;

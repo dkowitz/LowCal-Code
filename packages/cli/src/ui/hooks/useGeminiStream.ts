@@ -589,6 +589,20 @@ export const useGeminiStream = (
     [addItem],
   );
 
+  const handleTokenBudgetWarningEvent = useCallback(
+    (value: { tokens: number; limit: number; effectiveLimit: number }) =>
+      addItem(
+        {
+          type: 'info',
+          text:
+            `⚠️  Context usage is high: ${value.tokens.toLocaleString()} of ${value.limit.toLocaleString()} tokens ` +
+            `(safe budget ≈ ${value.effectiveLimit.toLocaleString()}). Consider narrowing directory listings, requesting files on demand, or running /compress.`,
+        },
+        Date.now(),
+      ),
+    [addItem],
+  );
+
   const handleLoopDetectedEvent = useCallback(() => {
     addItem(
       {
@@ -641,6 +655,9 @@ export const useGeminiStream = (
           case ServerGeminiEventType.SessionTokenLimitExceeded:
             handleSessionTokenLimitExceededEvent(event.value);
             break;
+          case ServerGeminiEventType.TokenBudgetWarning:
+            handleTokenBudgetWarningEvent(event.value);
+            break;
           case ServerGeminiEventType.Finished:
             handleFinishedEvent(
               event as ServerGeminiFinishedEvent,
@@ -676,6 +693,7 @@ export const useGeminiStream = (
       handleFinishedEvent,
       handleMaxSessionTurnsEvent,
       handleSessionTokenLimitExceededEvent,
+      handleTokenBudgetWarningEvent,
     ],
   );
 

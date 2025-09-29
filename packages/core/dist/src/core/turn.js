@@ -22,6 +22,7 @@ export var GeminiEventType;
     GeminiEventType["LoopDetected"] = "loop_detected";
     GeminiEventType["Citation"] = "citation";
     GeminiEventType["Retry"] = "retry";
+    GeminiEventType["TokenBudgetWarning"] = "token_budget_warning";
 })(GeminiEventType || (GeminiEventType = {}));
 export var CompressionStatus;
 (function (CompressionStatus) {

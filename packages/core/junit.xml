@@ -1,536 +1,300 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="121" failures="28" errors="0" time="0.188042884">
-    <testsuite name="src/core/client.test.ts" timestamp="2025-09-28T20:33:59.650Z" hostname="uby" tests="70" failures="28" errors="0" skipped="1" time="0.163117403">
-        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should throw an error for non-positive numbers" time="0.001176755">
+<testsuites name="vitest tests" tests="121" failures="0" errors="0" time="0.198582898">
+    <testsuite name="src/core/client.test.ts" timestamp="2025-09-28T23:44:59.532Z" hostname="uby" tests="70" failures="0" errors="0" skipped="1" time="0.174400696">
+        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should throw an error for non-positive numbers" time="0.001162305">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should throw an error for a fraction greater than or equal to 1" time="0.000126834">
+        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should throw an error for a fraction greater than or equal to 1" time="0.000119831">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should handle a fraction in the middle" time="0.000370145">
+        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should handle a fraction in the middle" time="0.000127806">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should handle a fraction that results in the last index" time="0.000100195">
+        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should handle a fraction that results in the last index" time="0.000044342">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should handle an empty history" time="0.000038511">
+        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should handle an empty history" time="0.000034273">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should handle a history with only one item" time="0.000054451">
+        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should handle a history with only one item" time="0.000033812">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should handle history with weird parts" time="0.000091308">
+        <testcase classname="src/core/client.test.ts" name="findIndexAfterFraction &gt; should handle history with weird parts" time="0.000047988">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should call embedContent with correct parameters and return embeddings" time="0.009666065">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should call embedContent with correct parameters and return embeddings" time="0.009754954">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should return an empty array if an empty array is passed" time="0.001595179">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should return an empty array if an empty array is passed" time="0.002288534">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should throw an error if API response has no embeddings array" time="0.001461882">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should throw an error if API response has no embeddings array" time="0.001870072">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should throw an error if API response has an empty embeddings array" time="0.001167949">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should throw an error if API response has an empty embeddings array" time="0.001546835">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should throw an error if API returns a mismatched number of embeddings" time="0.001113799">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should throw an error if API returns a mismatched number of embeddings" time="0.001260807">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should throw an error if any embedding has nullish values" time="0.001107457">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should throw an error if any embedding has nullish values" time="0.001168396">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should throw an error if any embedding has an empty values array" time="0.001173559">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should throw an error if any embedding has an empty values array" time="0.001265967">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should propagate errors from the API call" time="0.001424803">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateEmbedding &gt; should propagate errors from the API call" time="0.001497875">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateJson &gt; should call generateContent with the correct parameters" time="0.002151517">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateJson &gt; should call generateContent with the correct parameters" time="0.002420076">
         </testcase>
         <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateJson &gt; should allow overriding model and config" time="0">
             <skipped/>
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; addHistory &gt; should call chat.addHistory with the provided content" time="0.001388116">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; addHistory &gt; should call chat.addHistory with the provided content" time="0.001551774">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; resetChat &gt; should create a new chat session, clearing the old history" time="0.002306333">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; resetChat &gt; should create a new chat session, clearing the old history" time="0.00231317">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; when compression inflates the token count &gt; uses the truncated history for compression" time="0.001945095">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; when compression inflates the token count &gt; uses the truncated history for compression" time="0.001987318">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; when compression inflates the token count &gt; allows compression to be forced/manual after a failure" time="0.00253234">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; when compression inflates the token count &gt; allows compression to be forced/manual after a failure" time="0.002618613">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; when compression inflates the token count &gt; yields the result even if the compression inflated the tokens" time="0.001615115">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; when compression inflates the token count &gt; yields the result even if the compression inflated the tokens" time="0.001858601">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; when compression inflates the token count &gt; does not manipulate the source chat" time="0.001359022">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; when compression inflates the token count &gt; does not manipulate the source chat" time="0.001421784">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; when compression inflates the token count &gt; restores the history back to the original" time="0.001549835">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; when compression inflates the token count &gt; restores the history back to the original" time="0.001598149">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; when compression inflates the token count &gt; will not attempt to compress context after a failure" time="0.001484755">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; when compression inflates the token count &gt; will not attempt to compress context after a failure" time="0.001672377">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; attempts to compress with a maxOutputTokens set to the original token count" time="0.002540445">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; attempts to compress with a maxOutputTokens set to the original token count" time="0.002634302">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; should not trigger summarization if token count is below threshold" time="0.001541699">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; should not trigger summarization if token count is below threshold" time="0.001685391">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; logs a telemetry event when compressing" time="0.001856491">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; logs a telemetry event when compressing" time="0.005439229">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; should trigger summarization if token count is at threshold with contextPercentageThreshold setting" time="0.005223344">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; should trigger summarization if token count is at threshold with contextPercentageThreshold setting" time="0.003032927">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; should not compress across a function call response" time="0.005381527">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; should not compress across a function call response" time="0.002971244">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; should always trigger summarization when force is true, regardless of token count" time="0.002371062">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; should always trigger summarization when force is true, regardless of token count" time="0.002791332">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; should use current model from config for token counting after sendMessage" time="0.002233438">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; tryCompressChat &gt; should use current model from config for token counting after sendMessage" time="0.003209694">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; injects a plan mode reminder before user queries when approval mode is PLAN" time="0.009176892">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ fromAsync src/core/client.test.ts:117:20
- ❯ src/core/client.test.ts:987:7
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; injects a plan mode reminder before user queries when approval mode is PLAN" time="0.002956427">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; emits a compression event when the context was automatically compressed" time="0.00279189">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ fromAsync src/core/client.test.ts:117:20
- ❯ src/core/client.test.ts:1035:22
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; emits a compression event when the context was automatically compressed" time="0.002348374">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; does not emit a compression event when the status is 2" time="0.002307565">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ fromAsync src/core/client.test.ts:117:20
- ❯ src/core/client.test.ts:1092:24
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; does not emit a compression event when the status is 2" time="0.001938928">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; does not emit a compression event when the status is 4" time="0.003520307">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ fromAsync src/core/client.test.ts:117:20
- ❯ src/core/client.test.ts:1092:24
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; does not emit a compression event when the status is 4" time="0.001926655">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; does not emit a compression event when the status is 3" time="0.001919187">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ fromAsync src/core/client.test.ts:117:20
- ❯ src/core/client.test.ts:1092:24
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; does not emit a compression event when the status is 3" time="0.004513771">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should include editor context when ideMode is enabled" time="0.001994887">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1153:24
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should include editor context when ideMode is enabled" time="0.002158183">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should not add context if ideMode is enabled but no open files" time="0.001948011">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1221:24
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should not add context if ideMode is enabled but no open files" time="0.002021651">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should add context if ideMode is enabled and there is one active file" time="0.00187765">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1273:24
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should add context if ideMode is enabled and there is one active file" time="0.001952132">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should add context if ideMode is enabled and there are open files but no active file" time="0.001942501">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1349:24
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should add context if ideMode is enabled and there are open files but no active file" time="0.002005221">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should return the turn instance after the stream is complete" time="0.001994627">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1403:24
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should return the turn instance after the stream is complete" time="0.001928038">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should stop infinite loop after MAX_TURNS when nextSpeaker always returns model" time="0.002066489">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1460:24
-            </failure>
-        </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should yield MaxSessionTurns and stop when session turn limit is reached" time="0.002827316">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1545:26
-            </failure>
-        </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should respect MAX_TURNS limit even when turns parameter is set to a large value" time="0.003279472">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should stop infinite loop after MAX_TURNS when nextSpeaker always returns model" time="0.008680892">
             <system-out>
-Infinite loop protection working: checkNextSpeaker called 0 times, 0 events generated (properly bounded by MAX_TURNS)
+checkNextSpeaker called 100 times - infinite loop protection worked
 
             </system-out>
-            <system-err>
-Test timed out or errored: TypeError: this.wrapped.countTokens is not a function
-    at LoggingContentGenerator.countTokens [90m(/home/atmandk/LowCal-dev/packages/core/[39msrc/core/loggingContentGenerator.ts:187:25[90m)[39m
-    at TokenBudgetManager.evaluate [90m(/home/atmandk/LowCal-dev/packages/core/[39msrc/core/tokenBudgetManager.ts:52:61[90m)[39m
-    at GeminiClient.ensureRequestWithinBudget [90m(/home/atmandk/LowCal-dev/packages/core/[39msrc/core/client.ts:757:38[90m)[39m
-    at GeminiClient.sendMessageStream [90m(/home/atmandk/LowCal-dev/packages/core/[39msrc/core/client.ts:612:16[90m)[39m
-[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
-    at [90m/home/atmandk/LowCal-dev/packages/core/[39msrc/core/client.test.ts:1618:26
-    at file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:20
+        </testcase>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should yield MaxSessionTurns and stop when session turn limit is reached" time="0.003111062">
+        </testcase>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should respect MAX_TURNS limit even when turns parameter is set to a large value" time="0.011821248">
+            <system-out>
+Infinite loop protection working: checkNextSpeaker called 100 times, 1 events generated (properly bounded by MAX_TURNS)
 
-            </system-err>
+            </system-out>
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;sends delta when active file changes&apos;" time="0.002176763">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1820:28
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;sends delta when active file changes&apos;" time="0.003434559">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;sends delta when cursor line changes&apos;" time="0.006832168">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1820:28
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;sends delta when cursor line changes&apos;" time="0.00208048">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;sends delta when cursor character cha…&apos;" time="0.003288078">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1820:28
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;sends delta when cursor character cha…&apos;" time="0.001927397">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;sends delta when selected text changes&apos;" time="0.002609033">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1820:28
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;sends delta when selected text changes&apos;" time="0.001778262">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;sends delta when selected text is add…&apos;" time="0.002147179">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1820:28
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;sends delta when selected text is add…&apos;" time="0.001796345">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;sends delta when selected text is rem…&apos;" time="0.001826165">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1820:28
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;sends delta when selected text is rem…&apos;" time="0.002158474">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;does not send context when nothing ch…&apos;" time="0.00183417">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1820:28
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; &apos;does not send context when nothing ch…&apos;" time="0.001865703">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; sends full context when history is cleared, even if editor state is unchanged" time="0.001905572">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1889:26
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; Editor context delta &gt; sends full context when history is cleared, even if editor state is unchanged" time="0.002354656">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; IDE context with pending tool calls &gt; should NOT add IDE context when a tool call is pending" time="0.001929827">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:1976:26
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; IDE context with pending tool calls &gt; should NOT add IDE context when a tool call is pending" time="0.002188229">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; IDE context with pending tool calls &gt; should add IDE context when no tool call is pending" time="0.001845561">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:2006:26
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; IDE context with pending tool calls &gt; should add IDE context when no tool call is pending" time="0.00200482">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; IDE context with pending tool calls &gt; should send the latest IDE context on the next message after a skipped context" time="0.001929777">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:2057:26
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; IDE context with pending tool calls &gt; should send the latest IDE context on the next message after a skipped context" time="0.002296007">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; IDE context with pending tool calls &gt; should send a context DELTA on the next message after a skipped context" time="0.001950064">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:2150:26
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; IDE context with pending tool calls &gt; should send a context DELTA on the next message after a skipped context" time="0.002325101">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should not call checkNextSpeaker when turn.run() yields an error" time="0.002070417">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:2296:24
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should not call checkNextSpeaker when turn.run() yields an error" time="0.002197786">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should not call checkNextSpeaker when turn.run() yields a value then an error" time="0.002063745">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:2338:24
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; should not call checkNextSpeaker when turn.run() yields a value then an error" time="0.002217933">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; does not run loop checks when skipLoopDetection is true" time="0.002117845">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:2384:24
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; does not run loop checks when skipLoopDetection is true" time="0.002153495">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; runs loop checks when skipLoopDetection is false" time="0.002024773">
-            <failure message="this.wrapped.countTokens is not a function" type="TypeError">
-TypeError: this.wrapped.countTokens is not a function
- ❯ LoggingContentGenerator.countTokens src/core/loggingContentGenerator.ts:187:25
- ❯ TokenBudgetManager.evaluate src/core/tokenBudgetManager.ts:52:61
- ❯ GeminiClient.ensureRequestWithinBudget src/core/client.ts:757:38
- ❯ GeminiClient.sendMessageStream src/core/client.ts:612:16
- ❯ src/core/client.test.ts:2431:24
-            </failure>
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; sendMessageStream &gt; runs loop checks when skipLoopDetection is false" time="0.010004785">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateContent &gt; should call generateContent with the correct parameters" time="0.002053716">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateContent &gt; should call generateContent with the correct parameters" time="0.003550633">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateContent &gt; should use current model from config for content generation" time="0.008262461">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; generateContent &gt; should use current model from config for content generation" time="0.002787435">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; handleFlashFallback &gt; should use current model from config when checking for fallback" time="0.003257861">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; handleFlashFallback &gt; should use current model from config when checking for fallback" time="0.002135281">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; setHistory &gt; should strip thought signatures when stripThoughts is true" time="0.002593404">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; setHistory &gt; should strip thought signatures when stripThoughts is true" time="0.002242609">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; setHistory &gt; should not strip thought signatures when stripThoughts is false" time="0.002178106">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; setHistory &gt; should not strip thought signatures when stripThoughts is false" time="0.001952443">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; initialize &gt; should accept extraHistory parameter and pass it to startChat" time="0.002087468">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; initialize &gt; should accept extraHistory parameter and pass it to startChat" time="0.001974184">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; initialize &gt; should use empty array when no extraHistory is provided" time="0.00236965">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; initialize &gt; should use empty array when no extraHistory is provided" time="0.001942455">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; reinitialize &gt; should reinitialize with preserved user history" time="0.002244088">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; reinitialize &gt; should reinitialize with preserved user history" time="0.00224353">
         </testcase>
-        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; reinitialize &gt; should not throw error when chat is not initialized" time="0.002108778">
+        <testcase classname="src/core/client.test.ts" name="Gemini Client (client.ts) &gt; reinitialize &gt; should not throw error when chat is not initialized" time="0.002343104">
         </testcase>
     </testsuite>
-    <testsuite name="src/ide/ide-client.test.ts" timestamp="2025-09-28T20:33:59.659Z" hostname="uby" tests="9" failures="0" errors="0" skipped="0" time="0.010762473">
-        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should return invalid if QWEN_CODE_IDE_WORKSPACE_PATH is undefined" time="0.002029572">
+    <testsuite name="src/ide/ide-client.test.ts" timestamp="2025-09-28T23:44:59.535Z" hostname="uby" tests="9" failures="0" errors="0" skipped="0" time="0.010094521">
+        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should return invalid if QWEN_CODE_IDE_WORKSPACE_PATH is undefined" time="0.001723872">
         </testcase>
-        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should return invalid if QWEN_CODE_IDE_WORKSPACE_PATH is empty" time="0.000323368">
+        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should return invalid if QWEN_CODE_IDE_WORKSPACE_PATH is empty" time="0.000453217">
         </testcase>
-        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should connect using HTTP when port is provided in config file" time="0.004003469">
+        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should connect using HTTP when port is provided in config file" time="0.003736767">
             <system-out>
 [DEBUG] [IDEClient] Attempting to connect to IDE via HTTP SSE
 
             </system-out>
         </testcase>
-        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should connect using stdio when stdio config is provided in file" time="0.0007249">
+        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should connect using stdio when stdio config is provided in file" time="0.000735969">
             <system-out>
 [DEBUG] [IDEClient] Attempting to connect to IDE via stdio
 
             </system-out>
         </testcase>
-        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should prioritize port over stdio when both are in config file" time="0.000636246">
+        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should prioritize port over stdio when both are in config file" time="0.000587113">
             <system-out>
 [DEBUG] [IDEClient] Attempting to connect to IDE via HTTP SSE
 
             </system-out>
         </testcase>
-        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should connect using HTTP when port is provided in environment variables" time="0.000566316">
+        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should connect using HTTP when port is provided in environment variables" time="0.000580582">
             <system-out>
 [DEBUG] [IDEClient] Attempting to connect to IDE via HTTP SSE
 
             </system-out>
         </testcase>
-        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should connect using stdio when stdio config is in environment variables" time="0.000498812">
+        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should connect using stdio when stdio config is in environment variables" time="0.00050385">
             <system-out>
 [DEBUG] [IDEClient] Attempting to connect to IDE via stdio
 
             </system-out>
         </testcase>
-        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should prioritize file config over environment variables" time="0.00044365">
+        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should prioritize file config over environment variables" time="0.000413333">
             <system-out>
 [DEBUG] [IDEClient] Attempting to connect to IDE via HTTP SSE
 
             </system-out>
         </testcase>
-        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should be disconnected if no config is found" time="0.00056281">
+        <testcase classname="src/ide/ide-client.test.ts" name="IdeClient &gt; connect &gt; should be disconnected if no config is found" time="0.000564512">
             <system-err>
 [ERROR] [IDEClient] Failed to connect to IDE companion extension in VS Code. Please ensure the extension is running. To install the extension, run /ide install.
 
             </system-err>
         </testcase>
     </testsuite>
-    <testsuite name="src/tools/mcp-client.test.ts" timestamp="2025-09-28T20:33:59.660Z" hostname="uby" tests="42" failures="0" errors="0" skipped="0" time="0.014163008">
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; McpClient &gt; should discover tools" time="0.003105489">
+    <testsuite name="src/tools/mcp-client.test.ts" timestamp="2025-09-28T23:44:59.536Z" hostname="uby" tests="42" failures="0" errors="0" skipped="0" time="0.014087681">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; McpClient &gt; should discover tools" time="0.003045111">
             <system-err>
 Error discovering prompts from test-server: mcpClient.getServerCapabilities is not a function
 
             </system-err>
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; McpClient &gt; should skip tools if a parameter is missing a type" time="0.001425194">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; McpClient &gt; should skip tools if a parameter is missing a type" time="0.00143603">
             <system-err>
 Error discovering prompts from test-server: mcpClient.getServerCapabilities is not a function
 
             </system-err>
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; McpClient &gt; should handle errors when discovering prompts" time="0.00192637">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; McpClient &gt; should handle errors when discovering prompts" time="0.001351745">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; appendMcpServerCommand &gt; should do nothing if no MCP servers or command are configured" time="0.00027063">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; appendMcpServerCommand &gt; should do nothing if no MCP servers or command are configured" time="0.000245433">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; appendMcpServerCommand &gt; should discover tools via mcpServerCommand" time="0.000566266">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; appendMcpServerCommand &gt; should discover tools via mcpServerCommand" time="0.000922252">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; appendMcpServerCommand &gt; should handle error if mcpServerCommand parsing fails" time="0.000192045">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; appendMcpServerCommand &gt; should handle error if mcpServerCommand parsing fails" time="0.000490265">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; should connect via httpUrl &gt; without headers" time="0.000229153">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; should connect via httpUrl &gt; without headers" time="0.000351068">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; should connect via httpUrl &gt; with headers" time="0.000187266">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; should connect via httpUrl &gt; with headers" time="0.000221389">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; should connect via url &gt; without headers" time="0.000201041">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; should connect via url &gt; without headers" time="0.000199498">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; should connect via url &gt; with headers" time="0.000146631">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; should connect via url &gt; with headers" time="0.000166137">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; should connect via command" time="0.000655681">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; should connect via command" time="0.000743312">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; useGoogleCredentialProvider &gt; should use GoogleCredentialProvider when specified" time="0.00036808">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; useGoogleCredentialProvider &gt; should use GoogleCredentialProvider when specified" time="0.000390561">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; useGoogleCredentialProvider &gt; should use GoogleCredentialProvider with SSE transport" time="0.000201703">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; useGoogleCredentialProvider &gt; should use GoogleCredentialProvider with SSE transport" time="0.000214686">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; useGoogleCredentialProvider &gt; should throw an error if no URL is provided with GoogleCredentialProvider" time="0.000253108">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; createTransport &gt; useGoogleCredentialProvider &gt; should throw an error if no URL is provided with GoogleCredentialProvider" time="0.000261613">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return true if no include or exclude lists are provided" time="0.000216089">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return true if no include or exclude lists are provided" time="0.00020038">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return false if the tool is in the exclude list" time="0.0001458">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return false if the tool is in the exclude list" time="0.000125732">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return true if the tool is in the include list" time="0.000171437">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return true if the tool is in the include list" time="0.000118819">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return true if the tool is in the include list with parentheses" time="0.000118038">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return true if the tool is in the include list with parentheses" time="0.00010316">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return false if the include list exists but does not contain the tool" time="0.000094534">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return false if the include list exists but does not contain the tool" time="0.000089465">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return false if the tool is in both the include and exclude lists" time="0.000124209">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return false if the tool is in both the include and exclude lists" time="0.000097791">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return false if the function declaration has no name" time="0.000261874">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; isEnabled &gt; should return false if the function declaration has no name" time="0.000220017">
             <system-err>
 Discovered a function declaration without a name from MCP server &apos;myServer&apos;. Skipping.
 
             </system-err>
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a valid schema with anyOf" time="0.000168832">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a valid schema with anyOf" time="0.00014636">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false for an invalid schema with anyOf" time="0.000121665">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false for an invalid schema with anyOf" time="0.000106407">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a valid schema with allOf" time="0.000133096">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a valid schema with allOf" time="0.000140309">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false for an invalid schema with allOf" time="0.000092691">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false for an invalid schema with allOf" time="0.000086911">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a valid schema with oneOf" time="0.000118249">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a valid schema with oneOf" time="0.000088864">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false for an invalid schema with oneOf" time="0.00008648">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false for an invalid schema with oneOf" time="0.000084076">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a valid schema with nested subschemas" time="0.000090878">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a valid schema with nested subschemas" time="0.000106717">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false for an invalid schema with nested subschemas" time="0.000090878">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false for an invalid schema with nested subschemas" time="0.000089084">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a schema with a type and subschemas" time="0.000086069">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a schema with a type and subschemas" time="0.00008707">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false for a schema with no type and no subschemas" time="0.000083975">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false for a schema with no type and no subschemas" time="0.000081761">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a valid schema" time="0.000088453">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a valid schema" time="0.000085328">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false if a parameter is missing a type" time="0.000084306">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false if a parameter is missing a type" time="0.000094945">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false if a nested parameter is missing a type" time="0.00008652">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false if a nested parameter is missing a type" time="0.00008696">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false if an array item is missing a type" time="0.000109052">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return false if an array item is missing a type" time="0.000085257">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a schema with no properties" time="0.000134198">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a schema with no properties" time="0.000083073">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a schema with an empty properties object" time="0.000177267">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasValidTypes &gt; should return true for a schema with an empty properties object" time="0.000086018">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasNetworkTransport &gt; should return true if only url is provided" time="0.000120783">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasNetworkTransport &gt; should return true if only url is provided" time="0.00010273">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasNetworkTransport &gt; should return true if only httpUrl is provided" time="0.000092862">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasNetworkTransport &gt; should return true if only httpUrl is provided" time="0.000085458">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasNetworkTransport &gt; should return true if both url and httpUrl are provided" time="0.000116565">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasNetworkTransport &gt; should return true if both url and httpUrl are provided" time="0.000101127">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasNetworkTransport &gt; should return false if neither url nor httpUrl is provided" time="0.000090688">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasNetworkTransport &gt; should return false if neither url nor httpUrl is provided" time="0.000089335">
         </testcase>
-        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasNetworkTransport &gt; should return false for an empty config object" time="0.000085428">
+        <testcase classname="src/tools/mcp-client.test.ts" name="mcp-client &gt; hasNetworkTransport &gt; should return false for an empty config object" time="0.000084957">
         </testcase>
     </testsuite>
 </testsuites>

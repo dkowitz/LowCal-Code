@@ -445,7 +445,19 @@ export class GeminiClient {
                 return new Turn(this.getChat(), prompt_id);
             }
         }
-        await this.ensureRequestWithinBudget(prompt_id, request);
+        const budgetSnapshot = await this.ensureRequestWithinBudget(prompt_id, request);
+        if (budgetSnapshot &&
+            budgetSnapshot.tokens >= budgetSnapshot.warnThreshold &&
+            budgetSnapshot.tokens <= budgetSnapshot.limit) {
+            yield {
+                type: GeminiEventType.TokenBudgetWarning,
+                value: {
+                    tokens: budgetSnapshot.tokens,
+                    limit: budgetSnapshot.limit,
+                    effectiveLimit: budgetSnapshot.effectiveLimit,
+                },
+            };
+        }
         // Prevent context updates from being sent while a tool call is
         // waiting for a response. The Qwen API requires that a functionResponse
         // part from the user immediately follows a functionCall part from the model
@@ -531,7 +543,7 @@ export class GeminiClient {
     async ensureRequestWithinBudget(promptId, userMessage) {
         const model = this.config.getModel();
         if (!model) {
-            return;
+            return undefined;
         }
         const manager = this.getTokenBudgetManager();
         const buildPreview = () => {
@@ -548,7 +560,7 @@ export class GeminiClient {
             const previewContents = buildPreview();
             const snapshot = await manager.evaluate(model, previewContents);
             if (snapshot.fitsWithinEffective) {
-                return;
+                return snapshot;
             }
             const outOfHardLimit = !snapshot.withinHardLimit;
             if (attempt >= compressionStrategies.length) {
@@ -568,6 +580,8 @@ export class GeminiClient {
                 throw new TokenBudgetExceededError(`Unable to compress history to fit within the context window (${snapshot.tokens.toLocaleString()} tokens).`, snapshot);
             }
         }
+        // Should never reach here because the loop either returns or throws.
+        return undefined;
     }
     async generateJson(contents, schema, abortSignal, model, config = {}) {
         /**

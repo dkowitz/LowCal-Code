@@ -59,11 +59,16 @@ import {
   getSubagentSystemReminder,
 } from './prompts.js';
 import { tokenLimit } from './tokenLimits.js';
-import type { ChatCompressionInfo, ServerGeminiStreamEvent } from './turn.js';
+import type {
+  ChatCompressionInfo,
+  ServerGeminiStreamEvent,
+  ServerGeminiTokenBudgetWarningEvent,
+} from './turn.js';
 import { CompressionStatus, GeminiEventType, Turn } from './turn.js';
 import {
   TokenBudgetExceededError,
   TokenBudgetManager,
+  type TokenBudgetSnapshot,
 } from './tokenBudgetManager.js';
 
 function isThinkingSupported(model: string) {
@@ -606,7 +611,22 @@ export class GeminiClient {
       }
     }
 
-    await this.ensureRequestWithinBudget(prompt_id, request);
+    const budgetSnapshot = await this.ensureRequestWithinBudget(prompt_id, request);
+
+    if (
+      budgetSnapshot &&
+      budgetSnapshot.tokens >= budgetSnapshot.warnThreshold &&
+      budgetSnapshot.tokens <= budgetSnapshot.limit
+    ) {
+      yield {
+        type: GeminiEventType.TokenBudgetWarning,
+        value: {
+          tokens: budgetSnapshot.tokens,
+          limit: budgetSnapshot.limit,
+          effectiveLimit: budgetSnapshot.effectiveLimit,
+        },
+      } satisfies ServerGeminiTokenBudgetWarningEvent;
+    }
 
     // Prevent context updates from being sent while a tool call is
     // waiting for a response. The Qwen API requires that a functionResponse
@@ -726,10 +746,10 @@ export class GeminiClient {
   private async ensureRequestWithinBudget(
     promptId: string,
     userMessage: PartListUnion,
-  ): Promise<void> {
+  ): Promise<TokenBudgetSnapshot | undefined> {
     const model = this.config.getModel();
     if (!model) {
-      return;
+      return undefined;
     }
 
     const manager = this.getTokenBudgetManager();
@@ -754,7 +774,7 @@ export class GeminiClient {
       const snapshot = await manager.evaluate(model, previewContents);
 
       if (snapshot.fitsWithinEffective) {
-        return;
+        return snapshot;
       }
 
       const outOfHardLimit = !snapshot.withinHardLimit;
@@ -782,6 +802,9 @@ export class GeminiClient {
         );
       }
     }
+
+    // Should never reach here because the loop either returns or throws.
+    return undefined;
   }
 
   async generateJson(

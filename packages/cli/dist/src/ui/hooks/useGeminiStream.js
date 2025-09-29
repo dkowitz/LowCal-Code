@@ -343,6 +343,11 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             `   • Increase limit: Add "sessionTokenLimit": (e.g., 128000) to your settings.json\n` +
             `   • Compress history: Use /compress command to compress history`,
     }, Date.now()), [addItem]);
+    const handleTokenBudgetWarningEvent = useCallback((value) => addItem({
+        type: 'info',
+        text: `⚠️  Context usage is high: ${value.tokens.toLocaleString()} of ${value.limit.toLocaleString()} tokens ` +
+            `(safe budget ≈ ${value.effectiveLimit.toLocaleString()}). Consider narrowing directory listings, requesting files on demand, or running /compress.`,
+    }, Date.now()), [addItem]);
     const handleLoopDetectedEvent = useCallback(() => {
         addItem({
             type: 'info',
@@ -382,6 +387,9 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 case ServerGeminiEventType.SessionTokenLimitExceeded:
                     handleSessionTokenLimitExceededEvent(event.value);
                     break;
+                case ServerGeminiEventType.TokenBudgetWarning:
+                    handleTokenBudgetWarningEvent(event.value);
+                    break;
                 case ServerGeminiEventType.Finished:
                     handleFinishedEvent(event, userMessageTimestamp);
                     break;
@@ -413,6 +421,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         handleFinishedEvent,
         handleMaxSessionTurnsEvent,
         handleSessionTokenLimitExceededEvent,
+        handleTokenBudgetWarningEvent,
     ]);
     const submitQuery = useCallback(async (query, options, prompt_id) => {
         // Prevent concurrent executions of submitQuery, but allow continuations

@@ -191,6 +191,17 @@ function formatStructure(node, currentIndent, isLastChildOfParent, isProcessingR
         builder.push(`${indentForChildren}└───${TRUNCATION_INDICATOR}`);
     }
 }
+function collectTruncatedPaths(node, rootPath, acc) {
+    if (node.path !== rootPath) {
+        if (node.isIgnored || node.hasMoreFiles || node.hasMoreSubfolders) {
+            const relative = path.relative(rootPath, node.path) || '.';
+            acc.add(relative);
+        }
+    }
+    for (const child of node.subFolders) {
+        collectTruncatedPaths(child, rootPath, acc);
+    }
+}
 // --- Main Exported Function ---
 /**
  * Generates a string representation of a directory's structure,
@@ -235,6 +246,23 @@ export async function getFolderStructure(directory, options) {
         let summary = `Showing up to ${mergedOptions.maxItems} items (files + folders).`;
         if (isTruncated(structureRoot)) {
             summary += ` Folders or files indicated with ${TRUNCATION_INDICATOR} contain more items not shown, were ignored, or the display limit (${mergedOptions.maxItems} items) was reached.`;
+            const truncatedPathSet = new Set();
+            collectTruncatedPaths(structureRoot, structureRoot.path, truncatedPathSet);
+            if (truncatedPathSet.size > 0) {
+                const truncatedPaths = Array.from(truncatedPathSet).sort();
+                const displayPaths = truncatedPaths.slice(0, 5);
+                const formattedPaths = displayPaths
+                    .map((relativePath) => relativePath === '' || relativePath === '.'
+                    ? '.'
+                    : relativePath.replaceAll(path.sep, '/'))
+                    .join(', ');
+                const remainingCount = truncatedPaths.length - displayPaths.length;
+                summary += ` Truncated directories to inspect further: ${formattedPaths}`;
+                if (remainingCount > 0) {
+                    summary += `, plus ${remainingCount} more`;
+                }
+                summary += `. Consider running /list_directory <path> or /glob for deeper listings.`;
+            }
         }
         return `${summary}\n\n${resolvedPath}${path.sep}\n${structureLines.join('\n')}`;
     }
