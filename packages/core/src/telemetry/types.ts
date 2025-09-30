@@ -15,6 +15,7 @@ import {
   getDecisionFromOutcome,
   ToolCallDecision,
 } from './tool-call-decision.js';
+import type { RetryClassification } from '../utils/retry.js';
 import type { FileOperation } from './metrics.js';
 export { ToolCallDecision };
 import type { ToolRegistry } from '../tools/tool-registry.js';
@@ -473,17 +474,31 @@ export class ContentRetryEvent implements BaseTelemetryEvent {
   attempt_number: number;
   error_type: string; // e.g., 'EmptyStreamError'
   retry_delay_ms: number;
+  classification?: RetryClassification;
+  provider?: string;
+  status_code?: number;
+  error_message?: string;
 
   constructor(
     attempt_number: number,
     error_type: string,
     retry_delay_ms: number,
+    options: {
+      classification?: RetryClassification;
+      provider?: string;
+      status_code?: number;
+      error_message?: string;
+    } = {},
   ) {
     this['event.name'] = 'content_retry';
     this['event.timestamp'] = new Date().toISOString();
     this.attempt_number = attempt_number;
     this.error_type = error_type;
     this.retry_delay_ms = retry_delay_ms;
+    this.classification = options.classification;
+    this.provider = options.provider;
+    this.status_code = options.status_code;
+    this.error_message = options.error_message;
   }
 }
 
@@ -493,17 +508,31 @@ export class ContentRetryFailureEvent implements BaseTelemetryEvent {
   total_attempts: number;
   final_error_type: string;
   total_duration_ms?: number; // Optional: total time spent retrying
+  final_classification?: RetryClassification;
+  provider?: string;
+  status_code?: number;
+  error_message?: string;
 
   constructor(
     total_attempts: number,
     final_error_type: string,
     total_duration_ms?: number,
+    options: {
+      final_classification?: RetryClassification;
+      provider?: string;
+      status_code?: number;
+      error_message?: string;
+    } = {},
   ) {
     this['event.name'] = 'content_retry_failure';
     this['event.timestamp'] = new Date().toISOString();
     this.total_attempts = total_attempts;
     this.final_error_type = final_error_type;
     this.total_duration_ms = total_duration_ms;
+    this.final_classification = options.final_classification;
+    this.provider = options.provider;
+    this.status_code = options.status_code;
+    this.error_message = options.error_message;
   }
 }
 

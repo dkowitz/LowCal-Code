@@ -9,6 +9,7 @@ import type { ApprovalMode } from '../config/config.js';
 import type { CompletedToolCall } from '../core/coreToolScheduler.js';
 import type { DiffStat } from '../tools/tools.js';
 import { ToolCallDecision } from './tool-call-decision.js';
+import type { RetryClassification } from '../utils/retry.js';
 import type { FileOperation } from './metrics.js';
 export { ToolCallDecision };
 import type { ToolRegistry } from '../tools/tool-registry.js';
@@ -209,7 +210,16 @@ export declare class ContentRetryEvent implements BaseTelemetryEvent {
     attempt_number: number;
     error_type: string;
     retry_delay_ms: number;
-    constructor(attempt_number: number, error_type: string, retry_delay_ms: number);
+    classification?: RetryClassification;
+    provider?: string;
+    status_code?: number;
+    error_message?: string;
+    constructor(attempt_number: number, error_type: string, retry_delay_ms: number, options?: {
+        classification?: RetryClassification;
+        provider?: string;
+        status_code?: number;
+        error_message?: string;
+    });
 }
 export declare class ContentRetryFailureEvent implements BaseTelemetryEvent {
     'event.name': 'content_retry_failure';
@@ -217,7 +227,16 @@ export declare class ContentRetryFailureEvent implements BaseTelemetryEvent {
     total_attempts: number;
     final_error_type: string;
     total_duration_ms?: number;
-    constructor(total_attempts: number, final_error_type: string, total_duration_ms?: number);
+    final_classification?: RetryClassification;
+    provider?: string;
+    status_code?: number;
+    error_message?: string;
+    constructor(total_attempts: number, final_error_type: string, total_duration_ms?: number, options?: {
+        final_classification?: RetryClassification;
+        provider?: string;
+        status_code?: number;
+        error_message?: string;
+    });
 }
 export declare class SubagentExecutionEvent implements BaseTelemetryEvent {
     'event.name': 'subagent_execution';

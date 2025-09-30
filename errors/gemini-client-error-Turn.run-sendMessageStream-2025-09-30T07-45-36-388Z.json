@@ -1,0 +1,51 @@
+{
+  "error": {
+    "message": "Stream idle for 15000ms",
+    "stack": "IdleStreamTimeoutError: Stream idle for 15000ms\n    at Timeout.<anonymous> (file:///home/atmandk/LowCal-dev/packages/core/dist/src/core/geminiChat.js:598:32)\n    at listOnTimeout (node:internal/timers:608:17)\n    at process.processTimers (node:internal/timers:543:7)"
+  },
+  "context": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "This is the Qwen Code. We are setting up the context for our chat.\nToday's date is Tuesday, September 30, 2025 (formatted according to the user's locale).\nMy operating system is: linux\nI'm currently working in the directory: /home/atmandk/LowCal-dev\nHere is the folder structure of the current working directories:\n\nShowing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.\n\n/home/atmandk/LowCal-dev/\n├───.gitignore\n├───CHANGELOG.md\n├───CONTRIBUTING.md\n├───conversation.md\n├───Dockerfile\n├───Error log summary.txt\n├───error_analysis.md\n├───esbuild.config.js\n├───eslint.config.js\n├───LICENSE\n├───Makefile\n├───package-lock.json\n├───package.json\n├───QWEN.md\n├───README.md\n├───render_table.md\n├───render.md\n├───rt.md\n├───SECURITY.md\n├───test.md\n├───...\n└───..."
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Got it. Thanks for the context!"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "Hi there!"
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Hello! How can I assist you with your project today?"
+        }
+      ]
+    },
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "Examine the codebase and find and enumerate the mechanisms it utilizes for error handling and to ensure agentic autonomy - what does it do to minimize uer intervention in agentic tasks?"
+        }
+      ]
+    },
+    [
+      "Examine the codebase and find and enumerate the mechanisms it utilizes for error handling and to ensure agentic autonomy - what does it do to minimize uer intervention in agentic tasks?"
+    ]
+  ]
+}

@@ -225,5 +225,21 @@ export var EventMetadataKey;
     EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_FAILURE_FINAL_ERROR_TYPE"] = 80] = "GEMINI_CLI_CONTENT_RETRY_FAILURE_FINAL_ERROR_TYPE";
     // Logs the total duration in milliseconds for a content retry failure.
     EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_FAILURE_TOTAL_DURATION_MS"] = 81] = "GEMINI_CLI_CONTENT_RETRY_FAILURE_TOTAL_DURATION_MS";
+    // Logs the classification assigned to a retry attempt.
+    EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_CLASSIFICATION"] = 82] = "GEMINI_CLI_CONTENT_RETRY_CLASSIFICATION";
+    // Logs the provider label associated with a retry attempt.
+    EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_PROVIDER"] = 83] = "GEMINI_CLI_CONTENT_RETRY_PROVIDER";
+    // Logs the HTTP status code (if any) captured for a retry attempt.
+    EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_STATUS_CODE"] = 84] = "GEMINI_CLI_CONTENT_RETRY_STATUS_CODE";
+    // Logs the error message for a retry attempt.
+    EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_ERROR_MESSAGE"] = 85] = "GEMINI_CLI_CONTENT_RETRY_ERROR_MESSAGE";
+    // Logs the final classification reported for a retry failure event.
+    EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_FAILURE_FINAL_CLASSIFICATION"] = 86] = "GEMINI_CLI_CONTENT_RETRY_FAILURE_FINAL_CLASSIFICATION";
+    // Logs the provider label for a retry failure event.
+    EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_FAILURE_PROVIDER"] = 87] = "GEMINI_CLI_CONTENT_RETRY_FAILURE_PROVIDER";
+    // Logs the status code for a retry failure event.
+    EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_FAILURE_STATUS_CODE"] = 88] = "GEMINI_CLI_CONTENT_RETRY_FAILURE_STATUS_CODE";
+    // Logs the error message for a retry failure event.
+    EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_FAILURE_ERROR_MESSAGE"] = 89] = "GEMINI_CLI_CONTENT_RETRY_FAILURE_ERROR_MESSAGE";
 })(EventMetadataKey || (EventMetadataKey = {}));
 //# sourceMappingURL=event-metadata-key.js.map

@@ -13,7 +13,14 @@ export interface RetryOptions {
     shouldRetry: (error: Error) => boolean;
     onPersistent429?: (authType?: string, error?: unknown) => Promise<string | boolean | null>;
     authType?: string;
+    onRetryableError?: (error: Error, context: {
+        attempt: number;
+        classification: RetryClassification;
+        status?: number;
+        delayMs: number;
+    }) => void;
 }
+export type RetryClassification = 'network' | 'status' | 'unknown';
 /**
  * Retries a function with exponential backoff and jitter.
  * @param fn The asynchronous function to retry.

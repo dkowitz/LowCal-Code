@@ -325,4 +325,28 @@ export enum EventMetadataKey {
 
   // Logs the total duration in milliseconds for a content retry failure.
   GEMINI_CLI_CONTENT_RETRY_FAILURE_TOTAL_DURATION_MS = 81,
+
+  // Logs the classification assigned to a retry attempt.
+  GEMINI_CLI_CONTENT_RETRY_CLASSIFICATION = 82,
+
+  // Logs the provider label associated with a retry attempt.
+  GEMINI_CLI_CONTENT_RETRY_PROVIDER = 83,
+
+  // Logs the HTTP status code (if any) captured for a retry attempt.
+  GEMINI_CLI_CONTENT_RETRY_STATUS_CODE = 84,
+
+  // Logs the error message for a retry attempt.
+  GEMINI_CLI_CONTENT_RETRY_ERROR_MESSAGE = 85,
+
+  // Logs the final classification reported for a retry failure event.
+  GEMINI_CLI_CONTENT_RETRY_FAILURE_FINAL_CLASSIFICATION = 86,
+
+  // Logs the provider label for a retry failure event.
+  GEMINI_CLI_CONTENT_RETRY_FAILURE_PROVIDER = 87,
+
+  // Logs the status code for a retry failure event.
+  GEMINI_CLI_CONTENT_RETRY_FAILURE_STATUS_CODE = 88,
+
+  // Logs the error message for a retry failure event.
+  GEMINI_CLI_CONTENT_RETRY_FAILURE_ERROR_MESSAGE = 89,
 }

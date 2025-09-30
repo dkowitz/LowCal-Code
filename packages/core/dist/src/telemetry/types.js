@@ -362,12 +362,20 @@ export class ContentRetryEvent {
     attempt_number;
     error_type; // e.g., 'EmptyStreamError'
     retry_delay_ms;
-    constructor(attempt_number, error_type, retry_delay_ms) {
+    classification;
+    provider;
+    status_code;
+    error_message;
+    constructor(attempt_number, error_type, retry_delay_ms, options = {}) {
         this['event.name'] = 'content_retry';
         this['event.timestamp'] = new Date().toISOString();
         this.attempt_number = attempt_number;
         this.error_type = error_type;
         this.retry_delay_ms = retry_delay_ms;
+        this.classification = options.classification;
+        this.provider = options.provider;
+        this.status_code = options.status_code;
+        this.error_message = options.error_message;
     }
 }
 export class ContentRetryFailureEvent {
@@ -376,12 +384,20 @@ export class ContentRetryFailureEvent {
     total_attempts;
     final_error_type;
     total_duration_ms; // Optional: total time spent retrying
-    constructor(total_attempts, final_error_type, total_duration_ms) {
+    final_classification;
+    provider;
+    status_code;
+    error_message;
+    constructor(total_attempts, final_error_type, total_duration_ms, options = {}) {
         this['event.name'] = 'content_retry_failure';
         this['event.timestamp'] = new Date().toISOString();
         this.total_attempts = total_attempts;
         this.final_error_type = final_error_type;
         this.total_duration_ms = total_duration_ms;
+        this.final_classification = options.final_classification;
+        this.provider = options.provider;
+        this.status_code = options.status_code;
+        this.error_message = options.error_message;
     }
 }
 export class SubagentExecutionEvent {

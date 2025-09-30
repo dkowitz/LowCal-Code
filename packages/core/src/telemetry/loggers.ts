@@ -529,9 +529,24 @@ export function logContentRetry(
 
   const attributes: LogAttributes = {
     ...getCommonAttributes(config),
-    ...event,
     'event.name': EVENT_CONTENT_RETRY,
+    attempt_number: event.attempt_number,
+    error_type: event.error_type,
+    retry_delay_ms: event.retry_delay_ms,
   };
+
+  if (event.classification) {
+    attributes['retry.classification'] = event.classification;
+  }
+  if (event.provider) {
+    attributes['retry.provider'] = event.provider;
+  }
+  if (typeof event.status_code === 'number') {
+    attributes['retry.status_code'] = event.status_code;
+  }
+  if (event.error_message) {
+    attributes['error.message'] = event.error_message;
+  }
 
   const logger = logs.getLogger(SERVICE_NAME);
   const logRecord: LogRecord = {
@@ -551,9 +566,26 @@ export function logContentRetryFailure(
 
   const attributes: LogAttributes = {
     ...getCommonAttributes(config),
-    ...event,
     'event.name': EVENT_CONTENT_RETRY_FAILURE,
+    total_attempts: event.total_attempts,
+    final_error_type: event.final_error_type,
   };
+
+  if (typeof event.total_duration_ms === 'number') {
+    attributes['retry.total_duration_ms'] = event.total_duration_ms;
+  }
+  if (event.final_classification) {
+    attributes['retry.final_classification'] = event.final_classification;
+  }
+  if (event.provider) {
+    attributes['retry.provider'] = event.provider;
+  }
+  if (typeof event.status_code === 'number') {
+    attributes['retry.status_code'] = event.status_code;
+  }
+  if (event.error_message) {
+    attributes['error.message'] = event.error_message;
+  }
 
   const logger = logs.getLogger(SERVICE_NAME);
   const logRecord: LogRecord = {

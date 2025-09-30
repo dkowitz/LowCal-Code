@@ -3,14 +3,14 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { createUserContent, } from '@google/genai';
+import { createUserContent, FinishReason, } from '@google/genai';
 import { ProxyAgent, setGlobalDispatcher } from 'undici';
 import { ApprovalMode } from '../config/config.js';
 import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
 import { ideContext } from '../ide/ideContext.js';
 import { LoopDetectionService } from '../services/loopDetectionService.js';
-import { logChatCompression, logNextSpeakerCheck, } from '../telemetry/loggers.js';
-import { makeChatCompressionEvent, NextSpeakerCheckEvent, } from '../telemetry/types.js';
+import { logChatCompression, logContentRetry, logContentRetryFailure, logNextSpeakerCheck, } from '../telemetry/loggers.js';
+import { makeChatCompressionEvent, NextSpeakerCheckEvent, ContentRetryEvent, ContentRetryFailureEvent, } from '../telemetry/types.js';
 import { TaskTool } from '../tools/task.js';
 import { getDirectoryContextString, getEnvironmentContext, } from '../utils/environmentContext.js';
 import { reportError } from '../utils/errorReporting.js';
@@ -28,6 +28,7 @@ import { getCompressionPrompt, getCoreSystemPrompt, getCustomSystemPrompt, getPl
 import { tokenLimit } from './tokenLimits.js';
 import { CompressionStatus, GeminiEventType, Turn } from './turn.js';
 import { TokenBudgetExceededError, TokenBudgetManager, } from './tokenBudgetManager.js';
+import { getProviderTelemetryTag } from '../utils/providerTelemetry.js';
 function isThinkingSupported(model) {
     if (model.startsWith('gemini-2.5'))
         return true;
@@ -65,6 +66,14 @@ const COMPRESSION_TOKEN_THRESHOLD = 0.7;
  * means that only the last 30% of the chat history will be kept after compression.
  */
 const COMPRESSION_PRESERVE_THRESHOLD = 0.3;
+function isRecoverableStreamErrorMessage(message) {
+    if (!message) {
+        return false;
+    }
+    return (message.includes('Model stream ended with an invalid chunk or missing finish reason.') ||
+        message.includes('Model stream completed without any chunks.') ||
+        message.includes('Stream idle for'));
+}
 export class GeminiClient {
     config;
     chat;
@@ -513,6 +522,14 @@ export class GeminiClient {
                     return turn;
                 }
             }
+            if (event.type === GeminiEventType.Error &&
+                isRecoverableStreamErrorMessage(event.value?.error?.message)) {
+                const fallbackEvents = await this.runNonStreamingFallback(prompt_id, requestToSent);
+                for (const fallbackEvent of fallbackEvents) {
+                    yield fallbackEvent;
+                }
+                return turn;
+            }
             yield event;
             if (event.type === GeminiEventType.Error) {
                 return turn;
@@ -583,6 +600,39 @@ export class GeminiClient {
         // Should never reach here because the loop either returns or throws.
         return undefined;
     }
+    async runNonStreamingFallback(promptId, message) {
+        const fallbackResponse = await this.getChat().sendMessage({ message }, promptId);
+        const events = [];
+        const textParts = fallbackResponse.candidates?.[0]?.content?.parts?.map((part) => 'text' in part && part.text ? part.text : '') ?? [];
+        const text = textParts.filter(Boolean).join('');
+        if (text) {
+            events.push({
+                type: GeminiEventType.Content,
+                value: text,
+            });
+        }
+        const functionCalls = getFunctionCalls(fallbackResponse) ?? [];
+        functionCalls.forEach((call, index) => {
+            const toolCall = {
+                callId: call?.id ||
+                    `fallback_call_${Date.now().toString(36)}_${index.toString(36)}`,
+                name: call?.name ?? 'unknown_tool',
+                args: call?.args ?? {},
+                isClientInitiated: false,
+                prompt_id: promptId,
+            };
+            events.push({
+                type: GeminiEventType.ToolCallRequest,
+                value: toolCall,
+            });
+        });
+        events.push({
+            type: GeminiEventType.Finished,
+            value: fallbackResponse.candidates?.[0]?.finishReason ??
+                FinishReason.FINISH_REASON_UNSPECIFIED,
+        });
+        return events;
+    }
     async generateJson(contents, schema, abortSignal, model, config = {}) {
         /**
          * TODO: ensure `model` consistency among GeminiClient, GeminiChat, and ContentGenerator
@@ -591,6 +641,8 @@ export class GeminiClient {
          * which is not available as `qwen3-coder-flash`
          */
         const modelToUse = this.config.getModel() || DEFAULT_GEMINI_FLASH_MODEL;
+        const providerTag = getProviderTelemetryTag(this.config);
+        let lastRetryMetadata;
         try {
             const userMemory = this.config.getUserMemory();
             const finalSystemInstruction = config.systemInstruction
@@ -624,7 +676,21 @@ export class GeminiClient {
             const result = await retryWithBackoff(apiCall, {
                 onPersistent429: async (authType, error) => await this.handleFlashFallback(authType, error),
                 authType: this.config.getContentGeneratorConfig()?.authType,
+                onRetryableError: (error, context) => {
+                    lastRetryMetadata = {
+                        attempt: context.attempt,
+                        classification: context.classification,
+                        status: context.status,
+                    };
+                    logContentRetry(this.config, new ContentRetryEvent(context.attempt, error.name ?? 'Error', Math.round(context.delayMs), {
+                        classification: context.classification,
+                        provider: providerTag,
+                        status_code: context.status,
+                        error_message: error.message,
+                    }));
+                },
             });
+            lastRetryMetadata = undefined;
             const functionCalls = getFunctionCalls(result);
             if (functionCalls && functionCalls.length > 0) {
                 const functionCall = functionCalls.find((call) => call.name === 'respond_in_schema');
@@ -637,6 +703,15 @@ export class GeminiClient {
         catch (error) {
             if (abortSignal.aborted) {
                 throw error;
+            }
+            if (lastRetryMetadata) {
+                logContentRetryFailure(this.config, new ContentRetryFailureEvent(lastRetryMetadata.attempt, error instanceof Error ? error.name : 'UnknownError', undefined, {
+                    final_classification: lastRetryMetadata.classification,
+                    provider: providerTag,
+                    status_code: lastRetryMetadata.status,
+                    error_message: error instanceof Error ? error.message : String(error),
+                }));
+                lastRetryMetadata = undefined;
             }
             // Avoid double reporting for the empty response case handled above
             if (error instanceof Error &&
@@ -653,6 +728,8 @@ export class GeminiClient {
             ...this.generateContentConfig,
             ...generationConfig,
         };
+        const providerTag = getProviderTelemetryTag(this.config);
+        let lastRetryMetadata;
         try {
             const userMemory = this.config.getUserMemory();
             const finalSystemInstruction = generationConfig.systemInstruction
@@ -671,12 +748,35 @@ export class GeminiClient {
             const result = await retryWithBackoff(apiCall, {
                 onPersistent429: async (authType, error) => await this.handleFlashFallback(authType, error),
                 authType: this.config.getContentGeneratorConfig()?.authType,
+                onRetryableError: (error, context) => {
+                    lastRetryMetadata = {
+                        attempt: context.attempt,
+                        classification: context.classification,
+                        status: context.status,
+                    };
+                    logContentRetry(this.config, new ContentRetryEvent(context.attempt, error.name ?? 'Error', Math.round(context.delayMs), {
+                        classification: context.classification,
+                        provider: providerTag,
+                        status_code: context.status,
+                        error_message: error.message,
+                    }));
+                },
             });
+            lastRetryMetadata = undefined;
             return result;
         }
         catch (error) {
             if (abortSignal.aborted) {
                 throw error;
+            }
+            if (lastRetryMetadata) {
+                logContentRetryFailure(this.config, new ContentRetryFailureEvent(lastRetryMetadata.attempt, error instanceof Error ? error.name : 'UnknownError', undefined, {
+                    final_classification: lastRetryMetadata.classification,
+                    provider: providerTag,
+                    status_code: lastRetryMetadata.status,
+                    error_message: error instanceof Error ? error.message : String(error),
+                }));
+                lastRetryMetadata = undefined;
             }
             await reportError(error, `Error generating content via API with model ${modelToUse}.`, {
                 requestContents: contents,

@@ -16,7 +16,7 @@ import type {
   Tool,
 } from '@google/genai';
 import { createUserContent } from '@google/genai';
-import { retryWithBackoff } from '../utils/retry.js';
+import { retryWithBackoff, type RetryClassification } from '../utils/retry.js';
 import type { ContentGenerator } from './contentGenerator.js';
 import { AuthType } from './contentGenerator.js';
 import type { Config } from '../config/config.js';
@@ -33,6 +33,8 @@ import {
   ContentRetryFailureEvent,
   InvalidChunkEvent,
 } from '../telemetry/types.js';
+import { getProviderTelemetryTag } from '../utils/providerTelemetry.js';
+import { IdleStreamTimeoutError } from '../utils/networkErrors.js';
 
 export enum StreamEventType {
   /** A regular content chunk from the API. */
@@ -60,6 +62,8 @@ const INVALID_CONTENT_RETRY_OPTIONS: ContentRetryOptions = {
   maxAttempts: 3, // 1 initial call + 2 retries
   initialDelayMs: 500,
 };
+
+const STREAM_IDLE_TIMEOUT_MS = 15000;
 /**
  * Returns true if the response is valid, false otherwise.
  *
@@ -272,6 +276,14 @@ export class GeminiChat {
     const requestContents = this.getHistory(true).concat(userContent);
 
     let response: GenerateContentResponse;
+    const providerTag = getProviderTelemetryTag(this.config);
+    let lastRetryMetadata:
+      | {
+          attempt: number;
+          classification: RetryClassification;
+          status?: number;
+        }
+      | undefined;
 
     try {
       const apiCall = () => {
@@ -310,7 +322,29 @@ export class GeminiChat {
         onPersistent429: async (authType?: string, error?: unknown) =>
           await this.handleFlashFallback(authType, error),
         authType: this.config.getContentGeneratorConfig()?.authType,
+        onRetryableError: (error, context) => {
+          lastRetryMetadata = {
+            attempt: context.attempt,
+            classification: context.classification,
+            status: context.status,
+          };
+          logContentRetry(
+            this.config,
+            new ContentRetryEvent(
+              context.attempt,
+              error.name ?? 'Error',
+              Math.round(context.delayMs),
+              {
+                classification: context.classification,
+                provider: providerTag,
+                status_code: context.status,
+                error_message: error.message,
+              },
+            ),
+          );
+        },
       });
+      lastRetryMetadata = undefined;
 
       this.sendPromise = (async () => {
         const outputContent = response.candidates?.[0]?.content;
@@ -342,6 +376,24 @@ export class GeminiChat {
       });
       return response;
     } catch (error) {
+      if (lastRetryMetadata) {
+        logContentRetryFailure(
+          this.config,
+          new ContentRetryFailureEvent(
+            lastRetryMetadata.attempt,
+            error instanceof Error ? error.name : 'UnknownError',
+            undefined,
+            {
+              final_classification: lastRetryMetadata.classification,
+              provider: providerTag,
+              status_code: lastRetryMetadata.status,
+              error_message:
+                error instanceof Error ? error.message : String(error),
+            },
+          ),
+        );
+        lastRetryMetadata = undefined;
+      }
       this.sendPromise = Promise.resolve();
       throw error;
     }
@@ -386,6 +438,7 @@ export class GeminiChat {
     // Add user content to history ONCE before any attempts.
     this.history.push(userContent);
     const requestContents = this.getHistory(true);
+    const providerTag = getProviderTelemetryTag(this.config);
 
     // eslint-disable-next-line @typescript-eslint/no-this-alias
     const self = this;
@@ -418,7 +471,9 @@ export class GeminiChat {
             break;
           } catch (error) {
             lastError = error;
-            const isContentError = error instanceof EmptyStreamError;
+            const isEmptyStreamError = error instanceof EmptyStreamError;
+            const isIdleStreamError = error instanceof IdleStreamTimeoutError;
+            const isContentError = isEmptyStreamError || isIdleStreamError;
 
             if (isContentError) {
               // Check if we have more attempts left.
@@ -427,8 +482,18 @@ export class GeminiChat {
                   self.config,
                   new ContentRetryEvent(
                     attempt,
-                    'EmptyStreamError',
+                    isIdleStreamError
+                      ? 'IdleStreamTimeoutError'
+                      : 'EmptyStreamError',
                     INVALID_CONTENT_RETRY_OPTIONS.initialDelayMs,
+                    {
+                      classification: isIdleStreamError
+                        ? 'network'
+                        : 'unknown',
+                      provider: providerTag,
+                      error_message:
+                        error instanceof Error ? error.message : String(error),
+                    },
                   ),
                 );
                 await new Promise((res) =>
@@ -446,12 +511,29 @@ export class GeminiChat {
         }
 
         if (lastError) {
-          if (lastError instanceof EmptyStreamError) {
+          if (
+            lastError instanceof EmptyStreamError ||
+            lastError instanceof IdleStreamTimeoutError
+          ) {
             logContentRetryFailure(
               self.config,
               new ContentRetryFailureEvent(
                 INVALID_CONTENT_RETRY_OPTIONS.maxAttempts,
-                'EmptyStreamError',
+                lastError instanceof IdleStreamTimeoutError
+                  ? 'IdleStreamTimeoutError'
+                  : 'EmptyStreamError',
+                undefined,
+                {
+                  final_classification:
+                    lastError instanceof IdleStreamTimeoutError
+                      ? 'network'
+                      : 'unknown',
+                  provider: providerTag,
+                  error_message:
+                    lastError instanceof Error
+                      ? lastError.message
+                      : String(lastError),
+                },
               ),
             );
           }
@@ -473,6 +555,14 @@ export class GeminiChat {
     prompt_id: string,
     userContent: Content,
   ): Promise<AsyncGenerator<GenerateContentResponse>> {
+    const providerTag = getProviderTelemetryTag(this.config);
+    let lastRetryMetadata:
+      | {
+          attempt: number;
+          classification: RetryClassification;
+          status?: number;
+        }
+      | undefined;
     const apiCall = () => {
       const modelToUse = this.config.getModel();
 
@@ -495,21 +585,69 @@ export class GeminiChat {
       );
     };
 
-    const streamResponse = await retryWithBackoff(apiCall, {
-      shouldRetry: (error: unknown) => {
-        if (error instanceof Error && error.message) {
-          if (isSchemaDepthError(error.message)) return false;
-          if (error.message.includes('429')) return true;
-          if (error.message.match(/^5\d{2}/)) return true;
-        }
-        return false;
-      },
-      onPersistent429: async (authType?: string, error?: unknown) =>
-        await this.handleFlashFallback(authType, error),
-      authType: this.config.getContentGeneratorConfig()?.authType,
-    });
+    try {
+      const streamResponse = await retryWithBackoff(apiCall, {
+        shouldRetry: (error: unknown) => {
+          if (error instanceof Error && error.message) {
+            if (isSchemaDepthError(error.message)) return false;
+            if (error.message.includes('429')) return true;
+            if (error.message.match(/^5\d{2}/)) return true;
+          }
+          return false;
+        },
+        onPersistent429: async (authType?: string, error?: unknown) =>
+          await this.handleFlashFallback(authType, error),
+        authType: this.config.getContentGeneratorConfig()?.authType,
+        onRetryableError: (error, context) => {
+          lastRetryMetadata = {
+            attempt: context.attempt,
+            classification: context.classification,
+            status: context.status,
+          };
+          logContentRetry(
+            this.config,
+            new ContentRetryEvent(
+              context.attempt,
+              error.name ?? 'Error',
+              Math.round(context.delayMs),
+              {
+                classification: context.classification,
+                provider: providerTag,
+                status_code: context.status,
+                error_message: error.message,
+              },
+            ),
+          );
+        },
+      });
+      lastRetryMetadata = undefined;
 
-    return this.processStreamResponse(streamResponse, userContent);
+      return this.processStreamResponse(
+        streamResponse,
+        userContent,
+        prompt_id,
+        providerTag,
+      );
+    } catch (error) {
+      if (lastRetryMetadata) {
+        logContentRetryFailure(
+          this.config,
+          new ContentRetryFailureEvent(
+            lastRetryMetadata.attempt,
+            error instanceof Error ? error.name : 'UnknownError',
+            undefined,
+            {
+              final_classification: lastRetryMetadata.classification,
+              provider: providerTag,
+              status_code: lastRetryMetadata.status,
+              error_message:
+                error instanceof Error ? error.message : String(error),
+            },
+          ),
+        );
+      }
+      throw error;
+    }
   }
 
   /**
@@ -596,6 +734,8 @@ export class GeminiChat {
   private async *processStreamResponse(
     streamResponse: AsyncGenerator<GenerateContentResponse>,
     userInput: Content,
+    promptId: string,
+    providerTag: string,
   ): AsyncGenerator<GenerateContentResponse> {
     const modelResponseParts: Part[] = [];
     let hasReceivedAnyChunk = false;
@@ -604,7 +744,20 @@ export class GeminiChat {
     let lastChunk: GenerateContentResponse | null = null;
     let lastChunkIsInvalid = false;
 
-    for await (const chunk of streamResponse) {
+    while (true) {
+      const { value: chunk, done } = await this.nextStreamChunkWithWatchdog(
+        streamResponse,
+        promptId,
+        providerTag,
+      );
+
+      if (done) {
+        break;
+      }
+      if (!chunk) {
+        continue;
+      }
+
       hasReceivedAnyChunk = true;
       lastChunk = chunk;
 
@@ -660,6 +813,34 @@ export class GeminiChat {
 
     // Pass the raw, bundled data to the new, robust recordHistory
     this.recordHistory(userInput, modelOutput);
+  }
+
+  private async nextStreamChunkWithWatchdog(
+    stream: AsyncGenerator<GenerateContentResponse>,
+    _promptId: string,
+    _providerTag: string,
+  ): Promise<IteratorResult<GenerateContentResponse>> {
+    if (STREAM_IDLE_TIMEOUT_MS <= 0) {
+      return stream.next();
+    }
+
+    let timeoutHandle: NodeJS.Timeout | undefined;
+
+    try {
+      const result = await Promise.race<IteratorResult<GenerateContentResponse>>([
+        stream.next(),
+        new Promise<IteratorResult<GenerateContentResponse>>((_, reject) => {
+          timeoutHandle = setTimeout(() => {
+            reject(new IdleStreamTimeoutError(STREAM_IDLE_TIMEOUT_MS));
+          }, STREAM_IDLE_TIMEOUT_MS);
+        }),
+      ]);
+      return result;
+    } finally {
+      if (timeoutHandle) {
+        clearTimeout(timeoutHandle);
+      }
+    }
   }
 
   private recordHistory(

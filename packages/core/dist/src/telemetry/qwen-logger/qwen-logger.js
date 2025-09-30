@@ -483,6 +483,14 @@ export class QwenLogger {
                 attempt_number: event.attempt_number,
                 error_type: event.error_type,
                 retry_delay_ms: event.retry_delay_ms,
+                ...(event.classification
+                    ? { classification: event.classification }
+                    : {}),
+                ...(event.provider ? { provider: event.provider } : {}),
+                ...(typeof event.status_code === 'number'
+                    ? { status_code: event.status_code }
+                    : {}),
+                ...(event.error_message ? { error_message: event.error_message } : {}),
             }),
         });
         this.enqueueLogEvent(rumEvent);
@@ -496,6 +504,14 @@ export class QwenLogger {
                 total_attempts: event.total_attempts,
                 final_error_type: event.final_error_type,
                 total_duration_ms: event.total_duration_ms,
+                ...(event.final_classification
+                    ? { final_classification: event.final_classification }
+                    : {}),
+                ...(event.provider ? { provider: event.provider } : {}),
+                ...(typeof event.status_code === 'number'
+                    ? { status_code: event.status_code }
+                    : {}),
+                ...(event.error_message ? { error_message: event.error_message } : {}),
             }),
         });
         this.enqueueLogEvent(rumEvent);

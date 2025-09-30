@@ -5,6 +5,8 @@
  */
 
 import { AuthType } from '../core/contentGenerator.js';
+import { isNodeError } from './errors.js';
+import { IdleStreamTimeoutError } from './networkErrors.js';
 import {
   isProQuotaExceededError,
   isGenericQuotaExceededError,
@@ -26,7 +28,18 @@ export interface RetryOptions {
     error?: unknown,
   ) => Promise<string | boolean | null>;
   authType?: string;
+  onRetryableError?: (
+    error: Error,
+    context: {
+      attempt: number;
+      classification: RetryClassification;
+      status?: number;
+      delayMs: number;
+    },
+  ) => void;
 }
+
+export type RetryClassification = 'network' | 'status' | 'unknown';
 
 const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   maxAttempts: 5,
@@ -35,6 +48,28 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   shouldRetry: defaultShouldRetry,
 };
 
+const RETRYABLE_NODE_ERROR_CODES = new Set([
+  'ECONNRESET',
+  'ECONNREFUSED',
+  'ECONNABORTED',
+  'EPIPE',
+  'ETIMEDOUT',
+  'EHOSTUNREACH',
+  'ENOTFOUND',
+  'EAI_AGAIN',
+  'UND_ERR_ABORTED',
+]);
+
+const RETRYABLE_MESSAGE_KEYWORDS = [
+  'terminated',
+  'socket hang up',
+  'network connection closed',
+  'connection closed prematurely',
+  'fetch failed',
+  'request aborted',
+  'aborterror',
+];
+
 /**
  * Default predicate function to determine if a retry should be attempted.
  * Retries on 429 (Too Many Requests) and 5xx server errors.
@@ -42,6 +77,9 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
  * @returns True if the error is a transient error, false otherwise.
  */
 function defaultShouldRetry(error: Error | unknown): boolean {
+  if (isTransientNetworkError(error)) {
+    return true;
+  }
   // Check for common transient error status codes either in message or a status property
   if (error && typeof (error as { status?: number }).status === 'number') {
     const status = (error as { status: number }).status;
@@ -54,6 +92,53 @@ function defaultShouldRetry(error: Error | unknown): boolean {
     if (error.message.match(/5\d{2}/)) return true;
   }
   return false;
+}
+
+function isTransientNetworkError(error: unknown): boolean {
+  if (error instanceof IdleStreamTimeoutError) {
+    return true;
+  }
+
+  if (isNodeError(error) && error.code && RETRYABLE_NODE_ERROR_CODES.has(error.code)) {
+    return true;
+  }
+
+  if (
+    typeof DOMException !== 'undefined' &&
+    error instanceof DOMException &&
+    error.name === 'AbortError'
+  ) {
+    return true;
+  }
+
+  if (error instanceof Error) {
+    const message = error.message.toLowerCase();
+    return RETRYABLE_MESSAGE_KEYWORDS.some((keyword) =>
+      message.includes(keyword),
+    );
+  }
+
+  return false;
+}
+
+function classifyRetryableError(error: unknown): RetryClassification {
+  if (isTransientNetworkError(error)) {
+    return 'network';
+  }
+
+  const status = getErrorStatus(error);
+  if (status === 429 || (typeof status === 'number' && status >= 500 && status < 600)) {
+    return 'status';
+  }
+
+  if (error instanceof Error && error.message) {
+    const message = error.message;
+    if (message.includes('429') || message.match(/5\d{2}/)) {
+      return 'status';
+    }
+  }
+
+  return 'unknown';
 }
 
 /**
@@ -83,6 +168,7 @@ export async function retryWithBackoff<T>(
     onPersistent429,
     authType,
     shouldRetry,
+    onRetryableError,
   } = {
     ...DEFAULT_RETRY_OPTIONS,
     ...options,
@@ -198,13 +284,34 @@ export async function retryWithBackoff<T>(
         }
       }
 
-      // Check if we've exhausted retries or shouldn't retry
-      if (attempt >= maxAttempts || !shouldRetry(error as Error)) {
+      const { delayDurationMs, errorStatus: delayErrorStatus } =
+        getDelayDurationAndStatus(error);
+      const classification = classifyRetryableError(error);
+      const shouldRetryFlag =
+        classification !== 'unknown' || shouldRetry(error as Error);
+
+      if (attempt >= maxAttempts || !shouldRetryFlag) {
         throw error;
       }
 
-      const { delayDurationMs, errorStatus: delayErrorStatus } =
-        getDelayDurationAndStatus(error);
+      let resolvedDelayMs: number;
+
+      if (delayDurationMs > 0) {
+        resolvedDelayMs = delayDurationMs;
+      } else {
+        // Add jitter: +/- 30% of currentDelay
+        const jitter = currentDelay * 0.3 * (Math.random() * 2 - 1);
+        resolvedDelayMs = Math.max(0, currentDelay + jitter);
+      }
+
+      if (onRetryableError && error instanceof Error) {
+        onRetryableError(error, {
+          attempt,
+          classification,
+          status: getErrorStatus(error),
+          delayMs: resolvedDelayMs,
+        });
+      }
 
       if (delayDurationMs > 0) {
         // Respect Retry-After header if present and parsed
@@ -218,10 +325,7 @@ export async function retryWithBackoff<T>(
       } else {
         // Fall back to exponential backoff with jitter
         logRetryAttempt(attempt, error, errorStatus);
-        // Add jitter: +/- 30% of currentDelay
-        const jitter = currentDelay * 0.3 * (Math.random() * 2 - 1);
-        const delayWithJitter = Math.max(0, currentDelay + jitter);
-        await delay(delayWithJitter);
+        await delay(resolvedDelayMs);
         currentDelay = Math.min(maxDelayMs, currentDelay * 2);
       }
     }

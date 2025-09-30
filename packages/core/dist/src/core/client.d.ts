@@ -58,6 +58,7 @@ export declare class GeminiClient {
     private getIdeContextParts;
     sendMessageStream(request: PartListUnion, signal: AbortSignal, prompt_id: string, turns?: number, originalModel?: string): AsyncGenerator<ServerGeminiStreamEvent, Turn>;
     private ensureRequestWithinBudget;
+    private runNonStreamingFallback;
     generateJson(contents: Content[], schema: Record<string, unknown>, abortSignal: AbortSignal, model?: string, config?: GenerateContentConfig): Promise<Record<string, unknown>>;
     generateContent(contents: Content[], generationConfig: GenerateContentConfig, abortSignal: AbortSignal, model?: string): Promise<GenerateContentResponse>;
     generateEmbedding(texts: string[]): Promise<number[][]>;

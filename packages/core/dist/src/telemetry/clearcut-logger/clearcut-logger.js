@@ -653,6 +653,30 @@ export class ClearcutLogger {
                 value: String(event.retry_delay_ms),
             },
         ];
+        if (event.classification) {
+            data.push({
+                gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_CLASSIFICATION,
+                value: event.classification,
+            });
+        }
+        if (event.provider) {
+            data.push({
+                gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_PROVIDER,
+                value: event.provider,
+            });
+        }
+        if (typeof event.status_code === 'number') {
+            data.push({
+                gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_STATUS_CODE,
+                value: String(event.status_code),
+            });
+        }
+        if (event.error_message) {
+            data.push({
+                gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_ERROR_MESSAGE,
+                value: event.error_message,
+            });
+        }
         this.enqueueLogEvent(this.createLogEvent(EventNames.CONTENT_RETRY, data));
         this.flushIfNeeded();
     }
@@ -671,6 +695,30 @@ export class ClearcutLogger {
             data.push({
                 gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_FAILURE_TOTAL_DURATION_MS,
                 value: String(event.total_duration_ms),
+            });
+        }
+        if (event.final_classification) {
+            data.push({
+                gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_FAILURE_FINAL_CLASSIFICATION,
+                value: event.final_classification,
+            });
+        }
+        if (event.provider) {
+            data.push({
+                gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_FAILURE_PROVIDER,
+                value: event.provider,
+            });
+        }
+        if (typeof event.status_code === 'number') {
+            data.push({
+                gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_FAILURE_STATUS_CODE,
+                value: String(event.status_code),
+            });
+        }
+        if (event.error_message) {
+            data.push({
+                gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_FAILURE_ERROR_MESSAGE,
+                value: event.error_message,
             });
         }
         this.enqueueLogEvent(this.createLogEvent(EventNames.CONTENT_RETRY_FAILURE, data));

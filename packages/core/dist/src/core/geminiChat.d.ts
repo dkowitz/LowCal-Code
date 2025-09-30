@@ -128,6 +128,7 @@ export declare class GeminiChat {
     setTools(tools: Tool[]): void;
     maybeIncludeSchemaDepthContext(error: StructuredError): Promise<void>;
     private processStreamResponse;
+    private nextStreamChunkWithWatchdog;
     private recordHistory;
     /**
      * Handles Qwen OAuth authentication errors and rate limiting

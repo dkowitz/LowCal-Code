@@ -10,6 +10,8 @@ import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
 import { hasCycleInSchema } from '../tools/tools.js';
 import { logContentRetry, logContentRetryFailure, logInvalidChunk, } from '../telemetry/loggers.js';
 import { ContentRetryEvent, ContentRetryFailureEvent, InvalidChunkEvent, } from '../telemetry/types.js';
+import { getProviderTelemetryTag } from '../utils/providerTelemetry.js';
+import { IdleStreamTimeoutError } from '../utils/networkErrors.js';
 export var StreamEventType;
 (function (StreamEventType) {
     /** A regular content chunk from the API. */
@@ -22,6 +24,7 @@ const INVALID_CONTENT_RETRY_OPTIONS = {
     maxAttempts: 3, // 1 initial call + 2 retries
     initialDelayMs: 500,
 };
+const STREAM_IDLE_TIMEOUT_MS = 15000;
 /**
  * Returns true if the response is valid, false otherwise.
  *
@@ -210,6 +213,8 @@ export class GeminiChat {
         const userContent = createUserContent(params.message);
         const requestContents = this.getHistory(true).concat(userContent);
         let response;
+        const providerTag = getProviderTelemetryTag(this.config);
+        let lastRetryMetadata;
         try {
             const apiCall = () => {
                 const modelToUse = this.config.getModel() || DEFAULT_GEMINI_FLASH_MODEL;
@@ -239,7 +244,21 @@ export class GeminiChat {
                 },
                 onPersistent429: async (authType, error) => await this.handleFlashFallback(authType, error),
                 authType: this.config.getContentGeneratorConfig()?.authType,
+                onRetryableError: (error, context) => {
+                    lastRetryMetadata = {
+                        attempt: context.attempt,
+                        classification: context.classification,
+                        status: context.status,
+                    };
+                    logContentRetry(this.config, new ContentRetryEvent(context.attempt, error.name ?? 'Error', Math.round(context.delayMs), {
+                        classification: context.classification,
+                        provider: providerTag,
+                        status_code: context.status,
+                        error_message: error.message,
+                    }));
+                },
             });
+            lastRetryMetadata = undefined;
             this.sendPromise = (async () => {
                 const outputContent = response.candidates?.[0]?.content;
                 const modelOutput = outputContent ? [outputContent] : [];
@@ -264,6 +283,15 @@ export class GeminiChat {
             return response;
         }
         catch (error) {
+            if (lastRetryMetadata) {
+                logContentRetryFailure(this.config, new ContentRetryFailureEvent(lastRetryMetadata.attempt, error instanceof Error ? error.name : 'UnknownError', undefined, {
+                    final_classification: lastRetryMetadata.classification,
+                    provider: providerTag,
+                    status_code: lastRetryMetadata.status,
+                    error_message: error instanceof Error ? error.message : String(error),
+                }));
+                lastRetryMetadata = undefined;
+            }
             this.sendPromise = Promise.resolve();
             throw error;
         }
@@ -301,6 +329,7 @@ export class GeminiChat {
         // Add user content to history ONCE before any attempts.
         this.history.push(userContent);
         const requestContents = this.getHistory(true);
+        const providerTag = getProviderTelemetryTag(this.config);
         // eslint-disable-next-line @typescript-eslint/no-this-alias
         const self = this;
         return (async function* () {
@@ -320,11 +349,21 @@ export class GeminiChat {
                     }
                     catch (error) {
                         lastError = error;
-                        const isContentError = error instanceof EmptyStreamError;
+                        const isEmptyStreamError = error instanceof EmptyStreamError;
+                        const isIdleStreamError = error instanceof IdleStreamTimeoutError;
+                        const isContentError = isEmptyStreamError || isIdleStreamError;
                         if (isContentError) {
                             // Check if we have more attempts left.
                             if (attempt < INVALID_CONTENT_RETRY_OPTIONS.maxAttempts - 1) {
-                                logContentRetry(self.config, new ContentRetryEvent(attempt, 'EmptyStreamError', INVALID_CONTENT_RETRY_OPTIONS.initialDelayMs));
+                                logContentRetry(self.config, new ContentRetryEvent(attempt, isIdleStreamError
+                                    ? 'IdleStreamTimeoutError'
+                                    : 'EmptyStreamError', INVALID_CONTENT_RETRY_OPTIONS.initialDelayMs, {
+                                    classification: isIdleStreamError
+                                        ? 'network'
+                                        : 'unknown',
+                                    provider: providerTag,
+                                    error_message: error instanceof Error ? error.message : String(error),
+                                }));
                                 await new Promise((res) => setTimeout(res, INVALID_CONTENT_RETRY_OPTIONS.initialDelayMs *
                                     (attempt + 1)));
                                 continue;
@@ -334,8 +373,19 @@ export class GeminiChat {
                     }
                 }
                 if (lastError) {
-                    if (lastError instanceof EmptyStreamError) {
-                        logContentRetryFailure(self.config, new ContentRetryFailureEvent(INVALID_CONTENT_RETRY_OPTIONS.maxAttempts, 'EmptyStreamError'));
+                    if (lastError instanceof EmptyStreamError ||
+                        lastError instanceof IdleStreamTimeoutError) {
+                        logContentRetryFailure(self.config, new ContentRetryFailureEvent(INVALID_CONTENT_RETRY_OPTIONS.maxAttempts, lastError instanceof IdleStreamTimeoutError
+                            ? 'IdleStreamTimeoutError'
+                            : 'EmptyStreamError', undefined, {
+                            final_classification: lastError instanceof IdleStreamTimeoutError
+                                ? 'network'
+                                : 'unknown',
+                            provider: providerTag,
+                            error_message: lastError instanceof Error
+                                ? lastError.message
+                                : String(lastError),
+                        }));
                     }
                     // If the stream fails, remove the user message that was added.
                     if (self.history[self.history.length - 1] === userContent) {
@@ -350,6 +400,8 @@ export class GeminiChat {
         })();
     }
     async makeApiCallAndProcessStream(requestContents, params, prompt_id, userContent) {
+        const providerTag = getProviderTelemetryTag(this.config);
+        let lastRetryMetadata;
         const apiCall = () => {
             const modelToUse = this.config.getModel();
             if (this.config.getQuotaErrorOccurred() &&
@@ -362,22 +414,49 @@ export class GeminiChat {
                 config: { ...this.generationConfig, ...params.config },
             }, prompt_id);
         };
-        const streamResponse = await retryWithBackoff(apiCall, {
-            shouldRetry: (error) => {
-                if (error instanceof Error && error.message) {
-                    if (isSchemaDepthError(error.message))
-                        return false;
-                    if (error.message.includes('429'))
-                        return true;
-                    if (error.message.match(/^5\d{2}/))
-                        return true;
-                }
-                return false;
-            },
-            onPersistent429: async (authType, error) => await this.handleFlashFallback(authType, error),
-            authType: this.config.getContentGeneratorConfig()?.authType,
-        });
-        return this.processStreamResponse(streamResponse, userContent);
+        try {
+            const streamResponse = await retryWithBackoff(apiCall, {
+                shouldRetry: (error) => {
+                    if (error instanceof Error && error.message) {
+                        if (isSchemaDepthError(error.message))
+                            return false;
+                        if (error.message.includes('429'))
+                            return true;
+                        if (error.message.match(/^5\d{2}/))
+                            return true;
+                    }
+                    return false;
+                },
+                onPersistent429: async (authType, error) => await this.handleFlashFallback(authType, error),
+                authType: this.config.getContentGeneratorConfig()?.authType,
+                onRetryableError: (error, context) => {
+                    lastRetryMetadata = {
+                        attempt: context.attempt,
+                        classification: context.classification,
+                        status: context.status,
+                    };
+                    logContentRetry(this.config, new ContentRetryEvent(context.attempt, error.name ?? 'Error', Math.round(context.delayMs), {
+                        classification: context.classification,
+                        provider: providerTag,
+                        status_code: context.status,
+                        error_message: error.message,
+                    }));
+                },
+            });
+            lastRetryMetadata = undefined;
+            return this.processStreamResponse(streamResponse, userContent, prompt_id, providerTag);
+        }
+        catch (error) {
+            if (lastRetryMetadata) {
+                logContentRetryFailure(this.config, new ContentRetryFailureEvent(lastRetryMetadata.attempt, error instanceof Error ? error.name : 'UnknownError', undefined, {
+                    final_classification: lastRetryMetadata.classification,
+                    provider: providerTag,
+                    status_code: lastRetryMetadata.status,
+                    error_message: error instanceof Error ? error.message : String(error),
+                }));
+            }
+            throw error;
+        }
     }
     /**
      * Returns the chat history.
@@ -450,14 +529,21 @@ export class GeminiChat {
             }
         }
     }
-    async *processStreamResponse(streamResponse, userInput) {
+    async *processStreamResponse(streamResponse, userInput, promptId, providerTag) {
         const modelResponseParts = [];
         let hasReceivedAnyChunk = false;
         let hasReceivedValidChunk = false;
         let hasToolCall = false;
         let lastChunk = null;
         let lastChunkIsInvalid = false;
-        for await (const chunk of streamResponse) {
+        while (true) {
+            const { value: chunk, done } = await this.nextStreamChunkWithWatchdog(streamResponse, promptId, providerTag);
+            if (done) {
+                break;
+            }
+            if (!chunk) {
+                continue;
+            }
             hasReceivedAnyChunk = true;
             lastChunk = chunk;
             if (isValidResponse(chunk)) {
@@ -498,6 +584,28 @@ export class GeminiChat {
             : [];
         // Pass the raw, bundled data to the new, robust recordHistory
         this.recordHistory(userInput, modelOutput);
+    }
+    async nextStreamChunkWithWatchdog(stream, _promptId, _providerTag) {
+        if (STREAM_IDLE_TIMEOUT_MS <= 0) {
+            return stream.next();
+        }
+        let timeoutHandle;
+        try {
+            const result = await Promise.race([
+                stream.next(),
+                new Promise((_, reject) => {
+                    timeoutHandle = setTimeout(() => {
+                        reject(new IdleStreamTimeoutError(STREAM_IDLE_TIMEOUT_MS));
+                    }, STREAM_IDLE_TIMEOUT_MS);
+                }),
+            ]);
+            return result;
+        }
+        finally {
+            if (timeoutHandle) {
+                clearTimeout(timeoutHandle);
+            }
+        }
     }
     recordHistory(userInput, modelOutput, automaticFunctionCallingHistory) {
         // Part 1: Handle the user's turn.

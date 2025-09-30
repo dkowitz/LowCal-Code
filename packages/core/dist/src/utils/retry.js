@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { AuthType } from '../core/contentGenerator.js';
+import { isNodeError } from './errors.js';
+import { IdleStreamTimeoutError } from './networkErrors.js';
 import { isProQuotaExceededError, isGenericQuotaExceededError, isQwenQuotaExceededError, isQwenThrottlingError, } from './quotaErrorDetection.js';
 const DEFAULT_RETRY_OPTIONS = {
     maxAttempts: 5,
@@ -11,6 +13,26 @@ const DEFAULT_RETRY_OPTIONS = {
     maxDelayMs: 30000, // 30 seconds
     shouldRetry: defaultShouldRetry,
 };
+const RETRYABLE_NODE_ERROR_CODES = new Set([
+    'ECONNRESET',
+    'ECONNREFUSED',
+    'ECONNABORTED',
+    'EPIPE',
+    'ETIMEDOUT',
+    'EHOSTUNREACH',
+    'ENOTFOUND',
+    'EAI_AGAIN',
+    'UND_ERR_ABORTED',
+]);
+const RETRYABLE_MESSAGE_KEYWORDS = [
+    'terminated',
+    'socket hang up',
+    'network connection closed',
+    'connection closed prematurely',
+    'fetch failed',
+    'request aborted',
+    'aborterror',
+];
 /**
  * Default predicate function to determine if a retry should be attempted.
  * Retries on 429 (Too Many Requests) and 5xx server errors.
@@ -18,6 +40,9 @@ const DEFAULT_RETRY_OPTIONS = {
  * @returns True if the error is a transient error, false otherwise.
  */
 function defaultShouldRetry(error) {
+    if (isTransientNetworkError(error)) {
+        return true;
+    }
     // Check for common transient error status codes either in message or a status property
     if (error && typeof error.status === 'number') {
         const status = error.status;
@@ -32,6 +57,40 @@ function defaultShouldRetry(error) {
             return true;
     }
     return false;
+}
+function isTransientNetworkError(error) {
+    if (error instanceof IdleStreamTimeoutError) {
+        return true;
+    }
+    if (isNodeError(error) && error.code && RETRYABLE_NODE_ERROR_CODES.has(error.code)) {
+        return true;
+    }
+    if (typeof DOMException !== 'undefined' &&
+        error instanceof DOMException &&
+        error.name === 'AbortError') {
+        return true;
+    }
+    if (error instanceof Error) {
+        const message = error.message.toLowerCase();
+        return RETRYABLE_MESSAGE_KEYWORDS.some((keyword) => message.includes(keyword));
+    }
+    return false;
+}
+function classifyRetryableError(error) {
+    if (isTransientNetworkError(error)) {
+        return 'network';
+    }
+    const status = getErrorStatus(error);
+    if (status === 429 || (typeof status === 'number' && status >= 500 && status < 600)) {
+        return 'status';
+    }
+    if (error instanceof Error && error.message) {
+        const message = error.message;
+        if (message.includes('429') || message.match(/5\d{2}/)) {
+            return 'status';
+        }
+    }
+    return 'unknown';
 }
 /**
  * Delays execution for a specified number of milliseconds.
@@ -49,7 +108,7 @@ function delay(ms) {
  * @throws The last error encountered if all attempts fail.
  */
 export async function retryWithBackoff(fn, options) {
-    const { maxAttempts, initialDelayMs, maxDelayMs, onPersistent429, authType, shouldRetry, } = {
+    const { maxAttempts, initialDelayMs, maxDelayMs, onPersistent429, authType, shouldRetry, onRetryableError, } = {
         ...DEFAULT_RETRY_OPTIONS,
         ...options,
     };
@@ -157,11 +216,29 @@ export async function retryWithBackoff(fn, options) {
                     console.warn('Fallback to Flash model failed:', fallbackError);
                 }
             }
-            // Check if we've exhausted retries or shouldn't retry
-            if (attempt >= maxAttempts || !shouldRetry(error)) {
+            const { delayDurationMs, errorStatus: delayErrorStatus } = getDelayDurationAndStatus(error);
+            const classification = classifyRetryableError(error);
+            const shouldRetryFlag = classification !== 'unknown' || shouldRetry(error);
+            if (attempt >= maxAttempts || !shouldRetryFlag) {
                 throw error;
             }
-            const { delayDurationMs, errorStatus: delayErrorStatus } = getDelayDurationAndStatus(error);
+            let resolvedDelayMs;
+            if (delayDurationMs > 0) {
+                resolvedDelayMs = delayDurationMs;
+            }
+            else {
+                // Add jitter: +/- 30% of currentDelay
+                const jitter = currentDelay * 0.3 * (Math.random() * 2 - 1);
+                resolvedDelayMs = Math.max(0, currentDelay + jitter);
+            }
+            if (onRetryableError && error instanceof Error) {
+                onRetryableError(error, {
+                    attempt,
+                    classification,
+                    status: getErrorStatus(error),
+                    delayMs: resolvedDelayMs,
+                });
+            }
             if (delayDurationMs > 0) {
                 // Respect Retry-After header if present and parsed
                 console.warn(`Attempt ${attempt} failed with status ${delayErrorStatus ?? 'unknown'}. Retrying after explicit delay of ${delayDurationMs}ms...`, error);
@@ -172,10 +249,7 @@ export async function retryWithBackoff(fn, options) {
             else {
                 // Fall back to exponential backoff with jitter
                 logRetryAttempt(attempt, error, errorStatus);
-                // Add jitter: +/- 30% of currentDelay
-                const jitter = currentDelay * 0.3 * (Math.random() * 2 - 1);
-                const delayWithJitter = Math.max(0, currentDelay + jitter);
-                await delay(delayWithJitter);
+                await delay(resolvedDelayMs);
                 currentDelay = Math.min(maxDelayMs, currentDelay * 2);
             }
         }
