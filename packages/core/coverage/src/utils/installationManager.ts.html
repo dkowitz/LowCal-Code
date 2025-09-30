@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">64.28% </span>
+                <span class="strong">26.19% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>27/42</span>
+                <span class='fraction'>11/42</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">42.85% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/7</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>3/4</span>
+                <span class='fraction'>0/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">64.28% </span>
+                <span class="strong">26.19% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>27/42</span>
+                <span class='fraction'>11/42</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line medium'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -134,19 +134,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-yes">65x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -154,6 +143,17 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -161,23 +161,23 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">65x</span>
-<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @license
@@ -191,20 +191,20 @@ import * as path from 'node:path';
 import { Storage } from '../config/storage.js';
 &nbsp;
 export class InstallationManager {
-  private getInstallationIdPath(): string {
-    return Storage.getInstallationIdPath();
-  }
+  private <span class="fstat-no" title="function not covered" >getInstallationIdPath(): string {</span>
+<span class="cstat-no" title="statement not covered" >    return Storage.getInstallationIdPath();</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-  private readInstallationIdFromFile(): string | null {
-    const installationIdFile = this.getInstallationIdPath();
-    if (fs.existsSync(installationIdFile)) {
-      const installationid = fs
-        .readFileSync(installationIdFile, 'utf-8')
-        .trim();
-      return <span class="branch-0 cbranch-no" title="branch not covered" >installationid || null;</span>
-<span class="branch-0 cbranch-no" title="branch not covered" >    }</span>
+  private <span class="fstat-no" title="function not covered" >readInstallationIdFromFile(): string | null {</span>
+<span class="cstat-no" title="statement not covered" >    const installationIdFile = this.getInstallationIdPath();</span>
+<span class="cstat-no" title="statement not covered" >    if (fs.existsSync(installationIdFile)) {</span>
+<span class="cstat-no" title="statement not covered" >      const installationid = fs</span>
+<span class="cstat-no" title="statement not covered" >        .readFileSync(installationIdFile, 'utf-8')</span>
+<span class="cstat-no" title="statement not covered" >        .trim();</span>
+<span class="cstat-no" title="statement not covered" >      return installationid || null;</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    return null;</span>
-  }
+<span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   private <span class="fstat-no" title="function not covered" >writeInstallationIdToFile(installationId: string) {</span>
 <span class="cstat-no" title="statement not covered" >    const installationIdFile = this.getInstallationIdPath();</span>
@@ -218,24 +218,24 @@ export class InstallationManager {
    * This ID is used for unique user installation tracking.
    * @returns A UUID string for the user.
    */
-  getInstallationId(): string {
-    try {
-      let installationId = this.readInstallationIdFromFile();
+<span class="fstat-no" title="function not covered" >  getInstallationId(): string {</span>
+<span class="cstat-no" title="statement not covered" >    try {</span>
+<span class="cstat-no" title="statement not covered" >      let installationId = this.readInstallationIdFromFile();</span>
 &nbsp;
-      if (!installationId) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >      if (!installationId) {</span>
 <span class="cstat-no" title="statement not covered" >        installationId = randomUUID();</span>
 <span class="cstat-no" title="statement not covered" >        this.writeInstallationIdToFile(installationId);</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-      return installationId;
-<span class="branch-0 cbranch-no" title="branch not covered" >    } catch (error) {</span>
+<span class="cstat-no" title="statement not covered" >      return installationId;</span>
+<span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >      console.error(</span>
 <span class="cstat-no" title="statement not covered" >        'Error accessing installation ID file, generating ephemeral ID:',</span>
 <span class="cstat-no" title="statement not covered" >        error,</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >      return '123456789';</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-  }
+<span class="cstat-no" title="statement not covered" >  }</span>
 }
 &nbsp;</pre></td></tr></table></pre>
 
@@ -244,7 +244,7 @@ export class InstallationManager {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T00:16:56.414Z
+                at 2025-09-30T08:47:49.571Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

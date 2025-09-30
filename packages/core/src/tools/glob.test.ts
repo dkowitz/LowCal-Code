@@ -80,7 +80,8 @@ describe('GlobTool', () => {
       expect(result.llmContent).toContain('Found 2 file(s)');
       expect(result.llmContent).toContain(path.join(tempRootDir, 'fileA.txt'));
       expect(result.llmContent).toContain(path.join(tempRootDir, 'FileB.TXT'));
-      expect(result.returnDisplay).toBe('Found 2 matching file(s)');
+      expect(result.llmContent).toContain('Matches (first 2');
+      expect(result.returnDisplay).toBe('Showing 2 of 2 matching file(s)');
     });
 
     it('should find files case-sensitively when case_sensitive is true', async () => {
@@ -199,12 +200,15 @@ describe('GlobTool', () => {
       // Ensure llmContent is a string for TypeScript type checking
       expect(typeof llmContent).toBe('string');
 
-      const filesListed = llmContent
-        .trim()
-        .split(/\r?\n/)
-        .slice(1)
+      const lines = llmContent.split(/\r?\n/);
+      const matchesHeaderIndex = lines.findIndex((line) =>
+        line.startsWith('Matches ('),
+      );
+      expect(matchesHeaderIndex).toBeGreaterThan(-1);
+      const filesListed = lines
+        .slice(matchesHeaderIndex + 1)
         .map((line) => line.trim())
-        .filter(Boolean);
+        .filter((line) => line && !line.startsWith('…'));
 
       expect(filesListed).toHaveLength(2);
       expect(path.resolve(filesListed[0])).toBe(
@@ -223,6 +227,44 @@ describe('GlobTool', () => {
       const result = await invocation.execute(abortSignal);
       expect(result.error?.type).toBe(ToolErrorType.PATH_NOT_IN_WORKSPACE);
       expect(result.returnDisplay).toBe('Path is not within workspace');
+    });
+
+    it('should summarize when file matches exceed the default limit', async () => {
+      const bulkDir = path.join(tempRootDir, 'bulk');
+      await fs.mkdir(bulkDir);
+      await Promise.all(
+        Array.from({ length: 80 }, (_, idx) =>
+          fs.writeFile(path.join(bulkDir, `file-${idx}.log`), 'bulk'),
+        ),
+      );
+
+      const invocation = globTool.build({ pattern: '*.log', path: 'bulk' });
+      const result = await invocation.execute(abortSignal);
+
+      expect(result.llmContent).toContain('Found 80 file(s)');
+      expect(result.llmContent).toContain('Matches (first 50 of 80)');
+      expect(result.llmContent).toContain('hidden to protect the token budget');
+      expect(result.returnDisplay).toBe('Showing 50 of 80 matching file(s)');
+    });
+
+    it('should honour custom limit parameter', async () => {
+      const customDir = path.join(tempRootDir, 'custom');
+      await fs.mkdir(customDir);
+      await Promise.all(
+        Array.from({ length: 30 }, (_, idx) =>
+          fs.writeFile(path.join(customDir, `note-${idx}.md`), 'bulk'),
+        ),
+      );
+
+      const invocation = globTool.build({
+        pattern: '*.md',
+        path: 'custom',
+        limit: 10,
+      });
+      const result = await invocation.execute(abortSignal);
+
+      expect(result.llmContent).toContain('Matches (first 10 of 30)');
+      expect(result.returnDisplay).toBe('Showing 10 of 30 matching file(s)');
     });
 
     it('should return a GLOB_EXECUTION_ERROR on glob failure', async () => {
@@ -248,6 +290,15 @@ describe('GlobTool', () => {
     it('should return null for valid parameters (pattern and path)', () => {
       const params: GlobToolParams = { pattern: '*.js', path: 'sub' };
       expect(globTool.validateToolParams(params)).toBeNull();
+    });
+
+    it('should reject invalid limit values', () => {
+      expect(
+        globTool.validateToolParams({ pattern: '*.ts', limit: 0 }),
+      ).toBe('Limit must be a positive number when provided.');
+      expect(
+        globTool.validateToolParams({ pattern: '*.ts', limit: 999 }),
+      ).toBe('Limit cannot exceed 300.');
     });
 
     it('should return null for valid parameters (pattern, path, and case_sensitive)', () => {

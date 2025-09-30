@@ -73,12 +73,20 @@ export interface GlobToolParams {
    * Whether to respect .gitignore patterns (optional, defaults to true)
    */
   respect_git_ignore?: boolean;
+
+  /**
+   * Maximum number of matching files to include in the detailed listing (defaults to 50, capped at 300).
+   */
+  limit?: number;
 }
 
 class GlobToolInvocation extends BaseToolInvocation<
   GlobToolParams,
   ToolResult
 > {
+  static readonly DEFAULT_LIMIT = 50;
+  static readonly MAX_LIMIT = 300;
+
   constructor(
     private config: Config,
     params: GlobToolParams,
@@ -214,8 +222,26 @@ class GlobToolInvocation extends BaseToolInvocation<
       const sortedAbsolutePaths = sortedEntries.map((entry) =>
         entry.fullpath(),
       );
-      const fileListDescription = sortedAbsolutePaths.join('\n');
       const fileCount = sortedAbsolutePaths.length;
+
+      const limitParam = this.params.limit ?? GlobToolInvocation.DEFAULT_LIMIT;
+      const normalizedLimit = Math.min(
+        GlobToolInvocation.MAX_LIMIT,
+        Math.max(1, Math.trunc(limitParam)),
+      );
+      const limitedPaths = sortedAbsolutePaths.slice(0, normalizedLimit);
+      const truncatedCount = Math.max(0, fileCount - limitedPaths.length);
+
+      const extensionCounts = new Map<string, number>();
+      for (const filePath of sortedAbsolutePaths) {
+        const extension = (path.extname(filePath) || '(no extension)').toLowerCase();
+        extensionCounts.set(extension, (extensionCounts.get(extension) ?? 0) + 1);
+      }
+      const topExtensions = Array.from(extensionCounts.entries())
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 5)
+        .map(([ext, count]) => `${ext}: ${count}`)
+        .join(', ');
 
       let resultMessage = `Found ${fileCount} file(s) matching "${this.params.pattern}"`;
       if (searchDirectories.length === 1) {
@@ -226,11 +252,36 @@ class GlobToolInvocation extends BaseToolInvocation<
       if (gitIgnoredCount > 0) {
         resultMessage += ` (${gitIgnoredCount} additional files were git-ignored)`;
       }
-      resultMessage += `, sorted by modification time (newest first):\n${fileListDescription}`;
+      resultMessage += ', sorted by modification time (newest first).';
+      if (topExtensions) {
+        resultMessage += `\nTop file types: ${topExtensions}`;
+      }
+      resultMessage += `\n\nMatches (first ${limitedPaths.length}${
+        truncatedCount > 0 ? ` of ${fileCount}` : ''
+      }):\n${limitedPaths.join('\n')}`;
+
+      if (truncatedCount > 0) {
+      const suggestedLimit = Math.min(
+        GlobToolInvocation.MAX_LIMIT,
+        normalizedLimit + Math.min(truncatedCount, 50),
+      );
+      const suggestionPayload: Record<string, unknown> = {
+        pattern: this.params.pattern,
+        limit: suggestedLimit,
+      };
+      if (this.params.path) {
+        suggestionPayload['path'] = this.params.path;
+      }
+      const commandSuggestion = `/glob ${JSON.stringify(suggestionPayload)}`;
+        resultMessage += `\n\n…${truncatedCount} additional match${
+          truncatedCount === 1 ? '' : 'es'
+        } hidden to protect the token budget. Rerun ${commandSuggestion} or refine your pattern for narrower results.`;
+      }
 
       return {
         llmContent: resultMessage,
-        returnDisplay: `Found ${fileCount} matching file(s)`,
+        returnDisplay: `Showing ${limitedPaths.length} of ${fileCount} matching file(s)` +
+          (gitIgnoredCount > 0 ? ` (ignored: ${gitIgnoredCount} git-ignored)` : ''),
       };
     } catch (error) {
       const errorMessage =
@@ -283,6 +334,11 @@ export class GlobTool extends BaseDeclarativeTool<GlobToolParams, ToolResult> {
               'Optional: Whether to respect .gitignore patterns when finding files. Only available in git repositories. Defaults to true.',
             type: 'boolean',
           },
+          limit: {
+            description:
+              'Optional: Maximum number of matching files to include in the detailed listing (defaults to 50, capped at 300).',
+            type: 'integer',
+          },
         },
         required: ['pattern'],
         type: 'object',
@@ -296,6 +352,15 @@ export class GlobTool extends BaseDeclarativeTool<GlobToolParams, ToolResult> {
   protected override validateToolParamValues(
     params: GlobToolParams,
   ): string | null {
+    if (params.limit !== undefined) {
+      if (!Number.isFinite(params.limit) || params.limit <= 0) {
+        return 'Limit must be a positive number when provided.';
+      }
+      if (params.limit > GlobToolInvocation.MAX_LIMIT) {
+        return `Limit cannot exceed ${GlobToolInvocation.MAX_LIMIT}.`;
+      }
+    }
+
     const searchDirAbsolute = path.resolve(
       this.config.getTargetDir(),
       params.path || '.',

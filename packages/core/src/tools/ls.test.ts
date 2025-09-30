@@ -93,6 +93,15 @@ describe('LSTool', () => {
       );
     });
 
+    it('should reject invalid limit values', () => {
+      expect(() => lsTool.build({ path: '/abs/path', limit: 0 })).toThrow(
+        'Limit must be a positive number when provided.',
+      );
+      expect(() =>
+        lsTool.build({ path: '/abs/path', limit: 500 }),
+      ).toThrow('Limit cannot exceed 200.');
+    });
+
     it('should reject paths outside workspace with clear error message', () => {
       const params = {
         path: '/etc/passwd',
@@ -142,10 +151,12 @@ describe('LSTool', () => {
       const invocation = lsTool.build({ path: testPath });
       const result = await invocation.execute(new AbortController().signal);
 
+      expect(result.llmContent).toContain('Total items: 3');
+      expect(result.llmContent).toContain('Entries (first 3');
       expect(result.llmContent).toContain('[DIR] subdir');
       expect(result.llmContent).toContain('file1.ts');
       expect(result.llmContent).toContain('file2.ts');
-      expect(result.returnDisplay).toBe('Listed 3 item(s).');
+      expect(result.returnDisplay).toBe('Showing 3 of 3 item(s).');
     });
 
     it('should list files from secondary workspace directory', async () => {
@@ -170,7 +181,7 @@ describe('LSTool', () => {
 
       expect(result.llmContent).toContain('module1.js');
       expect(result.llmContent).toContain('module2.js');
-      expect(result.returnDisplay).toBe('Listed 2 item(s).');
+      expect(result.returnDisplay).toBe('Showing 2 of 2 item(s).');
     });
 
     it('should handle empty directories', async () => {
@@ -216,7 +227,7 @@ describe('LSTool', () => {
       expect(result.llmContent).toContain('test.js');
       expect(result.llmContent).toContain('index.js');
       expect(result.llmContent).not.toContain('test.spec.js');
-      expect(result.returnDisplay).toBe('Listed 2 item(s).');
+      expect(result.returnDisplay).toBe('Showing 2 of 2 item(s).');
     });
 
     it('should respect gitignore patterns', async () => {
@@ -245,7 +256,7 @@ describe('LSTool', () => {
       expect(result.llmContent).toContain('file1.js');
       expect(result.llmContent).toContain('file2.js');
       expect(result.llmContent).not.toContain('ignored.js');
-      expect(result.returnDisplay).toBe('Listed 2 item(s). (1 git-ignored)');
+      expect(result.returnDisplay).toBe('Showing 2 of 2 item(s). (ignored: 1 git-ignored)');
     });
 
     it('should respect geminiignore patterns', async () => {
@@ -274,7 +285,7 @@ describe('LSTool', () => {
       expect(result.llmContent).toContain('file1.js');
       expect(result.llmContent).toContain('file2.js');
       expect(result.llmContent).not.toContain('private.js');
-      expect(result.returnDisplay).toBe('Listed 2 item(s). (1 gemini-ignored)');
+      expect(result.returnDisplay).toBe('Showing 2 of 2 item(s). (ignored: 1 gemini-ignored)');
     });
 
     it('should handle non-directory paths', async () => {
@@ -337,11 +348,17 @@ describe('LSTool', () => {
       const lines = (
         typeof result.llmContent === 'string' ? result.llmContent : ''
       ).split('\n');
-      const entries = lines.slice(1).filter((line: string) => line.trim()); // Skip header
+      const entriesHeaderIndex = lines.findIndex((line) =>
+        line.startsWith('Entries ('),
+      );
+      expect(entriesHeaderIndex).toBeGreaterThan(-1);
+      const entries = lines
+        .slice(entriesHeaderIndex + 1)
+        .filter((line: string) => line.trim());
       expect(entries[0]).toBe('[DIR] a-dir');
       expect(entries[1]).toBe('[DIR] c-dir');
-      expect(entries[2]).toBe('b-file.ts');
-      expect(entries[3]).toBe('z-file.ts');
+      expect(entries[2]).toBe('     b-file.ts');
+      expect(entries[3]).toBe('     z-file.ts');
     });
 
     it('should handle permission errors gracefully', async () => {
@@ -400,7 +417,7 @@ describe('LSTool', () => {
       // Should still list the accessible file
       expect(result.llmContent).toContain('accessible.ts');
       expect(result.llmContent).not.toContain('inaccessible.ts');
-      expect(result.returnDisplay).toBe('Listed 1 item(s).');
+      expect(result.returnDisplay).toBe('Showing 1 of 1 item(s).');
 
       // Verify error was logged
       expect(consoleErrorSpy).toHaveBeenCalledWith(
@@ -408,6 +425,55 @@ describe('LSTool', () => {
       );
 
       consoleErrorSpy.mockRestore();
+    });
+
+    it('should summarize when entries exceed the default limit', async () => {
+      const testPath = '/home/user/project/big-dir';
+      const mockFiles = Array.from({ length: 60 }, (_, idx) => `file${idx}.ts`);
+
+      vi.mocked(fs.statSync).mockImplementation((path: any) => {
+        if (path.toString() === testPath) {
+          return { isDirectory: () => true } as fs.Stats;
+        }
+        return {
+          isDirectory: () => false,
+          mtime: new Date(),
+          size: 123,
+        } as fs.Stats;
+      });
+
+      vi.mocked(fs.readdirSync).mockReturnValue(mockFiles as any);
+
+      const invocation = lsTool.build({ path: testPath });
+      const result = await invocation.execute(new AbortController().signal);
+
+      expect(result.llmContent).toContain('Total items: 60');
+      expect(result.llmContent).toContain('Entries (first 40 of 60)');
+      expect(result.llmContent).toContain('…20 additional entries remain hidden');
+      expect(result.returnDisplay).toBe('Showing 40 of 60 item(s).');
+    });
+
+    it('should honour custom limit parameter', async () => {
+      const testPath = '/home/user/project/custom-limit';
+      const mockFiles = Array.from({ length: 30 }, (_, idx) => `note${idx}.md`);
+
+      vi.mocked(fs.statSync).mockImplementation((path: any) => {
+        if (path.toString() === testPath) {
+          return { isDirectory: () => true } as fs.Stats;
+        }
+        return {
+          isDirectory: () => false,
+          mtime: new Date(),
+          size: 512,
+        } as fs.Stats;
+      });
+      vi.mocked(fs.readdirSync).mockReturnValue(mockFiles as any);
+
+      const invocation = lsTool.build({ path: testPath, limit: 10 });
+      const result = await invocation.execute(new AbortController().signal);
+
+      expect(result.llmContent).toContain('Entries (first 10 of 30)');
+      expect(result.returnDisplay).toBe('Showing 10 of 30 item(s).');
     });
   });
 
@@ -483,7 +549,7 @@ describe('LSTool', () => {
 
       expect(result.llmContent).toContain('test1.spec.ts');
       expect(result.llmContent).toContain('test2.spec.ts');
-      expect(result.returnDisplay).toBe('Listed 2 item(s).');
+      expect(result.returnDisplay).toBe('Showing 2 of 2 item(s).');
     });
   });
 });

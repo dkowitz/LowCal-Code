@@ -6,6 +6,7 @@
 - Added streaming idle watchdog and automatic non-streaming fallback to prevent hangs from silent providers.
 - Expanded retry/backoff telemetry with classification, status codes, and provider tags for easier diagnosis of transient failures.
 - Added YOLO mode support for automatic vision model switching with CLI arguments and environment variables.
+- Directory and glob tools now summarize large listings, include follow-up commands, and cap detailed entries to safeguard the token budget.
 - Fixed ripgrep lazy loading to resolve VS Code IDE companion startup issues.
 - Fixed authentication hang when selecting Qwen OAuth.
 - Added OpenAI and Qwen OAuth authentication support to Zed ACP integration.

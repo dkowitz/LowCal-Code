@@ -11,6 +11,8 @@ import { DEFAULT_FILE_FILTERING_OPTIONS } from '../config/config.js';
 import { ToolErrorType } from './tool-error.js';
 class LSToolInvocation extends BaseToolInvocation {
     config;
+    static DEFAULT_LIMIT = 40;
+    static MAX_LIMIT = 200;
     constructor(config, params) {
         super(params);
         this.config = config;
@@ -135,10 +137,31 @@ class LSToolInvocation extends BaseToolInvocation {
                 return a.name.localeCompare(b.name);
             });
             // Create formatted content for LLM
-            const directoryContent = entries
-                .map((entry) => `${entry.isDirectory ? '[DIR] ' : ''}${entry.name}`)
+            const directoriesCount = entries.filter((entry) => entry.isDirectory).length;
+            const filesCount = entries.length - directoriesCount;
+            const limitParam = this.params.limit ?? LSToolInvocation.DEFAULT_LIMIT;
+            const normalizedLimit = Math.min(LSToolInvocation.MAX_LIMIT, Math.max(1, Math.trunc(limitParam)));
+            const limitedEntries = entries.slice(0, normalizedLimit);
+            const truncatedCount = Math.max(0, entries.length - limitedEntries.length);
+            const formattedListing = limitedEntries
+                .map((entry) => `${entry.isDirectory ? '[DIR] ' : '     '}${entry.name}`)
                 .join('\n');
-            let resultMessage = `Directory listing for ${this.params.path}:\n${directoryContent}`;
+            const extensionCounts = new Map();
+            for (const entry of entries) {
+                if (entry.isDirectory)
+                    continue;
+                const ext = (path.extname(entry.name) || '(no extension)').toLowerCase();
+                extensionCounts.set(ext, (extensionCounts.get(ext) ?? 0) + 1);
+            }
+            const topExtensions = Array.from(extensionCounts.entries())
+                .sort((a, b) => b[1] - a[1])
+                .slice(0, 5)
+                .map(([ext, count]) => `${ext}: ${count}`)
+                .join(', ');
+            let resultMessage = `Directory listing for ${this.params.path}\nTotal items: ${entries.length} (directories: ${directoriesCount}, files: ${filesCount})`;
+            if (topExtensions) {
+                resultMessage += `\nTop file types: ${topExtensions}`;
+            }
             const ignoredMessages = [];
             if (gitIgnoredCount > 0) {
                 ignoredMessages.push(`${gitIgnoredCount} git-ignored`);
@@ -147,11 +170,19 @@ class LSToolInvocation extends BaseToolInvocation {
                 ignoredMessages.push(`${geminiIgnoredCount} gemini-ignored`);
             }
             if (ignoredMessages.length > 0) {
-                resultMessage += `\n\n(${ignoredMessages.join(', ')})`;
+                resultMessage += `\nIgnored entries: ${ignoredMessages.join(', ')}`;
             }
-            let displayMessage = `Listed ${entries.length} item(s).`;
+            if (formattedListing) {
+                resultMessage += `\n\nEntries (first ${limitedEntries.length}${truncatedCount > 0 ? ` of ${entries.length}` : ''}):\n${formattedListing}`;
+            }
+            if (truncatedCount > 0) {
+                const suggestedLimit = Math.min(LSToolInvocation.MAX_LIMIT, normalizedLimit + Math.min(50, truncatedCount));
+                const commandSuggestion = `/list_directory {"path": ${JSON.stringify(this.params.path)}, "limit": ${suggestedLimit}}`;
+                resultMessage += `\n\n…${truncatedCount} additional entr${truncatedCount === 1 ? 'y remains' : 'ies remain'} hidden to protect the token budget. Rerun ${commandSuggestion} or refine with /glob to target specific files.`;
+            }
+            let displayMessage = `Showing ${limitedEntries.length} of ${entries.length} item(s).`;
             if (ignoredMessages.length > 0) {
-                displayMessage += ` (${ignoredMessages.join(', ')})`;
+                displayMessage += ` (ignored: ${ignoredMessages.join(', ')})`;
             }
             return {
                 llmContent: resultMessage,
@@ -184,6 +215,10 @@ export class LSTool extends BaseDeclarativeTool {
                     },
                     type: 'array',
                 },
+                limit: {
+                    description: 'Optional: Maximum number of entries to include in the detailed listing (defaults to 40, capped at 200).',
+                    type: 'integer',
+                },
                 file_filtering_options: {
                     description: 'Optional: Whether to respect ignore patterns from .gitignore or .qwenignore',
                     type: 'object',
@@ -210,6 +245,14 @@ export class LSTool extends BaseDeclarativeTool {
      * @returns An error message string if invalid, null otherwise
      */
     validateToolParamValues(params) {
+        if (params.limit !== undefined) {
+            if (!Number.isFinite(params.limit) || params.limit <= 0) {
+                return `Limit must be a positive number when provided.`;
+            }
+            if (params.limit > LSToolInvocation.MAX_LIMIT) {
+                return `Limit cannot exceed ${LSToolInvocation.MAX_LIMIT}.`;
+            }
+        }
         if (!path.isAbsolute(params.path)) {
             return `Path must be absolute: ${params.path}`;
         }

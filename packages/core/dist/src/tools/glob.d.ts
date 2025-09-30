@@ -36,6 +36,10 @@ export interface GlobToolParams {
      * Whether to respect .gitignore patterns (optional, defaults to true)
      */
     respect_git_ignore?: boolean;
+    /**
+     * Maximum number of matching files to include in the detailed listing (defaults to 50, capped at 300).
+     */
+    limit?: number;
 }
 /**
  * Implementation of the Glob tool logic

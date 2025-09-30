@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.18% </span>
+                <span class="strong">31.81% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>41/44</span>
+                <span class='fraction'>14/44</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>3/4</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">75% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>3/4</span>
+                <span class='fraction'>0/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">93.18% </span>
+                <span class="strong">31.81% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>41/44</span>
+                <span class='fraction'>14/44</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -174,38 +174,38 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">234x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
-<span class="cline-any cline-yes">234x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @license
@@ -239,45 +239,45 @@ export class TokenBudgetExceededError extends Error {
 }
 &nbsp;
 export class TokenBudgetManager {
-  constructor(private readonly contentGenerator: ContentGenerator) {}
+<span class="fstat-no" title="function not covered" >  constructor(private readonly contentGenerator: ContentGenerator) {}</span>
 &nbsp;
   /**
    * Evaluate the total token requirement for a prospective request and compute
    * how it relates to the model's context window.
    */
-  async evaluate(model: string, contents: Content[]): Promise&lt;TokenBudgetSnapshot&gt; {
-    const limit = tokenLimit(model, 'input');
-    const buffer = this.getSafetyBuffer(limit);
-    const effectiveLimit = Math.max(
-      0,
-      Math.min(limit - buffer, Math.floor(limit * 0.95)),
-    );
-    const warnThreshold = Math.max(limit * DEFAULT_WARN_FRACTION, effectiveLimit);
+<span class="fstat-no" title="function not covered" >  async evaluate(model: string, contents: Content[]): Promise&lt;TokenBudgetSnapshot&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    const limit = tokenLimit(model, 'input');</span>
+<span class="cstat-no" title="statement not covered" >    const buffer = this.getSafetyBuffer(limit);</span>
+<span class="cstat-no" title="statement not covered" >    const effectiveLimit = Math.max(</span>
+<span class="cstat-no" title="statement not covered" >      0,</span>
+<span class="cstat-no" title="statement not covered" >      Math.min(limit - buffer, Math.floor(limit * 0.95)),</span>
+<span class="cstat-no" title="statement not covered" >    );</span>
+<span class="cstat-no" title="statement not covered" >    const warnThreshold = Math.max(limit * DEFAULT_WARN_FRACTION, effectiveLimit);</span>
 &nbsp;
-    const { totalTokens = 0 } = await this.contentGenerator.countTokens({
-      model,
-      contents,
-    });
+<span class="cstat-no" title="statement not covered" >    const { totalTokens = 0 } = await this.contentGenerator.countTokens({</span>
+<span class="cstat-no" title="statement not covered" >      model,</span>
+<span class="cstat-no" title="statement not covered" >      contents,</span>
+<span class="cstat-no" title="statement not covered" >    });</span>
 &nbsp;
-    return {
-      tokens: totalTokens,
-      limit,
-      effectiveLimit,
-      warnThreshold,
-      fitsWithinEffective: totalTokens &lt;= effectiveLimit,
-      withinHardLimit: totalTokens &lt;= limit,
-    } satisfies TokenBudgetSnapshot;
-  }
+<span class="cstat-no" title="statement not covered" >    return {</span>
+<span class="cstat-no" title="statement not covered" >      tokens: totalTokens,</span>
+<span class="cstat-no" title="statement not covered" >      limit,</span>
+<span class="cstat-no" title="statement not covered" >      effectiveLimit,</span>
+<span class="cstat-no" title="statement not covered" >      warnThreshold,</span>
+<span class="cstat-no" title="statement not covered" >      fitsWithinEffective: totalTokens &lt;= effectiveLimit,</span>
+<span class="cstat-no" title="statement not covered" >      withinHardLimit: totalTokens &lt;= limit,</span>
+<span class="cstat-no" title="statement not covered" >    } satisfies TokenBudgetSnapshot;</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-  private getSafetyBuffer(limit: number): number {
-    if (limit &lt;= 0 || Number.isNaN(limit)) <span class="branch-0 cbranch-no" title="branch not covered" >return 0;</span>
+  private <span class="fstat-no" title="function not covered" >getSafetyBuffer(limit: number): number {</span>
+<span class="cstat-no" title="statement not covered" >    if (limit &lt;= 0 || Number.isNaN(limit)) return 0;</span>
 &nbsp;
-    const fractionalBuffer = Math.floor(limit * DEFAULT_BUFFER_FRACTION);
-    return Math.max(
-      MIN_BUFFER_TOKENS,
-      Math.min(fractionalBuffer, MAX_BUFFER_TOKENS),
-    );
-  }
+<span class="cstat-no" title="statement not covered" >    const fractionalBuffer = Math.floor(limit * DEFAULT_BUFFER_FRACTION);</span>
+<span class="cstat-no" title="statement not covered" >    return Math.max(</span>
+<span class="cstat-no" title="statement not covered" >      MIN_BUFFER_TOKENS,</span>
+<span class="cstat-no" title="statement not covered" >      Math.min(fractionalBuffer, MAX_BUFFER_TOKENS),</span>
+<span class="cstat-no" title="statement not covered" >    );</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 }
 &nbsp;</pre></td></tr></table></pre>
 
@@ -286,7 +286,7 @@ export class TokenBudgetManager {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T00:16:56.414Z
+                at 2025-09-30T08:47:49.571Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
