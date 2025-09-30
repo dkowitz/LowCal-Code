@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getLineRangeOffsets, getPositionFromOffsets, replaceRangeInternal, pushUndo, isWordCharStrict, isWordCharWithCombining, isCombiningMark, findNextWordAcrossLines, findPrevWordAcrossLines, findWordEndInLine, } from './text-buffer.js';
-import { cpLen, toCodePoints } from '../../utils/textUtils.js';
-import { assumeExhaustive } from '../../../utils/checks.js';
+import { getLineRangeOffsets, getPositionFromOffsets, replaceRangeInternal, pushUndo, isWordCharStrict, isWordCharWithCombining, isCombiningMark, findNextWordAcrossLines, findPrevWordAcrossLines, findWordEndInLine, } from "./text-buffer.js";
+import { cpLen, toCodePoints } from "../../utils/textUtils.js";
+import { assumeExhaustive } from "../../../utils/checks.js";
 // Check if we're at the end of a base word (on the last base character)
 // Returns true if current position has a base character followed only by combining marks until non-word
 function isAtEndOfBaseWord(lineCodePoints, col) {
@@ -23,8 +23,8 @@ function isAtEndOfBaseWord(lineCodePoints, col) {
 export function handleVimAction(state, action) {
     const { lines, cursorRow, cursorCol } = state;
     switch (action.type) {
-        case 'vim_delete_word_forward':
-        case 'vim_change_word_forward': {
+        case "vim_delete_word_forward":
+        case "vim_change_word_forward": {
             const { count } = action.payload;
             let endRow = cursorRow;
             let endCol = cursorCol;
@@ -36,7 +36,7 @@ export function handleVimAction(state, action) {
                 }
                 else {
                     // No more words, delete/change to end of current word or line
-                    const currentLine = lines[endRow] || '';
+                    const currentLine = lines[endRow] || "";
                     const wordEnd = findWordEndInLine(currentLine, endCol);
                     if (wordEnd !== null) {
                         endCol = wordEnd + 1; // Include the character at word end
@@ -49,12 +49,12 @@ export function handleVimAction(state, action) {
             }
             if (endRow !== cursorRow || endCol !== cursorCol) {
                 const nextState = pushUndo(state);
-                return replaceRangeInternal(nextState, cursorRow, cursorCol, endRow, endCol, '');
+                return replaceRangeInternal(nextState, cursorRow, cursorCol, endRow, endCol, "");
             }
             return state;
         }
-        case 'vim_delete_word_backward':
-        case 'vim_change_word_backward': {
+        case "vim_delete_word_backward":
+        case "vim_change_word_backward": {
             const { count } = action.payload;
             let startRow = cursorRow;
             let startCol = cursorCol;
@@ -70,12 +70,12 @@ export function handleVimAction(state, action) {
             }
             if (startRow !== cursorRow || startCol !== cursorCol) {
                 const nextState = pushUndo(state);
-                return replaceRangeInternal(nextState, startRow, startCol, cursorRow, cursorCol, '');
+                return replaceRangeInternal(nextState, startRow, startCol, cursorRow, cursorCol, "");
             }
             return state;
         }
-        case 'vim_delete_word_end':
-        case 'vim_change_word_end': {
+        case "vim_delete_word_end":
+        case "vim_change_word_end": {
             const { count } = action.payload;
             let row = cursorRow;
             let col = cursorCol;
@@ -104,16 +104,16 @@ export function handleVimAction(state, action) {
             }
             // Ensure we don't go past the end of the last line
             if (endRow < lines.length) {
-                const lineLen = cpLen(lines[endRow] || '');
+                const lineLen = cpLen(lines[endRow] || "");
                 endCol = Math.min(endCol, lineLen);
             }
             if (endRow !== cursorRow || endCol !== cursorCol) {
                 const nextState = pushUndo(state);
-                return replaceRangeInternal(nextState, cursorRow, cursorCol, endRow, endCol, '');
+                return replaceRangeInternal(nextState, cursorRow, cursorCol, endRow, endCol, "");
             }
             return state;
         }
-        case 'vim_delete_line': {
+        case "vim_delete_line": {
             const { count } = action.payload;
             if (lines.length === 0)
                 return state;
@@ -125,7 +125,7 @@ export function handleVimAction(state, action) {
                 const nextState = pushUndo(state);
                 return {
                     ...nextState,
-                    lines: [''],
+                    lines: [""],
                     cursorRow: 0,
                     cursorCol: 0,
                     preferredCol: null,
@@ -145,7 +145,7 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_change_line': {
+        case "vim_change_line": {
             const { count } = action.payload;
             if (lines.length === 0)
                 return state;
@@ -153,51 +153,51 @@ export function handleVimAction(state, action) {
             const nextState = pushUndo(state);
             const { startOffset, endOffset } = getLineRangeOffsets(cursorRow, linesToChange, nextState.lines);
             const { startRow, startCol, endRow, endCol } = getPositionFromOffsets(startOffset, endOffset, nextState.lines);
-            return replaceRangeInternal(nextState, startRow, startCol, endRow, endCol, '');
+            return replaceRangeInternal(nextState, startRow, startCol, endRow, endCol, "");
         }
-        case 'vim_delete_to_end_of_line':
-        case 'vim_change_to_end_of_line': {
-            const currentLine = lines[cursorRow] || '';
+        case "vim_delete_to_end_of_line":
+        case "vim_change_to_end_of_line": {
+            const currentLine = lines[cursorRow] || "";
             if (cursorCol < cpLen(currentLine)) {
                 const nextState = pushUndo(state);
-                return replaceRangeInternal(nextState, cursorRow, cursorCol, cursorRow, cpLen(currentLine), '');
+                return replaceRangeInternal(nextState, cursorRow, cursorCol, cursorRow, cpLen(currentLine), "");
             }
             return state;
         }
-        case 'vim_change_movement': {
+        case "vim_change_movement": {
             const { movement, count } = action.payload;
             const totalLines = lines.length;
             switch (movement) {
-                case 'h': {
+                case "h": {
                     // Left
                     // Change N characters to the left
                     const startCol = Math.max(0, cursorCol - count);
-                    return replaceRangeInternal(pushUndo(state), cursorRow, startCol, cursorRow, cursorCol, '');
+                    return replaceRangeInternal(pushUndo(state), cursorRow, startCol, cursorRow, cursorCol, "");
                 }
-                case 'j': {
+                case "j": {
                     // Down
                     const linesToChange = Math.min(count, totalLines - cursorRow);
                     if (linesToChange > 0) {
                         if (totalLines === 1) {
-                            const currentLine = state.lines[0] || '';
-                            return replaceRangeInternal(pushUndo(state), 0, 0, 0, cpLen(currentLine), '');
+                            const currentLine = state.lines[0] || "";
+                            return replaceRangeInternal(pushUndo(state), 0, 0, 0, cpLen(currentLine), "");
                         }
                         else {
                             const nextState = pushUndo(state);
                             const { startOffset, endOffset } = getLineRangeOffsets(cursorRow, linesToChange, nextState.lines);
                             const { startRow, startCol, endRow, endCol } = getPositionFromOffsets(startOffset, endOffset, nextState.lines);
-                            return replaceRangeInternal(nextState, startRow, startCol, endRow, endCol, '');
+                            return replaceRangeInternal(nextState, startRow, startCol, endRow, endCol, "");
                         }
                     }
                     return state;
                 }
-                case 'k': {
+                case "k": {
                     // Up
                     const upLines = Math.min(count, cursorRow + 1);
                     if (upLines > 0) {
                         if (state.lines.length === 1) {
-                            const currentLine = state.lines[0] || '';
-                            return replaceRangeInternal(pushUndo(state), 0, 0, 0, cpLen(currentLine), '');
+                            const currentLine = state.lines[0] || "";
+                            return replaceRangeInternal(pushUndo(state), 0, 0, 0, cpLen(currentLine), "");
                         }
                         else {
                             const startRow = Math.max(0, cursorRow - count + 1);
@@ -205,7 +205,7 @@ export function handleVimAction(state, action) {
                             const nextState = pushUndo(state);
                             const { startOffset, endOffset } = getLineRangeOffsets(startRow, linesToChange, nextState.lines);
                             const { startRow: newStartRow, startCol, endRow, endCol, } = getPositionFromOffsets(startOffset, endOffset, nextState.lines);
-                            const resultState = replaceRangeInternal(nextState, newStartRow, startCol, endRow, endCol, '');
+                            const resultState = replaceRangeInternal(nextState, newStartRow, startCol, endRow, endCol, "");
                             return {
                                 ...resultState,
                                 cursorRow: startRow,
@@ -215,16 +215,16 @@ export function handleVimAction(state, action) {
                     }
                     return state;
                 }
-                case 'l': {
+                case "l": {
                     // Right
                     // Change N characters to the right
-                    return replaceRangeInternal(pushUndo(state), cursorRow, cursorCol, cursorRow, Math.min(cpLen(lines[cursorRow] || ''), cursorCol + count), '');
+                    return replaceRangeInternal(pushUndo(state), cursorRow, cursorCol, cursorRow, Math.min(cpLen(lines[cursorRow] || ""), cursorCol + count), "");
                 }
                 default:
                     return state;
             }
         }
-        case 'vim_move_left': {
+        case "vim_move_left": {
             const { count } = action.payload;
             const { cursorRow, cursorCol, lines } = state;
             let newRow = cursorRow;
@@ -236,7 +236,7 @@ export function handleVimAction(state, action) {
                 else if (newRow > 0) {
                     // Move to end of previous line
                     newRow--;
-                    const prevLine = lines[newRow] || '';
+                    const prevLine = lines[newRow] || "";
                     const prevLineLength = cpLen(prevLine);
                     // Position on last character, or column 0 for empty lines
                     newCol = prevLineLength === 0 ? 0 : prevLineLength - 1;
@@ -249,13 +249,13 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_move_right': {
+        case "vim_move_right": {
             const { count } = action.payload;
             const { cursorRow, cursorCol, lines } = state;
             let newRow = cursorRow;
             let newCol = cursorCol;
             for (let i = 0; i < count; i++) {
-                const currentLine = lines[newRow] || '';
+                const currentLine = lines[newRow] || "";
                 const lineLength = cpLen(currentLine);
                 // Don't move past the last character of the line
                 // For empty lines, stay at column 0; for non-empty lines, don't go past last character
@@ -289,11 +289,11 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_move_up': {
+        case "vim_move_up": {
             const { count } = action.payload;
             const { cursorRow, cursorCol, lines } = state;
             const newRow = Math.max(0, cursorRow - count);
-            const targetLine = lines[newRow] || '';
+            const targetLine = lines[newRow] || "";
             const targetLineLength = cpLen(targetLine);
             const newCol = Math.min(cursorCol, targetLineLength > 0 ? targetLineLength - 1 : 0);
             return {
@@ -303,11 +303,11 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_move_down': {
+        case "vim_move_down": {
             const { count } = action.payload;
             const { cursorRow, cursorCol, lines } = state;
             const newRow = Math.min(lines.length - 1, cursorRow + count);
-            const targetLine = lines[newRow] || '';
+            const targetLine = lines[newRow] || "";
             const targetLineLength = cpLen(targetLine);
             const newCol = Math.min(cursorCol, targetLineLength > 0 ? targetLineLength - 1 : 0);
             return {
@@ -317,7 +317,7 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_move_word_forward': {
+        case "vim_move_word_forward": {
             const { count } = action.payload;
             let row = cursorRow;
             let col = cursorCol;
@@ -339,7 +339,7 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_move_word_backward': {
+        case "vim_move_word_backward": {
             const { count } = action.payload;
             let row = cursorRow;
             let col = cursorCol;
@@ -360,14 +360,14 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_move_word_end': {
+        case "vim_move_word_end": {
             const { count } = action.payload;
             let row = cursorRow;
             let col = cursorCol;
             for (let i = 0; i < count; i++) {
                 // Special handling for the first iteration when we're at end of word
                 if (i === 0) {
-                    const currentLine = lines[row] || '';
+                    const currentLine = lines[row] || "";
                     const lineCodePoints = toCodePoints(currentLine);
                     // Check if we're at the end of a word (on the last base character)
                     const atEndOfWord = col < lineCodePoints.length &&
@@ -403,25 +403,25 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_delete_char': {
+        case "vim_delete_char": {
             const { count } = action.payload;
             const { cursorRow, cursorCol, lines } = state;
-            const currentLine = lines[cursorRow] || '';
+            const currentLine = lines[cursorRow] || "";
             const lineLength = cpLen(currentLine);
             if (cursorCol < lineLength) {
                 const deleteCount = Math.min(count, lineLength - cursorCol);
                 const nextState = pushUndo(state);
-                return replaceRangeInternal(nextState, cursorRow, cursorCol, cursorRow, cursorCol + deleteCount, '');
+                return replaceRangeInternal(nextState, cursorRow, cursorCol, cursorRow, cursorCol + deleteCount, "");
             }
             return state;
         }
-        case 'vim_insert_at_cursor': {
+        case "vim_insert_at_cursor": {
             // Just return state - mode change is handled elsewhere
             return state;
         }
-        case 'vim_append_at_cursor': {
+        case "vim_append_at_cursor": {
             const { cursorRow, cursorCol, lines } = state;
-            const currentLine = lines[cursorRow] || '';
+            const currentLine = lines[cursorRow] || "";
             const newCol = cursorCol < cpLen(currentLine) ? cursorCol + 1 : cursorCol;
             return {
                 ...state,
@@ -429,18 +429,18 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_open_line_below': {
+        case "vim_open_line_below": {
             const { cursorRow, lines } = state;
             const nextState = pushUndo(state);
             // Insert newline at end of current line
-            const endOfLine = cpLen(lines[cursorRow] || '');
-            return replaceRangeInternal(nextState, cursorRow, endOfLine, cursorRow, endOfLine, '\n');
+            const endOfLine = cpLen(lines[cursorRow] || "");
+            return replaceRangeInternal(nextState, cursorRow, endOfLine, cursorRow, endOfLine, "\n");
         }
-        case 'vim_open_line_above': {
+        case "vim_open_line_above": {
             const { cursorRow } = state;
             const nextState = pushUndo(state);
             // Insert newline at beginning of current line
-            const resultState = replaceRangeInternal(nextState, cursorRow, 0, cursorRow, 0, '\n');
+            const resultState = replaceRangeInternal(nextState, cursorRow, 0, cursorRow, 0, "\n");
             // Move cursor to the new line above
             return {
                 ...resultState,
@@ -448,18 +448,18 @@ export function handleVimAction(state, action) {
                 cursorCol: 0,
             };
         }
-        case 'vim_append_at_line_end': {
+        case "vim_append_at_line_end": {
             const { cursorRow, lines } = state;
-            const lineLength = cpLen(lines[cursorRow] || '');
+            const lineLength = cpLen(lines[cursorRow] || "");
             return {
                 ...state,
                 cursorCol: lineLength,
                 preferredCol: null,
             };
         }
-        case 'vim_insert_at_line_start': {
+        case "vim_insert_at_line_start": {
             const { cursorRow, lines } = state;
-            const currentLine = lines[cursorRow] || '';
+            const currentLine = lines[cursorRow] || "";
             let col = 0;
             // Find first non-whitespace character using proper Unicode handling
             const lineCodePoints = toCodePoints(currentLine);
@@ -472,25 +472,25 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_move_to_line_start': {
+        case "vim_move_to_line_start": {
             return {
                 ...state,
                 cursorCol: 0,
                 preferredCol: null,
             };
         }
-        case 'vim_move_to_line_end': {
+        case "vim_move_to_line_end": {
             const { cursorRow, lines } = state;
-            const lineLength = cpLen(lines[cursorRow] || '');
+            const lineLength = cpLen(lines[cursorRow] || "");
             return {
                 ...state,
                 cursorCol: lineLength > 0 ? lineLength - 1 : 0,
                 preferredCol: null,
             };
         }
-        case 'vim_move_to_first_nonwhitespace': {
+        case "vim_move_to_first_nonwhitespace": {
             const { cursorRow, lines } = state;
-            const currentLine = lines[cursorRow] || '';
+            const currentLine = lines[cursorRow] || "";
             let col = 0;
             // Find first non-whitespace character using proper Unicode handling
             const lineCodePoints = toCodePoints(currentLine);
@@ -503,7 +503,7 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_move_to_first_line': {
+        case "vim_move_to_first_line": {
             return {
                 ...state,
                 cursorRow: 0,
@@ -511,7 +511,7 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_move_to_last_line': {
+        case "vim_move_to_last_line": {
             const { lines } = state;
             const lastRow = lines.length - 1;
             return {
@@ -521,7 +521,7 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_move_to_line': {
+        case "vim_move_to_line": {
             const { lineNumber } = action.payload;
             const { lines } = state;
             const targetRow = Math.min(Math.max(0, lineNumber - 1), lines.length - 1);
@@ -532,7 +532,7 @@ export function handleVimAction(state, action) {
                 preferredCol: null,
             };
         }
-        case 'vim_escape_insert_mode': {
+        case "vim_escape_insert_mode": {
             // Move cursor left if not at beginning of line (vim behavior when exiting insert mode)
             const { cursorCol } = state;
             const newCol = cursorCol > 0 ? cursorCol - 1 : 0;

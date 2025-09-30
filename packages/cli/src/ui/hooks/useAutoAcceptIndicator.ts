@@ -8,11 +8,11 @@ import {
   type ApprovalMode,
   APPROVAL_MODES,
   type Config,
-} from '@qwen-code/qwen-code-core';
-import { useEffect, useState } from 'react';
-import { useKeypress } from './useKeypress.js';
-import type { HistoryItemWithoutId } from '../types.js';
-import { MessageType } from '../types.js';
+} from "@qwen-code/qwen-code-core";
+import { useEffect, useState } from "react";
+import { useKeypress } from "./useKeypress.js";
+import type { HistoryItemWithoutId } from "../types.js";
+import { MessageType } from "../types.js";
 
 export interface UseAutoAcceptIndicatorArgs {
   config: Config;
@@ -33,7 +33,7 @@ export function useAutoAcceptIndicator({
 
   useKeypress(
     (key) => {
-      if (!(key.shift && key.name === 'tab')) {
+      if (!(key.shift && key.name === "tab")) {
         return;
       }
 

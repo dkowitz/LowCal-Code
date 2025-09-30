@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { type VariableSchema, VARIABLE_SCHEMA } from './variableSchema.js';
+import { type VariableSchema, VARIABLE_SCHEMA } from "./variableSchema.js";
 
 export type JsonObject = { [key: string]: JsonValue };
 export type JsonArray = JsonValue[];
@@ -46,13 +46,13 @@ export function recursivelyHydrateStrings(
   obj: JsonValue,
   values: VariableContext,
 ): JsonValue {
-  if (typeof obj === 'string') {
+  if (typeof obj === "string") {
     return hydrateString(obj, values);
   }
   if (Array.isArray(obj)) {
     return obj.map((item) => recursivelyHydrateStrings(item, values));
   }
-  if (typeof obj === 'object' && obj !== null) {
+  if (typeof obj === "object" && obj !== null) {
     const newObj: JsonObject = {};
     for (const key in obj) {
       if (Object.prototype.hasOwnProperty.call(obj, key)) {

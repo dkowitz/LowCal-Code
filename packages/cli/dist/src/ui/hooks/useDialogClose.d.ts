@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { SettingScope } from '../../config/settings.js';
-import type { AuthType } from '@qwen-code/qwen-code-core';
+import { SettingScope } from "../../config/settings.js";
+import type { AuthType } from "@qwen-code/qwen-code-core";
 export interface DialogCloseOptions {
     isThemeDialogOpen: boolean;
     handleThemeSelect: (theme: string | undefined, scope: SettingScope) => void;

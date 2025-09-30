@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { useEffect, useState, useRef } from 'react';
-import { Text, Box } from 'ink';
-import { Colors } from '../../colors.js';
-import { useKeypress } from '../../hooks/useKeypress.js';
+import type React from "react";
+import { useEffect, useState, useRef } from "react";
+import { Text, Box } from "ink";
+import { Colors } from "../../colors.js";
+import { useKeypress } from "../../hooks/useKeypress.js";
 
 /**
  * Represents a single option for the RadioButtonSelect.
@@ -63,7 +63,7 @@ export function RadioButtonSelect<T>({
 }: RadioButtonSelectProps<T>): React.JSX.Element {
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [scrollOffset, setScrollOffset] = useState(0);
-  const [numberInput, setNumberInput] = useState('');
+  const [numberInput, setNumberInput] = useState("");
   const numberInputTimer = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
@@ -100,24 +100,24 @@ export function RadioButtonSelect<T>({
       // Any key press that is not a digit should clear the number input buffer.
       if (!isNumeric && numberInputTimer.current) {
         clearTimeout(numberInputTimer.current);
-        setNumberInput('');
+        setNumberInput("");
       }
 
-      if (name === 'k' || name === 'up') {
+      if (name === "k" || name === "up") {
         const newIndex = activeIndex > 0 ? activeIndex - 1 : items.length - 1;
         setActiveIndex(newIndex);
         onHighlight?.(items[newIndex]!.value);
         return;
       }
 
-      if (name === 'j' || name === 'down') {
+      if (name === "j" || name === "down") {
         const newIndex = activeIndex < items.length - 1 ? activeIndex + 1 : 0;
         setActiveIndex(newIndex);
         onHighlight?.(items[newIndex]!.value);
         return;
       }
 
-      if (name === 'return') {
+      if (name === "return") {
         onSelect(items[activeIndex]!.value);
         return;
       }
@@ -134,8 +134,8 @@ export function RadioButtonSelect<T>({
         const targetIndex = Number.parseInt(newNumberInput, 10) - 1;
 
         // A single '0' is not a valid selection since items are 1-indexed.
-        if (newNumberInput === '0') {
-          numberInputTimer.current = setTimeout(() => setNumberInput(''), 350);
+        if (newNumberInput === "0") {
+          numberInputTimer.current = setTimeout(() => setNumberInput(""), 350);
           return;
         }
 
@@ -146,19 +146,19 @@ export function RadioButtonSelect<T>({
 
           // If the typed number can't be a prefix for another valid number,
           // select it immediately. Otherwise, wait for more input.
-          const potentialNextNumber = Number.parseInt(newNumberInput + '0', 10);
+          const potentialNextNumber = Number.parseInt(newNumberInput + "0", 10);
           if (potentialNextNumber > items.length) {
             onSelect(targetItem.value);
-            setNumberInput('');
+            setNumberInput("");
           } else {
             numberInputTimer.current = setTimeout(() => {
               onSelect(targetItem.value);
-              setNumberInput('');
+              setNumberInput("");
             }, 350); // Debounce time for multi-digit input.
           }
         } else {
           // The typed number is out of bounds, clear the buffer
-          setNumberInput('');
+          setNumberInput("");
         }
       }
     },
@@ -204,7 +204,7 @@ export function RadioButtonSelect<T>({
                 color={isSelected ? Colors.AccentGreen : Colors.Foreground}
                 aria-hidden
               >
-                {isSelected ? '●' : ' '}
+                {isSelected ? "●" : " "}
               </Text>
             </Box>
             <Box
@@ -217,7 +217,7 @@ export function RadioButtonSelect<T>({
             </Box>
             {item.themeNameDisplay && item.themeTypeDisplay ? (
               <Text color={textColor} wrap="truncate">
-                {item.themeNameDisplay}{' '}
+                {item.themeNameDisplay}{" "}
                 <Text color={Colors.Gray}>{item.themeTypeDisplay}</Text>
               </Text>
             ) : (

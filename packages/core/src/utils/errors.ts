@@ -11,7 +11,7 @@ interface GaxiosError {
 }
 
 export function isNodeError(error: unknown): error is NodeJS.ErrnoException {
-  return error instanceof Error && 'code' in error;
+  return error instanceof Error && "code" in error;
 }
 
 export function getErrorMessage(error: unknown): string {
@@ -21,7 +21,7 @@ export function getErrorMessage(error: unknown): string {
   try {
     return String(error);
   } catch {
-    return 'Failed to get error details';
+    return "Failed to get error details";
   }
 }
 
@@ -72,7 +72,7 @@ interface ResponseData {
 }
 
 export function toFriendlyError(error: unknown): unknown {
-  if (error && typeof error === 'object' && 'response' in error) {
+  if (error && typeof error === "object" && "response" in error) {
     const gaxiosError = error as GaxiosError;
     const data = parseResponseData(gaxiosError);
     if (data.error && data.error.message && data.error.code) {
@@ -95,7 +95,7 @@ export function toFriendlyError(error: unknown): unknown {
 
 function parseResponseData(error: GaxiosError): ResponseData {
   // Inexplicably, Gaxios sometimes doesn't JSONify the response data.
-  if (typeof error.response?.data === 'string') {
+  if (typeof error.response?.data === "string") {
     return JSON.parse(error.response?.data) as ResponseData;
   }
   return error.response?.data as ResponseData;

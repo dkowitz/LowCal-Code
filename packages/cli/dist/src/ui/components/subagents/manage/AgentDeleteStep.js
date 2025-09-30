@@ -4,24 +4,24 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { Box, Text } from 'ink';
-import {} from '@qwen-code/qwen-code-core';
-import { theme } from '../../../semantic-colors.js';
-import { useKeypress } from '../../../hooks/useKeypress.js';
+import { Box, Text } from "ink";
+import {} from "@qwen-code/qwen-code-core";
+import { theme } from "../../../semantic-colors.js";
+import { useKeypress } from "../../../hooks/useKeypress.js";
 export function AgentDeleteStep({ selectedAgent, onDelete, onNavigateBack, }) {
     useKeypress(async (key) => {
         if (!selectedAgent)
             return;
-        if (key.name === 'y' || key.name === 'return') {
+        if (key.name === "y" || key.name === "return") {
             try {
                 await onDelete(selectedAgent);
                 // Navigation will be handled by the parent component after successful deletion
             }
             catch (error) {
-                console.error('Failed to delete agent:', error);
+                console.error("Failed to delete agent:", error);
             }
         }
-        else if (key.name === 'n') {
+        else if (key.name === "n") {
             onNavigateBack();
         }
     }, { isActive: true });

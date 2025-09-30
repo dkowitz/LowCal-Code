@@ -6,19 +6,19 @@
 /**
  * Test to verify circular reference handling in telemetry logging
  */
-import { describe, it, expect } from 'vitest';
-import { logToolCall } from './loggers.js';
-import { ToolCallEvent } from './types.js';
-import { MockTool } from '../test-utils/tools.js';
-describe('Circular Reference Handling', () => {
-    it('should handle circular references in tool function arguments', () => {
+import { describe, it, expect } from "vitest";
+import { logToolCall } from "./loggers.js";
+import { ToolCallEvent } from "./types.js";
+import { MockTool } from "../test-utils/tools.js";
+describe("Circular Reference Handling", () => {
+    it("should handle circular references in tool function arguments", () => {
         // Create a mock config
         const mockConfig = {
             getTelemetryEnabled: () => true,
             getUsageStatisticsEnabled: () => true,
-            getSessionId: () => 'test-session',
-            getModel: () => 'test-model',
-            getEmbeddingModel: () => 'test-embedding',
+            getSessionId: () => "test-session",
+            getModel: () => "test-model",
+            getEmbeddingModel: () => "test-embedding",
             getDebugMode: () => false,
         };
         // Create an object with circular references (similar to HttpsProxyAgent)
@@ -28,27 +28,27 @@ describe('Circular Reference Handling', () => {
             agent: null,
         };
         circularObject.agent = circularObject; // Create circular reference
-        circularObject.sockets['test-host'] = [
+        circularObject.sockets["test-host"] = [
             { _httpMessage: { agent: circularObject } },
         ];
         // Create a mock CompletedToolCall with circular references in function_args
         const mockRequest = {
-            callId: 'test-call-id',
-            name: 'ReadFile',
+            callId: "test-call-id",
+            name: "ReadFile",
             args: circularObject, // This would cause the original error
             isClientInitiated: false,
-            prompt_id: 'test-prompt-id',
+            prompt_id: "test-prompt-id",
         };
         const mockResponse = {
-            callId: 'test-call-id',
-            responseParts: [{ text: 'test result' }],
+            callId: "test-call-id",
+            responseParts: [{ text: "test result" }],
             resultDisplay: undefined,
             error: undefined, // undefined means success
             errorType: undefined,
         };
-        const tool = new MockTool('mock-tool');
+        const tool = new MockTool("mock-tool");
         const mockCompletedToolCall = {
-            status: 'success',
+            status: "success",
             request: mockRequest,
             response: mockResponse,
             tool,
@@ -62,36 +62,36 @@ describe('Circular Reference Handling', () => {
             logToolCall(mockConfig, event);
         }).not.toThrow();
     });
-    it('should handle normal objects without circular references', () => {
+    it("should handle normal objects without circular references", () => {
         const mockConfig = {
             getTelemetryEnabled: () => true,
             getUsageStatisticsEnabled: () => true,
-            getSessionId: () => 'test-session',
-            getModel: () => 'test-model',
-            getEmbeddingModel: () => 'test-embedding',
+            getSessionId: () => "test-session",
+            getModel: () => "test-model",
+            getEmbeddingModel: () => "test-embedding",
             getDebugMode: () => false,
         };
         const normalObject = {
-            filePath: '/test/path',
-            options: { encoding: 'utf8' },
+            filePath: "/test/path",
+            options: { encoding: "utf8" },
         };
         const mockRequest = {
-            callId: 'test-call-id',
-            name: 'ReadFile',
+            callId: "test-call-id",
+            name: "ReadFile",
             args: normalObject,
             isClientInitiated: false,
-            prompt_id: 'test-prompt-id',
+            prompt_id: "test-prompt-id",
         };
         const mockResponse = {
-            callId: 'test-call-id',
-            responseParts: [{ text: 'test result' }],
+            callId: "test-call-id",
+            responseParts: [{ text: "test result" }],
             resultDisplay: undefined,
             error: undefined, // undefined means success
             errorType: undefined,
         };
-        const tool = new MockTool('mock-tool');
+        const tool = new MockTool("mock-tool");
         const mockCompletedToolCall = {
-            status: 'success',
+            status: "success",
             request: mockRequest,
             response: mockResponse,
             tool,

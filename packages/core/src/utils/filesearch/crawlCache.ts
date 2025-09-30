@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import crypto from 'node:crypto';
+import crypto from "node:crypto";
 
 const crawlCache = new Map<string, string[]>();
 const cacheTimers = new Map<string, NodeJS.Timeout>();
@@ -19,13 +19,13 @@ export const getCacheKey = (
   ignoreContent: string,
   maxDepth?: number,
 ): string => {
-  const hash = crypto.createHash('sha256');
+  const hash = crypto.createHash("sha256");
   hash.update(directory);
   hash.update(ignoreContent);
   if (maxDepth !== undefined) {
     hash.update(String(maxDepth));
   }
-  return hash.digest('hex');
+  return hash.digest("hex");
 };
 
 /**

@@ -7,11 +7,11 @@
 import {
   IdeDiffAcceptedNotificationSchema,
   IdeDiffClosedNotificationSchema,
-} from '@qwen-code/qwen-code-core';
-import { type JSONRPCNotification } from '@modelcontextprotocol/sdk/types.js';
-import * as path from 'node:path';
-import * as vscode from 'vscode';
-import { DIFF_SCHEME } from './extension.js';
+} from "@qwen-code/qwen-code-core";
+import { type JSONRPCNotification } from "@modelcontextprotocol/sdk/types.js";
+import * as path from "node:path";
+import * as vscode from "vscode";
+import { DIFF_SCHEME } from "./extension.js";
 
 export class DiffContentProvider implements vscode.TextDocumentContentProvider {
   private content = new Map<string, string>();
@@ -22,7 +22,7 @@ export class DiffContentProvider implements vscode.TextDocumentContentProvider {
   }
 
   provideTextDocumentContent(uri: vscode.Uri): string {
-    return this.content.get(uri.toString()) ?? '';
+    return this.content.get(uri.toString()) ?? "";
   }
 
   setContent(uri: vscode.Uri, content: string): void {
@@ -96,8 +96,8 @@ export class DiffManager {
 
     const diffTitle = `${path.basename(filePath)} ↔ Modified`;
     await vscode.commands.executeCommand(
-      'setContext',
-      'qwen.diff.isVisible',
+      "setContext",
+      "qwen.diff.isVisible",
       true,
     );
 
@@ -109,13 +109,13 @@ export class DiffManager {
       // We need to provide an empty document to diff against.
       // Using the 'untitled' scheme is one way to do this.
       leftDocUri = vscode.Uri.from({
-        scheme: 'untitled',
+        scheme: "untitled",
         path: filePath,
       });
     }
 
     await vscode.commands.executeCommand(
-      'vscode.diff',
+      "vscode.diff",
       leftDocUri,
       rightDocUri,
       diffTitle,
@@ -125,7 +125,7 @@ export class DiffManager {
       },
     );
     await vscode.commands.executeCommand(
-      'workbench.action.files.setActiveEditorWriteableInSession',
+      "workbench.action.files.setActiveEditorWriteableInSession",
     );
   }
 
@@ -147,8 +147,8 @@ export class DiffManager {
       await this.closeDiffEditor(uriToClose);
       this.onDidChangeEmitter.fire(
         IdeDiffClosedNotificationSchema.parse({
-          jsonrpc: '2.0',
-          method: 'ide/diffClosed',
+          jsonrpc: "2.0",
+          method: "ide/diffClosed",
           params: {
             filePath,
             content: modifiedContent,
@@ -176,8 +176,8 @@ export class DiffManager {
 
     this.onDidChangeEmitter.fire(
       IdeDiffAcceptedNotificationSchema.parse({
-        jsonrpc: '2.0',
-        method: 'ide/diffAccepted',
+        jsonrpc: "2.0",
+        method: "ide/diffAccepted",
         params: {
           filePath: diffInfo.originalFilePath,
           content: modifiedContent,
@@ -204,8 +204,8 @@ export class DiffManager {
 
     this.onDidChangeEmitter.fire(
       IdeDiffClosedNotificationSchema.parse({
-        jsonrpc: '2.0',
-        method: 'ide/diffClosed',
+        jsonrpc: "2.0",
+        method: "ide/diffClosed",
         params: {
           filePath: diffInfo.originalFilePath,
           content: modifiedContent,
@@ -228,8 +228,8 @@ export class DiffManager {
       }
     }
     await vscode.commands.executeCommand(
-      'setContext',
-      'qwen.diff.isVisible',
+      "setContext",
+      "qwen.diff.isVisible",
       isVisible,
     );
   }
@@ -241,8 +241,8 @@ export class DiffManager {
   private async closeDiffEditor(rightDocUri: vscode.Uri) {
     const diffInfo = this.diffDocuments.get(rightDocUri.toString());
     await vscode.commands.executeCommand(
-      'setContext',
-      'qwen.diff.isVisible',
+      "setContext",
+      "qwen.diff.isVisible",
       false,
     );
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 export function isNodeError(error) {
-    return error instanceof Error && 'code' in error;
+    return error instanceof Error && "code" in error;
 }
 export function getErrorMessage(error) {
     if (error instanceof Error) {
@@ -14,7 +14,7 @@ export function getErrorMessage(error) {
         return String(error);
     }
     catch {
-        return 'Failed to get error details';
+        return "Failed to get error details";
     }
 }
 export class FatalError extends Error {
@@ -56,7 +56,7 @@ export class UnauthorizedError extends Error {
 export class BadRequestError extends Error {
 }
 export function toFriendlyError(error) {
-    if (error && typeof error === 'object' && 'response' in error) {
+    if (error && typeof error === "object" && "response" in error) {
         const gaxiosError = error;
         const data = parseResponseData(gaxiosError);
         if (data.error && data.error.message && data.error.code) {
@@ -78,7 +78,7 @@ export function toFriendlyError(error) {
 }
 function parseResponseData(error) {
     // Inexplicably, Gaxios sometimes doesn't JSONify the response data.
-    if (typeof error.response?.data === 'string') {
+    if (typeof error.response?.data === "string") {
         return JSON.parse(error.response?.data);
     }
     return error.response?.data;

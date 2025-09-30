@@ -637,14 +637,14 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">896x</span>
-<span class="cline-any cline-yes">896x</span>
+<span class="cline-any cline-yes">941x</span>
+<span class="cline-any cline-yes">941x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">896x</span>
-<span class="cline-any cline-yes">896x</span>
+<span class="cline-any cline-yes">941x</span>
+<span class="cline-any cline-yes">941x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">296x</span>
@@ -664,15 +664,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">296x</span>
 <span class="cline-any cline-yes">296x</span>
-<span class="cline-any cline-yes">722x</span>
-<span class="cline-any cline-yes">722x</span>
+<span class="cline-any cline-yes">757x</span>
+<span class="cline-any cline-yes">757x</span>
 <span class="cline-any cline-yes">296x</span>
 <span class="cline-any cline-yes">296x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">296x</span>
 <span class="cline-any cline-yes">296x</span>
-<span class="cline-any cline-yes">609x</span>
-<span class="cline-any cline-yes">609x</span>
+<span class="cline-any cline-yes">644x</span>
+<span class="cline-any cline-yes">644x</span>
 <span class="cline-any cline-yes">296x</span>
 <span class="cline-any cline-yes">296x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1095,22 +1095,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type { Config } from '@qwen-code/qwen-code-core';
+import type { Config } from "@qwen-code/qwen-code-core";
 import {
   KittySequenceOverflowEvent,
   logKittySequenceOverflow,
-} from '@qwen-code/qwen-code-core';
-import { useStdin } from 'ink';
-import type React from 'react';
+} from "@qwen-code/qwen-code-core";
+import { useStdin } from "ink";
+import type React from "react";
 import {
   createContext,
   useCallback,
   useContext,
   useEffect,
   useRef,
-} from 'react';
-import readline from 'node:readline';
-import { PassThrough } from 'node:stream';
+} from "react";
+import readline from "node:readline";
+import { PassThrough } from "node:stream";
 import {
   BACKSLASH_ENTER_DETECTION_WINDOW_MS,
   CHAR_CODE_ESC,
@@ -1120,11 +1120,11 @@ import {
   KITTY_KEYCODE_NUMPAD_ENTER,
   KITTY_KEYCODE_TAB,
   MAX_KITTY_SEQUENCE_LENGTH,
-} from '../utils/platformConstants.js';
+} from "../utils/platformConstants.js";
 &nbsp;
-import { FOCUS_IN, FOCUS_OUT } from '../hooks/useFocus.js';
+import { FOCUS_IN, FOCUS_OUT } from "../hooks/useFocus.js";
 &nbsp;
-const ESC = '\u001B';
+const ESC = "\u001B";
 export const PASTE_MODE_PREFIX = `${ESC}[200~`;
 export const PASTE_MODE_SUFFIX = `${ESC}[201~`;
 &nbsp;
@@ -1153,7 +1153,7 @@ export function useKeypressContext() {
   const context = useContext(KeypressContext);
   if (!context) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >    throw new Error(</span>
-<span class="cstat-no" title="statement not covered" >      'useKeypressContext must be used within a KeypressProvider',</span>
+<span class="cstat-no" title="statement not covered" >      "useKeypressContext must be used within a KeypressProvider",</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
   return context;
@@ -1201,7 +1201,7 @@ export function KeypressProvider({
 &nbsp;
     let isPaste = false;
     let pasteBuffer = Buffer.alloc(0);
-    let kittySequenceBuffer = '';
+    let kittySequenceBuffer = "";
     let backslashTimeout: NodeJS.Timeout | null = null;
     let waitingForEnterAfterBackslash = false;
     let rawDataBuffer = Buffer.alloc(0);
@@ -1220,11 +1220,11 @@ export function KeypressProvider({
       const ctrl = (modifierBits &amp; 4) === 4;
 &nbsp;
       const keyNameMap: Record&lt;number, string&gt; = {
-        [CHAR_CODE_ESC]: 'escape',
-        [KITTY_KEYCODE_TAB]: 'tab',
-        [KITTY_KEYCODE_BACKSPACE]: 'backspace',
-        [KITTY_KEYCODE_ENTER]: 'return',
-        [KITTY_KEYCODE_NUMPAD_ENTER]: 'return',
+        [CHAR_CODE_ESC]: "escape",
+        [KITTY_KEYCODE_TAB]: "tab",
+        [KITTY_KEYCODE_BACKSPACE]: "backspace",
+        [KITTY_KEYCODE_ENTER]: "return",
+        [KITTY_KEYCODE_NUMPAD_ENTER]: "return",
       };
 &nbsp;
       if (keyCode in keyNameMap) {
@@ -1262,14 +1262,14 @@ export function KeypressProvider({
     };
 &nbsp;
     const handleKeypress = (_: unknown, key: Key) =&gt; {
-      if (key.name === 'paste-start') {
+      if (key.name === "paste-start") {
         isPaste = true;
         return;
       }
-      if (key.name === 'paste-end') {
+      if (key.name === "paste-end") {
         isPaste = false;
         broadcast({
-          name: '',
+          name: "",
           ctrl: false,
           meta: false,
           shift: false,
@@ -1285,7 +1285,7 @@ export function KeypressProvider({
         return;
       }
 &nbsp;
-      if (key.name === 'return' &amp;&amp; waitingForEnterAfterBackslash) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+      if (key.name === "return" &amp;&amp; waitingForEnterAfterBackslash) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        if (backslashTimeout) {</span>
 <span class="cstat-no" title="statement not covered" >          clearTimeout(backslashTimeout);</span>
 <span class="cstat-no" title="statement not covered" >          backslashTimeout = null;</span>
@@ -1294,12 +1294,12 @@ export function KeypressProvider({
 <span class="cstat-no" title="statement not covered" >        broadcast({</span>
 <span class="cstat-no" title="statement not covered" >          ...key,</span>
 <span class="cstat-no" title="statement not covered" >          shift: true,</span>
-<span class="cstat-no" title="statement not covered" >          sequence: '\r', // Corrected escaping for newline</span>
+<span class="cstat-no" title="statement not covered" >          sequence: "\r", // Corrected escaping for newline</span>
 <span class="cstat-no" title="statement not covered" >        });</span>
 <span class="cstat-no" title="statement not covered" >        return;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-      if (key.sequence === <span class="branch-0 cbranch-no" title="branch not covered" >'\\' &amp;&amp; !key.name) <span class="branch-0 cbranch-no" title="branch not covered" >{</span></span>
+      if (key.sequence === <span class="branch-0 cbranch-no" title="branch not covered" >"\\" &amp;&amp; !key.name) <span class="branch-0 cbranch-no" title="branch not covered" >{</span></span>
         // Corrected escaping for backslash
 <span class="cstat-no" title="statement not covered" >        waitingForEnterAfterBackslash = true;</span>
 <span class="cstat-no" title="statement not covered" >        backslashTimeout = setTimeout(() =&gt; {</span>
@@ -1310,15 +1310,15 @@ export function KeypressProvider({
 <span class="cstat-no" title="statement not covered" >        return;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-      if (<span class="branch-0 cbranch-no" title="branch not covered" >waitingForEnterAfterBackslash &amp;&amp; key.name !== 'return') <span class="branch-0 cbranch-no" title="branch not covered" >{</span></span>
+      if (<span class="branch-0 cbranch-no" title="branch not covered" >waitingForEnterAfterBackslash &amp;&amp; key.name !== "return") <span class="branch-0 cbranch-no" title="branch not covered" >{</span></span>
 <span class="cstat-no" title="statement not covered" >        if (backslashTimeout) {</span>
 <span class="cstat-no" title="statement not covered" >          clearTimeout(backslashTimeout);</span>
 <span class="cstat-no" title="statement not covered" >          backslashTimeout = null;</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >        waitingForEnterAfterBackslash = false;</span>
 <span class="cstat-no" title="statement not covered" >        broadcast({</span>
-<span class="cstat-no" title="statement not covered" >          name: '',</span>
-<span class="cstat-no" title="statement not covered" >          sequence: '\\',</span>
+<span class="cstat-no" title="statement not covered" >          name: "",</span>
+<span class="cstat-no" title="statement not covered" >          sequence: "\\",</span>
 <span class="cstat-no" title="statement not covered" >          ctrl: false,</span>
 <span class="cstat-no" title="statement not covered" >          meta: false,</span>
 <span class="cstat-no" title="statement not covered" >          shift: false,</span>
@@ -1326,25 +1326,25 @@ export function KeypressProvider({
 <span class="cstat-no" title="statement not covered" >        });</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-      if (['up', 'down', 'left', 'right'].includes(key.name)) {
+      if (["up", "down", "left", "right"].includes(key.name)) {
         broadcast(key);
         return;
       }
 &nbsp;
       if (
-        (key.ctrl &amp;&amp; key.name === 'c') ||
+        (key.ctrl &amp;&amp; key.name === "c") ||
         key.sequence === `${ESC}${KITTY_CTRL_C}`
       ) {
         if (kittySequenceBuffer &amp;&amp; debugKeystrokeLogging) {
           console.log(
-            '[DEBUG] Kitty buffer cleared on Ctrl+C:',
+            "[DEBUG] Kitty buffer cleared on Ctrl+C:",
             kittySequenceBuffer,
           );
         }
-        kittySequenceBuffer = '';
+        kittySequenceBuffer = "";
         if (key.sequence === `${ESC}${KITTY_CTRL_C}`) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >          broadcast({</span>
-<span class="cstat-no" title="statement not covered" >            name: 'c',</span>
+<span class="cstat-no" title="statement not covered" >            name: "c",</span>
 <span class="cstat-no" title="statement not covered" >            ctrl: true,</span>
 <span class="cstat-no" title="statement not covered" >            meta: false,</span>
 <span class="cstat-no" title="statement not covered" >            shift: false,</span>
@@ -1371,7 +1371,7 @@ export function KeypressProvider({
 &nbsp;
           if (debugKeystrokeLogging) {
             console.log(
-              '[DEBUG] Kitty buffer accumulating:',
+              "[DEBUG] Kitty buffer accumulating:",
               kittySequenceBuffer,
             );
           }
@@ -1380,11 +1380,11 @@ export function KeypressProvider({
           if (kittyKey) {
             if (debugKeystrokeLogging) {
               console.log(
-                '[DEBUG] Kitty sequence parsed successfully:',
+                "[DEBUG] Kitty sequence parsed successfully:",
                 kittySequenceBuffer,
               );
             }
-            kittySequenceBuffer = '';
+            kittySequenceBuffer = "";
             broadcast(kittyKey);
             return;
           }
@@ -1393,13 +1393,13 @@ export function KeypressProvider({
             const codes = Array.from(kittySequenceBuffer).map((ch) =&gt;
               ch.charCodeAt(0),
             );
-            console.warn('Kitty sequence buffer has char codes:', codes);
+            console.warn("Kitty sequence buffer has char codes:", codes);
           }
 &nbsp;
           if (kittySequenceBuffer.length &gt; MAX_KITTY_SEQUENCE_LENGTH) {
             if (debugKeystrokeLogging) {
               console.log(
-                '[DEBUG] Kitty buffer overflow, clearing:',
+                "[DEBUG] Kitty buffer overflow, clearing:",
                 kittySequenceBuffer,
               );
             }
@@ -1410,14 +1410,14 @@ export function KeypressProvider({
 <span class="cstat-no" title="statement not covered" >              );</span>
 <span class="cstat-no" title="statement not covered" >              logKittySequenceOverflow(config, event);</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
-            kittySequenceBuffer = '';
+            kittySequenceBuffer = "";
           } else {
             return;
           }
         }
       }
 &nbsp;
-      if (key.name === 'return' &amp;&amp; key.sequence === `${ESC}\r`) {
+      if (key.name === "return" &amp;&amp; key.sequence === `${ESC}\r`) {
         key.meta = true;
       }
       broadcast({ ...key, paste: isPaste });
@@ -1431,8 +1431,8 @@ export function KeypressProvider({
     };
 &nbsp;
     const createPasteKeyEvent = (
-      name: 'paste-start' | 'paste-end' | '' = '',
-      sequence: string = '',
+      name: "paste-start" | "paste-end" | "" = "",
+      sequence: string = "",
     ): Key =&gt; ({
       name,
       ctrl: false,
@@ -1464,16 +1464,16 @@ export function KeypressProvider({
 &nbsp;
         let markerPos = -1;
         let markerLength = 0;
-        let markerType: 'prefix' | 'suffix' | null = null;
+        let markerType: "prefix" | "suffix" | null = null;
 &nbsp;
         if (hasPrefix &amp;&amp; (!hasSuffix || prefixPos &lt; suffixPos)) {
           markerPos = prefixPos;
           markerLength = pasteModePrefixBuffer.length;
-          markerType = 'prefix';
+          markerType = "prefix";
         } else if (hasSuffix) {
           markerPos = suffixPos;
           markerLength = pasteModeSuffixBuffer.length;
-          markerType = 'suffix';
+          markerType = "suffix";
         }
 &nbsp;
         if (markerPos === -1) {
@@ -1484,10 +1484,10 @@ export function KeypressProvider({
         if (nextData.length &gt; 0) {
           keypressStream.write(nextData);
         }
-        if (markerType === 'prefix') {
-          handleKeypress(undefined, createPasteKeyEvent('paste-start'));
-        } else if (markerType === 'suffix') {
-          handleKeypress(undefined, createPasteKeyEvent('paste-end'));
+        if (markerType === "prefix") {
+          handleKeypress(undefined, createPasteKeyEvent("paste-start"));
+        } else if (markerType === "suffix") {
+          handleKeypress(undefined, createPasteKeyEvent("paste-end"));
         }
         cursor = markerPos + markerLength;
       }
@@ -1506,9 +1506,9 @@ export function KeypressProvider({
         keypressStream.write(rawDataBuffer);
       } else {
         // Flush raw data buffer as a paste event
-        handleKeypress(undefined, createPasteKeyEvent('paste-start'));
+        handleKeypress(undefined, createPasteKeyEvent("paste-start"));
         keypressStream.write(rawDataBuffer);
-        handleKeypress(undefined, createPasteKeyEvent('paste-end'));
+        handleKeypress(undefined, createPasteKeyEvent("paste-end"));
       }
 &nbsp;
       rawDataBuffer = Buffer.alloc(0);
@@ -1516,7 +1516,7 @@ export function KeypressProvider({
     };
 &nbsp;
     const handleRawKeypress = (_data: Buffer) =&gt; {
-      const data = Buffer.isBuffer(_data) ? <span class="branch-0 cbranch-no" title="branch not covered" >_data : Buffer.from(_data, 'utf8');</span>
+      const data = Buffer.isBuffer(_data) ? <span class="branch-0 cbranch-no" title="branch not covered" >_data : Buffer.from(_data, "utf8");</span>
 &nbsp;
       // Buffer the incoming data
       rawDataBuffer = Buffer.concat([rawDataBuffer, data]);
@@ -1542,20 +1542,20 @@ export function KeypressProvider({
         escapeCodeTimeout: 0,
       });
       readline.emitKeypressEvents(keypressStream, rl);
-      keypressStream.on('keypress', handleKeypress);
-      stdin.on('data', handleRawKeypress);
+      keypressStream.on("keypress", handleKeypress);
+      stdin.on("data", handleRawKeypress);
     } else {
       rl = readline.createInterface({ input: stdin, escapeCodeTimeout: 0 });
       readline.emitKeypressEvents(stdin, rl);
-      stdin.on('keypress', handleKeypress);
+      stdin.on("keypress", handleKeypress);
     }
 &nbsp;
     return () =&gt; {
       if (usePassthrough) {
-        keypressStream.removeListener('keypress', handleKeypress);
-        stdin.removeListener('data', handleRawKeypress);
+        keypressStream.removeListener("keypress", handleKeypress);
+        stdin.removeListener("data", handleRawKeypress);
       } else {
-        stdin.removeListener('keypress', handleKeypress);
+        stdin.removeListener("keypress", handleKeypress);
       }
 &nbsp;
       rl.close();
@@ -1576,7 +1576,7 @@ export function KeypressProvider({
       // Flush any pending paste data to avoid data loss on exit.
       if (isPaste) {
         broadcast({
-          name: '',
+          name: "",
           ctrl: false,
           meta: false,
           shift: false,
@@ -1609,7 +1609,7 @@ export function KeypressProvider({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.148Z
+                at 2025-09-30T22:44:16.802Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

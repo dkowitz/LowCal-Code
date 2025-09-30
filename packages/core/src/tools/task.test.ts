@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { TaskTool, type TaskParams } from './task.js';
-import type { PartListUnion } from '@google/genai';
-import type { ToolResultDisplay, TaskResultDisplay } from './tools.js';
-import type { Config } from '../config/config.js';
-import { SubagentManager } from '../subagents/subagent-manager.js';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import { TaskTool, type TaskParams } from "./task.js";
+import type { PartListUnion } from "@google/genai";
+import type { ToolResultDisplay, TaskResultDisplay } from "./tools.js";
+import type { Config } from "../config/config.js";
+import { SubagentManager } from "../subagents/subagent-manager.js";
 import {
   type SubagentConfig,
   SubagentTerminateMode,
-} from '../subagents/types.js';
-import { type SubAgentScope, ContextState } from '../subagents/subagent.js';
-import { partToString } from '../utils/partUtils.js';
+} from "../subagents/types.js";
+import { type SubAgentScope, ContextState } from "../subagents/subagent.js";
+import { partToString } from "../utils/partUtils.js";
 
 // Type for accessing protected methods in tests
 type TaskToolWithProtectedMethods = TaskTool & {
@@ -33,31 +33,31 @@ type TaskToolWithProtectedMethods = TaskTool & {
 };
 
 // Mock dependencies
-vi.mock('../subagents/subagent-manager.js');
-vi.mock('../subagents/subagent.js');
+vi.mock("../subagents/subagent-manager.js");
+vi.mock("../subagents/subagent.js");
 
 const MockedSubagentManager = vi.mocked(SubagentManager);
 const MockedContextState = vi.mocked(ContextState);
 
-describe('TaskTool', () => {
+describe("TaskTool", () => {
   let config: Config;
   let taskTool: TaskTool;
   let mockSubagentManager: SubagentManager;
 
   const mockSubagents: SubagentConfig[] = [
     {
-      name: 'file-search',
-      description: 'Specialized agent for searching and analyzing files',
-      systemPrompt: 'You are a file search specialist.',
-      level: 'project',
-      filePath: '/project/.qwen/agents/file-search.md',
+      name: "file-search",
+      description: "Specialized agent for searching and analyzing files",
+      systemPrompt: "You are a file search specialist.",
+      level: "project",
+      filePath: "/project/.qwen/agents/file-search.md",
     },
     {
-      name: 'code-review',
-      description: 'Agent for reviewing code quality and best practices',
-      systemPrompt: 'You are a code review specialist.',
-      level: 'user',
-      filePath: '/home/user/.qwen/agents/code-review.md',
+      name: "code-review",
+      description: "Agent for reviewing code quality and best practices",
+      systemPrompt: "You are a code review specialist.",
+      level: "user",
+      filePath: "/home/user/.qwen/agents/code-review.md",
     },
   ];
 
@@ -67,8 +67,8 @@ describe('TaskTool', () => {
 
     // Create mock config
     config = {
-      getProjectRoot: vi.fn().mockReturnValue('/test/project'),
-      getSessionId: vi.fn().mockReturnValue('test-session-id'),
+      getProjectRoot: vi.fn().mockReturnValue("/test/project"),
+      getSessionId: vi.fn().mockReturnValue("test-session-id"),
       getSubagentManager: vi.fn(),
     } as unknown as Config;
 
@@ -95,59 +95,59 @@ describe('TaskTool', () => {
     vi.useRealTimers();
   });
 
-  describe('initialization', () => {
-    it('should initialize with correct name and properties', () => {
-      expect(taskTool.name).toBe('task');
-      expect(taskTool.displayName).toBe('Task');
-      expect(taskTool.kind).toBe('other');
+  describe("initialization", () => {
+    it("should initialize with correct name and properties", () => {
+      expect(taskTool.name).toBe("task");
+      expect(taskTool.displayName).toBe("Task");
+      expect(taskTool.kind).toBe("other");
     });
 
-    it('should load available subagents during initialization', () => {
+    it("should load available subagents during initialization", () => {
       expect(mockSubagentManager.listSubagents).toHaveBeenCalled();
     });
 
-    it('should update description with available subagents', () => {
-      expect(taskTool.description).toContain('file-search');
+    it("should update description with available subagents", () => {
+      expect(taskTool.description).toContain("file-search");
       expect(taskTool.description).toContain(
-        'Specialized agent for searching and analyzing files',
+        "Specialized agent for searching and analyzing files",
       );
-      expect(taskTool.description).toContain('code-review');
+      expect(taskTool.description).toContain("code-review");
       expect(taskTool.description).toContain(
-        'Agent for reviewing code quality and best practices',
+        "Agent for reviewing code quality and best practices",
       );
     });
 
-    it('should handle empty subagents list gracefully', async () => {
+    it("should handle empty subagents list gracefully", async () => {
       vi.mocked(mockSubagentManager.listSubagents).mockResolvedValue([]);
 
       const emptyTaskTool = new TaskTool(config);
       await vi.runAllTimersAsync();
 
       expect(emptyTaskTool.description).toContain(
-        'No subagents are currently configured',
+        "No subagents are currently configured",
       );
     });
 
-    it('should handle subagent loading errors gracefully', async () => {
+    it("should handle subagent loading errors gracefully", async () => {
       vi.mocked(mockSubagentManager.listSubagents).mockRejectedValue(
-        new Error('Loading failed'),
+        new Error("Loading failed"),
       );
 
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       new TaskTool(config);
       await vi.runAllTimersAsync();
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to load subagents for Task tool:',
+        "Failed to load subagents for Task tool:",
         expect.any(Error),
       );
       consoleSpy.mockRestore();
     });
   });
 
-  describe('schema generation', () => {
-    it('should generate schema with subagent names as enum', () => {
+  describe("schema generation", () => {
+    it("should generate schema with subagent names as enum", () => {
       const schema = taskTool.schema;
       const properties = schema.parametersJsonSchema as {
         properties: {
@@ -157,12 +157,12 @@ describe('TaskTool', () => {
         };
       };
       expect(properties.properties.subagent_type.enum).toEqual([
-        'file-search',
-        'code-review',
+        "file-search",
+        "code-review",
       ]);
     });
 
-    it('should generate schema without enum when no subagents available', async () => {
+    it("should generate schema without enum when no subagents available", async () => {
       vi.mocked(mockSubagentManager.listSubagents).mockResolvedValue([]);
 
       const emptyTaskTool = new TaskTool(config);
@@ -180,50 +180,50 @@ describe('TaskTool', () => {
     });
   });
 
-  describe('validateToolParams', () => {
+  describe("validateToolParams", () => {
     const validParams: TaskParams = {
-      description: 'Search files',
-      prompt: 'Find all TypeScript files in the project',
-      subagent_type: 'file-search',
+      description: "Search files",
+      prompt: "Find all TypeScript files in the project",
+      subagent_type: "file-search",
     };
 
-    it('should validate valid parameters', async () => {
+    it("should validate valid parameters", async () => {
       const result = taskTool.validateToolParams(validParams);
       expect(result).toBeNull();
     });
 
-    it('should reject empty description', async () => {
+    it("should reject empty description", async () => {
       const result = taskTool.validateToolParams({
         ...validParams,
-        description: '',
+        description: "",
       });
       expect(result).toBe(
         'Parameter "description" must be a non-empty string.',
       );
     });
 
-    it('should reject empty prompt', async () => {
+    it("should reject empty prompt", async () => {
       const result = taskTool.validateToolParams({
         ...validParams,
-        prompt: '',
+        prompt: "",
       });
       expect(result).toBe('Parameter "prompt" must be a non-empty string.');
     });
 
-    it('should reject empty subagent_type', async () => {
+    it("should reject empty subagent_type", async () => {
       const result = taskTool.validateToolParams({
         ...validParams,
-        subagent_type: '',
+        subagent_type: "",
       });
       expect(result).toBe(
         'Parameter "subagent_type" must be a non-empty string.',
       );
     });
 
-    it('should reject non-existent subagent', async () => {
+    it("should reject non-existent subagent", async () => {
       const result = taskTool.validateToolParams({
         ...validParams,
-        subagent_type: 'non-existent',
+        subagent_type: "non-existent",
       });
       expect(result).toBe(
         'Subagent "non-existent" not found. Available subagents: file-search, code-review',
@@ -231,15 +231,15 @@ describe('TaskTool', () => {
     });
   });
 
-  describe('refreshSubagents', () => {
-    it('should refresh available subagents and update description', async () => {
+  describe("refreshSubagents", () => {
+    it("should refresh available subagents and update description", async () => {
       const newSubagents: SubagentConfig[] = [
         {
-          name: 'test-agent',
-          description: 'A test agent',
-          systemPrompt: 'Test prompt',
-          level: 'project',
-          filePath: '/project/.qwen/agents/test-agent.md',
+          name: "test-agent",
+          description: "A test agent",
+          systemPrompt: "Test prompt",
+          level: "project",
+          filePath: "/project/.qwen/agents/test-agent.md",
         },
       ];
 
@@ -249,25 +249,25 @@ describe('TaskTool', () => {
 
       await taskTool.refreshSubagents();
 
-      expect(taskTool.description).toContain('test-agent');
-      expect(taskTool.description).toContain('A test agent');
+      expect(taskTool.description).toContain("test-agent");
+      expect(taskTool.description).toContain("A test agent");
     });
   });
 
-  describe('TaskToolInvocation', () => {
+  describe("TaskToolInvocation", () => {
     let mockSubagentScope: SubAgentScope;
     let mockContextState: ContextState;
 
     beforeEach(() => {
       mockSubagentScope = {
         runNonInteractive: vi.fn().mockResolvedValue(undefined),
-        result: 'Task completed successfully',
+        result: "Task completed successfully",
         terminateMode: SubagentTerminateMode.GOAL,
-        getFinalText: vi.fn().mockReturnValue('Task completed successfully'),
+        getFinalText: vi.fn().mockReturnValue("Task completed successfully"),
         formatCompactResult: vi
           .fn()
           .mockReturnValue(
-            '✅ Success: Search files completed with GOAL termination',
+            "✅ Success: Search files completed with GOAL termination",
           ),
         getExecutionSummary: vi.fn().mockReturnValue({
           rounds: 2,
@@ -282,7 +282,7 @@ describe('TaskTool', () => {
           estimatedCost: 0.045,
           toolUsage: [
             {
-              name: 'grep',
+              name: "grep",
               count: 2,
               success: 2,
               failure: 0,
@@ -290,7 +290,7 @@ describe('TaskTool', () => {
               averageDurationMs: 400,
             },
             {
-              name: 'read_file',
+              name: "read_file",
               count: 1,
               success: 1,
               failure: 0,
@@ -323,11 +323,11 @@ describe('TaskTool', () => {
       );
     });
 
-    it('should execute subagent successfully', async () => {
+    it("should execute subagent successfully", async () => {
       const params: TaskParams = {
-        description: 'Search files',
-        prompt: 'Find all TypeScript files',
-        subagent_type: 'file-search',
+        description: "Search files",
+        prompt: "Find all TypeScript files",
+        subagent_type: "file-search",
       };
 
       const invocation = (
@@ -336,7 +336,7 @@ describe('TaskTool', () => {
       const result = await invocation.execute();
 
       expect(mockSubagentManager.loadSubagent).toHaveBeenCalledWith(
-        'file-search',
+        "file-search",
       );
       expect(mockSubagentManager.createSubagentScope).toHaveBeenCalledWith(
         mockSubagents[0],
@@ -349,20 +349,20 @@ describe('TaskTool', () => {
       );
 
       const llmText = partToString(result.llmContent);
-      expect(llmText).toBe('Task completed successfully');
+      expect(llmText).toBe("Task completed successfully");
       const display = result.returnDisplay as TaskResultDisplay;
-      expect(display.type).toBe('task_execution');
-      expect(display.status).toBe('completed');
-      expect(display.subagentName).toBe('file-search');
+      expect(display.type).toBe("task_execution");
+      expect(display.status).toBe("completed");
+      expect(display.subagentName).toBe("file-search");
     });
 
-    it('should handle subagent not found error', async () => {
+    it("should handle subagent not found error", async () => {
       vi.mocked(mockSubagentManager.loadSubagent).mockResolvedValue(null);
 
       const params: TaskParams = {
-        description: 'Search files',
-        prompt: 'Find all TypeScript files',
-        subagent_type: 'non-existent',
+        description: "Search files",
+        prompt: "Find all TypeScript files",
+        subagent_type: "non-existent",
       };
 
       const invocation = (
@@ -373,19 +373,19 @@ describe('TaskTool', () => {
       const llmText = partToString(result.llmContent);
       expect(llmText).toContain('Subagent "non-existent" not found');
       const display = result.returnDisplay as TaskResultDisplay;
-      expect(display.status).toBe('failed');
-      expect(display.subagentName).toBe('non-existent');
+      expect(display.status).toBe("failed");
+      expect(display.subagentName).toBe("non-existent");
     });
 
-    it('should handle execution errors gracefully', async () => {
+    it("should handle execution errors gracefully", async () => {
       vi.mocked(mockSubagentManager.createSubagentScope).mockRejectedValue(
-        new Error('Creation failed'),
+        new Error("Creation failed"),
       );
 
       const params: TaskParams = {
-        description: 'Search files',
-        prompt: 'Find all TypeScript files',
-        subagent_type: 'file-search',
+        description: "Search files",
+        prompt: "Find all TypeScript files",
+        subagent_type: "file-search",
       };
 
       const invocation = (
@@ -394,17 +394,17 @@ describe('TaskTool', () => {
       const result = await invocation.execute();
 
       const llmText = partToString(result.llmContent);
-      expect(llmText).toContain('Failed to run subagent: Creation failed');
+      expect(llmText).toContain("Failed to run subagent: Creation failed");
       const display = result.returnDisplay as TaskResultDisplay;
 
-      expect(display.status).toBe('failed');
+      expect(display.status).toBe("failed");
     });
 
-    it('should execute subagent without live output callback', async () => {
+    it("should execute subagent without live output callback", async () => {
       const params: TaskParams = {
-        description: 'Search files',
-        prompt: 'Find all TypeScript files',
-        subagent_type: 'file-search',
+        description: "Search files",
+        prompt: "Find all TypeScript files",
+        subagent_type: "file-search",
       };
 
       const invocation = (
@@ -418,17 +418,17 @@ describe('TaskTool', () => {
 
       // Verify the result has the expected structure
       const text = partToString(result.llmContent);
-      expect(text).toBe('Task completed successfully');
+      expect(text).toBe("Task completed successfully");
       const display = result.returnDisplay as TaskResultDisplay;
-      expect(display.status).toBe('completed');
-      expect(display.subagentName).toBe('file-search');
+      expect(display.status).toBe("completed");
+      expect(display.subagentName).toBe("file-search");
     });
 
-    it('should set context variables correctly', async () => {
+    it("should set context variables correctly", async () => {
       const params: TaskParams = {
-        description: 'Search files',
-        prompt: 'Find all TypeScript files',
-        subagent_type: 'file-search',
+        description: "Search files",
+        prompt: "Find all TypeScript files",
+        subagent_type: "file-search",
       };
 
       const invocation = (
@@ -437,16 +437,16 @@ describe('TaskTool', () => {
       await invocation.execute();
 
       expect(mockContextState.set).toHaveBeenCalledWith(
-        'task_prompt',
-        'Find all TypeScript files',
+        "task_prompt",
+        "Find all TypeScript files",
       );
     });
 
-    it('should return structured display object', async () => {
+    it("should return structured display object", async () => {
       const params: TaskParams = {
-        description: 'Search files',
-        prompt: 'Find all TypeScript files',
-        subagent_type: 'file-search',
+        description: "Search files",
+        prompt: "Find all TypeScript files",
+        subagent_type: "file-search",
       };
 
       const invocation = (
@@ -454,24 +454,24 @@ describe('TaskTool', () => {
       ).createInvocation(params);
       const result = await invocation.execute();
 
-      expect(typeof result.returnDisplay).toBe('object');
-      expect(result.returnDisplay).toHaveProperty('type', 'task_execution');
+      expect(typeof result.returnDisplay).toBe("object");
+      expect(result.returnDisplay).toHaveProperty("type", "task_execution");
       expect(result.returnDisplay).toHaveProperty(
-        'subagentName',
-        'file-search',
+        "subagentName",
+        "file-search",
       );
       expect(result.returnDisplay).toHaveProperty(
-        'taskDescription',
-        'Search files',
+        "taskDescription",
+        "Search files",
       );
-      expect(result.returnDisplay).toHaveProperty('status', 'completed');
+      expect(result.returnDisplay).toHaveProperty("status", "completed");
     });
 
-    it('should not require confirmation', async () => {
+    it("should not require confirmation", async () => {
       const params: TaskParams = {
-        description: 'Search files',
-        prompt: 'Find all TypeScript files',
-        subagent_type: 'file-search',
+        description: "Search files",
+        prompt: "Find all TypeScript files",
+        subagent_type: "file-search",
       };
 
       const invocation = (
@@ -482,11 +482,11 @@ describe('TaskTool', () => {
       expect(shouldConfirm).toBe(false);
     });
 
-    it('should provide correct description', async () => {
+    it("should provide correct description", async () => {
       const params: TaskParams = {
-        description: 'Search files',
-        prompt: 'Find all TypeScript files',
-        subagent_type: 'file-search',
+        description: "Search files",
+        prompt: "Find all TypeScript files",
+        subagent_type: "file-search",
       };
 
       const invocation = (

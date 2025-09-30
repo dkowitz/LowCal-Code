@@ -3,14 +3,14 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { type PartListUnion } from '@google/genai';
-import type { UseHistoryManagerReturn } from './useHistoryManager.js';
-import type { Config } from '@qwen-code/qwen-code-core';
-import { ToolConfirmationOutcome } from '@qwen-code/qwen-code-core';
-import type { HistoryItemWithoutId, HistoryItem, SlashCommandProcessorResult } from '../types.js';
-import type { LoadedSettings } from '../../config/settings.js';
-import { type CommandContext, type SlashCommand } from '../commands/types.js';
-import type { SessionLoggingController } from '../../services/SessionMarkdownLogger.js';
+import { type PartListUnion } from "@google/genai";
+import type { UseHistoryManagerReturn } from "./useHistoryManager.js";
+import type { Config } from "@qwen-code/qwen-code-core";
+import { ToolConfirmationOutcome } from "@qwen-code/qwen-code-core";
+import type { HistoryItemWithoutId, HistoryItem, SlashCommandProcessorResult } from "../types.js";
+import type { LoadedSettings } from "../../config/settings.js";
+import { type CommandContext, type SlashCommand } from "../commands/types.js";
+import type { SessionLoggingController } from "../../services/SessionMarkdownLogger.js";
 /**
  * Hook to define and process slash commands (e.g., /help, /clear).
  */

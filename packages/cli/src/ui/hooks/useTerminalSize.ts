@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 
 const TERMINAL_PADDING_X = 8;
 
@@ -22,9 +22,9 @@ export function useTerminalSize(): { columns: number; rows: number } {
       });
     }
 
-    process.stdout.on('resize', updateSize);
+    process.stdout.on("resize", updateSize);
     return () => {
-      process.stdout.off('resize', updateSize);
+      process.stdout.off("resize", updateSize);
     };
   }, []);
 

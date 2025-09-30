@@ -643,36 +643,36 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type { Config, IdeClient, File } from '@qwen-code/qwen-code-core';
+import type { Config, IdeClient, File } from "@qwen-code/qwen-code-core";
 import {
   QWEN_CODE_COMPANION_EXTENSION_NAME,
   getIdeInstaller,
   IDEConnectionStatus,
   ideContext,
-} from '@qwen-code/qwen-code-core';
-import path from 'node:path';
+} from "@qwen-code/qwen-code-core";
+import path from "node:path";
 import type {
   CommandContext,
   SlashCommand,
   SlashCommandActionReturn,
-} from './types.js';
-import { CommandKind } from './types.js';
-import { SettingScope } from '../../config/settings.js';
+} from "./types.js";
+import { CommandKind } from "./types.js";
+import { SettingScope } from "../../config/settings.js";
 &nbsp;
 function getIdeStatusMessage(ideClient: IdeClient): {
-  messageType: 'info' | 'error';
+  messageType: "info" | "error";
   content: string;
 } {
   const connection = ideClient.getConnectionStatus();
   switch (connection.status) {
 <span class="branch-0 cbranch-no" title="branch not covered" >    case IDEConnectionStatus.Connected:</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
-<span class="cstat-no" title="statement not covered" >        messageType: 'info',</span>
+<span class="cstat-no" title="statement not covered" >        messageType: "info",</span>
 <span class="cstat-no" title="statement not covered" >        content: `🟢 Connected to ${ideClient.getDetectedIdeDisplayName()}`,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="branch-0 cbranch-no" title="branch not covered" >    case IDEConnectionStatus.Connecting:</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
-<span class="cstat-no" title="statement not covered" >        messageType: 'info',</span>
+<span class="cstat-no" title="statement not covered" >        messageType: "info",</span>
 <span class="cstat-no" title="statement not covered" >        content: `🟡 Connecting...`,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
     default: {
@@ -681,7 +681,7 @@ function getIdeStatusMessage(ideClient: IdeClient): {
 <span class="cstat-no" title="statement not covered" >        content += `: ${connection.details}`;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
       return {
-        messageType: 'error',
+        messageType: "error",
         content,
       };
     }
@@ -704,9 +704,9 @@ function getIdeStatusMessage(ideClient: IdeClient): {
 <span class="cstat-no" title="statement not covered" >        ? `${basename} (/${parentDir})`</span>
 <span class="cstat-no" title="statement not covered" >        : basename;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      return `  - ${displayName}${file.isActive ? ' (active)' : ''}`;</span>
+<span class="cstat-no" title="statement not covered" >      return `  - ${displayName}${file.isActive ? " (active)" : ""}`;</span>
 <span class="cstat-no" title="statement not covered" >    })</span>
-<span class="cstat-no" title="statement not covered" >    .join('\n');</span>
+<span class="cstat-no" title="statement not covered" >    .join("\n");</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const infoMessage = `</span>
 (Note: The file list is limited to a number of recently accessed files within your workspace and only includes local files on disk)`;
@@ -715,7 +715,7 @@ function getIdeStatusMessage(ideClient: IdeClient): {
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 async function getIdeStatusMessageWithFiles(ideClient: IdeClient): Promise&lt;{
-  messageType: 'info' | 'error';
+  messageType: "info" | "error";
   content: string;
 }&gt; {
   const connection = ideClient.getConnectionStatus();
@@ -728,13 +728,13 @@ async function getIdeStatusMessageWithFiles(ideClient: IdeClient): Promise&lt;{
 <span class="cstat-no" title="statement not covered" >        content += formatFileList(openFiles);</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
       return {
-        messageType: 'info',
+        messageType: "info",
         content,
       };
     }
     case IDEConnectionStatus.Connecting:
       return {
-        messageType: 'info',
+        messageType: "info",
         content: `🟡 Connecting...`,
       };
     default: {
@@ -743,7 +743,7 @@ async function getIdeStatusMessageWithFiles(ideClient: IdeClient): Promise&lt;{
         content += `: ${connection.details}`;
       }
       return {
-        messageType: 'error',
+        messageType: "error",
         content,
       };
     }
@@ -758,34 +758,34 @@ export const ideCommand = (config: Config | null): SlashCommand | null =&gt; {
   const currentIDE = ideClient.getCurrentIde();
   if (!currentIDE || !ideClient.getDetectedIdeDisplayName()) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >    return {</span>
-<span class="cstat-no" title="statement not covered" >      name: 'ide',</span>
-<span class="cstat-no" title="statement not covered" >      description: 'manage IDE integration',</span>
+<span class="cstat-no" title="statement not covered" >      name: "ide",</span>
+<span class="cstat-no" title="statement not covered" >      description: "manage IDE integration",</span>
 <span class="cstat-no" title="statement not covered" >      kind: CommandKind.BUILT_IN,</span>
 <span class="cstat-no" title="statement not covered" >      action: <span class="fstat-no" title="function not covered" >(): SlashCommandActionReturn =&gt;</span></span>
 <span class="cstat-no" title="statement not covered" >        ({</span>
-<span class="cstat-no" title="statement not covered" >          type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >          messageType: 'error',</span>
+<span class="cstat-no" title="statement not covered" >          type: "message",</span>
+<span class="cstat-no" title="statement not covered" >          messageType: "error",</span>
 <span class="cstat-no" title="statement not covered" >          content: `IDE integration is not supported in your current environment. To use this feature, run Qwen Code in one of these supported IDEs: VS Code or VS Code forks.`,</span>
 <span class="cstat-no" title="statement not covered" >        }) as const,</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   const ideSlashCommand: SlashCommand = {
-    name: 'ide',
-    description: 'manage IDE integration',
+    name: "ide",
+    description: "manage IDE integration",
     kind: CommandKind.BUILT_IN,
     subCommands: [],
   };
 &nbsp;
   const statusCommand: SlashCommand = {
-    name: 'status',
-    description: 'check status of IDE integration',
+    name: "status",
+    description: "check status of IDE integration",
     kind: CommandKind.BUILT_IN,
     action: async (): Promise&lt;SlashCommandActionReturn&gt; =&gt; {
       const { messageType, content } =
         await getIdeStatusMessageWithFiles(ideClient);
       return {
-        type: 'message',
+        type: "message",
         messageType,
         content,
       } as const;
@@ -793,7 +793,7 @@ export const ideCommand = (config: Config | null): SlashCommand | null =&gt; {
   };
 &nbsp;
   const installCommand: SlashCommand = {
-    name: 'install',
+    name: "install",
     description: `install required IDE companion for ${ideClient.getDetectedIdeDisplayName()}`,
     kind: CommandKind.BUILT_IN,
     action: async (context) =&gt; {
@@ -801,7 +801,7 @@ export const ideCommand = (config: Config | null): SlashCommand | null =&gt; {
       if (!installer) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        context.ui.addItem(</span>
 <span class="cstat-no" title="statement not covered" >          {</span>
-<span class="cstat-no" title="statement not covered" >            type: 'error',</span>
+<span class="cstat-no" title="statement not covered" >            type: "error",</span>
 <span class="cstat-no" title="statement not covered" >            text: `No installer is available for ${ideClient.getDetectedIdeDisplayName()}. Please install the '${QWEN_CODE_COMPANION_EXTENSION_NAME}' extension manually from the marketplace.`,</span>
 <span class="cstat-no" title="statement not covered" >          },</span>
 <span class="cstat-no" title="statement not covered" >          Date.now(),</span>
@@ -811,7 +811,7 @@ export const ideCommand = (config: Config | null): SlashCommand | null =&gt; {
 &nbsp;
       context.ui.addItem(
         {
-          type: 'info',
+          type: "info",
           text: `Installing IDE companion...`,
         },
         Date.now(),
@@ -820,7 +820,7 @@ export const ideCommand = (config: Config | null): SlashCommand | null =&gt; {
       const result = await installer.install();
       context.ui.addItem(
         {
-          type: result.success ? 'info' : 'error',
+          type: result.success ? "info" : "error",
           text: result.message,
         },
         Date.now(),
@@ -828,7 +828,7 @@ export const ideCommand = (config: Config | null): SlashCommand | null =&gt; {
       if (result.success) {
         context.services.settings.setValue(
           SettingScope.User,
-          'ide.enabled',
+          "ide.enabled",
           true,
         );
         // Poll for up to 5 seconds for the extension to activate.
@@ -844,7 +844,7 @@ export const ideCommand = (config: Config | null): SlashCommand | null =&gt; {
         }
 &nbsp;
         const { messageType, content } = getIdeStatusMessage(ideClient);
-        if (messageType === 'error') {
+        if (messageType === "error") {
           context.ui.addItem(
             {
               type: messageType,
@@ -866,13 +866,13 @@ export const ideCommand = (config: Config | null): SlashCommand | null =&gt; {
   };
 &nbsp;
   const enableCommand: SlashCommand = {
-    name: 'enable',
-    description: 'enable IDE integration',
+    name: "enable",
+    description: "enable IDE integration",
     kind: CommandKind.BUILT_IN,
     action: <span class="fstat-no" title="function not covered" >async (context: CommandContext) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      context.services.settings.setValue(</span>
 <span class="cstat-no" title="statement not covered" >        SettingScope.User,</span>
-<span class="cstat-no" title="statement not covered" >        'ide.enabled',</span>
+<span class="cstat-no" title="statement not covered" >        "ide.enabled",</span>
 <span class="cstat-no" title="statement not covered" >        true,</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >      await config.setIdeModeAndSyncConnection(true);</span>
@@ -888,13 +888,13 @@ export const ideCommand = (config: Config | null): SlashCommand | null =&gt; {
   };
 &nbsp;
   const disableCommand: SlashCommand = {
-    name: 'disable',
-    description: 'disable IDE integration',
+    name: "disable",
+    description: "disable IDE integration",
     kind: CommandKind.BUILT_IN,
     action: <span class="fstat-no" title="function not covered" >async (context: CommandContext) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      context.services.settings.setValue(</span>
 <span class="cstat-no" title="statement not covered" >        SettingScope.User,</span>
-<span class="cstat-no" title="statement not covered" >        'ide.enabled',</span>
+<span class="cstat-no" title="statement not covered" >        "ide.enabled",</span>
 <span class="cstat-no" title="statement not covered" >        false,</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >      await config.setIdeModeAndSyncConnection(false);</span>
@@ -931,7 +931,7 @@ export const ideCommand = (config: Config | null): SlashCommand | null =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.148Z
+                at 2025-09-30T22:44:16.802Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -4,11 +4,11 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useMemo, useEffect } from 'react';
-import { Box, Text } from 'ink';
-import { RadioButtonSelect } from '../../shared/RadioButtonSelect.js';
-import { Kind } from '@qwen-code/qwen-code-core';
-import { Colors } from '../../../colors.js';
+import { useState, useMemo, useEffect } from "react";
+import { Box, Text } from "ink";
+import { RadioButtonSelect } from "../../shared/RadioButtonSelect.js";
+import { Kind } from "@qwen-code/qwen-code-core";
+import { Colors } from "../../../colors.js";
 /**
  * Tool selection with categories.
  */
@@ -20,15 +20,15 @@ export function ToolSelector({ tools = [], onSelect, config, }) {
             return {
                 toolCategories: [
                     {
-                        id: 'all',
-                        name: 'All Tools (Default)',
+                        id: "all",
+                        name: "All Tools (Default)",
                         tools: [],
                     },
                 ],
                 readTools: [],
                 editTools: [],
                 executeTools: [],
-                initialCategory: 'all',
+                initialCategory: "all",
             };
         }
         const toolRegistry = config.getToolRegistry();
@@ -53,36 +53,36 @@ export function ToolSelector({ tools = [], onSelect, config, }) {
             .sort();
         const toolCategories = [
             {
-                id: 'all',
-                name: 'All Tools',
+                id: "all",
+                name: "All Tools",
                 tools: [],
             },
             {
-                id: 'read',
-                name: 'Read-only Tools',
+                id: "read",
+                name: "Read-only Tools",
                 tools: readTools,
             },
             {
-                id: 'edit',
-                name: 'Read & Edit Tools',
+                id: "edit",
+                name: "Read & Edit Tools",
                 tools: [...readTools, ...editTools],
             },
             {
-                id: 'execute',
-                name: 'Read & Edit & Execution Tools',
+                id: "execute",
+                name: "Read & Edit & Execution Tools",
                 tools: [...readTools, ...editTools, ...executeTools],
             },
-        ].filter((category) => category.id === 'all' || category.tools.length > 0);
+        ].filter((category) => category.id === "all" || category.tools.length > 0);
         // Determine initial category based on tools prop
-        let initialCategory = 'all'; // default to first option
+        let initialCategory = "all"; // default to first option
         if (tools.length === 0) {
             // Empty array represents all tools
-            initialCategory = 'all';
+            initialCategory = "all";
         }
         else {
             // Try to match tools array to a category
             const matchingCategory = toolCategories.find((category) => {
-                if (category.id === 'all')
+                if (category.id === "all")
                     return false;
                 // Check if the tools array exactly matches this category's tools
                 const categoryToolsSet = new Set(category.tools);
@@ -119,7 +119,7 @@ export function ToolSelector({ tools = [], onSelect, config, }) {
     const handleSelect = (selectedValue) => {
         const category = toolCategories.find((cat) => cat.id === selectedValue);
         if (category) {
-            if (category.id === 'all') {
+            if (category.id === "all") {
                 onSelect([]); // Empty array for 'all'
             }
             else {
@@ -132,12 +132,12 @@ export function ToolSelector({ tools = [], onSelect, config, }) {
     return (_jsxs(Box, { flexDirection: "column", gap: 1, children: [_jsx(Box, { flexDirection: "column", children: _jsx(RadioButtonSelect, { items: toolOptions.map((option) => ({
                         label: option.label,
                         value: option.value,
-                    })), initialIndex: toolOptions.findIndex((opt) => opt.value === selectedCategory), onSelect: handleSelect, onHighlight: handleHighlight, isFocused: true }) }), currentCategory && (_jsx(Box, { flexDirection: "column", children: currentCategory.id === 'all' ? (_jsx(Text, { color: Colors.Gray, children: "All tools selected, including MCP tools" })) : currentCategory.tools.length > 0 ? (_jsxs(_Fragment, { children: [_jsx(Text, { color: Colors.Gray, children: "Selected tools:" }), _jsx(Box, { flexDirection: "column", marginLeft: 2, children: (() => {
+                    })), initialIndex: toolOptions.findIndex((opt) => opt.value === selectedCategory), onSelect: handleSelect, onHighlight: handleHighlight, isFocused: true }) }), currentCategory && (_jsx(Box, { flexDirection: "column", children: currentCategory.id === "all" ? (_jsx(Text, { color: Colors.Gray, children: "All tools selected, including MCP tools" })) : currentCategory.tools.length > 0 ? (_jsxs(_Fragment, { children: [_jsx(Text, { color: Colors.Gray, children: "Selected tools:" }), _jsx(Box, { flexDirection: "column", marginLeft: 2, children: (() => {
                                 // Filter the already categorized tools to show only those in current category
                                 const categoryReadTools = currentCategory.tools.filter((tool) => readTools.includes(tool));
                                 const categoryEditTools = currentCategory.tools.filter((tool) => editTools.includes(tool));
                                 const categoryExecuteTools = currentCategory.tools.filter((tool) => executeTools.includes(tool));
-                                return (_jsxs(_Fragment, { children: [categoryReadTools.length > 0 && (_jsxs(Text, { color: Colors.Gray, children: ["\u2022 Read-only tools: ", categoryReadTools.join(', ')] })), categoryEditTools.length > 0 && (_jsxs(Text, { color: Colors.Gray, children: ["\u2022 Edit tools: ", categoryEditTools.join(', ')] })), categoryExecuteTools.length > 0 && (_jsxs(Text, { color: Colors.Gray, children: ["\u2022 Execution tools: ", categoryExecuteTools.join(', ')] }))] }));
+                                return (_jsxs(_Fragment, { children: [categoryReadTools.length > 0 && (_jsxs(Text, { color: Colors.Gray, children: ["\u2022 Read-only tools: ", categoryReadTools.join(", ")] })), categoryEditTools.length > 0 && (_jsxs(Text, { color: Colors.Gray, children: ["\u2022 Edit tools: ", categoryEditTools.join(", ")] })), categoryExecuteTools.length > 0 && (_jsxs(Text, { color: Colors.Gray, children: ["\u2022 Execution tools: ", categoryExecuteTools.join(", ")] }))] }));
                             })() })] })) : null }))] }));
 }
 //# sourceMappingURL=ToolSelector.js.map

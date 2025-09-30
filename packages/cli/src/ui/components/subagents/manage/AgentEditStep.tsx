@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useCallback } from 'react';
-import { Box, Text } from 'ink';
-import { RadioButtonSelect } from '../../shared/RadioButtonSelect.js';
-import { MANAGEMENT_STEPS } from '../types.js';
-import { theme } from '../../../semantic-colors.js';
-import { useLaunchEditor } from '../../../hooks/useLaunchEditor.js';
-import { type SubagentConfig } from '@qwen-code/qwen-code-core';
+import { useState, useCallback } from "react";
+import { Box, Text } from "ink";
+import { RadioButtonSelect } from "../../shared/RadioButtonSelect.js";
+import { MANAGEMENT_STEPS } from "../types.js";
+import { theme } from "../../../semantic-colors.js";
+import { useLaunchEditor } from "../../../hooks/useLaunchEditor.js";
+import { type SubagentConfig } from "@qwen-code/qwen-code-core";
 
 interface EditOption {
   id: string;
@@ -19,16 +19,16 @@ interface EditOption {
 
 const editOptions: EditOption[] = [
   {
-    id: 'editor',
-    label: 'Open in editor',
+    id: "editor",
+    label: "Open in editor",
   },
   {
-    id: 'tools',
-    label: 'Edit tools',
+    id: "tools",
+    label: "Edit tools",
   },
   {
-    id: 'color',
-    label: 'Edit color',
+    id: "color",
+    label: "Edit color",
   },
 ];
 
@@ -44,7 +44,7 @@ export function EditOptionsStep({
   selectedAgent,
   onNavigateToStep,
 }: EditOptionsStepProps) {
-  const [selectedOption, setSelectedOption] = useState<string>('editor');
+  const [selectedOption, setSelectedOption] = useState<string>("editor");
   const [error, setError] = useState<string | null>(null);
 
   const launchEditor = useLaunchEditor();
@@ -59,18 +59,18 @@ export function EditOptionsStep({
 
       setError(null);
 
-      if (selectedValue === 'editor') {
+      if (selectedValue === "editor") {
         // Launch editor directly
         try {
           await launchEditor(selectedAgent?.filePath);
         } catch (err) {
           setError(
-            `Failed to launch editor: ${err instanceof Error ? err.message : 'Unknown error'}`,
+            `Failed to launch editor: ${err instanceof Error ? err.message : "Unknown error"}`,
           );
         }
-      } else if (selectedValue === 'tools') {
+      } else if (selectedValue === "tools") {
         onNavigateToStep(MANAGEMENT_STEPS.EDIT_TOOLS);
-      } else if (selectedValue === 'color') {
+      } else if (selectedValue === "color") {
         onNavigateToStep(MANAGEMENT_STEPS.EDIT_COLOR);
       }
     },

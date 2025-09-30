@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { OAuthClientProvider } from '@modelcontextprotocol/sdk/client/auth.js';
+import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
 import type {
   OAuthClientInformation,
   OAuthClientInformationFull,
   OAuthClientMetadata,
   OAuthTokens,
-} from '@modelcontextprotocol/sdk/shared/auth.js';
-import { GoogleAuth } from 'google-auth-library';
-import type { MCPServerConfig } from '../config/config.js';
+} from "@modelcontextprotocol/sdk/shared/auth.js";
+import { GoogleAuth } from "google-auth-library";
+import type { MCPServerConfig } from "../config/config.js";
 
 const ALLOWED_HOSTS = [/^.+\.googleapis\.com$/, /^(.*\.)?luci\.app$/];
 
@@ -20,13 +20,13 @@ export class GoogleCredentialProvider implements OAuthClientProvider {
   private readonly auth: GoogleAuth;
 
   // Properties required by OAuthClientProvider, with no-op values
-  readonly redirectUrl = '';
+  readonly redirectUrl = "";
   readonly clientMetadata: OAuthClientMetadata = {
-    client_name: 'Gemini CLI (Google ADC)',
+    client_name: "Gemini CLI (Google ADC)",
     redirect_uris: [],
     grant_types: [],
     response_types: [],
-    token_endpoint_auth_method: 'none',
+    token_endpoint_auth_method: "none",
   };
   private _clientInformation?: OAuthClientInformationFull;
 
@@ -34,7 +34,7 @@ export class GoogleCredentialProvider implements OAuthClientProvider {
     const url = this.config?.url || this.config?.httpUrl;
     if (!url) {
       throw new Error(
-        'URL must be provided in the config for Google Credentials provider',
+        "URL must be provided in the config for Google Credentials provider",
       );
     }
 
@@ -48,7 +48,7 @@ export class GoogleCredentialProvider implements OAuthClientProvider {
     const scopes = this.config?.oauth?.scopes;
     if (!scopes || scopes.length === 0) {
       throw new Error(
-        'Scopes must be provided in the oauth config for Google Credentials provider',
+        "Scopes must be provided in the oauth config for Google Credentials provider",
       );
     }
     this.auth = new GoogleAuth({
@@ -69,13 +69,13 @@ export class GoogleCredentialProvider implements OAuthClientProvider {
     const accessTokenResponse = await client.getAccessToken();
 
     if (!accessTokenResponse.token) {
-      console.error('Failed to get access token from Google ADC');
+      console.error("Failed to get access token from Google ADC");
       return undefined;
     }
 
     const tokens: OAuthTokens = {
       access_token: accessTokenResponse.token,
-      token_type: 'Bearer',
+      token_type: "Bearer",
     };
     return tokens;
   }
@@ -94,6 +94,6 @@ export class GoogleCredentialProvider implements OAuthClientProvider {
 
   codeVerifier(): string {
     // No-op
-    return '';
+    return "";
   }
 }

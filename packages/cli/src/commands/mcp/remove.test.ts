@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { vi, describe, it, expect, beforeEach } from 'vitest';
-import yargs from 'yargs';
-import { loadSettings, SettingScope } from '../../config/settings.js';
-import { removeCommand } from './remove.js';
+import { vi, describe, it, expect, beforeEach } from "vitest";
+import yargs from "yargs";
+import { loadSettings, SettingScope } from "../../config/settings.js";
+import { removeCommand } from "./remove.js";
 
-vi.mock('fs/promises', () => ({
+vi.mock("fs/promises", () => ({
   readFile: vi.fn(),
   writeFile: vi.fn(),
 }));
 
-vi.mock('../../config/settings.js', async () => {
-  const actual = await vi.importActual('../../config/settings.js');
+vi.mock("../../config/settings.js", async () => {
+  const actual = await vi.importActual("../../config/settings.js");
   return {
     ...actual,
     loadSettings: vi.fn(),
@@ -24,7 +24,7 @@ vi.mock('../../config/settings.js', async () => {
 
 const mockedLoadSettings = loadSettings as vi.Mock;
 
-describe('mcp remove command', () => {
+describe("mcp remove command", () => {
   let parser: yargs.Argv;
   let mockSetValue: vi.Mock;
   let mockSettings: Record<string, unknown>;
@@ -36,7 +36,7 @@ describe('mcp remove command', () => {
     mockSetValue = vi.fn();
     mockSettings = {
       mcpServers: {
-        'test-server': {
+        "test-server": {
           command: 'echo "hello"',
         },
       },
@@ -47,19 +47,19 @@ describe('mcp remove command', () => {
     });
   });
 
-  it('should remove a server from project settings', async () => {
-    await parser.parseAsync('remove test-server');
+  it("should remove a server from project settings", async () => {
+    await parser.parseAsync("remove test-server");
 
     expect(mockSetValue).toHaveBeenCalledWith(
       SettingScope.Workspace,
-      'mcpServers',
+      "mcpServers",
       {},
     );
   });
 
-  it('should show a message if server not found', async () => {
-    const consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
-    await parser.parseAsync('remove non-existent-server');
+  it("should show a message if server not found", async () => {
+    const consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+    await parser.parseAsync("remove non-existent-server");
 
     expect(mockSetValue).not.toHaveBeenCalled();
     expect(consoleSpy).toHaveBeenCalledWith(

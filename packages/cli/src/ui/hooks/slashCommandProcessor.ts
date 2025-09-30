@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useCallback, useMemo, useEffect, useState } from 'react';
-import { type PartListUnion } from '@google/genai';
-import process from 'node:process';
-import type { UseHistoryManagerReturn } from './useHistoryManager.js';
-import type { Config } from '@qwen-code/qwen-code-core';
+import { useCallback, useMemo, useEffect, useState } from "react";
+import { type PartListUnion } from "@google/genai";
+import process from "node:process";
+import type { UseHistoryManagerReturn } from "./useHistoryManager.js";
+import type { Config } from "@qwen-code/qwen-code-core";
 import {
   GitService,
   Logger,
@@ -17,28 +17,28 @@ import {
   SlashCommandStatus,
   ToolConfirmationOutcome,
   Storage,
-} from '@qwen-code/qwen-code-core';
-import { useSessionStats } from '../contexts/SessionContext.js';
-import { formatDuration } from '../utils/formatters.js';
-import { runExitCleanup } from '../../utils/cleanup.js';
+} from "@qwen-code/qwen-code-core";
+import { useSessionStats } from "../contexts/SessionContext.js";
+import { formatDuration } from "../utils/formatters.js";
+import { runExitCleanup } from "../../utils/cleanup.js";
 import type {
   Message,
   HistoryItemWithoutId,
   HistoryItem,
   SlashCommandProcessorResult,
-} from '../types.js';
-import { MessageType } from '../types.js';
-import type { LoadedSettings } from '../../config/settings.js';
+} from "../types.js";
+import { MessageType } from "../types.js";
+import type { LoadedSettings } from "../../config/settings.js";
 import {
   type CommandContext,
   type SlashCommand,
   type SlashCommandActionReturn,
-} from '../commands/types.js';
-import { CommandService } from '../../services/CommandService.js';
-import { BuiltinCommandLoader } from '../../services/BuiltinCommandLoader.js';
-import { FileCommandLoader } from '../../services/FileCommandLoader.js';
-import { McpPromptLoader } from '../../services/McpPromptLoader.js';
-import type { SessionLoggingController } from '../../services/SessionMarkdownLogger.js';
+} from "../commands/types.js";
+import { CommandService } from "../../services/CommandService.js";
+import { BuiltinCommandLoader } from "../../services/BuiltinCommandLoader.js";
+import { FileCommandLoader } from "../../services/FileCommandLoader.js";
+import { McpPromptLoader } from "../../services/McpPromptLoader.js";
+import type { SessionLoggingController } from "../../services/SessionMarkdownLogger.js";
 
 /**
  * Hook to define and process slash commands (e.g., /help, /clear).
@@ -46,10 +46,10 @@ import type { SessionLoggingController } from '../../services/SessionMarkdownLog
 export const useSlashCommandProcessor = (
   config: Config | null,
   settings: LoadedSettings,
-  addItem: UseHistoryManagerReturn['addItem'],
-  clearItems: UseHistoryManagerReturn['clearItems'],
-  loadHistory: UseHistoryManagerReturn['loadHistory'],
-  history: UseHistoryManagerReturn['history'],
+  addItem: UseHistoryManagerReturn["addItem"],
+  clearItems: UseHistoryManagerReturn["clearItems"],
+  loadHistory: UseHistoryManagerReturn["loadHistory"],
+  history: UseHistoryManagerReturn["history"],
   refreshStatic: () => void,
   onDebugMessage: (message: string) => void,
   openThemeDialog: () => void,
@@ -104,7 +104,7 @@ export const useSlashCommandProcessor = (
 
   const logger = useMemo(() => {
     const l = new Logger(
-      config?.getSessionId() || '',
+      config?.getSessionId() || "",
       config?.storage ?? new Storage(process.cwd()),
     );
     // The logger's initialize is async, but we can create the instance
@@ -129,7 +129,7 @@ export const useSlashCommandProcessor = (
       let historyItemContent: HistoryItemWithoutId;
       if (message.type === MessageType.ABOUT) {
         historyItemContent = {
-          type: 'about',
+          type: "about",
           cliVersion: message.cliVersion,
           osVersion: message.osVersion,
           sandboxEnv: message.sandboxEnv,
@@ -140,40 +140,40 @@ export const useSlashCommandProcessor = (
         };
       } else if (message.type === MessageType.HELP) {
         historyItemContent = {
-          type: 'help',
+          type: "help",
           timestamp: message.timestamp,
         };
       } else if (message.type === MessageType.STATS) {
         historyItemContent = {
-          type: 'stats',
+          type: "stats",
           duration: message.duration,
         };
       } else if (message.type === MessageType.MODEL_STATS) {
         historyItemContent = {
-          type: 'model_stats',
+          type: "model_stats",
         };
       } else if (message.type === MessageType.TOOL_STATS) {
         historyItemContent = {
-          type: 'tool_stats',
+          type: "tool_stats",
         };
       } else if (message.type === MessageType.QUIT) {
         historyItemContent = {
-          type: 'quit',
+          type: "quit",
           duration: message.duration,
         };
       } else if (message.type === MessageType.QUIT_CONFIRMATION) {
         historyItemContent = {
-          type: 'quit_confirmation',
+          type: "quit_confirmation",
           duration: message.duration,
         };
       } else if (message.type === MessageType.COMPRESSION) {
         historyItemContent = {
-          type: 'compression',
+          type: "compression",
           compression: message.compression,
         };
       } else if (message.type === MessageType.SUMMARY) {
         historyItemContent = {
-          type: 'summary',
+          type: "summary",
           summary: message.summary,
         };
       } else {
@@ -285,12 +285,12 @@ export const useSlashCommandProcessor = (
       oneTimeShellAllowlist?: Set<string>,
       overwriteConfirmed?: boolean,
     ): Promise<SlashCommandProcessorResult | false> => {
-      if (typeof rawQuery !== 'string') {
+      if (typeof rawQuery !== "string") {
         return false;
       }
 
       const trimmed = rawQuery.trim();
-      if (!trimmed.startsWith('/') && !trimmed.startsWith('?')) {
+      if (!trimmed.startsWith("/") && !trimmed.startsWith("?")) {
         return false;
       }
 
@@ -342,12 +342,12 @@ export const useSlashCommandProcessor = (
       const resolvedCommandPath = canonicalPath;
       const subcommand =
         resolvedCommandPath.length > 1
-          ? resolvedCommandPath.slice(1).join(' ')
+          ? resolvedCommandPath.slice(1).join(" ")
           : undefined;
 
       try {
         if (commandToExecute) {
-          const args = parts.slice(pathIndex).join(' ');
+          const args = parts.slice(pathIndex).join(" ");
           const invocationTimestamp = new Date().toISOString();
           const startTime = Date.now();
 
@@ -382,16 +382,13 @@ export const useSlashCommandProcessor = (
             }
             let result: SlashCommandActionReturn | void;
             try {
-              result = await commandToExecute.action(
-                fullCommandContext,
-                args,
-              );
+              result = await commandToExecute.action(fullCommandContext, args);
               const duration = Date.now() - startTime;
               void loggingController.logCommandResult({
                 timestamp: new Date().toISOString(),
                 canonicalPath: resolvedCommandPath,
                 rawCommand: trimmed,
-                outcome: result ? result.type : 'void',
+                outcome: result ? result.type : "void",
                 durationMs: duration,
               });
             } catch (error) {
@@ -400,10 +397,11 @@ export const useSlashCommandProcessor = (
                 timestamp: new Date().toISOString(),
                 canonicalPath: resolvedCommandPath,
                 rawCommand: trimmed,
-                outcome: 'error',
+                outcome: "error",
                 durationMs: duration,
                 details: {
-                  message: error instanceof Error ? error.message : String(error),
+                  message:
+                    error instanceof Error ? error.message : String(error),
                 },
               });
               throw error;
@@ -411,14 +409,14 @@ export const useSlashCommandProcessor = (
 
             if (result) {
               switch (result.type) {
-                case 'tool':
+                case "tool":
                   return {
-                    type: 'schedule_tool',
+                    type: "schedule_tool",
                     toolName: result.toolName,
                     toolArgs: result.toolArgs,
                   };
-                case 'message':
-                  if (result.messageType === 'info') {
+                case "message":
+                  if (result.messageType === "info") {
                     addMessage({
                       type: MessageType.INFO,
                       content: result.content,
@@ -431,35 +429,35 @@ export const useSlashCommandProcessor = (
                       timestamp: new Date(),
                     });
                   }
-                  return { type: 'handled' };
-                case 'dialog':
+                  return { type: "handled" };
+                case "dialog":
                   switch (result.dialog) {
-                    case 'auth':
+                    case "auth":
                       openAuthDialog();
-                      return { type: 'handled' };
-                    case 'theme':
+                      return { type: "handled" };
+                    case "theme":
                       openThemeDialog();
-                      return { type: 'handled' };
-                    case 'editor':
+                      return { type: "handled" };
+                    case "editor":
                       openEditorDialog();
-                      return { type: 'handled' };
-                    case 'privacy':
+                      return { type: "handled" };
+                    case "privacy":
                       openPrivacyNotice();
-                      return { type: 'handled' };
-                    case 'settings':
+                      return { type: "handled" };
+                    case "settings":
                       openSettingsDialog();
-                      return { type: 'handled' };
-                    case 'model':
+                      return { type: "handled" };
+                    case "model":
                       openModelSelectionDialog();
-                      return { type: 'handled' };
-                    case 'subagent_create':
+                      return { type: "handled" };
+                    case "subagent_create":
                       openSubagentCreateDialog();
-                      return { type: 'handled' };
-                    case 'subagent_list':
+                      return { type: "handled" };
+                    case "subagent_list":
                       openAgentsManagerDialog();
-                      return { type: 'handled' };
-                    case 'help':
-                      return { type: 'handled' };
+                      return { type: "handled" };
+                    case "help":
+                      return { type: "handled" };
                     default: {
                       const unhandled: never = result.dialog;
                       throw new Error(
@@ -467,19 +465,19 @@ export const useSlashCommandProcessor = (
                       );
                     }
                   }
-                case 'load_history': {
+                case "load_history": {
                   await config
                     ?.getGeminiClient()
                     ?.setHistory(result.clientHistory);
                   fullCommandContext.ui.clear();
                   result.history.forEach(
                     (item: HistoryItemWithoutId, index: number) => {
-                    fullCommandContext.ui.addItem(item, index);
+                      fullCommandContext.ui.addItem(item, index);
                     },
                   );
-                  return { type: 'handled' };
+                  return { type: "handled" };
                 }
-                case 'quit_confirmation':
+                case "quit_confirmation":
                   // Show quit confirmation dialog instead of immediately quitting
                   setQuitConfirmationRequest({
                     onConfirm: (shouldQuit: boolean, action?: string) => {
@@ -489,28 +487,28 @@ export const useSlashCommandProcessor = (
                         return;
                       }
                       if (shouldQuit) {
-                        if (action === 'save_and_quit') {
+                        if (action === "save_and_quit") {
                           // First save conversation with auto-generated tag, then quit
                           const timestamp = new Date()
                             .toISOString()
-                            .replace(/[:.]/g, '-');
+                            .replace(/[:.]/g, "-");
                           const autoSaveTag = `auto-save chat ${timestamp}`;
                           handleSlashCommand(`/chat save "${autoSaveTag}"`);
-                          setTimeout(() => handleSlashCommand('/quit'), 100);
-                        } else if (action === 'summary_and_quit') {
+                          setTimeout(() => handleSlashCommand("/quit"), 100);
+                        } else if (action === "summary_and_quit") {
                           // Generate summary and then quit
-                          handleSlashCommand('/summary')
+                          handleSlashCommand("/summary")
                             .then(() => {
                               // Wait for user to see the summary result
                               setTimeout(() => {
-                                handleSlashCommand('/quit');
+                                handleSlashCommand("/quit");
                               }, 1200);
                             })
                             .catch((error) => {
                               // If summary fails, still quit but show error
                               addItem(
                                 {
-                                  type: 'error',
+                                  type: "error",
                                   text: `Failed to generate summary before quit: ${
                                     error instanceof Error
                                       ? error.message
@@ -521,7 +519,7 @@ export const useSlashCommandProcessor = (
                               );
                               // Give user time to see the error message
                               setTimeout(() => {
-                                handleSlashCommand('/quit');
+                                handleSlashCommand("/quit");
                               }, 1000);
                             });
                         } else {
@@ -532,12 +530,12 @@ export const useSlashCommandProcessor = (
 
                           setQuittingMessages([
                             {
-                              type: 'user',
+                              type: "user",
                               text: `/quit`,
                               id: now - 1,
                             },
                             {
-                              type: 'quit',
+                              type: "quit",
                               duration: formatDuration(wallDuration),
                               id: now,
                             },
@@ -550,22 +548,22 @@ export const useSlashCommandProcessor = (
                       }
                     },
                   });
-                  return { type: 'handled' };
+                  return { type: "handled" };
 
-                case 'quit':
+                case "quit":
                   setQuittingMessages(result.messages);
                   setTimeout(async () => {
                     await runExitCleanup();
                     process.exit(0);
                   }, 100);
-                  return { type: 'handled' };
+                  return { type: "handled" };
 
-                case 'submit_prompt':
+                case "submit_prompt":
                   return {
-                    type: 'submit_prompt',
+                    type: "submit_prompt",
                     content: result.content,
                   };
-                case 'confirm_shell_commands': {
+                case "confirm_shell_commands": {
                   const { outcome, approvedCommands } = await new Promise<{
                     outcome: ToolConfirmationOutcome;
                     approvedCommands?: string[];
@@ -590,7 +588,7 @@ export const useSlashCommandProcessor = (
                     !approvedCommands ||
                     approvedCommands.length === 0
                   ) {
-                    return { type: 'handled' };
+                    return { type: "handled" };
                   }
 
                   if (outcome === ToolConfirmationOutcome.ProceedAlways) {
@@ -605,7 +603,7 @@ export const useSlashCommandProcessor = (
                     new Set(approvedCommands),
                   );
                 }
-                case 'confirm_action': {
+                case "confirm_action": {
                   const { confirmed } = await new Promise<{
                     confirmed: boolean;
                   }>((resolve) => {
@@ -622,11 +620,11 @@ export const useSlashCommandProcessor = (
                     addItem(
                       {
                         type: MessageType.INFO,
-                        text: 'Operation cancelled.',
+                        text: "Operation cancelled.",
                       },
                       Date.now(),
                     );
-                    return { type: 'handled' };
+                    return { type: "handled" };
                   }
 
                   return await handleSlashCommand(
@@ -644,17 +642,17 @@ export const useSlashCommandProcessor = (
               }
             }
 
-            return { type: 'handled' };
+            return { type: "handled" };
           } else if (commandToExecute.subCommands) {
             const helpText = `Command '/${commandToExecute.name}' requires a subcommand. Available:\n${commandToExecute.subCommands
-              .map((sc) => `  - ${sc.name}: ${sc.description || ''}`)
-              .join('\n')}`;
+              .map((sc) => `  - ${sc.name}: ${sc.description || ""}`)
+              .join("\n")}`;
             addMessage({
               type: MessageType.INFO,
               content: helpText,
               timestamp: new Date(),
             });
-            return { type: 'handled' };
+            return { type: "handled" };
           }
         }
 
@@ -664,7 +662,7 @@ export const useSlashCommandProcessor = (
           timestamp: new Date(),
         });
 
-        return { type: 'handled' };
+        return { type: "handled" };
       } catch (e: unknown) {
         hasError = true;
         if (config) {
@@ -682,7 +680,7 @@ export const useSlashCommandProcessor = (
           },
           Date.now(),
         );
-        return { type: 'handled' };
+        return { type: "handled" };
       } finally {
         if (config && resolvedCommandPath[0] && !hasError) {
           const event = makeSlashCommandEvent({

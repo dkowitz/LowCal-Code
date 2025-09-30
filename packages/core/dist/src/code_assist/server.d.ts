@@ -3,11 +3,11 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { OAuth2Client } from 'google-auth-library';
-import type { CodeAssistGlobalUserSettingResponse, LoadCodeAssistRequest, LoadCodeAssistResponse, LongRunningOperationResponse, OnboardUserRequest, SetCodeAssistGlobalUserSettingRequest } from './types.js';
-import type { CountTokensParameters, CountTokensResponse, EmbedContentParameters, EmbedContentResponse, GenerateContentParameters, GenerateContentResponse } from '@google/genai';
-import type { ContentGenerator } from '../core/contentGenerator.js';
-import type { UserTierId } from './types.js';
+import type { OAuth2Client } from "google-auth-library";
+import type { CodeAssistGlobalUserSettingResponse, LoadCodeAssistRequest, LoadCodeAssistResponse, LongRunningOperationResponse, OnboardUserRequest, SetCodeAssistGlobalUserSettingRequest } from "./types.js";
+import type { CountTokensParameters, CountTokensResponse, EmbedContentParameters, EmbedContentResponse, GenerateContentParameters, GenerateContentResponse } from "@google/genai";
+import type { ContentGenerator } from "../core/contentGenerator.js";
+import type { UserTierId } from "./types.js";
 /** HTTP options to be used in each of the requests. */
 export interface HttpOptions {
     /** Additional HTTP headers to be sent with the request. */

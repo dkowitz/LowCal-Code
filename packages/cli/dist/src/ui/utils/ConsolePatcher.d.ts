@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { ConsoleMessageItem } from '../types.js';
+import type { ConsoleMessageItem } from "../types.js";
 interface ConsolePatcherParams {
-    onNewMessage?: (message: Omit<ConsoleMessageItem, 'id'>) => void;
+    onNewMessage?: (message: Omit<ConsoleMessageItem, "id">) => void;
     debugMode: boolean;
     stderr?: boolean;
 }

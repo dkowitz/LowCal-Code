@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useCallback } from 'react';
-import { SettingScope } from '../../config/settings.js';
+import { useCallback } from "react";
+import { SettingScope } from "../../config/settings.js";
 /**
  * Hook that handles closing dialogs when Ctrl+C is pressed.
  * This mimics the ESC key behavior by calling the same handlers that ESC uses.

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import * as os from 'node:os';
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import * as os from "node:os";
 
 /**
  * Defines the structure of a virtual file system to be created for testing.
@@ -58,18 +58,18 @@ export type FileSystemStructure = {
 async function create(dir: string, structure: FileSystemStructure) {
   for (const [name, content] of Object.entries(structure)) {
     const newPath = path.join(dir, name);
-    if (typeof content === 'string') {
+    if (typeof content === "string") {
       await fs.writeFile(newPath, content);
     } else if (Array.isArray(content)) {
       await fs.mkdir(newPath, { recursive: true });
       for (const item of content) {
-        if (typeof item === 'string') {
-          await fs.writeFile(path.join(newPath, item), '');
+        if (typeof item === "string") {
+          await fs.writeFile(path.join(newPath, item), "");
         } else {
           await create(newPath, item as FileSystemStructure);
         }
       }
-    } else if (typeof content === 'object' && content !== null) {
+    } else if (typeof content === "object" && content !== null) {
       await fs.mkdir(newPath, { recursive: true });
       await create(newPath, content as FileSystemStructure);
     }
@@ -84,7 +84,7 @@ async function create(dir: string, structure: FileSystemStructure) {
 export async function createTmpDir(
   structure: FileSystemStructure,
 ): Promise<string> {
-  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), 'gemini-cli-test-'));
+  const tmpDir = await fs.mkdtemp(path.join(os.tmpdir(), "gemini-cli-test-"));
   await create(tmpDir, structure);
   return tmpDir;
 }

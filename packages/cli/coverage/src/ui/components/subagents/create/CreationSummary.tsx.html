@@ -681,16 +681,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { useCallback, useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
-import type { WizardStepProps } from '../types.js';
+import { useCallback, useState, useEffect } from "react";
+import { Box, Text, useInput } from "ink";
+import type { WizardStepProps } from "../types.js";
 import type {
   SubagentManager,
   SubagentConfig,
-} from '@qwen-code/qwen-code-core';
-import { theme } from '../../../semantic-colors.js';
-import { shouldShowColor, getColorForDisplay } from '../utils.js';
-import { useLaunchEditor } from '../../../hooks/useLaunchEditor.js';
+} from "@qwen-code/qwen-code-core";
+import { theme } from "../../../semantic-colors.js";
+import { shouldShowColor, getColorForDisplay } from "../utils.js";
+import { useLaunchEditor } from "../../../hooks/useLaunchEditor.js";
 &nbsp;
 /**
  * Step 6: Final confirmation and actions.
@@ -709,7 +709,7 @@ export <span class="fstat-no" title="function not covered" >function CreationSum
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const truncateText = (text: string, maxLength: number): string =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (text.length &lt;= maxLength) return text;</span>
-<span class="cstat-no" title="statement not covered" >    return text.substring(0, maxLength - 3) + '...';</span>
+<span class="cstat-no" title="statement not covered" >    return text.substring(0, maxLength - 3) + "...";</span>
 <span class="cstat-no" title="statement not covered" >  };</span>
 &nbsp;
   // Check for warnings
@@ -733,14 +733,14 @@ export <span class="fstat-no" title="function not covered" >function CreationSum
 <span class="cstat-no" title="statement not covered" >          );</span>
 <span class="cstat-no" title="statement not covered" >          if (existing) {</span>
 <span class="cstat-no" title="statement not covered" >            const conflictLevel =</span>
-<span class="cstat-no" title="statement not covered" >              existing.level === 'project' ? 'project' : 'user';</span>
+<span class="cstat-no" title="statement not covered" >              existing.level === "project" ? "project" : "user";</span>
 <span class="cstat-no" title="statement not covered" >            const targetLevel = state.location;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >            if (conflictLevel === targetLevel) {</span>
 <span class="cstat-no" title="statement not covered" >              allWarnings.push(</span>
 <span class="cstat-no" title="statement not covered" >                `Name "${state.generatedName}" already exists at ${conflictLevel} level - will overwrite existing subagent`,</span>
 <span class="cstat-no" title="statement not covered" >              );</span>
-<span class="cstat-no" title="statement not covered" >            } else if (targetLevel === 'project') {</span>
+<span class="cstat-no" title="statement not covered" >            } else if (targetLevel === "project") {</span>
 <span class="cstat-no" title="statement not covered" >              allWarnings.push(</span>
 <span class="cstat-no" title="statement not covered" >                `Name "${state.generatedName}" exists at user level - project level will take precedence`,</span>
 <span class="cstat-no" title="statement not covered" >              );</span>
@@ -753,7 +753,7 @@ export <span class="fstat-no" title="function not covered" >function CreationSum
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      } catch (error) {</span>
         // Silently handle errors in warning checks
-<span class="cstat-no" title="statement not covered" >        console.warn('Error checking subagent name availability:', error);</span>
+<span class="cstat-no" title="statement not covered" >        console.warn("Error checking subagent name availability:", error);</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
       // Check length warnings
@@ -782,13 +782,13 @@ export <span class="fstat-no" title="function not covered" >function CreationSum
 &nbsp;
   // If no tools explicitly selected, it means "all tools" for this agent
 <span class="cstat-no" title="statement not covered" >  const toolsDisplay =</span>
-<span class="cstat-no" title="statement not covered" >    state.selectedTools.length === 0 ? '*' : state.selectedTools.join(', ');</span>
+<span class="cstat-no" title="statement not covered" >    state.selectedTools.length === 0 ? "*" : state.selectedTools.join(", ");</span>
 &nbsp;
   // Common method to save subagent configuration
 <span class="cstat-no" title="statement not covered" >  const saveSubagent = useCallback(async (): Promise&lt;SubagentManager&gt; =&gt; {</span>
     // Create SubagentManager instance
 <span class="cstat-no" title="statement not covered" >    if (!config) {</span>
-<span class="cstat-no" title="statement not covered" >      throw new Error('Configuration not available');</span>
+<span class="cstat-no" title="statement not covered" >      throw new Error("Configuration not available");</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    const subagentManager = config.getSubagentManager();</span>
 &nbsp;
@@ -798,7 +798,7 @@ export <span class="fstat-no" title="function not covered" >function CreationSum
 <span class="cstat-no" title="statement not covered" >      description: state.generatedDescription,</span>
 <span class="cstat-no" title="statement not covered" >      systemPrompt: state.generatedSystemPrompt,</span>
 <span class="cstat-no" title="statement not covered" >      level: state.location,</span>
-<span class="cstat-no" title="statement not covered" >      filePath: '', // Will be set by manager</span>
+<span class="cstat-no" title="statement not covered" >      filePath: "", // Will be set by manager</span>
 <span class="cstat-no" title="statement not covered" >      tools: Array.isArray(state.selectedTools)</span>
 <span class="cstat-no" title="statement not covered" >        ? state.selectedTools</span>
 <span class="cstat-no" title="statement not covered" >        : undefined,</span>
@@ -831,7 +831,7 @@ export <span class="fstat-no" title="function not covered" >function CreationSum
 <span class="cstat-no" title="statement not covered" >      showSuccessAndClose();</span>
 <span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >      setSaveError(</span>
-<span class="cstat-no" title="statement not covered" >        error instanceof Error ? error.message : 'Unknown error occurred',</span>
+<span class="cstat-no" title="statement not covered" >        error instanceof Error ? error.message : "Unknown error occurred",</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }, [saveSubagent, showSuccessAndClose]);</span>
@@ -857,7 +857,7 @@ export <span class="fstat-no" title="function not covered" >function CreationSum
 <span class="cstat-no" title="statement not covered" >      showSuccessAndClose();</span>
 <span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >      setSaveError(</span>
-<span class="cstat-no" title="statement not covered" >        `Failed to save and edit subagent: ${error instanceof Error ? error.message : 'Unknown error'}`,</span>
+<span class="cstat-no" title="statement not covered" >        `Failed to save and edit subagent: ${error instanceof Error ? error.message : "Unknown error"}`,</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }, [</span>
@@ -872,12 +872,12 @@ export <span class="fstat-no" title="function not covered" >function CreationSum
 <span class="cstat-no" title="statement not covered" >  useInput((input, key) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (saveSuccess) return;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (key.return || input === 's') {</span>
+<span class="cstat-no" title="statement not covered" >    if (key.return || input === "s") {</span>
 <span class="cstat-no" title="statement not covered" >      handleSave();</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (input === 'e') {</span>
+<span class="cstat-no" title="statement not covered" >    if (input === "e") {</span>
 <span class="cstat-no" title="statement not covered" >      handleEdit();</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -893,7 +893,7 @@ export <span class="fstat-no" title="function not covered" >function CreationSum
 <span class="cstat-no" title="statement not covered" >        &lt;/Box&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Box&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >            Subagent &amp;quot;{state.generatedName}&amp;quot; has been saved to{' '}</span>
+<span class="cstat-no" title="statement not covered" >            Subagent &amp;quot;{state.generatedName}&amp;quot; has been saved to{" "}</span>
 <span class="cstat-no" title="statement not covered" >            {state.location} level.</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Box&gt;</span>
@@ -914,9 +914,9 @@ export <span class="fstat-no" title="function not covered" >function CreationSum
 <span class="cstat-no" title="statement not covered" >        &lt;Box&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={theme.text.primary}&gt;Location: &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >            {state.location === 'project'</span>
-<span class="cstat-no" title="statement not covered" >              ? 'Project Level (.qwen/agents/)'</span>
-<span class="cstat-no" title="statement not covered" >              : 'User Level (~/.qwen/agents/)'}</span>
+<span class="cstat-no" title="statement not covered" >            {state.location === "project"</span>
+<span class="cstat-no" title="statement not covered" >              ? "Project Level (.qwen/agents/)"</span>
+<span class="cstat-no" title="statement not covered" >              : "User Level (~/.qwen/agents/)"}</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Box&gt;</span>
 &nbsp;
@@ -988,7 +988,7 @@ export <span class="fstat-no" title="function not covered" >function CreationSum
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.148Z
+                at 2025-09-30T22:44:16.802Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

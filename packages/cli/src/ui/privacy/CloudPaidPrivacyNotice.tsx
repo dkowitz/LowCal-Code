@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Box, Newline, Text } from 'ink';
-import { Colors } from '../colors.js';
-import { useKeypress } from '../hooks/useKeypress.js';
+import { Box, Newline, Text } from "ink";
+import { Colors } from "../colors.js";
+import { useKeypress } from "../hooks/useKeypress.js";
 
 interface CloudPaidPrivacyNoticeProps {
   onExit: () => void;
@@ -17,7 +17,7 @@ export const CloudPaidPrivacyNotice = ({
 }: CloudPaidPrivacyNoticeProps) => {
   useKeypress(
     (key) => {
-      if (key.name === 'escape') {
+      if (key.name === "escape") {
         onExit();
       }
     },
@@ -45,11 +45,11 @@ export const CloudPaidPrivacyNotice = ({
       </Text>
       <Newline />
       <Text>
-        <Text color={Colors.AccentBlue}>[1]</Text>{' '}
+        <Text color={Colors.AccentBlue}>[1]</Text>{" "}
         https://cloud.google.com/terms/service-terms
       </Text>
       <Text>
-        <Text color={Colors.AccentGreen}>[2]</Text>{' '}
+        <Text color={Colors.AccentGreen}>[2]</Text>{" "}
         https://cloud.google.com/terms/services
       </Text>
       <Newline />

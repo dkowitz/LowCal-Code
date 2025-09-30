@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { getErrorMessage, isNodeError } from './errors.js';
-import { URL } from 'node:url';
+import { getErrorMessage, isNodeError } from "./errors.js";
+import { URL } from "node:url";
 
 const PRIVATE_IP_RANGES = [
   /^10\./,
@@ -23,7 +23,7 @@ export class FetchError extends Error {
     public code?: string,
   ) {
     super(message);
-    this.name = 'FetchError';
+    this.name = "FetchError";
   }
 }
 
@@ -47,8 +47,8 @@ export async function fetchWithTimeout(
     const response = await fetch(url, { signal: controller.signal });
     return response;
   } catch (error) {
-    if (isNodeError(error) && error.code === 'ABORT_ERR') {
-      throw new FetchError(`Request timed out after ${timeout}ms`, 'ETIMEDOUT');
+    if (isNodeError(error) && error.code === "ABORT_ERR") {
+      throw new FetchError(`Request timed out after ${timeout}ms`, "ETIMEDOUT");
     }
     throw new FetchError(getErrorMessage(error));
   } finally {

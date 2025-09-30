@@ -23,7 +23,7 @@ export const formatMemoryUsage = (bytes: number): string => {
  */
 export const formatDuration = (milliseconds: number): string => {
   if (milliseconds <= 0) {
-    return '0s';
+    return "0s";
   }
 
   if (milliseconds < 1000) {
@@ -59,5 +59,5 @@ export const formatDuration = (milliseconds: number): string => {
     return `${seconds}s`;
   }
 
-  return parts.join(' ');
+  return parts.join(" ");
 };

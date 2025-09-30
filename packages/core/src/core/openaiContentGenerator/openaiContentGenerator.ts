@@ -1,6 +1,6 @@
-import type { ContentGenerator } from '../contentGenerator.js';
-import type { Config } from '../../config/config.js';
-import { type OpenAICompatibleProvider } from './provider/index.js';
+import type { ContentGenerator } from "../contentGenerator.js";
+import type { Config } from "../../config/config.js";
+import { type OpenAICompatibleProvider } from "./provider/index.js";
 import type {
   CountTokensParameters,
   CountTokensResponse,
@@ -8,13 +8,13 @@ import type {
   EmbedContentResponse,
   GenerateContentParameters,
   GenerateContentResponse,
-} from '@google/genai';
-import type { PipelineConfig } from './pipeline.js';
-import { ContentGenerationPipeline } from './pipeline.js';
-import { DefaultTelemetryService } from './telemetryService.js';
-import { EnhancedErrorHandler } from './errorHandler.js';
-import { getDefaultTokenizer } from '../../utils/request-tokenizer/index.js';
-import type { ContentGeneratorConfig } from '../contentGenerator.js';
+} from "@google/genai";
+import type { PipelineConfig } from "./pipeline.js";
+import { ContentGenerationPipeline } from "./pipeline.js";
+import { DefaultTelemetryService } from "./telemetryService.js";
+import { EnhancedErrorHandler } from "./errorHandler.js";
+import { getDefaultTokenizer } from "../../utils/request-tokenizer/index.js";
+import type { ContentGeneratorConfig } from "../contentGenerator.js";
 
 export class OpenAIContentGenerator implements ContentGenerator {
   protected pipeline: ContentGenerationPipeline;
@@ -26,7 +26,7 @@ export class OpenAIContentGenerator implements ContentGenerator {
     provider: OpenAICompatibleProvider,
   ) {
     this.provider = provider;
-    
+
     // Create pipeline configuration
     const pipelineConfig: PipelineConfig = {
       cliConfig,
@@ -86,7 +86,7 @@ export class OpenAIContentGenerator implements ContentGenerator {
       // Use the new high-performance request tokenizer
       const tokenizer = getDefaultTokenizer();
       const result = await tokenizer.calculateTokens(request, {
-        textEncoding: 'cl100k_base', // Use GPT-4 encoding for consistency
+        textEncoding: "cl100k_base", // Use GPT-4 encoding for consistency
       });
 
       return {
@@ -94,7 +94,7 @@ export class OpenAIContentGenerator implements ContentGenerator {
       };
     } catch (error) {
       console.warn(
-        'Failed to calculate tokens with new tokenizer, falling back to simple method:',
+        "Failed to calculate tokens with new tokenizer, falling back to simple method:",
         error,
       );
 
@@ -112,40 +112,40 @@ export class OpenAIContentGenerator implements ContentGenerator {
     request: EmbedContentParameters,
   ): Promise<EmbedContentResponse> {
     // Extract text from contents
-    let text = '';
+    let text = "";
     if (Array.isArray(request.contents)) {
       text = request.contents
         .map((content) => {
-          if (typeof content === 'string') return content;
-          if ('parts' in content && content.parts) {
+          if (typeof content === "string") return content;
+          if ("parts" in content && content.parts) {
             return content.parts
               .map((part) =>
-                typeof part === 'string'
+                typeof part === "string"
                   ? part
-                  : 'text' in part
-                    ? (part as { text?: string }).text || ''
-                    : '',
+                  : "text" in part
+                    ? (part as { text?: string }).text || ""
+                    : "",
               )
-              .join(' ');
+              .join(" ");
           }
-          return '';
+          return "";
         })
-        .join(' ');
+        .join(" ");
     } else if (request.contents) {
-      if (typeof request.contents === 'string') {
+      if (typeof request.contents === "string") {
         text = request.contents;
-      } else if ('parts' in request.contents && request.contents.parts) {
+      } else if ("parts" in request.contents && request.contents.parts) {
         text = request.contents.parts
           .map((part) =>
-            typeof part === 'string' ? part : 'text' in part ? part.text : '',
+            typeof part === "string" ? part : "text" in part ? part.text : "",
           )
-          .join(' ');
+          .join(" ");
       }
     }
 
     try {
       const embedding = await this.pipeline.client.embeddings.create({
-        model: 'text-embedding-ada-002', // Default embedding model
+        model: "text-embedding-ada-002", // Default embedding model
         input: text,
       });
 
@@ -157,7 +157,7 @@ export class OpenAIContentGenerator implements ContentGenerator {
         ],
       };
     } catch (error) {
-      console.error('OpenAI API Embedding Error:', error);
+      console.error("OpenAI API Embedding Error:", error);
       throw new Error(
         `OpenAI API error: ${error instanceof Error ? error.message : String(error)}`,
       );

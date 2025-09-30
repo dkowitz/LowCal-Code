@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Text } from 'ink';
-import { Colors } from '../colors.js';
+import { Text } from "ink";
+import { Colors } from "../colors.js";
 export const PrepareLabel = ({ label, matchedIndex, userInput, textColor, highlightColor = Colors.AccentYellow, }) => {
     if (matchedIndex === undefined ||
         matchedIndex < 0 ||

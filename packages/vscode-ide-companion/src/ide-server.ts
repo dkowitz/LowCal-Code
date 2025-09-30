@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as vscode from 'vscode';
-import { IdeContextNotificationSchema } from '@qwen-code/qwen-code-core';
-import { isInitializeRequest } from '@modelcontextprotocol/sdk/types.js';
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import express, { type Request, type Response } from 'express';
-import { randomUUID } from 'node:crypto';
-import { type Server as HTTPServer } from 'node:http';
-import * as path from 'node:path';
-import * as fs from 'node:fs/promises';
-import * as os from 'node:os';
-import { z } from 'zod';
-import type { DiffManager } from './diff-manager.js';
-import { OpenFilesManager } from './open-files-manager.js';
+import * as vscode from "vscode";
+import { IdeContextNotificationSchema } from "@qwen-code/qwen-code-core";
+import { isInitializeRequest } from "@modelcontextprotocol/sdk/types.js";
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import express, { type Request, type Response } from "express";
+import { randomUUID } from "node:crypto";
+import { type Server as HTTPServer } from "node:http";
+import * as path from "node:path";
+import * as fs from "node:fs/promises";
+import * as os from "node:os";
+import { z } from "zod";
+import type { DiffManager } from "./diff-manager.js";
+import { OpenFilesManager } from "./open-files-manager.js";
 
-const MCP_SESSION_ID_HEADER = 'mcp-session-id';
-const IDE_SERVER_PORT_ENV_VAR = 'QWEN_CODE_IDE_SERVER_PORT';
-const IDE_WORKSPACE_PATH_ENV_VAR = 'QWEN_CODE_IDE_WORKSPACE_PATH';
+const MCP_SESSION_ID_HEADER = "mcp-session-id";
+const IDE_SERVER_PORT_ENV_VAR = "QWEN_CODE_IDE_SERVER_PORT";
+const IDE_WORKSPACE_PATH_ENV_VAR = "QWEN_CODE_IDE_WORKSPACE_PATH";
 
 function writePortAndWorkspace(
   context: vscode.ExtensionContext,
@@ -33,7 +33,7 @@ function writePortAndWorkspace(
   const workspacePath =
     workspaceFolders && workspaceFolders.length > 0
       ? workspaceFolders.map((folder) => folder.uri.fsPath).join(path.delimiter)
-      : '';
+      : "";
 
   context.environmentVariableCollection.replace(
     IDE_SERVER_PORT_ENV_VAR,
@@ -61,8 +61,8 @@ function sendIdeContextUpdateNotification(
   const ideContext = openFilesManager.state;
 
   const notification = IdeContextNotificationSchema.parse({
-    jsonrpc: '2.0',
-    method: 'ide/contextUpdate',
+    jsonrpc: "2.0",
+    method: "ide/contextUpdate",
     params: ideContext,
   });
 
@@ -124,7 +124,7 @@ export class IDEServer {
       );
       context.subscriptions.push(onDidChangeDiffSubscription);
 
-      app.post('/mcp', async (req: Request, res: Response) => {
+      app.post("/mcp", async (req: Request, res: Response) => {
         const sessionId = req.headers[MCP_SESSION_ID_HEADER] as
           | string
           | undefined;
@@ -142,10 +142,10 @@ export class IDEServer {
           });
           const keepAlive = setInterval(() => {
             try {
-              transport.send({ jsonrpc: '2.0', method: 'ping' });
+              transport.send({ jsonrpc: "2.0", method: "ping" });
             } catch (e) {
               this.log(
-                'Failed to send keep-alive ping, cleaning up interval.' + e,
+                "Failed to send keep-alive ping, cleaning up interval." + e,
               );
               clearInterval(keepAlive);
             }
@@ -162,14 +162,14 @@ export class IDEServer {
           mcpServer.connect(transport);
         } else {
           this.log(
-            'Bad Request: No valid session ID provided for non-initialize request.',
+            "Bad Request: No valid session ID provided for non-initialize request.",
           );
           res.status(400).json({
-            jsonrpc: '2.0',
+            jsonrpc: "2.0",
             error: {
               code: -32000,
               message:
-                'Bad Request: No valid session ID provided for non-initialize request.',
+                "Bad Request: No valid session ID provided for non-initialize request.",
             },
             id: null,
           });
@@ -180,14 +180,14 @@ export class IDEServer {
           await transport.handleRequest(req, res, req.body);
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Unknown error';
+            error instanceof Error ? error.message : "Unknown error";
           this.log(`Error handling MCP request: ${errorMessage}`);
           if (!res.headersSent) {
             res.status(500).json({
-              jsonrpc: '2.0' as const,
+              jsonrpc: "2.0" as const,
               error: {
                 code: -32603,
-                message: 'Internal server error',
+                message: "Internal server error",
               },
               id: null,
             });
@@ -200,8 +200,8 @@ export class IDEServer {
           | string
           | undefined;
         if (!sessionId || !transports[sessionId]) {
-          this.log('Invalid or missing session ID');
-          res.status(400).send('Invalid or missing session ID');
+          this.log("Invalid or missing session ID");
+          res.status(400).send("Invalid or missing session ID");
           return;
         }
 
@@ -210,10 +210,10 @@ export class IDEServer {
           await transport.handleRequest(req, res);
         } catch (error) {
           const errorMessage =
-            error instanceof Error ? error.message : 'Unknown error';
+            error instanceof Error ? error.message : "Unknown error";
           this.log(`Error handling session request: ${errorMessage}`);
           if (!res.headersSent) {
-            res.status(400).send('Bad Request');
+            res.status(400).send("Bad Request");
           }
         }
 
@@ -227,11 +227,11 @@ export class IDEServer {
         }
       };
 
-      app.get('/mcp', handleSessionRequest);
+      app.get("/mcp", handleSessionRequest);
 
       this.server = app.listen(0, async () => {
         const address = (this.server as HTTPServer).address();
-        if (address && typeof address !== 'string') {
+        if (address && typeof address !== "string") {
           this.port = address.port;
           this.log(`IDE server listening on port ${this.port}`);
           await writePortAndWorkspace(
@@ -286,16 +286,16 @@ export class IDEServer {
 const createMcpServer = (diffManager: DiffManager) => {
   const server = new McpServer(
     {
-      name: 'qwen-code-companion-mcp-server',
-      version: '1.0.0',
+      name: "qwen-code-companion-mcp-server",
+      version: "1.0.0",
     },
     { capabilities: { logging: {} } },
   );
   server.registerTool(
-    'openDiff',
+    "openDiff",
     {
       description:
-        '(IDE Tool) Open a diff view to create or modify a file. Returns a notification once the diff has been accepted or rejcted.',
+        "(IDE Tool) Open a diff view to create or modify a file. Returns a notification once the diff has been accepted or rejcted.",
       inputSchema: z.object({
         filePath: z.string(),
         // TODO(chrstn): determine if this should be required or not.
@@ -309,11 +309,11 @@ const createMcpServer = (diffManager: DiffManager) => {
       filePath: string;
       newContent?: string;
     }) => {
-      await diffManager.showDiff(filePath, newContent ?? '');
+      await diffManager.showDiff(filePath, newContent ?? "");
       return {
         content: [
           {
-            type: 'text',
+            type: "text",
             text: `Showing diff for ${filePath}`,
           },
         ],
@@ -321,9 +321,9 @@ const createMcpServer = (diffManager: DiffManager) => {
     },
   );
   server.registerTool(
-    'closeDiff',
+    "closeDiff",
     {
-      description: '(IDE Tool) Close an open diff view for a specific file.',
+      description: "(IDE Tool) Close an open diff view for a specific file.",
       inputSchema: z.object({
         filePath: z.string(),
       }).shape,
@@ -334,7 +334,7 @@ const createMcpServer = (diffManager: DiffManager) => {
       return {
         content: [
           {
-            type: 'text',
+            type: "text",
             text: JSON.stringify(response),
           },
         ],

@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { readPackageUp, } from 'read-package-up';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
+import { readPackageUp, } from "read-package-up";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 let packageJson;

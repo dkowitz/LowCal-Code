@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from 'vitest';
-import type { KeyBindingConfig } from './keyBindings.js';
-import { Command, defaultKeyBindings } from './keyBindings.js';
+import { describe, it, expect } from "vitest";
+import type { KeyBindingConfig } from "./keyBindings.js";
+import { Command, defaultKeyBindings } from "./keyBindings.js";
 
-describe('keyBindings config', () => {
-  describe('defaultKeyBindings', () => {
-    it('should have bindings for all commands', () => {
+describe("keyBindings config", () => {
+  describe("defaultKeyBindings", () => {
+    it("should have bindings for all commands", () => {
       const commands = Object.values(Command);
 
       for (const command of commands) {
@@ -19,7 +19,7 @@ describe('keyBindings config', () => {
       }
     });
 
-    it('should have valid key binding structures', () => {
+    it("should have valid key binding structures", () => {
       for (const [_, bindings] of Object.entries(defaultKeyBindings)) {
         for (const binding of bindings) {
           // Each binding should have either key or sequence, but not both
@@ -31,25 +31,25 @@ describe('keyBindings config', () => {
 
           // Modifier properties should be boolean or undefined
           if (binding.ctrl !== undefined) {
-            expect(typeof binding.ctrl).toBe('boolean');
+            expect(typeof binding.ctrl).toBe("boolean");
           }
           if (binding.shift !== undefined) {
-            expect(typeof binding.shift).toBe('boolean');
+            expect(typeof binding.shift).toBe("boolean");
           }
           if (binding.command !== undefined) {
-            expect(typeof binding.command).toBe('boolean');
+            expect(typeof binding.command).toBe("boolean");
           }
           if (binding.paste !== undefined) {
-            expect(typeof binding.paste).toBe('boolean');
+            expect(typeof binding.paste).toBe("boolean");
           }
         }
       }
     });
 
-    it('should export all required types', () => {
+    it("should export all required types", () => {
       // Basic type checks
-      expect(typeof Command.HOME).toBe('string');
-      expect(typeof Command.END).toBe('string');
+      expect(typeof Command.HOME).toBe("string");
+      expect(typeof Command.END).toBe("string");
 
       // Config should be readonly
       const config: KeyBindingConfig = defaultKeyBindings;

@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 export function useSlashCompletion(props) {
     const { enabled, query, slashCommands, commandContext, setSuggestions, setIsLoadingSuggestions, setIsPerfectMatch, } = props;
     const [completionStart, setCompletionStart] = useState(-1);
@@ -12,11 +12,11 @@ export function useSlashCompletion(props) {
         if (!enabled || query === null) {
             return;
         }
-        const fullPath = query?.substring(1) || '';
-        const hasTrailingSpace = !!query?.endsWith(' ');
+        const fullPath = query?.substring(1) || "";
+        const hasTrailingSpace = !!query?.endsWith(" ");
         const rawParts = fullPath.split(/\s+/).filter((p) => p);
         let commandPathParts = rawParts;
-        let partial = '';
+        let partial = "";
         if (!hasTrailingSpace && rawParts.length > 0) {
             partial = rawParts[rawParts.length - 1];
             commandPathParts = rawParts.slice(0, -1);
@@ -47,12 +47,12 @@ export function useSlashCompletion(props) {
             if (exactMatchAsParent) {
                 leafCommand = exactMatchAsParent;
                 currentLevel = exactMatchAsParent.subCommands;
-                partial = '';
+                partial = "";
             }
         }
         setIsPerfectMatch(false);
         if (!hasTrailingSpace) {
-            if (leafCommand && partial === '' && leafCommand.action) {
+            if (leafCommand && partial === "" && leafCommand.action) {
                 setIsPerfectMatch(true);
             }
             else if (currentLevel) {
@@ -66,14 +66,14 @@ export function useSlashCompletion(props) {
         const depth = commandPathParts.length;
         const isArgumentCompletion = leafCommand?.completion &&
             (hasTrailingSpace ||
-                (rawParts.length > depth && depth > 0 && partial !== ''));
+                (rawParts.length > depth && depth > 0 && partial !== ""));
         if (hasTrailingSpace || exactMatchAsParent) {
             setCompletionStart(query.length);
             setCompletionEnd(query.length);
         }
         else if (partial) {
             if (isArgumentCompletion) {
-                const commandSoFar = `/${commandPathParts.join(' ')}`;
+                const commandSoFar = `/${commandPathParts.join(" ")}`;
                 const argStartIndex = commandSoFar.length + (commandPathParts.length > 0 ? 1 : 0);
                 setCompletionStart(argStartIndex);
             }
@@ -89,7 +89,7 @@ export function useSlashCompletion(props) {
         if (isArgumentCompletion) {
             const fetchAndSetSuggestions = async () => {
                 setIsLoadingSuggestions(true);
-                const argString = rawParts.slice(depth).join(' ');
+                const argString = rawParts.slice(depth).join(" ");
                 const results = (await leafCommand.completion(commandContext, argString)) || [];
                 const finalSuggestions = results.map((s) => ({ label: s, value: s }));
                 setSuggestions(finalSuggestions);

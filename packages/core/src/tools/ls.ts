@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import type { ToolInvocation, ToolResult } from './tools.js';
-import { BaseDeclarativeTool, BaseToolInvocation, Kind } from './tools.js';
-import { makeRelative, shortenPath } from '../utils/paths.js';
-import type { Config } from '../config/config.js';
-import { DEFAULT_FILE_FILTERING_OPTIONS } from '../config/config.js';
-import { ToolErrorType } from './tool-error.js';
+import fs from "node:fs";
+import path from "node:path";
+import type { ToolInvocation, ToolResult } from "./tools.js";
+import { BaseDeclarativeTool, BaseToolInvocation, Kind } from "./tools.js";
+import { makeRelative, shortenPath } from "../utils/paths.js";
+import type { Config } from "../config/config.js";
+import { DEFAULT_FILE_FILTERING_OPTIONS } from "../config/config.js";
+import { ToolErrorType } from "./tool-error.js";
 
 /**
  * Parameters for the LS tool
@@ -95,9 +95,9 @@ class LSToolInvocation extends BaseToolInvocation<LSToolParams, ToolResult> {
     for (const pattern of patterns) {
       // Convert glob pattern to RegExp
       const regexPattern = pattern
-        .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-        .replace(/\*/g, '.*')
-        .replace(/\?/g, '.');
+        .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+        .replace(/\*/g, ".*")
+        .replace(/\?/g, ".");
       const regex = new RegExp(`^${regexPattern}$`);
       if (regex.test(filename)) {
         return true;
@@ -240,7 +240,9 @@ class LSToolInvocation extends BaseToolInvocation<LSToolParams, ToolResult> {
       });
 
       // Create formatted content for LLM
-      const directoriesCount = entries.filter((entry) => entry.isDirectory).length;
+      const directoriesCount = entries.filter(
+        (entry) => entry.isDirectory,
+      ).length;
       const filesCount = entries.length - directoriesCount;
 
       const limitParam = this.params.limit ?? LSToolInvocation.DEFAULT_LIMIT;
@@ -250,16 +252,23 @@ class LSToolInvocation extends BaseToolInvocation<LSToolParams, ToolResult> {
       );
 
       const limitedEntries = entries.slice(0, normalizedLimit);
-      const truncatedCount = Math.max(0, entries.length - limitedEntries.length);
+      const truncatedCount = Math.max(
+        0,
+        entries.length - limitedEntries.length,
+      );
 
       const formattedListing = limitedEntries
-        .map((entry) => `${entry.isDirectory ? '[DIR] ' : '     '}${entry.name}`)
-        .join('\n');
+        .map(
+          (entry) => `${entry.isDirectory ? "[DIR] " : "     "}${entry.name}`,
+        )
+        .join("\n");
 
       const extensionCounts = new Map<string, number>();
       for (const entry of entries) {
         if (entry.isDirectory) continue;
-        const ext = (path.extname(entry.name) || '(no extension)').toLowerCase();
+        const ext = (
+          path.extname(entry.name) || "(no extension)"
+        ).toLowerCase();
         extensionCounts.set(ext, (extensionCounts.get(ext) ?? 0) + 1);
       }
 
@@ -267,7 +276,7 @@ class LSToolInvocation extends BaseToolInvocation<LSToolParams, ToolResult> {
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
         .map(([ext, count]) => `${ext}: ${count}`)
-        .join(', ');
+        .join(", ");
 
       let resultMessage = `Directory listing for ${this.params.path}\nTotal items: ${entries.length} (directories: ${directoriesCount}, files: ${filesCount})`;
       if (topExtensions) {
@@ -283,12 +292,12 @@ class LSToolInvocation extends BaseToolInvocation<LSToolParams, ToolResult> {
       }
 
       if (ignoredMessages.length > 0) {
-        resultMessage += `\nIgnored entries: ${ignoredMessages.join(', ')}`;
+        resultMessage += `\nIgnored entries: ${ignoredMessages.join(", ")}`;
       }
 
       if (formattedListing) {
         resultMessage += `\n\nEntries (first ${limitedEntries.length}${
-          truncatedCount > 0 ? ` of ${entries.length}` : ''
+          truncatedCount > 0 ? ` of ${entries.length}` : ""
         }):\n${formattedListing}`;
       }
 
@@ -301,13 +310,13 @@ class LSToolInvocation extends BaseToolInvocation<LSToolParams, ToolResult> {
           this.params.path,
         )}, "limit": ${suggestedLimit}}`;
         resultMessage += `\n\n…${truncatedCount} additional entr${
-          truncatedCount === 1 ? 'y remains' : 'ies remain'
+          truncatedCount === 1 ? "y remains" : "ies remain"
         } hidden to protect the token budget. Rerun ${commandSuggestion} or refine with /glob to target specific files.`;
       }
 
       let displayMessage = `Showing ${limitedEntries.length} of ${entries.length} item(s).`;
       if (ignoredMessages.length > 0) {
-        displayMessage += ` (ignored: ${ignoredMessages.join(', ')})`;
+        displayMessage += ` (ignored: ${ignoredMessages.join(", ")})`;
       }
 
       return {
@@ -318,7 +327,7 @@ class LSToolInvocation extends BaseToolInvocation<LSToolParams, ToolResult> {
       const errorMsg = `Error listing directory: ${error instanceof Error ? error.message : String(error)}`;
       return this.errorResult(
         errorMsg,
-        'Failed to list directory.',
+        "Failed to list directory.",
         ToolErrorType.LS_EXECUTION_ERROR,
       );
     }
@@ -329,53 +338,53 @@ class LSToolInvocation extends BaseToolInvocation<LSToolParams, ToolResult> {
  * Implementation of the LS tool logic
  */
 export class LSTool extends BaseDeclarativeTool<LSToolParams, ToolResult> {
-  static readonly Name = 'list_directory';
+  static readonly Name = "list_directory";
 
   constructor(private config: Config) {
     super(
       LSTool.Name,
-      'ReadFolder',
-      'Lists the names of files and subdirectories directly within a specified directory path. Can optionally ignore entries matching provided glob patterns.',
+      "ReadFolder",
+      "Lists the names of files and subdirectories directly within a specified directory path. Can optionally ignore entries matching provided glob patterns.",
       Kind.Search,
       {
         properties: {
           path: {
             description:
-              'The absolute path to the directory to list (must be absolute, not relative)',
-            type: 'string',
+              "The absolute path to the directory to list (must be absolute, not relative)",
+            type: "string",
           },
           ignore: {
-            description: 'List of glob patterns to ignore',
+            description: "List of glob patterns to ignore",
             items: {
-              type: 'string',
+              type: "string",
             },
-            type: 'array',
+            type: "array",
           },
           limit: {
             description:
-              'Optional: Maximum number of entries to include in the detailed listing (defaults to 40, capped at 200).',
-            type: 'integer',
+              "Optional: Maximum number of entries to include in the detailed listing (defaults to 40, capped at 200).",
+            type: "integer",
           },
           file_filtering_options: {
             description:
-              'Optional: Whether to respect ignore patterns from .gitignore or .qwenignore',
-            type: 'object',
+              "Optional: Whether to respect ignore patterns from .gitignore or .qwenignore",
+            type: "object",
             properties: {
               respect_git_ignore: {
                 description:
-                  'Optional: Whether to respect .gitignore patterns when listing files. Only available in git repositories. Defaults to true.',
-                type: 'boolean',
+                  "Optional: Whether to respect .gitignore patterns when listing files. Only available in git repositories. Defaults to true.",
+                type: "boolean",
               },
               respect_gemini_ignore: {
                 description:
-                  'Optional: Whether to respect .qwenignore patterns when listing files. Defaults to true.',
-                type: 'boolean',
+                  "Optional: Whether to respect .qwenignore patterns when listing files. Defaults to true.",
+                type: "boolean",
               },
             },
           },
         },
-        required: ['path'],
-        type: 'object',
+        required: ["path"],
+        type: "object",
       },
     );
   }
@@ -405,7 +414,7 @@ export class LSTool extends BaseDeclarativeTool<LSToolParams, ToolResult> {
     if (!workspaceContext.isPathWithinWorkspace(params.path)) {
       const directories = workspaceContext.getDirectories();
       return `Path must be within one of the workspace directories: ${directories.join(
-        ', ',
+        ", ",
       )}`;
     }
     return null;

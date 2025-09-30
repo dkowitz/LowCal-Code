@@ -37,6 +37,6 @@ export interface ProcessImportsResult {
  * @param importFormat - The format of the import tree
  * @returns Processed content with imports resolved and import tree
  */
-export declare function processImports(content: string, basePath: string, debugMode?: boolean, importState?: ImportState, projectRoot?: string, importFormat?: 'flat' | 'tree'): Promise<ProcessImportsResult>;
+export declare function processImports(content: string, basePath: string, debugMode?: boolean, importState?: ImportState, projectRoot?: string, importFormat?: "flat" | "tree"): Promise<ProcessImportsResult>;
 export declare function validateImportPath(importPath: string, basePath: string, allowedDirectories: string[]): boolean;
 export {};

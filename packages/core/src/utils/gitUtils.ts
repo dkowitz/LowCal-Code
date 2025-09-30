@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as fs from 'node:fs';
-import * as path from 'node:path';
+import * as fs from "node:fs";
+import * as path from "node:path";
 
 /**
  * Checks if a directory is within a git repository
@@ -17,7 +17,7 @@ export function isGitRepository(directory: string): boolean {
     let currentDir = path.resolve(directory);
 
     while (true) {
-      const gitDir = path.join(currentDir, '.git');
+      const gitDir = path.join(currentDir, ".git");
 
       // Check if .git exists (either as directory or file for worktrees)
       if (fs.existsSync(gitDir)) {
@@ -51,7 +51,7 @@ export function findGitRoot(directory: string): string | null {
     let currentDir = path.resolve(directory);
 
     while (true) {
-      const gitDir = path.join(currentDir, '.git');
+      const gitDir = path.join(currentDir, ".git");
 
       if (fs.existsSync(gitDir)) {
         return currentDir;

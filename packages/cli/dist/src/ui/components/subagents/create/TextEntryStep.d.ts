@@ -3,8 +3,8 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { WizardStepProps } from '../types.js';
-interface TextEntryStepProps extends Pick<WizardStepProps, 'dispatch' | 'onNext' | 'state'> {
+import type { WizardStepProps } from "../types.js";
+interface TextEntryStepProps extends Pick<WizardStepProps, "dispatch" | "onNext" | "state"> {
     description: string;
     placeholder?: string;
     /**

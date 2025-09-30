@@ -11,15 +11,15 @@ import {
   getShellConfiguration,
   ShellExecutionService,
   flatMapTextParts,
-} from '@qwen-code/qwen-code-core';
+} from "@qwen-code/qwen-code-core";
 
-import type { CommandContext } from '../../ui/commands/types.js';
-import type { IPromptProcessor, PromptPipelineContent } from './types.js';
+import type { CommandContext } from "../../ui/commands/types.js";
+import type { IPromptProcessor, PromptPipelineContent } from "./types.js";
 import {
   SHELL_INJECTION_TRIGGER,
   SHORTHAND_ARGS_PLACEHOLDER,
-} from './types.js';
-import { extractInjections, type Injection } from './injectionParser.js';
+} from "./types.js";
+import { extractInjections, type Injection } from "./injectionParser.js";
 
 export class ConfirmationRequiredError extends Error {
   constructor(
@@ -27,7 +27,7 @@ export class ConfirmationRequiredError extends Error {
     public commandsToConfirm: string[],
   ) {
     super(message);
-    this.name = 'ConfirmationRequiredError';
+    this.name = "ConfirmationRequiredError";
   }
 }
 
@@ -66,7 +66,7 @@ export class ShellProcessor implements IPromptProcessor {
     prompt: string,
     context: CommandContext,
   ): Promise<PromptPipelineContent> {
-    const userArgsRaw = context.invocation?.args || '';
+    const userArgsRaw = context.invocation?.args || "";
 
     if (!prompt.includes(SHELL_INJECTION_TRIGGER)) {
       return [
@@ -102,7 +102,7 @@ export class ShellProcessor implements IPromptProcessor {
       (injection) => {
         const command = injection.content;
 
-        if (command === '') {
+        if (command === "") {
           return { ...injection, resolvedCommand: undefined };
         }
 
@@ -127,7 +127,7 @@ export class ShellProcessor implements IPromptProcessor {
       if (!allAllowed) {
         if (isHardDenial) {
           throw new Error(
-            `${this.commandName} cannot be run. Blocked command: "${command}". Reason: ${blockReason || 'Blocked by configuration.'}`,
+            `${this.commandName} cannot be run. Blocked command: "${command}". Reason: ${blockReason || "Blocked by configuration."}`,
           );
         }
 
@@ -141,12 +141,12 @@ export class ShellProcessor implements IPromptProcessor {
     // Handle confirmation requirements.
     if (commandsToConfirm.size > 0) {
       throw new ConfirmationRequiredError(
-        'Shell command confirmation required',
+        "Shell command confirmation required",
         Array.from(commandsToConfirm),
       );
     }
 
-    let processedPrompt = '';
+    let processedPrompt = "";
     let lastIndex = 0;
 
     for (const injection of resolvedInjections) {

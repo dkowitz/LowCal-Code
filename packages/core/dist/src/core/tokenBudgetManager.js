@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { tokenLimit } from './tokenLimits.js';
+import { tokenLimit } from "./tokenLimits.js";
 const DEFAULT_WARN_FRACTION = 0.85;
 const DEFAULT_BUFFER_FRACTION = 0.05;
 const MIN_BUFFER_TOKENS = 512;
@@ -13,7 +13,7 @@ export class TokenBudgetExceededError extends Error {
     constructor(message, snapshot) {
         super(message);
         this.snapshot = snapshot;
-        this.name = 'TokenBudgetExceededError';
+        this.name = "TokenBudgetExceededError";
     }
 }
 export class TokenBudgetManager {
@@ -26,7 +26,7 @@ export class TokenBudgetManager {
      * how it relates to the model's context window.
      */
     async evaluate(model, contents) {
-        const limit = tokenLimit(model, 'input');
+        const limit = tokenLimit(model, "input");
         const buffer = this.getSafetyBuffer(limit);
         const effectiveLimit = Math.max(0, Math.min(limit - buffer, Math.floor(limit * 0.95)));
         const warnThreshold = Math.max(limit * DEFAULT_WARN_FRACTION, effectiveLimit);

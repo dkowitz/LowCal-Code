@@ -3,11 +3,11 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { OpenAIContentGenerator } from '../core/openaiContentGenerator/index.js';
-import type { IQwenOAuth2Client } from './qwenOAuth2.js';
-import type { Config } from '../config/config.js';
-import type { GenerateContentParameters, GenerateContentResponse, CountTokensParameters, CountTokensResponse, EmbedContentParameters, EmbedContentResponse } from '@google/genai';
-import type { ContentGeneratorConfig } from '../core/contentGenerator.js';
+import { OpenAIContentGenerator } from "../core/openaiContentGenerator/index.js";
+import type { IQwenOAuth2Client } from "./qwenOAuth2.js";
+import type { Config } from "../config/config.js";
+import type { GenerateContentParameters, GenerateContentResponse, CountTokensParameters, CountTokensResponse, EmbedContentParameters, EmbedContentResponse } from "@google/genai";
+import type { ContentGeneratorConfig } from "../core/contentGenerator.js";
 /**
  * Qwen Content Generator that uses Qwen OAuth tokens with automatic refresh
  */

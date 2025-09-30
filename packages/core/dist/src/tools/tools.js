@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ToolErrorType } from './tool-error.js';
-import { SchemaValidator } from '../utils/schemaValidator.js';
-import {} from '../subagents/subagent-statistics.js';
+import { ToolErrorType } from "./tool-error.js";
+import { SchemaValidator } from "../utils/schemaValidator.js";
+import {} from "../subagents/subagent-statistics.js";
 /**
  * A convenience base class for ToolInvocation.
  */
@@ -156,11 +156,11 @@ export class BaseDeclarativeTool extends DeclarativeTool {
  * @returns True if the object is a Tool, false otherwise.
  */
 export function isTool(obj) {
-    return (typeof obj === 'object' &&
+    return (typeof obj === "object" &&
         obj !== null &&
-        'name' in obj &&
-        'build' in obj &&
-        typeof obj.build === 'function');
+        "name" in obj &&
+        "build" in obj &&
+        typeof obj.build === "function");
 }
 /**
  * Detects cycles in a JSON schemas due to `$ref`s.
@@ -169,13 +169,13 @@ export function isTool(obj) {
  */
 export function hasCycleInSchema(schema) {
     function resolveRef(ref) {
-        if (!ref.startsWith('#/')) {
+        if (!ref.startsWith("#/")) {
             return null;
         }
-        const path = ref.substring(2).split('/');
+        const path = ref.substring(2).split("/");
         let current = schema;
         for (const segment of path) {
-            if (typeof current !== 'object' ||
+            if (typeof current !== "object" ||
                 current === null ||
                 !Object.prototype.hasOwnProperty.call(current, segment)) {
                 return null;
@@ -185,7 +185,7 @@ export function hasCycleInSchema(schema) {
         return current;
     }
     function traverse(node, visitedRefs, pathRefs) {
-        if (typeof node !== 'object' || node === null) {
+        if (typeof node !== "object" || node === null) {
             return false;
         }
         if (Array.isArray(node)) {
@@ -196,9 +196,9 @@ export function hasCycleInSchema(schema) {
             }
             return false;
         }
-        if ('$ref' in node && typeof node.$ref === 'string') {
+        if ("$ref" in node && typeof node.$ref === "string") {
             const ref = node.$ref;
-            if (ref === '#/' || pathRefs.has(ref)) {
+            if (ref === "#/" || pathRefs.has(ref)) {
                 // A ref to just '#/' is always a cycle.
                 return true; // Cycle detected!
             }

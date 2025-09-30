@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { type Config } from '../config/config.js';
-import { type Status } from '../core/coreToolScheduler.js';
-import { type ThoughtSummary } from '../core/turn.js';
-import type { PartListUnion } from '@google/genai';
+import { type Config } from "../config/config.js";
+import { type Status } from "../core/coreToolScheduler.js";
+import { type ThoughtSummary } from "../core/turn.js";
+import type { PartListUnion } from "@google/genai";
 /**
  * Token usage summary for a message or conversation.
  */
@@ -45,9 +45,9 @@ export interface ToolCallRecord {
  * Message type and message type-specific fields.
  */
 export type ConversationRecordExtra = {
-    type: 'user';
+    type: "user";
 } | {
-    type: 'gemini';
+    type: "gemini";
     toolCalls?: ToolCallRecord[];
     thoughts?: Array<ThoughtSummary & {
         timestamp: string;
@@ -107,7 +107,7 @@ export declare class ChatRecordingService {
      * Records a message in the conversation.
      */
     recordMessage(message: {
-        type: ConversationRecordExtra['type'];
+        type: ConversationRecordExtra["type"];
         content: string;
         append?: boolean;
     }): void;

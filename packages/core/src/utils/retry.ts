@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AuthType } from '../core/contentGenerator.js';
-import { isNodeError } from './errors.js';
-import { IdleStreamTimeoutError } from './networkErrors.js';
+import { AuthType } from "../core/contentGenerator.js";
+import { isNodeError } from "./errors.js";
+import { IdleStreamTimeoutError } from "./networkErrors.js";
 import {
   isProQuotaExceededError,
   isGenericQuotaExceededError,
   isQwenQuotaExceededError,
   isQwenThrottlingError,
-} from './quotaErrorDetection.js';
+} from "./quotaErrorDetection.js";
 
 export interface HttpError extends Error {
   status?: number;
@@ -39,7 +39,7 @@ export interface RetryOptions {
   ) => void;
 }
 
-export type RetryClassification = 'network' | 'status' | 'unknown';
+export type RetryClassification = "network" | "status" | "unknown";
 
 const DEFAULT_RETRY_OPTIONS: RetryOptions = {
   maxAttempts: 5,
@@ -49,25 +49,25 @@ const DEFAULT_RETRY_OPTIONS: RetryOptions = {
 };
 
 const RETRYABLE_NODE_ERROR_CODES = new Set([
-  'ECONNRESET',
-  'ECONNREFUSED',
-  'ECONNABORTED',
-  'EPIPE',
-  'ETIMEDOUT',
-  'EHOSTUNREACH',
-  'ENOTFOUND',
-  'EAI_AGAIN',
-  'UND_ERR_ABORTED',
+  "ECONNRESET",
+  "ECONNREFUSED",
+  "ECONNABORTED",
+  "EPIPE",
+  "ETIMEDOUT",
+  "EHOSTUNREACH",
+  "ENOTFOUND",
+  "EAI_AGAIN",
+  "UND_ERR_ABORTED",
 ]);
 
 const RETRYABLE_MESSAGE_KEYWORDS = [
-  'terminated',
-  'socket hang up',
-  'network connection closed',
-  'connection closed prematurely',
-  'fetch failed',
-  'request aborted',
-  'aborterror',
+  "terminated",
+  "socket hang up",
+  "network connection closed",
+  "connection closed prematurely",
+  "fetch failed",
+  "request aborted",
+  "aborterror",
 ];
 
 /**
@@ -81,14 +81,14 @@ function defaultShouldRetry(error: Error | unknown): boolean {
     return true;
   }
   // Check for common transient error status codes either in message or a status property
-  if (error && typeof (error as { status?: number }).status === 'number') {
+  if (error && typeof (error as { status?: number }).status === "number") {
     const status = (error as { status: number }).status;
     if (status === 429 || (status >= 500 && status < 600)) {
       return true;
     }
   }
   if (error instanceof Error && error.message) {
-    if (error.message.includes('429')) return true;
+    if (error.message.includes("429")) return true;
     if (error.message.match(/5\d{2}/)) return true;
   }
   return false;
@@ -99,14 +99,18 @@ function isTransientNetworkError(error: unknown): boolean {
     return true;
   }
 
-  if (isNodeError(error) && error.code && RETRYABLE_NODE_ERROR_CODES.has(error.code)) {
+  if (
+    isNodeError(error) &&
+    error.code &&
+    RETRYABLE_NODE_ERROR_CODES.has(error.code)
+  ) {
     return true;
   }
 
   if (
-    typeof DOMException !== 'undefined' &&
+    typeof DOMException !== "undefined" &&
     error instanceof DOMException &&
-    error.name === 'AbortError'
+    error.name === "AbortError"
   ) {
     return true;
   }
@@ -123,22 +127,25 @@ function isTransientNetworkError(error: unknown): boolean {
 
 function classifyRetryableError(error: unknown): RetryClassification {
   if (isTransientNetworkError(error)) {
-    return 'network';
+    return "network";
   }
 
   const status = getErrorStatus(error);
-  if (status === 429 || (typeof status === 'number' && status >= 500 && status < 600)) {
-    return 'status';
+  if (
+    status === 429 ||
+    (typeof status === "number" && status >= 500 && status < 600)
+  ) {
+    return "status";
   }
 
   if (error instanceof Error && error.message) {
     const message = error.message;
-    if (message.includes('429') || message.match(/5\d{2}/)) {
-      return 'status';
+    if (message.includes("429") || message.match(/5\d{2}/)) {
+      return "status";
     }
   }
 
-  return 'unknown';
+  return "unknown";
 }
 
 /**
@@ -207,7 +214,7 @@ export async function retryWithBackoff<T>(
           }
         } catch (fallbackError) {
           // If fallback fails, continue with original error
-          console.warn('Fallback to Flash model failed:', fallbackError);
+          console.warn("Fallback to Flash model failed:", fallbackError);
         }
       }
 
@@ -234,7 +241,7 @@ export async function retryWithBackoff<T>(
           }
         } catch (fallbackError) {
           // If fallback fails, continue with original error
-          console.warn('Fallback to Flash model failed:', fallbackError);
+          console.warn("Fallback to Flash model failed:", fallbackError);
         }
       }
 
@@ -280,7 +287,7 @@ export async function retryWithBackoff<T>(
           }
         } catch (fallbackError) {
           // If fallback fails, continue with original error
-          console.warn('Fallback to Flash model failed:', fallbackError);
+          console.warn("Fallback to Flash model failed:", fallbackError);
         }
       }
 
@@ -288,7 +295,7 @@ export async function retryWithBackoff<T>(
         getDelayDurationAndStatus(error);
       const classification = classifyRetryableError(error);
       const shouldRetryFlag =
-        classification !== 'unknown' || shouldRetry(error as Error);
+        classification !== "unknown" || shouldRetry(error as Error);
 
       if (attempt >= maxAttempts || !shouldRetryFlag) {
         throw error;
@@ -316,7 +323,7 @@ export async function retryWithBackoff<T>(
       if (delayDurationMs > 0) {
         // Respect Retry-After header if present and parsed
         console.warn(
-          `Attempt ${attempt} failed with status ${delayErrorStatus ?? 'unknown'}. Retrying after explicit delay of ${delayDurationMs}ms...`,
+          `Attempt ${attempt} failed with status ${delayErrorStatus ?? "unknown"}. Retrying after explicit delay of ${delayDurationMs}ms...`,
           error,
         );
         await delay(delayDurationMs);
@@ -332,7 +339,7 @@ export async function retryWithBackoff<T>(
   }
   // This line should theoretically be unreachable due to the throw in the catch block.
   // Added for type safety and to satisfy the compiler that a promise is always returned.
-  throw new Error('Retry attempts exhausted');
+  throw new Error("Retry attempts exhausted");
 }
 
 /**
@@ -341,20 +348,20 @@ export async function retryWithBackoff<T>(
  * @returns The HTTP status code, or undefined if not found.
  */
 export function getErrorStatus(error: unknown): number | undefined {
-  if (typeof error === 'object' && error !== null) {
-    if ('status' in error && typeof error.status === 'number') {
+  if (typeof error === "object" && error !== null) {
+    if ("status" in error && typeof error.status === "number") {
       return error.status;
     }
     // Check for error.response.status (common in axios errors)
     if (
-      'response' in error &&
-      typeof (error as { response?: unknown }).response === 'object' &&
+      "response" in error &&
+      typeof (error as { response?: unknown }).response === "object" &&
       (error as { response?: unknown }).response !== null
     ) {
       const response = (
         error as { response: { status?: unknown; headers?: unknown } }
       ).response;
-      if ('status' in response && typeof response.status === 'number') {
+      if ("status" in response && typeof response.status === "number") {
         return response.status;
       }
     }
@@ -368,22 +375,22 @@ export function getErrorStatus(error: unknown): number | undefined {
  * @returns The delay in milliseconds, or 0 if not found or invalid.
  */
 function getRetryAfterDelayMs(error: unknown): number {
-  if (typeof error === 'object' && error !== null) {
+  if (typeof error === "object" && error !== null) {
     // Check for error.response.headers (common in axios errors)
     if (
-      'response' in error &&
-      typeof (error as { response?: unknown }).response === 'object' &&
+      "response" in error &&
+      typeof (error as { response?: unknown }).response === "object" &&
       (error as { response?: unknown }).response !== null
     ) {
       const response = (error as { response: { headers?: unknown } }).response;
       if (
-        'headers' in response &&
-        typeof response.headers === 'object' &&
+        "headers" in response &&
+        typeof response.headers === "object" &&
         response.headers !== null
       ) {
-        const headers = response.headers as { 'retry-after'?: unknown };
-        const retryAfterHeader = headers['retry-after'];
-        if (typeof retryAfterHeader === 'string') {
+        const headers = response.headers as { "retry-after"?: unknown };
+        const retryAfterHeader = headers["retry-after"];
+        if (typeof retryAfterHeader === "string") {
           const retryAfterSeconds = parseInt(retryAfterHeader, 10);
           if (!isNaN(retryAfterSeconds)) {
             return retryAfterSeconds * 1000;
@@ -440,7 +447,7 @@ function logRetryAttempt(
     console.error(message, error);
   } else if (error instanceof Error) {
     // Fallback for errors that might not have a status but have a message
-    if (error.message.includes('429')) {
+    if (error.message.includes("429")) {
       console.warn(
         `Attempt ${attempt} failed with 429 error (no Retry-After header). Retrying with backoff...`,
         error,

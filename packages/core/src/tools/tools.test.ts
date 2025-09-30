@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi } from 'vitest';
-import type { ToolInvocation, ToolResult } from './tools.js';
-import { DeclarativeTool, hasCycleInSchema, Kind } from './tools.js';
-import { ToolErrorType } from './tool-error.js';
+import { describe, it, expect, vi } from "vitest";
+import type { ToolInvocation, ToolResult } from "./tools.js";
+import { DeclarativeTool, hasCycleInSchema, Kind } from "./tools.js";
+import { ToolErrorType } from "./tool-error.js";
 
 class TestToolInvocation implements ToolInvocation<object, ToolResult> {
   constructor(
@@ -16,7 +16,7 @@ class TestToolInvocation implements ToolInvocation<object, ToolResult> {
   ) {}
 
   getDescription(): string {
-    return 'A test invocation';
+    return "A test invocation";
   }
 
   toolLocations() {
@@ -36,7 +36,7 @@ class TestTool extends DeclarativeTool<object, ToolResult> {
   private readonly buildFn: (params: object) => TestToolInvocation;
 
   constructor(buildFn: (params: object) => TestToolInvocation) {
-    super('test-tool', 'Test Tool', 'A tool for testing', Kind.Other, {});
+    super("test-tool", "Test Tool", "A tool for testing", Kind.Other, {});
     this.buildFn = buildFn;
   }
 
@@ -45,17 +45,17 @@ class TestTool extends DeclarativeTool<object, ToolResult> {
   }
 }
 
-describe('DeclarativeTool', () => {
-  describe('validateBuildAndExecute', () => {
+describe("DeclarativeTool", () => {
+  describe("validateBuildAndExecute", () => {
     const abortSignal = new AbortController().signal;
 
-    it('should return INVALID_TOOL_PARAMS error if build fails', async () => {
-      const buildError = new Error('Invalid build parameters');
+    it("should return INVALID_TOOL_PARAMS error if build fails", async () => {
+      const buildError = new Error("Invalid build parameters");
       const buildFn = vi.fn().mockImplementation(() => {
         throw buildError;
       });
       const tool = new TestTool(buildFn);
-      const params = { foo: 'bar' };
+      const params = { foo: "bar" };
 
       const result = await tool.validateBuildAndExecute(params, abortSignal);
 
@@ -70,13 +70,13 @@ describe('DeclarativeTool', () => {
       });
     });
 
-    it('should return EXECUTION_FAILED error if execute fails', async () => {
-      const executeError = new Error('Execution failed');
+    it("should return EXECUTION_FAILED error if execute fails", async () => {
+      const executeError = new Error("Execution failed");
       const executeFn = vi.fn().mockRejectedValue(executeError);
       const invocation = new TestToolInvocation({}, executeFn);
       const buildFn = vi.fn().mockReturnValue(invocation);
       const tool = new TestTool(buildFn);
-      const params = { foo: 'bar' };
+      const params = { foo: "bar" };
 
       const result = await tool.validateBuildAndExecute(params, abortSignal);
 
@@ -92,16 +92,16 @@ describe('DeclarativeTool', () => {
       });
     });
 
-    it('should return the result of execute on success', async () => {
+    it("should return the result of execute on success", async () => {
       const successResult: ToolResult = {
-        llmContent: 'Success!',
-        returnDisplay: 'Success!',
+        llmContent: "Success!",
+        returnDisplay: "Success!",
       };
       const executeFn = vi.fn().mockResolvedValue(successResult);
       const invocation = new TestToolInvocation({}, executeFn);
       const buildFn = vi.fn().mockReturnValue(invocation);
       const tool = new TestTool(buildFn);
-      const params = { foo: 'bar' };
+      const params = { foo: "bar" };
 
       const result = await tool.validateBuildAndExecute(params, abortSignal);
 
@@ -112,26 +112,26 @@ describe('DeclarativeTool', () => {
   });
 });
 
-describe('hasCycleInSchema', () => {
-  it('should detect a simple direct cycle', () => {
+describe("hasCycleInSchema", () => {
+  it("should detect a simple direct cycle", () => {
     const schema = {
       properties: {
         data: {
-          $ref: '#/properties/data',
+          $ref: "#/properties/data",
         },
       },
     };
     expect(hasCycleInSchema(schema)).toBe(true);
   });
 
-  it('should detect a cycle from object properties referencing parent properties', () => {
+  it("should detect a cycle from object properties referencing parent properties", () => {
     const schema = {
-      type: 'object',
+      type: "object",
       properties: {
         data: {
-          type: 'object',
+          type: "object",
           properties: {
-            child: { $ref: '#/properties/data' },
+            child: { $ref: "#/properties/data" },
           },
         },
       },
@@ -139,16 +139,16 @@ describe('hasCycleInSchema', () => {
     expect(hasCycleInSchema(schema)).toBe(true);
   });
 
-  it('should detect a cycle from array items referencing parent properties', () => {
+  it("should detect a cycle from array items referencing parent properties", () => {
     const schema = {
-      type: 'object',
+      type: "object",
       properties: {
         data: {
-          type: 'array',
+          type: "array",
           items: {
-            type: 'object',
+            type: "object",
             properties: {
-              child: { $ref: '#/properties/data/items' },
+              child: { $ref: "#/properties/data/items" },
             },
           },
         },
@@ -157,20 +157,20 @@ describe('hasCycleInSchema', () => {
     expect(hasCycleInSchema(schema)).toBe(true);
   });
 
-  it('should detect a cycle between sibling properties', () => {
+  it("should detect a cycle between sibling properties", () => {
     const schema = {
-      type: 'object',
+      type: "object",
       properties: {
         a: {
-          type: 'object',
+          type: "object",
           properties: {
-            child: { $ref: '#/properties/b' },
+            child: { $ref: "#/properties/b" },
           },
         },
         b: {
-          type: 'object',
+          type: "object",
           properties: {
-            child: { $ref: '#/properties/a' },
+            child: { $ref: "#/properties/a" },
           },
         },
       },
@@ -178,19 +178,19 @@ describe('hasCycleInSchema', () => {
     expect(hasCycleInSchema(schema)).toBe(true);
   });
 
-  it('should not detect a cycle in a valid schema', () => {
+  it("should not detect a cycle in a valid schema", () => {
     const schema = {
-      type: 'object',
+      type: "object",
       properties: {
-        name: { type: 'string' },
-        address: { $ref: '#/definitions/address' },
+        name: { type: "string" },
+        address: { $ref: "#/definitions/address" },
       },
       definitions: {
         address: {
-          type: 'object',
+          type: "object",
           properties: {
-            street: { type: 'string' },
-            city: { type: 'string' },
+            street: { type: "string" },
+            city: { type: "string" },
           },
         },
       },
@@ -198,33 +198,33 @@ describe('hasCycleInSchema', () => {
     expect(hasCycleInSchema(schema)).toBe(false);
   });
 
-  it('should handle non-cyclic sibling refs', () => {
+  it("should handle non-cyclic sibling refs", () => {
     const schema = {
       properties: {
-        a: { $ref: '#/definitions/stringDef' },
-        b: { $ref: '#/definitions/stringDef' },
+        a: { $ref: "#/definitions/stringDef" },
+        b: { $ref: "#/definitions/stringDef" },
       },
       definitions: {
-        stringDef: { type: 'string' },
+        stringDef: { type: "string" },
       },
     };
     expect(hasCycleInSchema(schema)).toBe(false);
   });
 
-  it('should handle nested but not cyclic refs', () => {
+  it("should handle nested but not cyclic refs", () => {
     const schema = {
       properties: {
-        a: { $ref: '#/definitions/defA' },
+        a: { $ref: "#/definitions/defA" },
       },
       definitions: {
-        defA: { properties: { b: { $ref: '#/definitions/defB' } } },
-        defB: { type: 'string' },
+        defA: { properties: { b: { $ref: "#/definitions/defB" } } },
+        defB: { type: "string" },
       },
     };
     expect(hasCycleInSchema(schema)).toBe(false);
   });
 
-  it('should return false for an empty schema', () => {
+  it("should return false for an empty schema", () => {
     expect(hasCycleInSchema({})).toBe(false);
   });
 });

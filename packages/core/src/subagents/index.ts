@@ -28,18 +28,18 @@ export type {
   ListSubagentsOptions,
   CreateSubagentOptions,
   SubagentErrorCode,
-} from './types.js';
+} from "./types.js";
 
-export { SubagentError } from './types.js';
+export { SubagentError } from "./types.js";
 
 // Built-in agents registry
-export { BuiltinAgentRegistry } from './builtin-agents.js';
+export { BuiltinAgentRegistry } from "./builtin-agents.js";
 
 // Validation system
-export { SubagentValidator } from './validation.js';
+export { SubagentValidator } from "./validation.js";
 
 // Main management class
-export { SubagentManager } from './subagent-manager.js';
+export { SubagentManager } from "./subagent-manager.js";
 
 // Re-export existing runtime types for convenience
 export type {
@@ -48,9 +48,9 @@ export type {
   RunConfig,
   ToolConfig,
   SubagentTerminateMode,
-} from './types.js';
+} from "./types.js";
 
-export { SubAgentScope } from './subagent.js';
+export { SubAgentScope } from "./subagent.js";
 
 // Event system for UI integration
 export type {
@@ -62,12 +62,12 @@ export type {
   SubAgentToolResultEvent,
   SubAgentFinishEvent,
   SubAgentErrorEvent,
-} from './subagent-events.js';
+} from "./subagent-events.js";
 
-export { SubAgentEventEmitter } from './subagent-events.js';
+export { SubAgentEventEmitter } from "./subagent-events.js";
 
 // Statistics and formatting
 export type {
   SubagentStatsSummary,
   ToolUsageStats,
-} from './subagent-statistics.js';
+} from "./subagent-statistics.js";

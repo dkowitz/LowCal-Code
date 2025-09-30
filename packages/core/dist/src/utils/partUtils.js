@@ -9,13 +9,13 @@
  */
 export function partToString(value, options) {
     if (!value) {
-        return '';
+        return "";
     }
-    if (typeof value === 'string') {
+    if (typeof value === "string") {
         return value;
     }
     if (Array.isArray(value)) {
-        return value.map((part) => partToString(part, options)).join('');
+        return value.map((part) => partToString(part, options)).join("");
     }
     // Cast to Part, assuming it might contain project-specific fields
     const part = value;
@@ -46,7 +46,7 @@ export function partToString(value, options) {
             return `<${part.inlineData.mimeType}>`;
         }
     }
-    return part.text ?? '';
+    return part.text ?? "";
 }
 export function getResponseText(response) {
     if (response.candidates && response.candidates.length > 0) {
@@ -57,7 +57,7 @@ export function getResponseText(response) {
             return candidate.content.parts
                 .filter((part) => part.text)
                 .map((part) => part.text)
-                .join('');
+                .join("");
         }
     }
     return null;
@@ -76,15 +76,15 @@ export async function flatMapTextParts(parts, transform) {
     const result = [];
     const partArray = Array.isArray(parts)
         ? parts
-        : typeof parts === 'string'
+        : typeof parts === "string"
             ? [{ text: parts }]
             : [parts];
     for (const part of partArray) {
         let textToProcess;
-        if (typeof part === 'string') {
+        if (typeof part === "string") {
             textToProcess = part;
         }
-        else if ('text' in part) {
+        else if ("text" in part) {
             textToProcess = part.text;
         }
         if (textToProcess !== undefined) {
@@ -107,7 +107,7 @@ export async function flatMapTextParts(parts, transform) {
  * @param separator The separator to add between existing text and the new text.
  * @returns The modified prompt.
  */
-export function appendToLastTextPart(prompt, textToAppend, separator = '\n\n') {
+export function appendToLastTextPart(prompt, textToAppend, separator = "\n\n") {
     if (!textToAppend) {
         return prompt;
     }
@@ -116,10 +116,10 @@ export function appendToLastTextPart(prompt, textToAppend, separator = '\n\n') {
     }
     const newPrompt = [...prompt];
     const lastPart = newPrompt.at(-1);
-    if (typeof lastPart === 'string') {
+    if (typeof lastPart === "string") {
         newPrompt[newPrompt.length - 1] = `${lastPart}${separator}${textToAppend}`;
     }
-    else if (lastPart && 'text' in lastPart) {
+    else if (lastPart && "text" in lastPart) {
         newPrompt[newPrompt.length - 1] = {
             ...lastPart,
             text: `${lastPart.text}${separator}${textToAppend}`,

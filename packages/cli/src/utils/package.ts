@@ -7,9 +7,9 @@
 import {
   readPackageUp,
   type PackageJson as BasePackageJson,
-} from 'read-package-up';
-import { fileURLToPath } from 'node:url';
-import path from 'node:path';
+} from "read-package-up";
+import { fileURLToPath } from "node:url";
+import path from "node:path";
 
 export type PackageJson = BasePackageJson & {
   config?: {

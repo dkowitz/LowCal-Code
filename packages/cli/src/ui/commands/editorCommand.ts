@@ -8,14 +8,14 @@ import {
   CommandKind,
   type OpenDialogActionReturn,
   type SlashCommand,
-} from './types.js';
+} from "./types.js";
 
 export const editorCommand: SlashCommand = {
-  name: 'editor',
-  description: 'set external editor preference',
+  name: "editor",
+  description: "set external editor preference",
   kind: CommandKind.BUILT_IN,
   action: (): OpenDialogActionReturn => ({
-    type: 'dialog',
-    dialog: 'editor',
+    type: "dialog",
+    dialog: "editor",
   }),
 };

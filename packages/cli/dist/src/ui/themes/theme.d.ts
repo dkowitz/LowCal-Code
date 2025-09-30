@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { CSSProperties } from 'react';
-import type { SemanticColors } from './semantic-tokens.js';
-export type ThemeType = 'light' | 'dark' | 'ansi' | 'custom';
+import type { CSSProperties } from "react";
+import type { SemanticColors } from "./semantic-tokens.js";
+export type ThemeType = "light" | "dark" | "ansi" | "custom";
 export interface ColorsTheme {
     type: ThemeType;
     Background: string;
@@ -24,7 +24,7 @@ export interface ColorsTheme {
     GradientColors?: string[];
 }
 export interface CustomTheme {
-    type: 'custom';
+    type: "custom";
     name: string;
     text?: {
         primary?: string;

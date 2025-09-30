@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { executeToolCall, shutdownTelemetry, isTelemetrySdkInitialized, GeminiEventType, parseAndFormatApiError, FatalInputError, FatalTurnLimitedError, } from '@qwen-code/qwen-code-core';
-import { ConsolePatcher } from './ui/utils/ConsolePatcher.js';
-import { handleAtCommand } from './ui/hooks/atCommandProcessor.js';
+import { executeToolCall, shutdownTelemetry, isTelemetrySdkInitialized, GeminiEventType, parseAndFormatApiError, FatalInputError, FatalTurnLimitedError, } from "@qwen-code/qwen-code-core";
+import { ConsolePatcher } from "./ui/utils/ConsolePatcher.js";
+import { handleAtCommand } from "./ui/hooks/atCommandProcessor.js";
 export async function runNonInteractive(config, input, prompt_id) {
     const consolePatcher = new ConsolePatcher({
         stderr: true,
@@ -14,8 +14,8 @@ export async function runNonInteractive(config, input, prompt_id) {
     try {
         consolePatcher.patch();
         // Handle EPIPE errors when the output is piped to a command that closes early.
-        process.stdout.on('error', (err) => {
-            if (err.code === 'EPIPE') {
+        process.stdout.on("error", (err) => {
+            if (err.code === "EPIPE") {
                 // Exit gracefully if the pipe is closed.
                 process.exit(0);
             }
@@ -33,23 +33,23 @@ export async function runNonInteractive(config, input, prompt_id) {
         if (!shouldProceed || !processedQuery) {
             // An error occurred during @include processing (e.g., file not found).
             // The error message is already logged by handleAtCommand.
-            throw new FatalInputError('Exiting due to an error processing the @ command.');
+            throw new FatalInputError("Exiting due to an error processing the @ command.");
         }
         let currentMessages = [
-            { role: 'user', parts: processedQuery },
+            { role: "user", parts: processedQuery },
         ];
         let turnCount = 0;
         while (true) {
             turnCount++;
             if (config.getMaxSessionTurns() >= 0 &&
                 turnCount > config.getMaxSessionTurns()) {
-                throw new FatalTurnLimitedError('Reached max session turns for this session. Increase the number of turns by specifying maxSessionTurns in settings.json.');
+                throw new FatalTurnLimitedError("Reached max session turns for this session. Increase the number of turns by specifying maxSessionTurns in settings.json.");
             }
             const toolCallRequests = [];
             const responseStream = geminiClient.sendMessageStream(currentMessages[0]?.parts || [], abortController.signal, prompt_id);
             for await (const event of responseStream) {
                 if (abortController.signal.aborted) {
-                    console.error('Operation cancelled.');
+                    console.error("Operation cancelled.");
                     return;
                 }
                 if (event.type === GeminiEventType.Content) {
@@ -70,10 +70,10 @@ export async function runNonInteractive(config, input, prompt_id) {
                         toolResponseParts.push(...toolResponse.responseParts);
                     }
                 }
-                currentMessages = [{ role: 'user', parts: toolResponseParts }];
+                currentMessages = [{ role: "user", parts: toolResponseParts }];
             }
             else {
-                process.stdout.write('\n'); // Ensure a final newline
+                process.stdout.write("\n"); // Ensure a final newline
                 return;
             }
         }

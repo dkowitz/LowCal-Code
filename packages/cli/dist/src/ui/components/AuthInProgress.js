@@ -1,13 +1,13 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useState, useEffect } from 'react';
-import { Box, Text } from 'ink';
-import Spinner from 'ink-spinner';
-import { Colors } from '../colors.js';
-import { useKeypress } from '../hooks/useKeypress.js';
+import { useState, useEffect } from "react";
+import { Box, Text } from "ink";
+import Spinner from "ink-spinner";
+import { Colors } from "../colors.js";
+import { useKeypress } from "../hooks/useKeypress.js";
 export function AuthInProgress({ onTimeout, }) {
     const [timedOut, setTimedOut] = useState(false);
     useKeypress((key) => {
-        if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
+        if (key.name === "escape" || (key.ctrl && key.name === "c")) {
             onTimeout();
         }
     }, { isActive: true });

@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { safeJsonStringify } from '../utils/safeJsonStringify.js';
-import { BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, } from './tools.js';
-import { ToolErrorType } from './tool-error.js';
+import { safeJsonStringify } from "../utils/safeJsonStringify.js";
+import { BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, } from "./tools.js";
+import { ToolErrorType } from "./tool-error.js";
 class DiscoveredMCPToolInvocation extends BaseToolInvocation {
     mcpTool;
     serverName;
@@ -34,8 +34,8 @@ class DiscoveredMCPToolInvocation extends BaseToolInvocation {
             return false; // server and/or tool already allowlisted
         }
         const confirmationDetails = {
-            type: 'mcp',
-            title: 'Confirm MCP Tool Execution',
+            type: "mcp",
+            title: "Confirm MCP Tool Execution",
             serverName: this.serverName,
             toolName: this.serverToolName, // Display original tool name in confirmation
             toolDisplayName: this.displayName, // Display global registry name exposed to model and user
@@ -59,7 +59,7 @@ class DiscoveredMCPToolInvocation extends BaseToolInvocation {
         if (response) {
             const error = response?.error;
             const isError = error?.isError;
-            if (error && (isError === true || isError === 'true')) {
+            if (error && (isError === true || isError === "true")) {
                 return true;
             }
         }
@@ -141,7 +141,7 @@ function transformResourceBlock(block, toolName) {
         return { text: resource.text };
     }
     if (resource?.blob) {
-        const mimeType = resource.mimeType || 'application/octet-stream';
+        const mimeType = resource.mimeType || "application/octet-stream";
         return [
             {
                 text: `[Tool '${toolName}' provided the following embedded resource with mime-type: ${mimeType}]`,
@@ -169,21 +169,21 @@ function transformResourceLinkBlock(block) {
  */
 function transformMcpContentToParts(sdkResponse) {
     const funcResponse = sdkResponse?.[0]?.functionResponse;
-    const mcpContent = funcResponse?.response?.['content'];
-    const toolName = funcResponse?.name || 'unknown tool';
+    const mcpContent = funcResponse?.response?.["content"];
+    const toolName = funcResponse?.name || "unknown tool";
     if (!Array.isArray(mcpContent)) {
-        return [{ text: '[Error: Could not parse tool response]' }];
+        return [{ text: "[Error: Could not parse tool response]" }];
     }
     const transformed = mcpContent.flatMap((block) => {
         switch (block.type) {
-            case 'text':
+            case "text":
                 return transformTextBlock(block);
-            case 'image':
-            case 'audio':
+            case "image":
+            case "audio":
                 return transformImageAudioBlock(block, toolName);
-            case 'resource':
+            case "resource":
                 return transformResourceBlock(block, toolName);
-            case 'resource_link':
+            case "resource_link":
                 return transformResourceLinkBlock(block);
             default:
                 return null;
@@ -200,40 +200,40 @@ function transformMcpContentToParts(sdkResponse) {
  * @returns A formatted string representing the tool's output.
  */
 function getStringifiedResultForDisplay(rawResponse) {
-    const mcpContent = rawResponse?.[0]?.functionResponse?.response?.['content'];
+    const mcpContent = rawResponse?.[0]?.functionResponse?.response?.["content"];
     if (!Array.isArray(mcpContent)) {
-        return '```json\n' + JSON.stringify(rawResponse, null, 2) + '\n```';
+        return "```json\n" + JSON.stringify(rawResponse, null, 2) + "\n```";
     }
     const displayParts = mcpContent.map((block) => {
         switch (block.type) {
-            case 'text':
+            case "text":
                 return block.text;
-            case 'image':
+            case "image":
                 return `[Image: ${block.mimeType}]`;
-            case 'audio':
+            case "audio":
                 return `[Audio: ${block.mimeType}]`;
-            case 'resource_link':
+            case "resource_link":
                 return `[Link to ${block.title || block.name}: ${block.uri}]`;
-            case 'resource':
+            case "resource":
                 if (block.resource?.text) {
                     return block.resource.text;
                 }
-                return `[Embedded Resource: ${block.resource?.mimeType || 'unknown type'}]`;
+                return `[Embedded Resource: ${block.resource?.mimeType || "unknown type"}]`;
             default:
                 return `[Unknown content type: ${block.type}]`;
         }
     });
-    return displayParts.join('\n');
+    return displayParts.join("\n");
 }
 /** Visible for testing */
 export function generateValidName(name) {
     // Replace invalid characters (based on 400 error message from Gemini API) with underscores
-    let validToolname = name.replace(/[^a-zA-Z0-9_.-]/g, '_');
+    let validToolname = name.replace(/[^a-zA-Z0-9_.-]/g, "_");
     // If longer than 63 characters, replace middle with '___'
     // (Gemini API says max length 64, but actual limit seems to be 63)
     if (validToolname.length > 63) {
         validToolname =
-            validToolname.slice(0, 28) + '___' + validToolname.slice(-32);
+            validToolname.slice(0, 28) + "___" + validToolname.slice(-32);
     }
     return validToolname;
 }

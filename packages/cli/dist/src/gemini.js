@@ -1,40 +1,40 @@
 import { jsx as _jsx } from "react/jsx-runtime";
-import { AuthType, FatalConfigError, getOauthClient, IdeConnectionEvent, IdeConnectionType, logIdeConnection, logUserPrompt, sessionId, } from '@qwen-code/qwen-code-core';
-import { render } from 'ink';
-import { spawn } from 'node:child_process';
-import dns from 'node:dns';
-import os from 'node:os';
-import { basename } from 'node:path';
-import v8 from 'node:v8';
-import React from 'react';
-import { validateAuthMethod } from './config/auth.js';
-import { loadCliConfig, parseArguments } from './config/config.js';
-import { loadExtensions } from './config/extension.js';
-import { loadSettings, SettingScope } from './config/settings.js';
-import { runNonInteractive } from './nonInteractiveCli.js';
-import { AppWrapper } from './ui/App.js';
-import { setMaxSizedBoxDebugging } from './ui/components/shared/MaxSizedBox.js';
-import { SettingsContext } from './ui/contexts/SettingsContext.js';
-import { themeManager } from './ui/themes/theme-manager.js';
-import { ConsolePatcher } from './ui/utils/ConsolePatcher.js';
-import { detectAndEnableKittyProtocol } from './ui/utils/kittyProtocolDetector.js';
-import { checkForUpdates } from './ui/utils/updateCheck.js';
-import { cleanupCheckpoints, registerCleanup } from './utils/cleanup.js';
-import { AppEvent, appEvents } from './utils/events.js';
-import { handleAutoUpdate } from './utils/handleAutoUpdate.js';
-import { readStdin } from './utils/readStdin.js';
-import { start_sandbox } from './utils/sandbox.js';
-import { getStartupWarnings } from './utils/startupWarnings.js';
-import { getUserStartupWarnings } from './utils/userStartupWarnings.js';
-import { getCliVersion } from './utils/version.js';
-import { validateNonInteractiveAuth } from './validateNonInterActiveAuth.js';
-import { runZedIntegration } from './zed-integration/zedIntegration.js';
+import { AuthType, FatalConfigError, getOauthClient, IdeConnectionEvent, IdeConnectionType, logIdeConnection, logUserPrompt, sessionId, } from "@qwen-code/qwen-code-core";
+import { render } from "ink";
+import { spawn } from "node:child_process";
+import dns from "node:dns";
+import os from "node:os";
+import { basename } from "node:path";
+import v8 from "node:v8";
+import React from "react";
+import { validateAuthMethod } from "./config/auth.js";
+import { loadCliConfig, parseArguments } from "./config/config.js";
+import { loadExtensions } from "./config/extension.js";
+import { loadSettings, SettingScope } from "./config/settings.js";
+import { runNonInteractive } from "./nonInteractiveCli.js";
+import { AppWrapper } from "./ui/App.js";
+import { setMaxSizedBoxDebugging } from "./ui/components/shared/MaxSizedBox.js";
+import { SettingsContext } from "./ui/contexts/SettingsContext.js";
+import { themeManager } from "./ui/themes/theme-manager.js";
+import { ConsolePatcher } from "./ui/utils/ConsolePatcher.js";
+import { detectAndEnableKittyProtocol } from "./ui/utils/kittyProtocolDetector.js";
+import { checkForUpdates } from "./ui/utils/updateCheck.js";
+import { cleanupCheckpoints, registerCleanup } from "./utils/cleanup.js";
+import { AppEvent, appEvents } from "./utils/events.js";
+import { handleAutoUpdate } from "./utils/handleAutoUpdate.js";
+import { readStdin } from "./utils/readStdin.js";
+import { start_sandbox } from "./utils/sandbox.js";
+import { getStartupWarnings } from "./utils/startupWarnings.js";
+import { getUserStartupWarnings } from "./utils/userStartupWarnings.js";
+import { getCliVersion } from "./utils/version.js";
+import { validateNonInteractiveAuth } from "./validateNonInterActiveAuth.js";
+import { runZedIntegration } from "./zed-integration/zedIntegration.js";
 export function validateDnsResolutionOrder(order) {
-    const defaultValue = 'ipv4first';
+    const defaultValue = "ipv4first";
     if (order === undefined) {
         return defaultValue;
     }
-    if (order === 'ipv4first' || order === 'verbatim') {
+    if (order === "ipv4first" || order === "verbatim") {
         return order;
     }
     // We don't want to throw here, just warn and use the default.
@@ -50,7 +50,7 @@ function getNodeMemoryArgs(config) {
     if (config.getDebugMode()) {
         console.debug(`Current heap size ${currentMaxOldSpaceSizeMb.toFixed(2)} MB`);
     }
-    if (process.env['GEMINI_CLI_NO_RELAUNCH']) {
+    if (process.env["GEMINI_CLI_NO_RELAUNCH"]) {
         return [];
     }
     if (targetMaxOldSpaceSizeInMB > currentMaxOldSpaceSizeMb) {
@@ -63,17 +63,17 @@ function getNodeMemoryArgs(config) {
 }
 async function relaunchWithAdditionalArgs(additionalArgs) {
     const nodeArgs = [...additionalArgs, ...process.argv.slice(1)];
-    const newEnv = { ...process.env, GEMINI_CLI_NO_RELAUNCH: 'true' };
+    const newEnv = { ...process.env, GEMINI_CLI_NO_RELAUNCH: "true" };
     const child = spawn(process.execPath, nodeArgs, {
-        stdio: 'inherit',
+        stdio: "inherit",
         env: newEnv,
     });
-    await new Promise((resolve) => child.on('close', resolve));
+    await new Promise((resolve) => child.on("close", resolve));
     process.exit(0);
 }
 export function setupUnhandledRejectionHandler() {
     let unhandledRejectionOccurred = false;
-    process.on('unhandledRejection', (reason, _promise) => {
+    process.on("unhandledRejection", (reason, _promise) => {
         const errorMessage = `=========================================
 This is an unexpected error. Please file a bug report using the /bug tool.
 CRITICAL: Unhandled Promise Rejection!
@@ -82,7 +82,7 @@ Reason: ${reason}${reason instanceof Error && reason.stack
             ? `
 Stack trace:
 ${reason.stack}`
-            : ''}`;
+            : ""}`;
         appEvents.emit(AppEvent.LogError, errorMessage);
         if (!unhandledRejectionOccurred) {
             unhandledRejectionOccurred = true;
@@ -103,7 +103,7 @@ export async function startInteractiveUI(config, settings, startupWarnings, work
         .catch((err) => {
         // Silently ignore update check errors.
         if (config.getDebugMode()) {
-            console.error('Update check failed:', err);
+            console.error("Update check failed:", err);
         }
     });
     registerCleanup(() => instance.unmount());
@@ -115,7 +115,7 @@ export async function main() {
     await cleanupCheckpoints();
     if (settings.errors.length > 0) {
         const errorMessages = settings.errors.map((error) => `Error in ${error.path}: ${error.message}`);
-        throw new FatalConfigError(`${errorMessages.join('\n')}\nPlease fix the configuration file(s) and try again.`);
+        throw new FatalConfigError(`${errorMessages.join("\n")}\nPlease fix the configuration file(s) and try again.`);
     }
     const argv = await parseArguments(settings.merged);
     const extensions = loadExtensions(workspaceRoot);
@@ -128,11 +128,11 @@ export async function main() {
     registerCleanup(consolePatcher.cleanup);
     dns.setDefaultResultOrder(validateDnsResolutionOrder(settings.merged.advanced?.dnsResolutionOrder));
     if (argv.promptInteractive && !process.stdin.isTTY) {
-        console.error('Error: The --prompt-interactive flag is not supported when piping input from stdin.');
+        console.error("Error: The --prompt-interactive flag is not supported when piping input from stdin.");
         process.exit(1);
     }
     if (config.getListExtensions()) {
-        console.log('Installed extensions:');
+        console.log("Installed extensions:");
         for (const extension of extensions) {
             console.log(`- ${extension.config.name}`);
         }
@@ -140,16 +140,16 @@ export async function main() {
     }
     // Set a default auth type if one isn't set.
     if (!settings.merged.security?.auth?.selectedType) {
-        if (process.env['CLOUD_SHELL'] === 'true') {
-            settings.setValue(SettingScope.User, 'selectedAuthType', AuthType.CLOUD_SHELL);
+        if (process.env["CLOUD_SHELL"] === "true") {
+            settings.setValue(SettingScope.User, "selectedAuthType", AuthType.CLOUD_SHELL);
         }
     }
     // Empty key causes issues with the GoogleGenAI package.
-    if (process.env['GEMINI_API_KEY']?.trim() === '') {
-        delete process.env['GEMINI_API_KEY'];
+    if (process.env["GEMINI_API_KEY"]?.trim() === "") {
+        delete process.env["GEMINI_API_KEY"];
     }
-    if (process.env['GOOGLE_API_KEY']?.trim() === '') {
-        delete process.env['GOOGLE_API_KEY'];
+    if (process.env["GOOGLE_API_KEY"]?.trim() === "") {
+        delete process.env["GOOGLE_API_KEY"];
     }
     setMaxSizedBoxDebugging(config.getDebugMode());
     await config.initialize();
@@ -167,7 +167,7 @@ export async function main() {
         }
     }
     // hop into sandbox if we are outside and sandboxing is enabled
-    if (!process.env['SANDBOX']) {
+    if (!process.env["SANDBOX"]) {
         const memoryArgs = settings.merged.advanced?.autoConfigureMemory
             ? getNodeMemoryArgs(config)
             : [];
@@ -184,11 +184,11 @@ export async function main() {
                     await config.refreshAuth(settings.merged.security.auth.selectedType);
                 }
                 catch (err) {
-                    console.error('Error authenticating:', err);
+                    console.error("Error authenticating:", err);
                     process.exit(1);
                 }
             }
-            let stdinData = '';
+            let stdinData = "";
             if (!process.stdin.isTTY) {
                 stdinData = await readStdin();
             }
@@ -197,7 +197,7 @@ export async function main() {
             const injectStdinIntoArgs = (args, stdinData) => {
                 const finalArgs = [...args];
                 if (stdinData) {
-                    const promptIndex = finalArgs.findIndex((arg) => arg === '--prompt' || arg === '-p');
+                    const promptIndex = finalArgs.findIndex((arg) => arg === "--prompt" || arg === "-p");
                     if (promptIndex > -1 && finalArgs.length > promptIndex + 1) {
                         // If there's a prompt argument, prepend stdin to it
                         finalArgs[promptIndex + 1] =
@@ -205,7 +205,7 @@ export async function main() {
                     }
                     else {
                         // If there's no prompt argument, add stdin as the prompt
-                        finalArgs.push('--prompt', stdinData);
+                        finalArgs.push("--prompt", stdinData);
                     }
                 }
                 return finalArgs;
@@ -256,8 +256,8 @@ export async function main() {
     }
     const prompt_id = Math.random().toString(16).slice(2);
     logUserPrompt(config, {
-        'event.name': 'user_prompt',
-        'event.timestamp': new Date().toISOString(),
+        "event.name": "user_prompt",
+        "event.timestamp": new Date().toISOString(),
         prompt: input,
         prompt_id,
         auth_type: config.getContentGeneratorConfig()?.authType,
@@ -265,18 +265,18 @@ export async function main() {
     });
     const nonInteractiveConfig = await validateNonInteractiveAuth(settings.merged.security?.auth?.selectedType, settings.merged.security?.auth?.useExternal, config);
     if (config.getDebugMode()) {
-        console.log('Session ID: %s', sessionId);
+        console.log("Session ID: %s", sessionId);
     }
     await runNonInteractive(nonInteractiveConfig, input, prompt_id);
     process.exit(0);
 }
 function setWindowTitle(title, settings) {
     if (!settings.merged.ui?.hideWindowTitle) {
-        const windowTitle = (process.env['CLI_TITLE'] || `Qwen - ${title}`).replace(
+        const windowTitle = (process.env["CLI_TITLE"] || `Qwen - ${title}`).replace(
         // eslint-disable-next-line no-control-regex
-        /[\x00-\x1F\x7F]/g, '');
+        /[\x00-\x1F\x7F]/g, "");
         process.stdout.write(`\x1b]2;${windowTitle}\x07`);
-        process.on('exit', () => {
+        process.on("exit", () => {
             process.stdout.write(`\x1b]2;\x07`);
         });
     }

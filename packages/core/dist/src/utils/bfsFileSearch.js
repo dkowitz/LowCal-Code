@@ -3,13 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 // Simple console logger for now.
 // TODO: Integrate with a more robust server-side logger.
 const logger = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    debug: (...args) => console.debug('[DEBUG] [BfsFileSearch]', ...args),
+    debug: (...args) => console.debug("[DEBUG] [BfsFileSearch]", ...args),
 };
 /**
  * Performs a breadth-first search for a specific file within a directory structure.
@@ -55,7 +55,7 @@ export async function bfsFileSearch(rootDir, options) {
             }
             catch (error) {
                 // Warn user that a directory could not be read, as this affects search results.
-                const message = error?.message ?? 'Unknown error';
+                const message = error?.message ?? "Unknown error";
                 console.warn(`[WARN] Skipping unreadable directory: ${currentDir} (${message})`);
                 if (debug) {
                     logger.debug(`Full error for ${currentDir}:`, error);

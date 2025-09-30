@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { vi } from 'vitest';
-import { createMockLoggingController } from './mockLoggingController.js';
+import { vi } from "vitest";
+import { createMockLoggingController } from "./mockLoggingController.js";
 /**
  * Creates a deep, fully-typed mock of the CommandContext for use in tests.
  * All functions are pre-mocked with `vi.fn()`.
@@ -15,9 +15,9 @@ import { createMockLoggingController } from './mockLoggingController.js';
 export const createMockCommandContext = (overrides = {}) => {
     const defaultMocks = {
         invocation: {
-            raw: '',
-            name: '',
-            args: '',
+            raw: "",
+            name: "",
+            args: "",
         },
         services: {
             config: null,
@@ -75,8 +75,8 @@ export const createMockCommandContext = (overrides = {}) => {
                 const targetValue = output[key];
                 if (
                 // We only want to recursivlty merge plain objects
-                Object.prototype.toString.call(sourceValue) === '[object Object]' &&
-                    Object.prototype.toString.call(targetValue) === '[object Object]') {
+                Object.prototype.toString.call(sourceValue) === "[object Object]" &&
+                    Object.prototype.toString.call(targetValue) === "[object Object]") {
                     output[key] = merge(targetValue, sourceValue);
                 }
                 else {

@@ -3,8 +3,8 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { GenerateContentResponse, } from '@google/genai';
-import { OpenAIContentConverter } from './converter.js';
+import { GenerateContentResponse, } from "@google/genai";
+import { OpenAIContentConverter } from "./converter.js";
 export class ContentGenerationPipeline {
     config;
     client;
@@ -181,15 +181,15 @@ export class ContentGenerationPipeline {
         };
         const params = {
             // Parameters with request fallback and defaults
-            temperature: getParameterValue('temperature', 'temperature', 0.0),
-            top_p: getParameterValue('top_p', 'topP', 1.0),
+            temperature: getParameterValue("temperature", "temperature", 0.0),
+            top_p: getParameterValue("top_p", "topP", 1.0),
             // Max tokens (special case: different property names)
-            ...addParameterIfDefined('max_tokens', 'max_tokens', 'maxOutputTokens'),
+            ...addParameterIfDefined("max_tokens", "max_tokens", "maxOutputTokens"),
             // Config-only parameters (no request fallback)
-            ...addParameterIfDefined('top_k', 'top_k'),
-            ...addParameterIfDefined('repetition_penalty', 'repetition_penalty'),
-            ...addParameterIfDefined('presence_penalty', 'presence_penalty'),
-            ...addParameterIfDefined('frequency_penalty', 'frequency_penalty'),
+            ...addParameterIfDefined("top_k", "top_k"),
+            ...addParameterIfDefined("repetition_penalty", "repetition_penalty"),
+            ...addParameterIfDefined("presence_penalty", "presence_penalty"),
+            ...addParameterIfDefined("frequency_penalty", "frequency_penalty"),
         };
         return params;
     }
@@ -247,7 +247,7 @@ export class ContentGenerationPipeline {
         return {
             userPromptId,
             model: this.contentGeneratorConfig.model,
-            authType: this.contentGeneratorConfig.authType || 'unknown',
+            authType: this.contentGeneratorConfig.authType || "unknown",
             startTime: Date.now(),
             duration: 0,
             isStreaming,

@@ -3,12 +3,12 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Config } from './config.js';
-import { DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_FLASH_MODEL } from './models.js';
-import fs from 'node:fs';
-vi.mock('node:fs');
-describe('Flash Model Fallback Configuration', () => {
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { Config } from "./config.js";
+import { DEFAULT_GEMINI_MODEL, DEFAULT_GEMINI_FLASH_MODEL } from "./models.js";
+import fs from "node:fs";
+vi.mock("node:fs");
+describe("Flash Model Fallback Configuration", () => {
     let config;
     beforeEach(() => {
         vi.mocked(fs.existsSync).mockReturnValue(true);
@@ -16,30 +16,30 @@ describe('Flash Model Fallback Configuration', () => {
             isDirectory: () => true,
         });
         config = new Config({
-            sessionId: 'test-session',
-            targetDir: '/test',
+            sessionId: "test-session",
+            targetDir: "/test",
             debugMode: false,
-            cwd: '/test',
+            cwd: "/test",
             model: DEFAULT_GEMINI_MODEL,
         });
         // Initialize contentGeneratorConfig for testing
         config.contentGeneratorConfig = {
             model: DEFAULT_GEMINI_MODEL,
-            authType: 'oauth-personal',
+            authType: "oauth-personal",
         };
     });
     // These tests do not actually test fallback. isInFallbackMode() only returns true,
     // when setFallbackMode is marked as true. This is to decouple setting a model
     // with the fallback mechanism. This will be necessary we introduce more
     // intelligent model routing.
-    describe('setModel', () => {
-        it('should only mark as switched if contentGeneratorConfig exists', async () => {
+    describe("setModel", () => {
+        it("should only mark as switched if contentGeneratorConfig exists", async () => {
             // Create config without initializing contentGeneratorConfig
             const newConfig = new Config({
-                sessionId: 'test-session-2',
-                targetDir: '/test',
+                sessionId: "test-session-2",
+                targetDir: "/test",
                 debugMode: false,
-                cwd: '/test',
+                cwd: "/test",
                 model: DEFAULT_GEMINI_MODEL,
             });
             // Should not crash when contentGeneratorConfig is undefined
@@ -47,33 +47,33 @@ describe('Flash Model Fallback Configuration', () => {
             expect(newConfig.isInFallbackMode()).toBe(false);
         });
     });
-    describe('getModel', () => {
-        it('should return contentGeneratorConfig model if available', async () => {
+    describe("getModel", () => {
+        it("should return contentGeneratorConfig model if available", async () => {
             // Simulate initialized content generator config
             await config.setModel(DEFAULT_GEMINI_FLASH_MODEL);
             expect(config.getModel()).toBe(DEFAULT_GEMINI_FLASH_MODEL);
         });
-        it('should fall back to initial model if contentGeneratorConfig is not available', () => {
+        it("should fall back to initial model if contentGeneratorConfig is not available", () => {
             // Test with fresh config where contentGeneratorConfig might not be set
             const newConfig = new Config({
-                sessionId: 'test-session-2',
-                targetDir: '/test',
+                sessionId: "test-session-2",
+                targetDir: "/test",
                 debugMode: false,
-                cwd: '/test',
-                model: 'custom-model',
+                cwd: "/test",
+                model: "custom-model",
             });
-            expect(newConfig.getModel()).toBe('custom-model');
+            expect(newConfig.getModel()).toBe("custom-model");
         });
     });
-    describe('isInFallbackMode', () => {
-        it('should start as false for new session', () => {
+    describe("isInFallbackMode", () => {
+        it("should start as false for new session", () => {
             expect(config.isInFallbackMode()).toBe(false);
         });
-        it('should remain false if no model switch occurs', () => {
+        it("should remain false if no model switch occurs", () => {
             // Perform other operations that don't involve model switching
             expect(config.isInFallbackMode()).toBe(false);
         });
-        it('should persist switched state throughout session', async () => {
+        it("should persist switched state throughout session", async () => {
             await config.setModel(DEFAULT_GEMINI_FLASH_MODEL);
             // Setting state for fallback mode as is expected of clients
             config.setFallbackMode(true);

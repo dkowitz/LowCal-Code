@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Box, Text } from 'ink';
-import { theme } from '../../../semantic-colors.js';
-import { shouldShowColor, getColorForDisplay } from '../utils.js';
-import { type SubagentConfig } from '@qwen-code/qwen-code-core';
+import { Box, Text } from "ink";
+import { theme } from "../../../semantic-colors.js";
+import { shouldShowColor, getColorForDisplay } from "../utils.js";
+import { type SubagentConfig } from "@qwen-code/qwen-code-core";
 
 interface AgentViewerStepProps {
   selectedAgent: SubagentConfig | null;
@@ -24,7 +24,7 @@ export const AgentViewerStep = ({ selectedAgent }: AgentViewerStepProps) => {
 
   const agent = selectedAgent;
 
-  const toolsDisplay = agent.tools ? agent.tools.join(', ') : '*';
+  const toolsDisplay = agent.tools ? agent.tools.join(", ") : "*";
 
   return (
     <Box flexDirection="column" gap={1}>

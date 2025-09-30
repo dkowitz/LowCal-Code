@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { z } from 'zod';
+import { z } from "zod";
 /**
  * Zod schema for validating a file context from the IDE.
  */
@@ -263,23 +263,23 @@ export declare const IdeDiffAcceptedNotificationSchema: z.ZodObject<{
         filePath: z.ZodString;
         content: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        content: string;
         filePath: string;
+        content: string;
     }, {
-        content: string;
         filePath: string;
+        content: string;
     }>;
 }, "strip", z.ZodTypeAny, {
     params: {
-        content: string;
         filePath: string;
+        content: string;
     };
     jsonrpc: "2.0";
     method: "ide/diffAccepted";
 }, {
     params: {
-        content: string;
         filePath: string;
+        content: string;
     };
     jsonrpc: "2.0";
     method: "ide/diffAccepted";
@@ -342,10 +342,10 @@ export declare const CloseDiffResponseSchema: z.ZodEffects<z.ZodObject<{
     }[];
 }>;
 export type DiffUpdateResult = {
-    status: 'accepted';
+    status: "accepted";
     content?: string;
 } | {
-    status: 'rejected';
+    status: "rejected";
     content: undefined;
 };
 type IdeContextSubscriber = (ideContext: IdeContext | undefined) => void;

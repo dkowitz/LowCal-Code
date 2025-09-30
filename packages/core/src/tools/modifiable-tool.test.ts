@@ -4,30 +4,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
 import type {
   ModifyContext,
   ModifiableDeclarativeTool,
-} from './modifiable-tool.js';
+} from "./modifiable-tool.js";
 import {
   modifyWithEditor,
   isModifiableDeclarativeTool,
-} from './modifiable-tool.js';
-import type { EditorType } from '../utils/editor.js';
-import fs from 'node:fs';
-import fsp from 'node:fs/promises';
-import os from 'node:os';
-import * as path from 'node:path';
+} from "./modifiable-tool.js";
+import type { EditorType } from "../utils/editor.js";
+import fs from "node:fs";
+import fsp from "node:fs/promises";
+import os from "node:os";
+import * as path from "node:path";
 
 // Mock dependencies
 const mockOpenDiff = vi.hoisted(() => vi.fn());
 const mockCreatePatch = vi.hoisted(() => vi.fn());
 
-vi.mock('../utils/editor.js', () => ({
+vi.mock("../utils/editor.js", () => ({
   openDiff: mockOpenDiff,
 }));
 
-vi.mock('diff', () => ({
+vi.mock("diff", () => ({
   createPatch: mockCreatePatch,
 }));
 
@@ -37,7 +37,7 @@ interface TestParams {
   modifiedContent?: string;
 }
 
-describe('modifyWithEditor', () => {
+describe("modifyWithEditor", () => {
   let testProjectDir: string;
   let mockModifyContext: ModifyContext<TestParams>;
   let mockParams: TestParams;
@@ -50,16 +50,16 @@ describe('modifyWithEditor', () => {
     vi.resetAllMocks();
 
     testProjectDir = await fsp.mkdtemp(
-      path.join(os.tmpdir(), 'modifiable-tool-test-'),
+      path.join(os.tmpdir(), "modifiable-tool-test-"),
     );
     abortSignal = new AbortController().signal;
 
-    currentContent = 'original content\nline 2\nline 3';
-    proposedContent = 'modified content\nline 2\nline 3';
-    modifiedContent = 'user modified content\nline 2\nline 3\nnew line';
+    currentContent = "original content\nline 2\nline 3";
+    proposedContent = "modified content\nline 2\nline 3";
+    modifiedContent = "user modified content\nline 2\nline 3\nnew line";
     mockParams = {
-      filePath: path.join(testProjectDir, 'test.txt'),
-      someOtherParam: 'value',
+      filePath: path.join(testProjectDir, "test.txt"),
+      someOtherParam: "value",
     };
 
     mockModifyContext = {
@@ -76,25 +76,25 @@ describe('modifyWithEditor', () => {
     };
 
     mockOpenDiff.mockImplementation(async (_oldPath, newPath) => {
-      await fsp.writeFile(newPath, modifiedContent, 'utf8');
+      await fsp.writeFile(newPath, modifiedContent, "utf8");
     });
 
-    mockCreatePatch.mockReturnValue('mock diff content');
+    mockCreatePatch.mockReturnValue("mock diff content");
   });
 
   afterEach(async () => {
     vi.restoreAllMocks();
     await fsp.rm(testProjectDir, { recursive: true, force: true });
-    const diffDir = path.join(os.tmpdir(), 'qwen-code-tool-modify-diffs');
+    const diffDir = path.join(os.tmpdir(), "qwen-code-tool-modify-diffs");
     await fsp.rm(diffDir, { recursive: true, force: true });
   });
 
-  describe('successful modification', () => {
-    it('should successfully modify content with VSCode editor', async () => {
+  describe("successful modification", () => {
+    it("should successfully modify content with VSCode editor", async () => {
       const result = await modifyWithEditor(
         mockParams,
         mockModifyContext,
-        'vscode' as EditorType,
+        "vscode" as EditorType,
         abortSignal,
         vi.fn(),
       );
@@ -120,8 +120,8 @@ describe('modifyWithEditor', () => {
         path.basename(mockParams.filePath),
         currentContent,
         modifiedContent,
-        'Current',
-        'Proposed',
+        "Current",
+        "Proposed",
         expect.objectContaining({
           context: 3,
           ignoreWhitespace: true,
@@ -138,18 +138,18 @@ describe('modifyWithEditor', () => {
           modifiedContent,
           oldContent: currentContent,
         },
-        updatedDiff: 'mock diff content',
+        updatedDiff: "mock diff content",
       });
     });
 
-    it('should create temp directory if it does not exist', async () => {
-      const diffDir = path.join(os.tmpdir(), 'qwen-code-tool-modify-diffs');
+    it("should create temp directory if it does not exist", async () => {
+      const diffDir = path.join(os.tmpdir(), "qwen-code-tool-modify-diffs");
       await fsp.rm(diffDir, { recursive: true, force: true }).catch(() => {});
 
       await modifyWithEditor(
         mockParams,
         mockModifyContext,
-        'vscode' as EditorType,
+        "vscode" as EditorType,
         abortSignal,
         vi.fn(),
       );
@@ -158,16 +158,16 @@ describe('modifyWithEditor', () => {
       expect(stats.isDirectory()).toBe(true);
     });
 
-    it('should not create temp directory if it already exists', async () => {
-      const diffDir = path.join(os.tmpdir(), 'qwen-code-tool-modify-diffs');
+    it("should not create temp directory if it already exists", async () => {
+      const diffDir = path.join(os.tmpdir(), "qwen-code-tool-modify-diffs");
       await fsp.mkdir(diffDir, { recursive: true });
 
-      const mkdirSpy = vi.spyOn(fs, 'mkdirSync');
+      const mkdirSpy = vi.spyOn(fs, "mkdirSync");
 
       await modifyWithEditor(
         mockParams,
         mockModifyContext,
-        'vscode' as EditorType,
+        "vscode" as EditorType,
         abortSignal,
         vi.fn(),
       );
@@ -177,26 +177,26 @@ describe('modifyWithEditor', () => {
     });
   });
 
-  it('should handle missing old temp file gracefully', async () => {
+  it("should handle missing old temp file gracefully", async () => {
     mockOpenDiff.mockImplementation(async (oldPath, newPath) => {
-      await fsp.writeFile(newPath, modifiedContent, 'utf8');
+      await fsp.writeFile(newPath, modifiedContent, "utf8");
       await fsp.unlink(oldPath);
     });
 
     const result = await modifyWithEditor(
       mockParams,
       mockModifyContext,
-      'vscode' as EditorType,
+      "vscode" as EditorType,
       abortSignal,
       vi.fn(),
     );
 
     expect(mockCreatePatch).toHaveBeenCalledWith(
       path.basename(mockParams.filePath),
-      '',
+      "",
       modifiedContent,
-      'Current',
-      'Proposed',
+      "Current",
+      "Proposed",
       expect.objectContaining({
         context: 3,
         ignoreWhitespace: true,
@@ -204,10 +204,10 @@ describe('modifyWithEditor', () => {
     );
 
     expect(result.updatedParams).toBeDefined();
-    expect(result.updatedDiff).toBe('mock diff content');
+    expect(result.updatedDiff).toBe("mock diff content");
   });
 
-  it('should handle missing new temp file gracefully', async () => {
+  it("should handle missing new temp file gracefully", async () => {
     mockOpenDiff.mockImplementation(async (_oldPath, newPath) => {
       await fsp.unlink(newPath);
     });
@@ -215,7 +215,7 @@ describe('modifyWithEditor', () => {
     const result = await modifyWithEditor(
       mockParams,
       mockModifyContext,
-      'vscode' as EditorType,
+      "vscode" as EditorType,
       abortSignal,
       vi.fn(),
     );
@@ -223,9 +223,9 @@ describe('modifyWithEditor', () => {
     expect(mockCreatePatch).toHaveBeenCalledWith(
       path.basename(mockParams.filePath),
       currentContent,
-      '',
-      'Current',
-      'Proposed',
+      "",
+      "Current",
+      "Proposed",
       expect.objectContaining({
         context: 3,
         ignoreWhitespace: true,
@@ -233,24 +233,24 @@ describe('modifyWithEditor', () => {
     );
 
     expect(result.updatedParams).toBeDefined();
-    expect(result.updatedDiff).toBe('mock diff content');
+    expect(result.updatedDiff).toBe("mock diff content");
   });
 
-  it('should clean up temp files even if editor fails', async () => {
-    const editorError = new Error('Editor failed to open');
+  it("should clean up temp files even if editor fails", async () => {
+    const editorError = new Error("Editor failed to open");
     mockOpenDiff.mockRejectedValue(editorError);
 
-    const writeSpy = vi.spyOn(fs, 'writeFileSync');
+    const writeSpy = vi.spyOn(fs, "writeFileSync");
 
     await expect(
       modifyWithEditor(
         mockParams,
         mockModifyContext,
-        'vscode' as EditorType,
+        "vscode" as EditorType,
         abortSignal,
         vi.fn(),
       ),
-    ).rejects.toThrow('Editor failed to open');
+    ).rejects.toThrow("Editor failed to open");
 
     expect(writeSpy).toHaveBeenCalledTimes(2);
     const oldFilePath = writeSpy.mock.calls[0][0] as string;
@@ -262,42 +262,42 @@ describe('modifyWithEditor', () => {
     writeSpy.mockRestore();
   });
 
-  it('should handle temp file cleanup errors gracefully', async () => {
+  it("should handle temp file cleanup errors gracefully", async () => {
     const consoleErrorSpy = vi
-      .spyOn(console, 'error')
+      .spyOn(console, "error")
       .mockImplementation(() => {});
-    vi.spyOn(fs, 'unlinkSync').mockImplementation(() => {
-      throw new Error('Failed to delete file');
+    vi.spyOn(fs, "unlinkSync").mockImplementation(() => {
+      throw new Error("Failed to delete file");
     });
 
     await modifyWithEditor(
       mockParams,
       mockModifyContext,
-      'vscode' as EditorType,
+      "vscode" as EditorType,
       abortSignal,
       vi.fn(),
     );
 
     expect(consoleErrorSpy).toHaveBeenCalledTimes(2);
     expect(consoleErrorSpy).toHaveBeenCalledWith(
-      expect.stringContaining('Error deleting temp diff file:'),
+      expect.stringContaining("Error deleting temp diff file:"),
     );
 
     consoleErrorSpy.mockRestore();
   });
 
-  it('should create temp files with correct naming with extension', async () => {
+  it("should create temp files with correct naming with extension", async () => {
     const testFilePath = path.join(
       testProjectDir,
-      'subfolder',
-      'test-file.txt',
+      "subfolder",
+      "test-file.txt",
     );
     mockModifyContext.getFilePath = vi.fn().mockReturnValue(testFilePath);
 
     await modifyWithEditor(
       mockParams,
       mockModifyContext,
-      'vscode' as EditorType,
+      "vscode" as EditorType,
       abortSignal,
       vi.fn(),
     );
@@ -307,19 +307,19 @@ describe('modifyWithEditor', () => {
     expect(oldFilePath).toMatch(/qwen-code-modify-test-file-old-\d+\.txt$/);
     expect(newFilePath).toMatch(/qwen-code-modify-test-file-new-\d+\.txt$/);
 
-    const diffDir = path.join(os.tmpdir(), 'qwen-code-tool-modify-diffs');
+    const diffDir = path.join(os.tmpdir(), "qwen-code-tool-modify-diffs");
     expect(path.dirname(oldFilePath)).toBe(diffDir);
     expect(path.dirname(newFilePath)).toBe(diffDir);
   });
 
-  it('should create temp files with correct naming without extension', async () => {
-    const testFilePath = path.join(testProjectDir, 'subfolder', 'test-file');
+  it("should create temp files with correct naming without extension", async () => {
+    const testFilePath = path.join(testProjectDir, "subfolder", "test-file");
     mockModifyContext.getFilePath = vi.fn().mockReturnValue(testFilePath);
 
     await modifyWithEditor(
       mockParams,
       mockModifyContext,
-      'vscode' as EditorType,
+      "vscode" as EditorType,
       abortSignal,
       vi.fn(),
     );
@@ -329,25 +329,25 @@ describe('modifyWithEditor', () => {
     expect(oldFilePath).toMatch(/qwen-code-modify-test-file-old-\d+$/);
     expect(newFilePath).toMatch(/qwen-code-modify-test-file-new-\d+$/);
 
-    const diffDir = path.join(os.tmpdir(), 'qwen-code-tool-modify-diffs');
+    const diffDir = path.join(os.tmpdir(), "qwen-code-tool-modify-diffs");
     expect(path.dirname(oldFilePath)).toBe(diffDir);
     expect(path.dirname(newFilePath)).toBe(diffDir);
   });
 });
 
-describe('isModifiableTool', () => {
-  it('should return true for objects with getModifyContext method', () => {
+describe("isModifiableTool", () => {
+  it("should return true for objects with getModifyContext method", () => {
     const mockTool = {
-      name: 'test-tool',
+      name: "test-tool",
       getModifyContext: vi.fn(),
     } as unknown as ModifiableDeclarativeTool<TestParams>;
 
     expect(isModifiableDeclarativeTool(mockTool)).toBe(true);
   });
 
-  it('should return false for objects without getModifyContext method', () => {
+  it("should return false for objects without getModifyContext method", () => {
     const mockTool = {
-      name: 'test-tool',
+      name: "test-tool",
     } as unknown as ModifiableDeclarativeTool<TestParams>;
 
     expect(isModifiableDeclarativeTool(mockTool)).toBe(false);

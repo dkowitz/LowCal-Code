@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ToolPlanConfirmationDetails, ToolResult } from './tools.js';
+import type { ToolPlanConfirmationDetails, ToolResult } from "./tools.js";
 import {
   BaseDeclarativeTool,
   BaseToolInvocation,
   Kind,
   ToolConfirmationOutcome,
-} from './tools.js';
-import type { FunctionDeclaration } from '@google/genai';
-import type { Config } from '../config/config.js';
-import { ApprovalMode } from '../config/config.js';
+} from "./tools.js";
+import type { FunctionDeclaration } from "@google/genai";
+import type { Config } from "../config/config.js";
+import { ApprovalMode } from "../config/config.js";
 
 export interface ExitPlanModeParams {
   plan: string;
@@ -28,20 +28,20 @@ Eg.
 `;
 
 const exitPlanModeToolSchemaData: FunctionDeclaration = {
-  name: 'exit_plan_mode',
+  name: "exit_plan_mode",
   description: exitPlanModeToolDescription,
   parametersJsonSchema: {
-    type: 'object',
+    type: "object",
     properties: {
       plan: {
-        type: 'string',
+        type: "string",
         description:
-          'The plan you came up with, that you want to run by the user for approval. Supports markdown. The plan should be pretty concise.',
+          "The plan you came up with, that you want to run by the user for approval. Supports markdown. The plan should be pretty concise.",
       },
     },
-    required: ['plan'],
+    required: ["plan"],
     additionalProperties: false,
-    $schema: 'http://json-schema.org/draft-07/schema#',
+    $schema: "http://json-schema.org/draft-07/schema#",
   },
 };
 
@@ -59,15 +59,15 @@ class ExitPlanModeToolInvocation extends BaseToolInvocation<
   }
 
   getDescription(): string {
-    return 'Present implementation plan for user approval';
+    return "Present implementation plan for user approval";
   }
 
   override async shouldConfirmExecute(
     _abortSignal: AbortSignal,
   ): Promise<ToolPlanConfirmationDetails> {
     const details: ToolPlanConfirmationDetails = {
-      type: 'plan',
-      title: 'Would you like to proceed?',
+      type: "plan",
+      title: "Would you like to proceed?",
       plan: this.params.plan,
       onConfirm: async (outcome: ToolConfirmationOutcome) => {
         switch (outcome) {
@@ -113,7 +113,7 @@ class ExitPlanModeToolInvocation extends BaseToolInvocation<
     try {
       if (!this.wasApproved) {
         const rejectionMessage =
-          'Plan execution was not approved. Remaining in plan mode.';
+          "Plan execution was not approved. Remaining in plan mode.";
         return {
           llmContent: JSON.stringify({
             success: false,
@@ -125,13 +125,13 @@ class ExitPlanModeToolInvocation extends BaseToolInvocation<
       }
 
       const llmMessage =
-        'User has approved your plan. You can now start coding. Start with updating your todo list if applicable.';
-      const displayMessage = 'User approved the plan.';
+        "User has approved your plan. You can now start coding. Start with updating your todo list if applicable.";
+      const displayMessage = "User approved the plan.";
 
       return {
         llmContent: llmMessage,
         returnDisplay: {
-          type: 'plan_summary',
+          type: "plan_summary",
           message: displayMessage,
           plan,
         },
@@ -162,7 +162,7 @@ export class ExitPlanModeTool extends BaseDeclarativeTool<
   constructor(private readonly config: Config) {
     super(
       ExitPlanModeTool.Name,
-      'ExitPlanMode',
+      "ExitPlanMode",
       exitPlanModeToolDescription,
       Kind.Think,
       exitPlanModeToolSchemaData.parametersJsonSchema as Record<
@@ -176,8 +176,8 @@ export class ExitPlanModeTool extends BaseDeclarativeTool<
     // Validate plan parameter
     if (
       !params.plan ||
-      typeof params.plan !== 'string' ||
-      params.plan.trim() === ''
+      typeof params.plan !== "string" ||
+      params.plan.trim() === ""
     ) {
       return 'Parameter "plan" must be a non-empty string.';
     }

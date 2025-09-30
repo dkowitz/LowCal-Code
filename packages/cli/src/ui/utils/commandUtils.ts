@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { SpawnOptions } from 'node:child_process';
-import { spawn } from 'node:child_process';
+import type { SpawnOptions } from "node:child_process";
+import { spawn } from "node:child_process";
 
 /**
  * Checks if a query string potentially represents an '@' command.
@@ -17,7 +17,7 @@ import { spawn } from 'node:child_process';
  */
 export const isAtCommand = (query: string): boolean =>
   // Check if starts with @ OR has a space, then @
-  query.startsWith('@') || /\s@/.test(query);
+  query.startsWith("@") || /\s@/.test(query);
 
 /**
  * Checks if a query string potentially represents an '/' command.
@@ -27,17 +27,17 @@ export const isAtCommand = (query: string): boolean =>
  * @returns True if the query looks like an '/' command, false otherwise.
  */
 export const isSlashCommand = (query: string): boolean => {
-  if (!query.startsWith('/')) {
+  if (!query.startsWith("/")) {
     return false;
   }
 
   // Exclude line comments that start with '//'
-  if (query.startsWith('//')) {
+  if (query.startsWith("//")) {
     return false;
   }
 
   // Exclude block comments that start with '/*'
-  if (query.startsWith('/*')) {
+  if (query.startsWith("/*")) {
     return false;
   }
 
@@ -49,26 +49,26 @@ export const copyToClipboard = async (text: string): Promise<void> => {
   const run = (cmd: string, args: string[], options?: SpawnOptions) =>
     new Promise<void>((resolve, reject) => {
       const child = options ? spawn(cmd, args, options) : spawn(cmd, args);
-      let stderr = '';
+      let stderr = "";
       if (child.stderr) {
-        child.stderr.on('data', (chunk) => (stderr += chunk.toString()));
+        child.stderr.on("data", (chunk) => (stderr += chunk.toString()));
       }
-      child.on('error', reject);
-      child.on('close', (code) => {
+      child.on("error", reject);
+      child.on("close", (code) => {
         if (code === 0) return resolve();
         const errorMsg = stderr.trim();
         reject(
           new Error(
-            `'${cmd}' exited with code ${code}${errorMsg ? `: ${errorMsg}` : ''}`,
+            `'${cmd}' exited with code ${code}${errorMsg ? `: ${errorMsg}` : ""}`,
           ),
         );
       });
       if (child.stdin) {
-        child.stdin.on('error', reject);
+        child.stdin.on("error", reject);
         child.stdin.write(text);
         child.stdin.end();
       } else {
-        reject(new Error('Child process has no stdin stream to write to.'));
+        reject(new Error("Child process has no stdin stream to write to."));
       }
     });
 
@@ -76,30 +76,30 @@ export const copyToClipboard = async (text: string): Promise<void> => {
   // - stdin: 'pipe' to write the text that needs to be copied.
   // - stdout: 'inherit' since we don't need to capture the command's output on success.
   // - stderr: 'pipe' to capture error messages (e.g., "command not found") for better error handling.
-  const linuxOptions: SpawnOptions = { stdio: ['pipe', 'inherit', 'pipe'] };
+  const linuxOptions: SpawnOptions = { stdio: ["pipe", "inherit", "pipe"] };
 
   switch (process.platform) {
-    case 'win32':
-      return run('clip', []);
-    case 'darwin':
-      return run('pbcopy', []);
-    case 'linux':
+    case "win32":
+      return run("clip", []);
+    case "darwin":
+      return run("pbcopy", []);
+    case "linux":
       try {
-        await run('xclip', ['-selection', 'clipboard'], linuxOptions);
+        await run("xclip", ["-selection", "clipboard"], linuxOptions);
       } catch (primaryError) {
         try {
           // If xclip fails for any reason, try xsel as a fallback.
-          await run('xsel', ['--clipboard', '--input'], linuxOptions);
+          await run("xsel", ["--clipboard", "--input"], linuxOptions);
         } catch (fallbackError) {
           const xclipNotFound =
             primaryError instanceof Error &&
-            (primaryError as NodeJS.ErrnoException).code === 'ENOENT';
+            (primaryError as NodeJS.ErrnoException).code === "ENOENT";
           const xselNotFound =
             fallbackError instanceof Error &&
-            (fallbackError as NodeJS.ErrnoException).code === 'ENOENT';
+            (fallbackError as NodeJS.ErrnoException).code === "ENOENT";
           if (xclipNotFound && xselNotFound) {
             throw new Error(
-              'Please ensure xclip or xsel is installed and configured.',
+              "Please ensure xclip or xsel is installed and configured.",
             );
           }
 
@@ -133,18 +133,18 @@ export const getUrlOpenCommand = (): string => {
   // --- Determine the OS-specific command to open URLs ---
   let openCmd: string;
   switch (process.platform) {
-    case 'darwin':
-      openCmd = 'open';
+    case "darwin":
+      openCmd = "open";
       break;
-    case 'win32':
-      openCmd = 'start';
+    case "win32":
+      openCmd = "start";
       break;
-    case 'linux':
-      openCmd = 'xdg-open';
+    case "linux":
+      openCmd = "xdg-open";
       break;
     default:
       // Default to xdg-open, which appears to be supported for the less popular operating systems.
-      openCmd = 'xdg-open';
+      openCmd = "xdg-open";
       console.warn(
         `Unknown platform: ${process.platform}. Attempting to open URLs with: ${openCmd}.`,
       );

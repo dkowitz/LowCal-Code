@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Box, Text } from 'ink';
-import Gradient from 'ink-gradient';
-import { theme } from '../semantic-colors.js';
-import { formatDuration } from '../utils/formatters.js';
-import type { ModelMetrics } from '../contexts/SessionContext.js';
-import { useSessionStats } from '../contexts/SessionContext.js';
+import type React from "react";
+import { Box, Text } from "ink";
+import Gradient from "ink-gradient";
+import { theme } from "../semantic-colors.js";
+import { formatDuration } from "../utils/formatters.js";
+import type { ModelMetrics } from "../contexts/SessionContext.js";
+import { useSessionStats } from "../contexts/SessionContext.js";
 import {
   getStatusColor,
   TOOL_SUCCESS_RATE_HIGH,
   TOOL_SUCCESS_RATE_MEDIUM,
   USER_AGREEMENT_RATE_HIGH,
   USER_AGREEMENT_RATE_MEDIUM,
-} from '../utils/displayUtils.js';
-import { computeSessionStats } from '../utils/computeStats.js';
+} from "../utils/displayUtils.js";
+import { computeSessionStats } from "../utils/computeStats.js";
 
 // A more flexible and powerful StatRow component
 interface StatRowProps {
@@ -108,7 +108,7 @@ const ModelUsageTable: React.FC<{
       {Object.entries(models).map(([name, modelMetrics]) => (
         <Box key={name}>
           <Box width={nameWidth}>
-            <Text>{name.replace('-001', '')}</Text>
+            <Text>{name.replace("-001", "")}</Text>
           </Box>
           <Box width={requestsWidth} justifyContent="flex-end">
             <Text>{modelMetrics.api.totalRequests}</Text>
@@ -128,7 +128,7 @@ const ModelUsageTable: React.FC<{
       {cacheEfficiency > 0 && (
         <Box flexDirection="column" marginTop={1}>
           <Text>
-            <Text color={theme.status.success}>Savings Highlight:</Text>{' '}
+            <Text color={theme.status.success}>Savings Highlight:</Text>{" "}
             {totalCachedTokens.toLocaleString()} ({cacheEfficiency.toFixed(1)}
             %) of input tokens were served from the cache, reducing costs.
           </Text>
@@ -206,8 +206,8 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
         </StatRow>
         <StatRow title="Tool Calls:">
           <Text>
-            {tools.totalCalls} ({' '}
-            <Text color={theme.status.success}>✓ {tools.totalSuccess}</Text>{' '}
+            {tools.totalCalls} ({" "}
+            <Text color={theme.status.success}>✓ {tools.totalSuccess}</Text>{" "}
             <Text color={theme.status.error}>x {tools.totalFail}</Text> )
           </Text>
         </StatRow>
@@ -217,7 +217,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
         {computed.totalDecisions > 0 && (
           <StatRow title="User Agreement:">
             <Text color={agreementColor}>
-              {computed.agreementRate.toFixed(1)}%{' '}
+              {computed.agreementRate.toFixed(1)}%{" "}
               <Text color={theme.text.secondary}>
                 ({computed.totalDecisions} reviewed)
               </Text>
@@ -230,7 +230,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
               <Text>
                 <Text color={theme.status.success}>
                   +{files.totalLinesAdded}
-                </Text>{' '}
+                </Text>{" "}
                 <Text color={theme.status.error}>
                   -{files.totalLinesRemoved}
                 </Text>
@@ -248,7 +248,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
         </StatRow>
         <SubStatRow title="API Time:">
           <Text>
-            {formatDuration(computed.totalApiTime)}{' '}
+            {formatDuration(computed.totalApiTime)}{" "}
             <Text color={theme.text.secondary}>
               ({computed.apiTimePercent.toFixed(1)}%)
             </Text>
@@ -256,7 +256,7 @@ export const StatsDisplay: React.FC<StatsDisplayProps> = ({
         </SubStatRow>
         <SubStatRow title="Tool Time:">
           <Text>
-            {formatDuration(computed.totalToolTime)}{' '}
+            {formatDuration(computed.totalToolTime)}{" "}
             <Text color={theme.text.secondary}>
               ({computed.toolTimePercent.toFixed(1)}%)
             </Text>

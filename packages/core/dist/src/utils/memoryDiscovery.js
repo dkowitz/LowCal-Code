@@ -3,28 +3,28 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as fs from 'node:fs/promises';
-import * as fsSync from 'node:fs';
-import * as path from 'node:path';
-import { homedir } from 'node:os';
-import { bfsFileSearch } from './bfsFileSearch.js';
-import { GEMINI_CONFIG_DIR, getAllGeminiMdFilenames, } from '../tools/memoryTool.js';
-import { processImports } from './memoryImportProcessor.js';
-import { DEFAULT_MEMORY_FILE_FILTERING_OPTIONS } from '../config/config.js';
+import * as fs from "node:fs/promises";
+import * as fsSync from "node:fs";
+import * as path from "node:path";
+import { homedir } from "node:os";
+import { bfsFileSearch } from "./bfsFileSearch.js";
+import { GEMINI_CONFIG_DIR, getAllGeminiMdFilenames, } from "../tools/memoryTool.js";
+import { processImports } from "./memoryImportProcessor.js";
+import { DEFAULT_MEMORY_FILE_FILTERING_OPTIONS } from "../config/config.js";
 // Simple console logger, similar to the one previously in CLI's config.ts
 // TODO: Integrate with a more robust server-side logger if available/appropriate.
 const logger = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    debug: (...args) => console.debug('[DEBUG] [MemoryDiscovery]', ...args),
+    debug: (...args) => console.debug("[DEBUG] [MemoryDiscovery]", ...args),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    warn: (...args) => console.warn('[WARN] [MemoryDiscovery]', ...args),
+    warn: (...args) => console.warn("[WARN] [MemoryDiscovery]", ...args),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    error: (...args) => console.error('[ERROR] [MemoryDiscovery]', ...args),
+    error: (...args) => console.error("[ERROR] [MemoryDiscovery]", ...args),
 };
 async function findProjectRoot(startDir) {
     let currentDir = path.resolve(startDir);
     while (true) {
-        const gitPath = path.join(currentDir, '.git');
+        const gitPath = path.join(currentDir, ".git");
         try {
             const stats = await fs.lstat(gitPath);
             if (stats.isDirectory()) {
@@ -34,15 +34,15 @@ async function findProjectRoot(startDir) {
         catch (error) {
             // Don't log ENOENT errors as they're expected when .git doesn't exist
             // Also don't log errors in test environments, which often have mocked fs
-            const isENOENT = typeof error === 'object' &&
+            const isENOENT = typeof error === "object" &&
                 error !== null &&
-                'code' in error &&
-                error.code === 'ENOENT';
+                "code" in error &&
+                error.code === "ENOENT";
             // Only log unexpected errors in non-test environments
             // process.env['NODE_ENV'] === 'test' or VITEST are common test indicators
-            const isTestEnv = process.env['NODE_ENV'] === 'test' || process.env['VITEST'];
+            const isTestEnv = process.env["NODE_ENV"] === "test" || process.env["VITEST"];
             if (!isENOENT && !isTestEnv) {
-                if (typeof error === 'object' && error !== null && 'code' in error) {
+                if (typeof error === "object" && error !== null && "code" in error) {
                     const fsError = error;
                     logger.warn(`Error checking for .git directory at ${gitPath}: ${fsError.message}`);
                 }
@@ -72,7 +72,7 @@ async function getGeminiMdFilePathsInternal(currentWorkingDirectory, includeDire
         const batchPromises = batch.map((dir) => getGeminiMdFilePathsInternalForEachDir(dir, userHomePath, debugMode, fileService, extensionContextFilePaths, fileFilteringOptions, maxDirs));
         const batchResults = await Promise.allSettled(batchPromises);
         for (const result of batchResults) {
-            if (result.status === 'fulfilled') {
+            if (result.status === "fulfilled") {
                 pathsArrays.push(result.value);
             }
             else {
@@ -128,7 +128,7 @@ async function getGeminiMdFilePathsInternalForEachDir(dir, userHomePath, debugMo
                 logger.debug(`Searching for ${geminiMdFilename} starting from CWD: ${resolvedCwd}`);
             const projectRoot = await findProjectRoot(resolvedCwd);
             if (debugMode)
-                logger.debug(`Determined project root: ${projectRoot ?? 'None'}`);
+                logger.debug(`Determined project root: ${projectRoot ?? "None"}`);
             const upwardPaths = [];
             let currentDir = resolvedCwd;
             const ultimateStopDir = projectRoot
@@ -180,7 +180,7 @@ async function getGeminiMdFilePathsInternalForEachDir(dir, userHomePath, debugMo
         logger.debug(`Final ordered ${getAllGeminiMdFilenames()} paths to read: ${JSON.stringify(finalPaths)}`);
     return finalPaths;
 }
-async function readGeminiMdFiles(filePaths, debugMode, importFormat = 'tree') {
+async function readGeminiMdFiles(filePaths, debugMode, importFormat = "tree") {
     // Process files in parallel with concurrency limit to prevent EMFILE errors
     const CONCURRENT_LIMIT = 20; // Higher limit for file reads as they're typically faster
     const results = [];
@@ -188,7 +188,7 @@ async function readGeminiMdFiles(filePaths, debugMode, importFormat = 'tree') {
         const batch = filePaths.slice(i, i + CONCURRENT_LIMIT);
         const batchPromises = batch.map(async (filePath) => {
             try {
-                const content = await fs.readFile(filePath, 'utf-8');
+                const content = await fs.readFile(filePath, "utf-8");
                 // Process imports in the content
                 const processedResult = await processImports(content, path.dirname(filePath), debugMode, undefined, undefined, importFormat);
                 if (debugMode)
@@ -196,7 +196,7 @@ async function readGeminiMdFiles(filePaths, debugMode, importFormat = 'tree') {
                 return { filePath, content: processedResult.content };
             }
             catch (error) {
-                const isTestEnv = process.env['NODE_ENV'] === 'test' || process.env['VITEST'];
+                const isTestEnv = process.env["NODE_ENV"] === "test" || process.env["VITEST"];
                 if (!isTestEnv) {
                     const message = error instanceof Error ? error.message : String(error);
                     logger.warn(`Warning: Could not read ${getAllGeminiMdFilenames()} file at ${filePath}. Error: ${message}`);
@@ -208,7 +208,7 @@ async function readGeminiMdFiles(filePaths, debugMode, importFormat = 'tree') {
         });
         const batchResults = await Promise.allSettled(batchPromises);
         for (const result of batchResults) {
-            if (result.status === 'fulfilled') {
+            if (result.status === "fulfilled") {
                 results.push(result.value);
             }
             else {
@@ -226,7 +226,7 @@ function concatenateInstructions(instructionContents,
 // CWD is needed to resolve relative paths for display markers
 currentWorkingDirectoryForDisplay) {
     return instructionContents
-        .filter((item) => typeof item.content === 'string')
+        .filter((item) => typeof item.content === "string")
         .map((item) => {
         const trimmedContent = item.content.trim();
         if (trimmedContent.length === 0) {
@@ -238,13 +238,13 @@ currentWorkingDirectoryForDisplay) {
         return `--- Context from: ${displayPath} ---\n${trimmedContent}\n--- End of Context from: ${displayPath} ---`;
     })
         .filter((block) => block !== null)
-        .join('\n\n');
+        .join("\n\n");
 }
 /**
  * Loads hierarchical QWEN.md files and concatenates their content.
  * This function is intended for use by the server.
  */
-export async function loadServerHierarchicalMemory(currentWorkingDirectory, includeDirectoriesToReadGemini, debugMode, fileService, extensionContextFilePaths = [], importFormat = 'tree', fileFilteringOptions, maxDirs = 200) {
+export async function loadServerHierarchicalMemory(currentWorkingDirectory, includeDirectoriesToReadGemini, debugMode, fileService, extensionContextFilePaths = [], importFormat = "tree", fileFilteringOptions, maxDirs = 200) {
     if (debugMode)
         logger.debug(`Loading server hierarchical memory for CWD: ${currentWorkingDirectory} (importFormat: ${importFormat})`);
     // For the server, homedir() refers to the server process's home.
@@ -253,8 +253,8 @@ export async function loadServerHierarchicalMemory(currentWorkingDirectory, incl
     const filePaths = await getGeminiMdFilePathsInternal(currentWorkingDirectory, includeDirectoriesToReadGemini, userHomePath, debugMode, fileService, extensionContextFilePaths, fileFilteringOptions || DEFAULT_MEMORY_FILE_FILTERING_OPTIONS, maxDirs);
     if (filePaths.length === 0) {
         if (debugMode)
-            logger.debug('No QWEN.md files found in hierarchy.');
-        return { memoryContent: '', fileCount: 0 };
+            logger.debug("No QWEN.md files found in hierarchy.");
+        return { memoryContent: "", fileCount: 0 };
     }
     const contentsWithPaths = await readGeminiMdFiles(filePaths, debugMode, importFormat);
     // Pass CWD for relative path display in concatenated content

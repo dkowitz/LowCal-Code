@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as fs from 'fs/promises';
-import * as path from 'path';
+import * as fs from "fs/promises";
+import * as path from "path";
 
 export interface ProjectSummaryInfo {
   hasHistory: boolean;
@@ -25,7 +25,7 @@ export interface ProjectSummaryInfo {
  * Reads and parses the project summary file to extract structured information
  */
 export async function getProjectSummaryInfo(): Promise<ProjectSummaryInfo> {
-  const summaryPath = path.join(process.cwd(), '.qwen', 'PROJECT_SUMMARY.md');
+  const summaryPath = path.join(process.cwd(), ".qwen", "PROJECT_SUMMARY.md");
 
   try {
     await fs.access(summaryPath);
@@ -36,7 +36,7 @@ export async function getProjectSummaryInfo(): Promise<ProjectSummaryInfo> {
   }
 
   try {
-    const content = await fs.readFile(summaryPath, 'utf-8');
+    const content = await fs.readFile(summaryPath, "utf-8");
 
     // Extract timestamp if available
     const timestampMatch = content.match(/\*\*Update time\*\*: (.+)/);
@@ -55,13 +55,13 @@ export async function getProjectSummaryInfo(): Promise<ProjectSummaryInfo> {
       const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
       if (diffDays > 0) {
-        return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+        return `${diffDays} day${diffDays > 1 ? "s" : ""} ago`;
       } else if (diffHours > 0) {
-        return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+        return `${diffHours} hour${diffHours > 1 ? "s" : ""} ago`;
       } else if (diffMinutes > 0) {
-        return `${diffMinutes} minute${diffMinutes > 1 ? 's' : ''} ago`;
+        return `${diffMinutes} minute${diffMinutes > 1 ? "s" : ""} ago`;
       } else {
-        return 'just now';
+        return "just now";
       }
     };
 
@@ -71,31 +71,31 @@ export async function getProjectSummaryInfo(): Promise<ProjectSummaryInfo> {
     const goalSection = content.match(
       /## Overall Goal\s*\n?([\s\S]*?)(?=\n## |$)/,
     );
-    const goalContent = goalSection ? goalSection[1].trim() : '';
+    const goalContent = goalSection ? goalSection[1].trim() : "";
 
     // Parse Current Plan section
     const planSection = content.match(
       /## Current Plan\s*\n?([\s\S]*?)(?=\n## |$)/,
     );
-    const planContent = planSection ? planSection[1] : '';
-    const planLines = planContent.split('\n').filter((line) => line.trim());
+    const planContent = planSection ? planSection[1] : "";
+    const planLines = planContent.split("\n").filter((line) => line.trim());
     const doneCount = planLines.filter((line) =>
-      line.includes('[DONE]'),
+      line.includes("[DONE]"),
     ).length;
     const inProgressCount = planLines.filter((line) =>
-      line.includes('[IN PROGRESS]'),
+      line.includes("[IN PROGRESS]"),
     ).length;
     const todoCount = planLines.filter((line) =>
-      line.includes('[TODO]'),
+      line.includes("[TODO]"),
     ).length;
     const totalTasks = doneCount + inProgressCount + todoCount;
 
     // Extract pending tasks
     const pendingTasks = planLines
       .filter(
-        (line) => line.includes('[TODO]') || line.includes('[IN PROGRESS]'),
+        (line) => line.includes("[TODO]") || line.includes("[IN PROGRESS]"),
       )
-      .map((line) => line.replace(/^\d+\.\s*/, '').trim())
+      .map((line) => line.replace(/^\d+\.\s*/, "").trim())
       .slice(0, 3);
 
     return {

@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Content } from '@google/genai';
-import type { Storage } from '../config/storage.js';
+import type { Content } from "@google/genai";
+import type { Storage } from "../config/storage.js";
 export declare enum MessageSenderType {
     USER = "user",
     MODEL_SWITCH = "model_switch"
@@ -19,7 +19,7 @@ export interface LogEntry {
 export interface ModelSwitchEvent {
     fromModel: string;
     toModel: string;
-    reason: 'vision_auto_switch' | 'manual' | 'fallback' | 'other';
+    reason: "vision_auto_switch" | "manual" | "fallback" | "other";
     context?: string;
 }
 /**

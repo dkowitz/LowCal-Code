@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { reportError } from '../utils/errorReporting.js';
-import type { Config } from '../config/config.js';
-import { type ToolCallRequestInfo } from '../core/turn.js';
+import { reportError } from "../utils/errorReporting.js";
+import type { Config } from "../config/config.js";
+import { type ToolCallRequestInfo } from "../core/turn.js";
 import {
   CoreToolScheduler,
   type ToolCall,
   type WaitingToolCall,
-} from '../core/coreToolScheduler.js';
+} from "../core/coreToolScheduler.js";
 import type {
   ToolConfirmationOutcome,
   ToolCallConfirmationDetails,
-} from '../tools/tools.js';
-import { createContentGenerator } from '../core/contentGenerator.js';
-import { getEnvironmentContext } from '../utils/environmentContext.js';
+} from "../tools/tools.js";
+import { createContentGenerator } from "../core/contentGenerator.js";
+import { getEnvironmentContext } from "../utils/environmentContext.js";
 import type {
   Content,
   Part,
@@ -25,15 +25,15 @@ import type {
   GenerateContentConfig,
   FunctionDeclaration,
   GenerateContentResponseUsageMetadata,
-} from '@google/genai';
-import { GeminiChat } from '../core/geminiChat.js';
+} from "@google/genai";
+import { GeminiChat } from "../core/geminiChat.js";
 import type {
   PromptConfig,
   ModelConfig,
   RunConfig,
   ToolConfig,
-} from './types.js';
-import { SubagentTerminateMode } from './types.js';
+} from "./types.js";
+import { SubagentTerminateMode } from "./types.js";
 import type {
   SubAgentFinishEvent,
   SubAgentRoundEvent,
@@ -42,19 +42,19 @@ import type {
   SubAgentToolResultEvent,
   SubAgentStreamTextEvent,
   SubAgentErrorEvent,
-} from './subagent-events.js';
+} from "./subagent-events.js";
 import {
   type SubAgentEventEmitter,
   SubAgentEventType,
-} from './subagent-events.js';
+} from "./subagent-events.js";
 import {
   SubagentStatistics,
   type SubagentStatsSummary,
-} from './subagent-statistics.js';
-import type { SubagentHooks } from './subagent-hooks.js';
-import { logSubagentExecution } from '../telemetry/loggers.js';
-import { SubagentExecutionEvent } from '../telemetry/types.js';
-import { TaskTool } from '../tools/task.js';
+} from "./subagent-statistics.js";
+import type { SubagentHooks } from "./subagent-hooks.js";
+import { logSubagentExecution } from "../telemetry/loggers.js";
+import { SubagentExecutionEvent } from "../telemetry/types.js";
+import { TaskTool } from "../tools/task.js";
 
 /**
  * @fileoverview Defines the configuration interfaces for a subagent.
@@ -143,7 +143,7 @@ function templateString(template: string, context: ContextState): string {
   if (missingKeys.length > 0) {
     throw new Error(
       `Missing context values for the following keys: ${missingKeys.join(
-        ', ',
+        ", ",
       )}`,
     );
   }
@@ -184,7 +184,7 @@ export class SubAgentScope {
     }
   >();
   private eventEmitter?: SubAgentEventEmitter;
-  private finalText: string = '';
+  private finalText: string = "";
   private terminateMode: SubagentTerminateMode = SubagentTerminateMode.ERROR;
   private readonly stats = new SubagentStatistics();
   private hooks?: SubagentHooks;
@@ -276,7 +276,7 @@ export class SubAgentScope {
         this.terminateMode = SubagentTerminateMode.CANCELLED;
         return;
       }
-      externalSignal.addEventListener('abort', onAbort, { once: true });
+      externalSignal.addEventListener("abort", onAbort, { once: true });
     }
     const toolRegistry = this.runtimeContext.getToolRegistry();
 
@@ -285,11 +285,11 @@ export class SubAgentScope {
     const toolsList: FunctionDeclaration[] = [];
     if (this.toolConfig) {
       const asStrings = this.toolConfig.tools.filter(
-        (t): t is string => typeof t === 'string',
+        (t): t is string => typeof t === "string",
       );
-      const hasWildcard = asStrings.includes('*');
+      const hasWildcard = asStrings.includes("*");
       const onlyInlineDecls = this.toolConfig.tools.filter(
-        (t): t is FunctionDeclaration => typeof t !== 'string',
+        (t): t is FunctionDeclaration => typeof t !== "string",
       );
 
       if (hasWildcard || asStrings.length === 0) {
@@ -314,10 +314,10 @@ export class SubAgentScope {
     }
 
     const initialTaskText = String(
-      (context.get('task_prompt') as string) ?? 'Get Started!',
+      (context.get("task_prompt") as string) ?? "Get Started!",
     );
     let currentMessages: Content[] = [
-      { role: 'user', parts: [{ text: initialTaskText }] },
+      { role: "user", parts: [{ text: initialTaskText }] },
     ];
 
     const startTime = Date.now();
@@ -330,14 +330,14 @@ export class SubAgentScope {
         subagentId: this.subagentId,
         name: this.name,
         model: this.modelConfig.model,
-        tools: (this.toolConfig?.tools || ['*']).map((t) =>
-          typeof t === 'string' ? t : t.name,
+        tools: (this.toolConfig?.tools || ["*"]).map((t) =>
+          typeof t === "string" ? t : t.name,
         ),
         timestamp: Date.now(),
       } as SubAgentStartEvent);
 
       // Log telemetry for subagent start
-      const startEvent = new SubagentExecutionEvent(this.name, 'started');
+      const startEvent = new SubagentExecutionEvent(this.name, "started");
       logSubagentExecution(this.runtimeContext, startEvent);
       while (true) {
         // Check termination conditions.
@@ -378,7 +378,7 @@ export class SubAgentScope {
         } as SubAgentRoundEvent);
 
         const functionCalls: FunctionCall[] = [];
-        let roundText = '';
+        let roundText = "";
         let lastUsage: GenerateContentResponseUsageMetadata | undefined =
           undefined;
         for await (const streamEvent of responseStream) {
@@ -388,12 +388,12 @@ export class SubAgentScope {
           }
 
           // Handle retry events
-          if (streamEvent.type === 'retry') {
+          if (streamEvent.type === "retry") {
             continue;
           }
 
           // Handle chunk events
-          if (streamEvent.type === 'chunk') {
+          if (streamEvent.type === "chunk") {
             const resp = streamEvent.value;
             if (resp.functionCalls) functionCalls.push(...resp.functionCalls);
             const content = resp.candidates?.[0]?.content;
@@ -466,10 +466,10 @@ export class SubAgentScope {
           // Otherwise, nudge the model to finalize a result.
           currentMessages = [
             {
-              role: 'user',
+              role: "user",
               parts: [
                 {
-                  text: 'Please provide the final result now and stop calling tools.',
+                  text: "Please provide the final result now and stop calling tools.",
                 },
               ],
             },
@@ -483,7 +483,7 @@ export class SubAgentScope {
         } as SubAgentRoundEvent);
       }
     } catch (error) {
-      console.error('Error during subagent execution:', error);
+      console.error("Error during subagent execution:", error);
       this.terminateMode = SubagentTerminateMode.ERROR;
       this.eventEmitter?.emit(SubAgentEventType.ERROR, {
         subagentId: this.subagentId,
@@ -493,7 +493,7 @@ export class SubAgentScope {
 
       throw error;
     } finally {
-      if (externalSignal) externalSignal.removeEventListener('abort', onAbort);
+      if (externalSignal) externalSignal.removeEventListener("abort", onAbort);
       this.executionStats.totalDurationMs = Date.now() - startTime;
       const summary = this.stats.getSummary(Date.now());
       this.eventEmitter?.emit(SubAgentEventType.FINISH, {
@@ -513,13 +513,13 @@ export class SubAgentScope {
       const completionEvent = new SubagentExecutionEvent(
         this.name,
         this.terminateMode === SubagentTerminateMode.GOAL
-          ? 'completed'
-          : 'failed',
+          ? "completed"
+          : "failed",
         {
           terminate_reason: this.terminateMode,
           result: this.finalText,
           execution_summary: this.stats.formatCompact(
-            'Subagent execution completed',
+            "Subagent execution completed",
           ),
         },
       );
@@ -563,9 +563,9 @@ export class SubAgentScope {
         for (const call of completedCalls) {
           const toolName = call.request.name;
           const duration = call.durationMs ?? 0;
-          const success = call.status === 'success';
+          const success = call.status === "success";
           const errorMessage =
-            call.status === 'error' || call.status === 'cancelled'
+            call.status === "error" || call.status === "cancelled"
               ? call.response.error?.message
               : undefined;
 
@@ -590,7 +590,7 @@ export class SubAgentScope {
             tu.success += 1;
           } else {
             tu.failure += 1;
-            tu.lastError = errorMessage || 'Unknown error';
+            tu.lastError = errorMessage || "Unknown error";
           }
           tu.totalDurationMs = (tu.totalDurationMs || 0) + duration;
           tu.averageDurationMs =
@@ -606,7 +606,7 @@ export class SubAgentScope {
             success,
             error: errorMessage,
             resultDisplay: call.response.resultDisplay
-              ? typeof call.response.resultDisplay === 'string'
+              ? typeof call.response.resultDisplay === "string"
                 ? call.response.resultDisplay
                 : JSON.stringify(call.response.resultDisplay)
               : undefined,
@@ -639,7 +639,7 @@ export class SubAgentScope {
           if (respParts) {
             const parts = Array.isArray(respParts) ? respParts : [respParts];
             for (const part of parts) {
-              if (typeof part === 'string') {
+              if (typeof part === "string") {
                 toolResponseParts.push({ text: part });
               } else if (part) {
                 toolResponseParts.push(part);
@@ -652,7 +652,7 @@ export class SubAgentScope {
       },
       onToolCallsUpdate: (calls: ToolCall[]) => {
         for (const call of calls) {
-          if (call.status !== 'awaiting_approval') continue;
+          if (call.status !== "awaiting_approval") continue;
           const waiting = call as WaitingToolCall;
 
           // Emit approval request event for UI visibility
@@ -672,7 +672,7 @@ export class SubAgentScope {
               respond: async (
                 outcome: ToolConfirmationOutcome,
                 payload?: Parameters<
-                  ToolCallConfirmationDetails['onConfirm']
+                  ToolCallConfirmationDetails["onConfirm"]
                 >[1],
               ) => {
                 if (responded.has(waiting.request.callId)) return;
@@ -695,7 +695,7 @@ export class SubAgentScope {
 
     // Prepare requests and emit TOOL_CALL events
     const requests: ToolCallRequestInfo[] = functionCalls.map((fc) => {
-      const toolName = String(fc.name || 'unknown');
+      const toolName = String(fc.name || "unknown");
       const callId = fc.id ?? `${fc.name}-${Date.now()}`;
       const args = (fc.args ?? {}) as Record<string, unknown>;
       const request: ToolCallRequestInfo = {
@@ -743,11 +743,11 @@ export class SubAgentScope {
     // If all tool calls failed, inform the model so it can re-evaluate.
     if (functionCalls.length > 0 && toolResponseParts.length === 0) {
       toolResponseParts.push({
-        text: 'All tool calls failed. Please analyze the errors and try an alternative approach.',
+        text: "All tool calls failed. Please analyze the errors and try an alternative approach.",
       });
     }
 
-    return [{ role: 'user', parts: toolResponseParts }];
+    return [{ role: "user", parts: toolResponseParts }];
   }
 
   getEventEmitter() {
@@ -783,19 +783,19 @@ export class SubAgentScope {
   private async createChatObject(context: ContextState) {
     if (!this.promptConfig.systemPrompt && !this.promptConfig.initialMessages) {
       throw new Error(
-        'PromptConfig must have either `systemPrompt` or `initialMessages` defined.',
+        "PromptConfig must have either `systemPrompt` or `initialMessages` defined.",
       );
     }
     if (this.promptConfig.systemPrompt && this.promptConfig.initialMessages) {
       throw new Error(
-        'PromptConfig cannot have both `systemPrompt` and `initialMessages` defined.',
+        "PromptConfig cannot have both `systemPrompt` and `initialMessages` defined.",
       );
     }
 
     const envParts = await getEnvironmentContext(this.runtimeContext);
     const envHistory: Content[] = [
-      { role: 'user', parts: envParts },
-      { role: 'model', parts: [{ text: 'Got it. Thanks for the context!' }] },
+      { role: "user", parts: envParts },
+      { role: "model", parts: [{ text: "Got it. Thanks for the context!" }] },
     ];
 
     const start_history = [
@@ -838,9 +838,9 @@ export class SubAgentScope {
     } catch (error) {
       await reportError(
         error,
-        'Error initializing Gemini chat session.',
+        "Error initializing Gemini chat session.",
         start_history,
-        'startChat',
+        "startChat",
       );
       // The calling function will handle the undefined return.
       return undefined;
@@ -863,21 +863,21 @@ export class SubAgentScope {
       const toolRegistry = this.runtimeContext.getToolRegistry();
       const tool = toolRegistry.getTool(toolName);
       if (!tool) {
-        return '';
+        return "";
       }
 
       const toolInstance = tool.build(args);
-      return toolInstance.getDescription() || '';
+      return toolInstance.getDescription() || "";
     } catch {
       // Safely ignore all runtime errors and return empty string
-      return '';
+      return "";
     }
   }
 
   private buildChatSystemPrompt(context: ContextState): string {
     if (!this.promptConfig.systemPrompt) {
       // This should ideally be caught in createChatObject, but serves as a safeguard.
-      return '';
+      return "";
     }
 
     let finalPrompt = templateString(this.promptConfig.systemPrompt, context);

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { execSync } from 'node:child_process';
-import { ProxyAgent } from 'undici';
+import { execSync } from "node:child_process";
+import { ProxyAgent } from "undici";
 
 /**
  * Checks if a directory is within a git repository hosted on GitHub.
@@ -14,9 +14,9 @@ import { ProxyAgent } from 'undici';
 export const isGitHubRepository = (): boolean => {
   try {
     const remotes = (
-      execSync('git remote -v', {
-        encoding: 'utf-8',
-      }) || ''
+      execSync("git remote -v", {
+        encoding: "utf-8",
+      }) || ""
     ).trim();
 
     const pattern = /github\.com/;
@@ -36,9 +36,9 @@ export const isGitHubRepository = (): boolean => {
  */
 export const getGitRepoRoot = (): string => {
   const gitRepoRoot = (
-    execSync('git rev-parse --show-toplevel', {
-      encoding: 'utf-8',
-    }) || ''
+    execSync("git rev-parse --show-toplevel", {
+      encoding: "utf-8",
+    }) || ""
   ).trim();
 
   if (!gitRepoRoot) {
@@ -61,11 +61,11 @@ export const getLatestGitHubRelease = async (
     const endpoint = `https://api.github.com/repos/google-github-actions/run-gemini-cli/releases/latest`;
 
     const response = await fetch(endpoint, {
-      method: 'GET',
+      method: "GET",
       headers: {
-        Accept: 'application/vnd.github+json',
-        'Content-Type': 'application/json',
-        'X-GitHub-Api-Version': '2022-11-28',
+        Accept: "application/vnd.github+json",
+        "Content-Type": "application/json",
+        "X-GitHub-Api-Version": "2022-11-28",
       },
       dispatcher: proxy ? new ProxyAgent(proxy) : undefined,
       signal: AbortSignal.any([AbortSignal.timeout(30_000), controller.signal]),
@@ -96,8 +96,8 @@ export const getLatestGitHubRelease = async (
  * @throws error if the exec command fails.
  */
 export function getGitHubRepoInfo(): { owner: string; repo: string } {
-  const remoteUrl = execSync('git remote get-url origin', {
-    encoding: 'utf-8',
+  const remoteUrl = execSync("git remote get-url origin", {
+    encoding: "utf-8",
   }).trim();
 
   // Matches either https://github.com/owner/repo.git or git@github.com:owner/repo.git

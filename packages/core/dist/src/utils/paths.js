@@ -3,11 +3,11 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import path from 'node:path';
-import os from 'node:os';
-import * as crypto from 'node:crypto';
-export const QWEN_DIR = '.qwen';
-export const GOOGLE_ACCOUNTS_FILENAME = 'google_accounts.json';
+import path from "node:path";
+import os from "node:os";
+import * as crypto from "node:crypto";
+export const QWEN_DIR = ".qwen";
+export const GOOGLE_ACCOUNTS_FILENAME = "google_accounts.json";
 /**
  * Special characters that need to be escaped in file paths for shell compatibility.
  * Includes: spaces, parentheses, brackets, braces, semicolons, ampersands, pipes,
@@ -22,7 +22,7 @@ export const SHELL_SPECIAL_CHARS = /[ \t()[\]{};|*?$`'"#&<>!~]/;
 export function tildeifyPath(path) {
     const homeDir = os.homedir();
     if (path.startsWith(homeDir)) {
-        return path.replace(homeDir, '~');
+        return path.replace(homeDir, "~");
     }
     return path;
 }
@@ -39,14 +39,14 @@ export function shortenPath(filePath, maxLen = 35) {
     const separator = path.sep;
     // Get segments of the path *after* the root
     const relativePath = filePath.substring(root.length);
-    const segments = relativePath.split(separator).filter((s) => s !== ''); // Filter out empty segments
+    const segments = relativePath.split(separator).filter((s) => s !== ""); // Filter out empty segments
     // Handle cases with no segments after root (e.g., "/", "C:\") or only one segment
     if (segments.length <= 1) {
         // Fall back to simple start/end truncation for very short paths or single segments
         const keepLen = Math.floor((maxLen - 3) / 2);
         // Ensure keepLen is not negative if maxLen is very small
         if (keepLen <= 0) {
-            return filePath.substring(0, maxLen - 3) + '...';
+            return filePath.substring(0, maxLen - 3) + "...";
         }
         const start = filePath.substring(0, keepLen);
         const end = filePath.substring(filePath.length - keepLen);
@@ -80,7 +80,7 @@ export function shortenPath(filePath, maxLen = 35) {
     // As a final check, if the result is somehow still too long
     // truncate the result string from the beginning, prefixing with "...".
     if (result.length > maxLen) {
-        return '...' + result.substring(result.length - maxLen - 3);
+        return "..." + result.substring(result.length - maxLen - 3);
     }
     return result;
 }
@@ -98,7 +98,7 @@ export function makeRelative(targetPath, rootDirectory) {
     const resolvedRootDirectory = path.resolve(rootDirectory);
     const relativePath = path.relative(resolvedRootDirectory, resolvedTargetPath);
     // If the paths are the same, path.relative returns '', return '.' instead
-    return relativePath || '.';
+    return relativePath || ".";
 }
 /**
  * Escapes special characters in a file path like macOS terminal does.
@@ -106,19 +106,19 @@ export function makeRelative(targetPath, rootDirectory) {
  * asterisks, question marks, dollar signs, backticks, quotes, hash, and other shell metacharacters.
  */
 export function escapePath(filePath) {
-    let result = '';
+    let result = "";
     for (let i = 0; i < filePath.length; i++) {
         const char = filePath[i];
         // Count consecutive backslashes before this character
         let backslashCount = 0;
-        for (let j = i - 1; j >= 0 && filePath[j] === '\\'; j--) {
+        for (let j = i - 1; j >= 0 && filePath[j] === "\\"; j--) {
             backslashCount++;
         }
         // Character is already escaped if there's an odd number of backslashes before it
         const isAlreadyEscaped = backslashCount % 2 === 1;
         // Only escape if not already escaped
         if (!isAlreadyEscaped && SHELL_SPECIAL_CHARS.test(char)) {
-            result += '\\' + char;
+            result += "\\" + char;
         }
         else {
             result += char;
@@ -131,7 +131,7 @@ export function escapePath(filePath) {
  * Removes backslash escaping from shell metacharacters.
  */
 export function unescapePath(filePath) {
-    return filePath.replace(new RegExp(`\\\\([${SHELL_SPECIAL_CHARS.source.slice(1, -1)}])`, 'g'), '$1');
+    return filePath.replace(new RegExp(`\\\\([${SHELL_SPECIAL_CHARS.source.slice(1, -1)}])`, "g"), "$1");
 }
 /**
  * Generates a unique hash for a project based on its root path.
@@ -139,7 +139,7 @@ export function unescapePath(filePath) {
  * @returns A SHA256 hash of the project root path.
  */
 export function getProjectHash(projectRoot) {
-    return crypto.createHash('sha256').update(projectRoot).digest('hex');
+    return crypto.createHash("sha256").update(projectRoot).digest("hex");
 }
 /**
  * Checks if a path is a subpath of another path.
@@ -148,12 +148,12 @@ export function getProjectHash(projectRoot) {
  * @returns True if childPath is a subpath of parentPath, false otherwise.
  */
 export function isSubpath(parentPath, childPath) {
-    const isWindows = os.platform() === 'win32';
+    const isWindows = os.platform() === "win32";
     const pathModule = isWindows ? path.win32 : path;
     // On Windows, path.relative is case-insensitive. On POSIX, it's case-sensitive.
     const relative = pathModule.relative(parentPath, childPath);
     return (!relative.startsWith(`..${pathModule.sep}`) &&
-        relative !== '..' &&
+        relative !== ".." &&
         !pathModule.isAbsolute(relative));
 }
 //# sourceMappingURL=paths.js.map

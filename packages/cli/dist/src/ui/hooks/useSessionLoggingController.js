@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import { setErrorReportListener, } from '@qwen-code/qwen-code-core';
-import { SessionMarkdownLogger, } from '../../services/SessionMarkdownLogger.js';
-import { appEvents, AppEvent } from '../../utils/events.js';
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import { setErrorReportListener, } from "@qwen-code/qwen-code-core";
+import { SessionMarkdownLogger, } from "../../services/SessionMarkdownLogger.js";
+import { appEvents, AppEvent } from "../../utils/events.js";
 export function useSessionLoggingController(options) {
     const { history, config, sessionStats } = options;
     const loggerRef = useRef(new SessionMarkdownLogger());
@@ -25,7 +25,7 @@ export function useSessionLoggingController(options) {
     }, [history]);
     useEffect(() => {
         const handleAppError = (message) => {
-            const text = typeof message === 'string' ? message : String(message);
+            const text = typeof message === "string" ? message : String(message);
             void loggerRef.current.logAppError({
                 timestamp: new Date().toISOString(),
                 message: text,
@@ -56,7 +56,7 @@ export function useSessionLoggingController(options) {
         const additionalContext = {};
         const projectRoot = config.getProjectRoot();
         if (projectRoot) {
-            additionalContext['workspaceRoot'] = projectRoot;
+            additionalContext["workspaceRoot"] = projectRoot;
         }
         const statusResult = await loggerRef.current.enable({
             sessionId: config.getSessionId(),

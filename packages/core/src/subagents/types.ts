@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Content, FunctionDeclaration } from '@google/genai';
+import type { Content, FunctionDeclaration } from "@google/genai";
 
 /**
  * Represents the storage level for a subagent configuration.
@@ -12,7 +12,7 @@ import type { Content, FunctionDeclaration } from '@google/genai';
  * - 'user': Stored in `~/.qwen/agents/` in the user's home directory
  * - 'builtin': Built-in agents embedded in the codebase, always available
  */
-export type SubagentLevel = 'project' | 'user' | 'builtin';
+export type SubagentLevel = "project" | "user" | "builtin";
 
 /**
  * Core configuration for a subagent as stored in Markdown files.
@@ -112,10 +112,10 @@ export interface ListSubagentsOptions {
   hasTool?: string;
 
   /** Sort order for results */
-  sortBy?: 'name' | 'lastModified' | 'level';
+  sortBy?: "name" | "lastModified" | "level";
 
   /** Sort direction */
-  sortOrder?: 'asc' | 'desc';
+  sortOrder?: "asc" | "desc";
 
   /** Force refresh from disk, bypassing cache. Defaults to false. */
   force?: boolean;
@@ -145,7 +145,7 @@ export class SubagentError extends Error {
     readonly subagentName?: string,
   ) {
     super(message);
-    this.name = 'SubagentError';
+    this.name = "SubagentError";
   }
 }
 
@@ -153,13 +153,13 @@ export class SubagentError extends Error {
  * Error codes for subagent operations.
  */
 export const SubagentErrorCode = {
-  NOT_FOUND: 'NOT_FOUND',
-  ALREADY_EXISTS: 'ALREADY_EXISTS',
-  INVALID_CONFIG: 'INVALID_CONFIG',
-  INVALID_NAME: 'INVALID_NAME',
-  FILE_ERROR: 'FILE_ERROR',
-  VALIDATION_ERROR: 'VALIDATION_ERROR',
-  TOOL_NOT_FOUND: 'TOOL_NOT_FOUND',
+  NOT_FOUND: "NOT_FOUND",
+  ALREADY_EXISTS: "ALREADY_EXISTS",
+  INVALID_CONFIG: "INVALID_CONFIG",
+  INVALID_NAME: "INVALID_NAME",
+  FILE_ERROR: "FILE_ERROR",
+  VALIDATION_ERROR: "VALIDATION_ERROR",
+  TOOL_NOT_FOUND: "TOOL_NOT_FOUND",
 } as const;
 
 export type SubagentErrorCode =
@@ -173,23 +173,23 @@ export enum SubagentTerminateMode {
   /**
    * Indicates that the subagent's execution terminated due to an unrecoverable error.
    */
-  ERROR = 'ERROR',
+  ERROR = "ERROR",
   /**
    * Indicates that the subagent's execution terminated because it exceeded the maximum allowed working time.
    */
-  TIMEOUT = 'TIMEOUT',
+  TIMEOUT = "TIMEOUT",
   /**
    * Indicates that the subagent's execution successfully completed all its defined goals.
    */
-  GOAL = 'GOAL',
+  GOAL = "GOAL",
   /**
    * Indicates that the subagent's execution terminated because it exceeded the maximum number of turns.
    */
-  MAX_TURNS = 'MAX_TURNS',
+  MAX_TURNS = "MAX_TURNS",
   /**
    * Indicates that the subagent's execution was cancelled via an abort signal.
    */
-  CANCELLED = 'CANCELLED',
+  CANCELLED = "CANCELLED",
 }
 
 /**

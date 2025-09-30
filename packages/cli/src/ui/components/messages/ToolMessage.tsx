@@ -4,25 +4,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { Box, Text } from 'ink';
-import type { IndividualToolCallDisplay } from '../../types.js';
-import { ToolCallStatus } from '../../types.js';
-import { DiffRenderer } from './DiffRenderer.js';
-import { Colors } from '../../colors.js';
-import { MarkdownDisplay } from '../../utils/MarkdownDisplay.js';
-import { GeminiRespondingSpinner } from '../GeminiRespondingSpinner.js';
-import { MaxSizedBox } from '../shared/MaxSizedBox.js';
-import { TodoDisplay } from '../TodoDisplay.js';
-import { TOOL_STATUS } from '../../constants.js';
+import React from "react";
+import { Box, Text } from "ink";
+import type { IndividualToolCallDisplay } from "../../types.js";
+import { ToolCallStatus } from "../../types.js";
+import { DiffRenderer } from "./DiffRenderer.js";
+import { Colors } from "../../colors.js";
+import { MarkdownDisplay } from "../../utils/MarkdownDisplay.js";
+import { GeminiRespondingSpinner } from "../GeminiRespondingSpinner.js";
+import { MaxSizedBox } from "../shared/MaxSizedBox.js";
+import { TodoDisplay } from "../TodoDisplay.js";
+import { TOOL_STATUS } from "../../constants.js";
 import type {
   TodoResultDisplay,
   TaskResultDisplay,
   PlanResultDisplay,
   Config,
-} from '@qwen-code/qwen-code-core';
-import { AgentExecutionDisplay } from '../subagents/index.js';
-import { PlanSummaryDisplay } from '../PlanSummaryDisplay.js';
+} from "@qwen-code/qwen-code-core";
+import { AgentExecutionDisplay } from "../subagents/index.js";
+import { PlanSummaryDisplay } from "../PlanSummaryDisplay.js";
 
 const STATIC_HEIGHT = 1;
 const RESERVED_LINE_COUNT = 5; // for tool name, status, padding etc.
@@ -32,15 +32,15 @@ const MIN_LINES_SHOWN = 2; // show at least this many lines
 // Large threshold to ensure we don't cause performance issues for very large
 // outputs that will get truncated further MaxSizedBox anyway.
 const MAXIMUM_RESULT_DISPLAY_CHARACTERS = 1000000;
-export type TextEmphasis = 'high' | 'medium' | 'low';
+export type TextEmphasis = "high" | "medium" | "low";
 
 type DisplayRendererResult =
-  | { type: 'none' }
-  | { type: 'todo'; data: TodoResultDisplay }
-  | { type: 'plan'; data: PlanResultDisplay }
-  | { type: 'string'; data: string }
-  | { type: 'diff'; data: { fileDiff: string; fileName: string } }
-  | { type: 'task'; data: TaskResultDisplay };
+  | { type: "none" }
+  | { type: "todo"; data: TodoResultDisplay }
+  | { type: "plan"; data: PlanResultDisplay }
+  | { type: "string"; data: string }
+  | { type: "diff"; data: { fileDiff: string; fileName: string } }
+  | { type: "task"; data: TaskResultDisplay };
 
 /**
  * Custom hook to determine the type of result display and return appropriate rendering info
@@ -50,62 +50,62 @@ const useResultDisplayRenderer = (
 ): DisplayRendererResult =>
   React.useMemo(() => {
     if (!resultDisplay) {
-      return { type: 'none' };
+      return { type: "none" };
     }
 
     // Check for TodoResultDisplay
     if (
-      typeof resultDisplay === 'object' &&
+      typeof resultDisplay === "object" &&
       resultDisplay !== null &&
-      'type' in resultDisplay &&
-      resultDisplay.type === 'todo_list'
+      "type" in resultDisplay &&
+      resultDisplay.type === "todo_list"
     ) {
       return {
-        type: 'todo',
+        type: "todo",
         data: resultDisplay as TodoResultDisplay,
       };
     }
 
     if (
-      typeof resultDisplay === 'object' &&
+      typeof resultDisplay === "object" &&
       resultDisplay !== null &&
-      'type' in resultDisplay &&
-      resultDisplay.type === 'plan_summary'
+      "type" in resultDisplay &&
+      resultDisplay.type === "plan_summary"
     ) {
       return {
-        type: 'plan',
+        type: "plan",
         data: resultDisplay as PlanResultDisplay,
       };
     }
 
     // Check for SubagentExecutionResultDisplay (for non-task tools)
     if (
-      typeof resultDisplay === 'object' &&
+      typeof resultDisplay === "object" &&
       resultDisplay !== null &&
-      'type' in resultDisplay &&
-      resultDisplay.type === 'task_execution'
+      "type" in resultDisplay &&
+      resultDisplay.type === "task_execution"
     ) {
       return {
-        type: 'task',
+        type: "task",
         data: resultDisplay as TaskResultDisplay,
       };
     }
 
     // Check for FileDiff
     if (
-      typeof resultDisplay === 'object' &&
+      typeof resultDisplay === "object" &&
       resultDisplay !== null &&
-      'fileDiff' in resultDisplay
+      "fileDiff" in resultDisplay
     ) {
       return {
-        type: 'diff',
+        type: "diff",
         data: resultDisplay as { fileDiff: string; fileName: string },
       };
     }
 
     // Default to string
     return {
-      type: 'string',
+      type: "string",
       data: resultDisplay as string,
     };
   }, [resultDisplay]);
@@ -159,7 +159,7 @@ const StringResultRenderer: React.FC<{
 
   // Truncate if too long
   if (displayData.length > MAXIMUM_RESULT_DISPLAY_CHARACTERS) {
-    displayData = '...' + displayData.slice(-MAXIMUM_RESULT_DISPLAY_CHARACTERS);
+    displayData = "..." + displayData.slice(-MAXIMUM_RESULT_DISPLAY_CHARACTERS);
   }
 
   if (renderAsMarkdown) {
@@ -215,7 +215,7 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
   status,
   availableTerminalHeight,
   terminalWidth,
-  emphasis = 'medium',
+  emphasis = "medium",
   renderOutputAsMarkdown = true,
   config,
 }) => {
@@ -248,22 +248,22 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
           description={description}
           emphasis={emphasis}
         />
-        {emphasis === 'high' && <TrailingIndicator />}
+        {emphasis === "high" && <TrailingIndicator />}
       </Box>
-      {displayRenderer.type !== 'none' && (
+      {displayRenderer.type !== "none" && (
         <Box paddingLeft={STATUS_INDICATOR_WIDTH} width="100%" marginTop={1}>
           <Box flexDirection="column">
-            {displayRenderer.type === 'todo' && (
+            {displayRenderer.type === "todo" && (
               <TodoResultRenderer data={displayRenderer.data} />
             )}
-            {displayRenderer.type === 'plan' && (
+            {displayRenderer.type === "plan" && (
               <PlanResultRenderer
                 data={displayRenderer.data}
                 availableHeight={availableHeight}
                 childWidth={childWidth}
               />
             )}
-            {displayRenderer.type === 'task' && (
+            {displayRenderer.type === "task" && (
               <SubagentExecutionRenderer
                 data={displayRenderer.data}
                 availableHeight={availableHeight}
@@ -271,7 +271,7 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
                 config={config}
               />
             )}
-            {displayRenderer.type === 'string' && (
+            {displayRenderer.type === "string" && (
               <StringResultRenderer
                 data={displayRenderer.data}
                 renderAsMarkdown={renderOutputAsMarkdown}
@@ -279,7 +279,7 @@ export const ToolMessage: React.FC<ToolMessageProps> = ({
                 childWidth={childWidth}
               />
             )}
-            {displayRenderer.type === 'diff' && (
+            {displayRenderer.type === "diff" && (
               <DiffResultRenderer
                 data={displayRenderer.data}
                 availableHeight={availableHeight}
@@ -311,22 +311,22 @@ const ToolStatusIndicator: React.FC<ToolStatusIndicatorProps> = ({
       />
     )}
     {status === ToolCallStatus.Success && (
-      <Text color={Colors.AccentGreen} aria-label={'Success:'}>
+      <Text color={Colors.AccentGreen} aria-label={"Success:"}>
         {TOOL_STATUS.SUCCESS}
       </Text>
     )}
     {status === ToolCallStatus.Confirming && (
-      <Text color={Colors.AccentYellow} aria-label={'Confirming:'}>
+      <Text color={Colors.AccentYellow} aria-label={"Confirming:"}>
         {TOOL_STATUS.CONFIRMING}
       </Text>
     )}
     {status === ToolCallStatus.Canceled && (
-      <Text color={Colors.AccentYellow} aria-label={'Canceled:'} bold>
+      <Text color={Colors.AccentYellow} aria-label={"Canceled:"} bold>
         {TOOL_STATUS.CANCELED}
       </Text>
     )}
     {status === ToolCallStatus.Error && (
-      <Text color={Colors.AccentRed} aria-label={'Error:'} bold>
+      <Text color={Colors.AccentRed} aria-label={"Error:"} bold>
         {TOOL_STATUS.ERROR}
       </Text>
     )}
@@ -347,11 +347,11 @@ const ToolInfo: React.FC<ToolInfo> = ({
 }) => {
   const nameColor = React.useMemo<string>(() => {
     switch (emphasis) {
-      case 'high':
+      case "high":
         return Colors.Foreground;
-      case 'medium':
+      case "medium":
         return Colors.Foreground;
-      case 'low':
+      case "low":
         return Colors.Gray;
       default: {
         const exhaustiveCheck: never = emphasis;
@@ -377,7 +377,7 @@ const ToolInfo: React.FC<ToolInfo> = ({
 
 const TrailingIndicator: React.FC = () => (
   <Text color={Colors.Foreground} wrap="truncate">
-    {' '}
+    {" "}
     ←
   </Text>
 );

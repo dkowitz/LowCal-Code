@@ -1,6 +1,6 @@
-import type { Config } from '../../../config/config.js';
-import type { ContentGeneratorConfig } from '../../contentGenerator.js';
-import { DefaultOpenAICompatibleProvider } from './default.js';
+import type { Config } from "../../../config/config.js";
+import type { ContentGeneratorConfig } from "../../contentGenerator.js";
+import { DefaultOpenAICompatibleProvider } from "./default.js";
 export declare class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatibleProvider {
     constructor(contentGeneratorConfig: ContentGeneratorConfig, cliConfig: Config);
     static isLMStudioProvider(contentGeneratorConfig: ContentGeneratorConfig): boolean;

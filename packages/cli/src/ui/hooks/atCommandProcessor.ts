@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import type { PartListUnion, PartUnion } from '@google/genai';
-import type { AnyToolInvocation, Config } from '@qwen-code/qwen-code-core';
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import type { PartListUnion, PartUnion } from "@google/genai";
+import type { AnyToolInvocation, Config } from "@qwen-code/qwen-code-core";
 import {
   getErrorMessage,
   isNodeError,
   unescapePath,
-} from '@qwen-code/qwen-code-core';
-import type { HistoryItem, IndividualToolCallDisplay } from '../types.js';
-import { ToolCallStatus } from '../types.js';
-import type { UseHistoryManagerReturn } from './useHistoryManager.js';
+} from "@qwen-code/qwen-code-core";
+import type { HistoryItem, IndividualToolCallDisplay } from "../types.js";
+import { ToolCallStatus } from "../types.js";
+import type { UseHistoryManagerReturn } from "./useHistoryManager.js";
 
 interface HandleAtCommandParams {
   query: string;
   config: Config;
-  addItem: UseHistoryManagerReturn['addItem'];
+  addItem: UseHistoryManagerReturn["addItem"];
   onDebugMessage: (message: string) => void;
   messageId: number;
   signal: AbortSignal;
@@ -32,7 +32,7 @@ interface HandleAtCommandResult {
 }
 
 interface AtCommandPart {
-  type: 'text' | 'atPath';
+  type: "text" | "atPath";
   content: string;
 }
 
@@ -50,8 +50,8 @@ function parseAllAtCommands(query: string): AtCommandPart[] {
     // Find next unescaped '@'
     while (nextSearchIndex < query.length) {
       if (
-        query[nextSearchIndex] === '@' &&
-        (nextSearchIndex === 0 || query[nextSearchIndex - 1] !== '\\')
+        query[nextSearchIndex] === "@" &&
+        (nextSearchIndex === 0 || query[nextSearchIndex - 1] !== "\\")
       ) {
         atIndex = nextSearchIndex;
         break;
@@ -62,7 +62,7 @@ function parseAllAtCommands(query: string): AtCommandPart[] {
     if (atIndex === -1) {
       // No more @
       if (currentIndex < query.length) {
-        parts.push({ type: 'text', content: query.substring(currentIndex) });
+        parts.push({ type: "text", content: query.substring(currentIndex) });
       }
       break;
     }
@@ -70,7 +70,7 @@ function parseAllAtCommands(query: string): AtCommandPart[] {
     // Add text before @
     if (atIndex > currentIndex) {
       parts.push({
-        type: 'text',
+        type: "text",
         content: query.substring(currentIndex, atIndex),
       });
     }
@@ -82,17 +82,17 @@ function parseAllAtCommands(query: string): AtCommandPart[] {
       const char = query[pathEndIndex];
       if (inEscape) {
         inEscape = false;
-      } else if (char === '\\') {
+      } else if (char === "\\") {
         inEscape = true;
       } else if (/[,\s;!?()[\]{}]/.test(char)) {
         // Path ends at first whitespace or punctuation not escaped
         break;
-      } else if (char === '.') {
+      } else if (char === ".") {
         // For . we need to be more careful - only terminate if followed by whitespace or end of string
         // This allows file extensions like .txt, .js but terminates at sentence endings like "file.txt. Next sentence"
         const nextChar =
-          pathEndIndex + 1 < query.length ? query[pathEndIndex + 1] : '';
-        if (nextChar === '' || /\s/.test(nextChar)) {
+          pathEndIndex + 1 < query.length ? query[pathEndIndex + 1] : "";
+        if (nextChar === "" || /\s/.test(nextChar)) {
           break;
         }
       }
@@ -101,12 +101,12 @@ function parseAllAtCommands(query: string): AtCommandPart[] {
     const rawAtPath = query.substring(atIndex, pathEndIndex);
     // unescapePath expects the @ symbol to be present, and will handle it.
     const atPath = unescapePath(rawAtPath);
-    parts.push({ type: 'atPath', content: atPath });
+    parts.push({ type: "atPath", content: atPath });
     currentIndex = pathEndIndex;
   }
   // Filter out empty text parts that might result from consecutive @paths or leading/trailing spaces
   return parts.filter(
-    (part) => !(part.type === 'text' && part.content.trim() === ''),
+    (part) => !(part.type === "text" && part.content.trim() === ""),
   );
 }
 
@@ -129,7 +129,7 @@ export async function handleAtCommand({
 }: HandleAtCommandParams): Promise<HandleAtCommandResult> {
   const commandParts = parseAllAtCommands(query);
   const atPathCommandParts = commandParts.filter(
-    (part) => part.type === 'atPath',
+    (part) => part.type === "atPath",
   );
 
   if (atPathCommandParts.length === 0) {
@@ -151,12 +151,12 @@ export async function handleAtCommand({
   };
 
   const toolRegistry = config.getToolRegistry();
-  const readManyFilesTool = toolRegistry.getTool('read_many_files');
-  const globTool = toolRegistry.getTool('glob');
+  const readManyFilesTool = toolRegistry.getTool("read_many_files");
+  const globTool = toolRegistry.getTool("glob");
 
   if (!readManyFilesTool) {
     addItem(
-      { type: 'error', text: 'Error: read_many_files tool not found.' },
+      { type: "error", text: "Error: read_many_files tool not found." },
       userMessageTimestamp,
     );
     return { processedQuery: null, shouldProceed: false };
@@ -165,9 +165,9 @@ export async function handleAtCommand({
   for (const atPathPart of atPathCommandParts) {
     const originalAtPath = atPathPart.content; // e.g., "@file.txt" or "@"
 
-    if (originalAtPath === '@') {
+    if (originalAtPath === "@") {
       onDebugMessage(
-        'Lone @ detected, will be treated as text in the modified query.',
+        "Lone @ detected, will be treated as text in the modified query.",
       );
       continue;
     }
@@ -178,7 +178,7 @@ export async function handleAtCommand({
       // but as a safeguard:
       addItem(
         {
-          type: 'error',
+          type: "error",
           text: `Error: Invalid @ command '${originalAtPath}'. No path specified.`,
         },
         userMessageTimestamp,
@@ -213,14 +213,14 @@ export async function handleAtCommand({
 
     if (gitIgnored || geminiIgnored) {
       const reason =
-        gitIgnored && geminiIgnored ? 'both' : gitIgnored ? 'git' : 'gemini';
+        gitIgnored && geminiIgnored ? "both" : gitIgnored ? "git" : "gemini";
       ignoredByReason[reason].push(pathName);
       const reasonText =
-        reason === 'both'
-          ? 'ignored by both git and gemini'
-          : reason === 'git'
-            ? 'git-ignored'
-            : 'gemini-ignored';
+        reason === "both"
+          ? "ignored by both git and gemini"
+          : reason === "git"
+            ? "git-ignored"
+            : "gemini-ignored";
       onDebugMessage(`Path ${pathName} is ${reasonText} and will be skipped.`);
       continue;
     }
@@ -242,7 +242,7 @@ export async function handleAtCommand({
         }
         resolvedSuccessfully = true;
       } catch (error) {
-        if (isNodeError(error) && error.code === 'ENOENT') {
+        if (isNodeError(error) && error.code === "ENOENT") {
           if (config.getEnableRecursiveFileSearch() && globTool) {
             onDebugMessage(
               `Path ${pathName} not found directly, attempting glob search.`,
@@ -257,11 +257,11 @@ export async function handleAtCommand({
               );
               if (
                 globResult.llmContent &&
-                typeof globResult.llmContent === 'string' &&
-                !globResult.llmContent.startsWith('No files found') &&
-                !globResult.llmContent.startsWith('Error:')
+                typeof globResult.llmContent === "string" &&
+                !globResult.llmContent.startsWith("No files found") &&
+                !globResult.llmContent.startsWith("Error:")
               ) {
-                const lines = globResult.llmContent.split('\n');
+                const lines = globResult.llmContent.split("\n");
                 if (lines.length > 1 && lines[1]) {
                   const firstMatchAbsolute = lines[1].trim();
                   currentPathSpec = path.relative(dir, firstMatchAbsolute);
@@ -311,10 +311,10 @@ export async function handleAtCommand({
   }
 
   // Construct the initial part of the query for the LLM
-  let initialQueryText = '';
+  let initialQueryText = "";
   for (let i = 0; i < commandParts.length; i++) {
     const part = commandParts[i];
-    if (part.type === 'text') {
+    if (part.type === "text") {
       initialQueryText += part.content;
     } else {
       // type === 'atPath'
@@ -322,16 +322,16 @@ export async function handleAtCommand({
       if (
         i > 0 &&
         initialQueryText.length > 0 &&
-        !initialQueryText.endsWith(' ')
+        !initialQueryText.endsWith(" ")
       ) {
         // Add space if previous part was text and didn't end with space, or if previous was @path
         const prevPart = commandParts[i - 1];
         if (
-          prevPart.type === 'text' ||
-          (prevPart.type === 'atPath' &&
+          prevPart.type === "text" ||
+          (prevPart.type === "atPath" &&
             atPathToResolvedSpecMap.has(prevPart.content))
         ) {
-          initialQueryText += ' ';
+          initialQueryText += " ";
         }
       }
       if (resolvedSpec) {
@@ -342,10 +342,10 @@ export async function handleAtCommand({
         if (
           i > 0 &&
           initialQueryText.length > 0 &&
-          !initialQueryText.endsWith(' ') &&
-          !part.content.startsWith(' ')
+          !initialQueryText.endsWith(" ") &&
+          !part.content.startsWith(" ")
         ) {
-          initialQueryText += ' ';
+          initialQueryText += " ";
         }
         initialQueryText += part.content;
       }
@@ -355,31 +355,31 @@ export async function handleAtCommand({
 
   // Inform user about ignored paths
   const totalIgnored =
-    ignoredByReason['git'].length +
-    ignoredByReason['gemini'].length +
-    ignoredByReason['both'].length;
+    ignoredByReason["git"].length +
+    ignoredByReason["gemini"].length +
+    ignoredByReason["both"].length;
 
   if (totalIgnored > 0) {
     const messages = [];
-    if (ignoredByReason['git'].length) {
-      messages.push(`Git-ignored: ${ignoredByReason['git'].join(', ')}`);
+    if (ignoredByReason["git"].length) {
+      messages.push(`Git-ignored: ${ignoredByReason["git"].join(", ")}`);
     }
-    if (ignoredByReason['gemini'].length) {
-      messages.push(`Gemini-ignored: ${ignoredByReason['gemini'].join(', ')}`);
+    if (ignoredByReason["gemini"].length) {
+      messages.push(`Gemini-ignored: ${ignoredByReason["gemini"].join(", ")}`);
     }
-    if (ignoredByReason['both'].length) {
-      messages.push(`Ignored by both: ${ignoredByReason['both'].join(', ')}`);
+    if (ignoredByReason["both"].length) {
+      messages.push(`Ignored by both: ${ignoredByReason["both"].join(", ")}`);
     }
 
-    const message = `Ignored ${totalIgnored} files:\n${messages.join('\n')}`;
+    const message = `Ignored ${totalIgnored} files:\n${messages.join("\n")}`;
     console.log(message);
     onDebugMessage(message);
   }
 
   // Fallback for lone "@" or completely invalid @-commands resulting in empty initialQueryText
   if (pathSpecsToRead.length === 0) {
-    onDebugMessage('No valid file paths found in @ commands to read.');
-    if (initialQueryText === '@' && query.trim() === '@') {
+    onDebugMessage("No valid file paths found in @ commands to read.");
+    if (initialQueryText === "@" && query.trim() === "@") {
       // If the only thing was a lone @, pass original query (which might have spaces)
       return { processedQuery: [{ text: query }], shouldProceed: true };
     } else if (!initialQueryText && query) {
@@ -416,17 +416,17 @@ export async function handleAtCommand({
       status: ToolCallStatus.Success,
       resultDisplay:
         result.returnDisplay ||
-        `Successfully read: ${contentLabelsForDisplay.join(', ')}`,
+        `Successfully read: ${contentLabelsForDisplay.join(", ")}`,
       confirmationDetails: undefined,
     };
 
     if (Array.isArray(result.llmContent)) {
       const fileContentRegex = /^--- (.*?) ---\n\n([\s\S]*?)\n\n$/;
       processedQueryParts.push({
-        text: '\n--- Content from referenced files ---',
+        text: "\n--- Content from referenced files ---",
       });
       for (const part of result.llmContent) {
-        if (typeof part === 'string') {
+        if (typeof part === "string") {
           const match = fileContentRegex.exec(part);
           if (match) {
             const filePathSpecInContent = match[1]; // This is a resolved pathSpec
@@ -445,14 +445,14 @@ export async function handleAtCommand({
       }
     } else {
       onDebugMessage(
-        'read_many_files tool returned no content or empty content.',
+        "read_many_files tool returned no content or empty content.",
       );
     }
 
     addItem(
-      { type: 'tool_group', tools: [toolCallDisplay] } as Omit<
+      { type: "tool_group", tools: [toolCallDisplay] } as Omit<
         HistoryItem,
-        'id'
+        "id"
       >,
       userMessageTimestamp,
     );
@@ -463,15 +463,15 @@ export async function handleAtCommand({
       name: readManyFilesTool.displayName,
       description:
         invocation?.getDescription() ??
-        'Error attempting to execute tool to read files',
+        "Error attempting to execute tool to read files",
       status: ToolCallStatus.Error,
-      resultDisplay: `Error reading files (${contentLabelsForDisplay.join(', ')}): ${getErrorMessage(error)}`,
+      resultDisplay: `Error reading files (${contentLabelsForDisplay.join(", ")}): ${getErrorMessage(error)}`,
       confirmationDetails: undefined,
     };
     addItem(
-      { type: 'tool_group', tools: [toolCallDisplay] } as Omit<
+      { type: "tool_group", tools: [toolCallDisplay] } as Omit<
         HistoryItem,
-        'id'
+        "id"
       >,
       userMessageTimestamp,
     );

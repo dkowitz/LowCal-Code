@@ -4,20 +4,20 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Box, Text } from 'ink';
-import { AgentSelectionStep } from './AgentSelectionStep.js';
-import { ActionSelectionStep } from './ActionSelectionStep.js';
-import { AgentViewerStep } from './AgentViewerStep.js';
-import { EditOptionsStep } from './AgentEditStep.js';
-import { AgentDeleteStep } from './AgentDeleteStep.js';
-import { ToolSelector } from '../create/ToolSelector.js';
-import { ColorSelector } from '../create/ColorSelector.js';
-import { MANAGEMENT_STEPS } from '../types.js';
-import { Colors } from '../../../colors.js';
-import { theme } from '../../../semantic-colors.js';
-import { getColorForDisplay, shouldShowColor } from '../utils.js';
-import { useKeypress } from '../../../hooks/useKeypress.js';
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { Box, Text } from "ink";
+import { AgentSelectionStep } from "./AgentSelectionStep.js";
+import { ActionSelectionStep } from "./ActionSelectionStep.js";
+import { AgentViewerStep } from "./AgentViewerStep.js";
+import { EditOptionsStep } from "./AgentEditStep.js";
+import { AgentDeleteStep } from "./AgentDeleteStep.js";
+import { ToolSelector } from "../create/ToolSelector.js";
+import { ColorSelector } from "../create/ColorSelector.js";
+import { MANAGEMENT_STEPS } from "../types.js";
+import { Colors } from "../../../colors.js";
+import { theme } from "../../../semantic-colors.js";
+import { getColorForDisplay, shouldShowColor } from "../utils.js";
+import { useKeypress } from "../../../hooks/useKeypress.js";
 /**
  * Main orchestrator component for the agents management dialog.
  */
@@ -74,13 +74,13 @@ export function AgentsManagerDialog({ onClose, config, }) {
             setSelectedAgentIndex(-1);
         }
         catch (error) {
-            console.error('Failed to delete agent:', error);
+            console.error("Failed to delete agent:", error);
             throw error; // Re-throw to let the component handle the error state
         }
     }, [config, loadAgents]);
     // Centralized ESC key handling for the entire dialog
     useKeypress((key) => {
-        if (key.name !== 'escape') {
+        if (key.name !== "escape") {
             return;
         }
         const currentStep = getCurrentStep();
@@ -103,9 +103,9 @@ export function AgentsManagerDialog({ onClose, config, }) {
         const getStepHeaderText = () => {
             switch (currentStep) {
                 case MANAGEMENT_STEPS.AGENT_SELECTION:
-                    return 'Agents';
+                    return "Agents";
                 case MANAGEMENT_STEPS.ACTION_SELECTION:
-                    return 'Choose Action';
+                    return "Choose Action";
                 case MANAGEMENT_STEPS.AGENT_VIEWER:
                     return selectedAgent?.name;
                 case MANAGEMENT_STEPS.EDIT_OPTIONS:
@@ -117,7 +117,7 @@ export function AgentsManagerDialog({ onClose, config, }) {
                 case MANAGEMENT_STEPS.DELETE_CONFIRMATION:
                     return `Delete ${selectedAgent?.name}`;
                 default:
-                    return 'Unknown Step';
+                    return "Unknown Step";
             }
         };
         // Use agent color for the Agent Viewer header
@@ -133,17 +133,17 @@ export function AgentsManagerDialog({ onClose, config, }) {
         const getNavigationInstructions = () => {
             if (currentStep === MANAGEMENT_STEPS.AGENT_SELECTION) {
                 if (availableAgents.length === 0) {
-                    return 'Esc to close';
+                    return "Esc to close";
                 }
-                return 'Enter to select, ↑↓ to navigate, Esc to close';
+                return "Enter to select, ↑↓ to navigate, Esc to close";
             }
             if (currentStep === MANAGEMENT_STEPS.AGENT_VIEWER) {
-                return 'Esc to go back';
+                return "Esc to go back";
             }
             if (currentStep === MANAGEMENT_STEPS.DELETE_CONFIRMATION) {
-                return 'Enter to confirm, Esc to cancel';
+                return "Enter to confirm, Esc to cancel";
             }
-            return 'Enter to select, ↑↓ to navigate, Esc to go back';
+            return "Enter to select, ↑↓ to navigate, Esc to go back";
         };
         return (_jsx(Box, { children: _jsx(Text, { color: theme.text.secondary, children: getNavigationInstructions() }) }));
     }, [getCurrentStep, availableAgents]);
@@ -170,12 +170,12 @@ export function AgentsManagerDialog({ onClose, config, }) {
                                     handleNavigateBack();
                                 }
                                 catch (error) {
-                                    console.error('Failed to save agent changes:', error);
+                                    console.error("Failed to save agent changes:", error);
                                 }
                             }
                         }, config: config }) }));
             case MANAGEMENT_STEPS.EDIT_COLOR:
-                return (_jsx(Box, { flexDirection: "column", gap: 1, children: _jsx(ColorSelector, { color: selectedAgent?.color || 'auto', agentName: selectedAgent?.name || 'Agent', onSelect: async (color) => {
+                return (_jsx(Box, { flexDirection: "column", gap: 1, children: _jsx(ColorSelector, { color: selectedAgent?.color || "auto", agentName: selectedAgent?.name || "Agent", onSelect: async (color) => {
                             // Save changes and reload agents
                             if (selectedAgent && config) {
                                 try {
@@ -187,7 +187,7 @@ export function AgentsManagerDialog({ onClose, config, }) {
                                     handleNavigateBack();
                                 }
                                 catch (error) {
-                                    console.error('Failed to save color changes:', error);
+                                    console.error("Failed to save color changes:", error);
                                 }
                             }
                         } }) }));

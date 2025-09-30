@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 // Mock the request tokenizer module BEFORE importing the class that uses it
 const mockTokenizer = {
     calculateTokens: vi.fn().mockResolvedValue({
@@ -18,22 +18,22 @@ const mockTokenizer = {
     }),
     dispose: vi.fn(),
 };
-vi.mock('../../../utils/request-tokenizer/index.js', () => ({
+vi.mock("../../../utils/request-tokenizer/index.js", () => ({
     getDefaultTokenizer: vi.fn(() => mockTokenizer),
     DefaultRequestTokenizer: vi.fn(() => mockTokenizer),
     disposeDefaultTokenizer: vi.fn(),
 }));
 // Mock tiktoken as well for completeness
-vi.mock('tiktoken', () => ({
+vi.mock("tiktoken", () => ({
     get_encoding: vi.fn(() => ({
         encode: vi.fn(() => new Array(50)), // Mock 50 tokens
         free: vi.fn(),
     })),
 }));
 // Now import the modules that depend on the mocked modules
-import { OpenAIContentGenerator } from './openaiContentGenerator.js';
-import { AuthType } from '../contentGenerator.js';
-describe('OpenAIContentGenerator (Refactored)', () => {
+import { OpenAIContentGenerator } from "./openaiContentGenerator.js";
+import { AuthType } from "../contentGenerator.js";
+describe("OpenAIContentGenerator (Refactored)", () => {
     let generator;
     let mockConfig;
     beforeEach(() => {
@@ -42,7 +42,7 @@ describe('OpenAIContentGenerator (Refactored)', () => {
         // Mock config
         mockConfig = {
             getContentGeneratorConfig: vi.fn().mockReturnValue({
-                authType: 'openai',
+                authType: "openai",
                 enableOpenAILogging: false,
                 timeout: 120000,
                 maxRetries: 3,
@@ -52,12 +52,12 @@ describe('OpenAIContentGenerator (Refactored)', () => {
                     top_p: 0.9,
                 },
             }),
-            getCliVersion: vi.fn().mockReturnValue('1.0.0'),
+            getCliVersion: vi.fn().mockReturnValue("1.0.0"),
         };
         // Create generator instance
         const contentGeneratorConfig = {
-            model: 'gpt-4',
-            apiKey: 'test-key',
+            model: "gpt-4",
+            apiKey: "test-key",
             authType: AuthType.USE_OPENAI,
             enableOpenAILogging: false,
             timeout: 120000,
@@ -88,56 +88,56 @@ describe('OpenAIContentGenerator (Refactored)', () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
-    describe('constructor', () => {
-        it('should initialize with basic configuration', () => {
+    describe("constructor", () => {
+        it("should initialize with basic configuration", () => {
             expect(generator).toBeDefined();
         });
     });
-    describe('generateContent', () => {
-        it('should delegate to pipeline.execute', async () => {
+    describe("generateContent", () => {
+        it("should delegate to pipeline.execute", async () => {
             // This test verifies the method exists and can be called
-            expect(typeof generator.generateContent).toBe('function');
+            expect(typeof generator.generateContent).toBe("function");
         });
     });
-    describe('generateContentStream', () => {
-        it('should delegate to pipeline.executeStream', async () => {
+    describe("generateContentStream", () => {
+        it("should delegate to pipeline.executeStream", async () => {
             // This test verifies the method exists and can be called
-            expect(typeof generator.generateContentStream).toBe('function');
+            expect(typeof generator.generateContentStream).toBe("function");
         });
     });
-    describe('countTokens', () => {
-        it('should count tokens using tiktoken', async () => {
+    describe("countTokens", () => {
+        it("should count tokens using tiktoken", async () => {
             const request = {
-                contents: [{ role: 'user', parts: [{ text: 'Hello world' }] }],
-                model: 'gpt-4',
+                contents: [{ role: "user", parts: [{ text: "Hello world" }] }],
+                model: "gpt-4",
             };
             const result = await generator.countTokens(request);
             expect(result.totalTokens).toBe(50); // Mocked value
         });
-        it('should fall back to character approximation if tiktoken fails', async () => {
+        it("should fall back to character approximation if tiktoken fails", async () => {
             // Mock tiktoken to throw error
-            vi.doMock('tiktoken', () => ({
+            vi.doMock("tiktoken", () => ({
                 get_encoding: vi.fn().mockImplementation(() => {
-                    throw new Error('Tiktoken failed');
+                    throw new Error("Tiktoken failed");
                 }),
             }));
             const request = {
-                contents: [{ role: 'user', parts: [{ text: 'Hello world' }] }],
-                model: 'gpt-4',
+                contents: [{ role: "user", parts: [{ text: "Hello world" }] }],
+                model: "gpt-4",
             };
             const result = await generator.countTokens(request);
             // Should use character approximation (content length / 4)
             expect(result.totalTokens).toBeGreaterThan(0);
         });
     });
-    describe('embedContent', () => {
-        it('should delegate to pipeline.client.embeddings.create', async () => {
+    describe("embedContent", () => {
+        it("should delegate to pipeline.client.embeddings.create", async () => {
             // This test verifies the method exists and can be called
-            expect(typeof generator.embedContent).toBe('function');
+            expect(typeof generator.embedContent).toBe("function");
         });
     });
-    describe('shouldSuppressErrorLogging', () => {
-        it('should return false by default', () => {
+    describe("shouldSuppressErrorLogging", () => {
+        it("should return false by default", () => {
             // Create a test subclass to access the protected method
             class TestGenerator extends OpenAIContentGenerator {
                 testShouldSuppressErrorLogging(error, request) {
@@ -145,8 +145,8 @@ describe('OpenAIContentGenerator (Refactored)', () => {
                 }
             }
             const contentGeneratorConfig = {
-                model: 'gpt-4',
-                apiKey: 'test-key',
+                model: "gpt-4",
+                apiKey: "test-key",
                 authType: AuthType.USE_OPENAI,
                 enableOpenAILogging: false,
                 timeout: 120000,
@@ -174,13 +174,13 @@ describe('OpenAIContentGenerator (Refactored)', () => {
             };
             const testGenerator = new TestGenerator(contentGeneratorConfig, mockConfig, mockProvider);
             const request = {
-                contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
-                model: 'gpt-4',
+                contents: [{ role: "user", parts: [{ text: "Hello" }] }],
+                model: "gpt-4",
             };
-            const result = testGenerator.testShouldSuppressErrorLogging(new Error('Test error'), request);
+            const result = testGenerator.testShouldSuppressErrorLogging(new Error("Test error"), request);
             expect(result).toBe(false);
         });
-        it('should allow subclasses to override error suppression behavior', async () => {
+        it("should allow subclasses to override error suppression behavior", async () => {
             class TestGenerator extends OpenAIContentGenerator {
                 testShouldSuppressErrorLogging(error, request) {
                     return this.shouldSuppressErrorLogging(error, request);
@@ -190,8 +190,8 @@ describe('OpenAIContentGenerator (Refactored)', () => {
                 }
             }
             const contentGeneratorConfig = {
-                model: 'gpt-4',
-                apiKey: 'test-key',
+                model: "gpt-4",
+                apiKey: "test-key",
                 authType: AuthType.USE_OPENAI,
                 enableOpenAILogging: false,
                 timeout: 120000,
@@ -219,10 +219,10 @@ describe('OpenAIContentGenerator (Refactored)', () => {
             };
             const testGenerator = new TestGenerator(contentGeneratorConfig, mockConfig, mockProvider);
             const request = {
-                contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
-                model: 'gpt-4',
+                contents: [{ role: "user", parts: [{ text: "Hello" }] }],
+                model: "gpt-4",
             };
-            const result = testGenerator.testShouldSuppressErrorLogging(new Error('Test error'), request);
+            const result = testGenerator.testShouldSuppressErrorLogging(new Error("Test error"), request);
             expect(result).toBe(true);
         });
     });

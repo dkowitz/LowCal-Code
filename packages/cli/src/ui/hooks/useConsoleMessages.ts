@@ -10,8 +10,8 @@ import {
   useReducer,
   useRef,
   useTransition,
-} from 'react';
-import type { ConsoleMessageItem } from '../types.js';
+} from "react";
+import type { ConsoleMessageItem } from "../types.js";
 
 export interface UseConsoleMessagesReturn {
   consoleMessages: ConsoleMessageItem[];
@@ -20,15 +20,15 @@ export interface UseConsoleMessagesReturn {
 }
 
 type Action =
-  | { type: 'ADD_MESSAGES'; payload: ConsoleMessageItem[] }
-  | { type: 'CLEAR' };
+  | { type: "ADD_MESSAGES"; payload: ConsoleMessageItem[] }
+  | { type: "CLEAR" };
 
 function consoleMessagesReducer(
   state: ConsoleMessageItem[],
   action: Action,
 ): ConsoleMessageItem[] {
   switch (action.type) {
-    case 'ADD_MESSAGES': {
+    case "ADD_MESSAGES": {
       const newMessages = [...state];
       for (const queuedMessage of action.payload) {
         const lastMessage = newMessages[newMessages.length - 1];
@@ -49,7 +49,7 @@ function consoleMessagesReducer(
       }
       return newMessages;
     }
-    case 'CLEAR':
+    case "CLEAR":
       return [];
     default:
       return state;
@@ -67,7 +67,7 @@ export function useConsoleMessages(): UseConsoleMessagesReturn {
       const messagesToProcess = messageQueueRef.current;
       messageQueueRef.current = [];
       startTransition(() => {
-        dispatch({ type: 'ADD_MESSAGES', payload: messagesToProcess });
+        dispatch({ type: "ADD_MESSAGES", payload: messagesToProcess });
       });
     }
     timeoutRef.current = null;
@@ -92,7 +92,7 @@ export function useConsoleMessages(): UseConsoleMessagesReturn {
     }
     messageQueueRef.current = [];
     startTransition(() => {
-      dispatch({ type: 'CLEAR' });
+      dispatch({ type: "CLEAR" });
     });
   }, []);
 

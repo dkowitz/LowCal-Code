@@ -3,9 +3,9 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { DefaultRequestTokenizer } from './requestTokenizer.js';
-describe('DefaultRequestTokenizer', () => {
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { DefaultRequestTokenizer } from "./requestTokenizer.js";
+describe("DefaultRequestTokenizer", () => {
     let tokenizer;
     beforeEach(() => {
         tokenizer = new DefaultRequestTokenizer();
@@ -13,14 +13,14 @@ describe('DefaultRequestTokenizer', () => {
     afterEach(async () => {
         await tokenizer.dispose();
     });
-    describe('text token calculation', () => {
-        it('should calculate tokens for simple text content', async () => {
+    describe("text token calculation", () => {
+        it("should calculate tokens for simple text content", async () => {
             const request = {
-                model: 'test-model',
+                model: "test-model",
                 contents: [
                     {
-                        role: 'user',
-                        parts: [{ text: 'Hello, world!' }],
+                        role: "user",
+                        parts: [{ text: "Hello, world!" }],
                     },
                 ],
             };
@@ -30,16 +30,16 @@ describe('DefaultRequestTokenizer', () => {
             expect(result.breakdown.imageTokens).toBe(0);
             expect(result.processingTime).toBeGreaterThan(0);
         });
-        it('should handle multiple text parts', async () => {
+        it("should handle multiple text parts", async () => {
             const request = {
-                model: 'test-model',
+                model: "test-model",
                 contents: [
                     {
-                        role: 'user',
+                        role: "user",
                         parts: [
-                            { text: 'First part' },
-                            { text: 'Second part' },
-                            { text: 'Third part' },
+                            { text: "First part" },
+                            { text: "Second part" },
+                            { text: "Third part" },
                         ],
                     },
                 ],
@@ -48,29 +48,29 @@ describe('DefaultRequestTokenizer', () => {
             expect(result.totalTokens).toBeGreaterThan(0);
             expect(result.breakdown.textTokens).toBeGreaterThan(0);
         });
-        it('should handle string content', async () => {
+        it("should handle string content", async () => {
             const request = {
-                model: 'test-model',
-                contents: ['Simple string content'],
+                model: "test-model",
+                contents: ["Simple string content"],
             };
             const result = await tokenizer.calculateTokens(request);
             expect(result.totalTokens).toBeGreaterThan(0);
             expect(result.breakdown.textTokens).toBeGreaterThan(0);
         });
     });
-    describe('image token calculation', () => {
-        it('should calculate tokens for image content', async () => {
+    describe("image token calculation", () => {
+        it("should calculate tokens for image content", async () => {
             // Create a simple 1x1 PNG image in base64
-            const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==';
+            const pngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
             const request = {
-                model: 'test-model',
+                model: "test-model",
                 contents: [
                     {
-                        role: 'user',
+                        role: "user",
                         parts: [
                             {
                                 inlineData: {
-                                    mimeType: 'image/png',
+                                    mimeType: "image/png",
                                     data: pngBase64,
                                 },
                             },
@@ -83,23 +83,23 @@ describe('DefaultRequestTokenizer', () => {
             expect(result.breakdown.imageTokens).toBeGreaterThanOrEqual(4);
             expect(result.breakdown.textTokens).toBe(0);
         });
-        it('should handle multiple images', async () => {
-            const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==';
+        it("should handle multiple images", async () => {
+            const pngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
             const request = {
-                model: 'test-model',
+                model: "test-model",
                 contents: [
                     {
-                        role: 'user',
+                        role: "user",
                         parts: [
                             {
                                 inlineData: {
-                                    mimeType: 'image/png',
+                                    mimeType: "image/png",
                                     data: pngBase64,
                                 },
                             },
                             {
                                 inlineData: {
-                                    mimeType: 'image/png',
+                                    mimeType: "image/png",
                                     data: pngBase64,
                                 },
                             },
@@ -112,23 +112,23 @@ describe('DefaultRequestTokenizer', () => {
             expect(result.breakdown.imageTokens).toBeGreaterThanOrEqual(8);
         });
     });
-    describe('mixed content', () => {
-        it('should handle text and image content together', async () => {
-            const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==';
+    describe("mixed content", () => {
+        it("should handle text and image content together", async () => {
+            const pngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
             const request = {
-                model: 'test-model',
+                model: "test-model",
                 contents: [
                     {
-                        role: 'user',
+                        role: "user",
                         parts: [
-                            { text: 'Here is an image:' },
+                            { text: "Here is an image:" },
                             {
                                 inlineData: {
-                                    mimeType: 'image/png',
+                                    mimeType: "image/png",
                                     data: pngBase64,
                                 },
                             },
-                            { text: 'What do you see?' },
+                            { text: "What do you see?" },
                         ],
                     },
                 ],
@@ -139,18 +139,18 @@ describe('DefaultRequestTokenizer', () => {
             expect(result.breakdown.imageTokens).toBeGreaterThanOrEqual(4);
         });
     });
-    describe('function content', () => {
-        it('should handle function calls', async () => {
+    describe("function content", () => {
+        it("should handle function calls", async () => {
             const request = {
-                model: 'test-model',
+                model: "test-model",
                 contents: [
                     {
-                        role: 'user',
+                        role: "user",
                         parts: [
                             {
                                 functionCall: {
-                                    name: 'test_function',
-                                    args: { param1: 'value1', param2: 42 },
+                                    name: "test_function",
+                                    args: { param1: "value1", param2: 42 },
                                 },
                             },
                         ],
@@ -162,10 +162,10 @@ describe('DefaultRequestTokenizer', () => {
             expect(result.breakdown.otherTokens).toBeGreaterThan(0);
         });
     });
-    describe('empty content', () => {
-        it('should handle empty request', async () => {
+    describe("empty content", () => {
+        it("should handle empty request", async () => {
             const request = {
-                model: 'test-model',
+                model: "test-model",
                 contents: [],
             };
             const result = await tokenizer.calculateTokens(request);
@@ -173,41 +173,41 @@ describe('DefaultRequestTokenizer', () => {
             expect(result.breakdown.textTokens).toBe(0);
             expect(result.breakdown.imageTokens).toBe(0);
         });
-        it('should handle undefined contents', async () => {
+        it("should handle undefined contents", async () => {
             const request = {
-                model: 'test-model',
+                model: "test-model",
                 contents: [],
             };
             const result = await tokenizer.calculateTokens(request);
             expect(result.totalTokens).toBe(0);
         });
     });
-    describe('configuration', () => {
-        it('should use custom text encoding', async () => {
+    describe("configuration", () => {
+        it("should use custom text encoding", async () => {
             const request = {
-                model: 'test-model',
+                model: "test-model",
                 contents: [
                     {
-                        role: 'user',
-                        parts: [{ text: 'Test text for encoding' }],
+                        role: "user",
+                        parts: [{ text: "Test text for encoding" }],
                     },
                 ],
             };
             const result = await tokenizer.calculateTokens(request, {
-                textEncoding: 'cl100k_base',
+                textEncoding: "cl100k_base",
             });
             expect(result.totalTokens).toBeGreaterThan(0);
         });
-        it('should process multiple images serially', async () => {
-            const pngBase64 = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==';
+        it("should process multiple images serially", async () => {
+            const pngBase64 = "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
             const request = {
-                model: 'test-model',
+                model: "test-model",
                 contents: [
                     {
-                        role: 'user',
+                        role: "user",
                         parts: Array(10).fill({
                             inlineData: {
-                                mimeType: 'image/png',
+                                mimeType: "image/png",
                                 data: pngBase64,
                             },
                         }),
@@ -218,18 +218,18 @@ describe('DefaultRequestTokenizer', () => {
             expect(result.totalTokens).toBeGreaterThanOrEqual(60); // At least 6 tokens per image * 10 images
         });
     });
-    describe('error handling', () => {
-        it('should handle malformed image data gracefully', async () => {
+    describe("error handling", () => {
+        it("should handle malformed image data gracefully", async () => {
             const request = {
-                model: 'test-model',
+                model: "test-model",
                 contents: [
                     {
-                        role: 'user',
+                        role: "user",
                         parts: [
                             {
                                 inlineData: {
-                                    mimeType: 'image/png',
-                                    data: 'invalid-base64-data',
+                                    mimeType: "image/png",
+                                    data: "invalid-base64-data",
                                 },
                             },
                         ],

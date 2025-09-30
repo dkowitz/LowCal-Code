@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { flatMapTextParts, readPathFromWorkspace, } from '@qwen-code/qwen-code-core';
-import { MessageType } from '../../ui/types.js';
-import { AT_FILE_INJECTION_TRIGGER, } from './types.js';
-import { extractInjections } from './injectionParser.js';
+import { flatMapTextParts, readPathFromWorkspace, } from "@qwen-code/qwen-code-core";
+import { MessageType } from "../../ui/types.js";
+import { AT_FILE_INJECTION_TRIGGER, } from "./types.js";
+import { extractInjections } from "./injectionParser.js";
 export class AtFileProcessor {
     commandName;
     constructor(commandName) {

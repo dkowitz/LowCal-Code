@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import React from 'react';
+import React from "react";
 /**
  * Minimum height for the MaxSizedBox component.
  * This ensures there is room for at least one line of content as well as the
@@ -15,7 +15,7 @@ interface MaxSizedBoxProps {
     children?: React.ReactNode;
     maxWidth?: number;
     maxHeight: number | undefined;
-    overflowDirection?: 'top' | 'bottom';
+    overflowDirection?: "top" | "bottom";
     additionalHiddenLinesCount?: number;
 }
 /**

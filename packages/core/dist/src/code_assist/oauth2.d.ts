@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { OAuth2Client } from 'google-auth-library';
-import type { Config } from '../config/config.js';
-import { AuthType } from '../core/contentGenerator.js';
+import { OAuth2Client } from "google-auth-library";
+import type { Config } from "../config/config.js";
+import { AuthType } from "../core/contentGenerator.js";
 /**
  * An Authentication URL for updating the credentials of a Oauth2Client
  * as well as a promise that will resolve when the credentials have

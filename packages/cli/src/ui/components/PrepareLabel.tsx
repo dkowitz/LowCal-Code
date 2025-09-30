@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Text } from 'ink';
-import { Colors } from '../colors.js';
+import type React from "react";
+import { Text } from "ink";
+import { Colors } from "../colors.js";
 
 interface PrepareLabelProps {
   label: string;

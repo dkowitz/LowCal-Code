@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { glob, escape } from 'glob';
-import type { ToolInvocation, ToolResult } from './tools.js';
-import { BaseDeclarativeTool, BaseToolInvocation, Kind } from './tools.js';
-import { ToolNames } from './tool-names.js';
-import { shortenPath, makeRelative } from '../utils/paths.js';
-import type { Config } from '../config/config.js';
-import { ToolErrorType } from './tool-error.js';
+import fs from "node:fs";
+import path from "node:path";
+import { glob, escape } from "glob";
+import type { ToolInvocation, ToolResult } from "./tools.js";
+import { BaseDeclarativeTool, BaseToolInvocation, Kind } from "./tools.js";
+import { ToolNames } from "./tool-names.js";
+import { shortenPath, makeRelative } from "../utils/paths.js";
+import type { Config } from "../config/config.js";
+import { ToolErrorType } from "./tool-error.js";
 
 // Subset of 'Path' interface provided by 'glob' that we can implement for testing
 export interface GlobPath {
@@ -99,7 +99,7 @@ class GlobToolInvocation extends BaseToolInvocation<
     if (this.params.path) {
       const searchDir = path.resolve(
         this.config.getTargetDir(),
-        this.params.path || '.',
+        this.params.path || ".",
       );
       const relativePath = makeRelative(searchDir, this.config.getTargetDir());
       description += ` within ${shortenPath(relativePath)}`;
@@ -234,14 +234,19 @@ class GlobToolInvocation extends BaseToolInvocation<
 
       const extensionCounts = new Map<string, number>();
       for (const filePath of sortedAbsolutePaths) {
-        const extension = (path.extname(filePath) || '(no extension)').toLowerCase();
-        extensionCounts.set(extension, (extensionCounts.get(extension) ?? 0) + 1);
+        const extension = (
+          path.extname(filePath) || "(no extension)"
+        ).toLowerCase();
+        extensionCounts.set(
+          extension,
+          (extensionCounts.get(extension) ?? 0) + 1,
+        );
       }
       const topExtensions = Array.from(extensionCounts.entries())
         .sort((a, b) => b[1] - a[1])
         .slice(0, 5)
         .map(([ext, count]) => `${ext}: ${count}`)
-        .join(', ');
+        .join(", ");
 
       let resultMessage = `Found ${fileCount} file(s) matching "${this.params.pattern}"`;
       if (searchDirectories.length === 1) {
@@ -252,36 +257,39 @@ class GlobToolInvocation extends BaseToolInvocation<
       if (gitIgnoredCount > 0) {
         resultMessage += ` (${gitIgnoredCount} additional files were git-ignored)`;
       }
-      resultMessage += ', sorted by modification time (newest first).';
+      resultMessage += ", sorted by modification time (newest first).";
       if (topExtensions) {
         resultMessage += `\nTop file types: ${topExtensions}`;
       }
       resultMessage += `\n\nMatches (first ${limitedPaths.length}${
-        truncatedCount > 0 ? ` of ${fileCount}` : ''
-      }):\n${limitedPaths.join('\n')}`;
+        truncatedCount > 0 ? ` of ${fileCount}` : ""
+      }):\n${limitedPaths.join("\n")}`;
 
       if (truncatedCount > 0) {
-      const suggestedLimit = Math.min(
-        GlobToolInvocation.MAX_LIMIT,
-        normalizedLimit + Math.min(truncatedCount, 50),
-      );
-      const suggestionPayload: Record<string, unknown> = {
-        pattern: this.params.pattern,
-        limit: suggestedLimit,
-      };
-      if (this.params.path) {
-        suggestionPayload['path'] = this.params.path;
-      }
-      const commandSuggestion = `/glob ${JSON.stringify(suggestionPayload)}`;
+        const suggestedLimit = Math.min(
+          GlobToolInvocation.MAX_LIMIT,
+          normalizedLimit + Math.min(truncatedCount, 50),
+        );
+        const suggestionPayload: Record<string, unknown> = {
+          pattern: this.params.pattern,
+          limit: suggestedLimit,
+        };
+        if (this.params.path) {
+          suggestionPayload["path"] = this.params.path;
+        }
+        const commandSuggestion = `/glob ${JSON.stringify(suggestionPayload)}`;
         resultMessage += `\n\n…${truncatedCount} additional match${
-          truncatedCount === 1 ? '' : 'es'
+          truncatedCount === 1 ? "" : "es"
         } hidden to protect the token budget. Rerun ${commandSuggestion} or refine your pattern for narrower results.`;
       }
 
       return {
         llmContent: resultMessage,
-        returnDisplay: `Showing ${limitedPaths.length} of ${fileCount} matching file(s)` +
-          (gitIgnoredCount > 0 ? ` (ignored: ${gitIgnoredCount} git-ignored)` : ''),
+        returnDisplay:
+          `Showing ${limitedPaths.length} of ${fileCount} matching file(s)` +
+          (gitIgnoredCount > 0
+            ? ` (ignored: ${gitIgnoredCount} git-ignored)`
+            : ""),
       };
     } catch (error) {
       const errorMessage =
@@ -309,39 +317,39 @@ export class GlobTool extends BaseDeclarativeTool<GlobToolParams, ToolResult> {
   constructor(private config: Config) {
     super(
       GlobTool.Name,
-      'FindFiles',
-      'Efficiently finds files matching specific glob patterns (e.g., `src/**/*.ts`, `**/*.md`), returning absolute paths sorted by modification time (newest first). Ideal for quickly locating files based on their name or path structure, especially in large codebases.',
+      "FindFiles",
+      "Efficiently finds files matching specific glob patterns (e.g., `src/**/*.ts`, `**/*.md`), returning absolute paths sorted by modification time (newest first). Ideal for quickly locating files based on their name or path structure, especially in large codebases.",
       Kind.Search,
       {
         properties: {
           pattern: {
             description:
               "The glob pattern to match against (e.g., '**/*.py', 'docs/*.md').",
-            type: 'string',
+            type: "string",
           },
           path: {
             description:
-              'Optional: The absolute path to the directory to search within. If omitted, searches the root directory.',
-            type: 'string',
+              "Optional: The absolute path to the directory to search within. If omitted, searches the root directory.",
+            type: "string",
           },
           case_sensitive: {
             description:
-              'Optional: Whether the search should be case-sensitive. Defaults to false.',
-            type: 'boolean',
+              "Optional: Whether the search should be case-sensitive. Defaults to false.",
+            type: "boolean",
           },
           respect_git_ignore: {
             description:
-              'Optional: Whether to respect .gitignore patterns when finding files. Only available in git repositories. Defaults to true.',
-            type: 'boolean',
+              "Optional: Whether to respect .gitignore patterns when finding files. Only available in git repositories. Defaults to true.",
+            type: "boolean",
           },
           limit: {
             description:
-              'Optional: Maximum number of matching files to include in the detailed listing (defaults to 50, capped at 300).',
-            type: 'integer',
+              "Optional: Maximum number of matching files to include in the detailed listing (defaults to 50, capped at 300).",
+            type: "integer",
           },
         },
-        required: ['pattern'],
-        type: 'object',
+        required: ["pattern"],
+        type: "object",
       },
     );
   }
@@ -354,7 +362,7 @@ export class GlobTool extends BaseDeclarativeTool<GlobToolParams, ToolResult> {
   ): string | null {
     if (params.limit !== undefined) {
       if (!Number.isFinite(params.limit) || params.limit <= 0) {
-        return 'Limit must be a positive number when provided.';
+        return "Limit must be a positive number when provided.";
       }
       if (params.limit > GlobToolInvocation.MAX_LIMIT) {
         return `Limit cannot exceed ${GlobToolInvocation.MAX_LIMIT}.`;
@@ -363,13 +371,13 @@ export class GlobTool extends BaseDeclarativeTool<GlobToolParams, ToolResult> {
 
     const searchDirAbsolute = path.resolve(
       this.config.getTargetDir(),
-      params.path || '.',
+      params.path || ".",
     );
 
     const workspaceContext = this.config.getWorkspaceContext();
     if (!workspaceContext.isPathWithinWorkspace(searchDirAbsolute)) {
       const directories = workspaceContext.getDirectories();
-      return `Search path ("${searchDirAbsolute}") resolves outside the allowed workspace directories: ${directories.join(', ')}`;
+      return `Search path ("${searchDirAbsolute}") resolves outside the allowed workspace directories: ${directories.join(", ")}`;
     }
 
     const targetDir = searchDirAbsolute || this.config.getTargetDir();
@@ -386,8 +394,8 @@ export class GlobTool extends BaseDeclarativeTool<GlobToolParams, ToolResult> {
 
     if (
       !params.pattern ||
-      typeof params.pattern !== 'string' ||
-      params.pattern.trim() === ''
+      typeof params.pattern !== "string" ||
+      params.pattern.trim() === ""
     ) {
       return "The 'pattern' parameter cannot be empty.";
     }

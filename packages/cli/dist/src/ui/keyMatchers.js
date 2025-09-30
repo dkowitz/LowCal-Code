@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { Command, defaultKeyBindings } from '../config/keyBindings.js';
+import { Command, defaultKeyBindings } from "../config/keyBindings.js";
 /**
  * Matches a KeyBinding against an actual Key press
  * Pure data-driven matching logic

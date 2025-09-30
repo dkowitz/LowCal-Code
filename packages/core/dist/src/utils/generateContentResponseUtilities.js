@@ -3,18 +3,18 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getResponseText } from './partUtils.js';
+import { getResponseText } from "./partUtils.js";
 export function getResponseTextFromParts(parts) {
     if (!parts) {
         return undefined;
     }
     const textSegments = parts
         .map((part) => part.text)
-        .filter((text) => typeof text === 'string');
+        .filter((text) => typeof text === "string");
     if (textSegments.length === 0) {
         return undefined;
     }
-    return textSegments.join('');
+    return textSegments.join("");
 }
 export function getFunctionCalls(response) {
     const parts = response.candidates?.[0]?.content?.parts;

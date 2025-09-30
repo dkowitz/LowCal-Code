@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { DefaultRequestTokenizer } from './requestTokenizer.js';
-import type { CountTokensParameters } from '@google/genai';
+import { describe, it, expect, beforeEach, afterEach } from "vitest";
+import { DefaultRequestTokenizer } from "./requestTokenizer.js";
+import type { CountTokensParameters } from "@google/genai";
 
-describe('DefaultRequestTokenizer', () => {
+describe("DefaultRequestTokenizer", () => {
   let tokenizer: DefaultRequestTokenizer;
 
   beforeEach(() => {
@@ -19,14 +19,14 @@ describe('DefaultRequestTokenizer', () => {
     await tokenizer.dispose();
   });
 
-  describe('text token calculation', () => {
-    it('should calculate tokens for simple text content', async () => {
+  describe("text token calculation", () => {
+    it("should calculate tokens for simple text content", async () => {
       const request: CountTokensParameters = {
-        model: 'test-model',
+        model: "test-model",
         contents: [
           {
-            role: 'user',
-            parts: [{ text: 'Hello, world!' }],
+            role: "user",
+            parts: [{ text: "Hello, world!" }],
           },
         ],
       };
@@ -39,16 +39,16 @@ describe('DefaultRequestTokenizer', () => {
       expect(result.processingTime).toBeGreaterThan(0);
     });
 
-    it('should handle multiple text parts', async () => {
+    it("should handle multiple text parts", async () => {
       const request: CountTokensParameters = {
-        model: 'test-model',
+        model: "test-model",
         contents: [
           {
-            role: 'user',
+            role: "user",
             parts: [
-              { text: 'First part' },
-              { text: 'Second part' },
-              { text: 'Third part' },
+              { text: "First part" },
+              { text: "Second part" },
+              { text: "Third part" },
             ],
           },
         ],
@@ -60,10 +60,10 @@ describe('DefaultRequestTokenizer', () => {
       expect(result.breakdown.textTokens).toBeGreaterThan(0);
     });
 
-    it('should handle string content', async () => {
+    it("should handle string content", async () => {
       const request: CountTokensParameters = {
-        model: 'test-model',
-        contents: ['Simple string content'],
+        model: "test-model",
+        contents: ["Simple string content"],
       };
 
       const result = await tokenizer.calculateTokens(request);
@@ -73,21 +73,21 @@ describe('DefaultRequestTokenizer', () => {
     });
   });
 
-  describe('image token calculation', () => {
-    it('should calculate tokens for image content', async () => {
+  describe("image token calculation", () => {
+    it("should calculate tokens for image content", async () => {
       // Create a simple 1x1 PNG image in base64
       const pngBase64 =
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==';
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
 
       const request: CountTokensParameters = {
-        model: 'test-model',
+        model: "test-model",
         contents: [
           {
-            role: 'user',
+            role: "user",
             parts: [
               {
                 inlineData: {
-                  mimeType: 'image/png',
+                  mimeType: "image/png",
                   data: pngBase64,
                 },
               },
@@ -103,25 +103,25 @@ describe('DefaultRequestTokenizer', () => {
       expect(result.breakdown.textTokens).toBe(0);
     });
 
-    it('should handle multiple images', async () => {
+    it("should handle multiple images", async () => {
       const pngBase64 =
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==';
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
 
       const request: CountTokensParameters = {
-        model: 'test-model',
+        model: "test-model",
         contents: [
           {
-            role: 'user',
+            role: "user",
             parts: [
               {
                 inlineData: {
-                  mimeType: 'image/png',
+                  mimeType: "image/png",
                   data: pngBase64,
                 },
               },
               {
                 inlineData: {
-                  mimeType: 'image/png',
+                  mimeType: "image/png",
                   data: pngBase64,
                 },
               },
@@ -137,25 +137,25 @@ describe('DefaultRequestTokenizer', () => {
     });
   });
 
-  describe('mixed content', () => {
-    it('should handle text and image content together', async () => {
+  describe("mixed content", () => {
+    it("should handle text and image content together", async () => {
       const pngBase64 =
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==';
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
 
       const request: CountTokensParameters = {
-        model: 'test-model',
+        model: "test-model",
         contents: [
           {
-            role: 'user',
+            role: "user",
             parts: [
-              { text: 'Here is an image:' },
+              { text: "Here is an image:" },
               {
                 inlineData: {
-                  mimeType: 'image/png',
+                  mimeType: "image/png",
                   data: pngBase64,
                 },
               },
-              { text: 'What do you see?' },
+              { text: "What do you see?" },
             ],
           },
         ],
@@ -169,18 +169,18 @@ describe('DefaultRequestTokenizer', () => {
     });
   });
 
-  describe('function content', () => {
-    it('should handle function calls', async () => {
+  describe("function content", () => {
+    it("should handle function calls", async () => {
       const request: CountTokensParameters = {
-        model: 'test-model',
+        model: "test-model",
         contents: [
           {
-            role: 'user',
+            role: "user",
             parts: [
               {
                 functionCall: {
-                  name: 'test_function',
-                  args: { param1: 'value1', param2: 42 },
+                  name: "test_function",
+                  args: { param1: "value1", param2: 42 },
                 },
               },
             ],
@@ -195,10 +195,10 @@ describe('DefaultRequestTokenizer', () => {
     });
   });
 
-  describe('empty content', () => {
-    it('should handle empty request', async () => {
+  describe("empty content", () => {
+    it("should handle empty request", async () => {
       const request: CountTokensParameters = {
-        model: 'test-model',
+        model: "test-model",
         contents: [],
       };
 
@@ -209,9 +209,9 @@ describe('DefaultRequestTokenizer', () => {
       expect(result.breakdown.imageTokens).toBe(0);
     });
 
-    it('should handle undefined contents', async () => {
+    it("should handle undefined contents", async () => {
       const request: CountTokensParameters = {
-        model: 'test-model',
+        model: "test-model",
         contents: [],
       };
 
@@ -221,37 +221,37 @@ describe('DefaultRequestTokenizer', () => {
     });
   });
 
-  describe('configuration', () => {
-    it('should use custom text encoding', async () => {
+  describe("configuration", () => {
+    it("should use custom text encoding", async () => {
       const request: CountTokensParameters = {
-        model: 'test-model',
+        model: "test-model",
         contents: [
           {
-            role: 'user',
-            parts: [{ text: 'Test text for encoding' }],
+            role: "user",
+            parts: [{ text: "Test text for encoding" }],
           },
         ],
       };
 
       const result = await tokenizer.calculateTokens(request, {
-        textEncoding: 'cl100k_base',
+        textEncoding: "cl100k_base",
       });
 
       expect(result.totalTokens).toBeGreaterThan(0);
     });
 
-    it('should process multiple images serially', async () => {
+    it("should process multiple images serially", async () => {
       const pngBase64 =
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==';
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
 
       const request: CountTokensParameters = {
-        model: 'test-model',
+        model: "test-model",
         contents: [
           {
-            role: 'user',
+            role: "user",
             parts: Array(10).fill({
               inlineData: {
-                mimeType: 'image/png',
+                mimeType: "image/png",
                 data: pngBase64,
               },
             }),
@@ -265,18 +265,18 @@ describe('DefaultRequestTokenizer', () => {
     });
   });
 
-  describe('error handling', () => {
-    it('should handle malformed image data gracefully', async () => {
+  describe("error handling", () => {
+    it("should handle malformed image data gracefully", async () => {
       const request: CountTokensParameters = {
-        model: 'test-model',
+        model: "test-model",
         contents: [
           {
-            role: 'user',
+            role: "user",
             parts: [
               {
                 inlineData: {
-                  mimeType: 'image/png',
-                  data: 'invalid-base64-data',
+                  mimeType: "image/png",
+                  data: "invalid-base64-data",
                 },
               },
             ],

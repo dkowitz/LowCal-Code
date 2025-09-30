@@ -5,17 +5,17 @@
  */
 
 // no hooks needed beyond keypress handled inside
-import { Box, Text } from 'ink';
-import chalk from 'chalk';
-import stringWidth from 'string-width';
-import { useTextBuffer } from './text-buffer.js';
-import { useKeypress } from '../../hooks/useKeypress.js';
-import { keyMatchers, Command } from '../../keyMatchers.js';
-import { cpSlice, cpLen } from '../../utils/textUtils.js';
-import { theme } from '../../semantic-colors.js';
-import { Colors } from '../../colors.js';
-import type { Key } from '../../hooks/useKeypress.js';
-import { useCallback, useRef, useEffect } from 'react';
+import { Box, Text } from "ink";
+import chalk from "chalk";
+import stringWidth from "string-width";
+import { useTextBuffer } from "./text-buffer.js";
+import { useKeypress } from "../../hooks/useKeypress.js";
+import { keyMatchers, Command } from "../../keyMatchers.js";
+import { cpSlice, cpLen } from "../../utils/textUtils.js";
+import { theme } from "../../semantic-colors.js";
+import { Colors } from "../../colors.js";
+import type { Key } from "../../hooks/useKeypress.js";
+import { useCallback, useRef, useEffect } from "react";
 
 export interface TextInputProps {
   value: string;
@@ -50,7 +50,7 @@ export function TextInput({
   }, []);
 
   const buffer = useTextBuffer({
-    initialText: value || '',
+    initialText: value || "",
     viewport: { height, width: inputWidth },
     isValidPath: () => false,
     onChange: stableOnChange,
@@ -66,12 +66,12 @@ export function TextInput({
       if (!buffer || !isActive) return;
 
       // Submit on Enter
-      if (keyMatchers[Command.SUBMIT](key) || key.name === 'return') {
+      if (keyMatchers[Command.SUBMIT](key) || key.name === "return") {
         if (allowMultiline) {
           const [row, col] = buffer.cursor;
           const line = buffer.lines[row];
-          const charBefore = col > 0 ? cpSlice(line, col - 1, col) : '';
-          if (charBefore === '\\') {
+          const charBefore = col > 0 ? cpSlice(line, col - 1, col) : "";
+          if (charBefore === "\\") {
             buffer.backspace();
             buffer.newline();
           } else {
@@ -91,17 +91,17 @@ export function TextInput({
 
       // Navigation helpers
       if (keyMatchers[Command.HOME](key)) {
-        buffer.move('home');
+        buffer.move("home");
         return;
       }
       if (keyMatchers[Command.END](key)) {
-        buffer.move('end');
+        buffer.move("end");
         buffer.moveToOffset(cpLen(buffer.text));
         return;
       }
 
       if (keyMatchers[Command.CLEAR_INPUT](key)) {
-        if (buffer.text.length > 0) buffer.setText('');
+        if (buffer.text.length > 0) buffer.setText("");
         return;
       }
       if (keyMatchers[Command.KILL_LINE_RIGHT](key)) {
@@ -133,7 +133,7 @@ export function TextInput({
   return (
     <Box flexDirection="column" gap={1}>
       <Box>
-        <Text color={theme.text.accent}>{'> '}</Text>
+        <Text color={theme.text.accent}>{"> "}</Text>
         <Box flexGrow={1} flexDirection="column">
           {buffer.text.length === 0 && placeholder ? (
             <Text>
@@ -146,7 +146,7 @@ export function TextInput({
               let display = cpSlice(lineText, 0, inputWidth);
               const currentVisualWidth = stringWidth(display);
               if (currentVisualWidth < inputWidth) {
-                display = display + ' '.repeat(inputWidth - currentVisualWidth);
+                display = display + " ".repeat(inputWidth - currentVisualWidth);
               }
 
               if (visualIdxInRenderedSet === cursorVisualRow) {
@@ -158,7 +158,7 @@ export function TextInput({
                         display,
                         relativeVisualColForHighlight,
                         relativeVisualColForHighlight + 1,
-                      ) || ' ';
+                      ) || " ";
                     const highlighted = chalk.inverse(charToHighlight);
                     display =
                       cpSlice(display, 0, relativeVisualColForHighlight) +
@@ -168,7 +168,7 @@ export function TextInput({
                     relativeVisualColForHighlight === cpLen(display) &&
                     cpLen(display) === inputWidth
                   ) {
-                    display = display + chalk.inverse(' ');
+                    display = display + chalk.inverse(" ");
                   }
                 }
               }

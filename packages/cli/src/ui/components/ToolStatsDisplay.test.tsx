@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { render } from 'ink-testing-library';
-import { describe, it, expect, vi } from 'vitest';
-import { ToolStatsDisplay } from './ToolStatsDisplay.js';
-import * as SessionContext from '../contexts/SessionContext.js';
-import type { SessionMetrics } from '../contexts/SessionContext.js';
+import { render } from "ink-testing-library";
+import { describe, it, expect, vi } from "vitest";
+import { ToolStatsDisplay } from "./ToolStatsDisplay.js";
+import * as SessionContext from "../contexts/SessionContext.js";
+import type { SessionMetrics } from "../contexts/SessionContext.js";
 
 // Mock the context to provide controlled data for testing
-vi.mock('../contexts/SessionContext.js', async (importOriginal) => {
+vi.mock("../contexts/SessionContext.js", async (importOriginal) => {
   const actual = await importOriginal<typeof SessionContext>();
   return {
     ...actual,
@@ -37,7 +37,7 @@ const renderWithMockedStats = (metrics: SessionMetrics) => {
   return render(<ToolStatsDisplay />);
 };
 
-describe('<ToolStatsDisplay />', () => {
+describe("<ToolStatsDisplay />", () => {
   it('should render "no tool calls" message when there are no active tools', () => {
     const { lastFrame } = renderWithMockedStats({
       models: {},
@@ -52,12 +52,12 @@ describe('<ToolStatsDisplay />', () => {
     });
 
     expect(lastFrame()).toContain(
-      'No tool calls have been made in this session.',
+      "No tool calls have been made in this session.",
     );
     expect(lastFrame()).toMatchSnapshot();
   });
 
-  it('should display stats for a single tool correctly', () => {
+  it("should display stats for a single tool correctly", () => {
     const { lastFrame } = renderWithMockedStats({
       models: {},
       tools: {
@@ -67,7 +67,7 @@ describe('<ToolStatsDisplay />', () => {
         totalDurationMs: 100,
         totalDecisions: { accept: 1, reject: 0, modify: 0 },
         byName: {
-          'test-tool': {
+          "test-tool": {
             count: 1,
             success: 1,
             fail: 0,
@@ -79,11 +79,11 @@ describe('<ToolStatsDisplay />', () => {
     });
 
     const output = lastFrame();
-    expect(output).toContain('test-tool');
+    expect(output).toContain("test-tool");
     expect(output).toMatchSnapshot();
   });
 
-  it('should display stats for multiple tools correctly', () => {
+  it("should display stats for multiple tools correctly", () => {
     const { lastFrame } = renderWithMockedStats({
       models: {},
       tools: {
@@ -93,14 +93,14 @@ describe('<ToolStatsDisplay />', () => {
         totalDurationMs: 300,
         totalDecisions: { accept: 1, reject: 1, modify: 1 },
         byName: {
-          'tool-a': {
+          "tool-a": {
             count: 2,
             success: 1,
             fail: 1,
             durationMs: 200,
             decisions: { accept: 1, reject: 1, modify: 0 },
           },
-          'tool-b': {
+          "tool-b": {
             count: 1,
             success: 1,
             fail: 0,
@@ -112,12 +112,12 @@ describe('<ToolStatsDisplay />', () => {
     });
 
     const output = lastFrame();
-    expect(output).toContain('tool-a');
-    expect(output).toContain('tool-b');
+    expect(output).toContain("tool-a");
+    expect(output).toContain("tool-b");
     expect(output).toMatchSnapshot();
   });
 
-  it('should handle large values without wrapping or overlapping', () => {
+  it("should handle large values without wrapping or overlapping", () => {
     const { lastFrame } = renderWithMockedStats({
       models: {},
       tools: {
@@ -131,7 +131,7 @@ describe('<ToolStatsDisplay />', () => {
           modify: 12345,
         },
         byName: {
-          'long-named-tool-for-testing-wrapping-and-such': {
+          "long-named-tool-for-testing-wrapping-and-such": {
             count: 999999999,
             success: 888888888,
             fail: 111111111,
@@ -149,7 +149,7 @@ describe('<ToolStatsDisplay />', () => {
     expect(lastFrame()).toMatchSnapshot();
   });
 
-  it('should handle zero decisions gracefully', () => {
+  it("should handle zero decisions gracefully", () => {
     const { lastFrame } = renderWithMockedStats({
       models: {},
       tools: {
@@ -159,7 +159,7 @@ describe('<ToolStatsDisplay />', () => {
         totalDurationMs: 100,
         totalDecisions: { accept: 0, reject: 0, modify: 0 },
         byName: {
-          'test-tool': {
+          "test-tool": {
             count: 1,
             success: 1,
             fail: 0,
@@ -171,10 +171,10 @@ describe('<ToolStatsDisplay />', () => {
     });
 
     const output = lastFrame();
-    expect(output).toContain('Total Reviewed Suggestions:');
-    expect(output).toContain('0');
-    expect(output).toContain('Overall Agreement Rate:');
-    expect(output).toContain('--');
+    expect(output).toContain("Total Reviewed Suggestions:");
+    expect(output).toContain("0");
+    expect(output).toContain("Overall Agreement Rate:");
+    expect(output).toContain("--");
     expect(output).toMatchSnapshot();
   });
 });

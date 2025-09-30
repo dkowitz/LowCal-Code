@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useCallback, useEffect, useReducer, useRef, useTransition, } from 'react';
+import { useCallback, useEffect, useReducer, useRef, useTransition, } from "react";
 function consoleMessagesReducer(state, action) {
     switch (action.type) {
-        case 'ADD_MESSAGES': {
+        case "ADD_MESSAGES": {
             const newMessages = [...state];
             for (const queuedMessage of action.payload) {
                 const lastMessage = newMessages[newMessages.length - 1];
@@ -26,7 +26,7 @@ function consoleMessagesReducer(state, action) {
             }
             return newMessages;
         }
-        case 'CLEAR':
+        case "CLEAR":
             return [];
         default:
             return state;
@@ -42,7 +42,7 @@ export function useConsoleMessages() {
             const messagesToProcess = messageQueueRef.current;
             messageQueueRef.current = [];
             startTransition(() => {
-                dispatch({ type: 'ADD_MESSAGES', payload: messagesToProcess });
+                dispatch({ type: "ADD_MESSAGES", payload: messagesToProcess });
             });
         }
         timeoutRef.current = null;
@@ -62,7 +62,7 @@ export function useConsoleMessages() {
         }
         messageQueueRef.current = [];
         startTransition(() => {
-            dispatch({ type: 'CLEAR' });
+            dispatch({ type: "CLEAR" });
         });
     }, []);
     // Cleanup on unmount

@@ -791,23 +791,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type React from 'react';
-import { Box, Text } from 'ink';
-import { DiffRenderer } from './DiffRenderer.js';
-import { Colors } from '../../colors.js';
-import { RenderInline } from '../../utils/InlineMarkdownRenderer.js';
-import { MarkdownDisplay } from '../../utils/MarkdownDisplay.js';
+import type React from "react";
+import { Box, Text } from "ink";
+import { DiffRenderer } from "./DiffRenderer.js";
+import { Colors } from "../../colors.js";
+import { RenderInline } from "../../utils/InlineMarkdownRenderer.js";
+import { MarkdownDisplay } from "../../utils/MarkdownDisplay.js";
 import type {
   ToolCallConfirmationDetails,
   ToolExecuteConfirmationDetails,
   ToolMcpConfirmationDetails,
   Config,
-} from '@qwen-code/qwen-code-core';
-import { ToolConfirmationOutcome } from '@qwen-code/qwen-code-core';
-import type { RadioSelectItem } from '../shared/RadioButtonSelect.js';
-import { RadioButtonSelect } from '../shared/RadioButtonSelect.js';
-import { MaxSizedBox } from '../shared/MaxSizedBox.js';
-import { useKeypress } from '../../hooks/useKeypress.js';
+} from "@qwen-code/qwen-code-core";
+import { ToolConfirmationOutcome } from "@qwen-code/qwen-code-core";
+import type { RadioSelectItem } from "../shared/RadioButtonSelect.js";
+import { RadioButtonSelect } from "../shared/RadioButtonSelect.js";
+import { MaxSizedBox } from "../shared/MaxSizedBox.js";
+import { useKeypress } from "../../hooks/useKeypress.js";
 &nbsp;
 export interface ToolConfirmationMessageProps {
   confirmationDetails: ToolCallConfirmationDetails;
@@ -832,11 +832,11 @@ export const ToolConfirmationMessage: React.FC&lt;
   const childWidth = terminalWidth - 2; // 2 for padding
 &nbsp;
   const handleConfirm = <span class="fstat-no" title="function not covered" >async (outcome: ToolConfirmationOutcome) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (confirmationDetails.type === 'edit') {</span>
+<span class="cstat-no" title="statement not covered" >    if (confirmationDetails.type === "edit") {</span>
 <span class="cstat-no" title="statement not covered" >      const ideClient = config.getIdeClient();</span>
 <span class="cstat-no" title="statement not covered" >      if (config.getIdeMode()) {</span>
 <span class="cstat-no" title="statement not covered" >        const cliOutcome =</span>
-<span class="cstat-no" title="statement not covered" >          outcome === ToolConfirmationOutcome.Cancel ? 'rejected' : 'accepted';</span>
+<span class="cstat-no" title="statement not covered" >          outcome === ToolConfirmationOutcome.Cancel ? "rejected" : "accepted";</span>
 <span class="cstat-no" title="statement not covered" >        await ideClient?.resolveDiffFromCli(</span>
 <span class="cstat-no" title="statement not covered" >          confirmationDetails.filePath,</span>
 <span class="cstat-no" title="statement not covered" >          cliOutcome,</span>
@@ -851,7 +851,7 @@ export const ToolConfirmationMessage: React.FC&lt;
   useKeypress(
 <span class="fstat-no" title="function not covered" >    (key) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      if (!isFocused) return;</span>
-<span class="cstat-no" title="statement not covered" >      if (key.name === 'escape' || (key.ctrl &amp;&amp; key.name === 'c')) {</span>
+<span class="cstat-no" title="statement not covered" >      if (key.name === "escape" || (key.ctrl &amp;&amp; key.name === "c")) {</span>
 <span class="cstat-no" title="statement not covered" >        handleConfirm(ToolConfirmationOutcome.Cancel);</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
@@ -864,15 +864,15 @@ export const ToolConfirmationMessage: React.FC&lt;
   if (compactMode) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >    const compactOptions: Array&lt;RadioSelectItem&lt;ToolConfirmationOutcome&gt;&gt; = [</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
-<span class="cstat-no" title="statement not covered" >        label: 'Yes, allow once',</span>
+<span class="cstat-no" title="statement not covered" >        label: "Yes, allow once",</span>
 <span class="cstat-no" title="statement not covered" >        value: ToolConfirmationOutcome.ProceedOnce,</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
-<span class="cstat-no" title="statement not covered" >        label: 'Allow always',</span>
+<span class="cstat-no" title="statement not covered" >        label: "Allow always",</span>
 <span class="cstat-no" title="statement not covered" >        value: ToolConfirmationOutcome.ProceedAlways,</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
-<span class="cstat-no" title="statement not covered" >        label: 'No',</span>
+<span class="cstat-no" title="statement not covered" >        label: "No",</span>
 <span class="cstat-no" title="statement not covered" >        value: ToolConfirmationOutcome.Cancel,</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >    ];</span>
@@ -907,7 +907,7 @@ export const ToolConfirmationMessage: React.FC&lt;
   function availableBodyContentHeight() {
     if (options.length === 0) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
       // This should not happen in practice as options are always added before this is called.
-<span class="cstat-no" title="statement not covered" >      throw new Error('Options not provided for confirmation message');</span>
+<span class="cstat-no" title="statement not covered" >      throw new Error("Options not provided for confirmation message");</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     if (availableTerminalHeight === undefined) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
@@ -931,7 +931,7 @@ export const ToolConfirmationMessage: React.FC&lt;
     return Math.max(availableTerminalHeight - surroundingElementsHeight, 1);
   }
 &nbsp;
-  if (confirmationDetails.type === 'edit') {
+  if (confirmationDetails.type === "edit") {
     if (confirmationDetails.isModifying) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      return (</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Box</span>
@@ -952,27 +952,27 @@ export const ToolConfirmationMessage: React.FC&lt;
 &nbsp;
     question = `Apply this change?`;
     options.push({
-      label: 'Yes, allow once',
+      label: "Yes, allow once",
       value: ToolConfirmationOutcome.ProceedOnce,
     });
     if (isTrustedFolder) {
       options.push({
-        label: 'Yes, allow always',
+        label: "Yes, allow always",
         value: ToolConfirmationOutcome.ProceedAlways,
       });
     }
     if (config.getIdeMode()) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      options.push({</span>
-<span class="cstat-no" title="statement not covered" >        label: 'No (esc)',</span>
+<span class="cstat-no" title="statement not covered" >        label: "No (esc)",</span>
 <span class="cstat-no" title="statement not covered" >        value: ToolConfirmationOutcome.Cancel,</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
     } else {
       options.push({
-        label: 'Modify with external editor',
+        label: "Modify with external editor",
         value: ToolConfirmationOutcome.ModifyWithEditor,
       });
       options.push({
-        label: 'No, suggest changes (esc)',
+        label: "No, suggest changes (esc)",
         value: ToolConfirmationOutcome.Cancel,
       });
     }
@@ -985,13 +985,13 @@ export const ToolConfirmationMessage: React.FC&lt;
         terminalWidth={childWidth}
       /&gt;
     );
-  } else if (confirmationDetails.type === 'exec') {
+  } else if (confirmationDetails.type === "exec") {
     const executionProps =
       confirmationDetails as ToolExecuteConfirmationDetails;
 &nbsp;
     question = `Allow execution of: '${executionProps.rootCommand}'?`;
     options.push({
-      label: 'Yes, allow once',
+      label: "Yes, allow once",
       value: ToolConfirmationOutcome.ProceedOnce,
     });
     if (isTrustedFolder) {
@@ -1001,7 +1001,7 @@ export const ToolConfirmationMessage: React.FC&lt;
       });
     }
     options.push({
-      label: 'No, suggest changes (esc)',
+      label: "No, suggest changes (esc)",
       value: ToolConfirmationOutcome.Cancel,
     });
 &nbsp;
@@ -1023,20 +1023,20 @@ export const ToolConfirmationMessage: React.FC&lt;
         &lt;/Box&gt;
       &lt;/Box&gt;
     );
-  } else if (confirmationDetails.type === 'plan') {
+  } else if (confirmationDetails.type === "plan") {
     const planProps = confirmationDetails;
 &nbsp;
     question = planProps.title;
     options.push({
-      label: 'Yes, and auto-accept edits',
+      label: "Yes, and auto-accept edits",
       value: ToolConfirmationOutcome.ProceedAlways,
     });
     options.push({
-      label: 'Yes, and manually approve edits',
+      label: "Yes, and manually approve edits",
       value: ToolConfirmationOutcome.ProceedOnce,
     });
     options.push({
-      label: 'No, keep planning (esc)',
+      label: "No, keep planning (esc)",
       value: ToolConfirmationOutcome.Cancel,
     });
 &nbsp;
@@ -1050,7 +1050,7 @@ export const ToolConfirmationMessage: React.FC&lt;
         /&gt;
       &lt;/Box&gt;
     );
-  } else if (confirmationDetails.type === 'info') {
+  } else if (confirmationDetails.type === "info") {
     const infoProps = confirmationDetails;
     const displayUrls =
       infoProps.urls &amp;&amp;
@@ -1058,17 +1058,17 @@ export const ToolConfirmationMessage: React.FC&lt;
 &nbsp;
     question = `Do you want to proceed?`;
     options.push({
-      label: 'Yes, allow once',
+      label: "Yes, allow once",
       value: ToolConfirmationOutcome.ProceedOnce,
     });
     if (isTrustedFolder) {
       options.push({
-        label: 'Yes, allow always',
+        label: "Yes, allow always",
         value: ToolConfirmationOutcome.ProceedAlways,
       });
     }
     options.push({
-      label: 'No, suggest changes (esc)',
+      label: "No, suggest changes (esc)",
       value: ToolConfirmationOutcome.Cancel,
     });
 &nbsp;
@@ -1082,7 +1082,7 @@ export const ToolConfirmationMessage: React.FC&lt;
             &lt;Text&gt;URLs to fetch:&lt;/Text&gt;
             {infoProps.urls.map((url) =&gt; (
               &lt;Text key={url}&gt;
-                {' '}
+                {" "}
                 - &lt;RenderInline text={url} /&gt;
               &lt;/Text&gt;
             ))}
@@ -1103,7 +1103,7 @@ export const ToolConfirmationMessage: React.FC&lt;
 &nbsp;
     question = `Allow execution of MCP tool "${mcpProps.toolName}" from server "${mcpProps.serverName}"?`;
     options.push({
-      label: 'Yes, allow once',
+      label: "Yes, allow once",
       value: ToolConfirmationOutcome.ProceedOnce,
     });
     if (isTrustedFolder) {
@@ -1117,7 +1117,7 @@ export const ToolConfirmationMessage: React.FC&lt;
       });
     }
     options.push({
-      label: 'No, suggest changes (esc)',
+      label: "No, suggest changes (esc)",
       value: ToolConfirmationOutcome.Cancel,
     });
   }
@@ -1153,7 +1153,7 @@ export const ToolConfirmationMessage: React.FC&lt;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.148Z
+                at 2025-09-30T22:44:16.802Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

@@ -307,8 +307,8 @@ export type AvailableModel = {
   isVision?: boolean;
 };
 &nbsp;
-export const MAINLINE_VLM = 'vision-model';
-export const MAINLINE_CODER = 'coder-model';
+export const MAINLINE_VLM = "vision-model";
+export const MAINLINE_CODER = "coder-model";
 &nbsp;
 export const AVAILABLE_MODELS_QWEN: AvailableModel[] = [
   { id: MAINLINE_CODER, label: MAINLINE_CODER },
@@ -332,7 +332,7 @@ export <span class="fstat-no" title="function not covered" >function getFiltered
  * In the future, after settings.json is updated, we will allow users to configure this themselves.
  */
 export <span class="fstat-no" title="function not covered" >function getOpenAIAvailableModelFromEnv(): AvailableModel | null {</span>
-<span class="cstat-no" title="statement not covered" >  const id = process.env['OPENAI_MODEL']?.trim();</span>
+<span class="cstat-no" title="statement not covered" >  const id = process.env["OPENAI_MODEL"]?.trim();</span>
 <span class="cstat-no" title="statement not covered" >  return id ? { id, label: id } : null;</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
@@ -348,18 +348,18 @@ export <span class="fstat-no" title="function not covered" >function getOpenAIAv
     // Normalize the base URL to avoid double /v1 paths
     // If baseUrl already ends with /v1, don't add another /v1
 <span class="cstat-no" title="statement not covered" >    let url: string;</span>
-<span class="cstat-no" title="statement not covered" >    if (baseUrl.endsWith('/v1')) {</span>
-<span class="cstat-no" title="statement not covered" >      url = baseUrl + '/models';</span>
+<span class="cstat-no" title="statement not covered" >    if (baseUrl.endsWith("/v1")) {</span>
+<span class="cstat-no" title="statement not covered" >      url = baseUrl + "/models";</span>
 <span class="cstat-no" title="statement not covered" >    } else {</span>
-<span class="cstat-no" title="statement not covered" >      url = baseUrl.replace(/\/*$/, '') + '/v1/models';</span>
+<span class="cstat-no" title="statement not covered" >      url = baseUrl.replace(/\/*$/, "") + "/v1/models";</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    
-<span class="cstat-no" title="statement not covered" >    const headers: Record&lt;string, string&gt; = {</span>
-<span class="cstat-no" title="statement not covered" >      'Content-Type': 'application/json',</span>
-<span class="cstat-no" title="statement not covered" >    };</span>
-<span class="cstat-no" title="statement not covered" >    if (apiKey) headers['Authorization'] = `Bearer ${apiKey}`;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    const resp = await fetch(url, { headers, method: 'GET' as const });</span>
+<span class="cstat-no" title="statement not covered" >    const headers: Record&lt;string, string&gt; = {</span>
+<span class="cstat-no" title="statement not covered" >      "Content-Type": "application/json",</span>
+<span class="cstat-no" title="statement not covered" >    };</span>
+<span class="cstat-no" title="statement not covered" >    if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >    const resp = await fetch(url, { headers, method: "GET" as const });</span>
 <span class="cstat-no" title="statement not covered" >    if (!resp.ok) return [];</span>
 <span class="cstat-no" title="statement not covered" >    const data = await resp.json();</span>
     // OpenAI responses typically have "data" array with id fields
@@ -382,14 +382,14 @@ export <span class="fstat-no" title="function not covered" >function getOpenAIAv
 <span class="cstat-no" title="statement not covered" >): Promise&lt;string | null&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  try {</span>
     // LM Studio endpoint is /api/v0/models, not /v1
-<span class="cstat-no" title="statement not covered" >    const url = baseUrl.replace(/\/v1\/?$/, '') + '/api/v0/models';</span>
-<span class="cstat-no" title="statement not covered" >    const resp = await fetch(url, { method: 'GET' });</span>
+<span class="cstat-no" title="statement not covered" >    const url = baseUrl.replace(/\/v1\/?$/, "") + "/api/v0/models";</span>
+<span class="cstat-no" title="statement not covered" >    const resp = await fetch(url, { method: "GET" });</span>
 <span class="cstat-no" title="statement not covered" >    if (!resp.ok) {</span>
 <span class="cstat-no" title="statement not covered" >      return null;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    const data = await resp.json();</span>
 <span class="cstat-no" title="statement not covered" >    const models: any[] = Array.isArray(data?.data) ? data.data : [];</span>
-<span class="cstat-no" title="statement not covered" >    const loadedModel = models.find((m) =&gt; m.state === 'loaded');</span>
+<span class="cstat-no" title="statement not covered" >    const loadedModel = models.find((m) =&gt; m.state === "loaded");</span>
 <span class="cstat-no" title="statement not covered" >    return loadedModel?.id || null;</span>
 <span class="cstat-no" title="statement not covered" >  } catch (e) {</span>
     // swallow errors and return null
@@ -418,7 +418,7 @@ export function isVisionModel(modelId: string): boolean {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.148Z
+                at 2025-09-30T22:44:16.802Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

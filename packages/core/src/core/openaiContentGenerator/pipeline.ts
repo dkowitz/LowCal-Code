@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type OpenAI from 'openai';
+import type OpenAI from "openai";
 import {
   type GenerateContentParameters,
   GenerateContentResponse,
-} from '@google/genai';
-import type { Config } from '../../config/config.js';
-import type { ContentGeneratorConfig } from '../contentGenerator.js';
-import type { OpenAICompatibleProvider } from './provider/index.js';
-import { OpenAIContentConverter } from './converter.js';
-import type { TelemetryService, RequestContext } from './telemetryService.js';
-import type { ErrorHandler } from './errorHandler.js';
+} from "@google/genai";
+import type { Config } from "../../config/config.js";
+import type { ContentGeneratorConfig } from "../contentGenerator.js";
+import type { OpenAICompatibleProvider } from "./provider/index.js";
+import { OpenAIContentConverter } from "./converter.js";
+import type { TelemetryService, RequestContext } from "./telemetryService.js";
+import type { ErrorHandler } from "./errorHandler.js";
 
 export interface PipelineConfig {
   cliConfig: Config;
@@ -306,17 +306,17 @@ export class ContentGenerationPipeline {
 
     const params = {
       // Parameters with request fallback and defaults
-      temperature: getParameterValue('temperature', 'temperature', 0.0),
-      top_p: getParameterValue('top_p', 'topP', 1.0),
+      temperature: getParameterValue("temperature", "temperature", 0.0),
+      top_p: getParameterValue("top_p", "topP", 1.0),
 
       // Max tokens (special case: different property names)
-      ...addParameterIfDefined('max_tokens', 'max_tokens', 'maxOutputTokens'),
+      ...addParameterIfDefined("max_tokens", "max_tokens", "maxOutputTokens"),
 
       // Config-only parameters (no request fallback)
-      ...addParameterIfDefined('top_k', 'top_k'),
-      ...addParameterIfDefined('repetition_penalty', 'repetition_penalty'),
-      ...addParameterIfDefined('presence_penalty', 'presence_penalty'),
-      ...addParameterIfDefined('frequency_penalty', 'frequency_penalty'),
+      ...addParameterIfDefined("top_k", "top_k"),
+      ...addParameterIfDefined("repetition_penalty", "repetition_penalty"),
+      ...addParameterIfDefined("presence_penalty", "presence_penalty"),
+      ...addParameterIfDefined("frequency_penalty", "frequency_penalty"),
     };
 
     return params;
@@ -411,7 +411,7 @@ export class ContentGenerationPipeline {
     return {
       userPromptId,
       model: this.contentGeneratorConfig.model,
-      authType: this.contentGeneratorConfig.authType || 'unknown',
+      authType: this.contentGeneratorConfig.authType || "unknown",
       startTime: Date.now(),
       duration: 0,
       isStreaming,

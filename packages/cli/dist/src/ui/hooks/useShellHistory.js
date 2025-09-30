@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useEffect, useCallback } from 'react';
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import { isNodeError, Storage } from '@qwen-code/qwen-code-core';
+import { useState, useEffect, useCallback } from "react";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { isNodeError, Storage } from "@qwen-code/qwen-code-core";
 const MAX_HISTORY_LENGTH = 100;
 async function getHistoryFilePath(projectRoot, configStorage) {
     const storage = configStorage ?? new Storage(projectRoot);
@@ -15,9 +15,9 @@ async function getHistoryFilePath(projectRoot, configStorage) {
 // Handle multiline commands
 async function readHistoryFile(filePath) {
     try {
-        const text = await fs.readFile(filePath, 'utf-8');
+        const text = await fs.readFile(filePath, "utf-8");
         const result = [];
-        let cur = '';
+        let cur = "";
         for (const raw of text.split(/\r?\n/)) {
             if (!raw.trim())
                 continue;
@@ -25,7 +25,7 @@ async function readHistoryFile(filePath) {
             const m = cur.match(/(\\+)$/);
             if (m && m[1].length % 2) {
                 // odd number of trailing '\'
-                cur = cur.slice(0, -1) + ' ' + line;
+                cur = cur.slice(0, -1) + " " + line;
             }
             else {
                 if (cur)
@@ -38,19 +38,19 @@ async function readHistoryFile(filePath) {
         return result;
     }
     catch (err) {
-        if (isNodeError(err) && err.code === 'ENOENT')
+        if (isNodeError(err) && err.code === "ENOENT")
             return [];
-        console.error('Error reading history:', err);
+        console.error("Error reading history:", err);
         return [];
     }
 }
 async function writeHistoryFile(filePath, history) {
     try {
         await fs.mkdir(path.dirname(filePath), { recursive: true });
-        await fs.writeFile(filePath, history.join('\n'));
+        await fs.writeFile(filePath, history.join("\n"));
     }
     catch (error) {
-        console.error('Error writing shell history:', error);
+        console.error("Error writing shell history:", error);
     }
 }
 export function useShellHistory(projectRoot, storage) {
@@ -93,7 +93,7 @@ export function useShellHistory(projectRoot, storage) {
         const newIndex = historyIndex - 1;
         setHistoryIndex(newIndex);
         if (newIndex < 0) {
-            return '';
+            return "";
         }
         return history[newIndex] ?? null;
     }, [history, historyIndex]);

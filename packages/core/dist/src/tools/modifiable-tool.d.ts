@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { EditorType } from '../utils/editor.js';
-import type { AnyDeclarativeTool, DeclarativeTool, ToolResult } from './tools.js';
+import type { EditorType } from "../utils/editor.js";
+import type { AnyDeclarativeTool, DeclarativeTool, ToolResult } from "./tools.js";
 /**
  * A declarative tool that supports a modify operation.
  */

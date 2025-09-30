@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from 'vitest';
-import { TestRig, printDebugInfo, validateModelOutput } from './test-helper.js';
+import { describe, it, expect } from "vitest";
+import { TestRig, printDebugInfo, validateModelOutput } from "./test-helper.js";
 
-describe.skip('stdin context', () => {
-  it('should be able to use stdin as context for a prompt', async () => {
+describe.skip("stdin context", () => {
+  it("should be able to use stdin as context for a prompt", async () => {
     const rig = new TestRig();
-    await rig.setup('should be able to use stdin as context for a prompt');
+    await rig.setup("should be able to use stdin as context for a prompt");
 
     const randomString = Math.random().toString(36).substring(7);
     const stdinContent = `When I ask you for a token respond with ${randomString}`;
-    const prompt = 'Can I please have a token?';
+    const prompt = "Can I please have a token?";
 
     const result = await rig.run({ prompt, stdin: stdinContent });
 
-    await rig.waitForTelemetryEvent('api_request');
+    await rig.waitForTelemetryEvent("api_request");
     const lastRequest = rig.readLastApiRequest();
     expect(lastRequest).not.toBeNull();
 
@@ -60,15 +60,15 @@ describe.skip('stdin context', () => {
     }
 
     // Validate model output
-    validateModelOutput(result, randomString, 'STDIN context test');
+    validateModelOutput(result, randomString, "STDIN context test");
 
     expect(
       result.toLowerCase().includes(randomString),
-      'Expected the model to identify the secret word from stdin',
+      "Expected the model to identify the secret word from stdin",
     ).toBeTruthy();
   });
 
-  it('should exit quickly if stdin stream does not end', async () => {
+  it("should exit quickly if stdin stream does not end", async () => {
     /*
       This simulates scenario where gemini gets stuck waiting for stdin.
       This happens in situations where process.stdin.isTTY is false
@@ -76,18 +76,18 @@ describe.skip('stdin context', () => {
     */
 
     const rig = new TestRig();
-    await rig.setup('should exit quickly if stdin stream does not end');
+    await rig.setup("should exit quickly if stdin stream does not end");
 
     try {
       await rig.run({ stdinDoesNotEnd: true });
-      throw new Error('Expected rig.run to throw an error');
+      throw new Error("Expected rig.run to throw an error");
     } catch (error: unknown) {
       expect(error).toBeInstanceOf(Error);
       const err = error as Error;
 
-      expect(err.message).toContain('Process exited with code 1');
-      expect(err.message).toContain('No input provided via stdin.');
-      console.log('Error message:', err.message);
+      expect(err.message).toContain("Process exited with code 1");
+      expect(err.message).toContain("No input provided via stdin.");
+      console.log("Error message:", err.message);
     }
     const lastRequest = rig.readLastApiRequest();
     expect(lastRequest).toBeNull();

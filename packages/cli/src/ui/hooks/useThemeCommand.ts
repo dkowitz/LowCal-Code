@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import { themeManager } from '../themes/theme-manager.js';
-import type { LoadedSettings, SettingScope } from '../../config/settings.js'; // Import LoadedSettings, AppSettings, MergedSetting
-import { type HistoryItem, MessageType } from '../types.js';
-import process from 'node:process';
+import { useState, useCallback, useEffect } from "react";
+import { themeManager } from "../themes/theme-manager.js";
+import type { LoadedSettings, SettingScope } from "../../config/settings.js"; // Import LoadedSettings, AppSettings, MergedSetting
+import { type HistoryItem, MessageType } from "../types.js";
+import process from "node:process";
 
 interface UseThemeCommandReturn {
   isThemeDialogOpen: boolean;
@@ -23,7 +23,7 @@ interface UseThemeCommandReturn {
 export const useThemeCommand = (
   loadedSettings: LoadedSettings,
   setThemeError: (error: string | null) => void,
-  addItem: (item: Omit<HistoryItem, 'id'>, timestamp: number) => void,
+  addItem: (item: Omit<HistoryItem, "id">, timestamp: number) => void,
 ): UseThemeCommandReturn => {
   const [isThemeDialogOpen, setIsThemeDialogOpen] = useState(false);
 
@@ -39,11 +39,11 @@ export const useThemeCommand = (
   }, [loadedSettings.merged.ui?.theme, setThemeError]);
 
   const openThemeDialog = useCallback(() => {
-    if (process.env['NO_COLOR']) {
+    if (process.env["NO_COLOR"]) {
       addItem(
         {
           type: MessageType.INFO,
-          text: 'Theme configuration unavailable due to NO_COLOR env variable.',
+          text: "Theme configuration unavailable due to NO_COLOR env variable.",
         },
         Date.now(),
       );
@@ -88,7 +88,7 @@ export const useThemeCommand = (
           setIsThemeDialogOpen(true);
           return;
         }
-        loadedSettings.setValue(scope, 'ui.theme', themeName); // Update the merged settings
+        loadedSettings.setValue(scope, "ui.theme", themeName); // Update the merged settings
         if (loadedSettings.merged.ui?.customThemes) {
           themeManager.loadCustomThemes(loadedSettings.merged.ui?.customThemes);
         }

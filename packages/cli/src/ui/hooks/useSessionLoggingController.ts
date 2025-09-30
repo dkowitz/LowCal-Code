@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useCallback, useEffect, useMemo, useRef } from 'react';
-import type { Config } from '@qwen-code/qwen-code-core';
+import { useCallback, useEffect, useMemo, useRef } from "react";
+import type { Config } from "@qwen-code/qwen-code-core";
 import {
   setErrorReportListener,
   type ErrorReportEvent,
-} from '@qwen-code/qwen-code-core';
+} from "@qwen-code/qwen-code-core";
 import {
   SessionMarkdownLogger,
   type SessionLoggingController,
-} from '../../services/SessionMarkdownLogger.js';
-import type { HistoryItem } from '../types.js';
-import type { SessionStatsState } from '../contexts/SessionContext.js';
-import { appEvents, AppEvent } from '../../utils/events.js';
+} from "../../services/SessionMarkdownLogger.js";
+import type { HistoryItem } from "../types.js";
+import type { SessionStatsState } from "../contexts/SessionContext.js";
+import { appEvents, AppEvent } from "../../utils/events.js";
 
 interface UseSessionLoggingControllerOptions {
   history: HistoryItem[];
@@ -47,7 +47,7 @@ export function useSessionLoggingController(
 
   useEffect(() => {
     const handleAppError = (message: unknown) => {
-      const text = typeof message === 'string' ? message : String(message);
+      const text = typeof message === "string" ? message : String(message);
       void loggerRef.current.logAppError({
         timestamp: new Date().toISOString(),
         message: text,
@@ -81,7 +81,7 @@ export function useSessionLoggingController(
     const additionalContext: Record<string, unknown> = {};
     const projectRoot = config.getProjectRoot();
     if (projectRoot) {
-      additionalContext['workspaceRoot'] = projectRoot;
+      additionalContext["workspaceRoot"] = projectRoot;
     }
     const statusResult = await loggerRef.current.enable(
       {

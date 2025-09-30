@@ -5,21 +5,21 @@
  */
 export class BaseTokenStorage {
     serviceName;
-    constructor(serviceName = 'gemini-cli-mcp-oauth') {
+    constructor(serviceName = "gemini-cli-mcp-oauth") {
         this.serviceName = serviceName;
     }
     validateCredentials(credentials) {
         if (!credentials.serverName) {
-            throw new Error('Server name is required');
+            throw new Error("Server name is required");
         }
         if (!credentials.token) {
-            throw new Error('Token is required');
+            throw new Error("Token is required");
         }
         if (!credentials.token.accessToken) {
-            throw new Error('Access token is required');
+            throw new Error("Access token is required");
         }
         if (!credentials.token.tokenType) {
-            throw new Error('Token type is required');
+            throw new Error("Token type is required");
         }
     }
     isTokenExpired(credentials) {
@@ -30,7 +30,7 @@ export class BaseTokenStorage {
         return Date.now() > credentials.token.expiresAt - bufferMs;
     }
     sanitizeServerName(serverName) {
-        return serverName.replace(/[^a-zA-Z0-9-_.]/g, '_');
+        return serverName.replace(/[^a-zA-Z0-9-_.]/g, "_");
     }
 }
 //# sourceMappingURL=base-token-storage.js.map

@@ -217,11 +217,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { useState } from 'react';
-import { Box } from 'ink';
-import { RadioButtonSelect } from '../../shared/RadioButtonSelect.js';
-import { MANAGEMENT_STEPS } from '../types.js';
-import { type SubagentConfig } from '@qwen-code/qwen-code-core';
+import { useState } from "react";
+import { Box } from "ink";
+import { RadioButtonSelect } from "../../shared/RadioButtonSelect.js";
+import { MANAGEMENT_STEPS } from "../types.js";
+import { type SubagentConfig } from "@qwen-code/qwen-code-core";
 &nbsp;
 interface ActionSelectionStepProps {
   selectedAgent: SubagentConfig | null;
@@ -235,25 +235,25 @@ export const ActionSelectionStep = <span class="fstat-no" title="function not co
 <span class="cstat-no" title="statement not covered" >  onNavigateBack,</span>
 <span class="cstat-no" title="statement not covered" >}: ActionSelectionStepProps) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  const [selectedAction, setSelectedAction] = useState&lt;</span>
-    'view' | 'edit' | 'delete' | null
+    "view" | "edit" | "delete" | null
 <span class="cstat-no" title="statement not covered" >  &gt;(null);</span>
 &nbsp;
   // Filter actions based on whether the agent is built-in
 <span class="cstat-no" title="statement not covered" >  const allActions = [</span>
-<span class="cstat-no" title="statement not covered" >    { label: 'View Agent', value: 'view' as const },</span>
-<span class="cstat-no" title="statement not covered" >    { label: 'Edit Agent', value: 'edit' as const },</span>
-<span class="cstat-no" title="statement not covered" >    { label: 'Delete Agent', value: 'delete' as const },</span>
-<span class="cstat-no" title="statement not covered" >    { label: 'Back', value: 'back' as const },</span>
+<span class="cstat-no" title="statement not covered" >    { label: "View Agent", value: "view" as const },</span>
+<span class="cstat-no" title="statement not covered" >    { label: "Edit Agent", value: "edit" as const },</span>
+<span class="cstat-no" title="statement not covered" >    { label: "Delete Agent", value: "delete" as const },</span>
+<span class="cstat-no" title="statement not covered" >    { label: "Back", value: "back" as const },</span>
 <span class="cstat-no" title="statement not covered" >  ];</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const actions = selectedAgent?.isBuiltin</span>
 <span class="cstat-no" title="statement not covered" >    ? allActions.filter(</span>
-<span class="cstat-no" title="statement not covered" >        (action) =&gt; action.value === 'view' || action.value === 'back',</span>
+<span class="cstat-no" title="statement not covered" >        (action) =&gt; action.value === "view" || action.value === "back",</span>
 <span class="cstat-no" title="statement not covered" >      )</span>
 <span class="cstat-no" title="statement not covered" >    : allActions;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  const handleActionSelect = (value: 'view' | 'edit' | 'delete' | 'back') =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (value === 'back') {</span>
+<span class="cstat-no" title="statement not covered" >  const handleActionSelect = (value: "view" | "edit" | "delete" | "back") =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    if (value === "back") {</span>
 <span class="cstat-no" title="statement not covered" >      onNavigateBack();</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -261,11 +261,11 @@ export const ActionSelectionStep = <span class="fstat-no" title="function not co
 <span class="cstat-no" title="statement not covered" >    setSelectedAction(value);</span>
 &nbsp;
     // Navigate to appropriate step based on action
-<span class="cstat-no" title="statement not covered" >    if (value === 'view') {</span>
+<span class="cstat-no" title="statement not covered" >    if (value === "view") {</span>
 <span class="cstat-no" title="statement not covered" >      onNavigateToStep(MANAGEMENT_STEPS.AGENT_VIEWER);</span>
-<span class="cstat-no" title="statement not covered" >    } else if (value === 'edit') {</span>
+<span class="cstat-no" title="statement not covered" >    } else if (value === "edit") {</span>
 <span class="cstat-no" title="statement not covered" >      onNavigateToStep(MANAGEMENT_STEPS.EDIT_OPTIONS);</span>
-<span class="cstat-no" title="statement not covered" >    } else if (value === 'delete') {</span>
+<span class="cstat-no" title="statement not covered" >    } else if (value === "delete") {</span>
 <span class="cstat-no" title="statement not covered" >      onNavigateToStep(MANAGEMENT_STEPS.DELETE_CONFIRMATION);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  };</span>
@@ -292,7 +292,7 @@ export const ActionSelectionStep = <span class="fstat-no" title="function not co
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.374Z
+                at 2025-09-30T22:44:16.879Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

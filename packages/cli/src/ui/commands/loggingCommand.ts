@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { CommandKind, type SlashCommand } from './types.js';
+import { CommandKind, type SlashCommand } from "./types.js";
 
 const USAGE_MESSAGE =
-  'Usage: /logging <on|off|status>. Enables or disables enhanced session logging.';
+  "Usage: /logging <on|off|status>. Enables or disables enhanced session logging.";
 
 export const loggingCommand: SlashCommand = {
-  name: 'logging',
+  name: "logging",
   description:
-    'enable, disable, or check the status of enhanced session logging for this session',
+    "enable, disable, or check the status of enhanced session logging for this session",
   kind: CommandKind.BUILT_IN,
   async action(context, args) {
     const logging = context.services.logging;
@@ -21,7 +21,7 @@ export const loggingCommand: SlashCommand = {
     const showStatus = () => {
       const status = logging.getStatus();
       const messageLines = [
-        `Logging is currently ${status.enabled ? 'enabled' : 'disabled'}.`,
+        `Logging is currently ${status.enabled ? "enabled" : "disabled"}.`,
       ];
       if (status.logFilePath) {
         messageLines.push(`Log file: \`${status.logFilePath}\``);
@@ -31,38 +31,37 @@ export const loggingCommand: SlashCommand = {
       }
       context.ui.addItem(
         {
-          type: 'info',
-          text: messageLines.join(' '),
+          type: "info",
+          text: messageLines.join(" "),
         },
         Date.now(),
       );
     };
 
-    if (!input || input === 'status') {
+    if (!input || input === "status") {
       showStatus();
       return;
     }
 
-    if (input === 'on' || input === 'enable') {
+    if (input === "on" || input === "enable") {
       try {
         const status = await logging.enableLogging();
-        const parts = ['Enhanced session logging enabled.'];
+        const parts = ["Enhanced session logging enabled."];
         if (status.logFilePath) {
           parts.push(`Writing to \`${status.logFilePath}\`.`);
         }
         context.ui.addItem(
           {
-            type: 'info',
-            text: parts.join(' '),
+            type: "info",
+            text: parts.join(" "),
           },
           Date.now(),
         );
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : String(error);
+        const message = error instanceof Error ? error.message : String(error);
         context.ui.addItem(
           {
-            type: 'error',
+            type: "error",
             text: `Failed to enable logging: ${message}`,
           },
           Date.now(),
@@ -71,22 +70,21 @@ export const loggingCommand: SlashCommand = {
       return;
     }
 
-    if (input === 'off' || input === 'disable') {
+    if (input === "off" || input === "disable") {
       try {
-        await logging.disableLogging('Disabled via /logging command');
+        await logging.disableLogging("Disabled via /logging command");
         context.ui.addItem(
           {
-            type: 'info',
-            text: 'Enhanced session logging disabled.',
+            type: "info",
+            text: "Enhanced session logging disabled.",
           },
           Date.now(),
         );
       } catch (error) {
-        const message =
-          error instanceof Error ? error.message : String(error);
+        const message = error instanceof Error ? error.message : String(error);
         context.ui.addItem(
           {
-            type: 'error',
+            type: "error",
             text: `Failed to disable logging: ${message}`,
           },
           Date.now(),
@@ -97,7 +95,7 @@ export const loggingCommand: SlashCommand = {
 
     context.ui.addItem(
       {
-        type: 'error',
+        type: "error",
         text: USAGE_MESSAGE,
       },
       Date.now(),

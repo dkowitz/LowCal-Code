@@ -2293,7 +2293,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useState, useRef, useCallback, useEffect, useMemo } from "react";
 import type {
   Config,
   GeminiClient,
@@ -2305,7 +2305,7 @@ import type {
   ToolCallRequestInfo,
   EditorType,
   ThoughtSummary,
-} from '@qwen-code/qwen-code-core';
+} from "@qwen-code/qwen-code-core";
 import {
   GeminiEventType as ServerGeminiEventType,
   getErrorMessage,
@@ -2320,36 +2320,36 @@ import {
   ConversationFinishedEvent,
   ApprovalMode,
   parseAndFormatApiError,
-} from '@qwen-code/qwen-code-core';
-import { type Part, type PartListUnion, FinishReason } from '@google/genai';
+} from "@qwen-code/qwen-code-core";
+import { type Part, type PartListUnion, FinishReason } from "@google/genai";
 import type {
   HistoryItem,
   HistoryItemWithoutId,
   HistoryItemToolGroup,
   SlashCommandProcessorResult,
-} from '../types.js';
-import { StreamingState, MessageType, ToolCallStatus } from '../types.js';
-import { isAtCommand, isSlashCommand } from '../utils/commandUtils.js';
-import { useShellCommandProcessor } from './shellCommandProcessor.js';
-import { useVisionAutoSwitch } from './useVisionAutoSwitch.js';
-import { handleAtCommand } from './atCommandProcessor.js';
-import { findLastSafeSplitPoint } from '../utils/markdownUtilities.js';
-import { useStateAndRef } from './useStateAndRef.js';
-import type { UseHistoryManagerReturn } from './useHistoryManager.js';
-import { useLogger } from './useLogger.js';
+} from "../types.js";
+import { StreamingState, MessageType, ToolCallStatus } from "../types.js";
+import { isAtCommand, isSlashCommand } from "../utils/commandUtils.js";
+import { useShellCommandProcessor } from "./shellCommandProcessor.js";
+import { useVisionAutoSwitch } from "./useVisionAutoSwitch.js";
+import { handleAtCommand } from "./atCommandProcessor.js";
+import { findLastSafeSplitPoint } from "../utils/markdownUtilities.js";
+import { useStateAndRef } from "./useStateAndRef.js";
+import type { UseHistoryManagerReturn } from "./useHistoryManager.js";
+import { useLogger } from "./useLogger.js";
 import type {
   TrackedToolCall,
   TrackedCompletedToolCall,
   TrackedCancelledToolCall,
-} from './useReactToolScheduler.js';
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
+} from "./useReactToolScheduler.js";
+import { promises as fs } from "node:fs";
+import path from "node:path";
 import {
   useReactToolScheduler,
   mapToDisplay as mapTrackedToolCallsToDisplay,
-} from './useReactToolScheduler.js';
-import { useSessionStats } from '../contexts/SessionContext.js';
-import { useKeypress } from './useKeypress.js';
+} from "./useReactToolScheduler.js";
+import { useSessionStats } from "../contexts/SessionContext.js";
+import { useKeypress } from "./useKeypress.js";
 &nbsp;
 enum StreamProcessingStatus {
   Completed,
@@ -2364,7 +2364,7 @@ enum StreamProcessingStatus {
 export const useGeminiStream = (
   geminiClient: GeminiClient,
   history: HistoryItem[],
-  addItem: UseHistoryManagerReturn['addItem'],
+  addItem: UseHistoryManagerReturn["addItem"],
   config: Config,
   onDebugMessage: (message: string) =&gt; void,
   handleSlashCommand: (
@@ -2459,19 +2459,19 @@ export const useGeminiStream = (
   );
 &nbsp;
   const streamingState = useMemo(() =&gt; {
-    if (toolCalls.some((tc) =&gt; tc.status === 'awaiting_approval')) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+    if (toolCalls.some((tc) =&gt; tc.status === "awaiting_approval")) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      return StreamingState.WaitingForConfirmation;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
     if (
       isResponding ||
       toolCalls.some(
         (tc) =&gt;
-          tc.status === 'executing' ||
-          tc.status === 'scheduled' ||
-          tc.status === 'validating' ||
-          ((tc.status === <span class="branch-0 cbranch-no" title="branch not covered" >'success' ||</span>
-<span class="cstat-no" title="statement not covered" >            tc.status === <span class="branch-0 cbranch-no" title="branch not covered" >'error' ||</span></span>
-<span class="cstat-no" title="statement not covered" >            tc.status === 'cancelled') &amp;&amp;</span>
+          tc.status === "executing" ||
+          tc.status === "scheduled" ||
+          tc.status === "validating" ||
+          ((tc.status === <span class="branch-0 cbranch-no" title="branch not covered" >"success" ||</span>
+<span class="cstat-no" title="statement not covered" >            tc.status === <span class="branch-0 cbranch-no" title="branch not covered" >"error" ||</span></span>
+<span class="cstat-no" title="statement not covered" >            tc.status === "cancelled") &amp;&amp;</span>
             !(tc as TrackedCompletedToolCall | TrackedCancelledToolCall)
               .responseSubmittedToGemini),
       )
@@ -2518,7 +2518,7 @@ export const useGeminiStream = (
     addItem(
       {
         type: MessageType.INFO,
-        text: 'Request cancelled.',
+        text: "Request cancelled.",
       },
       Date.now(),
     );
@@ -2535,7 +2535,7 @@ export const useGeminiStream = (
 &nbsp;
   useKeypress(
     (key) =&gt; {
-      if (key.name === 'escape') {
+      if (key.name === "escape") {
         cancelOngoingRequest();
       }
     },
@@ -2555,13 +2555,13 @@ export const useGeminiStream = (
       if (turnCancelledRef.current) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        return { queryToSend: null, shouldProceed: false };</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
-      if (typeof query === 'string' &amp;&amp; query.trim().length === 0) {
+      if (typeof query === "string" &amp;&amp; query.trim().length === 0) {
         return { queryToSend: null, shouldProceed: false };
       }
 &nbsp;
       let localQueryToSendToGemini: PartListUnion | null = null;
 &nbsp;
-      if (typeof query === 'string') {
+      if (typeof query === "string") {
         const trimmedQuery = query.trim();
         logUserPrompt(
           config,
@@ -2582,7 +2582,7 @@ export const useGeminiStream = (
 &nbsp;
         if (slashCommandResult) {
           switch (slashCommandResult.type) {
-            case 'schedule_tool': {
+            case "schedule_tool": {
               const { toolName, toolArgs } = slashCommandResult;
               const toolCallRequest: ToolCallRequestInfo = {
                 callId: `${toolName}-${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -2594,7 +2594,7 @@ export const useGeminiStream = (
               scheduleToolCalls([toolCallRequest], abortSignal);
               return { queryToSend: null, shouldProceed: false };
             }
-            case 'submit_prompt': {
+            case "submit_prompt": {
               localQueryToSendToGemini = slashCommandResult.content;
 &nbsp;
               return {
@@ -2602,7 +2602,7 @@ export const useGeminiStream = (
                 shouldProceed: true,
               };
             }
-            case 'handled': {
+            case "handled": {
               return { queryToSend: null, shouldProceed: false };
             }
 <span class="branch-0 cbranch-no" title="branch not covered" >            default: {</span>
@@ -2654,7 +2654,7 @@ export const useGeminiStream = (
 &nbsp;
       if (localQueryToSendToGemini === null) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        onDebugMessage(</span>
-<span class="cstat-no" title="statement not covered" >          'Query processing resulted in null, not sending to Gemini.',</span>
+<span class="cstat-no" title="statement not covered" >          "Query processing resulted in null, not sending to Gemini.",</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
 <span class="cstat-no" title="statement not covered" >        return { queryToSend: null, shouldProceed: false };</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
@@ -2676,23 +2676,23 @@ export const useGeminiStream = (
 &nbsp;
   const handleContentEvent = useCallback(
     (
-      eventValue: ContentEvent['value'],
+      eventValue: ContentEvent["value"],
       currentGeminiMessageBuffer: string,
       userMessageTimestamp: number,
     ): string =&gt; {
       if (turnCancelledRef.current) {
         // Prevents additional output after a user initiated cancel.
-        return '';
+        return "";
       }
       let newGeminiMessageBuffer = currentGeminiMessageBuffer + eventValue;
       if (
-        pendingHistoryItemRef.<span class="branch-0 cbranch-no" title="branch not covered" >current?.type !== '</span>gemini' &amp;&amp;
-        pendingHistoryItemRef.<span class="branch-0 cbranch-no" title="branch not covered" >current?.type !== '</span>gemini_content'
+        pendingHistoryItemRef.<span class="branch-0 cbranch-no" title="branch not covered" >current?.type !== "</span>gemini" &amp;&amp;
+        pendingHistoryItemRef.<span class="branch-0 cbranch-no" title="branch not covered" >current?.type !== "</span>gemini_content"
       ) {
         if (pendingHistoryItemRef.current) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >          addItem(pendingHistoryItemRef.current, userMessageTimestamp);</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
-        setPendingHistoryItem({ type: 'gemini', text: '' });
+        setPendingHistoryItem({ type: "gemini", text: "" });
         newGeminiMessageBuffer = eventValue;
       }
       // Split large messages for better rendering performance. Ideally,
@@ -2701,7 +2701,7 @@ export const useGeminiStream = (
       if (splitPoint === newGeminiMessageBuffer.length) {
         // Update the existing message with accumulated content
         setPendingHistoryItem((item) =&gt; ({
-          type: item?.type as 'gemini' | 'gemini_content',
+          type: item?.type as "gemini" | "gemini_content",
           text: newGeminiMessageBuffer,
         }));
 <span class="branch-0 cbranch-no" title="branch not covered" >      } else {</span>
@@ -2718,13 +2718,13 @@ export const useGeminiStream = (
 <span class="cstat-no" title="statement not covered" >        addItem(</span>
 <span class="cstat-no" title="statement not covered" >          {</span>
 <span class="cstat-no" title="statement not covered" >            type: pendingHistoryItemRef.current?.type as</span>
-              | 'gemini'
-              | 'gemini_content',
+              | "gemini"
+              | "gemini_content",
 <span class="cstat-no" title="statement not covered" >            text: beforeText,</span>
 <span class="cstat-no" title="statement not covered" >          },</span>
 <span class="cstat-no" title="statement not covered" >          userMessageTimestamp,</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
-<span class="cstat-no" title="statement not covered" >        setPendingHistoryItem({ type: 'gemini_content', text: afterText });</span>
+<span class="cstat-no" title="statement not covered" >        setPendingHistoryItem({ type: "gemini_content", text: afterText });</span>
 <span class="cstat-no" title="statement not covered" >        newGeminiMessageBuffer = afterText;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
       return newGeminiMessageBuffer;
@@ -2738,7 +2738,7 @@ export const useGeminiStream = (
 <span class="cstat-no" title="statement not covered" >        return;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
       if (pendingHistoryItemRef.current) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >        if (pendingHistoryItemRef.current.type === 'tool_group') {</span>
+<span class="cstat-no" title="statement not covered" >        if (pendingHistoryItemRef.current.type === "tool_group") {</span>
 <span class="cstat-no" title="statement not covered" >          const updatedTools = pendingHistoryItemRef.current.tools.map(</span>
 <span class="cstat-no" title="statement not covered" >            (tool) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >              tool.status === ToolCallStatus.Pending ||</span>
@@ -2758,7 +2758,7 @@ export const useGeminiStream = (
 <span class="cstat-no" title="statement not covered" >        setPendingHistoryItem(null);</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
       addItem(
-        { type: MessageType.INFO, text: 'User cancelled the request.' },
+        { type: MessageType.INFO, text: "User cancelled the request." },
         userMessageTimestamp,
       );
       setIsResponding(false);
@@ -2768,7 +2768,7 @@ export const useGeminiStream = (
   );
 &nbsp;
   const handleErrorEvent = useCallback(
-    (eventValue: ErrorEvent['value'], userMessageTimestamp: number) =&gt; {
+    (eventValue: ErrorEvent["value"], userMessageTimestamp: number) =&gt; {
       if (pendingHistoryItemRef.current) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        addItem(pendingHistoryItemRef.current, userMessageTimestamp);</span>
 <span class="cstat-no" title="statement not covered" >        setPendingHistoryItem(null);</span>
@@ -2798,30 +2798,30 @@ export const useGeminiStream = (
       const finishReasonMessages: Record&lt;FinishReason, string | undefined&gt; = {
         [FinishReason.FINISH_REASON_UNSPECIFIED]: undefined,
         [FinishReason.STOP]: undefined,
-        [FinishReason.MAX_TOKENS]: 'Response truncated due to token limits.',
-        [FinishReason.SAFETY]: 'Response stopped due to safety reasons.',
-        [FinishReason.RECITATION]: 'Response stopped due to recitation policy.',
+        [FinishReason.MAX_TOKENS]: "Response truncated due to token limits.",
+        [FinishReason.SAFETY]: "Response stopped due to safety reasons.",
+        [FinishReason.RECITATION]: "Response stopped due to recitation policy.",
         [FinishReason.LANGUAGE]:
-          'Response stopped due to unsupported language.',
-        [FinishReason.BLOCKLIST]: 'Response stopped due to forbidden terms.',
+          "Response stopped due to unsupported language.",
+        [FinishReason.BLOCKLIST]: "Response stopped due to forbidden terms.",
         [FinishReason.PROHIBITED_CONTENT]:
-          'Response stopped due to prohibited content.',
+          "Response stopped due to prohibited content.",
         [FinishReason.SPII]:
-          'Response stopped due to sensitive personally identifiable information.',
-        [FinishReason.OTHER]: 'Response stopped for other reasons.',
+          "Response stopped due to sensitive personally identifiable information.",
+        [FinishReason.OTHER]: "Response stopped for other reasons.",
         [FinishReason.MALFORMED_FUNCTION_CALL]:
-          'Response stopped due to malformed function call.',
+          "Response stopped due to malformed function call.",
         [FinishReason.IMAGE_SAFETY]:
-          'Response stopped due to image safety violations.',
+          "Response stopped due to image safety violations.",
         [FinishReason.UNEXPECTED_TOOL_CALL]:
-          'Response stopped due to unexpected tool call.',
+          "Response stopped due to unexpected tool call.",
       };
 &nbsp;
       const message = finishReasonMessages[finishReason];
       if (message) {
         addItem(
           {
-            type: 'info',
+            type: "info",
             text: `⚠️  ${message}`,
           },
           userMessageTimestamp,
@@ -2832,15 +2832,15 @@ export const useGeminiStream = (
   );
 &nbsp;
   const handleChatCompressionEvent = useCallback(
-    (eventValue: ServerGeminiChatCompressedEvent['value']) =&gt;
+    (eventValue: ServerGeminiChatCompressedEvent["value"]) =&gt;
 <span class="cstat-no" title="statement not covered" >      addItem(</span>
 <span class="cstat-no" title="statement not covered" >        {</span>
-<span class="cstat-no" title="statement not covered" >          type: 'info',</span>
+<span class="cstat-no" title="statement not covered" >          type: "info",</span>
 <span class="cstat-no" title="statement not covered" >          text:</span>
 <span class="cstat-no" title="statement not covered" >            `IMPORTANT: This conversation approached the input token limit for ${config.getModel()}. ` +</span>
             `A compressed context will be sent for future messages (compressed from: ` +
-<span class="cstat-no" title="statement not covered" >            `${eventValue?.originalTokenCount ?? 'unknown'} to ` +</span>
-<span class="cstat-no" title="statement not covered" >            `${eventValue?.newTokenCount ?? 'unknown'} tokens).`,</span>
+<span class="cstat-no" title="statement not covered" >            `${eventValue?.originalTokenCount ?? "unknown"} to ` +</span>
+<span class="cstat-no" title="statement not covered" >            `${eventValue?.newTokenCount ?? "unknown"} tokens).`,</span>
 <span class="cstat-no" title="statement not covered" >        },</span>
 <span class="cstat-no" title="statement not covered" >        Date.now(),</span>
 <span class="cstat-no" title="statement not covered" >      ),</span>
@@ -2851,7 +2851,7 @@ export const useGeminiStream = (
     () =&gt;
 <span class="cstat-no" title="statement not covered" >      addItem(</span>
 <span class="cstat-no" title="statement not covered" >        {</span>
-<span class="cstat-no" title="statement not covered" >          type: 'info',</span>
+<span class="cstat-no" title="statement not covered" >          type: "info",</span>
 <span class="cstat-no" title="statement not covered" >          text:</span>
 <span class="cstat-no" title="statement not covered" >            `The session has reached the maximum number of turns: ${config.getMaxSessionTurns()}. ` +</span>
             `Please update this limit in your setting.json file.`,
@@ -2865,7 +2865,7 @@ export const useGeminiStream = (
     (value: { currentTokens: number; limit: number; message: string }) =&gt;
 <span class="cstat-no" title="statement not covered" >      addItem(</span>
 <span class="cstat-no" title="statement not covered" >        {</span>
-<span class="cstat-no" title="statement not covered" >          type: 'error',</span>
+<span class="cstat-no" title="statement not covered" >          type: "error",</span>
 <span class="cstat-no" title="statement not covered" >          text:</span>
 <span class="cstat-no" title="statement not covered" >            `🚫 Session token limit exceeded: ${value.currentTokens.toLocaleString()} tokens &gt; ${value.limit.toLocaleString()} limit.\n\n` +</span>
             `💡 Solutions:\n` +
@@ -2882,7 +2882,7 @@ export const useGeminiStream = (
     (value: { tokens: number; limit: number; effectiveLimit: number }) =&gt;
 <span class="cstat-no" title="statement not covered" >      addItem(</span>
 <span class="cstat-no" title="statement not covered" >        {</span>
-<span class="cstat-no" title="statement not covered" >          type: 'info',</span>
+<span class="cstat-no" title="statement not covered" >          type: "info",</span>
 <span class="cstat-no" title="statement not covered" >          text:</span>
 <span class="cstat-no" title="statement not covered" >            `⚠️  Context usage is high: ${value.tokens.toLocaleString()} of ${value.limit.toLocaleString()} tokens ` +</span>
 <span class="cstat-no" title="statement not covered" >            `(safe budget ≈ ${value.effectiveLimit.toLocaleString()}). Consider narrowing directory listings, requesting files on demand, or running /compress.`,</span>
@@ -2895,7 +2895,7 @@ export const useGeminiStream = (
   const handleLoopDetectedEvent = useCallback(() =&gt; {
 <span class="cstat-no" title="statement not covered" >    addItem(</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
-<span class="cstat-no" title="statement not covered" >        type: 'info',</span>
+<span class="cstat-no" title="statement not covered" >        type: "info",</span>
 <span class="cstat-no" title="statement not covered" >        text: `A potential loop was detected. This can happen due to repetitive tool calls or other model behavior. The request has been halted.`,</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >      Date.now(),</span>
@@ -2908,7 +2908,7 @@ export const useGeminiStream = (
       userMessageTimestamp: number,
       signal: AbortSignal,
     ): Promise&lt;StreamProcessingStatus&gt; =&gt; {
-      let geminiMessageBuffer = '';
+      let geminiMessageBuffer = "";
       const toolCallRequests: ToolCallRequestInfo[] = [];
       for await (const event of stream) {
         switch (event.type) {
@@ -3021,7 +3021,7 @@ export const useGeminiStream = (
       turnCancelledRef.current = false;
 &nbsp;
       if (!prompt_id) {
-        prompt_id = config.getSessionId() + '########' + getPromptCount();
+        prompt_id = config.getSessionId() + "########" + getPromptCount();
       }
 &nbsp;
       const { queryToSend, shouldProceed } = await prepareQueryForGemini(
@@ -3073,7 +3073,7 @@ export const useGeminiStream = (
         if (processingStatus === StreamProcessingStatus.UserCancelled) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
           // Restore original model if it was temporarily overridden
 <span class="cstat-no" title="statement not covered" >          restoreOriginalModel().catch((error) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >            console.error('Failed to restore original model:', error);</span>
+<span class="cstat-no" title="statement not covered" >            console.error("Failed to restore original model:", error);</span>
 <span class="cstat-no" title="statement not covered" >          });</span>
 <span class="cstat-no" title="statement not covered" >          isSubmittingQueryRef.current = false;</span>
 <span class="cstat-no" title="statement not covered" >          return;</span>
@@ -3090,22 +3090,22 @@ export const useGeminiStream = (
 &nbsp;
         // Restore original model if it was temporarily overridden
         restoreOriginalModel().catch((error) =&gt; {
-<span class="cstat-no" title="statement not covered" >          console.error('Failed to restore original model:', error);</span>
+<span class="cstat-no" title="statement not covered" >          console.error("Failed to restore original model:", error);</span>
         });
       } catch (error: unknown) {
         // Restore original model if it was temporarily overridden
         restoreOriginalModel().catch((error) =&gt; {
-<span class="cstat-no" title="statement not covered" >          console.error('Failed to restore original model:', error);</span>
+<span class="cstat-no" title="statement not covered" >          console.error("Failed to restore original model:", error);</span>
         });
 &nbsp;
         if (error instanceof UnauthorizedError) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >          onAuthError();</span>
-        } else if (!isNodeError(error<span class="branch-0 cbranch-no" title="branch not covered" >) || error.name !== 'AbortError') {</span>
+        } else if (!isNodeError(error<span class="branch-0 cbranch-no" title="branch not covered" >) || error.name !== "AbortError") {</span>
           addItem(
             {
               type: MessageType.ERROR,
               text: parseAndFormatApiError(
-                getErrorMessage(error<span class="branch-0 cbranch-no" title="branch not covered" >) || 'Unknown error',</span>
+                getErrorMessage(error<span class="branch-0 cbranch-no" title="branch not covered" >) || "Unknown error",</span>
                 config.getContentGeneratorConfig()?.authType,
                 undefined,
                 config.getModel(),
@@ -3152,9 +3152,9 @@ export const useGeminiStream = (
             tc: TrackedToolCall,
           ): tc is TrackedCompletedToolCall | TrackedCancelledToolCall =&gt; {
             const isTerminalState =
-              tc.status === 'success' ||
-              tc.status === 'error' ||
-              tc.status === 'cancelled';
+              tc.status === "success" ||
+              tc.status === "error" ||
+              tc.status === "cancelled";
 &nbsp;
             if (isTerminalState) {
               const completedOrCancelledCall = tc as
@@ -3179,8 +3179,8 @@ export const useGeminiStream = (
       // Identify new, successful save_memory calls that we haven't processed yet.
       const newSuccessfulMemorySaves = completedAndReadyToSubmitTools.filter(
         (t) =&gt;
-          t.request.name === 'save_memory' &amp;&amp;
-          t.status === 'success' &amp;&amp;
+          t.request.name === "save_memory" &amp;&amp;
+          t.status === "success" &amp;&amp;
           !processedMemoryToolsRef.current.has(t.request.callId),
       );
 &nbsp;
@@ -3203,7 +3203,7 @@ export const useGeminiStream = (
 &nbsp;
       // If all the tools were cancelled, don't submit a response to Gemini.
       const allToolsCancelled = geminiTools.every(
-        (tc) =&gt; tc.status === 'cancelled',
+        (tc) =&gt; tc.status === "cancelled",
       );
 &nbsp;
       if (allToolsCancelled) {
@@ -3214,7 +3214,7 @@ export const useGeminiStream = (
             (toolCall) =&gt; toolCall.response.responseParts,
           );
           geminiClient.addHistory({
-            role: 'user',
+            role: "user",
             parts: combinedParts,
           });
         }
@@ -3277,9 +3277,9 @@ export const useGeminiStream = (
 <span class="branch-0 cbranch-no" title="branch not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      const restorableToolCalls = toolCalls.filter(</span>
 <span class="cstat-no" title="statement not covered" >        (toolCall) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >          (toolCall.request.name === 'edit' ||</span>
-<span class="cstat-no" title="statement not covered" >            toolCall.request.name === 'write_file') &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >          toolCall.status === 'awaiting_approval',</span>
+<span class="cstat-no" title="statement not covered" >          (toolCall.request.name === "edit" ||</span>
+<span class="cstat-no" title="statement not covered" >            toolCall.request.name === "write_file") &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >          toolCall.status === "awaiting_approval",</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      if (restorableToolCalls.length &gt; 0) {</span>
@@ -3292,7 +3292,7 @@ export const useGeminiStream = (
 <span class="cstat-no" title="statement not covered" >        try {</span>
 <span class="cstat-no" title="statement not covered" >          await fs.mkdir(checkpointDir, { recursive: true });</span>
 <span class="cstat-no" title="statement not covered" >        } catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >          if (!isNodeError(error) || error.code !== 'EEXIST') {</span>
+<span class="cstat-no" title="statement not covered" >          if (!isNodeError(error) || error.code !== "EEXIST") {</span>
 <span class="cstat-no" title="statement not covered" >            onDebugMessage(</span>
 <span class="cstat-no" title="statement not covered" >              `Failed to create checkpoint directory: ${getErrorMessage(error)}`,</span>
 <span class="cstat-no" title="statement not covered" >            );</span>
@@ -3301,7 +3301,7 @@ export const useGeminiStream = (
 <span class="cstat-no" title="statement not covered" >        }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        for (const toolCall of restorableToolCalls) {</span>
-<span class="cstat-no" title="statement not covered" >          const filePath = toolCall.request.args['file_path'] as string;</span>
+<span class="cstat-no" title="statement not covered" >          const filePath = toolCall.request.args["file_path"] as string;</span>
 <span class="cstat-no" title="statement not covered" >          if (!filePath) {</span>
 <span class="cstat-no" title="statement not covered" >            onDebugMessage(</span>
 <span class="cstat-no" title="statement not covered" >              `Skipping restorable tool call due to missing file_path: ${toolCall.request.name}`,</span>
@@ -3341,8 +3341,8 @@ export const useGeminiStream = (
 &nbsp;
 <span class="cstat-no" title="statement not covered" >            const timestamp = new Date()</span>
 <span class="cstat-no" title="statement not covered" >              .toISOString()</span>
-<span class="cstat-no" title="statement not covered" >              .replace(/:/g, '-')</span>
-<span class="cstat-no" title="statement not covered" >              .replace(/\./g, '_');</span>
+<span class="cstat-no" title="statement not covered" >              .replace(/:/g, "-")</span>
+<span class="cstat-no" title="statement not covered" >              .replace(/\./g, "_");</span>
 <span class="cstat-no" title="statement not covered" >            const toolName = toolCall.request.name;</span>
 <span class="cstat-no" title="statement not covered" >            const fileName = path.basename(filePath);</span>
 <span class="cstat-no" title="statement not covered" >            const toolCallWithSnapshotFileName = `${timestamp}-${fileName}-${toolName}.json`;</span>
@@ -3406,7 +3406,7 @@ export const useGeminiStream = (
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.374Z
+                at 2025-09-30T22:44:16.879Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -567,12 +567,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { useState, useMemo, useEffect } from 'react';
-import { Box, Text } from 'ink';
-import { RadioButtonSelect } from '../../shared/RadioButtonSelect.js';
-import type { ToolCategory } from '../types.js';
-import { Kind, type Config } from '@qwen-code/qwen-code-core';
-import { Colors } from '../../../colors.js';
+import { useState, useMemo, useEffect } from "react";
+import { Box, Text } from "ink";
+import { RadioButtonSelect } from "../../shared/RadioButtonSelect.js";
+import type { ToolCategory } from "../types.js";
+import { Kind, type Config } from "@qwen-code/qwen-code-core";
+import { Colors } from "../../../colors.js";
 &nbsp;
 interface ToolOption {
   label: string;
@@ -607,15 +607,15 @@ export <span class="fstat-no" title="function not covered" >function ToolSelecto
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        toolCategories: [</span>
 <span class="cstat-no" title="statement not covered" >          {</span>
-<span class="cstat-no" title="statement not covered" >            id: 'all',</span>
-<span class="cstat-no" title="statement not covered" >            name: 'All Tools (Default)',</span>
+<span class="cstat-no" title="statement not covered" >            id: "all",</span>
+<span class="cstat-no" title="statement not covered" >            name: "All Tools (Default)",</span>
 <span class="cstat-no" title="statement not covered" >            tools: [],</span>
 <span class="cstat-no" title="statement not covered" >          },</span>
 <span class="cstat-no" title="statement not covered" >        ],</span>
 <span class="cstat-no" title="statement not covered" >        readTools: [],</span>
 <span class="cstat-no" title="statement not covered" >        editTools: [],</span>
 <span class="cstat-no" title="statement not covered" >        executeTools: [],</span>
-<span class="cstat-no" title="statement not covered" >        initialCategory: 'all',</span>
+<span class="cstat-no" title="statement not covered" >        initialCategory: "all",</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
@@ -651,37 +651,37 @@ export <span class="fstat-no" title="function not covered" >function ToolSelecto
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const toolCategories = [</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
-<span class="cstat-no" title="statement not covered" >        id: 'all',</span>
-<span class="cstat-no" title="statement not covered" >        name: 'All Tools',</span>
+<span class="cstat-no" title="statement not covered" >        id: "all",</span>
+<span class="cstat-no" title="statement not covered" >        name: "All Tools",</span>
 <span class="cstat-no" title="statement not covered" >        tools: [],</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
-<span class="cstat-no" title="statement not covered" >        id: 'read',</span>
-<span class="cstat-no" title="statement not covered" >        name: 'Read-only Tools',</span>
+<span class="cstat-no" title="statement not covered" >        id: "read",</span>
+<span class="cstat-no" title="statement not covered" >        name: "Read-only Tools",</span>
 <span class="cstat-no" title="statement not covered" >        tools: readTools,</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
-<span class="cstat-no" title="statement not covered" >        id: 'edit',</span>
-<span class="cstat-no" title="statement not covered" >        name: 'Read &amp; Edit Tools',</span>
+<span class="cstat-no" title="statement not covered" >        id: "edit",</span>
+<span class="cstat-no" title="statement not covered" >        name: "Read &amp; Edit Tools",</span>
 <span class="cstat-no" title="statement not covered" >        tools: [...readTools, ...editTools],</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
-<span class="cstat-no" title="statement not covered" >        id: 'execute',</span>
-<span class="cstat-no" title="statement not covered" >        name: 'Read &amp; Edit &amp; Execution Tools',</span>
+<span class="cstat-no" title="statement not covered" >        id: "execute",</span>
+<span class="cstat-no" title="statement not covered" >        name: "Read &amp; Edit &amp; Execution Tools",</span>
 <span class="cstat-no" title="statement not covered" >        tools: [...readTools, ...editTools, ...executeTools],</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
-<span class="cstat-no" title="statement not covered" >    ].filter((category) =&gt; category.id === 'all' || category.tools.length &gt; 0);</span>
+<span class="cstat-no" title="statement not covered" >    ].filter((category) =&gt; category.id === "all" || category.tools.length &gt; 0);</span>
 &nbsp;
     // Determine initial category based on tools prop
-<span class="cstat-no" title="statement not covered" >    let initialCategory = 'all'; // default to first option</span>
+<span class="cstat-no" title="statement not covered" >    let initialCategory = "all"; // default to first option</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (tools.length === 0) {</span>
       // Empty array represents all tools
-<span class="cstat-no" title="statement not covered" >      initialCategory = 'all';</span>
+<span class="cstat-no" title="statement not covered" >      initialCategory = "all";</span>
 <span class="cstat-no" title="statement not covered" >    } else {</span>
       // Try to match tools array to a category
 <span class="cstat-no" title="statement not covered" >      const matchingCategory = toolCategories.find((category) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        if (category.id === 'all') return false;</span>
+<span class="cstat-no" title="statement not covered" >        if (category.id === "all") return false;</span>
 &nbsp;
         // Check if the tools array exactly matches this category's tools
 <span class="cstat-no" title="statement not covered" >        const categoryToolsSet = new Set(category.tools);</span>
@@ -729,7 +729,7 @@ export <span class="fstat-no" title="function not covered" >function ToolSelecto
 <span class="cstat-no" title="statement not covered" >  const handleSelect = (selectedValue: string) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const category = toolCategories.find((cat) =&gt; cat.id === selectedValue);</span>
 <span class="cstat-no" title="statement not covered" >    if (category) {</span>
-<span class="cstat-no" title="statement not covered" >      if (category.id === 'all') {</span>
+<span class="cstat-no" title="statement not covered" >      if (category.id === "all") {</span>
 <span class="cstat-no" title="statement not covered" >        onSelect([]); // Empty array for 'all'</span>
 <span class="cstat-no" title="statement not covered" >      } else {</span>
 <span class="cstat-no" title="statement not covered" >        onSelect(category.tools);</span>
@@ -762,7 +762,7 @@ export <span class="fstat-no" title="function not covered" >function ToolSelecto
       {/* Show help information or tools for selected category */}
 <span class="cstat-no" title="statement not covered" >      {currentCategory &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Box flexDirection="column"&gt;</span>
-<span class="cstat-no" title="statement not covered" >          {currentCategory.id === 'all' ? (</span>
+<span class="cstat-no" title="statement not covered" >          {currentCategory.id === "all" ? (</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Text color={Colors.Gray}&gt;</span>
               All tools selected, including MCP tools
 <span class="cstat-no" title="statement not covered" >            &lt;/Text&gt;</span>
@@ -786,17 +786,17 @@ export <span class="fstat-no" title="function not covered" >function ToolSelecto
 <span class="cstat-no" title="statement not covered" >                    &lt;&gt;</span>
 <span class="cstat-no" title="statement not covered" >                      {categoryReadTools.length &gt; 0 &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >                        &lt;Text color={Colors.Gray}&gt;</span>
-<span class="cstat-no" title="statement not covered" >                          • Read-only tools: {categoryReadTools.join(', ')}</span>
+<span class="cstat-no" title="statement not covered" >                          • Read-only tools: {categoryReadTools.join(", ")}</span>
 <span class="cstat-no" title="statement not covered" >                        &lt;/Text&gt;</span>
                       )}
 <span class="cstat-no" title="statement not covered" >                      {categoryEditTools.length &gt; 0 &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >                        &lt;Text color={Colors.Gray}&gt;</span>
-<span class="cstat-no" title="statement not covered" >                          • Edit tools: {categoryEditTools.join(', ')}</span>
+<span class="cstat-no" title="statement not covered" >                          • Edit tools: {categoryEditTools.join(", ")}</span>
 <span class="cstat-no" title="statement not covered" >                        &lt;/Text&gt;</span>
                       )}
 <span class="cstat-no" title="statement not covered" >                      {categoryExecuteTools.length &gt; 0 &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >                        &lt;Text color={Colors.Gray}&gt;</span>
-<span class="cstat-no" title="statement not covered" >                          • Execution tools: {categoryExecuteTools.join(', ')}</span>
+<span class="cstat-no" title="statement not covered" >                          • Execution tools: {categoryExecuteTools.join(", ")}</span>
 <span class="cstat-no" title="statement not covered" >                        &lt;/Text&gt;</span>
                       )}
 <span class="cstat-no" title="statement not covered" >                    &lt;/&gt;</span>
@@ -817,7 +817,7 @@ export <span class="fstat-no" title="function not covered" >function ToolSelecto
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.148Z
+                at 2025-09-30T22:44:16.802Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

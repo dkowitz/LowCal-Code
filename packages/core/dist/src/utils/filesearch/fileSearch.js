@@ -3,17 +3,17 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import path from 'node:path';
-import picomatch from 'picomatch';
-import { loadIgnoreRules } from './ignore.js';
-import { ResultCache } from './result-cache.js';
-import { crawl } from './crawler.js';
-import { AsyncFzf } from 'fzf';
-import { unescapePath } from '../paths.js';
+import path from "node:path";
+import picomatch from "picomatch";
+import { loadIgnoreRules } from "./ignore.js";
+import { ResultCache } from "./result-cache.js";
+import { crawl } from "./crawler.js";
+import { AsyncFzf } from "fzf";
+import { unescapePath } from "../paths.js";
 export class AbortError extends Error {
-    constructor(message = 'Search aborted') {
+    constructor(message = "Search aborted") {
         super(message);
-        this.name = 'AbortError';
+        this.name = "AbortError";
     }
 }
 /**
@@ -43,8 +43,8 @@ export async function filter(allPaths, pattern, signal) {
         }
     }
     results.sort((a, b) => {
-        const aIsDir = a.endsWith('/');
-        const bIsDir = b.endsWith('/');
+        const aIsDir = a.endsWith("/");
+        const bIsDir = b.endsWith("/");
         if (aIsDir && !bIsDir)
             return -1;
         if (!aIsDir && bIsDir)
@@ -80,9 +80,9 @@ class RecursiveFileSearch {
         if (!this.resultCache ||
             (!this.fzf && !this.options.disableFuzzySearch) ||
             !this.ignore) {
-            throw new Error('Engine not initialized. Call initialize() first.');
+            throw new Error("Engine not initialized. Call initialize() first.");
         }
-        pattern = unescapePath(pattern) || '*';
+        pattern = unescapePath(pattern) || "*";
         let filteredCandidates;
         const { files: candidates, isExactMatch } = await this.resultCache.get(pattern);
         if (isExactMatch) {
@@ -91,7 +91,7 @@ class RecursiveFileSearch {
         }
         else {
             let shouldCache = true;
-            if (pattern.includes('*') || !this.fzf) {
+            if (pattern.includes("*") || !this.fzf) {
                 filteredCandidates = await filter(candidates, pattern, options.signal);
             }
             else {
@@ -119,7 +119,7 @@ class RecursiveFileSearch {
             if (results.length >= (options.maxResults ?? Infinity)) {
                 break;
             }
-            if (candidate === '.') {
+            if (candidate === ".") {
                 continue;
             }
             if (!fileFilter(candidate)) {
@@ -135,7 +135,7 @@ class RecursiveFileSearch {
             // occurence of the pattern. We use it for search spaces that have >20k
             // files, because the v2 algorithm is just too slow in those cases.
             this.fzf = new AsyncFzf(this.allFiles, {
-                fuzzy: this.allFiles.length > 20000 ? 'v1' : 'v2',
+                fuzzy: this.allFiles.length > 20000 ? "v1" : "v2",
             });
         }
     }
@@ -151,10 +151,10 @@ class DirectoryFileSearch {
     }
     async search(pattern, options = {}) {
         if (!this.ignore) {
-            throw new Error('Engine not initialized. Call initialize() first.');
+            throw new Error("Engine not initialized. Call initialize() first.");
         }
-        pattern = pattern || '*';
-        const dir = pattern.endsWith('/') ? pattern : path.dirname(pattern);
+        pattern = pattern || "*";
+        const dir = pattern.endsWith("/") ? pattern : path.dirname(pattern);
         const results = await crawl({
             crawlDirectory: path.join(this.options.projectRoot, dir),
             cwd: this.options.projectRoot,
@@ -170,7 +170,7 @@ class DirectoryFileSearch {
             if (finalResults.length >= (options.maxResults ?? Infinity)) {
                 break;
             }
-            if (candidate === '.') {
+            if (candidate === ".") {
                 continue;
             }
             if (!fileFilter(candidate)) {

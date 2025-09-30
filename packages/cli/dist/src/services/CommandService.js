@@ -46,11 +46,11 @@ export class CommandService {
         const results = await Promise.allSettled(loaders.map((loader) => loader.loadCommands(signal)));
         const allCommands = [];
         for (const result of results) {
-            if (result.status === 'fulfilled') {
+            if (result.status === "fulfilled") {
                 allCommands.push(...result.value);
             }
             else {
-                console.debug('A command loader failed:', result.reason);
+                console.debug("A command loader failed:", result.reason);
             }
         }
         const commandMap = new Map();

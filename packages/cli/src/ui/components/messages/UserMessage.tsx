@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Text, Box } from 'ink';
-import { Colors } from '../../colors.js';
-import { SCREEN_READER_USER_PREFIX } from '../../textConstants.js';
-import { isSlashCommand as checkIsSlashCommand } from '../../utils/commandUtils.js';
+import type React from "react";
+import { Text, Box } from "ink";
+import { Colors } from "../../colors.js";
+import { SCREEN_READER_USER_PREFIX } from "../../textConstants.js";
+import { isSlashCommand as checkIsSlashCommand } from "../../utils/commandUtils.js";
 
 interface UserMessageProps {
   text: string;
 }
 
 export const UserMessage: React.FC<UserMessageProps> = ({ text }) => {
-  const prefix = '> ';
+  const prefix = "> ";
   const prefixWidth = prefix.length;
   const isSlashCommand = checkIsSlashCommand(text);
 

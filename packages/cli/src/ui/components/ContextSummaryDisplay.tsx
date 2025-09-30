@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
+import type React from "react";
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
 import {
   type IdeContext,
   type MCPServerConfig,
-} from '@qwen-code/qwen-code-core';
-import { useTerminalSize } from '../hooks/useTerminalSize.js';
-import { isNarrowWidth } from '../utils/isNarrowWidth.js';
+} from "@qwen-code/qwen-code-core";
+import { useTerminalSize } from "../hooks/useTerminalSize.js";
+import { isNarrowWidth } from "../utils/isNarrowWidth.js";
 
 interface ContextSummaryDisplayProps {
   geminiMdFileCount: number;
@@ -48,50 +48,50 @@ export const ContextSummaryDisplay: React.FC<ContextSummaryDisplayProps> = ({
 
   const openFilesText = (() => {
     if (openFileCount === 0) {
-      return '';
+      return "";
     }
     return `${openFileCount} open file${
-      openFileCount > 1 ? 's' : ''
+      openFileCount > 1 ? "s" : ""
     } (ctrl+g to view)`;
   })();
 
   const geminiMdText = (() => {
     if (geminiMdFileCount === 0) {
-      return '';
+      return "";
     }
     const allNamesTheSame = new Set(contextFileNames).size < 2;
-    const name = allNamesTheSame ? contextFileNames[0] : 'context';
+    const name = allNamesTheSame ? contextFileNames[0] : "context";
     return `${geminiMdFileCount} ${name} file${
-      geminiMdFileCount > 1 ? 's' : ''
+      geminiMdFileCount > 1 ? "s" : ""
     }`;
   })();
 
   const mcpText = (() => {
     if (mcpServerCount === 0 && blockedMcpServerCount === 0) {
-      return '';
+      return "";
     }
 
     const parts = [];
     if (mcpServerCount > 0) {
       parts.push(
-        `${mcpServerCount} MCP server${mcpServerCount > 1 ? 's' : ''}`,
+        `${mcpServerCount} MCP server${mcpServerCount > 1 ? "s" : ""}`,
       );
     }
 
     if (blockedMcpServerCount > 0) {
       let blockedText = `${blockedMcpServerCount} Blocked`;
       if (mcpServerCount === 0) {
-        blockedText += ` MCP server${blockedMcpServerCount > 1 ? 's' : ''}`;
+        blockedText += ` MCP server${blockedMcpServerCount > 1 ? "s" : ""}`;
       }
       parts.push(blockedText);
     }
-    let text = parts.join(', ');
+    let text = parts.join(", ");
     // Add ctrl+t hint when MCP servers are available
     if (mcpServers && Object.keys(mcpServers).length > 0) {
       if (showToolDescriptions) {
-        text += ' (ctrl+t to toggle)';
+        text += " (ctrl+t to toggle)";
       } else {
-        text += ' (ctrl+t to view)';
+        text += " (ctrl+t to view)";
       }
     }
     return text;
@@ -105,7 +105,7 @@ export const ContextSummaryDisplay: React.FC<ContextSummaryDisplayProps> = ({
         <Text color={Colors.Gray}>Using:</Text>
         {summaryParts.map((part, index) => (
           <Text key={index} color={Colors.Gray}>
-            {'  '}- {part}
+            {"  "}- {part}
           </Text>
         ))}
       </Box>
@@ -114,7 +114,7 @@ export const ContextSummaryDisplay: React.FC<ContextSummaryDisplayProps> = ({
 
   return (
     <Box>
-      <Text color={Colors.Gray}>Using: {summaryParts.join(' | ')}</Text>
+      <Text color={Colors.Gray}>Using: {summaryParts.join(" | ")}</Text>
     </Box>
   );
 };

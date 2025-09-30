@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { WebSearchTool, type WebSearchToolParams } from './web-search.js';
-import type { Config } from '../config/config.js';
-import { GeminiClient } from '../core/client.js';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { WebSearchTool, type WebSearchToolParams } from "./web-search.js";
+import type { Config } from "../config/config.js";
+import { GeminiClient } from "../core/client.js";
 
 // Mock GeminiClient and Config constructor
-vi.mock('../core/client.js');
-vi.mock('../config/config.js');
+vi.mock("../core/client.js");
+vi.mock("../config/config.js");
 
 // Mock global fetch
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
-describe('WebSearchTool', () => {
+describe("WebSearchTool", () => {
   const abortSignal = new AbortController().signal;
   let mockGeminiClient: GeminiClient;
   let tool: WebSearchTool;
@@ -27,7 +27,7 @@ describe('WebSearchTool', () => {
     const mockConfigInstance = {
       getGeminiClient: () => mockGeminiClient,
       getProxy: () => undefined,
-      getTavilyApiKey: () => 'test-api-key', // Add the missing method
+      getTavilyApiKey: () => "test-api-key", // Add the missing method
     } as unknown as Config;
     mockGeminiClient = new GeminiClient(mockConfigInstance);
     tool = new WebSearchTool(mockConfigInstance);
@@ -37,32 +37,32 @@ describe('WebSearchTool', () => {
     vi.restoreAllMocks();
   });
 
-  describe('build', () => {
-    it('should return an invocation for a valid query', () => {
-      const params: WebSearchToolParams = { query: 'test query' };
+  describe("build", () => {
+    it("should return an invocation for a valid query", () => {
+      const params: WebSearchToolParams = { query: "test query" };
       const invocation = tool.build(params);
       expect(invocation).toBeDefined();
       expect(invocation.params).toEqual(params);
     });
 
-    it('should throw an error for an empty query', () => {
-      const params: WebSearchToolParams = { query: '' };
+    it("should throw an error for an empty query", () => {
+      const params: WebSearchToolParams = { query: "" };
       expect(() => tool.build(params)).toThrow(
         "The 'query' parameter cannot be empty.",
       );
     });
 
-    it('should throw an error for a query with only whitespace', () => {
-      const params: WebSearchToolParams = { query: '   ' };
+    it("should throw an error for a query with only whitespace", () => {
+      const params: WebSearchToolParams = { query: "   " };
       expect(() => tool.build(params)).toThrow(
         "The 'query' parameter cannot be empty.",
       );
     });
   });
 
-  describe('getDescription', () => {
-    it('should return a description of the search', () => {
-      const params: WebSearchToolParams = { query: 'test query' };
+  describe("getDescription", () => {
+    it("should return a description of the search", () => {
+      const params: WebSearchToolParams = { query: "test query" };
       const invocation = tool.build(params);
       expect(invocation.getDescription()).toBe(
         'Searching the web for: "test query"',
@@ -70,15 +70,15 @@ describe('WebSearchTool', () => {
     });
   });
 
-  describe('execute', () => {
-    it('should return search results for a successful query', async () => {
-      const params: WebSearchToolParams = { query: 'successful query' };
+  describe("execute", () => {
+    it("should return search results for a successful query", async () => {
+      const params: WebSearchToolParams = { query: "successful query" };
 
       // Mock the fetch response
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          answer: 'Here are your results.',
+          answer: "Here are your results.",
           results: [],
         }),
       } as Response);
@@ -95,14 +95,14 @@ describe('WebSearchTool', () => {
       expect(result.sources).toEqual([]);
     });
 
-    it('should handle no search results found', async () => {
-      const params: WebSearchToolParams = { query: 'no results query' };
+    it("should handle no search results found", async () => {
+      const params: WebSearchToolParams = { query: "no results query" };
 
       // Mock the fetch response
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          answer: '',
+          answer: "",
           results: [],
         }),
       } as Response);
@@ -113,34 +113,34 @@ describe('WebSearchTool', () => {
       expect(result.llmContent).toBe(
         'No search results or information found for query: "no results query"',
       );
-      expect(result.returnDisplay).toBe('No information found.');
+      expect(result.returnDisplay).toBe("No information found.");
     });
 
-    it('should handle API errors gracefully', async () => {
-      const params: WebSearchToolParams = { query: 'error query' };
+    it("should handle API errors gracefully", async () => {
+      const params: WebSearchToolParams = { query: "error query" };
 
       // Mock the fetch to reject
-      mockFetch.mockRejectedValueOnce(new Error('API Failure'));
+      mockFetch.mockRejectedValueOnce(new Error("API Failure"));
 
       const invocation = tool.build(params);
       const result = await invocation.execute(abortSignal);
 
-      expect(result.llmContent).toContain('Error:');
-      expect(result.llmContent).toContain('API Failure');
-      expect(result.returnDisplay).toBe('Error performing web search.');
+      expect(result.llmContent).toContain("Error:");
+      expect(result.llmContent).toContain("API Failure");
+      expect(result.returnDisplay).toBe("Error performing web search.");
     });
 
-    it('should correctly format results with sources', async () => {
-      const params: WebSearchToolParams = { query: 'grounding query' };
+    it("should correctly format results with sources", async () => {
+      const params: WebSearchToolParams = { query: "grounding query" };
 
       // Mock the fetch response
       mockFetch.mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          answer: 'This is a test response.',
+          answer: "This is a test response.",
           results: [
-            { title: 'Example Site', url: 'https://example.com' },
-            { title: 'Google', url: 'https://google.com' },
+            { title: "Example Site", url: "https://example.com" },
+            { title: "Google", url: "https://google.com" },
           ],
         }),
       } as Response);

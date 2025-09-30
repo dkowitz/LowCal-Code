@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import util from 'node:util';
-import type { ConsoleMessageItem } from '../types.js';
+import util from "node:util";
+import type { ConsoleMessageItem } from "../types.js";
 
 interface ConsolePatcherParams {
-  onNewMessage?: (message: Omit<ConsoleMessageItem, 'id'>) => void;
+  onNewMessage?: (message: Omit<ConsoleMessageItem, "id">) => void;
   debugMode: boolean;
   stderr?: boolean;
 }
@@ -27,11 +27,11 @@ export class ConsolePatcher {
   }
 
   patch() {
-    console.log = this.patchConsoleMethod('log', this.originalConsoleLog);
-    console.warn = this.patchConsoleMethod('warn', this.originalConsoleWarn);
-    console.error = this.patchConsoleMethod('error', this.originalConsoleError);
-    console.debug = this.patchConsoleMethod('debug', this.originalConsoleDebug);
-    console.info = this.patchConsoleMethod('info', this.originalConsoleInfo);
+    console.log = this.patchConsoleMethod("log", this.originalConsoleLog);
+    console.warn = this.patchConsoleMethod("warn", this.originalConsoleWarn);
+    console.error = this.patchConsoleMethod("error", this.originalConsoleError);
+    console.debug = this.patchConsoleMethod("debug", this.originalConsoleDebug);
+    console.info = this.patchConsoleMethod("info", this.originalConsoleInfo);
   }
 
   cleanup = () => {
@@ -46,12 +46,12 @@ export class ConsolePatcher {
 
   private patchConsoleMethod =
     (
-      type: 'log' | 'warn' | 'error' | 'debug' | 'info',
+      type: "log" | "warn" | "error" | "debug" | "info",
       originalMethod: (...args: unknown[]) => void,
     ) =>
     (...args: unknown[]) => {
       if (this.params.stderr) {
-        if (type !== 'debug' || this.params.debugMode) {
+        if (type !== "debug" || this.params.debugMode) {
           this.originalConsoleError(this.formatArgs(args));
         }
       } else {
@@ -59,7 +59,7 @@ export class ConsolePatcher {
           originalMethod.apply(console, args);
         }
 
-        if (type !== 'debug' || this.params.debugMode) {
+        if (type !== "debug" || this.params.debugMode) {
           this.params.onNewMessage?.({
             type,
             content: this.formatArgs(args),

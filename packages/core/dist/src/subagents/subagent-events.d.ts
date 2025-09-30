@@ -3,8 +3,8 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { ToolCallConfirmationDetails, ToolConfirmationOutcome } from '../tools/tools.js';
-export type SubAgentEvent = 'start' | 'round_start' | 'round_end' | 'stream_text' | 'tool_call' | 'tool_result' | 'tool_waiting_approval' | 'finish' | 'error';
+import type { ToolCallConfirmationDetails, ToolConfirmationOutcome } from "../tools/tools.js";
+export type SubAgentEvent = "start" | "round_start" | "round_end" | "stream_text" | "tool_call" | "tool_result" | "tool_waiting_approval" | "finish" | "error";
 export declare enum SubAgentEventType {
     START = "start",
     ROUND_START = "round_start",
@@ -61,10 +61,10 @@ export interface SubAgentApprovalRequestEvent {
     callId: string;
     name: string;
     description: string;
-    confirmationDetails: Omit<ToolCallConfirmationDetails, 'onConfirm'> & {
-        type: ToolCallConfirmationDetails['type'];
+    confirmationDetails: Omit<ToolCallConfirmationDetails, "onConfirm"> & {
+        type: ToolCallConfirmationDetails["type"];
     };
-    respond: (outcome: ToolConfirmationOutcome, payload?: Parameters<ToolCallConfirmationDetails['onConfirm']>[1]) => Promise<void>;
+    respond: (outcome: ToolConfirmationOutcome, payload?: Parameters<ToolCallConfirmationDetails["onConfirm"]>[1]) => Promise<void>;
     timestamp: number;
 }
 export interface SubAgentFinishEvent {

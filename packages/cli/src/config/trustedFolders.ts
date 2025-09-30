@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { homedir } from 'node:os';
-import { getErrorMessage, isWithinRoot } from '@qwen-code/qwen-code-core';
-import type { Settings } from './settings.js';
-import stripJsonComments from 'strip-json-comments';
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { homedir } from "node:os";
+import { getErrorMessage, isWithinRoot } from "@qwen-code/qwen-code-core";
+import type { Settings } from "./settings.js";
+import stripJsonComments from "strip-json-comments";
 
-export const TRUSTED_FOLDERS_FILENAME = 'trustedFolders.json';
-export const SETTINGS_DIRECTORY_NAME = '.qwen';
+export const TRUSTED_FOLDERS_FILENAME = "trustedFolders.json";
+export const SETTINGS_DIRECTORY_NAME = ".qwen";
 export const USER_SETTINGS_DIR = path.join(homedir(), SETTINGS_DIRECTORY_NAME);
 export const USER_TRUSTED_FOLDERS_PATH = path.join(
   USER_SETTINGS_DIR,
@@ -20,9 +20,9 @@ export const USER_TRUSTED_FOLDERS_PATH = path.join(
 );
 
 export enum TrustLevel {
-  TRUST_FOLDER = 'TRUST_FOLDER',
-  TRUST_PARENT = 'TRUST_PARENT',
-  DO_NOT_TRUST = 'DO_NOT_TRUST',
+  TRUST_FOLDER = "TRUST_FOLDER",
+  TRUST_PARENT = "TRUST_PARENT",
+  DO_NOT_TRUST = "DO_NOT_TRUST",
 }
 
 export interface TrustRule {
@@ -68,7 +68,7 @@ export function loadTrustedFolders(): LoadedTrustedFolders {
   // Load user trusted folders
   try {
     if (fs.existsSync(userPath)) {
-      const content = fs.readFileSync(userPath, 'utf-8');
+      const content = fs.readFileSync(userPath, "utf-8");
       const parsed = JSON.parse(stripJsonComments(content)) as Record<
         string,
         TrustLevel
@@ -103,10 +103,10 @@ export function saveTrustedFolders(
     fs.writeFileSync(
       trustedFoldersFile.path,
       JSON.stringify(trustedFoldersFile.config, null, 2),
-      'utf-8',
+      "utf-8",
     );
   } catch (error) {
-    console.error('Error saving trusted folders file:', error);
+    console.error("Error saving trusted folders file:", error);
   }
 }
 

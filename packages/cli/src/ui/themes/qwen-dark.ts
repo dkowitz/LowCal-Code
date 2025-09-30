@@ -4,108 +4,108 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { type ColorsTheme, Theme } from './theme.js';
-import { darkSemanticColors } from './semantic-tokens.js';
+import { type ColorsTheme, Theme } from "./theme.js";
+import { darkSemanticColors } from "./semantic-tokens.js";
 
 const qwenDarkColors: ColorsTheme = {
-  type: 'dark',
-  Background: '#0b0e14',
-  Foreground: '#bfbdb6',
-  LightBlue: '#59C2FF',
-  AccentBlue: '#39BAE6',
-  AccentPurple: '#D2A6FF',
-  AccentCyan: '#95E6CB',
-  AccentGreen: '#AAD94C',
-  AccentYellow: '#FFD700',
-  AccentRed: '#F26D78',
-  DiffAdded: '#AAD94C',
-  DiffRemoved: '#F26D78',
-  Comment: '#646A71',
-  Gray: '#3D4149',
-  GradientColors: ['#FFD700', '#da7959'],
+  type: "dark",
+  Background: "#0b0e14",
+  Foreground: "#bfbdb6",
+  LightBlue: "#59C2FF",
+  AccentBlue: "#39BAE6",
+  AccentPurple: "#D2A6FF",
+  AccentCyan: "#95E6CB",
+  AccentGreen: "#AAD94C",
+  AccentYellow: "#FFD700",
+  AccentRed: "#F26D78",
+  DiffAdded: "#AAD94C",
+  DiffRemoved: "#F26D78",
+  Comment: "#646A71",
+  Gray: "#3D4149",
+  GradientColors: ["#FFD700", "#da7959"],
 };
 
 export const QwenDark: Theme = new Theme(
-  'Qwen Dark',
-  'dark',
+  "Qwen Dark",
+  "dark",
   {
     hljs: {
-      display: 'block',
-      overflowX: 'auto',
-      padding: '0.5em',
+      display: "block",
+      overflowX: "auto",
+      padding: "0.5em",
       background: qwenDarkColors.Background,
       color: qwenDarkColors.Foreground,
     },
-    'hljs-keyword': {
+    "hljs-keyword": {
       color: qwenDarkColors.AccentYellow,
     },
-    'hljs-literal': {
+    "hljs-literal": {
       color: qwenDarkColors.AccentPurple,
     },
-    'hljs-symbol': {
+    "hljs-symbol": {
       color: qwenDarkColors.AccentCyan,
     },
-    'hljs-name': {
+    "hljs-name": {
       color: qwenDarkColors.LightBlue,
     },
-    'hljs-link': {
+    "hljs-link": {
       color: qwenDarkColors.AccentBlue,
     },
-    'hljs-function .hljs-keyword': {
+    "hljs-function .hljs-keyword": {
       color: qwenDarkColors.AccentYellow,
     },
-    'hljs-subst': {
+    "hljs-subst": {
       color: qwenDarkColors.Foreground,
     },
-    'hljs-string': {
+    "hljs-string": {
       color: qwenDarkColors.AccentGreen,
     },
-    'hljs-title': {
+    "hljs-title": {
       color: qwenDarkColors.AccentYellow,
     },
-    'hljs-type': {
+    "hljs-type": {
       color: qwenDarkColors.AccentBlue,
     },
-    'hljs-attribute': {
+    "hljs-attribute": {
       color: qwenDarkColors.AccentYellow,
     },
-    'hljs-bullet': {
+    "hljs-bullet": {
       color: qwenDarkColors.AccentYellow,
     },
-    'hljs-addition': {
+    "hljs-addition": {
       color: qwenDarkColors.AccentGreen,
     },
-    'hljs-variable': {
+    "hljs-variable": {
       color: qwenDarkColors.Foreground,
     },
-    'hljs-template-tag': {
+    "hljs-template-tag": {
       color: qwenDarkColors.AccentYellow,
     },
-    'hljs-template-variable': {
+    "hljs-template-variable": {
       color: qwenDarkColors.AccentYellow,
     },
-    'hljs-comment': {
+    "hljs-comment": {
       color: qwenDarkColors.Comment,
-      fontStyle: 'italic',
+      fontStyle: "italic",
     },
-    'hljs-quote': {
+    "hljs-quote": {
       color: qwenDarkColors.AccentCyan,
-      fontStyle: 'italic',
+      fontStyle: "italic",
     },
-    'hljs-deletion': {
+    "hljs-deletion": {
       color: qwenDarkColors.AccentRed,
     },
-    'hljs-meta': {
+    "hljs-meta": {
       color: qwenDarkColors.AccentYellow,
     },
-    'hljs-doctag': {
-      fontWeight: 'bold',
+    "hljs-doctag": {
+      fontWeight: "bold",
     },
-    'hljs-strong': {
-      fontWeight: 'bold',
+    "hljs-strong": {
+      fontWeight: "bold",
     },
-    'hljs-emphasis': {
-      fontStyle: 'italic',
+    "hljs-emphasis": {
+      fontStyle: "italic",
     },
   },
   qwenDarkColors,

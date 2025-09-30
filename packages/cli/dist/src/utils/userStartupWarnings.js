@@ -3,12 +3,12 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import fs from 'node:fs/promises';
-import * as os from 'node:os';
-import path from 'node:path';
+import fs from "node:fs/promises";
+import * as os from "node:os";
+import path from "node:path";
 // Individual warning checks
 const homeDirectoryCheck = {
-    id: 'home-directory',
+    id: "home-directory",
     check: async (workspaceRoot) => {
         try {
             const [workspaceRealPath, homeRealPath] = await Promise.all([
@@ -16,21 +16,21 @@ const homeDirectoryCheck = {
                 fs.realpath(os.homedir()),
             ]);
             if (workspaceRealPath === homeRealPath) {
-                return 'You are running Qwen Code in your home directory. It is recommended to run in a project-specific directory.';
+                return "You are running Qwen Code in your home directory. It is recommended to run in a project-specific directory.";
             }
             return null;
         }
         catch (_err) {
-            return 'Could not verify the current directory due to a file system error.';
+            return "Could not verify the current directory due to a file system error.";
         }
     },
 };
 const rootDirectoryCheck = {
-    id: 'root-directory',
+    id: "root-directory",
     check: async (workspaceRoot) => {
         try {
             const workspaceRealPath = await fs.realpath(workspaceRoot);
-            const errorMessage = 'Warning: You are running Qwen Code in the root directory. Your entire folder structure will be used for context. It is strongly recommended to run in a project-specific directory.';
+            const errorMessage = "Warning: You are running Qwen Code in the root directory. Your entire folder structure will be used for context. It is strongly recommended to run in a project-specific directory.";
             // Check for Unix root directory
             if (path.dirname(workspaceRealPath) === workspaceRealPath) {
                 return errorMessage;
@@ -38,7 +38,7 @@ const rootDirectoryCheck = {
             return null;
         }
         catch (_err) {
-            return 'Could not verify the current directory due to a file system error.';
+            return "Could not verify the current directory due to a file system error.";
         }
     },
 };

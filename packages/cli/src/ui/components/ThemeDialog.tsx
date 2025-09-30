@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { useCallback, useState } from 'react';
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
-import { themeManager, DEFAULT_THEME } from '../themes/theme-manager.js';
-import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
-import { DiffRenderer } from './messages/DiffRenderer.js';
-import { colorizeCode } from '../utils/CodeColorizer.js';
-import type { LoadedSettings } from '../../config/settings.js';
-import { SettingScope } from '../../config/settings.js';
+import type React from "react";
+import { useCallback, useState } from "react";
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
+import { themeManager, DEFAULT_THEME } from "../themes/theme-manager.js";
+import { RadioButtonSelect } from "./shared/RadioButtonSelect.js";
+import { DiffRenderer } from "./messages/DiffRenderer.js";
+import { colorizeCode } from "../utils/CodeColorizer.js";
+import type { LoadedSettings } from "../../config/settings.js";
+import { SettingScope } from "../../config/settings.js";
 import {
   getScopeItems,
   getScopeMessageForSetting,
-} from '../../utils/dialogScopeUtils.js';
-import { useKeypress } from '../hooks/useKeypress.js';
+} from "../../utils/dialogScopeUtils.js";
+import { useKeypress } from "../hooks/useKeypress.js";
 
 interface ThemeDialogProps {
   /** Callback function when a theme is selected */
@@ -55,7 +55,7 @@ export function ThemeDialog({
       : settings.merged.ui?.customThemes || {};
   const builtInThemes = themeManager
     .getAvailableThemes()
-    .filter((theme) => theme.type !== 'custom');
+    .filter((theme) => theme.type !== "custom");
   const customThemeNames = Object.keys(customThemes);
   const capitalize = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
   // Generate theme items
@@ -70,7 +70,7 @@ export function ThemeDialog({
       label: name,
       value: name,
       themeNameDisplay: name,
-      themeTypeDisplay: 'Custom',
+      themeTypeDisplay: "Custom",
     })),
   ];
   const [selectInputKey, setSelectInputKey] = useState(Date.now());
@@ -105,21 +105,21 @@ export function ThemeDialog({
   const handleScopeSelect = useCallback(
     (scope: SettingScope) => {
       handleScopeHighlight(scope);
-      setFocusedSection('theme'); // Reset focus to theme section
+      setFocusedSection("theme"); // Reset focus to theme section
     },
     [handleScopeHighlight],
   );
 
-  const [focusedSection, setFocusedSection] = useState<'theme' | 'scope'>(
-    'theme',
+  const [focusedSection, setFocusedSection] = useState<"theme" | "scope">(
+    "theme",
   );
 
   useKeypress(
     (key) => {
-      if (key.name === 'tab') {
-        setFocusedSection((prev) => (prev === 'theme' ? 'scope' : 'theme'));
+      if (key.name === "tab") {
+        setFocusedSection((prev) => (prev === "theme" ? "scope" : "theme"));
       }
-      if (key.name === 'escape') {
+      if (key.name === "escape") {
         onSelect(undefined, selectedScope);
       }
     },
@@ -128,7 +128,7 @@ export function ThemeDialog({
 
   // Generate scope message for theme setting
   const otherScopeModifiedMessage = getScopeMessageForSetting(
-    'ui.theme',
+    "ui.theme",
     selectedScope,
     settings,
   );
@@ -181,7 +181,7 @@ export function ThemeDialog({
   }
 
   // Don't focus the scope selection if it is hidden due to height constraints.
-  const currentFocusedSection = !showScopeSelection ? 'theme' : focusedSection;
+  const currentFocusedSection = !showScopeSelection ? "theme" : focusedSection;
 
   // Vertical space taken by elements other than the two code blocks in the preview pane.
   // Includes "Preview" title, borders, and margin between blocks.
@@ -220,8 +220,8 @@ export function ThemeDialog({
       <Box flexDirection="row">
         {/* Left Column: Selection */}
         <Box flexDirection="column" width="45%" paddingRight={2}>
-          <Text bold={currentFocusedSection === 'theme'} wrap="truncate">
-            {currentFocusedSection === 'theme' ? '> ' : '  '}Select Theme{' '}
+          <Text bold={currentFocusedSection === "theme"} wrap="truncate">
+            {currentFocusedSection === "theme" ? "> " : "  "}Select Theme{" "}
             <Text color={Colors.Gray}>{otherScopeModifiedMessage}</Text>
           </Text>
           <RadioButtonSelect
@@ -230,25 +230,25 @@ export function ThemeDialog({
             initialIndex={safeInitialThemeIndex}
             onSelect={handleThemeSelect}
             onHighlight={handleThemeHighlight}
-            isFocused={currentFocusedSection === 'theme'}
+            isFocused={currentFocusedSection === "theme"}
             maxItemsToShow={8}
             showScrollArrows={true}
-            showNumbers={currentFocusedSection === 'theme'}
+            showNumbers={currentFocusedSection === "theme"}
           />
 
           {/* Scope Selection */}
           {showScopeSelection && (
             <Box marginTop={1} flexDirection="column">
-              <Text bold={currentFocusedSection === 'scope'} wrap="truncate">
-                {currentFocusedSection === 'scope' ? '> ' : '  '}Apply To
+              <Text bold={currentFocusedSection === "scope"} wrap="truncate">
+                {currentFocusedSection === "scope" ? "> " : "  "}Apply To
               </Text>
               <RadioButtonSelect
                 items={scopeItems}
                 initialIndex={0} // Default to User Settings
                 onSelect={handleScopeSelect}
                 onHighlight={handleScopeHighlight}
-                isFocused={currentFocusedSection === 'scope'}
-                showNumbers={currentFocusedSection === 'scope'}
+                isFocused={currentFocusedSection === "scope"}
+                showNumbers={currentFocusedSection === "scope"}
               />
             </Box>
           )}
@@ -280,7 +280,7 @@ def fibonacci(n):
     for _ in range(n):
         a, b = b, a + b
     return a`,
-                  'python',
+                  "python",
                   codeBlockHeight,
                   colorizeCodeWidth,
                 )}
@@ -304,7 +304,7 @@ def fibonacci(n):
       <Box marginTop={1}>
         <Text color={Colors.Gray} wrap="truncate">
           (Use Enter to select
-          {showScopeSelection ? ', Tab to change focus' : ''})
+          {showScopeSelection ? ", Tab to change focus" : ""})
         </Text>
       </Box>
     </Box>

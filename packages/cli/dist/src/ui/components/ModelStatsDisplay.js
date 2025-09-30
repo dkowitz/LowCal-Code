@@ -1,9 +1,9 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
-import { formatDuration } from '../utils/formatters.js';
-import { calculateAverageLatency, calculateCacheHitRate, calculateErrorRate, } from '../utils/computeStats.js';
-import { useSessionStats } from '../contexts/SessionContext.js';
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
+import { formatDuration } from "../utils/formatters.js";
+import { calculateAverageLatency, calculateCacheHitRate, calculateErrorRate, } from "../utils/computeStats.js";
+import { useSessionStats } from "../contexts/SessionContext.js";
 const METRIC_COL_WIDTH = 28;
 const MODEL_COL_WIDTH = 22;
 const StatRow = ({ title, values, isSubtle = false, isSection = false, }) => (_jsxs(Box, { children: [_jsx(Box, { width: METRIC_COL_WIDTH, children: _jsx(Text, { bold: isSection, color: isSection ? undefined : Colors.LightBlue, children: isSubtle ? `  ↳ ${title}` : title }) }), values.map((value, index) => (_jsx(Box, { width: MODEL_COL_WIDTH, children: _jsx(Text, { children: value }) }, index)))] }));

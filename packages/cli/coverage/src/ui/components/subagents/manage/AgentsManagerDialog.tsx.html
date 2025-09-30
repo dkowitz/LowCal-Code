@@ -733,21 +733,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Box, Text } from 'ink';
-import { AgentSelectionStep } from './AgentSelectionStep.js';
-import { ActionSelectionStep } from './ActionSelectionStep.js';
-import { AgentViewerStep } from './AgentViewerStep.js';
-import { EditOptionsStep } from './AgentEditStep.js';
-import { AgentDeleteStep } from './AgentDeleteStep.js';
-import { ToolSelector } from '../create/ToolSelector.js';
-import { ColorSelector } from '../create/ColorSelector.js';
-import { MANAGEMENT_STEPS } from '../types.js';
-import { Colors } from '../../../colors.js';
-import { theme } from '../../../semantic-colors.js';
-import { getColorForDisplay, shouldShowColor } from '../utils.js';
-import type { SubagentConfig, Config } from '@qwen-code/qwen-code-core';
-import { useKeypress } from '../../../hooks/useKeypress.js';
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { Box, Text } from "ink";
+import { AgentSelectionStep } from "./AgentSelectionStep.js";
+import { ActionSelectionStep } from "./ActionSelectionStep.js";
+import { AgentViewerStep } from "./AgentViewerStep.js";
+import { EditOptionsStep } from "./AgentEditStep.js";
+import { AgentDeleteStep } from "./AgentDeleteStep.js";
+import { ToolSelector } from "../create/ToolSelector.js";
+import { ColorSelector } from "../create/ColorSelector.js";
+import { MANAGEMENT_STEPS } from "../types.js";
+import { Colors } from "../../../colors.js";
+import { theme } from "../../../semantic-colors.js";
+import { getColorForDisplay, shouldShowColor } from "../utils.js";
+import type { SubagentConfig, Config } from "@qwen-code/qwen-code-core";
+import { useKeypress } from "../../../hooks/useKeypress.js";
 &nbsp;
 interface AgentsManagerDialogProps {
   onClose: () =&gt; void;
@@ -833,7 +833,7 @@ export <span class="fstat-no" title="function not covered" >function AgentsManag
 <span class="cstat-no" title="statement not covered" >        setNavigationStack([MANAGEMENT_STEPS.AGENT_SELECTION]);</span>
 <span class="cstat-no" title="statement not covered" >        setSelectedAgentIndex(-1);</span>
 <span class="cstat-no" title="statement not covered" >      } catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >        console.error('Failed to delete agent:', error);</span>
+<span class="cstat-no" title="statement not covered" >        console.error("Failed to delete agent:", error);</span>
 <span class="cstat-no" title="statement not covered" >        throw error; // Re-throw to let the component handle the error state</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
@@ -843,7 +843,7 @@ export <span class="fstat-no" title="function not covered" >function AgentsManag
   // Centralized ESC key handling for the entire dialog
 <span class="cstat-no" title="statement not covered" >  useKeypress(</span>
 <span class="cstat-no" title="statement not covered" >    (key) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      if (key.name !== 'escape') {</span>
+<span class="cstat-no" title="statement not covered" >      if (key.name !== "escape") {</span>
 <span class="cstat-no" title="statement not covered" >        return;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
@@ -873,9 +873,9 @@ export <span class="fstat-no" title="function not covered" >function AgentsManag
 <span class="cstat-no" title="statement not covered" >    const getStepHeaderText = () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      switch (currentStep) {</span>
 <span class="cstat-no" title="statement not covered" >        case MANAGEMENT_STEPS.AGENT_SELECTION:</span>
-<span class="cstat-no" title="statement not covered" >          return 'Agents';</span>
+<span class="cstat-no" title="statement not covered" >          return "Agents";</span>
 <span class="cstat-no" title="statement not covered" >        case MANAGEMENT_STEPS.ACTION_SELECTION:</span>
-<span class="cstat-no" title="statement not covered" >          return 'Choose Action';</span>
+<span class="cstat-no" title="statement not covered" >          return "Choose Action";</span>
 <span class="cstat-no" title="statement not covered" >        case MANAGEMENT_STEPS.AGENT_VIEWER:</span>
 <span class="cstat-no" title="statement not covered" >          return selectedAgent?.name;</span>
 <span class="cstat-no" title="statement not covered" >        case MANAGEMENT_STEPS.EDIT_OPTIONS:</span>
@@ -887,7 +887,7 @@ export <span class="fstat-no" title="function not covered" >function AgentsManag
 <span class="cstat-no" title="statement not covered" >        case MANAGEMENT_STEPS.DELETE_CONFIRMATION:</span>
 <span class="cstat-no" title="statement not covered" >          return `Delete ${selectedAgent?.name}`;</span>
 <span class="cstat-no" title="statement not covered" >        default:</span>
-<span class="cstat-no" title="statement not covered" >          return 'Unknown Step';</span>
+<span class="cstat-no" title="statement not covered" >          return "Unknown Step";</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
@@ -913,20 +913,20 @@ export <span class="fstat-no" title="function not covered" >function AgentsManag
 <span class="cstat-no" title="statement not covered" >    const getNavigationInstructions = () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      if (currentStep === MANAGEMENT_STEPS.AGENT_SELECTION) {</span>
 <span class="cstat-no" title="statement not covered" >        if (availableAgents.length === 0) {</span>
-<span class="cstat-no" title="statement not covered" >          return 'Esc to close';</span>
+<span class="cstat-no" title="statement not covered" >          return "Esc to close";</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
-<span class="cstat-no" title="statement not covered" >        return 'Enter to select, ↑↓ to navigate, Esc to close';</span>
+<span class="cstat-no" title="statement not covered" >        return "Enter to select, ↑↓ to navigate, Esc to close";</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      if (currentStep === MANAGEMENT_STEPS.AGENT_VIEWER) {</span>
-<span class="cstat-no" title="statement not covered" >        return 'Esc to go back';</span>
+<span class="cstat-no" title="statement not covered" >        return "Esc to go back";</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      if (currentStep === MANAGEMENT_STEPS.DELETE_CONFIRMATION) {</span>
-<span class="cstat-no" title="statement not covered" >        return 'Enter to confirm, Esc to cancel';</span>
+<span class="cstat-no" title="statement not covered" >        return "Enter to confirm, Esc to cancel";</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      return 'Enter to select, ↑↓ to navigate, Esc to go back';</span>
+<span class="cstat-no" title="statement not covered" >      return "Enter to select, ↑↓ to navigate, Esc to go back";</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    return (</span>
@@ -978,7 +978,7 @@ export <span class="fstat-no" title="function not covered" >function AgentsManag
 <span class="cstat-no" title="statement not covered" >                    await loadAgents();</span>
 <span class="cstat-no" title="statement not covered" >                    handleNavigateBack();</span>
 <span class="cstat-no" title="statement not covered" >                  } catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >                    console.error('Failed to save agent changes:', error);</span>
+<span class="cstat-no" title="statement not covered" >                    console.error("Failed to save agent changes:", error);</span>
 <span class="cstat-no" title="statement not covered" >                  }</span>
 <span class="cstat-no" title="statement not covered" >                }</span>
 <span class="cstat-no" title="statement not covered" >              }}</span>
@@ -990,8 +990,8 @@ export <span class="fstat-no" title="function not covered" >function AgentsManag
 <span class="cstat-no" title="statement not covered" >        return (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Box flexDirection="column" gap={1}&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;ColorSelector</span>
-<span class="cstat-no" title="statement not covered" >              color={selectedAgent?.color || 'auto'}</span>
-<span class="cstat-no" title="statement not covered" >              agentName={selectedAgent?.name || 'Agent'}</span>
+<span class="cstat-no" title="statement not covered" >              color={selectedAgent?.color || "auto"}</span>
+<span class="cstat-no" title="statement not covered" >              agentName={selectedAgent?.name || "Agent"}</span>
 <span class="cstat-no" title="statement not covered" >              onSelect={async (color) =&gt; {</span>
                 // Save changes and reload agents
 <span class="cstat-no" title="statement not covered" >                if (selectedAgent &amp;&amp; config) {</span>
@@ -1007,7 +1007,7 @@ export <span class="fstat-no" title="function not covered" >function AgentsManag
 <span class="cstat-no" title="statement not covered" >                    await loadAgents();</span>
 <span class="cstat-no" title="statement not covered" >                    handleNavigateBack();</span>
 <span class="cstat-no" title="statement not covered" >                  } catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >                    console.error('Failed to save color changes:', error);</span>
+<span class="cstat-no" title="statement not covered" >                    console.error("Failed to save color changes:", error);</span>
 <span class="cstat-no" title="statement not covered" >                  }</span>
 <span class="cstat-no" title="statement not covered" >                }</span>
 <span class="cstat-no" title="statement not covered" >              }}</span>
@@ -1066,7 +1066,7 @@ export <span class="fstat-no" title="function not covered" >function AgentsManag
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.148Z
+                at 2025-09-30T22:44:16.802Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

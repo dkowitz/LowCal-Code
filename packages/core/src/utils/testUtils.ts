@@ -56,7 +56,7 @@ export function disableSimulationAfterFallback(): void {
  * Create a simulated 429 error response
  */
 export function createSimulated429Error(): Error {
-  const error = new Error('Rate limit exceeded (simulated)') as Error & {
+  const error = new Error("Rate limit exceeded (simulated)") as Error & {
     status: number;
   };
   error.status = 429;

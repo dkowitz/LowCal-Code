@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Box, Newline, Text } from 'ink';
-import { RadioButtonSelect } from '../components/shared/RadioButtonSelect.js';
-import { usePrivacySettings } from '../hooks/usePrivacySettings.js';
-import { CloudPaidPrivacyNotice } from './CloudPaidPrivacyNotice.js';
-import type { Config } from '@qwen-code/qwen-code-core';
-import { Colors } from '../colors.js';
-import { useKeypress } from '../hooks/useKeypress.js';
+import { Box, Newline, Text } from "ink";
+import { RadioButtonSelect } from "../components/shared/RadioButtonSelect.js";
+import { usePrivacySettings } from "../hooks/usePrivacySettings.js";
+import { CloudPaidPrivacyNotice } from "./CloudPaidPrivacyNotice.js";
+import type { Config } from "@qwen-code/qwen-code-core";
+import { Colors } from "../colors.js";
+import { useKeypress } from "../hooks/useKeypress.js";
 
 interface CloudFreePrivacyNoticeProps {
   config: Config;
@@ -26,7 +26,7 @@ export const CloudFreePrivacyNotice = ({
 
   useKeypress(
     (key) => {
-      if (privacyState.error && key.name === 'escape') {
+      if (privacyState.error && key.name === "escape") {
         onExit();
       }
     },
@@ -53,8 +53,8 @@ export const CloudFreePrivacyNotice = ({
   }
 
   const items = [
-    { label: 'Yes', value: true },
-    { label: 'No', value: false },
+    { label: "Yes", value: true },
+    { label: "No", value: false },
   ];
 
   return (
@@ -107,7 +107,7 @@ export const CloudFreePrivacyNotice = ({
       </Box>
       <Newline />
       <Text>
-        <Text color={Colors.AccentBlue}>[1]</Text>{' '}
+        <Text color={Colors.AccentBlue}>[1]</Text>{" "}
         https://policies.google.com/privacy
       </Text>
       <Newline />

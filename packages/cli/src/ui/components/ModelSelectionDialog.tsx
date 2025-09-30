@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
+import React, { useState } from "react";
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
 import {
   RadioButtonSelect,
   type RadioSelectItem,
-} from './shared/RadioButtonSelect.js';
-import { useKeypress } from '../hooks/useKeypress.js';
-import type { AvailableModel } from '../models/availableModels.js';
-import { TextInput } from './shared/TextInput.js';
+} from "./shared/RadioButtonSelect.js";
+import { useKeypress } from "../hooks/useKeypress.js";
+import type { AvailableModel } from "../models/availableModels.js";
+import { TextInput } from "./shared/TextInput.js";
 
 export interface ModelSelectionDialogProps {
   availableModels: AvailableModel[];
@@ -28,11 +28,11 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
   onSelect,
   onCancel,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   useKeypress(
     (key) => {
-      if (key.name === 'escape') {
+      if (key.name === "escape") {
         onCancel();
       }
     },
@@ -47,8 +47,8 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
 
   const options: Array<RadioSelectItem<string>> = filteredModels.map(
     (model) => {
-      const visionIndicator = model.isVision ? ' [Vision]' : '';
-      const currentIndicator = model.id === currentModel ? ' (current)' : '';
+      const visionIndicator = model.isVision ? " [Vision]" : "";
+      const currentIndicator = model.id === currentModel ? " (current)" : "";
       return {
         label: `${model.label}${visionIndicator}${currentIndicator}`,
         value: model.id,

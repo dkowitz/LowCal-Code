@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { isNodeError } from '../utils/errors.js';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import * as process from 'node:process';
+import { isNodeError } from "../utils/errors.js";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as process from "node:process";
 
 export type Unsubscribe = () => void;
 
@@ -53,7 +53,7 @@ export class WorkspaceContext {
         listener();
       } catch (e) {
         // Don't let one listener break others.
-        console.error('Error in WorkspaceContext listener:', e);
+        console.error("Error in WorkspaceContext listener:", e);
       }
     }
   }
@@ -155,7 +155,7 @@ export class WorkspaceContext {
     } catch (e: unknown) {
       if (
         isNodeError(e) &&
-        e.code === 'ENOENT' &&
+        e.code === "ENOENT" &&
         e.path &&
         // realpathSync does not set e.path correctly for symlinks to
         // non-existent files.
@@ -181,7 +181,7 @@ export class WorkspaceContext {
     const relative = path.relative(rootDirectory, pathToCheck);
     return (
       !relative.startsWith(`..${path.sep}`) &&
-      relative !== '..' &&
+      relative !== ".." &&
       !path.isAbsolute(relative)
     );
   }
@@ -191,7 +191,7 @@ export class WorkspaceContext {
    */
   private isFileSymlink(filePath: string): boolean {
     try {
-      return !fs.readlinkSync(filePath).endsWith('/');
+      return !fs.readlinkSync(filePath).endsWith("/");
     } catch (_error) {
       return false;
     }

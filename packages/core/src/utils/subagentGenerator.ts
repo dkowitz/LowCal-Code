@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Content } from '@google/genai';
-import { DEFAULT_QWEN_MODEL } from '../config/models.js';
-import type { GeminiClient } from '../core/client.js';
+import type { Content } from "@google/genai";
+import { DEFAULT_QWEN_MODEL } from "../config/models.js";
+import type { GeminiClient } from "../core/client.js";
 
 const SYSTEM_PROMPT = `You are an elite AI agent architect specializing in crafting high-performance agent configurations. Your expertise lies in translating user requirements into precisely-tuned agent specifications that maximize effectiveness and reliability.
 
@@ -78,25 +78,25 @@ const createUserPrompt = (userInput: string): string =>
   `Create an agent configuration based on this request: "${userInput}"`;
 
 const RESPONSE_SCHEMA: Record<string, unknown> = {
-  type: 'object',
+  type: "object",
   properties: {
     name: {
-      type: 'string',
+      type: "string",
       description:
         "A unique, descriptive identifier using lowercase letters, numbers, and hyphens (e.g., 'code-reviewer', 'api-docs-writer', 'test-generator')",
     },
     description: {
-      type: 'string',
+      type: "string",
       description:
         "A precise, actionable description starting with 'Use this agent when...' that clearly defines the triggering conditions and use cases",
     },
     systemPrompt: {
-      type: 'string',
+      type: "string",
       description:
         "The complete system prompt that will govern the agent's behavior, written in second person ('You are...', 'You will...') and structured for maximum clarity and effectiveness",
     },
   },
-  required: ['name', 'description', 'systemPrompt'],
+  required: ["name", "description", "systemPrompt"],
 };
 
 export interface SubagentGeneratedContent {
@@ -119,11 +119,11 @@ export async function subagentGenerator(
   abortSignal: AbortSignal,
 ): Promise<SubagentGeneratedContent> {
   if (!userDescription.trim()) {
-    throw new Error('User description cannot be empty');
+    throw new Error("User description cannot be empty");
   }
 
   const userPrompt = createUserPrompt(userDescription);
-  const contents: Content[] = [{ role: 'user', parts: [{ text: userPrompt }] }];
+  const contents: Content[] = [{ role: "user", parts: [{ text: userPrompt }] }];
 
   const parsedResponse = (await geminiClient.generateJson(
     contents,
@@ -141,7 +141,7 @@ export async function subagentGenerator(
     !parsedResponse.description ||
     !parsedResponse.systemPrompt
   ) {
-    throw new Error('Invalid response from LLM: missing required fields');
+    throw new Error("Invalid response from LLM: missing required fields");
   }
 
   return parsedResponse;

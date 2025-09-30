@@ -8,23 +8,23 @@ import {
   allowEditorTypeInSandbox,
   checkHasEditorType,
   type EditorType,
-} from '@qwen-code/qwen-code-core';
+} from "@qwen-code/qwen-code-core";
 
 export interface EditorDisplay {
   name: string;
-  type: EditorType | 'not_set';
+  type: EditorType | "not_set";
   disabled: boolean;
 }
 
 export const EDITOR_DISPLAY_NAMES: Record<EditorType, string> = {
-  cursor: 'Cursor',
-  emacs: 'Emacs',
-  neovim: 'Neovim',
-  vim: 'Vim',
-  vscode: 'VS Code',
-  vscodium: 'VSCodium',
-  windsurf: 'Windsurf',
-  zed: 'Zed',
+  cursor: "Cursor",
+  emacs: "Emacs",
+  neovim: "Neovim",
+  vim: "Vim",
+  vscode: "VS Code",
+  vscodium: "VSCodium",
+  windsurf: "Windsurf",
+  zed: "Zed",
 };
 
 class EditorSettingsManager {
@@ -36,8 +36,8 @@ class EditorSettingsManager {
     ).sort() as EditorType[];
     this.availableEditors = [
       {
-        name: 'None',
-        type: 'not_set',
+        name: "None",
+        type: "not_set",
         disabled: false,
       },
       ...editorTypes.map((type) => {
@@ -45,9 +45,9 @@ class EditorSettingsManager {
         const isAllowedInSandbox = allowEditorTypeInSandbox(type);
 
         let labelSuffix = !isAllowedInSandbox
-          ? ' (Not available in sandbox)'
-          : '';
-        labelSuffix = !hasEditor ? ' (Not installed)' : labelSuffix;
+          ? " (Not available in sandbox)"
+          : "";
+        labelSuffix = !hasEditor ? " (Not installed)" : labelSuffix;
 
         return {
           name: EDITOR_DISPLAY_NAMES[type] + labelSuffix,

@@ -1,7 +1,7 @@
-import type OpenAI from 'openai';
+import type OpenAI from "openai";
 export interface ChatCompletionContentPartTextWithCache extends OpenAI.Chat.ChatCompletionContentPartText {
     cache_control?: {
-        type: 'ephemeral';
+        type: "ephemeral";
     };
 }
 export type ChatCompletionContentPartWithCache = ChatCompletionContentPartTextWithCache | OpenAI.Chat.ChatCompletionContentPartImage | OpenAI.Chat.ChatCompletionContentPartRefusal;

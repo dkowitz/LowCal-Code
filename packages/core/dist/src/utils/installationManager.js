@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as fs from 'node:fs';
-import { randomUUID } from 'node:crypto';
-import * as path from 'node:path';
-import { Storage } from '../config/storage.js';
+import * as fs from "node:fs";
+import { randomUUID } from "node:crypto";
+import * as path from "node:path";
+import { Storage } from "../config/storage.js";
 export class InstallationManager {
     getInstallationIdPath() {
         return Storage.getInstallationIdPath();
@@ -15,7 +15,7 @@ export class InstallationManager {
         const installationIdFile = this.getInstallationIdPath();
         if (fs.existsSync(installationIdFile)) {
             const installationid = fs
-                .readFileSync(installationIdFile, 'utf-8')
+                .readFileSync(installationIdFile, "utf-8")
                 .trim();
             return installationid || null;
         }
@@ -25,7 +25,7 @@ export class InstallationManager {
         const installationIdFile = this.getInstallationIdPath();
         const dir = path.dirname(installationIdFile);
         fs.mkdirSync(dir, { recursive: true });
-        fs.writeFileSync(installationIdFile, installationId, 'utf-8');
+        fs.writeFileSync(installationIdFile, installationId, "utf-8");
     }
     /**
      * Retrieves the installation ID from a file, creating it if it doesn't exist.
@@ -42,8 +42,8 @@ export class InstallationManager {
             return installationId;
         }
         catch (error) {
-            console.error('Error accessing installation ID file, generating ephemeral ID:', error);
-            return '123456789';
+            console.error("Error accessing installation ID file, generating ephemeral ID:", error);
+            return "123456789";
         }
     }
 }

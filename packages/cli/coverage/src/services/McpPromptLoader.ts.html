@@ -581,19 +581,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type { Config } from '@qwen-code/qwen-code-core';
+import type { Config } from "@qwen-code/qwen-code-core";
 import {
   getErrorMessage,
   getMCPServerPrompts,
-} from '@qwen-code/qwen-code-core';
+} from "@qwen-code/qwen-code-core";
 import type {
   CommandContext,
   SlashCommand,
   SlashCommandActionReturn,
-} from '../ui/commands/types.js';
-import { CommandKind } from '../ui/commands/types.js';
-import type { ICommandLoader } from './types.js';
-import type { PromptArgument } from '@modelcontextprotocol/sdk/types.js';
+} from "../ui/commands/types.js";
+import { CommandKind } from "../ui/commands/types.js";
+import type { ICommandLoader } from "./types.js";
+import type { PromptArgument } from "@modelcontextprotocol/sdk/types.js";
 &nbsp;
 /**
  * Discovers and loads executable slash commands from prompts exposed by
@@ -625,14 +625,14 @@ export class McpPromptLoader implements ICommandLoader {
 <span class="cstat-no" title="statement not covered" >          kind: CommandKind.MCP_PROMPT,</span>
 <span class="cstat-no" title="statement not covered" >          subCommands: [</span>
 <span class="cstat-no" title="statement not covered" >            {</span>
-<span class="cstat-no" title="statement not covered" >              name: 'help',</span>
-<span class="cstat-no" title="statement not covered" >              description: 'Show help for this prompt',</span>
+<span class="cstat-no" title="statement not covered" >              name: "help",</span>
+<span class="cstat-no" title="statement not covered" >              description: "Show help for this prompt",</span>
 <span class="cstat-no" title="statement not covered" >              kind: CommandKind.MCP_PROMPT,</span>
 <span class="cstat-no" title="statement not covered" >              action: <span class="fstat-no" title="function not covered" >async (): Promise&lt;SlashCommandActionReturn&gt; =&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >                if (!prompt.arguments || prompt.arguments.length === 0) {</span>
 <span class="cstat-no" title="statement not covered" >                  return {</span>
-<span class="cstat-no" title="statement not covered" >                    type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >                    messageType: 'info',</span>
+<span class="cstat-no" title="statement not covered" >                    type: "message",</span>
+<span class="cstat-no" title="statement not covered" >                    messageType: "info",</span>
 <span class="cstat-no" title="statement not covered" >                    content: `Prompt "${prompt.name}" has no arguments.`,</span>
 <span class="cstat-no" title="statement not covered" >                  };</span>
 <span class="cstat-no" title="statement not covered" >                }</span>
@@ -648,12 +648,12 @@ export class McpPromptLoader implements ICommandLoader {
 <span class="cstat-no" title="statement not covered" >                    helpMessage += `    ${arg.description}\n`;</span>
 <span class="cstat-no" title="statement not covered" >                  }</span>
 <span class="cstat-no" title="statement not covered" >                  helpMessage += `    (required: ${</span>
-<span class="cstat-no" title="statement not covered" >                    arg.required ? 'yes' : 'no'</span>
+<span class="cstat-no" title="statement not covered" >                    arg.required ? "yes" : "no"</span>
 <span class="cstat-no" title="statement not covered" >                  })\n\n`;</span>
 <span class="cstat-no" title="statement not covered" >                }</span>
 <span class="cstat-no" title="statement not covered" >                return {</span>
-<span class="cstat-no" title="statement not covered" >                  type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >                  messageType: 'info',</span>
+<span class="cstat-no" title="statement not covered" >                  type: "message",</span>
+<span class="cstat-no" title="statement not covered" >                  messageType: "info",</span>
 <span class="cstat-no" title="statement not covered" >                  content: helpMessage,</span>
 <span class="cstat-no" title="statement not covered" >                };</span>
 <span class="cstat-no" title="statement not covered" >              },</span>
@@ -665,17 +665,17 @@ export class McpPromptLoader implements ICommandLoader {
 <span class="cstat-no" title="statement not covered" >          ): Promise&lt;SlashCommandActionReturn&gt; =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >            if (!this.config) {</span>
 <span class="cstat-no" title="statement not covered" >              return {</span>
-<span class="cstat-no" title="statement not covered" >                type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >                messageType: 'error',</span>
-<span class="cstat-no" title="statement not covered" >                content: 'Config not loaded.',</span>
+<span class="cstat-no" title="statement not covered" >                type: "message",</span>
+<span class="cstat-no" title="statement not covered" >                messageType: "error",</span>
+<span class="cstat-no" title="statement not covered" >                content: "Config not loaded.",</span>
 <span class="cstat-no" title="statement not covered" >              };</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >            const promptInputs = this.parseArgs(args, prompt.arguments);</span>
 <span class="cstat-no" title="statement not covered" >            if (promptInputs instanceof Error) {</span>
 <span class="cstat-no" title="statement not covered" >              return {</span>
-<span class="cstat-no" title="statement not covered" >                type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >                messageType: 'error',</span>
+<span class="cstat-no" title="statement not covered" >                type: "message",</span>
+<span class="cstat-no" title="statement not covered" >                messageType: "error",</span>
 <span class="cstat-no" title="statement not covered" >                content: promptInputs.message,</span>
 <span class="cstat-no" title="statement not covered" >              };</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
@@ -685,38 +685,38 @@ export class McpPromptLoader implements ICommandLoader {
 <span class="cstat-no" title="statement not covered" >              const mcpServerConfig = mcpServers[serverName];</span>
 <span class="cstat-no" title="statement not covered" >              if (!mcpServerConfig) {</span>
 <span class="cstat-no" title="statement not covered" >                return {</span>
-<span class="cstat-no" title="statement not covered" >                  type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >                  messageType: 'error',</span>
+<span class="cstat-no" title="statement not covered" >                  type: "message",</span>
+<span class="cstat-no" title="statement not covered" >                  messageType: "error",</span>
 <span class="cstat-no" title="statement not covered" >                  content: `MCP server config not found for '${serverName}'.`,</span>
 <span class="cstat-no" title="statement not covered" >                };</span>
 <span class="cstat-no" title="statement not covered" >              }</span>
 <span class="cstat-no" title="statement not covered" >              const result = await prompt.invoke(promptInputs);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >              if (result['error']) {</span>
+<span class="cstat-no" title="statement not covered" >              if (result["error"]) {</span>
 <span class="cstat-no" title="statement not covered" >                return {</span>
-<span class="cstat-no" title="statement not covered" >                  type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >                  messageType: 'error',</span>
-<span class="cstat-no" title="statement not covered" >                  content: `Error invoking prompt: ${result['error']}`,</span>
+<span class="cstat-no" title="statement not covered" >                  type: "message",</span>
+<span class="cstat-no" title="statement not covered" >                  messageType: "error",</span>
+<span class="cstat-no" title="statement not covered" >                  content: `Error invoking prompt: ${result["error"]}`,</span>
 <span class="cstat-no" title="statement not covered" >                };</span>
 <span class="cstat-no" title="statement not covered" >              }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >              if (!result.messages?.[0]?.content?.['text']) {</span>
+<span class="cstat-no" title="statement not covered" >              if (!result.messages?.[0]?.content?.["text"]) {</span>
 <span class="cstat-no" title="statement not covered" >                return {</span>
-<span class="cstat-no" title="statement not covered" >                  type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >                  messageType: 'error',</span>
+<span class="cstat-no" title="statement not covered" >                  type: "message",</span>
+<span class="cstat-no" title="statement not covered" >                  messageType: "error",</span>
 <span class="cstat-no" title="statement not covered" >                  content:</span>
-<span class="cstat-no" title="statement not covered" >                    'Received an empty or invalid prompt response from the server.',</span>
+<span class="cstat-no" title="statement not covered" >                    "Received an empty or invalid prompt response from the server.",</span>
 <span class="cstat-no" title="statement not covered" >                };</span>
 <span class="cstat-no" title="statement not covered" >              }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >              return {</span>
-<span class="cstat-no" title="statement not covered" >                type: 'submit_prompt',</span>
+<span class="cstat-no" title="statement not covered" >                type: "submit_prompt",</span>
 <span class="cstat-no" title="statement not covered" >                content: JSON.stringify(result.messages[0].content.text),</span>
 <span class="cstat-no" title="statement not covered" >              };</span>
 <span class="cstat-no" title="statement not covered" >            } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >              return {</span>
-<span class="cstat-no" title="statement not covered" >                type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >                messageType: 'error',</span>
+<span class="cstat-no" title="statement not covered" >                type: "message",</span>
+<span class="cstat-no" title="statement not covered" >                messageType: "error",</span>
 <span class="cstat-no" title="statement not covered" >                content: `Error: ${getErrorMessage(error)}`,</span>
 <span class="cstat-no" title="statement not covered" >              };</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
@@ -771,7 +771,7 @@ export class McpPromptLoader implements ICommandLoader {
     while ((match = namedArgRegex.exec(userArgs)) !== null) {
       const key = match[1];
       // Extract the quoted or unquoted argument and remove escape chars.
-      const value = (match[2] ?? match[3]).replace(/\\(.)/g, '$1');
+      const value = (match[2] ?? match[3]).replace(/\\(.)/g, "$1");
       argValues[key] = value;
       // Capture text between matches as potential positional args
       if (match.index &gt; lastIndex) {
@@ -785,13 +785,13 @@ export class McpPromptLoader implements ICommandLoader {
       positionalParts.push(userArgs.substring(lastIndex));
     }
 &nbsp;
-    const positionalArgsString = positionalParts.join('').trim();
+    const positionalArgsString = positionalParts.join("").trim();
     // extracts either quoted strings or non-quoted sequences of non-space characters.
     const positionalArgRegex = /(?:"((?:\\.|[^"\\])*)"|([^ ]+))/g;
     const positionalArgs: string[] = [];
     while ((match = positionalArgRegex.exec(positionalArgsString)) !== null) {
       // Extract the quoted or unquoted argument and remove escape chars.
-      positionalArgs.push((match[1] ?? match[2]).replace(/\\(.)/g, '$1'));
+      positionalArgs.push((match[1] ?? match[2]).replace(/\\(.)/g, "$1"));
     }
 &nbsp;
     if (!promptArgs) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
@@ -810,7 +810,7 @@ export class McpPromptLoader implements ICommandLoader {
     if (unfilledArgs.length === 1) {
       // If we have only one unfilled arg, we don't require quotes we just
       // join all the given arguments together as if they were quoted.
-      promptInputs[unfilledArgs[0].name] = positionalArgs.join(' ');
+      promptInputs[unfilledArgs[0].name] = positionalArgs.join(" ");
     } else {
       const missingArgs: string[] = [];
       for (let i = 0; i &lt; unfilledArgs.length; i++) {
@@ -823,7 +823,7 @@ export class McpPromptLoader implements ICommandLoader {
       if (missingArgs.length &gt; 0) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        const missingArgNames = missingArgs</span>
 <span class="cstat-no" title="statement not covered" >          .map((name) =&gt; `--${name}`)</span>
-<span class="cstat-no" title="statement not covered" >          .join(', ');</span>
+<span class="cstat-no" title="statement not covered" >          .join(", ");</span>
 <span class="cstat-no" title="statement not covered" >        return new Error(`Missing required argument(s): ${missingArgNames}`);</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
     }
@@ -838,7 +838,7 @@ export class McpPromptLoader implements ICommandLoader {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.148Z
+                at 2025-09-30T22:44:16.802Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

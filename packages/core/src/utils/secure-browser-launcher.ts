@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-import { platform } from 'node:os';
-import { URL } from 'node:url';
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import { platform } from "node:os";
+import { URL } from "node:url";
 
 const execFileAsync = promisify(execFile);
 
@@ -28,7 +28,7 @@ function validateUrl(url: string): void {
   }
 
   // Only allow HTTP and HTTPS protocols
-  if (parsedUrl.protocol !== 'http:' && parsedUrl.protocol !== 'https:') {
+  if (parsedUrl.protocol !== "http:" && parsedUrl.protocol !== "https:") {
     throw new Error(
       `Unsafe protocol: ${parsedUrl.protocol}. Only HTTP and HTTPS are allowed.`,
     );
@@ -37,7 +37,7 @@ function validateUrl(url: string): void {
   // Additional validation: ensure no newlines or control characters
   // eslint-disable-next-line no-control-regex
   if (/[\r\n\x00-\x1f]/.test(url)) {
-    throw new Error('URL contains invalid characters');
+    throw new Error("URL contains invalid characters");
   }
 }
 
@@ -60,32 +60,32 @@ export async function openBrowserSecurely(url: string): Promise<void> {
   let args: string[];
 
   switch (platformName) {
-    case 'darwin':
+    case "darwin":
       // macOS
-      command = 'open';
+      command = "open";
       args = [url];
       break;
 
-    case 'win32':
+    case "win32":
       // Windows - use PowerShell with Start-Process
       // This avoids the cmd.exe shell which is vulnerable to injection
-      command = 'powershell.exe';
+      command = "powershell.exe";
       args = [
-        '-NoProfile',
-        '-NonInteractive',
-        '-WindowStyle',
-        'Hidden',
-        '-Command',
+        "-NoProfile",
+        "-NonInteractive",
+        "-WindowStyle",
+        "Hidden",
+        "-Command",
         `Start-Process '${url.replace(/'/g, "''")}'`,
       ];
       break;
 
-    case 'linux':
-    case 'freebsd':
-    case 'openbsd':
+    case "linux":
+    case "freebsd":
+    case "openbsd":
       // Linux and BSD variants
       // Try xdg-open first, fall back to other options
-      command = 'xdg-open';
+      command = "xdg-open";
       args = [url];
       break;
 
@@ -102,7 +102,7 @@ export async function openBrowserSecurely(url: string): Promise<void> {
     },
     // Detach the browser process so it doesn't block
     detached: true,
-    stdio: 'ignore',
+    stdio: "ignore",
   };
 
   try {
@@ -110,17 +110,17 @@ export async function openBrowserSecurely(url: string): Promise<void> {
   } catch (error) {
     // For Linux, try fallback commands if xdg-open fails
     if (
-      (platformName === 'linux' ||
-        platformName === 'freebsd' ||
-        platformName === 'openbsd') &&
-      command === 'xdg-open'
+      (platformName === "linux" ||
+        platformName === "freebsd" ||
+        platformName === "openbsd") &&
+      command === "xdg-open"
     ) {
       const fallbackCommands = [
-        'gnome-open',
-        'kde-open',
-        'firefox',
-        'chromium',
-        'google-chrome',
+        "gnome-open",
+        "kde-open",
+        "firefox",
+        "chromium",
+        "google-chrome",
       ];
 
       for (const fallbackCommand of fallbackCommands) {
@@ -136,7 +136,7 @@ export async function openBrowserSecurely(url: string): Promise<void> {
 
     // Re-throw the error if all attempts failed
     throw new Error(
-      `Failed to open browser: ${error instanceof Error ? error.message : 'Unknown error'}`,
+      `Failed to open browser: ${error instanceof Error ? error.message : "Unknown error"}`,
     );
   }
 }
@@ -150,16 +150,16 @@ export async function openBrowserSecurely(url: string): Promise<void> {
 export function shouldLaunchBrowser(): boolean {
   // A list of browser names that indicate we should not attempt to open a
   // web browser for the user.
-  const browserBlocklist = ['www-browser'];
-  const browserEnv = process.env['BROWSER'];
+  const browserBlocklist = ["www-browser"];
+  const browserEnv = process.env["BROWSER"];
   if (browserEnv && browserBlocklist.includes(browserEnv)) {
     return false;
   }
 
   // Common environment variables used in CI/CD or other non-interactive shells.
   if (
-    process.env['CI'] ||
-    process.env['DEBIAN_FRONTEND'] === 'noninteractive'
+    process.env["CI"] ||
+    process.env["DEBIAN_FRONTEND"] === "noninteractive"
   ) {
     return false;
   }
@@ -167,12 +167,12 @@ export function shouldLaunchBrowser(): boolean {
   // The presence of SSH_CONNECTION indicates a remote session.
   // We should not attempt to launch a browser unless a display is explicitly available
   // (checked below for Linux).
-  const isSSH = !!process.env['SSH_CONNECTION'];
+  const isSSH = !!process.env["SSH_CONNECTION"];
 
   // On Linux, the presence of a display server is a strong indicator of a GUI.
-  if (platform() === 'linux') {
+  if (platform() === "linux") {
     // These are environment variables that can indicate a running compositor on Linux.
-    const displayVariables = ['DISPLAY', 'WAYLAND_DISPLAY', 'MIR_SOCKET'];
+    const displayVariables = ["DISPLAY", "WAYLAND_DISPLAY", "MIR_SOCKET"];
     const hasDisplay = displayVariables.some((v) => !!process.env[v]);
     if (!hasDisplay) {
       return false;
@@ -181,7 +181,7 @@ export function shouldLaunchBrowser(): boolean {
 
   // If in an SSH session on a non-Linux OS (e.g., macOS), don't launch browser.
   // The Linux case is handled above (it's allowed if DISPLAY is set).
-  if (isSSH && platform() !== 'linux') {
+  if (isSSH && platform() !== "linux") {
     return false;
   }
 

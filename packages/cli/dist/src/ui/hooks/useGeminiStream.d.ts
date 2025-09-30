@@ -3,11 +3,11 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Config, GeminiClient, EditorType, ThoughtSummary } from '@qwen-code/qwen-code-core';
-import { type PartListUnion } from '@google/genai';
-import type { HistoryItem, HistoryItemWithoutId, SlashCommandProcessorResult } from '../types.js';
-import { StreamingState } from '../types.js';
-import type { UseHistoryManagerReturn } from './useHistoryManager.js';
+import type { Config, GeminiClient, EditorType, ThoughtSummary } from "@qwen-code/qwen-code-core";
+import { type PartListUnion } from "@google/genai";
+import type { HistoryItem, HistoryItemWithoutId, SlashCommandProcessorResult } from "../types.js";
+import { StreamingState } from "../types.js";
+import type { UseHistoryManagerReturn } from "./useHistoryManager.js";
 /**
  * Manages the Gemini stream, including user input, command processing,
  * API interaction, and tool call lifecycle.

@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useCallback, useMemo, useEffect } from 'react';
-import { Box, Text } from 'ink';
-import { AgentSelectionStep } from './AgentSelectionStep.js';
-import { ActionSelectionStep } from './ActionSelectionStep.js';
-import { AgentViewerStep } from './AgentViewerStep.js';
-import { EditOptionsStep } from './AgentEditStep.js';
-import { AgentDeleteStep } from './AgentDeleteStep.js';
-import { ToolSelector } from '../create/ToolSelector.js';
-import { ColorSelector } from '../create/ColorSelector.js';
-import { MANAGEMENT_STEPS } from '../types.js';
-import { Colors } from '../../../colors.js';
-import { theme } from '../../../semantic-colors.js';
-import { getColorForDisplay, shouldShowColor } from '../utils.js';
-import type { SubagentConfig, Config } from '@qwen-code/qwen-code-core';
-import { useKeypress } from '../../../hooks/useKeypress.js';
+import { useState, useCallback, useMemo, useEffect } from "react";
+import { Box, Text } from "ink";
+import { AgentSelectionStep } from "./AgentSelectionStep.js";
+import { ActionSelectionStep } from "./ActionSelectionStep.js";
+import { AgentViewerStep } from "./AgentViewerStep.js";
+import { EditOptionsStep } from "./AgentEditStep.js";
+import { AgentDeleteStep } from "./AgentDeleteStep.js";
+import { ToolSelector } from "../create/ToolSelector.js";
+import { ColorSelector } from "../create/ColorSelector.js";
+import { MANAGEMENT_STEPS } from "../types.js";
+import { Colors } from "../../../colors.js";
+import { theme } from "../../../semantic-colors.js";
+import { getColorForDisplay, shouldShowColor } from "../utils.js";
+import type { SubagentConfig, Config } from "@qwen-code/qwen-code-core";
+import { useKeypress } from "../../../hooks/useKeypress.js";
 
 interface AgentsManagerDialogProps {
   onClose: () => void;
@@ -104,7 +104,7 @@ export function AgentsManagerDialog({
         setNavigationStack([MANAGEMENT_STEPS.AGENT_SELECTION]);
         setSelectedAgentIndex(-1);
       } catch (error) {
-        console.error('Failed to delete agent:', error);
+        console.error("Failed to delete agent:", error);
         throw error; // Re-throw to let the component handle the error state
       }
     },
@@ -114,7 +114,7 @@ export function AgentsManagerDialog({
   // Centralized ESC key handling for the entire dialog
   useKeypress(
     (key) => {
-      if (key.name !== 'escape') {
+      if (key.name !== "escape") {
         return;
       }
 
@@ -144,9 +144,9 @@ export function AgentsManagerDialog({
     const getStepHeaderText = () => {
       switch (currentStep) {
         case MANAGEMENT_STEPS.AGENT_SELECTION:
-          return 'Agents';
+          return "Agents";
         case MANAGEMENT_STEPS.ACTION_SELECTION:
-          return 'Choose Action';
+          return "Choose Action";
         case MANAGEMENT_STEPS.AGENT_VIEWER:
           return selectedAgent?.name;
         case MANAGEMENT_STEPS.EDIT_OPTIONS:
@@ -158,7 +158,7 @@ export function AgentsManagerDialog({
         case MANAGEMENT_STEPS.DELETE_CONFIRMATION:
           return `Delete ${selectedAgent?.name}`;
         default:
-          return 'Unknown Step';
+          return "Unknown Step";
       }
     };
 
@@ -184,20 +184,20 @@ export function AgentsManagerDialog({
     const getNavigationInstructions = () => {
       if (currentStep === MANAGEMENT_STEPS.AGENT_SELECTION) {
         if (availableAgents.length === 0) {
-          return 'Esc to close';
+          return "Esc to close";
         }
-        return 'Enter to select, ↑↓ to navigate, Esc to close';
+        return "Enter to select, ↑↓ to navigate, Esc to close";
       }
 
       if (currentStep === MANAGEMENT_STEPS.AGENT_VIEWER) {
-        return 'Esc to go back';
+        return "Esc to go back";
       }
 
       if (currentStep === MANAGEMENT_STEPS.DELETE_CONFIRMATION) {
-        return 'Enter to confirm, Esc to cancel';
+        return "Enter to confirm, Esc to cancel";
       }
 
-      return 'Enter to select, ↑↓ to navigate, Esc to go back';
+      return "Enter to select, ↑↓ to navigate, Esc to go back";
     };
 
     return (
@@ -249,7 +249,7 @@ export function AgentsManagerDialog({
                     await loadAgents();
                     handleNavigateBack();
                   } catch (error) {
-                    console.error('Failed to save agent changes:', error);
+                    console.error("Failed to save agent changes:", error);
                   }
                 }
               }}
@@ -261,8 +261,8 @@ export function AgentsManagerDialog({
         return (
           <Box flexDirection="column" gap={1}>
             <ColorSelector
-              color={selectedAgent?.color || 'auto'}
-              agentName={selectedAgent?.name || 'Agent'}
+              color={selectedAgent?.color || "auto"}
+              agentName={selectedAgent?.name || "Agent"}
               onSelect={async (color) => {
                 // Save changes and reload agents
                 if (selectedAgent && config) {
@@ -278,7 +278,7 @@ export function AgentsManagerDialog({
                     await loadAgents();
                     handleNavigateBack();
                   } catch (error) {
-                    console.error('Failed to save color changes:', error);
+                    console.error("Failed to save color changes:", error);
                   }
                 }
               }}

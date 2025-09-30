@@ -3,10 +3,10 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-export { DefaultRequestTokenizer } from './requestTokenizer.js';
-import { DefaultRequestTokenizer } from './requestTokenizer.js';
-export { TextTokenizer } from './textTokenizer.js';
-export { ImageTokenizer } from './imageTokenizer.js';
+export { DefaultRequestTokenizer } from "./requestTokenizer.js";
+import { DefaultRequestTokenizer } from "./requestTokenizer.js";
+export { TextTokenizer } from "./textTokenizer.js";
+export { ImageTokenizer } from "./imageTokenizer.js";
 // Singleton instance for convenient usage
 let defaultTokenizer = null;
 /**

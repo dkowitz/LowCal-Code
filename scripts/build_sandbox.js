@@ -17,57 +17,57 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { execSync } from 'node:child_process';
+import { execSync } from "node:child_process";
 import {
   chmodSync,
   existsSync,
   readFileSync,
   rmSync,
   writeFileSync,
-} from 'node:fs';
-import { join } from 'node:path';
-import os from 'node:os';
-import yargs from 'yargs';
-import { hideBin } from 'yargs/helpers';
-import cliPkgJson from '../packages/cli/package.json' with { type: 'json' };
+} from "node:fs";
+import { join } from "node:path";
+import os from "node:os";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+import cliPkgJson from "../packages/cli/package.json" with { type: "json" };
 
 const argv = yargs(hideBin(process.argv))
-  .option('s', {
-    alias: 'skip-npm-install-build',
-    type: 'boolean',
+  .option("s", {
+    alias: "skip-npm-install-build",
+    type: "boolean",
     default: false,
-    description: 'skip npm install + npm run build',
+    description: "skip npm install + npm run build",
   })
-  .option('f', {
-    alias: 'dockerfile',
-    type: 'string',
-    description: 'use <dockerfile> for custom image',
+  .option("f", {
+    alias: "dockerfile",
+    type: "string",
+    description: "use <dockerfile> for custom image",
   })
-  .option('i', {
-    alias: 'image',
-    type: 'string',
-    description: 'use <image> name for custom image',
+  .option("i", {
+    alias: "image",
+    type: "string",
+    description: "use <image> name for custom image",
   })
-  .option('output-file', {
-    type: 'string',
+  .option("output-file", {
+    type: "string",
     description:
-      'Path to write the final image URI. Used for CI/CD pipeline integration.',
+      "Path to write the final image URI. Used for CI/CD pipeline integration.",
   }).argv;
 
 let sandboxCommand;
 try {
-  sandboxCommand = execSync('node scripts/sandbox_command.js')
+  sandboxCommand = execSync("node scripts/sandbox_command.js")
     .toString()
     .trim();
 } catch (e) {
-  console.warn('ERROR: could not detect sandbox container command');
+  console.warn("ERROR: could not detect sandbox container command");
   console.error(e);
   process.exit(1);
 }
 
-if (sandboxCommand === 'sandbox-exec') {
+if (sandboxCommand === "sandbox-exec") {
   console.warn(
-    'WARNING: container-based sandboxing is disabled (see README.md#sandboxing)',
+    "WARNING: container-based sandboxing is disabled (see README.md#sandboxing)",
   );
   process.exit(0);
 }
@@ -76,75 +76,75 @@ console.log(`using ${sandboxCommand} for sandboxing`);
 
 const baseImage = cliPkgJson.config.sandboxImageUri;
 const customImage = argv.i;
-const baseDockerfile = 'Dockerfile';
+const baseDockerfile = "Dockerfile";
 const customDockerfile = argv.f;
 
 if (!baseImage?.length) {
   console.warn(
-    'No default image tag specified in gemini-cli/packages/cli/package.json',
+    "No default image tag specified in gemini-cli/packages/cli/package.json",
   );
 }
 
 if (!argv.s) {
-  execSync('npm install', { stdio: 'inherit' });
-  execSync('npm run build --workspaces', { stdio: 'inherit' });
+  execSync("npm install", { stdio: "inherit" });
+  execSync("npm run build --workspaces", { stdio: "inherit" });
 }
 
-console.log('packing @qwen-code/qwen-code ...');
-const cliPackageDir = join('packages', 'cli');
-rmSync(join(cliPackageDir, 'dist', 'qwen-code-*.tgz'), { force: true });
+console.log("packing @qwen-code/qwen-code ...");
+const cliPackageDir = join("packages", "cli");
+rmSync(join(cliPackageDir, "dist", "qwen-code-*.tgz"), { force: true });
 execSync(
   `npm pack -w @qwen-code/qwen-code --pack-destination ./packages/cli/dist`,
   {
-    stdio: 'ignore',
+    stdio: "ignore",
   },
 );
 
-console.log('packing @qwen-code/qwen-code-core ...');
-const corePackageDir = join('packages', 'core');
-rmSync(join(corePackageDir, 'dist', 'qwen-code-core-*.tgz'), {
+console.log("packing @qwen-code/qwen-code-core ...");
+const corePackageDir = join("packages", "core");
+rmSync(join(corePackageDir, "dist", "qwen-code-core-*.tgz"), {
   force: true,
 });
 execSync(
   `npm pack -w @qwen-code/qwen-code-core --pack-destination ./packages/core/dist`,
-  { stdio: 'ignore' },
+  { stdio: "ignore" },
 );
 
 const packageVersion = JSON.parse(
-  readFileSync(join(process.cwd(), 'package.json'), 'utf-8'),
+  readFileSync(join(process.cwd(), "package.json"), "utf-8"),
 ).version;
 
 chmodSync(
-  join(cliPackageDir, 'dist', `qwen-code-qwen-code-${packageVersion}.tgz`),
+  join(cliPackageDir, "dist", `qwen-code-qwen-code-${packageVersion}.tgz`),
   0o755,
 );
 chmodSync(
   join(
     corePackageDir,
-    'dist',
+    "dist",
     `qwen-code-qwen-code-core-${packageVersion}.tgz`,
   ),
   0o755,
 );
 
-const buildStdout = process.env.VERBOSE ? 'inherit' : 'ignore';
+const buildStdout = process.env.VERBOSE ? "inherit" : "ignore";
 
 // Determine the appropriate shell based on OS
-const isWindows = os.platform() === 'win32';
-const shellToUse = isWindows ? 'powershell.exe' : '/bin/bash';
+const isWindows = os.platform() === "win32";
+const shellToUse = isWindows ? "powershell.exe" : "/bin/bash";
 
 function buildImage(imageName, dockerfile) {
   console.log(`building ${imageName} ... (can be slow first time)`);
 
-  let buildCommandArgs = '';
-  let tempAuthFile = '';
+  let buildCommandArgs = "";
+  let tempAuthFile = "";
 
-  if (sandboxCommand === 'podman') {
+  if (sandboxCommand === "podman") {
     if (isWindows) {
       // PowerShell doesn't support <() process substitution.
       // Create a temporary auth file that we will clean up after.
       tempAuthFile = join(os.tmpdir(), `qwen-auth-${Date.now()}.json`);
-      writeFileSync(tempAuthFile, '{}');
+      writeFileSync(tempAuthFile, "{}");
       buildCommandArgs = `--authfile="${tempAuthFile}"`;
     } else {
       // Use bash-specific syntax for Linux/macOS
@@ -153,17 +153,17 @@ function buildImage(imageName, dockerfile) {
   }
 
   const npmPackageVersion = JSON.parse(
-    readFileSync(join(process.cwd(), 'package.json'), 'utf-8'),
+    readFileSync(join(process.cwd(), "package.json"), "utf-8"),
   ).version;
 
   const imageTag =
-    process.env.GEMINI_SANDBOX_IMAGE_TAG || imageName.split(':')[1];
-  const finalImageName = `${imageName.split(':')[0]}:${imageTag}`;
+    process.env.GEMINI_SANDBOX_IMAGE_TAG || imageName.split(":")[1];
+  const finalImageName = `${imageName.split(":")[0]}:${imageTag}`;
 
   try {
     execSync(
       `${sandboxCommand} build ${buildCommandArgs} ${
-        process.env.BUILD_SANDBOX_FLAGS || ''
+        process.env.BUILD_SANDBOX_FLAGS || ""
       } --build-arg CLI_VERSION_ARG=${npmPackageVersion} -f "${dockerfile}" -t "${imageName}" .`,
       { stdio: buildStdout, shell: shellToUse },
     );
@@ -199,4 +199,4 @@ if (customDockerfile && customImage) {
   buildImage(customImage, customDockerfile);
 }
 
-execSync(`${sandboxCommand} image prune -f`, { stdio: 'ignore' });
+execSync(`${sandboxCommand} image prune -f`, { stdio: "ignore" });

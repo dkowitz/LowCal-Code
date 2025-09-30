@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Box } from 'ink';
-import { type Config, AuthType } from '@qwen-code/qwen-code-core';
-import { GeminiPrivacyNotice } from './GeminiPrivacyNotice.js';
-import { CloudPaidPrivacyNotice } from './CloudPaidPrivacyNotice.js';
-import { CloudFreePrivacyNotice } from './CloudFreePrivacyNotice.js';
+import { Box } from "ink";
+import { type Config, AuthType } from "@qwen-code/qwen-code-core";
+import { GeminiPrivacyNotice } from "./GeminiPrivacyNotice.js";
+import { CloudPaidPrivacyNotice } from "./CloudPaidPrivacyNotice.js";
+import { CloudFreePrivacyNotice } from "./CloudFreePrivacyNotice.js";
 
 interface PrivacyNoticeProps {
   onExit: () => void;

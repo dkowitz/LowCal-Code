@@ -3,13 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { DiscoveredMCPTool } from '../tools/mcp-tool.js';
-import { AuthType } from '../core/contentGenerator.js';
-import { getDecisionFromOutcome, ToolCallDecision, } from './tool-call-decision.js';
+import { DiscoveredMCPTool } from "../tools/mcp-tool.js";
+import { AuthType } from "../core/contentGenerator.js";
+import { getDecisionFromOutcome, ToolCallDecision, } from "./tool-call-decision.js";
 export { ToolCallDecision };
 export class StartSessionEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     model;
     embedding_model;
     sandbox_enabled;
@@ -34,17 +34,17 @@ export class StartSessionEvent {
             useGemini = generatorConfig.authType === AuthType.USE_GEMINI;
             useVertex = generatorConfig.authType === AuthType.USE_VERTEX_AI;
         }
-        this['event.name'] = 'cli_config';
+        this["event.name"] = "cli_config";
         this.model = config.getModel();
         this.embedding_model = config.getEmbeddingModel();
         this.sandbox_enabled =
-            typeof config.getSandbox() === 'string' || !!config.getSandbox();
-        this.core_tools_enabled = (config.getCoreTools() ?? []).join(',');
+            typeof config.getSandbox() === "string" || !!config.getSandbox();
+        this.core_tools_enabled = (config.getCoreTools() ?? []).join(",");
         this.approval_mode = config.getApprovalMode();
         this.api_key_enabled = useGemini || useVertex;
         this.vertex_ai_enabled = useVertex;
         this.debug_enabled = config.getDebugMode();
-        this.mcp_servers = mcpServers ? Object.keys(mcpServers).join(',') : '';
+        this.mcp_servers = mcpServers ? Object.keys(mcpServers).join(",") : "";
         this.telemetry_enabled = config.getTelemetryEnabled();
         this.telemetry_log_user_prompts_enabled =
             config.getTelemetryLogPromptsEnabled();
@@ -58,30 +58,30 @@ export class StartSessionEvent {
             this.mcp_tools_count = mcpTools.length;
             this.mcp_tools = mcpTools
                 .map((tool) => tool.name)
-                .join(',');
+                .join(",");
         }
     }
 }
 export class EndSessionEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     session_id;
     constructor(config) {
-        this['event.name'] = 'end_session';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "end_session";
+        this["event.timestamp"] = new Date().toISOString();
         this.session_id = config?.getSessionId();
     }
 }
 export class UserPromptEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     prompt_length;
     prompt_id;
     auth_type;
     prompt;
     constructor(prompt_length, prompt_Id, auth_type, prompt) {
-        this['event.name'] = 'user_prompt';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "user_prompt";
+        this["event.timestamp"] = new Date().toISOString();
         this.prompt_length = prompt_length;
         this.prompt_id = prompt_Id;
         this.auth_type = auth_type;
@@ -89,8 +89,8 @@ export class UserPromptEvent {
     }
 }
 export class ToolCallEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     function_name;
     function_args;
     duration_ms;
@@ -103,12 +103,12 @@ export class ToolCallEvent {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata;
     constructor(call) {
-        this['event.name'] = 'tool_call';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "tool_call";
+        this["event.timestamp"] = new Date().toISOString();
         this.function_name = call.request.name;
         this.function_args = call.request.args;
         this.duration_ms = call.durationMs ?? 0;
-        this.success = call.status === 'success';
+        this.success = call.status === "success";
         this.decision = call.outcome
             ? getDecisionFromOutcome(call.outcome)
             : undefined;
@@ -116,13 +116,13 @@ export class ToolCallEvent {
         this.error_type = call.response.errorType;
         this.prompt_id = call.request.prompt_id;
         this.tool_type =
-            typeof call.tool !== 'undefined' && call.tool instanceof DiscoveredMCPTool
-                ? 'mcp'
-                : 'native';
-        if (call.status === 'success' &&
-            typeof call.response.resultDisplay === 'object' &&
+            typeof call.tool !== "undefined" && call.tool instanceof DiscoveredMCPTool
+                ? "mcp"
+                : "native";
+        if (call.status === "success" &&
+            typeof call.response.resultDisplay === "object" &&
             call.response.resultDisplay !== null &&
-            'diffStat' in call.response.resultDisplay) {
+            "diffStat" in call.response.resultDisplay) {
             const diffStat = call.response.resultDisplay.diffStat;
             if (diffStat) {
                 this.metadata = {
@@ -136,22 +136,22 @@ export class ToolCallEvent {
     }
 }
 export class ApiRequestEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     model;
     prompt_id;
     request_text;
     constructor(model, prompt_id, request_text) {
-        this['event.name'] = 'api_request';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "api_request";
+        this["event.timestamp"] = new Date().toISOString();
         this.model = model;
         this.prompt_id = prompt_id;
         this.request_text = request_text;
     }
 }
 export class ApiErrorEvent {
-    'event.name';
-    'event.timestamp'; // ISO 8601
+    "event.name";
+    "event.timestamp"; // ISO 8601
     response_id;
     model;
     error;
@@ -161,8 +161,8 @@ export class ApiErrorEvent {
     prompt_id;
     auth_type;
     constructor(response_id, model, error, duration_ms, prompt_id, auth_type, error_type, status_code) {
-        this['event.name'] = 'api_error';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "api_error";
+        this["event.timestamp"] = new Date().toISOString();
         this.response_id = response_id;
         this.model = model;
         this.error = error;
@@ -174,8 +174,8 @@ export class ApiErrorEvent {
     }
 }
 export class ApiResponseEvent {
-    'event.name';
-    'event.timestamp'; // ISO 8601
+    "event.name";
+    "event.timestamp"; // ISO 8601
     response_id;
     model;
     status_code;
@@ -191,8 +191,8 @@ export class ApiResponseEvent {
     prompt_id;
     auth_type;
     constructor(response_id, model, duration_ms, prompt_id, auth_type, usage_data, response_text, error) {
-        this['event.name'] = 'api_response';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "api_response";
+        this["event.timestamp"] = new Date().toISOString();
         this.response_id = response_id;
         this.model = model;
         this.duration_ms = duration_ms;
@@ -210,12 +210,12 @@ export class ApiResponseEvent {
     }
 }
 export class FlashFallbackEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     auth_type;
     constructor(auth_type) {
-        this['event.name'] = 'flash_fallback';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "flash_fallback";
+        this["event.timestamp"] = new Date().toISOString();
         this.auth_type = auth_type;
     }
 }
@@ -226,26 +226,26 @@ export var LoopType;
     LoopType["LLM_DETECTED_LOOP"] = "llm_detected_loop";
 })(LoopType || (LoopType = {}));
 export class LoopDetectedEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     loop_type;
     prompt_id;
     constructor(loop_type, prompt_id) {
-        this['event.name'] = 'loop_detected';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "loop_detected";
+        this["event.timestamp"] = new Date().toISOString();
         this.loop_type = loop_type;
         this.prompt_id = prompt_id;
     }
 }
 export class NextSpeakerCheckEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     prompt_id;
     finish_reason;
     result;
     constructor(prompt_id, finish_reason, result) {
-        this['event.name'] = 'next_speaker_check';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "next_speaker_check";
+        this["event.timestamp"] = new Date().toISOString();
         this.prompt_id = prompt_id;
         this.finish_reason = finish_reason;
         this.result = result;
@@ -253,8 +253,8 @@ export class NextSpeakerCheckEvent {
 }
 export function makeSlashCommandEvent({ command, subcommand, status, }) {
     return {
-        'event.name': 'slash_command',
-        'event.timestamp': new Date().toISOString(),
+        "event.name": "slash_command",
+        "event.timestamp": new Date().toISOString(),
         command,
         subcommand,
         status,
@@ -267,19 +267,19 @@ export var SlashCommandStatus;
 })(SlashCommandStatus || (SlashCommandStatus = {}));
 export function makeChatCompressionEvent({ tokens_before, tokens_after, }) {
     return {
-        'event.name': 'chat_compression',
-        'event.timestamp': new Date().toISOString(),
+        "event.name": "chat_compression",
+        "event.timestamp": new Date().toISOString(),
         tokens_before,
         tokens_after,
     };
 }
 export class MalformedJsonResponseEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     model;
     constructor(model) {
-        this['event.name'] = 'malformed_json_response';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "malformed_json_response";
+        this["event.timestamp"] = new Date().toISOString();
         this.model = model;
     }
 }
@@ -289,43 +289,43 @@ export var IdeConnectionType;
     IdeConnectionType["SESSION"] = "session";
 })(IdeConnectionType || (IdeConnectionType = {}));
 export class IdeConnectionEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     connection_type;
     constructor(connection_type) {
-        this['event.name'] = 'ide_connection';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "ide_connection";
+        this["event.timestamp"] = new Date().toISOString();
         this.connection_type = connection_type;
     }
 }
 export class ConversationFinishedEvent {
-    'event_name';
-    'event.timestamp'; // ISO 8601;
+    "event_name";
+    "event.timestamp"; // ISO 8601;
     approvalMode;
     turnCount;
     constructor(approvalMode, turnCount) {
-        this['event_name'] = 'conversation_finished';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event_name"] = "conversation_finished";
+        this["event.timestamp"] = new Date().toISOString();
         this.approvalMode = approvalMode;
         this.turnCount = turnCount;
     }
 }
 export class KittySequenceOverflowEvent {
-    'event.name';
-    'event.timestamp'; // ISO 8601
+    "event.name";
+    "event.timestamp"; // ISO 8601
     sequence_length;
     truncated_sequence;
     constructor(sequence_length, truncated_sequence) {
-        this['event.name'] = 'kitty_sequence_overflow';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "kitty_sequence_overflow";
+        this["event.timestamp"] = new Date().toISOString();
         this.sequence_length = sequence_length;
         // Truncate to first 20 chars for logging (avoid logging sensitive data)
         this.truncated_sequence = truncated_sequence.substring(0, 20);
     }
 }
 export class FileOperationEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     tool_name;
     operation;
     lines;
@@ -334,8 +334,8 @@ export class FileOperationEvent {
     diff_stat;
     programming_language;
     constructor(tool_name, operation, lines, mimetype, extension, diff_stat, programming_language) {
-        this['event.name'] = 'file_operation';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "file_operation";
+        this["event.timestamp"] = new Date().toISOString();
         this.tool_name = tool_name;
         this.operation = operation;
         this.lines = lines;
@@ -347,18 +347,18 @@ export class FileOperationEvent {
 }
 // Add these new event interfaces
 export class InvalidChunkEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     error_message; // Optional: validation error details
     constructor(error_message) {
-        this['event.name'] = 'invalid_chunk';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "invalid_chunk";
+        this["event.timestamp"] = new Date().toISOString();
         this.error_message = error_message;
     }
 }
 export class ContentRetryEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     attempt_number;
     error_type; // e.g., 'EmptyStreamError'
     retry_delay_ms;
@@ -367,8 +367,8 @@ export class ContentRetryEvent {
     status_code;
     error_message;
     constructor(attempt_number, error_type, retry_delay_ms, options = {}) {
-        this['event.name'] = 'content_retry';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "content_retry";
+        this["event.timestamp"] = new Date().toISOString();
         this.attempt_number = attempt_number;
         this.error_type = error_type;
         this.retry_delay_ms = retry_delay_ms;
@@ -379,8 +379,8 @@ export class ContentRetryEvent {
     }
 }
 export class ContentRetryFailureEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     total_attempts;
     final_error_type;
     total_duration_ms; // Optional: total time spent retrying
@@ -389,8 +389,8 @@ export class ContentRetryFailureEvent {
     status_code;
     error_message;
     constructor(total_attempts, final_error_type, total_duration_ms, options = {}) {
-        this['event.name'] = 'content_retry_failure';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "content_retry_failure";
+        this["event.timestamp"] = new Date().toISOString();
         this.total_attempts = total_attempts;
         this.final_error_type = final_error_type;
         this.total_duration_ms = total_duration_ms;
@@ -401,16 +401,16 @@ export class ContentRetryFailureEvent {
     }
 }
 export class SubagentExecutionEvent {
-    'event.name';
-    'event.timestamp';
+    "event.name";
+    "event.timestamp";
     subagent_name;
     status;
     terminate_reason;
     result;
     execution_summary;
     constructor(subagent_name, status, options) {
-        this['event.name'] = 'subagent_execution';
-        this['event.timestamp'] = new Date().toISOString();
+        this["event.name"] = "subagent_execution";
+        this["event.timestamp"] = new Date().toISOString();
         this.subagent_name = subagent_name;
         this.status = status;
         this.terminate_reason = options?.terminate_reason;

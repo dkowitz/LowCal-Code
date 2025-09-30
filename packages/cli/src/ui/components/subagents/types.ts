@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { SubagentLevel, Config } from '@qwen-code/qwen-code-core';
+import type { SubagentLevel, Config } from "@qwen-code/qwen-code-core";
 
 /**
  * State management for the subagent creation wizard.
@@ -17,7 +17,7 @@ export interface CreationWizardState {
   location: SubagentLevel;
 
   /** Generation method selection */
-  generationMethod: 'qwen' | 'manual';
+  generationMethod: "qwen" | "manual";
 
   /** User's description input for the subagent */
   userDescription: string;
@@ -69,26 +69,26 @@ export interface ColorOption {
  * Actions that can be dispatched to update wizard state.
  */
 export type WizardAction =
-  | { type: 'SET_STEP'; step: number }
-  | { type: 'SET_LOCATION'; location: SubagentLevel }
-  | { type: 'SET_GENERATION_METHOD'; method: 'qwen' | 'manual' }
-  | { type: 'SET_USER_DESCRIPTION'; description: string }
-  | { type: 'SET_GENERATED_NAME'; name: string }
-  | { type: 'SET_GENERATED_SYSTEM_PROMPT'; systemPrompt: string }
-  | { type: 'SET_GENERATED_DESCRIPTION'; description: string }
+  | { type: "SET_STEP"; step: number }
+  | { type: "SET_LOCATION"; location: SubagentLevel }
+  | { type: "SET_GENERATION_METHOD"; method: "qwen" | "manual" }
+  | { type: "SET_USER_DESCRIPTION"; description: string }
+  | { type: "SET_GENERATED_NAME"; name: string }
+  | { type: "SET_GENERATED_SYSTEM_PROMPT"; systemPrompt: string }
+  | { type: "SET_GENERATED_DESCRIPTION"; description: string }
   | {
-      type: 'SET_GENERATED_CONTENT';
+      type: "SET_GENERATED_CONTENT";
       name: string;
       description: string;
       systemPrompt: string;
     }
-  | { type: 'SET_TOOLS'; tools: string[] }
-  | { type: 'SET_BACKGROUND_COLOR'; color: string }
-  | { type: 'SET_GENERATING'; isGenerating: boolean }
-  | { type: 'SET_VALIDATION_ERRORS'; errors: string[] }
-  | { type: 'RESET_WIZARD' }
-  | { type: 'GO_TO_PREVIOUS_STEP' }
-  | { type: 'GO_TO_NEXT_STEP' };
+  | { type: "SET_TOOLS"; tools: string[] }
+  | { type: "SET_BACKGROUND_COLOR"; color: string }
+  | { type: "SET_GENERATING"; isGenerating: boolean }
+  | { type: "SET_VALIDATION_ERRORS"; errors: string[] }
+  | { type: "RESET_WIZARD" }
+  | { type: "GO_TO_PREVIOUS_STEP" }
+  | { type: "GO_TO_NEXT_STEP" };
 
 /**
  * Props for wizard step components.
@@ -115,13 +115,13 @@ export interface WizardResult {
 }
 
 export const MANAGEMENT_STEPS = {
-  AGENT_SELECTION: 'agent-selection',
-  ACTION_SELECTION: 'action-selection',
-  AGENT_VIEWER: 'agent-viewer',
-  EDIT_OPTIONS: 'edit-options',
-  EDIT_TOOLS: 'edit-tools',
-  EDIT_COLOR: 'edit-color',
-  DELETE_CONFIRMATION: 'delete-confirmation',
+  AGENT_SELECTION: "agent-selection",
+  ACTION_SELECTION: "action-selection",
+  AGENT_VIEWER: "agent-viewer",
+  EDIT_OPTIONS: "edit-options",
+  EDIT_TOOLS: "edit-tools",
+  EDIT_COLOR: "edit-color",
+  DELETE_CONFIRMATION: "delete-confirmation",
 } as const;
 
 /**

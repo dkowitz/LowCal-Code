@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Box, Text, useInput } from 'ink';
+import { Box, Text, useInput } from "ink";
 import {
   type Extension,
   performWorkspaceExtensionMigration,
-} from '../../config/extension.js';
-import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
-import { Colors } from '../colors.js';
-import { useState } from 'react';
+} from "../../config/extension.js";
+import { RadioButtonSelect } from "./shared/RadioButtonSelect.js";
+import { Colors } from "../colors.js";
+import { useState } from "react";
 
 export function WorkspaceMigrationDialog(props: {
   workspaceExtensions: Extension[];
@@ -30,7 +30,7 @@ export function WorkspaceMigrationDialog(props: {
   };
 
   useInput((input) => {
-    if (migrationComplete && input === 'q') {
+    if (migrationComplete && input === "q") {
       process.exit(0);
     }
   });
@@ -73,7 +73,7 @@ export function WorkspaceMigrationDialog(props: {
       borderColor={Colors.Gray}
       padding={1}
     >
-      <Text bold>Workspace-level extensions are deprecated{'\n'}</Text>
+      <Text bold>Workspace-level extensions are deprecated{"\n"}</Text>
       <Text>Would you like to install them at the user level?</Text>
       <Text>
         The extension definition will remain in your workspace directory.
@@ -91,11 +91,11 @@ export function WorkspaceMigrationDialog(props: {
       <Box marginTop={1}>
         <RadioButtonSelect
           items={[
-            { label: 'Install all', value: 'migrate' },
-            { label: 'Skip', value: 'skip' },
+            { label: "Install all", value: "migrate" },
+            { label: "Skip", value: "skip" },
           ]}
           onSelect={(value: string) => {
-            if (value === 'migrate') {
+            if (value === "migrate") {
               onMigrate();
             } else {
               onClose();

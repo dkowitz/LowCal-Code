@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { CommandKind } from './types.js';
-import { terminalSetup } from '../utils/terminalSetup.js';
+import { CommandKind } from "./types.js";
+import { terminalSetup } from "../utils/terminalSetup.js";
 /**
  * Command to configure terminal keybindings for multiline input support.
  *
@@ -12,8 +12,8 @@ import { terminalSetup } from '../utils/terminalSetup.js';
  * to support Shift+Enter and Ctrl+Enter for multiline input.
  */
 export const terminalSetupCommand = {
-    name: 'terminal-setup',
-    description: 'Configure terminal keybindings for multiline input (VS Code, Cursor, Windsurf)',
+    name: "terminal-setup",
+    description: "Configure terminal keybindings for multiline input (VS Code, Cursor, Windsurf)",
     kind: CommandKind.BUILT_IN,
     action: async () => {
         try {
@@ -21,19 +21,19 @@ export const terminalSetupCommand = {
             let content = result.message;
             if (result.requiresRestart) {
                 content +=
-                    '\n\nPlease restart your terminal for the changes to take effect.';
+                    "\n\nPlease restart your terminal for the changes to take effect.";
             }
             return {
-                type: 'message',
+                type: "message",
                 content,
-                messageType: result.success ? 'info' : 'error',
+                messageType: result.success ? "info" : "error",
             };
         }
         catch (error) {
             return {
-                type: 'message',
+                type: "message",
                 content: `Failed to configure terminal: ${error}`,
-                messageType: 'error',
+                messageType: "error",
             };
         }
     },

@@ -3,24 +3,24 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { afterEach, describe, expect, it, vi } from 'vitest';
-import { McpClientManager } from './mcp-client-manager.js';
-import { McpClient } from './mcp-client.js';
-vi.mock('./mcp-client.js', async () => {
-    const originalModule = await vi.importActual('./mcp-client.js');
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { McpClientManager } from "./mcp-client-manager.js";
+import { McpClient } from "./mcp-client.js";
+vi.mock("./mcp-client.js", async () => {
+    const originalModule = await vi.importActual("./mcp-client.js");
     return {
         ...originalModule,
         McpClient: vi.fn(),
         populateMcpServerCommand: vi.fn(() => ({
-            'test-server': {},
+            "test-server": {},
         })),
     };
 });
-describe('McpClientManager', () => {
+describe("McpClientManager", () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
-    it('should discover tools from all servers', async () => {
+    it("should discover tools from all servers", async () => {
         const mockedMcpClient = {
             connect: vi.fn(),
             discover: vi.fn(),
@@ -29,8 +29,8 @@ describe('McpClientManager', () => {
         };
         vi.mocked(McpClient).mockReturnValue(mockedMcpClient);
         const manager = new McpClientManager({
-            'test-server': {},
-        }, '', {}, {}, false, {});
+            "test-server": {},
+        }, "", {}, {}, false, {});
         await manager.discoverAllMcpTools();
         expect(mockedMcpClient.connect).toHaveBeenCalledOnce();
         expect(mockedMcpClient.discover).toHaveBeenCalledOnce();

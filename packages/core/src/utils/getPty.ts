@@ -7,7 +7,7 @@
 export type PtyImplementation = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   module: any;
-  name: 'lydell-node-pty' | 'node-pty';
+  name: "lydell-node-pty" | "node-pty";
 } | null;
 
 export interface PtyProcess {
@@ -19,14 +19,14 @@ export interface PtyProcess {
 
 export const getPty = async (): Promise<PtyImplementation> => {
   try {
-    const lydell = '@lydell/node-pty';
+    const lydell = "@lydell/node-pty";
     const module = await import(lydell);
-    return { module, name: 'lydell-node-pty' };
+    return { module, name: "lydell-node-pty" };
   } catch (_e) {
     try {
-      const nodePty = 'node-pty';
+      const nodePty = "node-pty";
       const module = await import(nodePty);
-      return { module, name: 'node-pty' };
+      return { module, name: "node-pty" };
     } catch (_e2) {
       return null;
     }

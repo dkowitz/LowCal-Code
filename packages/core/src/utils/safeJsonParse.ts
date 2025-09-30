@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { jsonrepair } from 'jsonrepair';
+import { jsonrepair } from "jsonrepair";
 
 /**
  * Safely parse JSON string with jsonrepair fallback for malformed JSON.
@@ -19,7 +19,7 @@ export function safeJsonParse<T = Record<string, unknown>>(
   jsonString: string,
   fallbackValue: T = {} as T,
 ): T {
-  if (!jsonString || typeof jsonString !== 'string') {
+  if (!jsonString || typeof jsonString !== "string") {
     return fallbackValue;
   }
 
@@ -34,7 +34,7 @@ export function safeJsonParse<T = Record<string, unknown>>(
       // jsonrepair always returns a string, so we need to parse it
       return JSON.parse(repairedJson) as T;
     } catch (repairError) {
-      console.error('Failed to parse JSON even with jsonrepair:', {
+      console.error("Failed to parse JSON even with jsonrepair:", {
         originalError: error,
         repairError,
         jsonString,

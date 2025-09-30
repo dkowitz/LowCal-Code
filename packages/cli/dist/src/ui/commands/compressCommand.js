@@ -3,19 +3,19 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { MessageType } from '../types.js';
-import { CommandKind } from './types.js';
+import { MessageType } from "../types.js";
+import { CommandKind } from "./types.js";
 export const compressCommand = {
-    name: 'compress',
-    altNames: ['summarize'],
-    description: 'Compresses the context by replacing it with a summary.',
+    name: "compress",
+    altNames: ["summarize"],
+    description: "Compresses the context by replacing it with a summary.",
     kind: CommandKind.BUILT_IN,
     action: async (context) => {
         const { ui } = context;
         if (ui.pendingItem) {
             ui.addItem({
                 type: MessageType.ERROR,
-                text: 'Already compressing, wait for previous request to complete',
+                text: "Already compressing, wait for previous request to complete",
             }, Date.now());
             return;
         }
@@ -48,7 +48,7 @@ export const compressCommand = {
             else {
                 ui.addItem({
                     type: MessageType.ERROR,
-                    text: 'Failed to compress chat history.',
+                    text: "Failed to compress chat history.",
                 }, Date.now());
             }
         }

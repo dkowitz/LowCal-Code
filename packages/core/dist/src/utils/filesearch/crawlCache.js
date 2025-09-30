@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import crypto from 'node:crypto';
+import crypto from "node:crypto";
 const crawlCache = new Map();
 const cacheTimers = new Map();
 /**
@@ -12,13 +12,13 @@ const cacheTimers = new Map();
  * or ignore rules change.
  */
 export const getCacheKey = (directory, ignoreContent, maxDepth) => {
-    const hash = crypto.createHash('sha256');
+    const hash = crypto.createHash("sha256");
     hash.update(directory);
     hash.update(ignoreContent);
     if (maxDepth !== undefined) {
         hash.update(String(maxDepth));
     }
-    return hash.digest('hex');
+    return hash.digest("hex");
 };
 /**
  * Reads cached data from the in-memory cache.

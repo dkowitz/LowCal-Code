@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { WizardStepProps } from '../types.js';
+import type { WizardStepProps } from "../types.js";
 /**
  * Step 2: Generation method selection.
  */

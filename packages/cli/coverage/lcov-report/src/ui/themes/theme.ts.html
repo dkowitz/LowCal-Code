@@ -30,16 +30,16 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">42.55% </span>
+                <span class="strong">41.3% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>20/47</span>
+                <span class='fraction'>19/46</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">100% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>8/8</span>
+                <span class='fraction'>7/7</span>
             </div>
         
             
@@ -681,20 +681,20 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">626x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">626x</span>
-<span class="cline-any cline-yes">626x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">626x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">626x</span>
 <span class="cline-any cline-yes">626x</span>
 <span class="cline-any cline-yes">626x</span>
@@ -744,7 +744,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">626x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">116x</span>
 <span class="cline-any cline-yes">116x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -753,7 +753,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">626x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">19208x</span>
 <span class="cline-any cline-yes">19208x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -763,7 +763,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">626x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">626x</span>
 <span class="cline-any cline-yes">626x</span>
 <span class="cline-any cline-yes">626x</span>
@@ -788,7 +788,7 @@
 <span class="cline-any cline-yes">22094x</span>
 <span class="cline-any cline-yes">626x</span>
 <span class="cline-any cline-yes">626x</span>
-<span class="cline-any cline-yes">626x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1031,11 +1031,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type { CSSProperties } from 'react';
-import type { SemanticColors } from './semantic-tokens.js';
-import { resolveColor } from './color-utils.js';
+import type { CSSProperties } from "react";
+import type { SemanticColors } from "./semantic-tokens.js";
+import { resolveColor } from "./color-utils.js";
 &nbsp;
-export type ThemeType = 'light' | 'dark' | 'ansi' | 'custom';
+export type ThemeType = "light" | "dark" | "ansi" | "custom";
 &nbsp;
 export interface ColorsTheme {
   type: ThemeType;
@@ -1056,7 +1056,7 @@ export interface ColorsTheme {
 }
 &nbsp;
 export interface CustomTheme {
-  type: 'custom';
+  type: "custom";
   name: string;
 &nbsp;
   text?: {
@@ -1105,56 +1105,56 @@ export interface CustomTheme {
 }
 &nbsp;
 export const lightTheme: ColorsTheme = {
-  type: 'light',
-  Background: '#FAFAFA',
-  Foreground: '#3C3C43',
-  LightBlue: '#89BDCD',
-  AccentBlue: '#3B82F6',
-  AccentPurple: '#8B5CF6',
-  AccentCyan: '#06B6D4',
-  AccentGreen: '#3CA84B',
-  AccentYellow: '#D5A40A',
-  AccentRed: '#DD4C4C',
-  DiffAdded: '#C6EAD8',
-  DiffRemoved: '#FFCCCC',
-  Comment: '#008000',
-  Gray: '#97a0b0',
-  GradientColors: ['#4796E4', '#847ACE', '#C3677F'],
+  type: "light",
+  Background: "#FAFAFA",
+  Foreground: "#3C3C43",
+  LightBlue: "#89BDCD",
+  AccentBlue: "#3B82F6",
+  AccentPurple: "#8B5CF6",
+  AccentCyan: "#06B6D4",
+  AccentGreen: "#3CA84B",
+  AccentYellow: "#D5A40A",
+  AccentRed: "#DD4C4C",
+  DiffAdded: "#C6EAD8",
+  DiffRemoved: "#FFCCCC",
+  Comment: "#008000",
+  Gray: "#97a0b0",
+  GradientColors: ["#4796E4", "#847ACE", "#C3677F"],
 };
 &nbsp;
 export const darkTheme: ColorsTheme = {
-  type: 'dark',
-  Background: '#1E1E2E',
-  Foreground: '#CDD6F4',
-  LightBlue: '#ADD8E6',
-  AccentBlue: '#89B4FA',
-  AccentPurple: '#CBA6F7',
-  AccentCyan: '#89DCEB',
-  AccentGreen: '#A6E3A1',
-  AccentYellow: '#F9E2AF',
-  AccentRed: '#F38BA8',
-  DiffAdded: '#28350B',
-  DiffRemoved: '#430000',
-  Comment: '#6C7086',
-  Gray: '#6C7086',
-  GradientColors: ['#4796E4', '#847ACE', '#C3677F'],
+  type: "dark",
+  Background: "#1E1E2E",
+  Foreground: "#CDD6F4",
+  LightBlue: "#ADD8E6",
+  AccentBlue: "#89B4FA",
+  AccentPurple: "#CBA6F7",
+  AccentCyan: "#89DCEB",
+  AccentGreen: "#A6E3A1",
+  AccentYellow: "#F9E2AF",
+  AccentRed: "#F38BA8",
+  DiffAdded: "#28350B",
+  DiffRemoved: "#430000",
+  Comment: "#6C7086",
+  Gray: "#6C7086",
+  GradientColors: ["#4796E4", "#847ACE", "#C3677F"],
 };
 &nbsp;
 export const ansiTheme: ColorsTheme = {
-  type: 'ansi',
-  Background: 'black',
-  Foreground: 'white',
-  LightBlue: 'blue',
-  AccentBlue: 'blue',
-  AccentPurple: 'magenta',
-  AccentCyan: 'cyan',
-  AccentGreen: 'green',
-  AccentYellow: 'yellow',
-  AccentRed: 'red',
-  DiffAdded: 'green',
-  DiffRemoved: 'red',
-  Comment: 'gray',
-  Gray: 'gray',
+  type: "ansi",
+  Background: "black",
+  Foreground: "white",
+  LightBlue: "blue",
+  AccentBlue: "blue",
+  AccentPurple: "magenta",
+  AccentCyan: "cyan",
+  AccentGreen: "green",
+  AccentYellow: "yellow",
+  AccentRed: "red",
+  DiffAdded: "green",
+  DiffRemoved: "red",
+  Comment: "gray",
+  Gray: "gray",
 };
 &nbsp;
 export class Theme {
@@ -1214,10 +1214,10 @@ export class Theme {
     this._colorMap = Object.freeze(this._buildColorMap(rawMappings)); // Build and freeze the map
 &nbsp;
     // Determine the default foreground color
-    const rawDefaultColor = rawMappings['hljs']?.color;
+    const rawDefaultColor = rawMappings["hljs"]?.color;
     this.defaultColor =
       (rawDefaultColor ? Theme._resolveColor(rawDefaultColor) : undefined) ??
-      ''; // Default to empty string if not found or resolvable
+      ""; // Default to empty string if not found or resolvable
   }
 &nbsp;
   /**
@@ -1250,7 +1250,7 @@ export class Theme {
     const inkTheme: Record&lt;string, string&gt; = {};
     for (const key in hljsTheme) {
       // Ensure the key starts with 'hljs-' or is 'hljs' for the base style
-      if (!key.startsWith('hljs-') &amp;&amp; key !== 'hljs') {
+      if (!key.startsWith("hljs-") &amp;&amp; key !== "hljs") {
         continue; // Skip keys not related to highlighting classes
       }
 &nbsp;
@@ -1278,160 +1278,160 @@ export class Theme {
  */
 export function createCustomTheme(customTheme: CustomTheme): Theme {
   const colors: ColorsTheme = {
-    type: 'custom',
-    Background: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >background?.primary ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >Background ?? '',</span>
-    Foreground: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >text?.primary ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >Foreground ?? '',</span>
-    LightBlue: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >text?.link ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >LightBlue ?? '',</span>
-    AccentBlue: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >text?.link ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >AccentBlue ?? '',</span>
-    AccentPurple: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >text?.accent ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >AccentPurple ?? '',</span>
-    AccentCyan: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >text?.link ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >AccentCyan ?? '',</span>
-    AccentGreen: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >status?.success ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >AccentGreen ?? '',</span>
-    AccentYellow: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >status?.warning ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >AccentYellow ?? '',</span>
-    AccentRed: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >status?.error ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >AccentRed ?? '',</span>
+    type: "custom",
+    Background: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >background?.primary ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >Background ?? "",</span>
+    Foreground: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >text?.primary ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >Foreground ?? "",</span>
+    LightBlue: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >text?.link ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >LightBlue ?? "",</span>
+    AccentBlue: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >text?.link ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >AccentBlue ?? "",</span>
+    AccentPurple: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >text?.accent ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >AccentPurple ?? "",</span>
+    AccentCyan: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >text?.link ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >AccentCyan ?? "",</span>
+    AccentGreen: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >status?.success ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >AccentGreen ?? "",</span>
+    AccentYellow: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >status?.warning ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >AccentYellow ?? "",</span>
+    AccentRed: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >status?.error ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >AccentRed ?? "",</span>
     DiffAdded:
-      customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >background?.diff?.added ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >DiffAdded ?? '',</span>
+      customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >background?.diff?.added ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >DiffAdded ?? "",</span>
     DiffRemoved:
-      customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >background?.diff?.removed ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >DiffRemoved ?? '',</span>
-    Comment: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >ui?.comment ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >Comment ?? '',</span>
-    Gray: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >text?.secondary ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >Gray ?? '',</span>
+      customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >background?.diff?.removed ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >DiffRemoved ?? "",</span>
+    Comment: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >ui?.comment ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >Comment ?? "",</span>
+    Gray: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >text?.secondary ?? c</span>ustomTheme.<span class="branch-0 cbranch-no" title="branch not covered" >Gray ?? "",</span>
     GradientColors: customTheme.<span class="branch-0 cbranch-no" title="branch not covered" >ui?.gradient ?? c</span>ustomTheme.GradientColors,
   };
 &nbsp;
   // Generate CSS properties mappings based on the custom theme colors
   const rawMappings: Record&lt;string, CSSProperties&gt; = {
     hljs: {
-      display: 'block',
-      overflowX: 'auto',
-      padding: '0.5em',
+      display: "block",
+      overflowX: "auto",
+      padding: "0.5em",
       background: colors.Background,
       color: colors.Foreground,
     },
-    'hljs-keyword': {
+    "hljs-keyword": {
       color: colors.AccentBlue,
     },
-    'hljs-literal': {
+    "hljs-literal": {
       color: colors.AccentBlue,
     },
-    'hljs-symbol': {
+    "hljs-symbol": {
       color: colors.AccentBlue,
     },
-    'hljs-name': {
+    "hljs-name": {
       color: colors.AccentBlue,
     },
-    'hljs-link': {
+    "hljs-link": {
       color: colors.AccentBlue,
-      textDecoration: 'underline',
+      textDecoration: "underline",
     },
-    'hljs-built_in': {
+    "hljs-built_in": {
       color: colors.AccentCyan,
     },
-    'hljs-type': {
+    "hljs-type": {
       color: colors.AccentCyan,
     },
-    'hljs-number': {
+    "hljs-number": {
       color: colors.AccentGreen,
     },
-    'hljs-class': {
+    "hljs-class": {
       color: colors.AccentGreen,
     },
-    'hljs-string': {
+    "hljs-string": {
       color: colors.AccentYellow,
     },
-    'hljs-meta-string': {
+    "hljs-meta-string": {
       color: colors.AccentYellow,
     },
-    'hljs-regexp': {
+    "hljs-regexp": {
       color: colors.AccentRed,
     },
-    'hljs-template-tag': {
+    "hljs-template-tag": {
       color: colors.AccentRed,
     },
-    'hljs-subst': {
+    "hljs-subst": {
       color: colors.Foreground,
     },
-    'hljs-function': {
+    "hljs-function": {
       color: colors.Foreground,
     },
-    'hljs-title': {
+    "hljs-title": {
       color: colors.Foreground,
     },
-    'hljs-params': {
+    "hljs-params": {
       color: colors.Foreground,
     },
-    'hljs-formula': {
+    "hljs-formula": {
       color: colors.Foreground,
     },
-    'hljs-comment': {
+    "hljs-comment": {
       color: colors.Comment,
-      fontStyle: 'italic',
+      fontStyle: "italic",
     },
-    'hljs-quote': {
+    "hljs-quote": {
       color: colors.Comment,
-      fontStyle: 'italic',
+      fontStyle: "italic",
     },
-    'hljs-doctag': {
+    "hljs-doctag": {
       color: colors.Comment,
     },
-    'hljs-meta': {
+    "hljs-meta": {
       color: colors.Gray,
     },
-    'hljs-meta-keyword': {
+    "hljs-meta-keyword": {
       color: colors.Gray,
     },
-    'hljs-tag': {
+    "hljs-tag": {
       color: colors.Gray,
     },
-    'hljs-variable': {
+    "hljs-variable": {
       color: colors.AccentPurple,
     },
-    'hljs-template-variable': {
+    "hljs-template-variable": {
       color: colors.AccentPurple,
     },
-    'hljs-attr': {
+    "hljs-attr": {
       color: colors.LightBlue,
     },
-    'hljs-attribute': {
+    "hljs-attribute": {
       color: colors.LightBlue,
     },
-    'hljs-builtin-name': {
+    "hljs-builtin-name": {
       color: colors.LightBlue,
     },
-    'hljs-section': {
+    "hljs-section": {
       color: colors.AccentYellow,
     },
-    'hljs-emphasis': {
-      fontStyle: 'italic',
+    "hljs-emphasis": {
+      fontStyle: "italic",
     },
-    'hljs-strong': {
-      fontWeight: 'bold',
+    "hljs-strong": {
+      fontWeight: "bold",
     },
-    'hljs-bullet': {
+    "hljs-bullet": {
       color: colors.AccentYellow,
     },
-    'hljs-selector-tag': {
+    "hljs-selector-tag": {
       color: colors.AccentYellow,
     },
-    'hljs-selector-id': {
+    "hljs-selector-id": {
       color: colors.AccentYellow,
     },
-    'hljs-selector-class': {
+    "hljs-selector-class": {
       color: colors.AccentYellow,
     },
-    'hljs-selector-attr': {
+    "hljs-selector-attr": {
       color: colors.AccentYellow,
     },
-    'hljs-selector-pseudo': {
+    "hljs-selector-pseudo": {
       color: colors.AccentYellow,
     },
-    'hljs-addition': {
+    "hljs-addition": {
       backgroundColor: colors.AccentGreen,
-      display: 'inline-block',
-      width: '100%',
+      display: "inline-block",
+      width: "100%",
     },
-    'hljs-deletion': {
+    "hljs-deletion": {
       backgroundColor: colors.AccentRed,
-      display: 'inline-block',
-      width: '100%',
+      display: "inline-block",
+      width: "100%",
     },
   };
 &nbsp;
@@ -1467,7 +1467,7 @@ export function createCustomTheme(customTheme: CustomTheme): Theme {
 &nbsp;
   return new Theme(
     customTheme.name,
-    'custom',
+    "custom",
     rawMappings,
     colors,
     semanticColors,
@@ -1513,7 +1513,7 @@ function isValidThemeName(name: string): boolean {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.374Z
+                at 2025-09-30T22:44:16.879Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

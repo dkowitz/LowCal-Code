@@ -1,8 +1,8 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
-import { RadioButtonSelect, } from './shared/RadioButtonSelect.js';
-import { useKeypress } from '../hooks/useKeypress.js';
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
+import { RadioButtonSelect, } from "./shared/RadioButtonSelect.js";
+import { useKeypress } from "../hooks/useKeypress.js";
 export var VisionSwitchOutcome;
 (function (VisionSwitchOutcome) {
     VisionSwitchOutcome["SwitchOnce"] = "once";
@@ -11,21 +11,21 @@ export var VisionSwitchOutcome;
 })(VisionSwitchOutcome || (VisionSwitchOutcome = {}));
 export const ModelSwitchDialog = ({ onSelect, }) => {
     useKeypress((key) => {
-        if (key.name === 'escape') {
+        if (key.name === "escape") {
             onSelect(VisionSwitchOutcome.ContinueWithCurrentModel);
         }
     }, { isActive: true });
     const options = [
         {
-            label: 'Switch for this request only',
+            label: "Switch for this request only",
             value: VisionSwitchOutcome.SwitchOnce,
         },
         {
-            label: 'Switch session to vision model',
+            label: "Switch session to vision model",
             value: VisionSwitchOutcome.SwitchSessionToVL,
         },
         {
-            label: 'Continue with current model',
+            label: "Continue with current model",
             value: VisionSwitchOutcome.ContinueWithCurrentModel,
         },
     ];

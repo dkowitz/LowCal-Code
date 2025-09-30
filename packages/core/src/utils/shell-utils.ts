@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { AnyToolInvocation } from '../index.js';
-import type { Config } from '../config/config.js';
-import os from 'node:os';
-import { quote } from 'shell-quote';
-import { doesToolInvocationMatch } from './tool-utils.js';
-import { isShellCommandReadOnly } from './shellReadOnlyChecker.js';
+import type { AnyToolInvocation } from "../index.js";
+import type { Config } from "../config/config.js";
+import os from "node:os";
+import { quote } from "shell-quote";
+import { doesToolInvocationMatch } from "./tool-utils.js";
+import { isShellCommandReadOnly } from "./shellReadOnlyChecker.js";
 
-const SHELL_TOOL_NAMES = ['run_shell_command', 'ShellTool'];
+const SHELL_TOOL_NAMES = ["run_shell_command", "ShellTool"];
 
 /**
  * An identifier for the shell type.
  */
-export type ShellType = 'cmd' | 'powershell' | 'bash';
+export type ShellType = "cmd" | "powershell" | "bash";
 
 /**
  * Defines the configuration required to execute a command string within a specific shell.
@@ -42,20 +42,20 @@ export interface ShellConfiguration {
  */
 export function getShellConfiguration(): ShellConfiguration {
   if (isWindows()) {
-    const comSpec = process.env['ComSpec'] || 'cmd.exe';
+    const comSpec = process.env["ComSpec"] || "cmd.exe";
     const executable = comSpec.toLowerCase();
 
     if (
-      executable.endsWith('powershell.exe') ||
-      executable.endsWith('pwsh.exe')
+      executable.endsWith("powershell.exe") ||
+      executable.endsWith("pwsh.exe")
     ) {
       // For PowerShell, the arguments are different.
       // -NoProfile: Speeds up startup.
       // -Command: Executes the following command.
       return {
         executable: comSpec,
-        argsPrefix: ['-NoProfile', '-Command'],
-        shell: 'powershell',
+        argsPrefix: ["-NoProfile", "-Command"],
+        shell: "powershell",
       };
     }
 
@@ -66,19 +66,19 @@ export function getShellConfiguration(): ShellConfiguration {
     // /c: Carries out the command specified by the string and then terminates.
     return {
       executable: comSpec,
-      argsPrefix: ['/d', '/s', '/c'],
-      shell: 'cmd',
+      argsPrefix: ["/d", "/s", "/c"],
+      shell: "cmd",
     };
   }
 
   // Unix-like systems (Linux, macOS)
-  return { executable: 'bash', argsPrefix: ['-c'], shell: 'bash' };
+  return { executable: "bash", argsPrefix: ["-c"], shell: "bash" };
 }
 
 /**
  * Export the platform detection constant for use in process management (e.g., killing processes).
  */
-export const isWindows = () => os.platform() === 'win32';
+export const isWindows = () => os.platform() === "win32";
 
 /**
  * Escapes a string so that it can be safely used as a single argument
@@ -90,17 +90,17 @@ export const isWindows = () => os.platform() === 'win32';
  */
 export function escapeShellArg(arg: string, shell: ShellType): string {
   if (!arg) {
-    return '';
+    return "";
   }
 
   switch (shell) {
-    case 'powershell':
+    case "powershell":
       // For PowerShell, wrap in single quotes and escape internal single quotes by doubling them.
       return `'${arg.replace(/'/g, "''")}'`;
-    case 'cmd':
+    case "cmd":
       // Simple Windows escaping for cmd.exe: wrap in double quotes and escape inner double quotes.
       return `"${arg.replace(/"/g, '""')}"`;
-    case 'bash':
+    case "bash":
     default:
       // POSIX shell escaping using shell-quote.
       return quote([arg]);
@@ -115,7 +115,7 @@ export function escapeShellArg(arg: string, shell: ShellType): string {
  */
 export function splitCommands(command: string): string[] {
   const commands: string[] = [];
-  let currentCommand = '';
+  let currentCommand = "";
   let inSingleQuotes = false;
   let inDoubleQuotes = false;
   let i = 0;
@@ -124,7 +124,7 @@ export function splitCommands(command: string): string[] {
     const char = command[i];
     const nextChar = command[i + 1];
 
-    if (char === '\\' && i < command.length - 1) {
+    if (char === "\\" && i < command.length - 1) {
       currentCommand += char + command[i + 1];
       i += 2;
       continue;
@@ -138,15 +138,15 @@ export function splitCommands(command: string): string[] {
 
     if (!inSingleQuotes && !inDoubleQuotes) {
       if (
-        (char === '&' && nextChar === '&') ||
-        (char === '|' && nextChar === '|')
+        (char === "&" && nextChar === "&") ||
+        (char === "|" && nextChar === "|")
       ) {
         commands.push(currentCommand.trim());
-        currentCommand = '';
+        currentCommand = "";
         i++; // Skip the next character
-      } else if (char === ';' || char === '&' || char === '|') {
+      } else if (char === ";" || char === "&" || char === "|") {
         commands.push(currentCommand.trim());
-        currentCommand = '';
+        currentCommand = "";
       } else {
         currentCommand += char;
       }
@@ -239,7 +239,7 @@ export function detectCommandSubstitution(command: string): boolean {
     const nextChar = command[i + 1];
 
     // Handle escaping - only works outside single quotes
-    if (char === '\\' && !inSingleQuotes) {
+    if (char === "\\" && !inSingleQuotes) {
       i += 2; // Skip the escaped character
       continue;
     }
@@ -249,7 +249,7 @@ export function detectCommandSubstitution(command: string): boolean {
       inSingleQuotes = !inSingleQuotes;
     } else if (char === '"' && !inSingleQuotes && !inBackticks) {
       inDoubleQuotes = !inDoubleQuotes;
-    } else if (char === '`' && !inSingleQuotes) {
+    } else if (char === "`" && !inSingleQuotes) {
       // Backticks work outside single quotes (including in double quotes)
       inBackticks = !inBackticks;
     }
@@ -257,18 +257,18 @@ export function detectCommandSubstitution(command: string): boolean {
     // Check for command substitution patterns that would be executed
     if (!inSingleQuotes) {
       // $(...) command substitution - works in double quotes and unquoted
-      if (char === '$' && nextChar === '(') {
+      if (char === "$" && nextChar === "(") {
         return true;
       }
 
       // <(...) process substitution - works unquoted only (not in double quotes)
-      if (char === '<' && nextChar === '(' && !inDoubleQuotes && !inBackticks) {
+      if (char === "<" && nextChar === "(" && !inDoubleQuotes && !inBackticks) {
         return true;
       }
 
       // Backtick command substitution - check for opening backtick
       // (We track the state above, so this catches the start of backtick substitution)
-      if (char === '`' && !inBackticks) {
+      if (char === "`" && !inBackticks) {
         return true;
       }
     }
@@ -319,15 +319,15 @@ export function checkCommandPermissions(
       allAllowed: false,
       disallowedCommands: [command],
       blockReason:
-        'Command substitution using $(), <(), or >() is not allowed for security reasons',
+        "Command substitution using $(), <(), or >() is not allowed for security reasons",
       isHardDenial: true,
     };
   }
 
-  const normalize = (cmd: string): string => cmd.trim().replace(/\s+/g, ' ');
+  const normalize = (cmd: string): string => cmd.trim().replace(/\s+/g, " ");
   const commandsToValidate = splitCommands(command).map(normalize);
   const invocation: AnyToolInvocation & { params: { command: string } } = {
-    params: { command: '' },
+    params: { command: "" },
   } as AnyToolInvocation & { params: { command: string } };
 
   // 1. Blocklist Check (Highest Priority)
@@ -340,15 +340,15 @@ export function checkCommandPermissions(
     return {
       allAllowed: false,
       disallowedCommands: commandsToValidate,
-      blockReason: 'Shell tool is globally disabled in configuration',
+      blockReason: "Shell tool is globally disabled in configuration",
       isHardDenial: true,
     };
   }
 
   for (const cmd of commandsToValidate) {
-    invocation.params['command'] = cmd;
+    invocation.params["command"] = cmd;
     if (
-      doesToolInvocationMatch('run_shell_command', invocation, excludeTools)
+      doesToolInvocationMatch("run_shell_command", invocation, excludeTools)
     ) {
       return {
         allAllowed: false,
@@ -382,16 +382,16 @@ export function checkCommandPermissions(
     );
 
     for (const cmd of commandsToValidate) {
-      invocation.params['command'] = cmd;
+      invocation.params["command"] = cmd;
       const isSessionAllowed = doesToolInvocationMatch(
-        'run_shell_command',
+        "run_shell_command",
         invocation,
         [...normalizedSessionAllowlist],
       );
       if (isSessionAllowed) continue;
 
       const isGloballyAllowed = doesToolInvocationMatch(
-        'run_shell_command',
+        "run_shell_command",
         invocation,
         coreTools,
       );
@@ -406,7 +406,7 @@ export function checkCommandPermissions(
         disallowedCommands,
         blockReason: `Command(s) not on the global or session allowlist. Disallowed commands: ${disallowedCommands
           .map((c) => JSON.stringify(c))
-          .join(', ')}`,
+          .join(", ")}`,
         isHardDenial: false, // This is a soft denial; confirmation is possible.
       };
     }
@@ -419,9 +419,9 @@ export function checkCommandPermissions(
 
     if (hasSpecificAllowedCommands) {
       for (const cmd of commandsToValidate) {
-        invocation.params['command'] = cmd;
+        invocation.params["command"] = cmd;
         const isGloballyAllowed = doesToolInvocationMatch(
-          'run_shell_command',
+          "run_shell_command",
           invocation,
           coreTools,
         );
@@ -435,7 +435,7 @@ export function checkCommandPermissions(
           disallowedCommands,
           blockReason: `Command(s) not in the allowed commands list. Disallowed commands: ${disallowedCommands
             .map((c) => JSON.stringify(c))
-            .join(', ')}`,
+            .join(", ")}`,
           isHardDenial: false, // This is a soft denial.
         };
       }
@@ -483,6 +483,6 @@ export function isCommandNeedsPermission(command: string): {
 
   return {
     requiresPermission: true,
-    reason: 'Command requires permission to execute.',
+    reason: "Command requires permission to execute.",
   };
 }

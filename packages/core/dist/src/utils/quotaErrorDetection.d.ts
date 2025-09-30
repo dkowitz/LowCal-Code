@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { StructuredError } from '../core/turn.js';
+import type { StructuredError } from "../core/turn.js";
 export interface ApiError {
     error: {
         code: number;

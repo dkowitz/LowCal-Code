@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { vi } from 'vitest';
+import { vi } from "vitest";
 export const createMockLoggingController = () => ({
     enableLogging: vi.fn().mockResolvedValue({ enabled: true }),
     disableLogging: vi.fn().mockResolvedValue({ enabled: false }),

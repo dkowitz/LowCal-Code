@@ -3,22 +3,22 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { openDiff } from '../utils/editor.js';
-import os from 'node:os';
-import path from 'node:path';
-import fs from 'node:fs';
-import * as Diff from 'diff';
-import { DEFAULT_DIFF_OPTIONS } from './diffOptions.js';
-import { isNodeError } from '../utils/errors.js';
+import { openDiff } from "../utils/editor.js";
+import os from "node:os";
+import path from "node:path";
+import fs from "node:fs";
+import * as Diff from "diff";
+import { DEFAULT_DIFF_OPTIONS } from "./diffOptions.js";
+import { isNodeError } from "../utils/errors.js";
 /**
  * Type guard to check if a declarative tool is modifiable.
  */
 export function isModifiableDeclarativeTool(tool) {
-    return 'getModifyContext' in tool;
+    return "getModifyContext" in tool;
 }
 function createTempFilesForModify(currentContent, proposedContent, file_path) {
     const tempDir = os.tmpdir();
-    const diffDir = path.join(tempDir, 'qwen-code-tool-modify-diffs');
+    const diffDir = path.join(tempDir, "qwen-code-tool-modify-diffs");
     if (!fs.existsSync(diffDir)) {
         fs.mkdirSync(diffDir, { recursive: true });
     }
@@ -27,31 +27,31 @@ function createTempFilesForModify(currentContent, proposedContent, file_path) {
     const timestamp = Date.now();
     const tempOldPath = path.join(diffDir, `qwen-code-modify-${fileName}-old-${timestamp}${ext}`);
     const tempNewPath = path.join(diffDir, `qwen-code-modify-${fileName}-new-${timestamp}${ext}`);
-    fs.writeFileSync(tempOldPath, currentContent, 'utf8');
-    fs.writeFileSync(tempNewPath, proposedContent, 'utf8');
+    fs.writeFileSync(tempOldPath, currentContent, "utf8");
+    fs.writeFileSync(tempNewPath, proposedContent, "utf8");
     return { oldPath: tempOldPath, newPath: tempNewPath };
 }
 function getUpdatedParams(tmpOldPath, tempNewPath, originalParams, modifyContext) {
-    let oldContent = '';
-    let newContent = '';
+    let oldContent = "";
+    let newContent = "";
     try {
-        oldContent = fs.readFileSync(tmpOldPath, 'utf8');
+        oldContent = fs.readFileSync(tmpOldPath, "utf8");
     }
     catch (err) {
-        if (!isNodeError(err) || err.code !== 'ENOENT')
+        if (!isNodeError(err) || err.code !== "ENOENT")
             throw err;
-        oldContent = '';
+        oldContent = "";
     }
     try {
-        newContent = fs.readFileSync(tempNewPath, 'utf8');
+        newContent = fs.readFileSync(tempNewPath, "utf8");
     }
     catch (err) {
-        if (!isNodeError(err) || err.code !== 'ENOENT')
+        if (!isNodeError(err) || err.code !== "ENOENT")
             throw err;
-        newContent = '';
+        newContent = "";
     }
     const updatedParams = modifyContext.createUpdatedParams(oldContent, newContent, originalParams);
-    const updatedDiff = Diff.createPatch(path.basename(modifyContext.getFilePath(originalParams)), oldContent, newContent, 'Current', 'Proposed', DEFAULT_DIFF_OPTIONS);
+    const updatedDiff = Diff.createPatch(path.basename(modifyContext.getFilePath(originalParams)), oldContent, newContent, "Current", "Proposed", DEFAULT_DIFF_OPTIONS);
     return { updatedParams, updatedDiff };
 }
 function deleteTempFiles(oldPath, newPath) {

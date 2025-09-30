@@ -17,21 +17,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { execSync } from 'node:child_process';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { readPackageUp } from 'read-package-up';
+import { execSync } from "node:child_process";
+import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { dirname, join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
+import { readPackageUp } from "read-package-up";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = join(__dirname, '..');
+const root = join(__dirname, "..");
 const scriptPath = relative(root, fileURLToPath(import.meta.url));
-const generatedCliDir = join(root, 'packages/cli/src/generated');
-const cliGitCommitFile = join(generatedCliDir, 'git-commit.ts');
-const generatedCoreDir = join(root, 'packages/core/src/generated');
-const coreGitCommitFile = join(generatedCoreDir, 'git-commit.ts');
-let gitCommitInfo = 'N/A';
-let cliVersion = 'UNKNOWN';
+const generatedCliDir = join(root, "packages/cli/src/generated");
+const cliGitCommitFile = join(generatedCliDir, "git-commit.ts");
+const generatedCoreDir = join(root, "packages/core/src/generated");
+const coreGitCommitFile = join(generatedCoreDir, "git-commit.ts");
+let gitCommitInfo = "N/A";
+let cliVersion = "UNKNOWN";
 
 if (!existsSync(generatedCliDir)) {
   mkdirSync(generatedCliDir, { recursive: true });
@@ -42,15 +42,15 @@ if (!existsSync(generatedCoreDir)) {
 }
 
 try {
-  const gitHash = execSync('git rev-parse --short HEAD', {
-    encoding: 'utf-8',
+  const gitHash = execSync("git rev-parse --short HEAD", {
+    encoding: "utf-8",
   }).trim();
   if (gitHash) {
     gitCommitInfo = gitHash;
   }
 
   const result = await readPackageUp();
-  cliVersion = result?.packageJson?.version ?? 'UNKNOWN';
+  cliVersion = result?.packageJson?.version ?? "UNKNOWN";
 } catch {
   // ignore
 }

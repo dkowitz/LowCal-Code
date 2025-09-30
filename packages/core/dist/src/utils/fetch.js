@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getErrorMessage, isNodeError } from './errors.js';
-import { URL } from 'node:url';
+import { getErrorMessage, isNodeError } from "./errors.js";
+import { URL } from "node:url";
 const PRIVATE_IP_RANGES = [
     /^10\./,
     /^127\./,
@@ -19,7 +19,7 @@ export class FetchError extends Error {
     constructor(message, code) {
         super(message);
         this.code = code;
-        this.name = 'FetchError';
+        this.name = "FetchError";
     }
 }
 export function isPrivateIp(url) {
@@ -39,8 +39,8 @@ export async function fetchWithTimeout(url, timeout) {
         return response;
     }
     catch (error) {
-        if (isNodeError(error) && error.code === 'ABORT_ERR') {
-            throw new FetchError(`Request timed out after ${timeout}ms`, 'ETIMEDOUT');
+        if (isNodeError(error) && error.code === "ABORT_ERR") {
+            throw new FetchError(`Request timed out after ${timeout}ms`, "ETIMEDOUT");
         }
         throw new FetchError(getErrorMessage(error));
     }

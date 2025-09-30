@@ -4,25 +4,25 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { Config } from '../config/config.js';
-import fs from 'node:fs';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { Config } from "../config/config.js";
+import fs from "node:fs";
 import {
   setSimulate429,
   disableSimulationAfterFallback,
   shouldSimulate429,
   createSimulated429Error,
   resetRequestCounter,
-} from './testUtils.js';
-import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
-import { retryWithBackoff } from './retry.js';
-import { AuthType } from '../core/contentGenerator.js';
+} from "./testUtils.js";
+import { DEFAULT_GEMINI_FLASH_MODEL } from "../config/models.js";
+import { retryWithBackoff } from "./retry.js";
+import { AuthType } from "../core/contentGenerator.js";
 
-vi.mock('node:fs');
+vi.mock("node:fs");
 
-vi.mock('node:fs');
+vi.mock("node:fs");
 
-describe('Flash Fallback Integration', () => {
+describe("Flash Fallback Integration", () => {
   let config: Config;
 
   beforeEach(() => {
@@ -31,11 +31,11 @@ describe('Flash Fallback Integration', () => {
       isDirectory: () => true,
     } as fs.Stats);
     config = new Config({
-      sessionId: 'test-session',
-      targetDir: '/test',
+      sessionId: "test-session",
+      targetDir: "/test",
       debugMode: false,
-      cwd: '/test',
-      model: 'gemini-2.5-pro',
+      cwd: "/test",
+      model: "gemini-2.5-pro",
     });
 
     // Reset simulation state for each test
@@ -43,7 +43,7 @@ describe('Flash Fallback Integration', () => {
     resetRequestCounter();
   });
 
-  it('should automatically accept fallback', async () => {
+  it("should automatically accept fallback", async () => {
     // Set up a minimal flash fallback handler for testing
     const flashFallbackHandler = async (): Promise<boolean> => true;
 
@@ -51,7 +51,7 @@ describe('Flash Fallback Integration', () => {
 
     // Call the handler directly to test
     const result = await config.flashFallbackHandler!(
-      'gemini-2.5-pro',
+      "gemini-2.5-pro",
       DEFAULT_GEMINI_FLASH_MODEL,
     );
 
@@ -59,16 +59,16 @@ describe('Flash Fallback Integration', () => {
     expect(result).toBe(true);
   });
 
-  it('should trigger fallback after 2 consecutive 429 errors for OAuth users', async () => {
+  it("should trigger fallback after 2 consecutive 429 errors for OAuth users", async () => {
     let fallbackCalled = false;
-    let fallbackModel = '';
+    let fallbackModel = "";
 
     // Mock function that simulates exactly 2 429 errors, then succeeds after fallback
     const mockApiCall = vi
       .fn()
       .mockRejectedValueOnce(createSimulated429Error())
       .mockRejectedValueOnce(createSimulated429Error())
-      .mockResolvedValueOnce('success after fallback');
+      .mockResolvedValueOnce("success after fallback");
 
     // Mock fallback handler
     const mockFallbackHandler = vi.fn(async (_authType?: string) => {
@@ -97,12 +97,12 @@ describe('Flash Fallback Integration', () => {
       AuthType.LOGIN_WITH_GOOGLE,
       expect.any(Error),
     );
-    expect(result).toBe('success after fallback');
+    expect(result).toBe("success after fallback");
     // Should have: 2 failures, then fallback triggered, then 1 success after retry reset
     expect(mockApiCall).toHaveBeenCalledTimes(3);
   });
 
-  it('should not trigger fallback for API key users', async () => {
+  it("should not trigger fallback for API key users", async () => {
     let fallbackCalled = false;
 
     // Mock function that simulates 429 errors
@@ -129,7 +129,7 @@ describe('Flash Fallback Integration', () => {
       });
     } catch (error) {
       // Expected to throw after max attempts
-      expect((error as Error).message).toContain('Rate limit exceeded');
+      expect((error as Error).message).toContain("Rate limit exceeded");
     }
 
     // Verify fallback was NOT triggered for API key users
@@ -137,7 +137,7 @@ describe('Flash Fallback Integration', () => {
     expect(mockFallbackHandler).not.toHaveBeenCalled();
   });
 
-  it('should properly disable simulation state after fallback', () => {
+  it("should properly disable simulation state after fallback", () => {
     // Enable simulation
     setSimulate429(true);
 

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { SlashCommand } from '../ui/commands/types.js';
-import type { ICommandLoader } from './types.js';
+import type { SlashCommand } from "../ui/commands/types.js";
+import type { ICommandLoader } from "./types.js";
 
 /**
  * Orchestrates the discovery and loading of all slash commands for the CLI.
@@ -54,10 +54,10 @@ export class CommandService {
 
     const allCommands: SlashCommand[] = [];
     for (const result of results) {
-      if (result.status === 'fulfilled') {
+      if (result.status === "fulfilled") {
         allCommands.push(...result.value);
       } else {
-        console.debug('A command loader failed:', result.reason);
+        console.debug("A command loader failed:", result.reason);
       }
     }
 

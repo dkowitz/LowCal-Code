@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { FileDiscoveryService } from '../services/fileDiscoveryService.js';
-import type { FileFilteringOptions } from '../config/config.js';
+import type { FileDiscoveryService } from "../services/fileDiscoveryService.js";
+import type { FileFilteringOptions } from "../config/config.js";
 /** Options for customizing folder structure retrieval. */
 interface FolderStructureOptions {
     /** Maximum number of files and folders combined to display. Defaults to 20. */

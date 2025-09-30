@@ -375,15 +375,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import * as fs from 'node:fs/promises';
-import path from 'node:path';
+import * as fs from "node:fs/promises";
+import path from "node:path";
 import {
   type CommandContext,
   type SlashCommand,
   type SlashCommandActionReturn,
   CommandKind,
-} from './types.js';
-import type { Config } from '@qwen-code/qwen-code-core';
+} from "./types.js";
+import type { Config } from "@qwen-code/qwen-code-core";
 &nbsp;
 async function restoreAction(
   context: CommandContext,
@@ -397,9 +397,9 @@ async function restoreAction(
 &nbsp;
   if (!checkpointDir) {
     return {
-      type: 'message',
-      messageType: 'error',
-      content: 'Could not determine the .gemini directory path.',
+      type: "message",
+      messageType: "error",
+      content: "Could not determine the .gemini directory path.",
     };
   }
 &nbsp;
@@ -407,53 +407,53 @@ async function restoreAction(
     // Ensure the directory exists before trying to read it.
     await fs.mkdir(checkpointDir, { recursive: true });
     const files = await fs.readdir(checkpointDir);
-    const jsonFiles = files.filter((file) =&gt; file.endsWith('.json'));
+    const jsonFiles = files.filter((file) =&gt; file.endsWith(".json"));
 &nbsp;
     if (!args) {
       if (jsonFiles.length === 0) {
         return {
-          type: 'message',
-          messageType: 'info',
-          content: 'No restorable tool calls found.',
+          type: "message",
+          messageType: "info",
+          content: "No restorable tool calls found.",
         };
       }
       const truncatedFiles = jsonFiles.map((file) =&gt; {
-        const components = file.split('.');
+        const components = file.split(".");
         if (components.length &lt;= 1) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >          return file;</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
         components.pop();
-        return components.join('.');
+        return components.join(".");
       });
-      const fileList = truncatedFiles.join('\n');
+      const fileList = truncatedFiles.join("\n");
       return {
-        type: 'message',
-        messageType: 'info',
+        type: "message",
+        messageType: "info",
         content: `Available tool calls to restore:\n\n${fileList}`,
       };
     }
 &nbsp;
-    const selectedFile = args.endsWith('.json'<span class="branch-0 cbranch-no" title="branch not covered" >) ? args : `</span>${args}.json`;
+    const selectedFile = args.endsWith(".json"<span class="branch-0 cbranch-no" title="branch not covered" >) ? args : `</span>${args}.json`;
 &nbsp;
     if (!jsonFiles.includes(selectedFile)) {
       return {
-        type: 'message',
-        messageType: 'error',
+        type: "message",
+        messageType: "error",
         content: `File not found: ${selectedFile}`,
       };
     }
 &nbsp;
     const filePath = path.join(checkpointDir, selectedFile);
-    const data = await fs.readFile(filePath, 'utf-8');
+    const data = await fs.readFile(filePath, "utf-8");
     const toolCallData = JSON.parse(data);
 &nbsp;
     if (toolCallData.history) {
       if (!loadHistory) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
         // This should not happen
 <span class="cstat-no" title="statement not covered" >        return {</span>
-<span class="cstat-no" title="statement not covered" >          type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >          messageType: 'error',</span>
-<span class="cstat-no" title="statement not covered" >          content: 'loadHistory function is not available.',</span>
+<span class="cstat-no" title="statement not covered" >          type: "message",</span>
+<span class="cstat-no" title="statement not covered" >          messageType: "error",</span>
+<span class="cstat-no" title="statement not covered" >          content: "loadHistory function is not available.",</span>
 <span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
       loadHistory(toolCallData.history);
@@ -467,22 +467,22 @@ async function restoreAction(
       await gitService?.restoreProjectFromSnapshot(toolCallData.commitHash);
       addItem(
         {
-          type: 'info',
-          text: 'Restored project to the state before the tool call.',
+          type: "info",
+          text: "Restored project to the state before the tool call.",
         },
         Date.now(),
       );
     }
 &nbsp;
     return {
-      type: 'tool',
+      type: "tool",
       toolName: toolCallData.toolCall.name,
       toolArgs: toolCallData.toolCall.args,
     };
   } catch (error) {
     return {
-      type: 'message',
-      messageType: 'error',
+      type: "message",
+      messageType: "error",
       content: `Could not read restorable tool calls. This is the error: ${error}`,
     };
   }
@@ -501,8 +501,8 @@ async function completion(
   try {
     const files = await fs.readdir(checkpointDir);
     return files
-      .filter((file) =&gt; file.endsWith('.json'))
-      .map((file) =&gt; file.replace('.json', ''));
+      .filter((file) =&gt; file.endsWith(".json"))
+      .map((file) =&gt; file.replace(".json", ""));
   } catch (_err) {
     return [];
   }
@@ -514,9 +514,9 @@ export const restoreCommand = (config: Config | null): SlashCommand | null =&gt;
   }
 &nbsp;
   return {
-    name: 'restore',
+    name: "restore",
     description:
-      'Restore a tool call. This will reset the conversation and file history to the state it was in when the tool call was suggested',
+      "Restore a tool call. This will reset the conversation and file history to the state it was in when the tool call was suggested",
     kind: CommandKind.BUILT_IN,
     action: restoreAction,
     completion,
@@ -529,7 +529,7 @@ export const restoreCommand = (config: Config | null): SlashCommand | null =&gt;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.374Z
+                at 2025-09-30T22:44:16.879Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

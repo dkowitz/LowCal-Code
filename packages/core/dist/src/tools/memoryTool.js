@@ -3,31 +3,31 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, } from './tools.js';
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import { Storage } from '../config/storage.js';
-import * as Diff from 'diff';
-import { DEFAULT_DIFF_OPTIONS } from './diffOptions.js';
-import { tildeifyPath } from '../utils/paths.js';
-import { ToolErrorType } from './tool-error.js';
+import { BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, } from "./tools.js";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { Storage } from "../config/storage.js";
+import * as Diff from "diff";
+import { DEFAULT_DIFF_OPTIONS } from "./diffOptions.js";
+import { tildeifyPath } from "../utils/paths.js";
+import { ToolErrorType } from "./tool-error.js";
 const memoryToolSchemaData = {
-    name: 'save_memory',
-    description: 'Saves a specific piece of information or fact to your long-term memory. Use this when the user explicitly asks you to remember something, or when they state a clear, concise fact that seems important to retain for future interactions.',
+    name: "save_memory",
+    description: "Saves a specific piece of information or fact to your long-term memory. Use this when the user explicitly asks you to remember something, or when they state a clear, concise fact that seems important to retain for future interactions.",
     parametersJsonSchema: {
-        type: 'object',
+        type: "object",
         properties: {
             fact: {
-                type: 'string',
-                description: 'The specific fact or piece of information to remember. Should be a clear, self-contained statement.',
+                type: "string",
+                description: "The specific fact or piece of information to remember. Should be a clear, self-contained statement.",
             },
             scope: {
-                type: 'string',
+                type: "string",
                 description: 'Where to save the memory: "global" saves to user-level ~/.qwen/QWEN.md (shared across all projects), "project" saves to current project\'s QWEN.md (project-specific). If not specified, will prompt user to choose.',
-                enum: ['global', 'project'],
+                enum: ["global", "project"],
             },
         },
-        required: ['fact'],
+        required: ["fact"],
     },
 };
 const memoryToolDescription = `
@@ -52,9 +52,9 @@ Do NOT use this tool:
   - "project": Saves to current project's QWEN.md (project-specific)
   - If not specified, the tool will ask the user where they want to save the memory.
 `;
-export const GEMINI_CONFIG_DIR = '.qwen';
-export const DEFAULT_CONTEXT_FILENAME = 'QWEN.md';
-export const MEMORY_SECTION_HEADER = '## Qwen Added Memories';
+export const GEMINI_CONFIG_DIR = ".qwen";
+export const DEFAULT_CONTEXT_FILENAME = "QWEN.md";
+export const MEMORY_SECTION_HEADER = "## Qwen Added Memories";
 // This variable will hold the currently configured filename for QWEN.md context files.
 // It defaults to DEFAULT_CONTEXT_FILENAME but can be overridden by setGeminiMdFilename.
 let currentGeminiMdFilename = DEFAULT_CONTEXT_FILENAME;
@@ -64,7 +64,7 @@ export function setGeminiMdFilename(newFilename) {
             currentGeminiMdFilename = newFilename.map((name) => name.trim());
         }
     }
-    else if (newFilename && newFilename.trim() !== '') {
+    else if (newFilename && newFilename.trim() !== "") {
         currentGeminiMdFilename = newFilename.trim();
     }
 }
@@ -86,8 +86,8 @@ function getGlobalMemoryFilePath() {
 function getProjectMemoryFilePath() {
     return path.join(process.cwd(), getCurrentGeminiMdFilename());
 }
-function getMemoryFilePath(scope = 'global') {
-    return scope === 'project'
+function getMemoryFilePath(scope = "global") {
+    return scope === "project"
         ? getProjectMemoryFilePath()
         : getGlobalMemoryFilePath();
 }
@@ -96,25 +96,25 @@ function getMemoryFilePath(scope = 'global') {
  */
 function ensureNewlineSeparation(currentContent) {
     if (currentContent.length === 0)
-        return '';
-    if (currentContent.endsWith('\n\n') || currentContent.endsWith('\r\n\r\n'))
-        return '';
-    if (currentContent.endsWith('\n') || currentContent.endsWith('\r\n'))
-        return '\n';
-    return '\n\n';
+        return "";
+    if (currentContent.endsWith("\n\n") || currentContent.endsWith("\r\n\r\n"))
+        return "";
+    if (currentContent.endsWith("\n") || currentContent.endsWith("\r\n"))
+        return "\n";
+    return "\n\n";
 }
 /**
  * Reads the current content of the memory file
  */
-async function readMemoryFileContent(scope = 'global') {
+async function readMemoryFileContent(scope = "global") {
     try {
-        return await fs.readFile(getMemoryFilePath(scope), 'utf-8');
+        return await fs.readFile(getMemoryFilePath(scope), "utf-8");
     }
     catch (err) {
         const error = err;
-        if (!(error instanceof Error) || error.code !== 'ENOENT')
+        if (!(error instanceof Error) || error.code !== "ENOENT")
             throw err;
-        return '';
+        return "";
     }
 }
 /**
@@ -122,7 +122,7 @@ async function readMemoryFileContent(scope = 'global') {
  */
 function computeNewContent(currentContent, fact) {
     let processedText = fact.trim();
-    processedText = processedText.replace(/^(-+\s*)+/, '').trim();
+    processedText = processedText.replace(/^(-+\s*)+/, "").trim();
     const newMemoryItem = `- ${processedText}`;
     const headerIndex = currentContent.indexOf(MEMORY_SECTION_HEADER);
     if (headerIndex === -1) {
@@ -134,7 +134,7 @@ function computeNewContent(currentContent, fact) {
     else {
         // Header found, find where to insert the new memory entry
         const startOfSectionContent = headerIndex + MEMORY_SECTION_HEADER.length;
-        let endOfSectionIndex = currentContent.indexOf('\n## ', startOfSectionContent);
+        let endOfSectionIndex = currentContent.indexOf("\n## ", startOfSectionContent);
         if (endOfSectionIndex === -1) {
             endOfSectionIndex = currentContent.length; // End of file
         }
@@ -147,15 +147,15 @@ function computeNewContent(currentContent, fact) {
         const afterSectionMarker = currentContent.substring(endOfSectionIndex);
         sectionContent += `\n${newMemoryItem}`;
         return (`${beforeSectionMarker}\n${sectionContent.trimStart()}\n${afterSectionMarker}`.trimEnd() +
-            '\n');
+            "\n");
     }
 }
 class MemoryToolInvocation extends BaseToolInvocation {
     static allowlist = new Set();
     getDescription() {
         if (!this.params.scope) {
-            const globalPath = tildeifyPath(getMemoryFilePath('global'));
-            const projectPath = tildeifyPath(getMemoryFilePath('project'));
+            const globalPath = tildeifyPath(getMemoryFilePath("global"));
+            const projectPath = tildeifyPath(getMemoryFilePath("project"));
             return `CHOOSE: ${globalPath} (global) OR ${projectPath} (project)`;
         }
         const scope = this.params.scope;
@@ -166,11 +166,11 @@ class MemoryToolInvocation extends BaseToolInvocation {
         // When scope is not specified, show a choice dialog defaulting to global
         if (!this.params.scope) {
             // Show preview of what would be added to global by default
-            const defaultScope = 'global';
+            const defaultScope = "global";
             const currentContent = await readMemoryFileContent(defaultScope);
             const newContent = computeNewContent(currentContent, this.params.fact);
-            const globalPath = tildeifyPath(getMemoryFilePath('global'));
-            const projectPath = tildeifyPath(getMemoryFilePath('project'));
+            const globalPath = tildeifyPath(getMemoryFilePath("global"));
+            const projectPath = tildeifyPath(getMemoryFilePath("project"));
             const fileName = path.basename(getMemoryFilePath(defaultScope));
             const choiceText = `Choose where to save this memory:
 
@@ -183,9 +183,9 @@ Options:
 Preview of changes to be made to GLOBAL memory:
 `;
             const fileDiff = choiceText +
-                Diff.createPatch(fileName, currentContent, newContent, 'Current', 'Proposed (Global)', DEFAULT_DIFF_OPTIONS);
+                Diff.createPatch(fileName, currentContent, newContent, "Current", "Proposed (Global)", DEFAULT_DIFF_OPTIONS);
             const confirmationDetails = {
-                type: 'edit',
+                type: "edit",
                 title: `Choose Memory Location: GLOBAL (${globalPath}) or PROJECT (${projectPath})`,
                 fileName,
                 filePath: getMemoryFilePath(defaultScope),
@@ -210,9 +210,9 @@ Preview of changes to be made to GLOBAL memory:
         // Calculate the new content that will be written to the memory file
         const newContent = computeNewContent(currentContent, this.params.fact);
         const fileName = path.basename(memoryFilePath);
-        const fileDiff = Diff.createPatch(fileName, currentContent, newContent, 'Current', 'Proposed', DEFAULT_DIFF_OPTIONS);
+        const fileDiff = Diff.createPatch(fileName, currentContent, newContent, "Current", "Proposed", DEFAULT_DIFF_OPTIONS);
         const confirmationDetails = {
-            type: 'edit',
+            type: "edit",
             title: `Confirm Memory Save: ${tildeifyPath(memoryFilePath)} (${scope})`,
             fileName: memoryFilePath,
             filePath: memoryFilePath,
@@ -229,7 +229,7 @@ Preview of changes to be made to GLOBAL memory:
     }
     async execute(_signal) {
         const { fact, modified_by_user, modified_content } = this.params;
-        if (!fact || typeof fact !== 'string' || fact.trim() === '') {
+        if (!fact || typeof fact !== "string" || fact.trim() === "") {
             const errorMessage = 'Parameter "fact" must be a non-empty string.';
             return {
                 llmContent: JSON.stringify({ success: false, error: errorMessage }),
@@ -238,8 +238,8 @@ Preview of changes to be made to GLOBAL memory:
         }
         // If scope is not specified and user didn't modify content, return error prompting for choice
         if (!this.params.scope && !modified_by_user) {
-            const globalPath = tildeifyPath(getMemoryFilePath('global'));
-            const projectPath = tildeifyPath(getMemoryFilePath('project'));
+            const globalPath = tildeifyPath(getMemoryFilePath("global"));
+            const projectPath = tildeifyPath(getMemoryFilePath("project"));
             const errorMessage = `Please specify where to save this memory:
 
 Global: ${globalPath} (shared across all projects)
@@ -247,12 +247,12 @@ Project: ${projectPath} (current project only)`;
             return {
                 llmContent: JSON.stringify({
                     success: false,
-                    error: 'Please specify where to save this memory',
+                    error: "Please specify where to save this memory",
                 }),
                 returnDisplay: errorMessage,
             };
         }
-        const scope = this.params.scope || 'global';
+        const scope = this.params.scope || "global";
         const memoryFilePath = getMemoryFilePath(scope);
         try {
             if (modified_by_user && modified_content !== undefined) {
@@ -260,7 +260,7 @@ Project: ${projectPath} (current project only)`;
                 await fs.mkdir(path.dirname(memoryFilePath), {
                     recursive: true,
                 });
-                await fs.writeFile(memoryFilePath, modified_content, 'utf-8');
+                await fs.writeFile(memoryFilePath, modified_content, "utf-8");
                 const successMessage = `Okay, I've updated the ${scope} memory file with your modifications.`;
                 return {
                     llmContent: JSON.stringify({
@@ -307,10 +307,10 @@ Project: ${projectPath} (current project only)`;
 export class MemoryTool extends BaseDeclarativeTool {
     static Name = memoryToolSchemaData.name;
     constructor() {
-        super(MemoryTool.Name, 'SaveMemory', memoryToolDescription, Kind.Think, memoryToolSchemaData.parametersJsonSchema);
+        super(MemoryTool.Name, "SaveMemory", memoryToolDescription, Kind.Think, memoryToolSchemaData.parametersJsonSchema);
     }
     validateToolParamValues(params) {
-        if (params.fact.trim() === '') {
+        if (params.fact.trim() === "") {
             return 'Parameter "fact" must be a non-empty string.';
         }
         return null;
@@ -321,13 +321,13 @@ export class MemoryTool extends BaseDeclarativeTool {
     static async performAddMemoryEntry(text, memoryFilePath, fsAdapter) {
         let processedText = text.trim();
         // Remove leading hyphens and spaces that might be misinterpreted as markdown list items
-        processedText = processedText.replace(/^(-+\s*)+/, '').trim();
+        processedText = processedText.replace(/^(-+\s*)+/, "").trim();
         const newMemoryItem = `- ${processedText}`;
         try {
             await fsAdapter.mkdir(path.dirname(memoryFilePath), { recursive: true });
-            let content = '';
+            let content = "";
             try {
-                content = await fsAdapter.readFile(memoryFilePath, 'utf-8');
+                content = await fsAdapter.readFile(memoryFilePath, "utf-8");
             }
             catch (_e) {
                 // File doesn't exist, will be created with header and item.
@@ -341,7 +341,7 @@ export class MemoryTool extends BaseDeclarativeTool {
             else {
                 // Header found, find where to insert the new memory entry
                 const startOfSectionContent = headerIndex + MEMORY_SECTION_HEADER.length;
-                let endOfSectionIndex = content.indexOf('\n## ', startOfSectionContent);
+                let endOfSectionIndex = content.indexOf("\n## ", startOfSectionContent);
                 if (endOfSectionIndex === -1) {
                     endOfSectionIndex = content.length; // End of file
                 }
@@ -355,9 +355,9 @@ export class MemoryTool extends BaseDeclarativeTool {
                 sectionContent += `\n${newMemoryItem}`;
                 content =
                     `${beforeSectionMarker}\n${sectionContent.trimStart()}\n${afterSectionMarker}`.trimEnd() +
-                        '\n';
+                        "\n";
             }
-            await fsAdapter.writeFile(memoryFilePath, content, 'utf-8');
+            await fsAdapter.writeFile(memoryFilePath, content, "utf-8");
         }
         catch (error) {
             console.error(`[MemoryTool] Error adding memory entry to ${memoryFilePath}:`, error);
@@ -368,7 +368,7 @@ export class MemoryTool extends BaseDeclarativeTool {
         return {
             getFilePath: (params) => {
                 // Determine scope from modified content or default
-                let scope = params.scope || 'global';
+                let scope = params.scope || "global";
                 if (params.modified_content) {
                     const scopeMatch = params.modified_content.match(/^scope:\s*(global|project)\s*\n/i);
                     if (scopeMatch) {
@@ -384,19 +384,19 @@ export class MemoryTool extends BaseDeclarativeTool {
                     if (scopeMatch) {
                         const scope = scopeMatch[1].toLowerCase();
                         const content = await readMemoryFileContent(scope);
-                        const globalPath = tildeifyPath(getMemoryFilePath('global'));
-                        const projectPath = tildeifyPath(getMemoryFilePath('project'));
+                        const globalPath = tildeifyPath(getMemoryFilePath("global"));
+                        const projectPath = tildeifyPath(getMemoryFilePath("project"));
                         return `scope: ${scope}\n\n# INSTRUCTIONS:\n# - Save as "global" for GLOBAL memory: ${globalPath}\n# - Save as "project" for PROJECT memory: ${projectPath}\n\n${content}`;
                     }
                 }
-                const scope = params.scope || 'global';
+                const scope = params.scope || "global";
                 const content = await readMemoryFileContent(scope);
-                const globalPath = tildeifyPath(getMemoryFilePath('global'));
-                const projectPath = tildeifyPath(getMemoryFilePath('project'));
+                const globalPath = tildeifyPath(getMemoryFilePath("global"));
+                const projectPath = tildeifyPath(getMemoryFilePath("project"));
                 return `scope: ${scope}\n\n# INSTRUCTIONS:\n# - Save as "global" for GLOBAL memory: ${globalPath}\n# - Save as "project" for PROJECT memory: ${projectPath}\n\n${content}`;
             },
             getProposedContent: async (params) => {
-                let scope = params.scope || 'global';
+                let scope = params.scope || "global";
                 // Check if modified content has scope directive
                 if (params.modified_content) {
                     const scopeMatch = params.modified_content.match(/^scope:\s*(global|project)\s*\n/i);
@@ -406,8 +406,8 @@ export class MemoryTool extends BaseDeclarativeTool {
                 }
                 const currentContent = await readMemoryFileContent(scope);
                 const newContent = computeNewContent(currentContent, params.fact);
-                const globalPath = tildeifyPath(getMemoryFilePath('global'));
-                const projectPath = tildeifyPath(getMemoryFilePath('project'));
+                const globalPath = tildeifyPath(getMemoryFilePath("global"));
+                const projectPath = tildeifyPath(getMemoryFilePath("project"));
                 return `scope: ${scope}\n\n# INSTRUCTIONS:\n# - Save as "global" for GLOBAL memory: ${globalPath}\n# - Save as "project" for PROJECT memory: ${projectPath}\n\n${newContent}`;
             },
             createUpdatedParams: (_oldContent, modifiedProposedContent, originalParams) => {
@@ -415,12 +415,12 @@ export class MemoryTool extends BaseDeclarativeTool {
                 const scopeMatch = modifiedProposedContent.match(/^scope:\s*(global|project)/i);
                 const scope = scopeMatch
                     ? scopeMatch[1].toLowerCase()
-                    : 'global';
+                    : "global";
                 // Strip out the scope directive and instruction lines, keep only the actual memory content
-                const contentWithoutScope = modifiedProposedContent.replace(/^scope:\s*(global|project)\s*\n/, '');
+                const contentWithoutScope = modifiedProposedContent.replace(/^scope:\s*(global|project)\s*\n/, "");
                 const actualContent = contentWithoutScope
-                    .replace(/^#[^\n]*\n/gm, '')
-                    .replace(/^\s*\n/gm, '')
+                    .replace(/^#[^\n]*\n/gm, "")
+                    .replace(/^\s*\n/gm, "")
                     .trim();
                 return {
                     ...originalParams,

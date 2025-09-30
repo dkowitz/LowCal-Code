@@ -9,15 +9,15 @@ import type {
   GeminiUserTier,
   LoadCodeAssistResponse,
   OnboardUserRequest,
-} from './types.js';
-import { UserTierId } from './types.js';
-import { CodeAssistServer } from './server.js';
-import type { OAuth2Client } from 'google-auth-library';
+} from "./types.js";
+import { UserTierId } from "./types.js";
+import { CodeAssistServer } from "./server.js";
+import type { OAuth2Client } from "google-auth-library";
 
 export class ProjectIdRequiredError extends Error {
   constructor() {
     super(
-      'This account requires setting the GOOGLE_CLOUD_PROJECT env var. See https://goo.gle/gemini-cli-auth-docs#workspace-gca',
+      "This account requires setting the GOOGLE_CLOUD_PROJECT env var. See https://goo.gle/gemini-cli-auth-docs#workspace-gca",
     );
   }
 }
@@ -33,12 +33,12 @@ export interface UserData {
  * @returns the user's actual project id
  */
 export async function setupUser(client: OAuth2Client): Promise<UserData> {
-  const projectId = process.env['GOOGLE_CLOUD_PROJECT'] || undefined;
-  const caServer = new CodeAssistServer(client, projectId, {}, '', undefined);
+  const projectId = process.env["GOOGLE_CLOUD_PROJECT"] || undefined;
+  const caServer = new CodeAssistServer(client, projectId, {}, "", undefined);
   const coreClientMetadata: ClientMetadata = {
-    ideType: 'IDE_UNSPECIFIED',
-    platform: 'PLATFORM_UNSPECIFIED',
-    pluginType: 'GEMINI',
+    ideType: "IDE_UNSPECIFIED",
+    platform: "PLATFORM_UNSPECIFIED",
+    pluginType: "GEMINI",
   };
 
   const loadRes = await caServer.loadCodeAssist({
@@ -116,8 +116,8 @@ function getOnboardTier(res: LoadCodeAssistResponse): GeminiUserTier {
     }
   }
   return {
-    name: '',
-    description: '',
+    name: "",
+    description: "",
     id: UserTierId.LEGACY,
     userDefinedCloudaicompanionProject: true,
   };

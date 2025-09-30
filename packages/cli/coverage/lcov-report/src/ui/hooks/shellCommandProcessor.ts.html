@@ -698,23 +698,23 @@
 import type {
   HistoryItemWithoutId,
   IndividualToolCallDisplay,
-} from '../types.js';
-import { ToolCallStatus } from '../types.js';
-import { useCallback } from 'react';
+} from "../types.js";
+import { ToolCallStatus } from "../types.js";
+import { useCallback } from "react";
 import type {
   Config,
   GeminiClient,
   ShellExecutionResult,
-} from '@qwen-code/qwen-code-core';
-import { isBinary, ShellExecutionService } from '@qwen-code/qwen-code-core';
-import { type PartListUnion } from '@google/genai';
-import type { UseHistoryManagerReturn } from './useHistoryManager.js';
-import { SHELL_COMMAND_NAME } from '../constants.js';
-import { formatMemoryUsage } from '../utils/formatters.js';
-import crypto from 'node:crypto';
-import path from 'node:path';
-import os from 'node:os';
-import fs from 'node:fs';
+} from "@qwen-code/qwen-code-core";
+import { isBinary, ShellExecutionService } from "@qwen-code/qwen-code-core";
+import { type PartListUnion } from "@google/genai";
+import type { UseHistoryManagerReturn } from "./useHistoryManager.js";
+import { SHELL_COMMAND_NAME } from "../constants.js";
+import { formatMemoryUsage } from "../utils/formatters.js";
+import crypto from "node:crypto";
+import path from "node:path";
+import os from "node:os";
+import fs from "node:fs";
 &nbsp;
 export const OUTPUT_UPDATE_INTERVAL_MS = 1000;
 const MAX_OUTPUT_LENGTH = 10000;
@@ -726,11 +726,11 @@ function addShellCommandToGeminiHistory(
 ) {
   const modelContent =
     resultText.length &gt; <span class="branch-0 cbranch-no" title="branch not covered" >MAX_OUTPUT_LENGTH</span>
-<span class="cstat-no" title="statement not covered" >      ? resultText.substring(0, MAX_OUTPUT_LENGTH) + '\n... (truncated)'</span>
+<span class="cstat-no" title="statement not covered" >      ? resultText.substring(0, MAX_OUTPUT_LENGTH) + "\n... (truncated)"</span>
       : resultText;
 &nbsp;
   geminiClient.addHistory({
-    role: 'user',
+    role: "user",
     parts: [
       {
         text: `I ran the following shell command:
@@ -752,7 +752,7 @@ ${modelContent}
  * Orchestrates command execution and updates history and agent context.
  */
 export const useShellCommandProcessor = (
-  addItemToHistory: UseHistoryManagerReturn['addItem'],
+  addItemToHistory: UseHistoryManagerReturn["addItem"],
   setPendingHistoryItem: React.Dispatch&lt;
     React.SetStateAction&lt;HistoryItemWithoutId | null&gt;
   &gt;,
@@ -763,18 +763,18 @@ export const useShellCommandProcessor = (
 ) =&gt; {
   const handleShellCommand = useCallback(
     (rawQuery: PartListUnion, abortSignal: AbortSignal): boolean =&gt; {
-      if (typeof rawQuery !== 'string' || rawQuery.trim() === '') <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+      if (typeof rawQuery !== "string" || rawQuery.trim() === "") <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        return false;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
       const userMessageTimestamp = Date.now();
       const callId = `shell-${userMessageTimestamp}`;
       addItemToHistory(
-        { type: 'user_shell', text: rawQuery },
+        { type: "user_shell", text: rawQuery },
         userMessageTimestamp,
       );
 &nbsp;
-      const isWindows = os.platform() === 'win32';
+      const isWindows = os.platform() === "win32";
       const targetDir = config.getTargetDir();
       let commandToExecute = rawQuery;
       let pwdFilePath: string | undefined;
@@ -782,11 +782,11 @@ export const useShellCommandProcessor = (
       // On non-windows, wrap the command to capture the final working directory.
       if (!isWindows) {
         let command = rawQuery.trim();
-        const pwdFileName = `shell_pwd_${crypto.randomBytes(6).toString('hex')}.tmp`;
+        const pwdFileName = `shell_pwd_${crypto.randomBytes(6).toString("hex")}.tmp`;
         pwdFilePath = path.join(os.tmpdir(), pwdFileName);
         // Ensure command ends with a separator before adding our own.
-        if (!command.endsWith(';') &amp;&amp; !command.endsWith('&amp;')) {
-          command += ';';
+        if (!command.endsWith(";") &amp;&amp; !command.endsWith("&amp;")) {
+          command += ";";
         }
         commandToExecute = `{ ${command} }; __code=$?; pwd &gt; "${pwdFilePath}"; exit $__code`;
       }
@@ -795,7 +795,7 @@ export const useShellCommandProcessor = (
         resolve: (value: void | PromiseLike&lt;void&gt;) =&gt; void,
       ) =&gt; {
         let lastUpdateTime = Date.now();
-        let cumulativeStdout = '';
+        let cumulativeStdout = "";
         let isBinaryStream = false;
         let binaryBytesReceived = 0;
 &nbsp;
@@ -804,12 +804,12 @@ export const useShellCommandProcessor = (
           name: SHELL_COMMAND_NAME,
           description: rawQuery,
           status: ToolCallStatus.Executing,
-          resultDisplay: '',
+          resultDisplay: "",
           confirmationDetails: undefined,
         };
 &nbsp;
         setPendingHistoryItem({
-          type: 'tool_group',
+          type: "tool_group",
           tools: [initialToolDisplay],
         });
 &nbsp;
@@ -817,10 +817,10 @@ export const useShellCommandProcessor = (
 &nbsp;
         const abortHandler = () =&gt; {
           onDebugMessage(
-            `Aborting shell command (PID: ${executionPid ?? 'unknown'})`,
+            `Aborting shell command (PID: ${executionPid ?? "unknown"})`,
           );
         };
-        abortSignal.addEventListener('abort', abortHandler, { once: true });
+        abortSignal.addEventListener("abort", abortHandler, { once: true });
 &nbsp;
         onDebugMessage(`Executing in ${targetDir}: ${commandToExecute}`);
 &nbsp;
@@ -830,20 +830,20 @@ export const useShellCommandProcessor = (
             targetDir,
             (event) =&gt; {
               switch (event.type) {
-                case 'data':
+                case "data":
                   // Do not process text data if we've already switched to binary mode.
                   if (isBinaryStream) <span class="branch-0 cbranch-no" title="branch not covered" >break;</span>
                   cumulativeStdout += event.chunk;
                   break;
-                case 'binary_detected':
+                case "binary_detected":
                   isBinaryStream = true;
                   break;
-                case 'binary_progress':
+                case "binary_progress":
                   isBinaryStream = true;
                   binaryBytesReceived = event.bytesReceived;
                   break;
 <span class="branch-0 cbranch-no" title="branch not covered" >                default: {</span>
-<span class="cstat-no" title="statement not covered" >                  throw new Error('An unhandled ShellOutputEvent was found.');</span>
+<span class="cstat-no" title="statement not covered" >                  throw new Error("An unhandled ShellOutputEvent was found.");</span>
 <span class="cstat-no" title="statement not covered" >                }</span>
               }
 &nbsp;
@@ -856,7 +856,7 @@ export const useShellCommandProcessor = (
                   )} received]`;
                 } else {
                   currentDisplayOutput =
-                    '[Binary output detected. Halting stream...]';
+                    "[Binary output detected. Halting stream...]";
                 }
               } else {
                 currentDisplayOutput = cumulativeStdout;
@@ -865,7 +865,7 @@ export const useShellCommandProcessor = (
               // Throttle pending UI updates to avoid excessive re-renders.
               if (Date.now() - lastUpdateTime &gt; OUTPUT_UPDATE_INTERVAL_MS) {
                 setPendingHistoryItem({
-                  type: 'tool_group',
+                  type: "tool_group",
                   tools: [
                     {
                       ...initialToolDisplay,
@@ -890,10 +890,10 @@ export const useShellCommandProcessor = (
 &nbsp;
               if (isBinary(result.rawOutput)) {
                 mainContent =
-                  '[Command produced binary output, which is not shown.]';
+                  "[Command produced binary output, which is not shown.]";
               } else {
                 mainContent =
-                  result.output.trim(<span class="branch-0 cbranch-no" title="branch not covered" >) || '(Command produced no output)';</span>
+                  result.output.trim(<span class="branch-0 cbranch-no" title="branch not covered" >) || "(Command produced no output)";</span>
               }
 &nbsp;
               let finalOutput = mainContent;
@@ -914,7 +914,7 @@ export const useShellCommandProcessor = (
               }
 &nbsp;
               if (pwdFilePath &amp;&amp; fs.existsSync(pwdFilePath)) {
-                const finalPwd = fs.readFileSync(pwdFilePath, 'utf8').trim();
+                const finalPwd = fs.readFileSync(pwdFilePath, "utf8").trim();
                 if (finalPwd &amp;&amp; finalPwd !== targetDir) {
                   const warning = `WARNING: shell mode is stateless; the directory change to '${finalPwd}' will not persist.`;
                   finalOutput = `${warning}\n\n${finalOutput}`;
@@ -930,7 +930,7 @@ export const useShellCommandProcessor = (
               // Add the complete, contextual result to the local UI history.
               addItemToHistory(
                 {
-                  type: 'tool_group',
+                  type: "tool_group",
                   tools: [finalToolDisplay],
                 } as HistoryItemWithoutId,
                 userMessageTimestamp,
@@ -949,14 +949,14 @@ export const useShellCommandProcessor = (
                 err instanceof Error ? err.<span class="branch-0 cbranch-no" title="branch not covered" >message : String(err);</span>
               addItemToHistory(
                 {
-                  type: 'error',
+                  type: "error",
                   text: `An unexpected error occurred: ${errorMessage}`,
                 },
                 userMessageTimestamp,
               );
             })
             .finally(() =&gt; {
-              abortSignal.removeEventListener('abort', abortHandler);
+              abortSignal.removeEventListener("abort", abortHandler);
               if (pwdFilePath &amp;&amp; fs.existsSync(pwdFilePath)) {
                 fs.unlinkSync(pwdFilePath);
               }
@@ -968,7 +968,7 @@ export const useShellCommandProcessor = (
           const errorMessage = err instanceof Error ? err.<span class="branch-0 cbranch-no" title="branch not covered" >message : String(err);</span>
           addItemToHistory(
             {
-              type: 'error',
+              type: "error",
               text: `An unexpected error occurred: ${errorMessage}`,
             },
             userMessageTimestamp,
@@ -1009,7 +1009,7 @@ export const useShellCommandProcessor = (
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.374Z
+                at 2025-09-30T22:44:16.879Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

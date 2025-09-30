@@ -3,9 +3,9 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { logApiError, logApiResponse } from '../../telemetry/loggers.js';
-import { ApiErrorEvent, ApiResponseEvent } from '../../telemetry/types.js';
-import { openaiLogger } from '../../utils/openaiLogger.js';
+import { logApiError, logApiResponse } from "../../telemetry/loggers.js";
+import { ApiErrorEvent, ApiResponseEvent } from "../../telemetry/types.js";
+import { openaiLogger } from "../../utils/openaiLogger.js";
 export class DefaultTelemetryService {
     config;
     enableOpenAILogging;
@@ -15,7 +15,7 @@ export class DefaultTelemetryService {
     }
     async logSuccess(context, response, openaiRequest, openaiResponse) {
         // Log API response event for UI telemetry
-        const responseEvent = new ApiResponseEvent(response.responseId || 'unknown', context.model, context.duration, context.userPromptId, context.authType, response.usageMetadata);
+        const responseEvent = new ApiResponseEvent(response.responseId || "unknown", context.model, context.duration, context.userPromptId, context.authType, response.usageMetadata);
         logApiResponse(this.config, responseEvent);
         // Log interaction if enabled
         if (this.enableOpenAILogging && openaiRequest && openaiResponse) {
@@ -27,7 +27,7 @@ export class DefaultTelemetryService {
         // Log API error event for UI telemetry
         const errorEvent = new ApiErrorEvent(
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        error?.requestID || 'unknown', context.model, errorMessage, context.duration, context.userPromptId, context.authType, 
+        error?.requestID || "unknown", context.model, errorMessage, context.duration, context.userPromptId, context.authType, 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         error?.type, 
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -45,7 +45,7 @@ export class DefaultTelemetryService {
             .reverse()
             .find((r) => r.usageMetadata)?.usageMetadata;
         // Log API response event for UI telemetry
-        const responseEvent = new ApiResponseEvent(responses[responses.length - 1]?.responseId || 'unknown', context.model, context.duration, context.userPromptId, context.authType, finalUsageMetadata);
+        const responseEvent = new ApiResponseEvent(responses[responses.length - 1]?.responseId || "unknown", context.model, context.duration, context.userPromptId, context.authType, finalUsageMetadata);
         logApiResponse(this.config, responseEvent);
         // Log interaction if enabled - combine chunks only when needed
         if (this.enableOpenAILogging &&
@@ -63,11 +63,11 @@ export class DefaultTelemetryService {
      */
     combineOpenAIChunksForLogging(chunks) {
         if (chunks.length === 0) {
-            throw new Error('No chunks to combine');
+            throw new Error("No chunks to combine");
         }
         const firstChunk = chunks[0];
         // Combine all content from chunks
-        let combinedContent = '';
+        let combinedContent = "";
         const toolCalls = [];
         let finishReason = null;
         let usage;
@@ -84,9 +84,9 @@ export class DefaultTelemetryService {
                         if (toolCall.index !== undefined) {
                             if (!toolCalls[toolCall.index]) {
                                 toolCalls[toolCall.index] = {
-                                    id: toolCall.id || '',
-                                    type: toolCall.type || 'function',
-                                    function: { name: '', arguments: '' },
+                                    id: toolCall.id || "",
+                                    type: toolCall.type || "function",
+                                    function: { name: "", arguments: "" },
                                 };
                             }
                             if (toolCall.function?.name) {
@@ -112,7 +112,7 @@ export class DefaultTelemetryService {
         }
         // Create the combined ChatCompletion response
         const message = {
-            role: 'assistant',
+            role: "assistant",
             content: combinedContent || null,
             refusal: null,
         };
@@ -122,14 +122,14 @@ export class DefaultTelemetryService {
         }
         const combinedResponse = {
             id: firstChunk.id,
-            object: 'chat.completion',
+            object: "chat.completion",
             created: firstChunk.created,
             model: firstChunk.model,
             choices: [
                 {
                     index: 0,
                     message,
-                    finish_reason: finishReason || 'stop',
+                    finish_reason: finishReason || "stop",
                     logprobs: null,
                 },
             ],

@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { render } from 'ink-testing-library';
-import { OverflowProvider } from '../../contexts/OverflowContext.js';
-import { MaxSizedBox, setMaxSizedBoxDebugging } from './MaxSizedBox.js';
-import { Box, Text } from 'ink';
-import { describe, it, expect } from 'vitest';
+import { render } from "ink-testing-library";
+import { OverflowProvider } from "../../contexts/OverflowContext.js";
+import { MaxSizedBox, setMaxSizedBoxDebugging } from "./MaxSizedBox.js";
+import { Box, Text } from "ink";
+import { describe, it, expect } from "vitest";
 
-describe('<MaxSizedBox />', () => {
+describe("<MaxSizedBox />", () => {
   // Make sure MaxSizedBox logs errors on invalid configurations.
   // This is useful for debugging issues with the component.
   // It should be set to false in production for performance and to avoid
   // cluttering the console if there are ignorable issues.
   setMaxSizedBoxDebugging(true);
 
-  it('renders children without truncation when they fit', () => {
+  it("renders children without truncation when they fit", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={80} maxHeight={10}>
@@ -27,10 +27,10 @@ describe('<MaxSizedBox />', () => {
         </MaxSizedBox>
       </OverflowProvider>,
     );
-    expect(lastFrame()).equals('Hello, World!');
+    expect(lastFrame()).equals("Hello, World!");
   });
 
-  it('hides lines when content exceeds maxHeight', () => {
+  it("hides lines when content exceeds maxHeight", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={80} maxHeight={2}>
@@ -50,7 +50,7 @@ describe('<MaxSizedBox />', () => {
 Line 3`);
   });
 
-  it('hides lines at the end when content exceeds maxHeight and overflowDirection is bottom', () => {
+  it("hides lines at the end when content exceeds maxHeight and overflowDirection is bottom", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={80} maxHeight={2} overflowDirection="bottom">
@@ -70,7 +70,7 @@ Line 3`);
 ... last 2 lines hidden ...`);
   });
 
-  it('wraps text that exceeds maxWidth', () => {
+  it("wraps text that exceeds maxWidth", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={10} maxHeight={5}>
@@ -86,7 +86,7 @@ long line
 of text`);
   });
 
-  it('handles mixed wrapping and non-wrapping segments', () => {
+  it("handles mixed wrapping and non-wrapping segments", () => {
     const multilineText = `This part will wrap around.
 And has a line break.
   Leading spaces preserved.`;
@@ -127,7 +127,7 @@ Longer No Wrap: This
     );
   });
 
-  it('handles words longer than maxWidth by splitting them', () => {
+  it("handles words longer than maxWidth by splitting them", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={5} maxHeight={5}>
@@ -145,7 +145,7 @@ lidoc
 ious`);
   });
 
-  it('does not truncate when maxHeight is undefined', () => {
+  it("does not truncate when maxHeight is undefined", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={80} maxHeight={undefined}>
@@ -202,7 +202,7 @@ Line 3`);
 ... last 2 lines hidden ...`);
   });
 
-  it('renders an empty box for empty children', () => {
+  it("renders an empty box for empty children", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={80} maxHeight={10}></MaxSizedBox>
@@ -210,10 +210,10 @@ Line 3`);
     );
     // Expect an empty string or a box with nothing in it.
     // Ink renders an empty box as an empty string.
-    expect(lastFrame()).equals('');
+    expect(lastFrame()).equals("");
   });
 
-  it('wraps text with multi-byte unicode characters correctly', () => {
+  it("wraps text with multi-byte unicode characters correctly", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={5} maxHeight={5}>
@@ -230,7 +230,7 @@ Line 3`);
 世界`);
   });
 
-  it('wraps text with multi-byte emoji characters correctly', () => {
+  it("wraps text with multi-byte emoji characters correctly", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={5} maxHeight={5}>
@@ -248,7 +248,7 @@ Line 3`);
 🐶`);
   });
 
-  it('falls back to an ellipsis when width is extremely small', () => {
+  it("falls back to an ellipsis when width is extremely small", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={2} maxHeight={2}>
@@ -260,10 +260,10 @@ Line 3`);
       </OverflowProvider>,
     );
 
-    expect(lastFrame()).equals('N…');
+    expect(lastFrame()).equals("N…");
   });
 
-  it('truncates long non-wrapping text with ellipsis', () => {
+  it("truncates long non-wrapping text with ellipsis", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={3} maxHeight={2}>
@@ -275,15 +275,15 @@ Line 3`);
       </OverflowProvider>,
     );
 
-    expect(lastFrame()).equals('AB…');
+    expect(lastFrame()).equals("AB…");
   });
 
-  it('truncates non-wrapping text containing line breaks', () => {
+  it("truncates non-wrapping text containing line breaks", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={3} maxHeight={2}>
           <Box>
-            <Text>{'A\nBCDE'}</Text>
+            <Text>{"A\nBCDE"}</Text>
             <Text wrap="wrap">wrap</Text>
           </Box>
         </MaxSizedBox>
@@ -293,7 +293,7 @@ Line 3`);
     expect(lastFrame()).equals(`A\n…`);
   });
 
-  it('truncates emoji characters correctly with ellipsis', () => {
+  it("truncates emoji characters correctly with ellipsis", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={3} maxHeight={2}>
@@ -308,7 +308,7 @@ Line 3`);
     expect(lastFrame()).equals(`🐶…`);
   });
 
-  it('shows ellipsis for multiple rows with long non-wrapping text', () => {
+  it("shows ellipsis for multiple rows with long non-wrapping text", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={3} maxHeight={3}>
@@ -331,7 +331,7 @@ Line 3`);
     expect(lastFrame()).equals(`AA…\nBB…\nCC…`);
   });
 
-  it('accounts for additionalHiddenLinesCount', () => {
+  it("accounts for additionalHiddenLinesCount", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={80} maxHeight={2} additionalHiddenLinesCount={5}>
@@ -352,7 +352,7 @@ Line 3`);
 Line 3`);
   });
 
-  it('handles React.Fragment as a child', () => {
+  it("handles React.Fragment as a child", () => {
     const { lastFrame } = render(
       <OverflowProvider>
         <MaxSizedBox maxWidth={80} maxHeight={10}>
@@ -375,11 +375,11 @@ Line 2 from Fragment
 Line 3 direct child`);
   });
 
-  it('clips a long single text child from the top', () => {
+  it("clips a long single text child from the top", () => {
     const THIRTY_LINES = Array.from(
       { length: 30 },
       (_, i) => `Line ${i + 1}`,
-    ).join('\n');
+    ).join("\n");
 
     const { lastFrame } = render(
       <OverflowProvider>
@@ -392,18 +392,18 @@ Line 3 direct child`);
     );
 
     const expected = [
-      '... first 21 lines hidden ...',
+      "... first 21 lines hidden ...",
       ...Array.from({ length: 9 }, (_, i) => `Line ${22 + i}`),
-    ].join('\n');
+    ].join("\n");
 
     expect(lastFrame()).equals(expected);
   });
 
-  it('clips a long single text child from the bottom', () => {
+  it("clips a long single text child from the bottom", () => {
     const THIRTY_LINES = Array.from(
       { length: 30 },
       (_, i) => `Line ${i + 1}`,
-    ).join('\n');
+    ).join("\n");
 
     const { lastFrame } = render(
       <OverflowProvider>
@@ -417,8 +417,8 @@ Line 3 direct child`);
 
     const expected = [
       ...Array.from({ length: 9 }, (_, i) => `Line ${i + 1}`),
-      '... last 21 lines hidden ...',
-    ].join('\n');
+      "... last 21 lines hidden ...",
+    ].join("\n");
 
     expect(lastFrame()).equals(expected);
   });

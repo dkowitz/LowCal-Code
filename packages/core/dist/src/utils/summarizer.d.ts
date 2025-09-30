@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { ToolResult } from '../tools/tools.js';
-import type { GeminiClient } from '../core/client.js';
+import type { ToolResult } from "../tools/tools.js";
+import type { GeminiClient } from "../core/client.js";
 /**
  * A function that summarizes the result of a tool execution.
  *

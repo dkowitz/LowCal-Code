@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
-import type { Suggestion } from '../components/SuggestionsDisplay.js';
-import { MAX_SUGGESTIONS_TO_SHOW } from '../components/SuggestionsDisplay.js';
+import type { Suggestion } from "../components/SuggestionsDisplay.js";
+import { MAX_SUGGESTIONS_TO_SHOW } from "../components/SuggestionsDisplay.js";
 
 export interface UseCompletionReturn {
   suggestions: Suggestion[];

@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { useMemo } from 'react';
-import { Box } from 'ink';
-import type { IndividualToolCallDisplay } from '../../types.js';
-import { ToolCallStatus } from '../../types.js';
-import { ToolMessage } from './ToolMessage.js';
-import { ToolConfirmationMessage } from './ToolConfirmationMessage.js';
-import { Colors } from '../../colors.js';
-import type { Config } from '@qwen-code/qwen-code-core';
-import { SHELL_COMMAND_NAME } from '../../constants.js';
+import type React from "react";
+import { useMemo } from "react";
+import { Box } from "ink";
+import type { IndividualToolCallDisplay } from "../../types.js";
+import { ToolCallStatus } from "../../types.js";
+import { ToolMessage } from "./ToolMessage.js";
+import { ToolConfirmationMessage } from "./ToolConfirmationMessage.js";
+import { Colors } from "../../colors.js";
+import type { Config } from "@qwen-code/qwen-code-core";
+import { SHELL_COMMAND_NAME } from "../../constants.js";
 
 interface ToolGroupMessageProps {
   groupId: number;
@@ -53,7 +53,7 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
 
   let countToolCallsWithResults = 0;
   for (const tool of toolCalls) {
-    if (tool.resultDisplay !== undefined && tool.resultDisplay !== '') {
+    if (tool.resultDisplay !== undefined && tool.resultDisplay !== "") {
       countToolCallsWithResults++;
     }
   }
@@ -100,10 +100,10 @@ export const ToolGroupMessage: React.FC<ToolGroupMessageProps> = ({
                 terminalWidth={innerWidth}
                 emphasis={
                   isConfirming
-                    ? 'high'
+                    ? "high"
                     : toolAwaitingApproval
-                      ? 'low'
-                      : 'medium'
+                      ? "low"
+                      : "medium"
                 }
                 renderOutputAsMarkdown={tool.renderOutputAsMarkdown}
                 config={config}

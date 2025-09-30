@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { isGitRepository } from '@qwen-code/qwen-code-core';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import * as childProcess from 'node:child_process';
+import { isGitRepository } from "@qwen-code/qwen-code-core";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as childProcess from "node:child_process";
 export var PackageManager;
 (function (PackageManager) {
     PackageManager["NPM"] = "npm";
@@ -26,14 +26,14 @@ export function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
     }
     try {
         // Normalize path separators to forward slashes for consistent matching.
-        const realPath = fs.realpathSync(cliPath).replace(/\\/g, '/');
-        const normalizedProjectRoot = projectRoot?.replace(/\\/g, '/');
+        const realPath = fs.realpathSync(cliPath).replace(/\\/g, "/");
+        const normalizedProjectRoot = projectRoot?.replace(/\\/g, "/");
         const isGit = isGitRepository(process.cwd());
         // Check for local git clone first
         if (isGit &&
             normalizedProjectRoot &&
             realPath.startsWith(normalizedProjectRoot) &&
-            !realPath.includes('/node_modules/')) {
+            !realPath.includes("/node_modules/")) {
             return {
                 packageManager: PackageManager.UNKNOWN, // Not managed by a package manager in this sense
                 isGlobal: false,
@@ -41,26 +41,26 @@ export function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
             };
         }
         // Check for npx/pnpx
-        if (realPath.includes('/.npm/_npx') || realPath.includes('/npm/_npx')) {
+        if (realPath.includes("/.npm/_npx") || realPath.includes("/npm/_npx")) {
             return {
                 packageManager: PackageManager.NPX,
                 isGlobal: false,
-                updateMessage: 'Running via npx, update not applicable.',
+                updateMessage: "Running via npx, update not applicable.",
             };
         }
-        if (realPath.includes('/.pnpm/_pnpx')) {
+        if (realPath.includes("/.pnpm/_pnpx")) {
             return {
                 packageManager: PackageManager.PNPX,
                 isGlobal: false,
-                updateMessage: 'Running via pnpx, update not applicable.',
+                updateMessage: "Running via pnpx, update not applicable.",
             };
         }
         // Check for Homebrew
-        if (process.platform === 'darwin') {
+        if (process.platform === "darwin") {
             try {
                 // We do not support homebrew for now, keep forward compatibility for future use
                 childProcess.execSync('brew list -1 | grep -q "^qwen-code$"', {
-                    stdio: 'ignore',
+                    stdio: "ignore",
                 });
                 return {
                     packageManager: PackageManager.HOMEBREW,
@@ -73,59 +73,59 @@ export function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
             }
         }
         // Check for pnpm
-        if (realPath.includes('/.pnpm/global')) {
-            const updateCommand = 'pnpm add -g @qwen-code/qwen-code@latest';
+        if (realPath.includes("/.pnpm/global")) {
+            const updateCommand = "pnpm add -g @qwen-code/qwen-code@latest";
             return {
                 packageManager: PackageManager.PNPM,
                 isGlobal: true,
                 updateCommand,
                 updateMessage: isAutoUpdateDisabled
                     ? `Please run ${updateCommand} to update`
-                    : 'Installed with pnpm. Attempting to automatically update now...',
+                    : "Installed with pnpm. Attempting to automatically update now...",
             };
         }
         // Check for yarn
-        if (realPath.includes('/.yarn/global')) {
-            const updateCommand = 'yarn global add @qwen-code/qwen-code@latest';
+        if (realPath.includes("/.yarn/global")) {
+            const updateCommand = "yarn global add @qwen-code/qwen-code@latest";
             return {
                 packageManager: PackageManager.YARN,
                 isGlobal: true,
                 updateCommand,
                 updateMessage: isAutoUpdateDisabled
                     ? `Please run ${updateCommand} to update`
-                    : 'Installed with yarn. Attempting to automatically update now...',
+                    : "Installed with yarn. Attempting to automatically update now...",
             };
         }
         // Check for bun
-        if (realPath.includes('/.bun/install/cache')) {
+        if (realPath.includes("/.bun/install/cache")) {
             return {
                 packageManager: PackageManager.BUNX,
                 isGlobal: false,
-                updateMessage: 'Running via bunx, update not applicable.',
+                updateMessage: "Running via bunx, update not applicable.",
             };
         }
-        if (realPath.includes('/.bun/bin')) {
-            const updateCommand = 'bun add -g @qwen-code/qwen-code@latest';
+        if (realPath.includes("/.bun/bin")) {
+            const updateCommand = "bun add -g @qwen-code/qwen-code@latest";
             return {
                 packageManager: PackageManager.BUN,
                 isGlobal: true,
                 updateCommand,
                 updateMessage: isAutoUpdateDisabled
                     ? `Please run ${updateCommand} to update`
-                    : 'Installed with bun. Attempting to automatically update now...',
+                    : "Installed with bun. Attempting to automatically update now...",
             };
         }
         // Check for local install
         if (normalizedProjectRoot &&
             realPath.startsWith(`${normalizedProjectRoot}/node_modules`)) {
             let pm = PackageManager.NPM;
-            if (fs.existsSync(path.join(projectRoot, 'yarn.lock'))) {
+            if (fs.existsSync(path.join(projectRoot, "yarn.lock"))) {
                 pm = PackageManager.YARN;
             }
-            else if (fs.existsSync(path.join(projectRoot, 'pnpm-lock.yaml'))) {
+            else if (fs.existsSync(path.join(projectRoot, "pnpm-lock.yaml"))) {
                 pm = PackageManager.PNPM;
             }
-            else if (fs.existsSync(path.join(projectRoot, 'bun.lockb'))) {
+            else if (fs.existsSync(path.join(projectRoot, "bun.lockb"))) {
                 pm = PackageManager.BUN;
             }
             return {
@@ -135,14 +135,14 @@ export function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
             };
         }
         // Assume global npm
-        const updateCommand = 'npm install -g @qwen-code/qwen-code@latest';
+        const updateCommand = "npm install -g @qwen-code/qwen-code@latest";
         return {
             packageManager: PackageManager.NPM,
             isGlobal: true,
             updateCommand,
             updateMessage: isAutoUpdateDisabled
                 ? `Please run ${updateCommand} to update`
-                : 'Installed with npm. Attempting to automatically update now...',
+                : "Installed with npm. Attempting to automatically update now...",
         };
     }
     catch (error) {

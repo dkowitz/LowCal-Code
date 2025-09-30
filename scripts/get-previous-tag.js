@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { execSync } from 'child_process';
+import { execSync } from "child_process";
 
 /**
  * Determines the correct previous tag for release notes generation.
@@ -35,7 +35,7 @@ export function getPreviousTag(currentTag) {
 
     return previousTag;
   } catch (error) {
-    console.error('Error getting previous tag:', error.message);
+    console.error("Error getting previous tag:", error.message);
     return null;
   }
 }
@@ -45,7 +45,7 @@ export function getPreviousTag(currentTag) {
  */
 function parseTag(tag) {
   // Remove 'v' prefix if present
-  const cleanTag = tag.startsWith('v') ? tag.substring(1) : tag;
+  const cleanTag = tag.startsWith("v") ? tag.substring(1) : tag;
 
   // Match pattern: X.Y.Z or X.Y.Z-prerelease
   const match = cleanTag.match(/^(\d+)\.(\d+)\.(\d+)(?:-(.+))?$/);
@@ -61,8 +61,8 @@ function parseTag(tag) {
     minor: parseInt(minor),
     patch: parseInt(patch),
     prerelease: prerelease || null,
-    isNightly: prerelease && prerelease.startsWith('nightly'),
-    isPreview: prerelease && prerelease.startsWith('preview'),
+    isNightly: prerelease && prerelease.startsWith("nightly"),
+    isPreview: prerelease && prerelease.startsWith("preview"),
     version: `${major}.${minor}.${patch}`,
   };
 }
@@ -187,7 +187,7 @@ function findPreviousStableTag(currentTagInfo) {
  */
 function tagExists(tag) {
   try {
-    execSync(`git rev-parse --verify ${tag}`, { stdio: 'ignore' });
+    execSync(`git rev-parse --verify ${tag}`, { stdio: "ignore" });
     return true;
   } catch {
     return false;
@@ -199,7 +199,7 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
   const currentTag = process.argv[2];
 
   if (!currentTag) {
-    console.error('Usage: node get-previous-tag.js <current-tag>');
+    console.error("Usage: node get-previous-tag.js <current-tag>");
     process.exit(1);
   }
 
@@ -207,7 +207,7 @@ if (process.argv[1] === new URL(import.meta.url).pathname) {
   if (previousTag) {
     console.log(previousTag);
   } else {
-    console.error('No suitable previous tag found');
+    console.error("No suitable previous tag found");
     process.exit(1);
   }
 }

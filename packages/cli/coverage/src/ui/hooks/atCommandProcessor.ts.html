@@ -1029,23 +1029,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import type { PartListUnion, PartUnion } from '@google/genai';
-import type { AnyToolInvocation, Config } from '@qwen-code/qwen-code-core';
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import type { PartListUnion, PartUnion } from "@google/genai";
+import type { AnyToolInvocation, Config } from "@qwen-code/qwen-code-core";
 import {
   getErrorMessage,
   isNodeError,
   unescapePath,
-} from '@qwen-code/qwen-code-core';
-import type { HistoryItem, IndividualToolCallDisplay } from '../types.js';
-import { ToolCallStatus } from '../types.js';
-import type { UseHistoryManagerReturn } from './useHistoryManager.js';
+} from "@qwen-code/qwen-code-core";
+import type { HistoryItem, IndividualToolCallDisplay } from "../types.js";
+import { ToolCallStatus } from "../types.js";
+import type { UseHistoryManagerReturn } from "./useHistoryManager.js";
 &nbsp;
 interface HandleAtCommandParams {
   query: string;
   config: Config;
-  addItem: UseHistoryManagerReturn['addItem'];
+  addItem: UseHistoryManagerReturn["addItem"];
   onDebugMessage: (message: string) =&gt; void;
   messageId: number;
   signal: AbortSignal;
@@ -1057,7 +1057,7 @@ interface HandleAtCommandResult {
 }
 &nbsp;
 interface AtCommandPart {
-  type: 'text' | 'atPath';
+  type: "text" | "atPath";
   content: string;
 }
 &nbsp;
@@ -1075,8 +1075,8 @@ function parseAllAtCommands(query: string): AtCommandPart[] {
     // Find next unescaped '@'
     while (nextSearchIndex &lt; query.length) {
       if (
-        query[nextSearchIndex] === '@' &amp;&amp;
-        (nextSearchIndex === 0 || query[nextSearchIndex - 1] !== '\\')
+        query[nextSearchIndex] === "@" &amp;&amp;
+        (nextSearchIndex === 0 || query[nextSearchIndex - 1] !== "\\")
       ) {
         atIndex = nextSearchIndex;
         break;
@@ -1087,7 +1087,7 @@ function parseAllAtCommands(query: string): AtCommandPart[] {
     if (atIndex === -1) {
       // No more @
       if (currentIndex &lt; query.length) {
-        parts.push({ type: 'text', content: query.substring(currentIndex) });
+        parts.push({ type: "text", content: query.substring(currentIndex) });
       }
       break;
     }
@@ -1095,7 +1095,7 @@ function parseAllAtCommands(query: string): AtCommandPart[] {
     // Add text before @
     if (atIndex &gt; currentIndex) {
       parts.push({
-        type: 'text',
+        type: "text",
         content: query.substring(currentIndex, atIndex),
       });
     }
@@ -1107,17 +1107,17 @@ function parseAllAtCommands(query: string): AtCommandPart[] {
       const char = query[pathEndIndex];
       if (inEscape) {
         inEscape = false;
-      } else if (char === '\\') {
+      } else if (char === "\\") {
         inEscape = true;
       } else if (/[,\s;!?()[\]{}]/.test(char)) {
         // Path ends at first whitespace or punctuation not escaped
         break;
-      } else if (char === '.') {
+      } else if (char === ".") {
         // For . we need to be more careful - only terminate if followed by whitespace or end of string
         // This allows file extensions like .txt, .js but terminates at sentence endings like "file.txt. Next sentence"
         const nextChar =
-          pathEndIndex + 1 &lt; query.length ? query[pathEndIndex + 1] : '';
-        if (nextChar === '' || /\s/.test(nextChar)) {
+          pathEndIndex + 1 &lt; query.length ? query[pathEndIndex + 1] : "";
+        if (nextChar === "" || /\s/.test(nextChar)) {
           break;
         }
       }
@@ -1126,12 +1126,12 @@ function parseAllAtCommands(query: string): AtCommandPart[] {
     const rawAtPath = query.substring(atIndex, pathEndIndex);
     // unescapePath expects the @ symbol to be present, and will handle it.
     const atPath = unescapePath(rawAtPath);
-    parts.push({ type: 'atPath', content: atPath });
+    parts.push({ type: "atPath", content: atPath });
     currentIndex = pathEndIndex;
   }
   // Filter out empty text parts that might result from consecutive @paths or leading/trailing spaces
   return parts.filter(
-    (part) =&gt; !(part.type === 'text' &amp;&amp; part.content.trim() === ''),
+    (part) =&gt; !(part.type === "text" &amp;&amp; part.content.trim() === ""),
   );
 }
 &nbsp;
@@ -1154,7 +1154,7 @@ export async function handleAtCommand({
 }: HandleAtCommandParams): Promise&lt;HandleAtCommandResult&gt; {
   const commandParts = parseAllAtCommands(query);
   const atPathCommandParts = commandParts.filter(
-    (part) =&gt; part.type === 'atPath',
+    (part) =&gt; part.type === "atPath",
   );
 &nbsp;
   if (atPathCommandParts.length === 0) {
@@ -1176,12 +1176,12 @@ export async function handleAtCommand({
   };
 &nbsp;
   const toolRegistry = config.getToolRegistry();
-  const readManyFilesTool = toolRegistry.getTool('read_many_files');
-  const globTool = toolRegistry.getTool('glob');
+  const readManyFilesTool = toolRegistry.getTool("read_many_files");
+  const globTool = toolRegistry.getTool("glob");
 &nbsp;
   if (!readManyFilesTool) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >    addItem(</span>
-<span class="cstat-no" title="statement not covered" >      { type: 'error', text: 'Error: read_many_files tool not found.' },</span>
+<span class="cstat-no" title="statement not covered" >      { type: "error", text: "Error: read_many_files tool not found." },</span>
 <span class="cstat-no" title="statement not covered" >      userMessageTimestamp,</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 <span class="cstat-no" title="statement not covered" >    return { processedQuery: null, shouldProceed: false };</span>
@@ -1190,9 +1190,9 @@ export async function handleAtCommand({
   for (const atPathPart of atPathCommandParts) {
     const originalAtPath = atPathPart.content; // e.g., "@file.txt" or "@"
 &nbsp;
-    if (originalAtPath === '@') {
+    if (originalAtPath === "@") {
       onDebugMessage(
-        'Lone @ detected, will be treated as text in the modified query.',
+        "Lone @ detected, will be treated as text in the modified query.",
       );
       continue;
     }
@@ -1203,7 +1203,7 @@ export async function handleAtCommand({
       // but as a safeguard:
 <span class="cstat-no" title="statement not covered" >      addItem(</span>
 <span class="cstat-no" title="statement not covered" >        {</span>
-<span class="cstat-no" title="statement not covered" >          type: 'error',</span>
+<span class="cstat-no" title="statement not covered" >          type: "error",</span>
 <span class="cstat-no" title="statement not covered" >          text: `Error: Invalid @ command '${originalAtPath}'. No path specified.`,</span>
 <span class="cstat-no" title="statement not covered" >        },</span>
 <span class="cstat-no" title="statement not covered" >        userMessageTimestamp,</span>
@@ -1238,14 +1238,14 @@ export async function handleAtCommand({
 &nbsp;
     if (gitIgnored || geminiIgnored) {
       const reason =
-        gitIgnored &amp;&amp; <span class="branch-0 cbranch-no" title="branch not covered" >geminiIgnored ? 'both' : g</span>itIgnored ? 'git' : 'gemini';
+        gitIgnored &amp;&amp; <span class="branch-0 cbranch-no" title="branch not covered" >geminiIgnored ? "both" : g</span>itIgnored ? "git" : "gemini";
       ignoredByReason[reason].push(pathName);
       const reasonText =
-        reason === <span class="branch-0 cbranch-no" title="branch not covered" >'both'</span>
-<span class="cstat-no" title="statement not covered" >          ? 'ignored by both git and gemini'</span>
-          : reason === 'git'
-            ? 'git-ignored'
-            : 'gemini-ignored';
+        reason === <span class="branch-0 cbranch-no" title="branch not covered" >"both"</span>
+<span class="cstat-no" title="statement not covered" >          ? "ignored by both git and gemini"</span>
+          : reason === "git"
+            ? "git-ignored"
+            : "gemini-ignored";
       onDebugMessage(`Path ${pathName} is ${reasonText} and will be skipped.`);
       continue;
     }
@@ -1267,7 +1267,7 @@ export async function handleAtCommand({
         }
         resolvedSuccessfully = true;
       } catch (error) {
-        if (isNodeError(error) &amp;&amp; error.code === 'ENOENT') {
+        if (isNodeError(error) &amp;&amp; error.code === "ENOENT") {
           if (config.getEnableRecursiveFileSearch() &amp;&amp; globTool) {
             onDebugMessage(
               `Path ${pathName} not found directly, attempting glob search.`,
@@ -1282,11 +1282,11 @@ export async function handleAtCommand({
               );
               if (
                 globResult.llmContent &amp;&amp;
-                typeof globResult.llmContent === 'string' &amp;&amp;
-                !globResult.llmContent.startsWith('No files found'<span class="branch-0 cbranch-no" title="branch not covered" >) &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >                !globResult.llmContent.startsWith('Error:')</span>
+                typeof globResult.llmContent === "string" &amp;&amp;
+                !globResult.llmContent.startsWith("No files found"<span class="branch-0 cbranch-no" title="branch not covered" >) &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >                !globResult.llmContent.startsWith("Error:")</span>
               ) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >                const lines = globResult.llmContent.split('\n');</span>
+<span class="cstat-no" title="statement not covered" >                const lines = globResult.llmContent.split("\n");</span>
 <span class="cstat-no" title="statement not covered" >                if (lines.length &gt; 1 &amp;&amp; lines[1]) {</span>
 <span class="cstat-no" title="statement not covered" >                  const firstMatchAbsolute = lines[1].trim();</span>
 <span class="cstat-no" title="statement not covered" >                  currentPathSpec = path.relative(dir, firstMatchAbsolute);</span>
@@ -1336,10 +1336,10 @@ export async function handleAtCommand({
   }
 &nbsp;
   // Construct the initial part of the query for the LLM
-  let initialQueryText = '';
+  let initialQueryText = "";
   for (let i = 0; i &lt; commandParts.length; i++) {
     const part = commandParts[i];
-    if (part.type === 'text') {
+    if (part.type === "text") {
       initialQueryText += part.content;
     } else {
       // type === 'atPath'
@@ -1347,16 +1347,16 @@ export async function handleAtCommand({
       if (
         i &gt; 0 &amp;&amp;
         initialQueryText.length &gt; 0 &amp;&amp;
-        !initialQueryText.endsWith(' ')
+        !initialQueryText.endsWith(" ")
       ) {
         // Add space if previous part was text and didn't end with space, or if previous was @path
         const prevPart = commandParts[i - 1];
         if (
-          prevPart.type === 'text' ||
-          (prevPart.type === 'atPath' &amp;&amp;
+          prevPart.type === "text" ||
+          (prevPart.type === "atPath" &amp;&amp;
             atPathToResolvedSpecMap.has(prevPart.content))
         ) {
-          initialQueryText += ' ';
+          initialQueryText += " ";
         }
       }
       if (resolvedSpec) {
@@ -1367,10 +1367,10 @@ export async function handleAtCommand({
         if (
           i &gt; 0 &amp;&amp;
           initialQueryText.length &gt; 0 &amp;&amp;
-          !initialQueryText.endsWith(' '<span class="branch-0 cbranch-no" title="branch not covered" >) &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >          !part.content.startsWith(' ')</span>
+          !initialQueryText.endsWith(" "<span class="branch-0 cbranch-no" title="branch not covered" >) &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >          !part.content.startsWith(" ")</span>
         ) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >          initialQueryText += ' ';</span>
+<span class="cstat-no" title="statement not covered" >          initialQueryText += " ";</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
         initialQueryText += part.content;
       }
@@ -1380,31 +1380,31 @@ export async function handleAtCommand({
 &nbsp;
   // Inform user about ignored paths
   const totalIgnored =
-    ignoredByReason['git'].length +
-    ignoredByReason['gemini'].length +
-    ignoredByReason['both'].length;
+    ignoredByReason["git"].length +
+    ignoredByReason["gemini"].length +
+    ignoredByReason["both"].length;
 &nbsp;
   if (totalIgnored &gt; 0) {
     const messages = [];
-    if (ignoredByReason['git'].length) {
-      messages.push(`Git-ignored: ${ignoredByReason['git'].join(', ')}`);
+    if (ignoredByReason["git"].length) {
+      messages.push(`Git-ignored: ${ignoredByReason["git"].join(", ")}`);
     }
-    if (ignoredByReason['gemini'].length) {
-      messages.push(`Gemini-ignored: ${ignoredByReason['gemini'].join(', ')}`);
+    if (ignoredByReason["gemini"].length) {
+      messages.push(`Gemini-ignored: ${ignoredByReason["gemini"].join(", ")}`);
     }
-    if (ignoredByReason['both'].length) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >      messages.push(`Ignored by both: ${ignoredByReason['both'].join(', ')}`);</span>
+    if (ignoredByReason["both"].length) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >      messages.push(`Ignored by both: ${ignoredByReason["both"].join(", ")}`);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-    const message = `Ignored ${totalIgnored} files:\n${messages.join('\n')}`;
+    const message = `Ignored ${totalIgnored} files:\n${messages.join("\n")}`;
     console.log(message);
     onDebugMessage(message);
   }
 &nbsp;
   // Fallback for lone "@" or completely invalid @-commands resulting in empty initialQueryText
   if (pathSpecsToRead.length === 0) {
-    onDebugMessage('No valid file paths found in @ commands to read.');
-    if (initialQueryText === '@' &amp;&amp; query.trim() === '@') {
+    onDebugMessage("No valid file paths found in @ commands to read.");
+    if (initialQueryText === "@" &amp;&amp; query.trim() === "@") {
       // If the only thing was a lone @, pass original query (which might have spaces)
       return { processedQuery: [{ text: query }], shouldProceed: true };
     } else if (!<span class="branch-0 cbranch-no" title="branch not covered" >initialQueryText &amp;&amp; query) <span class="branch-0 cbranch-no" title="branch not covered" >{</span></span>
@@ -1441,17 +1441,17 @@ export async function handleAtCommand({
       status: ToolCallStatus.Success,
       resultDisplay:
         result.<span class="branch-0 cbranch-no" title="branch not covered" >returnDisplay ||</span>
-<span class="cstat-no" title="statement not covered" >        `Successfully read: ${contentLabelsForDisplay.join(', ')}`,</span>
+<span class="cstat-no" title="statement not covered" >        `Successfully read: ${contentLabelsForDisplay.join(", ")}`,</span>
       confirmationDetails: undefined,
     };
 &nbsp;
     if (Array.isArray(result.llmContent)) {
       const fileContentRegex = /^--- (.*?) ---\n\n([\s\S]*?)\n\n$/;
       processedQueryParts.push({
-        text: '\n--- Content from referenced files ---',
+        text: "\n--- Content from referenced files ---",
       });
       for (const part of result.llmContent) {
-        if (typeof part === 'string') {
+        if (typeof part === "string") {
           const match = fileContentRegex.exec(part);
           if (match) {
             const filePathSpecInContent = match[1]; // This is a resolved pathSpec
@@ -1470,14 +1470,14 @@ export async function handleAtCommand({
       }
 <span class="branch-0 cbranch-no" title="branch not covered" >    } else {</span>
 <span class="cstat-no" title="statement not covered" >      onDebugMessage(</span>
-<span class="cstat-no" title="statement not covered" >        'read_many_files tool returned no content or empty content.',</span>
+<span class="cstat-no" title="statement not covered" >        "read_many_files tool returned no content or empty content.",</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     addItem(
-      { type: 'tool_group', tools: [toolCallDisplay] } as Omit&lt;
+      { type: "tool_group", tools: [toolCallDisplay] } as Omit&lt;
         HistoryItem,
-        'id'
+        "id"
       &gt;,
       userMessageTimestamp,
     );
@@ -1488,15 +1488,15 @@ export async function handleAtCommand({
 <span class="cstat-no" title="statement not covered" >      name: readManyFilesTool.displayName,</span>
 <span class="cstat-no" title="statement not covered" >      description:</span>
 <span class="cstat-no" title="statement not covered" >        invocation?.getDescription() ??</span>
-<span class="cstat-no" title="statement not covered" >        'Error attempting to execute tool to read files',</span>
+<span class="cstat-no" title="statement not covered" >        "Error attempting to execute tool to read files",</span>
 <span class="cstat-no" title="statement not covered" >      status: ToolCallStatus.Error,</span>
-<span class="cstat-no" title="statement not covered" >      resultDisplay: `Error reading files (${contentLabelsForDisplay.join(', ')}): ${getErrorMessage(error)}`,</span>
+<span class="cstat-no" title="statement not covered" >      resultDisplay: `Error reading files (${contentLabelsForDisplay.join(", ")}): ${getErrorMessage(error)}`,</span>
 <span class="cstat-no" title="statement not covered" >      confirmationDetails: undefined,</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >    addItem(</span>
-<span class="cstat-no" title="statement not covered" >      { type: 'tool_group', tools: [toolCallDisplay] } as Omit&lt;</span>
+<span class="cstat-no" title="statement not covered" >      { type: "tool_group", tools: [toolCallDisplay] } as Omit&lt;</span>
         HistoryItem,
-        'id'
+        "id"
       &gt;,
 <span class="cstat-no" title="statement not covered" >      userMessageTimestamp,</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
@@ -1510,7 +1510,7 @@ export async function handleAtCommand({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.148Z
+                at 2025-09-30T22:44:16.802Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

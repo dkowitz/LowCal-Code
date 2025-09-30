@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Settings } from './settings.js';
+import type { Settings } from "./settings.js";
 export declare const TRUSTED_FOLDERS_FILENAME = "trustedFolders.json";
 export declare const SETTINGS_DIRECTORY_NAME = ".qwen";
 export declare const USER_SETTINGS_DIR: string;

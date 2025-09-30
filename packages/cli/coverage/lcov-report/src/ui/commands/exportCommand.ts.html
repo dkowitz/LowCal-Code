@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">70.11% </span>
+                <span class="strong">70.45% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>61/87</span>
+                <span class='fraction'>62/88</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">70.11% </span>
+                <span class="strong">70.45% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>61/87</span>
+                <span class='fraction'>62/88</span>
             </div>
         
             
@@ -167,7 +167,9 @@
 <a name='L102'></a><a href='#L102'>102</a>
 <a name='L103'></a><a href='#L103'>103</a>
 <a name='L104'></a><a href='#L104'>104</a>
-<a name='L105'></a><a href='#L105'>105</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L105'></a><a href='#L105'>105</a>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -179,6 +181,7 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
@@ -271,75 +274,77 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">1x</span></td><td class="text"><pre class="prettyprint lang-js">/**
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @license
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type { SlashCommand } from './types.js';
-import { CommandKind } from './types.js';
+import type { SlashCommand } from "./types.js";
+import { CommandKind } from "./types.js";
 &nbsp;
-import fs from 'node:fs';
-import path from 'node:path';
+import fs from "node:fs";
+import path from "node:path";
 &nbsp;
 export const exportCommand: SlashCommand = {
-  name: 'export',
-  description: 'save the current conversation to a markdown file in the current working directory',
+  name: "export",
+  description:
+    "save the current conversation to a markdown file in the current working directory",
   kind: CommandKind.BUILT_IN,
   action: async (context, args) =&gt; {
     const history = context.ui.getHistory();
-    
+&nbsp;
     // Determine filename
-    let fileName = 'conversation.md';
+    let fileName = "conversation.md";
     if (args &amp;&amp; args.trim()) {
       fileName = args.trim();
       // Sanitize filename
-      fileName = fileName.replace(/[^a-zA-Z0-9._-]/g, '_');
-      if (!fileName.endsWith('.md')) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >        fileName += '.md';</span>
+      fileName = fileName.replace(/[^a-zA-Z0-9._-]/g, "_");
+      if (!fileName.endsWith(".md")) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >        fileName += ".md";</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
     }
-    
+&nbsp;
     const fullPath = path.join(process.cwd(), fileName);
-    
+&nbsp;
     // Format markdown content
     let markdownContent = `# Qwen Code Conversation Export\n\n`;
     const now = new Date();
     markdownContent += `**Exported:** ${now.toLocaleString()}\n`;
-    markdownContent += `**Session ID:** ${context.services.config?.getSessionId(<span class="branch-0 cbranch-no" title="branch not covered" >) || 'unknown'}</span>\n\n`;
-    
+    markdownContent += `**Session ID:** ${context.services.config?.getSessionId(<span class="branch-0 cbranch-no" title="branch not covered" >) || "unknown"}</span>\n\n`;
+&nbsp;
     // Process history items
     for (const item of history) {
       switch (item.type) {
-        case 'user':
+        case "user":
           if (item.text) {
             markdownContent += `## User Message\n\n${item.text.trim()}\n\n---\n\n`;
           }
           break;
-        case 'gemini':
-        case 'gemini_content':
+        case "gemini":
+        case "gemini_content":
           if (item.text) {
             markdownContent += `## Assistant Response\n\n${item.text.trim()}\n\n---\n\n`;
           }
           break;
-<span class="branch-0 cbranch-no" title="branch not covered" >        case 'info':</span>
+<span class="branch-0 cbranch-no" title="branch not covered" >        case "info":</span>
 <span class="cstat-no" title="statement not covered" >          if (item.text) {</span>
 <span class="cstat-no" title="statement not covered" >            markdownContent += `### Info\n\n&gt; ${item.text.trim()}\n\n`;</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >          break;</span>
-<span class="branch-0 cbranch-no" title="branch not covered" >        case 'error':</span>
+<span class="branch-0 cbranch-no" title="branch not covered" >        case "error":</span>
 <span class="cstat-no" title="statement not covered" >          if (item.text) {</span>
 <span class="cstat-no" title="statement not covered" >            markdownContent += `### Error\n\n**Error:** ${item.text.trim()}\n\n`;</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >          break;</span>
-<span class="branch-0 cbranch-no" title="branch not covered" >        case 'tool_group':</span>
+<span class="branch-0 cbranch-no" title="branch not covered" >        case "tool_group":</span>
 <span class="cstat-no" title="statement not covered" >          markdownContent += `### Tool Execution\n\n`;</span>
 <span class="cstat-no" title="statement not covered" >          if (item.tools) {</span>
 <span class="cstat-no" title="statement not covered" >            for (const tool of item.tools) {</span>
 <span class="cstat-no" title="statement not covered" >              markdownContent += `**Tool:** ${tool.name}\n`;</span>
 <span class="cstat-no" title="statement not covered" >              if (tool.resultDisplay) {</span>
-<span class="cstat-no" title="statement not covered" >                markdownContent += `**Result:** ${typeof tool.resultDisplay === 'string' ? tool.resultDisplay : JSON.stringify(tool.resultDisplay)}\n`;</span>
+<span class="cstat-no" title="statement not covered" >                markdownContent += `**Result:** ${typeof tool.resultDisplay === "string" ? tool.resultDisplay : JSON.stringify(tool.resultDisplay)}\n`;</span>
 <span class="cstat-no" title="statement not covered" >              }</span>
 <span class="cstat-no" title="statement not covered" >              markdownContent += `\n`;</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
@@ -354,35 +359,36 @@ export const exportCommand: SlashCommand = {
 <span class="cstat-no" title="statement not covered" >          break;</span>
       }
     }
-    
+&nbsp;
     try {
-      fs.writeFileSync(fullPath, markdownContent, 'utf8');
+      fs.writeFileSync(fullPath, markdownContent, "utf8");
       context.ui.addItem(
         {
-          type: 'info',
+          type: "info",
           text: `✅ Conversation exported successfully to \`${fileName}\``,
         },
-        Date.now()
+        Date.now(),
       );
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.<span class="branch-0 cbranch-no" title="branch not covered" >message : 'Unknown error';</span>
+      const errorMsg = error instanceof Error ? error.<span class="branch-0 cbranch-no" title="branch not covered" >message : "Unknown error";</span>
       context.ui.addItem(
         {
-          type: 'error',
+          type: "error",
           text: `❌ Failed to export conversation: ${errorMsg}`,
         },
-        Date.now()
+        Date.now(),
       );
     }
   },
-};</pre></td></tr></table></pre>
+};
+&nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
             </div><!-- /wrapper -->
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.374Z
+                at 2025-09-30T22:44:16.879Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

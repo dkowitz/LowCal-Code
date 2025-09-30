@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { StreamingState } from '../types.js';
-import { useTimer } from './useTimer.js';
-import { usePhraseCycler } from './usePhraseCycler.js';
-import { useState, useEffect, useRef } from 'react'; // Added useRef
+import { StreamingState } from "../types.js";
+import { useTimer } from "./useTimer.js";
+import { usePhraseCycler } from "./usePhraseCycler.js";
+import { useState, useEffect, useRef } from "react"; // Added useRef
 export const useLoadingIndicator = (streamingState) => {
     const [timerResetKey, setTimerResetKey] = useState(0);
     const isTimerActive = streamingState === StreamingState.Responding;

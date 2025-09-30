@@ -7,10 +7,10 @@
 /**
  * @fileoverview Disallows relative imports between specified monorepo packages.
  */
-'use strict';
+"use strict";
 
-import path from 'node:path';
-import fs from 'node:fs';
+import path from "node:path";
+import fs from "node:fs";
 
 /**
  * Finds the package name by searching for the nearest `package.json` file
@@ -34,9 +34,9 @@ function findPackageName(filePath, root) {
   let currentDir = path.dirname(path.resolve(filePath));
   while (currentDir !== root) {
     const parentDir = path.dirname(currentDir);
-    const packageJsonPath = path.join(currentDir, 'package.json');
+    const packageJsonPath = path.join(currentDir, "package.json");
     if (fs.existsSync(packageJsonPath)) {
-      const pkg = JSON.parse(fs.readFileSync(packageJsonPath, 'utf-8'));
+      const pkg = JSON.parse(fs.readFileSync(packageJsonPath, "utf-8"));
       return pkg.name;
     }
 
@@ -51,24 +51,24 @@ function findPackageName(filePath, root) {
 
 export default {
   meta: {
-    type: 'problem',
+    type: "problem",
     docs: {
-      description: 'Disallow relative imports between packages.',
-      category: 'Best Practices',
-      recommended: 'error',
+      description: "Disallow relative imports between packages.",
+      category: "Best Practices",
+      recommended: "error",
     },
-    fixable: 'code',
+    fixable: "code",
     schema: [
       {
-        type: 'object',
+        type: "object",
         properties: {
           root: {
-            type: 'string',
+            type: "string",
             description:
-              'Absolute path to the root of all relevant packages to consider.',
+              "Absolute path to the root of all relevant packages to consider.",
           },
         },
-        required: ['root'],
+        required: ["root"],
         additionalProperties: false,
       },
     ],
@@ -87,8 +87,8 @@ export default {
     const currentFilePath = context.filename;
     if (
       !currentFilePath ||
-      currentFilePath === '<input>' ||
-      currentFilePath === '<text>'
+      currentFilePath === "<input>" ||
+      currentFilePath === "<text>"
     ) {
       // Skip if filename is not available (e.g., linting raw text)
       return {};
@@ -109,8 +109,8 @@ export default {
         // Only interested in relative paths
         if (
           !importedPath ||
-          typeof importedPath !== 'string' ||
-          !importedPath.startsWith('.')
+          typeof importedPath !== "string" ||
+          !importedPath.startsWith(".")
         ) {
           return;
         }
@@ -131,7 +131,7 @@ export default {
         if (!importedPackage) {
           context.report({
             node: node.source,
-            messageId: 'relativeImportIsInvalidPackage',
+            messageId: "relativeImportIsInvalidPackage",
             data: { importedPath: importedPath },
           });
           return;
@@ -142,7 +142,7 @@ export default {
           // We found a relative import crossing package boundaries
           context.report({
             node: node.source, // Report the error on the source string literal
-            messageId: 'noRelativePathsForCrossPackageImport',
+            messageId: "noRelativePathsForCrossPackageImport",
             data: {
               importedPath,
               importedPackage,

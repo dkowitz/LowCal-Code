@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Box } from 'ink';
-import { MarkdownDisplay } from '../../utils/MarkdownDisplay.js';
+import type React from "react";
+import { Box } from "ink";
+import { MarkdownDisplay } from "../../utils/MarkdownDisplay.js";
 
 interface GeminiMessageContentProps {
   text: string;
@@ -27,7 +27,7 @@ export const GeminiMessageContent: React.FC<GeminiMessageContentProps> = ({
   availableTerminalHeight,
   terminalWidth,
 }) => {
-  const originalPrefix = '✦ ';
+  const originalPrefix = "✦ ";
   const prefixWidth = originalPrefix.length;
 
   return (

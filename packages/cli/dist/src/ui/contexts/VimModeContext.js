@@ -4,20 +4,20 @@ import { jsx as _jsx } from "react/jsx-runtime";
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { createContext, useCallback, useContext, useEffect, useState, } from 'react';
-import { SettingScope } from '../../config/settings.js';
+import { createContext, useCallback, useContext, useEffect, useState, } from "react";
+import { SettingScope } from "../../config/settings.js";
 const VimModeContext = createContext(undefined);
 export const VimModeProvider = ({ children, settings, }) => {
     const initialVimEnabled = settings.merged.general?.vimMode ?? false;
     const [vimEnabled, setVimEnabled] = useState(initialVimEnabled);
-    const [vimMode, setVimMode] = useState(initialVimEnabled ? 'NORMAL' : 'INSERT');
+    const [vimMode, setVimMode] = useState(initialVimEnabled ? "NORMAL" : "INSERT");
     useEffect(() => {
         // Initialize vimEnabled from settings on mount
         const enabled = settings.merged.general?.vimMode ?? false;
         setVimEnabled(enabled);
         // When vim mode is enabled, always start in NORMAL mode
         if (enabled) {
-            setVimMode('NORMAL');
+            setVimMode("NORMAL");
         }
     }, [settings.merged.general?.vimMode]);
     const toggleVimEnabled = useCallback(async () => {
@@ -25,9 +25,9 @@ export const VimModeProvider = ({ children, settings, }) => {
         setVimEnabled(newValue);
         // When enabling vim mode, start in NORMAL mode
         if (newValue) {
-            setVimMode('NORMAL');
+            setVimMode("NORMAL");
         }
-        await settings.setValue(SettingScope.User, 'general.vimMode', newValue);
+        await settings.setValue(SettingScope.User, "general.vimMode", newValue);
         return newValue;
     }, [vimEnabled, settings]);
     const value = {
@@ -41,7 +41,7 @@ export const VimModeProvider = ({ children, settings, }) => {
 export const useVimMode = () => {
     const context = useContext(VimModeContext);
     if (context === undefined) {
-        throw new Error('useVimMode must be used within a VimModeProvider');
+        throw new Error("useVimMode must be used within a VimModeProvider");
     }
     return context;
 };

@@ -4,148 +4,148 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { type ColorsTheme, Theme } from './theme.js';
+import { type ColorsTheme, Theme } from "./theme.js";
 
 const xcodeColors: ColorsTheme = {
-  type: 'light',
-  Background: '#fff',
-  Foreground: '#444',
-  LightBlue: '#0E0EFF',
-  AccentBlue: '#1c00cf',
-  AccentPurple: '#aa0d91',
-  AccentCyan: '#3F6E74',
-  AccentGreen: '#007400',
-  AccentYellow: '#836C28',
-  AccentRed: '#c41a16',
-  DiffAdded: '#C6EAD8',
-  DiffRemoved: '#FEDEDE',
-  Comment: '#007400',
-  Gray: '#c0c0c0',
-  GradientColors: ['#1c00cf', '#007400'],
+  type: "light",
+  Background: "#fff",
+  Foreground: "#444",
+  LightBlue: "#0E0EFF",
+  AccentBlue: "#1c00cf",
+  AccentPurple: "#aa0d91",
+  AccentCyan: "#3F6E74",
+  AccentGreen: "#007400",
+  AccentYellow: "#836C28",
+  AccentRed: "#c41a16",
+  DiffAdded: "#C6EAD8",
+  DiffRemoved: "#FEDEDE",
+  Comment: "#007400",
+  Gray: "#c0c0c0",
+  GradientColors: ["#1c00cf", "#007400"],
 };
 
 export const XCode: Theme = new Theme(
-  'Xcode',
-  'light',
+  "Xcode",
+  "light",
   {
     hljs: {
-      display: 'block',
-      overflowX: 'auto',
-      padding: '0.5em',
+      display: "block",
+      overflowX: "auto",
+      padding: "0.5em",
       background: xcodeColors.Background,
       color: xcodeColors.Foreground,
     },
-    'xml .hljs-meta': {
+    "xml .hljs-meta": {
       color: xcodeColors.Gray,
     },
-    'hljs-comment': {
+    "hljs-comment": {
       color: xcodeColors.Comment,
     },
-    'hljs-quote': {
+    "hljs-quote": {
       color: xcodeColors.Comment,
     },
-    'hljs-tag': {
+    "hljs-tag": {
       color: xcodeColors.AccentPurple,
     },
-    'hljs-attribute': {
+    "hljs-attribute": {
       color: xcodeColors.AccentPurple,
     },
-    'hljs-keyword': {
+    "hljs-keyword": {
       color: xcodeColors.AccentPurple,
     },
-    'hljs-selector-tag': {
+    "hljs-selector-tag": {
       color: xcodeColors.AccentPurple,
     },
-    'hljs-literal': {
+    "hljs-literal": {
       color: xcodeColors.AccentPurple,
     },
-    'hljs-name': {
+    "hljs-name": {
       color: xcodeColors.AccentPurple,
     },
-    'hljs-variable': {
+    "hljs-variable": {
       color: xcodeColors.AccentCyan,
     },
-    'hljs-template-variable': {
+    "hljs-template-variable": {
       color: xcodeColors.AccentCyan,
     },
-    'hljs-code': {
+    "hljs-code": {
       color: xcodeColors.AccentRed,
     },
-    'hljs-string': {
+    "hljs-string": {
       color: xcodeColors.AccentRed,
     },
-    'hljs-meta-string': {
+    "hljs-meta-string": {
       color: xcodeColors.AccentRed,
     },
-    'hljs-regexp': {
+    "hljs-regexp": {
       color: xcodeColors.LightBlue,
     },
-    'hljs-link': {
+    "hljs-link": {
       color: xcodeColors.LightBlue,
     },
-    'hljs-title': {
+    "hljs-title": {
       color: xcodeColors.AccentBlue,
     },
-    'hljs-symbol': {
+    "hljs-symbol": {
       color: xcodeColors.AccentBlue,
     },
-    'hljs-bullet': {
+    "hljs-bullet": {
       color: xcodeColors.AccentBlue,
     },
-    'hljs-number': {
+    "hljs-number": {
       color: xcodeColors.AccentBlue,
     },
-    'hljs-section': {
+    "hljs-section": {
       color: xcodeColors.AccentYellow,
     },
-    'hljs-meta': {
+    "hljs-meta": {
       color: xcodeColors.AccentYellow,
     },
-    'hljs-class .hljs-title': {
+    "hljs-class .hljs-title": {
       color: xcodeColors.AccentPurple,
     },
-    'hljs-type': {
+    "hljs-type": {
       color: xcodeColors.AccentPurple,
     },
-    'hljs-built_in': {
+    "hljs-built_in": {
       color: xcodeColors.AccentPurple,
     },
-    'hljs-builtin-name': {
+    "hljs-builtin-name": {
       color: xcodeColors.AccentPurple,
     },
-    'hljs-params': {
+    "hljs-params": {
       color: xcodeColors.AccentPurple,
     },
-    'hljs-attr': {
+    "hljs-attr": {
       color: xcodeColors.AccentYellow,
     },
-    'hljs-subst': {
+    "hljs-subst": {
       color: xcodeColors.Foreground,
     },
-    'hljs-formula': {
-      backgroundColor: '#eee',
-      fontStyle: 'italic',
+    "hljs-formula": {
+      backgroundColor: "#eee",
+      fontStyle: "italic",
     },
-    'hljs-addition': {
-      backgroundColor: '#baeeba',
+    "hljs-addition": {
+      backgroundColor: "#baeeba",
     },
-    'hljs-deletion': {
-      backgroundColor: '#ffc8bd',
+    "hljs-deletion": {
+      backgroundColor: "#ffc8bd",
     },
-    'hljs-selector-id': {
+    "hljs-selector-id": {
       color: xcodeColors.AccentYellow,
     },
-    'hljs-selector-class': {
+    "hljs-selector-class": {
       color: xcodeColors.AccentYellow,
     },
-    'hljs-doctag': {
-      fontWeight: 'bold',
+    "hljs-doctag": {
+      fontWeight: "bold",
     },
-    'hljs-strong': {
-      fontWeight: 'bold',
+    "hljs-strong": {
+      fontWeight: "bold",
     },
-    'hljs-emphasis': {
-      fontStyle: 'italic',
+    "hljs-emphasis": {
+      fontStyle: "italic",
     },
   },
   xcodeColors,

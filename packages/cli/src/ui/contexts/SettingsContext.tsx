@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useContext } from 'react';
-import type { LoadedSettings } from '../../config/settings.js';
+import React, { useContext } from "react";
+import type { LoadedSettings } from "../../config/settings.js";
 
 export const SettingsContext = React.createContext<LoadedSettings | undefined>(
   undefined,
@@ -14,7 +14,7 @@ export const SettingsContext = React.createContext<LoadedSettings | undefined>(
 export const useSettings = () => {
   const context = useContext(SettingsContext);
   if (context === undefined) {
-    throw new Error('useSettings must be used within a SettingsProvider');
+    throw new Error("useSettings must be used within a SettingsProvider");
   }
   return context;
 };

@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { MCPServerConfig, BugCommandSettings, TelemetrySettings, AuthType, ChatCompressionSettings } from '@qwen-code/qwen-code-core';
-import type { CustomTheme } from '../ui/themes/theme.js';
+import type { MCPServerConfig, BugCommandSettings, TelemetrySettings, AuthType, ChatCompressionSettings } from "@qwen-code/qwen-code-core";
+import type { CustomTheme } from "../ui/themes/theme.js";
 export interface SettingDefinition {
-    type: 'boolean' | 'string' | 'number' | 'array' | 'object';
+    type: "boolean" | "string" | "number" | "array" | "object";
     label: string;
     category: string;
     requiresRestart: boolean;
@@ -21,8 +21,8 @@ export interface SettingDefinition {
 export interface SettingsSchema {
     [key: string]: SettingDefinition;
 }
-export type MemoryImportFormat = 'tree' | 'flat';
-export type DnsResolutionOrder = 'ipv4first' | 'verbatim';
+export type MemoryImportFormat = "tree" | "flat";
+export type DnsResolutionOrder = "ipv4first" | "verbatim";
 /**
  * The canonical schema for all settings.
  * The structure of this object defines the structure of the `Settings` type.
@@ -976,7 +976,7 @@ export declare const SETTINGS_SCHEMA: {
 type InferSettings<T extends SettingsSchema> = {
     -readonly [K in keyof T]?: T[K] extends {
         properties: SettingsSchema;
-    } ? InferSettings<T[K]['properties']> : T[K]['default'] extends boolean ? boolean : T[K]['default'];
+    } ? InferSettings<T[K]["properties"]> : T[K]["default"] extends boolean ? boolean : T[K]["default"];
 };
 export type Settings = InferSettings<typeof SETTINGS_SCHEMA>;
 export {};

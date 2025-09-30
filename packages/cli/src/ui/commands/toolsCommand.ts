@@ -8,19 +8,19 @@ import {
   type CommandContext,
   type SlashCommand,
   CommandKind,
-} from './types.js';
-import { MessageType } from '../types.js';
+} from "./types.js";
+import { MessageType } from "../types.js";
 
 export const toolsCommand: SlashCommand = {
-  name: 'tools',
-  description: 'list available Qwen Code tools. Usage: /tools [desc]',
+  name: "tools",
+  description: "list available Qwen Code tools. Usage: /tools [desc]",
   kind: CommandKind.BUILT_IN,
   action: async (context: CommandContext, args?: string): Promise<void> => {
     const subCommand = args?.trim();
 
     // Default to NOT showing descriptions. The user must opt in with an argument.
     let useShowDescriptions = false;
-    if (subCommand === 'desc' || subCommand === 'descriptions') {
+    if (subCommand === "desc" || subCommand === "descriptions") {
       useShowDescriptions = true;
     }
 
@@ -29,7 +29,7 @@ export const toolsCommand: SlashCommand = {
       context.ui.addItem(
         {
           type: MessageType.ERROR,
-          text: 'Could not retrieve tool registry.',
+          text: "Could not retrieve tool registry.",
         },
         Date.now(),
       );
@@ -38,20 +38,20 @@ export const toolsCommand: SlashCommand = {
 
     const tools = toolRegistry.getAllTools();
     // Filter out MCP tools by checking for the absence of a serverName property
-    const geminiTools = tools.filter((tool) => !('serverName' in tool));
+    const geminiTools = tools.filter((tool) => !("serverName" in tool));
 
-    let message = 'Available Qwen Code tools:\n\n';
+    let message = "Available Qwen Code tools:\n\n";
 
     if (geminiTools.length > 0) {
       geminiTools.forEach((tool) => {
         if (useShowDescriptions && tool.description) {
           message += `  - \u001b[36m${tool.displayName} (${tool.name})\u001b[0m:\n`;
 
-          const greenColor = '\u001b[32m';
-          const resetColor = '\u001b[0m';
+          const greenColor = "\u001b[32m";
+          const resetColor = "\u001b[0m";
 
           // Handle multi-line descriptions
-          const descLines = tool.description.trim().split('\n');
+          const descLines = tool.description.trim().split("\n");
           for (const descLine of descLines) {
             message += `      ${greenColor}${descLine}${resetColor}\n`;
           }
@@ -60,11 +60,11 @@ export const toolsCommand: SlashCommand = {
         }
       });
     } else {
-      message += '  No tools available\n';
+      message += "  No tools available\n";
     }
-    message += '\n';
+    message += "\n";
 
-    message += '\u001b[0m';
+    message += "\u001b[0m";
 
     context.ui.addItem({ type: MessageType.INFO, text: message }, Date.now());
   },

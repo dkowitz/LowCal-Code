@@ -693,21 +693,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type React from 'react';
-import { useCallback, useState } from 'react';
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
-import { themeManager, DEFAULT_THEME } from '../themes/theme-manager.js';
-import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
-import { DiffRenderer } from './messages/DiffRenderer.js';
-import { colorizeCode } from '../utils/CodeColorizer.js';
-import type { LoadedSettings } from '../../config/settings.js';
-import { SettingScope } from '../../config/settings.js';
+import type React from "react";
+import { useCallback, useState } from "react";
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
+import { themeManager, DEFAULT_THEME } from "../themes/theme-manager.js";
+import { RadioButtonSelect } from "./shared/RadioButtonSelect.js";
+import { DiffRenderer } from "./messages/DiffRenderer.js";
+import { colorizeCode } from "../utils/CodeColorizer.js";
+import type { LoadedSettings } from "../../config/settings.js";
+import { SettingScope } from "../../config/settings.js";
 import {
   getScopeItems,
   getScopeMessageForSetting,
-} from '../../utils/dialogScopeUtils.js';
-import { useKeypress } from '../hooks/useKeypress.js';
+} from "../../utils/dialogScopeUtils.js";
+import { useKeypress } from "../hooks/useKeypress.js";
 &nbsp;
 interface ThemeDialogProps {
   /** Callback function when a theme is selected */
@@ -744,7 +744,7 @@ export <span class="fstat-no" title="function not covered" >function ThemeDialog
 <span class="cstat-no" title="statement not covered" >      : settings.merged.ui?.customThemes || {};</span>
 <span class="cstat-no" title="statement not covered" >  const builtInThemes = themeManager</span>
 <span class="cstat-no" title="statement not covered" >    .getAvailableThemes()</span>
-<span class="cstat-no" title="statement not covered" >    .filter((theme) =&gt; theme.type !== 'custom');</span>
+<span class="cstat-no" title="statement not covered" >    .filter((theme) =&gt; theme.type !== "custom");</span>
 <span class="cstat-no" title="statement not covered" >  const customThemeNames = Object.keys(customThemes);</span>
 <span class="cstat-no" title="statement not covered" >  const capitalize = (s: string) =&gt; s.charAt(0).toUpperCase() + s.slice(1);</span>
   // Generate theme items
@@ -759,7 +759,7 @@ export <span class="fstat-no" title="function not covered" >function ThemeDialog
 <span class="cstat-no" title="statement not covered" >      label: name,</span>
 <span class="cstat-no" title="statement not covered" >      value: name,</span>
 <span class="cstat-no" title="statement not covered" >      themeNameDisplay: name,</span>
-<span class="cstat-no" title="statement not covered" >      themeTypeDisplay: 'Custom',</span>
+<span class="cstat-no" title="statement not covered" >      themeTypeDisplay: "Custom",</span>
 <span class="cstat-no" title="statement not covered" >    })),</span>
 <span class="cstat-no" title="statement not covered" >  ];</span>
 <span class="cstat-no" title="statement not covered" >  const [selectInputKey, setSelectInputKey] = useState(Date.now());</span>
@@ -794,21 +794,21 @@ export <span class="fstat-no" title="function not covered" >function ThemeDialog
 <span class="cstat-no" title="statement not covered" >  const handleScopeSelect = useCallback(</span>
 <span class="cstat-no" title="statement not covered" >    (scope: SettingScope) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      handleScopeHighlight(scope);</span>
-<span class="cstat-no" title="statement not covered" >      setFocusedSection('theme'); // Reset focus to theme section</span>
+<span class="cstat-no" title="statement not covered" >      setFocusedSection("theme"); // Reset focus to theme section</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
 <span class="cstat-no" title="statement not covered" >    [handleScopeHighlight],</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  const [focusedSection, setFocusedSection] = useState&lt;'theme' | 'scope'&gt;(</span>
-<span class="cstat-no" title="statement not covered" >    'theme',</span>
+<span class="cstat-no" title="statement not covered" >  const [focusedSection, setFocusedSection] = useState&lt;"theme" | "scope"&gt;(</span>
+<span class="cstat-no" title="statement not covered" >    "theme",</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  useKeypress(</span>
 <span class="cstat-no" title="statement not covered" >    (key) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      if (key.name === 'tab') {</span>
-<span class="cstat-no" title="statement not covered" >        setFocusedSection((prev) =&gt; (prev === 'theme' ? 'scope' : 'theme'));</span>
+<span class="cstat-no" title="statement not covered" >      if (key.name === "tab") {</span>
+<span class="cstat-no" title="statement not covered" >        setFocusedSection((prev) =&gt; (prev === "theme" ? "scope" : "theme"));</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
-<span class="cstat-no" title="statement not covered" >      if (key.name === 'escape') {</span>
+<span class="cstat-no" title="statement not covered" >      if (key.name === "escape") {</span>
 <span class="cstat-no" title="statement not covered" >        onSelect(undefined, selectedScope);</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
@@ -817,7 +817,7 @@ export <span class="fstat-no" title="function not covered" >function ThemeDialog
 &nbsp;
   // Generate scope message for theme setting
 <span class="cstat-no" title="statement not covered" >  const otherScopeModifiedMessage = getScopeMessageForSetting(</span>
-<span class="cstat-no" title="statement not covered" >    'ui.theme',</span>
+<span class="cstat-no" title="statement not covered" >    "ui.theme",</span>
 <span class="cstat-no" title="statement not covered" >    selectedScope,</span>
 <span class="cstat-no" title="statement not covered" >    settings,</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
@@ -870,7 +870,7 @@ export <span class="fstat-no" title="function not covered" >function ThemeDialog
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   // Don't focus the scope selection if it is hidden due to height constraints.
-<span class="cstat-no" title="statement not covered" >  const currentFocusedSection = !showScopeSelection ? 'theme' : focusedSection;</span>
+<span class="cstat-no" title="statement not covered" >  const currentFocusedSection = !showScopeSelection ? "theme" : focusedSection;</span>
 &nbsp;
   // Vertical space taken by elements other than the two code blocks in the preview pane.
   // Includes "Preview" title, borders, and margin between blocks.
@@ -909,8 +909,8 @@ export <span class="fstat-no" title="function not covered" >function ThemeDialog
 <span class="cstat-no" title="statement not covered" >      &lt;Box flexDirection="row"&gt;</span>
         {/* Left Column: Selection */}
 <span class="cstat-no" title="statement not covered" >        &lt;Box flexDirection="column" width="45%" paddingRight={2}&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;Text bold={currentFocusedSection === 'theme'} wrap="truncate"&gt;</span>
-<span class="cstat-no" title="statement not covered" >            {currentFocusedSection === 'theme' ? '&gt; ' : '  '}Select Theme{' '}</span>
+<span class="cstat-no" title="statement not covered" >          &lt;Text bold={currentFocusedSection === "theme"} wrap="truncate"&gt;</span>
+<span class="cstat-no" title="statement not covered" >            {currentFocusedSection === "theme" ? "&gt; " : "  "}Select Theme{" "}</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Text color={Colors.Gray}&gt;{otherScopeModifiedMessage}&lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;RadioButtonSelect</span>
@@ -919,25 +919,25 @@ export <span class="fstat-no" title="function not covered" >function ThemeDialog
 <span class="cstat-no" title="statement not covered" >            initialIndex={safeInitialThemeIndex}</span>
 <span class="cstat-no" title="statement not covered" >            onSelect={handleThemeSelect}</span>
 <span class="cstat-no" title="statement not covered" >            onHighlight={handleThemeHighlight}</span>
-<span class="cstat-no" title="statement not covered" >            isFocused={currentFocusedSection === 'theme'}</span>
+<span class="cstat-no" title="statement not covered" >            isFocused={currentFocusedSection === "theme"}</span>
 <span class="cstat-no" title="statement not covered" >            maxItemsToShow={8}</span>
 <span class="cstat-no" title="statement not covered" >            showScrollArrows={true}</span>
-<span class="cstat-no" title="statement not covered" >            showNumbers={currentFocusedSection === 'theme'}</span>
+<span class="cstat-no" title="statement not covered" >            showNumbers={currentFocusedSection === "theme"}</span>
 <span class="cstat-no" title="statement not covered" >          /&gt;</span>
 &nbsp;
           {/* Scope Selection */}
 <span class="cstat-no" title="statement not covered" >          {showScopeSelection &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Box marginTop={1} flexDirection="column"&gt;</span>
-<span class="cstat-no" title="statement not covered" >              &lt;Text bold={currentFocusedSection === 'scope'} wrap="truncate"&gt;</span>
-<span class="cstat-no" title="statement not covered" >                {currentFocusedSection === 'scope' ? '&gt; ' : '  '}Apply To</span>
+<span class="cstat-no" title="statement not covered" >              &lt;Text bold={currentFocusedSection === "scope"} wrap="truncate"&gt;</span>
+<span class="cstat-no" title="statement not covered" >                {currentFocusedSection === "scope" ? "&gt; " : "  "}Apply To</span>
 <span class="cstat-no" title="statement not covered" >              &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >              &lt;RadioButtonSelect</span>
 <span class="cstat-no" title="statement not covered" >                items={scopeItems}</span>
 <span class="cstat-no" title="statement not covered" >                initialIndex={0} // Default to User Settings</span>
 <span class="cstat-no" title="statement not covered" >                onSelect={handleScopeSelect}</span>
 <span class="cstat-no" title="statement not covered" >                onHighlight={handleScopeHighlight}</span>
-<span class="cstat-no" title="statement not covered" >                isFocused={currentFocusedSection === 'scope'}</span>
-<span class="cstat-no" title="statement not covered" >                showNumbers={currentFocusedSection === 'scope'}</span>
+<span class="cstat-no" title="statement not covered" >                isFocused={currentFocusedSection === "scope"}</span>
+<span class="cstat-no" title="statement not covered" >                showNumbers={currentFocusedSection === "scope"}</span>
 <span class="cstat-no" title="statement not covered" >              /&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;/Box&gt;</span>
           )}
@@ -969,7 +969,7 @@ def fibonacci(n):
     for _ in range(n):
         a, b = b, a + b
     return a`,
-<span class="cstat-no" title="statement not covered" >                  'python',</span>
+<span class="cstat-no" title="statement not covered" >                  "python",</span>
 <span class="cstat-no" title="statement not covered" >                  codeBlockHeight,</span>
 <span class="cstat-no" title="statement not covered" >                  colorizeCodeWidth,</span>
 <span class="cstat-no" title="statement not covered" >                )}</span>
@@ -993,7 +993,7 @@ def fibonacci(n):
 <span class="cstat-no" title="statement not covered" >      &lt;Box marginTop={1}&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text color={Colors.Gray} wrap="truncate"&gt;</span>
           (Use Enter to select
-<span class="cstat-no" title="statement not covered" >          {showScopeSelection ? ', Tab to change focus' : ''})</span>
+<span class="cstat-no" title="statement not covered" >          {showScopeSelection ? ", Tab to change focus" : ""})</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/Box&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;/Box&gt;</span>
@@ -1006,7 +1006,7 @@ def fibonacci(n):
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.374Z
+                at 2025-09-30T22:44:16.879Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
-import { PrepareLabel } from './PrepareLabel.js';
-import { isSlashCommand } from '../utils/commandUtils.js';
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
+import { PrepareLabel } from "./PrepareLabel.js";
+import { isSlashCommand } from "../utils/commandUtils.js";
 export interface Suggestion {
   label: string;
   value: string;

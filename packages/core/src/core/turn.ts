@@ -11,21 +11,21 @@ import type {
   FunctionCall,
   FunctionDeclaration,
   FinishReason,
-} from '@google/genai';
+} from "@google/genai";
 import type {
   ToolCallConfirmationDetails,
   ToolResult,
   ToolResultDisplay,
-} from '../tools/tools.js';
-import type { ToolErrorType } from '../tools/tool-error.js';
-import { getResponseText } from '../utils/partUtils.js';
-import { reportError } from '../utils/errorReporting.js';
+} from "../tools/tools.js";
+import type { ToolErrorType } from "../tools/tool-error.js";
+import { getResponseText } from "../utils/partUtils.js";
+import { reportError } from "../utils/errorReporting.js";
 import {
   getErrorMessage,
   UnauthorizedError,
   toFriendlyError,
-} from '../utils/errors.js';
-import type { GeminiChat } from './geminiChat.js';
+} from "../utils/errors.js";
+import type { GeminiChat } from "./geminiChat.js";
 
 // Define a structure for tools passed to the server
 export interface ServerTool {
@@ -43,21 +43,21 @@ export interface ServerTool {
 }
 
 export enum GeminiEventType {
-  Content = 'content',
-  ToolCallRequest = 'tool_call_request',
-  ToolCallResponse = 'tool_call_response',
-  ToolCallConfirmation = 'tool_call_confirmation',
-  UserCancelled = 'user_cancelled',
-  Error = 'error',
-  ChatCompressed = 'chat_compressed',
-  Thought = 'thought',
-  MaxSessionTurns = 'max_session_turns',
-  SessionTokenLimitExceeded = 'session_token_limit_exceeded',
-  Finished = 'finished',
-  LoopDetected = 'loop_detected',
-  Citation = 'citation',
-  Retry = 'retry',
-  TokenBudgetWarning = 'token_budget_warning',
+  Content = "content",
+  ToolCallRequest = "tool_call_request",
+  ToolCallResponse = "tool_call_response",
+  ToolCallConfirmation = "tool_call_confirmation",
+  UserCancelled = "user_cancelled",
+  Error = "error",
+  ChatCompressed = "chat_compressed",
+  Thought = "thought",
+  MaxSessionTurns = "max_session_turns",
+  SessionTokenLimitExceeded = "session_token_limit_exceeded",
+  Finished = "finished",
+  LoopDetected = "loop_detected",
+  Citation = "citation",
+  Retry = "retry",
+  TokenBudgetWarning = "token_budget_warning",
 }
 
 export type ServerGeminiRetryEvent = {
@@ -249,7 +249,7 @@ export class Turn {
         }
 
         // Handle the new RETRY event
-        if (streamEvent.type === 'retry') {
+        if (streamEvent.type === "retry") {
           yield { type: GeminiEventType.Retry };
           continue; // Skip to the next event in the stream
         }
@@ -264,12 +264,12 @@ export class Turn {
         if (thoughtPart?.thought) {
           // Thought always has a bold "subject" part enclosed in double asterisks
           // (e.g., **Subject**). The rest of the string is considered the description.
-          const rawText = thoughtPart.text ?? '';
+          const rawText = thoughtPart.text ?? "";
           const subjectStringMatches = rawText.match(/\*\*(.*?)\*\*/s);
           const subject = subjectStringMatches
             ? subjectStringMatches[1].trim()
-            : '';
-          const description = rawText.replace(/\*\*(.*?)\*\*/s, '').trim();
+            : "";
+          const description = rawText.replace(/\*\*(.*?)\*\*/s, "").trim();
           const thought: ThoughtSummary = {
             subject,
             description,
@@ -323,15 +323,15 @@ export class Turn {
       const contextForReport = [...this.chat.getHistory(/*curated*/ true), req];
       await reportError(
         error,
-        'Error when talking to API',
+        "Error when talking to API",
         contextForReport,
-        'Turn.run-sendMessageStream',
+        "Turn.run-sendMessageStream",
       );
       const status =
-        typeof error === 'object' &&
+        typeof error === "object" &&
         error !== null &&
-        'status' in error &&
-        typeof (error as { status: unknown }).status === 'number'
+        "status" in error &&
+        typeof (error as { status: unknown }).status === "number"
           ? (error as { status: number }).status
           : undefined;
       const structuredError: StructuredError = {
@@ -350,7 +350,7 @@ export class Turn {
     const callId =
       fnCall.id ??
       `${fnCall.name}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-    const name = fnCall.name || 'undefined_tool_name';
+    const name = fnCall.name || "undefined_tool_name";
     const args = (fnCall.args || {}) as Record<string, unknown>;
 
     const toolCallRequest: ToolCallRequestInfo = {

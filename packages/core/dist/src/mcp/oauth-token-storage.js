@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { promises as fs } from 'node:fs';
-import * as path from 'node:path';
-import { Storage } from '../config/storage.js';
-import { getErrorMessage } from '../utils/errors.js';
+import { promises as fs } from "node:fs";
+import * as path from "node:path";
+import { Storage } from "../config/storage.js";
+import { getErrorMessage } from "../utils/errors.js";
 /**
  * Class for managing MCP OAuth token storage and retrieval.
  */
@@ -35,7 +35,7 @@ export class MCPOAuthTokenStorage {
         const tokenMap = new Map();
         try {
             const tokenFile = this.getTokenFilePath();
-            const data = await fs.readFile(tokenFile, 'utf-8');
+            const data = await fs.readFile(tokenFile, "utf-8");
             const tokens = JSON.parse(data);
             for (const credential of tokens) {
                 tokenMap.set(credential.serverName, credential);
@@ -43,7 +43,7 @@ export class MCPOAuthTokenStorage {
         }
         catch (error) {
             // File doesn't exist or is invalid, return empty map
-            if (error.code !== 'ENOENT') {
+            if (error.code !== "ENOENT") {
                 console.error(`Failed to load MCP OAuth tokens: ${getErrorMessage(error)}`);
             }
         }
@@ -139,7 +139,7 @@ export class MCPOAuthTokenStorage {
             await fs.unlink(tokenFile);
         }
         catch (error) {
-            if (error.code !== 'ENOENT') {
+            if (error.code !== "ENOENT") {
                 console.error(`Failed to clear MCP OAuth tokens: ${getErrorMessage(error)}`);
             }
         }

@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ToolResult } from '../tools/tools.js';
+import type { ToolResult } from "../tools/tools.js";
 import type {
   Content,
   GenerateContentConfig,
   GenerateContentResponse,
-} from '@google/genai';
-import type { GeminiClient } from '../core/client.js';
-import { DEFAULT_GEMINI_FLASH_LITE_MODEL } from '../config/models.js';
-import { getResponseText, partToString } from './partUtils.js';
+} from "@google/genai";
+import type { GeminiClient } from "../core/client.js";
+import { DEFAULT_GEMINI_FLASH_LITE_MODEL } from "../config/models.js";
+import { getResponseText, partToString } from "./partUtils.js";
 
 /**
  * A function that summarizes the result of a tool execution.
@@ -73,11 +73,11 @@ export async function summarizeToolOutput(
     return textToSummarize;
   }
   const prompt = SUMMARIZE_TOOL_OUTPUT_PROMPT.replace(
-    '{maxOutputTokens}',
+    "{maxOutputTokens}",
     String(maxOutputTokens),
-  ).replace('{textToSummarize}', textToSummarize);
+  ).replace("{textToSummarize}", textToSummarize);
 
-  const contents: Content[] = [{ role: 'user', parts: [{ text: prompt }] }];
+  const contents: Content[] = [{ role: "user", parts: [{ text: prompt }] }];
   const toolOutputSummarizerConfig: GenerateContentConfig = {
     maxOutputTokens,
   };
@@ -90,7 +90,7 @@ export async function summarizeToolOutput(
     )) as unknown as GenerateContentResponse;
     return getResponseText(parsedResponse) || textToSummarize;
   } catch (error) {
-    console.error('Failed to summarize tool output.', error);
+    console.error("Failed to summarize tool output.", error);
     return textToSummarize;
   }
 }

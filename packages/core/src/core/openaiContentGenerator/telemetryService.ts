@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Config } from '../../config/config.js';
-import { logApiError, logApiResponse } from '../../telemetry/loggers.js';
-import { ApiErrorEvent, ApiResponseEvent } from '../../telemetry/types.js';
-import { openaiLogger } from '../../utils/openaiLogger.js';
-import type { GenerateContentResponse } from '@google/genai';
-import type OpenAI from 'openai';
+import type { Config } from "../../config/config.js";
+import { logApiError, logApiResponse } from "../../telemetry/loggers.js";
+import { ApiErrorEvent, ApiResponseEvent } from "../../telemetry/types.js";
+import { openaiLogger } from "../../utils/openaiLogger.js";
+import type { GenerateContentResponse } from "@google/genai";
+import type OpenAI from "openai";
 
 export interface RequestContext {
   userPromptId: string;
@@ -56,7 +56,7 @@ export class DefaultTelemetryService implements TelemetryService {
   ): Promise<void> {
     // Log API response event for UI telemetry
     const responseEvent = new ApiResponseEvent(
-      response.responseId || 'unknown',
+      response.responseId || "unknown",
       context.model,
       context.duration,
       context.userPromptId,
@@ -82,7 +82,7 @@ export class DefaultTelemetryService implements TelemetryService {
     // Log API error event for UI telemetry
     const errorEvent = new ApiErrorEvent(
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (error as any)?.requestID || 'unknown',
+      (error as any)?.requestID || "unknown",
       context.model,
       errorMessage,
       context.duration,
@@ -119,7 +119,7 @@ export class DefaultTelemetryService implements TelemetryService {
 
     // Log API response event for UI telemetry
     const responseEvent = new ApiResponseEvent(
-      responses[responses.length - 1]?.responseId || 'unknown',
+      responses[responses.length - 1]?.responseId || "unknown",
       context.model,
       context.duration,
       context.userPromptId,
@@ -150,20 +150,20 @@ export class DefaultTelemetryService implements TelemetryService {
     chunks: OpenAI.Chat.ChatCompletionChunk[],
   ): OpenAI.Chat.ChatCompletion {
     if (chunks.length === 0) {
-      throw new Error('No chunks to combine');
+      throw new Error("No chunks to combine");
     }
 
     const firstChunk = chunks[0];
 
     // Combine all content from chunks
-    let combinedContent = '';
+    let combinedContent = "";
     const toolCalls: OpenAI.Chat.ChatCompletionMessageToolCall[] = [];
     let finishReason:
-      | 'stop'
-      | 'length'
-      | 'tool_calls'
-      | 'content_filter'
-      | 'function_call'
+      | "stop"
+      | "length"
+      | "tool_calls"
+      | "content_filter"
+      | "function_call"
       | null = null;
     let usage:
       | {
@@ -187,9 +187,9 @@ export class DefaultTelemetryService implements TelemetryService {
             if (toolCall.index !== undefined) {
               if (!toolCalls[toolCall.index]) {
                 toolCalls[toolCall.index] = {
-                  id: toolCall.id || '',
-                  type: toolCall.type || 'function',
-                  function: { name: '', arguments: '' },
+                  id: toolCall.id || "",
+                  type: toolCall.type || "function",
+                  function: { name: "", arguments: "" },
                 };
               }
 
@@ -219,7 +219,7 @@ export class DefaultTelemetryService implements TelemetryService {
 
     // Create the combined ChatCompletion response
     const message: OpenAI.Chat.ChatCompletionMessage = {
-      role: 'assistant',
+      role: "assistant",
       content: combinedContent || null,
       refusal: null,
     };
@@ -231,14 +231,14 @@ export class DefaultTelemetryService implements TelemetryService {
 
     const combinedResponse: OpenAI.Chat.ChatCompletion = {
       id: firstChunk.id,
-      object: 'chat.completion',
+      object: "chat.completion",
       created: firstChunk.created,
       model: firstChunk.model,
       choices: [
         {
           index: 0,
           message,
-          finish_reason: finishReason || 'stop',
+          finish_reason: finishReason || "stop",
           logprobs: null,
         },
       ],

@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useEffect, useCallback } from 'react';
-import { getProjectSummaryInfo, } from '@qwen-code/qwen-code-core';
-import {} from '../../config/settingsSchema.js';
+import { useState, useEffect, useCallback } from "react";
+import { getProjectSummaryInfo, } from "@qwen-code/qwen-code-core";
+import {} from "../../config/settingsSchema.js";
 export function useWelcomeBack(config, submitQuery, buffer, settings) {
     const [welcomeBackInfo, setWelcomeBackInfo] = useState(null);
     const [showWelcomeBackDialog, setShowWelcomeBackDialog] = useState(false);
@@ -27,14 +27,14 @@ export function useWelcomeBack(config, submitQuery, buffer, settings) {
         }
         catch (error) {
             // Silently ignore errors - welcome back is not critical
-            console.debug('Welcome back check failed:', error);
+            console.debug("Welcome back check failed:", error);
         }
     }, [settings.enableWelcomeBack]);
     // Handle welcome back dialog selection
     const handleWelcomeBackSelection = useCallback((choice) => {
         setWelcomeBackChoice(choice);
         setShowWelcomeBackDialog(false);
-        if (choice === 'continue' && welcomeBackInfo?.content) {
+        if (choice === "continue" && welcomeBackInfo?.content) {
             // Create the context message to fill in the input box
             const contextMessage = `@.qwen/PROJECT_SUMMARY.md, Based on our previous conversation,Let's continue?`;
             // Set the input fill state instead of directly submitting
@@ -44,7 +44,7 @@ export function useWelcomeBack(config, submitQuery, buffer, settings) {
         // If choice is 'restart', just close the dialog and continue normally
     }, [welcomeBackInfo]);
     const handleWelcomeBackClose = useCallback(() => {
-        setWelcomeBackChoice('restart'); // Default to restart when closed
+        setWelcomeBackChoice("restart"); // Default to restart when closed
         setShowWelcomeBackDialog(false);
     }, []);
     const clearInputFill = useCallback(() => {

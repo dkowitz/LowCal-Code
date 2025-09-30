@@ -7,9 +7,9 @@
 export async function readStdin(): Promise<string> {
   const MAX_STDIN_SIZE = 8 * 1024 * 1024; // 8MB
   return new Promise((resolve, reject) => {
-    let data = '';
+    let data = "";
     let totalSize = 0;
-    process.stdin.setEncoding('utf8');
+    process.stdin.setEncoding("utf8");
 
     const pipedInputShouldBeAvailableInMs = 500;
     let pipedInputTimerId: null | NodeJS.Timeout = setTimeout(() => {
@@ -56,13 +56,13 @@ export async function readStdin(): Promise<string> {
         clearTimeout(pipedInputTimerId);
         pipedInputTimerId = null;
       }
-      process.stdin.removeListener('readable', onReadable);
-      process.stdin.removeListener('end', onEnd);
-      process.stdin.removeListener('error', onError);
+      process.stdin.removeListener("readable", onReadable);
+      process.stdin.removeListener("end", onEnd);
+      process.stdin.removeListener("error", onError);
     };
 
-    process.stdin.on('readable', onReadable);
-    process.stdin.on('end', onEnd);
-    process.stdin.on('error', onError);
+    process.stdin.on("readable", onReadable);
+    process.stdin.on("end", onEnd);
+    process.stdin.on("error", onError);
   });
 }

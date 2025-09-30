@@ -447,38 +447,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import * as fsPromises from 'fs/promises';
-import path from 'path';
+import * as fsPromises from "fs/promises";
+import path from "path";
 import {
   type SlashCommand,
   CommandKind,
   type SlashCommandActionReturn,
-} from './types.js';
-import { getProjectSummaryPrompt } from '@qwen-code/qwen-code-core';
-import type { HistoryItemSummary } from '../types.js';
+} from "./types.js";
+import { getProjectSummaryPrompt } from "@qwen-code/qwen-code-core";
+import type { HistoryItemSummary } from "../types.js";
 &nbsp;
 export const summaryCommand: SlashCommand = {
-  name: 'summary',
+  name: "summary",
   description:
-    'Generate a project summary and save it to .qwen/PROJECT_SUMMARY.md',
+    "Generate a project summary and save it to .qwen/PROJECT_SUMMARY.md",
   kind: CommandKind.BUILT_IN,
   action: <span class="fstat-no" title="function not covered" >async (context): Promise&lt;SlashCommandActionReturn&gt; =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const { config } = context.services;</span>
 <span class="cstat-no" title="statement not covered" >    const { ui } = context;</span>
 <span class="cstat-no" title="statement not covered" >    if (!config) {</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
-<span class="cstat-no" title="statement not covered" >        type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >        messageType: 'error',</span>
-<span class="cstat-no" title="statement not covered" >        content: 'Config not loaded.',</span>
+<span class="cstat-no" title="statement not covered" >        type: "message",</span>
+<span class="cstat-no" title="statement not covered" >        messageType: "error",</span>
+<span class="cstat-no" title="statement not covered" >        content: "Config not loaded.",</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const geminiClient = config.getGeminiClient();</span>
 <span class="cstat-no" title="statement not covered" >    if (!geminiClient) {</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
-<span class="cstat-no" title="statement not covered" >        type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >        messageType: 'error',</span>
-<span class="cstat-no" title="statement not covered" >        content: 'No chat client available to generate summary.',</span>
+<span class="cstat-no" title="statement not covered" >        type: "message",</span>
+<span class="cstat-no" title="statement not covered" >        messageType: "error",</span>
+<span class="cstat-no" title="statement not covered" >        content: "No chat client available to generate summary.",</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
@@ -486,16 +486,16 @@ export const summaryCommand: SlashCommand = {
 <span class="cstat-no" title="statement not covered" >    if (ui.pendingItem) {</span>
 <span class="cstat-no" title="statement not covered" >      ui.addItem(</span>
 <span class="cstat-no" title="statement not covered" >        {</span>
-<span class="cstat-no" title="statement not covered" >          type: 'error' as const,</span>
-<span class="cstat-no" title="statement not covered" >          text: 'Already generating summary, wait for previous request to complete',</span>
+<span class="cstat-no" title="statement not covered" >          type: "error" as const,</span>
+<span class="cstat-no" title="statement not covered" >          text: "Already generating summary, wait for previous request to complete",</span>
 <span class="cstat-no" title="statement not covered" >        },</span>
 <span class="cstat-no" title="statement not covered" >        Date.now(),</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
-<span class="cstat-no" title="statement not covered" >        type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >        messageType: 'error',</span>
+<span class="cstat-no" title="statement not covered" >        type: "message",</span>
+<span class="cstat-no" title="statement not covered" >        messageType: "error",</span>
 <span class="cstat-no" title="statement not covered" >        content:</span>
-<span class="cstat-no" title="statement not covered" >          'Already generating summary, wait for previous request to complete',</span>
+<span class="cstat-no" title="statement not covered" >          "Already generating summary, wait for previous request to complete",</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
@@ -506,18 +506,18 @@ export const summaryCommand: SlashCommand = {
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      if (history.length &lt;= 2) {</span>
 <span class="cstat-no" title="statement not covered" >        return {</span>
-<span class="cstat-no" title="statement not covered" >          type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >          messageType: 'info',</span>
-<span class="cstat-no" title="statement not covered" >          content: 'No conversation found to summarize.',</span>
+<span class="cstat-no" title="statement not covered" >          type: "message",</span>
+<span class="cstat-no" title="statement not covered" >          messageType: "info",</span>
+<span class="cstat-no" title="statement not covered" >          content: "No conversation found to summarize.",</span>
 <span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
       // Show loading state
 <span class="cstat-no" title="statement not covered" >      const pendingMessage: HistoryItemSummary = {</span>
-<span class="cstat-no" title="statement not covered" >        type: 'summary',</span>
+<span class="cstat-no" title="statement not covered" >        type: "summary",</span>
 <span class="cstat-no" title="statement not covered" >        summary: {</span>
 <span class="cstat-no" title="statement not covered" >          isPending: true,</span>
-<span class="cstat-no" title="statement not covered" >          stage: 'generating',</span>
+<span class="cstat-no" title="statement not covered" >          stage: "generating",</span>
 <span class="cstat-no" title="statement not covered" >        },</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >      ui.setPendingItem(pendingMessage);</span>
@@ -533,7 +533,7 @@ export const summaryCommand: SlashCommand = {
 <span class="cstat-no" title="statement not covered" >        [</span>
 <span class="cstat-no" title="statement not covered" >          ...conversationContext,</span>
 <span class="cstat-no" title="statement not covered" >          {</span>
-<span class="cstat-no" title="statement not covered" >            role: 'user',</span>
+<span class="cstat-no" title="statement not covered" >            role: "user",</span>
 <span class="cstat-no" title="statement not covered" >            parts: [</span>
 <span class="cstat-no" title="statement not covered" >              {</span>
 <span class="cstat-no" title="statement not covered" >                text: getProjectSummaryPrompt(),</span>
@@ -551,27 +551,27 @@ export const summaryCommand: SlashCommand = {
 <span class="cstat-no" title="statement not covered" >      const markdownSummary =</span>
 <span class="cstat-no" title="statement not covered" >        parts</span>
 <span class="cstat-no" title="statement not covered" >          ?.map((part) =&gt; part.text)</span>
-<span class="cstat-no" title="statement not covered" >          .filter((text): text is string =&gt; typeof text === 'string')</span>
-<span class="cstat-no" title="statement not covered" >          .join('') || '';</span>
+<span class="cstat-no" title="statement not covered" >          .filter((text): text is string =&gt; typeof text === "string")</span>
+<span class="cstat-no" title="statement not covered" >          .join("") || "";</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      if (!markdownSummary) {</span>
 <span class="cstat-no" title="statement not covered" >        throw new Error(</span>
-<span class="cstat-no" title="statement not covered" >          'Failed to generate summary - no text content received from LLM response',</span>
+<span class="cstat-no" title="statement not covered" >          "Failed to generate summary - no text content received from LLM response",</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
       // Update loading message to show saving progress
 <span class="cstat-no" title="statement not covered" >      ui.setPendingItem({</span>
-<span class="cstat-no" title="statement not covered" >        type: 'summary',</span>
+<span class="cstat-no" title="statement not covered" >        type: "summary",</span>
 <span class="cstat-no" title="statement not covered" >        summary: {</span>
 <span class="cstat-no" title="statement not covered" >          isPending: true,</span>
-<span class="cstat-no" title="statement not covered" >          stage: 'saving',</span>
+<span class="cstat-no" title="statement not covered" >          stage: "saving",</span>
 <span class="cstat-no" title="statement not covered" >        },</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 &nbsp;
       // Ensure .qwen directory exists
 <span class="cstat-no" title="statement not covered" >      const projectRoot = config.getProjectRoot();</span>
-<span class="cstat-no" title="statement not covered" >      const qwenDir = path.join(projectRoot, '.qwen');</span>
+<span class="cstat-no" title="statement not covered" >      const qwenDir = path.join(projectRoot, ".qwen");</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        await fsPromises.mkdir(qwenDir, { recursive: true });</span>
 <span class="cstat-no" title="statement not covered" >      } catch (_err) {</span>
@@ -579,7 +579,7 @@ export const summaryCommand: SlashCommand = {
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
       // Save the summary to PROJECT_SUMMARY.md
-<span class="cstat-no" title="statement not covered" >      const summaryPath = path.join(qwenDir, 'PROJECT_SUMMARY.md');</span>
+<span class="cstat-no" title="statement not covered" >      const summaryPath = path.join(qwenDir, "PROJECT_SUMMARY.md");</span>
 <span class="cstat-no" title="statement not covered" >      const summaryContent = `${markdownSummary}</span>
 &nbsp;
 ---
@@ -588,31 +588,31 @@ export const summaryCommand: SlashCommand = {
 <span class="cstat-no" title="statement not covered" >**Update time**: ${new Date().toISOString()} </span>
 `;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      await fsPromises.writeFile(summaryPath, summaryContent, 'utf8');</span>
+<span class="cstat-no" title="statement not covered" >      await fsPromises.writeFile(summaryPath, summaryContent, "utf8");</span>
 &nbsp;
       // Clear pending item and show success message
 <span class="cstat-no" title="statement not covered" >      ui.setPendingItem(null);</span>
 <span class="cstat-no" title="statement not covered" >      const completedSummaryItem: HistoryItemSummary = {</span>
-<span class="cstat-no" title="statement not covered" >        type: 'summary',</span>
+<span class="cstat-no" title="statement not covered" >        type: "summary",</span>
 <span class="cstat-no" title="statement not covered" >        summary: {</span>
 <span class="cstat-no" title="statement not covered" >          isPending: false,</span>
-<span class="cstat-no" title="statement not covered" >          stage: 'completed',</span>
-<span class="cstat-no" title="statement not covered" >          filePath: '.qwen/PROJECT_SUMMARY.md',</span>
+<span class="cstat-no" title="statement not covered" >          stage: "completed",</span>
+<span class="cstat-no" title="statement not covered" >          filePath: ".qwen/PROJECT_SUMMARY.md",</span>
 <span class="cstat-no" title="statement not covered" >        },</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >      ui.addItem(completedSummaryItem, Date.now());</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      return {</span>
-<span class="cstat-no" title="statement not covered" >        type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >        messageType: 'info',</span>
-<span class="cstat-no" title="statement not covered" >        content: '', // Empty content since we show the message in UI component</span>
+<span class="cstat-no" title="statement not covered" >        type: "message",</span>
+<span class="cstat-no" title="statement not covered" >        messageType: "info",</span>
+<span class="cstat-no" title="statement not covered" >        content: "", // Empty content since we show the message in UI component</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
       // Clear pending item on error
 <span class="cstat-no" title="statement not covered" >      ui.setPendingItem(null);</span>
 <span class="cstat-no" title="statement not covered" >      ui.addItem(</span>
 <span class="cstat-no" title="statement not covered" >        {</span>
-<span class="cstat-no" title="statement not covered" >          type: 'error' as const,</span>
+<span class="cstat-no" title="statement not covered" >          type: "error" as const,</span>
 <span class="cstat-no" title="statement not covered" >          text: `❌ Failed to generate project context summary: ${</span>
 <span class="cstat-no" title="statement not covered" >            error instanceof Error ? error.message : String(error)</span>
 <span class="cstat-no" title="statement not covered" >          }`,</span>
@@ -621,8 +621,8 @@ export const summaryCommand: SlashCommand = {
 <span class="cstat-no" title="statement not covered" >      );</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      return {</span>
-<span class="cstat-no" title="statement not covered" >        type: 'message',</span>
-<span class="cstat-no" title="statement not covered" >        messageType: 'error',</span>
+<span class="cstat-no" title="statement not covered" >        type: "message",</span>
+<span class="cstat-no" title="statement not covered" >        messageType: "error",</span>
 <span class="cstat-no" title="statement not covered" >        content: `Failed to generate project context summary: ${</span>
 <span class="cstat-no" title="statement not covered" >          error instanceof Error ? error.message : String(error)</span>
 <span class="cstat-no" title="statement not covered" >        }`,</span>
@@ -637,7 +637,7 @@ export const summaryCommand: SlashCommand = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.374Z
+                at 2025-09-30T22:44:16.879Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

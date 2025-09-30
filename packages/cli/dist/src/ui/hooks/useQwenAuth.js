@@ -3,13 +3,13 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useCallback, useEffect } from 'react';
-import { AuthType, qwenOAuth2Events, QwenOAuth2Event, } from '@qwen-code/qwen-code-core';
+import { useState, useCallback, useEffect } from "react";
+import { AuthType, qwenOAuth2Events, QwenOAuth2Event, } from "@qwen-code/qwen-code-core";
 export const useQwenAuth = (settings, isAuthenticating) => {
     const [qwenAuthState, setQwenAuthState] = useState({
         isQwenAuthenticating: false,
         deviceAuth: null,
-        authStatus: 'idle',
+        authStatus: "idle",
         authMessage: null,
     });
     const isQwenAuth = settings.merged.security?.auth?.selectedType === AuthType.QWEN_OAUTH;
@@ -20,7 +20,7 @@ export const useQwenAuth = (settings, isAuthenticating) => {
             setQwenAuthState({
                 isQwenAuthenticating: false,
                 deviceAuth: null,
-                authStatus: 'idle',
+                authStatus: "idle",
                 authMessage: null,
             });
             return;
@@ -28,7 +28,7 @@ export const useQwenAuth = (settings, isAuthenticating) => {
         setQwenAuthState((prev) => ({
             ...prev,
             isQwenAuthenticating: true,
-            authStatus: 'idle',
+            authStatus: "idle",
         }));
         // Set up event listeners
         const handleDeviceAuth = (deviceAuth) => {
@@ -40,7 +40,7 @@ export const useQwenAuth = (settings, isAuthenticating) => {
                     user_code: deviceAuth.user_code,
                     expires_in: deviceAuth.expires_in,
                 },
-                authStatus: 'polling',
+                authStatus: "polling",
             }));
         };
         const handleAuthProgress = (status, message) => {
@@ -65,7 +65,7 @@ export const useQwenAuth = (settings, isAuthenticating) => {
         setQwenAuthState({
             isQwenAuthenticating: false,
             deviceAuth: null,
-            authStatus: 'idle',
+            authStatus: "idle",
             authMessage: null,
         });
     }, []);

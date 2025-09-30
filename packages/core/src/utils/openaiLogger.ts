@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as path from 'node:path';
-import { promises as fs } from 'node:fs';
-import { v4 as uuidv4 } from 'uuid';
-import * as os from 'os';
+import * as path from "node:path";
+import { promises as fs } from "node:fs";
+import { v4 as uuidv4 } from "uuid";
+import * as os from "os";
 
 /**
  * Logger specifically for OpenAI API requests and responses
@@ -21,7 +21,7 @@ export class OpenAILogger {
    * @param customLogDir Optional custom log directory path
    */
   constructor(customLogDir?: string) {
-    this.logDir = customLogDir || path.join(process.cwd(), 'logs', 'openai');
+    this.logDir = customLogDir || path.join(process.cwd(), "logs", "openai");
   }
 
   /**
@@ -34,7 +34,7 @@ export class OpenAILogger {
       await fs.mkdir(this.logDir, { recursive: true });
       this.initialized = true;
     } catch (error) {
-      console.error('Failed to initialize OpenAI logger:', error);
+      console.error("Failed to initialize OpenAI logger:", error);
       throw new Error(`Failed to initialize OpenAI logger: ${error}`);
     }
   }
@@ -55,7 +55,7 @@ export class OpenAILogger {
       await this.initialize();
     }
 
-    const timestamp = new Date().toISOString().replace(/:/g, '-');
+    const timestamp = new Date().toISOString().replace(/:/g, "-");
     const id = uuidv4().slice(0, 8);
     const filename = `openai-${timestamp}-${id}.json`;
     const filePath = path.join(this.logDir, filename);
@@ -79,10 +79,10 @@ export class OpenAILogger {
     };
 
     try {
-      await fs.writeFile(filePath, JSON.stringify(logData, null, 2), 'utf-8');
+      await fs.writeFile(filePath, JSON.stringify(logData, null, 2), "utf-8");
       return filePath;
     } catch (writeError) {
-      console.error('Failed to write OpenAI log file:', writeError);
+      console.error("Failed to write OpenAI log file:", writeError);
       throw new Error(`Failed to write OpenAI log file: ${writeError}`);
     }
   }
@@ -100,17 +100,17 @@ export class OpenAILogger {
     try {
       const files = await fs.readdir(this.logDir);
       const logFiles = files
-        .filter((file) => file.startsWith('openai-') && file.endsWith('.json'))
+        .filter((file) => file.startsWith("openai-") && file.endsWith(".json"))
         .map((file) => path.join(this.logDir, file))
         .sort()
         .reverse();
 
       return limit ? logFiles.slice(0, limit) : logFiles;
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code === 'ENOENT') {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
         return [];
       }
-      console.error('Failed to read OpenAI log directory:', error);
+      console.error("Failed to read OpenAI log directory:", error);
       return [];
     }
   }
@@ -122,7 +122,7 @@ export class OpenAILogger {
    */
   async readLogFile(filePath: string): Promise<unknown> {
     try {
-      const content = await fs.readFile(filePath, 'utf-8');
+      const content = await fs.readFile(filePath, "utf-8");
       return JSON.parse(content);
     } catch (error) {
       console.error(`Failed to read log file ${filePath}:`, error);

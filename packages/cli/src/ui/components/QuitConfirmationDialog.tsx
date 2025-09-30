@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Box, Text } from 'ink';
-import type React from 'react';
-import { Colors } from '../colors.js';
+import { Box, Text } from "ink";
+import type React from "react";
+import { Colors } from "../colors.js";
 import {
   RadioButtonSelect,
   type RadioSelectItem,
-} from './shared/RadioButtonSelect.js';
-import { useKeypress } from '../hooks/useKeypress.js';
+} from "./shared/RadioButtonSelect.js";
+import { useKeypress } from "../hooks/useKeypress.js";
 
 export enum QuitChoice {
-  CANCEL = 'cancel',
-  QUIT = 'quit',
-  SAVE_AND_QUIT = 'save_and_quit',
-  SUMMARY_AND_QUIT = 'summary_and_quit',
+  CANCEL = "cancel",
+  QUIT = "quit",
+  SAVE_AND_QUIT = "save_and_quit",
+  SUMMARY_AND_QUIT = "summary_and_quit",
 }
 
 interface QuitConfirmationDialogProps {
@@ -29,7 +29,7 @@ export const QuitConfirmationDialog: React.FC<QuitConfirmationDialogProps> = ({
 }) => {
   useKeypress(
     (key) => {
-      if (key.name === 'escape') {
+      if (key.name === "escape") {
         onSelect(QuitChoice.CANCEL);
       }
     },
@@ -38,19 +38,19 @@ export const QuitConfirmationDialog: React.FC<QuitConfirmationDialogProps> = ({
 
   const options: Array<RadioSelectItem<QuitChoice>> = [
     {
-      label: 'Quit immediately (/quit)',
+      label: "Quit immediately (/quit)",
       value: QuitChoice.QUIT,
     },
     {
-      label: 'Generate summary and quit (/summary)',
+      label: "Generate summary and quit (/summary)",
       value: QuitChoice.SUMMARY_AND_QUIT,
     },
     {
-      label: 'Save conversation and quit (/chat save)',
+      label: "Save conversation and quit (/chat save)",
       value: QuitChoice.SAVE_AND_QUIT,
     },
     {
-      label: 'Cancel (stay in application)',
+      label: "Cancel (stay in application)",
       value: QuitChoice.CANCEL,
     },
   ];

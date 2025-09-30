@@ -209,27 +209,27 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">133x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">145x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">122x</span>
-<span class="cline-any cline-yes">119x</span>
-<span class="cline-any cline-yes">119x</span>
-<span class="cline-any cline-yes">133x</span>
-<span class="cline-any cline-yes">116x</span>
-<span class="cline-any cline-yes">116x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">134x</span>
+<span class="cline-any cline-yes">131x</span>
+<span class="cline-any cline-yes">131x</span>
+<span class="cline-any cline-yes">145x</span>
+<span class="cline-any cline-yes">128x</span>
+<span class="cline-any cline-yes">128x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-yes">17x</span>
@@ -284,7 +284,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">133x</span>
+<span class="cline-any cline-yes">145x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
@@ -309,15 +309,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type React from 'react';
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
+import type React from "react";
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
 import {
   type IdeContext,
   type MCPServerConfig,
-} from '@qwen-code/qwen-code-core';
-import { useTerminalSize } from '../hooks/useTerminalSize.js';
-import { isNarrowWidth } from '../utils/isNarrowWidth.js';
+} from "@qwen-code/qwen-code-core";
+import { useTerminalSize } from "../hooks/useTerminalSize.js";
+import { isNarrowWidth } from "../utils/isNarrowWidth.js";
 &nbsp;
 interface ContextSummaryDisplayProps {
   geminiMdFileCount: number;
@@ -353,50 +353,50 @@ export const ContextSummaryDisplay: React.FC&lt;ContextSummaryDisplayProps&gt; =
 &nbsp;
   const openFilesText = (() =&gt; {
     if (openFileCount === 0) {
-      return '';
+      return "";
     }
     return `${openFileCount} open file${
-      openFileCount &gt; 1 ? 's' : ''
+      openFileCount &gt; 1 ? "s" : ""
     } (ctrl+g to view)`;
   })();
 &nbsp;
   const geminiMdText = (() =&gt; {
     if (geminiMdFileCount === 0) {
-      return '';
+      return "";
     }
     const allNamesTheSame = new Set(contextFileNames).size &lt; 2;
-    const name = allNamesTheSame ? contextFileNames[0] : 'context';
+    const name = allNamesTheSame ? contextFileNames[0] : "context";
     return `${geminiMdFileCount} ${name} file${
-      geminiMdFileCount &gt; 1 ? 's' : ''
+      geminiMdFileCount &gt; 1 ? "s" : ""
     }`;
   })();
 &nbsp;
   const mcpText = (() =&gt; {
     if (mcpServerCount === 0 &amp;&amp; blockedMcpServerCount === 0) {
-      return '';
+      return "";
     }
 &nbsp;
     const parts = [];
     if (mcpServerCount &gt; 0) {
       parts.push(
-        `${mcpServerCount} MCP server${mcpServerCount &gt; 1 ? 's' : ''}`,
+        `${mcpServerCount} MCP server${mcpServerCount &gt; 1 ? "s" : ""}`,
       );
     }
 &nbsp;
     if (blockedMcpServerCount &gt; 0) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      let blockedText = `${blockedMcpServerCount} Blocked`;</span>
 <span class="cstat-no" title="statement not covered" >      if (mcpServerCount === 0) {</span>
-<span class="cstat-no" title="statement not covered" >        blockedText += ` MCP server${blockedMcpServerCount &gt; 1 ? 's' : ''}`;</span>
+<span class="cstat-no" title="statement not covered" >        blockedText += ` MCP server${blockedMcpServerCount &gt; 1 ? "s" : ""}`;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      parts.push(blockedText);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    let text = parts.join(', ');
+    let text = parts.join(", ");
     // Add ctrl+t hint when MCP servers are available
     if (mcpServers &amp;&amp; Object.keys(mcpServers).length &gt; 0) {
       if (showToolDescriptions) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >        text += ' (ctrl+t to toggle)';</span>
+<span class="cstat-no" title="statement not covered" >        text += " (ctrl+t to toggle)";</span>
       } else {
-        text += ' (ctrl+t to view)';
+        text += " (ctrl+t to view)";
       }
     }
     return text;
@@ -410,7 +410,7 @@ export const ContextSummaryDisplay: React.FC&lt;ContextSummaryDisplayProps&gt; =
         &lt;Text color={Colors.Gray}&gt;Using:&lt;/Text&gt;
         {summaryParts.map((part, index) =&gt; (
           &lt;Text key={index} color={Colors.Gray}&gt;
-            {'  '}- {part}
+            {"  "}- {part}
           &lt;/Text&gt;
         ))}
       &lt;/Box&gt;
@@ -419,7 +419,7 @@ export const ContextSummaryDisplay: React.FC&lt;ContextSummaryDisplayProps&gt; =
 &nbsp;
   return (
     &lt;Box&gt;
-      &lt;Text color={Colors.Gray}&gt;Using: {summaryParts.join(' | ')}&lt;/Text&gt;
+      &lt;Text color={Colors.Gray}&gt;Using: {summaryParts.join(" | ")}&lt;/Text&gt;
     &lt;/Box&gt;
   );
 };
@@ -430,7 +430,7 @@ export const ContextSummaryDisplay: React.FC&lt;ContextSummaryDisplayProps&gt; =
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.374Z
+                at 2025-09-30T22:44:16.879Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

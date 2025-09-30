@@ -4,62 +4,62 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { renderHook, act, waitFor } from '@testing-library/react';
-import { useShellHistory } from './useShellHistory.js';
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import * as os from 'node:os';
-import * as crypto from 'node:crypto';
+import { renderHook, act, waitFor } from "@testing-library/react";
+import { useShellHistory } from "./useShellHistory.js";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import * as os from "node:os";
+import * as crypto from "node:crypto";
 
-vi.mock('fs/promises', () => ({
+vi.mock("fs/promises", () => ({
   readFile: vi.fn(),
   writeFile: vi.fn(),
   mkdir: vi.fn(),
 }));
-vi.mock('os');
-vi.mock('crypto');
-vi.mock('fs', async (importOriginal) => {
-  const actualFs = await importOriginal<typeof import('fs')>();
+vi.mock("os");
+vi.mock("crypto");
+vi.mock("fs", async (importOriginal) => {
+  const actualFs = await importOriginal<typeof import("fs")>();
   return {
     ...actualFs,
     mkdirSync: vi.fn(),
   };
 });
-vi.mock('@qwen-code/qwen-code-core', () => {
+vi.mock("@qwen-code/qwen-code-core", () => {
   class Storage {
     getProjectTempDir(): string {
-      return path.join('/test/home/', '.qwen', 'tmp', 'mocked_hash');
+      return path.join("/test/home/", ".qwen", "tmp", "mocked_hash");
     }
     getHistoryFilePath(): string {
       return path.join(
-        '/test/home/',
-        '.qwen',
-        'tmp',
-        'mocked_hash',
-        'shell_history',
+        "/test/home/",
+        ".qwen",
+        "tmp",
+        "mocked_hash",
+        "shell_history",
       );
     }
   }
   return {
     isNodeError: (err: unknown): err is NodeJS.ErrnoException =>
-      typeof err === 'object' && err !== null && 'code' in err,
+      typeof err === "object" && err !== null && "code" in err,
     Storage,
   };
 });
 
-const MOCKED_PROJECT_ROOT = '/test/project';
-const MOCKED_HOME_DIR = '/test/home';
-const MOCKED_PROJECT_HASH = 'mocked_hash';
+const MOCKED_PROJECT_ROOT = "/test/project";
+const MOCKED_HOME_DIR = "/test/home";
+const MOCKED_PROJECT_HASH = "mocked_hash";
 
 const MOCKED_HISTORY_DIR = path.join(
   MOCKED_HOME_DIR,
-  '.qwen',
-  'tmp',
+  ".qwen",
+  "tmp",
   MOCKED_PROJECT_HASH,
 );
-const MOCKED_HISTORY_FILE = path.join(MOCKED_HISTORY_DIR, 'shell_history');
+const MOCKED_HISTORY_FILE = path.join(MOCKED_HISTORY_DIR, "shell_history");
 
-describe('useShellHistory', () => {
+describe("useShellHistory", () => {
   const mockedFs = vi.mocked(fs);
   const mockedOs = vi.mocked(os);
   const mockedCrypto = vi.mocked(crypto);
@@ -67,7 +67,7 @@ describe('useShellHistory', () => {
   beforeEach(() => {
     vi.resetAllMocks();
 
-    mockedFs.readFile.mockResolvedValue('');
+    mockedFs.readFile.mockResolvedValue("");
     mockedFs.writeFile.mockResolvedValue(undefined);
     mockedFs.mkdir.mockResolvedValue(undefined);
     mockedOs.homedir.mockReturnValue(MOCKED_HOME_DIR);
@@ -79,14 +79,14 @@ describe('useShellHistory', () => {
     mockedCrypto.createHash.mockReturnValue(hashMock as never);
   });
 
-  it('should initialize and read the history file from the correct path', async () => {
-    mockedFs.readFile.mockResolvedValue('cmd1\ncmd2');
+  it("should initialize and read the history file from the correct path", async () => {
+    mockedFs.readFile.mockResolvedValue("cmd1\ncmd2");
     const { result } = renderHook(() => useShellHistory(MOCKED_PROJECT_ROOT));
 
     await waitFor(() => {
       expect(mockedFs.readFile).toHaveBeenCalledWith(
         MOCKED_HISTORY_FILE,
-        'utf-8',
+        "utf-8",
       );
     });
 
@@ -96,12 +96,12 @@ describe('useShellHistory', () => {
     });
 
     // History is loaded newest-first: ['cmd2', 'cmd1']
-    expect(command).toBe('cmd2');
+    expect(command).toBe("cmd2");
   });
 
-  it('should handle a nonexistent history file gracefully', async () => {
-    const error = new Error('File not found') as NodeJS.ErrnoException;
-    error.code = 'ENOENT';
+  it("should handle a nonexistent history file gracefully", async () => {
+    const error = new Error("File not found") as NodeJS.ErrnoException;
+    error.code = "ENOENT";
     mockedFs.readFile.mockRejectedValue(error);
 
     const { result } = renderHook(() => useShellHistory(MOCKED_PROJECT_ROOT));
@@ -118,13 +118,13 @@ describe('useShellHistory', () => {
     expect(command).toBe(null);
   });
 
-  it('should add a command and write to the history file', async () => {
+  it("should add a command and write to the history file", async () => {
     const { result } = renderHook(() => useShellHistory(MOCKED_PROJECT_ROOT));
 
     await waitFor(() => expect(mockedFs.readFile).toHaveBeenCalled());
 
     act(() => {
-      result.current.addCommandToHistory('new_command');
+      result.current.addCommandToHistory("new_command");
     });
 
     await waitFor(() => {
@@ -133,7 +133,7 @@ describe('useShellHistory', () => {
       });
       expect(mockedFs.writeFile).toHaveBeenCalledWith(
         MOCKED_HISTORY_FILE,
-        'new_command', // Written to file oldest-first.
+        "new_command", // Written to file oldest-first.
       );
     });
 
@@ -141,11 +141,11 @@ describe('useShellHistory', () => {
     act(() => {
       command = result.current.getPreviousCommand();
     });
-    expect(command).toBe('new_command');
+    expect(command).toBe("new_command");
   });
 
-  it('should navigate history correctly with previous/next commands', async () => {
-    mockedFs.readFile.mockResolvedValue('cmd1\ncmd2\ncmd3');
+  it("should navigate history correctly with previous/next commands", async () => {
+    mockedFs.readFile.mockResolvedValue("cmd1\ncmd2\ncmd3");
     const { result } = renderHook(() => useShellHistory(MOCKED_PROJECT_ROOT));
 
     // Wait for history to be loaded: ['cmd3', 'cmd2', 'cmd1']
@@ -156,61 +156,61 @@ describe('useShellHistory', () => {
     act(() => {
       command = result.current.getPreviousCommand();
     });
-    expect(command).toBe('cmd3');
+    expect(command).toBe("cmd3");
 
     act(() => {
       command = result.current.getPreviousCommand();
     });
-    expect(command).toBe('cmd2');
+    expect(command).toBe("cmd2");
 
     act(() => {
       command = result.current.getPreviousCommand();
     });
-    expect(command).toBe('cmd1');
+    expect(command).toBe("cmd1");
 
     // Should stay at the oldest command
     act(() => {
       command = result.current.getPreviousCommand();
     });
-    expect(command).toBe('cmd1');
+    expect(command).toBe("cmd1");
 
     act(() => {
       command = result.current.getNextCommand();
     });
-    expect(command).toBe('cmd2');
+    expect(command).toBe("cmd2");
 
     act(() => {
       command = result.current.getNextCommand();
     });
-    expect(command).toBe('cmd3');
+    expect(command).toBe("cmd3");
 
     // Should return to the "new command" line (represented as empty string)
     act(() => {
       command = result.current.getNextCommand();
     });
-    expect(command).toBe('');
+    expect(command).toBe("");
   });
 
-  it('should not add empty or whitespace-only commands to history', async () => {
+  it("should not add empty or whitespace-only commands to history", async () => {
     const { result } = renderHook(() => useShellHistory(MOCKED_PROJECT_ROOT));
     await waitFor(() => expect(mockedFs.readFile).toHaveBeenCalled());
 
     act(() => {
-      result.current.addCommandToHistory('   ');
+      result.current.addCommandToHistory("   ");
     });
 
     expect(mockedFs.writeFile).not.toHaveBeenCalled();
   });
 
-  it('should truncate history to MAX_HISTORY_LENGTH (100)', async () => {
+  it("should truncate history to MAX_HISTORY_LENGTH (100)", async () => {
     const oldCommands = Array.from({ length: 120 }, (_, i) => `old_cmd_${i}`);
-    mockedFs.readFile.mockResolvedValue(oldCommands.join('\n'));
+    mockedFs.readFile.mockResolvedValue(oldCommands.join("\n"));
 
     const { result } = renderHook(() => useShellHistory(MOCKED_PROJECT_ROOT));
     await waitFor(() => expect(mockedFs.readFile).toHaveBeenCalled());
 
     act(() => {
-      result.current.addCommandToHistory('new_cmd');
+      result.current.addCommandToHistory("new_cmd");
     });
 
     // Wait for the async write to happen and then inspect the arguments.
@@ -221,22 +221,22 @@ describe('useShellHistory', () => {
     // After adding 'new_cmd': ['new_cmd', 'old_cmd_119', ..., 'old_cmd_21'] (100 items)
     // Written to file (reversed): ['old_cmd_21', ..., 'old_cmd_119', 'new_cmd']
     const writtenContent = mockedFs.writeFile.mock.calls[0][1] as string;
-    const writtenLines = writtenContent.split('\n');
+    const writtenLines = writtenContent.split("\n");
 
     expect(writtenLines.length).toBe(100);
-    expect(writtenLines[0]).toBe('old_cmd_21'); // New oldest command
-    expect(writtenLines[99]).toBe('new_cmd'); // Newest command
+    expect(writtenLines[0]).toBe("old_cmd_21"); // New oldest command
+    expect(writtenLines[99]).toBe("new_cmd"); // Newest command
   });
 
-  it('should move an existing command to the top when re-added', async () => {
-    mockedFs.readFile.mockResolvedValue('cmd1\ncmd2\ncmd3');
+  it("should move an existing command to the top when re-added", async () => {
+    mockedFs.readFile.mockResolvedValue("cmd1\ncmd2\ncmd3");
     const { result } = renderHook(() => useShellHistory(MOCKED_PROJECT_ROOT));
 
     // Initial state: ['cmd3', 'cmd2', 'cmd1']
     await waitFor(() => expect(mockedFs.readFile).toHaveBeenCalled());
 
     act(() => {
-      result.current.addCommandToHistory('cmd1');
+      result.current.addCommandToHistory("cmd1");
     });
 
     // After re-adding 'cmd1': ['cmd1', 'cmd3', 'cmd2']
@@ -244,8 +244,8 @@ describe('useShellHistory', () => {
     await waitFor(() => expect(mockedFs.writeFile).toHaveBeenCalled());
 
     const writtenContent = mockedFs.writeFile.mock.calls[0][1] as string;
-    const writtenLines = writtenContent.split('\n');
+    const writtenLines = writtenContent.split("\n");
 
-    expect(writtenLines).toEqual(['cmd2', 'cmd3', 'cmd1']);
+    expect(writtenLines).toEqual(["cmd2", "cmd3", "cmd1"]);
   });
 });

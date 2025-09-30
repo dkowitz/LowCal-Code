@@ -4,31 +4,31 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { spawnSync } from 'node:child_process';
-import fs from 'node:fs';
-import os from 'node:os';
-import pathMod from 'node:path';
-import { useState, useCallback, useEffect, useMemo, useReducer } from 'react';
-import stringWidth from 'string-width';
-import { unescapePath } from '@qwen-code/qwen-code-core';
+import { spawnSync } from "node:child_process";
+import fs from "node:fs";
+import os from "node:os";
+import pathMod from "node:path";
+import { useState, useCallback, useEffect, useMemo, useReducer } from "react";
+import stringWidth from "string-width";
+import { unescapePath } from "@qwen-code/qwen-code-core";
 import {
   toCodePoints,
   cpLen,
   cpSlice,
   stripUnsafeCharacters,
-} from '../../utils/textUtils.js';
-import type { VimAction } from './vim-buffer-actions.js';
-import { handleVimAction } from './vim-buffer-actions.js';
+} from "../../utils/textUtils.js";
+import type { VimAction } from "./vim-buffer-actions.js";
+import { handleVimAction } from "./vim-buffer-actions.js";
 
 export type Direction =
-  | 'left'
-  | 'right'
-  | 'up'
-  | 'down'
-  | 'wordLeft'
-  | 'wordRight'
-  | 'home'
-  | 'end';
+  | "left"
+  | "right"
+  | "up"
+  | "down"
+  | "wordLeft"
+  | "wordRight"
+  | "home"
+  | "end";
 
 // Simple helper for word‑wise ops.
 function isWordChar(ch: string | undefined): boolean {
@@ -53,13 +53,13 @@ export const isWordCharWithCombining = (char: string): boolean =>
 
 // Get the script of a character (simplified for common scripts)
 export const getCharScript = (char: string): string => {
-  if (/[\p{Script=Latin}]/u.test(char)) return 'latin'; // All Latin script chars including diacritics
-  if (/[\p{Script=Han}]/u.test(char)) return 'han'; // Chinese
-  if (/[\p{Script=Arabic}]/u.test(char)) return 'arabic';
-  if (/[\p{Script=Hiragana}]/u.test(char)) return 'hiragana';
-  if (/[\p{Script=Katakana}]/u.test(char)) return 'katakana';
-  if (/[\p{Script=Cyrillic}]/u.test(char)) return 'cyrillic';
-  return 'other';
+  if (/[\p{Script=Latin}]/u.test(char)) return "latin"; // All Latin script chars including diacritics
+  if (/[\p{Script=Han}]/u.test(char)) return "han"; // Chinese
+  if (/[\p{Script=Arabic}]/u.test(char)) return "arabic";
+  if (/[\p{Script=Hiragana}]/u.test(char)) return "hiragana";
+  if (/[\p{Script=Katakana}]/u.test(char)) return "katakana";
+  if (/[\p{Script=Cyrillic}]/u.test(char)) return "cyrillic";
+  return "other";
 };
 
 // Check if two characters are from different scripts (indicating word boundary)
@@ -255,7 +255,7 @@ export const findNextWordAcrossLines = (
   searchForWordStart: boolean,
 ): { row: number; col: number } | null => {
   // First try current line
-  const currentLine = lines[cursorRow] || '';
+  const currentLine = lines[cursorRow] || "";
   const colInCurrentLine = searchForWordStart
     ? findNextWordStartInLine(currentLine, cursorCol)
     : findWordEndInLine(currentLine, cursorCol);
@@ -266,7 +266,7 @@ export const findNextWordAcrossLines = (
 
   // Search subsequent lines
   for (let row = cursorRow + 1; row < lines.length; row++) {
-    const line = lines[row] || '';
+    const line = lines[row] || "";
     const chars = toCodePoints(line);
 
     // For empty lines, if we haven't found any words yet, return the empty line
@@ -274,7 +274,7 @@ export const findNextWordAcrossLines = (
       // Check if there are any words in remaining lines
       let hasWordsInLaterLines = false;
       for (let laterRow = row + 1; laterRow < lines.length; laterRow++) {
-        const laterLine = lines[laterRow] || '';
+        const laterLine = lines[laterRow] || "";
         const laterChars = toCodePoints(laterLine);
         let firstNonWhitespace = 0;
         while (
@@ -328,7 +328,7 @@ export const findPrevWordAcrossLines = (
   cursorCol: number,
 ): { row: number; col: number } | null => {
   // First try current line
-  const currentLine = lines[cursorRow] || '';
+  const currentLine = lines[cursorRow] || "";
   const colInCurrentLine = findPrevWordStartInLine(currentLine, cursorCol);
 
   if (colInCurrentLine !== null) {
@@ -337,7 +337,7 @@ export const findPrevWordAcrossLines = (
 
   // Search previous lines
   for (let row = cursorRow - 1; row >= 0; row--) {
-    const line = lines[row] || '';
+    const line = lines[row] || "";
     const chars = toCodePoints(line);
 
     if (chars.length === 0) continue;
@@ -433,7 +433,7 @@ export const replaceRangeInternal = (
   endCol: number,
   text: string,
 ): TextBufferState => {
-  const currentLine = (row: number) => state.lines[row] || '';
+  const currentLine = (row: number) => state.lines[row] || "";
   const currentLineLen = (row: number) => cpLen(currentLine(row));
   const clamp = (value: number, min: number, max: number) =>
     Math.min(Math.max(value, min), max);
@@ -458,9 +458,9 @@ export const replaceRangeInternal = (
   const suffix = cpSlice(currentLine(endRow), eCol);
 
   const normalisedReplacement = text
-    .replace(/\r\n/g, '\n')
-    .replace(/\r/g, '\n');
-  const replacementParts = normalisedReplacement.split('\n');
+    .replace(/\r\n/g, "\n")
+    .replace(/\r/g, "\n");
+  const replacementParts = normalisedReplacement.split("\n");
 
   // The combined first line of the new text
   const firstLine = prefix + replacementParts[0];
@@ -492,7 +492,7 @@ export const replaceRangeInternal = (
     cursorRow: Math.min(Math.max(finalCursorRow, 0), newLines.length - 1),
     cursorCol: Math.max(
       0,
-      Math.min(finalCursorCol, cpLen(newLines[finalCursorRow] || '')),
+      Math.min(finalCursorCol, cpLen(newLines[finalCursorRow] || "")),
     ),
     preferredCol: null,
   };
@@ -563,7 +563,7 @@ export function offsetToLogicalPos(
 
   if (offset === 0) return [0, 0];
 
-  const lines = text.split('\n');
+  const lines = text.split("\n");
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
     const lineLength = cpLen(line);
@@ -651,7 +651,7 @@ function calculateVisualLayout(
       // Handle empty logical line
       logicalToVisualMap[logIndex].push([visualLines.length, 0]);
       visualToLogicalMap.push([logIndex, 0]);
-      visualLines.push('');
+      visualLines.push("");
       if (logIndex === logicalCursor[0] && logicalCursor[1] === 0) {
         currentVisualCursor = [visualLines.length - 1, 0];
       }
@@ -661,7 +661,7 @@ function calculateVisualLayout(
       const codePointsInLogLine = toCodePoints(logLine);
 
       while (currentPosInLogLine < codePointsInLogLine.length) {
-        let currentChunk = '';
+        let currentChunk = "";
         let currentChunkVisualWidth = 0;
         let numCodePointsInChunk = 0;
         let lastWordBreakPoint = -1; // Index in codePointsInLogLine for word break
@@ -685,7 +685,7 @@ function calculateVisualLayout(
                   currentPosInLogLine,
                   currentPosInLogLine + numCodePointsAtLastWordBreak,
                 )
-                .join('');
+                .join("");
               numCodePointsInChunk = numCodePointsAtLastWordBreak;
             } else {
               // No word break, or word break is at the start of this potential chunk, or word break leads to empty chunk.
@@ -716,7 +716,7 @@ function calculateVisualLayout(
           numCodePointsInChunk++;
 
           // Check for word break opportunity (space)
-          if (char === ' ') {
+          if (char === " ") {
             lastWordBreakPoint = i; // Store code point index of the space
             // Store the state *before* adding the space, if we decide to break here.
             numCodePointsAtLastWordBreak = numCodePointsInChunk - 1; // Chars *before* the space
@@ -788,7 +788,7 @@ function calculateVisualLayout(
           logicalStartOfThisChunk + numCodePointsInChunk <
             codePointsInLogLine.length &&
           currentPosInLogLine < codePointsInLogLine.length && // Redundant if previous is true, but safe
-          codePointsInLogLine[currentPosInLogLine] === ' '
+          codePointsInLogLine[currentPosInLogLine] === " "
         ) {
           currentPosInLogLine++;
         }
@@ -816,10 +816,10 @@ function calculateVisualLayout(
   // If the entire logical text was empty, ensure there's one empty visual line.
   if (
     logicalLines.length === 0 ||
-    (logicalLines.length === 1 && logicalLines[0] === '')
+    (logicalLines.length === 1 && logicalLines[0] === "")
   ) {
     if (visualLines.length === 0) {
-      visualLines.push('');
+      visualLines.push("");
       if (!logicalToVisualMap[0]) logicalToVisualMap[0] = [];
       logicalToVisualMap[0].push([0, 0]);
       visualToLogicalMap.push([0, 0]);
@@ -875,24 +875,24 @@ export const pushUndo = (currentState: TextBufferState): TextBufferState => {
 };
 
 export type TextBufferAction =
-  | { type: 'set_text'; payload: string; pushToUndo?: boolean }
-  | { type: 'insert'; payload: string }
-  | { type: 'backspace' }
+  | { type: "set_text"; payload: string; pushToUndo?: boolean }
+  | { type: "insert"; payload: string }
+  | { type: "backspace" }
   | {
-      type: 'move';
+      type: "move";
       payload: {
         dir: Direction;
       };
     }
-  | { type: 'delete' }
-  | { type: 'delete_word_left' }
-  | { type: 'delete_word_right' }
-  | { type: 'kill_line_right' }
-  | { type: 'kill_line_left' }
-  | { type: 'undo' }
-  | { type: 'redo' }
+  | { type: "delete" }
+  | { type: "delete_word_left" }
+  | { type: "delete_word_right" }
+  | { type: "kill_line_right" }
+  | { type: "kill_line_left" }
+  | { type: "undo" }
+  | { type: "redo" }
   | {
-      type: 'replace_range';
+      type: "replace_range";
       payload: {
         startRow: number;
         startCol: number;
@@ -901,45 +901,45 @@ export type TextBufferAction =
         text: string;
       };
     }
-  | { type: 'move_to_offset'; payload: { offset: number } }
-  | { type: 'create_undo_snapshot' }
-  | { type: 'set_viewport_width'; payload: number }
-  | { type: 'vim_delete_word_forward'; payload: { count: number } }
-  | { type: 'vim_delete_word_backward'; payload: { count: number } }
-  | { type: 'vim_delete_word_end'; payload: { count: number } }
-  | { type: 'vim_change_word_forward'; payload: { count: number } }
-  | { type: 'vim_change_word_backward'; payload: { count: number } }
-  | { type: 'vim_change_word_end'; payload: { count: number } }
-  | { type: 'vim_delete_line'; payload: { count: number } }
-  | { type: 'vim_change_line'; payload: { count: number } }
-  | { type: 'vim_delete_to_end_of_line' }
-  | { type: 'vim_change_to_end_of_line' }
+  | { type: "move_to_offset"; payload: { offset: number } }
+  | { type: "create_undo_snapshot" }
+  | { type: "set_viewport_width"; payload: number }
+  | { type: "vim_delete_word_forward"; payload: { count: number } }
+  | { type: "vim_delete_word_backward"; payload: { count: number } }
+  | { type: "vim_delete_word_end"; payload: { count: number } }
+  | { type: "vim_change_word_forward"; payload: { count: number } }
+  | { type: "vim_change_word_backward"; payload: { count: number } }
+  | { type: "vim_change_word_end"; payload: { count: number } }
+  | { type: "vim_delete_line"; payload: { count: number } }
+  | { type: "vim_change_line"; payload: { count: number } }
+  | { type: "vim_delete_to_end_of_line" }
+  | { type: "vim_change_to_end_of_line" }
   | {
-      type: 'vim_change_movement';
-      payload: { movement: 'h' | 'j' | 'k' | 'l'; count: number };
+      type: "vim_change_movement";
+      payload: { movement: "h" | "j" | "k" | "l"; count: number };
     }
   // New vim actions for stateless command handling
-  | { type: 'vim_move_left'; payload: { count: number } }
-  | { type: 'vim_move_right'; payload: { count: number } }
-  | { type: 'vim_move_up'; payload: { count: number } }
-  | { type: 'vim_move_down'; payload: { count: number } }
-  | { type: 'vim_move_word_forward'; payload: { count: number } }
-  | { type: 'vim_move_word_backward'; payload: { count: number } }
-  | { type: 'vim_move_word_end'; payload: { count: number } }
-  | { type: 'vim_delete_char'; payload: { count: number } }
-  | { type: 'vim_insert_at_cursor' }
-  | { type: 'vim_append_at_cursor' }
-  | { type: 'vim_open_line_below' }
-  | { type: 'vim_open_line_above' }
-  | { type: 'vim_append_at_line_end' }
-  | { type: 'vim_insert_at_line_start' }
-  | { type: 'vim_move_to_line_start' }
-  | { type: 'vim_move_to_line_end' }
-  | { type: 'vim_move_to_first_nonwhitespace' }
-  | { type: 'vim_move_to_first_line' }
-  | { type: 'vim_move_to_last_line' }
-  | { type: 'vim_move_to_line'; payload: { lineNumber: number } }
-  | { type: 'vim_escape_insert_mode' };
+  | { type: "vim_move_left"; payload: { count: number } }
+  | { type: "vim_move_right"; payload: { count: number } }
+  | { type: "vim_move_up"; payload: { count: number } }
+  | { type: "vim_move_down"; payload: { count: number } }
+  | { type: "vim_move_word_forward"; payload: { count: number } }
+  | { type: "vim_move_word_backward"; payload: { count: number } }
+  | { type: "vim_move_word_end"; payload: { count: number } }
+  | { type: "vim_delete_char"; payload: { count: number } }
+  | { type: "vim_insert_at_cursor" }
+  | { type: "vim_append_at_cursor" }
+  | { type: "vim_open_line_below" }
+  | { type: "vim_open_line_above" }
+  | { type: "vim_append_at_line_end" }
+  | { type: "vim_insert_at_line_start" }
+  | { type: "vim_move_to_line_start" }
+  | { type: "vim_move_to_line_end" }
+  | { type: "vim_move_to_first_nonwhitespace" }
+  | { type: "vim_move_to_first_line" }
+  | { type: "vim_move_to_last_line" }
+  | { type: "vim_move_to_line"; payload: { lineNumber: number } }
+  | { type: "vim_escape_insert_mode" };
 
 export function textBufferReducer(
   state: TextBufferState,
@@ -947,41 +947,41 @@ export function textBufferReducer(
 ): TextBufferState {
   const pushUndoLocal = pushUndo;
 
-  const currentLine = (r: number): string => state.lines[r] ?? '';
+  const currentLine = (r: number): string => state.lines[r] ?? "";
   const currentLineLen = (r: number): number => cpLen(currentLine(r));
 
   switch (action.type) {
-    case 'set_text': {
+    case "set_text": {
       let nextState = state;
       if (action.pushToUndo !== false) {
         nextState = pushUndoLocal(state);
       }
       const newContentLines = action.payload
-        .replace(/\r\n?/g, '\n')
-        .split('\n');
-      const lines = newContentLines.length === 0 ? [''] : newContentLines;
+        .replace(/\r\n?/g, "\n")
+        .split("\n");
+      const lines = newContentLines.length === 0 ? [""] : newContentLines;
       const lastNewLineIndex = lines.length - 1;
       return {
         ...nextState,
         lines,
         cursorRow: lastNewLineIndex,
-        cursorCol: cpLen(lines[lastNewLineIndex] ?? ''),
+        cursorCol: cpLen(lines[lastNewLineIndex] ?? ""),
         preferredCol: null,
       };
     }
 
-    case 'insert': {
+    case "insert": {
       const nextState = pushUndoLocal(state);
       const newLines = [...nextState.lines];
       let newCursorRow = nextState.cursorRow;
       let newCursorCol = nextState.cursorCol;
 
-      const currentLine = (r: number) => newLines[r] ?? '';
+      const currentLine = (r: number) => newLines[r] ?? "";
 
       const str = stripUnsafeCharacters(
-        action.payload.replace(/\r\n/g, '\n').replace(/\r/g, '\n'),
+        action.payload.replace(/\r\n/g, "\n").replace(/\r/g, "\n"),
       );
-      const parts = str.split('\n');
+      const parts = str.split("\n");
       const lineContent = currentLine(newCursorRow);
       const before = cpSlice(lineContent, 0, newCursorCol);
       const after = cpSlice(lineContent, newCursorCol);
@@ -989,7 +989,7 @@ export function textBufferReducer(
       if (parts.length > 1) {
         newLines[newCursorRow] = before + parts[0];
         const remainingParts = parts.slice(1);
-        const lastPartOriginal = remainingParts.pop() ?? '';
+        const lastPartOriginal = remainingParts.pop() ?? "";
         newLines.splice(newCursorRow + 1, 0, ...remainingParts);
         newLines.splice(
           newCursorRow + parts.length - 1,
@@ -1012,13 +1012,13 @@ export function textBufferReducer(
       };
     }
 
-    case 'backspace': {
+    case "backspace": {
       const nextState = pushUndoLocal(state);
       const newLines = [...nextState.lines];
       let newCursorRow = nextState.cursorRow;
       let newCursorCol = nextState.cursorCol;
 
-      const currentLine = (r: number) => newLines[r] ?? '';
+      const currentLine = (r: number) => newLines[r] ?? "";
 
       if (newCursorCol === 0 && newCursorRow === 0) return state;
 
@@ -1047,14 +1047,14 @@ export function textBufferReducer(
       };
     }
 
-    case 'set_viewport_width': {
+    case "set_viewport_width": {
       if (action.payload === state.viewportWidth) {
         return state;
       }
       return { ...state, viewportWidth: action.payload };
     }
 
-    case 'move': {
+    case "move": {
       const { dir } = action.payload;
       const { lines, cursorRow, cursorCol, viewportWidth } = state;
       const visualLayout = calculateVisualLayout(
@@ -1068,19 +1068,19 @@ export function textBufferReducer(
       let newVisualCol = visualCursor[1];
       let newPreferredCol = state.preferredCol;
 
-      const currentVisLineLen = cpLen(visualLines[newVisualRow] ?? '');
+      const currentVisLineLen = cpLen(visualLines[newVisualRow] ?? "");
 
       switch (dir) {
-        case 'left':
+        case "left":
           newPreferredCol = null;
           if (newVisualCol > 0) {
             newVisualCol--;
           } else if (newVisualRow > 0) {
             newVisualRow--;
-            newVisualCol = cpLen(visualLines[newVisualRow] ?? '');
+            newVisualCol = cpLen(visualLines[newVisualRow] ?? "");
           }
           break;
-        case 'right':
+        case "right":
           newPreferredCol = null;
           if (newVisualCol < currentVisLineLen) {
             newVisualCol++;
@@ -1089,37 +1089,37 @@ export function textBufferReducer(
             newVisualCol = 0;
           }
           break;
-        case 'up':
+        case "up":
           if (newVisualRow > 0) {
             if (newPreferredCol === null) newPreferredCol = newVisualCol;
             newVisualRow--;
             newVisualCol = clamp(
               newPreferredCol,
               0,
-              cpLen(visualLines[newVisualRow] ?? ''),
+              cpLen(visualLines[newVisualRow] ?? ""),
             );
           }
           break;
-        case 'down':
+        case "down":
           if (newVisualRow < visualLines.length - 1) {
             if (newPreferredCol === null) newPreferredCol = newVisualCol;
             newVisualRow++;
             newVisualCol = clamp(
               newPreferredCol,
               0,
-              cpLen(visualLines[newVisualRow] ?? ''),
+              cpLen(visualLines[newVisualRow] ?? ""),
             );
           }
           break;
-        case 'home':
+        case "home":
           newPreferredCol = null;
           newVisualCol = 0;
           break;
-        case 'end':
+        case "end":
           newPreferredCol = null;
           newVisualCol = currentVisLineLen;
           break;
-        case 'wordLeft': {
+        case "wordLeft": {
           const { cursorRow, cursorCol, lines } = state;
           if (cursorCol === 0 && cursorRow === 0) return state;
 
@@ -1128,7 +1128,7 @@ export function textBufferReducer(
 
           if (cursorCol === 0) {
             newCursorRow--;
-            newCursorCol = cpLen(lines[newCursorRow] ?? '');
+            newCursorCol = cpLen(lines[newCursorRow] ?? "");
           } else {
             const lineContent = lines[cursorRow];
             const arr = toCodePoints(lineContent);
@@ -1155,18 +1155,18 @@ export function textBufferReducer(
             preferredCol: null,
           };
         }
-        case 'wordRight': {
+        case "wordRight": {
           const { cursorRow, cursorCol, lines } = state;
           if (
             cursorRow === lines.length - 1 &&
-            cursorCol === cpLen(lines[cursorRow] ?? '')
+            cursorCol === cpLen(lines[cursorRow] ?? "")
           ) {
             return state;
           }
 
           let newCursorRow = cursorRow;
           let newCursorCol = cursorCol;
-          const lineContent = lines[cursorRow] ?? '';
+          const lineContent = lines[cursorRow] ?? "";
           const arr = toCodePoints(lineContent);
 
           if (cursorCol >= arr.length) {
@@ -1197,7 +1197,7 @@ export function textBufferReducer(
           cursorCol: clamp(
             logStartCol + newVisualCol,
             0,
-            cpLen(state.lines[logRow] ?? ''),
+            cpLen(state.lines[logRow] ?? ""),
           ),
           preferredCol: newPreferredCol,
         };
@@ -1205,7 +1205,7 @@ export function textBufferReducer(
       return state;
     }
 
-    case 'delete': {
+    case "delete": {
       const { cursorRow, cursorCol, lines } = state;
       const lineContent = currentLine(cursorRow);
       if (cursorCol < currentLineLen(cursorRow)) {
@@ -1226,7 +1226,7 @@ export function textBufferReducer(
       return state;
     }
 
-    case 'delete_word_left': {
+    case "delete_word_left": {
       const { cursorRow, cursorCol } = state;
       if (cursorCol === 0 && cursorRow === 0) return state;
       if (cursorCol === 0) {
@@ -1274,7 +1274,7 @@ export function textBufferReducer(
       };
     }
 
-    case 'delete_word_right': {
+    case "delete_word_right": {
       const { cursorRow, cursorCol, lines } = state;
       const lineContent = currentLine(cursorRow);
       const arr = toCodePoints(lineContent);
@@ -1299,7 +1299,7 @@ export function textBufferReducer(
       return { ...nextState, lines: newLines, preferredCol: null };
     }
 
-    case 'kill_line_right': {
+    case "kill_line_right": {
       const { cursorRow, cursorCol, lines } = state;
       const lineContent = currentLine(cursorRow);
       if (cursorCol < currentLineLen(cursorRow)) {
@@ -1319,7 +1319,7 @@ export function textBufferReducer(
       return state;
     }
 
-    case 'kill_line_left': {
+    case "kill_line_left": {
       const { cursorRow, cursorCol } = state;
       if (cursorCol > 0) {
         const nextState = pushUndoLocal(state);
@@ -1336,7 +1336,7 @@ export function textBufferReducer(
       return state;
     }
 
-    case 'undo': {
+    case "undo": {
       const stateToRestore = state.undoStack[state.undoStack.length - 1];
       if (!stateToRestore) return state;
 
@@ -1353,7 +1353,7 @@ export function textBufferReducer(
       };
     }
 
-    case 'redo': {
+    case "redo": {
       const stateToRestore = state.redoStack[state.redoStack.length - 1];
       if (!stateToRestore) return state;
 
@@ -1370,7 +1370,7 @@ export function textBufferReducer(
       };
     }
 
-    case 'replace_range': {
+    case "replace_range": {
       const { startRow, startCol, endRow, endCol, text } = action.payload;
       const nextState = pushUndoLocal(state);
       return replaceRangeInternal(
@@ -1383,10 +1383,10 @@ export function textBufferReducer(
       );
     }
 
-    case 'move_to_offset': {
+    case "move_to_offset": {
       const { offset } = action.payload;
       const [newRow, newCol] = offsetToLogicalPos(
-        state.lines.join('\n'),
+        state.lines.join("\n"),
         offset,
       );
       return {
@@ -1397,43 +1397,43 @@ export function textBufferReducer(
       };
     }
 
-    case 'create_undo_snapshot': {
+    case "create_undo_snapshot": {
       return pushUndoLocal(state);
     }
 
     // Vim-specific operations
-    case 'vim_delete_word_forward':
-    case 'vim_delete_word_backward':
-    case 'vim_delete_word_end':
-    case 'vim_change_word_forward':
-    case 'vim_change_word_backward':
-    case 'vim_change_word_end':
-    case 'vim_delete_line':
-    case 'vim_change_line':
-    case 'vim_delete_to_end_of_line':
-    case 'vim_change_to_end_of_line':
-    case 'vim_change_movement':
-    case 'vim_move_left':
-    case 'vim_move_right':
-    case 'vim_move_up':
-    case 'vim_move_down':
-    case 'vim_move_word_forward':
-    case 'vim_move_word_backward':
-    case 'vim_move_word_end':
-    case 'vim_delete_char':
-    case 'vim_insert_at_cursor':
-    case 'vim_append_at_cursor':
-    case 'vim_open_line_below':
-    case 'vim_open_line_above':
-    case 'vim_append_at_line_end':
-    case 'vim_insert_at_line_start':
-    case 'vim_move_to_line_start':
-    case 'vim_move_to_line_end':
-    case 'vim_move_to_first_nonwhitespace':
-    case 'vim_move_to_first_line':
-    case 'vim_move_to_last_line':
-    case 'vim_move_to_line':
-    case 'vim_escape_insert_mode':
+    case "vim_delete_word_forward":
+    case "vim_delete_word_backward":
+    case "vim_delete_word_end":
+    case "vim_change_word_forward":
+    case "vim_change_word_backward":
+    case "vim_change_word_end":
+    case "vim_delete_line":
+    case "vim_change_line":
+    case "vim_delete_to_end_of_line":
+    case "vim_change_to_end_of_line":
+    case "vim_change_movement":
+    case "vim_move_left":
+    case "vim_move_right":
+    case "vim_move_up":
+    case "vim_move_down":
+    case "vim_move_word_forward":
+    case "vim_move_word_backward":
+    case "vim_move_word_end":
+    case "vim_delete_char":
+    case "vim_insert_at_cursor":
+    case "vim_append_at_cursor":
+    case "vim_open_line_below":
+    case "vim_open_line_above":
+    case "vim_append_at_line_end":
+    case "vim_insert_at_line_start":
+    case "vim_move_to_line_start":
+    case "vim_move_to_line_end":
+    case "vim_move_to_first_nonwhitespace":
+    case "vim_move_to_first_line":
+    case "vim_move_to_last_line":
+    case "vim_move_to_line":
+    case "vim_escape_insert_mode":
       return handleVimAction(state, action as VimAction);
 
     default: {
@@ -1447,7 +1447,7 @@ export function textBufferReducer(
 // --- End of reducer logic ---
 
 export function useTextBuffer({
-  initialText = '',
+  initialText = "",
   initialCursorOffset = 0,
   viewport,
   stdin,
@@ -1457,13 +1457,13 @@ export function useTextBuffer({
   shellModeActive = false,
 }: UseTextBufferProps): TextBuffer {
   const initialState = useMemo((): TextBufferState => {
-    const lines = initialText.split('\n');
+    const lines = initialText.split("\n");
     const [initialCursorRow, initialCursorCol] = calculateInitialCursorPosition(
-      lines.length === 0 ? [''] : lines,
+      lines.length === 0 ? [""] : lines,
       initialCursorOffset,
     );
     return {
-      lines: lines.length === 0 ? [''] : lines,
+      lines: lines.length === 0 ? [""] : lines,
       cursorRow: initialCursorRow,
       cursorCol: initialCursorCol,
       preferredCol: null,
@@ -1478,7 +1478,7 @@ export function useTextBuffer({
   const [state, dispatch] = useReducer(textBufferReducer, initialState);
   const { lines, cursorRow, cursorCol, preferredCol, selectionAnchor } = state;
 
-  const text = useMemo(() => lines.join('\n'), [lines]);
+  const text = useMemo(() => lines.join("\n"), [lines]);
 
   const visualLayout = useMemo(
     () =>
@@ -1497,7 +1497,7 @@ export function useTextBuffer({
   }, [text, onChange]);
 
   useEffect(() => {
-    dispatch({ type: 'set_viewport_width', payload: viewport.width });
+    dispatch({ type: "set_viewport_width", payload: viewport.width });
   }, [viewport.width]);
 
   // Update visual scroll (vertical)
@@ -1518,7 +1518,7 @@ export function useTextBuffer({
   const insert = useCallback(
     (ch: string, { paste = false }: { paste?: boolean } = {}): void => {
       if (/[\n\r]/.test(ch)) {
-        dispatch({ type: 'insert', payload: ch });
+        dispatch({ type: "insert", payload: ch });
         return;
       }
 
@@ -1540,230 +1540,230 @@ export function useTextBuffer({
         }
       }
 
-      let currentText = '';
+      let currentText = "";
       for (const char of toCodePoints(ch)) {
         if (char.codePointAt(0) === 127) {
           if (currentText.length > 0) {
-            dispatch({ type: 'insert', payload: currentText });
-            currentText = '';
+            dispatch({ type: "insert", payload: currentText });
+            currentText = "";
           }
-          dispatch({ type: 'backspace' });
+          dispatch({ type: "backspace" });
         } else {
           currentText += char;
         }
       }
       if (currentText.length > 0) {
-        dispatch({ type: 'insert', payload: currentText });
+        dispatch({ type: "insert", payload: currentText });
       }
     },
     [isValidPath, shellModeActive],
   );
 
   const newline = useCallback((): void => {
-    dispatch({ type: 'insert', payload: '\n' });
+    dispatch({ type: "insert", payload: "\n" });
   }, []);
 
   const backspace = useCallback((): void => {
-    dispatch({ type: 'backspace' });
+    dispatch({ type: "backspace" });
   }, []);
 
   const del = useCallback((): void => {
-    dispatch({ type: 'delete' });
+    dispatch({ type: "delete" });
   }, []);
 
   const move = useCallback((dir: Direction): void => {
-    dispatch({ type: 'move', payload: { dir } });
+    dispatch({ type: "move", payload: { dir } });
   }, []);
 
   const undo = useCallback((): void => {
-    dispatch({ type: 'undo' });
+    dispatch({ type: "undo" });
   }, []);
 
   const redo = useCallback((): void => {
-    dispatch({ type: 'redo' });
+    dispatch({ type: "redo" });
   }, []);
 
   const setText = useCallback((newText: string): void => {
-    dispatch({ type: 'set_text', payload: newText });
+    dispatch({ type: "set_text", payload: newText });
   }, []);
 
   const deleteWordLeft = useCallback((): void => {
-    dispatch({ type: 'delete_word_left' });
+    dispatch({ type: "delete_word_left" });
   }, []);
 
   const deleteWordRight = useCallback((): void => {
-    dispatch({ type: 'delete_word_right' });
+    dispatch({ type: "delete_word_right" });
   }, []);
 
   const killLineRight = useCallback((): void => {
-    dispatch({ type: 'kill_line_right' });
+    dispatch({ type: "kill_line_right" });
   }, []);
 
   const killLineLeft = useCallback((): void => {
-    dispatch({ type: 'kill_line_left' });
+    dispatch({ type: "kill_line_left" });
   }, []);
 
   // Vim-specific operations
   const vimDeleteWordForward = useCallback((count: number): void => {
-    dispatch({ type: 'vim_delete_word_forward', payload: { count } });
+    dispatch({ type: "vim_delete_word_forward", payload: { count } });
   }, []);
 
   const vimDeleteWordBackward = useCallback((count: number): void => {
-    dispatch({ type: 'vim_delete_word_backward', payload: { count } });
+    dispatch({ type: "vim_delete_word_backward", payload: { count } });
   }, []);
 
   const vimDeleteWordEnd = useCallback((count: number): void => {
-    dispatch({ type: 'vim_delete_word_end', payload: { count } });
+    dispatch({ type: "vim_delete_word_end", payload: { count } });
   }, []);
 
   const vimChangeWordForward = useCallback((count: number): void => {
-    dispatch({ type: 'vim_change_word_forward', payload: { count } });
+    dispatch({ type: "vim_change_word_forward", payload: { count } });
   }, []);
 
   const vimChangeWordBackward = useCallback((count: number): void => {
-    dispatch({ type: 'vim_change_word_backward', payload: { count } });
+    dispatch({ type: "vim_change_word_backward", payload: { count } });
   }, []);
 
   const vimChangeWordEnd = useCallback((count: number): void => {
-    dispatch({ type: 'vim_change_word_end', payload: { count } });
+    dispatch({ type: "vim_change_word_end", payload: { count } });
   }, []);
 
   const vimDeleteLine = useCallback((count: number): void => {
-    dispatch({ type: 'vim_delete_line', payload: { count } });
+    dispatch({ type: "vim_delete_line", payload: { count } });
   }, []);
 
   const vimChangeLine = useCallback((count: number): void => {
-    dispatch({ type: 'vim_change_line', payload: { count } });
+    dispatch({ type: "vim_change_line", payload: { count } });
   }, []);
 
   const vimDeleteToEndOfLine = useCallback((): void => {
-    dispatch({ type: 'vim_delete_to_end_of_line' });
+    dispatch({ type: "vim_delete_to_end_of_line" });
   }, []);
 
   const vimChangeToEndOfLine = useCallback((): void => {
-    dispatch({ type: 'vim_change_to_end_of_line' });
+    dispatch({ type: "vim_change_to_end_of_line" });
   }, []);
 
   const vimChangeMovement = useCallback(
-    (movement: 'h' | 'j' | 'k' | 'l', count: number): void => {
-      dispatch({ type: 'vim_change_movement', payload: { movement, count } });
+    (movement: "h" | "j" | "k" | "l", count: number): void => {
+      dispatch({ type: "vim_change_movement", payload: { movement, count } });
     },
     [],
   );
 
   // New vim navigation and operation methods
   const vimMoveLeft = useCallback((count: number): void => {
-    dispatch({ type: 'vim_move_left', payload: { count } });
+    dispatch({ type: "vim_move_left", payload: { count } });
   }, []);
 
   const vimMoveRight = useCallback((count: number): void => {
-    dispatch({ type: 'vim_move_right', payload: { count } });
+    dispatch({ type: "vim_move_right", payload: { count } });
   }, []);
 
   const vimMoveUp = useCallback((count: number): void => {
-    dispatch({ type: 'vim_move_up', payload: { count } });
+    dispatch({ type: "vim_move_up", payload: { count } });
   }, []);
 
   const vimMoveDown = useCallback((count: number): void => {
-    dispatch({ type: 'vim_move_down', payload: { count } });
+    dispatch({ type: "vim_move_down", payload: { count } });
   }, []);
 
   const vimMoveWordForward = useCallback((count: number): void => {
-    dispatch({ type: 'vim_move_word_forward', payload: { count } });
+    dispatch({ type: "vim_move_word_forward", payload: { count } });
   }, []);
 
   const vimMoveWordBackward = useCallback((count: number): void => {
-    dispatch({ type: 'vim_move_word_backward', payload: { count } });
+    dispatch({ type: "vim_move_word_backward", payload: { count } });
   }, []);
 
   const vimMoveWordEnd = useCallback((count: number): void => {
-    dispatch({ type: 'vim_move_word_end', payload: { count } });
+    dispatch({ type: "vim_move_word_end", payload: { count } });
   }, []);
 
   const vimDeleteChar = useCallback((count: number): void => {
-    dispatch({ type: 'vim_delete_char', payload: { count } });
+    dispatch({ type: "vim_delete_char", payload: { count } });
   }, []);
 
   const vimInsertAtCursor = useCallback((): void => {
-    dispatch({ type: 'vim_insert_at_cursor' });
+    dispatch({ type: "vim_insert_at_cursor" });
   }, []);
 
   const vimAppendAtCursor = useCallback((): void => {
-    dispatch({ type: 'vim_append_at_cursor' });
+    dispatch({ type: "vim_append_at_cursor" });
   }, []);
 
   const vimOpenLineBelow = useCallback((): void => {
-    dispatch({ type: 'vim_open_line_below' });
+    dispatch({ type: "vim_open_line_below" });
   }, []);
 
   const vimOpenLineAbove = useCallback((): void => {
-    dispatch({ type: 'vim_open_line_above' });
+    dispatch({ type: "vim_open_line_above" });
   }, []);
 
   const vimAppendAtLineEnd = useCallback((): void => {
-    dispatch({ type: 'vim_append_at_line_end' });
+    dispatch({ type: "vim_append_at_line_end" });
   }, []);
 
   const vimInsertAtLineStart = useCallback((): void => {
-    dispatch({ type: 'vim_insert_at_line_start' });
+    dispatch({ type: "vim_insert_at_line_start" });
   }, []);
 
   const vimMoveToLineStart = useCallback((): void => {
-    dispatch({ type: 'vim_move_to_line_start' });
+    dispatch({ type: "vim_move_to_line_start" });
   }, []);
 
   const vimMoveToLineEnd = useCallback((): void => {
-    dispatch({ type: 'vim_move_to_line_end' });
+    dispatch({ type: "vim_move_to_line_end" });
   }, []);
 
   const vimMoveToFirstNonWhitespace = useCallback((): void => {
-    dispatch({ type: 'vim_move_to_first_nonwhitespace' });
+    dispatch({ type: "vim_move_to_first_nonwhitespace" });
   }, []);
 
   const vimMoveToFirstLine = useCallback((): void => {
-    dispatch({ type: 'vim_move_to_first_line' });
+    dispatch({ type: "vim_move_to_first_line" });
   }, []);
 
   const vimMoveToLastLine = useCallback((): void => {
-    dispatch({ type: 'vim_move_to_last_line' });
+    dispatch({ type: "vim_move_to_last_line" });
   }, []);
 
   const vimMoveToLine = useCallback((lineNumber: number): void => {
-    dispatch({ type: 'vim_move_to_line', payload: { lineNumber } });
+    dispatch({ type: "vim_move_to_line", payload: { lineNumber } });
   }, []);
 
   const vimEscapeInsertMode = useCallback((): void => {
-    dispatch({ type: 'vim_escape_insert_mode' });
+    dispatch({ type: "vim_escape_insert_mode" });
   }, []);
 
   const openInExternalEditor = useCallback(
     async (opts: { editor?: string } = {}): Promise<void> => {
       const editor =
         opts.editor ??
-        process.env['VISUAL'] ??
-        process.env['EDITOR'] ??
-        (process.platform === 'win32' ? 'notepad' : 'vi');
-      const tmpDir = fs.mkdtempSync(pathMod.join(os.tmpdir(), 'gemini-edit-'));
-      const filePath = pathMod.join(tmpDir, 'buffer.txt');
-      fs.writeFileSync(filePath, text, 'utf8');
+        process.env["VISUAL"] ??
+        process.env["EDITOR"] ??
+        (process.platform === "win32" ? "notepad" : "vi");
+      const tmpDir = fs.mkdtempSync(pathMod.join(os.tmpdir(), "gemini-edit-"));
+      const filePath = pathMod.join(tmpDir, "buffer.txt");
+      fs.writeFileSync(filePath, text, "utf8");
 
-      dispatch({ type: 'create_undo_snapshot' });
+      dispatch({ type: "create_undo_snapshot" });
 
       const wasRaw = stdin?.isRaw ?? false;
       try {
         setRawMode?.(false);
         const { status, error } = spawnSync(editor, [filePath], {
-          stdio: 'inherit',
+          stdio: "inherit",
         });
         if (error) throw error;
-        if (typeof status === 'number' && status !== 0)
+        if (typeof status === "number" && status !== 0)
           throw new Error(`External editor exited with status ${status}`);
 
-        let newText = fs.readFileSync(filePath, 'utf8');
-        newText = newText.replace(/\r\n?/g, '\n');
-        dispatch({ type: 'set_text', payload: newText, pushToUndo: false });
+        let newText = fs.readFileSync(filePath, "utf8");
+        newText = newText.replace(/\r\n?/g, "\n");
+        dispatch({ type: "set_text", payload: newText, pushToUndo: false });
       } catch (err) {
-        console.error('[useTextBuffer] external editor error', err);
+        console.error("[useTextBuffer] external editor error", err);
       } finally {
         if (wasRaw) setRawMode?.(true);
         try {
@@ -1800,42 +1800,42 @@ export function useTextBuffer({
       }
 
       if (
-        key.name === 'return' ||
-        input === '\r' ||
-        input === '\n' ||
-        input === '\\\r' // VSCode terminal represents shift + enter this way
+        key.name === "return" ||
+        input === "\r" ||
+        input === "\n" ||
+        input === "\\\r" // VSCode terminal represents shift + enter this way
       )
         newline();
-      else if (key.name === 'left' && !key.meta && !key.ctrl) move('left');
-      else if (key.ctrl && key.name === 'b') move('left');
-      else if (key.name === 'right' && !key.meta && !key.ctrl) move('right');
-      else if (key.ctrl && key.name === 'f') move('right');
-      else if (key.name === 'up') move('up');
-      else if (key.name === 'down') move('down');
-      else if ((key.ctrl || key.meta) && key.name === 'left') move('wordLeft');
-      else if (key.meta && key.name === 'b') move('wordLeft');
-      else if ((key.ctrl || key.meta) && key.name === 'right')
-        move('wordRight');
-      else if (key.meta && key.name === 'f') move('wordRight');
-      else if (key.name === 'home') move('home');
-      else if (key.ctrl && key.name === 'a') move('home');
-      else if (key.name === 'end') move('end');
-      else if (key.ctrl && key.name === 'e') move('end');
-      else if (key.ctrl && key.name === 'w') deleteWordLeft();
+      else if (key.name === "left" && !key.meta && !key.ctrl) move("left");
+      else if (key.ctrl && key.name === "b") move("left");
+      else if (key.name === "right" && !key.meta && !key.ctrl) move("right");
+      else if (key.ctrl && key.name === "f") move("right");
+      else if (key.name === "up") move("up");
+      else if (key.name === "down") move("down");
+      else if ((key.ctrl || key.meta) && key.name === "left") move("wordLeft");
+      else if (key.meta && key.name === "b") move("wordLeft");
+      else if ((key.ctrl || key.meta) && key.name === "right")
+        move("wordRight");
+      else if (key.meta && key.name === "f") move("wordRight");
+      else if (key.name === "home") move("home");
+      else if (key.ctrl && key.name === "a") move("home");
+      else if (key.name === "end") move("end");
+      else if (key.ctrl && key.name === "e") move("end");
+      else if (key.ctrl && key.name === "w") deleteWordLeft();
       else if (
         (key.meta || key.ctrl) &&
-        (key.name === 'backspace' || input === '\x7f')
+        (key.name === "backspace" || input === "\x7f")
       )
         deleteWordLeft();
-      else if ((key.meta || key.ctrl) && key.name === 'delete')
+      else if ((key.meta || key.ctrl) && key.name === "delete")
         deleteWordRight();
       else if (
-        key.name === 'backspace' ||
-        input === '\x7f' ||
-        (key.ctrl && key.name === 'h')
+        key.name === "backspace" ||
+        input === "\x7f" ||
+        (key.ctrl && key.name === "h")
       )
         backspace();
-      else if (key.name === 'delete' || (key.ctrl && key.name === 'd')) del();
+      else if (key.name === "delete" || (key.ctrl && key.name === "d")) del();
       else if (input && !key.ctrl && !key.meta) {
         insert(input, { paste: key.paste });
       }
@@ -1857,7 +1857,7 @@ export function useTextBuffer({
       text: string,
     ): void => {
       dispatch({
-        type: 'replace_range',
+        type: "replace_range",
         payload: { startRow, startCol, endRow, endCol, text },
       });
     },
@@ -1874,7 +1874,7 @@ export function useTextBuffer({
   );
 
   const moveToOffset = useCallback((offset: number): void => {
-    dispatch({ type: 'move_to_offset', payload: { offset } });
+    dispatch({ type: "move_to_offset", payload: { offset } });
   }, []);
 
   const returnValue: TextBuffer = {
@@ -2098,7 +2098,7 @@ export interface TextBuffer {
   /**
    * Change movement operations (vim 'ch', 'cj', 'ck', 'cl' commands)
    */
-  vimChangeMovement: (movement: 'h' | 'j' | 'k' | 'l', count: number) => void;
+  vimChangeMovement: (movement: "h" | "j" | "k" | "l", count: number) => void;
   /**
    * Move cursor left N times (vim 'h' command)
    */

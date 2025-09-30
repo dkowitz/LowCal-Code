@@ -707,23 +707,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { useReducer, useCallback, useMemo } from 'react';
-import { Box, Text } from 'ink';
-import { wizardReducer, initialWizardState } from '../reducers.js';
-import { LocationSelector } from './LocationSelector.js';
-import { GenerationMethodSelector } from './GenerationMethodSelector.js';
-import { DescriptionInput } from './DescriptionInput.js';
-import { ToolSelector } from './ToolSelector.js';
-import { ColorSelector } from './ColorSelector.js';
-import { CreationSummary } from './CreationSummary.js';
-import { type WizardStepProps } from '../types.js';
-import { WIZARD_STEPS } from '../constants.js';
-import { getStepKind } from '../utils.js';
-import type { Config } from '@qwen-code/qwen-code-core';
-import { Colors } from '../../../colors.js';
-import { theme } from '../../../semantic-colors.js';
-import { TextEntryStep } from './TextEntryStep.js';
-import { useKeypress } from '../../../hooks/useKeypress.js';
+import { useReducer, useCallback, useMemo } from "react";
+import { Box, Text } from "ink";
+import { wizardReducer, initialWizardState } from "../reducers.js";
+import { LocationSelector } from "./LocationSelector.js";
+import { GenerationMethodSelector } from "./GenerationMethodSelector.js";
+import { DescriptionInput } from "./DescriptionInput.js";
+import { ToolSelector } from "./ToolSelector.js";
+import { ColorSelector } from "./ColorSelector.js";
+import { CreationSummary } from "./CreationSummary.js";
+import { type WizardStepProps } from "../types.js";
+import { WIZARD_STEPS } from "../constants.js";
+import { getStepKind } from "../utils.js";
+import type { Config } from "@qwen-code/qwen-code-core";
+import { Colors } from "../../../colors.js";
+import { theme } from "../../../semantic-colors.js";
+import { TextEntryStep } from "./TextEntryStep.js";
+import { useKeypress } from "../../../hooks/useKeypress.js";
 &nbsp;
 interface AgentCreationWizardProps {
   onClose: () =&gt; void;
@@ -740,28 +740,28 @@ export <span class="fstat-no" title="function not covered" >function AgentCreati
 <span class="cstat-no" title="statement not covered" >  const [state, dispatch] = useReducer(wizardReducer, initialWizardState);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const handleNext = useCallback(() =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    dispatch({ type: 'GO_TO_NEXT_STEP' });</span>
+<span class="cstat-no" title="statement not covered" >    dispatch({ type: "GO_TO_NEXT_STEP" });</span>
 <span class="cstat-no" title="statement not covered" >  }, []);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const handlePrevious = useCallback(() =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    dispatch({ type: 'GO_TO_PREVIOUS_STEP' });</span>
+<span class="cstat-no" title="statement not covered" >    dispatch({ type: "GO_TO_PREVIOUS_STEP" });</span>
 <span class="cstat-no" title="statement not covered" >  }, []);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const handleCancel = useCallback(() =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    dispatch({ type: 'RESET_WIZARD' });</span>
+<span class="cstat-no" title="statement not covered" >    dispatch({ type: "RESET_WIZARD" });</span>
 <span class="cstat-no" title="statement not covered" >    onClose();</span>
 <span class="cstat-no" title="statement not covered" >  }, [onClose]);</span>
 &nbsp;
   // Centralized ESC key handling for the entire wizard
 <span class="cstat-no" title="statement not covered" >  useKeypress(</span>
 <span class="cstat-no" title="statement not covered" >    (key) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      if (key.name !== 'escape') {</span>
+<span class="cstat-no" title="statement not covered" >      if (key.name !== "escape") {</span>
 <span class="cstat-no" title="statement not covered" >        return;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
       // LLM DescriptionInput handles its own ESC logic when generating
 <span class="cstat-no" title="statement not covered" >      const kind = getStepKind(state.generationMethod, state.currentStep);</span>
-<span class="cstat-no" title="statement not covered" >      if (kind === 'LLM_DESC' &amp;&amp; state.isGenerating) {</span>
+<span class="cstat-no" title="statement not covered" >      if (kind === "LLM_DESC" &amp;&amp; state.isGenerating) {</span>
 <span class="cstat-no" title="statement not covered" >        return; // Let DescriptionInput handle it</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
@@ -793,26 +793,26 @@ export <span class="fstat-no" title="function not covered" >function AgentCreati
 <span class="cstat-no" title="statement not covered" >      const kind = getStepKind(state.generationMethod, state.currentStep);</span>
 <span class="cstat-no" title="statement not covered" >      const n = state.currentStep;</span>
 <span class="cstat-no" title="statement not covered" >      switch (kind) {</span>
-<span class="cstat-no" title="statement not covered" >        case 'LOCATION':</span>
+<span class="cstat-no" title="statement not covered" >        case "LOCATION":</span>
 <span class="cstat-no" title="statement not covered" >          return `Step ${n}: Choose Location`;</span>
-<span class="cstat-no" title="statement not covered" >        case 'GEN_METHOD':</span>
+<span class="cstat-no" title="statement not covered" >        case "GEN_METHOD":</span>
 <span class="cstat-no" title="statement not covered" >          return `Step ${n}: Choose Generation Method`;</span>
-<span class="cstat-no" title="statement not covered" >        case 'LLM_DESC':</span>
+<span class="cstat-no" title="statement not covered" >        case "LLM_DESC":</span>
 <span class="cstat-no" title="statement not covered" >          return `Step ${n}: Describe Your Subagent`;</span>
-<span class="cstat-no" title="statement not covered" >        case 'MANUAL_NAME':</span>
+<span class="cstat-no" title="statement not covered" >        case "MANUAL_NAME":</span>
 <span class="cstat-no" title="statement not covered" >          return `Step ${n}: Enter Subagent Name`;</span>
-<span class="cstat-no" title="statement not covered" >        case 'MANUAL_PROMPT':</span>
+<span class="cstat-no" title="statement not covered" >        case "MANUAL_PROMPT":</span>
 <span class="cstat-no" title="statement not covered" >          return `Step ${n}: Enter System Prompt`;</span>
-<span class="cstat-no" title="statement not covered" >        case 'MANUAL_DESC':</span>
+<span class="cstat-no" title="statement not covered" >        case "MANUAL_DESC":</span>
 <span class="cstat-no" title="statement not covered" >          return `Step ${n}: Enter Description`;</span>
-<span class="cstat-no" title="statement not covered" >        case 'TOOLS':</span>
+<span class="cstat-no" title="statement not covered" >        case "TOOLS":</span>
 <span class="cstat-no" title="statement not covered" >          return `Step ${n}: Select Tools`;</span>
-<span class="cstat-no" title="statement not covered" >        case 'COLOR':</span>
+<span class="cstat-no" title="statement not covered" >        case "COLOR":</span>
 <span class="cstat-no" title="statement not covered" >          return `Step ${n}: Choose Background Color`;</span>
-<span class="cstat-no" title="statement not covered" >        case 'FINAL':</span>
+<span class="cstat-no" title="statement not covered" >        case "FINAL":</span>
 <span class="cstat-no" title="statement not covered" >          return `Step ${n}: Confirm and Save`;</span>
 <span class="cstat-no" title="statement not covered" >        default:</span>
-<span class="cstat-no" title="statement not covered" >          return 'Unknown Step';</span>
+<span class="cstat-no" title="statement not covered" >          return "Unknown Step";</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
@@ -824,7 +824,7 @@ export <span class="fstat-no" title="function not covered" >function AgentCreati
 <span class="cstat-no" title="statement not covered" >  }, [state.currentStep, state.generationMethod]);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const renderDebugContent = useCallback(() =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (process.env['NODE_ENV'] !== 'development') {</span>
+<span class="cstat-no" title="statement not covered" >    if (process.env["NODE_ENV"] !== "development") {</span>
 <span class="cstat-no" title="statement not covered" >      return null;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
@@ -836,16 +836,16 @@ export <span class="fstat-no" title="function not covered" >function AgentCreati
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={Colors.Gray}&gt;Step: {state.currentStep}&lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={Colors.Gray}&gt;</span>
-<span class="cstat-no" title="statement not covered" >            Can Proceed: {state.canProceed ? 'Yes' : 'No'}</span>
+<span class="cstat-no" title="statement not covered" >            Can Proceed: {state.canProceed ? "Yes" : "No"}</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={Colors.Gray}&gt;</span>
-<span class="cstat-no" title="statement not covered" >            Generating: {state.isGenerating ? 'Yes' : 'No'}</span>
+<span class="cstat-no" title="statement not covered" >            Generating: {state.isGenerating ? "Yes" : "No"}</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={Colors.Gray}&gt;Location: {state.location}&lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={Colors.Gray}&gt;Method: {state.generationMethod}&lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          {state.validationErrors.length &gt; 0 &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Text color={theme.status.error}&gt;</span>
-<span class="cstat-no" title="statement not covered" >              Errors: {state.validationErrors.join(', ')}</span>
+<span class="cstat-no" title="statement not covered" >              Errors: {state.validationErrors.join(", ")}</span>
 <span class="cstat-no" title="statement not covered" >            &lt;/Text&gt;</span>
           )}
 <span class="cstat-no" title="statement not covered" >        &lt;/Box&gt;</span>
@@ -864,27 +864,27 @@ export <span class="fstat-no" title="function not covered" >function AgentCreati
 <span class="cstat-no" title="statement not covered" >    const getNavigationInstructions = () =&gt; {</span>
       // Special case: During generation in description input step, only show cancel option
 <span class="cstat-no" title="statement not covered" >      const kind = getStepKind(state.generationMethod, state.currentStep);</span>
-<span class="cstat-no" title="statement not covered" >      if (kind === 'LLM_DESC' &amp;&amp; state.isGenerating) {</span>
-<span class="cstat-no" title="statement not covered" >        return 'Esc to cancel';</span>
+<span class="cstat-no" title="statement not covered" >      if (kind === "LLM_DESC" &amp;&amp; state.isGenerating) {</span>
+<span class="cstat-no" title="statement not covered" >        return "Esc to cancel";</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      if (getStepKind(state.generationMethod, state.currentStep) === 'FINAL') {</span>
-<span class="cstat-no" title="statement not covered" >        return 'Press Enter to save, e to save and edit, Esc to go back';</span>
+<span class="cstat-no" title="statement not covered" >      if (getStepKind(state.generationMethod, state.currentStep) === "FINAL") {</span>
+<span class="cstat-no" title="statement not covered" >        return "Press Enter to save, e to save and edit, Esc to go back";</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
       // Steps that have ↑↓ navigation (RadioButtonSelect components)
 <span class="cstat-no" title="statement not covered" >      const kindForNav = getStepKind(state.generationMethod, state.currentStep);</span>
 <span class="cstat-no" title="statement not covered" >      const hasNavigation =</span>
-<span class="cstat-no" title="statement not covered" >        kindForNav === 'LOCATION' ||</span>
-<span class="cstat-no" title="statement not covered" >        kindForNav === 'GEN_METHOD' ||</span>
-<span class="cstat-no" title="statement not covered" >        kindForNav === 'TOOLS' ||</span>
-<span class="cstat-no" title="statement not covered" >        kindForNav === 'COLOR';</span>
-<span class="cstat-no" title="statement not covered" >      const navigationPart = hasNavigation ? '↑↓ to navigate, ' : '';</span>
+<span class="cstat-no" title="statement not covered" >        kindForNav === "LOCATION" ||</span>
+<span class="cstat-no" title="statement not covered" >        kindForNav === "GEN_METHOD" ||</span>
+<span class="cstat-no" title="statement not covered" >        kindForNav === "TOOLS" ||</span>
+<span class="cstat-no" title="statement not covered" >        kindForNav === "COLOR";</span>
+<span class="cstat-no" title="statement not covered" >      const navigationPart = hasNavigation ? "↑↓ to navigate, " : "";</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      const escAction =</span>
 <span class="cstat-no" title="statement not covered" >        state.currentStep === WIZARD_STEPS.LOCATION_SELECTION</span>
-<span class="cstat-no" title="statement not covered" >          ? 'cancel'</span>
-<span class="cstat-no" title="statement not covered" >          : 'go back';</span>
+<span class="cstat-no" title="statement not covered" >          ? "cancel"</span>
+<span class="cstat-no" title="statement not covered" >          : "go back";</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      return `Press Enter to continue, ${navigationPart}Esc to ${escAction}`;</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
@@ -899,13 +899,13 @@ export <span class="fstat-no" title="function not covered" >function AgentCreati
 <span class="cstat-no" title="statement not covered" >  const renderStepContent = useCallback(() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const kind = getStepKind(state.generationMethod, state.currentStep);</span>
 <span class="cstat-no" title="statement not covered" >    switch (kind) {</span>
-<span class="cstat-no" title="statement not covered" >      case 'LOCATION':</span>
+<span class="cstat-no" title="statement not covered" >      case "LOCATION":</span>
 <span class="cstat-no" title="statement not covered" >        return &lt;LocationSelector {...stepProps} /&gt;;</span>
-<span class="cstat-no" title="statement not covered" >      case 'GEN_METHOD':</span>
+<span class="cstat-no" title="statement not covered" >      case "GEN_METHOD":</span>
 <span class="cstat-no" title="statement not covered" >        return &lt;GenerationMethodSelector {...stepProps} /&gt;;</span>
-<span class="cstat-no" title="statement not covered" >      case 'LLM_DESC':</span>
+<span class="cstat-no" title="statement not covered" >      case "LLM_DESC":</span>
 <span class="cstat-no" title="statement not covered" >        return &lt;DescriptionInput {...stepProps} /&gt;;</span>
-<span class="cstat-no" title="statement not covered" >      case 'MANUAL_NAME':</span>
+<span class="cstat-no" title="statement not covered" >      case "MANUAL_NAME":</span>
 <span class="cstat-no" title="statement not covered" >        return (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;TextEntryStep</span>
 <span class="cstat-no" title="statement not covered" >            key="manual-name"</span>
@@ -918,14 +918,14 @@ export <span class="fstat-no" title="function not covered" >function AgentCreati
 <span class="cstat-no" title="statement not covered" >            initialText={state.generatedName}</span>
 <span class="cstat-no" title="statement not covered" >            onChange={(t) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >              const value = t; // keep raw, trim later when validating</span>
-<span class="cstat-no" title="statement not covered" >              dispatch({ type: 'SET_GENERATED_NAME', name: value });</span>
+<span class="cstat-no" title="statement not covered" >              dispatch({ type: "SET_GENERATED_NAME", name: value });</span>
 <span class="cstat-no" title="statement not covered" >            }}</span>
 <span class="cstat-no" title="statement not covered" >            validate={(t) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >              t.trim().length === 0 ? 'Name cannot be empty.' : null</span>
+<span class="cstat-no" title="statement not covered" >              t.trim().length === 0 ? "Name cannot be empty." : null</span>
             }
 <span class="cstat-no" title="statement not covered" >          /&gt;</span>
         );
-<span class="cstat-no" title="statement not covered" >      case 'MANUAL_PROMPT':</span>
+<span class="cstat-no" title="statement not covered" >      case "MANUAL_PROMPT":</span>
 <span class="cstat-no" title="statement not covered" >        return (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;TextEntryStep</span>
 <span class="cstat-no" title="statement not covered" >            key="manual-prompt"</span>
@@ -938,16 +938,16 @@ export <span class="fstat-no" title="function not covered" >function AgentCreati
 <span class="cstat-no" title="statement not covered" >            initialText={state.generatedSystemPrompt}</span>
 <span class="cstat-no" title="statement not covered" >            onChange={(t) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >              dispatch({</span>
-<span class="cstat-no" title="statement not covered" >                type: 'SET_GENERATED_SYSTEM_PROMPT',</span>
+<span class="cstat-no" title="statement not covered" >                type: "SET_GENERATED_SYSTEM_PROMPT",</span>
 <span class="cstat-no" title="statement not covered" >                systemPrompt: t,</span>
 <span class="cstat-no" title="statement not covered" >              });</span>
 <span class="cstat-no" title="statement not covered" >            }}</span>
 <span class="cstat-no" title="statement not covered" >            validate={(t) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >              t.trim().length === 0 ? 'System prompt cannot be empty.' : null</span>
+<span class="cstat-no" title="statement not covered" >              t.trim().length === 0 ? "System prompt cannot be empty." : null</span>
             }
 <span class="cstat-no" title="statement not covered" >          /&gt;</span>
         );
-<span class="cstat-no" title="statement not covered" >      case 'MANUAL_DESC':</span>
+<span class="cstat-no" title="statement not covered" >      case "MANUAL_DESC":</span>
 <span class="cstat-no" title="statement not covered" >        return (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;TextEntryStep</span>
 <span class="cstat-no" title="statement not covered" >            key="manual-desc"</span>
@@ -959,36 +959,36 @@ export <span class="fstat-no" title="function not covered" >function AgentCreati
 <span class="cstat-no" title="statement not covered" >            height={6}</span>
 <span class="cstat-no" title="statement not covered" >            initialText={state.generatedDescription}</span>
 <span class="cstat-no" title="statement not covered" >            onChange={(t) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >              dispatch({ type: 'SET_GENERATED_DESCRIPTION', description: t });</span>
+<span class="cstat-no" title="statement not covered" >              dispatch({ type: "SET_GENERATED_DESCRIPTION", description: t });</span>
 <span class="cstat-no" title="statement not covered" >            }}</span>
 <span class="cstat-no" title="statement not covered" >            validate={(t) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >              t.trim().length === 0 ? 'Description cannot be empty.' : null</span>
+<span class="cstat-no" title="statement not covered" >              t.trim().length === 0 ? "Description cannot be empty." : null</span>
             }
 <span class="cstat-no" title="statement not covered" >          /&gt;</span>
         );
-<span class="cstat-no" title="statement not covered" >      case 'TOOLS':</span>
+<span class="cstat-no" title="statement not covered" >      case "TOOLS":</span>
 <span class="cstat-no" title="statement not covered" >        return (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;ToolSelector</span>
 <span class="cstat-no" title="statement not covered" >            tools={state.selectedTools}</span>
 <span class="cstat-no" title="statement not covered" >            onSelect={(tools) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >              dispatch({ type: 'SET_TOOLS', tools });</span>
+<span class="cstat-no" title="statement not covered" >              dispatch({ type: "SET_TOOLS", tools });</span>
 <span class="cstat-no" title="statement not covered" >              handleNext();</span>
 <span class="cstat-no" title="statement not covered" >            }}</span>
 <span class="cstat-no" title="statement not covered" >            config={config}</span>
 <span class="cstat-no" title="statement not covered" >          /&gt;</span>
         );
-<span class="cstat-no" title="statement not covered" >      case 'COLOR':</span>
+<span class="cstat-no" title="statement not covered" >      case "COLOR":</span>
 <span class="cstat-no" title="statement not covered" >        return (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;ColorSelector</span>
 <span class="cstat-no" title="statement not covered" >            color={state.color}</span>
 <span class="cstat-no" title="statement not covered" >            agentName={state.generatedName}</span>
 <span class="cstat-no" title="statement not covered" >            onSelect={(color) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >              dispatch({ type: 'SET_BACKGROUND_COLOR', color });</span>
+<span class="cstat-no" title="statement not covered" >              dispatch({ type: "SET_BACKGROUND_COLOR", color });</span>
 <span class="cstat-no" title="statement not covered" >              handleNext();</span>
 <span class="cstat-no" title="statement not covered" >            }}</span>
 <span class="cstat-no" title="statement not covered" >          /&gt;</span>
         );
-<span class="cstat-no" title="statement not covered" >      case 'FINAL':</span>
+<span class="cstat-no" title="statement not covered" >      case "FINAL":</span>
 <span class="cstat-no" title="statement not covered" >        return &lt;CreationSummary {...stepProps} /&gt;;</span>
 <span class="cstat-no" title="statement not covered" >      default:</span>
 <span class="cstat-no" title="statement not covered" >        return (</span>
@@ -1027,7 +1027,7 @@ export <span class="fstat-no" title="function not covered" >function AgentCreati
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.148Z
+                at 2025-09-30T22:44:16.802Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

@@ -4,32 +4,32 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { useCallback, useEffect, useState, useRef } from 'react';
-import { Box, Text } from 'ink';
-import { theme } from '../semantic-colors.js';
-import { SuggestionsDisplay } from './SuggestionsDisplay.js';
-import { useInputHistory } from '../hooks/useInputHistory.js';
-import type { TextBuffer } from './shared/text-buffer.js';
-import { logicalPosToOffset } from './shared/text-buffer.js';
-import { cpSlice, cpLen, toCodePoints } from '../utils/textUtils.js';
-import chalk from 'chalk';
-import stringWidth from 'string-width';
-import { useShellHistory } from '../hooks/useShellHistory.js';
-import { useReverseSearchCompletion } from '../hooks/useReverseSearchCompletion.js';
-import { useCommandCompletion } from '../hooks/useCommandCompletion.js';
-import type { Key } from '../hooks/useKeypress.js';
-import { useKeypress } from '../hooks/useKeypress.js';
-import { keyMatchers, Command } from '../keyMatchers.js';
-import type { CommandContext, SlashCommand } from '../commands/types.js';
-import type { Config } from '@qwen-code/qwen-code-core';
+import type React from "react";
+import { useCallback, useEffect, useState, useRef } from "react";
+import { Box, Text } from "ink";
+import { theme } from "../semantic-colors.js";
+import { SuggestionsDisplay } from "./SuggestionsDisplay.js";
+import { useInputHistory } from "../hooks/useInputHistory.js";
+import type { TextBuffer } from "./shared/text-buffer.js";
+import { logicalPosToOffset } from "./shared/text-buffer.js";
+import { cpSlice, cpLen, toCodePoints } from "../utils/textUtils.js";
+import chalk from "chalk";
+import stringWidth from "string-width";
+import { useShellHistory } from "../hooks/useShellHistory.js";
+import { useReverseSearchCompletion } from "../hooks/useReverseSearchCompletion.js";
+import { useCommandCompletion } from "../hooks/useCommandCompletion.js";
+import type { Key } from "../hooks/useKeypress.js";
+import { useKeypress } from "../hooks/useKeypress.js";
+import { keyMatchers, Command } from "../keyMatchers.js";
+import type { CommandContext, SlashCommand } from "../commands/types.js";
+import type { Config } from "@qwen-code/qwen-code-core";
 import {
   clipboardHasImage,
   saveClipboardImage,
   cleanupOldClipboardImages,
-} from '../utils/clipboardUtils.js';
-import * as path from 'node:path';
-import { SCREEN_READER_USER_PREFIX } from '../textConstants.js';
+} from "../utils/clipboardUtils.js";
+import * as path from "node:path";
+import { SCREEN_READER_USER_PREFIX } from "../textConstants.js";
 
 export interface InputPromptProps {
   buffer: TextBuffer;
@@ -57,7 +57,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
   config,
   slashCommands,
   commandContext,
-  placeholder = '  Type your message or @path/to/file',
+  placeholder = "  Type your message or @path/to/file",
   focus = true,
   inputWidth,
   suggestionsWidth,
@@ -81,7 +81,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
     }
   }, [dirs.length, dirsChanged]);
   const [reverseSearchActive, setReverseSearchActive] = useState(false);
-  const [textBeforeReverseSearch, setTextBeforeReverseSearch] = useState('');
+  const [textBeforeReverseSearch, setTextBeforeReverseSearch] = useState("");
   const [cursorPosition, setCursorPosition] = useState<[number, number]>([
     0, 0,
   ]);
@@ -140,7 +140,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       }
       // Clear the buffer *before* calling onSubmit to prevent potential re-submission
       // if onSubmit triggers a re-render while the buffer still holds the old value.
-      buffer.setText('');
+      buffer.setText("");
       onSubmit(submittedValue);
       resetCompletionState();
       resetReverseSearchCompletionState();
@@ -216,15 +216,15 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
 
           // Add spaces around the path if needed
           let textToInsert = insertText;
-          const charBefore = offset > 0 ? currentText[offset - 1] : '';
+          const charBefore = offset > 0 ? currentText[offset - 1] : "";
           const charAfter =
-            offset < currentText.length ? currentText[offset] : '';
+            offset < currentText.length ? currentText[offset] : "";
 
-          if (charBefore && charBefore !== ' ' && charBefore !== '\n') {
-            textToInsert = ' ' + textToInsert;
+          if (charBefore && charBefore !== " " && charBefore !== "\n") {
+            textToInsert = " " + textToInsert;
           }
-          if (!charAfter || (charAfter !== ' ' && charAfter !== '\n')) {
-            textToInsert = textToInsert + ' ';
+          if (!charAfter || (charAfter !== " " && charAfter !== "\n")) {
+            textToInsert = textToInsert + " ";
           }
 
           // Insert at cursor position
@@ -232,7 +232,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
         }
       }
     } catch (error) {
-      console.error('Error handling clipboard image:', error);
+      console.error("Error handling clipboard image:", error);
     }
   }, [buffer, config]);
 
@@ -254,19 +254,19 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       }
 
       // Reset ESC count and hide prompt on any non-ESC key
-      if (key.name !== 'escape') {
+      if (key.name !== "escape") {
         if (escPressCount > 0 || showEscapePrompt) {
           resetEscapeState();
         }
       }
 
       if (
-        key.sequence === '!' &&
-        buffer.text === '' &&
+        key.sequence === "!" &&
+        buffer.text === "" &&
         !completion.showSuggestions
       ) {
         setShellModeActive(!shellModeActive);
-        buffer.setText(''); // Clear the '!' from input
+        buffer.setText(""); // Clear the '!' from input
         return;
       }
 
@@ -297,7 +297,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
 
         // Handle double ESC for clearing input
         if (escPressCount === 0) {
-          if (buffer.text === '') {
+          if (buffer.text === "") {
             return;
           }
           setEscPressCount(1);
@@ -310,7 +310,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
           }, 500);
         } else {
           // clear input and immediately reset state
-          buffer.setText('');
+          buffer.setText("");
           resetCompletionState();
           resetEscapeState();
         }
@@ -409,7 +409,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
 
       // Handle Tab key for ghost text acceptance
       if (
-        key.name === 'tab' &&
+        key.name === "tab" &&
         !completion.showSuggestions &&
         completion.promptCompletion.text
       ) {
@@ -461,8 +461,8 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
         if (buffer.text.trim()) {
           const [row, col] = buffer.cursor;
           const line = buffer.lines[row];
-          const charBefore = col > 0 ? cpSlice(line, col - 1, col) : '';
-          if (charBefore === '\\') {
+          const charBefore = col > 0 ? cpSlice(line, col - 1, col) : "";
+          if (charBefore === "\\") {
             buffer.backspace();
             buffer.newline();
           } else {
@@ -480,17 +480,17 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
 
       // Ctrl+A (Home) / Ctrl+E (End)
       if (keyMatchers[Command.HOME](key)) {
-        buffer.move('home');
+        buffer.move("home");
         return;
       }
       if (keyMatchers[Command.END](key)) {
-        buffer.move('end');
+        buffer.move("end");
         return;
       }
       // Ctrl+C (Clear input)
       if (keyMatchers[Command.CLEAR_INPUT](key)) {
         if (buffer.text.length > 0) {
-          buffer.setText('');
+          buffer.setText("");
           resetCompletionState();
         }
         return;
@@ -570,34 +570,34 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       !buffer.text ||
       !completion.promptCompletion.text.startsWith(buffer.text)
     ) {
-      return { inlineGhost: '', additionalLines: [] };
+      return { inlineGhost: "", additionalLines: [] };
     }
 
     const ghostSuffix = completion.promptCompletion.text.slice(
       buffer.text.length,
     );
     if (!ghostSuffix) {
-      return { inlineGhost: '', additionalLines: [] };
+      return { inlineGhost: "", additionalLines: [] };
     }
 
-    const currentLogicalLine = buffer.lines[buffer.cursor[0]] || '';
+    const currentLogicalLine = buffer.lines[buffer.cursor[0]] || "";
     const cursorCol = buffer.cursor[1];
 
     const textBeforeCursor = cpSlice(currentLogicalLine, 0, cursorCol);
     const usedWidth = stringWidth(textBeforeCursor);
     const remainingWidth = Math.max(0, inputWidth - usedWidth);
 
-    const ghostTextLinesRaw = ghostSuffix.split('\n');
-    const firstLineRaw = ghostTextLinesRaw.shift() || '';
+    const ghostTextLinesRaw = ghostSuffix.split("\n");
+    const firstLineRaw = ghostTextLinesRaw.shift() || "";
 
-    let inlineGhost = '';
-    let remainingFirstLine = '';
+    let inlineGhost = "";
+    let remainingFirstLine = "";
 
     if (stringWidth(firstLineRaw) <= remainingWidth) {
       inlineGhost = firstLineRaw;
     } else {
-      const words = firstLineRaw.split(' ');
-      let currentLine = '';
+      const words = firstLineRaw.split(" ");
+      let currentLine = "";
       let wordIdx = 0;
       for (const word of words) {
         const prospectiveLine = currentLine ? `${currentLine} ${word}` : word;
@@ -609,7 +609,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       }
       inlineGhost = currentLine;
       if (words.length > wordIdx) {
-        remainingFirstLine = words.slice(wordIdx).join(' ');
+        remainingFirstLine = words.slice(wordIdx).join(" ");
       }
     }
 
@@ -618,14 +618,14 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
       linesToWrap.push(remainingFirstLine);
     }
     linesToWrap.push(...ghostTextLinesRaw);
-    const remainingGhostText = linesToWrap.join('\n');
+    const remainingGhostText = linesToWrap.join("\n");
 
     const additionalLines: string[] = [];
     if (remainingGhostText) {
-      const textLines = remainingGhostText.split('\n');
+      const textLines = remainingGhostText.split("\n");
       for (const textLine of textLines) {
-        const words = textLine.split(' ');
-        let currentLine = '';
+        const words = textLine.split(" ");
+        let currentLine = "";
 
         for (const word of words) {
           const prospectiveLine = currentLine ? `${currentLine} ${word}` : word;
@@ -638,7 +638,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
 
             let wordToProcess = word;
             while (stringWidth(wordToProcess) > inputWidth) {
-              let part = '';
+              let part = "";
               const wordCP = toCodePoints(wordToProcess);
               let partWidth = 0;
               let splitIndex = 0;
@@ -695,13 +695,13 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
                 color={theme.text.link}
                 aria-label={SCREEN_READER_USER_PREFIX}
               >
-                (r:){' '}
+                (r:){" "}
               </Text>
             ) : (
-              '! '
+              "! "
             )
           ) : (
-            '> '
+            "> "
           )}
         </Text>
         <Box flexGrow={1} flexDirection="column">
@@ -723,7 +723,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
 
                 const isOnCursorLine =
                   focus && visualIdxInRenderedSet === cursorVisualRow;
-                const currentLineGhost = isOnCursorLine ? inlineGhost : '';
+                const currentLineGhost = isOnCursorLine ? inlineGhost : "";
 
                 const ghostWidth = stringWidth(currentLineGhost);
 
@@ -737,7 +737,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
                           display,
                           relativeVisualColForHighlight,
                           relativeVisualColForHighlight + 1,
-                        ) || ' ';
+                        ) || " ";
                       const highlighted = chalk.inverse(charToHighlight);
                       display =
                         cpSlice(display, 0, relativeVisualColForHighlight) +
@@ -747,7 +747,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
                       relativeVisualColForHighlight === cpLen(display)
                     ) {
                       if (!currentLineGhost) {
-                        display = display + chalk.inverse(' ');
+                        display = display + chalk.inverse(" ");
                       }
                     }
                   }
@@ -758,7 +758,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
                   visualIdxInRenderedSet === cursorVisualRow &&
                   cursorVisualColAbsolute ===
                     // eslint-disable-next-line no-control-regex
-                    cpLen(display.replace(/\x1b\[[0-9;]*m/g, '')) &&
+                    cpLen(display.replace(/\x1b\[[0-9;]*m/g, "")) &&
                   currentLineGhost;
 
                 const actualDisplayWidth = stringWidth(display);
@@ -773,13 +773,13 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
                 return (
                   <Text key={`line-${visualIdxInRenderedSet}`}>
                     {display}
-                    {showCursorBeforeGhost && chalk.inverse(' ')}
+                    {showCursorBeforeGhost && chalk.inverse(" ")}
                     {currentLineGhost && (
                       <Text color={theme.text.secondary}>
                         {currentLineGhost}
                       </Text>
                     )}
-                    {trailingPadding > 0 && ' '.repeat(trailingPadding)}
+                    {trailingPadding > 0 && " ".repeat(trailingPadding)}
                   </Text>
                 );
               })
@@ -795,7 +795,7 @@ export const InputPrompt: React.FC<InputPromptProps> = ({
                       color={theme.text.secondary}
                     >
                       {ghostLine}
-                      {' '.repeat(padding)}
+                      {" ".repeat(padding)}
                     </Text>
                   );
                 }),

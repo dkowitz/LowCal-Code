@@ -261,14 +261,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { type DetectedIde, getIdeInfo } from '@qwen-code/qwen-code-core';
-import { Box, Text } from 'ink';
-import type { RadioSelectItem } from './components/shared/RadioButtonSelect.js';
-import { RadioButtonSelect } from './components/shared/RadioButtonSelect.js';
-import { useKeypress } from './hooks/useKeypress.js';
+import { type DetectedIde, getIdeInfo } from "@qwen-code/qwen-code-core";
+import { Box, Text } from "ink";
+import type { RadioSelectItem } from "./components/shared/RadioButtonSelect.js";
+import { RadioButtonSelect } from "./components/shared/RadioButtonSelect.js";
+import { useKeypress } from "./hooks/useKeypress.js";
 &nbsp;
 export type IdeIntegrationNudgeResult = {
-  userSelection: 'yes' | 'no' | 'dismiss';
+  userSelection: "yes" | "no" | "dismiss";
   isExtensionPreInstalled: boolean;
 };
 &nbsp;
@@ -283,9 +283,9 @@ export <span class="fstat-no" title="function not covered" >function IdeIntegrat
 <span class="cstat-no" title="statement not covered" >}: IdeIntegrationNudgeProps) {</span>
 <span class="cstat-no" title="statement not covered" >  useKeypress(</span>
 <span class="cstat-no" title="statement not covered" >    (key) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      if (key.name === 'escape') {</span>
+<span class="cstat-no" title="statement not covered" >      if (key.name === "escape") {</span>
 <span class="cstat-no" title="statement not covered" >        onComplete({</span>
-<span class="cstat-no" title="statement not covered" >          userSelection: 'no',</span>
+<span class="cstat-no" title="statement not covered" >          userSelection: "no",</span>
 <span class="cstat-no" title="statement not covered" >          isExtensionPreInstalled: false,</span>
 <span class="cstat-no" title="statement not covered" >        });</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
@@ -296,28 +296,28 @@ export <span class="fstat-no" title="function not covered" >function IdeIntegrat
 <span class="cstat-no" title="statement not covered" >  const { displayName: ideName } = getIdeInfo(ide);</span>
   // Assume extension is already installed if the env variables are set.
 <span class="cstat-no" title="statement not covered" >  const isExtensionPreInstalled =</span>
-<span class="cstat-no" title="statement not covered" >    !!process.env['QWEN_CODE_IDE_SERVER_PORT'] &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >    !!process.env['QWEN_CODE_IDE_WORKSPACE_PATH'];</span>
+<span class="cstat-no" title="statement not covered" >    !!process.env["QWEN_CODE_IDE_SERVER_PORT"] &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >    !!process.env["QWEN_CODE_IDE_WORKSPACE_PATH"];</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const OPTIONS: Array&lt;RadioSelectItem&lt;IdeIntegrationNudgeResult&gt;&gt; = [</span>
 <span class="cstat-no" title="statement not covered" >    {</span>
-<span class="cstat-no" title="statement not covered" >      label: 'Yes',</span>
+<span class="cstat-no" title="statement not covered" >      label: "Yes",</span>
 <span class="cstat-no" title="statement not covered" >      value: {</span>
-<span class="cstat-no" title="statement not covered" >        userSelection: 'yes',</span>
+<span class="cstat-no" title="statement not covered" >        userSelection: "yes",</span>
 <span class="cstat-no" title="statement not covered" >        isExtensionPreInstalled,</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
 <span class="cstat-no" title="statement not covered" >    {</span>
-<span class="cstat-no" title="statement not covered" >      label: 'No (esc)',</span>
+<span class="cstat-no" title="statement not covered" >      label: "No (esc)",</span>
 <span class="cstat-no" title="statement not covered" >      value: {</span>
-<span class="cstat-no" title="statement not covered" >        userSelection: 'no',</span>
+<span class="cstat-no" title="statement not covered" >        userSelection: "no",</span>
 <span class="cstat-no" title="statement not covered" >        isExtensionPreInstalled,</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
 <span class="cstat-no" title="statement not covered" >    {</span>
 <span class="cstat-no" title="statement not covered" >      label: "No, don't ask again",</span>
 <span class="cstat-no" title="statement not covered" >      value: {</span>
-<span class="cstat-no" title="statement not covered" >        userSelection: 'dismiss',</span>
+<span class="cstat-no" title="statement not covered" >        userSelection: "dismiss",</span>
 <span class="cstat-no" title="statement not covered" >        isExtensionPreInstalled,</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
@@ -325,10 +325,10 @@ export <span class="fstat-no" title="function not covered" >function IdeIntegrat
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const installText = isExtensionPreInstalled</span>
 <span class="cstat-no" title="statement not covered" >    ? `If you select Yes, the CLI will have access to your open files and display diffs directly in ${</span>
-<span class="cstat-no" title="statement not covered" >        ideName ?? 'your editor'</span>
+<span class="cstat-no" title="statement not covered" >        ideName ?? "your editor"</span>
 <span class="cstat-no" title="statement not covered" >      }.`</span>
 <span class="cstat-no" title="statement not covered" >    : `If you select Yes, we'll install an extension that allows the CLI to access your open files and display diffs directly in ${</span>
-<span class="cstat-no" title="statement not covered" >        ideName ?? 'your editor'</span>
+<span class="cstat-no" title="statement not covered" >        ideName ?? "your editor"</span>
 <span class="cstat-no" title="statement not covered" >      }.`;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
@@ -342,8 +342,8 @@ export <span class="fstat-no" title="function not covered" >function IdeIntegrat
     &gt;
 <span class="cstat-no" title="statement not covered" >      &lt;Box marginBottom={1} flexDirection="column"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;Text color="yellow"&gt;{'&gt; '}&lt;/Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >          {`Do you want to connect ${ideName ?? 'your editor'} to Qwen Code?`}</span>
+<span class="cstat-no" title="statement not covered" >          &lt;Text color="yellow"&gt;{"&gt; "}&lt;/Text&gt;</span>
+<span class="cstat-no" title="statement not covered" >          {`Do you want to connect ${ideName ?? "your editor"} to Qwen Code?`}</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text dimColor&gt;{installText}&lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/Box&gt;</span>
@@ -358,7 +358,7 @@ export <span class="fstat-no" title="function not covered" >function IdeIntegrat
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-29T17:26:19.148Z
+                at 2025-09-30T22:44:16.802Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

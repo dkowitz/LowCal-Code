@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect } from "vitest";
 import {
   calculateAverageLatency,
   calculateCacheHitRate,
   calculateErrorRate,
   computeSessionStats,
-} from './computeStats.js';
+} from "./computeStats.js";
 import type {
   ModelMetrics,
   SessionMetrics,
-} from '../contexts/SessionContext.js';
+} from "../contexts/SessionContext.js";
 
-describe('calculateErrorRate', () => {
-  it('should return 0 if totalRequests is 0', () => {
+describe("calculateErrorRate", () => {
+  it("should return 0 if totalRequests is 0", () => {
     const metrics: ModelMetrics = {
       api: { totalRequests: 0, totalErrors: 0, totalLatencyMs: 0 },
       tokens: {
@@ -32,7 +32,7 @@ describe('calculateErrorRate', () => {
     expect(calculateErrorRate(metrics)).toBe(0);
   });
 
-  it('should calculate the error rate correctly', () => {
+  it("should calculate the error rate correctly", () => {
     const metrics: ModelMetrics = {
       api: { totalRequests: 10, totalErrors: 2, totalLatencyMs: 0 },
       tokens: {
@@ -48,8 +48,8 @@ describe('calculateErrorRate', () => {
   });
 });
 
-describe('calculateAverageLatency', () => {
-  it('should return 0 if totalRequests is 0', () => {
+describe("calculateAverageLatency", () => {
+  it("should return 0 if totalRequests is 0", () => {
     const metrics: ModelMetrics = {
       api: { totalRequests: 0, totalErrors: 0, totalLatencyMs: 1000 },
       tokens: {
@@ -64,7 +64,7 @@ describe('calculateAverageLatency', () => {
     expect(calculateAverageLatency(metrics)).toBe(0);
   });
 
-  it('should calculate the average latency correctly', () => {
+  it("should calculate the average latency correctly", () => {
     const metrics: ModelMetrics = {
       api: { totalRequests: 10, totalErrors: 0, totalLatencyMs: 1500 },
       tokens: {
@@ -80,8 +80,8 @@ describe('calculateAverageLatency', () => {
   });
 });
 
-describe('calculateCacheHitRate', () => {
-  it('should return 0 if prompt tokens is 0', () => {
+describe("calculateCacheHitRate", () => {
+  it("should return 0 if prompt tokens is 0", () => {
     const metrics: ModelMetrics = {
       api: { totalRequests: 0, totalErrors: 0, totalLatencyMs: 0 },
       tokens: {
@@ -96,7 +96,7 @@ describe('calculateCacheHitRate', () => {
     expect(calculateCacheHitRate(metrics)).toBe(0);
   });
 
-  it('should calculate the cache hit rate correctly', () => {
+  it("should calculate the cache hit rate correctly", () => {
     const metrics: ModelMetrics = {
       api: { totalRequests: 0, totalErrors: 0, totalLatencyMs: 0 },
       tokens: {
@@ -112,8 +112,8 @@ describe('calculateCacheHitRate', () => {
   });
 });
 
-describe('computeSessionStats', () => {
-  it('should return all zeros for initial empty metrics', () => {
+describe("computeSessionStats", () => {
+  it("should return all zeros for initial empty metrics", () => {
     const metrics: SessionMetrics = {
       models: {},
       tools: {
@@ -149,10 +149,10 @@ describe('computeSessionStats', () => {
     });
   });
 
-  it('should correctly calculate API and tool time percentages', () => {
+  it("should correctly calculate API and tool time percentages", () => {
     const metrics: SessionMetrics = {
       models: {
-        'gemini-pro': {
+        "gemini-pro": {
           api: { totalRequests: 1, totalErrors: 0, totalLatencyMs: 750 },
           tokens: {
             prompt: 10,
@@ -187,10 +187,10 @@ describe('computeSessionStats', () => {
     expect(result.toolTimePercent).toBe(25);
   });
 
-  it('should correctly calculate cache efficiency', () => {
+  it("should correctly calculate cache efficiency", () => {
     const metrics: SessionMetrics = {
       models: {
-        'gemini-pro': {
+        "gemini-pro": {
           api: { totalRequests: 2, totalErrors: 0, totalLatencyMs: 1000 },
           tokens: {
             prompt: 150,
@@ -221,7 +221,7 @@ describe('computeSessionStats', () => {
     expect(result.cacheEfficiency).toBeCloseTo(33.33); // 50 / 150
   });
 
-  it('should correctly calculate success and agreement rates', () => {
+  it("should correctly calculate success and agreement rates", () => {
     const metrics: SessionMetrics = {
       models: {},
       tools: {
@@ -244,7 +244,7 @@ describe('computeSessionStats', () => {
     expect(result.agreementRate).toBe(60); // 6 / 10
   });
 
-  it('should handle division by zero gracefully', () => {
+  it("should handle division by zero gracefully", () => {
     const metrics: SessionMetrics = {
       models: {},
       tools: {
@@ -270,7 +270,7 @@ describe('computeSessionStats', () => {
     expect(result.agreementRate).toBe(0);
   });
 
-  it('should correctly include line counts', () => {
+  it("should correctly include line counts", () => {
     const metrics: SessionMetrics = {
       models: {},
       tools: {

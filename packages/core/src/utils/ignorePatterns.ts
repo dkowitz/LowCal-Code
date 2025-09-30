@@ -4,49 +4,49 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import path from 'node:path';
-import type { Config } from '../config/config.js';
-import { getCurrentGeminiMdFilename } from '../tools/memoryTool.js';
+import path from "node:path";
+import type { Config } from "../config/config.js";
+import { getCurrentGeminiMdFilename } from "../tools/memoryTool.js";
 
 /**
  * Common ignore patterns used across multiple tools for basic exclusions.
  * These are the most commonly ignored directories in development projects.
  */
 export const COMMON_IGNORE_PATTERNS: string[] = [
-  '**/node_modules/**',
-  '**/.git/**',
-  '**/bower_components/**',
-  '**/.svn/**',
-  '**/.hg/**',
+  "**/node_modules/**",
+  "**/.git/**",
+  "**/bower_components/**",
+  "**/.svn/**",
+  "**/.hg/**",
 ];
 
 /**
  * Binary file extension patterns that are typically excluded from text processing.
  */
 export const BINARY_FILE_PATTERNS: string[] = [
-  '**/*.bin',
-  '**/*.exe',
-  '**/*.dll',
-  '**/*.so',
-  '**/*.dylib',
-  '**/*.class',
-  '**/*.jar',
-  '**/*.war',
-  '**/*.zip',
-  '**/*.tar',
-  '**/*.gz',
-  '**/*.bz2',
-  '**/*.rar',
-  '**/*.7z',
-  '**/*.doc',
-  '**/*.docx',
-  '**/*.xls',
-  '**/*.xlsx',
-  '**/*.ppt',
-  '**/*.pptx',
-  '**/*.odt',
-  '**/*.ods',
-  '**/*.odp',
+  "**/*.bin",
+  "**/*.exe",
+  "**/*.dll",
+  "**/*.so",
+  "**/*.dylib",
+  "**/*.class",
+  "**/*.jar",
+  "**/*.war",
+  "**/*.zip",
+  "**/*.tar",
+  "**/*.gz",
+  "**/*.bz2",
+  "**/*.rar",
+  "**/*.7z",
+  "**/*.doc",
+  "**/*.docx",
+  "**/*.xls",
+  "**/*.xlsx",
+  "**/*.ppt",
+  "**/*.pptx",
+  "**/*.odt",
+  "**/*.ods",
+  "**/*.odp",
 ];
 
 /**
@@ -54,37 +54,37 @@ export const BINARY_FILE_PATTERNS: string[] = [
  * These files can be processed as inlineData when explicitly requested.
  */
 export const MEDIA_FILE_PATTERNS: string[] = [
-  '**/*.pdf',
-  '**/*.png',
-  '**/*.jpg',
-  '**/*.jpeg',
-  '**/*.gif',
-  '**/*.webp',
-  '**/*.bmp',
-  '**/*.svg',
+  "**/*.pdf",
+  "**/*.png",
+  "**/*.jpg",
+  "**/*.jpeg",
+  "**/*.gif",
+  "**/*.webp",
+  "**/*.bmp",
+  "**/*.svg",
 ];
 
 /**
  * Common directory patterns that are typically ignored in development projects.
  */
 export const COMMON_DIRECTORY_EXCLUDES: string[] = [
-  '**/.vscode/**',
-  '**/.idea/**',
-  '**/dist/**',
-  '**/build/**',
-  '**/coverage/**',
-  '**/__pycache__/**',
+  "**/.vscode/**",
+  "**/.idea/**",
+  "**/dist/**",
+  "**/build/**",
+  "**/coverage/**",
+  "**/__pycache__/**",
 ];
 
 /**
  * Python-specific patterns.
  */
-export const PYTHON_EXCLUDES: string[] = ['**/*.pyc', '**/*.pyo'];
+export const PYTHON_EXCLUDES: string[] = ["**/*.pyc", "**/*.pyo"];
 
 /**
  * System and environment file patterns.
  */
-export const SYSTEM_FILE_EXCLUDES: string[] = ['**/.DS_Store', '**/.env'];
+export const SYSTEM_FILE_EXCLUDES: string[] = ["**/.DS_Store", "**/.env"];
 
 /**
  * Comprehensive file exclusion patterns combining all common ignore patterns.
@@ -222,23 +222,23 @@ export class FileExclusions {
 export function extractExtensionsFromPatterns(patterns: string[]): string[] {
   const extensions = new Set(
     patterns
-      .filter((pattern) => pattern.includes('*.'))
+      .filter((pattern) => pattern.includes("*."))
       .flatMap((pattern) => {
-        const extPart = pattern.substring(pattern.lastIndexOf('*.') + 1);
+        const extPart = pattern.substring(pattern.lastIndexOf("*.") + 1);
         // Handle brace expansion e.g. `**/*.{jpg,png}`
-        if (extPart.startsWith('.{') && extPart.endsWith('}')) {
+        if (extPart.startsWith(".{") && extPart.endsWith("}")) {
           const inner = extPart.slice(2, -1); // get 'jpg,png'
           return inner
-            .split(',')
+            .split(",")
             .map((ext) => `.${ext.trim()}`)
-            .filter((ext) => ext !== '.');
+            .filter((ext) => ext !== ".");
         }
         // Handle simple/compound/dotfile extensions
         if (
-          extPart.startsWith('.') &&
-          !extPart.includes('/') &&
-          !extPart.includes('{') &&
-          !extPart.includes('}')
+          extPart.startsWith(".") &&
+          !extPart.includes("/") &&
+          !extPart.includes("{") &&
+          !extPart.includes("}")
         ) {
           // Using path.extname on a dummy file handles various cases like
           // '.tar.gz' -> '.gz' and '.profile' -> '.profile' correctly.
@@ -246,7 +246,7 @@ export function extractExtensionsFromPatterns(patterns: string[]): string[] {
           // If extname returns empty (e.g. for '.'), use the original part.
           // Then filter out empty or '.' results and invalid double dot patterns.
           const result = extracted || extPart;
-          return result && result !== '.' && !result.substring(1).includes('.')
+          return result && result !== "." && !result.substring(1).includes(".")
             ? [result]
             : [];
         }
@@ -267,10 +267,10 @@ export const BINARY_EXTENSIONS: string[] = [
     ...PYTHON_EXCLUDES,
   ]),
   // Additional binary extensions not in the main patterns
-  '.dat',
-  '.obj',
-  '.o',
-  '.a',
-  '.lib',
-  '.wasm',
+  ".dat",
+  ".obj",
+  ".o",
+  ".a",
+  ".lib",
+  ".wasm",
 ].sort();

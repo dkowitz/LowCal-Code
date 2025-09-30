@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
+import { useState } from "react";
 import {
   isKittyProtocolEnabled,
   isKittyProtocolSupported,
-} from '../utils/kittyProtocolDetector.js';
+} from "../utils/kittyProtocolDetector.js";
 
 export interface KittyProtocolStatus {
   supported: boolean;
