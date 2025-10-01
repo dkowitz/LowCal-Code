@@ -42,6 +42,10 @@ export interface ChatCompressionSettings {
 export interface SummarizeToolOutputSettings {
     tokenBudget?: number;
 }
+export interface ToolSelfHealingSettings {
+    maxConsecutiveErrors?: number;
+    enableAutoSuggestions?: boolean;
+}
 export interface TelemetrySettings {
     enabled?: boolean;
     target?: TelemetryTarget;
@@ -144,6 +148,8 @@ export interface ConfigParameters {
     }>;
     noBrowser?: boolean;
     summarizeToolOutput?: Record<string, SummarizeToolOutputSettings>;
+    toolSelfHealing?: ToolSelfHealingSettings;
+    toolSelfHealingOverrides?: Record<string, ToolSelfHealingSettings>;
     folderTrustFeature?: boolean;
     folderTrust?: boolean;
     ideMode?: boolean;
@@ -230,6 +236,8 @@ export declare class Config {
     flashFallbackHandler?: FlashFallbackHandler;
     private quotaErrorOccurred;
     private readonly summarizeToolOutput;
+    private readonly toolSelfHealing?;
+    private readonly toolSelfHealingOverrides?;
     private authType?;
     private readonly enableOpenAILogging;
     private readonly contentGenerator?;
@@ -336,6 +344,8 @@ export declare class Config {
     getNoBrowser(): boolean;
     isBrowserLaunchSuppressed(): boolean;
     getSummarizeToolOutputConfig(): Record<string, SummarizeToolOutputSettings> | undefined;
+    getToolSelfHealingSettings(): ToolSelfHealingSettings | undefined;
+    getToolSelfHealingOverride(toolName: string): ToolSelfHealingSettings | undefined;
     getTavilyApiKey(): string | undefined;
     getIdeClient(): IdeClient;
     getIdeMode(): boolean;

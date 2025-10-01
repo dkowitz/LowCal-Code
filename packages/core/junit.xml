@@ -1,551 +1,69 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="242" failures="0" errors="0" time="1.83427877">
-    <testsuite name="src/ide/process-utils.test.ts" timestamp="2025-09-30T08:47:49.541Z" hostname="uby" tests="7" failures="0" errors="0" skipped="0" time="0.006722916">
-        <testcase classname="src/ide/process-utils.test.ts" name="getIdeProcessInfo &gt; on Unix &gt; should traverse up to find the shell and return grandparent process info" time="0.001659439">
+<testsuites name="vitest tests" tests="32" failures="0" errors="0" time="7.03231104">
+    <testsuite name="src/core/geminiChat.test.ts" timestamp="2025-10-01T13:00:34.792Z" hostname="uby" tests="32" failures="0" errors="0" skipped="0" time="7.03231104">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessage &gt; should retain the initial user message when an automatic function call occurs" time="0.002172147">
         </testcase>
-        <testcase classname="src/ide/process-utils.test.ts" name="getIdeProcessInfo &gt; on Unix &gt; should return parent process info if grandparent lookup fails" time="0.003034551">
-            <system-out>
-Failed to get process info for pid 800: Error: ps failed
-    at [90m/home/atmandk/LowCal-dev/packages/core/[39msrc/ide/process-utils.test.ts:57:32
-    at file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:155:11
-    at file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:26
-    at file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1897:20
-    at new Promise (&lt;anonymous&gt;)
-    at runWithTimeout (file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1863:10)
-    at runTest (file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1574:12)
-[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
-    at runSuite (file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1729:8)
-    at runSuite (file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1729:8)
-
-            </system-out>
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessage &gt; should throw an error when attempting to add a user turn after another user turn" time="0.001024364">
         </testcase>
-        <testcase classname="src/ide/process-utils.test.ts" name="getIdeProcessInfo &gt; on Windows &gt; should traverse up and find the great-grandchild of the root process" time="0.000279588">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessage &gt; should preserve text parts that are in the same response as a thought" time="0.000247758">
         </testcase>
-        <testcase classname="src/ide/process-utils.test.ts" name="getIdeProcessInfo &gt; on Windows &gt; should handle non-existent process gracefully" time="0.000103553">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessage &gt; should add a placeholder model turn when a tool call is followed by an empty model response" time="0.000259049">
         </testcase>
-        <testcase classname="src/ide/process-utils.test.ts" name="getIdeProcessInfo &gt; on Windows &gt; should handle malformed JSON output gracefully" time="0.000614631">
-            <system-out>
-Failed to get process info for pid 1000: SyntaxError: Unexpected token &apos;j&apos;, &quot;{&quot;invalid&quot;:json}&quot; is not valid JSON
-    at JSON.parse (&lt;anonymous&gt;)
-    at getProcessInfo [90m(/home/atmandk/LowCal-dev/packages/core/[39msrc/ide/process-utils.ts:46:16[90m)[39m
-[90m    at processTicksAndRejections (node:internal/process/task_queues:105:5)[39m
-    at getIdeProcessInfoForWindows [90m(/home/atmandk/LowCal-dev/packages/core/[39msrc/ide/process-utils.ts:136:29[90m)[39m
-
-            </system-out>
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessage &gt; should call generateContent with the correct parameters" time="0.001171236">
         </testcase>
-        <testcase classname="src/ide/process-utils.test.ts" name="getIdeProcessInfo &gt; on Windows &gt; should handle PowerShell errors without crashing the process chain" time="0.000178462">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream &gt; should succeed if a tool call is followed by an empty part" time="0.00128714">
         </testcase>
-        <testcase classname="src/ide/process-utils.test.ts" name="getIdeProcessInfo &gt; on Windows &gt; should handle partial JSON data with defaults" time="0.000083465">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream &gt; should fail if the stream ends with an empty part and has no finishReason" time="1.502588504">
         </testcase>
-    </testsuite>
-    <testsuite name="src/mcp/oauth-utils.test.ts" timestamp="2025-09-30T08:47:49.543Z" hostname="uby" tests="21" failures="0" errors="0" skipped="0" time="0.007192456">
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; buildWellKnownUrls &gt; should build standard root-based URLs by default" time="0.001521373">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream &gt; should succeed if the stream ends with an invalid part but has a finishReason and contained a valid part" time="0.000666021">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; buildWellKnownUrls &gt; should build path-based URLs when includePathSuffix is true" time="0.000217915">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream &gt; should not consolidate text into a part that also contains a functionCall" time="0.000423313">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; buildWellKnownUrls &gt; should handle root path correctly" time="0.000196415">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream &gt; should consolidate subsequent text chunks after receiving an empty text chunk" time="0.000344257">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; buildWellKnownUrls &gt; should handle trailing slash in path" time="0.000140271">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream &gt; should consolidate adjacent text parts that arrive in separate stream chunks" time="0.000346911">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; fetchProtectedResourceMetadata &gt; should fetch protected resource metadata successfully" time="0.000771131">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream &gt; should preserve text parts that stream in the same chunk as a thought" time="0.000293233">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; fetchProtectedResourceMetadata &gt; should return null when fetch fails" time="0.000167321">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream &gt; should add a placeholder model turn when a tool call is followed by an empty stream response" time="0.000381095">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; fetchAuthorizationServerMetadata &gt; should fetch authorization server metadata successfully" time="0.00017793">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream &gt; should call generateContentStream with the correct parameters" time="0.000406061">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; fetchAuthorizationServerMetadata &gt; should return null when fetch fails" time="0.0000968">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; recordHistory &gt; should consolidate all consecutive model turns into a single turn" time="0.000292581">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; discoverAuthorizationServerMetadata &gt; should handle URLs without path components correctly" time="0.000338308">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; recordHistory &gt; should add a placeholder model turn when a tool call is followed by an empty response" time="0.000229745">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; discoverAuthorizationServerMetadata &gt; should handle URLs with path components correctly" time="0.000266805">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; recordHistory &gt; should add user input and a single model output to history" time="0.000209738">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; metadataToOAuthConfig &gt; should convert metadata to OAuth config" time="0.000793562">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; recordHistory &gt; should consolidate adjacent text parts from multiple content objects" time="0.000171807">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; metadataToOAuthConfig &gt; should handle empty scopes" time="0.000148926">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; recordHistory &gt; should add an empty placeholder turn if modelOutput is empty" time="0.000198447">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; parseWWWAuthenticateHeader &gt; should parse resource metadata URI from WWW-Authenticate header" time="0.000158694">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; recordHistory &gt; should preserve model outputs with undefined or empty parts arrays" time="0.000203937">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; parseWWWAuthenticateHeader &gt; should return null when no resource metadata URI is found" time="0.00012387">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; recordHistory &gt; should not consolidate content with different roles" time="0.000207583">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; extractBaseUrl &gt; should extract base URL from MCP server URL" time="0.000157552">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; addHistory &gt; should add a new content item to the history" time="0.000196744">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; extractBaseUrl &gt; should handle URLs with ports" time="0.000132586">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; addHistory &gt; should add multiple items correctly" time="0.000184732">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; isSSEEndpoint &gt; should return true for SSE endpoints" time="0.000164816">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream with retries &gt; should yield a RETRY event when an invalid stream is encountered" time="0.502585554">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; isSSEEndpoint &gt; should return true for non-MCP endpoints" time="0.000076492">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream with retries &gt; should retry on invalid content, succeed, and report metrics" time="0.501439204">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; isSSEEndpoint &gt; should return false for MCP endpoints" time="0.000106327">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream with retries &gt; should fall back to non-streaming when idle timeouts persist" time="1.503564137">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; buildResourceParameter &gt; should build resource parameter from endpoint URL" time="0.000098613">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; sendMessageStream with retries &gt; should fail after all retries on persistent invalid content and report metrics" time="1.502220877">
         </testcase>
-        <testcase classname="src/mcp/oauth-utils.test.ts" name="OAuthUtils &gt; buildResourceParameter &gt; should handle URLs with ports" time="0.000080139">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; should correctly retry and append to an existing history mid-conversation" time="0.50219357">
         </testcase>
-    </testsuite>
-    <testsuite name="src/telemetry/telemetry-utils.test.ts" timestamp="2025-09-30T08:47:49.544Z" hostname="uby" tests="6" failures="0" errors="0" skipped="0" time="0.002124843">
-        <testcase classname="src/telemetry/telemetry-utils.test.ts" name="getProgrammingLanguage &gt; should return the programming language when file_path is present" time="0.000794535">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; concurrency control &gt; should queue a subsequent sendMessage call until the first one completes" time="0.001675738">
         </testcase>
-        <testcase classname="src/telemetry/telemetry-utils.test.ts" name="getProgrammingLanguage &gt; should return the programming language when absolute_path is present" time="0.000090848">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; should retry if the model returns a completely empty stream (no chunks)" time="0.501115106">
         </testcase>
-        <testcase classname="src/telemetry/telemetry-utils.test.ts" name="getProgrammingLanguage &gt; should return the programming language when path is present" time="0.000125142">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; should queue a subsequent sendMessageStream call until the first stream is fully consumed" time="0.000577478">
         </testcase>
-        <testcase classname="src/telemetry/telemetry-utils.test.ts" name="getProgrammingLanguage &gt; should return undefined when no file path is present" time="0.00008054">
-        </testcase>
-        <testcase classname="src/telemetry/telemetry-utils.test.ts" name="getProgrammingLanguage &gt; should handle unknown file extensions gracefully" time="0.000057727">
-        </testcase>
-        <testcase classname="src/telemetry/telemetry-utils.test.ts" name="getProgrammingLanguage &gt; should handle files with no extension" time="0.00007025">
-        </testcase>
-    </testsuite>
-    <testsuite name="src/tools/glob.test.ts" timestamp="2025-09-30T08:47:49.545Z" hostname="uby" tests="37" failures="0" errors="0" skipped="0" time="1.668925493">
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should find files matching a simple pattern in the root" time="0.078003667">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should find files case-sensitively when case_sensitive is true" time="0.054064174">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should find files case-insensitively by default (pattern: *.TXT)" time="0.054632569">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should find files case-insensitively when case_sensitive is false (pattern: *.TXT)" time="0.053737969">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should find files using a pattern that includes a subdirectory" time="0.053963196">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should find files in a specified relative path (relative to rootDir)" time="0.0527902">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should find files using a deep globstar pattern (e.g., **/*.log)" time="0.053863441">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should return &quot;No files found&quot; message when pattern matches nothing" time="0.053891964">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should find files with special characters in the name" time="0.053928622">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should find files with special characters like [] and () in the path" time="0.054326841">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should correctly sort files by modification time (newest first)" time="0.055662079">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should return a PATH_NOT_IN_WORKSPACE error if path is outside workspace" time="0.052535627">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should summarize when file matches exceed the default limit" time="0.073809624">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should honour custom limit parameter" time="0.058999511">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; execute &gt; should return a GLOB_EXECUTION_ERROR on glob failure" time="0.056356757">
-            <system-err>
-GlobLogic execute Error: Glob failed Error: Glob failed
-    at [90m/home/atmandk/LowCal-dev/packages/core/[39msrc/tools/glob.test.ts:271:46
-    at file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:155:11
-    at file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:752:26
-    at file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1897:20
-    at new Promise (&lt;anonymous&gt;)
-    at runWithTimeout (file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1863:10)
-    at runTest (file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1574:12)
-    at runSuite (file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1729:8)
-    at runSuite (file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1729:8)
-    at runSuite (file:///home/atmandk/LowCal-dev/node_modules/[4m@vitest/runner[24m/dist/chunk-hooks.js:1729:8)
-
-            </system-err>
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; validateToolParams &gt; should return null for valid parameters (pattern only)" time="0.053516147">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; validateToolParams &gt; should return null for valid parameters (pattern and path)" time="0.054411719">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; validateToolParams &gt; should reject invalid limit values" time="0.05333484">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; validateToolParams &gt; should return null for valid parameters (pattern, path, and case_sensitive)" time="0.052891797">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; validateToolParams &gt; should return error if pattern is missing (schema validation)" time="0.052889554">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; validateToolParams &gt; should return error if pattern is an empty string" time="0.053666466">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; validateToolParams &gt; should return error if pattern is only whitespace" time="0.053355789">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; validateToolParams &gt; should pass if path is provided but is not a string (type coercion)" time="0.053060761">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; validateToolParams &gt; should pass if case_sensitive is provided but is not a boolean (type coercion)" time="0.052870568">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; validateToolParams &gt; should return error if search path resolves outside the tool&apos;s root directory" time="0.055035566">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; validateToolParams &gt; should return error if specified search path does not exist" time="0.053392367">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; validateToolParams &gt; should return error if specified search path is a file, not a directory" time="0.053783202">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; workspace boundary validation &gt; should validate search paths are within workspace boundaries" time="0.053233251">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; workspace boundary validation &gt; should provide clear error messages when path is outside workspace" time="0.053148383">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="GlobTool &gt; workspace boundary validation &gt; should work with paths in workspace subdirectories" time="0.0534105">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="sortFileEntries &gt; should sort a mix of recent and older files correctly" time="0.004337378">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="sortFileEntries &gt; should sort only recent files by mtime descending" time="0.000106106">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="sortFileEntries &gt; should sort only older files alphabetically by path" time="0.000063638">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="sortFileEntries &gt; should handle an empty array" time="0.000041187">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="sortFileEntries &gt; should correctly sort files when mtimes are identical for older files" time="0.000049252">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="sortFileEntries &gt; should correctly sort files when mtimes are identical for recent files (maintaining mtime sort)" time="0.000234736">
-        </testcase>
-        <testcase classname="src/tools/glob.test.ts" name="sortFileEntries &gt; should use recencyThresholdMs parameter correctly" time="0.000078756">
-        </testcase>
-    </testsuite>
-    <testsuite name="src/tools/ls.test.ts" timestamp="2025-09-30T08:47:49.546Z" hostname="uby" tests="25" failures="0" errors="0" skipped="0" time="0.057594284">
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; parameter validation &gt; should accept valid absolute paths within workspace" time="0.017191">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; parameter validation &gt; should reject relative paths" time="0.00199971">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; parameter validation &gt; should reject invalid limit values" time="0.001500575">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; parameter validation &gt; should reject paths outside workspace with clear error message" time="0.001370343">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; parameter validation &gt; should accept paths in secondary workspace directory" time="0.0014608">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should list files in a directory" time="0.002257669">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should list files from secondary workspace directory" time="0.001511975">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should handle empty directories" time="0.00131481">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should respect ignore patterns" time="0.001530901">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should respect gitignore patterns" time="0.001765196">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should respect geminiignore patterns" time="0.001533165">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should handle non-directory paths" time="0.001290394">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should handle non-existent paths" time="0.001333945">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should sort directories first, then files alphabetically" time="0.001478563">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should handle permission errors gracefully" time="0.00135287">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should throw for invalid params at build time" time="0.001615228">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should handle errors accessing individual files during listing" time="0.00276994">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should summarize when entries exceed the default limit" time="0.00169769">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; execute &gt; should honour custom limit parameter" time="0.001599989">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; getDescription &gt; should return shortened relative path" time="0.001383367">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; getDescription &gt; should handle paths in secondary workspace" time="0.001287318">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; workspace boundary validation &gt; should accept paths in primary workspace directory" time="0.001235112">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; workspace boundary validation &gt; should accept paths in secondary workspace directory" time="0.003156768">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; workspace boundary validation &gt; should reject paths outside all workspace directories" time="0.001302397">
-        </testcase>
-        <testcase classname="src/tools/ls.test.ts" name="LSTool &gt; workspace boundary validation &gt; should list files from secondary workspace directory" time="0.001607032">
-        </testcase>
-    </testsuite>
-    <testsuite name="src/tools/tools.test.ts" timestamp="2025-09-30T08:47:49.547Z" hostname="uby" tests="11" failures="0" errors="0" skipped="0" time="0.005075078">
-        <testcase classname="src/tools/tools.test.ts" name="DeclarativeTool &gt; validateBuildAndExecute &gt; should return INVALID_TOOL_PARAMS error if build fails" time="0.002592601">
-        </testcase>
-        <testcase classname="src/tools/tools.test.ts" name="DeclarativeTool &gt; validateBuildAndExecute &gt; should return EXECUTION_FAILED error if execute fails" time="0.000509756">
-        </testcase>
-        <testcase classname="src/tools/tools.test.ts" name="DeclarativeTool &gt; validateBuildAndExecute &gt; should return the result of execute on success" time="0.000223895">
-        </testcase>
-        <testcase classname="src/tools/tools.test.ts" name="hasCycleInSchema &gt; should detect a simple direct cycle" time="0.000297792">
-        </testcase>
-        <testcase classname="src/tools/tools.test.ts" name="hasCycleInSchema &gt; should detect a cycle from object properties referencing parent properties" time="0.000085148">
-        </testcase>
-        <testcase classname="src/tools/tools.test.ts" name="hasCycleInSchema &gt; should detect a cycle from array items referencing parent properties" time="0.000068778">
-        </testcase>
-        <testcase classname="src/tools/tools.test.ts" name="hasCycleInSchema &gt; should detect a cycle between sibling properties" time="0.000082082">
-        </testcase>
-        <testcase classname="src/tools/tools.test.ts" name="hasCycleInSchema &gt; should not detect a cycle in a valid schema" time="0.000084647">
-        </testcase>
-        <testcase classname="src/tools/tools.test.ts" name="hasCycleInSchema &gt; should handle non-cyclic sibling refs" time="0.000083846">
-        </testcase>
-        <testcase classname="src/tools/tools.test.ts" name="hasCycleInSchema &gt; should handle nested but not cyclic refs" time="0.000071393">
-        </testcase>
-        <testcase classname="src/tools/tools.test.ts" name="hasCycleInSchema &gt; should return false for an empty schema" time="0.000057447">
-        </testcase>
-    </testsuite>
-    <testsuite name="src/utils/fileUtils.test.ts" timestamp="2025-09-30T08:47:49.547Z" hostname="uby" tests="40" failures="0" errors="0" skipped="0" time="0.071549351">
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; isWithinRoot &gt; should return true for paths directly within the root" time="0.001716526">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; isWithinRoot &gt; should return true for the root path itself" time="0.000333459">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; isWithinRoot &gt; should return false for paths outside the root" time="0.000267397">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; isWithinRoot &gt; should return false for paths that only partially match the root prefix" time="0.000223786">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; isWithinRoot &gt; should handle paths with trailing slashes correctly" time="0.000262347">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; isWithinRoot &gt; should handle different path separators (POSIX vs Windows)" time="0.000230988">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; isWithinRoot &gt; should return false for a root path that is a sub-path of the path to check" time="0.000242811">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; isBinaryFile &gt; should return false for an empty file" time="0.001084803">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; isBinaryFile &gt; should return false for a typical text file" time="0.000736667">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; isBinaryFile &gt; should return true for a file with many null bytes" time="0.000661618">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; isBinaryFile &gt; should return true for a file with high percentage of non-printable ASCII" time="0.000583333">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; isBinaryFile &gt; should return false if file access fails (e.g., ENOENT)" time="0.001429453">
-            <system-err>
-Failed to check if file is binary: /tmp/fileUtils-test-9efhOf/binaryCheck.tmp ENOENT: no such file or directory, open &apos;/tmp/fileUtils-test-9efhOf/binaryCheck.tmp&apos;
-
-            </system-err>
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; detectFileType &gt; should detect typescript type by extension (ts, mts, cts, tsx)" time="0.001312415">
-            <system-err>
-Failed to check if file is binary: component.tsx ENOENT: no such file or directory, open &apos;component.tsx&apos;
-
-            </system-err>
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; detectFileType &gt; should detect image type by extension (png)" time="0.000435428">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; detectFileType &gt; should detect image type by extension (jpeg)" time="0.000435558">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; detectFileType &gt; should detect svg type by extension" time="0.000459532">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; detectFileType &gt; should detect pdf type by extension" time="0.000524603">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; detectFileType &gt; should detect audio type by extension" time="0.000428315">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; detectFileType &gt; should detect video type by extension" time="0.000386547">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; detectFileType &gt; should detect known binary extensions as binary (e.g. .zip)" time="0.00039362">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; detectFileType &gt; should detect known binary extensions as binary (e.g. .exe)" time="0.000455936">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; detectFileType &gt; should use isBinaryFile for unknown extensions and detect as binary" time="0.034081693">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; detectFileType &gt; should default to text if mime type is unknown and content is not binary" time="0.000712502">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should read a text file successfully" time="0.00108323">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should handle file not found" time="0.000345241">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should handle read errors for text files" time="0.000707072">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should handle read errors for image/pdf files" time="0.000415501">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should process an image file" time="0.000926039">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should process a PDF file" time="0.000794995">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should read an SVG file as text when under 1MB" time="0.000588341">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should skip binary files" time="0.000449845">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should handle path being a directory" time="0.000316658">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should paginate text files correctly (offset and limit)" time="0.001324778">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should identify truncation when reading the end of a file" time="0.000738059">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should handle limit exceeding file length" time="0.00058227">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should truncate long lines in text files" time="0.000943641">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should truncate when line count exceeds the limit" time="0.000538179">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should truncate when a line length exceeds the character limit" time="0.000623116">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should truncate both line count and line length when both exceed limits" time="0.000606405">
-        </testcase>
-        <testcase classname="src/utils/fileUtils.test.ts" name="fileUtils &gt; processSingleFileContent &gt; should return an error if the file size exceeds 20MB" time="0.011730958">
-        </testcase>
-    </testsuite>
-    <testsuite name="src/utils/partUtils.test.ts" timestamp="2025-09-30T08:47:49.549Z" hostname="uby" tests="37" failures="0" errors="0" skipped="0" time="0.005814259">
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (default behavior) &gt; should return empty string for undefined or null" time="0.000837074">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (default behavior) &gt; should return string input unchanged" time="0.000086481">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (default behavior) &gt; should concatenate strings from an array" time="0.000052848">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (default behavior) &gt; should return text property when provided a text part" time="0.000046847">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (default behavior) &gt; should return empty string for non-text parts" time="0.00007035">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should return empty string for undefined or null" time="0.000084196">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should return string input unchanged" time="0.00005934">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should join parts if the value is an array" time="0.000047057">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should return the text property if the part is an object with text" time="0.000039924">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should return descriptive string for videoMetadata part" time="0.000035956">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should return descriptive string for thought part" time="0.000034895">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should return descriptive string for codeExecutionResult part" time="0.000050734">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should return descriptive string for executableCode part" time="0.000040676">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should return descriptive string for fileData part" time="0.000040515">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should return descriptive string for functionCall part" time="0.000034313">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should return descriptive string for functionResponse part" time="0.000053669">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should return descriptive string for inlineData part" time="0.000072825">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should return an empty string for an unknown part type" time="0.000074528">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; partToString (verbose) &gt; should handle complex nested arrays with various part types" time="0.000097922">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; getResponseText &gt; should return null when no candidates exist" time="0.000323741">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; getResponseText &gt; should return concatenated text from first candidate" time="0.000138027">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; getResponseText &gt; should ignore parts without text" time="0.000092632">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; getResponseText &gt; should return null when candidate has no parts" time="0.000077284">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; getResponseText &gt; should return null if the first candidate has no content property" time="0.000083795">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; flatMapTextParts &gt; should return an empty array for empty input" time="0.000471555">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; flatMapTextParts &gt; should transform a simple string input" time="0.000136594">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; flatMapTextParts &gt; should transform a single text part object" time="0.000074559">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; flatMapTextParts &gt; should transform an array of text parts and flatten the result" time="0.000112989">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; flatMapTextParts &gt; should pass through non-text parts unmodified" time="0.000057336">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; flatMapTextParts &gt; should handle a mix of text and non-text parts in an array" time="0.000073165">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; flatMapTextParts &gt; should handle a transform that returns an empty array" time="0.0000811">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; appendToLastTextPart &gt; should append to an empty prompt" time="0.000818419">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; appendToLastTextPart &gt; should append to a prompt with a string as the last part" time="0.000128969">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; appendToLastTextPart &gt; should append to a prompt with a text part object as the last part" time="0.000070912">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; appendToLastTextPart &gt; should append a new text part if the last part is not a text part" time="0.000055092">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; appendToLastTextPart &gt; should not append anything if the text to append is empty" time="0.000036217">
-        </testcase>
-        <testcase classname="src/utils/partUtils.test.ts" name="partUtils &gt; appendToLastTextPart &gt; should use a custom separator" time="0.000030837">
-        </testcase>
-    </testsuite>
-    <testsuite name="src/utils/shell-utils.test.ts" timestamp="2025-09-30T08:47:49.550Z" hostname="uby" tests="51" failures="0" errors="0" skipped="0" time="0.007405301">
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; should allow a command if no restrictions are provided" time="0.001491628">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; should allow a command if it is in the global allowlist" time="0.000183791">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; should block a command if it is not in a strict global allowlist" time="0.000116225">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; should block a command if it is in the blocked list" time="0.000085509">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; should prioritize the blocklist over the allowlist" time="0.000071393">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; should allow any command when a wildcard is in coreTools" time="0.000057827">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; should block any command when a wildcard is in excludeTools" time="0.000069048">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; should block a command on the blocklist even with a wildcard allow" time="0.00007543">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; should allow a chained command if all parts are on the global allowlist" time="0.000063558">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; should block a chained command if any part is blocked" time="0.000063658">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; command substitution &gt; should block command substitution using `$(...)`" time="0.000122558">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; command substitution &gt; should block command substitution using `&lt;(...)`" time="0.00005926">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; command substitution &gt; should block command substitution using backticks" time="0.00004851">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandAllowed &gt; command substitution &gt; should allow substitution-like patterns inside single quotes" time="0.000060613">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="checkCommandPermissions &gt; in &quot;Default Allow&quot; mode (no sessionAllowlist) &gt; should return a detailed success object for an allowed command" time="0.000499648">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="checkCommandPermissions &gt; in &quot;Default Allow&quot; mode (no sessionAllowlist) &gt; should return a detailed failure object for a blocked command" time="0.000109834">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="checkCommandPermissions &gt; in &quot;Default Allow&quot; mode (no sessionAllowlist) &gt; should return a detailed failure object for a command not on a strict allowlist" time="0.000083535">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="checkCommandPermissions &gt; in &quot;Default Deny&quot; mode (with sessionAllowlist) &gt; should allow a command on the sessionAllowlist" time="0.000082503">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="checkCommandPermissions &gt; in &quot;Default Deny&quot; mode (with sessionAllowlist) &gt; should block a command not on the sessionAllowlist or global allowlist" time="0.000089946">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="checkCommandPermissions &gt; in &quot;Default Deny&quot; mode (with sessionAllowlist) &gt; should allow a command on the global allowlist even if not on the session allowlist" time="0.000052738">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="checkCommandPermissions &gt; in &quot;Default Deny&quot; mode (with sessionAllowlist) &gt; should allow a chained command if parts are on different allowlists" time="0.000051075">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="checkCommandPermissions &gt; in &quot;Default Deny&quot; mode (with sessionAllowlist) &gt; should block a command on the sessionAllowlist if it is also globally blocked" time="0.000046286">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="checkCommandPermissions &gt; in &quot;Default Deny&quot; mode (with sessionAllowlist) &gt; should block a chained command if one part is not on any allowlist" time="0.000061724">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="getCommandRoots &gt; should return a single command" time="0.000171809">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="getCommandRoots &gt; should handle paths and return the binary name" time="0.000093203">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="getCommandRoots &gt; should return an empty array for an empty string" time="0.000038481">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="getCommandRoots &gt; should handle a mix of operators" time="0.000049743">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="getCommandRoots &gt; should correctly parse a chained command with quotes" time="0.000039603">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="stripShellWrapper &gt; should strip sh -c with quotes" time="0.000112388">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="stripShellWrapper &gt; should strip bash -c with extra whitespace" time="0.000055793">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="stripShellWrapper &gt; should strip zsh -c without quotes" time="0.000033873">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="stripShellWrapper &gt; should strip cmd.exe /c" time="0.00002733">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="stripShellWrapper &gt; should not strip anything if no wrapper is present" time="0.000026379">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="escapeShellArg &gt; POSIX (bash) &gt; should use shell-quote for escaping" time="0.000644336">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="escapeShellArg &gt; POSIX (bash) &gt; should handle empty strings" time="0.000190864">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="escapeShellArg &gt; Windows &gt; when shell is cmd.exe &gt; should wrap simple arguments in double quotes" time="0.000071814">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="escapeShellArg &gt; Windows &gt; when shell is cmd.exe &gt; should escape internal double quotes by doubling them" time="0.000059511">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="escapeShellArg &gt; Windows &gt; when shell is cmd.exe &gt; should handle empty strings" time="0.000038361">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="escapeShellArg &gt; Windows &gt; when shell is PowerShell &gt; should wrap simple arguments in single quotes" time="0.00004289">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="escapeShellArg &gt; Windows &gt; when shell is PowerShell &gt; should escape internal single quotes by doubling them" time="0.000033933">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="escapeShellArg &gt; Windows &gt; when shell is PowerShell &gt; should handle double quotes without escaping them" time="0.000031408">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="escapeShellArg &gt; Windows &gt; when shell is PowerShell &gt; should handle empty strings" time="0.000026529">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="getShellConfiguration &gt; should return bash configuration on Linux" time="0.000125493">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="getShellConfiguration &gt; should return bash configuration on macOS (darwin)" time="0.000061314">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="getShellConfiguration &gt; on Windows &gt; should return cmd.exe configuration by default" time="0.000100456">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="getShellConfiguration &gt; on Windows &gt; should respect ComSpec for cmd.exe" time="0.000065261">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="getShellConfiguration &gt; on Windows &gt; should return PowerShell configuration if ComSpec points to powershell.exe" time="0.000058719">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="getShellConfiguration &gt; on Windows &gt; should return PowerShell configuration if ComSpec points to pwsh.exe" time="0.00005397">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="getShellConfiguration &gt; on Windows &gt; should be case-insensitive when checking ComSpec" time="0.000052888">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandNeedPermission &gt; returns false for read-only commands" time="0.000241898">
-        </testcase>
-        <testcase classname="src/utils/shell-utils.test.ts" name="isCommandNeedPermission &gt; returns true for mutating commands with reason" time="0.000093423">
-        </testcase>
-    </testsuite>
-    <testsuite name="src/utils/tool-utils.test.ts" timestamp="2025-09-30T08:47:49.552Z" hostname="uby" tests="7" failures="0" errors="0" skipped="0" time="0.001874789">
-        <testcase classname="src/utils/tool-utils.test.ts" name="doesToolInvocationMatch &gt; should not match a partial command prefix" time="0.00083538">
-        </testcase>
-        <testcase classname="src/utils/tool-utils.test.ts" name="doesToolInvocationMatch &gt; should match an exact command" time="0.000110095">
-        </testcase>
-        <testcase classname="src/utils/tool-utils.test.ts" name="doesToolInvocationMatch &gt; should match a command that is a prefix" time="0.000058148">
-        </testcase>
-        <testcase classname="src/utils/tool-utils.test.ts" name="doesToolInvocationMatch &gt; for non-shell tools &gt; should match by tool name" time="0.000052337">
-        </testcase>
-        <testcase classname="src/utils/tool-utils.test.ts" name="doesToolInvocationMatch &gt; for non-shell tools &gt; should match by tool class name" time="0.000045564">
-        </testcase>
-        <testcase classname="src/utils/tool-utils.test.ts" name="doesToolInvocationMatch &gt; for non-shell tools &gt; should not match if neither name is in the patterns" time="0.000038631">
-        </testcase>
-        <testcase classname="src/utils/tool-utils.test.ts" name="doesToolInvocationMatch &gt; for non-shell tools &gt; should match by tool name when passed as a string" time="0.000034554">
+        <testcase classname="src/core/geminiChat.test.ts" name="GeminiChat &gt; should discard valid partial content from a failed attempt upon retry" time="0.501815661">
         </testcase>
     </testsuite>
 </testsuites>

@@ -1,64 +1,68 @@
+
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <title>Code coverage report for src/tools/mcp-tool.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type="text/css">
-      .coverage-summary .sorter {
-        background-image: url(../../sort-arrow-sprite.png);
-      }
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
     </style>
-  </head>
-
-  <body>
-    <div class="wrapper">
-      <div class="pad1">
-        <h1>
-          <a href="../../index.html">All files</a> /
-          <a href="index.html">src/tools</a> mcp-tool.ts
-        </h1>
-        <div class="clearfix">
-          <div class="fl pad1y space-right2">
-            <span class="strong">7.84% </span>
-            <span class="quiet">Statements</span>
-            <span class="fraction">20/255</span>
-          </div>
-
-          <div class="fl pad1y space-right2">
-            <span class="strong">100% </span>
-            <span class="quiet">Branches</span>
-            <span class="fraction">1/1</span>
-          </div>
-
-          <div class="fl pad1y space-right2">
-            <span class="strong">6.25% </span>
-            <span class="quiet">Functions</span>
-            <span class="fraction">1/16</span>
-          </div>
-
-          <div class="fl pad1y space-right2">
-            <span class="strong">7.84% </span>
-            <span class="quiet">Lines</span>
-            <span class="fraction">20/255</span>
-          </div>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/tools</a> mcp-tool.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">7.84% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>20/255</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>1/1</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">6.25% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>1/16</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">7.84% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>20/255</span>
+            </div>
+        
+            
         </div>
         <p class="quiet">
-          Press <em>n</em> or <em>j</em> to go to the next uncovered block,
-          <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
         <template id="filterTemplate">
-          <div class="quiet">
-            Filter:
-            <input type="search" id="fileSearch" />
-          </div>
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
         </template>
-      </div>
-      <div class="status-line low"></div>
-      <pre><table class="coverage">
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
 <a name='L3'></a><a href='#L3'>3</a>
@@ -805,38 +809,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { safeJsonStringify } from '../utils/safeJsonStringify.js';
+import { safeJsonStringify } from "../utils/safeJsonStringify.js";
 import type {
   ToolCallConfirmationDetails,
   ToolInvocation,
   ToolMcpConfirmationDetails,
   ToolResult,
-} from './tools.js';
+} from "./tools.js";
 import {
   BaseDeclarativeTool,
   BaseToolInvocation,
   Kind,
   ToolConfirmationOutcome,
-} from './tools.js';
-import type { CallableTool, FunctionCall, Part } from '@google/genai';
-import { ToolErrorType } from './tool-error.js';
+} from "./tools.js";
+import type { CallableTool, FunctionCall, Part } from "@google/genai";
+import { ToolErrorType } from "./tool-error.js";
 &nbsp;
 type ToolParams = Record&lt;string, unknown&gt;;
 &nbsp;
 // Discriminated union for MCP Content Blocks to ensure type safety.
 type McpTextBlock = {
-  type: 'text';
+  type: "text";
   text: string;
 };
 &nbsp;
 type McpMediaBlock = {
-  type: 'image' | 'audio';
+  type: "image" | "audio";
   mimeType: string;
   data: string;
 };
 &nbsp;
 type McpResourceBlock = {
-  type: 'resource';
+  type: "resource";
   resource: {
     text?: string;
     blob?: string;
@@ -845,7 +849,7 @@ type McpResourceBlock = {
 };
 &nbsp;
 type McpResourceLinkBlock = {
-  type: 'resource_link';
+  type: "resource_link";
   uri: string;
   title?: string;
   name?: string;
@@ -893,8 +897,8 @@ class DiscoveredMCPToolInvocation extends BaseToolInvocation&lt;
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const confirmationDetails: ToolMcpConfirmationDetails = {</span>
-<span class="cstat-no" title="statement not covered" >      type: 'mcp',</span>
-<span class="cstat-no" title="statement not covered" >      title: 'Confirm MCP Tool Execution',</span>
+<span class="cstat-no" title="statement not covered" >      type: "mcp",</span>
+<span class="cstat-no" title="statement not covered" >      title: "Confirm MCP Tool Execution",</span>
 <span class="cstat-no" title="statement not covered" >      serverName: this.serverName,</span>
 <span class="cstat-no" title="statement not covered" >      toolName: this.serverToolName, // Display original tool name in confirmation</span>
 <span class="cstat-no" title="statement not covered" >      toolDisplayName: this.displayName, // Display global registry name exposed to model and user</span>
@@ -924,7 +928,7 @@ class DiscoveredMCPToolInvocation extends BaseToolInvocation&lt;
 <span class="cstat-no" title="statement not covered" >      const error = (response as { error?: McpError })?.error;</span>
 <span class="cstat-no" title="statement not covered" >      const isError = error?.isError;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      if (error &amp;&amp; (isError === true || isError === 'true')) {</span>
+<span class="cstat-no" title="statement not covered" >      if (error &amp;&amp; (isError === true || isError === "true")) {</span>
 <span class="cstat-no" title="statement not covered" >        return true;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -1056,7 +1060,7 @@ export class DiscoveredMCPTool extends BaseDeclarativeTool&lt;
 <span class="cstat-no" title="statement not covered" >    return { text: resource.text };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >  if (resource?.blob) {</span>
-<span class="cstat-no" title="statement not covered" >    const mimeType = resource.mimeType || 'application/octet-stream';</span>
+<span class="cstat-no" title="statement not covered" >    const mimeType = resource.mimeType || "application/octet-stream";</span>
 <span class="cstat-no" title="statement not covered" >    return [</span>
 <span class="cstat-no" title="statement not covered" >      {</span>
 <span class="cstat-no" title="statement not covered" >        text: `[Tool '${toolName}' provided the following embedded resource with mime-type: ${mimeType}]`,</span>
@@ -1086,24 +1090,24 @@ export class DiscoveredMCPTool extends BaseDeclarativeTool&lt;
  */
 <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function transformMcpContentToParts(sdkResponse: Part[]): Part[] {</span></span>
 <span class="cstat-no" title="statement not covered" >  const funcResponse = sdkResponse?.[0]?.functionResponse;</span>
-<span class="cstat-no" title="statement not covered" >  const mcpContent = funcResponse?.response?.['content'] as McpContentBlock[];</span>
-<span class="cstat-no" title="statement not covered" >  const toolName = funcResponse?.name || 'unknown tool';</span>
+<span class="cstat-no" title="statement not covered" >  const mcpContent = funcResponse?.response?.["content"] as McpContentBlock[];</span>
+<span class="cstat-no" title="statement not covered" >  const toolName = funcResponse?.name || "unknown tool";</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  if (!Array.isArray(mcpContent)) {</span>
-<span class="cstat-no" title="statement not covered" >    return [{ text: '[Error: Could not parse tool response]' }];</span>
+<span class="cstat-no" title="statement not covered" >    return [{ text: "[Error: Could not parse tool response]" }];</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const transformed = mcpContent.flatMap(</span>
 <span class="cstat-no" title="statement not covered" >    (block: McpContentBlock): Part | Part[] | null =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      switch (block.type) {</span>
-<span class="cstat-no" title="statement not covered" >        case 'text':</span>
+<span class="cstat-no" title="statement not covered" >        case "text":</span>
 <span class="cstat-no" title="statement not covered" >          return transformTextBlock(block);</span>
-<span class="cstat-no" title="statement not covered" >        case 'image':</span>
-<span class="cstat-no" title="statement not covered" >        case 'audio':</span>
+<span class="cstat-no" title="statement not covered" >        case "image":</span>
+<span class="cstat-no" title="statement not covered" >        case "audio":</span>
 <span class="cstat-no" title="statement not covered" >          return transformImageAudioBlock(block, toolName);</span>
-<span class="cstat-no" title="statement not covered" >        case 'resource':</span>
+<span class="cstat-no" title="statement not covered" >        case "resource":</span>
 <span class="cstat-no" title="statement not covered" >          return transformResourceBlock(block, toolName);</span>
-<span class="cstat-no" title="statement not covered" >        case 'resource_link':</span>
+<span class="cstat-no" title="statement not covered" >        case "resource_link":</span>
 <span class="cstat-no" title="statement not covered" >          return transformResourceLinkBlock(block);</span>
 <span class="cstat-no" title="statement not covered" >        default:</span>
 <span class="cstat-no" title="statement not covered" >          return null;</span>
@@ -1124,74 +1128,68 @@ export class DiscoveredMCPTool extends BaseDeclarativeTool&lt;
  */
 <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function getStringifiedResultForDisplay(rawResponse: Part[]): string {</span></span>
 <span class="cstat-no" title="statement not covered" >  const mcpContent = rawResponse?.[0]?.functionResponse?.response?.[</span>
-<span class="cstat-no" title="statement not covered" >    'content'</span>
+<span class="cstat-no" title="statement not covered" >    "content"</span>
 <span class="cstat-no" title="statement not covered" >  ] as McpContentBlock[];</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  if (!Array.isArray(mcpContent)) {</span>
-<span class="cstat-no" title="statement not covered" >    return '```json\n' + JSON.stringify(rawResponse, null, 2) + '\n```';</span>
+<span class="cstat-no" title="statement not covered" >    return "```json\n" + JSON.stringify(rawResponse, null, 2) + "\n```";</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const displayParts = mcpContent.map((block: McpContentBlock): string =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    switch (block.type) {</span>
-<span class="cstat-no" title="statement not covered" >      case 'text':</span>
+<span class="cstat-no" title="statement not covered" >      case "text":</span>
 <span class="cstat-no" title="statement not covered" >        return block.text;</span>
-<span class="cstat-no" title="statement not covered" >      case 'image':</span>
+<span class="cstat-no" title="statement not covered" >      case "image":</span>
 <span class="cstat-no" title="statement not covered" >        return `[Image: ${block.mimeType}]`;</span>
-<span class="cstat-no" title="statement not covered" >      case 'audio':</span>
+<span class="cstat-no" title="statement not covered" >      case "audio":</span>
 <span class="cstat-no" title="statement not covered" >        return `[Audio: ${block.mimeType}]`;</span>
-<span class="cstat-no" title="statement not covered" >      case 'resource_link':</span>
+<span class="cstat-no" title="statement not covered" >      case "resource_link":</span>
 <span class="cstat-no" title="statement not covered" >        return `[Link to ${block.title || block.name}: ${block.uri}]`;</span>
-<span class="cstat-no" title="statement not covered" >      case 'resource':</span>
+<span class="cstat-no" title="statement not covered" >      case "resource":</span>
 <span class="cstat-no" title="statement not covered" >        if (block.resource?.text) {</span>
 <span class="cstat-no" title="statement not covered" >          return block.resource.text;</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >        return `[Embedded Resource: ${</span>
-<span class="cstat-no" title="statement not covered" >          block.resource?.mimeType || 'unknown type'</span>
+<span class="cstat-no" title="statement not covered" >          block.resource?.mimeType || "unknown type"</span>
 <span class="cstat-no" title="statement not covered" >        }]`;</span>
 <span class="cstat-no" title="statement not covered" >      default:</span>
 <span class="cstat-no" title="statement not covered" >        return `[Unknown content type: ${(block as { type: string }).type}]`;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  });</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return displayParts.join('\n');</span>
+<span class="cstat-no" title="statement not covered" >  return displayParts.join("\n");</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 /** Visible for testing */
 export <span class="fstat-no" title="function not covered" >function generateValidName(name: string) {</span>
   // Replace invalid characters (based on 400 error message from Gemini API) with underscores
-<span class="cstat-no" title="statement not covered" >  let validToolname = name.replace(/[^a-zA-Z0-9_.-]/g, '_');</span>
+<span class="cstat-no" title="statement not covered" >  let validToolname = name.replace(/[^a-zA-Z0-9_.-]/g, "_");</span>
 &nbsp;
   // If longer than 63 characters, replace middle with '___'
   // (Gemini API says max length 64, but actual limit seems to be 63)
 <span class="cstat-no" title="statement not covered" >  if (validToolname.length &gt; 63) {</span>
 <span class="cstat-no" title="statement not covered" >    validToolname =</span>
-<span class="cstat-no" title="statement not covered" >      validToolname.slice(0, 28) + '___' + validToolname.slice(-32);</span>
+<span class="cstat-no" title="statement not covered" >      validToolname.slice(0, 28) + "___" + validToolname.slice(-32);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >  return validToolname;</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;</pre></td></tr></table></pre>
 
-      <div class="push"></div>
-      <!-- for sticky footer -->
-    </div>
-    <!-- /wrapper -->
-    <div class="footer quiet pad2 space-top1 center small">
-      Code coverage generated by
-      <a
-        href="https://istanbul.js.org/"
-        target="_blank"
-        rel="noopener noreferrer"
-        >istanbul</a
-      >
-      at 2025-09-30T08:47:49.571Z
-    </div>
-    <script src="../../prettify.js"></script>
-    <script>
-      window.onload = function () {
-        prettyPrint();
-      };
-    </script>
-    <script src="../../sorter.js"></script>
-    <script src="../../block-navigation.js"></script>
-  </body>
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2025-10-01T13:00:34.814Z
+            </div>
+        <script src="../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
+    </body>
 </html>
+    

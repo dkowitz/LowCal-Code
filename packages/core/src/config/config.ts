@@ -88,6 +88,11 @@ export interface SummarizeToolOutputSettings {
   tokenBudget?: number;
 }
 
+export interface ToolSelfHealingSettings {
+  maxConsecutiveErrors?: number;
+  enableAutoSuggestions?: boolean;
+}
+
 export interface TelemetrySettings {
   enabled?: boolean;
   target?: TelemetryTarget;
@@ -213,6 +218,8 @@ export interface ConfigParameters {
   blockedMcpServers?: Array<{ name: string; extensionName: string }>;
   noBrowser?: boolean;
   summarizeToolOutput?: Record<string, SummarizeToolOutputSettings>;
+  toolSelfHealing?: ToolSelfHealingSettings;
+  toolSelfHealingOverrides?: Record<string, ToolSelfHealingSettings>;
   folderTrustFeature?: boolean;
   folderTrust?: boolean;
   ideMode?: boolean;
@@ -315,6 +322,11 @@ export class Config {
   private readonly summarizeToolOutput:
     | Record<string, SummarizeToolOutputSettings>
     | undefined;
+  private readonly toolSelfHealing?: ToolSelfHealingSettings;
+  private readonly toolSelfHealingOverrides?: Record<
+    string,
+    ToolSelfHealingSettings
+  >;
   private authType?: AuthType;
   private readonly enableOpenAILogging: boolean;
   private readonly contentGenerator?: {
@@ -406,6 +418,8 @@ export class Config {
     this._blockedMcpServers = params.blockedMcpServers ?? [];
     this.noBrowser = params.noBrowser ?? false;
     this.summarizeToolOutput = params.summarizeToolOutput;
+    this.toolSelfHealing = params.toolSelfHealing;
+    this.toolSelfHealingOverrides = params.toolSelfHealingOverrides;
     this.folderTrustFeature = params.folderTrustFeature ?? false;
     this.folderTrust = params.folderTrust ?? false;
     this.ideMode = params.ideMode ?? false;
@@ -858,6 +872,16 @@ export class Config {
     | Record<string, SummarizeToolOutputSettings>
     | undefined {
     return this.summarizeToolOutput;
+  }
+
+  getToolSelfHealingSettings(): ToolSelfHealingSettings | undefined {
+    return this.toolSelfHealing;
+  }
+
+  getToolSelfHealingOverride(toolName: string):
+    | ToolSelfHealingSettings
+    | undefined {
+    return this.toolSelfHealingOverrides?.[toolName];
   }
 
   // Web search provider configuration

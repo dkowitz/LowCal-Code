@@ -290,6 +290,22 @@ describe("ReadFileTool", () => {
       expect(result.returnDisplay).toBe("Read image file: image.png");
     });
 
+    it("should summarize large image files without embedding", async () => {
+      const imagePath = path.join(tempRootDir, "large-image.png");
+      const largeBuffer = Buffer.alloc(80 * 1024, 0xcd);
+      await fsp.writeFile(imagePath, largeBuffer);
+      const params: ReadFileToolParams = { absolute_path: imagePath };
+      const invocation = tool.build(params) as ToolInvocation<
+        ReadFileToolParams,
+        ToolResult
+      >;
+
+      const result = await invocation.execute(abortSignal);
+      expect(typeof result.llmContent).toBe("string");
+      expect(result.llmContent as string).toContain("Binary file summary");
+      expect(result.returnDisplay).toContain("Binary file summary: large-image.png");
+    });
+
     it("should handle PDF file and return appropriate content", async () => {
       const pdfPath = path.join(tempRootDir, "document.pdf");
       // Minimal PDF header

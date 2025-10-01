@@ -1,64 +1,68 @@
+
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <title>Code coverage report for src/code_assist/server.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type="text/css">
-      .coverage-summary .sorter {
-        background-image: url(../../sort-arrow-sprite.png);
-      }
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
     </style>
-  </head>
-
-  <body>
-    <div class="wrapper">
-      <div class="pad1">
-        <h1>
-          <a href="../../index.html">All files</a> /
-          <a href="index.html">src/code_assist</a> server.ts
-        </h1>
-        <div class="clearfix">
-          <div class="fl pad1y space-right2">
-            <span class="strong">11.97% </span>
-            <span class="quiet">Statements</span>
-            <span class="fraction">20/167</span>
-          </div>
-
-          <div class="fl pad1y space-right2">
-            <span class="strong">100% </span>
-            <span class="quiet">Branches</span>
-            <span class="fraction">0/0</span>
-          </div>
-
-          <div class="fl pad1y space-right2">
-            <span class="strong">0% </span>
-            <span class="quiet">Functions</span>
-            <span class="fraction">0/13</span>
-          </div>
-
-          <div class="fl pad1y space-right2">
-            <span class="strong">11.97% </span>
-            <span class="quiet">Lines</span>
-            <span class="fraction">20/167</span>
-          </div>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/code_assist</a> server.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">11.97% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>20/167</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">100% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>0/0</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">0% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>0/13</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">11.97% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>20/167</span>
+            </div>
+        
+            
         </div>
         <p class="quiet">
-          Press <em>n</em> or <em>j</em> to go to the next uncovered block,
-          <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
         <template id="filterTemplate">
-          <div class="quiet">
-            Filter:
-            <input type="search" id="fileSearch" />
-          </div>
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
         </template>
-      </div>
-      <div class="status-line low"></div>
-      <pre><table class="coverage">
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
 <a name='L3'></a><a href='#L3'>3</a>
@@ -511,7 +515,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type { OAuth2Client } from 'google-auth-library';
+import type { OAuth2Client } from "google-auth-library";
 import type {
   CodeAssistGlobalUserSettingResponse,
   LoadCodeAssistRequest,
@@ -519,7 +523,7 @@ import type {
   LongRunningOperationResponse,
   OnboardUserRequest,
   SetCodeAssistGlobalUserSettingRequest,
-} from './types.js';
+} from "./types.js";
 import type {
   CountTokensParameters,
   CountTokensResponse,
@@ -527,20 +531,20 @@ import type {
   EmbedContentResponse,
   GenerateContentParameters,
   GenerateContentResponse,
-} from '@google/genai';
-import * as readline from 'node:readline';
-import type { ContentGenerator } from '../core/contentGenerator.js';
-import type { UserTierId } from './types.js';
+} from "@google/genai";
+import * as readline from "node:readline";
+import type { ContentGenerator } from "../core/contentGenerator.js";
+import type { UserTierId } from "./types.js";
 import type {
   CaCountTokenResponse,
   CaGenerateContentResponse,
-} from './converter.js';
+} from "./converter.js";
 import {
   fromCountTokenResponse,
   fromGenerateContentResponse,
   toCountTokenRequest,
   toGenerateContentRequest,
-} from './converter.js';
+} from "./converter.js";
 &nbsp;
 /** HTTP options to be used in each of the requests. */
 export interface HttpOptions {
@@ -548,8 +552,8 @@ export interface HttpOptions {
   headers?: Record&lt;string, string&gt;;
 }
 &nbsp;
-export const CODE_ASSIST_ENDPOINT = 'https://localhost:0'; // Disable Google Code Assist API Request
-export const CODE_ASSIST_API_VERSION = 'v1internal';
+export const CODE_ASSIST_ENDPOINT = "https://localhost:0"; // Disable Google Code Assist API Request
+export const CODE_ASSIST_API_VERSION = "v1internal";
 &nbsp;
 export class CodeAssistServer implements ContentGenerator {
 <span class="fstat-no" title="function not covered" >  constructor(</span>
@@ -565,7 +569,7 @@ export class CodeAssistServer implements ContentGenerator {
 <span class="cstat-no" title="statement not covered" >    userPromptId: string,</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;AsyncGenerator&lt;GenerateContentResponse&gt;&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const resps = await this.requestStreamingPost&lt;CaGenerateContentResponse&gt;(</span>
-<span class="cstat-no" title="statement not covered" >      'streamGenerateContent',</span>
+<span class="cstat-no" title="statement not covered" >      "streamGenerateContent",</span>
 <span class="cstat-no" title="statement not covered" >      toGenerateContentRequest(</span>
 <span class="cstat-no" title="statement not covered" >        req,</span>
 <span class="cstat-no" title="statement not covered" >        userPromptId,</span>
@@ -586,7 +590,7 @@ export class CodeAssistServer implements ContentGenerator {
 <span class="cstat-no" title="statement not covered" >    userPromptId: string,</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;GenerateContentResponse&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const resp = await this.requestPost&lt;CaGenerateContentResponse&gt;(</span>
-<span class="cstat-no" title="statement not covered" >      'generateContent',</span>
+<span class="cstat-no" title="statement not covered" >      "generateContent",</span>
 <span class="cstat-no" title="statement not covered" >      toGenerateContentRequest(</span>
 <span class="cstat-no" title="statement not covered" >        req,</span>
 <span class="cstat-no" title="statement not covered" >        userPromptId,</span>
@@ -602,7 +606,7 @@ export class CodeAssistServer implements ContentGenerator {
 <span class="cstat-no" title="statement not covered" >    req: OnboardUserRequest,</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;LongRunningOperationResponse&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    return await this.requestPost&lt;LongRunningOperationResponse&gt;(</span>
-<span class="cstat-no" title="statement not covered" >      'onboardUser',</span>
+<span class="cstat-no" title="statement not covered" >      "onboardUser",</span>
 <span class="cstat-no" title="statement not covered" >      req,</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -611,14 +615,14 @@ export class CodeAssistServer implements ContentGenerator {
 <span class="cstat-no" title="statement not covered" >    req: LoadCodeAssistRequest,</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;LoadCodeAssistResponse&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    return await this.requestPost&lt;LoadCodeAssistResponse&gt;(</span>
-<span class="cstat-no" title="statement not covered" >      'loadCodeAssist',</span>
+<span class="cstat-no" title="statement not covered" >      "loadCodeAssist",</span>
 <span class="cstat-no" title="statement not covered" >      req,</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="fstat-no" title="function not covered" >  async getCodeAssistGlobalUserSetting(): Promise&lt;CodeAssistGlobalUserSettingResponse&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    return await this.requestGet&lt;CodeAssistGlobalUserSettingResponse&gt;(</span>
-<span class="cstat-no" title="statement not covered" >      'getCodeAssistGlobalUserSetting',</span>
+<span class="cstat-no" title="statement not covered" >      "getCodeAssistGlobalUserSetting",</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -626,14 +630,14 @@ export class CodeAssistServer implements ContentGenerator {
 <span class="cstat-no" title="statement not covered" >    req: SetCodeAssistGlobalUserSettingRequest,</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;CodeAssistGlobalUserSettingResponse&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    return await this.requestPost&lt;CodeAssistGlobalUserSettingResponse&gt;(</span>
-<span class="cstat-no" title="statement not covered" >      'setCodeAssistGlobalUserSetting',</span>
+<span class="cstat-no" title="statement not covered" >      "setCodeAssistGlobalUserSetting",</span>
 <span class="cstat-no" title="statement not covered" >      req,</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="fstat-no" title="function not covered" >  async countTokens(req: CountTokensParameters): Promise&lt;CountTokensResponse&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const resp = await this.requestPost&lt;CaCountTokenResponse&gt;(</span>
-<span class="cstat-no" title="statement not covered" >      'countTokens',</span>
+<span class="cstat-no" title="statement not covered" >      "countTokens",</span>
 <span class="cstat-no" title="statement not covered" >      toCountTokenRequest(req),</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 <span class="cstat-no" title="statement not covered" >    return fromCountTokenResponse(resp);</span>
@@ -652,12 +656,12 @@ export class CodeAssistServer implements ContentGenerator {
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;T&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const res = await this.client.request({</span>
 <span class="cstat-no" title="statement not covered" >      url: this.getMethodUrl(method),</span>
-<span class="cstat-no" title="statement not covered" >      method: 'POST',</span>
+<span class="cstat-no" title="statement not covered" >      method: "POST",</span>
 <span class="cstat-no" title="statement not covered" >      headers: {</span>
-<span class="cstat-no" title="statement not covered" >        'Content-Type': 'application/json',</span>
+<span class="cstat-no" title="statement not covered" >        "Content-Type": "application/json",</span>
 <span class="cstat-no" title="statement not covered" >        ...this.httpOptions.headers,</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
-<span class="cstat-no" title="statement not covered" >      responseType: 'json',</span>
+<span class="cstat-no" title="statement not covered" >      responseType: "json",</span>
 <span class="cstat-no" title="statement not covered" >      body: JSON.stringify(req),</span>
 <span class="cstat-no" title="statement not covered" >      signal,</span>
 <span class="cstat-no" title="statement not covered" >    });</span>
@@ -667,12 +671,12 @@ export class CodeAssistServer implements ContentGenerator {
 <span class="fstat-no" title="function not covered" >  async requestGet&lt;T&gt;(method: string, signal?: AbortSignal): Promise&lt;T&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const res = await this.client.request({</span>
 <span class="cstat-no" title="statement not covered" >      url: this.getMethodUrl(method),</span>
-<span class="cstat-no" title="statement not covered" >      method: 'GET',</span>
+<span class="cstat-no" title="statement not covered" >      method: "GET",</span>
 <span class="cstat-no" title="statement not covered" >      headers: {</span>
-<span class="cstat-no" title="statement not covered" >        'Content-Type': 'application/json',</span>
+<span class="cstat-no" title="statement not covered" >        "Content-Type": "application/json",</span>
 <span class="cstat-no" title="statement not covered" >        ...this.httpOptions.headers,</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
-<span class="cstat-no" title="statement not covered" >      responseType: 'json',</span>
+<span class="cstat-no" title="statement not covered" >      responseType: "json",</span>
 <span class="cstat-no" title="statement not covered" >      signal,</span>
 <span class="cstat-no" title="statement not covered" >    });</span>
 <span class="cstat-no" title="statement not covered" >    return res.data as T;</span>
@@ -685,15 +689,15 @@ export class CodeAssistServer implements ContentGenerator {
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;AsyncGenerator&lt;T&gt;&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const res = await this.client.request({</span>
 <span class="cstat-no" title="statement not covered" >      url: this.getMethodUrl(method),</span>
-<span class="cstat-no" title="statement not covered" >      method: 'POST',</span>
+<span class="cstat-no" title="statement not covered" >      method: "POST",</span>
 <span class="cstat-no" title="statement not covered" >      params: {</span>
-<span class="cstat-no" title="statement not covered" >        alt: 'sse',</span>
+<span class="cstat-no" title="statement not covered" >        alt: "sse",</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
 <span class="cstat-no" title="statement not covered" >      headers: {</span>
-<span class="cstat-no" title="statement not covered" >        'Content-Type': 'application/json',</span>
+<span class="cstat-no" title="statement not covered" >        "Content-Type": "application/json",</span>
 <span class="cstat-no" title="statement not covered" >        ...this.httpOptions.headers,</span>
 <span class="cstat-no" title="statement not covered" >      },</span>
-<span class="cstat-no" title="statement not covered" >      responseType: 'stream',</span>
+<span class="cstat-no" title="statement not covered" >      responseType: "stream",</span>
 <span class="cstat-no" title="statement not covered" >      body: JSON.stringify(req),</span>
 <span class="cstat-no" title="statement not covered" >      signal,</span>
 <span class="cstat-no" title="statement not covered" >    });</span>
@@ -707,13 +711,13 @@ export class CodeAssistServer implements ContentGenerator {
 <span class="cstat-no" title="statement not covered" >      let bufferedLines: string[] = [];</span>
 <span class="cstat-no" title="statement not covered" >      for await (const line of rl) {</span>
         // blank lines are used to separate JSON objects in the stream
-<span class="cstat-no" title="statement not covered" >        if (line === '') {</span>
+<span class="cstat-no" title="statement not covered" >        if (line === "") {</span>
 <span class="cstat-no" title="statement not covered" >          if (bufferedLines.length === 0) {</span>
 <span class="cstat-no" title="statement not covered" >            continue; // no data to yield</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
-<span class="cstat-no" title="statement not covered" >          yield JSON.parse(bufferedLines.join('\n')) as T;</span>
+<span class="cstat-no" title="statement not covered" >          yield JSON.parse(bufferedLines.join("\n")) as T;</span>
 <span class="cstat-no" title="statement not covered" >          bufferedLines = []; // Reset the buffer after yielding</span>
-<span class="cstat-no" title="statement not covered" >        } else if (line.startsWith('data: ')) {</span>
+<span class="cstat-no" title="statement not covered" >        } else if (line.startsWith("data: ")) {</span>
 <span class="cstat-no" title="statement not covered" >          bufferedLines.push(line.slice(6).trim());</span>
 <span class="cstat-no" title="statement not covered" >        } else {</span>
 <span class="cstat-no" title="statement not covered" >          throw new Error(`Unexpected line format in response: ${line}`);</span>
@@ -724,33 +728,27 @@ export class CodeAssistServer implements ContentGenerator {
 &nbsp;
 <span class="fstat-no" title="function not covered" >  getMethodUrl(method: string): string {</span>
 <span class="cstat-no" title="statement not covered" >    const endpoint =</span>
-<span class="cstat-no" title="statement not covered" >      process.env['CODE_ASSIST_ENDPOINT'] ?? CODE_ASSIST_ENDPOINT;</span>
+<span class="cstat-no" title="statement not covered" >      process.env["CODE_ASSIST_ENDPOINT"] ?? CODE_ASSIST_ENDPOINT;</span>
 <span class="cstat-no" title="statement not covered" >    return `${endpoint}/${CODE_ASSIST_API_VERSION}:${method}`;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 }
 &nbsp;</pre></td></tr></table></pre>
 
-      <div class="push"></div>
-      <!-- for sticky footer -->
-    </div>
-    <!-- /wrapper -->
-    <div class="footer quiet pad2 space-top1 center small">
-      Code coverage generated by
-      <a
-        href="https://istanbul.js.org/"
-        target="_blank"
-        rel="noopener noreferrer"
-        >istanbul</a
-      >
-      at 2025-09-30T08:47:49.639Z
-    </div>
-    <script src="../../prettify.js"></script>
-    <script>
-      window.onload = function () {
-        prettyPrint();
-      };
-    </script>
-    <script src="../../sorter.js"></script>
-    <script src="../../block-navigation.js"></script>
-  </body>
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2025-10-01T13:00:34.883Z
+            </div>
+        <script src="../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
+    </body>
 </html>
+    

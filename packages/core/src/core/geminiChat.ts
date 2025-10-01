@@ -346,28 +346,10 @@ export class GeminiChat {
       });
       lastRetryMetadata = undefined;
 
-      this.sendPromise = (async () => {
-        const outputContent = response.candidates?.[0]?.content;
-        const modelOutput = outputContent ? [outputContent] : [];
-
-        // Because the AFC input contains the entire curated chat history in
-        // addition to the new user input, we need to truncate the AFC history
-        // to deduplicate the existing chat history.
-        const fullAutomaticFunctionCallingHistory =
-          response.automaticFunctionCallingHistory;
-        const index = this.getHistory(true).length;
-        let automaticFunctionCallingHistory: Content[] = [];
-        if (fullAutomaticFunctionCallingHistory != null) {
-          automaticFunctionCallingHistory =
-            fullAutomaticFunctionCallingHistory.slice(index) ?? [];
-        }
-
-        this.recordHistory(
-          userContent,
-          modelOutput,
-          automaticFunctionCallingHistory,
-        );
-      })();
+      this.sendPromise = this.finalizeNonStreamingResponse(
+        response,
+        userContent,
+      );
       await this.sendPromise.catch((error) => {
         // Resets sendPromise to avoid subsequent calls failing
         this.sendPromise = Promise.resolve();
@@ -509,42 +491,123 @@ export class GeminiChat {
         }
 
         if (lastError) {
-          if (
-            lastError instanceof EmptyStreamError ||
-            lastError instanceof IdleStreamTimeoutError
-          ) {
-            logContentRetryFailure(
-              self.config,
-              new ContentRetryFailureEvent(
-                INVALID_CONTENT_RETRY_OPTIONS.maxAttempts,
-                lastError instanceof IdleStreamTimeoutError
-                  ? "IdleStreamTimeoutError"
-                  : "EmptyStreamError",
-                undefined,
-                {
-                  final_classification:
-                    lastError instanceof IdleStreamTimeoutError
-                      ? "network"
-                      : "unknown",
-                  provider: providerTag,
-                  error_message:
-                    lastError instanceof Error
-                      ? lastError.message
-                      : String(lastError),
-                },
-              ),
-            );
+          let handled = false;
+          let errorToThrow: unknown = lastError;
+
+          if (lastError instanceof IdleStreamTimeoutError) {
+            try {
+              const fallbackChunks = await self.executeNonStreamingFallback(
+                requestContents,
+                params,
+                prompt_id,
+                userContent,
+                providerTag,
+              );
+              yield { type: StreamEventType.RETRY };
+              for (const chunk of fallbackChunks) {
+                yield { type: StreamEventType.CHUNK, value: chunk };
+              }
+              handled = true;
+            } catch (fallbackError) {
+              errorToThrow = fallbackError ?? lastError;
+            }
           }
-          // If the stream fails, remove the user message that was added.
-          if (self.history[self.history.length - 1] === userContent) {
-            self.history.pop();
+
+          if (!handled) {
+            if (
+              errorToThrow instanceof EmptyStreamError ||
+              errorToThrow instanceof IdleStreamTimeoutError
+            ) {
+              logContentRetryFailure(
+                self.config,
+                new ContentRetryFailureEvent(
+                  INVALID_CONTENT_RETRY_OPTIONS.maxAttempts,
+                  errorToThrow instanceof IdleStreamTimeoutError
+                    ? "IdleStreamTimeoutError"
+                    : "EmptyStreamError",
+                  undefined,
+                  {
+                    final_classification:
+                      errorToThrow instanceof IdleStreamTimeoutError
+                        ? "network"
+                        : "unknown",
+                    provider: providerTag,
+                    error_message:
+                      errorToThrow instanceof Error
+                        ? errorToThrow.message
+                        : String(errorToThrow),
+                  },
+                ),
+              );
+            }
+            if (self.history[self.history.length - 1] === userContent) {
+              self.history.pop();
+            }
+            throw errorToThrow;
           }
-          throw lastError;
         }
       } finally {
         streamDoneResolver!();
       }
     })();
+  }
+
+  private async finalizeNonStreamingResponse(
+    response: GenerateContentResponse,
+    userContent: Content,
+  ): Promise<void> {
+    const outputContent = response.candidates?.[0]?.content;
+    const modelOutput = outputContent ? [outputContent] : [];
+
+    const fullAutomaticFunctionCallingHistory =
+      response.automaticFunctionCallingHistory;
+    const index = this.getHistory(true).length;
+    let automaticFunctionCallingHistory: Content[] = [];
+    if (fullAutomaticFunctionCallingHistory != null) {
+      automaticFunctionCallingHistory =
+        fullAutomaticFunctionCallingHistory.slice(index) ?? [];
+    }
+
+    this.recordHistory(
+      userContent,
+      modelOutput,
+      automaticFunctionCallingHistory,
+    );
+  }
+
+  private async executeNonStreamingFallback(
+    requestContents: Content[],
+    params: SendMessageParameters,
+    prompt_id: string,
+    userContent: Content,
+    providerTag: string,
+  ): Promise<GenerateContentResponse[]> {
+    const response = await this.contentGenerator.generateContent(
+      {
+        model: this.config.getModel() || DEFAULT_GEMINI_FLASH_MODEL,
+        contents: requestContents,
+        config: { ...this.generationConfig, ...params.config },
+      },
+      prompt_id,
+    );
+
+    await this.finalizeNonStreamingResponse(response, userContent);
+
+    logContentRetry(
+      this.config,
+      new ContentRetryEvent(
+        INVALID_CONTENT_RETRY_OPTIONS.maxAttempts,
+        "NonStreamingFallback",
+        0,
+        {
+          classification: "unknown",
+          provider: providerTag,
+          error_message: "Recovered via non-streaming fallback",
+        },
+      ),
+    );
+
+    return [response];
   }
 
   private async makeApiCallAndProcessStream(

@@ -28,6 +28,7 @@ export declare class GeminiClient {
     private lastSentIdeContext;
     private forceFullIdeContext;
     private tokenBudgetManager?;
+    private pendingChatCompressionEvent;
     /**
      * At any point in this conversation, was compression triggered without
      * being forced and did it fail?
@@ -59,6 +60,15 @@ export declare class GeminiClient {
     sendMessageStream(request: PartListUnion, signal: AbortSignal, prompt_id: string, turns?: number, originalModel?: string): AsyncGenerator<ServerGeminiStreamEvent, Turn>;
     private ensureRequestWithinBudget;
     private runNonStreamingFallback;
+    private trimHistoryForBudget;
+    private buildBudgetPreview;
+    private summarizeContentForBudget;
+    private shouldTrimText;
+    private findHistoryEntryToPrune;
+    private isTrimPlaceholder;
+    private makeTrimPlaceholder;
+    private describeTrimmedContent;
+    private recordChatCompressionEvent;
     generateJson(contents: Content[], schema: Record<string, unknown>, abortSignal: AbortSignal, model?: string, config?: GenerateContentConfig): Promise<Record<string, unknown>>;
     generateContent(contents: Content[], generationConfig: GenerateContentConfig, abortSignal: AbortSignal, model?: string): Promise<GenerateContentResponse>;
     generateEmbedding(texts: string[]): Promise<number[][]>;

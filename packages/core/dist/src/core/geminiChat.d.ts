@@ -91,6 +91,8 @@ export declare class GeminiChat {
      * ```
      */
     sendMessageStream(params: SendMessageParameters, prompt_id: string): Promise<AsyncGenerator<StreamEvent>>;
+    private finalizeNonStreamingResponse;
+    private executeNonStreamingFallback;
     private makeApiCallAndProcessStream;
     /**
      * Returns the chat history.

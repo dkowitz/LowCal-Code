@@ -6,6 +6,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { GeminiChat, EmptyStreamError, StreamEventType, } from "./geminiChat.js";
 import { setSimulate429 } from "../utils/testUtils.js";
+import { IdleStreamTimeoutError } from "../utils/networkErrors.js";
 // Mocks
 const mockModelsModule = {
     generateContent: vi.fn(),
@@ -867,6 +868,39 @@ describe("GeminiChat", () => {
                 role: "model",
                 parts: [{ text: "Successful response" }],
             });
+        });
+        it("should fall back to non-streaming when idle timeouts persist", async () => {
+            vi.mocked(mockModelsModule.generateContentStream).mockImplementation(async () => (async function* () {
+                throw new IdleStreamTimeoutError(15000);
+            })());
+            const fallbackResponse = {
+                candidates: [
+                    {
+                        content: { parts: [{ text: "Recovered response" }], role: "model" },
+                        finishReason: "STOP",
+                    },
+                ],
+            };
+            vi.mocked(mockModelsModule.generateContent).mockResolvedValue(fallbackResponse);
+            const stream = await chat.sendMessageStream({ message: "trigger fallback" }, "prompt-id-non-streaming-fallback");
+            const events = [];
+            for await (const event of stream) {
+                events.push(event);
+            }
+            const chunkEvents = events.filter((event) => event.type === StreamEventType.CHUNK);
+            expect(chunkEvents).toHaveLength(1);
+            expect(chunkEvents[0].value).toBe(fallbackResponse);
+            // Two automatic retries plus the fallback retry marker
+            expect(events.filter((event) => event.type === StreamEventType.RETRY).length).toBe(3);
+            expect(mockModelsModule.generateContent).toHaveBeenCalledTimes(1);
+            expect(mockLogContentRetryFailure).not.toHaveBeenCalled();
+            const history = chat.getHistory();
+            expect(history.length).toBe(2);
+            expect(history[0]).toEqual({
+                role: "user",
+                parts: [{ text: "trigger fallback" }],
+            });
+            expect(history[1]?.parts?.[0]?.text).toBe("Recovered response");
         });
         it("should fail after all retries on persistent invalid content and report metrics", async () => {
             vi.mocked(mockModelsModule.generateContentStream).mockImplementation(async () => (async function* () {

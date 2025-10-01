@@ -10,6 +10,8 @@ import * as Diff from "diff";
 import { doesToolInvocationMatch } from "../utils/tool-utils.js";
 import levenshtein from "fast-levenshtein";
 import { getPlanModeSystemReminder } from "./prompts.js";
+import { getErrorMessage } from "../utils/errors.js";
+import { getProviderTelemetryTag } from "../utils/providerTelemetry.js";
 /**
  * Formats tool output for a Gemini FunctionResponse.
  */
@@ -98,6 +100,7 @@ export class CoreToolScheduler {
     isFinalizingToolCalls = false;
     isScheduling = false;
     requestQueue = [];
+    invocationErrorCounts = new Map();
     constructor(options) {
         this.config = options.config;
         this.toolRegistry = options.config.getToolRegistry();
@@ -554,18 +557,23 @@ export class CoreToolScheduler {
                             errorType: undefined,
                         };
                         this.setStatusInternal(callId, "success", successResponse);
+                        this.clearFailureCount(scheduledCall.request);
                     }
                     else {
                         // It is a failure
                         const error = new Error(toolResult.error.message);
-                        const errorResponse = createErrorResponse(scheduledCall.request, error, toolResult.error.type);
-                        this.setStatusInternal(callId, "error", errorResponse);
+                        const baseErrorResponse = createErrorResponse(scheduledCall.request, error, toolResult.error.type);
+                        const augmentedResponse = this.handleRepeatedFailure(scheduledCall.request, baseErrorResponse, error, toolResult.error.type);
+                        this.setStatusInternal(callId, "error", augmentedResponse ?? baseErrorResponse);
                     }
                 })
                     .catch((executionError) => {
-                    this.setStatusInternal(callId, "error", createErrorResponse(scheduledCall.request, executionError instanceof Error
+                    const normalizedError = executionError instanceof Error
                         ? executionError
-                        : new Error(String(executionError)), ToolErrorType.UNHANDLED_EXCEPTION));
+                        : new Error(String(executionError));
+                    const baseErrorResponse = createErrorResponse(scheduledCall.request, normalizedError, ToolErrorType.UNHANDLED_EXCEPTION);
+                    const augmentedResponse = this.handleRepeatedFailure(scheduledCall.request, baseErrorResponse, normalizedError, ToolErrorType.UNHANDLED_EXCEPTION);
+                    this.setStatusInternal(callId, "error", augmentedResponse ?? baseErrorResponse);
                 });
             });
         }
@@ -609,6 +617,99 @@ export class CoreToolScheduler {
                 outcome,
             };
         });
+    }
+    getFailureThreshold(request) {
+        const override = this.config.getToolSelfHealingOverride(request.name);
+        const globalSettings = this.config.getToolSelfHealingSettings();
+        return (override?.maxConsecutiveErrors ??
+            globalSettings?.maxConsecutiveErrors ??
+            2);
+    }
+    shouldSuggestAutoRecovery(request) {
+        const override = this.config.getToolSelfHealingOverride(request.name);
+        const globalSettings = this.config.getToolSelfHealingSettings();
+        return (override?.enableAutoSuggestions ??
+            globalSettings?.enableAutoSuggestions ??
+            true);
+    }
+    incrementFailureCount(request) {
+        const key = this.getInvocationKey(request);
+        const current = this.invocationErrorCounts.get(key) ?? 0;
+        const next = current + 1;
+        this.invocationErrorCounts.set(key, next);
+        return next;
+    }
+    clearFailureCount(request) {
+        const key = this.getInvocationKey(request);
+        this.invocationErrorCounts.delete(key);
+    }
+    getInvocationKey(request) {
+        const argsKey = JSON.stringify(request.args ?? {});
+        return `${request.prompt_id}::${request.name}::${argsKey}`;
+    }
+    handleRepeatedFailure(request, baseResponse, error, errorType) {
+        const failureCount = this.incrementFailureCount(request);
+        const threshold = this.getFailureThreshold(request);
+        if (failureCount < threshold) {
+            return null;
+        }
+        // We reached or exceeded the threshold. Reset counter so we do not spam.
+        this.clearFailureCount(request);
+        if (!this.shouldSuggestAutoRecovery(request)) {
+            return null;
+        }
+        const tip = this.buildSelfHealingSuggestion(request, errorType);
+        const providerTag = getProviderTelemetryTag(this.config);
+        const existingResponse = baseResponse.responseParts[0]?.functionResponse?.response;
+        const normalizedResponse = existingResponse && typeof existingResponse === "object"
+            ? existingResponse
+            : {};
+        const response = {
+            ...baseResponse,
+            responseParts: [
+                {
+                    functionResponse: {
+                        id: request.callId,
+                        name: request.name,
+                        response: {
+                            ...normalizedResponse,
+                            error: `${getErrorMessage(error)} (auto-suggestion applied)`,
+                            suggestion: tip,
+                            provider: providerTag,
+                            attempts: failureCount,
+                        },
+                    },
+                },
+            ],
+            resultDisplay: tip,
+            error,
+            errorType,
+        };
+        return response;
+    }
+    buildSelfHealingSuggestion(request, errorType) {
+        const base = `Received multiple errors while calling ${request.name}.`;
+        const guidance = this.suggestNextAction(request, errorType);
+        return guidance ? `${base} ${guidance}` : base;
+    }
+    suggestNextAction(request, errorType) {
+        switch (request.name) {
+            case "list_directory":
+                return "Try narrowing the directory path or use `/glob` with a specific pattern to locate files.";
+            case "glob":
+                return "Consider refining the glob pattern or switching to `/list_directory` to inspect the folder before matching.";
+            case "read_file":
+                return "Verify the file path, or run `/list_directory` on the containing folder to confirm the filename.";
+            case "read_many_files":
+                return "Confirm the path list and try reducing the number of files requested.";
+            case "shell":
+                return "Check command syntax or run with safer flags before retrying.";
+            default:
+                if (errorType === ToolErrorType.INVALID_TOOL_PARAMS) {
+                    return "Double-check the arguments provided; you may need to adjust parameter names or value types.";
+                }
+                return "Consider adjusting inputs or selecting an alternative tool before retrying.";
+        }
     }
     async autoApproveCompatiblePendingTools(signal, triggeringCallId) {
         const pendingTools = this.toolCalls.filter((call) => call.status === "awaiting_approval" &&

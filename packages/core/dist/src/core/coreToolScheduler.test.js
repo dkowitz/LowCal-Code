@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { describe, expect, it, vi } from "vitest";
-import { ApprovalMode, BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, } from "../index.js";
+import { ApprovalMode, BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, ToolErrorType, } from "../index.js";
 import { MockModifiableTool, MockTool } from "../test-utils/tools.js";
 import { CoreToolScheduler, convertToFunctionResponse, } from "./coreToolScheduler.js";
 import { getPlanModeSystemReminder } from "./prompts.js";
@@ -105,6 +105,25 @@ async function waitForStatus(onToolCallsUpdate, status, timeout = 5000) {
             }
             else {
                 setTimeout(check, 10); // Check again in 10ms
+            }
+        };
+        check();
+    });
+}
+async function waitForCompletion(onAllToolCallsComplete, timeout = 5000) {
+    return new Promise((resolve, reject) => {
+        const startTime = Date.now();
+        const check = () => {
+            if (Date.now() - startTime > timeout) {
+                reject(new Error("Timed out waiting for tool completion"));
+                return;
+            }
+            if (onAllToolCallsComplete.mock.calls.length > 0) {
+                const calls = onAllToolCallsComplete.mock.calls[onAllToolCallsComplete.mock.calls.length - 1][0];
+                resolve(calls);
+            }
+            else {
+                setTimeout(check, 10);
             }
         };
         check();
@@ -342,6 +361,160 @@ describe("CoreToolScheduler", () => {
                 .flatMap((call) => call[0])
                 .map((tc) => tc.status);
             expect(observedStatuses).not.toContain("awaiting_approval");
+        });
+        it("emits an auto-suggestion after repeated failures", async () => {
+            const mockTool = new MockTool("list_directory");
+            mockTool.executeFn.mockImplementation(() => Promise.resolve({
+                llmContent: "",
+                returnDisplay: "failure",
+                error: {
+                    message: "directory not found",
+                    type: ToolErrorType.PATH_NOT_IN_WORKSPACE,
+                },
+            }));
+            const mockToolRegistry = {
+                getTool: () => mockTool,
+                getFunctionDeclarations: () => [],
+                getAllToolNames: () => [mockTool.name],
+                registerTool: () => { },
+                getToolByName: () => mockTool,
+                getToolByDisplayName: () => mockTool,
+                getTools: () => [mockTool],
+                discoverTools: async () => { },
+                getAllTools: () => [mockTool],
+                getToolsByServer: () => [],
+            };
+            const onAllToolCallsComplete = vi.fn();
+            const onToolCallsUpdate = vi.fn();
+            const mockConfig = {
+                getSessionId: () => "self-heal-session",
+                getUsageStatisticsEnabled: () => true,
+                getDebugMode: () => false,
+                getApprovalMode: () => ApprovalMode.DEFAULT,
+                getAllowedTools: () => [],
+                getContentGeneratorConfig: () => ({
+                    model: "test-model",
+                    authType: "oauth-personal",
+                }),
+                getToolRegistry: () => mockToolRegistry,
+                getToolSelfHealingSettings: () => ({
+                    maxConsecutiveErrors: 2,
+                    enableAutoSuggestions: true,
+                }),
+                getToolSelfHealingOverride: () => undefined,
+                getTargetDir: () => "/workspace",
+            };
+            const scheduler = new CoreToolScheduler({
+                config: mockConfig,
+                onAllToolCallsComplete,
+                onToolCallsUpdate,
+                getPreferredEditor: () => "vscode",
+                onEditorClose: vi.fn(),
+            });
+            const baseRequest = {
+                callId: "heal-1",
+                name: mockTool.name,
+                args: { path: "/missing" },
+                isClientInitiated: false,
+                prompt_id: "prompt-self-heal",
+            };
+            const abortSignal = new AbortController().signal;
+            await scheduler.schedule(baseRequest, abortSignal);
+            await waitForStatus(onToolCallsUpdate, "error");
+            await waitForCompletion(onAllToolCallsComplete);
+            onAllToolCallsComplete.mockClear();
+            onToolCallsUpdate.mockClear();
+            await scheduler.schedule({ ...baseRequest, callId: "heal-2" }, abortSignal);
+            const completedCalls = (await waitForCompletion(onAllToolCallsComplete));
+            const erroredCall = completedCalls[0];
+            const responsePayload = erroredCall.response.responseParts[0]?.functionResponse
+                ?.response;
+            expect(responsePayload?.["error"]).toContain("auto-suggestion applied");
+            expect(erroredCall.response.resultDisplay).toContain("Try narrowing");
+        });
+        it("resets failure counter after a successful execution", async () => {
+            const mockTool = new MockTool("read_file");
+            mockTool.executeFn
+                .mockResolvedValueOnce({
+                llmContent: "",
+                returnDisplay: "failure",
+                error: {
+                    message: "not found",
+                    type: ToolErrorType.FILE_NOT_FOUND,
+                },
+            })
+                .mockResolvedValueOnce({
+                llmContent: "",
+                returnDisplay: "failure",
+                error: {
+                    message: "not found",
+                    type: ToolErrorType.FILE_NOT_FOUND,
+                },
+            })
+                .mockResolvedValue({
+                llmContent: "file content",
+                returnDisplay: "file content",
+            });
+            const mockToolRegistry = {
+                getTool: () => mockTool,
+                getFunctionDeclarations: () => [],
+                getAllToolNames: () => [mockTool.name],
+                registerTool: () => { },
+                getToolByName: () => mockTool,
+                getToolByDisplayName: () => mockTool,
+                getTools: () => [mockTool],
+                discoverTools: async () => { },
+                getAllTools: () => [mockTool],
+                getToolsByServer: () => [],
+            };
+            const onAllToolCallsComplete = vi.fn();
+            const onToolCallsUpdate = vi.fn();
+            const mockConfig = {
+                getSessionId: () => "heal-reset-session",
+                getUsageStatisticsEnabled: () => true,
+                getDebugMode: () => false,
+                getApprovalMode: () => ApprovalMode.DEFAULT,
+                getAllowedTools: () => [],
+                getContentGeneratorConfig: () => ({
+                    model: "test-model",
+                    authType: "oauth-personal",
+                }),
+                getToolRegistry: () => mockToolRegistry,
+                getToolSelfHealingSettings: () => ({
+                    maxConsecutiveErrors: 2,
+                    enableAutoSuggestions: true,
+                }),
+                getToolSelfHealingOverride: () => undefined,
+                getTargetDir: () => "/workspace",
+            };
+            const scheduler = new CoreToolScheduler({
+                config: mockConfig,
+                onAllToolCallsComplete,
+                onToolCallsUpdate,
+                getPreferredEditor: () => "vscode",
+                onEditorClose: vi.fn(),
+            });
+            const baseRequest = {
+                callId: "reset-1",
+                name: mockTool.name,
+                args: { path: "missing.md" },
+                isClientInitiated: false,
+                prompt_id: "prompt-reset",
+            };
+            const abortSignal = new AbortController().signal;
+            await scheduler.schedule(baseRequest, abortSignal);
+            await waitForStatus(onToolCallsUpdate, "error");
+            await waitForCompletion(onAllToolCallsComplete);
+            onAllToolCallsComplete.mockClear();
+            onToolCallsUpdate.mockClear();
+            await scheduler.schedule({ ...baseRequest, callId: "reset-2" }, abortSignal);
+            await waitForStatus(onToolCallsUpdate, "error");
+            await waitForCompletion(onAllToolCallsComplete);
+            onAllToolCallsComplete.mockClear();
+            onToolCallsUpdate.mockClear();
+            await scheduler.schedule({ ...baseRequest, callId: "reset-3" }, abortSignal);
+            const successCall = (await waitForStatus(onToolCallsUpdate, "success"));
+            expect(successCall.response.resultDisplay).toBe("file content");
         });
     });
     describe("getToolSuggestion", () => {
