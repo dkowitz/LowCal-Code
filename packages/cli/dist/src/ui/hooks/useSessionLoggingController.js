@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import { setErrorReportListener, } from "@qwen-code/qwen-code-core";
+import { setErrorReportListener } from "@qwen-code/qwen-code-core";
 import { SessionMarkdownLogger, } from "../../services/SessionMarkdownLogger.js";
 import { appEvents, AppEvent } from "../../utils/events.js";
 export function useSessionLoggingController(options) {
@@ -74,28 +74,18 @@ export function useSessionLoggingController(options) {
         return statusResult;
     }, []);
     const getStatus = useCallback(() => loggerRef.current.getStatus(), []);
-    const controller = useMemo(() => {
-        return {
-            enableLogging,
-            disableLogging,
-            getStatus,
-            logCommandInvocation: (payload) => {
-                void loggerRef.current.logCommandInvocation(payload);
-            },
-            logCommandResult: (payload) => {
-                void loggerRef.current.logCommandResult(payload);
-            },
-            logAppError: (message) => {
-                void loggerRef.current.logAppError({
-                    timestamp: new Date().toISOString(),
-                    message,
-                });
-            },
-            logErrorReport: (payload) => {
-                void loggerRef.current.logErrorReport(payload);
-            },
-        };
-    }, [disableLogging, enableLogging, getStatus]);
+    const controller = useMemo(() => ({
+        enableLogging,
+        disableLogging,
+        getStatus,
+        logCommandInvocation: (payload) => loggerRef.current.logCommandInvocation(payload),
+        logCommandResult: (payload) => loggerRef.current.logCommandResult(payload),
+        logAppError: (message) => loggerRef.current.logAppError({
+            timestamp: new Date().toISOString(),
+            message,
+        }),
+        logErrorReport: (payload) => loggerRef.current.logErrorReport(payload),
+    }), [disableLogging, enableLogging, getStatus]);
     return controller;
 }
 //# sourceMappingURL=useSessionLoggingController.js.map

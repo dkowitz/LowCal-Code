@@ -51,7 +51,9 @@ describe("exportCommand", () => {
             promptCount: 0,
         };
         mockLogging = createMockLoggingController();
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, no-restricted-syntax
         vi.mocked(require("node:fs")).writeFileSync = mockWriteFileSync;
+        // eslint-disable-next-line @typescript-eslint/no-require-imports, no-restricted-syntax
         vi.mocked(require("node:path")).join = mockPathJoin;
         mockContext = {
             services: {

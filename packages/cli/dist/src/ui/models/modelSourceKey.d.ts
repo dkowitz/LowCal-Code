@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { AuthType } from '@qwen-code/qwen-code-core';
+import { AuthType } from "@qwen-code/qwen-code-core";
 interface ModelSourceDescriptor {
     authType?: AuthType;
     providerId?: string;

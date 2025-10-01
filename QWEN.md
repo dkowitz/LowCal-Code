@@ -1,126 +1,124 @@
-# QWEN.md – Project Context for LowCal‑dev
+# Qwen Code - Project Context
 
-## 📦 Project Overview
+## Project Overview
 
-**Qwen Code** is an AI‑powered command‑line workflow tool that lets developers interact with large code models (e.g. Qwen3‑Coder) directly from the terminal. It consists of a **CLI package** (`packages/cli`) and a **core server** (`packages/core`) plus a collection of helper tools (file system, shell, web fetch/search, memory). The repository is written in **TypeScript**, runs on **Node ≥20**, and uses **npm workspaces** for the multiple packages.
+Qwen Code is an AI-powered command-line workflow tool designed to enhance developer productivity. It is an adaptation of the Gemini CLI, specifically optimized for Qwen3-Coder models to provide advanced code understanding, intelligent editing, and workflow automation directly within the terminal.
 
----
+The project is structured as a monorepo with the main CLI at its core, supported by multiple internal packages. It leverages modern JavaScript/TypeScript tooling and can run with or without a sandbox for enhanced security.
 
-## 🗂️ Directory Layout (high‑level)
+## Key Technologies
 
-```
-LowCal-dev/
-├─ bundle/                # Built distributable (gemini.js) – entry point for `qwen` binary
-├─ docs/                  # Full documentation site (Markdown, assets)
-├─ integration-tests/     # End‑to‑end test suite (Vitest)
-├─ packages/
-│   ├─ cli/               # CLI implementation (yargs, REPL, UI)
-│   └─ core/              # Server, tool registry, model adapters
-├─ scripts/               # Build / release helper scripts
-├─ .gitignore, Makefile,  # Project‑level tooling & metadata
-├─ package.json           # Workspace root (defines npm scripts, deps)
-└─ README.md             # High‑level readme shown on GitHub/NPM
-```
+- **Core Language**: TypeScript (with strict type checking)
+- **Build & Bundle**: esbuild
+- **Testing**: Vitest (unit and integration tests)
+- **Linting & Formatting**: ESLint + Prettier
+- **Package Management**: npm + Workspaces
+- **Sandboxing**: Docker, Podman, or macOS Seatbelt (optional)
+- **CLI Framework**: Built with Node.js (v20+)
 
----
+## Building and Running
 
-## ⚙️ Building & Running
+### Prerequisites
+- Node.js 20.0.0 or higher
 
-The project follows the standard **npm** workflow; a `Makefile` provides shortcuts.
-| Action | Command (via npm) | Shortcut (`make`) |
-|--------|-------------------|------------------|
-| Install dependencies | `npm ci` | `make install` |
-| Build all packages & sandbox | `npm run build:all` | `make build-all` |
-| Run the CLI (development) | `npm run start` | `make start` |
-| Debug mode (inspect) | `npm run debug` | `make debug` |
-| Run tests (workspace aware) | `npm run test --workspaces` | `make test` |
-| Lint | `npm run lint` | `make lint` |
-| Format with Prettier | `npm run format` | `make format` |
-| Full pre‑flight check (format + lint + build + typecheck + tests) | `npm run preflight` | `make preflight` |
-
-> **Tip:** The binary exposed after a successful build is `bundle/gemini.js`; it is linked as the `qwen` command in `package.json`.
-
----
-
-## 🧪 Testing & Quality Gates
-
-- **Unit / integration tests** – Vitest (`npm run test`).
-- **Terminal‑bench benchmarks** – `npm run test:terminal-bench` (used for performance evaluation).
-- **Linting** – ESLint with Prettier (`npm run lint`, `npm run format`).
-- **Type checking** – `npm run typecheck` (runs per‑workspace if present).
-
-All CI pipelines expect the _preflight_ script to pass without errors.
-
----
-
-## 📚 Documentation
-
-The authoritative docs live under `docs/`. Key entry points:
-
-- `docs/index.md` – navigation hub.
-- `docs/cli/**` – CLI usage, commands, configuration, token handling.
-- `docs/core/**` – core server and tool API details.
-- `docs/tools/**` – descriptions of each tool (`read_file`, `run_shell_command`, etc.).
-- `docs/troubleshooting.md` – common issues & FAQ.
-
-You can open any file directly; the repository also ships a generated website (see `package.json` scripts for building docs).
-
----
-
-## 🛠️ Development Conventions
-
-| Area                | Convention                                                                                                                                                         |
-| ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| **Code style**      | ESLint + Prettier (`npm run lint`, `npm run format`). The repo enforces `eslint-config-prettier` and a custom license‑header rule.                                 |
-| **TypeScript**      | Strict mode enabled via `tsconfig.json`. Each workspace may have its own `tsconfig.*`; run `npm run typecheck` to verify.                                          |
-| **Commit workflow** | Use the provided scripts (`scripts/generate-git-commit-info.js`) for consistent commit messages. The CI expects a clean changelog generated by `npm run generate`. |
-| **Testing**         | Write Vitest tests under `**/*.test.ts` or `integration-tests/`. Run `npm run test:ci` in CI environments.                                                         |
-| **Release**         | Bump version with `npm run release:version`; the script updates package versions and changelog.                                                                    |
-
----
-
-## 📦 Key npm Scripts (excerpt)
-
-```json
-"scripts": {
-  "start": "node scripts/start.js",
-  "build": "node scripts/build.js",
-  "bundle": "npm run generate && node esbuild.config.js && node scripts/copy_bundle_assets.js",
-  "test": "npm run test --workspaces --if-present",
-  "lint": "eslint . --ext .ts,.tsx && eslint integration-tests",
-  "format": "prettier --experimental-cli --write .",
-  "typecheck": "npm run typecheck --workspaces --if-present",
-  "preflight": "npm run clean && npm ci && npm run format && npm run lint:ci && npm run build && npm run typecheck && npm run test:ci"
-}
+### Installation
+```bash
+npm install
 ```
 
----
+### Build Commands
+- **Build the project**: `npm run build`
+- **Build the CLI and sandbox container**: `npm run build:all`
+- **Bundle assets**: `npm run bundle`
 
-## 📦 Runtime Dependencies (runtime only)
+### Running the CLI
+```bash
+npm start
+```
 
-- `@lvce-editor/ripgrep` – fast file searching.
-- `simple-git` – Git operations for automation.
-- `strip-ansi` – clean console output.
+### Running in Debug Mode
+```bash
+npm run debug
+```
 
-Optional native dependencies (`node‑pty`) are used when a PTY is required; they are listed under `optionalDependencies` and loaded conditionally.
+## Testing
 
----
+### Unit Tests
+```bash
+npm run test
+```
 
-## 🎯 Typical Workflow for a Contributor
+### Integration Tests (End-to-End)
+```bash
+npm run test:e2e
+```
 
-1. **Clone & install**: `git clone … && make install`
-2. **Run the CLI locally**: `make start` (or `npm run start`).
-3. **Make changes** in `packages/cli` or `packages/core`.
-4. **Run preflight**: `make preflight` – ensures formatting, linting, type‑checking and tests all pass.
-5. **Commit** using the conventional format (generated by `scripts/generate-git-commit-info.js`).
-6. **Create a PR** – CI will run the same preflight steps.
+### Comprehensive Check (Lint, Format, Test, Build)
+```bash
+npm run preflight
+```
 
----
+### Run Tests for a Specific Target
+```bash
+# Run only terminal benchmark tests for Qwen model
+npm run test:terminal-bench:qwen
 
-## 📄 License & Attribution
+# Run only integration tests with Docker sandbox
+npm run test:integration:sandbox:docker
+```
 
-The project is licensed under the MIT license (`LICENSE`). It is derived from Google’s Gemini CLI; see the _Acknowledgments_ section in `README.md` for full attribution.
+## Development Conventions
 
----
+### Coding Style
+- Follow the ESLint and Prettier rules defined in `eslint.config.js` and `.prettierrc` (inferred).
+- Use `npm run format` to auto-format code before committing.
+- Use `npm run lint` and `npm run lint:ci` to ensure code quality.
+- Strict TypeScript configuration enforced via `tsconfig.json`.
 
-_This QWEN.md file is generated to give future interactions a concise, searchable snapshot of the LowCal‑dev repository._
+### Project Structure
+- `packages/`: Contains sub-packages (`cli/`, `core/`, `vscode-ide-companion/`)
+- `scripts/`: Build, test, and utility scripts
+- `integration-tests/`: End-to-end test suite
+- `docs/`: Detailed project documentation
+- `bundle/`: Generated output from esbuild (contains the CLI executable)
+
+### Contribution Guidelines
+- All changes must be submitted via GitHub pull requests.
+- Link every PR to an existing issue.
+- Keep PRs small and focused on a single change.
+- Ensure all tests pass (`npm run preflight`) before submitting.
+- Update documentation if user-facing features or behavior change.
+- Follow Conventional Commits for commit messages.
+
+### Authorization
+The CLI supports two primary authentication methods:
+1. **Qwen OAuth (Recommended)**: Use `qwen` command and follow browser auth flow (free, 2,000 requests/day).
+2. **OpenAI-Compatible API**: Set `OPENAI_API_KEY`, `OPENAI_BASE_URL`, and `OPENAI_MODEL` environment variables.
+
+### Sandbox
+The tool can run in a sandboxed environment for enhanced security:
+- Enable automatically with `GEMINI_SANDBOX=true`
+- Uses Docker, Podman, or macOS Seatbelt
+- Builds a minimal container image during `npm run build:all`
+
+### Development Workflow
+1. Clone the repo.
+2. Run `npm install`.
+3. Run `npm run build`.
+4. Run `npm start` to launch the CLI.
+5. Use `npm run preflight` to verify code quality.
+
+For development with VS Code, use `npm run debug` and attach the debugger, or use the built-in VS Code launch configuration.
+
+## Key Files
+
+- `README.md`: Main project documentation and usage guide
+- `package.json`: Project configuration and all npm scripts
+- `esbuild.config.js`: Build configuration for the CLI bundle
+- `vitest.config.ts`: Test configuration
+- `eslint.config.js`: ESLint rules for the entire monorepo
+- `tsconfig.json`: TypeScript compiler options
+- `CONTRIBUTING.md`: Detailed contribution guidelines
+- `Makefile`: Convenience commands for common tasks
+
+> **Note**: This file (`QWEN.md`) serves as the central instructional context for AI agents working on this project. Always refer to it before making changes.

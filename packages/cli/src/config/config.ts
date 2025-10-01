@@ -422,10 +422,10 @@ export async function loadCliConfig(
           AppEvent.ShowInfo,
           `Saved OPENAI_API_KEY to: ${envPath}`,
         );
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
-    } catch (e) {
+    } catch (_e) {
       // Fall back to setting runtime env if persistence fails
       process.env["OPENAI_API_KEY"] = argv.openaiApiKey;
     }
@@ -440,10 +440,10 @@ export async function loadCliConfig(
           AppEvent.ShowInfo,
           `Saved OPENAI_BASE_URL to: ${envPath}`,
         );
-      } catch (e) {
+      } catch (_e) {
         // ignore
       }
-    } catch (e) {
+    } catch (_e) {
       process.env["OPENAI_BASE_URL"] = argv.openaiBaseUrl;
     }
   }

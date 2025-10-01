@@ -327,7 +327,7 @@ export enum EventMetadataKey {
   GEMINI_CLI_CONTENT_RETRY_FAILURE_TOTAL_DURATION_MS = 81,
 
   // Logs the classification assigned to a retry attempt.
-  GEMINI_CLI_CONTENT_RETRY_CLASSIFICATION = 82,
+  GEMINI_CLI_CONTENT_RETRY_CLASSIFICATION = 90,
 
   // Logs the provider label associated with a retry attempt.
   GEMINI_CLI_CONTENT_RETRY_PROVIDER = 83,

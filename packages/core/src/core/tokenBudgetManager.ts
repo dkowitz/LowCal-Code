@@ -25,7 +25,7 @@ export interface TokenBudgetSnapshot {
 export class TokenBudgetExceededError extends Error {
   constructor(
     message: string,
-    public readonly snapshot: TokenBudgetSnapshot,
+    readonly snapshot: TokenBudgetSnapshot,
   ) {
     super(message);
     this.name = "TokenBudgetExceededError";

@@ -878,9 +878,9 @@ export class Config {
     return this.toolSelfHealing;
   }
 
-  getToolSelfHealingOverride(toolName: string):
-    | ToolSelfHealingSettings
-    | undefined {
+  getToolSelfHealingOverride(
+    toolName: string,
+  ): ToolSelfHealingSettings | undefined {
     return this.toolSelfHealingOverrides?.[toolName];
   }
 

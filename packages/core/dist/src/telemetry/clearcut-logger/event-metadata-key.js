@@ -226,7 +226,7 @@ export var EventMetadataKey;
     // Logs the total duration in milliseconds for a content retry failure.
     EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_FAILURE_TOTAL_DURATION_MS"] = 81] = "GEMINI_CLI_CONTENT_RETRY_FAILURE_TOTAL_DURATION_MS";
     // Logs the classification assigned to a retry attempt.
-    EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_CLASSIFICATION"] = 82] = "GEMINI_CLI_CONTENT_RETRY_CLASSIFICATION";
+    EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_CLASSIFICATION"] = 90] = "GEMINI_CLI_CONTENT_RETRY_CLASSIFICATION";
     // Logs the provider label associated with a retry attempt.
     EventMetadataKey[EventMetadataKey["GEMINI_CLI_CONTENT_RETRY_PROVIDER"] = 83] = "GEMINI_CLI_CONTENT_RETRY_PROVIDER";
     // Logs the HTTP status code (if any) captured for a retry attempt.

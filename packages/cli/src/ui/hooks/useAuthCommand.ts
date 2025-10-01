@@ -81,7 +81,9 @@ Logging in with Google... Please restart Gemini CLI to continue.
           await config.refreshAuth(authType);
           console.log(`Refreshed auth via "${authType}".`);
         } catch (e) {
-          setAuthError(`Failed to refresh auth. Message: ${getErrorMessage(e)}`);
+          setAuthError(
+            `Failed to refresh auth. Message: ${getErrorMessage(e)}`,
+          );
           openAuthDialog();
         } finally {
           setIsAuthenticating(false);

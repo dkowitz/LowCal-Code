@@ -644,10 +644,24 @@ export class GeminiClient {
       }
     }
 
-    const budgetSnapshot = await this.ensureRequestWithinBudget(
-      prompt_id,
-      request,
-    );
+    let budgetSnapshot: TokenBudgetSnapshot | undefined;
+    try {
+      budgetSnapshot = await this.ensureRequestWithinBudget(prompt_id, request);
+    } catch (e) {
+      if (e instanceof TokenBudgetExceededError) {
+        yield {
+          type: GeminiEventType.Error,
+          value: {
+            error: {
+              message: e.message,
+            },
+          },
+        };
+        return new Turn(this.getChat(), prompt_id);
+      } else {
+        throw e;
+      }
+    }
 
     if (this.pendingChatCompressionEvent) {
       yield {
@@ -964,7 +978,7 @@ export class GeminiClient {
       }
     }
 
-    let workingHistory = cloneDeep(trimmedHistory);
+    const workingHistory = cloneDeep(trimmedHistory);
     let placeholderApplied = false;
 
     while (true) {
@@ -1169,8 +1183,7 @@ export class GeminiClient {
     const textPart = content.parts?.find(
       (part) => typeof part?.text === "string" && part.text.trim().length > 0,
     );
-    const textSnippet =
-      typeof textPart?.text === "string" ? textPart.text : "";
+    const textSnippet = typeof textPart?.text === "string" ? textPart.text : "";
 
     if (textSnippet) {
       const snippet = textSnippet.slice(0, 80).trim();

@@ -464,7 +464,26 @@ export class GeminiClient {
                 return new Turn(this.getChat(), prompt_id);
             }
         }
-        const budgetSnapshot = await this.ensureRequestWithinBudget(prompt_id, request);
+        let budgetSnapshot;
+        try {
+            budgetSnapshot = await this.ensureRequestWithinBudget(prompt_id, request);
+        }
+        catch (e) {
+            if (e instanceof TokenBudgetExceededError) {
+                yield {
+                    type: GeminiEventType.Error,
+                    value: {
+                        error: {
+                            message: e.message,
+                        },
+                    },
+                };
+                return new Turn(this.getChat(), prompt_id);
+            }
+            else {
+                throw e;
+            }
+        }
         if (this.pendingChatCompressionEvent) {
             yield {
                 type: GeminiEventType.ChatCompressed,
@@ -675,7 +694,7 @@ export class GeminiClient {
                 return snapshot;
             }
         }
-        let workingHistory = cloneDeep(trimmedHistory);
+        const workingHistory = cloneDeep(trimmedHistory);
         let placeholderApplied = false;
         while (true) {
             const indexToTrim = this.findHistoryEntryToPrune(workingHistory);

@@ -870,7 +870,9 @@ describe("GeminiChat", () => {
             });
         });
         it("should fall back to non-streaming when idle timeouts persist", async () => {
-            vi.mocked(mockModelsModule.generateContentStream).mockImplementation(async () => (async function* () {
+            vi.mocked(mockModelsModule.generateContentStream).mockImplementation(async () => 
+            // eslint-disable-next-line require-yield
+            (async function* () {
                 throw new IdleStreamTimeoutError(15000);
             })());
             const fallbackResponse = {
@@ -947,9 +949,7 @@ describe("GeminiChat", () => {
                 candidates: [{ content: { parts: [{ text: "" }] } }],
             };
         })())
-            .mockImplementationOnce(async () => 
-        // Second attempt succeeds
-        (async function* () {
+            .mockImplementationOnce(async () => (async function* () {
             yield {
                 candidates: [
                     {
@@ -1050,7 +1050,9 @@ describe("GeminiChat", () => {
         vi.mocked(mockModelsModule.generateContentStream)
             .mockImplementationOnce(
         // First call resolves to an async generator that yields nothing.
-        async () => (async function* () { })())
+        async () => Promise.resolve((async function* () {
+            // empty
+        })()))
             .mockImplementationOnce(
         // Second call returns a valid stream.
         async () => (async function* () {
@@ -1159,9 +1161,7 @@ describe("GeminiChat", () => {
     it("should discard valid partial content from a failed attempt upon retry", async () => {
         // ARRANGE: Mock the stream to fail on the first attempt after yielding some valid content.
         vi.mocked(mockModelsModule.generateContentStream)
-            .mockImplementationOnce(async () => 
-        // First attempt: yields one valid chunk, then one invalid chunk
-        (async function* () {
+            .mockImplementationOnce(async () => (async function* () {
             yield {
                 candidates: [
                     {

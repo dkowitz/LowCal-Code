@@ -303,7 +303,9 @@ describe("ReadFileTool", () => {
       const result = await invocation.execute(abortSignal);
       expect(typeof result.llmContent).toBe("string");
       expect(result.llmContent as string).toContain("Binary file summary");
-      expect(result.returnDisplay).toContain("Binary file summary: large-image.png");
+      expect(result.returnDisplay).toContain(
+        "Binary file summary: large-image.png",
+      );
     });
 
     it("should handle PDF file and return appropriate content", async () => {

@@ -12,4 +12,4 @@ interface ProviderKeyPromptProps {
     hideApiKeyInput?: boolean;
 }
 export declare function ProviderKeyPrompt({ prepopulatedBaseUrl, prepopulatedApiKey, onSubmit, onCancel, hideApiKeyInput, }: ProviderKeyPromptProps): React.JSX.Element;
-export default ProviderKeyPrompt;
+export {};
