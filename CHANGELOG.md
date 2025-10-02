@@ -2,9 +2,6 @@
 
 ## 0.0.13
 
-- Added tool self-healing counters with auto-suggestion error responses and provider-tagged telemetry for repeated tool failures.
-- Introduced configurable `toolSelfHealing`/`toolSelfHealingOverrides` knobs so workspaces can tune failure thresholds and messaging.
-- Added automatic history trimming for oversized tool outputs, with context-preserving placeholders and retry-free recovery when requests exceed model budgets.
 - Added preflight token budget enforcement with automatic chat compression retries to avoid context-window failures.
 - Added streaming idle watchdog and automatic non-streaming fallback to prevent hangs from silent providers.
 - Expanded retry/backoff telemetry with classification, status codes, and provider tags for easier diagnosis of transient failures.

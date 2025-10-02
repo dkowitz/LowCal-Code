@@ -1,68 +1,64 @@
-
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <title>Code coverage report for src/core/coreToolScheduler.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type='text/css'>
-        .coverage-summary .sorter {
-            background-image: url(../../sort-arrow-sprite.png);
-        }
+    <style type="text/css">
+      .coverage-summary .sorter {
+        background-image: url(../../sort-arrow-sprite.png);
+      }
     </style>
-</head>
-    
-<body>
-<div class='wrapper'>
-    <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/core</a> coreToolScheduler.ts</h1>
-        <div class='clearfix'>
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Statements</span>
-                <span class='fraction'>0/913</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Lines</span>
-                <span class='fraction'>0/913</span>
-            </div>
-        
-            
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <div class="pad1">
+        <h1>
+          <a href="../../index.html">All files</a> /
+          <a href="index.html">src/core</a> coreToolScheduler.ts
+        </h1>
+        <div class="clearfix">
+          <div class="fl pad1y space-right2">
+            <span class="strong">3.57% </span>
+            <span class="quiet">Statements</span>
+            <span class="fraction">28/783</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Branches</span>
+            <span class="fraction">0/1</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Functions</span>
+            <span class="fraction">0/20</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">3.57% </span>
+            <span class="quiet">Lines</span>
+            <span class="fraction">28/783</span>
+          </div>
         </div>
         <p class="quiet">
-            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+          Press <em>n</em> or <em>j</em> to go to the next uncovered block,
+          <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
         <template id="filterTemplate">
-            <div class="quiet">
-                Filter:
-                <input type="search" id="fileSearch">
-            </div>
+          <div class="quiet">
+            Filter:
+            <input type="search" id="fileSearch" />
+          </div>
         </template>
-    </div>
-    <div class='status-line low'></div>
-    <pre><table class="coverage">
+      </div>
+      <div class="status-line low"></div>
+      <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
 <a name='L3'></a><a href='#L3'>3</a>
@@ -1117,153 +1113,7 @@
 <a name='L1052'></a><a href='#L1052'>1052</a>
 <a name='L1053'></a><a href='#L1053'>1053</a>
 <a name='L1054'></a><a href='#L1054'>1054</a>
-<a name='L1055'></a><a href='#L1055'>1055</a>
-<a name='L1056'></a><a href='#L1056'>1056</a>
-<a name='L1057'></a><a href='#L1057'>1057</a>
-<a name='L1058'></a><a href='#L1058'>1058</a>
-<a name='L1059'></a><a href='#L1059'>1059</a>
-<a name='L1060'></a><a href='#L1060'>1060</a>
-<a name='L1061'></a><a href='#L1061'>1061</a>
-<a name='L1062'></a><a href='#L1062'>1062</a>
-<a name='L1063'></a><a href='#L1063'>1063</a>
-<a name='L1064'></a><a href='#L1064'>1064</a>
-<a name='L1065'></a><a href='#L1065'>1065</a>
-<a name='L1066'></a><a href='#L1066'>1066</a>
-<a name='L1067'></a><a href='#L1067'>1067</a>
-<a name='L1068'></a><a href='#L1068'>1068</a>
-<a name='L1069'></a><a href='#L1069'>1069</a>
-<a name='L1070'></a><a href='#L1070'>1070</a>
-<a name='L1071'></a><a href='#L1071'>1071</a>
-<a name='L1072'></a><a href='#L1072'>1072</a>
-<a name='L1073'></a><a href='#L1073'>1073</a>
-<a name='L1074'></a><a href='#L1074'>1074</a>
-<a name='L1075'></a><a href='#L1075'>1075</a>
-<a name='L1076'></a><a href='#L1076'>1076</a>
-<a name='L1077'></a><a href='#L1077'>1077</a>
-<a name='L1078'></a><a href='#L1078'>1078</a>
-<a name='L1079'></a><a href='#L1079'>1079</a>
-<a name='L1080'></a><a href='#L1080'>1080</a>
-<a name='L1081'></a><a href='#L1081'>1081</a>
-<a name='L1082'></a><a href='#L1082'>1082</a>
-<a name='L1083'></a><a href='#L1083'>1083</a>
-<a name='L1084'></a><a href='#L1084'>1084</a>
-<a name='L1085'></a><a href='#L1085'>1085</a>
-<a name='L1086'></a><a href='#L1086'>1086</a>
-<a name='L1087'></a><a href='#L1087'>1087</a>
-<a name='L1088'></a><a href='#L1088'>1088</a>
-<a name='L1089'></a><a href='#L1089'>1089</a>
-<a name='L1090'></a><a href='#L1090'>1090</a>
-<a name='L1091'></a><a href='#L1091'>1091</a>
-<a name='L1092'></a><a href='#L1092'>1092</a>
-<a name='L1093'></a><a href='#L1093'>1093</a>
-<a name='L1094'></a><a href='#L1094'>1094</a>
-<a name='L1095'></a><a href='#L1095'>1095</a>
-<a name='L1096'></a><a href='#L1096'>1096</a>
-<a name='L1097'></a><a href='#L1097'>1097</a>
-<a name='L1098'></a><a href='#L1098'>1098</a>
-<a name='L1099'></a><a href='#L1099'>1099</a>
-<a name='L1100'></a><a href='#L1100'>1100</a>
-<a name='L1101'></a><a href='#L1101'>1101</a>
-<a name='L1102'></a><a href='#L1102'>1102</a>
-<a name='L1103'></a><a href='#L1103'>1103</a>
-<a name='L1104'></a><a href='#L1104'>1104</a>
-<a name='L1105'></a><a href='#L1105'>1105</a>
-<a name='L1106'></a><a href='#L1106'>1106</a>
-<a name='L1107'></a><a href='#L1107'>1107</a>
-<a name='L1108'></a><a href='#L1108'>1108</a>
-<a name='L1109'></a><a href='#L1109'>1109</a>
-<a name='L1110'></a><a href='#L1110'>1110</a>
-<a name='L1111'></a><a href='#L1111'>1111</a>
-<a name='L1112'></a><a href='#L1112'>1112</a>
-<a name='L1113'></a><a href='#L1113'>1113</a>
-<a name='L1114'></a><a href='#L1114'>1114</a>
-<a name='L1115'></a><a href='#L1115'>1115</a>
-<a name='L1116'></a><a href='#L1116'>1116</a>
-<a name='L1117'></a><a href='#L1117'>1117</a>
-<a name='L1118'></a><a href='#L1118'>1118</a>
-<a name='L1119'></a><a href='#L1119'>1119</a>
-<a name='L1120'></a><a href='#L1120'>1120</a>
-<a name='L1121'></a><a href='#L1121'>1121</a>
-<a name='L1122'></a><a href='#L1122'>1122</a>
-<a name='L1123'></a><a href='#L1123'>1123</a>
-<a name='L1124'></a><a href='#L1124'>1124</a>
-<a name='L1125'></a><a href='#L1125'>1125</a>
-<a name='L1126'></a><a href='#L1126'>1126</a>
-<a name='L1127'></a><a href='#L1127'>1127</a>
-<a name='L1128'></a><a href='#L1128'>1128</a>
-<a name='L1129'></a><a href='#L1129'>1129</a>
-<a name='L1130'></a><a href='#L1130'>1130</a>
-<a name='L1131'></a><a href='#L1131'>1131</a>
-<a name='L1132'></a><a href='#L1132'>1132</a>
-<a name='L1133'></a><a href='#L1133'>1133</a>
-<a name='L1134'></a><a href='#L1134'>1134</a>
-<a name='L1135'></a><a href='#L1135'>1135</a>
-<a name='L1136'></a><a href='#L1136'>1136</a>
-<a name='L1137'></a><a href='#L1137'>1137</a>
-<a name='L1138'></a><a href='#L1138'>1138</a>
-<a name='L1139'></a><a href='#L1139'>1139</a>
-<a name='L1140'></a><a href='#L1140'>1140</a>
-<a name='L1141'></a><a href='#L1141'>1141</a>
-<a name='L1142'></a><a href='#L1142'>1142</a>
-<a name='L1143'></a><a href='#L1143'>1143</a>
-<a name='L1144'></a><a href='#L1144'>1144</a>
-<a name='L1145'></a><a href='#L1145'>1145</a>
-<a name='L1146'></a><a href='#L1146'>1146</a>
-<a name='L1147'></a><a href='#L1147'>1147</a>
-<a name='L1148'></a><a href='#L1148'>1148</a>
-<a name='L1149'></a><a href='#L1149'>1149</a>
-<a name='L1150'></a><a href='#L1150'>1150</a>
-<a name='L1151'></a><a href='#L1151'>1151</a>
-<a name='L1152'></a><a href='#L1152'>1152</a>
-<a name='L1153'></a><a href='#L1153'>1153</a>
-<a name='L1154'></a><a href='#L1154'>1154</a>
-<a name='L1155'></a><a href='#L1155'>1155</a>
-<a name='L1156'></a><a href='#L1156'>1156</a>
-<a name='L1157'></a><a href='#L1157'>1157</a>
-<a name='L1158'></a><a href='#L1158'>1158</a>
-<a name='L1159'></a><a href='#L1159'>1159</a>
-<a name='L1160'></a><a href='#L1160'>1160</a>
-<a name='L1161'></a><a href='#L1161'>1161</a>
-<a name='L1162'></a><a href='#L1162'>1162</a>
-<a name='L1163'></a><a href='#L1163'>1163</a>
-<a name='L1164'></a><a href='#L1164'>1164</a>
-<a name='L1165'></a><a href='#L1165'>1165</a>
-<a name='L1166'></a><a href='#L1166'>1166</a>
-<a name='L1167'></a><a href='#L1167'>1167</a>
-<a name='L1168'></a><a href='#L1168'>1168</a>
-<a name='L1169'></a><a href='#L1169'>1169</a>
-<a name='L1170'></a><a href='#L1170'>1170</a>
-<a name='L1171'></a><a href='#L1171'>1171</a>
-<a name='L1172'></a><a href='#L1172'>1172</a>
-<a name='L1173'></a><a href='#L1173'>1173</a>
-<a name='L1174'></a><a href='#L1174'>1174</a>
-<a name='L1175'></a><a href='#L1175'>1175</a>
-<a name='L1176'></a><a href='#L1176'>1176</a>
-<a name='L1177'></a><a href='#L1177'>1177</a>
-<a name='L1178'></a><a href='#L1178'>1178</a>
-<a name='L1179'></a><a href='#L1179'>1179</a>
-<a name='L1180'></a><a href='#L1180'>1180</a>
-<a name='L1181'></a><a href='#L1181'>1181</a>
-<a name='L1182'></a><a href='#L1182'>1182</a>
-<a name='L1183'></a><a href='#L1183'>1183</a>
-<a name='L1184'></a><a href='#L1184'>1184</a>
-<a name='L1185'></a><a href='#L1185'>1185</a>
-<a name='L1186'></a><a href='#L1186'>1186</a>
-<a name='L1187'></a><a href='#L1187'>1187</a>
-<a name='L1188'></a><a href='#L1188'>1188</a>
-<a name='L1189'></a><a href='#L1189'>1189</a>
-<a name='L1190'></a><a href='#L1190'>1190</a>
-<a name='L1191'></a><a href='#L1191'>1191</a>
-<a name='L1192'></a><a href='#L1192'>1192</a>
-<a name='L1193'></a><a href='#L1193'>1193</a>
-<a name='L1194'></a><a href='#L1194'>1194</a>
-<a name='L1195'></a><a href='#L1195'>1195</a>
-<a name='L1196'></a><a href='#L1196'>1196</a>
-<a name='L1197'></a><a href='#L1197'>1197</a>
-<a name='L1198'></a><a href='#L1198'>1198</a>
-<a name='L1199'></a><a href='#L1199'>1199</a>
-<a name='L1200'></a><a href='#L1200'>1200</a>
-<a name='L1201'></a><a href='#L1201'>1201</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L1055'></a><a href='#L1055'>1055</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1282,7 +1132,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1290,18 +1140,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1418,7 +1266,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1491,6 +1339,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1509,7 +1358,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1520,7 +1368,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1531,15 +1380,13 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1573,6 +1420,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1586,7 +1434,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1723,8 +1570,8 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1757,7 +1604,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1767,6 +1614,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1779,7 +1627,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1788,8 +1635,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1815,7 +1662,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1851,6 +1698,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1862,7 +1710,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2037,7 +1884,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2114,6 +1961,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2124,15 +1972,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2143,97 +1988,38 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2247,43 +2033,21 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2292,33 +2056,22 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2326,9 +2079,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2337,37 +2088,22 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2375,20 +2111,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2396,24 +2118,15 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2422,16 +2135,8 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2440,14 +2145,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2463,7 +2166,8 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @license
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
@@ -2481,30 +2185,28 @@ import type {
   ToolConfirmationPayload,
   AnyDeclarativeTool,
   AnyToolInvocation,
-} from "../index.js";
-<span class="cstat-no" title="statement not covered" >import {</span>
+} from '../index.js';
+import {
   ToolConfirmationOutcome,
   ApprovalMode,
   logToolCall,
   ToolErrorType,
   ToolCallEvent,
-} from "../index.js";
-import type { Part, PartListUnion } from "@google/genai";
-<span class="cstat-no" title="statement not covered" >import { getResponseTextFromParts } from "../utils/generateContentResponseUtilities.js";</span>
-import type { ModifyContext } from "../tools/modifiable-tool.js";
-<span class="cstat-no" title="statement not covered" >import {</span>
+} from '../index.js';
+import type { Part, PartListUnion } from '@google/genai';
+import { getResponseTextFromParts } from '../utils/generateContentResponseUtilities.js';
+import type { ModifyContext } from '../tools/modifiable-tool.js';
+import {
   isModifiableDeclarativeTool,
   modifyWithEditor,
-} from "../tools/modifiable-tool.js";
-<span class="cstat-no" title="statement not covered" >import * as Diff from "diff";</span>
-<span class="cstat-no" title="statement not covered" >import { doesToolInvocationMatch } from "../utils/tool-utils.js";</span>
-<span class="cstat-no" title="statement not covered" >import levenshtein from "fast-levenshtein";</span>
-<span class="cstat-no" title="statement not covered" >import { getPlanModeSystemReminder } from "./prompts.js";</span>
-<span class="cstat-no" title="statement not covered" >import { getErrorMessage } from "../utils/errors.js";</span>
-<span class="cstat-no" title="statement not covered" >import { getProviderTelemetryTag } from "../utils/providerTelemetry.js";</span>
+} from '../tools/modifiable-tool.js';
+import * as Diff from 'diff';
+import { doesToolInvocationMatch } from '../utils/tool-utils.js';
+import levenshtein from 'fast-levenshtein';
+import { getPlanModeSystemReminder } from './prompts.js';
 &nbsp;
 export type ValidatingToolCall = {
-  status: "validating";
+  status: 'validating';
   request: ToolCallRequestInfo;
   tool: AnyDeclarativeTool;
   invocation: AnyToolInvocation;
@@ -2513,7 +2215,7 @@ export type ValidatingToolCall = {
 };
 &nbsp;
 export type ScheduledToolCall = {
-  status: "scheduled";
+  status: 'scheduled';
   request: ToolCallRequestInfo;
   tool: AnyDeclarativeTool;
   invocation: AnyToolInvocation;
@@ -2522,7 +2224,7 @@ export type ScheduledToolCall = {
 };
 &nbsp;
 export type ErroredToolCall = {
-  status: "error";
+  status: 'error';
   request: ToolCallRequestInfo;
   response: ToolCallResponseInfo;
   tool?: AnyDeclarativeTool;
@@ -2531,7 +2233,7 @@ export type ErroredToolCall = {
 };
 &nbsp;
 export type SuccessfulToolCall = {
-  status: "success";
+  status: 'success';
   request: ToolCallRequestInfo;
   tool: AnyDeclarativeTool;
   response: ToolCallResponseInfo;
@@ -2541,7 +2243,7 @@ export type SuccessfulToolCall = {
 };
 &nbsp;
 export type ExecutingToolCall = {
-  status: "executing";
+  status: 'executing';
   request: ToolCallRequestInfo;
   tool: AnyDeclarativeTool;
   invocation: AnyToolInvocation;
@@ -2551,7 +2253,7 @@ export type ExecutingToolCall = {
 };
 &nbsp;
 export type CancelledToolCall = {
-  status: "cancelled";
+  status: 'cancelled';
   request: ToolCallRequestInfo;
   response: ToolCallResponseInfo;
   tool: AnyDeclarativeTool;
@@ -2561,7 +2263,7 @@ export type CancelledToolCall = {
 };
 &nbsp;
 export type WaitingToolCall = {
-  status: "awaiting_approval";
+  status: 'awaiting_approval';
   request: ToolCallRequestInfo;
   tool: AnyDeclarativeTool;
   invocation: AnyToolInvocation;
@@ -2570,7 +2272,7 @@ export type WaitingToolCall = {
   outcome?: ToolConfirmationOutcome;
 };
 &nbsp;
-export type Status = ToolCall["status"];
+export type Status = ToolCall['status'];
 &nbsp;
 export type ToolCall =
   | ValidatingToolCall
@@ -2604,7 +2306,7 @@ export type ToolCallsUpdateHandler = (toolCalls: ToolCall[]) =&gt; void;
 /**
  * Formats tool output for a Gemini FunctionResponse.
  */
-<span class="cstat-no" title="statement not covered" >function createFunctionResponsePart(</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function createFunctionResponsePart(</span></span>
 <span class="cstat-no" title="statement not covered" >  callId: string,</span>
 <span class="cstat-no" title="statement not covered" >  toolName: string,</span>
 <span class="cstat-no" title="statement not covered" >  output: string,</span>
@@ -2618,7 +2320,7 @@ export type ToolCallsUpdateHandler = (toolCalls: ToolCall[]) =&gt; void;
 <span class="cstat-no" title="statement not covered" >  };</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export function convertToFunctionResponse(</span>
+export <span class="fstat-no" title="function not covered" >function convertToFunctionResponse(</span>
 <span class="cstat-no" title="statement not covered" >  toolName: string,</span>
 <span class="cstat-no" title="statement not covered" >  callId: string,</span>
 <span class="cstat-no" title="statement not covered" >  llmContent: PartListUnion,</span>
@@ -2628,7 +2330,7 @@ export type ToolCallsUpdateHandler = (toolCalls: ToolCall[]) =&gt; void;
 <span class="cstat-no" title="statement not covered" >      ? llmContent[0]</span>
 <span class="cstat-no" title="statement not covered" >      : llmContent;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  if (typeof contentToProcess === "string") {</span>
+<span class="cstat-no" title="statement not covered" >  if (typeof contentToProcess === 'string') {</span>
 <span class="cstat-no" title="statement not covered" >    return [createFunctionResponsePart(callId, toolName, contentToProcess)];</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -2636,18 +2338,18 @@ export type ToolCallsUpdateHandler = (toolCalls: ToolCall[]) =&gt; void;
 <span class="cstat-no" title="statement not covered" >    const functionResponse = createFunctionResponsePart(</span>
 <span class="cstat-no" title="statement not covered" >      callId,</span>
 <span class="cstat-no" title="statement not covered" >      toolName,</span>
-<span class="cstat-no" title="statement not covered" >      "Tool execution succeeded.",</span>
+<span class="cstat-no" title="statement not covered" >      'Tool execution succeeded.',</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 <span class="cstat-no" title="statement not covered" >    return [functionResponse, ...toParts(contentToProcess)];</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   // After this point, contentToProcess is a single Part object.
 <span class="cstat-no" title="statement not covered" >  if (contentToProcess.functionResponse) {</span>
-<span class="cstat-no" title="statement not covered" >    if (contentToProcess.functionResponse.response?.["content"]) {</span>
+<span class="cstat-no" title="statement not covered" >    if (contentToProcess.functionResponse.response?.['content']) {</span>
 <span class="cstat-no" title="statement not covered" >      const stringifiedOutput =</span>
 <span class="cstat-no" title="statement not covered" >        getResponseTextFromParts(</span>
-<span class="cstat-no" title="statement not covered" >          contentToProcess.functionResponse.response["content"] as Part[],</span>
-<span class="cstat-no" title="statement not covered" >        ) || "";</span>
+<span class="cstat-no" title="statement not covered" >          contentToProcess.functionResponse.response['content'] as Part[],</span>
+<span class="cstat-no" title="statement not covered" >        ) || '';</span>
 <span class="cstat-no" title="statement not covered" >      return [createFunctionResponsePart(callId, toolName, stringifiedOutput)];</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
     // It's a functionResponse that we should pass through as is.
@@ -2658,7 +2360,7 @@ export type ToolCallsUpdateHandler = (toolCalls: ToolCall[]) =&gt; void;
 <span class="cstat-no" title="statement not covered" >    const mimeType =</span>
 <span class="cstat-no" title="statement not covered" >      contentToProcess.inlineData?.mimeType ||</span>
 <span class="cstat-no" title="statement not covered" >      contentToProcess.fileData?.mimeType ||</span>
-<span class="cstat-no" title="statement not covered" >      "unknown";</span>
+<span class="cstat-no" title="statement not covered" >      'unknown';</span>
 <span class="cstat-no" title="statement not covered" >    const functionResponse = createFunctionResponsePart(</span>
 <span class="cstat-no" title="statement not covered" >      callId,</span>
 <span class="cstat-no" title="statement not covered" >      toolName,</span>
@@ -2675,14 +2377,14 @@ export type ToolCallsUpdateHandler = (toolCalls: ToolCall[]) =&gt; void;
 &nbsp;
   // Default case for other kinds of parts.
 <span class="cstat-no" title="statement not covered" >  return [</span>
-<span class="cstat-no" title="statement not covered" >    createFunctionResponsePart(callId, toolName, "Tool execution succeeded."),</span>
+<span class="cstat-no" title="statement not covered" >    createFunctionResponsePart(callId, toolName, 'Tool execution succeeded.'),</span>
 <span class="cstat-no" title="statement not covered" >  ];</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >function toParts(input: PartListUnion): Part[] {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function toParts(input: PartListUnion): Part[] {</span></span>
 <span class="cstat-no" title="statement not covered" >  const parts: Part[] = [];</span>
 <span class="cstat-no" title="statement not covered" >  for (const part of Array.isArray(input) ? input : [input]) {</span>
-<span class="cstat-no" title="statement not covered" >    if (typeof part === "string") {</span>
+<span class="cstat-no" title="statement not covered" >    if (typeof part === 'string') {</span>
 <span class="cstat-no" title="statement not covered" >      parts.push({ text: part });</span>
 <span class="cstat-no" title="statement not covered" >    } else if (part) {</span>
 <span class="cstat-no" title="statement not covered" >      parts.push(part);</span>
@@ -2691,7 +2393,7 @@ export type ToolCallsUpdateHandler = (toolCalls: ToolCall[]) =&gt; void;
 <span class="cstat-no" title="statement not covered" >  return parts;</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >const createErrorResponse = (</span>
+const createErrorResponse = <span class="fstat-no" title="function not covered" >(</span>
 <span class="cstat-no" title="statement not covered" >  request: ToolCallRequestInfo,</span>
 <span class="cstat-no" title="statement not covered" >  error: Error,</span>
 <span class="cstat-no" title="statement not covered" >  errorType: ToolErrorType | undefined,</span>
@@ -2720,8 +2422,8 @@ interface CoreToolSchedulerOptions {
   onEditorClose: () =&gt; void;
 }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export class CoreToolScheduler {</span>
-<span class="cstat-no" title="statement not covered" >  private toolRegistry: ToolRegistry;</span>
+export class CoreToolScheduler {
+  private <span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >toolRegistry: ToolRegistry;</span></span>
 <span class="cstat-no" title="statement not covered" >  private toolCalls: ToolCall[] = [];</span>
 <span class="cstat-no" title="statement not covered" >  private outputUpdateHandler?: OutputUpdateHandler;</span>
 <span class="cstat-no" title="statement not covered" >  private onAllToolCallsComplete?: AllToolCallsCompleteHandler;</span>
@@ -2737,9 +2439,8 @@ interface CoreToolSchedulerOptions {
     resolve: () =&gt; void;
     reject: (reason?: Error) =&gt; void;
 <span class="cstat-no" title="statement not covered" >  }&gt; = [];</span>
-<span class="cstat-no" title="statement not covered" >  private invocationErrorCounts: Map&lt;string, number&gt; = new Map();</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  constructor(options: CoreToolSchedulerOptions) {</span>
+<span class="fstat-no" title="function not covered" >  constructor(options: CoreToolSchedulerOptions) {</span>
 <span class="cstat-no" title="statement not covered" >    this.config = options.config;</span>
 <span class="cstat-no" title="statement not covered" >    this.toolRegistry = options.config.getToolRegistry();</span>
 <span class="cstat-no" title="statement not covered" >    this.outputUpdateHandler = options.outputUpdateHandler;</span>
@@ -2751,29 +2452,29 @@ interface CoreToolSchedulerOptions {
 &nbsp;
   private setStatusInternal(
     targetCallId: string,
-    status: "success",
+    status: 'success',
     response: ToolCallResponseInfo,
   ): void;
   private setStatusInternal(
     targetCallId: string,
-    status: "awaiting_approval",
+    status: 'awaiting_approval',
     confirmationDetails: ToolCallConfirmationDetails,
   ): void;
   private setStatusInternal(
     targetCallId: string,
-    status: "error",
+    status: 'error',
     response: ToolCallResponseInfo,
   ): void;
   private setStatusInternal(
     targetCallId: string,
-    status: "cancelled",
+    status: 'cancelled',
     reason: string,
   ): void;
   private setStatusInternal(
     targetCallId: string,
-    status: "executing" | "scheduled" | "validating",
+    status: 'executing' | 'scheduled' | 'validating',
   ): void;
-<span class="cstat-no" title="statement not covered" >  private setStatusInternal(</span>
+  private <span class="fstat-no" title="function not covered" >setStatusInternal(</span>
 <span class="cstat-no" title="statement not covered" >    targetCallId: string,</span>
 <span class="cstat-no" title="statement not covered" >    newStatus: Status,</span>
 <span class="cstat-no" title="statement not covered" >    auxiliaryData?: unknown,</span>
@@ -2781,9 +2482,9 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >    this.toolCalls = this.toolCalls.map((currentCall) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      if (</span>
 <span class="cstat-no" title="statement not covered" >        currentCall.request.callId !== targetCallId ||</span>
-<span class="cstat-no" title="statement not covered" >        currentCall.status === "success" ||</span>
-<span class="cstat-no" title="statement not covered" >        currentCall.status === "error" ||</span>
-<span class="cstat-no" title="statement not covered" >        currentCall.status === "cancelled"</span>
+<span class="cstat-no" title="statement not covered" >        currentCall.status === 'success' ||</span>
+<span class="cstat-no" title="statement not covered" >        currentCall.status === 'error' ||</span>
+<span class="cstat-no" title="statement not covered" >        currentCall.status === 'cancelled'</span>
 <span class="cstat-no" title="statement not covered" >      ) {</span>
 <span class="cstat-no" title="statement not covered" >        return currentCall;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
@@ -2796,7 +2497,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >      const outcome = currentCall.outcome;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      switch (newStatus) {</span>
-<span class="cstat-no" title="statement not covered" >        case "success": {</span>
+<span class="cstat-no" title="statement not covered" >        case 'success': {</span>
 <span class="cstat-no" title="statement not covered" >          const durationMs = existingStartTime</span>
 <span class="cstat-no" title="statement not covered" >            ? Date.now() - existingStartTime</span>
 <span class="cstat-no" title="statement not covered" >            : undefined;</span>
@@ -2804,54 +2505,54 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >            request: currentCall.request,</span>
 <span class="cstat-no" title="statement not covered" >            tool: toolInstance,</span>
 <span class="cstat-no" title="statement not covered" >            invocation,</span>
-<span class="cstat-no" title="statement not covered" >            status: "success",</span>
+<span class="cstat-no" title="statement not covered" >            status: 'success',</span>
 <span class="cstat-no" title="statement not covered" >            response: auxiliaryData as ToolCallResponseInfo,</span>
 <span class="cstat-no" title="statement not covered" >            durationMs,</span>
 <span class="cstat-no" title="statement not covered" >            outcome,</span>
 <span class="cstat-no" title="statement not covered" >          } as SuccessfulToolCall;</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
-<span class="cstat-no" title="statement not covered" >        case "error": {</span>
+<span class="cstat-no" title="statement not covered" >        case 'error': {</span>
 <span class="cstat-no" title="statement not covered" >          const durationMs = existingStartTime</span>
 <span class="cstat-no" title="statement not covered" >            ? Date.now() - existingStartTime</span>
 <span class="cstat-no" title="statement not covered" >            : undefined;</span>
 <span class="cstat-no" title="statement not covered" >          return {</span>
 <span class="cstat-no" title="statement not covered" >            request: currentCall.request,</span>
-<span class="cstat-no" title="statement not covered" >            status: "error",</span>
+<span class="cstat-no" title="statement not covered" >            status: 'error',</span>
 <span class="cstat-no" title="statement not covered" >            tool: toolInstance,</span>
 <span class="cstat-no" title="statement not covered" >            response: auxiliaryData as ToolCallResponseInfo,</span>
 <span class="cstat-no" title="statement not covered" >            durationMs,</span>
 <span class="cstat-no" title="statement not covered" >            outcome,</span>
 <span class="cstat-no" title="statement not covered" >          } as ErroredToolCall;</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
-<span class="cstat-no" title="statement not covered" >        case "awaiting_approval":</span>
+<span class="cstat-no" title="statement not covered" >        case 'awaiting_approval':</span>
 <span class="cstat-no" title="statement not covered" >          return {</span>
 <span class="cstat-no" title="statement not covered" >            request: currentCall.request,</span>
 <span class="cstat-no" title="statement not covered" >            tool: toolInstance,</span>
-<span class="cstat-no" title="statement not covered" >            status: "awaiting_approval",</span>
+<span class="cstat-no" title="statement not covered" >            status: 'awaiting_approval',</span>
 <span class="cstat-no" title="statement not covered" >            confirmationDetails: auxiliaryData as ToolCallConfirmationDetails,</span>
 <span class="cstat-no" title="statement not covered" >            startTime: existingStartTime,</span>
 <span class="cstat-no" title="statement not covered" >            outcome,</span>
 <span class="cstat-no" title="statement not covered" >            invocation,</span>
 <span class="cstat-no" title="statement not covered" >          } as WaitingToolCall;</span>
-<span class="cstat-no" title="statement not covered" >        case "scheduled":</span>
+<span class="cstat-no" title="statement not covered" >        case 'scheduled':</span>
 <span class="cstat-no" title="statement not covered" >          return {</span>
 <span class="cstat-no" title="statement not covered" >            request: currentCall.request,</span>
 <span class="cstat-no" title="statement not covered" >            tool: toolInstance,</span>
-<span class="cstat-no" title="statement not covered" >            status: "scheduled",</span>
+<span class="cstat-no" title="statement not covered" >            status: 'scheduled',</span>
 <span class="cstat-no" title="statement not covered" >            startTime: existingStartTime,</span>
 <span class="cstat-no" title="statement not covered" >            outcome,</span>
 <span class="cstat-no" title="statement not covered" >            invocation,</span>
 <span class="cstat-no" title="statement not covered" >          } as ScheduledToolCall;</span>
-<span class="cstat-no" title="statement not covered" >        case "cancelled": {</span>
+<span class="cstat-no" title="statement not covered" >        case 'cancelled': {</span>
 <span class="cstat-no" title="statement not covered" >          const durationMs = existingStartTime</span>
 <span class="cstat-no" title="statement not covered" >            ? Date.now() - existingStartTime</span>
 <span class="cstat-no" title="statement not covered" >            : undefined;</span>
 &nbsp;
           // Preserve diff for cancelled edit operations
 <span class="cstat-no" title="statement not covered" >          let resultDisplay: ToolResultDisplay | undefined = undefined;</span>
-<span class="cstat-no" title="statement not covered" >          if (currentCall.status === "awaiting_approval") {</span>
+<span class="cstat-no" title="statement not covered" >          if (currentCall.status === 'awaiting_approval') {</span>
 <span class="cstat-no" title="statement not covered" >            const waitingCall = currentCall as WaitingToolCall;</span>
-<span class="cstat-no" title="statement not covered" >            if (waitingCall.confirmationDetails.type === "edit") {</span>
+<span class="cstat-no" title="statement not covered" >            if (waitingCall.confirmationDetails.type === 'edit') {</span>
 <span class="cstat-no" title="statement not covered" >              resultDisplay = {</span>
 <span class="cstat-no" title="statement not covered" >                fileDiff: waitingCall.confirmationDetails.fileDiff,</span>
 <span class="cstat-no" title="statement not covered" >                fileName: waitingCall.confirmationDetails.fileName,</span>
@@ -2860,7 +2561,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >                newContent: waitingCall.confirmationDetails.newContent,</span>
 <span class="cstat-no" title="statement not covered" >              };</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
-<span class="cstat-no" title="statement not covered" >          } else if (currentCall.status === "executing") {</span>
+<span class="cstat-no" title="statement not covered" >          } else if (currentCall.status === 'executing') {</span>
             // If the tool was streaming live output, preserve the latest
             // output so the UI can continue to show it after cancellation.
 <span class="cstat-no" title="statement not covered" >            const executingCall = currentCall as ExecutingToolCall;</span>
@@ -2873,7 +2574,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >            request: currentCall.request,</span>
 <span class="cstat-no" title="statement not covered" >            tool: toolInstance,</span>
 <span class="cstat-no" title="statement not covered" >            invocation,</span>
-<span class="cstat-no" title="statement not covered" >            status: "cancelled",</span>
+<span class="cstat-no" title="statement not covered" >            status: 'cancelled',</span>
 <span class="cstat-no" title="statement not covered" >            response: {</span>
 <span class="cstat-no" title="statement not covered" >              callId: currentCall.request.callId,</span>
 <span class="cstat-no" title="statement not covered" >              responseParts: [</span>
@@ -2895,20 +2596,20 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >            outcome,</span>
 <span class="cstat-no" title="statement not covered" >          } as CancelledToolCall;</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
-<span class="cstat-no" title="statement not covered" >        case "validating":</span>
+<span class="cstat-no" title="statement not covered" >        case 'validating':</span>
 <span class="cstat-no" title="statement not covered" >          return {</span>
 <span class="cstat-no" title="statement not covered" >            request: currentCall.request,</span>
 <span class="cstat-no" title="statement not covered" >            tool: toolInstance,</span>
-<span class="cstat-no" title="statement not covered" >            status: "validating",</span>
+<span class="cstat-no" title="statement not covered" >            status: 'validating',</span>
 <span class="cstat-no" title="statement not covered" >            startTime: existingStartTime,</span>
 <span class="cstat-no" title="statement not covered" >            outcome,</span>
 <span class="cstat-no" title="statement not covered" >            invocation,</span>
 <span class="cstat-no" title="statement not covered" >          } as ValidatingToolCall;</span>
-<span class="cstat-no" title="statement not covered" >        case "executing":</span>
+<span class="cstat-no" title="statement not covered" >        case 'executing':</span>
 <span class="cstat-no" title="statement not covered" >          return {</span>
 <span class="cstat-no" title="statement not covered" >            request: currentCall.request,</span>
 <span class="cstat-no" title="statement not covered" >            tool: toolInstance,</span>
-<span class="cstat-no" title="statement not covered" >            status: "executing",</span>
+<span class="cstat-no" title="statement not covered" >            status: 'executing',</span>
 <span class="cstat-no" title="statement not covered" >            startTime: existingStartTime,</span>
 <span class="cstat-no" title="statement not covered" >            outcome,</span>
 <span class="cstat-no" title="statement not covered" >            invocation,</span>
@@ -2923,11 +2624,11 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >    this.checkAndNotifyCompletion();</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private setArgsInternal(targetCallId: string, args: unknown): void {</span>
+  private <span class="fstat-no" title="function not covered" >setArgsInternal(targetCallId: string, args: unknown): void {</span>
 <span class="cstat-no" title="statement not covered" >    this.toolCalls = this.toolCalls.map((call) =&gt; {</span>
       // We should never be asked to set args on an ErroredToolCall, but
       // we guard for the case anyways.
-<span class="cstat-no" title="statement not covered" >      if (call.request.callId !== targetCallId || call.status === "error") {</span>
+<span class="cstat-no" title="statement not covered" >      if (call.request.callId !== targetCallId || call.status === 'error') {</span>
 <span class="cstat-no" title="statement not covered" >        return call;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
@@ -2943,7 +2644,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >        );</span>
 <span class="cstat-no" title="statement not covered" >        return {</span>
 <span class="cstat-no" title="statement not covered" >          request: { ...call.request, args: args as Record&lt;string, unknown&gt; },</span>
-<span class="cstat-no" title="statement not covered" >          status: "error",</span>
+<span class="cstat-no" title="statement not covered" >          status: 'error',</span>
 <span class="cstat-no" title="statement not covered" >          tool: call.tool,</span>
 <span class="cstat-no" title="statement not covered" >          response,</span>
 <span class="cstat-no" title="statement not covered" >        } as ErroredToolCall;</span>
@@ -2957,17 +2658,17 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >    });</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private isRunning(): boolean {</span>
+  private <span class="fstat-no" title="function not covered" >isRunning(): boolean {</span>
 <span class="cstat-no" title="statement not covered" >    return (</span>
 <span class="cstat-no" title="statement not covered" >      this.isFinalizingToolCalls ||</span>
 <span class="cstat-no" title="statement not covered" >      this.toolCalls.some(</span>
 <span class="cstat-no" title="statement not covered" >        (call) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >          call.status === "executing" || call.status === "awaiting_approval",</span>
+<span class="cstat-no" title="statement not covered" >          call.status === 'executing' || call.status === 'awaiting_approval',</span>
 <span class="cstat-no" title="statement not covered" >      )</span>
     );
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private buildInvocation(</span>
+  private <span class="fstat-no" title="function not covered" >buildInvocation(</span>
 <span class="cstat-no" title="statement not covered" >    tool: AnyDeclarativeTool,</span>
 <span class="cstat-no" title="statement not covered" >    args: object,</span>
 <span class="cstat-no" title="statement not covered" >  ): AnyToolInvocation | Error {</span>
@@ -2988,7 +2689,7 @@ interface CoreToolSchedulerOptions {
    * @param topN The number of suggestions to return. Defaults to 3.
    * @returns A suggestion string like " Did you mean 'tool'?" or " Did you mean one of: 'tool1', 'tool2'?", or an empty string if no suggestions are found.
    */
-<span class="cstat-no" title="statement not covered" >  private getToolSuggestion(unknownToolName: string, topN = 3): string {</span>
+  private <span class="fstat-no" title="function not covered" >getToolSuggestion(unknownToolName: string, topN = 3): string {</span>
 <span class="cstat-no" title="statement not covered" >    const allToolNames = this.toolRegistry.getAllToolNames();</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const matches = allToolNames.map((toolName) =&gt; ({</span>
@@ -3001,12 +2702,12 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >    const topNResults = matches.slice(0, topN);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (topNResults.length === 0) {</span>
-<span class="cstat-no" title="statement not covered" >      return "";</span>
+<span class="cstat-no" title="statement not covered" >      return '';</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const suggestedNames = topNResults</span>
 <span class="cstat-no" title="statement not covered" >      .map((match) =&gt; `"${match.name}"`)</span>
-<span class="cstat-no" title="statement not covered" >      .join(", ");</span>
+<span class="cstat-no" title="statement not covered" >      .join(', ');</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (topNResults.length &gt; 1) {</span>
 <span class="cstat-no" title="statement not covered" >      return ` Did you mean one of: ${suggestedNames}?`;</span>
@@ -3015,7 +2716,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  schedule(</span>
+<span class="fstat-no" title="function not covered" >  schedule(</span>
 <span class="cstat-no" title="statement not covered" >    request: ToolCallRequestInfo | ToolCallRequestInfo[],</span>
 <span class="cstat-no" title="statement not covered" >    signal: AbortSignal,</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;void&gt; {</span>
@@ -3028,21 +2729,21 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >          );</span>
 <span class="cstat-no" title="statement not covered" >          if (index &gt; -1) {</span>
 <span class="cstat-no" title="statement not covered" >            this.requestQueue.splice(index, 1);</span>
-<span class="cstat-no" title="statement not covered" >            reject(new Error("Tool call cancelled while in queue."));</span>
+<span class="cstat-no" title="statement not covered" >            reject(new Error('Tool call cancelled while in queue.'));</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >        };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        signal.addEventListener("abort", abortHandler, { once: true });</span>
+<span class="cstat-no" title="statement not covered" >        signal.addEventListener('abort', abortHandler, { once: true });</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        this.requestQueue.push({</span>
 <span class="cstat-no" title="statement not covered" >          request,</span>
 <span class="cstat-no" title="statement not covered" >          signal,</span>
 <span class="cstat-no" title="statement not covered" >          resolve: () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >            signal.removeEventListener("abort", abortHandler);</span>
+<span class="cstat-no" title="statement not covered" >            signal.removeEventListener('abort', abortHandler);</span>
 <span class="cstat-no" title="statement not covered" >            resolve();</span>
 <span class="cstat-no" title="statement not covered" >          },</span>
 <span class="cstat-no" title="statement not covered" >          reject: (reason?: Error) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >            signal.removeEventListener("abort", abortHandler);</span>
+<span class="cstat-no" title="statement not covered" >            signal.removeEventListener('abort', abortHandler);</span>
 <span class="cstat-no" title="statement not covered" >            reject(reason);</span>
 <span class="cstat-no" title="statement not covered" >          },</span>
 <span class="cstat-no" title="statement not covered" >        });</span>
@@ -3051,7 +2752,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >    return this._schedule(request, signal);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async _schedule(</span>
+<span class="fstat-no" title="function not covered" >  private async _schedule(</span>
 <span class="cstat-no" title="statement not covered" >    request: ToolCallRequestInfo | ToolCallRequestInfo[],</span>
 <span class="cstat-no" title="statement not covered" >    signal: AbortSignal,</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;void&gt; {</span>
@@ -3059,7 +2760,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      if (this.isRunning()) {</span>
 <span class="cstat-no" title="statement not covered" >        throw new Error(</span>
-<span class="cstat-no" title="statement not covered" >          "Cannot schedule new tool calls while other tool calls are actively running (executing or awaiting approval).",</span>
+<span class="cstat-no" title="statement not covered" >          'Cannot schedule new tool calls while other tool calls are actively running (executing or awaiting approval).',</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      const requestsToProcess = Array.isArray(request) ? request : [request];</span>
@@ -3071,7 +2772,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >            const suggestion = this.getToolSuggestion(reqInfo.name);</span>
 <span class="cstat-no" title="statement not covered" >            const errorMessage = `Tool "${reqInfo.name}" not found in registry. Tools must use the exact names that are registered.${suggestion}`;</span>
 <span class="cstat-no" title="statement not covered" >            return {</span>
-<span class="cstat-no" title="statement not covered" >              status: "error",</span>
+<span class="cstat-no" title="statement not covered" >              status: 'error',</span>
 <span class="cstat-no" title="statement not covered" >              request: reqInfo,</span>
 <span class="cstat-no" title="statement not covered" >              response: createErrorResponse(</span>
 <span class="cstat-no" title="statement not covered" >                reqInfo,</span>
@@ -3088,7 +2789,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >          );</span>
 <span class="cstat-no" title="statement not covered" >          if (invocationOrError instanceof Error) {</span>
 <span class="cstat-no" title="statement not covered" >            return {</span>
-<span class="cstat-no" title="statement not covered" >              status: "error",</span>
+<span class="cstat-no" title="statement not covered" >              status: 'error',</span>
 <span class="cstat-no" title="statement not covered" >              request: reqInfo,</span>
 <span class="cstat-no" title="statement not covered" >              tool: toolInstance,</span>
 <span class="cstat-no" title="statement not covered" >              response: createErrorResponse(</span>
@@ -3101,7 +2802,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >          }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >          return {</span>
-<span class="cstat-no" title="statement not covered" >            status: "validating",</span>
+<span class="cstat-no" title="statement not covered" >            status: 'validating',</span>
 <span class="cstat-no" title="statement not covered" >            request: reqInfo,</span>
 <span class="cstat-no" title="statement not covered" >            tool: toolInstance,</span>
 <span class="cstat-no" title="statement not covered" >            invocation: invocationOrError,</span>
@@ -3114,7 +2815,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >      this.notifyToolCallsUpdate();</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      for (const toolCall of newToolCalls) {</span>
-<span class="cstat-no" title="statement not covered" >        if (toolCall.status !== "validating") {</span>
+<span class="cstat-no" title="statement not covered" >        if (toolCall.status !== 'validating') {</span>
 <span class="cstat-no" title="statement not covered" >          continue;</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 &nbsp;
@@ -3124,8 +2825,8 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >          if (signal.aborted) {</span>
 <span class="cstat-no" title="statement not covered" >            this.setStatusInternal(</span>
 <span class="cstat-no" title="statement not covered" >              reqInfo.callId,</span>
-<span class="cstat-no" title="statement not covered" >              "cancelled",</span>
-<span class="cstat-no" title="statement not covered" >              "Tool call cancelled by user.",</span>
+<span class="cstat-no" title="statement not covered" >              'cancelled',</span>
+<span class="cstat-no" title="statement not covered" >              'Tool call cancelled by user.',</span>
 <span class="cstat-no" title="statement not covered" >            );</span>
 <span class="cstat-no" title="statement not covered" >            continue;</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
@@ -3138,30 +2839,30 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >              reqInfo.callId,</span>
 <span class="cstat-no" title="statement not covered" >              ToolConfirmationOutcome.ProceedAlways,</span>
 <span class="cstat-no" title="statement not covered" >            );</span>
-<span class="cstat-no" title="statement not covered" >            this.setStatusInternal(reqInfo.callId, "scheduled");</span>
+<span class="cstat-no" title="statement not covered" >            this.setStatusInternal(reqInfo.callId, 'scheduled');</span>
 <span class="cstat-no" title="statement not covered" >            continue;</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >          const allowedTools = this.config.getAllowedTools() || [];</span>
 <span class="cstat-no" title="statement not covered" >          const isPlanMode =</span>
 <span class="cstat-no" title="statement not covered" >            this.config.getApprovalMode() === ApprovalMode.PLAN;</span>
-<span class="cstat-no" title="statement not covered" >          const isExitPlanModeTool = reqInfo.name === "exit_plan_mode";</span>
+<span class="cstat-no" title="statement not covered" >          const isExitPlanModeTool = reqInfo.name === 'exit_plan_mode';</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >          if (isPlanMode &amp;&amp; !isExitPlanModeTool) {</span>
 <span class="cstat-no" title="statement not covered" >            if (confirmationDetails) {</span>
-<span class="cstat-no" title="statement not covered" >              this.setStatusInternal(reqInfo.callId, "error", {</span>
+<span class="cstat-no" title="statement not covered" >              this.setStatusInternal(reqInfo.callId, 'error', {</span>
 <span class="cstat-no" title="statement not covered" >                callId: reqInfo.callId,</span>
 <span class="cstat-no" title="statement not covered" >                responseParts: convertToFunctionResponse(</span>
 <span class="cstat-no" title="statement not covered" >                  reqInfo.name,</span>
 <span class="cstat-no" title="statement not covered" >                  reqInfo.callId,</span>
 <span class="cstat-no" title="statement not covered" >                  getPlanModeSystemReminder(),</span>
 <span class="cstat-no" title="statement not covered" >                ),</span>
-<span class="cstat-no" title="statement not covered" >                resultDisplay: "Plan mode blocked a non-read-only tool call.",</span>
+<span class="cstat-no" title="statement not covered" >                resultDisplay: 'Plan mode blocked a non-read-only tool call.',</span>
 <span class="cstat-no" title="statement not covered" >                error: undefined,</span>
 <span class="cstat-no" title="statement not covered" >                errorType: undefined,</span>
 <span class="cstat-no" title="statement not covered" >              });</span>
 <span class="cstat-no" title="statement not covered" >            } else {</span>
-<span class="cstat-no" title="statement not covered" >              this.setStatusInternal(reqInfo.callId, "scheduled");</span>
+<span class="cstat-no" title="statement not covered" >              this.setStatusInternal(reqInfo.callId, 'scheduled');</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
 <span class="cstat-no" title="statement not covered" >          } else if (</span>
 <span class="cstat-no" title="statement not covered" >            this.config.getApprovalMode() === ApprovalMode.YOLO ||</span>
@@ -3171,15 +2872,15 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >              reqInfo.callId,</span>
 <span class="cstat-no" title="statement not covered" >              ToolConfirmationOutcome.ProceedAlways,</span>
 <span class="cstat-no" title="statement not covered" >            );</span>
-<span class="cstat-no" title="statement not covered" >            this.setStatusInternal(reqInfo.callId, "scheduled");</span>
+<span class="cstat-no" title="statement not covered" >            this.setStatusInternal(reqInfo.callId, 'scheduled');</span>
 <span class="cstat-no" title="statement not covered" >          } else {</span>
             // Allow IDE to resolve confirmation
 <span class="cstat-no" title="statement not covered" >            if (</span>
-<span class="cstat-no" title="statement not covered" >              confirmationDetails.type === "edit" &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >              confirmationDetails.type === 'edit' &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >              confirmationDetails.ideConfirmation</span>
 <span class="cstat-no" title="statement not covered" >            ) {</span>
 <span class="cstat-no" title="statement not covered" >              confirmationDetails.ideConfirmation.then((resolution) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >                if (resolution.status === "accepted") {</span>
+<span class="cstat-no" title="statement not covered" >                if (resolution.status === 'accepted') {</span>
 <span class="cstat-no" title="statement not covered" >                  this.handleConfirmationResponse(</span>
 <span class="cstat-no" title="statement not covered" >                    reqInfo.callId,</span>
 <span class="cstat-no" title="statement not covered" >                    confirmationDetails.onConfirm,</span>
@@ -3214,14 +2915,14 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >            };</span>
 <span class="cstat-no" title="statement not covered" >            this.setStatusInternal(</span>
 <span class="cstat-no" title="statement not covered" >              reqInfo.callId,</span>
-<span class="cstat-no" title="statement not covered" >              "awaiting_approval",</span>
+<span class="cstat-no" title="statement not covered" >              'awaiting_approval',</span>
 <span class="cstat-no" title="statement not covered" >              wrappedConfirmationDetails,</span>
 <span class="cstat-no" title="statement not covered" >            );</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >        } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >          this.setStatusInternal(</span>
 <span class="cstat-no" title="statement not covered" >            reqInfo.callId,</span>
-<span class="cstat-no" title="statement not covered" >            "error",</span>
+<span class="cstat-no" title="statement not covered" >            'error',</span>
 <span class="cstat-no" title="statement not covered" >            createErrorResponse(</span>
 <span class="cstat-no" title="statement not covered" >              reqInfo,</span>
 <span class="cstat-no" title="statement not covered" >              error instanceof Error ? error : new Error(String(error)),</span>
@@ -3237,7 +2938,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  async handleConfirmationResponse(</span>
+<span class="fstat-no" title="function not covered" >  async handleConfirmationResponse(</span>
 <span class="cstat-no" title="statement not covered" >    callId: string,</span>
 <span class="cstat-no" title="statement not covered" >    originalOnConfirm: (outcome: ToolConfirmationOutcome) =&gt; Promise&lt;void&gt;,</span>
 <span class="cstat-no" title="statement not covered" >    outcome: ToolConfirmationOutcome,</span>
@@ -3245,10 +2946,10 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >    payload?: ToolConfirmationPayload,</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const toolCall = this.toolCalls.find(</span>
-<span class="cstat-no" title="statement not covered" >      (c) =&gt; c.request.callId === callId &amp;&amp; c.status === "awaiting_approval",</span>
+<span class="cstat-no" title="statement not covered" >      (c) =&gt; c.request.callId === callId &amp;&amp; c.status === 'awaiting_approval',</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (toolCall &amp;&amp; toolCall.status === "awaiting_approval") {</span>
+<span class="cstat-no" title="statement not covered" >    if (toolCall &amp;&amp; toolCall.status === 'awaiting_approval') {</span>
 <span class="cstat-no" title="statement not covered" >      await originalOnConfirm(outcome);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
@@ -3261,8 +2962,8 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >    if (outcome === ToolConfirmationOutcome.Cancel || signal.aborted) {</span>
 <span class="cstat-no" title="statement not covered" >      this.setStatusInternal(</span>
 <span class="cstat-no" title="statement not covered" >        callId,</span>
-<span class="cstat-no" title="statement not covered" >        "cancelled",</span>
-<span class="cstat-no" title="statement not covered" >        "User did not allow tool call",</span>
+<span class="cstat-no" title="statement not covered" >        'cancelled',</span>
+<span class="cstat-no" title="statement not covered" >        'User did not allow tool call',</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >    } else if (outcome === ToolConfirmationOutcome.ModifyWithEditor) {</span>
 <span class="cstat-no" title="statement not covered" >      const waitingToolCall = toolCall as WaitingToolCall;</span>
@@ -3273,7 +2974,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >          return;</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        this.setStatusInternal(callId, "awaiting_approval", {</span>
+<span class="cstat-no" title="statement not covered" >        this.setStatusInternal(callId, 'awaiting_approval', {</span>
 <span class="cstat-no" title="statement not covered" >          ...waitingToolCall.confirmationDetails,</span>
 <span class="cstat-no" title="statement not covered" >          isModifying: true,</span>
 <span class="cstat-no" title="statement not covered" >        } as ToolCallConfirmationDetails);</span>
@@ -3288,7 +2989,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >          this.onEditorClose,</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
 <span class="cstat-no" title="statement not covered" >        this.setArgsInternal(callId, updatedParams);</span>
-<span class="cstat-no" title="statement not covered" >        this.setStatusInternal(callId, "awaiting_approval", {</span>
+<span class="cstat-no" title="statement not covered" >        this.setStatusInternal(callId, 'awaiting_approval', {</span>
 <span class="cstat-no" title="statement not covered" >          ...waitingToolCall.confirmationDetails,</span>
 <span class="cstat-no" title="statement not covered" >          fileDiff: updatedDiff,</span>
 <span class="cstat-no" title="statement not covered" >          isModifying: false,</span>
@@ -3303,7 +3004,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >          signal,</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
-<span class="cstat-no" title="statement not covered" >      this.setStatusInternal(callId, "scheduled");</span>
+<span class="cstat-no" title="statement not covered" >      this.setStatusInternal(callId, 'scheduled');</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    this.attemptExecutionOfScheduledCalls(signal);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -3314,13 +3015,13 @@ interface CoreToolSchedulerOptions {
    * before the tool is scheduled for execution.
    * @private
    */
-<span class="cstat-no" title="statement not covered" >  private async _applyInlineModify(</span>
+<span class="fstat-no" title="function not covered" >  private async _applyInlineModify(</span>
 <span class="cstat-no" title="statement not covered" >    toolCall: WaitingToolCall,</span>
 <span class="cstat-no" title="statement not covered" >    payload: ToolConfirmationPayload,</span>
 <span class="cstat-no" title="statement not covered" >    signal: AbortSignal,</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (</span>
-<span class="cstat-no" title="statement not covered" >      toolCall.confirmationDetails.type !== "edit" ||</span>
+<span class="cstat-no" title="statement not covered" >      toolCall.confirmationDetails.type !== 'edit' ||</span>
 <span class="cstat-no" title="statement not covered" >      !isModifiableDeclarativeTool(toolCall.tool)</span>
 <span class="cstat-no" title="statement not covered" >    ) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
@@ -3340,38 +3041,38 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >      modifyContext.getFilePath(toolCall.request.args),</span>
 <span class="cstat-no" title="statement not covered" >      currentContent,</span>
 <span class="cstat-no" title="statement not covered" >      payload.newContent,</span>
-<span class="cstat-no" title="statement not covered" >      "Current",</span>
-<span class="cstat-no" title="statement not covered" >      "Proposed",</span>
+<span class="cstat-no" title="statement not covered" >      'Current',</span>
+<span class="cstat-no" title="statement not covered" >      'Proposed',</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    this.setArgsInternal(toolCall.request.callId, updatedParams);</span>
-<span class="cstat-no" title="statement not covered" >    this.setStatusInternal(toolCall.request.callId, "awaiting_approval", {</span>
+<span class="cstat-no" title="statement not covered" >    this.setStatusInternal(toolCall.request.callId, 'awaiting_approval', {</span>
 <span class="cstat-no" title="statement not covered" >      ...toolCall.confirmationDetails,</span>
 <span class="cstat-no" title="statement not covered" >      fileDiff: updatedDiff,</span>
 <span class="cstat-no" title="statement not covered" >    });</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private attemptExecutionOfScheduledCalls(signal: AbortSignal): void {</span>
+  private <span class="fstat-no" title="function not covered" >attemptExecutionOfScheduledCalls(signal: AbortSignal): void {</span>
 <span class="cstat-no" title="statement not covered" >    const allCallsFinalOrScheduled = this.toolCalls.every(</span>
 <span class="cstat-no" title="statement not covered" >      (call) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >        call.status === "scheduled" ||</span>
-<span class="cstat-no" title="statement not covered" >        call.status === "cancelled" ||</span>
-<span class="cstat-no" title="statement not covered" >        call.status === "success" ||</span>
-<span class="cstat-no" title="statement not covered" >        call.status === "error",</span>
+<span class="cstat-no" title="statement not covered" >        call.status === 'scheduled' ||</span>
+<span class="cstat-no" title="statement not covered" >        call.status === 'cancelled' ||</span>
+<span class="cstat-no" title="statement not covered" >        call.status === 'success' ||</span>
+<span class="cstat-no" title="statement not covered" >        call.status === 'error',</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (allCallsFinalOrScheduled) {</span>
 <span class="cstat-no" title="statement not covered" >      const callsToExecute = this.toolCalls.filter(</span>
-<span class="cstat-no" title="statement not covered" >        (call) =&gt; call.status === "scheduled",</span>
+<span class="cstat-no" title="statement not covered" >        (call) =&gt; call.status === 'scheduled',</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      callsToExecute.forEach((toolCall) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >        if (toolCall.status !== "scheduled") return;</span>
+<span class="cstat-no" title="statement not covered" >        if (toolCall.status !== 'scheduled') return;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        const scheduledCall = toolCall;</span>
 <span class="cstat-no" title="statement not covered" >        const { callId, name: toolName } = scheduledCall.request;</span>
 <span class="cstat-no" title="statement not covered" >        const invocation = scheduledCall.invocation;</span>
-<span class="cstat-no" title="statement not covered" >        this.setStatusInternal(callId, "executing");</span>
+<span class="cstat-no" title="statement not covered" >        this.setStatusInternal(callId, 'executing');</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        const liveOutputCallback = scheduledCall.tool.canUpdateOutput</span>
 <span class="cstat-no" title="statement not covered" >          ? (outputChunk: ToolResultDisplay) =&gt; {</span>
@@ -3379,7 +3080,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >                this.outputUpdateHandler(callId, outputChunk);</span>
 <span class="cstat-no" title="statement not covered" >              }</span>
 <span class="cstat-no" title="statement not covered" >              this.toolCalls = this.toolCalls.map((tc) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >                tc.request.callId === callId &amp;&amp; tc.status === "executing"</span>
+<span class="cstat-no" title="statement not covered" >                tc.request.callId === callId &amp;&amp; tc.status === 'executing'</span>
 <span class="cstat-no" title="statement not covered" >                  ? { ...tc, liveOutput: outputChunk }</span>
 <span class="cstat-no" title="statement not covered" >                  : tc,</span>
 <span class="cstat-no" title="statement not covered" >              );</span>
@@ -3393,8 +3094,8 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >            if (signal.aborted) {</span>
 <span class="cstat-no" title="statement not covered" >              this.setStatusInternal(</span>
 <span class="cstat-no" title="statement not covered" >                callId,</span>
-<span class="cstat-no" title="statement not covered" >                "cancelled",</span>
-<span class="cstat-no" title="statement not covered" >                "User cancelled tool execution.",</span>
+<span class="cstat-no" title="statement not covered" >                'cancelled',</span>
+<span class="cstat-no" title="statement not covered" >                'User cancelled tool execution.',</span>
 <span class="cstat-no" title="statement not covered" >              );</span>
 <span class="cstat-no" title="statement not covered" >              return;</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
@@ -3412,61 +3113,41 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >                error: undefined,</span>
 <span class="cstat-no" title="statement not covered" >                errorType: undefined,</span>
 <span class="cstat-no" title="statement not covered" >              };</span>
-<span class="cstat-no" title="statement not covered" >              this.setStatusInternal(callId, "success", successResponse);</span>
-<span class="cstat-no" title="statement not covered" >              this.clearFailureCount(scheduledCall.request);</span>
+<span class="cstat-no" title="statement not covered" >              this.setStatusInternal(callId, 'success', successResponse);</span>
 <span class="cstat-no" title="statement not covered" >            } else {</span>
               // It is a failure
 <span class="cstat-no" title="statement not covered" >              const error = new Error(toolResult.error.message);</span>
-<span class="cstat-no" title="statement not covered" >              const baseErrorResponse = createErrorResponse(</span>
+<span class="cstat-no" title="statement not covered" >              const errorResponse = createErrorResponse(</span>
 <span class="cstat-no" title="statement not covered" >                scheduledCall.request,</span>
 <span class="cstat-no" title="statement not covered" >                error,</span>
 <span class="cstat-no" title="statement not covered" >                toolResult.error.type,</span>
 <span class="cstat-no" title="statement not covered" >              );</span>
-<span class="cstat-no" title="statement not covered" >              const augmentedResponse = this.handleRepeatedFailure(</span>
-<span class="cstat-no" title="statement not covered" >                scheduledCall.request,</span>
-<span class="cstat-no" title="statement not covered" >                baseErrorResponse,</span>
-<span class="cstat-no" title="statement not covered" >                error,</span>
-<span class="cstat-no" title="statement not covered" >                toolResult.error.type,</span>
-<span class="cstat-no" title="statement not covered" >              );</span>
-<span class="cstat-no" title="statement not covered" >              this.setStatusInternal(</span>
-<span class="cstat-no" title="statement not covered" >                callId,</span>
-<span class="cstat-no" title="statement not covered" >                "error",</span>
-<span class="cstat-no" title="statement not covered" >                augmentedResponse ?? baseErrorResponse,</span>
-<span class="cstat-no" title="statement not covered" >              );</span>
+<span class="cstat-no" title="statement not covered" >              this.setStatusInternal(callId, 'error', errorResponse);</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
 <span class="cstat-no" title="statement not covered" >          })</span>
 <span class="cstat-no" title="statement not covered" >          .catch((executionError: Error) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >            const normalizedError =</span>
-<span class="cstat-no" title="statement not covered" >              executionError instanceof Error</span>
-<span class="cstat-no" title="statement not covered" >                ? executionError</span>
-<span class="cstat-no" title="statement not covered" >                : new Error(String(executionError));</span>
-<span class="cstat-no" title="statement not covered" >            const baseErrorResponse = createErrorResponse(</span>
-<span class="cstat-no" title="statement not covered" >              scheduledCall.request,</span>
-<span class="cstat-no" title="statement not covered" >              normalizedError,</span>
-<span class="cstat-no" title="statement not covered" >              ToolErrorType.UNHANDLED_EXCEPTION,</span>
-<span class="cstat-no" title="statement not covered" >            );</span>
-<span class="cstat-no" title="statement not covered" >            const augmentedResponse = this.handleRepeatedFailure(</span>
-<span class="cstat-no" title="statement not covered" >              scheduledCall.request,</span>
-<span class="cstat-no" title="statement not covered" >              baseErrorResponse,</span>
-<span class="cstat-no" title="statement not covered" >              normalizedError,</span>
-<span class="cstat-no" title="statement not covered" >              ToolErrorType.UNHANDLED_EXCEPTION,</span>
-<span class="cstat-no" title="statement not covered" >            );</span>
 <span class="cstat-no" title="statement not covered" >            this.setStatusInternal(</span>
 <span class="cstat-no" title="statement not covered" >              callId,</span>
-<span class="cstat-no" title="statement not covered" >              "error",</span>
-<span class="cstat-no" title="statement not covered" >              augmentedResponse ?? baseErrorResponse,</span>
+<span class="cstat-no" title="statement not covered" >              'error',</span>
+<span class="cstat-no" title="statement not covered" >              createErrorResponse(</span>
+<span class="cstat-no" title="statement not covered" >                scheduledCall.request,</span>
+<span class="cstat-no" title="statement not covered" >                executionError instanceof Error</span>
+<span class="cstat-no" title="statement not covered" >                  ? executionError</span>
+<span class="cstat-no" title="statement not covered" >                  : new Error(String(executionError)),</span>
+<span class="cstat-no" title="statement not covered" >                ToolErrorType.UNHANDLED_EXCEPTION,</span>
+<span class="cstat-no" title="statement not covered" >              ),</span>
 <span class="cstat-no" title="statement not covered" >            );</span>
 <span class="cstat-no" title="statement not covered" >          });</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private async checkAndNotifyCompletion(): Promise&lt;void&gt; {</span>
+<span class="fstat-no" title="function not covered" >  private async checkAndNotifyCompletion(): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const allCallsAreTerminal = this.toolCalls.every(</span>
 <span class="cstat-no" title="statement not covered" >      (call) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >        call.status === "success" ||</span>
-<span class="cstat-no" title="statement not covered" >        call.status === "error" ||</span>
-<span class="cstat-no" title="statement not covered" >        call.status === "cancelled",</span>
+<span class="cstat-no" title="statement not covered" >        call.status === 'success' ||</span>
+<span class="cstat-no" title="statement not covered" >        call.status === 'error' ||</span>
+<span class="cstat-no" title="statement not covered" >        call.status === 'cancelled',</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (this.toolCalls.length &gt; 0 &amp;&amp; allCallsAreTerminal) {</span>
@@ -3493,13 +3174,13 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private notifyToolCallsUpdate(): void {</span>
+  private <span class="fstat-no" title="function not covered" >notifyToolCallsUpdate(): void {</span>
 <span class="cstat-no" title="statement not covered" >    if (this.onToolCallsUpdate) {</span>
 <span class="cstat-no" title="statement not covered" >      this.onToolCallsUpdate([...this.toolCalls]);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private setToolCallOutcome(callId: string, outcome: ToolConfirmationOutcome) {</span>
+  private <span class="fstat-no" title="function not covered" >setToolCallOutcome(callId: string, outcome: ToolConfirmationOutcome) {</span>
 <span class="cstat-no" title="statement not covered" >    this.toolCalls = this.toolCalls.map((call) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      if (call.request.callId !== callId) return call;</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
@@ -3509,136 +3190,13 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >    });</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  private getFailureThreshold(request: ToolCallRequestInfo): number {</span>
-<span class="cstat-no" title="statement not covered" >    const override = this.config.getToolSelfHealingOverride(request.name);</span>
-<span class="cstat-no" title="statement not covered" >    const globalSettings = this.config.getToolSelfHealingSettings();</span>
-<span class="cstat-no" title="statement not covered" >    return (</span>
-<span class="cstat-no" title="statement not covered" >      override?.maxConsecutiveErrors ??</span>
-<span class="cstat-no" title="statement not covered" >      globalSettings?.maxConsecutiveErrors ??</span>
-<span class="cstat-no" title="statement not covered" >      2</span>
-    );
-<span class="cstat-no" title="statement not covered" >  }</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  private shouldSuggestAutoRecovery(request: ToolCallRequestInfo): boolean {</span>
-<span class="cstat-no" title="statement not covered" >    const override = this.config.getToolSelfHealingOverride(request.name);</span>
-<span class="cstat-no" title="statement not covered" >    const globalSettings = this.config.getToolSelfHealingSettings();</span>
-<span class="cstat-no" title="statement not covered" >    return (</span>
-<span class="cstat-no" title="statement not covered" >      override?.enableAutoSuggestions ??</span>
-<span class="cstat-no" title="statement not covered" >      globalSettings?.enableAutoSuggestions ??</span>
-<span class="cstat-no" title="statement not covered" >      true</span>
-    );
-<span class="cstat-no" title="statement not covered" >  }</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  private incrementFailureCount(request: ToolCallRequestInfo): number {</span>
-<span class="cstat-no" title="statement not covered" >    const key = this.getInvocationKey(request);</span>
-<span class="cstat-no" title="statement not covered" >    const current = this.invocationErrorCounts.get(key) ?? 0;</span>
-<span class="cstat-no" title="statement not covered" >    const next = current + 1;</span>
-<span class="cstat-no" title="statement not covered" >    this.invocationErrorCounts.set(key, next);</span>
-<span class="cstat-no" title="statement not covered" >    return next;</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  private clearFailureCount(request: ToolCallRequestInfo): void {</span>
-<span class="cstat-no" title="statement not covered" >    const key = this.getInvocationKey(request);</span>
-<span class="cstat-no" title="statement not covered" >    this.invocationErrorCounts.delete(key);</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  private getInvocationKey(request: ToolCallRequestInfo): string {</span>
-<span class="cstat-no" title="statement not covered" >    const argsKey = JSON.stringify(request.args ?? {});</span>
-<span class="cstat-no" title="statement not covered" >    return `${request.prompt_id}::${request.name}::${argsKey}`;</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  private handleRepeatedFailure(</span>
-<span class="cstat-no" title="statement not covered" >    request: ToolCallRequestInfo,</span>
-<span class="cstat-no" title="statement not covered" >    baseResponse: ToolCallResponseInfo,</span>
-<span class="cstat-no" title="statement not covered" >    error: Error,</span>
-<span class="cstat-no" title="statement not covered" >    errorType: ToolErrorType | undefined,</span>
-<span class="cstat-no" title="statement not covered" >  ): ToolCallResponseInfo | null {</span>
-<span class="cstat-no" title="statement not covered" >    const failureCount = this.incrementFailureCount(request);</span>
-<span class="cstat-no" title="statement not covered" >    const threshold = this.getFailureThreshold(request);</span>
-<span class="cstat-no" title="statement not covered" >    if (failureCount &lt; threshold) {</span>
-<span class="cstat-no" title="statement not covered" >      return null;</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
-&nbsp;
-    // We reached or exceeded the threshold. Reset counter so we do not spam.
-<span class="cstat-no" title="statement not covered" >    this.clearFailureCount(request);</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >    if (!this.shouldSuggestAutoRecovery(request)) {</span>
-<span class="cstat-no" title="statement not covered" >      return null;</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >    const tip = this.buildSelfHealingSuggestion(request, errorType);</span>
-<span class="cstat-no" title="statement not covered" >    const providerTag = getProviderTelemetryTag(this.config);</span>
-<span class="cstat-no" title="statement not covered" >    const existingResponse =</span>
-<span class="cstat-no" title="statement not covered" >      baseResponse.responseParts[0]?.functionResponse?.response;</span>
-<span class="cstat-no" title="statement not covered" >    const normalizedResponse =</span>
-<span class="cstat-no" title="statement not covered" >      existingResponse &amp;&amp; typeof existingResponse === "object"</span>
-<span class="cstat-no" title="statement not covered" >        ? (existingResponse as Record&lt;string, unknown&gt;)</span>
-<span class="cstat-no" title="statement not covered" >        : {};</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >    const response: ToolCallResponseInfo = {</span>
-<span class="cstat-no" title="statement not covered" >      ...baseResponse,</span>
-<span class="cstat-no" title="statement not covered" >      responseParts: [</span>
-<span class="cstat-no" title="statement not covered" >        {</span>
-<span class="cstat-no" title="statement not covered" >          functionResponse: {</span>
-<span class="cstat-no" title="statement not covered" >            id: request.callId,</span>
-<span class="cstat-no" title="statement not covered" >            name: request.name,</span>
-<span class="cstat-no" title="statement not covered" >            response: {</span>
-<span class="cstat-no" title="statement not covered" >              ...normalizedResponse,</span>
-<span class="cstat-no" title="statement not covered" >              error: `${getErrorMessage(error)} (auto-suggestion applied)`,</span>
-<span class="cstat-no" title="statement not covered" >              suggestion: tip,</span>
-<span class="cstat-no" title="statement not covered" >              provider: providerTag,</span>
-<span class="cstat-no" title="statement not covered" >              attempts: failureCount,</span>
-<span class="cstat-no" title="statement not covered" >            },</span>
-<span class="cstat-no" title="statement not covered" >          },</span>
-<span class="cstat-no" title="statement not covered" >        },</span>
-<span class="cstat-no" title="statement not covered" >      ],</span>
-<span class="cstat-no" title="statement not covered" >      resultDisplay: tip,</span>
-<span class="cstat-no" title="statement not covered" >      error,</span>
-<span class="cstat-no" title="statement not covered" >      errorType,</span>
-<span class="cstat-no" title="statement not covered" >    };</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >    return response;</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  private buildSelfHealingSuggestion(</span>
-<span class="cstat-no" title="statement not covered" >    request: ToolCallRequestInfo,</span>
-<span class="cstat-no" title="statement not covered" >    errorType: ToolErrorType | undefined,</span>
-<span class="cstat-no" title="statement not covered" >  ): string {</span>
-<span class="cstat-no" title="statement not covered" >    const base = `Received multiple errors while calling ${request.name}.`;</span>
-<span class="cstat-no" title="statement not covered" >    const guidance = this.suggestNextAction(request, errorType);</span>
-<span class="cstat-no" title="statement not covered" >    return guidance ? `${base} ${guidance}` : base;</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  private suggestNextAction(</span>
-<span class="cstat-no" title="statement not covered" >    request: ToolCallRequestInfo,</span>
-<span class="cstat-no" title="statement not covered" >    errorType: ToolErrorType | undefined,</span>
-<span class="cstat-no" title="statement not covered" >  ): string | undefined {</span>
-<span class="cstat-no" title="statement not covered" >    switch (request.name) {</span>
-<span class="cstat-no" title="statement not covered" >      case "list_directory":</span>
-<span class="cstat-no" title="statement not covered" >        return "Try narrowing the directory path or use `/glob` with a specific pattern to locate files.";</span>
-<span class="cstat-no" title="statement not covered" >      case "glob":</span>
-<span class="cstat-no" title="statement not covered" >        return "Consider refining the glob pattern or switching to `/list_directory` to inspect the folder before matching.";</span>
-<span class="cstat-no" title="statement not covered" >      case "read_file":</span>
-<span class="cstat-no" title="statement not covered" >        return "Verify the file path, or run `/list_directory` on the containing folder to confirm the filename.";</span>
-<span class="cstat-no" title="statement not covered" >      case "read_many_files":</span>
-<span class="cstat-no" title="statement not covered" >        return "Confirm the path list and try reducing the number of files requested.";</span>
-<span class="cstat-no" title="statement not covered" >      case "shell":</span>
-<span class="cstat-no" title="statement not covered" >        return "Check command syntax or run with safer flags before retrying.";</span>
-<span class="cstat-no" title="statement not covered" >      default:</span>
-<span class="cstat-no" title="statement not covered" >        if (errorType === ToolErrorType.INVALID_TOOL_PARAMS) {</span>
-<span class="cstat-no" title="statement not covered" >          return "Double-check the arguments provided; you may need to adjust parameter names or value types.";</span>
-<span class="cstat-no" title="statement not covered" >        }</span>
-<span class="cstat-no" title="statement not covered" >        return "Consider adjusting inputs or selecting an alternative tool before retrying.";</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
-&nbsp;
-<span class="cstat-no" title="statement not covered" >  private async autoApproveCompatiblePendingTools(</span>
+<span class="fstat-no" title="function not covered" >  private async autoApproveCompatiblePendingTools(</span>
 <span class="cstat-no" title="statement not covered" >    signal: AbortSignal,</span>
 <span class="cstat-no" title="statement not covered" >    triggeringCallId: string,</span>
 <span class="cstat-no" title="statement not covered" >  ): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const pendingTools = this.toolCalls.filter(</span>
 <span class="cstat-no" title="statement not covered" >      (call) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >        call.status === "awaiting_approval" &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >        call.status === 'awaiting_approval' &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >        call.request.callId !== triggeringCallId,</span>
 <span class="cstat-no" title="statement not covered" >    ) as WaitingToolCall[];</span>
 &nbsp;
@@ -3652,7 +3210,7 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >            pendingTool.request.callId,</span>
 <span class="cstat-no" title="statement not covered" >            ToolConfirmationOutcome.ProceedAlways,</span>
 <span class="cstat-no" title="statement not covered" >          );</span>
-<span class="cstat-no" title="statement not covered" >          this.setStatusInternal(pendingTool.request.callId, "scheduled");</span>
+<span class="cstat-no" title="statement not covered" >          this.setStatusInternal(pendingTool.request.callId, 'scheduled');</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >        console.error(</span>
@@ -3662,24 +3220,30 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+}
 &nbsp;</pre></td></tr></table></pre>
 
-                <div class='push'></div><!-- for sticky footer -->
-            </div><!-- /wrapper -->
-            <div class='footer quiet pad2 space-top1 center small'>
-                Code coverage generated by
-                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-01T13:00:34.883Z
-            </div>
-        <script src="../../prettify.js"></script>
-        <script>
-            window.onload = function () {
-                prettyPrint();
-            };
-        </script>
-        <script src="../../sorter.js"></script>
-        <script src="../../block-navigation.js"></script>
-    </body>
+      <div class="push"></div>
+      <!-- for sticky footer -->
+    </div>
+    <!-- /wrapper -->
+    <div class="footer quiet pad2 space-top1 center small">
+      Code coverage generated by
+      <a
+        href="https://istanbul.js.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >istanbul</a
+      >
+      at 2025-09-30T08:47:49.639Z
+    </div>
+    <script src="../../prettify.js"></script>
+    <script>
+      window.onload = function () {
+        prettyPrint();
+      };
+    </script>
+    <script src="../../sorter.js"></script>
+    <script src="../../block-navigation.js"></script>
+  </body>
 </html>
-    

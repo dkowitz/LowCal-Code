@@ -1,68 +1,66 @@
-
 <!doctype html>
 <html lang="en">
-
-<head>
-    <title>Code coverage report for src/telemetry/loggers.test.circular.ts</title>
+  <head>
+    <title>
+      Code coverage report for src/telemetry/loggers.test.circular.ts
+    </title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type='text/css'>
-        .coverage-summary .sorter {
-            background-image: url(../../sort-arrow-sprite.png);
-        }
+    <style type="text/css">
+      .coverage-summary .sorter {
+        background-image: url(../../sort-arrow-sprite.png);
+      }
     </style>
-</head>
-    
-<body>
-<div class='wrapper'>
-    <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/telemetry</a> loggers.test.circular.ts</h1>
-        <div class='clearfix'>
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Statements</span>
-                <span class='fraction'>0/93</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Lines</span>
-                <span class='fraction'>0/93</span>
-            </div>
-        
-            
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <div class="pad1">
+        <h1>
+          <a href="../../index.html">All files</a> /
+          <a href="index.html">src/telemetry</a> loggers.test.circular.ts
+        </h1>
+        <div class="clearfix">
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Statements</span>
+            <span class="fraction">0/93</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Branches</span>
+            <span class="fraction">0/1</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Functions</span>
+            <span class="fraction">0/1</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Lines</span>
+            <span class="fraction">0/93</span>
+          </div>
         </div>
         <p class="quiet">
-            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+          Press <em>n</em> or <em>j</em> to go to the next uncovered block,
+          <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
         <template id="filterTemplate">
-            <div class="quiet">
-                Filter:
-                <input type="search" id="fileSearch">
-            </div>
+          <div class="quiet">
+            Filter:
+            <input type="search" id="fileSearch" />
+          </div>
         </template>
-    </div>
-    <div class='status-line low'></div>
-    <pre><table class="coverage">
+      </div>
+      <div class="status-line low"></div>
+      <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
 <a name='L3'></a><a href='#L3'>3</a>
@@ -329,26 +327,26 @@
  * Test to verify circular reference handling in telemetry logging
  */
 &nbsp;
-<span class="cstat-no" title="statement not covered" >import { describe, it, expect } from "vitest";</span>
-<span class="cstat-no" title="statement not covered" >import { logToolCall } from "./loggers.js";</span>
-<span class="cstat-no" title="statement not covered" >import { ToolCallEvent } from "./types.js";</span>
-import type { Config } from "../config/config.js";
-import type { CompletedToolCall } from "../core/coreToolScheduler.js";
+<span class="cstat-no" title="statement not covered" >import { describe, it, expect } from 'vitest';</span>
+<span class="cstat-no" title="statement not covered" >import { logToolCall } from './loggers.js';</span>
+<span class="cstat-no" title="statement not covered" >import { ToolCallEvent } from './types.js';</span>
+import type { Config } from '../config/config.js';
+import type { CompletedToolCall } from '../core/coreToolScheduler.js';
 import type {
   ToolCallRequestInfo,
   ToolCallResponseInfo,
-} from "../core/turn.js";
-<span class="cstat-no" title="statement not covered" >import { MockTool } from "../test-utils/tools.js";</span>
+} from '../core/turn.js';
+<span class="cstat-no" title="statement not covered" >import { MockTool } from '../test-utils/tools.js';</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >describe("Circular Reference Handling", () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  it("should handle circular references in tool function arguments", () =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >describe('Circular Reference Handling', () =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  it('should handle circular references in tool function arguments', () =&gt; {</span>
     // Create a mock config
 <span class="cstat-no" title="statement not covered" >    const mockConfig = {</span>
 <span class="cstat-no" title="statement not covered" >      getTelemetryEnabled: () =&gt; true,</span>
 <span class="cstat-no" title="statement not covered" >      getUsageStatisticsEnabled: () =&gt; true,</span>
-<span class="cstat-no" title="statement not covered" >      getSessionId: () =&gt; "test-session",</span>
-<span class="cstat-no" title="statement not covered" >      getModel: () =&gt; "test-model",</span>
-<span class="cstat-no" title="statement not covered" >      getEmbeddingModel: () =&gt; "test-embedding",</span>
+<span class="cstat-no" title="statement not covered" >      getSessionId: () =&gt; 'test-session',</span>
+<span class="cstat-no" title="statement not covered" >      getModel: () =&gt; 'test-model',</span>
+<span class="cstat-no" title="statement not covered" >      getEmbeddingModel: () =&gt; 'test-embedding',</span>
 <span class="cstat-no" title="statement not covered" >      getDebugMode: () =&gt; false,</span>
 <span class="cstat-no" title="statement not covered" >    } as unknown as Config;</span>
 &nbsp;
@@ -359,30 +357,30 @@ import type {
 <span class="cstat-no" title="statement not covered" >      agent: null,</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >    circularObject.agent = circularObject; // Create circular reference</span>
-<span class="cstat-no" title="statement not covered" >    circularObject.sockets["test-host"] = [</span>
+<span class="cstat-no" title="statement not covered" >    circularObject.sockets['test-host'] = [</span>
 <span class="cstat-no" title="statement not covered" >      { _httpMessage: { agent: circularObject } },</span>
 <span class="cstat-no" title="statement not covered" >    ];</span>
 &nbsp;
     // Create a mock CompletedToolCall with circular references in function_args
 <span class="cstat-no" title="statement not covered" >    const mockRequest: ToolCallRequestInfo = {</span>
-<span class="cstat-no" title="statement not covered" >      callId: "test-call-id",</span>
-<span class="cstat-no" title="statement not covered" >      name: "ReadFile",</span>
+<span class="cstat-no" title="statement not covered" >      callId: 'test-call-id',</span>
+<span class="cstat-no" title="statement not covered" >      name: 'ReadFile',</span>
 <span class="cstat-no" title="statement not covered" >      args: circularObject, // This would cause the original error</span>
 <span class="cstat-no" title="statement not covered" >      isClientInitiated: false,</span>
-<span class="cstat-no" title="statement not covered" >      prompt_id: "test-prompt-id",</span>
+<span class="cstat-no" title="statement not covered" >      prompt_id: 'test-prompt-id',</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const mockResponse: ToolCallResponseInfo = {</span>
-<span class="cstat-no" title="statement not covered" >      callId: "test-call-id",</span>
-<span class="cstat-no" title="statement not covered" >      responseParts: [{ text: "test result" }],</span>
+<span class="cstat-no" title="statement not covered" >      callId: 'test-call-id',</span>
+<span class="cstat-no" title="statement not covered" >      responseParts: [{ text: 'test result' }],</span>
 <span class="cstat-no" title="statement not covered" >      resultDisplay: undefined,</span>
 <span class="cstat-no" title="statement not covered" >      error: undefined, // undefined means success</span>
 <span class="cstat-no" title="statement not covered" >      errorType: undefined,</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    const tool = new MockTool("mock-tool");</span>
+<span class="cstat-no" title="statement not covered" >    const tool = new MockTool('mock-tool');</span>
 <span class="cstat-no" title="statement not covered" >    const mockCompletedToolCall: CompletedToolCall = {</span>
-<span class="cstat-no" title="statement not covered" >      status: "success",</span>
+<span class="cstat-no" title="statement not covered" >      status: 'success',</span>
 <span class="cstat-no" title="statement not covered" >      request: mockRequest,</span>
 <span class="cstat-no" title="statement not covered" >      response: mockResponse,</span>
 <span class="cstat-no" title="statement not covered" >      tool,</span>
@@ -399,40 +397,40 @@ import type {
 <span class="cstat-no" title="statement not covered" >    }).not.toThrow();</span>
 <span class="cstat-no" title="statement not covered" >  });</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  it("should handle normal objects without circular references", () =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >  it('should handle normal objects without circular references', () =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const mockConfig = {</span>
 <span class="cstat-no" title="statement not covered" >      getTelemetryEnabled: () =&gt; true,</span>
 <span class="cstat-no" title="statement not covered" >      getUsageStatisticsEnabled: () =&gt; true,</span>
-<span class="cstat-no" title="statement not covered" >      getSessionId: () =&gt; "test-session",</span>
-<span class="cstat-no" title="statement not covered" >      getModel: () =&gt; "test-model",</span>
-<span class="cstat-no" title="statement not covered" >      getEmbeddingModel: () =&gt; "test-embedding",</span>
+<span class="cstat-no" title="statement not covered" >      getSessionId: () =&gt; 'test-session',</span>
+<span class="cstat-no" title="statement not covered" >      getModel: () =&gt; 'test-model',</span>
+<span class="cstat-no" title="statement not covered" >      getEmbeddingModel: () =&gt; 'test-embedding',</span>
 <span class="cstat-no" title="statement not covered" >      getDebugMode: () =&gt; false,</span>
 <span class="cstat-no" title="statement not covered" >    } as unknown as Config;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const normalObject = {</span>
-<span class="cstat-no" title="statement not covered" >      filePath: "/test/path",</span>
-<span class="cstat-no" title="statement not covered" >      options: { encoding: "utf8" },</span>
+<span class="cstat-no" title="statement not covered" >      filePath: '/test/path',</span>
+<span class="cstat-no" title="statement not covered" >      options: { encoding: 'utf8' },</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const mockRequest: ToolCallRequestInfo = {</span>
-<span class="cstat-no" title="statement not covered" >      callId: "test-call-id",</span>
-<span class="cstat-no" title="statement not covered" >      name: "ReadFile",</span>
+<span class="cstat-no" title="statement not covered" >      callId: 'test-call-id',</span>
+<span class="cstat-no" title="statement not covered" >      name: 'ReadFile',</span>
 <span class="cstat-no" title="statement not covered" >      args: normalObject,</span>
 <span class="cstat-no" title="statement not covered" >      isClientInitiated: false,</span>
-<span class="cstat-no" title="statement not covered" >      prompt_id: "test-prompt-id",</span>
+<span class="cstat-no" title="statement not covered" >      prompt_id: 'test-prompt-id',</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const mockResponse: ToolCallResponseInfo = {</span>
-<span class="cstat-no" title="statement not covered" >      callId: "test-call-id",</span>
-<span class="cstat-no" title="statement not covered" >      responseParts: [{ text: "test result" }],</span>
+<span class="cstat-no" title="statement not covered" >      callId: 'test-call-id',</span>
+<span class="cstat-no" title="statement not covered" >      responseParts: [{ text: 'test result' }],</span>
 <span class="cstat-no" title="statement not covered" >      resultDisplay: undefined,</span>
 <span class="cstat-no" title="statement not covered" >      error: undefined, // undefined means success</span>
 <span class="cstat-no" title="statement not covered" >      errorType: undefined,</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    const tool = new MockTool("mock-tool");</span>
+<span class="cstat-no" title="statement not covered" >    const tool = new MockTool('mock-tool');</span>
 <span class="cstat-no" title="statement not covered" >    const mockCompletedToolCall: CompletedToolCall = {</span>
-<span class="cstat-no" title="statement not covered" >      status: "success",</span>
+<span class="cstat-no" title="statement not covered" >      status: 'success',</span>
 <span class="cstat-no" title="statement not covered" >      request: mockRequest,</span>
 <span class="cstat-no" title="statement not covered" >      response: mockResponse,</span>
 <span class="cstat-no" title="statement not covered" >      tool,</span>
@@ -449,21 +447,27 @@ import type {
 <span class="cstat-no" title="statement not covered" >});</span>
 &nbsp;</pre></td></tr></table></pre>
 
-                <div class='push'></div><!-- for sticky footer -->
-            </div><!-- /wrapper -->
-            <div class='footer quiet pad2 space-top1 center small'>
-                Code coverage generated by
-                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-01T13:00:34.883Z
-            </div>
-        <script src="../../prettify.js"></script>
-        <script>
-            window.onload = function () {
-                prettyPrint();
-            };
-        </script>
-        <script src="../../sorter.js"></script>
-        <script src="../../block-navigation.js"></script>
-    </body>
+      <div class="push"></div>
+      <!-- for sticky footer -->
+    </div>
+    <!-- /wrapper -->
+    <div class="footer quiet pad2 space-top1 center small">
+      Code coverage generated by
+      <a
+        href="https://istanbul.js.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >istanbul</a
+      >
+      at 2025-09-30T08:47:49.639Z
+    </div>
+    <script src="../../prettify.js"></script>
+    <script>
+      window.onload = function () {
+        prettyPrint();
+      };
+    </script>
+    <script src="../../sorter.js"></script>
+    <script src="../../block-navigation.js"></script>
+  </body>
 </html>
-    

@@ -1,68 +1,64 @@
-
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <title>Code coverage report for src/utils/installationManager.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type='text/css'>
-        .coverage-summary .sorter {
-            background-image: url(../../sort-arrow-sprite.png);
-        }
+    <style type="text/css">
+      .coverage-summary .sorter {
+        background-image: url(../../sort-arrow-sprite.png);
+      }
     </style>
-</head>
-    
-<body>
-<div class='wrapper'>
-    <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/utils</a> installationManager.ts</h1>
-        <div class='clearfix'>
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">26.19% </span>
-                <span class="quiet">Statements</span>
-                <span class='fraction'>11/42</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Functions</span>
-                <span class='fraction'>0/4</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">26.19% </span>
-                <span class="quiet">Lines</span>
-                <span class='fraction'>11/42</span>
-            </div>
-        
-            
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <div class="pad1">
+        <h1>
+          <a href="../../index.html">All files</a> /
+          <a href="index.html">src/utils</a> installationManager.ts
+        </h1>
+        <div class="clearfix">
+          <div class="fl pad1y space-right2">
+            <span class="strong">26.19% </span>
+            <span class="quiet">Statements</span>
+            <span class="fraction">11/42</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">100% </span>
+            <span class="quiet">Branches</span>
+            <span class="fraction">0/0</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Functions</span>
+            <span class="fraction">0/4</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">26.19% </span>
+            <span class="quiet">Lines</span>
+            <span class="fraction">11/42</span>
+          </div>
         </div>
         <p class="quiet">
-            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+          Press <em>n</em> or <em>j</em> to go to the next uncovered block,
+          <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
         <template id="filterTemplate">
-            <div class="quiet">
-                Filter:
-                <input type="search" id="fileSearch">
-            </div>
+          <div class="quiet">
+            Filter:
+            <input type="search" id="fileSearch" />
+          </div>
         </template>
-    </div>
-    <div class='status-line low'></div>
-    <pre><table class="coverage">
+      </div>
+      <div class="status-line low"></div>
+      <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
 <a name='L3'></a><a href='#L3'>3</a>
@@ -185,10 +181,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import * as fs from "node:fs";
-import { randomUUID } from "node:crypto";
-import * as path from "node:path";
-import { Storage } from "../config/storage.js";
+import * as fs from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import * as path from 'node:path';
+import { Storage } from '../config/storage.js';
 &nbsp;
 export class InstallationManager {
   private <span class="fstat-no" title="function not covered" >getInstallationIdPath(): string {</span>
@@ -199,7 +195,7 @@ export class InstallationManager {
 <span class="cstat-no" title="statement not covered" >    const installationIdFile = this.getInstallationIdPath();</span>
 <span class="cstat-no" title="statement not covered" >    if (fs.existsSync(installationIdFile)) {</span>
 <span class="cstat-no" title="statement not covered" >      const installationid = fs</span>
-<span class="cstat-no" title="statement not covered" >        .readFileSync(installationIdFile, "utf-8")</span>
+<span class="cstat-no" title="statement not covered" >        .readFileSync(installationIdFile, 'utf-8')</span>
 <span class="cstat-no" title="statement not covered" >        .trim();</span>
 <span class="cstat-no" title="statement not covered" >      return installationid || null;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -210,7 +206,7 @@ export class InstallationManager {
 <span class="cstat-no" title="statement not covered" >    const installationIdFile = this.getInstallationIdPath();</span>
 <span class="cstat-no" title="statement not covered" >    const dir = path.dirname(installationIdFile);</span>
 <span class="cstat-no" title="statement not covered" >    fs.mkdirSync(dir, { recursive: true });</span>
-<span class="cstat-no" title="statement not covered" >    fs.writeFileSync(installationIdFile, installationId, "utf-8");</span>
+<span class="cstat-no" title="statement not covered" >    fs.writeFileSync(installationIdFile, installationId, 'utf-8');</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   /**
@@ -230,30 +226,36 @@ export class InstallationManager {
 <span class="cstat-no" title="statement not covered" >      return installationId;</span>
 <span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >      console.error(</span>
-<span class="cstat-no" title="statement not covered" >        "Error accessing installation ID file, generating ephemeral ID:",</span>
+<span class="cstat-no" title="statement not covered" >        'Error accessing installation ID file, generating ephemeral ID:',</span>
 <span class="cstat-no" title="statement not covered" >        error,</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
-<span class="cstat-no" title="statement not covered" >      return "123456789";</span>
+<span class="cstat-no" title="statement not covered" >      return '123456789';</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 }
 &nbsp;</pre></td></tr></table></pre>
 
-                <div class='push'></div><!-- for sticky footer -->
-            </div><!-- /wrapper -->
-            <div class='footer quiet pad2 space-top1 center small'>
-                Code coverage generated by
-                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-01T13:00:34.883Z
-            </div>
-        <script src="../../prettify.js"></script>
-        <script>
-            window.onload = function () {
-                prettyPrint();
-            };
-        </script>
-        <script src="../../sorter.js"></script>
-        <script src="../../block-navigation.js"></script>
-    </body>
+      <div class="push"></div>
+      <!-- for sticky footer -->
+    </div>
+    <!-- /wrapper -->
+    <div class="footer quiet pad2 space-top1 center small">
+      Code coverage generated by
+      <a
+        href="https://istanbul.js.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >istanbul</a
+      >
+      at 2025-09-30T08:47:49.639Z
+    </div>
+    <script src="../../prettify.js"></script>
+    <script>
+      window.onload = function () {
+        prettyPrint();
+      };
+    </script>
+    <script src="../../sorter.js"></script>
+    <script src="../../block-navigation.js"></script>
+  </body>
 </html>
-    

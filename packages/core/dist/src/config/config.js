@@ -165,8 +165,6 @@ export class Config {
     flashFallbackHandler;
     quotaErrorOccurred = false;
     summarizeToolOutput;
-    toolSelfHealing;
-    toolSelfHealingOverrides;
     authType;
     enableOpenAILogging;
     contentGenerator;
@@ -247,8 +245,6 @@ export class Config {
         this._blockedMcpServers = params.blockedMcpServers ?? [];
         this.noBrowser = params.noBrowser ?? false;
         this.summarizeToolOutput = params.summarizeToolOutput;
-        this.toolSelfHealing = params.toolSelfHealing;
-        this.toolSelfHealingOverrides = params.toolSelfHealingOverrides;
         this.folderTrustFeature = params.folderTrustFeature ?? false;
         this.folderTrust = params.folderTrust ?? false;
         this.ideMode = params.ideMode ?? false;
@@ -594,12 +590,6 @@ export class Config {
     }
     getSummarizeToolOutputConfig() {
         return this.summarizeToolOutput;
-    }
-    getToolSelfHealingSettings() {
-        return this.toolSelfHealing;
-    }
-    getToolSelfHealingOverride(toolName) {
-        return this.toolSelfHealingOverrides?.[toolName];
     }
     // Web search provider configuration
     getTavilyApiKey() {

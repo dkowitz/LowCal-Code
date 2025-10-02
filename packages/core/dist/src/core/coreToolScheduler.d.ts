@@ -94,7 +94,6 @@ export declare class CoreToolScheduler {
     private isFinalizingToolCalls;
     private isScheduling;
     private requestQueue;
-    private invocationErrorCounts;
     constructor(options: CoreToolSchedulerOptions);
     private setStatusInternal;
     private setArgsInternal;
@@ -122,14 +121,6 @@ export declare class CoreToolScheduler {
     private checkAndNotifyCompletion;
     private notifyToolCallsUpdate;
     private setToolCallOutcome;
-    private getFailureThreshold;
-    private shouldSuggestAutoRecovery;
-    private incrementFailureCount;
-    private clearFailureCount;
-    private getInvocationKey;
-    private handleRepeatedFailure;
-    private buildSelfHealingSuggestion;
-    private suggestNextAction;
     private autoApproveCompatiblePendingTools;
 }
 export {};

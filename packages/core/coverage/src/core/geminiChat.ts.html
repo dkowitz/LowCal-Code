@@ -1,68 +1,64 @@
-
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <title>Code coverage report for src/core/geminiChat.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type='text/css'>
-        .coverage-summary .sorter {
-            background-image: url(../../sort-arrow-sprite.png);
-        }
+    <style type="text/css">
+      .coverage-summary .sorter {
+        background-image: url(../../sort-arrow-sprite.png);
+      }
     </style>
-</head>
-    
-<body>
-<div class='wrapper'>
-    <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/core</a> geminiChat.ts</h1>
-        <div class='clearfix'>
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">69.55% </span>
-                <span class="quiet">Statements</span>
-                <span class='fraction'>537/772</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">82.19% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>120/146</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">60% </span>
-                <span class="quiet">Functions</span>
-                <span class='fraction'>21/35</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">69.55% </span>
-                <span class="quiet">Lines</span>
-                <span class='fraction'>537/772</span>
-            </div>
-        
-            
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <div class="pad1">
+        <h1>
+          <a href="../../index.html">All files</a> /
+          <a href="index.html">src/core</a> geminiChat.ts
+        </h1>
+        <div class="clearfix">
+          <div class="fl pad1y space-right2">
+            <span class="strong">5.89% </span>
+            <span class="quiet">Statements</span>
+            <span class="fraction">42/713</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">50% </span>
+            <span class="quiet">Branches</span>
+            <span class="fraction">1/2</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Functions</span>
+            <span class="fraction">0/24</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">5.89% </span>
+            <span class="quiet">Lines</span>
+            <span class="fraction">42/713</span>
+          </div>
         </div>
         <p class="quiet">
-            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+          Press <em>n</em> or <em>j</em> to go to the next uncovered block,
+          <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
         <template id="filterTemplate">
-            <div class="quiet">
-                Filter:
-                <input type="search" id="fileSearch">
-            </div>
+          <div class="quiet">
+            Filter:
+            <input type="search" id="fileSearch" />
+          </div>
         </template>
-    </div>
-    <div class='status-line medium'></div>
-    <pre><table class="coverage">
+      </div>
+      <div class="status-line low"></div>
+      <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
 <a name='L3'></a><a href='#L3'>3</a>
@@ -1071,70 +1067,7 @@
 <a name='L1006'></a><a href='#L1006'>1006</a>
 <a name='L1007'></a><a href='#L1007'>1007</a>
 <a name='L1008'></a><a href='#L1008'>1008</a>
-<a name='L1009'></a><a href='#L1009'>1009</a>
-<a name='L1010'></a><a href='#L1010'>1010</a>
-<a name='L1011'></a><a href='#L1011'>1011</a>
-<a name='L1012'></a><a href='#L1012'>1012</a>
-<a name='L1013'></a><a href='#L1013'>1013</a>
-<a name='L1014'></a><a href='#L1014'>1014</a>
-<a name='L1015'></a><a href='#L1015'>1015</a>
-<a name='L1016'></a><a href='#L1016'>1016</a>
-<a name='L1017'></a><a href='#L1017'>1017</a>
-<a name='L1018'></a><a href='#L1018'>1018</a>
-<a name='L1019'></a><a href='#L1019'>1019</a>
-<a name='L1020'></a><a href='#L1020'>1020</a>
-<a name='L1021'></a><a href='#L1021'>1021</a>
-<a name='L1022'></a><a href='#L1022'>1022</a>
-<a name='L1023'></a><a href='#L1023'>1023</a>
-<a name='L1024'></a><a href='#L1024'>1024</a>
-<a name='L1025'></a><a href='#L1025'>1025</a>
-<a name='L1026'></a><a href='#L1026'>1026</a>
-<a name='L1027'></a><a href='#L1027'>1027</a>
-<a name='L1028'></a><a href='#L1028'>1028</a>
-<a name='L1029'></a><a href='#L1029'>1029</a>
-<a name='L1030'></a><a href='#L1030'>1030</a>
-<a name='L1031'></a><a href='#L1031'>1031</a>
-<a name='L1032'></a><a href='#L1032'>1032</a>
-<a name='L1033'></a><a href='#L1033'>1033</a>
-<a name='L1034'></a><a href='#L1034'>1034</a>
-<a name='L1035'></a><a href='#L1035'>1035</a>
-<a name='L1036'></a><a href='#L1036'>1036</a>
-<a name='L1037'></a><a href='#L1037'>1037</a>
-<a name='L1038'></a><a href='#L1038'>1038</a>
-<a name='L1039'></a><a href='#L1039'>1039</a>
-<a name='L1040'></a><a href='#L1040'>1040</a>
-<a name='L1041'></a><a href='#L1041'>1041</a>
-<a name='L1042'></a><a href='#L1042'>1042</a>
-<a name='L1043'></a><a href='#L1043'>1043</a>
-<a name='L1044'></a><a href='#L1044'>1044</a>
-<a name='L1045'></a><a href='#L1045'>1045</a>
-<a name='L1046'></a><a href='#L1046'>1046</a>
-<a name='L1047'></a><a href='#L1047'>1047</a>
-<a name='L1048'></a><a href='#L1048'>1048</a>
-<a name='L1049'></a><a href='#L1049'>1049</a>
-<a name='L1050'></a><a href='#L1050'>1050</a>
-<a name='L1051'></a><a href='#L1051'>1051</a>
-<a name='L1052'></a><a href='#L1052'>1052</a>
-<a name='L1053'></a><a href='#L1053'>1053</a>
-<a name='L1054'></a><a href='#L1054'>1054</a>
-<a name='L1055'></a><a href='#L1055'>1055</a>
-<a name='L1056'></a><a href='#L1056'>1056</a>
-<a name='L1057'></a><a href='#L1057'>1057</a>
-<a name='L1058'></a><a href='#L1058'>1058</a>
-<a name='L1059'></a><a href='#L1059'>1059</a>
-<a name='L1060'></a><a href='#L1060'>1060</a>
-<a name='L1061'></a><a href='#L1061'>1061</a>
-<a name='L1062'></a><a href='#L1062'>1062</a>
-<a name='L1063'></a><a href='#L1063'>1063</a>
-<a name='L1064'></a><a href='#L1064'>1064</a>
-<a name='L1065'></a><a href='#L1065'>1065</a>
-<a name='L1066'></a><a href='#L1066'>1066</a>
-<a name='L1067'></a><a href='#L1067'>1067</a>
-<a name='L1068'></a><a href='#L1068'>1068</a>
-<a name='L1069'></a><a href='#L1069'>1069</a>
-<a name='L1070'></a><a href='#L1070'>1070</a>
-<a name='L1071'></a><a href='#L1071'>1071</a>
-<a name='L1072'></a><a href='#L1072'>1072</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L1009'></a><a href='#L1009'>1009</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1208,42 +1141,42 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">33x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">33x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">33x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">30x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">22x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">21x</span>
-<span class="cline-any cline-yes">21x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1251,13 +1184,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">32x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1267,34 +1200,34 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">26x</span>
-<span class="cline-any cline-yes">26x</span>
-<span class="cline-any cline-yes">26x</span>
-<span class="cline-any cline-yes">35x</span>
-<span class="cline-any cline-yes">41x</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">41x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">41x</span>
-<span class="cline-any cline-yes">26x</span>
-<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1302,9 +1235,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1320,13 +1253,13 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">32x</span>
-<span class="cline-any cline-yes">32x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1404,16 +1337,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1421,49 +1354,33 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1479,22 +1396,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1512,18 +1413,60 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">7x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1539,252 +1482,179 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">33x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">14x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
-<span class="cline-any cline-yes">18x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1792,10 +1662,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1816,16 +1683,15 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1845,7 +1711,13 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1871,13 +1743,13 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">59x</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">26x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">59x</span>
-<span class="cline-any cline-yes">59x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1890,11 +1762,11 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">5x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1929,62 +1801,62 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">26x</span>
-<span class="cline-any cline-yes">26x</span>
-<span class="cline-any cline-yes">62x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">33x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">24x</span>
-<span class="cline-any cline-yes">24x</span>
-<span class="cline-any cline-yes">24x</span>
-<span class="cline-any cline-yes">24x</span>
-<span class="cline-any cline-yes">24x</span>
-<span class="cline-any cline-yes">24x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">24x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">33x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">23x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1993,154 +1865,152 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">20x</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
-<span class="cline-any cline-yes">15x</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">29x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">62x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">59x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
-<span class="cline-any cline-yes">62x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">28x</span>
-<span class="cline-any cline-yes">28x</span>
-<span class="cline-any cline-yes">19x</span>
-<span class="cline-any cline-yes">28x</span>
-<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">12x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">12x</span>
-<span class="cline-any cline-yes">28x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">29x</span>
-<span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">34x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">33x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">33x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">33x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">5x</span>
-<span class="cline-any cline-yes">4x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">34x</span>
-<span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">34x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">30x</span>
-<span class="cline-any cline-yes">34x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">27x</span>
-<span class="cline-any cline-yes">31x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">17x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">10x</span>
-<span class="cline-any cline-yes">9x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">8x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">8x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">6x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">7x</span>
-<span class="cline-any cline-yes">31x</span>
-<span class="cline-any cline-yes">27x</span>
-<span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">30x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2221,34 +2091,34 @@ import type {
   SendMessageParameters,
   Part,
   Tool,
-} from "@google/genai";
-import { createUserContent } from "@google/genai";
-import { retryWithBackoff, type RetryClassification } from "../utils/retry.js";
-import type { ContentGenerator } from "./contentGenerator.js";
-import { AuthType } from "./contentGenerator.js";
-import type { Config } from "../config/config.js";
-import { DEFAULT_GEMINI_FLASH_MODEL } from "../config/models.js";
-import { hasCycleInSchema } from "../tools/tools.js";
-import type { StructuredError } from "./turn.js";
+} from '@google/genai';
+import { createUserContent } from '@google/genai';
+import { retryWithBackoff, type RetryClassification } from '../utils/retry.js';
+import type { ContentGenerator } from './contentGenerator.js';
+import { AuthType } from './contentGenerator.js';
+import type { Config } from '../config/config.js';
+import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
+import { hasCycleInSchema } from '../tools/tools.js';
+import type { StructuredError } from './turn.js';
 import {
   logContentRetry,
   logContentRetryFailure,
   logInvalidChunk,
-} from "../telemetry/loggers.js";
+} from '../telemetry/loggers.js';
 import {
   ContentRetryEvent,
   ContentRetryFailureEvent,
   InvalidChunkEvent,
-} from "../telemetry/types.js";
-import { getProviderTelemetryTag } from "../utils/providerTelemetry.js";
-import { IdleStreamTimeoutError } from "../utils/networkErrors.js";
+} from '../telemetry/types.js';
+import { getProviderTelemetryTag } from '../utils/providerTelemetry.js';
+import { IdleStreamTimeoutError } from '../utils/networkErrors.js';
 &nbsp;
 export enum StreamEventType {
   /** A regular content chunk from the API. */
-  CHUNK = "chunk",
+  CHUNK = 'chunk',
   /** A signal that a retry is about to happen. The UI should discard any partial
    * content from the attempt that just failed. */
-  RETRY = "retry",
+  RETRY = 'retry',
 }
 &nbsp;
 export type StreamEvent =
@@ -2279,42 +2149,42 @@ const STREAM_IDLE_TIMEOUT_MS = 15000;
  * 2. Empty choices with usage metadata
  * We'll check separately for both of these cases.
  */
-function isValidResponse(response: GenerateContentResponse): boolean {
-  if (response.usageMetadata) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function isValidResponse(response: GenerateContentResponse): boolean {</span></span>
+<span class="cstat-no" title="statement not covered" >  if (response.usageMetadata) {</span>
 <span class="cstat-no" title="statement not covered" >    return true;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-  if (response.candidates === undefined || response.candidates.length === 0) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >  if (response.candidates === undefined || response.candidates.length === 0) {</span>
 <span class="cstat-no" title="statement not covered" >    return false;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-  if (response.candidates.some((candidate) =&gt; candidate.finishReason)) {
-    return true;
-  }
+<span class="cstat-no" title="statement not covered" >  if (response.candidates.some((candidate) =&gt; candidate.finishReason)) {</span>
+<span class="cstat-no" title="statement not covered" >    return true;</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-  const content = response.candidates[0]?.content;
-  return content !== undefined &amp;&amp; isValidContent(content);
-}
+<span class="cstat-no" title="statement not covered" >  const content = response.candidates[0]?.content;</span>
+<span class="cstat-no" title="statement not covered" >  return content !== undefined &amp;&amp; isValidContent(content);</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-function isValidContent(content: Content): boolean {
-  if (content.parts === undefined || content.parts.length === 0) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function isValidContent(content: Content): boolean {</span></span>
+<span class="cstat-no" title="statement not covered" >  if (content.parts === undefined || content.parts.length === 0) {</span>
 <span class="cstat-no" title="statement not covered" >    return false;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
-  for (const part of content.parts) {
-    if (part === undefined || Object.keys(part).length === 0) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >  for (const part of content.parts) {</span>
+<span class="cstat-no" title="statement not covered" >    if (part === undefined || Object.keys(part).length === 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return false;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    if (
-      !part.thought &amp;&amp;
-      part.text !== undefined &amp;&amp;
-      part.text === "" &amp;&amp;
-      part.functionCall === undefined
-    ) {
-      return false;
-    }
-  }
-  return true;
-}
+<span class="cstat-no" title="statement not covered" >    if (</span>
+<span class="cstat-no" title="statement not covered" >      !part.thought &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >      part.text !== undefined &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >      part.text === '' &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >      part.functionCall === undefined</span>
+<span class="cstat-no" title="statement not covered" >    ) {</span>
+<span class="cstat-no" title="statement not covered" >      return false;</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
+<span class="cstat-no" title="statement not covered" >  return true;</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 /**
  * Validates the history contains the correct roles.
@@ -2322,13 +2192,13 @@ function isValidContent(content: Content): boolean {
  * @throws Error if the history does not start with a user turn.
  * @throws Error if the history contains an invalid role.
  */
-function validateHistory(history: Content[]) {
-  for (const content of history) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >    if (content.role !== "user" &amp;&amp; content.role !== "model") {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function validateHistory(history: Content[]) {</span></span>
+<span class="cstat-no" title="statement not covered" >  for (const content of history) {</span>
+<span class="cstat-no" title="statement not covered" >    if (content.role !== 'user' &amp;&amp; content.role !== 'model') {</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error(`Role must be user or model, but got ${content.role}.`);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
-}
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 /**
  * Extracts the curated (valid) history from a comprehensive history.
@@ -2338,44 +2208,44 @@ function validateHistory(history: Content[]) {
  * filters or recitation). Extracting valid turns from the history
  * ensures that subsequent requests could be accepted by the model.
  */
-function extractCuratedHistory(comprehensiveHistory: Content[]): Content[] {
-  if (comprehensiveHistory === undefined || comprehensiveHistory.length === 0) {
-    return [];
-  }
-  const curatedHistory: Content[] = [];
-  const length = comprehensiveHistory.length;
-  let i = 0;
-  while (i &lt; length) {
-    if (comprehensiveHistory[i].role === "user") {
-      curatedHistory.push(comprehensiveHistory[i]);
-      i++;
-    } else {
-      const modelOutput: Content[] = [];
-      let isValid = true;
-      while (i &lt; length &amp;&amp; comprehensiveHistory[i].role === "model") {
-        modelOutput.push(comprehensiveHistory[i]);
-        if (isValid &amp;&amp; !isValidContent(comprehensiveHistory[i])) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function extractCuratedHistory(comprehensiveHistory: Content[]): Content[] {</span></span>
+<span class="cstat-no" title="statement not covered" >  if (comprehensiveHistory === undefined || comprehensiveHistory.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >    return [];</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
+<span class="cstat-no" title="statement not covered" >  const curatedHistory: Content[] = [];</span>
+<span class="cstat-no" title="statement not covered" >  const length = comprehensiveHistory.length;</span>
+<span class="cstat-no" title="statement not covered" >  let i = 0;</span>
+<span class="cstat-no" title="statement not covered" >  while (i &lt; length) {</span>
+<span class="cstat-no" title="statement not covered" >    if (comprehensiveHistory[i].role === 'user') {</span>
+<span class="cstat-no" title="statement not covered" >      curatedHistory.push(comprehensiveHistory[i]);</span>
+<span class="cstat-no" title="statement not covered" >      i++;</span>
+<span class="cstat-no" title="statement not covered" >    } else {</span>
+<span class="cstat-no" title="statement not covered" >      const modelOutput: Content[] = [];</span>
+<span class="cstat-no" title="statement not covered" >      let isValid = true;</span>
+<span class="cstat-no" title="statement not covered" >      while (i &lt; length &amp;&amp; comprehensiveHistory[i].role === 'model') {</span>
+<span class="cstat-no" title="statement not covered" >        modelOutput.push(comprehensiveHistory[i]);</span>
+<span class="cstat-no" title="statement not covered" >        if (isValid &amp;&amp; !isValidContent(comprehensiveHistory[i])) {</span>
 <span class="cstat-no" title="statement not covered" >          isValid = false;</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
-        i++;
-      }
-      if (isValid) {
-        curatedHistory.push(...modelOutput);
-      }
-    }
-  }
-  return curatedHistory;
-}
+<span class="cstat-no" title="statement not covered" >        i++;</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >      if (isValid) {</span>
+<span class="cstat-no" title="statement not covered" >        curatedHistory.push(...modelOutput);</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
+<span class="cstat-no" title="statement not covered" >  return curatedHistory;</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 /**
  * Custom error to signal that a stream completed without valid content,
  * which should trigger a retry.
  */
 export class EmptyStreamError extends Error {
-  constructor(message: string) {
-    super(message);
-    this.name = "EmptyStreamError";
-  }
+<span class="fstat-no" title="function not covered" >  constructor(message: string) {</span>
+<span class="cstat-no" title="statement not covered" >    super(message);</span>
+<span class="cstat-no" title="statement not covered" >    this.name = 'EmptyStreamError';</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 }
 &nbsp;
 /**
@@ -2390,14 +2260,14 @@ export class GeminiChat {
   // model.
   private sendPromise: Promise&lt;void&gt; = Promise.resolve();
 &nbsp;
-  constructor(
-    private readonly config: Config,
-    private readonly contentGenerator: ContentGenerator,
-    private readonly generationConfig: GenerateContentConfig = {},
-    private history: Content[] = [],
-  ) {
-    validateHistory(history);
-  }
+<span class="fstat-no" title="function not covered" >  constructor(</span>
+<span class="cstat-no" title="statement not covered" >    private readonly config: Config,</span>
+<span class="cstat-no" title="statement not covered" >    private readonly contentGenerator: ContentGenerator,</span>
+<span class="cstat-no" title="statement not covered" >    private readonly generationConfig: GenerateContentConfig = {},</span>
+<span class="cstat-no" title="statement not covered" >    private history: Content[] = [],</span>
+<span class="cstat-no" title="statement not covered" >  ) {</span>
+<span class="cstat-no" title="statement not covered" >    validateHistory(history);</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" >  }</span></span></span>
 &nbsp;
   /**
    * Handles falling back to Flash model when persistent 429 errors occur for OAuth users.
@@ -2427,7 +2297,7 @@ export class GeminiChat {
 &nbsp;
     // Check if config has a fallback handler (set by CLI package)
 <span class="cstat-no" title="statement not covered" >    const fallbackHandler = this.config.flashFallbackHandler;</span>
-<span class="cstat-no" title="statement not covered" >    if (typeof fallbackHandler === "function") {</span>
+<span class="cstat-no" title="statement not covered" >    if (typeof fallbackHandler === 'function') {</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        const accepted = await fallbackHandler(</span>
 <span class="cstat-no" title="statement not covered" >          currentModel,</span>
@@ -2444,7 +2314,7 @@ export class GeminiChat {
 <span class="cstat-no" title="statement not covered" >          return null; // Model was switched but don't continue with current prompt</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      } catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >        console.warn("Flash fallback handler failed:", error);</span>
+<span class="cstat-no" title="statement not covered" >        console.warn('Flash fallback handler failed:', error);</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
@@ -2474,17 +2344,17 @@ export class GeminiChat {
    * console.log(response.text);
    * ```
    */
-  async sendMessage(
-    params: SendMessageParameters,
-    prompt_id: string,
-  ): Promise&lt;GenerateContentResponse&gt; {
-    await this.sendPromise;
-    const userContent = createUserContent(params.message);
-    const requestContents = this.getHistory(true).concat(userContent);
+<span class="fstat-no" title="function not covered" >  async sendMessage(</span>
+<span class="cstat-no" title="statement not covered" >    params: SendMessageParameters,</span>
+<span class="cstat-no" title="statement not covered" >    prompt_id: string,</span>
+<span class="cstat-no" title="statement not covered" >  ): Promise&lt;GenerateContentResponse&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    await this.sendPromise;</span>
+<span class="cstat-no" title="statement not covered" >    const userContent = createUserContent(params.message);</span>
+<span class="cstat-no" title="statement not covered" >    const requestContents = this.getHistory(true).concat(userContent);</span>
 &nbsp;
-    let response: GenerateContentResponse;
-    const providerTag = getProviderTelemetryTag(this.config);
-    let lastRetryMetadata:
+<span class="cstat-no" title="statement not covered" >    let response: GenerateContentResponse;</span>
+<span class="cstat-no" title="statement not covered" >    const providerTag = getProviderTelemetryTag(this.config);</span>
+<span class="cstat-no" title="statement not covered" >    let lastRetryMetadata:</span>
       | {
           attempt: number;
           classification: RetryClassification;
@@ -2492,44 +2362,44 @@ export class GeminiChat {
         }
       | undefined;
 &nbsp;
-    try {
-      const apiCall = () =&gt; {
-        const modelToUse = this.config.getModel(<span class="branch-0 cbranch-no" title="branch not covered" >) || DEFAULT_GEMINI_FLASH_MODEL;</span>
+<span class="cstat-no" title="statement not covered" >    try {</span>
+<span class="cstat-no" title="statement not covered" >      const apiCall = () =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        const modelToUse = this.config.getModel() || DEFAULT_GEMINI_FLASH_MODEL;</span>
 &nbsp;
         // Prevent Flash model calls immediately after quota error
-        if (
-          this.config.getQuotaErrorOccurred(<span class="branch-0 cbranch-no" title="branch not covered" >) &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >        if (</span>
+<span class="cstat-no" title="statement not covered" >          this.config.getQuotaErrorOccurred() &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >          modelToUse === DEFAULT_GEMINI_FLASH_MODEL</span>
-        ) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >        ) {</span>
 <span class="cstat-no" title="statement not covered" >          throw new Error(</span>
-<span class="cstat-no" title="statement not covered" >            "Please submit a new query to continue with the Flash model.",</span>
+<span class="cstat-no" title="statement not covered" >            'Please submit a new query to continue with the Flash model.',</span>
 <span class="cstat-no" title="statement not covered" >          );</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 &nbsp;
-        return this.contentGenerator.generateContent(
-          {
-            model: modelToUse,
-            contents: requestContents,
-            config: { ...this.generationConfig, ...params.config },
-          },
-          prompt_id,
-        );
-      };
+<span class="cstat-no" title="statement not covered" >        return this.contentGenerator.generateContent(</span>
+<span class="cstat-no" title="statement not covered" >          {</span>
+<span class="cstat-no" title="statement not covered" >            model: modelToUse,</span>
+<span class="cstat-no" title="statement not covered" >            contents: requestContents,</span>
+<span class="cstat-no" title="statement not covered" >            config: { ...this.generationConfig, ...params.config },</span>
+<span class="cstat-no" title="statement not covered" >          },</span>
+<span class="cstat-no" title="statement not covered" >          prompt_id,</span>
+<span class="cstat-no" title="statement not covered" >        );</span>
+<span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-      response = await retryWithBackoff(apiCall, {
-        shouldRetry: <span class="fstat-no" title="function not covered" >(error: unknown) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      response = await retryWithBackoff(apiCall, {</span>
+<span class="cstat-no" title="statement not covered" >        shouldRetry: (error: unknown) =&gt; {</span>
           // Check for known error messages and codes.
 <span class="cstat-no" title="statement not covered" >          if (error instanceof Error &amp;&amp; error.message) {</span>
 <span class="cstat-no" title="statement not covered" >            if (isSchemaDepthError(error.message)) return false;</span>
-<span class="cstat-no" title="statement not covered" >            if (error.message.includes("429")) return true;</span>
+<span class="cstat-no" title="statement not covered" >            if (error.message.includes('429')) return true;</span>
 <span class="cstat-no" title="statement not covered" >            if (error.message.match(/5\d{2}/)) return true;</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >          return false; // Don't retry other errors by default</span>
 <span class="cstat-no" title="statement not covered" >        },</span>
-        onPersistent429: <span class="fstat-no" title="function not covered" >async (authType?: string, error?: unknown) =&gt;</span>
+<span class="cstat-no" title="statement not covered" >        onPersistent429: async (authType?: string, error?: unknown) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >          await this.handleFlashFallback(authType, error),</span>
-        authType: this.config.getContentGeneratorConfig()?.authType,
-        onRetryableError: <span class="fstat-no" title="function not covered" >(error, context) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        authType: this.config.getContentGeneratorConfig()?.authType,</span>
+<span class="cstat-no" title="statement not covered" >        onRetryableError: (error, context) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >          lastRetryMetadata = {</span>
 <span class="cstat-no" title="statement not covered" >            attempt: context.attempt,</span>
 <span class="cstat-no" title="statement not covered" >            classification: context.classification,</span>
@@ -2539,7 +2409,7 @@ export class GeminiChat {
 <span class="cstat-no" title="statement not covered" >            this.config,</span>
 <span class="cstat-no" title="statement not covered" >            new ContentRetryEvent(</span>
 <span class="cstat-no" title="statement not covered" >              context.attempt,</span>
-<span class="cstat-no" title="statement not covered" >              error.name ?? "Error",</span>
+<span class="cstat-no" title="statement not covered" >              error.name ?? 'Error',</span>
 <span class="cstat-no" title="statement not covered" >              Math.round(context.delayMs),</span>
 <span class="cstat-no" title="statement not covered" >              {</span>
 <span class="cstat-no" title="statement not covered" >                classification: context.classification,</span>
@@ -2550,27 +2420,45 @@ export class GeminiChat {
 <span class="cstat-no" title="statement not covered" >            ),</span>
 <span class="cstat-no" title="statement not covered" >          );</span>
 <span class="cstat-no" title="statement not covered" >        },</span>
-      });
-      lastRetryMetadata = undefined;
+<span class="cstat-no" title="statement not covered" >      });</span>
+<span class="cstat-no" title="statement not covered" >      lastRetryMetadata = undefined;</span>
 &nbsp;
-      this.sendPromise = this.finalizeNonStreamingResponse(
-        response,
-        userContent,
-      );
-      await this.sendPromise.catch((error) =&gt; {
+<span class="cstat-no" title="statement not covered" >      this.sendPromise = (async () =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        const outputContent = response.candidates?.[0]?.content;</span>
+<span class="cstat-no" title="statement not covered" >        const modelOutput = outputContent ? [outputContent] : [];</span>
+&nbsp;
+        // Because the AFC input contains the entire curated chat history in
+        // addition to the new user input, we need to truncate the AFC history
+        // to deduplicate the existing chat history.
+<span class="cstat-no" title="statement not covered" >        const fullAutomaticFunctionCallingHistory =</span>
+<span class="cstat-no" title="statement not covered" >          response.automaticFunctionCallingHistory;</span>
+<span class="cstat-no" title="statement not covered" >        const index = this.getHistory(true).length;</span>
+<span class="cstat-no" title="statement not covered" >        let automaticFunctionCallingHistory: Content[] = [];</span>
+<span class="cstat-no" title="statement not covered" >        if (fullAutomaticFunctionCallingHistory != null) {</span>
+<span class="cstat-no" title="statement not covered" >          automaticFunctionCallingHistory =</span>
+<span class="cstat-no" title="statement not covered" >            fullAutomaticFunctionCallingHistory.slice(index) ?? [];</span>
+<span class="cstat-no" title="statement not covered" >        }</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >        this.recordHistory(</span>
+<span class="cstat-no" title="statement not covered" >          userContent,</span>
+<span class="cstat-no" title="statement not covered" >          modelOutput,</span>
+<span class="cstat-no" title="statement not covered" >          automaticFunctionCallingHistory,</span>
+<span class="cstat-no" title="statement not covered" >        );</span>
+<span class="cstat-no" title="statement not covered" >      })();</span>
+<span class="cstat-no" title="statement not covered" >      await this.sendPromise.catch((error) =&gt; {</span>
         // Resets sendPromise to avoid subsequent calls failing
-        this.sendPromise = Promise.resolve();
+<span class="cstat-no" title="statement not covered" >        this.sendPromise = Promise.resolve();</span>
         // Re-throw the error so the caller knows something went wrong.
-        throw error;
-      });
-      return response;
-    } catch (error) {
-      if (lastRetryMetadata) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >        throw error;</span>
+<span class="cstat-no" title="statement not covered" >      });</span>
+<span class="cstat-no" title="statement not covered" >      return response;</span>
+<span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
+<span class="cstat-no" title="statement not covered" >      if (lastRetryMetadata) {</span>
 <span class="cstat-no" title="statement not covered" >        logContentRetryFailure(</span>
 <span class="cstat-no" title="statement not covered" >          this.config,</span>
 <span class="cstat-no" title="statement not covered" >          new ContentRetryFailureEvent(</span>
 <span class="cstat-no" title="statement not covered" >            lastRetryMetadata.attempt,</span>
-<span class="cstat-no" title="statement not covered" >            error instanceof Error ? error.name : "UnknownError",</span>
+<span class="cstat-no" title="statement not covered" >            error instanceof Error ? error.name : 'UnknownError',</span>
 <span class="cstat-no" title="statement not covered" >            undefined,</span>
 <span class="cstat-no" title="statement not covered" >            {</span>
 <span class="cstat-no" title="statement not covered" >              final_classification: lastRetryMetadata.classification,</span>
@@ -2583,10 +2471,10 @@ export class GeminiChat {
 <span class="cstat-no" title="statement not covered" >        );</span>
 <span class="cstat-no" title="statement not covered" >        lastRetryMetadata = undefined;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
-      this.sendPromise = Promise.resolve();
-      throw error;
-    }
-  }
+<span class="cstat-no" title="statement not covered" >      this.sendPromise = Promise.resolve();</span>
+<span class="cstat-no" title="statement not covered" >      throw error;</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   /**
    * Sends a message to the model and returns the response in chunks.
@@ -2610,263 +2498,184 @@ export class GeminiChat {
    * }
    * ```
    */
-  async sendMessageStream(
-    params: SendMessageParameters,
-    prompt_id: string,
-  ): Promise&lt;AsyncGenerator&lt;StreamEvent&gt;&gt; {
-    await this.sendPromise;
+<span class="fstat-no" title="function not covered" >  async sendMessageStream(</span>
+<span class="cstat-no" title="statement not covered" >    params: SendMessageParameters,</span>
+<span class="cstat-no" title="statement not covered" >    prompt_id: string,</span>
+<span class="cstat-no" title="statement not covered" >  ): Promise&lt;AsyncGenerator&lt;StreamEvent&gt;&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    await this.sendPromise;</span>
 &nbsp;
-    let streamDoneResolver: () =&gt; void;
-    const streamDonePromise = new Promise&lt;void&gt;((resolve) =&gt; {
-      streamDoneResolver = resolve;
-    });
-    this.sendPromise = streamDonePromise;
+<span class="cstat-no" title="statement not covered" >    let streamDoneResolver: () =&gt; void;</span>
+<span class="cstat-no" title="statement not covered" >    const streamDonePromise = new Promise&lt;void&gt;((resolve) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      streamDoneResolver = resolve;</span>
+<span class="cstat-no" title="statement not covered" >    });</span>
+<span class="cstat-no" title="statement not covered" >    this.sendPromise = streamDonePromise;</span>
 &nbsp;
-    const userContent = createUserContent(params.message);
+<span class="cstat-no" title="statement not covered" >    const userContent = createUserContent(params.message);</span>
 &nbsp;
     // Add user content to history ONCE before any attempts.
-    this.history.push(userContent);
-    const requestContents = this.getHistory(true);
-    const providerTag = getProviderTelemetryTag(this.config);
+<span class="cstat-no" title="statement not covered" >    this.history.push(userContent);</span>
+<span class="cstat-no" title="statement not covered" >    const requestContents = this.getHistory(true);</span>
+<span class="cstat-no" title="statement not covered" >    const providerTag = getProviderTelemetryTag(this.config);</span>
 &nbsp;
     // eslint-disable-next-line @typescript-eslint/no-this-alias
-    const self = this;
-    return (async function* () {
-      try {
-        let lastError: unknown = new Error("Request failed after all retries.");
+<span class="cstat-no" title="statement not covered" >    const self = this;</span>
+<span class="cstat-no" title="statement not covered" >    return (async function* () {</span>
+<span class="cstat-no" title="statement not covered" >      try {</span>
+<span class="cstat-no" title="statement not covered" >        let lastError: unknown = new Error('Request failed after all retries.');</span>
 &nbsp;
-        for (
-          let attempt = 0;
-          attempt &lt; INVALID_CONTENT_RETRY_OPTIONS.maxAttempts;
-          attempt++
-        ) {
-          try {
-            if (attempt &gt; 0) {
-              yield { type: StreamEventType.RETRY };
-            }
-&nbsp;
-            const stream = await self.makeApiCallAndProcessStream(
-              requestContents,
-              params,
-              prompt_id,
-              userContent,
-            );
-&nbsp;
-            for await (const chunk of stream) {
-              yield { type: StreamEventType.CHUNK, value: chunk };
-            }
-&nbsp;
-            lastError = null;
-            break;
-          } catch (error) {
-            lastError = error;
-            const isEmptyStreamError = error instanceof EmptyStreamError;
-            const isIdleStreamError = error instanceof IdleStreamTimeoutError;
-            const isContentError = isEmptyStreamError || isIdleStreamError;
-&nbsp;
-            if (isContentError) {
-              // Check if we have more attempts left.
-              if (attempt &lt; INVALID_CONTENT_RETRY_OPTIONS.maxAttempts - 1) {
-                logContentRetry(
-                  self.config,
-                  new ContentRetryEvent(
-                    attempt,
-                    isIdleStreamError
-                      ? "IdleStreamTimeoutError"
-                      : "EmptyStreamError",
-                    INVALID_CONTENT_RETRY_OPTIONS.initialDelayMs,
-                    {
-                      classification: isIdleStreamError ? "network" : "unknown",
-                      provider: providerTag,
-                      error_message:
-                        error instanceof Error ? error.<span class="branch-0 cbranch-no" title="branch not covered" >message : String(error),</span>
-                    },
-                  ),
-                );
-                await new Promise((res) =&gt;
-                  setTimeout(
-                    res,
-                    INVALID_CONTENT_RETRY_OPTIONS.initialDelayMs *
-                      (attempt + 1),
-                  ),
-                );
-                continue;
-              }
-            }
-            break;
-          }
-        }
-&nbsp;
-        if (lastError) {
-          let handled = false;
-          let errorToThrow: unknown = lastError;
-&nbsp;
-          if (lastError instanceof IdleStreamTimeoutError) {
-            try {
-              const fallbackChunks = await self.executeNonStreamingFallback(
-                requestContents,
-                params,
-                prompt_id,
-                userContent,
-                providerTag,
-              );
-              yield { type: StreamEventType.RETRY };
-              for (const chunk of fallbackChunks) {
-                yield { type: StreamEventType.CHUNK, value: chunk };
-              }
-              handled = true;
-<span class="branch-0 cbranch-no" title="branch not covered" >            } catch (fallbackError) {</span>
-<span class="cstat-no" title="statement not covered" >              errorToThrow = fallbackError ?? lastError;</span>
+<span class="cstat-no" title="statement not covered" >        for (</span>
+<span class="cstat-no" title="statement not covered" >          let attempt = 0;</span>
+<span class="cstat-no" title="statement not covered" >          attempt &lt; INVALID_CONTENT_RETRY_OPTIONS.maxAttempts;</span>
+<span class="cstat-no" title="statement not covered" >          attempt++</span>
+<span class="cstat-no" title="statement not covered" >        ) {</span>
+<span class="cstat-no" title="statement not covered" >          try {</span>
+<span class="cstat-no" title="statement not covered" >            if (attempt &gt; 0) {</span>
+<span class="cstat-no" title="statement not covered" >              yield { type: StreamEventType.RETRY };</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
-          }
 &nbsp;
-          if (!handled) {
-            if (
-              errorToThrow instanceof <span class="branch-0 cbranch-no" title="branch not covered" >EmptyStreamError ||</span>
-<span class="cstat-no" title="statement not covered" >              errorToThrow instanceof IdleStreamTimeoutError</span>
-            ) {
-              logContentRetryFailure(
-                self.config,
-                new ContentRetryFailureEvent(
-                  INVALID_CONTENT_RETRY_OPTIONS.maxAttempts,
-                  errorToThrow instanceof <span class="branch-0 cbranch-no" title="branch not covered" >IdleStreamTimeoutError</span>
-<span class="cstat-no" title="statement not covered" >                    ? "IdleStreamTimeoutError"</span>
-                    : "EmptyStreamError",
-                  undefined,
-                  {
-                    final_classification:
-                      errorToThrow instanceof <span class="branch-0 cbranch-no" title="branch not covered" >IdleStreamTimeoutError</span>
-<span class="cstat-no" title="statement not covered" >                        ? "network"</span>
-                        : "unknown",
-                    provider: providerTag,
-                    error_message:
-                      errorToThrow instanceof Error
-                        ? errorToThrow.<span class="branch-0 cbranch-no" title="branch not covered" >message</span>
-<span class="cstat-no" title="statement not covered" >                        : String(errorToThrow),</span>
-                  },
-                ),
-              );
-            }
-            if (self.history[self.history.length - 1] === userContent) {
-              self.history.pop();
-            }
-            throw errorToThrow;
-          }
-        }
-      } finally {
-        streamDoneResolver!();
-      }
-    })();
-  }
+<span class="cstat-no" title="statement not covered" >            const stream = await self.makeApiCallAndProcessStream(</span>
+<span class="cstat-no" title="statement not covered" >              requestContents,</span>
+<span class="cstat-no" title="statement not covered" >              params,</span>
+<span class="cstat-no" title="statement not covered" >              prompt_id,</span>
+<span class="cstat-no" title="statement not covered" >              userContent,</span>
+<span class="cstat-no" title="statement not covered" >            );</span>
 &nbsp;
-  private async finalizeNonStreamingResponse(
-    response: GenerateContentResponse,
-    userContent: Content,
-  ): Promise&lt;void&gt; {
-    const outputContent = response.candidates?.[0]?.content;
-    const modelOutput = outputContent ? [outputContent<span class="branch-0 cbranch-no" title="branch not covered" >] : [];</span>
+<span class="cstat-no" title="statement not covered" >            for await (const chunk of stream) {</span>
+<span class="cstat-no" title="statement not covered" >              yield { type: StreamEventType.CHUNK, value: chunk };</span>
+<span class="cstat-no" title="statement not covered" >            }</span>
 &nbsp;
-    const fullAutomaticFunctionCallingHistory =
-      response.automaticFunctionCallingHistory;
-    const index = this.getHistory(true).length;
-    let automaticFunctionCallingHistory: Content[] = [];
-    if (fullAutomaticFunctionCallingHistory != null) {
-      automaticFunctionCallingHistory =
-        fullAutomaticFunctionCallingHistory.slice(index<span class="branch-0 cbranch-no" title="branch not covered" >) ?? [];</span>
-    }
+<span class="cstat-no" title="statement not covered" >            lastError = null;</span>
+<span class="cstat-no" title="statement not covered" >            break;</span>
+<span class="cstat-no" title="statement not covered" >          } catch (error) {</span>
+<span class="cstat-no" title="statement not covered" >            lastError = error;</span>
+<span class="cstat-no" title="statement not covered" >            const isEmptyStreamError = error instanceof EmptyStreamError;</span>
+<span class="cstat-no" title="statement not covered" >            const isIdleStreamError = error instanceof IdleStreamTimeoutError;</span>
+<span class="cstat-no" title="statement not covered" >            const isContentError = isEmptyStreamError || isIdleStreamError;</span>
 &nbsp;
-    this.recordHistory(
-      userContent,
-      modelOutput,
-      automaticFunctionCallingHistory,
-    );
-  }
+<span class="cstat-no" title="statement not covered" >            if (isContentError) {</span>
+              // Check if we have more attempts left.
+<span class="cstat-no" title="statement not covered" >              if (attempt &lt; INVALID_CONTENT_RETRY_OPTIONS.maxAttempts - 1) {</span>
+<span class="cstat-no" title="statement not covered" >                logContentRetry(</span>
+<span class="cstat-no" title="statement not covered" >                  self.config,</span>
+<span class="cstat-no" title="statement not covered" >                  new ContentRetryEvent(</span>
+<span class="cstat-no" title="statement not covered" >                    attempt,</span>
+<span class="cstat-no" title="statement not covered" >                    isIdleStreamError</span>
+<span class="cstat-no" title="statement not covered" >                      ? 'IdleStreamTimeoutError'</span>
+<span class="cstat-no" title="statement not covered" >                      : 'EmptyStreamError',</span>
+<span class="cstat-no" title="statement not covered" >                    INVALID_CONTENT_RETRY_OPTIONS.initialDelayMs,</span>
+<span class="cstat-no" title="statement not covered" >                    {</span>
+<span class="cstat-no" title="statement not covered" >                      classification: isIdleStreamError</span>
+<span class="cstat-no" title="statement not covered" >                        ? 'network'</span>
+<span class="cstat-no" title="statement not covered" >                        : 'unknown',</span>
+<span class="cstat-no" title="statement not covered" >                      provider: providerTag,</span>
+<span class="cstat-no" title="statement not covered" >                      error_message:</span>
+<span class="cstat-no" title="statement not covered" >                        error instanceof Error ? error.message : String(error),</span>
+<span class="cstat-no" title="statement not covered" >                    },</span>
+<span class="cstat-no" title="statement not covered" >                  ),</span>
+<span class="cstat-no" title="statement not covered" >                );</span>
+<span class="cstat-no" title="statement not covered" >                await new Promise((res) =&gt;</span>
+<span class="cstat-no" title="statement not covered" >                  setTimeout(</span>
+<span class="cstat-no" title="statement not covered" >                    res,</span>
+<span class="cstat-no" title="statement not covered" >                    INVALID_CONTENT_RETRY_OPTIONS.initialDelayMs *</span>
+<span class="cstat-no" title="statement not covered" >                      (attempt + 1),</span>
+<span class="cstat-no" title="statement not covered" >                  ),</span>
+<span class="cstat-no" title="statement not covered" >                );</span>
+<span class="cstat-no" title="statement not covered" >                continue;</span>
+<span class="cstat-no" title="statement not covered" >              }</span>
+<span class="cstat-no" title="statement not covered" >            }</span>
+<span class="cstat-no" title="statement not covered" >            break;</span>
+<span class="cstat-no" title="statement not covered" >          }</span>
+<span class="cstat-no" title="statement not covered" >        }</span>
 &nbsp;
-  private async executeNonStreamingFallback(
-    requestContents: Content[],
-    params: SendMessageParameters,
-    prompt_id: string,
-    userContent: Content,
-    providerTag: string,
-  ): Promise&lt;GenerateContentResponse[]&gt; {
-    const response = await this.contentGenerator.generateContent(
-      {
-        model: this.config.getModel(<span class="branch-0 cbranch-no" title="branch not covered" >) || DEFAULT_GEMINI_FLASH_MODEL,</span>
-        contents: requestContents,
-        config: { ...this.generationConfig, ...params.config },
-      },
-      prompt_id,
-    );
+<span class="cstat-no" title="statement not covered" >        if (lastError) {</span>
+<span class="cstat-no" title="statement not covered" >          if (</span>
+<span class="cstat-no" title="statement not covered" >            lastError instanceof EmptyStreamError ||</span>
+<span class="cstat-no" title="statement not covered" >            lastError instanceof IdleStreamTimeoutError</span>
+<span class="cstat-no" title="statement not covered" >          ) {</span>
+<span class="cstat-no" title="statement not covered" >            logContentRetryFailure(</span>
+<span class="cstat-no" title="statement not covered" >              self.config,</span>
+<span class="cstat-no" title="statement not covered" >              new ContentRetryFailureEvent(</span>
+<span class="cstat-no" title="statement not covered" >                INVALID_CONTENT_RETRY_OPTIONS.maxAttempts,</span>
+<span class="cstat-no" title="statement not covered" >                lastError instanceof IdleStreamTimeoutError</span>
+<span class="cstat-no" title="statement not covered" >                  ? 'IdleStreamTimeoutError'</span>
+<span class="cstat-no" title="statement not covered" >                  : 'EmptyStreamError',</span>
+<span class="cstat-no" title="statement not covered" >                undefined,</span>
+<span class="cstat-no" title="statement not covered" >                {</span>
+<span class="cstat-no" title="statement not covered" >                  final_classification:</span>
+<span class="cstat-no" title="statement not covered" >                    lastError instanceof IdleStreamTimeoutError</span>
+<span class="cstat-no" title="statement not covered" >                      ? 'network'</span>
+<span class="cstat-no" title="statement not covered" >                      : 'unknown',</span>
+<span class="cstat-no" title="statement not covered" >                  provider: providerTag,</span>
+<span class="cstat-no" title="statement not covered" >                  error_message:</span>
+<span class="cstat-no" title="statement not covered" >                    lastError instanceof Error</span>
+<span class="cstat-no" title="statement not covered" >                      ? lastError.message</span>
+<span class="cstat-no" title="statement not covered" >                      : String(lastError),</span>
+<span class="cstat-no" title="statement not covered" >                },</span>
+<span class="cstat-no" title="statement not covered" >              ),</span>
+<span class="cstat-no" title="statement not covered" >            );</span>
+<span class="cstat-no" title="statement not covered" >          }</span>
+          // If the stream fails, remove the user message that was added.
+<span class="cstat-no" title="statement not covered" >          if (self.history[self.history.length - 1] === userContent) {</span>
+<span class="cstat-no" title="statement not covered" >            self.history.pop();</span>
+<span class="cstat-no" title="statement not covered" >          }</span>
+<span class="cstat-no" title="statement not covered" >          throw lastError;</span>
+<span class="cstat-no" title="statement not covered" >        }</span>
+<span class="cstat-no" title="statement not covered" >      } finally {</span>
+<span class="cstat-no" title="statement not covered" >        streamDoneResolver!();</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >    })();</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-    await this.finalizeNonStreamingResponse(response, userContent);
-&nbsp;
-    logContentRetry(
-      this.config,
-      new ContentRetryEvent(
-        INVALID_CONTENT_RETRY_OPTIONS.maxAttempts,
-        "NonStreamingFallback",
-        0,
-        {
-          classification: "unknown",
-          provider: providerTag,
-          error_message: "Recovered via non-streaming fallback",
-        },
-      ),
-    );
-&nbsp;
-    return [response];
-  }
-&nbsp;
-  private async makeApiCallAndProcessStream(
-    requestContents: Content[],
-    params: SendMessageParameters,
-    prompt_id: string,
-    userContent: Content,
-  ): Promise&lt;AsyncGenerator&lt;GenerateContentResponse&gt;&gt; {
-    const providerTag = getProviderTelemetryTag(this.config);
-    let lastRetryMetadata:
+<span class="fstat-no" title="function not covered" >  private async makeApiCallAndProcessStream(</span>
+<span class="cstat-no" title="statement not covered" >    requestContents: Content[],</span>
+<span class="cstat-no" title="statement not covered" >    params: SendMessageParameters,</span>
+<span class="cstat-no" title="statement not covered" >    prompt_id: string,</span>
+<span class="cstat-no" title="statement not covered" >    userContent: Content,</span>
+<span class="cstat-no" title="statement not covered" >  ): Promise&lt;AsyncGenerator&lt;GenerateContentResponse&gt;&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    const providerTag = getProviderTelemetryTag(this.config);</span>
+<span class="cstat-no" title="statement not covered" >    let lastRetryMetadata:</span>
       | {
           attempt: number;
           classification: RetryClassification;
           status?: number;
         }
       | undefined;
-    const apiCall = () =&gt; {
-      const modelToUse = this.config.getModel();
+<span class="cstat-no" title="statement not covered" >    const apiCall = () =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >      const modelToUse = this.config.getModel();</span>
 &nbsp;
-      if (
-        this.config.getQuotaErrorOccurred(<span class="branch-0 cbranch-no" title="branch not covered" >) &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >      if (</span>
+<span class="cstat-no" title="statement not covered" >        this.config.getQuotaErrorOccurred() &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >        modelToUse === DEFAULT_GEMINI_FLASH_MODEL</span>
-      ) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >      ) {</span>
 <span class="cstat-no" title="statement not covered" >        throw new Error(</span>
-<span class="cstat-no" title="statement not covered" >          "Please submit a new query to continue with the Flash model.",</span>
+<span class="cstat-no" title="statement not covered" >          'Please submit a new query to continue with the Flash model.',</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-      return this.contentGenerator.generateContentStream(
-        {
-          model: modelToUse,
-          contents: requestContents,
-          config: { ...this.generationConfig, ...params.config },
-        },
-        prompt_id,
-      );
-    };
+<span class="cstat-no" title="statement not covered" >      return this.contentGenerator.generateContentStream(</span>
+<span class="cstat-no" title="statement not covered" >        {</span>
+<span class="cstat-no" title="statement not covered" >          model: modelToUse,</span>
+<span class="cstat-no" title="statement not covered" >          contents: requestContents,</span>
+<span class="cstat-no" title="statement not covered" >          config: { ...this.generationConfig, ...params.config },</span>
+<span class="cstat-no" title="statement not covered" >        },</span>
+<span class="cstat-no" title="statement not covered" >        prompt_id,</span>
+<span class="cstat-no" title="statement not covered" >      );</span>
+<span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
-    try {
-      const streamResponse = await retryWithBackoff(apiCall, {
-        shouldRetry: <span class="fstat-no" title="function not covered" >(error: unknown) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    try {</span>
+<span class="cstat-no" title="statement not covered" >      const streamResponse = await retryWithBackoff(apiCall, {</span>
+<span class="cstat-no" title="statement not covered" >        shouldRetry: (error: unknown) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >          if (error instanceof Error &amp;&amp; error.message) {</span>
 <span class="cstat-no" title="statement not covered" >            if (isSchemaDepthError(error.message)) return false;</span>
-<span class="cstat-no" title="statement not covered" >            if (error.message.includes("429")) return true;</span>
+<span class="cstat-no" title="statement not covered" >            if (error.message.includes('429')) return true;</span>
 <span class="cstat-no" title="statement not covered" >            if (error.message.match(/^5\d{2}/)) return true;</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >          return false;</span>
 <span class="cstat-no" title="statement not covered" >        },</span>
-        onPersistent429: <span class="fstat-no" title="function not covered" >async (authType?: string, error?: unknown) =&gt;</span>
+<span class="cstat-no" title="statement not covered" >        onPersistent429: async (authType?: string, error?: unknown) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >          await this.handleFlashFallback(authType, error),</span>
-        authType: this.config.getContentGeneratorConfig()?.authType,
-        onRetryableError: <span class="fstat-no" title="function not covered" >(error, context) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >        authType: this.config.getContentGeneratorConfig()?.authType,</span>
+<span class="cstat-no" title="statement not covered" >        onRetryableError: (error, context) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >          lastRetryMetadata = {</span>
 <span class="cstat-no" title="statement not covered" >            attempt: context.attempt,</span>
 <span class="cstat-no" title="statement not covered" >            classification: context.classification,</span>
@@ -2876,7 +2685,7 @@ export class GeminiChat {
 <span class="cstat-no" title="statement not covered" >            this.config,</span>
 <span class="cstat-no" title="statement not covered" >            new ContentRetryEvent(</span>
 <span class="cstat-no" title="statement not covered" >              context.attempt,</span>
-<span class="cstat-no" title="statement not covered" >              error.name ?? "Error",</span>
+<span class="cstat-no" title="statement not covered" >              error.name ?? 'Error',</span>
 <span class="cstat-no" title="statement not covered" >              Math.round(context.delayMs),</span>
 <span class="cstat-no" title="statement not covered" >              {</span>
 <span class="cstat-no" title="statement not covered" >                classification: context.classification,</span>
@@ -2887,22 +2696,22 @@ export class GeminiChat {
 <span class="cstat-no" title="statement not covered" >            ),</span>
 <span class="cstat-no" title="statement not covered" >          );</span>
 <span class="cstat-no" title="statement not covered" >        },</span>
-      });
-      lastRetryMetadata = undefined;
+<span class="cstat-no" title="statement not covered" >      });</span>
+<span class="cstat-no" title="statement not covered" >      lastRetryMetadata = undefined;</span>
 &nbsp;
-      return this.processStreamResponse(
-        streamResponse,
-        userContent,
-        prompt_id,
-        providerTag,
-      );
-<span class="branch-0 cbranch-no" title="branch not covered" >    } catch (error) {</span>
+<span class="cstat-no" title="statement not covered" >      return this.processStreamResponse(</span>
+<span class="cstat-no" title="statement not covered" >        streamResponse,</span>
+<span class="cstat-no" title="statement not covered" >        userContent,</span>
+<span class="cstat-no" title="statement not covered" >        prompt_id,</span>
+<span class="cstat-no" title="statement not covered" >        providerTag,</span>
+<span class="cstat-no" title="statement not covered" >      );</span>
+<span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >      if (lastRetryMetadata) {</span>
 <span class="cstat-no" title="statement not covered" >        logContentRetryFailure(</span>
 <span class="cstat-no" title="statement not covered" >          this.config,</span>
 <span class="cstat-no" title="statement not covered" >          new ContentRetryFailureEvent(</span>
 <span class="cstat-no" title="statement not covered" >            lastRetryMetadata.attempt,</span>
-<span class="cstat-no" title="statement not covered" >            error instanceof Error ? error.name : "UnknownError",</span>
+<span class="cstat-no" title="statement not covered" >            error instanceof Error ? error.name : 'UnknownError',</span>
 <span class="cstat-no" title="statement not covered" >            undefined,</span>
 <span class="cstat-no" title="statement not covered" >            {</span>
 <span class="cstat-no" title="statement not covered" >              final_classification: lastRetryMetadata.classification,</span>
@@ -2916,7 +2725,7 @@ export class GeminiChat {
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      throw error;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-  }
+<span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   /**
    * Returns the chat history.
@@ -2941,14 +2750,14 @@ export class GeminiChat {
    * @return History contents alternating between user and model for the entire
    * chat session.
    */
-  getHistory(curated: boolean = false): Content[] {
-    const history = curated
-      ? extractCuratedHistory(this.history)
-      : this.history;
+<span class="fstat-no" title="function not covered" >  getHistory(curated: boolean = false): Content[] {</span>
+<span class="cstat-no" title="statement not covered" >    const history = curated</span>
+<span class="cstat-no" title="statement not covered" >      ? extractCuratedHistory(this.history)</span>
+<span class="cstat-no" title="statement not covered" >      : this.history;</span>
     // Deep copy the history to avoid mutating the history outside of the
     // chat session.
-    return structuredClone(history);
-  }
+<span class="cstat-no" title="statement not covered" >    return structuredClone(history);</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   /**
    * Clears the chat history.
@@ -2960,12 +2769,12 @@ export class GeminiChat {
   /**
    * Adds a new entry to the chat history.
    */
-  addHistory(content: Content): void {
-    this.history.push(content);
-  }
-  setHistory(history: Content[]): void {
-    this.history = history;
-  }
+<span class="fstat-no" title="function not covered" >  addHistory(content: Content): void {</span>
+<span class="cstat-no" title="statement not covered" >    this.history.push(content);</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
+<span class="fstat-no" title="function not covered" >  setHistory(history: Content[]): void {</span>
+<span class="cstat-no" title="statement not covered" >    this.history = history;</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="fstat-no" title="function not covered" >  setTools(tools: Tool[]): void {</span>
 <span class="cstat-no" title="statement not covered" >    this.generationConfig.tools = tools;</span>
@@ -2999,63 +2808,63 @@ export class GeminiChat {
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-  private async *processStreamResponse(
-    streamResponse: AsyncGenerator&lt;GenerateContentResponse&gt;,
-    userInput: Content,
-    promptId: string,
-    providerTag: string,
-  ): AsyncGenerator&lt;GenerateContentResponse&gt; {
-    const modelResponseParts: Part[] = [];
-    let hasReceivedAnyChunk = false;
-    let hasReceivedValidChunk = false;
-    let hasToolCall = false;
-    let lastChunk: GenerateContentResponse | null = null;
-    let lastChunkIsInvalid = false;
+<span class="fstat-no" title="function not covered" >  private async *processStreamResponse(</span>
+<span class="cstat-no" title="statement not covered" >    streamResponse: AsyncGenerator&lt;GenerateContentResponse&gt;,</span>
+<span class="cstat-no" title="statement not covered" >    userInput: Content,</span>
+<span class="cstat-no" title="statement not covered" >    promptId: string,</span>
+<span class="cstat-no" title="statement not covered" >    providerTag: string,</span>
+<span class="cstat-no" title="statement not covered" >  ): AsyncGenerator&lt;GenerateContentResponse&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    const modelResponseParts: Part[] = [];</span>
+<span class="cstat-no" title="statement not covered" >    let hasReceivedAnyChunk = false;</span>
+<span class="cstat-no" title="statement not covered" >    let hasReceivedValidChunk = false;</span>
+<span class="cstat-no" title="statement not covered" >    let hasToolCall = false;</span>
+<span class="cstat-no" title="statement not covered" >    let lastChunk: GenerateContentResponse | null = null;</span>
+<span class="cstat-no" title="statement not covered" >    let lastChunkIsInvalid = false;</span>
 &nbsp;
-    while (true) {
-      const { value: chunk, done } = await this.nextStreamChunkWithWatchdog(
-        streamResponse,
-        promptId,
-        providerTag,
-      );
+<span class="cstat-no" title="statement not covered" >    while (true) {</span>
+<span class="cstat-no" title="statement not covered" >      const { value: chunk, done } = await this.nextStreamChunkWithWatchdog(</span>
+<span class="cstat-no" title="statement not covered" >        streamResponse,</span>
+<span class="cstat-no" title="statement not covered" >        promptId,</span>
+<span class="cstat-no" title="statement not covered" >        providerTag,</span>
+<span class="cstat-no" title="statement not covered" >      );</span>
 &nbsp;
-      if (done) {
-        break;
-      }
-      if (!chunk) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >      if (done) {</span>
+<span class="cstat-no" title="statement not covered" >        break;</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >      if (!chunk) {</span>
 <span class="cstat-no" title="statement not covered" >        continue;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-      hasReceivedAnyChunk = true;
-      lastChunk = chunk;
+<span class="cstat-no" title="statement not covered" >      hasReceivedAnyChunk = true;</span>
+<span class="cstat-no" title="statement not covered" >      lastChunk = chunk;</span>
 &nbsp;
-      if (isValidResponse(chunk)) {
-        hasReceivedValidChunk = true;
-        lastChunkIsInvalid = false;
-        const content = chunk.candidates?.[0]?.content;
-        if (content?.parts) {
-          modelResponseParts.push(...content.parts);
-          if (content.parts.some((part) =&gt; part.functionCall)) {
-            hasToolCall = true;
-          }
-        }
-      } else {
-        logInvalidChunk(
-          this.config,
-          new InvalidChunkEvent("Invalid chunk received from stream."),
-        );
-        lastChunkIsInvalid = true;
-      }
-      yield chunk;
-    }
+<span class="cstat-no" title="statement not covered" >      if (isValidResponse(chunk)) {</span>
+<span class="cstat-no" title="statement not covered" >        hasReceivedValidChunk = true;</span>
+<span class="cstat-no" title="statement not covered" >        lastChunkIsInvalid = false;</span>
+<span class="cstat-no" title="statement not covered" >        const content = chunk.candidates?.[0]?.content;</span>
+<span class="cstat-no" title="statement not covered" >        if (content?.parts) {</span>
+<span class="cstat-no" title="statement not covered" >          modelResponseParts.push(...content.parts);</span>
+<span class="cstat-no" title="statement not covered" >          if (content.parts.some((part) =&gt; part.functionCall)) {</span>
+<span class="cstat-no" title="statement not covered" >            hasToolCall = true;</span>
+<span class="cstat-no" title="statement not covered" >          }</span>
+<span class="cstat-no" title="statement not covered" >        }</span>
+<span class="cstat-no" title="statement not covered" >      } else {</span>
+<span class="cstat-no" title="statement not covered" >        logInvalidChunk(</span>
+<span class="cstat-no" title="statement not covered" >          this.config,</span>
+<span class="cstat-no" title="statement not covered" >          new InvalidChunkEvent('Invalid chunk received from stream.'),</span>
+<span class="cstat-no" title="statement not covered" >        );</span>
+<span class="cstat-no" title="statement not covered" >        lastChunkIsInvalid = true;</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >      yield chunk;</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-    if (!hasReceivedAnyChunk) {
-      throw new EmptyStreamError("Model stream completed without any chunks.");
-    }
+<span class="cstat-no" title="statement not covered" >    if (!hasReceivedAnyChunk) {</span>
+<span class="cstat-no" title="statement not covered" >      throw new EmptyStreamError('Model stream completed without any chunks.');</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-    const hasFinishReason = lastChunk?.candidates?.some(
-      (candidate) =&gt; candidate.finishReason,
-    );
+<span class="cstat-no" title="statement not covered" >    const hasFinishReason = lastChunk?.candidates?.some(</span>
+<span class="cstat-no" title="statement not covered" >      (candidate) =&gt; candidate.finishReason,</span>
+<span class="cstat-no" title="statement not covered" >    );</span>
 &nbsp;
     // Stream validation logic: A stream is considered successful if:
     // 1. There's a tool call (tool calls can end without explicit finish reasons), OR
@@ -3064,154 +2873,152 @@ export class GeminiChat {
     // We throw an error only when there's no tool call AND:
     // - No finish reason, OR
     // - Last chunk is invalid after receiving valid content
-    if (
-      !hasToolCall &amp;&amp;
-      (!hasFinishReason || (<span class="branch-0 cbranch-no" title="branch not covered" >lastChunkIsInvalid &amp;&amp; !hasReceivedValidChunk))</span>
-    ) {
-      throw new EmptyStreamError(
-        "Model stream ended with an invalid chunk or missing finish reason.",
-      );
-    }
+<span class="cstat-no" title="statement not covered" >    if (</span>
+<span class="cstat-no" title="statement not covered" >      !hasToolCall &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >      (!hasFinishReason || (lastChunkIsInvalid &amp;&amp; !hasReceivedValidChunk))</span>
+<span class="cstat-no" title="statement not covered" >    ) {</span>
+<span class="cstat-no" title="statement not covered" >      throw new EmptyStreamError(</span>
+<span class="cstat-no" title="statement not covered" >        'Model stream ended with an invalid chunk or missing finish reason.',</span>
+<span class="cstat-no" title="statement not covered" >      );</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     // Bundle all streamed parts into a single Content object
-    const modelOutput: Content[] =
-      modelResponseParts.length &gt; 0
-        ? [{ role: "model", parts: modelResponseParts }<span class="branch-0 cbranch-no" title="branch not covered" >]</span>
+<span class="cstat-no" title="statement not covered" >    const modelOutput: Content[] =</span>
+<span class="cstat-no" title="statement not covered" >      modelResponseParts.length &gt; 0</span>
+<span class="cstat-no" title="statement not covered" >        ? [{ role: 'model', parts: modelResponseParts }]</span>
 <span class="cstat-no" title="statement not covered" >        : [];</span>
 &nbsp;
     // Pass the raw, bundled data to the new, robust recordHistory
-    this.recordHistory(userInput, modelOutput);
-  }
+<span class="cstat-no" title="statement not covered" >    this.recordHistory(userInput, modelOutput);</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-  private async nextStreamChunkWithWatchdog(
-    stream: AsyncGenerator&lt;GenerateContentResponse&gt;,
-    _promptId: string,
-    _providerTag: string,
-  ): Promise&lt;IteratorResult&lt;GenerateContentResponse&gt;&gt; {
-    if (STREAM_IDLE_TIMEOUT_MS &lt;= 0) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="fstat-no" title="function not covered" >  private async nextStreamChunkWithWatchdog(</span>
+<span class="cstat-no" title="statement not covered" >    stream: AsyncGenerator&lt;GenerateContentResponse&gt;,</span>
+<span class="cstat-no" title="statement not covered" >    _promptId: string,</span>
+<span class="cstat-no" title="statement not covered" >    _providerTag: string,</span>
+<span class="cstat-no" title="statement not covered" >  ): Promise&lt;IteratorResult&lt;GenerateContentResponse&gt;&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    if (STREAM_IDLE_TIMEOUT_MS &lt;= 0) {</span>
 <span class="cstat-no" title="statement not covered" >      return stream.next();</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-    let timeoutHandle: NodeJS.Timeout | undefined;
+<span class="cstat-no" title="statement not covered" >    let timeoutHandle: NodeJS.Timeout | undefined;</span>
 &nbsp;
-    try {
-      const result = await Promise.race&lt;
-        IteratorResult&lt;GenerateContentResponse&gt;
-      &gt;([
-        stream.next(),
-        new Promise&lt;IteratorResult&lt;GenerateContentResponse&gt;&gt;((_, reject) =&gt; {
-          timeoutHandle = setTimeout(() =&gt; {
+<span class="cstat-no" title="statement not covered" >    try {</span>
+<span class="cstat-no" title="statement not covered" >      const result = await Promise.race&lt;IteratorResult&lt;GenerateContentResponse&gt;&gt;([</span>
+<span class="cstat-no" title="statement not covered" >        stream.next(),</span>
+<span class="cstat-no" title="statement not covered" >        new Promise&lt;IteratorResult&lt;GenerateContentResponse&gt;&gt;((_, reject) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >          timeoutHandle = setTimeout(() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >            reject(new IdleStreamTimeoutError(STREAM_IDLE_TIMEOUT_MS));</span>
-          }, STREAM_IDLE_TIMEOUT_MS);
-        }),
-      ]);
-      return result;
-    } finally {
-      if (timeoutHandle) {
-        clearTimeout(timeoutHandle);
-      }
-    }
-  }
+<span class="cstat-no" title="statement not covered" >          }, STREAM_IDLE_TIMEOUT_MS);</span>
+<span class="cstat-no" title="statement not covered" >        }),</span>
+<span class="cstat-no" title="statement not covered" >      ]);</span>
+<span class="cstat-no" title="statement not covered" >      return result;</span>
+<span class="cstat-no" title="statement not covered" >    } finally {</span>
+<span class="cstat-no" title="statement not covered" >      if (timeoutHandle) {</span>
+<span class="cstat-no" title="statement not covered" >        clearTimeout(timeoutHandle);</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-  private recordHistory(
-    userInput: Content,
-    modelOutput: Content[],
-    automaticFunctionCallingHistory?: Content[],
-  ) {
+  private <span class="fstat-no" title="function not covered" >recordHistory(</span>
+<span class="cstat-no" title="statement not covered" >    userInput: Content,</span>
+<span class="cstat-no" title="statement not covered" >    modelOutput: Content[],</span>
+<span class="cstat-no" title="statement not covered" >    automaticFunctionCallingHistory?: Content[],</span>
+<span class="cstat-no" title="statement not covered" >  ) {</span>
     // Part 1: Handle the user's turn.
-    if (
-      automaticFunctionCallingHistory &amp;&amp;
-      automaticFunctionCallingHistory.length &gt; 0
-    ) {
-      this.history.push(
-        ...extractCuratedHistory(automaticFunctionCallingHistory),
-      );
-    } else {
-      if (
-        this.history.length === 0 ||
-        this.history[this.history.length - 1] !== userInput
-      ) {
-        const lastTurn = this.history[this.history.length - 1];
+<span class="cstat-no" title="statement not covered" >    if (</span>
+<span class="cstat-no" title="statement not covered" >      automaticFunctionCallingHistory &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >      automaticFunctionCallingHistory.length &gt; 0</span>
+<span class="cstat-no" title="statement not covered" >    ) {</span>
+<span class="cstat-no" title="statement not covered" >      this.history.push(</span>
+<span class="cstat-no" title="statement not covered" >        ...extractCuratedHistory(automaticFunctionCallingHistory),</span>
+<span class="cstat-no" title="statement not covered" >      );</span>
+<span class="cstat-no" title="statement not covered" >    } else {</span>
+<span class="cstat-no" title="statement not covered" >      if (</span>
+<span class="cstat-no" title="statement not covered" >        this.history.length === 0 ||</span>
+<span class="cstat-no" title="statement not covered" >        this.history[this.history.length - 1] !== userInput</span>
+<span class="cstat-no" title="statement not covered" >      ) {</span>
+<span class="cstat-no" title="statement not covered" >        const lastTurn = this.history[this.history.length - 1];</span>
         // The only time we don't push is if it's the *exact same* object,
         // which happens in streaming where we add it preemptively.
-        if (lastTurn !== userInput) {
-          if (lastTurn?.role === "user") {
+<span class="cstat-no" title="statement not covered" >        if (lastTurn !== userInput) {</span>
+<span class="cstat-no" title="statement not covered" >          if (lastTurn?.role === 'user') {</span>
             // This is an invalid sequence.
-            throw new Error("Cannot add a user turn after another user turn.");
-          }
-          this.history.push(userInput);
-        }
-      }
-    }
+<span class="cstat-no" title="statement not covered" >            throw new Error('Cannot add a user turn after another user turn.');</span>
+<span class="cstat-no" title="statement not covered" >          }</span>
+<span class="cstat-no" title="statement not covered" >          this.history.push(userInput);</span>
+<span class="cstat-no" title="statement not covered" >        }</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     // Part 2: Process the model output into a final, consolidated list of turns.
-    const finalModelTurns: Content[] = [];
-    for (const content of modelOutput) {
+<span class="cstat-no" title="statement not covered" >    const finalModelTurns: Content[] = [];</span>
+<span class="cstat-no" title="statement not covered" >    for (const content of modelOutput) {</span>
       // A. Preserve malformed content that has no 'parts' array.
-      if (!content.parts) {
-        finalModelTurns.push(content);
-        continue;
-      }
+<span class="cstat-no" title="statement not covered" >      if (!content.parts) {</span>
+<span class="cstat-no" title="statement not covered" >        finalModelTurns.push(content);</span>
+<span class="cstat-no" title="statement not covered" >        continue;</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
       // B. Filter out 'thought' parts.
-      const visibleParts = content.parts.filter((part) =&gt; !part.thought);
+<span class="cstat-no" title="statement not covered" >      const visibleParts = content.parts.filter((part) =&gt; !part.thought);</span>
 &nbsp;
-      const newTurn = { ...content, parts: visibleParts };
-      const lastTurnInFinal = finalModelTurns[finalModelTurns.length - 1];
+<span class="cstat-no" title="statement not covered" >      const newTurn = { ...content, parts: visibleParts };</span>
+<span class="cstat-no" title="statement not covered" >      const lastTurnInFinal = finalModelTurns[finalModelTurns.length - 1];</span>
 &nbsp;
       // Consolidate this new turn with the PREVIOUS turn if they are adjacent model turns.
-      if (
-        lastTurnInFinal &amp;&amp;
-        lastTurnInFinal.role === "model" &amp;&amp;
-        newTurn.role === "model" &amp;&amp;
-        lastTurnInFinal.parts &amp;&amp; // SAFETY CHECK: Ensure the destination has a parts array.
-        newTurn.parts
-      ) {
-        lastTurnInFinal.parts.push(...newTurn.parts);
-      } else {
-        finalModelTurns.push(newTurn);
-      }
-    }
+<span class="cstat-no" title="statement not covered" >      if (</span>
+<span class="cstat-no" title="statement not covered" >        lastTurnInFinal &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >        lastTurnInFinal.role === 'model' &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >        newTurn.role === 'model' &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >        lastTurnInFinal.parts &amp;&amp; // SAFETY CHECK: Ensure the destination has a parts array.</span>
+<span class="cstat-no" title="statement not covered" >        newTurn.parts</span>
+<span class="cstat-no" title="statement not covered" >      ) {</span>
+<span class="cstat-no" title="statement not covered" >        lastTurnInFinal.parts.push(...newTurn.parts);</span>
+<span class="cstat-no" title="statement not covered" >      } else {</span>
+<span class="cstat-no" title="statement not covered" >        finalModelTurns.push(newTurn);</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     // Part 3: Add the processed model turns to the history, with one final consolidation pass.
-    if (finalModelTurns.length &gt; 0) {
+<span class="cstat-no" title="statement not covered" >    if (finalModelTurns.length &gt; 0) {</span>
       // Re-consolidate parts within any turns that were merged in the previous step.
-      for (const turn of finalModelTurns) {
-        if (turn.parts &amp;&amp; turn.parts.length &gt; 1) {
-          const consolidatedParts: Part[] = [];
-          for (const part of turn.parts) {
-            const lastPart = consolidatedParts[consolidatedParts.length - 1];
-            if (
-              lastPart &amp;&amp;
+<span class="cstat-no" title="statement not covered" >      for (const turn of finalModelTurns) {</span>
+<span class="cstat-no" title="statement not covered" >        if (turn.parts &amp;&amp; turn.parts.length &gt; 1) {</span>
+<span class="cstat-no" title="statement not covered" >          const consolidatedParts: Part[] = [];</span>
+<span class="cstat-no" title="statement not covered" >          for (const part of turn.parts) {</span>
+<span class="cstat-no" title="statement not covered" >            const lastPart = consolidatedParts[consolidatedParts.length - 1];</span>
+<span class="cstat-no" title="statement not covered" >            if (</span>
+<span class="cstat-no" title="statement not covered" >              lastPart &amp;&amp;</span>
               // Ensure lastPart is a pure text part
-              typeof lastPart.text === "string" &amp;&amp;
-              !lastPart.functionCall &amp;&amp;
-              !lastPart.functionResponse &amp;&amp;
-              !lastPart.inlineData &amp;&amp;
-              !lastPart.fileData &amp;&amp;
-              !lastPart.thought &amp;&amp;
+<span class="cstat-no" title="statement not covered" >              typeof lastPart.text === 'string' &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >              !lastPart.functionCall &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >              !lastPart.functionResponse &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >              !lastPart.inlineData &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >              !lastPart.fileData &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >              !lastPart.thought &amp;&amp;</span>
               // Ensure current part is a pure text part
-              typeof part.text === "string" &amp;&amp;
-              !part.functionCall &amp;&amp;
-              !part.functionResponse &amp;&amp;
-              !part.inlineData &amp;&amp;
-              !part.fileData &amp;&amp;
-              !part.thought
-            ) {
-              lastPart.text += part.text;
-            } else {
-              consolidatedParts.push({ ...part });
-            }
-          }
-          turn.parts = consolidatedParts;
-        }
-      }
-      this.history.push(...finalModelTurns);
-    } else {
+<span class="cstat-no" title="statement not covered" >              typeof part.text === 'string' &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >              !part.functionCall &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >              !part.functionResponse &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >              !part.inlineData &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >              !part.fileData &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >              !part.thought</span>
+<span class="cstat-no" title="statement not covered" >            ) {</span>
+<span class="cstat-no" title="statement not covered" >              lastPart.text += part.text;</span>
+<span class="cstat-no" title="statement not covered" >            } else {</span>
+<span class="cstat-no" title="statement not covered" >              consolidatedParts.push({ ...part });</span>
+<span class="cstat-no" title="statement not covered" >            }</span>
+<span class="cstat-no" title="statement not covered" >          }</span>
+<span class="cstat-no" title="statement not covered" >          turn.parts = consolidatedParts;</span>
+<span class="cstat-no" title="statement not covered" >        }</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >      this.history.push(...finalModelTurns);</span>
+<span class="cstat-no" title="statement not covered" >    } else {</span>
       // If, after all processing, there's NO model output, add the placeholder.
-      this.history.push({ role: "model", parts: [] });
-    }
-  }
+<span class="cstat-no" title="statement not covered" >      this.history.push({ role: 'model', parts: [] });</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   /**
    * Handles Qwen OAuth authentication errors and rate limiting
@@ -3233,32 +3040,32 @@ export class GeminiChat {
 <span class="cstat-no" title="statement not covered" >    const isAuthError =</span>
 <span class="cstat-no" title="statement not covered" >      errorCode === 401 ||</span>
 <span class="cstat-no" title="statement not covered" >      errorCode === 403 ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("unauthorized") ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("forbidden") ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("invalid api key") ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("authentication") ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("access denied") ||</span>
-<span class="cstat-no" title="statement not covered" >      (errorMessage.includes("token") &amp;&amp; errorMessage.includes("expired"));</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('unauthorized') ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('forbidden') ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('invalid api key') ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('authentication') ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('access denied') ||</span>
+<span class="cstat-no" title="statement not covered" >      (errorMessage.includes('token') &amp;&amp; errorMessage.includes('expired'));</span>
 &nbsp;
     // Check if this is a rate limiting error
 <span class="cstat-no" title="statement not covered" >    const isRateLimitError =</span>
 <span class="cstat-no" title="statement not covered" >      errorCode === 429 ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("429") ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("rate limit") ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("too many requests");</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('429') ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('rate limit') ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('too many requests');</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (isAuthError) {</span>
-<span class="cstat-no" title="statement not covered" >      console.warn("Qwen OAuth authentication error detected:", errorMessage);</span>
+<span class="cstat-no" title="statement not covered" >      console.warn('Qwen OAuth authentication error detected:', errorMessage);</span>
       // The QwenContentGenerator should automatically handle token refresh
       // If it still fails, it likely means the refresh token is also expired
 <span class="cstat-no" title="statement not covered" >      console.log(</span>
-<span class="cstat-no" title="statement not covered" >        "Note: If this persists, you may need to re-authenticate with Qwen OAuth",</span>
+<span class="cstat-no" title="statement not covered" >        'Note: If this persists, you may need to re-authenticate with Qwen OAuth',</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >      return null;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (isRateLimitError) {</span>
-<span class="cstat-no" title="statement not covered" >      console.warn("Qwen API rate limit encountered:", errorMessage);</span>
+<span class="cstat-no" title="statement not covered" >      console.warn('Qwen API rate limit encountered:', errorMessage);</span>
       // For rate limiting, we don't need to do anything special
       // The retry mechanism will handle the backoff
 <span class="cstat-no" title="statement not covered" >      return null;</span>
@@ -3270,29 +3077,35 @@ export class GeminiChat {
 }
 /** Visible for Testing */
 export <span class="fstat-no" title="function not covered" >function isSchemaDepthError(errorMessage: string): boolean {</span>
-<span class="cstat-no" title="statement not covered" >  return errorMessage.includes("maximum schema depth exceeded");</span>
+<span class="cstat-no" title="statement not covered" >  return errorMessage.includes('maximum schema depth exceeded');</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 export <span class="fstat-no" title="function not covered" >function isInvalidArgumentError(errorMessage: string): boolean {</span>
-<span class="cstat-no" title="statement not covered" >  return errorMessage.includes("Request contains an invalid argument");</span>
+<span class="cstat-no" title="statement not covered" >  return errorMessage.includes('Request contains an invalid argument');</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;</pre></td></tr></table></pre>
 
-                <div class='push'></div><!-- for sticky footer -->
-            </div><!-- /wrapper -->
-            <div class='footer quiet pad2 space-top1 center small'>
-                Code coverage generated by
-                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-01T13:00:34.814Z
-            </div>
-        <script src="../../prettify.js"></script>
-        <script>
-            window.onload = function () {
-                prettyPrint();
-            };
-        </script>
-        <script src="../../sorter.js"></script>
-        <script src="../../block-navigation.js"></script>
-    </body>
+      <div class="push"></div>
+      <!-- for sticky footer -->
+    </div>
+    <!-- /wrapper -->
+    <div class="footer quiet pad2 space-top1 center small">
+      Code coverage generated by
+      <a
+        href="https://istanbul.js.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >istanbul</a
+      >
+      at 2025-09-30T08:47:49.571Z
+    </div>
+    <script src="../../prettify.js"></script>
+    <script>
+      window.onload = function () {
+        prettyPrint();
+      };
+    </script>
+    <script src="../../sorter.js"></script>
+    <script src="../../block-navigation.js"></script>
+  </body>
 </html>
-    

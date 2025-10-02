@@ -1,68 +1,64 @@
-
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <title>Code coverage report for src/utils/userAccountManager.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type='text/css'>
-        .coverage-summary .sorter {
-            background-image: url(../../sort-arrow-sprite.png);
-        }
+    <style type="text/css">
+      .coverage-summary .sorter {
+        background-image: url(../../sort-arrow-sprite.png);
+      }
     </style>
-</head>
-    
-<body>
-<div class='wrapper'>
-    <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/utils</a> userAccountManager.ts</h1>
-        <div class='clearfix'>
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">13.33% </span>
-                <span class="quiet">Statements</span>
-                <span class='fraction'>14/105</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Functions</span>
-                <span class='fraction'>0/8</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">13.33% </span>
-                <span class="quiet">Lines</span>
-                <span class='fraction'>14/105</span>
-            </div>
-        
-            
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <div class="pad1">
+        <h1>
+          <a href="../../index.html">All files</a> /
+          <a href="index.html">src/utils</a> userAccountManager.ts
+        </h1>
+        <div class="clearfix">
+          <div class="fl pad1y space-right2">
+            <span class="strong">13.33% </span>
+            <span class="quiet">Statements</span>
+            <span class="fraction">14/105</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">100% </span>
+            <span class="quiet">Branches</span>
+            <span class="fraction">0/0</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Functions</span>
+            <span class="fraction">0/8</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">13.33% </span>
+            <span class="quiet">Lines</span>
+            <span class="fraction">14/105</span>
+          </div>
         </div>
         <p class="quiet">
-            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+          Press <em>n</em> or <em>j</em> to go to the next uncovered block,
+          <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
         <template id="filterTemplate">
-            <div class="quiet">
-                Filter:
-                <input type="search" id="fileSearch">
-            </div>
+          <div class="quiet">
+            Filter:
+            <input type="search" id="fileSearch" />
+          </div>
         </template>
-    </div>
-    <div class='status-line low'></div>
-    <pre><table class="coverage">
+      </div>
+      <div class="status-line low"></div>
+      <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
 <a name='L3'></a><a href='#L3'>3</a>
@@ -349,9 +345,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import path from "node:path";
-import { promises as fsp, readFileSync } from "node:fs";
-import { Storage } from "../config/storage.js";
+import path from 'node:path';
+import { promises as fsp, readFileSync } from 'node:fs';
+import { Storage } from '../config/storage.js';
 &nbsp;
 interface UserAccounts {
   active: string | null;
@@ -377,18 +373,18 @@ export class UserAccountManager {
 <span class="cstat-no" title="statement not covered" >    const parsed = JSON.parse(content);</span>
 &nbsp;
     // Inlined validation logic
-<span class="cstat-no" title="statement not covered" >    if (typeof parsed !== "object" || parsed === null) {</span>
-<span class="cstat-no" title="statement not covered" >      console.log("Invalid accounts file schema, starting fresh.");</span>
+<span class="cstat-no" title="statement not covered" >    if (typeof parsed !== 'object' || parsed === null) {</span>
+<span class="cstat-no" title="statement not covered" >      console.log('Invalid accounts file schema, starting fresh.');</span>
 <span class="cstat-no" title="statement not covered" >      return defaultState;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >    const { active, old } = parsed as Partial&lt;UserAccounts&gt;;</span>
 <span class="cstat-no" title="statement not covered" >    const isValid =</span>
-<span class="cstat-no" title="statement not covered" >      (active === undefined || active === null || typeof active === "string") &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >      (active === undefined || active === null || typeof active === 'string') &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >      (old === undefined ||</span>
-<span class="cstat-no" title="statement not covered" >        (Array.isArray(old) &amp;&amp; old.every((i) =&gt; typeof i === "string")));</span>
+<span class="cstat-no" title="statement not covered" >        (Array.isArray(old) &amp;&amp; old.every((i) =&gt; typeof i === 'string')));</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (!isValid) {</span>
-<span class="cstat-no" title="statement not covered" >      console.log("Invalid accounts file schema, starting fresh.");</span>
+<span class="cstat-no" title="statement not covered" >      console.log('Invalid accounts file schema, starting fresh.');</span>
 <span class="cstat-no" title="statement not covered" >      return defaultState;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
@@ -401,17 +397,17 @@ export class UserAccountManager {
   private <span class="fstat-no" title="function not covered" >readAccountsSync(filePath: string): UserAccounts {</span>
 <span class="cstat-no" title="statement not covered" >    const defaultState = { active: null, old: [] };</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      const content = readFileSync(filePath, "utf-8");</span>
+<span class="cstat-no" title="statement not covered" >      const content = readFileSync(filePath, 'utf-8');</span>
 <span class="cstat-no" title="statement not covered" >      return this.parseAndValidateAccounts(content);</span>
 <span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >      if (</span>
 <span class="cstat-no" title="statement not covered" >        error instanceof Error &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >        "code" in error &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >        error.code === "ENOENT"</span>
+<span class="cstat-no" title="statement not covered" >        'code' in error &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >        error.code === 'ENOENT'</span>
 <span class="cstat-no" title="statement not covered" >      ) {</span>
 <span class="cstat-no" title="statement not covered" >        return defaultState;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
-<span class="cstat-no" title="statement not covered" >      console.log("Error during sync read of accounts, starting fresh.", error);</span>
+<span class="cstat-no" title="statement not covered" >      console.log('Error during sync read of accounts, starting fresh.', error);</span>
 <span class="cstat-no" title="statement not covered" >      return defaultState;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -419,17 +415,17 @@ export class UserAccountManager {
 <span class="fstat-no" title="function not covered" >  private async readAccounts(filePath: string): Promise&lt;UserAccounts&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const defaultState = { active: null, old: [] };</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      const content = await fsp.readFile(filePath, "utf-8");</span>
+<span class="cstat-no" title="statement not covered" >      const content = await fsp.readFile(filePath, 'utf-8');</span>
 <span class="cstat-no" title="statement not covered" >      return this.parseAndValidateAccounts(content);</span>
 <span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >      if (</span>
 <span class="cstat-no" title="statement not covered" >        error instanceof Error &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >        "code" in error &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >        error.code === "ENOENT"</span>
+<span class="cstat-no" title="statement not covered" >        'code' in error &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >        error.code === 'ENOENT'</span>
 <span class="cstat-no" title="statement not covered" >      ) {</span>
 <span class="cstat-no" title="statement not covered" >        return defaultState;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
-<span class="cstat-no" title="statement not covered" >      console.log("Could not parse accounts file, starting fresh.", error);</span>
+<span class="cstat-no" title="statement not covered" >      console.log('Could not parse accounts file, starting fresh.', error);</span>
 <span class="cstat-no" title="statement not covered" >      return defaultState;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -450,7 +446,7 @@ export class UserAccountManager {
 <span class="cstat-no" title="statement not covered" >    accounts.old = accounts.old.filter((oldEmail) =&gt; oldEmail !== email);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    accounts.active = email;</span>
-<span class="cstat-no" title="statement not covered" >    await fsp.writeFile(filePath, JSON.stringify(accounts, null, 2), "utf-8");</span>
+<span class="cstat-no" title="statement not covered" >    await fsp.writeFile(filePath, JSON.stringify(accounts, null, 2), 'utf-8');</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="fstat-no" title="function not covered" >  getCachedGoogleAccount(): string | null {</span>
@@ -480,26 +476,32 @@ export class UserAccountManager {
 <span class="cstat-no" title="statement not covered" >      accounts.active = null;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    await fsp.writeFile(filePath, JSON.stringify(accounts, null, 2), "utf-8");</span>
+<span class="cstat-no" title="statement not covered" >    await fsp.writeFile(filePath, JSON.stringify(accounts, null, 2), 'utf-8');</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 }
 &nbsp;</pre></td></tr></table></pre>
 
-                <div class='push'></div><!-- for sticky footer -->
-            </div><!-- /wrapper -->
-            <div class='footer quiet pad2 space-top1 center small'>
-                Code coverage generated by
-                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-01T13:00:34.883Z
-            </div>
-        <script src="../../prettify.js"></script>
-        <script>
-            window.onload = function () {
-                prettyPrint();
-            };
-        </script>
-        <script src="../../sorter.js"></script>
-        <script src="../../block-navigation.js"></script>
-    </body>
+      <div class="push"></div>
+      <!-- for sticky footer -->
+    </div>
+    <!-- /wrapper -->
+    <div class="footer quiet pad2 space-top1 center small">
+      Code coverage generated by
+      <a
+        href="https://istanbul.js.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >istanbul</a
+      >
+      at 2025-09-30T08:47:49.639Z
+    </div>
+    <script src="../../prettify.js"></script>
+    <script>
+      window.onload = function () {
+        prettyPrint();
+      };
+    </script>
+    <script src="../../sorter.js"></script>
+    <script src="../../block-navigation.js"></script>
+  </body>
 </html>
-    

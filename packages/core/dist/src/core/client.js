@@ -34,15 +34,6 @@ function isThinkingSupported(model) {
         return true;
     return false;
 }
-const TEXT_TRIM_THRESHOLD = 4000;
-const TEXT_TRIM_HEAD = 2000;
-const TRIM_PLACEHOLDER_MARKER = "trimmed to fit the token budget";
-function cloneDeep(value) {
-    if (typeof globalThis.structuredClone === "function") {
-        return globalThis.structuredClone(value);
-    }
-    return JSON.parse(JSON.stringify(value));
-}
 /**
  * Returns the index of the content after the fraction of the total characters in the history.
  *
@@ -98,7 +89,6 @@ export class GeminiClient {
     lastSentIdeContext;
     forceFullIdeContext = true;
     tokenBudgetManager;
-    pendingChatCompressionEvent = null;
     /**
      * At any point in this conversation, was compression triggered without
      * being forced and did it fail?
@@ -465,13 +455,6 @@ export class GeminiClient {
             }
         }
         const budgetSnapshot = await this.ensureRequestWithinBudget(prompt_id, request);
-        if (this.pendingChatCompressionEvent) {
-            yield {
-                type: GeminiEventType.ChatCompressed,
-                value: this.pendingChatCompressionEvent,
-            };
-            this.pendingChatCompressionEvent = null;
-        }
         if (budgetSnapshot &&
             budgetSnapshot.tokens >= budgetSnapshot.warnThreshold &&
             budgetSnapshot.tokens <= budgetSnapshot.limit) {
@@ -598,10 +581,6 @@ export class GeminiClient {
             }
             const outOfHardLimit = !snapshot.withinHardLimit;
             if (attempt >= compressionStrategies.length) {
-                const trimmedSnapshot = await this.trimHistoryForBudget(manager, model, userMessage, snapshot);
-                if (trimmedSnapshot) {
-                    return trimmedSnapshot;
-                }
                 const message = outOfHardLimit
                     ? `Request would exceed the model's context window (${snapshot.tokens.toLocaleString()} > ${snapshot.limit.toLocaleString()} tokens).`
                     : `Request would exceed the safe context budget (${snapshot.tokens.toLocaleString()} > ${snapshot.effectiveLimit.toLocaleString()} tokens).`;
@@ -615,10 +594,6 @@ export class GeminiClient {
                 CompressionStatus.COMPRESSION_FAILED_TOKEN_COUNT_ERROR ||
                 compressionResult.compressionStatus ===
                     CompressionStatus.COMPRESSION_FAILED_INFLATED_TOKEN_COUNT) {
-                const trimmedSnapshot = await this.trimHistoryForBudget(manager, model, userMessage, snapshot);
-                if (trimmedSnapshot) {
-                    return trimmedSnapshot;
-                }
                 throw new TokenBudgetExceededError(`Unable to compress history to fit within the context window (${snapshot.tokens.toLocaleString()} tokens).`, snapshot);
             }
         }
@@ -657,201 +632,6 @@ export class GeminiClient {
                 FinishReason.FINISH_REASON_UNSPECIFIED,
         });
         return events;
-    }
-    async trimHistoryForBudget(manager, model, userMessage, lastSnapshot) {
-        const originalCuratedHistory = cloneDeep(this.getChat().getHistory(true));
-        const trimmedHistory = cloneDeep(originalCuratedHistory);
-        let modified = false;
-        for (const content of trimmedHistory) {
-            if (this.summarizeContentForBudget(content)) {
-                modified = true;
-            }
-        }
-        if (modified) {
-            this.getChat().setHistory(cloneDeep(trimmedHistory));
-            const snapshot = await manager.evaluate(model, this.buildBudgetPreview(trimmedHistory, userMessage));
-            if (snapshot.fitsWithinEffective) {
-                this.recordChatCompressionEvent(lastSnapshot.tokens, snapshot.tokens);
-                return snapshot;
-            }
-        }
-        let workingHistory = cloneDeep(trimmedHistory);
-        let placeholderApplied = false;
-        while (true) {
-            const indexToTrim = this.findHistoryEntryToPrune(workingHistory);
-            if (indexToTrim === -1) {
-                break;
-            }
-            const placeholder = this.makeTrimPlaceholder(workingHistory[indexToTrim]);
-            workingHistory[indexToTrim] = placeholder;
-            placeholderApplied = true;
-            this.getChat().setHistory(cloneDeep(workingHistory));
-            const snapshot = await manager.evaluate(model, this.buildBudgetPreview(workingHistory, userMessage));
-            if (snapshot.fitsWithinEffective) {
-                this.recordChatCompressionEvent(lastSnapshot.tokens, snapshot.tokens);
-                return snapshot;
-            }
-        }
-        if (!modified && !placeholderApplied) {
-            return null;
-        }
-        // Unable to trim enough; restore the original history to avoid data loss
-        this.getChat().setHistory(cloneDeep(originalCuratedHistory));
-        return null;
-    }
-    buildBudgetPreview(history, userMessage) {
-        const preview = cloneDeep(history);
-        preview.push(createUserContent(userMessage));
-        return preview;
-    }
-    summarizeContentForBudget(content) {
-        if (!content?.parts || content.parts.length === 0) {
-            return false;
-        }
-        let modified = false;
-        const newParts = [];
-        for (const originalPart of content.parts) {
-            const workingPart = cloneDeep(originalPart);
-            if ("inlineData" in workingPart && workingPart.inlineData) {
-                modified = true;
-                continue;
-            }
-            if ("text" in workingPart &&
-                typeof workingPart.text === "string" &&
-                this.shouldTrimText(workingPart.text)) {
-                workingPart.text = `${workingPart.text.slice(0, TEXT_TRIM_HEAD)}\n…${TRIM_PLACEHOLDER_MARKER}.`;
-                modified = true;
-            }
-            if ("functionResponse" in workingPart &&
-                workingPart.functionResponse?.response !== undefined) {
-                const responseValue = workingPart.functionResponse.response;
-                if (typeof responseValue === "string") {
-                    if (this.shouldTrimText(responseValue)) {
-                        workingPart.functionResponse = {
-                            ...workingPart.functionResponse,
-                            response: {
-                                summary: `${responseValue.slice(0, TEXT_TRIM_HEAD)}…`,
-                            },
-                        };
-                        modified = true;
-                    }
-                }
-                else if (responseValue && typeof responseValue === "object") {
-                    const updatedResponse = {
-                        ...responseValue,
-                    };
-                    let responseModified = false;
-                    for (const [key, value] of Object.entries(updatedResponse)) {
-                        if (typeof value === "string" && this.shouldTrimText(value)) {
-                            updatedResponse[key] = `${value.slice(0, TEXT_TRIM_HEAD)}…`;
-                            responseModified = true;
-                        }
-                    }
-                    if (responseModified) {
-                        workingPart.functionResponse = {
-                            ...workingPart.functionResponse,
-                            response: updatedResponse,
-                        };
-                        modified = true;
-                    }
-                }
-            }
-            newParts.push(workingPart);
-        }
-        if (modified) {
-            if (newParts.length === 0) {
-                newParts.push({
-                    text: `Previous content removed to protect the token budget. ${TRIM_PLACEHOLDER_MARKER}.`,
-                });
-            }
-            else {
-                newParts.push({
-                    text: `Original content truncated to fit within the token budget. ${TRIM_PLACEHOLDER_MARKER}.`,
-                });
-            }
-            content.parts = newParts;
-        }
-        return modified;
-    }
-    shouldTrimText(text) {
-        if (text.length <= TEXT_TRIM_THRESHOLD) {
-            return false;
-        }
-        const compact = text.replace(/\s+/g, "");
-        const looksLikeBase64 = /^[A-Za-z0-9+/=]+$/.test(compact);
-        return looksLikeBase64 || text.length > TEXT_TRIM_THRESHOLD * 2;
-    }
-    findHistoryEntryToPrune(history) {
-        for (let index = 0; index < history.length; index++) {
-            const entry = history[index];
-            if (this.isTrimPlaceholder(entry)) {
-                continue;
-            }
-            if (entry.parts?.some((part) => part?.functionResponse)) {
-                return index;
-            }
-            if (entry.parts?.some((part) => typeof part?.text === "string" && this.shouldTrimText(part.text))) {
-                return index;
-            }
-        }
-        for (let index = 0; index < history.length; index++) {
-            const entry = history[index];
-            if (this.isTrimPlaceholder(entry)) {
-                continue;
-            }
-            if (entry.role === "model") {
-                return index;
-            }
-        }
-        for (let index = 0; index < history.length; index++) {
-            if (!this.isTrimPlaceholder(history[index])) {
-                return index;
-            }
-        }
-        return -1;
-    }
-    isTrimPlaceholder(content) {
-        return (content.parts?.some((part) => typeof part?.text === "string" &&
-            part.text.includes(TRIM_PLACEHOLDER_MARKER)) ?? false);
-    }
-    makeTrimPlaceholder(original) {
-        const summary = this.describeTrimmedContent(original);
-        return {
-            role: original.role,
-            parts: [
-                { text: summary },
-                {
-                    text: `Original content removed to keep the conversation within the model's context window. ${TRIM_PLACEHOLDER_MARKER}.`,
-                },
-            ],
-        };
-    }
-    describeTrimmedContent(content) {
-        const toolPart = content.parts?.find((part) => typeof part !== "string" && part?.functionResponse?.name);
-        if (toolPart &&
-            typeof toolPart !== "string" &&
-            toolPart.functionResponse?.name) {
-            return `Trimmed earlier output from tool "${toolPart.functionResponse.name}" to fit within the token budget.`;
-        }
-        const textPart = content.parts?.find((part) => typeof part?.text === "string" && part.text.trim().length > 0);
-        const textSnippet = typeof textPart?.text === "string" ? textPart.text : "";
-        if (textSnippet) {
-            const snippet = textSnippet.slice(0, 80).trim();
-            return `Trimmed earlier response: "${snippet}${textSnippet.length > 80 ? "…" : ""}".`;
-        }
-        return "Trimmed earlier context to maintain the token budget.";
-    }
-    recordChatCompressionEvent(originalTokens, newTokens) {
-        this.pendingChatCompressionEvent = {
-            originalTokenCount: originalTokens,
-            newTokenCount: newTokens,
-            compressionStatus: CompressionStatus.COMPRESSED,
-        };
-        this.hasFailedCompressionAttempt = false;
-        logChatCompression(this.config, makeChatCompressionEvent({
-            tokens_before: originalTokens,
-            tokens_after: newTokens,
-        }));
     }
     async generateJson(contents, schema, abortSignal, model, config = {}) {
         /**

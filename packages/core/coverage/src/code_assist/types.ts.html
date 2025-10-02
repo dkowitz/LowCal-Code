@@ -1,68 +1,64 @@
-
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <title>Code coverage report for src/code_assist/types.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type='text/css'>
-        .coverage-summary .sorter {
-            background-image: url(../../sort-arrow-sprite.png);
-        }
+    <style type="text/css">
+      .coverage-summary .sorter {
+        background-image: url(../../sort-arrow-sprite.png);
+      }
     </style>
-</head>
-    
-<body>
-<div class='wrapper'>
-    <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/code_assist</a> types.ts</h1>
-        <div class='clearfix'>
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
-                <span class="quiet">Statements</span>
-                <span class='fraction'>19/19</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>3/3</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
-                <span class="quiet">Functions</span>
-                <span class='fraction'>0/0</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
-                <span class="quiet">Lines</span>
-                <span class='fraction'>19/19</span>
-            </div>
-        
-            
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <div class="pad1">
+        <h1>
+          <a href="../../index.html">All files</a> /
+          <a href="index.html">src/code_assist</a> types.ts
+        </h1>
+        <div class="clearfix">
+          <div class="fl pad1y space-right2">
+            <span class="strong">100% </span>
+            <span class="quiet">Statements</span>
+            <span class="fraction">19/19</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">100% </span>
+            <span class="quiet">Branches</span>
+            <span class="fraction">3/3</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">100% </span>
+            <span class="quiet">Functions</span>
+            <span class="fraction">0/0</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">100% </span>
+            <span class="quiet">Lines</span>
+            <span class="fraction">19/19</span>
+          </div>
         </div>
         <p class="quiet">
-            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+          Press <em>n</em> or <em>j</em> to go to the next uncovered block,
+          <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
         <template id="filterTemplate">
-            <div class="quiet">
-                Filter:
-                <input type="search" id="fileSearch">
-            </div>
+          <div class="quiet">
+            Filter:
+            <input type="search" id="fileSearch" />
+          </div>
         </template>
-    </div>
-    <div class='status-line high'></div>
-    <pre><table class="coverage">
+      </div>
+      <div class="status-line high"></div>
+      <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
 <a name='L3'></a><a href='#L3'>3</a>
@@ -451,25 +447,25 @@ export interface ClientMetadata {
 }
 &nbsp;
 export type ClientMetadataIdeType =
-  | "IDE_UNSPECIFIED"
-  | "VSCODE"
-  | "INTELLIJ"
-  | "VSCODE_CLOUD_WORKSTATION"
-  | "INTELLIJ_CLOUD_WORKSTATION"
-  | "CLOUD_SHELL";
+  | 'IDE_UNSPECIFIED'
+  | 'VSCODE'
+  | 'INTELLIJ'
+  | 'VSCODE_CLOUD_WORKSTATION'
+  | 'INTELLIJ_CLOUD_WORKSTATION'
+  | 'CLOUD_SHELL';
 export type ClientMetadataPlatform =
-  | "PLATFORM_UNSPECIFIED"
-  | "DARWIN_AMD64"
-  | "DARWIN_ARM64"
-  | "LINUX_AMD64"
-  | "LINUX_ARM64"
-  | "WINDOWS_AMD64";
+  | 'PLATFORM_UNSPECIFIED'
+  | 'DARWIN_AMD64'
+  | 'DARWIN_ARM64'
+  | 'LINUX_AMD64'
+  | 'LINUX_ARM64'
+  | 'WINDOWS_AMD64';
 export type ClientMetadataPluginType =
-  | "PLUGIN_UNSPECIFIED"
-  | "CLOUD_CODE"
-  | "GEMINI"
-  | "AIPLUGIN_INTELLIJ"
-  | "AIPLUGIN_STUDIO";
+  | 'PLUGIN_UNSPECIFIED'
+  | 'CLOUD_CODE'
+  | 'GEMINI'
+  | 'AIPLUGIN_INTELLIJ'
+  | 'AIPLUGIN_STUDIO';
 &nbsp;
 export interface LoadCodeAssistRequest {
   cloudaicompanionProject?: string;
@@ -522,14 +518,14 @@ export interface IneligibleTier {
  */
 export enum IneligibleTierReasonCode {
   // go/keep-sorted start
-  DASHER_USER = "DASHER_USER",
-  INELIGIBLE_ACCOUNT = "INELIGIBLE_ACCOUNT",
-  NON_USER_ACCOUNT = "NON_USER_ACCOUNT",
-  RESTRICTED_AGE = "RESTRICTED_AGE",
-  RESTRICTED_NETWORK = "RESTRICTED_NETWORK",
-  UNKNOWN = "UNKNOWN",
-  UNKNOWN_LOCATION = "UNKNOWN_LOCATION",
-  UNSUPPORTED_LOCATION = "UNSUPPORTED_LOCATION",
+  DASHER_USER = 'DASHER_USER',
+  INELIGIBLE_ACCOUNT = 'INELIGIBLE_ACCOUNT',
+  NON_USER_ACCOUNT = 'NON_USER_ACCOUNT',
+  RESTRICTED_AGE = 'RESTRICTED_AGE',
+  RESTRICTED_NETWORK = 'RESTRICTED_NETWORK',
+  UNKNOWN = 'UNKNOWN',
+  UNKNOWN_LOCATION = 'UNKNOWN_LOCATION',
+  UNSUPPORTED_LOCATION = 'UNSUPPORTED_LOCATION',
   // go/keep-sorted end
 }
 /**
@@ -538,9 +534,9 @@ export enum IneligibleTierReasonCode {
  * //depot/google3/cloud/developer_experience/cloudcode/pa/service/usertier.go;l=16
  */
 export enum UserTierId {
-  FREE = "free-tier",
-  LEGACY = "legacy-tier",
-  STANDARD = "standard-tier",
+  FREE = 'free-tier',
+  LEGACY = 'legacy-tier',
+  STANDARD = 'standard-tier',
 }
 &nbsp;
 /**
@@ -589,10 +585,10 @@ export interface OnboardUserResponse {
  * Error value is an additional value assigned to error responses from OnboardUser
  */
 export enum OnboardUserStatusCode {
-  Default = "DEFAULT",
-  Notice = "NOTICE",
-  Warning = "WARNING",
-  Error = "ERROR",
+  Default = 'DEFAULT',
+  Notice = 'NOTICE',
+  Warning = 'WARNING',
+  Error = 'ERROR',
 }
 &nbsp;
 /**
@@ -620,21 +616,27 @@ export interface CodeAssistGlobalUserSettingResponse {
 }
 &nbsp;</pre></td></tr></table></pre>
 
-                <div class='push'></div><!-- for sticky footer -->
-            </div><!-- /wrapper -->
-            <div class='footer quiet pad2 space-top1 center small'>
-                Code coverage generated by
-                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-01T13:00:34.814Z
-            </div>
-        <script src="../../prettify.js"></script>
-        <script>
-            window.onload = function () {
-                prettyPrint();
-            };
-        </script>
-        <script src="../../sorter.js"></script>
-        <script src="../../block-navigation.js"></script>
-    </body>
+      <div class="push"></div>
+      <!-- for sticky footer -->
+    </div>
+    <!-- /wrapper -->
+    <div class="footer quiet pad2 space-top1 center small">
+      Code coverage generated by
+      <a
+        href="https://istanbul.js.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >istanbul</a
+      >
+      at 2025-09-30T08:47:49.571Z
+    </div>
+    <script src="../../prettify.js"></script>
+    <script>
+      window.onload = function () {
+        prettyPrint();
+      };
+    </script>
+    <script src="../../sorter.js"></script>
+    <script src="../../block-navigation.js"></script>
+  </body>
 </html>
-    

@@ -1,68 +1,64 @@
-
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <title>Code coverage report for src/qwen/qwenContentGenerator.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type='text/css'>
-        .coverage-summary .sorter {
-            background-image: url(../../sort-arrow-sprite.png);
-        }
+    <style type="text/css">
+      .coverage-summary .sorter {
+        background-image: url(../../sort-arrow-sprite.png);
+      }
     </style>
-</head>
-    
-<body>
-<div class='wrapper'>
-    <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/qwen</a> qwenContentGenerator.ts</h1>
-        <div class='clearfix'>
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Statements</span>
-                <span class='fraction'>0/146</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Lines</span>
-                <span class='fraction'>0/146</span>
-            </div>
-        
-            
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <div class="pad1">
+        <h1>
+          <a href="../../index.html">All files</a> /
+          <a href="index.html">src/qwen</a> qwenContentGenerator.ts
+        </h1>
+        <div class="clearfix">
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Statements</span>
+            <span class="fraction">0/146</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Branches</span>
+            <span class="fraction">0/1</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Functions</span>
+            <span class="fraction">0/1</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Lines</span>
+            <span class="fraction">0/146</span>
+          </div>
         </div>
         <p class="quiet">
-            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+          Press <em>n</em> or <em>j</em> to go to the next uncovered block,
+          <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
         <template id="filterTemplate">
-            <div class="quiet">
-                Filter:
-                <input type="search" id="fileSearch">
-            </div>
+          <div class="quiet">
+            Filter:
+            <input type="search" id="fileSearch" />
+          </div>
         </template>
-    </div>
-    <div class='status-line low'></div>
-    <pre><table class="coverage">
+      </div>
+      <div class="status-line low"></div>
+      <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
 <a name='L3'></a><a href='#L3'>3</a>
@@ -575,11 +571,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-<span class="cstat-no" title="statement not covered" >import { OpenAIContentGenerator } from "../core/openaiContentGenerator/index.js";</span>
-<span class="cstat-no" title="statement not covered" >import { DashScopeOpenAICompatibleProvider } from "../core/openaiContentGenerator/provider/dashscope.js";</span>
-import type { IQwenOAuth2Client } from "./qwenOAuth2.js";
-<span class="cstat-no" title="statement not covered" >import { SharedTokenManager } from "./sharedTokenManager.js";</span>
-import type { Config } from "../config/config.js";
+<span class="cstat-no" title="statement not covered" >import { OpenAIContentGenerator } from '../core/openaiContentGenerator/index.js';</span>
+<span class="cstat-no" title="statement not covered" >import { DashScopeOpenAICompatibleProvider } from '../core/openaiContentGenerator/provider/dashscope.js';</span>
+import type { IQwenOAuth2Client } from './qwenOAuth2.js';
+<span class="cstat-no" title="statement not covered" >import { SharedTokenManager } from './sharedTokenManager.js';</span>
+import type { Config } from '../config/config.js';
 import type {
   GenerateContentParameters,
   GenerateContentResponse,
@@ -587,12 +583,12 @@ import type {
   CountTokensResponse,
   EmbedContentParameters,
   EmbedContentResponse,
-} from "@google/genai";
-import type { ContentGeneratorConfig } from "../core/contentGenerator.js";
+} from '@google/genai';
+import type { ContentGeneratorConfig } from '../core/contentGenerator.js';
 &nbsp;
 // Default fallback base URL if no endpoint is provided
 <span class="cstat-no" title="statement not covered" >const DEFAULT_QWEN_BASE_URL =</span>
-<span class="cstat-no" title="statement not covered" >  "https://dashscope.aliyuncs.com/compatible-mode/v1";</span>
+<span class="cstat-no" title="statement not covered" >  'https://dashscope.aliyuncs.com/compatible-mode/v1';</span>
 &nbsp;
 /**
  * Qwen Content Generator that uses Qwen OAuth tokens with automatic refresh
@@ -630,10 +626,10 @@ import type { ContentGeneratorConfig } from "../core/contentGenerator.js";
    */
 <span class="cstat-no" title="statement not covered" >  private getCurrentEndpoint(resourceUrl?: string): string {</span>
 <span class="cstat-no" title="statement not covered" >    const baseEndpoint = resourceUrl || DEFAULT_QWEN_BASE_URL;</span>
-<span class="cstat-no" title="statement not covered" >    const suffix = "/v1";</span>
+<span class="cstat-no" title="statement not covered" >    const suffix = '/v1';</span>
 &nbsp;
     // Normalize the URL: add protocol if missing, ensure /v1 suffix
-<span class="cstat-no" title="statement not covered" >    const normalizedUrl = baseEndpoint.startsWith("http")</span>
+<span class="cstat-no" title="statement not covered" >    const normalizedUrl = baseEndpoint.startsWith('http')</span>
 <span class="cstat-no" title="statement not covered" >      ? baseEndpoint</span>
 <span class="cstat-no" title="statement not covered" >      : `https://${baseEndpoint}`;</span>
 &nbsp;
@@ -664,7 +660,7 @@ import type { ContentGeneratorConfig } from "../core/contentGenerator.js";
 <span class="cstat-no" title="statement not covered" >      );</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      if (!credentials.access_token) {</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error("No access token available");</span>
+<span class="cstat-no" title="statement not covered" >        throw new Error('No access token available');</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      return {</span>
@@ -676,9 +672,9 @@ import type { ContentGeneratorConfig } from "../core/contentGenerator.js";
 <span class="cstat-no" title="statement not covered" >      if (this.isAuthError(error)) {</span>
 <span class="cstat-no" title="statement not covered" >        throw error;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
-<span class="cstat-no" title="statement not covered" >      console.warn("Failed to get token from shared manager:", error);</span>
+<span class="cstat-no" title="statement not covered" >      console.warn('Failed to get token from shared manager:', error);</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error(</span>
-<span class="cstat-no" title="statement not covered" >        "Failed to obtain valid Qwen access token. Please re-authenticate.",</span>
+<span class="cstat-no" title="statement not covered" >        'Failed to obtain valid Qwen access token. Please re-authenticate.',</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -786,16 +782,16 @@ import type { ContentGeneratorConfig } from "../core/contentGenerator.js";
 <span class="cstat-no" title="statement not covered" >    return (</span>
 <span class="cstat-no" title="statement not covered" >      errorCode === 401 ||</span>
 <span class="cstat-no" title="statement not covered" >      errorCode === 403 ||</span>
-<span class="cstat-no" title="statement not covered" >      errorCode === "401" ||</span>
-<span class="cstat-no" title="statement not covered" >      errorCode === "403" ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("unauthorized") ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("forbidden") ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("invalid api key") ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("invalid access token") ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("token expired") ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("authentication") ||</span>
-<span class="cstat-no" title="statement not covered" >      errorMessage.includes("access denied") ||</span>
-<span class="cstat-no" title="statement not covered" >      (errorMessage.includes("token") &amp;&amp; errorMessage.includes("expired"))</span>
+<span class="cstat-no" title="statement not covered" >      errorCode === '401' ||</span>
+<span class="cstat-no" title="statement not covered" >      errorCode === '403' ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('unauthorized') ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('forbidden') ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('invalid api key') ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('invalid access token') ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('token expired') ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('authentication') ||</span>
+<span class="cstat-no" title="statement not covered" >      errorMessage.includes('access denied') ||</span>
+<span class="cstat-no" title="statement not covered" >      (errorMessage.includes('token') &amp;&amp; errorMessage.includes('expired'))</span>
     );
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -824,21 +820,27 @@ import type { ContentGeneratorConfig } from "../core/contentGenerator.js";
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;</pre></td></tr></table></pre>
 
-                <div class='push'></div><!-- for sticky footer -->
-            </div><!-- /wrapper -->
-            <div class='footer quiet pad2 space-top1 center small'>
-                Code coverage generated by
-                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-01T13:00:34.883Z
-            </div>
-        <script src="../../prettify.js"></script>
-        <script>
-            window.onload = function () {
-                prettyPrint();
-            };
-        </script>
-        <script src="../../sorter.js"></script>
-        <script src="../../block-navigation.js"></script>
-    </body>
+      <div class="push"></div>
+      <!-- for sticky footer -->
+    </div>
+    <!-- /wrapper -->
+    <div class="footer quiet pad2 space-top1 center small">
+      Code coverage generated by
+      <a
+        href="https://istanbul.js.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >istanbul</a
+      >
+      at 2025-09-30T08:47:49.639Z
+    </div>
+    <script src="../../prettify.js"></script>
+    <script>
+      window.onload = function () {
+        prettyPrint();
+      };
+    </script>
+    <script src="../../sorter.js"></script>
+    <script src="../../block-navigation.js"></script>
+  </body>
 </html>
-    

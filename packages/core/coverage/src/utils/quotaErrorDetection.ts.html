@@ -1,68 +1,64 @@
-
 <!doctype html>
 <html lang="en">
-
-<head>
+  <head>
     <title>Code coverage report for src/utils/quotaErrorDetection.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type='text/css'>
-        .coverage-summary .sorter {
-            background-image: url(../../sort-arrow-sprite.png);
-        }
+    <style type="text/css">
+      .coverage-summary .sorter {
+        background-image: url(../../sort-arrow-sprite.png);
+      }
     </style>
-</head>
-    
-<body>
-<div class='wrapper'>
-    <div class='pad1'>
-        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/utils</a> quotaErrorDetection.ts</h1>
-        <div class='clearfix'>
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">6.48% </span>
-                <span class="quiet">Statements</span>
-                <span class='fraction'>7/108</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
-                <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
-                <span class="quiet">Functions</span>
-                <span class='fraction'>0/6</span>
-            </div>
-        
-            
-            <div class='fl pad1y space-right2'>
-                <span class="strong">6.48% </span>
-                <span class="quiet">Lines</span>
-                <span class='fraction'>7/108</span>
-            </div>
-        
-            
+  </head>
+
+  <body>
+    <div class="wrapper">
+      <div class="pad1">
+        <h1>
+          <a href="../../index.html">All files</a> /
+          <a href="index.html">src/utils</a> quotaErrorDetection.ts
+        </h1>
+        <div class="clearfix">
+          <div class="fl pad1y space-right2">
+            <span class="strong">6.48% </span>
+            <span class="quiet">Statements</span>
+            <span class="fraction">7/108</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">100% </span>
+            <span class="quiet">Branches</span>
+            <span class="fraction">0/0</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">0% </span>
+            <span class="quiet">Functions</span>
+            <span class="fraction">0/6</span>
+          </div>
+
+          <div class="fl pad1y space-right2">
+            <span class="strong">6.48% </span>
+            <span class="quiet">Lines</span>
+            <span class="fraction">7/108</span>
+          </div>
         </div>
         <p class="quiet">
-            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+          Press <em>n</em> or <em>j</em> to go to the next uncovered block,
+          <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
         <template id="filterTemplate">
-            <div class="quiet">
-                Filter:
-                <input type="search" id="fileSearch">
-            </div>
+          <div class="quiet">
+            Filter:
+            <input type="search" id="fileSearch" />
+          </div>
         </template>
-    </div>
-    <div class='status-line low'></div>
-    <pre><table class="coverage">
+      </div>
+      <div class="status-line low"></div>
+      <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
 <a name='L3'></a><a href='#L3'>3</a>
@@ -403,7 +399,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type { StructuredError } from "../core/turn.js";
+import type { StructuredError } from '../core/turn.js';
 &nbsp;
 export interface ApiError {
   error: {
@@ -416,20 +412,20 @@ export interface ApiError {
 &nbsp;
 export <span class="fstat-no" title="function not covered" >function isApiError(error: unknown): error is ApiError {</span>
 <span class="cstat-no" title="statement not covered" >  return (</span>
-<span class="cstat-no" title="statement not covered" >    typeof error === "object" &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >    typeof error === 'object' &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >    error !== null &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >    "error" in error &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >    typeof (error as ApiError).error === "object" &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >    "message" in (error as ApiError).error</span>
+<span class="cstat-no" title="statement not covered" >    'error' in error &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >    typeof (error as ApiError).error === 'object' &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >    'message' in (error as ApiError).error</span>
   );
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 export <span class="fstat-no" title="function not covered" >function isStructuredError(error: unknown): error is StructuredError {</span>
 <span class="cstat-no" title="statement not covered" >  return (</span>
-<span class="cstat-no" title="statement not covered" >    typeof error === "object" &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >    typeof error === 'object' &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >    error !== null &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >    "message" in error &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >    typeof (error as StructuredError).message === "string"</span>
+<span class="cstat-no" title="statement not covered" >    'message' in error &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >    typeof (error as StructuredError).message === 'string'</span>
   );
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
@@ -444,7 +440,7 @@ export <span class="fstat-no" title="function not covered" >function isProQuotaE
 <span class="cstat-no" title="statement not covered" >    message.includes("Quota exceeded for quota metric 'Gemini") &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >    message.includes("Pro Requests'");</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  if (typeof error === "string") {</span>
+<span class="cstat-no" title="statement not covered" >  if (typeof error === 'string') {</span>
 <span class="cstat-no" title="statement not covered" >    return checkMessage(error);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -457,25 +453,25 @@ export <span class="fstat-no" title="function not covered" >function isProQuotaE
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   // Check if it's a Gaxios error with response data
-<span class="cstat-no" title="statement not covered" >  if (error &amp;&amp; typeof error === "object" &amp;&amp; "response" in error) {</span>
+<span class="cstat-no" title="statement not covered" >  if (error &amp;&amp; typeof error === 'object' &amp;&amp; 'response' in error) {</span>
 <span class="cstat-no" title="statement not covered" >    const gaxiosError = error as {</span>
       response?: {
         data?: unknown;
       };
     };
 <span class="cstat-no" title="statement not covered" >    if (gaxiosError.response &amp;&amp; gaxiosError.response.data) {</span>
-<span class="cstat-no" title="statement not covered" >      if (typeof gaxiosError.response.data === "string") {</span>
+<span class="cstat-no" title="statement not covered" >      if (typeof gaxiosError.response.data === 'string') {</span>
 <span class="cstat-no" title="statement not covered" >        return checkMessage(gaxiosError.response.data);</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      if (</span>
-<span class="cstat-no" title="statement not covered" >        typeof gaxiosError.response.data === "object" &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >        typeof gaxiosError.response.data === 'object' &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >        gaxiosError.response.data !== null &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >        "error" in gaxiosError.response.data</span>
+<span class="cstat-no" title="statement not covered" >        'error' in gaxiosError.response.data</span>
 <span class="cstat-no" title="statement not covered" >      ) {</span>
 <span class="cstat-no" title="statement not covered" >        const errorData = gaxiosError.response.data as {</span>
           error?: { message?: string };
         };
-<span class="cstat-no" title="statement not covered" >        return checkMessage(errorData.error?.message || "");</span>
+<span class="cstat-no" title="statement not covered" >        return checkMessage(errorData.error?.message || '');</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -483,16 +479,16 @@ export <span class="fstat-no" title="function not covered" >function isProQuotaE
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 export <span class="fstat-no" title="function not covered" >function isGenericQuotaExceededError(error: unknown): boolean {</span>
-<span class="cstat-no" title="statement not covered" >  if (typeof error === "string") {</span>
-<span class="cstat-no" title="statement not covered" >    return error.includes("Quota exceeded for quota metric");</span>
+<span class="cstat-no" title="statement not covered" >  if (typeof error === 'string') {</span>
+<span class="cstat-no" title="statement not covered" >    return error.includes('Quota exceeded for quota metric');</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  if (isStructuredError(error)) {</span>
-<span class="cstat-no" title="statement not covered" >    return error.message.includes("Quota exceeded for quota metric");</span>
+<span class="cstat-no" title="statement not covered" >    return error.message.includes('Quota exceeded for quota metric');</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  if (isApiError(error)) {</span>
-<span class="cstat-no" title="statement not covered" >    return error.error.message.includes("Quota exceeded for quota metric");</span>
+<span class="cstat-no" title="statement not covered" >    return error.error.message.includes('Quota exceeded for quota metric');</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return false;</span>
@@ -503,13 +499,13 @@ export <span class="fstat-no" title="function not covered" >function isQwenQuota
 <span class="cstat-no" title="statement not covered" >  const checkMessage = (message: string): boolean =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const lowerMessage = message.toLowerCase();</span>
 <span class="cstat-no" title="statement not covered" >    return (</span>
-<span class="cstat-no" title="statement not covered" >      lowerMessage.includes("insufficient_quota") ||</span>
-<span class="cstat-no" title="statement not covered" >      lowerMessage.includes("free allocated quota exceeded") ||</span>
-<span class="cstat-no" title="statement not covered" >      (lowerMessage.includes("quota") &amp;&amp; lowerMessage.includes("exceeded"))</span>
+<span class="cstat-no" title="statement not covered" >      lowerMessage.includes('insufficient_quota') ||</span>
+<span class="cstat-no" title="statement not covered" >      lowerMessage.includes('free allocated quota exceeded') ||</span>
+<span class="cstat-no" title="statement not covered" >      (lowerMessage.includes('quota') &amp;&amp; lowerMessage.includes('exceeded'))</span>
     );
 <span class="cstat-no" title="statement not covered" >  };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  if (typeof error === "string") {</span>
+<span class="cstat-no" title="statement not covered" >  if (typeof error === 'string') {</span>
 <span class="cstat-no" title="statement not covered" >    return checkMessage(error);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -529,16 +525,16 @@ export <span class="fstat-no" title="function not covered" >function isQwenThrot
 <span class="cstat-no" title="statement not covered" >  const checkMessage = (message: string): boolean =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const lowerMessage = message.toLowerCase();</span>
 <span class="cstat-no" title="statement not covered" >    return (</span>
-<span class="cstat-no" title="statement not covered" >      lowerMessage.includes("throttling") ||</span>
-<span class="cstat-no" title="statement not covered" >      lowerMessage.includes("requests throttling triggered") ||</span>
-<span class="cstat-no" title="statement not covered" >      lowerMessage.includes("rate limit") ||</span>
-<span class="cstat-no" title="statement not covered" >      lowerMessage.includes("too many requests")</span>
+<span class="cstat-no" title="statement not covered" >      lowerMessage.includes('throttling') ||</span>
+<span class="cstat-no" title="statement not covered" >      lowerMessage.includes('requests throttling triggered') ||</span>
+<span class="cstat-no" title="statement not covered" >      lowerMessage.includes('rate limit') ||</span>
+<span class="cstat-no" title="statement not covered" >      lowerMessage.includes('too many requests')</span>
     );
 <span class="cstat-no" title="statement not covered" >  };</span>
 &nbsp;
   // Check status code
 <span class="cstat-no" title="statement not covered" >  const getStatusCode = (error: unknown): number | undefined =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (error &amp;&amp; typeof error === "object") {</span>
+<span class="cstat-no" title="statement not covered" >    if (error &amp;&amp; typeof error === 'object') {</span>
 <span class="cstat-no" title="statement not covered" >      const errorObj = error as { status?: number; code?: number };</span>
 <span class="cstat-no" title="statement not covered" >      return errorObj.status || errorObj.code;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -547,10 +543,10 @@ export <span class="fstat-no" title="function not covered" >function isQwenThrot
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const statusCode = getStatusCode(error);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  if (typeof error === "string") {</span>
+<span class="cstat-no" title="statement not covered" >  if (typeof error === 'string') {</span>
 <span class="cstat-no" title="statement not covered" >    return (</span>
 <span class="cstat-no" title="statement not covered" >      (statusCode === 429 &amp;&amp; checkMessage(error)) ||</span>
-<span class="cstat-no" title="statement not covered" >      error.includes("throttling")</span>
+<span class="cstat-no" title="statement not covered" >      error.includes('throttling')</span>
     );
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -566,21 +562,27 @@ export <span class="fstat-no" title="function not covered" >function isQwenThrot
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;</pre></td></tr></table></pre>
 
-                <div class='push'></div><!-- for sticky footer -->
-            </div><!-- /wrapper -->
-            <div class='footer quiet pad2 space-top1 center small'>
-                Code coverage generated by
-                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-01T13:00:34.814Z
-            </div>
-        <script src="../../prettify.js"></script>
-        <script>
-            window.onload = function () {
-                prettyPrint();
-            };
-        </script>
-        <script src="../../sorter.js"></script>
-        <script src="../../block-navigation.js"></script>
-    </body>
+      <div class="push"></div>
+      <!-- for sticky footer -->
+    </div>
+    <!-- /wrapper -->
+    <div class="footer quiet pad2 space-top1 center small">
+      Code coverage generated by
+      <a
+        href="https://istanbul.js.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        >istanbul</a
+      >
+      at 2025-09-30T08:47:49.571Z
+    </div>
+    <script src="../../prettify.js"></script>
+    <script>
+      window.onload = function () {
+        prettyPrint();
+      };
+    </script>
+    <script src="../../sorter.js"></script>
+    <script src="../../block-navigation.js"></script>
+  </body>
 </html>
-    

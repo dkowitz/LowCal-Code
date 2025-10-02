@@ -15,8 +15,6 @@ import { BINARY_EXTENSIONS } from "./ignorePatterns.js";
 // Constants for text file processing
 export const DEFAULT_MAX_LINES_TEXT_FILE = 2000;
 const MAX_LINE_LENGTH_TEXT_FILE = 2000;
-const BINARY_INLINE_MAX_BYTES = 64 * 1024; // 64KB inline cap to avoid large token payloads
-const BINARY_PREVIEW_BYTES = 2 * 1024; // 2KB preview snippet for oversized binaries
 
 // Default values for encoding and separator format
 export const DEFAULT_ENCODING: BufferEncoding = "utf-8";
@@ -307,65 +305,16 @@ export async function processSingleFileContent(
       case "pdf":
       case "audio":
       case "video": {
-        const mimeType = mime.lookup(filePath) || "application/octet-stream";
-
-        if (stats.size <= BINARY_INLINE_MAX_BYTES) {
-          const contentBuffer = await fs.promises.readFile(filePath);
-          const base64Data = contentBuffer.toString("base64");
-          return {
-            llmContent: {
-              inlineData: {
-                data: base64Data,
-                mimeType,
-              },
-            },
-            returnDisplay: `Read ${fileType} file: ${relativePathForDisplay}`,
-          };
-        }
-
-        const previewBytes = Math.min(BINARY_PREVIEW_BYTES, stats.size);
-        let previewBase64: string | null = null;
-        if (previewBytes > 0) {
-          const fileHandle = await fs.promises.open(filePath, "r");
-          try {
-            const previewBuffer = Buffer.alloc(previewBytes);
-            const { bytesRead } = await fileHandle.read(
-              previewBuffer,
-              0,
-              previewBytes,
-              0,
-            );
-            previewBase64 = previewBuffer
-              .subarray(0, bytesRead)
-              .toString("base64");
-          } finally {
-            await fileHandle.close();
-          }
-        }
-
-        const summaryLines = [
-          `Binary file summary: ${relativePathForDisplay}`,
-          `MIME type: ${mimeType}`,
-          `Size: ${formatBytes(stats.size)}`,
-        ];
-
-        if (previewBase64) {
-          summaryLines.push(
-            `Preview (first ${previewBytes} byte${
-              previewBytes === 1 ? "" : "s"
-            }, base64): ${previewBase64}${
-              stats.size > previewBytes ? "... [truncated]" : ""
-            }`,
-          );
-        }
-
-        summaryLines.push(
-          `Use /download_file ${JSON.stringify({ absolute_path: filePath })} to fetch the original file if needed.`,
-        );
-
+        const contentBuffer = await fs.promises.readFile(filePath);
+        const base64Data = contentBuffer.toString("base64");
         return {
-          llmContent: summaryLines.join("\n"),
-          returnDisplay: `Binary file summary: ${relativePathForDisplay} (${mimeType}, ${formatBytes(stats.size)})`,
+          llmContent: {
+            inlineData: {
+              data: base64Data,
+              mimeType: mime.lookup(filePath) || "application/octet-stream",
+            },
+          },
+          returnDisplay: `Read ${fileType} file: ${relativePathForDisplay}`,
         };
       }
       default: {
@@ -390,18 +339,4 @@ export async function processSingleFileContent(
       errorType: ToolErrorType.READ_CONTENT_FAILURE,
     };
   }
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes <= 0) {
-    return "0 B";
-  }
-  const units = ["B", "KB", "MB", "GB", "TB"] as const;
-  const exponent = Math.min(
-    Math.floor(Math.log(bytes) / Math.log(1024)),
-    units.length - 1,
-  );
-  const value = bytes / Math.pow(1024, exponent);
-  const precision = value >= 100 || exponent === 0 ? 0 : 1;
-  return `${value.toFixed(precision)} ${units[exponent]}`;
 }

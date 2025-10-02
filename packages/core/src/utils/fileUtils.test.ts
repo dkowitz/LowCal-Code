@@ -349,23 +349,6 @@ describe("fileUtils", () => {
       expect(result.returnDisplay).toContain("Read image file: image.png");
     });
 
-    it("should summarize large binary files without embedding full data", async () => {
-      const largeBuffer = Buffer.alloc(70 * 1024, 0xab);
-      actualNodeFs.writeFileSync(testImageFilePath, largeBuffer);
-      mockMimeLookup.mockReturnValue("image/png");
-
-      const result = await processSingleFileContent(
-        testImageFilePath,
-        tempRootDir,
-        new StandardFileSystemService(),
-      );
-
-      expect(typeof result.llmContent).toBe("string");
-      expect((result.llmContent as string)).toContain("Binary file summary");
-      expect((result.llmContent as string)).toContain("Preview (first");
-      expect(result.returnDisplay).toContain("Binary file summary: image.png");
-    });
-
     it("should process a PDF file", async () => {
       const fakePdfData = Buffer.from("fake pdf data");
       actualNodeFs.writeFileSync(testPdfFilePath, fakePdfData);
