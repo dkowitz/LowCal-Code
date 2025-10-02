@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, type FC } from "react";
+import React, { useState } from "react";
 import { Box, Text } from "ink";
 import { Colors } from "../colors.js";
 import {
@@ -22,7 +22,7 @@ export interface ModelSelectionDialogProps {
   onCancel: () => void;
 }
 
-export const ModelSelectionDialog: FC<ModelSelectionDialogProps> = ({
+export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
   availableModels,
   currentModel,
   onSelect,

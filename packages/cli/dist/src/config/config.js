@@ -281,11 +281,11 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
             try {
                 appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_API_KEY to: ${envPath}`);
             }
-            catch (_e) {
+            catch (e) {
                 // ignore
             }
         }
-        catch (_e) {
+        catch (e) {
             // Fall back to setting runtime env if persistence fails
             process.env["OPENAI_API_KEY"] = argv.openaiApiKey;
         }
@@ -297,11 +297,11 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
             try {
                 appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_BASE_URL to: ${envPath}`);
             }
-            catch (_e) {
+            catch (e) {
                 // ignore
             }
         }
-        catch (_e) {
+        catch (e) {
             process.env["OPENAI_BASE_URL"] = argv.openaiBaseUrl;
         }
     }

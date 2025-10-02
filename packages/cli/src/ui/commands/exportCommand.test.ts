@@ -16,7 +16,9 @@ import { exportCommand } from "./exportCommand.js";
 import type { CommandContext } from "./types.js";
 import type { HistoryItem } from "../types.js";
 import type { LoadedSettings } from "../../config/settings.js";
-import type { Config, Logger, GitService } from "@qwen-code/qwen-code-core";
+import type { Config } from "@qwen-code/qwen-code-core";
+import type { Logger } from "@qwen-code/qwen-code-core";
+import type { GitService } from "@qwen-code/qwen-code-core";
 import type { SessionStatsState } from "../contexts/SessionContext.js";
 import { createMockLoggingController } from "../../test-utils/mockLoggingController.js";
 
@@ -70,9 +72,7 @@ describe("exportCommand", () => {
     };
     mockLogging = createMockLoggingController();
 
-    // eslint-disable-next-line @typescript-eslint/no-require-imports, no-restricted-syntax
     vi.mocked(require("node:fs")).writeFileSync = mockWriteFileSync;
-    // eslint-disable-next-line @typescript-eslint/no-require-imports, no-restricted-syntax
     vi.mocked(require("node:path")).join = mockPathJoin;
 
     mockContext = {

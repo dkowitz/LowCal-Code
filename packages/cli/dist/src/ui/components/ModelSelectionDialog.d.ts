@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { type FC } from "react";
+import React from "react";
 import type { AvailableModel } from "../models/availableModels.js";
 export interface ModelSelectionDialogProps {
     availableModels: AvailableModel[];
@@ -11,4 +11,4 @@ export interface ModelSelectionDialogProps {
     onSelect: (modelId: string) => void;
     onCancel: () => void;
 }
-export declare const ModelSelectionDialog: FC<ModelSelectionDialogProps>;
+export declare const ModelSelectionDialog: React.FC<ModelSelectionDialogProps>;

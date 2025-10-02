@@ -361,8 +361,8 @@ describe("fileUtils", () => {
       );
 
       expect(typeof result.llmContent).toBe("string");
-      expect(result.llmContent as string).toContain("Binary file summary");
-      expect(result.llmContent as string).toContain("Preview (first");
+      expect((result.llmContent as string)).toContain("Binary file summary");
+      expect((result.llmContent as string)).toContain("Preview (first");
       expect(result.returnDisplay).toContain("Binary file summary: image.png");
     });
 

@@ -29,19 +29,13 @@ describe("env persistence", () => {
       // cleanup
       try {
         fs.unlinkSync(envPath);
-      } catch (_e) {
-        /* ignore */
-      }
+      } catch (e) {}
       try {
         fs.rmdirSync(geminiDir);
-      } catch (_e) {
-        /* ignore */
-      }
+      } catch (e) {}
       try {
         fs.rmdirSync(workspaceDir);
-      } catch (_e) {
-        /* ignore */
-      }
+      } catch (e) {}
     }
   });
 });

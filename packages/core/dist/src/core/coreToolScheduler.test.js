@@ -160,12 +160,6 @@ describe("CoreToolScheduler", () => {
                 authType: "oauth-personal",
             }),
             getToolRegistry: () => mockToolRegistry,
-            getToolSelfHealingOverride: vi.fn().mockReturnValue(undefined),
-            getToolSelfHealingSettings: vi.fn().mockReturnValue({
-                enabled: false,
-                maxRetries: 0,
-                retryDelayMs: 0,
-            }),
         };
         const scheduler = new CoreToolScheduler({
             config: mockConfig,
@@ -216,12 +210,6 @@ describe("CoreToolScheduler", () => {
                     authType: "oauth-personal",
                 }),
                 getToolRegistry: () => mockToolRegistry,
-                getToolSelfHealingOverride: vi.fn().mockReturnValue(undefined),
-                getToolSelfHealingSettings: vi.fn().mockReturnValue({
-                    enabled: false,
-                    maxRetries: 0,
-                    retryDelayMs: 0,
-                }),
             };
             const scheduler = new CoreToolScheduler({
                 config: mockConfig,
@@ -266,12 +254,6 @@ describe("CoreToolScheduler", () => {
                     authType: "oauth-personal",
                 }),
                 getToolRegistry: () => mockToolRegistry,
-                getToolSelfHealingOverride: vi.fn().mockReturnValue(undefined),
-                getToolSelfHealingSettings: vi.fn().mockReturnValue({
-                    enabled: false,
-                    maxRetries: 0,
-                    retryDelayMs: 0,
-                }),
             };
             const scheduler = new CoreToolScheduler({
                 config: mockConfig,
@@ -415,12 +397,12 @@ describe("CoreToolScheduler", () => {
                     authType: "oauth-personal",
                 }),
                 getToolRegistry: () => mockToolRegistry,
-                getToolSelfHealingOverride: vi.fn().mockReturnValue(undefined),
-                getToolSelfHealingSettings: vi.fn().mockReturnValue({
-                    enabled: false,
-                    maxRetries: 0,
-                    retryDelayMs: 0,
+                getToolSelfHealingSettings: () => ({
+                    maxConsecutiveErrors: 2,
+                    enableAutoSuggestions: true,
                 }),
+                getToolSelfHealingOverride: () => undefined,
+                getTargetDir: () => "/workspace",
             };
             const scheduler = new CoreToolScheduler({
                 config: mockConfig,
@@ -445,8 +427,8 @@ describe("CoreToolScheduler", () => {
             await scheduler.schedule({ ...baseRequest, callId: "heal-2" }, abortSignal);
             const completedCalls = (await waitForCompletion(onAllToolCallsComplete));
             const erroredCall = completedCalls[0];
-            const responsePayload = erroredCall.response.responseParts[0]
-                ?.functionResponse?.response;
+            const responsePayload = erroredCall.response.responseParts[0]?.functionResponse
+                ?.response;
             expect(responsePayload?.["error"]).toContain("auto-suggestion applied");
             expect(erroredCall.response.resultDisplay).toContain("Try narrowing");
         });
@@ -498,12 +480,12 @@ describe("CoreToolScheduler", () => {
                     authType: "oauth-personal",
                 }),
                 getToolRegistry: () => mockToolRegistry,
-                getToolSelfHealingOverride: vi.fn().mockReturnValue(undefined),
-                getToolSelfHealingSettings: vi.fn().mockReturnValue({
-                    enabled: false,
-                    maxRetries: 0,
-                    retryDelayMs: 0,
+                getToolSelfHealingSettings: () => ({
+                    maxConsecutiveErrors: 2,
+                    enableAutoSuggestions: true,
                 }),
+                getToolSelfHealingOverride: () => undefined,
+                getTargetDir: () => "/workspace",
             };
             const scheduler = new CoreToolScheduler({
                 config: mockConfig,
@@ -540,12 +522,6 @@ describe("CoreToolScheduler", () => {
             // Create mocked tool registry
             const mockConfig = {
                 getToolRegistry: () => mockToolRegistry,
-                getToolSelfHealingOverride: vi.fn().mockReturnValue(undefined),
-                getToolSelfHealingSettings: vi.fn().mockReturnValue({
-                    enabled: false,
-                    maxRetries: 0,
-                    retryDelayMs: 0,
-                }),
             };
             const mockToolRegistry = {
                 getAllToolNames: () => ["list_files", "read_file", "write_file"],
@@ -601,12 +577,6 @@ describe("CoreToolScheduler with payload", () => {
                 authType: "oauth-personal",
             }),
             getToolRegistry: () => mockToolRegistry,
-            getToolSelfHealingOverride: vi.fn().mockReturnValue(undefined),
-            getToolSelfHealingSettings: vi.fn().mockReturnValue({
-                enabled: false,
-                maxRetries: 0,
-                retryDelayMs: 0,
-            }),
         };
         const scheduler = new CoreToolScheduler({
             config: mockConfig,
@@ -869,12 +839,6 @@ describe("CoreToolScheduler edit cancellation", () => {
                 authType: "oauth-personal",
             }),
             getToolRegistry: () => mockToolRegistry,
-            getToolSelfHealingOverride: vi.fn().mockReturnValue(undefined),
-            getToolSelfHealingSettings: vi.fn().mockReturnValue({
-                enabled: false,
-                maxRetries: 0,
-                retryDelayMs: 0,
-            }),
         };
         const scheduler = new CoreToolScheduler({
             config: mockConfig,
@@ -937,6 +901,7 @@ describe("CoreToolScheduler YOLO mode", () => {
         };
         const onAllToolCallsComplete = vi.fn();
         const onToolCallsUpdate = vi.fn();
+        // Configure the scheduler for YOLO mode.
         const mockConfig = {
             getSessionId: () => "test-session-id",
             getUsageStatisticsEnabled: () => true,
@@ -948,12 +913,6 @@ describe("CoreToolScheduler YOLO mode", () => {
                 authType: "oauth-personal",
             }),
             getToolRegistry: () => mockToolRegistry,
-            getToolSelfHealingOverride: vi.fn().mockReturnValue(undefined),
-            getToolSelfHealingSettings: vi.fn().mockReturnValue({
-                enabled: false,
-                maxRetries: 0,
-                retryDelayMs: 0,
-            }),
         };
         const scheduler = new CoreToolScheduler({
             config: mockConfig,
@@ -1058,12 +1017,6 @@ describe("CoreToolScheduler cancellation during executing with live output", () 
                 authType: "oauth-personal",
             }),
             getToolRegistry: () => mockToolRegistry,
-            getToolSelfHealingOverride: vi.fn().mockReturnValue(undefined),
-            getToolSelfHealingSettings: vi.fn().mockReturnValue({
-                enabled: false,
-                maxRetries: 0,
-                retryDelayMs: 0,
-            }),
         };
         const scheduler = new CoreToolScheduler({
             config: mockConfig,
@@ -1136,12 +1089,6 @@ describe("CoreToolScheduler request queueing", () => {
                 authType: "oauth-personal",
             }),
             getToolRegistry: () => mockToolRegistry,
-            getToolSelfHealingOverride: vi.fn().mockReturnValue(undefined),
-            getToolSelfHealingSettings: vi.fn().mockReturnValue({
-                enabled: false,
-                maxRetries: 0,
-                retryDelayMs: 0,
-            }),
         };
         const scheduler = new CoreToolScheduler({
             config: mockConfig,
@@ -1238,12 +1185,6 @@ describe("CoreToolScheduler request queueing", () => {
             getContentGeneratorConfig: () => ({
                 model: "test-model",
                 authType: "oauth-personal",
-            }),
-            getToolSelfHealingOverride: vi.fn().mockReturnValue(undefined),
-            getToolSelfHealingSettings: vi.fn().mockReturnValue({
-                enabled: false,
-                maxRetries: 0,
-                retryDelayMs: 0,
             }),
         };
         const scheduler = new CoreToolScheduler({

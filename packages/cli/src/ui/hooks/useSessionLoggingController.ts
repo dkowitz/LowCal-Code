@@ -5,8 +5,11 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import type { Config, ErrorReportEvent } from "@qwen-code/qwen-code-core";
-import { setErrorReportListener } from "@qwen-code/qwen-code-core";
+import type { Config } from "@qwen-code/qwen-code-core";
+import {
+  setErrorReportListener,
+  type ErrorReportEvent,
+} from "@qwen-code/qwen-code-core";
 import {
   SessionMarkdownLogger,
   type SessionLoggingController,
@@ -102,24 +105,28 @@ export function useSessionLoggingController(
 
   const getStatus = useCallback(() => loggerRef.current.getStatus(), []);
 
-  const controller = useMemo<SessionLoggingController>(
-    () => ({
+  const controller = useMemo<SessionLoggingController>(() => {
+    return {
       enableLogging,
       disableLogging,
       getStatus,
-      logCommandInvocation: (payload) =>
-        loggerRef.current.logCommandInvocation(payload),
-      logCommandResult: (payload) =>
-        loggerRef.current.logCommandResult(payload),
-      logAppError: (message: string) =>
-        loggerRef.current.logAppError({
+      logCommandInvocation: (payload) => {
+        void loggerRef.current.logCommandInvocation(payload);
+      },
+      logCommandResult: (payload) => {
+        void loggerRef.current.logCommandResult(payload);
+      },
+      logAppError: (message: string) => {
+        void loggerRef.current.logAppError({
           timestamp: new Date().toISOString(),
           message,
-        }),
-      logErrorReport: (payload) => loggerRef.current.logErrorReport(payload),
-    }),
-    [disableLogging, enableLogging, getStatus],
-  );
+        });
+      },
+      logErrorReport: (payload) => {
+        void loggerRef.current.logErrorReport(payload);
+      },
+    };
+  }, [disableLogging, enableLogging, getStatus]);
 
   return controller;
 }

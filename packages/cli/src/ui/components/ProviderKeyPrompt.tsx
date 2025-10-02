@@ -33,7 +33,7 @@ export function ProviderKeyPrompt({
 
   useInput((input, key) => {
     let cleanInput = (input || "")
-      .replace(/\\u001b\[[0-9;]*[a-zA-Z]/g, "")
+      .replace(/\u001b\[[0-9;]*[a-zA-Z]/g, "")
       .replace(/\[200~/g, "")
       .replace(/\[201~/g, "")
       .replace(/^\[|~$/g, "");
@@ -146,3 +146,5 @@ export function ProviderKeyPrompt({
     </Box>
   );
 }
+
+export default ProviderKeyPrompt;

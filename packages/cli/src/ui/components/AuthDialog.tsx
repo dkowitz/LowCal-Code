@@ -76,7 +76,7 @@ export function AuthDialog({
         "security.auth.selectedType",
         authType,
       );
-    } catch (_e) {
+    } catch (e) {
       // ignore persistence failures; continue flow
     }
   };
@@ -88,7 +88,7 @@ export function AuthDialog({
         "security.auth.providerId",
         providerId,
       );
-    } catch (_e) {
+    } catch (e) {
       // ignore persistence failures; continue flow
     }
   };
@@ -107,7 +107,7 @@ export function AuthDialog({
         `security.auth.providers.${provider}.${key}`,
         value,
       );
-    } catch (_e) {
+    } catch (e) {
       // ignore persistence failures; continue flow
     }
   };
@@ -128,8 +128,8 @@ export function AuthDialog({
   };
   const items = [
     { label: "Qwen OAuth", value: AuthType.QWEN_OAUTH },
-    { label: "OpenRouter (OpenAI-compatible)", value: "openrouter" as const },
-    { label: "LM Studio (local)", value: "lmstudio" as const },
+    { label: "OpenRouter (OpenAI-compatible)", value: "openrouter" },
+    { label: "LM Studio (local)", value: "lmstudio" },
     { label: "OpenAI", value: AuthType.USE_OPENAI },
   ];
   // Try to detect OpenAI-compatible provider from environment first so the
@@ -197,7 +197,7 @@ export function AuthDialog({
     items.findIndex((item) => item.value === preferredValue),
   );
 
-  const handleAuthSelect = (value: AuthType | "openrouter" | "lmstudio") => {
+  const handleAuthSelect = (value: any) => {
     // Support both AuthType values and provider strings
     if (value === "openrouter") {
       const openrouterConfig =
@@ -312,7 +312,7 @@ export function AuthDialog({
           `Saved OPENAI_MODEL to: ${modelPath}`,
         );
       }
-    } catch (_e) {
+    } catch (e) {
       // ignore emission errors
     }
     setShowOpenAIKeyPrompt(false);
@@ -356,7 +356,7 @@ export function AuthDialog({
             `Saved OPENAI_BASE_URL to: ${baseUrlPath}`,
           );
         }
-      } catch (_e) {
+      } catch (e) {
         // ignore emissions
       }
       onSelect(AuthType.USE_OPENAI, SettingScope.User);
@@ -388,7 +388,7 @@ export function AuthDialog({
             `Saved OPENAI_BASE_URL to: ${baseUrlPath}`,
           );
         }
-      } catch (_e) {
+      } catch (e) {
         // ignore emissions
       }
       onSelect(AuthType.USE_OPENAI, SettingScope.User);

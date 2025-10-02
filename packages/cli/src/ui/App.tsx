@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
 import {
   Box,
   type DOMElement,
@@ -13,79 +13,79 @@ import {
   Text,
   useStdin,
   useStdout,
-} from "ink";
+} from 'ink';
 import {
   StreamingState,
   type HistoryItem,
   MessageType,
   ToolCallStatus,
   type HistoryItemWithoutId,
-} from "./types.js";
-import { useTerminalSize } from "./hooks/useTerminalSize.js";
-import { useGeminiStream } from "./hooks/useGeminiStream.js";
-import { useLoadingIndicator } from "./hooks/useLoadingIndicator.js";
-import { useThemeCommand } from "./hooks/useThemeCommand.js";
-import { useAuthCommand } from "./hooks/useAuthCommand.js";
-import { useQwenAuth } from "./hooks/useQwenAuth.js";
-import { useFolderTrust } from "./hooks/useFolderTrust.js";
-import { useEditorSettings } from "./hooks/useEditorSettings.js";
-import { useQuitConfirmation } from "./hooks/useQuitConfirmation.js";
-import { useWelcomeBack } from "./hooks/useWelcomeBack.js";
-import { useDialogClose } from "./hooks/useDialogClose.js";
-import { useSlashCommandProcessor } from "./hooks/slashCommandProcessor.js";
-import { useSessionLoggingController } from "./hooks/useSessionLoggingController.js";
-import { useSubagentCreateDialog } from "./hooks/useSubagentCreateDialog.js";
-import { useAgentsManagerDialog } from "./hooks/useAgentsManagerDialog.js";
-import { useAutoAcceptIndicator } from "./hooks/useAutoAcceptIndicator.js";
-import { useMessageQueue } from "./hooks/useMessageQueue.js";
-import { useConsoleMessages } from "./hooks/useConsoleMessages.js";
-import { Header } from "./components/Header.js";
-import { LoadingIndicator } from "./components/LoadingIndicator.js";
-import { AutoAcceptIndicator } from "./components/AutoAcceptIndicator.js";
-import { ShellModeIndicator } from "./components/ShellModeIndicator.js";
-import { InputPrompt } from "./components/InputPrompt.js";
-import { Footer } from "./components/Footer.js";
-import { ThemeDialog } from "./components/ThemeDialog.js";
-import { AuthDialog } from "./components/AuthDialog.js";
-import { AuthInProgress } from "./components/AuthInProgress.js";
-import { QwenOAuthProgress } from "./components/QwenOAuthProgress.js";
-import { EditorSettingsDialog } from "./components/EditorSettingsDialog.js";
-import { FolderTrustDialog } from "./components/FolderTrustDialog.js";
-import { ShellConfirmationDialog } from "./components/ShellConfirmationDialog.js";
-import { QuitConfirmationDialog } from "./components/QuitConfirmationDialog.js";
-import { RadioButtonSelect } from "./components/shared/RadioButtonSelect.js";
-import { ModelSelectionDialog } from "./components/ModelSelectionDialog.js";
+} from './types.js';
+import { useTerminalSize } from './hooks/useTerminalSize.js';
+import { useGeminiStream } from './hooks/useGeminiStream.js';
+import { useLoadingIndicator } from './hooks/useLoadingIndicator.js';
+import { useThemeCommand } from './hooks/useThemeCommand.js';
+import { useAuthCommand } from './hooks/useAuthCommand.js';
+import { useQwenAuth } from './hooks/useQwenAuth.js';
+import { useFolderTrust } from './hooks/useFolderTrust.js';
+import { useEditorSettings } from './hooks/useEditorSettings.js';
+import { useQuitConfirmation } from './hooks/useQuitConfirmation.js';
+import { useWelcomeBack } from './hooks/useWelcomeBack.js';
+import { useDialogClose } from './hooks/useDialogClose.js';
+import { useSlashCommandProcessor } from './hooks/slashCommandProcessor.js';
+import { useSessionLoggingController } from './hooks/useSessionLoggingController.js';
+import { useSubagentCreateDialog } from './hooks/useSubagentCreateDialog.js';
+import { useAgentsManagerDialog } from './hooks/useAgentsManagerDialog.js';
+import { useAutoAcceptIndicator } from './hooks/useAutoAcceptIndicator.js';
+import { useMessageQueue } from './hooks/useMessageQueue.js';
+import { useConsoleMessages } from './hooks/useConsoleMessages.js';
+import { Header } from './components/Header.js';
+import { LoadingIndicator } from './components/LoadingIndicator.js';
+import { AutoAcceptIndicator } from './components/AutoAcceptIndicator.js';
+import { ShellModeIndicator } from './components/ShellModeIndicator.js';
+import { InputPrompt } from './components/InputPrompt.js';
+import { Footer } from './components/Footer.js';
+import { ThemeDialog } from './components/ThemeDialog.js';
+import { AuthDialog } from './components/AuthDialog.js';
+import { AuthInProgress } from './components/AuthInProgress.js';
+import { QwenOAuthProgress } from './components/QwenOAuthProgress.js';
+import { EditorSettingsDialog } from './components/EditorSettingsDialog.js';
+import { FolderTrustDialog } from './components/FolderTrustDialog.js';
+import { ShellConfirmationDialog } from './components/ShellConfirmationDialog.js';
+import { QuitConfirmationDialog } from './components/QuitConfirmationDialog.js';
+import { RadioButtonSelect } from './components/shared/RadioButtonSelect.js';
+import { ModelSelectionDialog } from './components/ModelSelectionDialog.js';
 import {
   ModelSwitchDialog,
   type VisionSwitchOutcome,
-} from "./components/ModelSwitchDialog.js";
+} from './components/ModelSwitchDialog.js';
 import {
   getOpenAIAvailableModelFromEnv,
   getFilteredQwenModels,
   fetchOpenAICompatibleModels,
   getLMStudioLoadedModel,
   type AvailableModel,
-} from "./models/availableModels.js";
-import { createModelSourceKey } from "./models/modelSourceKey.js";
-import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
+} from './models/availableModels.js';
+import { createModelSourceKey } from './models/modelSourceKey.js';
+import { processVisionSwitchOutcome } from './hooks/useVisionAutoSwitch.js';
 import {
   AgentCreationWizard,
   AgentsManagerDialog,
-} from "./components/subagents/index.js";
-import { Colors } from "./colors.js";
-import { loadHierarchicalGeminiMemory } from "../config/config.js";
-import { setOpenAIModel, validateAuthMethod } from "../config/auth.js";
-import type { LoadedSettings } from "../config/settings.js";
-import { SettingScope } from "../config/settings.js";
-import { Tips } from "./components/Tips.js";
-import { ConsolePatcher } from "./utils/ConsolePatcher.js";
-import { registerCleanup } from "../utils/cleanup.js";
-import { DetailedMessagesDisplay } from "./components/DetailedMessagesDisplay.js";
-import { HistoryItemDisplay } from "./components/HistoryItemDisplay.js";
-import { ContextSummaryDisplay } from "./components/ContextSummaryDisplay.js";
-import { useHistory } from "./hooks/useHistoryManager.js";
-import process from "node:process";
-import type { EditorType, Config, IdeContext } from "@qwen-code/qwen-code-core";
+} from './components/subagents/index.js';
+import { Colors } from './colors.js';
+import { loadHierarchicalGeminiMemory } from '../config/config.js';
+import { setOpenAIModel } from '../config/auth.js';
+import type { LoadedSettings } from '../config/settings.js';
+import { SettingScope } from '../config/settings.js';
+import { Tips } from './components/Tips.js';
+import { ConsolePatcher } from './utils/ConsolePatcher.js';
+import { registerCleanup } from '../utils/cleanup.js';
+import { DetailedMessagesDisplay } from './components/DetailedMessagesDisplay.js';
+import { HistoryItemDisplay } from './components/HistoryItemDisplay.js';
+import { ContextSummaryDisplay } from './components/ContextSummaryDisplay.js';
+import { useHistory } from './hooks/useHistoryManager.js';
+import process from 'node:process';
+import type { EditorType, Config, IdeContext } from '@qwen-code/qwen-code-core';
 import {
   ApprovalMode,
   getAllGeminiMdFilenames,
@@ -98,42 +98,42 @@ import {
   isProQuotaExceededError,
   isGenericQuotaExceededError,
   UserTierId,
-} from "@qwen-code/qwen-code-core";
-import type { IdeIntegrationNudgeResult } from "./IdeIntegrationNudge.js";
-import { IdeIntegrationNudge } from "./IdeIntegrationNudge.js";
-
-import { useLogger } from "./hooks/useLogger.js";
-import { StreamingContext } from "./contexts/StreamingContext.js";
+} from '@qwen-code/qwen-code-core';
+import type { IdeIntegrationNudgeResult } from './IdeIntegrationNudge.js';
+import { IdeIntegrationNudge } from './IdeIntegrationNudge.js';
+import { validateAuthMethod } from '../config/auth.js';
+import { useLogger } from './hooks/useLogger.js';
+import { StreamingContext } from './contexts/StreamingContext.js';
 import {
   SessionStatsProvider,
   useSessionStats,
-} from "./contexts/SessionContext.js";
-import { useGitBranchName } from "./hooks/useGitBranchName.js";
-import { useFocus } from "./hooks/useFocus.js";
-import { useBracketedPaste } from "./hooks/useBracketedPaste.js";
-import { useTextBuffer } from "./components/shared/text-buffer.js";
-import { useVimMode, VimModeProvider } from "./contexts/VimModeContext.js";
-import { useVim } from "./hooks/vim.js";
-import type { Key } from "./hooks/useKeypress.js";
-import { useKeypress } from "./hooks/useKeypress.js";
-import { KeypressProvider } from "./contexts/KeypressContext.js";
-import { useKittyKeyboardProtocol } from "./hooks/useKittyKeyboardProtocol.js";
-import { keyMatchers, Command } from "./keyMatchers.js";
-import * as fs from "node:fs";
-import { UpdateNotification } from "./components/UpdateNotification.js";
-import type { UpdateObject } from "./utils/updateCheck.js";
-import ansiEscapes from "ansi-escapes";
-import { OverflowProvider } from "./contexts/OverflowContext.js";
-import { ShowMoreLines } from "./components/ShowMoreLines.js";
-import { PrivacyNotice } from "./privacy/PrivacyNotice.js";
-import { useSettingsCommand } from "./hooks/useSettingsCommand.js";
-import { SettingsDialog } from "./components/SettingsDialog.js";
-import { setUpdateHandler } from "../utils/handleAutoUpdate.js";
-import { appEvents, AppEvent } from "../utils/events.js";
-import { isNarrowWidth } from "./utils/isNarrowWidth.js";
-import { useWorkspaceMigration } from "./hooks/useWorkspaceMigration.js";
-import { WorkspaceMigrationDialog } from "./components/WorkspaceMigrationDialog.js";
-import { WelcomeBackDialog } from "./components/WelcomeBackDialog.js";
+} from './contexts/SessionContext.js';
+import { useGitBranchName } from './hooks/useGitBranchName.js';
+import { useFocus } from './hooks/useFocus.js';
+import { useBracketedPaste } from './hooks/useBracketedPaste.js';
+import { useTextBuffer } from './components/shared/text-buffer.js';
+import { useVimMode, VimModeProvider } from './contexts/VimModeContext.js';
+import { useVim } from './hooks/vim.js';
+import type { Key } from './hooks/useKeypress.js';
+import { useKeypress } from './hooks/useKeypress.js';
+import { KeypressProvider } from './contexts/KeypressContext.js';
+import { useKittyKeyboardProtocol } from './hooks/useKittyKeyboardProtocol.js';
+import { keyMatchers, Command } from './keyMatchers.js';
+import * as fs from 'node:fs';
+import { UpdateNotification } from './components/UpdateNotification.js';
+import type { UpdateObject } from './utils/updateCheck.js';
+import ansiEscapes from 'ansi-escapes';
+import { OverflowProvider } from './contexts/OverflowContext.js';
+import { ShowMoreLines } from './components/ShowMoreLines.js';
+import { PrivacyNotice } from './privacy/PrivacyNotice.js';
+import { useSettingsCommand } from './hooks/useSettingsCommand.js';
+import { SettingsDialog } from './components/SettingsDialog.js';
+import { setUpdateHandler } from '../utils/handleAutoUpdate.js';
+import { appEvents, AppEvent } from '../utils/events.js';
+import { isNarrowWidth } from './utils/isNarrowWidth.js';
+import { useWorkspaceMigration } from './hooks/useWorkspaceMigration.js';
+import { WorkspaceMigrationDialog } from './components/WorkspaceMigrationDialog.js';
+import { WelcomeBackDialog } from './components/WelcomeBackDialog.js';
 
 // Maximum number of queued messages to display in UI to prevent performance issues
 const MAX_DISPLAYED_QUEUED_MESSAGES = 3;
@@ -147,7 +147,7 @@ interface AppProps {
 
 function isToolExecuting(pendingHistoryItems: HistoryItemWithoutId[]) {
   return pendingHistoryItems.some((item) => {
-    if (item && item.type === "tool_group") {
+    if (item && item.type === 'tool_group') {
       return item.tools.some(
         (tool) => ToolCallStatus.Executing === tool.status,
       );
@@ -158,11 +158,11 @@ function isToolExecuting(pendingHistoryItems: HistoryItemWithoutId[]) {
 
 export const AppWrapper = (props: AppProps) => {
   const kittyProtocolStatus = useKittyKeyboardProtocol();
-  const nodeMajorVersion = parseInt(process.versions.node.split(".")[0], 10);
+  const nodeMajorVersion = parseInt(process.versions.node.split('.')[0], 10);
   return (
     <KeypressProvider
       kittyProtocolEnabled={kittyProtocolStatus.enabled}
-      pasteWorkaround={process.platform === "win32" || nodeMajorVersion < 20}
+      pasteWorkaround={process.platform === 'win32' || nodeMajorVersion < 20}
       config={props.config}
       debugKeystrokeLogging={
         props.settings.merged.general?.debugKeystrokeLogging
@@ -182,7 +182,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   useBracketedPaste();
   const [updateInfo, setUpdateInfo] = useState<UpdateObject | null>(null);
   const { stdout } = useStdout();
-  const nightly = version.includes("nightly");
+  const nightly = version.includes('nightly');
   const { history, addItem, clearItems, loadHistory } = useHistory();
 
   const [idePromptAnswered, setIdePromptAnswered] = useState(false);
@@ -230,7 +230,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   }, [setStaticKey, stdout]);
 
   const [geminiMdFileCount, setGeminiMdFileCount] = useState<number>(0);
-  const [debugMessage, setDebugMessage] = useState<string>("");
+  const [debugMessage, setDebugMessage] = useState<string>('');
   const [themeError, setThemeError] = useState<string | null>(null);
   const [authError, setAuthError] = useState<string | null>(null);
   const [editorError, setEditorError] = useState<string | null>(null);
@@ -252,15 +252,15 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         try {
           await config.setModel(savedModel);
           setCurrentModel(savedModel);
-          if (settings.merged.security?.auth?.providerId === "openrouter") {
+          if (settings.merged.security?.auth?.providerId === 'openrouter') {
             try {
               setOpenAIModel(savedModel);
             } catch (err) {
-              console.warn("Failed to persist OpenRouter model to .env:", err);
+              console.warn('Failed to persist OpenRouter model to .env:', err);
             }
           }
         } catch (e) {
-          console.warn("Failed to restore saved model from settings:", e);
+          console.warn('Failed to restore saved model from settings:', e);
         }
       })();
     }
@@ -270,14 +270,15 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     settings.merged.security?.auth?.providerId,
   ]);
 
-  const memoizedProcessEnv = useMemo(() => JSON.stringify(process.env), []);
-
   useEffect(() => {
     const authType = settings.merged.security?.auth?.selectedType;
-    const baseUrl = process.env["OPENAI_BASE_URL"];
+    const baseUrl = process.env['OPENAI_BASE_URL'];
     let interval: NodeJS.Timeout | undefined = undefined;
 
-    if (authType === AuthType.USE_OPENAI && baseUrl?.includes("127.0.0.1")) {
+    if (
+      authType === AuthType.USE_OPENAI &&
+      baseUrl?.includes('127.0.0.1')
+    ) {
       const fetchLmStudioModel = async () => {
         if (baseUrl) {
           const loadedModel = await getLMStudioLoadedModel(baseUrl);
@@ -294,11 +295,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         clearInterval(interval);
       }
     };
-  }, [settings.merged.security?.auth?.selectedType, memoizedProcessEnv]);
+  }, [settings.merged.security?.auth?.selectedType, JSON.stringify(process.env)]);
 
   useEffect(() => {
     const providerId = settings.merged.security?.auth?.providerId;
-    if (providerId !== "lmstudio") {
+    if (providerId !== 'lmstudio') {
       setLmStudioModel(null);
     }
   }, [settings.merged.security?.auth?.providerId]);
@@ -334,12 +335,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   // Model selection dialog states
   const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] =
     useState(false);
-  const [availableModelsForDialog, setAvailableModelsForDialog] = useState<
-    AvailableModel[]
-  >([]);
-  const [allAvailableModels, setAllAvailableModels] = useState<
-    AvailableModel[]
-  >([]);
+  const [availableModelsForDialog, setAvailableModelsForDialog] =
+    useState<AvailableModel[]>([]);
+  const [allAvailableModels, setAllAvailableModels] =
+    useState<AvailableModel[]>([]);
   const [modelSourceKey, setModelSourceKey] = useState<string | null>(null);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] =
@@ -369,7 +368,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
     const logErrorHandler = (errorMessage: unknown) => {
       handleNewMessage({
-        type: "error",
+        type: 'error',
         content: String(errorMessage),
         count: 1,
       });
@@ -378,9 +377,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
     const showInfoHandler = (payload: unknown) => {
       try {
-        const _text = String(payload);
-        addItem({ type: MessageType.INFO, text: _text }, Date.now());
-      } catch (_e) {
+        const text = String(payload);
+        addItem({ type: MessageType.INFO, text }, Date.now());
+      } catch (e) {
         // ignore
       }
     };
@@ -391,7 +390,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       appEvents.off(AppEvent.LogError, logErrorHandler);
       appEvents.off(AppEvent.ShowInfo, showInfoHandler);
     };
-  }, [handleNewMessage, addItem]);
+  }, [handleNewMessage]);
 
   const openPrivacyNotice = useCallback(() => {
     setShowPrivacyNotice(true);
@@ -406,7 +405,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const errorCount = useMemo(
     () =>
       consoleMessages
-        .filter((msg) => msg.type === "error")
+        .filter((msg) => msg.type === 'error')
         .reduce((total, msg) => total + msg.count, 0),
     [consoleMessages],
   );
@@ -486,10 +485,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   // Handle Qwen OAuth timeout
   useEffect(() => {
-    if (isQwenAuth && authStatus === "timeout") {
+    if (isQwenAuth && authStatus === 'timeout') {
       setAuthError(
         authMessage ||
-          "Qwen OAuth authentication timed out. Please try again or select a different authentication method.",
+          'Qwen OAuth authentication timed out. Please try again or select a different authentication method.',
       );
       cancelQwenAuth();
       cancelAuthentication();
@@ -547,7 +546,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     addItem(
       {
         type: MessageType.INFO,
-        text: "Refreshing hierarchical memory (QWEN.md or other context files)...",
+        text: 'Refreshing hierarchical memory (QWEN.md or other context files)...',
       },
       Date.now(),
     );
@@ -561,7 +560,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         config.getFileService(),
         settings.merged,
         config.getExtensionContextFilePaths(),
-        settings.merged.context?.importFormat || "tree", // Use setting or default to 'tree'
+        settings.merged.context?.importFormat || 'tree', // Use setting or default to 'tree'
         config.getFileFilteringOptions(),
       );
 
@@ -572,7 +571,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       addItem(
         {
           type: MessageType.INFO,
-          text: `Memory refreshed successfully. ${memoryContent.length > 0 ? `Loaded ${memoryContent.length} characters from ${fileCount} file(s).` : "No memory content found."}`,
+          text: `Memory refreshed successfully. ${memoryContent.length > 0 ? `Loaded ${memoryContent.length} characters from ${fileCount} file(s).` : 'No memory content found.'}`,
         },
         Date.now(),
       );
@@ -590,7 +589,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         },
         Date.now(),
       );
-      console.error("Error refreshing memory:", error);
+      console.error('Error refreshing memory:', error);
     }
   }, [config, addItem, settings.merged]);
 
@@ -685,7 +684,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
       // Switch model for future use but return false to stop current retry
       config.setModel(fallbackModel).catch((error) => {
-        console.error("Failed to switch to fallback model:", error);
+        console.error('Failed to switch to fallback model:', error);
       });
       config.setFallbackMode(true);
       logFlashFallback(
@@ -731,7 +730,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   }, [settings, openEditorDialog]);
 
   const onAuthError = useCallback(() => {
-    setAuthError("reauth required");
+    setAuthError('reauth required');
     openAuthDialog();
   }, [openAuthDialog, setAuthError]);
 
@@ -778,16 +777,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       const baseUrl =
         contentGeneratorConfig.authType === AuthType.USE_OPENAI
           ? contentGeneratorConfig.baseUrl ||
-            process.env["OPENAI_BASE_URL"] ||
-            ""
-          : "";
+            process.env['OPENAI_BASE_URL'] ||
+            ''
+          : '';
 
       // Determine provider ID for source key. For LM Studio (detected via localhost URL), ignore any stored providerId to avoid mixing with OpenRouter.
-      const isLMStudioBase =
-        baseUrl.includes("127.0.0.1") || baseUrl.includes("localhost");
-      const currentProviderId = isLMStudioBase
-        ? undefined
-        : (settings.merged.security?.auth?.providerId ?? undefined);
+      const isLMStudioBase = baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost');
+      const currentProviderId = isLMStudioBase ? undefined : (settings.merged.security?.auth?.providerId ?? undefined);
 
       const nextSourceKey = createModelSourceKey({
         authType: contentGeneratorConfig.authType,
@@ -795,7 +791,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         baseUrl,
       });
 
-      if (allAvailableModels.length > 0 && modelSourceKey === nextSourceKey) {
+      if (
+        allAvailableModels.length > 0 &&
+        modelSourceKey === nextSourceKey
+      ) {
         setAvailableModelsForDialog(allAvailableModels);
         setIsModelSelectionDialogOpen(true);
         return;
@@ -807,11 +806,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       try {
         if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
           const apiKey =
-            contentGeneratorConfig.apiKey || process.env["OPENAI_API_KEY"];
+            contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
           if (baseUrl) {
             // Detect LM Studio by localhost patterns
-            const isLMStudio =
-              baseUrl.includes("127.0.0.1") || baseUrl.includes("localhost");
+            const isLMStudio = baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost');
             if (isLMStudio) {
               // Fetch models from LM Studio endpoint
               models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
@@ -821,9 +819,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 if (lmModel && !models.find((m) => m.id === lmModel)) {
                   models.push({ id: lmModel, label: lmModel });
                 }
-              } catch (_) {
-                /* ignore */
-              }
+              } catch (_) {}
             } else {
               // Regular OpenAI provider
               models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
@@ -850,9 +846,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           const fallbackId = models[0].id;
           setCurrentModel(fallbackId);
           // Update config so stats use correct model
-          void config.setModel(fallbackId).catch(() => {
-            /* ignore */
-          });
+          void config.setModel(fallbackId).catch(() => {});
         } else {
           setCurrentModel(configModel);
         }
@@ -881,18 +875,18 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         // Unload previous model by setting new model (config.setModel will reinitialize client)
         await config.setModel(modelId);
         setCurrentModel(modelId);
-        if (settings.merged.security?.auth?.providerId === "openrouter") {
+        if (settings.merged.security?.auth?.providerId === 'openrouter') {
           try {
             setOpenAIModel(modelId);
           } catch (err) {
-            console.warn("Failed to persist OpenRouter model to .env:", err);
+            console.warn('Failed to persist OpenRouter model to .env:', err);
           }
         }
         // Persist selected model to user settings so it is restored on next startup.
         try {
-          settings.setValue(SettingScope.User, "model.name", modelId);
-        } catch (_e) {
-          console.warn("Failed to persist selected model to settings:", _e);
+          settings.setValue(SettingScope.User, 'model.name', modelId);
+        } catch (e) {
+          console.warn('Failed to persist selected model to settings:', e);
         }
         setIsModelSelectionDialogOpen(false);
         addItem(
@@ -906,22 +900,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         try {
           const gemini = config.getGeminiClient();
           if (gemini) {
-            void gemini
-              .generateContent(
-                [{ role: "user", parts: [{ text: "Say hello." }] }],
-                {},
-                new AbortController().signal,
-                modelId,
-              )
-              .catch(() => {
-                /* ignore */
-              });
+            void gemini.generateContent([{ role: 'user', parts: [{ text: 'Say hello.' }] }], {}, new AbortController().signal, modelId).catch(() => {});
           }
-        } catch (_e) {
+        } catch (e) {
           // ignore warm-up errors
         }
       } catch (error) {
-        console.error("Failed to switch model:", error);
+        console.error('Failed to switch model:', error);
         addItem(
           {
             type: MessageType.ERROR,
@@ -931,7 +916,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         );
       }
     },
-    [config, setCurrentModel, addItem, settings],
+    [config, setCurrentModel, addItem],
   );
 
   // available models for dialog are populated via handleModelSelectionOpen
@@ -978,7 +963,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   );
 
   const buffer = useTextBuffer({
-    initialText: "",
+    initialText: '',
     viewport: { height: 10, width: inputWidth },
     stdin,
     setRawMode,
@@ -1066,12 +1051,12 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   // Update the cancel handler with message queue support
   cancelHandlerRef.current = useCallback(() => {
     if (isToolExecuting(pendingHistoryItems)) {
-      buffer.setText(""); // Just clear the prompt
+      buffer.setText(''); // Just clear the prompt
       return;
     }
 
     const lastUserMessage = userMessages.at(-1);
-    let textToSet = lastUserMessage || "";
+    let textToSet = lastUserMessage || '';
 
     // Append queued messages if any exist
     const queuedText = getQueuedMessagesText();
@@ -1101,21 +1086,21 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const handleIdePromptComplete = useCallback(
     (result: IdeIntegrationNudgeResult) => {
-      if (result.userSelection === "yes") {
+      if (result.userSelection === 'yes') {
         if (result.isExtensionPreInstalled) {
-          handleSlashCommand("/ide enable");
+          handleSlashCommand('/ide enable');
         } else {
-          handleSlashCommand("/ide install");
+          handleSlashCommand('/ide install');
         }
         settings.setValue(
           SettingScope.User,
-          "hasSeenIdeIntegrationNudge",
+          'hasSeenIdeIntegrationNudge',
           true,
         );
-      } else if (result.userSelection === "dismiss") {
+      } else if (result.userSelection === 'dismiss') {
         settings.setValue(
           SettingScope.User,
-          "hasSeenIdeIntegrationNudge",
+          'hasSeenIdeIntegrationNudge',
           true,
         );
       }
@@ -1142,7 +1127,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           clearTimeout(timerRef.current);
         }
         // Exit directly without showing confirmation dialog
-        handleSlashCommand("/quit");
+        handleSlashCommand('/quit');
         return;
       }
 
@@ -1150,7 +1135,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
       // Special case: If quit-confirm dialog is open, Ctrl+C means "quit immediately"
       if (quitConfirmationRequest) {
-        handleSlashCommand("/quit");
+        handleSlashCommand('/quit');
         return;
       }
 
@@ -1167,12 +1152,12 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
       // 3. Clear input buffer (if has content)
       if (buffer.text.length > 0) {
-        buffer.setText("");
+        buffer.setText('');
         return; // Input cleared, end processing
       }
 
       // All cleanup tasks completed, show quit confirmation dialog
-      handleSlashCommand("/quit-confirm");
+      handleSlashCommand('/quit-confirm');
     },
     [
       handleSlashCommand,
@@ -1188,7 +1173,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     (key: Key) => {
       // Debug log keystrokes if enabled
       if (settings.merged.general?.debugKeystrokeLogging) {
-        console.log("[DEBUG] Keystroke:", JSON.stringify(key));
+        console.log('[DEBUG] Keystroke:', JSON.stringify(key));
       }
 
       let enteringConstrainHeightMode = false;
@@ -1205,15 +1190,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
         const mcpServers = config.getMcpServers();
         if (Object.keys(mcpServers || {}).length > 0) {
-          handleSlashCommand(newValue ? "/mcp desc" : "/mcp nodesc");
+          handleSlashCommand(newValue ? '/mcp desc' : '/mcp nodesc');
         }
-      } else if (
-        keyMatchers[Command.TOGGLE_IDE_CONTEXT_DETAIL](key) &&
+      } else if (keyMatchers[Command.TOGGLE_IDE_CONTEXT_DETAIL](key) &&
         config.getIdeMode() &&
         ideContextState
       ) {
         // Show IDE status when in IDE mode and context is available.
-        handleSlashCommand("/ide status");
+        handleSlashCommand('/ide status');
       } else if (keyMatchers[Command.TOGGLE_YOLO_MODE](key)) {
         toggleYoloMode();
       } else if (keyMatchers[Command.QUIT](key)) {
@@ -1235,7 +1219,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       }
     },
     [
-      toggleYoloMode,
       constrainHeight,
       setConstrainHeight,
       setShowErrorDetails,
@@ -1275,10 +1258,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
       const currentSessionUserMessages = history
         .filter(
-          (item): item is HistoryItem & { type: "user"; text: string } =>
-            item.type === "user" &&
-            typeof item.text === "string" &&
-            item.text.trim() !== "",
+          (item): item is HistoryItem & { type: 'user'; text: string } =>
+            item.type === 'user' &&
+            typeof item.text === 'string' &&
+            item.text.trim() !== '',
         )
         .map((item) => item.text)
         .reverse(); // Newest first, to match pastMessagesRaw sorting
@@ -1364,7 +1347,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     if (config.getDebugMode()) {
       return consoleMessages;
     }
-    return consoleMessages.filter((msg) => msg.type !== "debug");
+    return consoleMessages.filter((msg) => msg.type !== 'debug');
   }, [consoleMessages, config]);
 
   const branchName = useGitBranchName(config.getTargetDir());
@@ -1393,7 +1376,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       !isSubagentCreateDialogOpen &&
       !showPrivacyNotice &&
       !showWelcomeBackDialog &&
-      welcomeBackChoice !== "restart" &&
+      welcomeBackChoice !== 'restart' &&
       geminiClient?.isInitialized?.()
     ) {
       submitQuery(initialPrompt);
@@ -1441,7 +1424,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const staticAreaMaxItemHeight = Math.max(terminalHeight * 4, 100);
   const placeholder = vimModeEnabled
     ? "  Press 'i' for INSERT mode and 'Esc' for NORMAL mode."
-    : "  Type your message or @path/to/file";
+    : '  Type your message or @path/to/file';
 
   return (
     <StreamingContext.Provider value={streamingState}>
@@ -1563,8 +1546,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 <RadioButtonSelect
                   isFocused={!!confirmationRequest}
                   items={[
-                    { label: "Yes", value: true },
-                    { label: "No", value: false },
+                    { label: 'Yes', value: true },
+                    { label: 'No', value: false },
                   ]}
                   onSelect={(value: boolean) => {
                     confirmationRequest.onConfirm(value);
@@ -1622,14 +1605,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                   authMessage={authMessage}
                   onTimeout={() => {
                     setAuthError(
-                      "Qwen OAuth authentication timed out. Please try again.",
+                      'Qwen OAuth authentication timed out. Please try again.',
                     );
                     cancelQwenAuth();
                     cancelAuthentication();
                     openAuthDialog();
                   }}
                   onCancel={() => {
-                    setAuthError("Qwen OAuth authentication cancelled.");
+                    setAuthError('Qwen OAuth authentication cancelled.');
                     cancelQwenAuth();
                     cancelAuthentication();
                     openAuthDialog();
@@ -1638,7 +1621,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               ) : (
                 <AuthInProgress
                   onTimeout={() => {
-                    setAuthError("Authentication timed out. Please try again.");
+                    setAuthError('Authentication timed out. Please try again.');
                     cancelAuthentication();
                     openAuthDialog();
                   }}
@@ -1721,7 +1704,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                     .map((message, index) => {
                       // Ensure multi-line messages are collapsed for the preview.
                       // Replace all whitespace (including newlines) with a single space.
-                      const preview = message.replace(/\s+/g, " ");
+                      const preview = message.replace(/\s+/g, ' ');
 
                       return (
                         // Ensure the Box takes full width so truncation calculates correctly
@@ -1749,11 +1732,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 marginTop={1}
                 justifyContent="space-between"
                 width="100%"
-                flexDirection={isNarrow ? "column" : "row"}
-                alignItems={isNarrow ? "flex-start" : "center"}
+                flexDirection={isNarrow ? 'column' : 'row'}
+                alignItems={isNarrow ? 'flex-start' : 'center'}
               >
                 <Box>
-                  {process.env["GEMINI_SYSTEM_MD"] && (
+                  {process.env['GEMINI_SYSTEM_MD'] && (
                     <Text color={Colors.AccentRed}>|⌐■_■| </Text>
                   )}
                   {ctrlCPressedOnce ? (
@@ -1834,13 +1817,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             >
               {history.find(
                 (item) =>
-                  item.type === "error" && item.text?.includes(initError),
+                  item.type === 'error' && item.text?.includes(initError),
               )?.text ? (
                 <Text color={Colors.AccentRed}>
                   {
                     history.find(
                       (item) =>
-                        item.type === "error" && item.text?.includes(initError),
+                        item.type === 'error' && item.text?.includes(initError),
                     )?.text
                   }
                 </Text>
@@ -1850,7 +1833,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                     Initialization Error: {initError}
                   </Text>
                   <Text color={Colors.AccentRed}>
-                    {" "}
+                    {' '}
                     Please check API key and configuration.
                   </Text>
                 </>

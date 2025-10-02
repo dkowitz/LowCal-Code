@@ -363,11 +363,12 @@ function mergeSettings(
   function normalizeLegacyModel(s: Settings | undefined): Settings | undefined {
     if (!s) return s;
     try {
-      if (typeof (s as { model?: unknown }).model === "string") {
+      const asAny = s as any;
+      if (typeof asAny.model === "string") {
         return {
           ...s,
-          model: { name: (s as { model: string }).model },
-        };
+          model: { ...((s.model as any) ? {} : {}), name: asAny.model },
+        } as Settings;
       }
     } catch (_e) {
       // ignore

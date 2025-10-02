@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { AuthType, GEMINI_CONFIG_DIR as GEMINI_DIR, } from "@qwen-code/qwen-code-core";
+import { AuthType } from "@qwen-code/qwen-code-core";
 import { loadEnvironment } from "./settings.js";
 export const validateAuthMethod = (authMethod) => {
     loadEnvironment();
@@ -45,6 +45,7 @@ export const validateAuthMethod = (authMethod) => {
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { homedir } from "node:os";
+import { GEMINI_CONFIG_DIR as GEMINI_DIR } from "@qwen-code/qwen-code-core";
 function getEnvFilePath() {
     // Search upward from cwd for a project .env or .qwen/.env, otherwise use home fallback.
     let currentDir = path.resolve(process.cwd());
@@ -94,7 +95,13 @@ function setEnvVarAndPersist(key, value) {
     fs.writeFileSync(envPath, newLines.filter(Boolean).join("\n"), "utf-8");
     return envPath;
 }
-export const setOpenAIApiKey = (apiKey) => setEnvVarAndPersist("OPENAI_API_KEY", apiKey);
-export const setOpenAIBaseUrl = (baseUrl) => setEnvVarAndPersist("OPENAI_BASE_URL", baseUrl);
-export const setOpenAIModel = (model) => setEnvVarAndPersist("OPENAI_MODEL", model);
+export const setOpenAIApiKey = (apiKey) => {
+    return setEnvVarAndPersist("OPENAI_API_KEY", apiKey);
+};
+export const setOpenAIBaseUrl = (baseUrl) => {
+    return setEnvVarAndPersist("OPENAI_BASE_URL", baseUrl);
+};
+export const setOpenAIModel = (model) => {
+    return setEnvVarAndPersist("OPENAI_MODEL", model);
+};
 //# sourceMappingURL=auth.js.map

@@ -259,10 +259,11 @@ function mergeSettings(system, systemDefaults, user, workspace, isTrusted) {
         if (!s)
             return s;
         try {
-            if (typeof s.model === "string") {
+            const asAny = s;
+            if (typeof asAny.model === "string") {
                 return {
                     ...s,
-                    model: { name: s.model },
+                    model: { ...(s.model ? {} : {}), name: asAny.model },
                 };
             }
         }

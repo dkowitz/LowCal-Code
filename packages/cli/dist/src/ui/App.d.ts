@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { LoadedSettings } from "../config/settings.js";
-import type { Config } from "@qwen-code/qwen-code-core";
+import type { LoadedSettings } from '../config/settings.js';
+import type { Config } from '@qwen-code/qwen-code-core';
 interface AppProps {
     config: Config;
     settings: LoadedSettings;
