@@ -781,9 +781,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             ''
           : '';
 
-      // Determine provider ID for source key. For LM Studio (detected via localhost URL), ignore any stored providerId to avoid mixing with OpenRouter.
-      const isLMStudioBase = baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost');
-      const currentProviderId = isLMStudioBase ? undefined : (settings.merged.security?.auth?.providerId ?? undefined);
+      const currentProviderId =
+        settings.merged.security?.auth?.providerId ?? undefined;
 
       const nextSourceKey = createModelSourceKey({
         authType: contentGeneratorConfig.authType,
@@ -808,29 +807,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           const apiKey =
             contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
           if (baseUrl) {
-            // Detect LM Studio by localhost patterns
-            const isLMStudio = baseUrl.includes('127.0.0.1') || baseUrl.includes('localhost');
-            if (isLMStudio) {
-              // Fetch models from LM Studio endpoint
-              models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
-              // Ensure currently loaded model is included
-              try {
-                const lmModel = await getLMStudioLoadedModel(baseUrl);
-                if (lmModel && !models.find((m) => m.id === lmModel)) {
-                  models.push({ id: lmModel, label: lmModel });
-                }
-              } catch (_) {}
-            } else {
-              // Regular OpenAI provider
-              models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
-              const openAIModel = getOpenAIAvailableModelFromEnv();
-              if (openAIModel && !models.find((m) => m.id === openAIModel.id)) {
-                models.push(openAIModel);
-              }
-            }
+            models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
+          }
+          const openAIModel = getOpenAIAvailableModelFromEnv();
+          if (openAIModel && !models.find(m => m.id === openAIModel.id)) {
+            models.push(openAIModel);
           }
         } else {
-          // Non-OpenAI providers (e.g., Qwen)
           models = getFilteredQwenModels(
             settings.merged.experimental?.visionModelPreview ?? true,
           );
@@ -838,18 +821,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
         setAllAvailableModels(models);
         setAvailableModelsForDialog(models);
-        // Ensure current model reflects the actual loaded LM Studio model if applicable
-        const configModel = config.getModel();
-        const modelInList = models.find((m) => m.id === configModel);
-        if (!modelInList && models.length > 0) {
-          // Fallback to first model (likely the loaded LM Studio model)
-          const fallbackId = models[0].id;
-          setCurrentModel(fallbackId);
-          // Update config so stats use correct model
-          void config.setModel(fallbackId).catch(() => {});
-        } else {
-          setCurrentModel(configModel);
-        }
         setModelSourceKey(nextSourceKey);
         setIsModelSelectionDialogOpen(true);
       } finally {
