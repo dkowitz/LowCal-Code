@@ -16,6 +16,7 @@ import { getProgrammingLanguage } from '../telemetry/telemetry-utils.js';
 import { logFileOperation } from '../telemetry/loggers.js';
 import { FileOperationEvent } from '../telemetry/types.js';
 import { ToolErrorType } from './tool-error.js';
+import { applySmartTruncation } from '../utils/result-truncation.js';
 /**
  * Creates the default exclusion patterns including dynamic patterns.
  * This combines the shared patterns with dynamic patterns like GEMINI.md.
@@ -325,9 +326,26 @@ ${finalExclusionPatternsForDescription
         else {
             contentParts.push('No files matching the criteria were found or all were skipped.');
         }
+        // Apply smart truncation if content is too large
+        // Convert parts to string for truncation check
+        const contentString = contentParts
+            .map((part) => (typeof part === 'string' ? part : '[non-text content]'))
+            .join('');
+        const truncationResult = applySmartTruncation('read_many_files', contentString);
+        let finalContent;
+        let finalDisplay = displayMessage.trim();
+        if (truncationResult.wasTruncated) {
+            // If truncated, return as string
+            finalContent = truncationResult.content;
+            finalDisplay += `\n\n⚠️  ${truncationResult.summary}`;
+        }
+        else {
+            // Not truncated, return original parts (may include images/PDFs)
+            finalContent = contentParts;
+        }
         return {
-            llmContent: contentParts,
-            returnDisplay: displayMessage.trim(),
+            llmContent: finalContent,
+            returnDisplay: finalDisplay,
         };
     }
 }

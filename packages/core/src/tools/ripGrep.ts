@@ -14,6 +14,7 @@ import { SchemaValidator } from '../utils/schemaValidator.js';
 import { makeRelative, shortenPath } from '../utils/paths.js';
 import { getErrorMessage, isNodeError } from '../utils/errors.js';
 import type { Config } from '../config/config.js';
+import { applySmartTruncation } from '../utils/result-truncation.js';
 
 
 
@@ -193,8 +194,18 @@ class GrepToolInvocation extends BaseToolInvocation<
 
       let displayMessage = `Found ${matchCount} ${matchTerm}`;
 
+      // Apply smart truncation to prevent context overflow
+      const truncationResult = applySmartTruncation(
+        'search_file_content',
+        llmContent.trim(),
+      );
+
+      if (truncationResult.wasTruncated) {
+        displayMessage += ` (truncated: ${truncationResult.summary})`;
+      }
+
       return {
-        llmContent: llmContent.trim(),
+        llmContent: truncationResult.content,
         returnDisplay: displayMessage,
       };
     } catch (error) {

@@ -35,6 +35,7 @@ import * as Diff from 'diff';
 import { doesToolInvocationMatch } from '../utils/tool-utils.js';
 import levenshtein from 'fast-levenshtein';
 import { getPlanModeSystemReminder } from './prompts.js';
+import { validateToolCall, formatToolWarning } from '../utils/tool-validation.js';
 
 export type ValidatingToolCall = {
   status: 'validating';
@@ -481,6 +482,15 @@ export class CoreToolScheduler {
         } as ErroredToolCall;
       }
 
+      // Proactive validation for potentially large results
+      const warning = validateToolCall(
+        call.request.name,
+        args as Record<string, unknown>,
+      );
+      if (warning && warning.severity !== 'info') {
+        console.warn(`[Tool Validation] ${formatToolWarning(warning)}`);
+      }
+
       return {
         ...call,
         request: { ...call.request, args: args as Record<string, unknown> },
@@ -905,6 +915,17 @@ export class CoreToolScheduler {
         const invocation = scheduledCall.invocation;
         this.setStatusInternal(callId, 'executing');
 
+        // Debug logging for tool execution start
+        const startTime = Date.now();
+        console.debug(`[Tool] Starting: ${toolName} (${callId.substring(0, 8)}...)`);
+        if (Object.keys(scheduledCall.request.args).length > 0) {
+          const argsPreview = JSON.stringify(scheduledCall.request.args, null, 2)
+            .split('\n')
+            .slice(0, 5)
+            .join('\n');
+          console.debug(`[Tool] Args: ${argsPreview}${Object.keys(scheduledCall.request.args).length > 5 ? '...' : ''}`);
+        }
+
         const liveOutputCallback = scheduledCall.tool.canUpdateOutput
           ? (outputChunk: ToolResultDisplay) => {
               if (this.outputUpdateHandler) {
@@ -922,7 +943,11 @@ export class CoreToolScheduler {
         invocation
           .execute(signal, liveOutputCallback)
           .then(async (toolResult: ToolResult) => {
+            const duration = Date.now() - startTime;
+            console.debug(`[Tool] Completed: ${toolName} in ${duration}ms`);
+
             if (signal.aborted) {
+              console.debug(`[Tool] Cancelled: ${toolName}`);
               this.setStatusInternal(
                 callId,
                 'cancelled',
@@ -944,9 +969,11 @@ export class CoreToolScheduler {
                 error: undefined,
                 errorType: undefined,
               };
+              console.debug(`[Tool] Success: ${toolName}`);
               this.setStatusInternal(callId, 'success', successResponse);
             } else {
               // It is a failure
+              console.debug(`[Tool] Error: ${toolName} - ${toolResult.error.message}`);
               const error = new Error(toolResult.error.message);
               const errorResponse = createErrorResponse(
                 scheduledCall.request,
@@ -957,6 +984,8 @@ export class CoreToolScheduler {
             }
           })
           .catch((executionError: Error) => {
+            const duration = Date.now() - startTime;
+            console.debug(`[Tool] Exception: ${toolName} after ${duration}ms - ${executionError.message}`);
             this.setStatusInternal(
               callId,
               'error',

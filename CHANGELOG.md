@@ -2,6 +2,19 @@
 
 ## 0.0.13
 
+- **Added intelligent context management system to prevent "unable to compress history" errors:**
+  - Implemented smart truncation for tool results (search_file_content, read_many_files, etc.) that maintains effectiveness while preventing context overflow
+  - Added adaptive history compression with 6 progressive strategies for self-healing recovery
+  - Implemented proactive warnings for potentially large tool calls with helpful suggestions
+  - Tool results now automatically truncate with informative summaries when exceeding size thresholds
+  - Context overflow errors now trigger autonomous recovery attempts before failing
+- **Enhanced debug console (Ctrl+O) with real-time agent execution feedback:**
+  - Added detailed logging for tool execution (start, completion, duration, errors)
+  - Added model activity tracking (thinking, responding, streaming chunks)
+  - Added context management visibility (compression attempts, recovery strategies)
+  - Added tool validation warnings for potentially problematic queries
+  - Debug messages are toggleable and don't clutter main conversation
+  - Perfect for monitoring long agentic runs and debugging issues
 - Added preflight token budget enforcement with automatic chat compression retries to avoid context-window failures.
 - Added streaming idle watchdog and automatic non-streaming fallback to prevent hangs from silent providers.
 - Expanded retry/backoff telemetry with classification, status codes, and provider tags for easier diagnosis of transient failures.

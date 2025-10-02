@@ -11,6 +11,7 @@ import { BaseDeclarativeTool, BaseToolInvocation, Kind } from './tools.js';
 import { SchemaValidator } from '../utils/schemaValidator.js';
 import { makeRelative, shortenPath } from '../utils/paths.js';
 import { getErrorMessage, isNodeError } from '../utils/errors.js';
+import { applySmartTruncation } from '../utils/result-truncation.js';
 /**
  * Lazy loads the ripgrep binary path to avoid loading the library until needed
  */
@@ -125,8 +126,13 @@ class GrepToolInvocation extends BaseToolInvocation {
                 llmContent += '---\n';
             }
             let displayMessage = `Found ${matchCount} ${matchTerm}`;
+            // Apply smart truncation to prevent context overflow
+            const truncationResult = applySmartTruncation('search_file_content', llmContent.trim());
+            if (truncationResult.wasTruncated) {
+                displayMessage += ` (truncated: ${truncationResult.summary})`;
+            }
             return {
-                llmContent: llmContent.trim(),
+                llmContent: truncationResult.content,
                 returnDisplay: displayMessage,
             };
         }

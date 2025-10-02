@@ -58,6 +58,11 @@ export declare class GeminiClient {
     private getIdeContextParts;
     sendMessageStream(request: PartListUnion, signal: AbortSignal, prompt_id: string, turns?: number, originalModel?: string): AsyncGenerator<ServerGeminiStreamEvent, Turn>;
     private ensureRequestWithinBudget;
+    /**
+     * Self-healing recovery from context overflow using adaptive compression.
+     * This is a last-resort fallback when standard compression fails.
+     */
+    private tryAdaptiveRecovery;
     private runNonStreamingFallback;
     generateJson(contents: Content[], schema: Record<string, unknown>, abortSignal: AbortSignal, model?: string, config?: GenerateContentConfig): Promise<Record<string, unknown>>;
     generateContent(contents: Content[], generationConfig: GenerateContentConfig, abortSignal: AbortSignal, model?: string): Promise<GenerateContentResponse>;

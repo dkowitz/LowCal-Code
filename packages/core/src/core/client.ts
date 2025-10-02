@@ -48,6 +48,11 @@ import { isFunctionResponse } from '../utils/messageInspectors.js';
 import { checkNextSpeaker } from '../utils/nextSpeakerChecker.js';
 import { retryWithBackoff, type RetryClassification } from '../utils/retry.js';
 import { flatMapTextParts } from '../utils/partUtils.js';
+import {
+  applyAdaptiveCompression,
+  COMPRESSION_STRATEGIES,
+  estimateCompressionRatio,
+} from '../utils/context-recovery.js';
 import type {
   ContentGenerator,
   ContentGeneratorConfig,
@@ -558,8 +563,10 @@ export class GeminiClient {
     if (isNewPrompt) {
       this.loopDetector.reset(prompt_id);
       this.lastPromptId = prompt_id;
+      console.debug(`[Agent] Starting new prompt: ${prompt_id.substring(0, 8)}...`);
     }
     this.sessionTurnCount++;
+    console.debug(`[Agent] Turn ${this.sessionTurnCount} (model: ${this.config.getModel()})`);
     if (
       this.config.getMaxSessionTurns() > 0 &&
       this.sessionTurnCount > this.config.getMaxSessionTurns()
@@ -706,10 +713,13 @@ export class GeminiClient {
       requestToSent = [...systemReminders, ...requestToSent];
     }
 
+    console.debug(`[Agent] Sending request to model...`);
     const resultStream = turn.run(requestToSent, signal);
+    let contentChunks = 0;
     for await (const event of resultStream) {
       if (!this.config.getSkipLoopDetection()) {
         if (this.loopDetector.addAndCheck(event)) {
+          console.debug(`[Agent] Loop detected, stopping`);
           yield { type: GeminiEventType.LoopDetected };
           return turn;
         }
@@ -718,6 +728,7 @@ export class GeminiClient {
         event.type === GeminiEventType.Error &&
         isRecoverableStreamErrorMessage(event.value?.error?.message)
       ) {
+        console.debug(`[Agent] Recoverable error, using non-streaming fallback`);
         const fallbackEvents = await this.runNonStreamingFallback(
           prompt_id,
           requestToSent,
@@ -728,10 +739,23 @@ export class GeminiClient {
         return turn;
       }
 
+      // Log content streaming
+      if (event.type === GeminiEventType.Content) {
+        contentChunks++;
+        if (contentChunks === 1) {
+          console.debug(`[Agent] Model started responding...`);
+        }
+      }
+
       yield event;
       if (event.type === GeminiEventType.Error) {
+        console.debug(`[Agent] Error occurred: ${event.value?.error?.message || 'Unknown'}`);
         return turn;
       }
+    }
+    
+    if (contentChunks > 0) {
+      console.debug(`[Agent] Model finished responding (${contentChunks} chunks)`);
     }
     if (!turn.pendingToolCalls.length && signal && !signal.aborted) {
       // Check if model was switched during the call (likely due to quota error)
@@ -828,8 +852,22 @@ export class GeminiClient {
         compressionResult.compressionStatus ===
           CompressionStatus.COMPRESSION_FAILED_INFLATED_TOKEN_COUNT
       ) {
+        // Standard compression failed - try adaptive recovery as last resort
+        console.warn('[Context Management] Standard compression failed, attempting self-healing recovery...');
+        const recovered = await this.tryAdaptiveRecovery(promptId);
+        
+        if (recovered) {
+          // Recovery successful - retry the budget check
+          const retrySnapshot = await manager.evaluate(model, buildPreview());
+          if (retrySnapshot.fitsWithinEffective) {
+            console.warn('[Context Management] ✓ Self-healing recovery successful');
+            return retrySnapshot;
+          }
+        }
+        
+        // Recovery failed or still doesn't fit
         throw new TokenBudgetExceededError(
-          `Unable to compress history to fit within the context window (${snapshot.tokens.toLocaleString()} tokens).`,
+          `Unable to compress history to fit within the context window (${snapshot.tokens.toLocaleString()} tokens). Tried ${COMPRESSION_STRATEGIES.length} recovery strategies.`,
           snapshot,
         );
       }
@@ -837,6 +875,57 @@ export class GeminiClient {
 
     // Should never reach here because the loop either returns or throws.
     return undefined;
+  }
+
+  /**
+   * Self-healing recovery from context overflow using adaptive compression.
+   * This is a last-resort fallback when standard compression fails.
+   */
+  private async tryAdaptiveRecovery(
+    promptId: string,
+  ): Promise<boolean> {
+    console.warn('[Context Recovery] Standard compression failed, attempting adaptive recovery...');
+    
+    const currentHistory = this.getChat().getHistory(true);
+    
+    if (currentHistory.length === 0) {
+      console.error('[Context Recovery] Cannot recover: history is empty');
+      return false;
+    }
+
+    // Try each compression strategy progressively
+    for (let i = 0; i < COMPRESSION_STRATEGIES.length; i++) {
+      const strategy = COMPRESSION_STRATEGIES[i];
+      console.warn(`[Context Recovery] Trying strategy ${i + 1}/${COMPRESSION_STRATEGIES.length}...`);
+      
+      const compressed = applyAdaptiveCompression(currentHistory, strategy);
+      const ratio = estimateCompressionRatio(currentHistory, compressed);
+      
+      console.warn(`[Context Recovery] Compression ratio: ${(ratio * 100).toFixed(1)}% (${currentHistory.length} -> ${compressed.length} messages)`);
+      
+      // Apply the compressed history
+      await this.startChat(compressed);
+      
+      // Check if it fits now
+      const model = this.config.getModel();
+      if (!model) {
+        console.error('[Context Recovery] No model configured');
+        return false;
+      }
+      
+      const manager = this.getTokenBudgetManager();
+      const snapshot = await manager.evaluate(model, compressed);
+      
+      if (snapshot.fitsWithinEffective) {
+        console.warn(`[Context Recovery] ✓ Recovery successful with strategy ${i + 1}`);
+        return true;
+      }
+      
+      console.warn(`[Context Recovery] Strategy ${i + 1} insufficient (${snapshot.tokens} > ${snapshot.effectiveLimit} tokens)`);
+    }
+    
+    console.error('[Context Recovery] All recovery strategies exhausted');
+    return false;
   }
 
   private async runNonStreamingFallback(
