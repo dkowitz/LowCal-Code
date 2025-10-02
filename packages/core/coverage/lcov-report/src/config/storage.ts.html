@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">38.82% </span>
+                <span class="strong">48.23% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>33/85</span>
+                <span class='fraction'>41/85</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>3/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">13.04% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/23</span>
+                <span class='fraction'>3/23</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">38.82% </span>
+                <span class="strong">48.23% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>33/85</span>
+                <span class='fraction'>41/85</span>
             </div>
         
             
@@ -200,12 +200,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">84x</span>
+<span class="cline-any cline-yes">84x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">84x</span>
+<span class="cline-any cline-yes">84x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -216,12 +216,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">65x</span>
+<span class="cline-any cline-yes">65x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">19x</span>
+<span class="cline-any cline-yes">19x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -313,13 +313,13 @@ export class Storage {
 <span class="cstat-no" title="statement not covered" >    this.targetDir = targetDir;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-  static <span class="fstat-no" title="function not covered" >getGlobalGeminiDir(): string {</span>
-<span class="cstat-no" title="statement not covered" >    const homeDir = os.homedir();</span>
-<span class="cstat-no" title="statement not covered" >    if (!homeDir) {</span>
+  static getGlobalGeminiDir(): string {
+    const homeDir = os.homedir();
+    if (!homeDir) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      return path.join(os.tmpdir(), '.qwen');</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >    return path.join(homeDir, GEMINI_DIR);</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+    return path.join(homeDir, GEMINI_DIR);
+  }
 &nbsp;
   static <span class="fstat-no" title="function not covered" >getMcpOAuthTokensPath(): string {</span>
 <span class="cstat-no" title="statement not covered" >    return path.join(Storage.getGlobalGeminiDir(), 'mcp-oauth-tokens.json');</span>
@@ -329,13 +329,13 @@ export class Storage {
 <span class="cstat-no" title="statement not covered" >    return path.join(Storage.getGlobalGeminiDir(), 'settings.json');</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-  static <span class="fstat-no" title="function not covered" >getInstallationIdPath(): string {</span>
-<span class="cstat-no" title="statement not covered" >    return path.join(Storage.getGlobalGeminiDir(), 'installation_id');</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  static getInstallationIdPath(): string {
+    return path.join(Storage.getGlobalGeminiDir(), 'installation_id');
+  }
 &nbsp;
-  static <span class="fstat-no" title="function not covered" >getGoogleAccountsPath(): string {</span>
-<span class="cstat-no" title="statement not covered" >    return path.join(Storage.getGlobalGeminiDir(), GOOGLE_ACCOUNTS_FILENAME);</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  static getGoogleAccountsPath(): string {
+    return path.join(Storage.getGlobalGeminiDir(), GOOGLE_ACCOUNTS_FILENAME);
+  }
 &nbsp;
   static <span class="fstat-no" title="function not covered" >getUserCommandsDir(): string {</span>
 <span class="cstat-no" title="statement not covered" >    return path.join(Storage.getGlobalGeminiDir(), 'commands');</span>
@@ -412,7 +412,7 @@ export class Storage {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T08:47:49.639Z
+                at 2025-09-30T00:16:56.475Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">86.48% </span>
+                <span class="strong">27.02% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>32/37</span>
+                <span class='fraction'>10/37</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">38.46% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>5/13</span>
+                <span class='fraction'>0/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>2/2</span>
+                <span class='fraction'>0/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">86.48% </span>
+                <span class="strong">27.02% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>32/37</span>
+                <span class='fraction'>10/37</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -146,39 +146,39 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">57x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">57x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">57x</span>
-<span class="cline-any cline-yes">57x</span>
-<span class="cline-any cline-yes">57x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">56x</span>
-<span class="cline-any cline-yes">57x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @license
  * Copyright 2025 Google LLC
@@ -203,40 +203,40 @@ export class SchemaValidator {
    * Returns null if the data confroms to the schema described by schema (or if schema
    *  is null). Otherwise, returns a string describing the error.
    */
-  static validate(schema: unknown | undefined, data: unknown): string | null {
-    if (!schema) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+  static <span class="fstat-no" title="function not covered" >validate(schema: unknown | undefined, data: unknown): string | null {</span>
+<span class="cstat-no" title="statement not covered" >    if (!schema) {</span>
 <span class="cstat-no" title="statement not covered" >      return null;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    if (typeof data !== 'object' || data === null) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >    if (typeof data !== 'object' || data === null) {</span>
 <span class="cstat-no" title="statement not covered" >      return 'Value of params must be an object';</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-    const validate = ajValidator.compile(schema);
-    const valid = validate(data);
-    if (!valid &amp;&amp; validate.errors) {
+<span class="cstat-no" title="statement not covered" >    const validate = ajValidator.compile(schema);</span>
+<span class="cstat-no" title="statement not covered" >    const valid = validate(data);</span>
+<span class="cstat-no" title="statement not covered" >    if (!valid &amp;&amp; validate.errors) {</span>
       // Find any True or False values and lowercase them
-      fixBooleanCasing(data as Record&lt;string, unknown&gt;);
+<span class="cstat-no" title="statement not covered" >      fixBooleanCasing(data as Record&lt;string, unknown&gt;);</span>
 &nbsp;
-      const validate = ajValidator.compile(schema);
-      const valid = validate(data);
+<span class="cstat-no" title="statement not covered" >      const validate = ajValidator.compile(schema);</span>
+<span class="cstat-no" title="statement not covered" >      const valid = validate(data);</span>
 &nbsp;
-      if (!valid &amp;&amp; validate.errors) {
-        return ajValidator.errorsText(validate.errors, { dataVar: 'params' });
-      }
-    }
-    return null;
-  }
+<span class="cstat-no" title="statement not covered" >      if (!valid &amp;&amp; validate.errors) {</span>
+<span class="cstat-no" title="statement not covered" >        return ajValidator.errorsText(validate.errors, { dataVar: 'params' });</span>
+<span class="cstat-no" title="statement not covered" >      }</span>
+<span class="cstat-no" title="statement not covered" >    }</span>
+<span class="cstat-no" title="statement not covered" >    return null;</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
 }
 &nbsp;
-function fixBooleanCasing(data: Record&lt;string, unknown&gt;) {
-  for (const key of Object.keys(data)) {
-    if (!(key in data)) <span class="branch-0 cbranch-no" title="branch not covered" >continue;</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function fixBooleanCasing(data: Record&lt;string, unknown&gt;) {</span></span>
+<span class="cstat-no" title="statement not covered" >  for (const key of Object.keys(data)) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!(key in data)) continue;</span>
 &nbsp;
-    if (typeof data[key] === 'object') <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >    if (typeof data[key] === 'object') {</span>
 <span class="cstat-no" title="statement not covered" >      fixBooleanCasing(data[key] as Record&lt;string, unknown&gt;);</span>
-    } else if (data[key] === 'True') <span class="branch-0 cbranch-no" title="branch not covered" >data[key] = 'true';</span>
-    else if (data[key] === 'False') <span class="branch-0 cbranch-no" title="branch not covered" >data[key] = 'false';</span>
-  }
-}
+<span class="cstat-no" title="statement not covered" >    } else if (data[key] === 'True') data[key] = 'true';</span>
+<span class="cstat-no" title="statement not covered" >    else if (data[key] === 'False') data[key] = 'false';</span>
+<span class="cstat-no" title="statement not covered" >  }</span>
+<span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -244,7 +244,7 @@ function fixBooleanCasing(data: Record&lt;string, unknown&gt;) {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T08:47:49.571Z
+                at 2025-09-30T00:16:56.414Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

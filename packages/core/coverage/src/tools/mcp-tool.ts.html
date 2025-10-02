@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">7.84% </span>
+                <span class="strong">16.86% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>20/255</span>
+                <span class='fraction'>43/255</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">75% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>1/1</span>
+                <span class='fraction'>3/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.25% </span>
+                <span class="strong">18.75% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>1/16</span>
+                <span class='fraction'>3/16</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">7.84% </span>
+                <span class="strong">16.86% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>20/255</span>
+                <span class='fraction'>43/255</span>
             </div>
         
             
@@ -610,25 +610,25 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -793,16 +793,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @license
  * Copyright 2025 Google LLC
@@ -979,26 +979,26 @@ export class DiscoveredMCPTool extends BaseDeclarativeTool&lt;
   ToolParams,
   ToolResult
 &gt; {
-<span class="fstat-no" title="function not covered" >  constructor(</span>
-<span class="cstat-no" title="statement not covered" >    private readonly mcpTool: CallableTool,</span>
-<span class="cstat-no" title="statement not covered" >    readonly serverName: string,</span>
-<span class="cstat-no" title="statement not covered" >    readonly serverToolName: string,</span>
-<span class="cstat-no" title="statement not covered" >    description: string,</span>
-<span class="cstat-no" title="statement not covered" >    override readonly parameterSchema: unknown,</span>
-<span class="cstat-no" title="statement not covered" >    readonly timeout?: number,</span>
-<span class="cstat-no" title="statement not covered" >    readonly trust?: boolean,</span>
-<span class="cstat-no" title="statement not covered" >    nameOverride?: string,</span>
-<span class="cstat-no" title="statement not covered" >  ) {</span>
-<span class="cstat-no" title="statement not covered" >    super(</span>
-<span class="cstat-no" title="statement not covered" >      nameOverride ?? generateValidName(serverToolName),</span>
-<span class="cstat-no" title="statement not covered" >      `${serverToolName} (${serverName} MCP Server)`,</span>
-<span class="cstat-no" title="statement not covered" >      description,</span>
-<span class="cstat-no" title="statement not covered" >      Kind.Other,</span>
-<span class="cstat-no" title="statement not covered" >      parameterSchema,</span>
-<span class="cstat-no" title="statement not covered" >      true, // isOutputMarkdown</span>
-<span class="cstat-no" title="statement not covered" >      false, // canUpdateOutput</span>
-<span class="cstat-no" title="statement not covered" >    );</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+  constructor(
+    private readonly mcpTool: CallableTool,
+    readonly serverName: string,
+    readonly serverToolName: string,
+    description: string,
+    override readonly parameterSchema: unknown,
+    readonly timeout?: number,
+    readonly trust?: boolean,
+    nameOverride?: string,
+  ) {
+    super(
+      nameOverride ?? generateValidName(serverToolName),
+      `${serverToolName} (${serverName} MCP Server)`,
+      description,
+      Kind.Other,
+      parameterSchema,
+      true, // isOutputMarkdown
+      false, // canUpdateOutput
+    );
+  }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  asFullyQualifiedTool(): DiscoveredMCPTool {</span>
 <span class="cstat-no" title="statement not covered" >    return new DiscoveredMCPTool(</span>
@@ -1161,18 +1161,18 @@ export class DiscoveredMCPTool extends BaseDeclarativeTool&lt;
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 /** Visible for testing */
-export <span class="fstat-no" title="function not covered" >function generateValidName(name: string) {</span>
+export function generateValidName(name: string) {
   // Replace invalid characters (based on 400 error message from Gemini API) with underscores
-<span class="cstat-no" title="statement not covered" >  let validToolname = name.replace(/[^a-zA-Z0-9_.-]/g, '_');</span>
+  let validToolname = name.replace(/[^a-zA-Z0-9_.-]/g, '_');
 &nbsp;
   // If longer than 63 characters, replace middle with '___'
   // (Gemini API says max length 64, but actual limit seems to be 63)
-<span class="cstat-no" title="statement not covered" >  if (validToolname.length &gt; 63) {</span>
+  if (validToolname.length &gt; 63) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >    validToolname =</span>
 <span class="cstat-no" title="statement not covered" >      validToolname.slice(0, 28) + '___' + validToolname.slice(-32);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
-<span class="cstat-no" title="statement not covered" >  return validToolname;</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+  return validToolname;
+}
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -1180,7 +1180,7 @@ export <span class="fstat-no" title="function not covered" >function generateVal
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T08:47:49.571Z
+                at 2025-09-30T00:16:56.414Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

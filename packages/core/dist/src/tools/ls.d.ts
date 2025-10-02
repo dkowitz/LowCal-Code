@@ -15,10 +15,6 @@ export interface LSToolParams {
      */
     path: string;
     /**
-     * Maximum number of entries to include in the detailed listing (defaults to 40, capped at 200).
-     */
-    limit?: number;
-    /**
      * Array of glob patterns to ignore (optional)
      */
     ignore?: string[];

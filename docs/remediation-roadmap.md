@@ -11,10 +11,10 @@
 - 🔄 Wire provider-tagged retry analytics into UI messaging and health dashboards (telemetry available, surfacing pending).
 - 🔄 Tune idle thresholds per provider once we gather field data from the new telemetry channel.
 
-## Phase 2.5 – Tool Output Hygiene & Autonomy Boost *(in progress)*
-- ✅ Summarize long tool outputs (e.g., large directory listings) with capped listings, extension stats, and follow-up `/list_directory` or `/glob` commands.
-- 🔄 Detect repetitive tool/error loops and trigger self-healing plans instead of deferring to the user.
-- 🔄 Scaffold “resume-after-retry” logic so partially completed tool plans don’t restart from scratch.
+## Phase 2.5 – Tool Output Hygiene & Autonomy Boost *(planned)*
+- Summarize long tool outputs (e.g., large directory listings) so truncation retains actionable pointers.
+- Detect repetitive tool/error loops and trigger self-healing plans instead of deferring to the user.
+- Scaffold “resume-after-retry” logic so partially completed tool plans don’t restart from scratch.
 
 ## Phase 3 – Provider Health & LM Studio Integration *(planned)*
 - Introduce an `ensureModelLoaded()` handshake for LM Studio (model inventory, active model, context window discovery).

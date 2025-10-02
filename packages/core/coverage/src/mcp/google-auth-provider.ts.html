@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">34.84% </span>
+                <span class="strong">56.06% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>23/66</span>
+                <span class='fraction'>37/66</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">80% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>8/10</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">12.5% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/8</span>
+                <span class='fraction'>1/8</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">34.84% </span>
+                <span class="strong">56.06% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>23/66</span>
+                <span class='fraction'>37/66</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line low'></div>
+    <div class='status-line medium'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -195,30 +195,30 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">3x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">2x</span>
+<span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -293,31 +293,31 @@ export class GoogleCredentialProvider implements OAuthClientProvider {
   };
   private _clientInformation?: OAuthClientInformationFull;
 &nbsp;
-<span class="fstat-no" title="function not covered" >  constructor(private readonly config?: MCPServerConfig) {</span>
-<span class="cstat-no" title="statement not covered" >    const url = this.config?.url || this.config?.httpUrl;</span>
-<span class="cstat-no" title="statement not covered" >    if (!url) {</span>
-<span class="cstat-no" title="statement not covered" >      throw new Error(</span>
-<span class="cstat-no" title="statement not covered" >        'URL must be provided in the config for Google Credentials provider',</span>
-<span class="cstat-no" title="statement not covered" >      );</span>
-<span class="cstat-no" title="statement not covered" >    }</span>
+  constructor(private readonly config?: MCPServerConfig) {
+    const url = this.config?.url || this.config?.httpUrl;
+    if (!url) {
+      throw new Error(
+        'URL must be provided in the config for Google Credentials provider',
+      );
+    }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    const hostname = new URL(url).hostname;</span>
-<span class="cstat-no" title="statement not covered" >    if (!ALLOWED_HOSTS.some((pattern) =&gt; pattern.test(hostname))) {</span>
+    const hostname = new URL(url).hostname;
+    if (!ALLOWED_HOSTS.some((pattern) =&gt; pattern.test(hostname))) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error(</span>
 <span class="cstat-no" title="statement not covered" >        `Host "${hostname}" is not an allowed host for Google Credential provider.`,</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    const scopes = this.config?.oauth?.scopes;</span>
-<span class="cstat-no" title="statement not covered" >    if (!scopes || scopes.length === 0) {</span>
+    const scopes = this.config?.oauth?.scopes;
+    if (!scopes || scopes.length === 0) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      throw new Error(</span>
 <span class="cstat-no" title="statement not covered" >        'Scopes must be provided in the oauth config for Google Credentials provider',</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >    this.auth = new GoogleAuth({</span>
-<span class="cstat-no" title="statement not covered" >      scopes,</span>
-<span class="cstat-no" title="statement not covered" >    });</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+    this.auth = new GoogleAuth({
+      scopes,
+    });
+  }
 &nbsp;
 <span class="fstat-no" title="function not covered" >  clientInformation(): OAuthClientInformation | undefined {</span>
 <span class="cstat-no" title="statement not covered" >    return this._clientInformation;</span>
@@ -367,7 +367,7 @@ export class GoogleCredentialProvider implements OAuthClientProvider {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T08:47:49.571Z
+                at 2025-09-30T00:16:56.414Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
