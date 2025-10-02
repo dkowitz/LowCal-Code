@@ -4,7 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState } from 'react';
+import type React from 'react';
+import { useState } from 'react';
 import { Box, Text } from 'ink';
 import { Colors } from '../colors.js';
 import {
@@ -48,9 +49,30 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
   const options: Array<RadioSelectItem<string>> = filteredModels.map(
     (model) => {
       const visionIndicator = model.isVision ? ' [Vision]' : '';
+      
+      // Format pricing: convert from per-token to per-million-tokens
+      let priceInfo = '';
+      if (model.inputPrice || model.outputPrice) {
+        const formatPrice = (priceStr: string | undefined): string => {
+          if (!priceStr) return '?';
+          const pricePerToken = parseFloat(priceStr);
+          const pricePerMillion = pricePerToken * 1_000_000;
+          return pricePerMillion.toFixed(2);
+        };
+        
+        const inputFormatted = formatPrice(model.inputPrice);
+        const outputFormatted = formatPrice(model.outputPrice);
+        priceInfo = ` ${inputFormatted}/${outputFormatted} per 1M tokens`;
+      }
+      
+      // Format context length with comma separators
+      const ctxInfo = model.contextLength 
+        ? ` (${model.contextLength.toLocaleString()} ctx)` 
+        : '';
+      
       const currentIndicator = model.id === currentModel ? ' (current)' : '';
       return {
-        label: `${model.label}${visionIndicator}${currentIndicator}`,
+        label: `${model.label}${visionIndicator}${priceInfo}${ctxInfo}${currentIndicator}`,
         value: model.id,
       };
     },

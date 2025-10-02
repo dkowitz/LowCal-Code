@@ -57,7 +57,9 @@ export enum GeminiEventType {
   LoopDetected = 'loop_detected',
   Citation = 'citation',
   Retry = 'retry',
-  TokenBudgetWarning = 'token_budget_warning',
+  TokenBudgetWarning = "token_budget_warning",
+  ContextWindowRecovery = "context_window_recovery",
+  ToolOutputTruncated = "tool_output_truncated",
 }
 
 export type ServerGeminiRetryEvent = {
@@ -193,6 +195,25 @@ export type ServerGeminiTokenBudgetWarningEvent = {
   value: TokenBudgetWarningValue;
 };
 
+export interface ContextWindowRecoveryInfo {
+  message: string;
+}
+
+export type ServerGeminiContextWindowRecoveryEvent = {
+  type: GeminiEventType.ContextWindowRecovery;
+  value: ContextWindowRecoveryInfo;
+};
+
+export interface ToolOutputTruncatedInfo {
+  toolName: string;
+  output: string;
+}
+
+export type ServerGeminiToolOutputTruncatedEvent = {
+  type: GeminiEventType.ToolOutputTruncated;
+  value: ToolOutputTruncatedInfo;
+};
+
 // The original union type, now composed of the individual types
 export type ServerGeminiStreamEvent =
   | ServerGeminiContentEvent
@@ -208,6 +229,8 @@ export type ServerGeminiStreamEvent =
   | ServerGeminiFinishedEvent
   | ServerGeminiLoopDetectedEvent
   | ServerGeminiTokenBudgetWarningEvent
+  | ServerGeminiContextWindowRecoveryEvent
+  | ServerGeminiToolOutputTruncatedEvent
   | ServerGeminiRetryEvent;
 
 // A turn manages the agentic loop turn within the server context.

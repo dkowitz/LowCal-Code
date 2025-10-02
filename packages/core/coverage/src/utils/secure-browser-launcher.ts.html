@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.08% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>7/115</span>
+                <span class='fraction'>0/115</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">6.08% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>7/115</span>
+                <span class='fraction'>0/115</span>
             </div>
         
             
@@ -254,18 +254,18 @@
 <a name='L189'></a><a href='#L189'>189</a>
 <a name='L190'></a><a href='#L190'>190</a>
 <a name='L191'></a><a href='#L191'>191</a>
-<a name='L192'></a><a href='#L192'>192</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L192'></a><a href='#L192'>192</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -403,7 +403,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -445,18 +445,18 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
  * @license
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-import { platform } from 'node:os';
-import { URL } from 'node:url';
+<span class="cstat-no" title="statement not covered" >import { execFile } from 'node:child_process';</span>
+<span class="cstat-no" title="statement not covered" >import { promisify } from 'node:util';</span>
+<span class="cstat-no" title="statement not covered" >import { platform } from 'node:os';</span>
+<span class="cstat-no" title="statement not covered" >import { URL } from 'node:url';</span>
 &nbsp;
-const execFileAsync = promisify(execFile);
+<span class="cstat-no" title="statement not covered" >const execFileAsync = promisify(execFile);</span>
 &nbsp;
 /**
  * Validates that a URL is safe to open in a browser.
@@ -465,7 +465,7 @@ const execFileAsync = promisify(execFile);
  * @param url The URL to validate
  * @throws Error if the URL is invalid or uses an unsafe protocol
  */
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function validateUrl(url: string): void {</span></span>
+<span class="cstat-no" title="statement not covered" >function validateUrl(url: string): void {</span>
 <span class="cstat-no" title="statement not covered" >  let parsedUrl: URL;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  try {</span>
@@ -498,7 +498,7 @@ const execFileAsync = promisify(execFile);
  * @param url The URL to open
  * @throws Error if the URL is invalid or if opening the browser fails
  */
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function openBrowserSecurely(url: string): Promise&lt;void&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >export async function openBrowserSecurely(url: string): Promise&lt;void&gt; {</span>
   // Validate the URL first
 <span class="cstat-no" title="statement not covered" >  validateUrl(url);</span>
 &nbsp;
@@ -594,7 +594,7 @@ const execFileAsync = promisify(execFile);
  *
  * @returns True if the tool should attempt to launch a browser
  */
-export <span class="fstat-no" title="function not covered" >function shouldLaunchBrowser(): boolean {</span>
+<span class="cstat-no" title="statement not covered" >export function shouldLaunchBrowser(): boolean {</span>
   // A list of browser names that indicate we should not attempt to open a
   // web browser for the user.
 <span class="cstat-no" title="statement not covered" >  const browserBlocklist = ['www-browser'];</span>
@@ -643,7 +643,7 @@ export <span class="fstat-no" title="function not covered" >function shouldLaunc
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T00:16:56.414Z
+                at 2025-10-02T20:39:03.941Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

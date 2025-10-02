@@ -11,7 +11,6 @@ import { BaseDeclarativeTool, BaseToolInvocation, Kind } from './tools.js';
 import { SchemaValidator } from '../utils/schemaValidator.js';
 import { makeRelative, shortenPath } from '../utils/paths.js';
 import { getErrorMessage, isNodeError } from '../utils/errors.js';
-const DEFAULT_TOTAL_MAX_MATCHES = 20000;
 /**
  * Lazy loads the ripgrep binary path to avoid loading the library until needed
  */
@@ -74,10 +73,6 @@ class GrepToolInvocation extends BaseToolInvocation {
                 searchDirectories = [searchDirAbs];
             }
             let allMatches = [];
-            const totalMaxMatches = DEFAULT_TOTAL_MAX_MATCHES;
-            if (this.config.getDebugMode()) {
-                console.log(`[GrepTool] Total result limit: ${totalMaxMatches}`);
-            }
             for (const searchDir of searchDirectories) {
                 const searchResult = await this.performRipgrepSearch({
                     pattern: this.params.pattern,
@@ -92,10 +87,6 @@ class GrepToolInvocation extends BaseToolInvocation {
                     });
                 }
                 allMatches = allMatches.concat(searchResult);
-                if (allMatches.length >= totalMaxMatches) {
-                    allMatches = allMatches.slice(0, totalMaxMatches);
-                    break;
-                }
             }
             let searchLocationDescription;
             if (searchDirAbs === null) {
@@ -112,7 +103,6 @@ class GrepToolInvocation extends BaseToolInvocation {
                 const noMatchMsg = `No matches found for pattern "${this.params.pattern}" ${searchLocationDescription}${this.params.include ? ` (filter: "${this.params.include}")` : ''}.`;
                 return { llmContent: noMatchMsg, returnDisplay: `No matches found` };
             }
-            const wasTruncated = allMatches.length >= totalMaxMatches;
             const matchesByFile = allMatches.reduce((acc, match) => {
                 const fileKey = match.filePath;
                 if (!acc[fileKey]) {
@@ -125,9 +115,6 @@ class GrepToolInvocation extends BaseToolInvocation {
             const matchCount = allMatches.length;
             const matchTerm = matchCount === 1 ? 'match' : 'matches';
             let llmContent = `Found ${matchCount} ${matchTerm} for pattern "${this.params.pattern}" ${searchLocationDescription}${this.params.include ? ` (filter: "${this.params.include}")` : ''}`;
-            if (wasTruncated) {
-                llmContent += ` (results limited to ${totalMaxMatches} matches for performance)`;
-            }
             llmContent += `:\n---\n`;
             for (const filePath in matchesByFile) {
                 llmContent += `File: ${filePath}\n`;
@@ -138,9 +125,6 @@ class GrepToolInvocation extends BaseToolInvocation {
                 llmContent += '---\n';
             }
             let displayMessage = `Found ${matchCount} ${matchTerm}`;
-            if (wasTruncated) {
-                displayMessage += ` (limited)`;
-            }
             return {
                 llmContent: llmContent.trim(),
                 returnDisplay: displayMessage,

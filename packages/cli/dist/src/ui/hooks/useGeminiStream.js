@@ -344,9 +344,17 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             `   • Compress history: Use /compress command to compress history`,
     }, Date.now()), [addItem]);
     const handleTokenBudgetWarningEvent = useCallback((value) => addItem({
-        type: 'info',
+        type: "info",
         text: `⚠️  Context usage is high: ${value.tokens.toLocaleString()} of ${value.limit.toLocaleString()} tokens ` +
             `(safe budget ≈ ${value.effectiveLimit.toLocaleString()}). Consider narrowing directory listings, requesting files on demand, or running /compress.`,
+    }, Date.now()), [addItem]);
+    const handleContextWindowRecoveryEvent = useCallback((value) => addItem({
+        type: "info",
+        text: `⚠️  ${value.message}`,
+    }, Date.now()), [addItem]);
+    const handleToolOutputTruncatedEvent = useCallback((value) => addItem({
+        type: "info",
+        text: `⚠️  The output of the tool '${value.toolName}' was too long and has been truncated.`,
     }, Date.now()), [addItem]);
     const handleLoopDetectedEvent = useCallback(() => {
         addItem({
@@ -390,6 +398,12 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 case ServerGeminiEventType.TokenBudgetWarning:
                     handleTokenBudgetWarningEvent(event.value);
                     break;
+                case ServerGeminiEventType.ContextWindowRecovery:
+                    handleContextWindowRecoveryEvent(event.value);
+                    break;
+                case ServerGeminiEventType.ToolOutputTruncated:
+                    handleToolOutputTruncatedEvent(event.value);
+                    break;
                 case ServerGeminiEventType.Finished:
                     handleFinishedEvent(event, userMessageTimestamp);
                     break;
@@ -422,6 +436,8 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         handleMaxSessionTurnsEvent,
         handleSessionTokenLimitExceededEvent,
         handleTokenBudgetWarningEvent,
+        handleContextWindowRecoveryEvent,
+        handleToolOutputTruncatedEvent,
     ]);
     const submitQuery = useCallback(async (query, options, prompt_id) => {
         // Prevent concurrent executions of submitQuery, but allow continuations

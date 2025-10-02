@@ -16,6 +16,7 @@ vi.mock('../models/availableModels.js', () => ({
         { id: 'qwen-vl-max-latest', label: 'qwen-vl-max', isVision: true },
     ],
     getOpenAIAvailableModelFromEnv: vi.fn(),
+    fetchOpenAICompatibleModels: vi.fn(),
 }));
 // Helper function to create a mock config
 function createMockConfig(contentGeneratorConfig) {
@@ -26,9 +27,12 @@ function createMockConfig(contentGeneratorConfig) {
 describe('modelCommand', () => {
     let mockContext;
     const mockGetOpenAIAvailableModelFromEnv = vi.mocked(availableModelsModule.getOpenAIAvailableModelFromEnv);
+    const mockFetchOpenAICompatibleModels = vi.mocked(availableModelsModule.fetchOpenAICompatibleModels);
     beforeEach(() => {
         mockContext = createMockCommandContext();
         vi.clearAllMocks();
+        // Default mock return value for fetchOpenAICompatibleModels
+        mockFetchOpenAICompatibleModels.mockResolvedValue([]);
     });
     it('should have the correct name and description', () => {
         expect(modelCommand.name).toBe('model');

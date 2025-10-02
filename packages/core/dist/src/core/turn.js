@@ -23,6 +23,8 @@ export var GeminiEventType;
     GeminiEventType["Citation"] = "citation";
     GeminiEventType["Retry"] = "retry";
     GeminiEventType["TokenBudgetWarning"] = "token_budget_warning";
+    GeminiEventType["ContextWindowRecovery"] = "context_window_recovery";
+    GeminiEventType["ToolOutputTruncated"] = "tool_output_truncated";
 })(GeminiEventType || (GeminiEventType = {}));
 export var CompressionStatus;
 (function (CompressionStatus) {

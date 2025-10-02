@@ -15,7 +15,7 @@ import { makeRelative, shortenPath } from '../utils/paths.js';
 import { getErrorMessage, isNodeError } from '../utils/errors.js';
 import type { Config } from '../config/config.js';
 
-const DEFAULT_TOTAL_MAX_MATCHES = 20000;
+
 
 /**
  * Lazy loads the ripgrep binary path to avoid loading the library until needed
@@ -123,11 +123,6 @@ class GrepToolInvocation extends BaseToolInvocation<
       }
 
       let allMatches: GrepMatch[] = [];
-      const totalMaxMatches = DEFAULT_TOTAL_MAX_MATCHES;
-
-      if (this.config.getDebugMode()) {
-        console.log(`[GrepTool] Total result limit: ${totalMaxMatches}`);
-      }
 
       for (const searchDir of searchDirectories) {
         const searchResult = await this.performRipgrepSearch({
@@ -145,11 +140,6 @@ class GrepToolInvocation extends BaseToolInvocation<
         }
 
         allMatches = allMatches.concat(searchResult);
-
-        if (allMatches.length >= totalMaxMatches) {
-          allMatches = allMatches.slice(0, totalMaxMatches);
-          break;
-        }
       }
 
       let searchLocationDescription: string;
@@ -168,7 +158,7 @@ class GrepToolInvocation extends BaseToolInvocation<
         return { llmContent: noMatchMsg, returnDisplay: `No matches found` };
       }
 
-      const wasTruncated = allMatches.length >= totalMaxMatches;
+
 
       const matchesByFile = allMatches.reduce(
         (acc, match) => {
@@ -188,9 +178,7 @@ class GrepToolInvocation extends BaseToolInvocation<
 
       let llmContent = `Found ${matchCount} ${matchTerm} for pattern "${this.params.pattern}" ${searchLocationDescription}${this.params.include ? ` (filter: "${this.params.include}")` : ''}`;
 
-      if (wasTruncated) {
-        llmContent += ` (results limited to ${totalMaxMatches} matches for performance)`;
-      }
+
 
       llmContent += `:\n---\n`;
 
@@ -204,9 +192,6 @@ class GrepToolInvocation extends BaseToolInvocation<
       }
 
       let displayMessage = `Found ${matchCount} ${matchTerm}`;
-      if (wasTruncated) {
-        displayMessage += ` (limited)`;
-      }
 
       return {
         llmContent: llmContent.trim(),

@@ -28,7 +28,9 @@ export declare enum GeminiEventType {
     LoopDetected = "loop_detected",
     Citation = "citation",
     Retry = "retry",
-    TokenBudgetWarning = "token_budget_warning"
+    TokenBudgetWarning = "token_budget_warning",
+    ContextWindowRecovery = "context_window_recovery",
+    ToolOutputTruncated = "tool_output_truncated"
 }
 export type ServerGeminiRetryEvent = {
     type: GeminiEventType.Retry;
@@ -136,7 +138,22 @@ export type ServerGeminiTokenBudgetWarningEvent = {
     type: GeminiEventType.TokenBudgetWarning;
     value: TokenBudgetWarningValue;
 };
-export type ServerGeminiStreamEvent = ServerGeminiContentEvent | ServerGeminiToolCallRequestEvent | ServerGeminiToolCallResponseEvent | ServerGeminiToolCallConfirmationEvent | ServerGeminiUserCancelledEvent | ServerGeminiErrorEvent | ServerGeminiChatCompressedEvent | ServerGeminiThoughtEvent | ServerGeminiMaxSessionTurnsEvent | ServerGeminiSessionTokenLimitExceededEvent | ServerGeminiFinishedEvent | ServerGeminiLoopDetectedEvent | ServerGeminiTokenBudgetWarningEvent | ServerGeminiRetryEvent;
+export interface ContextWindowRecoveryInfo {
+    message: string;
+}
+export type ServerGeminiContextWindowRecoveryEvent = {
+    type: GeminiEventType.ContextWindowRecovery;
+    value: ContextWindowRecoveryInfo;
+};
+export interface ToolOutputTruncatedInfo {
+    toolName: string;
+    output: string;
+}
+export type ServerGeminiToolOutputTruncatedEvent = {
+    type: GeminiEventType.ToolOutputTruncated;
+    value: ToolOutputTruncatedInfo;
+};
+export type ServerGeminiStreamEvent = ServerGeminiContentEvent | ServerGeminiToolCallRequestEvent | ServerGeminiToolCallResponseEvent | ServerGeminiToolCallConfirmationEvent | ServerGeminiUserCancelledEvent | ServerGeminiErrorEvent | ServerGeminiChatCompressedEvent | ServerGeminiThoughtEvent | ServerGeminiMaxSessionTurnsEvent | ServerGeminiSessionTokenLimitExceededEvent | ServerGeminiFinishedEvent | ServerGeminiLoopDetectedEvent | ServerGeminiTokenBudgetWarningEvent | ServerGeminiContextWindowRecoveryEvent | ServerGeminiToolOutputTruncatedEvent | ServerGeminiRetryEvent;
 export declare class Turn {
     private readonly chat;
     private readonly prompt_id;

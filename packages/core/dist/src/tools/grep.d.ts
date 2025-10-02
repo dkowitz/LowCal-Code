@@ -22,10 +22,6 @@ export interface GrepToolParams {
      * File pattern to include in the search (e.g. "*.js", "*.{ts,tsx}")
      */
     include?: string;
-    /**
-     * Maximum number of matches to return (optional, defaults to 20)
-     */
-    maxResults?: number;
 }
 /**
  * Implementation of the Grep tool logic (moved from CLI)

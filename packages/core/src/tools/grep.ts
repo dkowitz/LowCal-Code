@@ -40,11 +40,6 @@ export interface GrepToolParams {
    * File pattern to include in the search (e.g. "*.js", "*.{ts,tsx}")
    */
   include?: string;
-
-  /**
-   * Maximum number of matches to return (optional, defaults to 20)
-   */
-  maxResults?: number;
 }
 
 /**
@@ -129,9 +124,7 @@ class GrepToolInvocation extends BaseToolInvocation<
 
       // Collect matches from all search directories
       let allMatches: GrepMatch[] = [];
-      const maxResults = this.params.maxResults ?? 20; // Default to 20 results
       let totalMatchesFound = 0;
-      let searchTruncated = false;
 
       for (const searchDir of searchDirectories) {
         const matches = await this.performGrepSearch({
@@ -151,20 +144,7 @@ class GrepToolInvocation extends BaseToolInvocation<
           });
         }
 
-        // Apply result limiting
-        const remainingSlots = maxResults - allMatches.length;
-        if (remainingSlots <= 0) {
-          searchTruncated = true;
-          break;
-        }
-
-        if (matches.length > remainingSlots) {
-          allMatches = allMatches.concat(matches.slice(0, remainingSlots));
-          searchTruncated = true;
-          break;
-        } else {
-          allMatches = allMatches.concat(matches);
-        }
+        allMatches = allMatches.concat(matches);
       }
 
       let searchLocationDescription: string;
@@ -203,9 +183,7 @@ class GrepToolInvocation extends BaseToolInvocation<
       // Build the header with truncation info if needed
       let headerText = `Found ${matchCount} ${matchTerm} for pattern "${this.params.pattern}" ${searchLocationDescription}${this.params.include ? ` (filter: "${this.params.include}")` : ''}`;
 
-      if (searchTruncated) {
-        headerText += ` (showing first ${matchCount} of ${totalMatchesFound}+ total matches)`;
-      }
+
 
       let llmContent = `${headerText}:
 ---
@@ -221,18 +199,9 @@ class GrepToolInvocation extends BaseToolInvocation<
       }
 
       // Add truncation guidance if results were limited
-      if (searchTruncated) {
-        llmContent += `\nWARNING: Results truncated to prevent context overflow. To see more results:
-- Use a more specific pattern to reduce matches
-- Add file filters with the 'include' parameter (e.g., "*.js", "src/**")
-- Specify a narrower 'path' to search in a subdirectory
-- Increase 'maxResults' parameter if you need more matches (current: ${maxResults})`;
-      }
+
 
       let displayText = `Found ${matchCount} ${matchTerm}`;
-      if (searchTruncated) {
-        displayText += ` (truncated from ${totalMatchesFound}+)`;
-      }
 
       return {
         llmContent: llmContent.trim(),
@@ -623,13 +592,7 @@ export class GrepTool extends BaseDeclarativeTool<GrepToolParams, ToolResult> {
               "Optional: A glob pattern to filter which files are searched (e.g., '*.js', '*.{ts,tsx}', 'src/**'). If omitted, searches all files (respecting potential global ignores).",
             type: 'string',
           },
-          maxResults: {
-            description:
-              'Optional: Maximum number of matches to return to prevent context overflow (default: 20, max: 100). Use lower values for broad searches, higher for specific searches.',
-            type: 'number',
-            minimum: 1,
-            maximum: 100,
-          },
+
         },
         required: ['pattern'],
         type: 'object',
@@ -692,16 +655,7 @@ export class GrepTool extends BaseDeclarativeTool<GrepToolParams, ToolResult> {
       return `Invalid regular expression pattern provided: ${params.pattern}. Error: ${getErrorMessage(error)}`;
     }
 
-    // Validate maxResults if provided
-    if (params.maxResults !== undefined) {
-      if (
-        !Number.isInteger(params.maxResults) ||
-        params.maxResults < 1 ||
-        params.maxResults > 100
-      ) {
-        return `maxResults must be an integer between 1 and 100, got: ${params.maxResults}`;
-      }
-    }
+
 
     // Only validate path if one is provided
     if (params.path) {

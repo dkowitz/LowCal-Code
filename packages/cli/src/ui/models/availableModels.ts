@@ -7,6 +7,18 @@
 export type AvailableModel = {
   id: string;
   label: string;
+  /**
+   * Optional price per input/prompt token (in USD). Only populated for OpenRouter models.
+   */
+  inputPrice?: string;
+  /**
+   * Optional price per output/completion token (in USD). Only populated for OpenRouter models.
+   */
+  outputPrice?: string;
+  /**
+   * Context window size in tokens. Only populated for OpenRouter models.
+   */
+  contextLength?: number;
   isVision?: boolean;
 };
 
@@ -68,7 +80,20 @@ export async function fetchOpenAICompatibleModels(
     // OpenAI responses typically have "data" array with id fields
     const models: any[] = Array.isArray(data?.data) ? data.data : [];
     return models
-      .map((m) => ({ id: m.id || m.name, label: m.id || m.name }))
+      .map((m) => ({
+        id: m.id || m.name,
+        label: m.id || m.name,
+        // OpenRouter includes pricing and context_length in the model object
+        // pricing.prompt is for input tokens, pricing.completion is for output tokens
+        inputPrice: typeof m.pricing?.prompt === 'string' ? m.pricing.prompt : undefined,
+        outputPrice: typeof m.pricing?.completion === 'string' ? m.pricing.completion : undefined,
+        contextLength:
+          typeof m.context_length === 'number'
+            ? m.context_length
+            : typeof m.top_provider?.context_length === 'number'
+            ? m.top_provider.context_length
+            : undefined,
+      }))
       .filter((m) => !!m.id);
   } catch (e) {
     // swallow errors and return empty list

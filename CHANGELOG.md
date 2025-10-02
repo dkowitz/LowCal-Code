@@ -13,6 +13,8 @@
 - Fixed Markdown list display issues on Windows.
 - Enhanced vision model instructions and documentation.
 - Improved authentication method compatibility across different IDE integrations.
+- Fixed OpenRouter model pricing display to show correct per-million-token rates with separate input/output pricing.
+- Improved model listing readability with comma-separated context length formatting.
 
 ## 0.0.12
 

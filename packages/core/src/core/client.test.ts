@@ -603,30 +603,32 @@ describe('Gemini Client (client.ts)', () => {
 
     describe('when compression inflates the token count', () => {
       it('uses the truncated history for compression');
-      it('allows compression to be forced/manual after a failure', async () => {
+      it("allows compression to be forced/manual after a failure", async () => {
         const { client, mockGenerator } = setup();
         mockGenerator.countTokens?.mockResolvedValue({
           totalTokens: 1000,
         });
-        await client.tryCompressChat('prompt-id-4'); // Fails
-        const result = await client.tryCompressChat('prompt-id-4', true);
+        await client.tryCompressChat("prompt-id-4"); // Fails
+        const result = await client.tryCompressChat("prompt-id-4", true);
 
         expect(result).toEqual({
           compressionStatus: CompressionStatus.COMPRESSED,
           newTokenCount: 1000,
           originalTokenCount: 1000,
+          model: "test-model",
         });
       });
 
-      it('yields the result even if the compression inflated the tokens', async () => {
+      it("yields the result even if the compression inflated the tokens", async () => {
         const { client } = setup();
-        const result = await client.tryCompressChat('prompt-id-4', true);
+        const result = await client.tryCompressChat("prompt-id-4", true);
 
         expect(result).toEqual({
           compressionStatus:
             CompressionStatus.COMPRESSION_FAILED_INFLATED_TOKEN_COUNT,
           newTokenCount: 5000,
           originalTokenCount: 1000,
+          model: "test-model",
         });
       });
 
@@ -663,11 +665,11 @@ describe('Gemini Client (client.ts)', () => {
         );
       });
 
-      it('will not attempt to compress context after a failure', async () => {
+      it("will not attempt to compress context after a failure", async () => {
         const { client, mockGenerator } = setup();
-        await client.tryCompressChat('prompt-id-4');
+        await client.tryCompressChat("prompt-id-4");
 
-        const result = await client.tryCompressChat('prompt-id-5');
+        const result = await client.tryCompressChat("prompt-id-5");
 
         // it counts tokens for {original, compressed} and then never again
         expect(mockGenerator.countTokens).toHaveBeenCalledTimes(2);
@@ -675,6 +677,7 @@ describe('Gemini Client (client.ts)', () => {
           compressionStatus: CompressionStatus.NOOP,
           newTokenCount: 0,
           originalTokenCount: 0,
+          model: "test-model",
         });
       });
     });
@@ -719,7 +722,7 @@ describe('Gemini Client (client.ts)', () => {
       });
 
       const initialChat = client.getChat();
-      const result = await client.tryCompressChat('prompt-id-2');
+      const result = await client.tryCompressChat("prompt-id-2");
       const newChat = client.getChat();
 
       expect(tokenLimit).toHaveBeenCalled();
@@ -727,6 +730,7 @@ describe('Gemini Client (client.ts)', () => {
         compressionStatus: CompressionStatus.NOOP,
         newTokenCount: 699,
         originalTokenCount: 699,
+        model: "test-model",
       });
       expect(newChat).toBe(initialChat);
     });

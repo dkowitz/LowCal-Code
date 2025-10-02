@@ -6,6 +6,18 @@
 export type AvailableModel = {
     id: string;
     label: string;
+    /**
+     * Optional price per input/prompt token (in USD). Only populated for OpenRouter models.
+     */
+    inputPrice?: string;
+    /**
+     * Optional price per output/completion token (in USD). Only populated for OpenRouter models.
+     */
+    outputPrice?: string;
+    /**
+     * Context window size in tokens. Only populated for OpenRouter models.
+     */
+    contextLength?: number;
     isVision?: boolean;
 };
 export declare const MAINLINE_VLM = "vision-model";
