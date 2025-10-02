@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 /* ACP defines a schema for a simple (experimental) JSON-RPC protocol that allows GUI applications to interact with agents. */
-import { z } from "zod";
-import { EOL } from "node:os";
-import * as schema from "./schema.js";
-export * from "./schema.js";
+import { z } from 'zod';
+import { EOL } from 'node:os';
+import * as schema from './schema.js';
+export * from './schema.js';
 export class AgentSideConnection {
     #connection;
     constructor(toAgent, input, output) {
@@ -83,12 +83,12 @@ class Connection {
         this.#receive(peerOutput);
     }
     async #receive(output) {
-        let content = "";
+        let content = '';
         const decoder = new TextDecoder();
         for await (const chunk of output) {
             content += decoder.decode(chunk, { stream: true });
             const lines = content.split(EOL);
-            content = lines.pop() || "";
+            content = lines.pop() || '';
             for (const line of lines) {
                 const trimmedLine = line.trim();
                 if (trimmedLine) {
@@ -99,20 +99,20 @@ class Connection {
         }
     }
     async #processMessage(message) {
-        if ("method" in message && "id" in message) {
+        if ('method' in message && 'id' in message) {
             // It's a request
             const response = await this.#tryCallHandler(message.method, message.params);
             await this.#sendMessage({
-                jsonrpc: "2.0",
+                jsonrpc: '2.0',
                 id: message.id,
                 ...response,
             });
         }
-        else if ("method" in message) {
+        else if ('method' in message) {
             // It's a notification
             await this.#tryCallHandler(message.method, message.params);
         }
-        else if ("id" in message) {
+        else if ('id' in message) {
             // It's a response
             this.#handleResponse(message);
         }
@@ -133,10 +133,10 @@ class Connection {
             if (error instanceof Error) {
                 details = error.message;
             }
-            else if (typeof error === "object" &&
+            else if (typeof error === 'object' &&
                 error != null &&
-                "message" in error &&
-                typeof error.message === "string") {
+                'message' in error &&
+                typeof error.message === 'string') {
                 details = error.message;
             }
             return RequestError.internalError(details).toResult();
@@ -145,10 +145,10 @@ class Connection {
     #handleResponse(response) {
         const pendingResponse = this.#pendingResponses.get(response.id);
         if (pendingResponse) {
-            if ("result" in response) {
+            if ('result' in response) {
                 pendingResponse.resolve(response.result);
             }
-            else if ("error" in response) {
+            else if ('error' in response) {
                 pendingResponse.reject(response.error);
             }
             this.#pendingResponses.delete(response.id);
@@ -159,14 +159,14 @@ class Connection {
         const responsePromise = new Promise((resolve, reject) => {
             this.#pendingResponses.set(id, { resolve, reject });
         });
-        await this.#sendMessage({ jsonrpc: "2.0", id, method, params });
+        await this.#sendMessage({ jsonrpc: '2.0', id, method, params });
         return responsePromise;
     }
     async sendNotification(method, params) {
-        await this.#sendMessage({ jsonrpc: "2.0", method, params });
+        await this.#sendMessage({ jsonrpc: '2.0', method, params });
     }
     async #sendMessage(json) {
-        const content = JSON.stringify(json) + "\n";
+        const content = JSON.stringify(json) + '\n';
         this.#writeQueue = this.#writeQueue
             .then(async () => {
             const writer = this.#peerInput.getWriter();
@@ -179,7 +179,7 @@ class Connection {
         })
             .catch((error) => {
             // Continue processing writes on error
-            console.error("ACP write error:", error);
+            console.error('ACP write error:', error);
         });
         return this.#writeQueue;
     }
@@ -190,28 +190,28 @@ export class RequestError extends Error {
     constructor(code, message, details) {
         super(message);
         this.code = code;
-        this.name = "RequestError";
+        this.name = 'RequestError';
         if (details) {
             this.data = { details };
         }
     }
     static parseError(details) {
-        return new RequestError(-32700, "Parse error", details);
+        return new RequestError(-32700, 'Parse error', details);
     }
     static invalidRequest(details) {
-        return new RequestError(-32600, "Invalid request", details);
+        return new RequestError(-32600, 'Invalid request', details);
     }
     static methodNotFound(details) {
-        return new RequestError(-32601, "Method not found", details);
+        return new RequestError(-32601, 'Method not found', details);
     }
     static invalidParams(details) {
-        return new RequestError(-32602, "Invalid params", details);
+        return new RequestError(-32602, 'Invalid params', details);
     }
     static internalError(details) {
-        return new RequestError(-32603, "Internal error", details);
+        return new RequestError(-32603, 'Internal error', details);
     }
     static authRequired(details) {
-        return new RequestError(-32000, "Authentication required", details);
+        return new RequestError(-32000, 'Authentication required', details);
     }
     toResult() {
         return {

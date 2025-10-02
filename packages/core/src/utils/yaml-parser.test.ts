@@ -4,30 +4,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, expect, it } from "vitest";
-import { parse, stringify } from "./yaml-parser.js";
+import { describe, expect, it } from 'vitest';
+import { parse, stringify } from './yaml-parser.js';
 
-describe("yaml-parser", () => {
-  describe("parse", () => {
-    it("should parse simple key-value pairs", () => {
-      const yaml = "name: test\ndescription: A test config";
+describe('yaml-parser', () => {
+  describe('parse', () => {
+    it('should parse simple key-value pairs', () => {
+      const yaml = 'name: test\ndescription: A test config';
       const result = parse(yaml);
       expect(result).toEqual({
-        name: "test",
-        description: "A test config",
+        name: 'test',
+        description: 'A test config',
       });
     });
 
-    it("should parse arrays", () => {
-      const yaml = "tools:\n  - file\n  - shell";
+    it('should parse arrays', () => {
+      const yaml = 'tools:\n  - file\n  - shell';
       const result = parse(yaml);
       expect(result).toEqual({
-        tools: ["file", "shell"],
+        tools: ['file', 'shell'],
       });
     });
 
-    it("should parse nested objects", () => {
-      const yaml = "modelConfig:\n  temperature: 0.7\n  maxTokens: 1000";
+    it('should parse nested objects', () => {
+      const yaml = 'modelConfig:\n  temperature: 0.7\n  maxTokens: 1000';
       const result = parse(yaml);
       expect(result).toEqual({
         modelConfig: {
@@ -38,20 +38,20 @@ describe("yaml-parser", () => {
     });
   });
 
-  describe("stringify", () => {
-    it("should stringify simple objects", () => {
-      const obj = { name: "test", description: "A test config" };
+  describe('stringify', () => {
+    it('should stringify simple objects', () => {
+      const obj = { name: 'test', description: 'A test config' };
       const result = stringify(obj);
-      expect(result).toBe("name: test\ndescription: A test config");
+      expect(result).toBe('name: test\ndescription: A test config');
     });
 
-    it("should stringify arrays", () => {
-      const obj = { tools: ["file", "shell"] };
+    it('should stringify arrays', () => {
+      const obj = { tools: ['file', 'shell'] };
       const result = stringify(obj);
-      expect(result).toBe("tools:\n  - file\n  - shell");
+      expect(result).toBe('tools:\n  - file\n  - shell');
     });
 
-    it("should stringify nested objects", () => {
+    it('should stringify nested objects', () => {
       const obj = {
         modelConfig: {
           temperature: 0.7,
@@ -60,24 +60,24 @@ describe("yaml-parser", () => {
       };
       const result = stringify(obj);
       expect(result).toBe(
-        "modelConfig:\n  temperature: 0.7\n  maxTokens: 1000",
+        'modelConfig:\n  temperature: 0.7\n  maxTokens: 1000',
       );
     });
 
-    describe("string escaping security", () => {
-      it("should properly escape strings with quotes", () => {
+    describe('string escaping security', () => {
+      it('should properly escape strings with quotes', () => {
         const obj = { key: 'value with "quotes"' };
         const result = stringify(obj);
         expect(result).toBe('key: "value with \\"quotes\\""');
       });
 
-      it("should properly escape strings with backslashes", () => {
-        const obj = { key: "value with \\ backslash" };
+      it('should properly escape strings with backslashes', () => {
+        const obj = { key: 'value with \\ backslash' };
         const result = stringify(obj);
         expect(result).toBe('key: "value with \\\\ backslash"');
       });
 
-      it("should properly escape strings with backslash-quote sequences", () => {
+      it('should properly escape strings with backslash-quote sequences', () => {
         // This is the critical security test case
         const obj = { key: 'value with \\" sequence' };
         const result = stringify(obj);
@@ -85,7 +85,7 @@ describe("yaml-parser", () => {
         expect(result).toBe('key: "value with \\\\\\" sequence"');
       });
 
-      it("should handle complex escaping scenarios", () => {
+      it('should handle complex escaping scenarios', () => {
         const testCases = [
           {
             input: { path: 'C:\\Program Files\\"App"\\file.txt' },
@@ -108,11 +108,11 @@ describe("yaml-parser", () => {
         });
       });
 
-      it("should maintain round-trip integrity for escaped strings", () => {
+      it('should maintain round-trip integrity for escaped strings', () => {
         const testStrings = [
-          "simple string",
+          'simple string',
           'string with "quotes"',
-          "string with \\ backslash",
+          'string with \\ backslash',
           'string with \\" sequence',
           'path\\to\\"file".txt',
           'He said: \\"Hello\\"',
@@ -121,72 +121,72 @@ describe("yaml-parser", () => {
 
         testStrings.forEach((testString) => {
           // Force quoting by adding a colon
-          const originalObj = { key: testString + ":" };
+          const originalObj = { key: testString + ':' };
           const yamlString = stringify(originalObj);
           const parsedObj = parse(yamlString);
           expect(parsedObj).toEqual(originalObj);
         });
       });
 
-      it("should not quote strings that do not need quoting", () => {
-        const obj = { key: "simplevalue" };
+      it('should not quote strings that do not need quoting', () => {
+        const obj = { key: 'simplevalue' };
         const result = stringify(obj);
-        expect(result).toBe("key: simplevalue");
+        expect(result).toBe('key: simplevalue');
       });
 
-      it("should quote strings with colons", () => {
-        const obj = { key: "value:with:colons" };
+      it('should quote strings with colons', () => {
+        const obj = { key: 'value:with:colons' };
         const result = stringify(obj);
         expect(result).toBe('key: "value:with:colons"');
       });
 
-      it("should quote strings with hash symbols", () => {
-        const obj = { key: "value#with#hash" };
+      it('should quote strings with hash symbols', () => {
+        const obj = { key: 'value#with#hash' };
         const result = stringify(obj);
         expect(result).toBe('key: "value#with#hash"');
       });
 
-      it("should quote strings with leading/trailing whitespace", () => {
-        const obj = { key: " value with spaces " };
+      it('should quote strings with leading/trailing whitespace', () => {
+        const obj = { key: ' value with spaces ' };
         const result = stringify(obj);
         expect(result).toBe('key: " value with spaces "');
       });
     });
 
-    describe("numeric string handling", () => {
-      it("should parse unquoted numeric values as numbers", () => {
-        const yaml = "name: 11\ndescription: 333";
+    describe('numeric string handling', () => {
+      it('should parse unquoted numeric values as numbers', () => {
+        const yaml = 'name: 11\ndescription: 333';
         const result = parse(yaml);
         expect(result).toEqual({
           name: 11,
           description: 333,
         });
-        expect(typeof result["name"]).toBe("number");
-        expect(typeof result["description"]).toBe("number");
+        expect(typeof result['name']).toBe('number');
+        expect(typeof result['description']).toBe('number');
       });
 
-      it("should parse quoted numeric values as strings", () => {
+      it('should parse quoted numeric values as strings', () => {
         const yaml = 'name: "11"\ndescription: "333"';
         const result = parse(yaml);
         expect(result).toEqual({
-          name: "11",
-          description: "333",
+          name: '11',
+          description: '333',
         });
-        expect(typeof result["name"]).toBe("string");
-        expect(typeof result["description"]).toBe("string");
+        expect(typeof result['name']).toBe('string');
+        expect(typeof result['description']).toBe('string');
       });
 
-      it("should handle mixed numeric and string values", () => {
+      it('should handle mixed numeric and string values', () => {
         const yaml = 'name: "11"\nage: 25\ndescription: "333"';
         const result = parse(yaml);
         expect(result).toEqual({
-          name: "11",
+          name: '11',
           age: 25,
-          description: "333",
+          description: '333',
         });
-        expect(typeof result["name"]).toBe("string");
-        expect(typeof result["age"]).toBe("number");
-        expect(typeof result["description"]).toBe("string");
+        expect(typeof result['name']).toBe('string');
+        expect(typeof result['age']).toBe('number');
+        expect(typeof result['description']).toBe('string');
       });
     });
   });

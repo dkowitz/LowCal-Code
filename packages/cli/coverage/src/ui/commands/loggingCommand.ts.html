@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">76.34% </span>
+                <span class="strong">74.73% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>71/93</span>
+                <span class='fraction'>71/95</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">76.34% </span>
+                <span class="strong">74.73% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>71/93</span>
+                <span class='fraction'>71/95</span>
             </div>
         
             
@@ -168,7 +168,9 @@
 <a name='L103'></a><a href='#L103'>103</a>
 <a name='L104'></a><a href='#L104'>104</a>
 <a name='L105'></a><a href='#L105'>105</a>
-<a name='L106'></a><a href='#L106'>106</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L106'></a><a href='#L106'>106</a>
+<a name='L107'></a><a href='#L107'>107</a>
+<a name='L108'></a><a href='#L108'>108</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -237,6 +239,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -251,6 +254,7 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -279,15 +283,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { CommandKind, type SlashCommand } from "./types.js";
+import { CommandKind, type SlashCommand } from './types.js';
 &nbsp;
 const USAGE_MESSAGE =
-  "Usage: /logging &lt;on|off|status&gt;. Enables or disables enhanced session logging.";
+  'Usage: /logging &lt;on|off|status&gt;. Enables or disables enhanced session logging.';
 &nbsp;
 export const loggingCommand: SlashCommand = {
-  name: "logging",
+  name: 'logging',
   description:
-    "enable, disable, or check the status of enhanced session logging for this session",
+    'enable, disable, or check the status of enhanced session logging for this session',
   kind: CommandKind.BUILT_IN,
   async action(context, args) {
     const logging = context.services.logging;
@@ -296,7 +300,7 @@ export const loggingCommand: SlashCommand = {
     const showStatus = () =&gt; {
       const status = logging.getStatus();
       const messageLines = [
-        `Logging is currently ${status.enabled ? <span class="branch-0 cbranch-no" title="branch not covered" >"enabled" : "disabled"}</span>.`,
+        `Logging is currently ${status.enabled ? <span class="branch-0 cbranch-no" title="branch not covered" >'enabled' : 'disabled'}</span>.`,
       ];
       if (status.logFilePath) {
         messageLines.push(`Log file: \`${status.logFilePath}\``);
@@ -306,37 +310,38 @@ export const loggingCommand: SlashCommand = {
 <span class="cstat-no" title="statement not covered" >      }</span>
       context.ui.addItem(
         {
-          type: "info",
-          text: messageLines.join(" "),
+          type: 'info',
+          text: messageLines.join(' '),
         },
         Date.now(),
       );
     };
 &nbsp;
-    if (!input || input === "status") {
+    if (!input || input === 'status') {
       showStatus();
       return;
     }
 &nbsp;
-    if (input === "on" || input === "enable") {
+    if (input === 'on' || input === 'enable') {
       try {
         const status = await logging.enableLogging();
-        const parts = ["Enhanced session logging enabled."];
+        const parts = ['Enhanced session logging enabled.'];
         if (status.logFilePath) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >          parts.push(`Writing to \`${status.logFilePath}\`.`);</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
         context.ui.addItem(
           {
-            type: "info",
-            text: parts.join(" "),
+            type: 'info',
+            text: parts.join(' '),
           },
           Date.now(),
         );
 <span class="branch-0 cbranch-no" title="branch not covered" >      } catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >        const message = error instanceof Error ? error.message : String(error);</span>
+<span class="cstat-no" title="statement not covered" >        const message =</span>
+<span class="cstat-no" title="statement not covered" >          error instanceof Error ? error.message : String(error);</span>
 <span class="cstat-no" title="statement not covered" >        context.ui.addItem(</span>
 <span class="cstat-no" title="statement not covered" >          {</span>
-<span class="cstat-no" title="statement not covered" >            type: "error",</span>
+<span class="cstat-no" title="statement not covered" >            type: 'error',</span>
 <span class="cstat-no" title="statement not covered" >            text: `Failed to enable logging: ${message}`,</span>
 <span class="cstat-no" title="statement not covered" >          },</span>
 <span class="cstat-no" title="statement not covered" >          Date.now(),</span>
@@ -345,21 +350,22 @@ export const loggingCommand: SlashCommand = {
       return;
     }
 &nbsp;
-    if (input === "off" || input === "disable") {
+    if (input === 'off' || input === 'disable') {
       try {
-        await logging.disableLogging("Disabled via /logging command");
+        await logging.disableLogging('Disabled via /logging command');
         context.ui.addItem(
           {
-            type: "info",
-            text: "Enhanced session logging disabled.",
+            type: 'info',
+            text: 'Enhanced session logging disabled.',
           },
           Date.now(),
         );
 <span class="branch-0 cbranch-no" title="branch not covered" >      } catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >        const message = error instanceof Error ? error.message : String(error);</span>
+<span class="cstat-no" title="statement not covered" >        const message =</span>
+<span class="cstat-no" title="statement not covered" >          error instanceof Error ? error.message : String(error);</span>
 <span class="cstat-no" title="statement not covered" >        context.ui.addItem(</span>
 <span class="cstat-no" title="statement not covered" >          {</span>
-<span class="cstat-no" title="statement not covered" >            type: "error",</span>
+<span class="cstat-no" title="statement not covered" >            type: 'error',</span>
 <span class="cstat-no" title="statement not covered" >            text: `Failed to disable logging: ${message}`,</span>
 <span class="cstat-no" title="statement not covered" >          },</span>
 <span class="cstat-no" title="statement not covered" >          Date.now(),</span>
@@ -370,7 +376,7 @@ export const loggingCommand: SlashCommand = {
 &nbsp;
     context.ui.addItem(
       {
-        type: "error",
+        type: 'error',
         text: USAGE_MESSAGE,
       },
       Date.now(),
@@ -385,7 +391,7 @@ export const loggingCommand: SlashCommand = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

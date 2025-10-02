@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { SlashCommand } from "./types.js";
+import type { SlashCommand } from './types.js';
 /**
  * Command to configure terminal keybindings for multiline input support.
  *

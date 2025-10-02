@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs from "node:fs";
-import path from "node:path";
-import os, { EOL } from "node:os";
-import crypto from "node:crypto";
-import type { Config } from "../config/config.js";
-import { ToolNames } from "./tool-names.js";
-import { ToolErrorType } from "./tool-error.js";
+import fs from 'node:fs';
+import path from 'node:path';
+import os, { EOL } from 'node:os';
+import crypto from 'node:crypto';
+import type { Config } from '../config/config.js';
+import { ToolNames } from './tool-names.js';
+import { ToolErrorType } from './tool-error.js';
 import type {
   ToolInvocation,
   ToolResult,
   ToolResultDisplay,
   ToolCallConfirmationDetails,
   ToolExecuteConfirmationDetails,
-} from "./tools.js";
+} from './tools.js';
 import {
   BaseDeclarativeTool,
   BaseToolInvocation,
   ToolConfirmationOutcome,
   Kind,
-} from "./tools.js";
-import { getErrorMessage } from "../utils/errors.js";
-import { summarizeToolOutput } from "../utils/summarizer.js";
-import type { ShellOutputEvent } from "../services/shellExecutionService.js";
-import { ShellExecutionService } from "../services/shellExecutionService.js";
-import { formatMemoryUsage } from "../utils/formatters.js";
+} from './tools.js';
+import { getErrorMessage } from '../utils/errors.js';
+import { summarizeToolOutput } from '../utils/summarizer.js';
+import type { ShellOutputEvent } from '../services/shellExecutionService.js';
+import { ShellExecutionService } from '../services/shellExecutionService.js';
+import { formatMemoryUsage } from '../utils/formatters.js';
 import {
   getCommandRoots,
   isCommandAllowed,
   isCommandNeedsPermission,
   stripShellWrapper,
-} from "../utils/shell-utils.js";
+} from '../utils/shell-utils.js';
 
 export const OUTPUT_UPDATE_INTERVAL_MS = 1000;
 
@@ -70,7 +70,7 @@ class ShellToolInvocation extends BaseToolInvocation<
     }
     // append optional (description), replacing any line breaks with spaces
     if (this.params.description) {
-      description += ` (${this.params.description.replace(/\n/g, " ")})`;
+      description += ` (${this.params.description.replace(/\n/g, ' ')})`;
     }
     return description;
   }
@@ -94,10 +94,10 @@ class ShellToolInvocation extends BaseToolInvocation<
     }
 
     const confirmationDetails: ToolExecuteConfirmationDetails = {
-      type: "exec",
-      title: "Confirm Shell Command",
+      type: 'exec',
+      title: 'Confirm Shell Command',
       command: this.params.command,
-      rootCommand: commandsToConfirm.join(", "),
+      rootCommand: commandsToConfirm.join(', '),
       onConfirm: async (outcome: ToolConfirmationOutcome) => {
         if (outcome === ToolConfirmationOutcome.ProceedAlways) {
           commandsToConfirm.forEach((command) => this.allowlist.add(command));
@@ -117,15 +117,15 @@ class ShellToolInvocation extends BaseToolInvocation<
 
     if (signal.aborted) {
       return {
-        llmContent: "Command was cancelled by user before it could start.",
-        returnDisplay: "Command cancelled by user.",
+        llmContent: 'Command was cancelled by user before it could start.',
+        returnDisplay: 'Command cancelled by user.',
       };
     }
 
-    const isWindows = os.platform() === "win32";
+    const isWindows = os.platform() === 'win32';
     const tempFileName = `shell_pgrep_${crypto
       .randomBytes(6)
-      .toString("hex")}.tmp`;
+      .toString('hex')}.tmp`;
     const tempFilePath = path.join(os.tmpdir(), tempFileName);
 
     try {
@@ -136,8 +136,8 @@ class ShellToolInvocation extends BaseToolInvocation<
       let finalCommand = processedCommand;
 
       // If explicitly marked as background and doesn't already end with &, add it
-      if (shouldRunInBackground && !finalCommand.trim().endsWith("&")) {
-        finalCommand = finalCommand.trim() + " &";
+      if (shouldRunInBackground && !finalCommand.trim().endsWith('&')) {
+        finalCommand = finalCommand.trim() + ' &';
       }
 
       // pgrep is not available on Windows, so we can't get background PIDs
@@ -146,16 +146,16 @@ class ShellToolInvocation extends BaseToolInvocation<
         : (() => {
             // wrap command to append subprocess pids (via pgrep) to temporary file
             let command = finalCommand.trim();
-            if (!command.endsWith("&")) command += ";";
+            if (!command.endsWith('&')) command += ';';
             return `{ ${command} }; __code=$?; pgrep -g 0 >${tempFilePath} 2>&1; exit $__code;`;
           })();
 
       const cwd = path.resolve(
         this.config.getTargetDir(),
-        this.params.directory || "",
+        this.params.directory || '',
       );
 
-      let cumulativeOutput = "";
+      let cumulativeOutput = '';
       let lastUpdateTime = Date.now();
       let isBinaryStream = false;
 
@@ -167,11 +167,11 @@ class ShellToolInvocation extends BaseToolInvocation<
             return;
           }
 
-          let currentDisplayOutput = "";
+          let currentDisplayOutput = '';
           let shouldUpdate = false;
 
           switch (event.type) {
-            case "data":
+            case 'data':
               if (isBinaryStream) break;
               cumulativeOutput = event.chunk;
               currentDisplayOutput = cumulativeOutput;
@@ -179,13 +179,13 @@ class ShellToolInvocation extends BaseToolInvocation<
                 shouldUpdate = true;
               }
               break;
-            case "binary_detected":
+            case 'binary_detected':
               isBinaryStream = true;
               currentDisplayOutput =
-                "[Binary output detected. Halting stream...]";
+                '[Binary output detected. Halting stream...]';
               shouldUpdate = true;
               break;
-            case "binary_progress":
+            case 'binary_progress':
               isBinaryStream = true;
               currentDisplayOutput = `[Receiving binary output... ${formatMemoryUsage(
                 event.bytesReceived,
@@ -195,7 +195,7 @@ class ShellToolInvocation extends BaseToolInvocation<
               }
               break;
             default: {
-              throw new Error("An unhandled ShellOutputEvent was found.");
+              throw new Error('An unhandled ShellOutputEvent was found.');
             }
           }
 
@@ -213,10 +213,10 @@ class ShellToolInvocation extends BaseToolInvocation<
       const result = await resultPromise;
 
       const backgroundPIDs: number[] = [];
-      if (os.platform() !== "win32") {
+      if (os.platform() !== 'win32') {
         if (fs.existsSync(tempFilePath)) {
           const pgrepLines = fs
-            .readFileSync(tempFilePath, "utf8")
+            .readFileSync(tempFilePath, 'utf8')
             .split(EOL)
             .filter(Boolean);
           for (const line of pgrepLines) {
@@ -230,41 +230,41 @@ class ShellToolInvocation extends BaseToolInvocation<
           }
         } else {
           if (!signal.aborted) {
-            console.error("missing pgrep output");
+            console.error('missing pgrep output');
           }
         }
       }
 
-      let llmContent = "";
+      let llmContent = '';
       if (result.aborted) {
-        llmContent = "Command was cancelled by user before it could complete.";
+        llmContent = 'Command was cancelled by user before it could complete.';
         if (result.output.trim()) {
           llmContent += ` Below is the output before it was cancelled:\n${result.output}`;
         } else {
-          llmContent += " There was no output before it was cancelled.";
+          llmContent += ' There was no output before it was cancelled.';
         }
       } else {
         // Create a formatted error string for display, replacing the wrapper command
         // with the user-facing command.
         const finalError = result.error
           ? result.error.message.replace(commandToExecute, this.params.command)
-          : "(none)";
+          : '(none)';
 
         llmContent = [
           `Command: ${this.params.command}`,
-          `Directory: ${this.params.directory || "(root)"}`,
-          `Output: ${result.output || "(empty)"}`,
+          `Directory: ${this.params.directory || '(root)'}`,
+          `Output: ${result.output || '(empty)'}`,
           `Error: ${finalError}`, // Use the cleaned error string.
-          `Exit Code: ${result.exitCode ?? "(none)"}`,
-          `Signal: ${result.signal ?? "(none)"}`,
+          `Exit Code: ${result.exitCode ?? '(none)'}`,
+          `Signal: ${result.signal ?? '(none)'}`,
           `Background PIDs: ${
-            backgroundPIDs.length ? backgroundPIDs.join(", ") : "(none)"
+            backgroundPIDs.length ? backgroundPIDs.join(', ') : '(none)'
           }`,
-          `Process Group PGID: ${result.pid ?? "(none)"}`,
-        ].join("\n");
+          `Process Group PGID: ${result.pid ?? '(none)'}`,
+        ].join('\n');
       }
 
-      let returnDisplayMessage = "";
+      let returnDisplayMessage = '';
       if (this.config.getDebugMode()) {
         returnDisplayMessage = llmContent;
       } else {
@@ -272,7 +272,7 @@ class ShellToolInvocation extends BaseToolInvocation<
           returnDisplayMessage = result.output;
         } else {
           if (result.aborted) {
-            returnDisplayMessage = "Command cancelled by user.";
+            returnDisplayMessage = 'Command cancelled by user.';
           } else if (result.signal) {
             returnDisplayMessage = `Command terminated by signal: ${result.signal}`;
           } else if (result.error) {
@@ -391,7 +391,7 @@ function getShellToolDescription(): string {
       Background PIDs: List of background processes started or \`(none)\`.
       Process Group PGID: Process group started or \`(none)\``;
 
-  if (os.platform() === "win32") {
+  if (os.platform() === 'win32') {
     return `This tool executes a given shell command as \`cmd.exe /c <command>\`. Command can start background processes using \`start /b\`.${toolDescription}`;
   } else {
     return `This tool executes a given shell command as \`bash -c <command>\`. Command can start background processes using \`&\`. Command is executed as a subprocess that leads its own process group. Command process group can be terminated as \`kill -- -PGID\` or signaled as \`kill -s SIGNAL -- -PGID\`.${toolDescription}`;
@@ -399,10 +399,10 @@ function getShellToolDescription(): string {
 }
 
 function getCommandDescription(): string {
-  if (os.platform() === "win32") {
-    return "Exact command to execute as `cmd.exe /c <command>`";
+  if (os.platform() === 'win32') {
+    return 'Exact command to execute as `cmd.exe /c <command>`';
   } else {
-    return "Exact bash command to execute as `bash -c <command>`";
+    return 'Exact bash command to execute as `bash -c <command>`';
   }
 }
 
@@ -416,33 +416,33 @@ export class ShellTool extends BaseDeclarativeTool<
   constructor(private readonly config: Config) {
     super(
       ShellTool.Name,
-      "Shell",
+      'Shell',
       getShellToolDescription(),
       Kind.Execute,
       {
-        type: "object",
+        type: 'object',
         properties: {
           command: {
-            type: "string",
+            type: 'string',
             description: getCommandDescription(),
           },
           is_background: {
-            type: "boolean",
+            type: 'boolean',
             description:
-              "Whether to run the command in background. Default is false. Set to true for long-running processes like development servers, watchers, or daemons that should continue running without blocking further commands.",
+              'Whether to run the command in background. Default is false. Set to true for long-running processes like development servers, watchers, or daemons that should continue running without blocking further commands.',
           },
           description: {
-            type: "string",
+            type: 'string',
             description:
-              "Brief description of the command for the user. Be specific and concise. Ideally a single sentence. Can be up to 3 sentences for clarity. No line breaks.",
+              'Brief description of the command for the user. Be specific and concise. Ideally a single sentence. Can be up to 3 sentences for clarity. No line breaks.',
           },
           directory: {
-            type: "string",
+            type: 'string',
             description:
-              "(OPTIONAL) Directory to run the command in, if not the project root directory. Must be relative to the project root directory and must already exist.",
+              '(OPTIONAL) Directory to run the command in, if not the project root directory. Must be relative to the project root directory and must already exist.',
           },
         },
-        required: ["command", "is_background"],
+        required: ['command', 'is_background'],
       },
       false, // output is not markdown
       true, // output can be updated
@@ -456,21 +456,21 @@ export class ShellTool extends BaseDeclarativeTool<
     if (!commandCheck.allowed) {
       if (!commandCheck.reason) {
         console.error(
-          "Unexpected: isCommandAllowed returned false without a reason",
+          'Unexpected: isCommandAllowed returned false without a reason',
         );
         return `Command is not allowed: ${params.command}`;
       }
       return commandCheck.reason;
     }
     if (!params.command.trim()) {
-      return "Command cannot be empty.";
+      return 'Command cannot be empty.';
     }
     if (getCommandRoots(params.command).length === 0) {
-      return "Could not identify command root to obtain permission from user.";
+      return 'Could not identify command root to obtain permission from user.';
     }
     if (params.directory) {
       if (path.isAbsolute(params.directory)) {
-        return "Directory cannot be absolute. Please refer to workspace directories by their name.";
+        return 'Directory cannot be absolute. Please refer to workspace directories by their name.';
       }
       const workspaceDirs = this.config.getWorkspaceContext().getDirectories();
       const matchingDirs = workspaceDirs.filter(

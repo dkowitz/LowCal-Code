@@ -1,7 +1,7 @@
-import OpenAI from "openai";
-import { AuthType } from "../../contentGenerator.js";
-import { DEFAULT_TIMEOUT, DEFAULT_MAX_RETRIES } from "../constants.js";
-import { tokenLimit } from "../../tokenLimits.js";
+import OpenAI from 'openai';
+import { AuthType } from '../../contentGenerator.js';
+import { DEFAULT_TIMEOUT, DEFAULT_MAX_RETRIES } from '../constants.js';
+import { tokenLimit } from '../../tokenLimits.js';
 export class DashScopeOpenAICompatibleProvider {
     contentGeneratorConfig;
     cliConfig;
@@ -13,18 +13,18 @@ export class DashScopeOpenAICompatibleProvider {
         const authType = contentGeneratorConfig.authType;
         const baseUrl = contentGeneratorConfig.baseUrl;
         return (authType === AuthType.QWEN_OAUTH ||
-            baseUrl === "https://dashscope.aliyuncs.com/compatible-mode/v1" ||
-            baseUrl === "https://dashscope-intl.aliyuncs.com/compatible-mode/v1");
+            baseUrl === 'https://dashscope.aliyuncs.com/compatible-mode/v1' ||
+            baseUrl === 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1');
     }
     buildHeaders() {
-        const version = this.cliConfig.getCliVersion() || "unknown";
+        const version = this.cliConfig.getCliVersion() || 'unknown';
         const userAgent = `QwenCode/${version} (${process.platform}; ${process.arch})`;
         const { authType } = this.contentGeneratorConfig;
         return {
-            "User-Agent": userAgent,
-            "X-DashScope-CacheControl": "enable",
-            "X-DashScope-UserAgent": userAgent,
-            "X-DashScope-AuthType": authType,
+            'User-Agent': userAgent,
+            'X-DashScope-CacheControl': 'enable',
+            'X-DashScope-UserAgent': userAgent,
+            'X-DashScope-AuthType': authType,
         };
     }
     buildClient() {
@@ -57,13 +57,13 @@ export class DashScopeOpenAICompatibleProvider {
         if (!this.shouldDisableCacheControl()) {
             // Add cache control to system and last messages for DashScope providers
             // Only add cache control to system message for non-streaming requests
-            const cacheTarget = request.stream ? "both" : "system";
+            const cacheTarget = request.stream ? 'both' : 'system';
             messages = this.addDashScopeCacheControl(messages, cacheTarget);
         }
         // Apply output token limits based on model capabilities
         // This ensures max_tokens doesn't exceed the model's maximum output limit
         const requestWithTokenLimits = this.applyOutputTokenLimit(request, request.model);
-        if (request.model.startsWith("qwen-vl")) {
+        if (request.model.startsWith('qwen-vl')) {
             return {
                 ...requestWithTokenLimits,
                 messages,
@@ -89,18 +89,18 @@ export class DashScopeOpenAICompatibleProvider {
     /**
      * Add cache control flag to specified message(s) for DashScope providers
      */
-    addDashScopeCacheControl(messages, target = "both") {
+    addDashScopeCacheControl(messages, target = 'both') {
         if (messages.length === 0) {
             return messages;
         }
         let updatedMessages = [...messages];
         // Add cache control to system message if requested
-        if (target === "system" || target === "both") {
-            updatedMessages = this.addCacheControlToMessage(updatedMessages, "system");
+        if (target === 'system' || target === 'both') {
+            updatedMessages = this.addCacheControlToMessage(updatedMessages, 'system');
         }
         // Add cache control to last message if requested
-        if (target === "last" || target === "both") {
-            updatedMessages = this.addCacheControlToMessage(updatedMessages, "last");
+        if (target === 'last' || target === 'both') {
+            updatedMessages = this.addCacheControlToMessage(updatedMessages, 'last');
         }
         return updatedMessages;
     }
@@ -115,7 +115,7 @@ export class DashScopeOpenAICompatibleProvider {
         }
         const message = updatedMessages[messageIndex];
         // Only process messages that have content
-        if ("content" in message &&
+        if ('content' in message &&
             message.content !== null &&
             message.content !== undefined) {
             const updatedContent = this.addCacheControlToContent(message.content);
@@ -130,8 +130,8 @@ export class DashScopeOpenAICompatibleProvider {
      * Find the index of the target message (system or last)
      */
     findTargetMessageIndex(messages, target) {
-        if (target === "system") {
-            return messages.findIndex((msg) => msg.role === "system");
+        if (target === 'system') {
+            return messages.findIndex((msg) => msg.role === 'system');
         }
         else {
             return messages.length - 1;
@@ -150,10 +150,10 @@ export class DashScopeOpenAICompatibleProvider {
      * Normalize content to array format
      */
     normalizeContentToArray(content) {
-        if (typeof content === "string") {
+        if (typeof content === 'string') {
             return [
                 {
-                    type: "text",
+                    type: 'text',
                     text: content,
                 },
             ];
@@ -167,26 +167,26 @@ export class DashScopeOpenAICompatibleProvider {
         if (contentArray.length === 0) {
             return [
                 {
-                    type: "text",
-                    text: "",
-                    cache_control: { type: "ephemeral" },
+                    type: 'text',
+                    text: '',
+                    cache_control: { type: 'ephemeral' },
                 },
             ];
         }
         const lastItem = contentArray[contentArray.length - 1];
-        if (lastItem.type === "text") {
+        if (lastItem.type === 'text') {
             // Add cache_control to the last text item
             contentArray[contentArray.length - 1] = {
                 ...lastItem,
-                cache_control: { type: "ephemeral" },
+                cache_control: { type: 'ephemeral' },
             };
         }
         else {
             // If the last item is not text, add a new text item with cache_control
             contentArray.push({
-                type: "text",
-                text: "",
-                cache_control: { type: "ephemeral" },
+                type: 'text',
+                text: '',
+                cache_control: { type: 'ephemeral' },
             });
         }
         return contentArray;
@@ -207,7 +207,7 @@ export class DashScopeOpenAICompatibleProvider {
         if (currentMaxTokens === undefined || currentMaxTokens === null) {
             return request; // No max_tokens parameter, return unchanged
         }
-        const modelLimit = tokenLimit(model, "output");
+        const modelLimit = tokenLimit(model, 'output');
         // If max_tokens exceeds the model limit, cap it to the model's limit
         if (currentMaxTokens > modelLimit) {
             return {

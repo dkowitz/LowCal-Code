@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { LoadedSettings, SettingScope } from "../../config/settings.js";
-import { type HistoryItem } from "../types.js";
-import type { EditorType } from "@qwen-code/qwen-code-core";
+import type { LoadedSettings, SettingScope } from '../../config/settings.js';
+import { type HistoryItem } from '../types.js';
+import type { EditorType } from '@qwen-code/qwen-code-core';
 interface UseEditorSettingsReturn {
     isEditorDialogOpen: boolean;
     openEditorDialog: () => void;

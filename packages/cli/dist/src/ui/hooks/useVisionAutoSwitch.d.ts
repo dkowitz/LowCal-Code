@@ -3,10 +3,10 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { type PartListUnion } from "@google/genai";
-import { AuthType, type Config } from "@qwen-code/qwen-code-core";
-import { VisionSwitchOutcome } from "../components/ModelSwitchDialog.js";
-import type { UseHistoryManagerReturn } from "./useHistoryManager.js";
+import { type PartListUnion } from '@google/genai';
+import { AuthType, type Config } from '@qwen-code/qwen-code-core';
+import { VisionSwitchOutcome } from '../components/ModelSwitchDialog.js';
+import type { UseHistoryManagerReturn } from './useHistoryManager.js';
 /**
  * Determines if we should offer vision switch for the given parts, auth type, and current model
  */
@@ -37,7 +37,7 @@ export interface VisionSwitchHandlingResult {
 /**
  * Custom hook for handling vision model auto-switching
  */
-export declare function useVisionAutoSwitch(config: Config, addItem: UseHistoryManagerReturn["addItem"], visionModelPreviewEnabled?: boolean, onVisionSwitchRequired?: (query: PartListUnion) => Promise<{
+export declare function useVisionAutoSwitch(config: Config, addItem: UseHistoryManagerReturn['addItem'], visionModelPreviewEnabled?: boolean, onVisionSwitchRequired?: (query: PartListUnion) => Promise<{
     modelOverride?: string;
     persistSessionModel?: string;
     showGuidance?: boolean;

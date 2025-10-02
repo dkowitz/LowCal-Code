@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { OAuthClientProvider } from "@modelcontextprotocol/sdk/client/auth.js";
-import type { OAuthClientInformation, OAuthClientInformationFull, OAuthClientMetadata, OAuthTokens } from "@modelcontextprotocol/sdk/shared/auth.js";
-import type { MCPServerConfig } from "../config/config.js";
+import type { OAuthClientProvider } from '@modelcontextprotocol/sdk/client/auth.js';
+import type { OAuthClientInformation, OAuthClientInformationFull, OAuthClientMetadata, OAuthTokens } from '@modelcontextprotocol/sdk/shared/auth.js';
+import type { MCPServerConfig } from '../config/config.js';
 export declare class GoogleCredentialProvider implements OAuthClientProvider {
     private readonly config?;
     private readonly auth;

@@ -4,26 +4,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import type { Mock } from "vitest";
-import type { ConfigParameters, SandboxConfig } from "./config.js";
-import { Config, ApprovalMode } from "./config.js";
-import * as path from "node:path";
-import { setGeminiMdFilename as mockSetGeminiMdFilename } from "../tools/memoryTool.js";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Mock } from 'vitest';
+import type { ConfigParameters, SandboxConfig } from './config.js';
+import { Config, ApprovalMode } from './config.js';
+import * as path from 'node:path';
+import { setGeminiMdFilename as mockSetGeminiMdFilename } from '../tools/memoryTool.js';
 import {
   DEFAULT_TELEMETRY_TARGET,
   DEFAULT_OTLP_ENDPOINT,
-} from "../telemetry/index.js";
-import type { ContentGeneratorConfig } from "../core/contentGenerator.js";
+} from '../telemetry/index.js';
+import type { ContentGeneratorConfig } from '../core/contentGenerator.js';
 import {
   AuthType,
   createContentGeneratorConfig,
-} from "../core/contentGenerator.js";
-import { GeminiClient } from "../core/client.js";
-import { GitService } from "../services/gitService.js";
+} from '../core/contentGenerator.js';
+import { GeminiClient } from '../core/client.js';
+import { GitService } from '../services/gitService.js';
 
-vi.mock("fs", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("fs")>();
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>();
   return {
     ...actual,
     existsSync: vi.fn().mockReturnValue(true),
@@ -34,11 +34,11 @@ vi.mock("fs", async (importOriginal) => {
   };
 });
 
-import { ShellTool } from "../tools/shell.js";
-import { ReadFileTool } from "../tools/read-file.js";
+import { ShellTool } from '../tools/shell.js';
+import { ReadFileTool } from '../tools/read-file.js';
 
-vi.mock("fs", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("fs")>();
+vi.mock('fs', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('fs')>();
   return {
     ...actual,
     existsSync: vi.fn().mockReturnValue(true),
@@ -50,7 +50,7 @@ vi.mock("fs", async (importOriginal) => {
 });
 
 // Mock dependencies that might be called during Config construction or createServerConfig
-vi.mock("../tools/tool-registry", () => {
+vi.mock('../tools/tool-registry', () => {
   const ToolRegistryMock = vi.fn();
   ToolRegistryMock.prototype.registerTool = vi.fn();
   ToolRegistryMock.prototype.discoverAllTools = vi.fn();
@@ -60,58 +60,58 @@ vi.mock("../tools/tool-registry", () => {
   return { ToolRegistry: ToolRegistryMock };
 });
 
-vi.mock("../utils/memoryDiscovery.js", () => ({
+vi.mock('../utils/memoryDiscovery.js', () => ({
   loadServerHierarchicalMemory: vi.fn(),
 }));
 
 // Mock individual tools if their constructors are complex or have side effects
-vi.mock("../tools/ls");
-vi.mock("../tools/read-file");
-vi.mock("../tools/grep");
-vi.mock("../tools/glob");
-vi.mock("../tools/edit");
-vi.mock("../tools/shell");
-vi.mock("../tools/write-file");
-vi.mock("../tools/web-fetch");
-vi.mock("../tools/read-many-files");
-vi.mock("../tools/memoryTool", () => ({
+vi.mock('../tools/ls');
+vi.mock('../tools/read-file');
+vi.mock('../tools/grep');
+vi.mock('../tools/glob');
+vi.mock('../tools/edit');
+vi.mock('../tools/shell');
+vi.mock('../tools/write-file');
+vi.mock('../tools/web-fetch');
+vi.mock('../tools/read-many-files');
+vi.mock('../tools/memoryTool', () => ({
   MemoryTool: vi.fn(),
   setGeminiMdFilename: vi.fn(),
-  getCurrentGeminiMdFilename: vi.fn(() => "QWEN.md"), // Mock the original filename
-  DEFAULT_CONTEXT_FILENAME: "QWEN.md",
-  GEMINI_CONFIG_DIR: ".gemini",
+  getCurrentGeminiMdFilename: vi.fn(() => 'QWEN.md'), // Mock the original filename
+  DEFAULT_CONTEXT_FILENAME: 'QWEN.md',
+  GEMINI_CONFIG_DIR: '.gemini',
 }));
 
-vi.mock("../core/contentGenerator.js", async (importOriginal) => {
+vi.mock('../core/contentGenerator.js', async (importOriginal) => {
   const actual =
-    await importOriginal<typeof import("../core/contentGenerator.js")>();
+    await importOriginal<typeof import('../core/contentGenerator.js')>();
   return {
     ...actual,
     createContentGeneratorConfig: vi.fn(),
   };
 });
 
-vi.mock("../core/client.js", () => ({
+vi.mock('../core/client.js', () => ({
   GeminiClient: vi.fn().mockImplementation(() => ({
     initialize: vi.fn().mockResolvedValue(undefined),
   })),
 }));
 
-vi.mock("../telemetry/index.js", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("../telemetry/index.js")>();
+vi.mock('../telemetry/index.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../telemetry/index.js')>();
   return {
     ...actual,
     initializeTelemetry: vi.fn(),
   };
 });
 
-vi.mock("../services/gitService.js", () => {
+vi.mock('../services/gitService.js', () => {
   const GitServiceMock = vi.fn();
   GitServiceMock.prototype.initialize = vi.fn();
   return { GitService: GitServiceMock };
 });
 
-vi.mock("../ide/ide-client.js", () => ({
+vi.mock('../ide/ide-client.js', () => ({
   IdeClient: {
     getInstance: vi.fn().mockResolvedValue({
       getConnectionStatus: vi.fn(),
@@ -121,22 +121,22 @@ vi.mock("../ide/ide-client.js", () => ({
   },
 }));
 
-describe("Server Config (config.ts)", () => {
-  const MODEL = "gemini-pro";
+describe('Server Config (config.ts)', () => {
+  const MODEL = 'gemini-pro';
   const SANDBOX: SandboxConfig = {
-    command: "docker",
-    image: "qwen-code-sandbox",
+    command: 'docker',
+    image: 'qwen-code-sandbox',
   };
-  const TARGET_DIR = "/path/to/target";
+  const TARGET_DIR = '/path/to/target';
   const DEBUG_MODE = false;
-  const QUESTION = "test question";
+  const QUESTION = 'test question';
   const FULL_CONTEXT = false;
-  const USER_MEMORY = "Test User Memory";
+  const USER_MEMORY = 'Test User Memory';
   const TELEMETRY_SETTINGS = { enabled: false };
-  const EMBEDDING_MODEL = "gemini-embedding";
-  const SESSION_ID = "test-session-id";
+  const EMBEDDING_MODEL = 'gemini-embedding';
+  const SESSION_ID = 'test-session-id';
   const baseParams: ConfigParameters = {
-    cwd: "/tmp",
+    cwd: '/tmp',
     embeddingModel: EMBEDDING_MODEL,
     sandbox: SANDBOX,
     targetDir: TARGET_DIR,
@@ -155,9 +155,9 @@ describe("Server Config (config.ts)", () => {
     vi.clearAllMocks();
   });
 
-  describe("initialize", () => {
-    it("should throw an error if checkpointing is enabled and GitService fails", async () => {
-      const gitError = new Error("Git is not installed");
+  describe('initialize', () => {
+    it('should throw an error if checkpointing is enabled and GitService fails', async () => {
+      const gitError = new Error('Git is not installed');
       (GitService.prototype.initialize as Mock).mockRejectedValue(gitError);
 
       const config = new Config({
@@ -168,8 +168,8 @@ describe("Server Config (config.ts)", () => {
       await expect(config.initialize()).rejects.toThrow(gitError);
     });
 
-    it("should not throw an error if checkpointing is disabled and GitService fails", async () => {
-      const gitError = new Error("Git is not installed");
+    it('should not throw an error if checkpointing is disabled and GitService fails', async () => {
+      const gitError = new Error('Git is not installed');
       (GitService.prototype.initialize as Mock).mockRejectedValue(gitError);
 
       const config = new Config({
@@ -180,7 +180,7 @@ describe("Server Config (config.ts)", () => {
       await expect(config.initialize()).resolves.toBeUndefined();
     });
 
-    it("should throw an error if initialized more than once", async () => {
+    it('should throw an error if initialized more than once', async () => {
       const config = new Config({
         ...baseParams,
         checkpointing: false,
@@ -188,19 +188,19 @@ describe("Server Config (config.ts)", () => {
 
       await expect(config.initialize()).resolves.toBeUndefined();
       await expect(config.initialize()).rejects.toThrow(
-        "Config was already initialized",
+        'Config was already initialized',
       );
     });
   });
 
-  describe("refreshAuth", () => {
-    it("should refresh auth and update config", async () => {
+  describe('refreshAuth', () => {
+    it('should refresh auth and update config', async () => {
       const config = new Config(baseParams);
       const authType = AuthType.USE_GEMINI;
-      const newModel = "gemini-flash";
+      const newModel = 'gemini-flash';
       const mockContentConfig = {
         model: newModel,
-        apiKey: "test-key",
+        apiKey: 'test-key',
       };
 
       (createContentGeneratorConfig as Mock).mockReturnValue(mockContentConfig);
@@ -224,21 +224,21 @@ describe("Server Config (config.ts)", () => {
       expect(config.isInFallbackMode()).toBe(false);
     });
 
-    it("should preserve conversation history when refreshing auth", async () => {
+    it('should preserve conversation history when refreshing auth', async () => {
       const config = new Config(baseParams);
       const authType = AuthType.USE_GEMINI;
       const mockContentConfig = {
-        model: "gemini-pro",
-        apiKey: "test-key",
+        model: 'gemini-pro',
+        apiKey: 'test-key',
       };
 
       (createContentGeneratorConfig as Mock).mockReturnValue(mockContentConfig);
 
       // Mock the existing client with some history
       const mockExistingHistory = [
-        { role: "user", parts: [{ text: "Hello" }] },
-        { role: "model", parts: [{ text: "Hi there!" }] },
-        { role: "user", parts: [{ text: "How are you?" }] },
+        { role: 'user', parts: [{ text: 'Hello' }] },
+        { role: 'model', parts: [{ text: 'Hi there!' }] },
+        { role: 'user', parts: [{ text: 'How are you?' }] },
       ];
 
       const mockExistingClient = {
@@ -275,12 +275,12 @@ describe("Server Config (config.ts)", () => {
       );
     });
 
-    it("should handle case when no existing client is initialized", async () => {
+    it('should handle case when no existing client is initialized', async () => {
       const config = new Config(baseParams);
       const authType = AuthType.USE_GEMINI;
       const mockContentConfig = {
-        model: "gemini-pro",
-        apiKey: "test-key",
+        model: 'gemini-pro',
+        apiKey: 'test-key',
       };
 
       (createContentGeneratorConfig as Mock).mockReturnValue(mockContentConfig);
@@ -306,11 +306,11 @@ describe("Server Config (config.ts)", () => {
       expect(mockNewClient.setHistory).not.toHaveBeenCalled();
     });
 
-    it("should strip thoughts when switching from GenAI to Vertex", async () => {
+    it('should strip thoughts when switching from GenAI to Vertex', async () => {
       const config = new Config(baseParams);
       const mockContentConfig = {
-        model: "gemini-pro",
-        apiKey: "test-key",
+        model: 'gemini-pro',
+        apiKey: 'test-key',
         authType: AuthType.USE_GEMINI,
       };
       (
@@ -323,7 +323,7 @@ describe("Server Config (config.ts)", () => {
       });
 
       const mockExistingHistory = [
-        { role: "user", parts: [{ text: "Hello" }] },
+        { role: 'user', parts: [{ text: 'Hello' }] },
       ];
       const mockExistingClient = {
         isInitialized: vi.fn().mockReturnValue(true),
@@ -349,11 +349,11 @@ describe("Server Config (config.ts)", () => {
       );
     });
 
-    it("should not strip thoughts when switching from Vertex to GenAI", async () => {
+    it('should not strip thoughts when switching from Vertex to GenAI', async () => {
       const config = new Config(baseParams);
       const mockContentConfig = {
-        model: "gemini-pro",
-        apiKey: "test-key",
+        model: 'gemini-pro',
+        apiKey: 'test-key',
         authType: AuthType.LOGIN_WITH_GOOGLE,
       };
       (
@@ -366,7 +366,7 @@ describe("Server Config (config.ts)", () => {
       });
 
       const mockExistingHistory = [
-        { role: "user", parts: [{ text: "Hello" }] },
+        { role: 'user', parts: [{ text: 'Hello' }] },
       ];
       const mockExistingClient = {
         isInitialized: vi.fn().mockReturnValue(true),
@@ -393,27 +393,26 @@ describe("Server Config (config.ts)", () => {
     });
   });
 
-  describe("setModel", () => {
-    it("updates fallback model when content generator config is unavailable", async () => {
+  describe('setModel', () => {
+    it('updates fallback model when content generator config is unavailable', async () => {
       const config = new Config({
         ...baseParams,
-        model: "initial-model",
+        model: 'initial-model',
       });
 
-      config["geminiClient"] = {
+      config['geminiClient'] = {
         isInitialized: () => false,
       } as unknown as GeminiClient;
 
-      await config.setModel("openrouter/model");
+      await config.setModel('openrouter/model');
 
-      config["contentGeneratorConfig"] =
-        undefined as unknown as ContentGeneratorConfig;
+      config['contentGeneratorConfig'] = undefined as unknown as ContentGeneratorConfig;
 
-      expect(config.getModel()).toBe("openrouter/model");
+      expect(config.getModel()).toBe('openrouter/model');
     });
   });
 
-  it("Config constructor should store userMemory correctly", () => {
+  it('Config constructor should store userMemory correctly', () => {
     const config = new Config(baseParams);
 
     expect(config.getUserMemory()).toBe(USER_MEMORY);
@@ -421,16 +420,16 @@ describe("Server Config (config.ts)", () => {
     expect(config.getTargetDir()).toBe(path.resolve(TARGET_DIR)); // Check resolved path
   });
 
-  it("Config constructor should default userMemory to empty string if not provided", () => {
+  it('Config constructor should default userMemory to empty string if not provided', () => {
     const paramsWithoutMemory: ConfigParameters = { ...baseParams };
     delete paramsWithoutMemory.userMemory;
     const config = new Config(paramsWithoutMemory);
 
-    expect(config.getUserMemory()).toBe("");
+    expect(config.getUserMemory()).toBe('');
   });
 
-  it("Config constructor should call setGeminiMdFilename with contextFileName if provided", () => {
-    const contextFileName = "CUSTOM_AGENTS.md";
+  it('Config constructor should call setGeminiMdFilename with contextFileName if provided', () => {
+    const contextFileName = 'CUSTOM_AGENTS.md';
     const paramsWithContextFile: ConfigParameters = {
       ...baseParams,
       contextFileName,
@@ -439,17 +438,17 @@ describe("Server Config (config.ts)", () => {
     expect(mockSetGeminiMdFilename).toHaveBeenCalledWith(contextFileName);
   });
 
-  it("Config constructor should not call setGeminiMdFilename if contextFileName is not provided", () => {
+  it('Config constructor should not call setGeminiMdFilename if contextFileName is not provided', () => {
     new Config(baseParams); // baseParams does not have contextFileName
     expect(mockSetGeminiMdFilename).not.toHaveBeenCalled();
   });
 
-  it("should set default file filtering settings when not provided", () => {
+  it('should set default file filtering settings when not provided', () => {
     const config = new Config(baseParams);
     expect(config.getFileFilteringRespectGitIgnore()).toBe(true);
   });
 
-  it("should set custom file filtering settings when provided", () => {
+  it('should set custom file filtering settings when provided', () => {
     const paramsWithFileFiltering: ConfigParameters = {
       ...baseParams,
       fileFiltering: {
@@ -460,8 +459,8 @@ describe("Server Config (config.ts)", () => {
     expect(config.getFileFilteringRespectGitIgnore()).toBe(false);
   });
 
-  it("should initialize WorkspaceContext with includeDirectories", () => {
-    const includeDirectories = ["/path/to/dir1", "/path/to/dir2"];
+  it('should initialize WorkspaceContext with includeDirectories', () => {
+    const includeDirectories = ['/path/to/dir1', '/path/to/dir2'];
     const paramsWithIncludeDirs: ConfigParameters = {
       ...baseParams,
       includeDirectories,
@@ -473,11 +472,11 @@ describe("Server Config (config.ts)", () => {
     // Should include the target directory plus the included directories
     expect(directories).toHaveLength(3);
     expect(directories).toContain(path.resolve(baseParams.targetDir));
-    expect(directories).toContain("/path/to/dir1");
-    expect(directories).toContain("/path/to/dir2");
+    expect(directories).toContain('/path/to/dir1');
+    expect(directories).toContain('/path/to/dir2');
   });
 
-  it("Config constructor should set telemetry to true when provided as true", () => {
+  it('Config constructor should set telemetry to true when provided as true', () => {
     const paramsWithTelemetry: ConfigParameters = {
       ...baseParams,
       telemetry: { enabled: true },
@@ -486,7 +485,7 @@ describe("Server Config (config.ts)", () => {
     expect(config.getTelemetryEnabled()).toBe(true);
   });
 
-  it("Config constructor should set telemetry to false when provided as false", () => {
+  it('Config constructor should set telemetry to false when provided as false', () => {
     const paramsWithTelemetry: ConfigParameters = {
       ...baseParams,
       telemetry: { enabled: false },
@@ -495,21 +494,21 @@ describe("Server Config (config.ts)", () => {
     expect(config.getTelemetryEnabled()).toBe(false);
   });
 
-  it("Config constructor should default telemetry to default value if not provided", () => {
+  it('Config constructor should default telemetry to default value if not provided', () => {
     const paramsWithoutTelemetry: ConfigParameters = { ...baseParams };
     delete paramsWithoutTelemetry.telemetry;
     const config = new Config(paramsWithoutTelemetry);
     expect(config.getTelemetryEnabled()).toBe(TELEMETRY_SETTINGS.enabled);
   });
 
-  it("should have a getFileService method that returns FileDiscoveryService", () => {
+  it('should have a getFileService method that returns FileDiscoveryService', () => {
     const config = new Config(baseParams);
     const fileService = config.getFileService();
     expect(fileService).toBeDefined();
   });
 
-  describe("Usage Statistics", () => {
-    it("defaults usage statistics to enabled if not specified", () => {
+  describe('Usage Statistics', () => {
+    it('defaults usage statistics to enabled if not specified', () => {
       const config = new Config({
         ...baseParams,
         usageStatisticsEnabled: undefined,
@@ -519,7 +518,7 @@ describe("Server Config (config.ts)", () => {
     });
 
     it.each([{ enabled: true }, { enabled: false }])(
-      "sets usage statistics based on the provided value (enabled: $enabled)",
+      'sets usage statistics based on the provided value (enabled: $enabled)',
       ({ enabled }) => {
         const config = new Config({
           ...baseParams,
@@ -530,8 +529,8 @@ describe("Server Config (config.ts)", () => {
     );
   });
 
-  describe("Telemetry Settings", () => {
-    it("should return default telemetry target if not provided", () => {
+  describe('Telemetry Settings', () => {
+    it('should return default telemetry target if not provided', () => {
       const params: ConfigParameters = {
         ...baseParams,
         telemetry: { enabled: true },
@@ -540,8 +539,8 @@ describe("Server Config (config.ts)", () => {
       expect(config.getTelemetryTarget()).toBe(DEFAULT_TELEMETRY_TARGET);
     });
 
-    it("should return provided OTLP endpoint", () => {
-      const endpoint = "http://custom.otel.collector:4317";
+    it('should return provided OTLP endpoint', () => {
+      const endpoint = 'http://custom.otel.collector:4317';
       const params: ConfigParameters = {
         ...baseParams,
         telemetry: { enabled: true, otlpEndpoint: endpoint },
@@ -550,7 +549,7 @@ describe("Server Config (config.ts)", () => {
       expect(config.getTelemetryOtlpEndpoint()).toBe(endpoint);
     });
 
-    it("should return default OTLP endpoint if not provided", () => {
+    it('should return default OTLP endpoint if not provided', () => {
       const params: ConfigParameters = {
         ...baseParams,
         telemetry: { enabled: true },
@@ -559,7 +558,7 @@ describe("Server Config (config.ts)", () => {
       expect(config.getTelemetryOtlpEndpoint()).toBe(DEFAULT_OTLP_ENDPOINT);
     });
 
-    it("should return provided logPrompts setting", () => {
+    it('should return provided logPrompts setting', () => {
       const params: ConfigParameters = {
         ...baseParams,
         telemetry: { enabled: true, logPrompts: false },
@@ -568,7 +567,7 @@ describe("Server Config (config.ts)", () => {
       expect(config.getTelemetryLogPromptsEnabled()).toBe(false);
     });
 
-    it("should return default logPrompts setting (true) if not provided", () => {
+    it('should return default logPrompts setting (true) if not provided', () => {
       const params: ConfigParameters = {
         ...baseParams,
         telemetry: { enabled: true },
@@ -577,60 +576,60 @@ describe("Server Config (config.ts)", () => {
       expect(config.getTelemetryLogPromptsEnabled()).toBe(true);
     });
 
-    it("should return default logPrompts setting (true) if telemetry object is not provided", () => {
+    it('should return default logPrompts setting (true) if telemetry object is not provided', () => {
       const paramsWithoutTelemetry: ConfigParameters = { ...baseParams };
       delete paramsWithoutTelemetry.telemetry;
       const config = new Config(paramsWithoutTelemetry);
       expect(config.getTelemetryLogPromptsEnabled()).toBe(true);
     });
 
-    it("should return default telemetry target if telemetry object is not provided", () => {
+    it('should return default telemetry target if telemetry object is not provided', () => {
       const paramsWithoutTelemetry: ConfigParameters = { ...baseParams };
       delete paramsWithoutTelemetry.telemetry;
       const config = new Config(paramsWithoutTelemetry);
       expect(config.getTelemetryTarget()).toBe(DEFAULT_TELEMETRY_TARGET);
     });
 
-    it("should return default OTLP endpoint if telemetry object is not provided", () => {
+    it('should return default OTLP endpoint if telemetry object is not provided', () => {
       const paramsWithoutTelemetry: ConfigParameters = { ...baseParams };
       delete paramsWithoutTelemetry.telemetry;
       const config = new Config(paramsWithoutTelemetry);
       expect(config.getTelemetryOtlpEndpoint()).toBe(DEFAULT_OTLP_ENDPOINT);
     });
 
-    it("should return provided OTLP protocol", () => {
+    it('should return provided OTLP protocol', () => {
       const params: ConfigParameters = {
         ...baseParams,
-        telemetry: { enabled: true, otlpProtocol: "http" },
+        telemetry: { enabled: true, otlpProtocol: 'http' },
       };
       const config = new Config(params);
-      expect(config.getTelemetryOtlpProtocol()).toBe("http");
+      expect(config.getTelemetryOtlpProtocol()).toBe('http');
     });
 
-    it("should return default OTLP protocol if not provided", () => {
+    it('should return default OTLP protocol if not provided', () => {
       const params: ConfigParameters = {
         ...baseParams,
         telemetry: { enabled: true },
       };
       const config = new Config(params);
-      expect(config.getTelemetryOtlpProtocol()).toBe("grpc");
+      expect(config.getTelemetryOtlpProtocol()).toBe('grpc');
     });
 
-    it("should return default OTLP protocol if telemetry object is not provided", () => {
+    it('should return default OTLP protocol if telemetry object is not provided', () => {
       const paramsWithoutTelemetry: ConfigParameters = { ...baseParams };
       delete paramsWithoutTelemetry.telemetry;
       const config = new Config(paramsWithoutTelemetry);
-      expect(config.getTelemetryOtlpProtocol()).toBe("grpc");
+      expect(config.getTelemetryOtlpProtocol()).toBe('grpc');
     });
   });
 
-  describe("UseRipgrep Configuration", () => {
-    it("should default useRipgrep to false when not provided", () => {
+  describe('UseRipgrep Configuration', () => {
+    it('should default useRipgrep to false when not provided', () => {
       const config = new Config(baseParams);
       expect(config.getUseRipgrep()).toBe(false);
     });
 
-    it("should set useRipgrep to true when provided as true", () => {
+    it('should set useRipgrep to true when provided as true', () => {
       const paramsWithRipgrep: ConfigParameters = {
         ...baseParams,
         useRipgrep: true,
@@ -639,7 +638,7 @@ describe("Server Config (config.ts)", () => {
       expect(config.getUseRipgrep()).toBe(true);
     });
 
-    it("should set useRipgrep to false when explicitly provided as false", () => {
+    it('should set useRipgrep to false when explicitly provided as false', () => {
       const paramsWithRipgrep: ConfigParameters = {
         ...baseParams,
         useRipgrep: false,
@@ -648,7 +647,7 @@ describe("Server Config (config.ts)", () => {
       expect(config.getUseRipgrep()).toBe(false);
     });
 
-    it("should default useRipgrep to false when undefined", () => {
+    it('should default useRipgrep to false when undefined', () => {
       const paramsWithUndefinedRipgrep: ConfigParameters = {
         ...baseParams,
         useRipgrep: undefined,
@@ -658,18 +657,18 @@ describe("Server Config (config.ts)", () => {
     });
   });
 
-  describe("createToolRegistry", () => {
-    it("should register a tool if coreTools contains an argument-specific pattern", async () => {
+  describe('createToolRegistry', () => {
+    it('should register a tool if coreTools contains an argument-specific pattern', async () => {
       const params: ConfigParameters = {
         ...baseParams,
-        coreTools: ["ShellTool(git status)"],
+        coreTools: ['ShellTool(git status)'],
       };
       const config = new Config(params);
       await config.initialize();
 
       // The ToolRegistry class is mocked, so we can inspect its prototype's methods.
       const registerToolMock = (
-        (await vi.importMock("../tools/tool-registry")) as {
+        (await vi.importMock('../tools/tool-registry')) as {
           ToolRegistry: { prototype: { registerTool: Mock } };
         }
       ).ToolRegistry.prototype.registerTool;
@@ -689,66 +688,66 @@ describe("Server Config (config.ts)", () => {
   });
 });
 
-describe("setApprovalMode with folder trust", () => {
-  it("should throw an error when setting YOLO mode in an untrusted folder", () => {
+describe('setApprovalMode with folder trust', () => {
+  it('should throw an error when setting YOLO mode in an untrusted folder', () => {
     const config = new Config({
-      sessionId: "test",
-      targetDir: ".",
+      sessionId: 'test',
+      targetDir: '.',
       debugMode: false,
-      model: "test-model",
-      cwd: ".",
+      model: 'test-model',
+      cwd: '.',
       trustedFolder: false, // Untrusted
     });
     expect(() => config.setApprovalMode(ApprovalMode.YOLO)).toThrow(
-      "Cannot enable privileged approval modes in an untrusted folder.",
+      'Cannot enable privileged approval modes in an untrusted folder.',
     );
   });
 
-  it("should throw an error when setting AUTO_EDIT mode in an untrusted folder", () => {
+  it('should throw an error when setting AUTO_EDIT mode in an untrusted folder', () => {
     const config = new Config({
-      sessionId: "test",
-      targetDir: ".",
+      sessionId: 'test',
+      targetDir: '.',
       debugMode: false,
-      model: "test-model",
-      cwd: ".",
+      model: 'test-model',
+      cwd: '.',
       trustedFolder: false, // Untrusted
     });
     expect(() => config.setApprovalMode(ApprovalMode.AUTO_EDIT)).toThrow(
-      "Cannot enable privileged approval modes in an untrusted folder.",
+      'Cannot enable privileged approval modes in an untrusted folder.',
     );
   });
 
-  it("should NOT throw an error when setting DEFAULT mode in an untrusted folder", () => {
+  it('should NOT throw an error when setting DEFAULT mode in an untrusted folder', () => {
     const config = new Config({
-      sessionId: "test",
-      targetDir: ".",
+      sessionId: 'test',
+      targetDir: '.',
       debugMode: false,
-      model: "test-model",
-      cwd: ".",
+      model: 'test-model',
+      cwd: '.',
       trustedFolder: false, // Untrusted
     });
     expect(() => config.setApprovalMode(ApprovalMode.DEFAULT)).not.toThrow();
   });
 
-  it("should NOT throw an error when setting PLAN mode in an untrusted folder", () => {
+  it('should NOT throw an error when setting PLAN mode in an untrusted folder', () => {
     const config = new Config({
-      sessionId: "test",
-      targetDir: ".",
+      sessionId: 'test',
+      targetDir: '.',
       debugMode: false,
-      model: "test-model",
-      cwd: ".",
+      model: 'test-model',
+      cwd: '.',
       trustedFolder: false, // Untrusted
     });
     expect(() => config.setApprovalMode(ApprovalMode.PLAN)).not.toThrow();
   });
 
-  it("should NOT throw an error when setting any mode in a trusted folder", () => {
+  it('should NOT throw an error when setting any mode in a trusted folder', () => {
     const config = new Config({
-      sessionId: "test",
-      targetDir: ".",
+      sessionId: 'test',
+      targetDir: '.',
       debugMode: false,
-      model: "test-model",
-      cwd: ".",
+      model: 'test-model',
+      cwd: '.',
       trustedFolder: true, // Trusted
     });
     expect(() => config.setApprovalMode(ApprovalMode.YOLO)).not.toThrow();
@@ -757,13 +756,13 @@ describe("setApprovalMode with folder trust", () => {
     expect(() => config.setApprovalMode(ApprovalMode.PLAN)).not.toThrow();
   });
 
-  it("should NOT throw an error when setting any mode if trustedFolder is undefined", () => {
+  it('should NOT throw an error when setting any mode if trustedFolder is undefined', () => {
     const config = new Config({
-      sessionId: "test",
-      targetDir: ".",
+      sessionId: 'test',
+      targetDir: '.',
       debugMode: false,
-      model: "test-model",
-      cwd: ".",
+      model: 'test-model',
+      cwd: '.',
       trustedFolder: undefined, // Undefined
     });
     expect(() => config.setApprovalMode(ApprovalMode.YOLO)).not.toThrow();
@@ -772,82 +771,82 @@ describe("setApprovalMode with folder trust", () => {
     expect(() => config.setApprovalMode(ApprovalMode.PLAN)).not.toThrow();
   });
 
-  describe("Model Switch Logging", () => {
-    it("should log model switch when setModel is called with different model", async () => {
+  describe('Model Switch Logging', () => {
+    it('should log model switch when setModel is called with different model', async () => {
       const config = new Config({
-        sessionId: "test-model-switch",
-        targetDir: ".",
+        sessionId: 'test-model-switch',
+        targetDir: '.',
         debugMode: false,
-        model: "qwen3-coder-plus",
-        cwd: ".",
+        model: 'qwen3-coder-plus',
+        cwd: '.',
       });
 
       // Initialize the config to set up content generator
       await config.initialize();
 
       // Mock the logger's logModelSwitch method
-      const logModelSwitchSpy = vi.spyOn(config["logger"]!, "logModelSwitch");
+      const logModelSwitchSpy = vi.spyOn(config['logger']!, 'logModelSwitch');
 
       // Change the model
-      await config.setModel("qwen-vl-max-latest", {
-        reason: "vision_auto_switch",
-        context: "Test model switch",
+      await config.setModel('qwen-vl-max-latest', {
+        reason: 'vision_auto_switch',
+        context: 'Test model switch',
       });
 
       // Verify that logModelSwitch was called with correct parameters
       expect(logModelSwitchSpy).toHaveBeenCalledWith({
-        fromModel: "qwen3-coder-plus",
-        toModel: "qwen-vl-max-latest",
-        reason: "vision_auto_switch",
-        context: "Test model switch",
+        fromModel: 'qwen3-coder-plus',
+        toModel: 'qwen-vl-max-latest',
+        reason: 'vision_auto_switch',
+        context: 'Test model switch',
       });
     });
 
-    it("should not log when setModel is called with same model", async () => {
+    it('should not log when setModel is called with same model', async () => {
       const config = new Config({
-        sessionId: "test-same-model",
-        targetDir: ".",
+        sessionId: 'test-same-model',
+        targetDir: '.',
         debugMode: false,
-        model: "qwen3-coder-plus",
-        cwd: ".",
+        model: 'qwen3-coder-plus',
+        cwd: '.',
       });
 
       // Initialize the config to set up content generator
       await config.initialize();
 
       // Mock the logger's logModelSwitch method
-      const logModelSwitchSpy = vi.spyOn(config["logger"]!, "logModelSwitch");
+      const logModelSwitchSpy = vi.spyOn(config['logger']!, 'logModelSwitch');
 
       // Set the same model
-      await config.setModel("qwen3-coder-plus");
+      await config.setModel('qwen3-coder-plus');
 
       // Verify that logModelSwitch was not called
       expect(logModelSwitchSpy).not.toHaveBeenCalled();
     });
 
-    it("should use default reason when no options provided", async () => {
+    it('should use default reason when no options provided', async () => {
       const config = new Config({
-        sessionId: "test-default-reason",
-        targetDir: ".",
+        sessionId: 'test-default-reason',
+        targetDir: '.',
         debugMode: false,
-        model: "qwen3-coder-plus",
-        cwd: ".",
+        model: 'qwen3-coder-plus',
+        cwd: '.',
       });
 
       // Initialize the config to set up content generator
       await config.initialize();
 
       // Mock the logger's logModelSwitch method
-      const logModelSwitchSpy = vi.spyOn(config["logger"]!, "logModelSwitch");
+      const logModelSwitchSpy = vi.spyOn(config['logger']!, 'logModelSwitch');
 
       // Change the model without options
-      await config.setModel("qwen-vl-max-latest");
+      await config.setModel('qwen-vl-max-latest');
 
       // Verify that logModelSwitch was called with default reason
       expect(logModelSwitchSpy).toHaveBeenCalledWith({
-        fromModel: "qwen3-coder-plus",
-        toModel: "qwen-vl-max-latest",
-        reason: "manual",
+        fromModel: 'qwen3-coder-plus',
+        toModel: 'qwen-vl-max-latest',
+        reason: 'manual',
         context: undefined,
       });
     });

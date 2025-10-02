@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Key } from "./hooks/useKeypress.js";
-import type { KeyBindingConfig } from "../config/keyBindings.js";
-import { Command } from "../config/keyBindings.js";
+import type { Key } from './hooks/useKeypress.js';
+import type { KeyBindingConfig } from '../config/keyBindings.js';
+import { Command } from '../config/keyBindings.js';
 /**
  * Key matcher function type
  */

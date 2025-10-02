@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { lightTheme, darkTheme, ansiTheme } from "./theme.js";
+import { lightTheme, darkTheme, ansiTheme } from './theme.js';
 export const lightSemanticColors = {
     text: {
         primary: lightTheme.Foreground,

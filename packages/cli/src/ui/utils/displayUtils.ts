@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Colors } from "../colors.js";
+import { Colors } from '../colors.js';
 
 // --- Thresholds ---
 export const TOOL_SUCCESS_RATE_HIGH = 95;

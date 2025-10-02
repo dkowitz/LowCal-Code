@@ -3,8 +3,8 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { EventEmitter } from "events";
-import type { Config } from "../config/config.js";
+import { EventEmitter } from 'events';
+import type { Config } from '../config/config.js';
 /**
  * PKCE (Proof Key for Code Exchange) utilities
  * Implements RFC 7636 - Proof Key for Code Exchange by OAuth Public Clients
@@ -89,7 +89,7 @@ export interface DeviceTokenData {
  * Device token pending response
  */
 export interface DeviceTokenPendingData {
-    status: "pending";
+    status: 'pending';
     slowDown?: boolean;
 }
 /**
@@ -177,7 +177,7 @@ export type AuthResult = {
     success: true;
 } | {
     success: false;
-    reason: "timeout" | "cancelled" | "error" | "rate_limit";
+    reason: 'timeout' | 'cancelled' | 'error' | 'rate_limit';
 };
 /**
  * Global event emitter instance for QwenOAuth2 authentication events

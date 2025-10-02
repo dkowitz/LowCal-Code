@@ -3,11 +3,11 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { OpenAIContentGenerator } from "../core/openaiContentGenerator/index.js";
-import { DashScopeOpenAICompatibleProvider } from "../core/openaiContentGenerator/provider/dashscope.js";
-import { SharedTokenManager } from "./sharedTokenManager.js";
+import { OpenAIContentGenerator } from '../core/openaiContentGenerator/index.js';
+import { DashScopeOpenAICompatibleProvider } from '../core/openaiContentGenerator/provider/dashscope.js';
+import { SharedTokenManager } from './sharedTokenManager.js';
 // Default fallback base URL if no endpoint is provided
-const DEFAULT_QWEN_BASE_URL = "https://dashscope.aliyuncs.com/compatible-mode/v1";
+const DEFAULT_QWEN_BASE_URL = 'https://dashscope.aliyuncs.com/compatible-mode/v1';
 /**
  * Qwen Content Generator that uses Qwen OAuth tokens with automatic refresh
  */
@@ -33,9 +33,9 @@ export class QwenContentGenerator extends OpenAIContentGenerator {
      */
     getCurrentEndpoint(resourceUrl) {
         const baseEndpoint = resourceUrl || DEFAULT_QWEN_BASE_URL;
-        const suffix = "/v1";
+        const suffix = '/v1';
         // Normalize the URL: add protocol if missing, ensure /v1 suffix
-        const normalizedUrl = baseEndpoint.startsWith("http")
+        const normalizedUrl = baseEndpoint.startsWith('http')
             ? baseEndpoint
             : `https://${baseEndpoint}`;
         return normalizedUrl.endsWith(suffix)
@@ -57,7 +57,7 @@ export class QwenContentGenerator extends OpenAIContentGenerator {
             // Use SharedTokenManager for consistent token/endpoint pairing and automatic refresh
             const credentials = await this.sharedManager.getValidCredentials(this.qwenClient);
             if (!credentials.access_token) {
-                throw new Error("No access token available");
+                throw new Error('No access token available');
             }
             return {
                 token: credentials.access_token,
@@ -69,8 +69,8 @@ export class QwenContentGenerator extends OpenAIContentGenerator {
             if (this.isAuthError(error)) {
                 throw error;
             }
-            console.warn("Failed to get token from shared manager:", error);
-            throw new Error("Failed to obtain valid Qwen access token. Please re-authenticate.");
+            console.warn('Failed to get token from shared manager:', error);
+            throw new Error('Failed to obtain valid Qwen access token. Please re-authenticate.');
         }
     }
     /**
@@ -144,16 +144,16 @@ export class QwenContentGenerator extends OpenAIContentGenerator {
         const errorCode = errorWithCode?.status || errorWithCode?.code;
         return (errorCode === 401 ||
             errorCode === 403 ||
-            errorCode === "401" ||
-            errorCode === "403" ||
-            errorMessage.includes("unauthorized") ||
-            errorMessage.includes("forbidden") ||
-            errorMessage.includes("invalid api key") ||
-            errorMessage.includes("invalid access token") ||
-            errorMessage.includes("token expired") ||
-            errorMessage.includes("authentication") ||
-            errorMessage.includes("access denied") ||
-            (errorMessage.includes("token") && errorMessage.includes("expired")));
+            errorCode === '401' ||
+            errorCode === '403' ||
+            errorMessage.includes('unauthorized') ||
+            errorMessage.includes('forbidden') ||
+            errorMessage.includes('invalid api key') ||
+            errorMessage.includes('invalid access token') ||
+            errorMessage.includes('token expired') ||
+            errorMessage.includes('authentication') ||
+            errorMessage.includes('access denied') ||
+            (errorMessage.includes('token') && errorMessage.includes('expired')));
     }
     /**
      * Get the current cached token (may be expired)

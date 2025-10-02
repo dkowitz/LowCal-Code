@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from "react";
-import { Text, Box } from "ink";
-import { Colors } from "../colors.js";
-import { RenderInline, getPlainTextLength } from "./InlineMarkdownRenderer.js";
+import React from 'react';
+import { Text, Box } from 'ink';
+import { Colors } from '../colors.js';
+import { RenderInline, getPlainTextLength } from './InlineMarkdownRenderer.js';
 
 interface TableRendererProps {
   headers: string[];
@@ -28,7 +28,7 @@ export const TableRenderer: React.FC<TableRendererProps> = ({
   const columnWidths = headers.map((header, index) => {
     const headerWidth = getPlainTextLength(header);
     const maxRowWidth = Math.max(
-      ...rows.map((row) => getPlainTextLength(row[index] || "")),
+      ...rows.map((row) => getPlainTextLength(row[index] || '')),
     );
     return Math.max(headerWidth, maxRowWidth) + 2; // Add padding
   });
@@ -78,7 +78,7 @@ export const TableRenderer: React.FC<TableRendererProps> = ({
           }
         }
 
-        cellContent = bestTruncated + "...";
+        cellContent = bestTruncated + '...';
       }
     }
 
@@ -95,17 +95,17 @@ export const TableRenderer: React.FC<TableRendererProps> = ({
         ) : (
           <RenderInline text={cellContent} />
         )}
-        {" ".repeat(paddingNeeded)}
+        {' '.repeat(paddingNeeded)}
       </Text>
     );
   };
 
   // Helper function to render border
-  const renderBorder = (type: "top" | "middle" | "bottom"): React.ReactNode => {
+  const renderBorder = (type: 'top' | 'middle' | 'bottom'): React.ReactNode => {
     const chars = {
-      top: { left: "┌", middle: "┬", right: "┐", horizontal: "─" },
-      middle: { left: "├", middle: "┼", right: "┤", horizontal: "─" },
-      bottom: { left: "└", middle: "┴", right: "┘", horizontal: "─" },
+      top: { left: '┌', middle: '┬', right: '┐', horizontal: '─' },
+      middle: { left: '├', middle: '┼', right: '┤', horizontal: '─' },
+      bottom: { left: '└', middle: '┴', right: '┘', horizontal: '─' },
     };
 
     const char = chars[type];
@@ -119,18 +119,18 @@ export const TableRenderer: React.FC<TableRendererProps> = ({
   const renderRow = (cells: string[], isHeader = false): React.ReactNode => {
     const renderedCells = cells.map((cell, index) => {
       const width = adjustedWidths[index] || 0;
-      return renderCell(cell || "", width, isHeader);
+      return renderCell(cell || '', width, isHeader);
     });
 
     return (
       <Text>
-        │{" "}
+        │{' '}
         {renderedCells.map((cell, index) => (
           <React.Fragment key={index}>
             {cell}
-            {index < renderedCells.length - 1 ? " │ " : ""}
+            {index < renderedCells.length - 1 ? ' │ ' : ''}
           </React.Fragment>
-        ))}{" "}
+        ))}{' '}
         │
       </Text>
     );
@@ -139,13 +139,13 @@ export const TableRenderer: React.FC<TableRendererProps> = ({
   return (
     <Box flexDirection="column" marginY={1}>
       {/* Top border */}
-      {renderBorder("top")}
+      {renderBorder('top')}
 
       {/* Header row */}
       {renderRow(headers, true)}
 
       {/* Middle border */}
-      {renderBorder("middle")}
+      {renderBorder('middle')}
 
       {/* Data rows */}
       {rows.map((row, index) => (
@@ -153,7 +153,7 @@ export const TableRenderer: React.FC<TableRendererProps> = ({
       ))}
 
       {/* Bottom border */}
-      {renderBorder("bottom")}
+      {renderBorder('bottom')}
     </Box>
   );
 };

@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import { type Config } from "@qwen-code/qwen-code-core";
+import type React from 'react';
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import { type Config } from '@qwen-code/qwen-code-core';
 
 interface TipsProps {
   config: Config;
@@ -26,18 +26,18 @@ export const Tips: React.FC<TipsProps> = ({ config }) => {
       </Text>
       {geminiMdFileCount === 0 && (
         <Text color={Colors.Foreground}>
-          3. Create{" "}
+          3. Create{' '}
           <Text bold color={Colors.AccentPurple}>
             QWEN.md
-          </Text>{" "}
+          </Text>{' '}
           files to customize your interactions with Qwen Code.
         </Text>
       )}
       <Text color={Colors.Foreground}>
-        {geminiMdFileCount === 0 ? "4." : "3."}{" "}
+        {geminiMdFileCount === 0 ? '4.' : '3.'}{' '}
         <Text bold color={Colors.AccentPurple}>
           /help
-        </Text>{" "}
+        </Text>{' '}
         for more information.
       </Text>
     </Box>

@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { type CreationWizardState, type WizardAction } from "./types.js";
+import { type CreationWizardState, type WizardAction } from './types.js';
 /**
  * Initial state for the creation wizard.
  */

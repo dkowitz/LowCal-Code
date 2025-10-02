@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Box, Text } from "ink";
-import { type SubagentConfig } from "@qwen-code/qwen-code-core";
-import type { StepNavigationProps } from "../types.js";
-import { theme } from "../../../semantic-colors.js";
-import { useKeypress } from "../../../hooks/useKeypress.js";
+import { Box, Text } from 'ink';
+import { type SubagentConfig } from '@qwen-code/qwen-code-core';
+import type { StepNavigationProps } from '../types.js';
+import { theme } from '../../../semantic-colors.js';
+import { useKeypress } from '../../../hooks/useKeypress.js';
 
 interface AgentDeleteStepProps extends StepNavigationProps {
   selectedAgent: SubagentConfig | null;
@@ -24,14 +24,14 @@ export function AgentDeleteStep({
     async (key) => {
       if (!selectedAgent) return;
 
-      if (key.name === "y" || key.name === "return") {
+      if (key.name === 'y' || key.name === 'return') {
         try {
           await onDelete(selectedAgent);
           // Navigation will be handled by the parent component after successful deletion
         } catch (error) {
-          console.error("Failed to delete agent:", error);
+          console.error('Failed to delete agent:', error);
         }
-      } else if (key.name === "n") {
+      } else if (key.name === 'n') {
         onNavigateBack();
       }
     },

@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { type DetectedIde } from "@qwen-code/qwen-code-core";
+import { type DetectedIde } from '@qwen-code/qwen-code-core';
 export type IdeIntegrationNudgeResult = {
-    userSelection: "yes" | "no" | "dismiss";
+    userSelection: 'yes' | 'no' | 'dismiss';
     isExtensionPreInstalled: boolean;
 };
 interface IdeIntegrationNudgeProps {

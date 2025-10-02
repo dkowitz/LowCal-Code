@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { FunctionDeclaration, PartListUnion } from "@google/genai";
-import { ToolErrorType } from "./tool-error.js";
-import type { DiffUpdateResult } from "../ide/ideContext.js";
-import { type SubagentStatsSummary } from "../subagents/subagent-statistics.js";
+import type { FunctionDeclaration, PartListUnion } from '@google/genai';
+import { ToolErrorType } from './tool-error.js';
+import type { DiffUpdateResult } from '../ide/ideContext.js';
+import { type SubagentStatsSummary } from '../subagents/subagent-statistics.js';
 /**
  * Represents a validated and ready-to-execute tool call.
  * An instance of this is created by a `ToolBuilder`.
@@ -199,12 +199,12 @@ export interface ToolResult {
  */
 export declare function hasCycleInSchema(schema: object): boolean;
 export interface TaskResultDisplay {
-    type: "task_execution";
+    type: 'task_execution';
     subagentName: string;
     subagentColor?: string;
     taskDescription: string;
     taskPrompt: string;
-    status: "running" | "completed" | "failed" | "cancelled";
+    status: 'running' | 'completed' | 'failed' | 'cancelled';
     terminateReason?: string;
     result?: string;
     executionSummary?: SubagentStatsSummary;
@@ -212,7 +212,7 @@ export interface TaskResultDisplay {
     toolCalls?: Array<{
         callId: string;
         name: string;
-        status: "executing" | "awaiting_approval" | "success" | "failed";
+        status: 'executing' | 'awaiting_approval' | 'success' | 'failed';
         error?: string;
         args?: Record<string, unknown>;
         result?: string;
@@ -235,20 +235,20 @@ export interface DiffStat {
     user_removed_lines: number;
 }
 export interface TodoResultDisplay {
-    type: "todo_list";
+    type: 'todo_list';
     todos: Array<{
         id: string;
         content: string;
-        status: "pending" | "in_progress" | "completed";
+        status: 'pending' | 'in_progress' | 'completed';
     }>;
 }
 export interface PlanResultDisplay {
-    type: "plan_summary";
+    type: 'plan_summary';
     message: string;
     plan: string;
 }
 export interface ToolEditConfirmationDetails {
-    type: "edit";
+    type: 'edit';
     title: string;
     onConfirm: (outcome: ToolConfirmationOutcome, payload?: ToolConfirmationPayload) => Promise<void>;
     fileName: string;
@@ -263,14 +263,14 @@ export interface ToolConfirmationPayload {
     newContent: string;
 }
 export interface ToolExecuteConfirmationDetails {
-    type: "exec";
+    type: 'exec';
     title: string;
     onConfirm: (outcome: ToolConfirmationOutcome) => Promise<void>;
     command: string;
     rootCommand: string;
 }
 export interface ToolMcpConfirmationDetails {
-    type: "mcp";
+    type: 'mcp';
     title: string;
     serverName: string;
     toolName: string;
@@ -278,7 +278,7 @@ export interface ToolMcpConfirmationDetails {
     onConfirm: (outcome: ToolConfirmationOutcome) => Promise<void>;
 }
 export interface ToolInfoConfirmationDetails {
-    type: "info";
+    type: 'info';
     title: string;
     onConfirm: (outcome: ToolConfirmationOutcome) => Promise<void>;
     prompt: string;
@@ -286,7 +286,7 @@ export interface ToolInfoConfirmationDetails {
 }
 export type ToolCallConfirmationDetails = ToolEditConfirmationDetails | ToolExecuteConfirmationDetails | ToolMcpConfirmationDetails | ToolInfoConfirmationDetails | ToolPlanConfirmationDetails;
 export interface ToolPlanConfirmationDetails {
-    type: "plan";
+    type: 'plan';
     title: string;
     plan: string;
     onConfirm: (outcome: ToolConfirmationOutcome) => Promise<void>;

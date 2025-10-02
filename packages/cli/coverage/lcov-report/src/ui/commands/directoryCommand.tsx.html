@@ -433,49 +433,49 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type { SlashCommand, CommandContext } from "./types.js";
-import { CommandKind } from "./types.js";
-import { MessageType } from "../types.js";
-import * as os from "node:os";
-import * as path from "node:path";
-import { loadServerHierarchicalMemory } from "@qwen-code/qwen-code-core";
+import type { SlashCommand, CommandContext } from './types.js';
+import { CommandKind } from './types.js';
+import { MessageType } from '../types.js';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { loadServerHierarchicalMemory } from '@qwen-code/qwen-code-core';
 &nbsp;
 export function expandHomeDir(p: string): string {
   if (!p) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >    return "";</span>
+<span class="cstat-no" title="statement not covered" >    return '';</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
   let expandedPath = p;
-  if (p.toLowerCase().startsWith("%userprofile%")) {
-    expandedPath = os.homedir() + p.substring("%userprofile%".length);
-  } else if (p === "~" || p.startsWith("~/")) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+  if (p.toLowerCase().startsWith('%userprofile%')) {
+    expandedPath = os.homedir() + p.substring('%userprofile%'.length);
+  } else if (p === '~' || p.startsWith('~/')) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >    expandedPath = os.homedir() + p.substring(1);</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
   return path.normalize(expandedPath);
 }
 &nbsp;
 export const directoryCommand: SlashCommand = {
-  name: "directory",
-  altNames: ["dir"],
-  description: "Manage workspace directories",
+  name: 'directory',
+  altNames: ['dir'],
+  description: 'Manage workspace directories',
   kind: CommandKind.BUILT_IN,
   subCommands: [
     {
-      name: "add",
+      name: 'add',
       description:
-        "Add directories to the workspace. Use comma to separate multiple paths",
+        'Add directories to the workspace. Use comma to separate multiple paths',
       kind: CommandKind.BUILT_IN,
       action: async (context: CommandContext, args: string) =&gt; {
         const {
           ui: { addItem },
           services: { config },
         } = context;
-        const [...rest] = args.split(" ");
+        const [...rest] = args.split(' ');
 &nbsp;
         if (!config) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >          addItem(</span>
 <span class="cstat-no" title="statement not covered" >            {</span>
 <span class="cstat-no" title="statement not covered" >              type: MessageType.ERROR,</span>
-<span class="cstat-no" title="statement not covered" >              text: "Configuration is not available.",</span>
+<span class="cstat-no" title="statement not covered" >              text: 'Configuration is not available.',</span>
 <span class="cstat-no" title="statement not covered" >            },</span>
 <span class="cstat-no" title="statement not covered" >            Date.now(),</span>
 <span class="cstat-no" title="statement not covered" >          );</span>
@@ -485,14 +485,14 @@ export const directoryCommand: SlashCommand = {
         const workspaceContext = config.getWorkspaceContext();
 &nbsp;
         const pathsToAdd = rest
-          .join(" ")
-          .split(",")
+          .join(' ')
+          .split(',')
           .filter((p) =&gt; p);
         if (pathsToAdd.length === 0) {
           addItem(
             {
               type: MessageType.ERROR,
-              text: "Please provide at least one path to add.",
+              text: 'Please provide at least one path to add.',
             },
             Date.now(),
           );
@@ -501,10 +501,10 @@ export const directoryCommand: SlashCommand = {
 &nbsp;
         if (config.isRestrictiveSandbox()) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >          return {</span>
-<span class="cstat-no" title="statement not covered" >            type: "message" as const,</span>
-<span class="cstat-no" title="statement not covered" >            messageType: "error" as const,</span>
+<span class="cstat-no" title="statement not covered" >            type: 'message' as const,</span>
+<span class="cstat-no" title="statement not covered" >            messageType: 'error' as const,</span>
 <span class="cstat-no" title="statement not covered" >            content:</span>
-<span class="cstat-no" title="statement not covered" >              "The /directory add command is not supported in restrictive sandbox profiles. Please use --include-directories when starting the session instead.",</span>
+<span class="cstat-no" title="statement not covered" >              'The /directory add command is not supported in restrictive sandbox profiles. Please use --include-directories when starting the session instead.',</span>
 <span class="cstat-no" title="statement not covered" >          };</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 &nbsp;
@@ -534,7 +534,7 @@ export const directoryCommand: SlashCommand = {
 <span class="cstat-no" title="statement not covered" >                config.getFileService(),</span>
 <span class="cstat-no" title="statement not covered" >                config.getExtensionContextFilePaths(),</span>
 <span class="cstat-no" title="statement not covered" >                context.services.settings.merged.context?.importFormat ||</span>
-<span class="cstat-no" title="statement not covered" >                  "tree", // Use setting or default to 'tree'</span>
+<span class="cstat-no" title="statement not covered" >                  'tree', // Use setting or default to 'tree'</span>
 <span class="cstat-no" title="statement not covered" >                config.getFileFilteringOptions(),</span>
 <span class="cstat-no" title="statement not covered" >                context.services.settings.merged.context?.discoveryMaxDirs,</span>
 <span class="cstat-no" title="statement not covered" >              );</span>
@@ -545,7 +545,7 @@ export const directoryCommand: SlashCommand = {
           addItem(
             {
               type: MessageType.INFO,
-              text: `Successfully added GEMINI.md files from the following directories if there are:\n- ${added.join("\n- ")}`,
+              text: `Successfully added GEMINI.md files from the following directories if there are:\n- ${added.join('\n- ')}`,
             },
             Date.now(),
           );
@@ -561,7 +561,7 @@ export const directoryCommand: SlashCommand = {
           addItem(
             {
               type: MessageType.INFO,
-              text: `Successfully added directories:\n- ${added.join("\n- ")}`,
+              text: `Successfully added directories:\n- ${added.join('\n- ')}`,
             },
             Date.now(),
           );
@@ -569,7 +569,7 @@ export const directoryCommand: SlashCommand = {
 &nbsp;
         if (errors.length &gt; 0) {
           addItem(
-            { type: MessageType.ERROR, text: errors.join("\n") },
+            { type: MessageType.ERROR, text: errors.join('\n') },
             Date.now(),
           );
         }
@@ -577,8 +577,8 @@ export const directoryCommand: SlashCommand = {
       },
     },
     {
-      name: "show",
-      description: "Show all directories in the workspace",
+      name: 'show',
+      description: 'Show all directories in the workspace',
       kind: CommandKind.BUILT_IN,
       action: async (context: CommandContext) =&gt; {
         const {
@@ -589,7 +589,7 @@ export const directoryCommand: SlashCommand = {
 <span class="cstat-no" title="statement not covered" >          addItem(</span>
 <span class="cstat-no" title="statement not covered" >            {</span>
 <span class="cstat-no" title="statement not covered" >              type: MessageType.ERROR,</span>
-<span class="cstat-no" title="statement not covered" >              text: "Configuration is not available.",</span>
+<span class="cstat-no" title="statement not covered" >              text: 'Configuration is not available.',</span>
 <span class="cstat-no" title="statement not covered" >            },</span>
 <span class="cstat-no" title="statement not covered" >            Date.now(),</span>
 <span class="cstat-no" title="statement not covered" >          );</span>
@@ -597,7 +597,7 @@ export const directoryCommand: SlashCommand = {
 <span class="cstat-no" title="statement not covered" >        }</span>
         const workspaceContext = config.getWorkspaceContext();
         const directories = workspaceContext.getDirectories();
-        const directoryList = directories.map((dir) =&gt; `- ${dir}`).join("\n");
+        const directoryList = directories.map((dir) =&gt; `- ${dir}`).join('\n');
         addItem(
           {
             type: MessageType.INFO,
@@ -616,7 +616,7 @@ export const directoryCommand: SlashCommand = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.879Z
+                at 2025-09-29T17:26:19.374Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

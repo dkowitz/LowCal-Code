@@ -4,38 +4,38 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as fsPromises from "fs/promises";
-import path from "path";
+import * as fsPromises from 'fs/promises';
+import path from 'path';
 import {
   type SlashCommand,
   CommandKind,
   type SlashCommandActionReturn,
-} from "./types.js";
-import { getProjectSummaryPrompt } from "@qwen-code/qwen-code-core";
-import type { HistoryItemSummary } from "../types.js";
+} from './types.js';
+import { getProjectSummaryPrompt } from '@qwen-code/qwen-code-core';
+import type { HistoryItemSummary } from '../types.js';
 
 export const summaryCommand: SlashCommand = {
-  name: "summary",
+  name: 'summary',
   description:
-    "Generate a project summary and save it to .qwen/PROJECT_SUMMARY.md",
+    'Generate a project summary and save it to .qwen/PROJECT_SUMMARY.md',
   kind: CommandKind.BUILT_IN,
   action: async (context): Promise<SlashCommandActionReturn> => {
     const { config } = context.services;
     const { ui } = context;
     if (!config) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "Config not loaded.",
+        type: 'message',
+        messageType: 'error',
+        content: 'Config not loaded.',
       };
     }
 
     const geminiClient = config.getGeminiClient();
     if (!geminiClient) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "No chat client available to generate summary.",
+        type: 'message',
+        messageType: 'error',
+        content: 'No chat client available to generate summary.',
       };
     }
 
@@ -43,16 +43,16 @@ export const summaryCommand: SlashCommand = {
     if (ui.pendingItem) {
       ui.addItem(
         {
-          type: "error" as const,
-          text: "Already generating summary, wait for previous request to complete",
+          type: 'error' as const,
+          text: 'Already generating summary, wait for previous request to complete',
         },
         Date.now(),
       );
       return {
-        type: "message",
-        messageType: "error",
+        type: 'message',
+        messageType: 'error',
         content:
-          "Already generating summary, wait for previous request to complete",
+          'Already generating summary, wait for previous request to complete',
       };
     }
 
@@ -63,18 +63,18 @@ export const summaryCommand: SlashCommand = {
 
       if (history.length <= 2) {
         return {
-          type: "message",
-          messageType: "info",
-          content: "No conversation found to summarize.",
+          type: 'message',
+          messageType: 'info',
+          content: 'No conversation found to summarize.',
         };
       }
 
       // Show loading state
       const pendingMessage: HistoryItemSummary = {
-        type: "summary",
+        type: 'summary',
         summary: {
           isPending: true,
-          stage: "generating",
+          stage: 'generating',
         },
       };
       ui.setPendingItem(pendingMessage);
@@ -90,7 +90,7 @@ export const summaryCommand: SlashCommand = {
         [
           ...conversationContext,
           {
-            role: "user",
+            role: 'user',
             parts: [
               {
                 text: getProjectSummaryPrompt(),
@@ -108,27 +108,27 @@ export const summaryCommand: SlashCommand = {
       const markdownSummary =
         parts
           ?.map((part) => part.text)
-          .filter((text): text is string => typeof text === "string")
-          .join("") || "";
+          .filter((text): text is string => typeof text === 'string')
+          .join('') || '';
 
       if (!markdownSummary) {
         throw new Error(
-          "Failed to generate summary - no text content received from LLM response",
+          'Failed to generate summary - no text content received from LLM response',
         );
       }
 
       // Update loading message to show saving progress
       ui.setPendingItem({
-        type: "summary",
+        type: 'summary',
         summary: {
           isPending: true,
-          stage: "saving",
+          stage: 'saving',
         },
       });
 
       // Ensure .qwen directory exists
       const projectRoot = config.getProjectRoot();
-      const qwenDir = path.join(projectRoot, ".qwen");
+      const qwenDir = path.join(projectRoot, '.qwen');
       try {
         await fsPromises.mkdir(qwenDir, { recursive: true });
       } catch (_err) {
@@ -136,7 +136,7 @@ export const summaryCommand: SlashCommand = {
       }
 
       // Save the summary to PROJECT_SUMMARY.md
-      const summaryPath = path.join(qwenDir, "PROJECT_SUMMARY.md");
+      const summaryPath = path.join(qwenDir, 'PROJECT_SUMMARY.md');
       const summaryContent = `${markdownSummary}
 
 ---
@@ -145,31 +145,31 @@ export const summaryCommand: SlashCommand = {
 **Update time**: ${new Date().toISOString()} 
 `;
 
-      await fsPromises.writeFile(summaryPath, summaryContent, "utf8");
+      await fsPromises.writeFile(summaryPath, summaryContent, 'utf8');
 
       // Clear pending item and show success message
       ui.setPendingItem(null);
       const completedSummaryItem: HistoryItemSummary = {
-        type: "summary",
+        type: 'summary',
         summary: {
           isPending: false,
-          stage: "completed",
-          filePath: ".qwen/PROJECT_SUMMARY.md",
+          stage: 'completed',
+          filePath: '.qwen/PROJECT_SUMMARY.md',
         },
       };
       ui.addItem(completedSummaryItem, Date.now());
 
       return {
-        type: "message",
-        messageType: "info",
-        content: "", // Empty content since we show the message in UI component
+        type: 'message',
+        messageType: 'info',
+        content: '', // Empty content since we show the message in UI component
       };
     } catch (error) {
       // Clear pending item on error
       ui.setPendingItem(null);
       ui.addItem(
         {
-          type: "error" as const,
+          type: 'error' as const,
           text: `❌ Failed to generate project context summary: ${
             error instanceof Error ? error.message : String(error)
           }`,
@@ -178,8 +178,8 @@ export const summaryCommand: SlashCommand = {
       );
 
       return {
-        type: "message",
-        messageType: "error",
+        type: 'message',
+        messageType: 'error',
         content: `Failed to generate project context summary: ${
           error instanceof Error ? error.message : String(error)
         }`,

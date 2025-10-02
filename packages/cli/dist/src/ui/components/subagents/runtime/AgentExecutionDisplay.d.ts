@@ -3,9 +3,9 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import React from "react";
-import type { TaskResultDisplay, Config } from "@qwen-code/qwen-code-core";
-export type DisplayMode = "compact" | "default" | "verbose";
+import React from 'react';
+import type { TaskResultDisplay, Config } from '@qwen-code/qwen-code-core';
+export type DisplayMode = 'compact' | 'default' | 'verbose';
 export interface AgentExecutionDisplayProps {
     data: TaskResultDisplay;
     availableHeight?: number;

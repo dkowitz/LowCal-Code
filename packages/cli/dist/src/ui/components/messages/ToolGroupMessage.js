@@ -1,11 +1,11 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useMemo } from "react";
-import { Box } from "ink";
-import { ToolCallStatus } from "../../types.js";
-import { ToolMessage } from "./ToolMessage.js";
-import { ToolConfirmationMessage } from "./ToolConfirmationMessage.js";
-import { Colors } from "../../colors.js";
-import { SHELL_COMMAND_NAME } from "../../constants.js";
+import { useMemo } from 'react';
+import { Box } from 'ink';
+import { ToolCallStatus } from '../../types.js';
+import { ToolMessage } from './ToolMessage.js';
+import { ToolConfirmationMessage } from './ToolConfirmationMessage.js';
+import { Colors } from '../../colors.js';
+import { SHELL_COMMAND_NAME } from '../../constants.js';
 // Main component renders the border and maps the tools using ToolMessage
 export const ToolGroupMessage = ({ toolCalls, availableTerminalHeight, terminalWidth, config, isFocused = true, }) => {
     const hasPending = !toolCalls.every((t) => t.status === ToolCallStatus.Success);
@@ -20,7 +20,7 @@ export const ToolGroupMessage = ({ toolCalls, availableTerminalHeight, terminalW
     const toolAwaitingApproval = useMemo(() => toolCalls.find((tc) => tc.status === ToolCallStatus.Confirming), [toolCalls]);
     let countToolCallsWithResults = 0;
     for (const tool of toolCalls) {
-        if (tool.resultDisplay !== undefined && tool.resultDisplay !== "") {
+        if (tool.resultDisplay !== undefined && tool.resultDisplay !== '') {
             countToolCallsWithResults++;
         }
     }
@@ -39,10 +39,10 @@ export const ToolGroupMessage = ({ toolCalls, availableTerminalHeight, terminalW
         width: "100%", marginLeft: 1, borderDimColor: hasPending, borderColor: borderColor, gap: 1, children: toolCalls.map((tool) => {
             const isConfirming = toolAwaitingApproval?.callId === tool.callId;
             return (_jsxs(Box, { flexDirection: "column", minHeight: 1, children: [_jsx(Box, { flexDirection: "row", alignItems: "center", children: _jsx(ToolMessage, { callId: tool.callId, name: tool.name, description: tool.description, resultDisplay: tool.resultDisplay, status: tool.status, confirmationDetails: tool.confirmationDetails, availableTerminalHeight: availableTerminalHeightPerToolMessage, terminalWidth: innerWidth, emphasis: isConfirming
-                                ? "high"
+                                ? 'high'
                                 : toolAwaitingApproval
-                                    ? "low"
-                                    : "medium", renderOutputAsMarkdown: tool.renderOutputAsMarkdown, config: config }) }), tool.status === ToolCallStatus.Confirming &&
+                                    ? 'low'
+                                    : 'medium', renderOutputAsMarkdown: tool.renderOutputAsMarkdown, config: config }) }), tool.status === ToolCallStatus.Confirming &&
                         isConfirming &&
                         tool.confirmationDetails && (_jsx(ToolConfirmationMessage, { confirmationDetails: tool.confirmationDetails, config: config, isFocused: isFocused, availableTerminalHeight: availableTerminalHeightPerToolMessage, terminalWidth: innerWidth }))] }, tool.callId));
         }) }));

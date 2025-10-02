@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { HistoryItem } from "../ui/types.js";
+import type { HistoryItem } from '../ui/types.js';
 export interface LoggingStatus {
     enabled: boolean;
     logFilePath?: string;

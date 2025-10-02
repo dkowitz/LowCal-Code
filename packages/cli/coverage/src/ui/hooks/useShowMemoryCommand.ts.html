@@ -221,10 +221,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type { Message } from "../types.js";
-<span class="cstat-no" title="statement not covered" >import { MessageType } from "../types.js";</span>
-import type { Config } from "@qwen-code/qwen-code-core";
-import type { LoadedSettings } from "../../config/settings.js";
+import type { Message } from '../types.js';
+<span class="cstat-no" title="statement not covered" >import { MessageType } from '../types.js';</span>
+import type { Config } from '@qwen-code/qwen-code-core';
+import type { LoadedSettings } from '../../config/settings.js';
 &nbsp;
 <span class="cstat-no" title="statement not covered" >export function createShowMemoryAction(</span>
 <span class="cstat-no" title="statement not covered" >  config: Config | null,</span>
@@ -235,7 +235,7 @@ import type { LoadedSettings } from "../../config/settings.js";
 <span class="cstat-no" title="statement not covered" >    if (!config) {</span>
 <span class="cstat-no" title="statement not covered" >      addMessage({</span>
 <span class="cstat-no" title="statement not covered" >        type: MessageType.ERROR,</span>
-<span class="cstat-no" title="statement not covered" >        content: "Configuration not available. Cannot show memory.",</span>
+<span class="cstat-no" title="statement not covered" >        content: 'Configuration not available. Cannot show memory.',</span>
 <span class="cstat-no" title="statement not covered" >        timestamp: new Date(),</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
@@ -244,7 +244,7 @@ import type { LoadedSettings } from "../../config/settings.js";
 <span class="cstat-no" title="statement not covered" >    const debugMode = config.getDebugMode();</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (debugMode) {</span>
-<span class="cstat-no" title="statement not covered" >      console.log("[DEBUG] Show Memory command invoked.");</span>
+<span class="cstat-no" title="statement not covered" >      console.log('[DEBUG] Show Memory command invoked.');</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const currentMemory = config.getUserMemory();</span>
@@ -263,11 +263,11 @@ import type { LoadedSettings } from "../../config/settings.js";
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (fileCount &gt; 0) {</span>
 <span class="cstat-no" title="statement not covered" >      const allNamesTheSame = new Set(contextFileNames).size &lt; 2;</span>
-<span class="cstat-no" title="statement not covered" >      const name = allNamesTheSame ? contextFileNames[0] : "context";</span>
+<span class="cstat-no" title="statement not covered" >      const name = allNamesTheSame ? contextFileNames[0] : 'context';</span>
 <span class="cstat-no" title="statement not covered" >      addMessage({</span>
 <span class="cstat-no" title="statement not covered" >        type: MessageType.INFO,</span>
 <span class="cstat-no" title="statement not covered" >        content: `Loaded memory from ${fileCount} ${name} file${</span>
-<span class="cstat-no" title="statement not covered" >          fileCount &gt; 1 ? "s" : ""</span>
+<span class="cstat-no" title="statement not covered" >          fileCount &gt; 1 ? 's' : ''</span>
 <span class="cstat-no" title="statement not covered" >        }.`,</span>
 <span class="cstat-no" title="statement not covered" >        timestamp: new Date(),</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
@@ -284,8 +284,8 @@ import type { LoadedSettings } from "../../config/settings.js";
 <span class="cstat-no" title="statement not covered" >        type: MessageType.INFO,</span>
 <span class="cstat-no" title="statement not covered" >        content:</span>
 <span class="cstat-no" title="statement not covered" >          fileCount &gt; 0</span>
-<span class="cstat-no" title="statement not covered" >            ? "Hierarchical memory (QWEN.md or other context files) is loaded but content is empty."</span>
-<span class="cstat-no" title="statement not covered" >            : "No hierarchical memory (QWEN.md or other context files) is currently loaded.",</span>
+<span class="cstat-no" title="statement not covered" >            ? 'Hierarchical memory (QWEN.md or other context files) is loaded but content is empty.'</span>
+<span class="cstat-no" title="statement not covered" >            : 'No hierarchical memory (QWEN.md or other context files) is currently loaded.',</span>
 <span class="cstat-no" title="statement not covered" >        timestamp: new Date(),</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -298,7 +298,7 @@ import type { LoadedSettings } from "../../config/settings.js";
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

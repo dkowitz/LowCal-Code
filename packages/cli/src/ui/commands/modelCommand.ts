@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AuthType } from "@qwen-code/qwen-code-core";
+import { AuthType } from '@qwen-code/qwen-code-core';
 import type {
   SlashCommand,
   CommandContext,
   OpenDialogActionReturn,
   MessageActionReturn,
-} from "./types.js";
-import { CommandKind } from "./types.js";
+} from './types.js';
+import { CommandKind } from './types.js';
 import {
   AVAILABLE_MODELS_QWEN,
   fetchOpenAICompatibleModels,
   getOpenAIAvailableModelFromEnv,
   type AvailableModel,
-} from "../models/availableModels.js";
+} from '../models/availableModels.js';
 
 async function getAvailableModelsForAuthType(
   authType: AuthType,
@@ -31,9 +31,9 @@ async function getAvailableModelsForAuthType(
       if (openAIModel) return [openAIModel];
 
       // If an OpenAI-compatible base URL is provided, assume models are available
-      const baseUrl = process.env["OPENAI_BASE_URL"]?.trim();
+      const baseUrl = process.env['OPENAI_BASE_URL']?.trim();
       if (baseUrl) {
-        const apiKey = process.env["OPENAI_API_KEY"]?.trim();
+        const apiKey = process.env['OPENAI_API_KEY']?.trim();
         return await fetchOpenAICompatibleModels(baseUrl, apiKey);
       }
 
@@ -47,8 +47,8 @@ async function getAvailableModelsForAuthType(
 }
 
 export const modelCommand: SlashCommand = {
-  name: "model",
-  description: "Switch the model for this session",
+  name: 'model',
+  description: 'Switch the model for this session',
   kind: CommandKind.BUILT_IN,
   action: async (
     context: CommandContext,
@@ -58,27 +58,27 @@ export const modelCommand: SlashCommand = {
 
     if (!config) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "Configuration not available.",
+        type: 'message',
+        messageType: 'error',
+        content: 'Configuration not available.',
       };
     }
 
     const contentGeneratorConfig = config.getContentGeneratorConfig();
     if (!contentGeneratorConfig) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "Content generator configuration not available.",
+        type: 'message',
+        messageType: 'error',
+        content: 'Content generator configuration not available.',
       };
     }
 
     const authType = contentGeneratorConfig.authType;
     if (!authType) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "Authentication type not available.",
+        type: 'message',
+        messageType: 'error',
+        content: 'Authentication type not available.',
       };
     }
 
@@ -86,16 +86,16 @@ export const modelCommand: SlashCommand = {
 
     if (availableModels.length === 0) {
       return {
-        type: "message",
-        messageType: "error",
+        type: 'message',
+        messageType: 'error',
         content: `No models available for the current authentication type (${authType}).`,
       };
     }
 
     // Trigger model selection dialog
     return {
-      type: "dialog",
-      dialog: "model",
+      type: 'dialog',
+      dialog: 'model',
     };
   },
 };

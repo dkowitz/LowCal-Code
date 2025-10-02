@@ -1,8 +1,8 @@
-import OpenAI from "openai";
-import type { Config } from "../../../config/config.js";
-import type { ContentGeneratorConfig } from "../../contentGenerator.js";
-import { DEFAULT_TIMEOUT, DEFAULT_MAX_RETRIES } from "../constants.js";
-import type { OpenAICompatibleProvider } from "./types.js";
+import OpenAI from 'openai';
+import type { Config } from '../../../config/config.js';
+import type { ContentGeneratorConfig } from '../../contentGenerator.js';
+import { DEFAULT_TIMEOUT, DEFAULT_MAX_RETRIES } from '../constants.js';
+import type { OpenAICompatibleProvider } from './types.js';
 
 /**
  * Default provider for standard OpenAI-compatible APIs
@@ -22,10 +22,10 @@ export class DefaultOpenAICompatibleProvider
   }
 
   buildHeaders(): Record<string, string | undefined> {
-    const version = this.cliConfig.getCliVersion() || "unknown";
+    const version = this.cliConfig.getCliVersion() || 'unknown';
     const userAgent = `QwenCode/${version} (${process.platform}; ${process.arch})`;
     return {
-      "User-Agent": userAgent,
+      'User-Agent': userAgent,
     };
   }
 

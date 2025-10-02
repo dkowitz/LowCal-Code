@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { useState, useEffect } from "react";
-import { Box, Text } from "ink";
-import Spinner from "ink-spinner";
-import { Colors } from "../colors.js";
-import { useKeypress } from "../hooks/useKeypress.js";
+import type React from 'react';
+import { useState, useEffect } from 'react';
+import { Box, Text } from 'ink';
+import Spinner from 'ink-spinner';
+import { Colors } from '../colors.js';
+import { useKeypress } from '../hooks/useKeypress.js';
 
 interface AuthInProgressProps {
   onTimeout: () => void;
@@ -22,7 +22,7 @@ export function AuthInProgress({
 
   useKeypress(
     (key) => {
-      if (key.name === "escape" || (key.ctrl && key.name === "c")) {
+      if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
         onTimeout();
       }
     },

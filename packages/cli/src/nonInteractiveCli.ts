@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Config, ToolCallRequestInfo } from "@qwen-code/qwen-code-core";
+import type { Config, ToolCallRequestInfo } from '@qwen-code/qwen-code-core';
 import {
   executeToolCall,
   shutdownTelemetry,
@@ -13,11 +13,11 @@ import {
   parseAndFormatApiError,
   FatalInputError,
   FatalTurnLimitedError,
-} from "@qwen-code/qwen-code-core";
-import type { Content, Part } from "@google/genai";
+} from '@qwen-code/qwen-code-core';
+import type { Content, Part } from '@google/genai';
 
-import { ConsolePatcher } from "./ui/utils/ConsolePatcher.js";
-import { handleAtCommand } from "./ui/hooks/atCommandProcessor.js";
+import { ConsolePatcher } from './ui/utils/ConsolePatcher.js';
+import { handleAtCommand } from './ui/hooks/atCommandProcessor.js';
 
 export async function runNonInteractive(
   config: Config,
@@ -32,8 +32,8 @@ export async function runNonInteractive(
   try {
     consolePatcher.patch();
     // Handle EPIPE errors when the output is piped to a command that closes early.
-    process.stdout.on("error", (err: NodeJS.ErrnoException) => {
-      if (err.code === "EPIPE") {
+    process.stdout.on('error', (err: NodeJS.ErrnoException) => {
+      if (err.code === 'EPIPE') {
         // Exit gracefully if the pipe is closed.
         process.exit(0);
       }
@@ -56,12 +56,12 @@ export async function runNonInteractive(
       // An error occurred during @include processing (e.g., file not found).
       // The error message is already logged by handleAtCommand.
       throw new FatalInputError(
-        "Exiting due to an error processing the @ command.",
+        'Exiting due to an error processing the @ command.',
       );
     }
 
     let currentMessages: Content[] = [
-      { role: "user", parts: processedQuery as Part[] },
+      { role: 'user', parts: processedQuery as Part[] },
     ];
 
     let turnCount = 0;
@@ -72,7 +72,7 @@ export async function runNonInteractive(
         turnCount > config.getMaxSessionTurns()
       ) {
         throw new FatalTurnLimitedError(
-          "Reached max session turns for this session. Increase the number of turns by specifying maxSessionTurns in settings.json.",
+          'Reached max session turns for this session. Increase the number of turns by specifying maxSessionTurns in settings.json.',
         );
       }
       const toolCallRequests: ToolCallRequestInfo[] = [];
@@ -85,7 +85,7 @@ export async function runNonInteractive(
 
       for await (const event of responseStream) {
         if (abortController.signal.aborted) {
-          console.error("Operation cancelled.");
+          console.error('Operation cancelled.');
           return;
         }
 
@@ -115,9 +115,9 @@ export async function runNonInteractive(
             toolResponseParts.push(...toolResponse.responseParts);
           }
         }
-        currentMessages = [{ role: "user", parts: toolResponseParts }];
+        currentMessages = [{ role: 'user', parts: toolResponseParts }];
       } else {
-        process.stdout.write("\n"); // Ensure a final newline
+        process.stdout.write('\n'); // Ensure a final newline
         return;
       }
     }

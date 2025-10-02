@@ -28,10 +28,10 @@ export function extractInjections(prompt, trigger, contextName) {
         let foundEnd = false;
         while (currentIndex < prompt.length) {
             const char = prompt[currentIndex];
-            if (char === "{") {
+            if (char === '{') {
                 braceCount++;
             }
-            else if (char === "}") {
+            else if (char === '}') {
                 braceCount--;
                 if (braceCount === 0) {
                     const injectionContent = prompt.substring(startIndex + trigger.length, currentIndex);
@@ -50,7 +50,7 @@ export function extractInjections(prompt, trigger, contextName) {
         }
         // Check if the inner loop finished without finding the closing brace.
         if (!foundEnd) {
-            const contextInfo = contextName ? ` in command '${contextName}'` : "";
+            const contextInfo = contextName ? ` in command '${contextName}'` : '';
             // Enforce strict parsing (Comment 1) and clarify limitations (Comment 2).
             throw new Error(`Invalid syntax${contextInfo}: Unclosed injection starting at index ${startIndex} ('${trigger}'). Ensure braces are balanced. Paths or commands with unbalanced braces are not supported directly.`);
         }

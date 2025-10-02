@@ -3,33 +3,33 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as fs from "node:fs";
-import * as path from "node:path";
-import * as Diff from "diff";
-import { BaseDeclarativeTool, Kind, ToolConfirmationOutcome } from "./tools.js";
-import { ToolErrorType } from "./tool-error.js";
-import { makeRelative, shortenPath } from "../utils/paths.js";
-import { isNodeError } from "../utils/errors.js";
-import { ApprovalMode } from "../config/config.js";
-import { DEFAULT_DIFF_OPTIONS, getDiffStat } from "./diffOptions.js";
-import { ReadFileTool } from "./read-file.js";
-import { ToolNames } from "./tool-names.js";
-import { IDEConnectionStatus } from "../ide/ide-client.js";
-import { FileOperation } from "../telemetry/metrics.js";
-import { logFileOperation } from "../telemetry/loggers.js";
-import { FileOperationEvent } from "../telemetry/types.js";
-import { getProgrammingLanguage } from "../telemetry/telemetry-utils.js";
-import { getSpecificMimeType } from "../utils/fileUtils.js";
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as Diff from 'diff';
+import { BaseDeclarativeTool, Kind, ToolConfirmationOutcome } from './tools.js';
+import { ToolErrorType } from './tool-error.js';
+import { makeRelative, shortenPath } from '../utils/paths.js';
+import { isNodeError } from '../utils/errors.js';
+import { ApprovalMode } from '../config/config.js';
+import { DEFAULT_DIFF_OPTIONS, getDiffStat } from './diffOptions.js';
+import { ReadFileTool } from './read-file.js';
+import { ToolNames } from './tool-names.js';
+import { IDEConnectionStatus } from '../ide/ide-client.js';
+import { FileOperation } from '../telemetry/metrics.js';
+import { logFileOperation } from '../telemetry/loggers.js';
+import { FileOperationEvent } from '../telemetry/types.js';
+import { getProgrammingLanguage } from '../telemetry/telemetry-utils.js';
+import { getSpecificMimeType } from '../utils/fileUtils.js';
 export function applyReplacement(currentContent, oldString, newString, isNewFile) {
     if (isNewFile) {
         return newString;
     }
     if (currentContent === null) {
         // Should not happen if not a new file, but defensively return empty or newString if oldString is also empty
-        return oldString === "" ? newString : "";
+        return oldString === '' ? newString : '';
     }
     // If oldString is empty and it's not a new file, do not modify the content.
-    if (oldString === "" && !isNewFile) {
+    if (oldString === '' && !isNewFile) {
         return currentContent;
     }
     return currentContent.replaceAll(oldString, newString);
@@ -64,17 +64,17 @@ class EditToolInvocation {
                 .getFileSystemService()
                 .readTextFile(params.file_path);
             // Normalize line endings to LF for consistent processing.
-            currentContent = currentContent.replace(/\r\n/g, "\n");
+            currentContent = currentContent.replace(/\r\n/g, '\n');
             fileExists = true;
         }
         catch (err) {
-            if (!isNodeError(err) || err.code !== "ENOENT") {
+            if (!isNodeError(err) || err.code !== 'ENOENT') {
                 // Rethrow unexpected FS errors (permissions, etc.)
                 throw err;
             }
             fileExists = false;
         }
-        if (params.old_string === "" && !fileExists) {
+        if (params.old_string === '' && !fileExists) {
             // Creating a new file
             isNewFile = true;
         }
@@ -88,7 +88,7 @@ class EditToolInvocation {
         }
         else if (currentContent !== null) {
             occurrences = this.countOccurrences(currentContent, params.old_string);
-            if (params.old_string === "") {
+            if (params.old_string === '') {
                 // Error: Trying to create a file that already exists
                 error = {
                     display: `Failed to edit. Attempted to create a file that already exists.`,
@@ -104,7 +104,7 @@ class EditToolInvocation {
                 };
             }
             else if (occurrences !== expectedReplacements) {
-                const occurrenceTerm = expectedReplacements === 1 ? "occurrence" : "occurrences";
+                const occurrenceTerm = expectedReplacements === 1 ? 'occurrence' : 'occurrences';
                 error = {
                     display: `Failed to edit, expected ${expectedReplacements} ${occurrenceTerm} but found ${occurrences}.`,
                     raw: `Failed to edit, Expected ${expectedReplacements} ${occurrenceTerm} but found ${occurrences} for old_string in file: ${params.file_path}`,
@@ -129,10 +129,10 @@ class EditToolInvocation {
         }
         const newContent = !error
             ? applyReplacement(currentContent, finalOldString, finalNewString, isNewFile)
-            : (currentContent ?? "");
+            : (currentContent ?? '');
         if (!error && fileExists && currentContent === newContent) {
             error = {
-                display: "No changes to apply. The new content is identical to the current content.",
+                display: 'No changes to apply. The new content is identical to the current content.',
                 raw: `No changes to apply. The new content is identical to the current content in file: ${params.file_path}`,
                 type: ToolErrorType.EDIT_NO_CHANGE,
             };
@@ -149,7 +149,7 @@ class EditToolInvocation {
      * Counts occurrences of a substring in a string
      */
     countOccurrences(str, substr) {
-        if (substr === "") {
+        if (substr === '') {
             return 0;
         }
         let count = 0;
@@ -182,14 +182,14 @@ class EditToolInvocation {
             return false;
         }
         const fileName = path.basename(this.params.file_path);
-        const fileDiff = Diff.createPatch(fileName, editData.currentContent ?? "", editData.newContent, "Current", "Proposed", DEFAULT_DIFF_OPTIONS);
+        const fileDiff = Diff.createPatch(fileName, editData.currentContent ?? '', editData.newContent, 'Current', 'Proposed', DEFAULT_DIFF_OPTIONS);
         const ideClient = this.config.getIdeClient();
         const ideConfirmation = this.config.getIdeMode() &&
             ideClient?.getConnectionStatus().status === IDEConnectionStatus.Connected
             ? ideClient.openDiff(this.params.file_path, editData.newContent)
             : undefined;
         const confirmationDetails = {
-            type: "edit",
+            type: 'edit',
             title: `Confirm Edit: ${shortenPath(makeRelative(this.params.file_path, this.config.getTargetDir()))}`,
             fileName,
             filePath: this.params.file_path,
@@ -202,10 +202,10 @@ class EditToolInvocation {
                 }
                 if (ideConfirmation) {
                     const result = await ideConfirmation;
-                    if (result.status === "accepted" && result.content) {
+                    if (result.status === 'accepted' && result.content) {
                         // TODO(chrstn): See https://github.com/google-gemini/gemini-cli/pull/5618#discussion_r2255413084
                         // for info on a possible race condition where the file is modified on disk while being edited.
-                        this.params.old_string = editData.currentContent ?? "";
+                        this.params.old_string = editData.currentContent ?? '';
                         this.params.new_string = result.content;
                     }
                 }
@@ -216,13 +216,13 @@ class EditToolInvocation {
     }
     getDescription() {
         const relativePath = makeRelative(this.params.file_path, this.config.getTargetDir());
-        if (this.params.old_string === "") {
+        if (this.params.old_string === '') {
             return `Create ${shortenPath(relativePath)}`;
         }
-        const oldStringSnippet = this.params.old_string.split("\n")[0].substring(0, 30) +
-            (this.params.old_string.length > 30 ? "..." : "");
-        const newStringSnippet = this.params.new_string.split("\n")[0].substring(0, 30) +
-            (this.params.new_string.length > 30 ? "..." : "");
+        const oldStringSnippet = this.params.old_string.split('\n')[0].substring(0, 30) +
+            (this.params.old_string.length > 30 ? '...' : '');
+        const newStringSnippet = this.params.new_string.split('\n')[0].substring(0, 30) +
+            (this.params.new_string.length > 30 ? '...' : '');
         if (this.params.old_string === this.params.new_string) {
             return `No file changes to ${shortenPath(relativePath)}`;
         }
@@ -267,15 +267,15 @@ class EditToolInvocation {
             let displayResult;
             const fileName = path.basename(this.params.file_path);
             const originallyProposedContent = this.params.ai_proposed_string || this.params.new_string;
-            const diffStat = getDiffStat(fileName, editData.currentContent ?? "", originallyProposedContent, this.params.new_string);
+            const diffStat = getDiffStat(fileName, editData.currentContent ?? '', originallyProposedContent, this.params.new_string);
             if (editData.isNewFile) {
                 displayResult = `Created ${shortenPath(makeRelative(this.params.file_path, this.config.getTargetDir()))}`;
             }
             else {
                 // Generate diff for display, even though core logic doesn't technically need it
                 // The CLI wrapper will use this part of the ToolResult
-                const fileDiff = Diff.createPatch(fileName, editData.currentContent ?? "", // Should not be null here if not isNewFile
-                editData.newContent, "Current", "Proposed", DEFAULT_DIFF_OPTIONS);
+                const fileDiff = Diff.createPatch(fileName, editData.currentContent ?? '', // Should not be null here if not isNewFile
+                editData.newContent, 'Current', 'Proposed', DEFAULT_DIFF_OPTIONS);
                 displayResult = {
                     fileDiff,
                     fileName,
@@ -292,7 +292,7 @@ class EditToolInvocation {
             if (this.params.modified_by_user) {
                 llmSuccessMessageParts.push(`User modified the \`new_string\` content to be: ${this.params.new_string}.`);
             }
-            const lines = editData.newContent.split("\n").length;
+            const lines = editData.newContent.split('\n').length;
             const mimetype = getSpecificMimeType(this.params.file_path);
             const extension = path.extname(this.params.file_path);
             const programming_language = getProgrammingLanguage({
@@ -300,7 +300,7 @@ class EditToolInvocation {
             });
             logFileOperation(this.config, new FileOperationEvent(EditTool.Name, editData.isNewFile ? FileOperation.CREATE : FileOperation.UPDATE, lines, mimetype, extension, diffStat, programming_language));
             return {
-                llmContent: llmSuccessMessageParts.join(" "),
+                llmContent: llmSuccessMessageParts.join(' '),
                 returnDisplay: displayResult,
             };
         }
@@ -333,7 +333,7 @@ export class EditTool extends BaseDeclarativeTool {
     config;
     static Name = ToolNames.EDIT;
     constructor(config) {
-        super(EditTool.Name, "Edit", `Replaces text within a file. By default, replaces a single occurrence, but can replace multiple occurrences when \`expected_replacements\` is specified. This tool requires providing significant context around the change to ensure precise targeting. Always use the ${ReadFileTool.Name} tool to examine the file's current content before attempting a text replacement.
+        super(EditTool.Name, 'Edit', `Replaces text within a file. By default, replaces a single occurrence, but can replace multiple occurrences when \`expected_replacements\` is specified. This tool requires providing significant context around the change to ensure precise targeting. Always use the ${ReadFileTool.Name} tool to examine the file's current content before attempting a text replacement.
 
       The user has the ability to modify the \`new_string\` content. If modified, this will be stated in the response.
 
@@ -347,24 +347,24 @@ Expectation for required parameters:
             properties: {
                 file_path: {
                     description: "The absolute path to the file to modify. Must start with '/'.",
-                    type: "string",
+                    type: 'string',
                 },
                 old_string: {
-                    description: "The exact literal text to replace, preferably unescaped. For single replacements (default), include at least 3 lines of context BEFORE and AFTER the target text, matching whitespace and indentation precisely. For multiple replacements, specify expected_replacements parameter. If this string is not the exact literal text (i.e. you escaped it) or does not match exactly, the tool will fail.",
-                    type: "string",
+                    description: 'The exact literal text to replace, preferably unescaped. For single replacements (default), include at least 3 lines of context BEFORE and AFTER the target text, matching whitespace and indentation precisely. For multiple replacements, specify expected_replacements parameter. If this string is not the exact literal text (i.e. you escaped it) or does not match exactly, the tool will fail.',
+                    type: 'string',
                 },
                 new_string: {
-                    description: "The exact literal text to replace `old_string` with, preferably unescaped. Provide the EXACT text. Ensure the resulting code is correct and idiomatic.",
-                    type: "string",
+                    description: 'The exact literal text to replace `old_string` with, preferably unescaped. Provide the EXACT text. Ensure the resulting code is correct and idiomatic.',
+                    type: 'string',
                 },
                 expected_replacements: {
-                    type: "number",
-                    description: "Number of replacements expected. Defaults to 1 if not specified. Use when you want to replace multiple occurrences.",
+                    type: 'number',
+                    description: 'Number of replacements expected. Defaults to 1 if not specified. Use when you want to replace multiple occurrences.',
                     minimum: 1,
                 },
             },
-            required: ["file_path", "old_string", "new_string"],
-            type: "object",
+            required: ['file_path', 'old_string', 'new_string'],
+            type: 'object',
         });
         this.config = config;
     }
@@ -383,7 +383,7 @@ Expectation for required parameters:
         const workspaceContext = this.config.getWorkspaceContext();
         if (!workspaceContext.isPathWithinWorkspace(params.file_path)) {
             const directories = workspaceContext.getDirectories();
-            return `File path must be within one of the workspace directories: ${directories.join(", ")}`;
+            return `File path must be within one of the workspace directories: ${directories.join(', ')}`;
         }
         return null;
     }
@@ -400,9 +400,9 @@ Expectation for required parameters:
                         .readTextFile(params.file_path);
                 }
                 catch (err) {
-                    if (!isNodeError(err) || err.code !== "ENOENT")
+                    if (!isNodeError(err) || err.code !== 'ENOENT')
                         throw err;
-                    return "";
+                    return '';
                 }
             },
             getProposedContent: async (params) => {
@@ -410,12 +410,12 @@ Expectation for required parameters:
                     const currentContent = await this.config
                         .getFileSystemService()
                         .readTextFile(params.file_path);
-                    return applyReplacement(currentContent, params.old_string, params.new_string, params.old_string === "" && currentContent === "");
+                    return applyReplacement(currentContent, params.old_string, params.new_string, params.old_string === '' && currentContent === '');
                 }
                 catch (err) {
-                    if (!isNodeError(err) || err.code !== "ENOENT")
+                    if (!isNodeError(err) || err.code !== 'ENOENT')
                         throw err;
-                    return "";
+                    return '';
                 }
             },
             createUpdatedParams: (oldContent, modifiedProposedContent, originalParams) => {

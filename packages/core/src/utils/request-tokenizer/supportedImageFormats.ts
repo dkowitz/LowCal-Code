@@ -9,13 +9,13 @@
  * These formats are supported by the vision model and can be processed by the image tokenizer
  */
 export const SUPPORTED_IMAGE_MIME_TYPES = [
-  "image/bmp",
-  "image/jpeg",
-  "image/jpg", // Alternative MIME type for JPEG
-  "image/png",
-  "image/tiff",
-  "image/webp",
-  "image/heic",
+  'image/bmp',
+  'image/jpeg',
+  'image/jpg', // Alternative MIME type for JPEG
+  'image/png',
+  'image/tiff',
+  'image/webp',
+  'image/heic',
 ] as const;
 
 /**
@@ -43,8 +43,8 @@ export function isSupportedImageMimeType(
  */
 export function getSupportedImageFormatsString(): string {
   return SUPPORTED_IMAGE_MIME_TYPES.map((type) =>
-    type.replace("image/", "").toUpperCase(),
-  ).join(", ");
+    type.replace('image/', '').toUpperCase(),
+  ).join(', ');
 }
 
 /**

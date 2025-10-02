@@ -4,32 +4,32 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useCallback } from "react";
-import { Box, Text } from "ink";
-import { RadioButtonSelect } from "../../shared/RadioButtonSelect.js";
-import { MANAGEMENT_STEPS } from "../types.js";
-import { theme } from "../../../semantic-colors.js";
-import { useLaunchEditor } from "../../../hooks/useLaunchEditor.js";
-import {} from "@qwen-code/qwen-code-core";
+import { useState, useCallback } from 'react';
+import { Box, Text } from 'ink';
+import { RadioButtonSelect } from '../../shared/RadioButtonSelect.js';
+import { MANAGEMENT_STEPS } from '../types.js';
+import { theme } from '../../../semantic-colors.js';
+import { useLaunchEditor } from '../../../hooks/useLaunchEditor.js';
+import {} from '@qwen-code/qwen-code-core';
 const editOptions = [
     {
-        id: "editor",
-        label: "Open in editor",
+        id: 'editor',
+        label: 'Open in editor',
     },
     {
-        id: "tools",
-        label: "Edit tools",
+        id: 'tools',
+        label: 'Edit tools',
     },
     {
-        id: "color",
-        label: "Edit color",
+        id: 'color',
+        label: 'Edit color',
     },
 ];
 /**
  * Edit options selection step - choose what to edit about the agent.
  */
 export function EditOptionsStep({ selectedAgent, onNavigateToStep, }) {
-    const [selectedOption, setSelectedOption] = useState("editor");
+    const [selectedOption, setSelectedOption] = useState('editor');
     const [error, setError] = useState(null);
     const launchEditor = useLaunchEditor();
     const handleHighlight = (selectedValue) => {
@@ -39,19 +39,19 @@ export function EditOptionsStep({ selectedAgent, onNavigateToStep, }) {
         if (!selectedAgent)
             return;
         setError(null);
-        if (selectedValue === "editor") {
+        if (selectedValue === 'editor') {
             // Launch editor directly
             try {
                 await launchEditor(selectedAgent?.filePath);
             }
             catch (err) {
-                setError(`Failed to launch editor: ${err instanceof Error ? err.message : "Unknown error"}`);
+                setError(`Failed to launch editor: ${err instanceof Error ? err.message : 'Unknown error'}`);
             }
         }
-        else if (selectedValue === "tools") {
+        else if (selectedValue === 'tools') {
             onNavigateToStep(MANAGEMENT_STEPS.EDIT_TOOLS);
         }
-        else if (selectedValue === "color") {
+        else if (selectedValue === 'color') {
             onNavigateToStep(MANAGEMENT_STEPS.EDIT_COLOR);
         }
     }, [selectedAgent, onNavigateToStep, launchEditor]);

@@ -3,9 +3,9 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { ToolPlanConfirmationDetails, ToolResult } from "./tools.js";
-import { BaseDeclarativeTool, BaseToolInvocation } from "./tools.js";
-import type { Config } from "../config/config.js";
+import type { ToolPlanConfirmationDetails, ToolResult } from './tools.js';
+import { BaseDeclarativeTool, BaseToolInvocation } from './tools.js';
+import type { Config } from '../config/config.js';
 export interface ExitPlanModeParams {
     plan: string;
 }

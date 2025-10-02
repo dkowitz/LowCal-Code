@@ -17,14 +17,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { execSync } from "node:child_process";
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
+import { execSync } from 'node:child_process';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = join(__dirname, "..");
+const root = join(__dirname, '..');
 
-execSync("npx --yes @vscode/vsce package --no-dependencies", {
-  stdio: "inherit",
-  cwd: join(root, "packages", "vscode-ide-companion"),
+execSync('npx --yes @vscode/vsce package --no-dependencies', {
+  stdio: 'inherit',
+  cwd: join(root, 'packages', 'vscode-ide-companion'),
 });

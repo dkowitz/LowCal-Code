@@ -8,13 +8,13 @@ import type {
   SlashCommand,
   CommandContext,
   MessageActionReturn,
-} from "./types.js";
-import { CommandKind } from "./types.js";
-import { ApprovalMode, APPROVAL_MODES } from "@qwen-code/qwen-code-core";
-import { SettingScope } from "../../config/settings.js";
+} from './types.js';
+import { CommandKind } from './types.js';
+import { ApprovalMode, APPROVAL_MODES } from '@qwen-code/qwen-code-core';
+import { SettingScope } from '../../config/settings.js';
 
 const USAGE_MESSAGE =
-  "Usage: /approval-mode <mode> [--session|--user|--project]";
+  'Usage: /approval-mode <mode> [--session|--user|--project]';
 
 const normalizeInputMode = (value: string): string =>
   value.trim().toLowerCase();
@@ -41,7 +41,7 @@ const parseApprovalMode = (value: string | null): ApprovalMode | null => {
     return null;
   }
 
-  const normalized = normalizeInputMode(value).replace(/_/g, "-");
+  const normalized = normalizeInputMode(value).replace(/_/g, '-');
   const matchIndex = APPROVAL_MODES.findIndex(
     (candidate) => candidate === normalized,
   );
@@ -52,13 +52,13 @@ const parseApprovalMode = (value: string | null): ApprovalMode | null => {
 const formatModeDescription = (mode: ApprovalMode): string => {
   switch (mode) {
     case ApprovalMode.PLAN:
-      return "Plan mode - Analyze only, do not modify files or execute commands";
+      return 'Plan mode - Analyze only, do not modify files or execute commands';
     case ApprovalMode.DEFAULT:
-      return "Default mode - Require approval for file edits or shell commands";
+      return 'Default mode - Require approval for file edits or shell commands';
     case ApprovalMode.AUTO_EDIT:
-      return "Auto-edit mode - Automatically approve file edits";
+      return 'Auto-edit mode - Automatically approve file edits';
     case ApprovalMode.YOLO:
-      return "YOLO mode - Automatically approve all tools";
+      return 'YOLO mode - Automatically approve all tools';
     default:
       return `${mode} mode`;
   }
@@ -68,44 +68,44 @@ const parseApprovalArgs = (
   args: string,
 ): {
   mode: string | null;
-  scope: "session" | "user" | "project";
+  scope: 'session' | 'user' | 'project';
   error?: string;
 } => {
   const trimmedArgs = args.trim();
   if (!trimmedArgs) {
-    return { mode: null, scope: "session" };
+    return { mode: null, scope: 'session' };
   }
 
   const tokens = tokenizeArgs(trimmedArgs);
   let mode: string | null = null;
-  let scope: "session" | "user" | "project" = "session";
+  let scope: 'session' | 'user' | 'project' = 'session';
   let scopeFlag: string | null = null;
 
   // Find scope flag and mode
   for (const token of tokens) {
-    if (token === "--session" || token === "--user" || token === "--project") {
+    if (token === '--session' || token === '--user' || token === '--project') {
       if (scopeFlag) {
         return {
           mode: null,
-          scope: "session",
-          error: "Multiple scope flags provided",
+          scope: 'session',
+          error: 'Multiple scope flags provided',
         };
       }
       scopeFlag = token;
-      scope = token.substring(2) as "session" | "user" | "project";
+      scope = token.substring(2) as 'session' | 'user' | 'project';
     } else if (!mode) {
       mode = token;
     } else {
       return {
         mode: null,
-        scope: "session",
-        error: "Invalid arguments provided",
+        scope: 'session',
+        error: 'Invalid arguments provided',
       };
     }
   }
 
   if (!mode) {
-    return { mode: null, scope: "session", error: "Missing approval mode" };
+    return { mode: null, scope: 'session', error: 'Missing approval mode' };
   }
 
   return { mode, scope };
@@ -114,16 +114,16 @@ const parseApprovalArgs = (
 const setApprovalModeWithScope = async (
   context: CommandContext,
   mode: ApprovalMode,
-  scope: "session" | "user" | "project",
+  scope: 'session' | 'user' | 'project',
 ): Promise<MessageActionReturn> => {
   const { services } = context;
   const { config } = services;
 
   if (!config) {
     return {
-      type: "message",
-      messageType: "error",
-      content: "Configuration not available.",
+      type: 'message',
+      messageType: 'error',
+      content: 'Configuration not available.',
     };
   }
 
@@ -132,24 +132,24 @@ const setApprovalModeWithScope = async (
     config.setApprovalMode(mode);
 
     // If scope is not session, also persist to settings
-    if (scope !== "session") {
+    if (scope !== 'session') {
       const { settings } = context.services;
-      if (!settings || typeof settings.setValue !== "function") {
+      if (!settings || typeof settings.setValue !== 'function') {
         return {
-          type: "message",
-          messageType: "error",
+          type: 'message',
+          messageType: 'error',
           content:
-            "Settings service is not available; unable to persist the approval mode.",
+            'Settings service is not available; unable to persist the approval mode.',
         };
       }
 
       const settingScope =
-        scope === "user" ? SettingScope.User : SettingScope.Workspace;
-      const scopeLabel = scope === "user" ? "user" : "project";
+        scope === 'user' ? SettingScope.User : SettingScope.Workspace;
+      const scopeLabel = scope === 'user' ? 'user' : 'project';
       let settingsPath: string | undefined;
 
       try {
-        if (typeof settings.forScope === "function") {
+        if (typeof settings.forScope === 'function') {
           settingsPath = settings.forScope(settingScope)?.path;
         }
       } catch (_error) {
@@ -157,43 +157,43 @@ const setApprovalModeWithScope = async (
       }
 
       try {
-        settings.setValue(settingScope, "approvalMode", mode);
+        settings.setValue(settingScope, 'approvalMode', mode);
       } catch (error) {
         return {
-          type: "message",
-          messageType: "error",
+          type: 'message',
+          messageType: 'error',
           content: `Failed to save approval mode: ${(error as Error).message}`,
         };
       }
 
-      const locationSuffix = settingsPath ? ` at ${settingsPath}` : "";
+      const locationSuffix = settingsPath ? ` at ${settingsPath}` : '';
 
       const scopeSuffix = ` (saved to ${scopeLabel} settings${locationSuffix})`;
 
       return {
-        type: "message",
-        messageType: "info",
+        type: 'message',
+        messageType: 'info',
         content: `Approval mode changed to: ${mode}${scopeSuffix}`,
       };
     }
 
     return {
-      type: "message",
-      messageType: "info",
+      type: 'message',
+      messageType: 'info',
       content: `Approval mode changed to: ${mode}`,
     };
   } catch (error) {
     return {
-      type: "message",
-      messageType: "error",
+      type: 'message',
+      messageType: 'error',
       content: `Failed to change approval mode: ${(error as Error).message}`,
     };
   }
 };
 
 export const approvalModeCommand: SlashCommand = {
-  name: "approval-mode",
-  description: "View or change the approval mode for tool usage",
+  name: 'approval-mode',
+  description: 'View or change the approval mode for tool usage',
   kind: CommandKind.BUILT_IN,
   action: async (
     context: CommandContext,
@@ -202,16 +202,16 @@ export const approvalModeCommand: SlashCommand = {
     const { config } = context.services;
     if (!config) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "Configuration not available.",
+        type: 'message',
+        messageType: 'error',
+        content: 'Configuration not available.',
       };
     }
 
     // If no arguments provided, show current mode and available options
-    if (!args || args.trim() === "") {
+    if (!args || args.trim() === '') {
       const currentMode =
-        typeof config.getApprovalMode === "function"
+        typeof config.getApprovalMode === 'function'
           ? config.getApprovalMode()
           : null;
 
@@ -219,20 +219,20 @@ export const approvalModeCommand: SlashCommand = {
 
       if (currentMode) {
         messageLines.push(`Current approval mode: ${currentMode}`);
-        messageLines.push("");
+        messageLines.push('');
       }
 
-      messageLines.push("Available approval modes:");
+      messageLines.push('Available approval modes:');
       for (const mode of APPROVAL_MODES) {
         messageLines.push(`  - ${mode}: ${formatModeDescription(mode)}`);
       }
-      messageLines.push("");
+      messageLines.push('');
       messageLines.push(USAGE_MESSAGE);
 
       return {
-        type: "message",
-        messageType: "info",
-        content: messageLines.join("\n"),
+        type: 'message',
+        messageType: 'info',
+        content: messageLines.join('\n'),
       };
     }
 
@@ -241,16 +241,16 @@ export const approvalModeCommand: SlashCommand = {
 
     if (parsed.error) {
       return {
-        type: "message",
-        messageType: "error",
+        type: 'message',
+        messageType: 'error',
         content: `${parsed.error}. ${USAGE_MESSAGE}`,
       };
     }
 
     if (!parsed.mode) {
       return {
-        type: "message",
-        messageType: "info",
+        type: 'message',
+        messageType: 'info',
         content: USAGE_MESSAGE,
       };
     }
@@ -259,14 +259,14 @@ export const approvalModeCommand: SlashCommand = {
 
     if (!requestedMode) {
       let message = `Invalid approval mode: ${parsed.mode}\n\n`;
-      message += "Available approval modes:\n";
+      message += 'Available approval modes:\n';
       for (const mode of APPROVAL_MODES) {
         message += `  - ${mode}: ${formatModeDescription(mode)}\n`;
       }
       message += `\n${USAGE_MESSAGE}`;
       return {
-        type: "message",
-        messageType: "error",
+        type: 'message',
+        messageType: 'error',
         content: message,
       };
     }
@@ -279,8 +279,8 @@ export const approvalModeCommand: SlashCommand = {
     kind: CommandKind.BUILT_IN,
     subCommands: [
       {
-        name: "--session",
-        description: "Apply to current session only (temporary)",
+        name: '--session',
+        description: 'Apply to current session only (temporary)',
         kind: CommandKind.BUILT_IN,
         action: async (
           context: CommandContext,
@@ -288,17 +288,17 @@ export const approvalModeCommand: SlashCommand = {
         ): Promise<MessageActionReturn> => {
           if (args.trim().length > 0) {
             return {
-              type: "message",
-              messageType: "error",
-              content: "Scope subcommands do not accept additional arguments.",
+              type: 'message',
+              messageType: 'error',
+              content: 'Scope subcommands do not accept additional arguments.',
             };
           }
-          return setApprovalModeWithScope(context, mode, "session");
+          return setApprovalModeWithScope(context, mode, 'session');
         },
       },
       {
-        name: "--project",
-        description: "Persist for this project/workspace",
+        name: '--project',
+        description: 'Persist for this project/workspace',
         kind: CommandKind.BUILT_IN,
         action: async (
           context: CommandContext,
@@ -306,17 +306,17 @@ export const approvalModeCommand: SlashCommand = {
         ): Promise<MessageActionReturn> => {
           if (args.trim().length > 0) {
             return {
-              type: "message",
-              messageType: "error",
-              content: "Scope subcommands do not accept additional arguments.",
+              type: 'message',
+              messageType: 'error',
+              content: 'Scope subcommands do not accept additional arguments.',
             };
           }
-          return setApprovalModeWithScope(context, mode, "project");
+          return setApprovalModeWithScope(context, mode, 'project');
         },
       },
       {
-        name: "--user",
-        description: "Persist for this user on this machine",
+        name: '--user',
+        description: 'Persist for this user on this machine',
         kind: CommandKind.BUILT_IN,
         action: async (
           context: CommandContext,
@@ -324,12 +324,12 @@ export const approvalModeCommand: SlashCommand = {
         ): Promise<MessageActionReturn> => {
           if (args.trim().length > 0) {
             return {
-              type: "message",
-              messageType: "error",
-              content: "Scope subcommands do not accept additional arguments.",
+              type: 'message',
+              messageType: 'error',
+              content: 'Scope subcommands do not accept additional arguments.',
             };
           }
-          return setApprovalModeWithScope(context, mode, "user");
+          return setApprovalModeWithScope(context, mode, 'user');
         },
       },
     ],
@@ -342,8 +342,8 @@ export const approvalModeCommand: SlashCommand = {
         const parsed = parseApprovalArgs(`${mode} ${args}`);
         if (parsed.error) {
           return {
-            type: "message",
-            messageType: "error",
+            type: 'message',
+            messageType: 'error',
             content: `${parsed.error}. ${USAGE_MESSAGE}`,
           };
         }
@@ -351,8 +351,8 @@ export const approvalModeCommand: SlashCommand = {
         const normalizedMode = parseApprovalMode(parsed.mode);
         if (!normalizedMode) {
           return {
-            type: "message",
-            messageType: "error",
+            type: 'message',
+            messageType: 'error',
             content: `Invalid approval mode: ${parsed.mode}. ${USAGE_MESSAGE}`,
           };
         }
@@ -360,32 +360,32 @@ export const approvalModeCommand: SlashCommand = {
         return setApprovalModeWithScope(context, normalizedMode, parsed.scope);
       }
 
-      return setApprovalModeWithScope(context, mode, "session");
+      return setApprovalModeWithScope(context, mode, 'session');
     },
   })),
   completion: async (_context: CommandContext, partialArg: string) => {
     const tokens = tokenizeArgs(partialArg);
     const hasTrailingSpace = /\s$/.test(partialArg);
     const currentSegment = hasTrailingSpace
-      ? ""
+      ? ''
       : tokens.length > 0
         ? tokens[tokens.length - 1]
-        : "";
+        : '';
 
     const normalizedCurrent = normalizeInputMode(currentSegment).replace(
       /_/g,
-      "-",
+      '-',
     );
 
-    const scopeValues = ["--session", "--project", "--user"];
+    const scopeValues = ['--session', '--project', '--user'];
 
     const normalizeToken = (token: string) =>
-      normalizeInputMode(token).replace(/_/g, "-");
+      normalizeInputMode(token).replace(/_/g, '-');
 
     const normalizedTokens = tokens.map(normalizeToken);
 
     if (tokens.length === 0) {
-      if (currentSegment.startsWith("-")) {
+      if (currentSegment.startsWith('-')) {
         return scopeValues.filter((scope) => scope.startsWith(currentSegment));
       }
       return APPROVAL_MODES;
@@ -393,7 +393,7 @@ export const approvalModeCommand: SlashCommand = {
 
     if (tokens.length === 1 && !hasTrailingSpace) {
       const originalToken = tokens[0];
-      if (originalToken.startsWith("-")) {
+      if (originalToken.startsWith('-')) {
         return scopeValues.filter((scope) =>
           scope.startsWith(normalizedCurrent),
         );

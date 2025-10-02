@@ -1,15 +1,15 @@
-import OpenAI from "openai";
-import type { Config } from "../../../config/config.js";
-import type { ContentGeneratorConfig } from "../../contentGenerator.js";
-import { AuthType } from "../../contentGenerator.js";
-import { DEFAULT_TIMEOUT, DEFAULT_MAX_RETRIES } from "../constants.js";
-import { tokenLimit } from "../../tokenLimits.js";
+import OpenAI from 'openai';
+import type { Config } from '../../../config/config.js';
+import type { ContentGeneratorConfig } from '../../contentGenerator.js';
+import { AuthType } from '../../contentGenerator.js';
+import { DEFAULT_TIMEOUT, DEFAULT_MAX_RETRIES } from '../constants.js';
+import { tokenLimit } from '../../tokenLimits.js';
 import type {
   OpenAICompatibleProvider,
   DashScopeRequestMetadata,
   ChatCompletionContentPartTextWithCache,
   ChatCompletionContentPartWithCache,
-} from "./types.js";
+} from './types.js';
 
 export class DashScopeOpenAICompatibleProvider
   implements OpenAICompatibleProvider
@@ -32,20 +32,20 @@ export class DashScopeOpenAICompatibleProvider
     const baseUrl = contentGeneratorConfig.baseUrl;
     return (
       authType === AuthType.QWEN_OAUTH ||
-      baseUrl === "https://dashscope.aliyuncs.com/compatible-mode/v1" ||
-      baseUrl === "https://dashscope-intl.aliyuncs.com/compatible-mode/v1"
+      baseUrl === 'https://dashscope.aliyuncs.com/compatible-mode/v1' ||
+      baseUrl === 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1'
     );
   }
 
   buildHeaders(): Record<string, string | undefined> {
-    const version = this.cliConfig.getCliVersion() || "unknown";
+    const version = this.cliConfig.getCliVersion() || 'unknown';
     const userAgent = `QwenCode/${version} (${process.platform}; ${process.arch})`;
     const { authType } = this.contentGeneratorConfig;
     return {
-      "User-Agent": userAgent,
-      "X-DashScope-CacheControl": "enable",
-      "X-DashScope-UserAgent": userAgent,
-      "X-DashScope-AuthType": authType,
+      'User-Agent': userAgent,
+      'X-DashScope-CacheControl': 'enable',
+      'X-DashScope-UserAgent': userAgent,
+      'X-DashScope-AuthType': authType,
     };
   }
 
@@ -89,7 +89,7 @@ export class DashScopeOpenAICompatibleProvider
     if (!this.shouldDisableCacheControl()) {
       // Add cache control to system and last messages for DashScope providers
       // Only add cache control to system message for non-streaming requests
-      const cacheTarget = request.stream ? "both" : "system";
+      const cacheTarget = request.stream ? 'both' : 'system';
       messages = this.addDashScopeCacheControl(messages, cacheTarget);
     }
 
@@ -100,7 +100,7 @@ export class DashScopeOpenAICompatibleProvider
       request.model,
     );
 
-    if (request.model.startsWith("qwen-vl")) {
+    if (request.model.startsWith('qwen-vl')) {
       return {
         ...requestWithTokenLimits,
         messages,
@@ -131,7 +131,7 @@ export class DashScopeOpenAICompatibleProvider
    */
   private addDashScopeCacheControl(
     messages: OpenAI.Chat.ChatCompletionMessageParam[],
-    target: "system" | "last" | "both" = "both",
+    target: 'system' | 'last' | 'both' = 'both',
   ): OpenAI.Chat.ChatCompletionMessageParam[] {
     if (messages.length === 0) {
       return messages;
@@ -140,16 +140,16 @@ export class DashScopeOpenAICompatibleProvider
     let updatedMessages = [...messages];
 
     // Add cache control to system message if requested
-    if (target === "system" || target === "both") {
+    if (target === 'system' || target === 'both') {
       updatedMessages = this.addCacheControlToMessage(
         updatedMessages,
-        "system",
+        'system',
       );
     }
 
     // Add cache control to last message if requested
-    if (target === "last" || target === "both") {
-      updatedMessages = this.addCacheControlToMessage(updatedMessages, "last");
+    if (target === 'last' || target === 'both') {
+      updatedMessages = this.addCacheControlToMessage(updatedMessages, 'last');
     }
 
     return updatedMessages;
@@ -160,7 +160,7 @@ export class DashScopeOpenAICompatibleProvider
    */
   private addCacheControlToMessage(
     messages: OpenAI.Chat.ChatCompletionMessageParam[],
-    target: "system" | "last",
+    target: 'system' | 'last',
   ): OpenAI.Chat.ChatCompletionMessageParam[] {
     const updatedMessages = [...messages];
     const messageIndex = this.findTargetMessageIndex(messages, target);
@@ -173,7 +173,7 @@ export class DashScopeOpenAICompatibleProvider
 
     // Only process messages that have content
     if (
-      "content" in message &&
+      'content' in message &&
       message.content !== null &&
       message.content !== undefined
     ) {
@@ -192,10 +192,10 @@ export class DashScopeOpenAICompatibleProvider
    */
   private findTargetMessageIndex(
     messages: OpenAI.Chat.ChatCompletionMessageParam[],
-    target: "system" | "last",
+    target: 'system' | 'last',
   ): number {
-    if (target === "system") {
-      return messages.findIndex((msg) => msg.role === "system");
+    if (target === 'system') {
+      return messages.findIndex((msg) => msg.role === 'system');
     } else {
       return messages.length - 1;
     }
@@ -205,7 +205,7 @@ export class DashScopeOpenAICompatibleProvider
    * Add cache control to message content, handling both string and array formats
    */
   private addCacheControlToContent(
-    content: NonNullable<OpenAI.Chat.ChatCompletionMessageParam["content"]>,
+    content: NonNullable<OpenAI.Chat.ChatCompletionMessageParam['content']>,
   ): ChatCompletionContentPartWithCache[] {
     // Convert content to array format if it's a string
     const contentArray = this.normalizeContentToArray(content);
@@ -218,12 +218,12 @@ export class DashScopeOpenAICompatibleProvider
    * Normalize content to array format
    */
   private normalizeContentToArray(
-    content: NonNullable<OpenAI.Chat.ChatCompletionMessageParam["content"]>,
+    content: NonNullable<OpenAI.Chat.ChatCompletionMessageParam['content']>,
   ): ChatCompletionContentPartWithCache[] {
-    if (typeof content === "string") {
+    if (typeof content === 'string') {
       return [
         {
-          type: "text",
+          type: 'text',
           text: content,
         } as ChatCompletionContentPartTextWithCache,
       ];
@@ -240,27 +240,27 @@ export class DashScopeOpenAICompatibleProvider
     if (contentArray.length === 0) {
       return [
         {
-          type: "text",
-          text: "",
-          cache_control: { type: "ephemeral" },
+          type: 'text',
+          text: '',
+          cache_control: { type: 'ephemeral' },
         } as ChatCompletionContentPartTextWithCache,
       ];
     }
 
     const lastItem = contentArray[contentArray.length - 1];
 
-    if (lastItem.type === "text") {
+    if (lastItem.type === 'text') {
       // Add cache_control to the last text item
       contentArray[contentArray.length - 1] = {
         ...lastItem,
-        cache_control: { type: "ephemeral" },
+        cache_control: { type: 'ephemeral' },
       } as ChatCompletionContentPartTextWithCache;
     } else {
       // If the last item is not text, add a new text item with cache_control
       contentArray.push({
-        type: "text",
-        text: "",
-        cache_control: { type: "ephemeral" },
+        type: 'text',
+        text: '',
+        cache_control: { type: 'ephemeral' },
       } as ChatCompletionContentPartTextWithCache);
     }
 
@@ -288,7 +288,7 @@ export class DashScopeOpenAICompatibleProvider
       return request; // No max_tokens parameter, return unchanged
     }
 
-    const modelLimit = tokenLimit(model, "output");
+    const modelLimit = tokenLimit(model, 'output');
 
     // If max_tokens exceeds the model limit, cap it to the model's limit
     if (currentMaxTokens > modelLimit) {

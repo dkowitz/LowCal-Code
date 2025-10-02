@@ -66,7 +66,6 @@ import {
   getLMStudioLoadedModel,
   type AvailableModel,
 } from './models/availableModels.js';
-import { createModelSourceKey } from './models/modelSourceKey.js';
 import { processVisionSwitchOutcome } from './hooks/useVisionAutoSwitch.js';
 import {
   AgentCreationWizard,
@@ -337,9 +336,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     useState(false);
   const [availableModelsForDialog, setAvailableModelsForDialog] =
     useState<AvailableModel[]>([]);
-  const [allAvailableModels, setAllAvailableModels] =
-    useState<AvailableModel[]>([]);
-  const [modelSourceKey, setModelSourceKey] = useState<string | null>(null);
+  const [allAvailableModels, setAllAvailableModels] = useState<AvailableModel[]>([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
   const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] =
     useState(false);
@@ -762,79 +759,52 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const handleModelSelectionOpen = useCallback(() => {
     (async () => {
-      if (isFetchingModels) {
-        return;
-      }
-
-      const contentGeneratorConfig = config.getContentGeneratorConfig();
-      if (!contentGeneratorConfig) {
-        setAvailableModelsForDialog([]);
-        setIsModelSelectionDialogOpen(true);
-        setModelSourceKey(null);
-        return;
-      }
-
-      const baseUrl =
-        contentGeneratorConfig.authType === AuthType.USE_OPENAI
-          ? contentGeneratorConfig.baseUrl ||
-            process.env['OPENAI_BASE_URL'] ||
-            ''
-          : '';
-
-      const currentProviderId =
-        settings.merged.security?.auth?.providerId ?? undefined;
-
-      const nextSourceKey = createModelSourceKey({
-        authType: contentGeneratorConfig.authType,
-        providerId: currentProviderId,
-        baseUrl,
-      });
-
-      if (
-        allAvailableModels.length > 0 &&
-        modelSourceKey === nextSourceKey
-      ) {
+      if (allAvailableModels.length > 0) {
         setAvailableModelsForDialog(allAvailableModels);
         setIsModelSelectionDialogOpen(true);
         return;
       }
 
+      if (isFetchingModels) {
+        return;
+      }
+
       setIsFetchingModels(true);
+
+      const contentGeneratorConfig = config.getContentGeneratorConfig();
+      if (!contentGeneratorConfig) {
+        setAvailableModelsForDialog([]);
+        setIsModelSelectionDialogOpen(true);
+        setIsFetchingModels(false);
+        return;
+      }
 
       let models: AvailableModel[] = [];
       try {
         if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
-          const apiKey =
-            contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
+          const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
+          const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
           if (baseUrl) {
             models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
           }
           const openAIModel = getOpenAIAvailableModelFromEnv();
-          if (openAIModel && !models.find(m => m.id === openAIModel.id)) {
-            models.push(openAIModel);
+          if (openAIModel) {
+            if (!models.find(m => m.id === openAIModel.id)) {
+              models.push(openAIModel);
+            }
           }
         } else {
-          models = getFilteredQwenModels(
-            settings.merged.experimental?.visionModelPreview ?? true,
-          );
+          models = getFilteredQwenModels(settings.merged.experimental?.visionModelPreview ?? true);
         }
-
+        
         setAllAvailableModels(models);
         setAvailableModelsForDialog(models);
-        setModelSourceKey(nextSourceKey);
         setIsModelSelectionDialogOpen(true);
       } finally {
         setIsFetchingModels(false);
       }
     })();
-  }, [
-    allAvailableModels,
-    config,
-    settings.merged.experimental?.visionModelPreview,
-    settings.merged.security?.auth?.providerId,
-    isFetchingModels,
-    modelSourceKey,
-  ]);
+  }, [allAvailableModels, config, settings.merged.experimental?.visionModelPreview, isFetchingModels]);
 
   const handleModelSelectionClose = useCallback(() => {
     setIsModelSelectionDialogOpen(false);
@@ -843,8 +813,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const handleModelSelect = useCallback(
     async (modelId: string) => {
       try {
-        // Unload previous model by setting new model (config.setModel will reinitialize client)
-        await config.setModel(modelId);
+  // Unload previous model by setting new model (config.setModel will reinitialize client)
+  await config.setModel(modelId);
         setCurrentModel(modelId);
         if (settings.merged.security?.auth?.providerId === 'openrouter') {
           try {

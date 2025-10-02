@@ -20,13 +20,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import fs from "node:fs";
-import path from "node:path";
+import fs from 'node:fs';
+import path from 'node:path';
 
-const sourceDir = path.join("src");
-const targetDir = path.join("dist", "src");
+const sourceDir = path.join('src');
+const targetDir = path.join('dist', 'src');
 
-const extensionsToCopy = [".md", ".json", ".sb"];
+const extensionsToCopy = ['.md', '.json', '.sb'];
 
 function copyFilesRecursive(source, target) {
   if (!fs.existsSync(target)) {
@@ -53,4 +53,4 @@ if (!fs.existsSync(sourceDir)) {
 }
 
 copyFilesRecursive(sourceDir, targetDir);
-console.log("Successfully copied files.");
+console.log('Successfully copied files.');

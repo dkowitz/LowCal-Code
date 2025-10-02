@@ -219,21 +219,21 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">218x</span>
+<span class="cline-any cline-yes">201x</span>
 <span class="cline-any cline-yes">74x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">60x</span>
@@ -285,39 +285,39 @@
 <span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-yes">14x</span>
 <span class="cline-any cline-yes">14x</span>
-<span class="cline-any cline-yes">218x</span>
+<span class="cline-any cline-yes">201x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">201x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">218x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
-<span class="cline-any cline-yes">218x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
+<span class="cline-any cline-yes">201x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @license
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { useState, useCallback, useEffect } from "react";
-import type { LoadedSettings } from "../../config/settings.js";
+import { useState, useCallback, useEffect } from 'react';
+import type { LoadedSettings } from '../../config/settings.js';
 import {
   AuthType,
   qwenOAuth2Events,
   QwenOAuth2Event,
-} from "@qwen-code/qwen-code-core";
+} from '@qwen-code/qwen-code-core';
 &nbsp;
 export interface DeviceAuthorizationInfo {
   verification_uri: string;
@@ -330,12 +330,12 @@ interface QwenAuthState {
   isQwenAuthenticating: boolean;
   deviceAuth: DeviceAuthorizationInfo | null;
   authStatus:
-    | "idle"
-    | "polling"
-    | "success"
-    | "error"
-    | "timeout"
-    | "rate_limit";
+    | 'idle'
+    | 'polling'
+    | 'success'
+    | 'error'
+    | 'timeout'
+    | 'rate_limit';
   authMessage: string | null;
 }
 &nbsp;
@@ -346,7 +346,7 @@ export const useQwenAuth = (
   const [qwenAuthState, setQwenAuthState] = useState&lt;QwenAuthState&gt;({
     isQwenAuthenticating: false,
     deviceAuth: null,
-    authStatus: "idle",
+    authStatus: 'idle',
     authMessage: null,
   });
 &nbsp;
@@ -360,7 +360,7 @@ export const useQwenAuth = (
       setQwenAuthState({
         isQwenAuthenticating: false,
         deviceAuth: null,
-        authStatus: "idle",
+        authStatus: 'idle',
         authMessage: null,
       });
       return;
@@ -369,7 +369,7 @@ export const useQwenAuth = (
     setQwenAuthState((prev) =&gt; ({
       ...prev,
       isQwenAuthenticating: true,
-      authStatus: "idle",
+      authStatus: 'idle',
     }));
 &nbsp;
     // Set up event listeners
@@ -382,12 +382,12 @@ export const useQwenAuth = (
           user_code: deviceAuth.user_code,
           expires_in: deviceAuth.expires_in,
         },
-        authStatus: "polling",
+        authStatus: 'polling',
       }));
     };
 &nbsp;
     const handleAuthProgress = (
-      status: "success" | "error" | "polling" | "timeout" | "rate_limit",
+      status: 'success' | 'error' | 'polling' | 'timeout' | 'rate_limit',
       message?: string,
     ) =&gt; {
       setQwenAuthState((prev) =&gt; ({
@@ -415,7 +415,7 @@ export const useQwenAuth = (
     setQwenAuthState({
       isQwenAuthenticating: false,
       deviceAuth: null,
-      authStatus: "idle",
+      authStatus: 'idle',
       authMessage: null,
     });
   }, []);
@@ -433,7 +433,7 @@ export const useQwenAuth = (
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

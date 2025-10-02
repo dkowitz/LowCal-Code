@@ -9,10 +9,10 @@
  * and then detect and warn about the potential tools that caused the error.
  */
 
-import { describe, it, beforeAll, expect } from "vitest";
-import { TestRig } from "./test-helper.js";
-import { join } from "node:path";
-import { writeFileSync } from "node:fs";
+import { describe, it, beforeAll, expect } from 'vitest';
+import { TestRig } from './test-helper.js';
+import { join } from 'node:path';
+import { writeFileSync } from 'node:fs';
 
 // Create a minimal MCP server that doesn't require external dependencies
 // This implements the MCP protocol directly using Node.js built-ins
@@ -153,39 +153,39 @@ rpc.send({
 });
 `;
 
-describe("mcp server with cyclic tool schema is detected", () => {
+describe('mcp server with cyclic tool schema is detected', () => {
   const rig = new TestRig();
 
   beforeAll(async () => {
     // Setup test directory with MCP server configuration
-    await rig.setup("cyclic-schema-mcp-server", {
+    await rig.setup('cyclic-schema-mcp-server', {
       settings: {
         mcpServers: {
-          "cyclic-schema-server": {
-            command: "node",
-            args: ["mcp-server.cjs"],
+          'cyclic-schema-server': {
+            command: 'node',
+            args: ['mcp-server.cjs'],
           },
         },
       },
     });
 
     // Create server script in the test directory
-    const testServerPath = join(rig.testDir!, "mcp-server.cjs");
+    const testServerPath = join(rig.testDir!, 'mcp-server.cjs');
     writeFileSync(testServerPath, serverScript);
 
     // Make the script executable (though running with 'node' should work anyway)
-    if (process.platform !== "win32") {
-      const { chmodSync } = await import("node:fs");
+    if (process.platform !== 'win32') {
+      const { chmodSync } = await import('node:fs');
       chmodSync(testServerPath, 0o755);
     }
   });
 
-  it("should error and suggest disabling the cyclic tool", async () => {
+  it('should error and suggest disabling the cyclic tool', async () => {
     // Just run any command to trigger the schema depth error.
     // If this test starts failing, check `isSchemaDepthError` from
     // geminiChat.ts to see if it needs to be updated.
     // Or, possibly it could mean that gemini has fixed the issue.
-    const output = await rig.run("hello");
+    const output = await rig.run('hello');
 
     expect(output).toMatch(
       /Skipping tool 'tool_with_cyclic_schema' from MCP server 'cyclic-schema-server' because it has missing types in its parameter schema/,

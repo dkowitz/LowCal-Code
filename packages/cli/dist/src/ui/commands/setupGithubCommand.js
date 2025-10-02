@@ -3,19 +3,19 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import path from "node:path";
-import * as fs from "node:fs";
-import { Writable } from "node:stream";
-import { ProxyAgent } from "undici";
-import { getGitRepoRoot, getLatestGitHubRelease, isGitHubRepository, getGitHubRepoInfo, } from "../../utils/gitUtils.js";
-import { CommandKind } from "./types.js";
-import { getUrlOpenCommand } from "../../ui/utils/commandUtils.js";
+import path from 'node:path';
+import * as fs from 'node:fs';
+import { Writable } from 'node:stream';
+import { ProxyAgent } from 'undici';
+import { getGitRepoRoot, getLatestGitHubRelease, isGitHubRepository, getGitHubRepoInfo, } from '../../utils/gitUtils.js';
+import { CommandKind } from './types.js';
+import { getUrlOpenCommand } from '../../ui/utils/commandUtils.js';
 export const GITHUB_WORKFLOW_PATHS = [
-    "gemini-dispatch/gemini-dispatch.yml",
-    "gemini-assistant/gemini-invoke.yml",
-    "issue-triage/gemini-triage.yml",
-    "issue-triage/gemini-scheduled-triage.yml",
-    "pr-review/gemini-review.yml",
+    'gemini-dispatch/gemini-dispatch.yml',
+    'gemini-assistant/gemini-invoke.yml',
+    'issue-triage/gemini-triage.yml',
+    'issue-triage/gemini-scheduled-triage.yml',
+    'pr-review/gemini-review.yml',
 ];
 // Generate OS-specific commands to open the GitHub pages needed for setup.
 function getOpenUrlsCommands(readmeUrl) {
@@ -33,14 +33,14 @@ function getOpenUrlsCommands(readmeUrl) {
 }
 // Add Gemini CLI specific entries to .gitignore file
 export async function updateGitignore(gitRepoRoot) {
-    const gitignoreEntries = [".gemini/", "gha-creds-*.json"];
-    const gitignorePath = path.join(gitRepoRoot, ".gitignore");
+    const gitignoreEntries = ['.gemini/', 'gha-creds-*.json'];
+    const gitignorePath = path.join(gitRepoRoot, '.gitignore');
     try {
         // Check if .gitignore exists and read its content
-        let existingContent = "";
+        let existingContent = '';
         let fileExists = true;
         try {
-            existingContent = await fs.promises.readFile(gitignorePath, "utf8");
+            existingContent = await fs.promises.readFile(gitignorePath, 'utf8');
         }
         catch (_error) {
             // File doesn't exist
@@ -48,33 +48,33 @@ export async function updateGitignore(gitRepoRoot) {
         }
         if (!fileExists) {
             // Create new .gitignore file with the entries
-            const contentToWrite = gitignoreEntries.join("\n") + "\n";
+            const contentToWrite = gitignoreEntries.join('\n') + '\n';
             await fs.promises.writeFile(gitignorePath, contentToWrite);
         }
         else {
             // Check which entries are missing
             const missingEntries = gitignoreEntries.filter((entry) => !existingContent
                 .split(/\r?\n/)
-                .some((line) => line.split("#")[0].trim() === entry));
+                .some((line) => line.split('#')[0].trim() === entry));
             if (missingEntries.length > 0) {
-                const contentToAdd = "\n" + missingEntries.join("\n") + "\n";
+                const contentToAdd = '\n' + missingEntries.join('\n') + '\n';
                 await fs.promises.appendFile(gitignorePath, contentToAdd);
             }
         }
     }
     catch (error) {
-        console.debug("Failed to update .gitignore:", error);
+        console.debug('Failed to update .gitignore:', error);
         // Continue without failing the whole command
     }
 }
 export const setupGithubCommand = {
-    name: "setup-github",
-    description: "Set up GitHub Actions",
+    name: 'setup-github',
+    description: 'Set up GitHub Actions',
     kind: CommandKind.BUILT_IN,
     action: async (context) => {
         const abortController = new AbortController();
         if (!isGitHubRepository()) {
-            throw new Error("Unable to determine the GitHub repository. /setup-github must be run from a git repository.");
+            throw new Error('Unable to determine the GitHub repository. /setup-github must be run from a git repository.');
         }
         // Find the root directory of the repo
         let gitRepoRoot;
@@ -83,14 +83,14 @@ export const setupGithubCommand = {
         }
         catch (_error) {
             console.debug(`Failed to get git repo root:`, _error);
-            throw new Error("Unable to determine the GitHub repository. /setup-github must be run from a git repository.");
+            throw new Error('Unable to determine the GitHub repository. /setup-github must be run from a git repository.');
         }
         // Get the latest release tag from GitHub
         const proxy = context?.services?.config?.getProxy();
         const releaseTag = await getLatestGitHubRelease(proxy);
         const readmeUrl = `https://github.com/google-github-actions/run-gemini-cli/blob/${releaseTag}/README.md#quick-start`;
         // Create the .github/workflows directory to download the files into
-        const githubWorkflowsDir = path.join(gitRepoRoot, ".github", "workflows");
+        const githubWorkflowsDir = path.join(gitRepoRoot, '.github', 'workflows');
         try {
             await fs.promises.mkdir(githubWorkflowsDir, { recursive: true });
         }
@@ -105,7 +105,7 @@ export const setupGithubCommand = {
             downloads.push((async () => {
                 const endpoint = `https://raw.githubusercontent.com/google-github-actions/run-gemini-cli/refs/tags/${releaseTag}/examples/workflows/${workflow}`;
                 const response = await fetch(endpoint, {
-                    method: "GET",
+                    method: 'GET',
                     dispatcher: proxy ? new ProxyAgent(proxy) : undefined,
                     signal: AbortSignal.any([
                         AbortSignal.timeout(30_000),
@@ -122,7 +122,7 @@ export const setupGithubCommand = {
                 const destination = path.resolve(githubWorkflowsDir, path.basename(workflow));
                 const fileStream = fs.createWriteStream(destination, {
                     mode: 0o644, // -rw-r--r--, user(rw), group(r), other(r)
-                    flags: "w", // write and overwrite
+                    flags: 'w', // write and overwrite
                     flush: true,
                 });
                 await body.pipeTo(Writable.toWeb(fileStream));
@@ -137,15 +137,15 @@ export const setupGithubCommand = {
         await updateGitignore(gitRepoRoot);
         // Print out a message
         const commands = [];
-        commands.push("set -eEuo pipefail");
+        commands.push('set -eEuo pipefail');
         commands.push(`echo "Successfully downloaded ${GITHUB_WORKFLOW_PATHS.length} workflows and updated .gitignore. Follow the steps in ${readmeUrl} (skipping the /setup-github step) to complete setup."`);
         commands.push(...getOpenUrlsCommands(readmeUrl));
-        const command = `(${commands.join(" && ")})`;
+        const command = `(${commands.join(' && ')})`;
         return {
-            type: "tool",
-            toolName: "run_shell_command",
+            type: 'tool',
+            toolName: 'run_shell_command',
             toolArgs: {
-                description: "Setting up GitHub Actions to triage issues and review PRs with Gemini.",
+                description: 'Setting up GitHub Actions to triage issues and review PRs with Gemini.',
                 command,
             },
         };

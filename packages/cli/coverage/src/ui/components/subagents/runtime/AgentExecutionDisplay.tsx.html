@@ -1171,21 +1171,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import React, { useMemo } from "react";
-import { Box, Text } from "ink";
-import { Colors } from "../../../colors.js";
+import React, { useMemo } from 'react';
+import { Box, Text } from 'ink';
+import { Colors } from '../../../colors.js';
 import type {
   TaskResultDisplay,
   SubagentStatsSummary,
   Config,
-} from "@qwen-code/qwen-code-core";
-import { theme } from "../../../semantic-colors.js";
-import { useKeypress } from "../../../hooks/useKeypress.js";
-import { COLOR_OPTIONS } from "../constants.js";
-import { fmtDuration } from "../utils.js";
-import { ToolConfirmationMessage } from "../../messages/ToolConfirmationMessage.js";
+} from '@qwen-code/qwen-code-core';
+import { theme } from '../../../semantic-colors.js';
+import { useKeypress } from '../../../hooks/useKeypress.js';
+import { COLOR_OPTIONS } from '../constants.js';
+import { fmtDuration } from '../utils.js';
+import { ToolConfirmationMessage } from '../../messages/ToolConfirmationMessage.js';
 &nbsp;
-export type DisplayMode = "compact" | "default" | "verbose";
+export type DisplayMode = 'compact' | 'default' | 'verbose';
 &nbsp;
 export interface AgentExecutionDisplayProps {
   data: TaskResultDisplay;
@@ -1196,40 +1196,40 @@ export interface AgentExecutionDisplayProps {
 &nbsp;
 const getStatusColor = <span class="fstat-no" title="function not covered" >(</span>
 <span class="cstat-no" title="statement not covered" >  status:</span>
-    | TaskResultDisplay["status"]
-    | "executing"
-    | "success"
-    | "awaiting_approval",
+    | TaskResultDisplay['status']
+    | 'executing'
+    | 'success'
+    | 'awaiting_approval',
 <span class="cstat-no" title="statement not covered" >) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  switch (status) {</span>
-<span class="cstat-no" title="statement not covered" >    case "running":</span>
-<span class="cstat-no" title="statement not covered" >    case "executing":</span>
-<span class="cstat-no" title="statement not covered" >    case "awaiting_approval":</span>
+<span class="cstat-no" title="statement not covered" >    case 'running':</span>
+<span class="cstat-no" title="statement not covered" >    case 'executing':</span>
+<span class="cstat-no" title="statement not covered" >    case 'awaiting_approval':</span>
 <span class="cstat-no" title="statement not covered" >      return theme.status.warning;</span>
-<span class="cstat-no" title="statement not covered" >    case "completed":</span>
-<span class="cstat-no" title="statement not covered" >    case "success":</span>
+<span class="cstat-no" title="statement not covered" >    case 'completed':</span>
+<span class="cstat-no" title="statement not covered" >    case 'success':</span>
 <span class="cstat-no" title="statement not covered" >      return theme.status.success;</span>
-<span class="cstat-no" title="statement not covered" >    case "cancelled":</span>
+<span class="cstat-no" title="statement not covered" >    case 'cancelled':</span>
 <span class="cstat-no" title="statement not covered" >      return theme.status.warning;</span>
-<span class="cstat-no" title="statement not covered" >    case "failed":</span>
+<span class="cstat-no" title="statement not covered" >    case 'failed':</span>
 <span class="cstat-no" title="statement not covered" >      return theme.status.error;</span>
 <span class="cstat-no" title="statement not covered" >    default:</span>
 <span class="cstat-no" title="statement not covered" >      return Colors.Gray;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >};</span>
 &nbsp;
-const getStatusText = <span class="fstat-no" title="function not covered" >(status: TaskResultDisplay["status"]) =&gt; {</span>
+const getStatusText = <span class="fstat-no" title="function not covered" >(status: TaskResultDisplay['status']) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  switch (status) {</span>
-<span class="cstat-no" title="statement not covered" >    case "running":</span>
-<span class="cstat-no" title="statement not covered" >      return "Running";</span>
-<span class="cstat-no" title="statement not covered" >    case "completed":</span>
-<span class="cstat-no" title="statement not covered" >      return "Completed";</span>
-<span class="cstat-no" title="statement not covered" >    case "cancelled":</span>
-<span class="cstat-no" title="statement not covered" >      return "User Cancelled";</span>
-<span class="cstat-no" title="statement not covered" >    case "failed":</span>
-<span class="cstat-no" title="statement not covered" >      return "Failed";</span>
+<span class="cstat-no" title="statement not covered" >    case 'running':</span>
+<span class="cstat-no" title="statement not covered" >      return 'Running';</span>
+<span class="cstat-no" title="statement not covered" >    case 'completed':</span>
+<span class="cstat-no" title="statement not covered" >      return 'Completed';</span>
+<span class="cstat-no" title="statement not covered" >    case 'cancelled':</span>
+<span class="cstat-no" title="statement not covered" >      return 'User Cancelled';</span>
+<span class="cstat-no" title="statement not covered" >    case 'failed':</span>
+<span class="cstat-no" title="statement not covered" >      return 'Failed';</span>
 <span class="cstat-no" title="statement not covered" >    default:</span>
-<span class="cstat-no" title="statement not covered" >      return "Unknown";</span>
+<span class="cstat-no" title="statement not covered" >      return 'Unknown';</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >};</span>
 &nbsp;
@@ -1247,7 +1247,7 @@ export const AgentExecutionDisplay: React.FC&lt;AgentExecutionDisplayProps&gt; =
 <span class="cstat-no" title="statement not covered" >  childWidth,</span>
 <span class="cstat-no" title="statement not covered" >  config,</span>
 <span class="cstat-no" title="statement not covered" >}) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  const [displayMode, setDisplayMode] = React.useState&lt;DisplayMode&gt;("compact");</span>
+<span class="cstat-no" title="statement not covered" >  const [displayMode, setDisplayMode] = React.useState&lt;DisplayMode&gt;('compact');</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const agentColor = useMemo(() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const colorOption = COLOR_OPTIONS.find(</span>
@@ -1258,46 +1258,46 @@ export const AgentExecutionDisplay: React.FC&lt;AgentExecutionDisplayProps&gt; =
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const footerText = React.useMemo(() =&gt; {</span>
     // This component only listens to keyboard shortcut events when the subagent is running
-<span class="cstat-no" title="statement not covered" >    if (data.status !== "running") return "";</span>
+<span class="cstat-no" title="statement not covered" >    if (data.status !== 'running') return '';</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (displayMode === "default") {</span>
+<span class="cstat-no" title="statement not covered" >    if (displayMode === 'default') {</span>
 <span class="cstat-no" title="statement not covered" >      const hasMoreLines =</span>
-<span class="cstat-no" title="statement not covered" >        data.taskPrompt.split("\n").length &gt; MAX_TASK_PROMPT_LINES;</span>
+<span class="cstat-no" title="statement not covered" >        data.taskPrompt.split('\n').length &gt; MAX_TASK_PROMPT_LINES;</span>
 <span class="cstat-no" title="statement not covered" >      const hasMoreToolCalls =</span>
 <span class="cstat-no" title="statement not covered" >        data.toolCalls &amp;&amp; data.toolCalls.length &gt; MAX_TOOL_CALLS;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      if (hasMoreToolCalls || hasMoreLines) {</span>
-<span class="cstat-no" title="statement not covered" >        return "Press ctrl+r to show less, ctrl+e to show more.";</span>
+<span class="cstat-no" title="statement not covered" >        return 'Press ctrl+r to show less, ctrl+e to show more.';</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
-<span class="cstat-no" title="statement not covered" >      return "Press ctrl+r to show less.";</span>
+<span class="cstat-no" title="statement not covered" >      return 'Press ctrl+r to show less.';</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    if (displayMode === "verbose") {</span>
-<span class="cstat-no" title="statement not covered" >      return "Press ctrl+e to show less.";</span>
+<span class="cstat-no" title="statement not covered" >    if (displayMode === 'verbose') {</span>
+<span class="cstat-no" title="statement not covered" >      return 'Press ctrl+e to show less.';</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    return "";</span>
+<span class="cstat-no" title="statement not covered" >    return '';</span>
 <span class="cstat-no" title="statement not covered" >  }, [displayMode, data]);</span>
 &nbsp;
   // Handle keyboard shortcuts to control display mode
 <span class="cstat-no" title="statement not covered" >  useKeypress(</span>
 <span class="cstat-no" title="statement not covered" >    (key) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      if (key.ctrl &amp;&amp; key.name === "r") {</span>
+<span class="cstat-no" title="statement not covered" >      if (key.ctrl &amp;&amp; key.name === 'r') {</span>
         // ctrl+r toggles between compact and default
 <span class="cstat-no" title="statement not covered" >        setDisplayMode((current) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >          current === "compact" ? "default" : "compact",</span>
+<span class="cstat-no" title="statement not covered" >          current === 'compact' ? 'default' : 'compact',</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
-<span class="cstat-no" title="statement not covered" >      } else if (key.ctrl &amp;&amp; key.name === "e") {</span>
+<span class="cstat-no" title="statement not covered" >      } else if (key.ctrl &amp;&amp; key.name === 'e') {</span>
         // ctrl+e toggles between default and verbose
 <span class="cstat-no" title="statement not covered" >        setDisplayMode((current) =&gt;</span>
-<span class="cstat-no" title="statement not covered" >          current === "default" ? "verbose" : "default",</span>
+<span class="cstat-no" title="statement not covered" >          current === 'default' ? 'verbose' : 'default',</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
 <span class="cstat-no" title="statement not covered" >    { isActive: true },</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  if (displayMode === "compact") {</span>
+<span class="cstat-no" title="statement not covered" >  if (displayMode === 'compact') {</span>
 <span class="cstat-no" title="statement not covered" >    return (</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Box flexDirection="column"&gt;</span>
         {/* Header: Agent name and status */}
@@ -1312,7 +1312,7 @@ export const AgentExecutionDisplay: React.FC&lt;AgentExecutionDisplayProps&gt; =
         )}
 &nbsp;
         {/* Running state: Show current tool call and progress */}
-<span class="cstat-no" title="statement not covered" >        {data.status === "running" &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >        {data.status === 'running' &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;&gt;</span>
             {/* Current tool call */}
 <span class="cstat-no" title="statement not covered" >            {data.toolCalls &amp;&amp; data.toolCalls.length &gt; 0 &amp;&amp; (</span>
@@ -1350,7 +1350,7 @@ export const AgentExecutionDisplay: React.FC&lt;AgentExecutionDisplayProps&gt; =
         )}
 &nbsp;
         {/* Completed state: Show summary line */}
-<span class="cstat-no" title="statement not covered" >        {data.status === "completed" &amp;&amp; data.executionSummary &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >        {data.status === 'completed' &amp;&amp; data.executionSummary &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Box flexDirection="row" marginTop={1}&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Text color={theme.text.secondary}&gt;</span>
 <span class="cstat-no" title="statement not covered" >              Execution Summary: {data.executionSummary.totalToolCalls} tool</span>
@@ -1361,7 +1361,7 @@ export const AgentExecutionDisplay: React.FC&lt;AgentExecutionDisplayProps&gt; =
         )}
 &nbsp;
         {/* Failed/Cancelled state: Show error reason */}
-<span class="cstat-no" title="statement not covered" >        {data.status === "failed" &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >        {data.status === 'failed' &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Box flexDirection="row" marginTop={1}&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Text color={theme.status.error}&gt;</span>
 <span class="cstat-no" title="statement not covered" >              Failed: {data.terminateReason}</span>
@@ -1391,7 +1391,7 @@ export const AgentExecutionDisplay: React.FC&lt;AgentExecutionDisplayProps&gt; =
 <span class="cstat-no" title="statement not covered" >      /&gt;</span>
 &nbsp;
       {/* Progress section for running tasks */}
-<span class="cstat-no" title="statement not covered" >      {data.status === "running" &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >      {data.status === 'running' &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >        data.toolCalls &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >        data.toolCalls.length &gt; 0 &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Box flexDirection="column"&gt;</span>
@@ -1417,9 +1417,9 @@ export const AgentExecutionDisplay: React.FC&lt;AgentExecutionDisplayProps&gt; =
       )}
 &nbsp;
       {/* Results section for completed/failed tasks */}
-<span class="cstat-no" title="statement not covered" >      {(data.status === "completed" ||</span>
-<span class="cstat-no" title="statement not covered" >        data.status === "failed" ||</span>
-<span class="cstat-no" title="statement not covered" >        data.status === "cancelled") &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >      {(data.status === 'completed' ||</span>
+<span class="cstat-no" title="statement not covered" >        data.status === 'failed' ||</span>
+<span class="cstat-no" title="statement not covered" >        data.status === 'cancelled') &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >        &lt;ResultsSection data={data} displayMode={displayMode} /&gt;</span>
       )}
 &nbsp;
@@ -1440,25 +1440,25 @@ const TaskPromptSection: React.FC&lt;{
   taskPrompt: string;
   displayMode: DisplayMode;
 }&gt; = <span class="fstat-no" title="function not covered" >({ taskPrompt, displayMode }) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  const lines = taskPrompt.split("\n");</span>
+<span class="cstat-no" title="statement not covered" >  const lines = taskPrompt.split('\n');</span>
 <span class="cstat-no" title="statement not covered" >  const shouldTruncate = lines.length &gt; 10;</span>
-<span class="cstat-no" title="statement not covered" >  const showFull = displayMode === "verbose";</span>
+<span class="cstat-no" title="statement not covered" >  const showFull = displayMode === 'verbose';</span>
 <span class="cstat-no" title="statement not covered" >  const displayLines = showFull ? lines : lines.slice(0, MAX_TASK_PROMPT_LINES);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Box flexDirection="column" gap={1}&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Box flexDirection="row"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text color={theme.text.primary}&gt;Task Detail: &lt;/Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >        {shouldTruncate &amp;&amp; displayMode === "default" &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >        {shouldTruncate &amp;&amp; displayMode === 'default' &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={Colors.Gray}&gt;</span>
-<span class="cstat-no" title="statement not covered" >            {" "}</span>
+<span class="cstat-no" title="statement not covered" >            {' '}</span>
 <span class="cstat-no" title="statement not covered" >            Showing the first {MAX_TASK_PROMPT_LINES} lines.</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
         )}
 <span class="cstat-no" title="statement not covered" >      &lt;/Box&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Box paddingLeft={1}&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text wrap="wrap"&gt;</span>
-<span class="cstat-no" title="statement not covered" >          {displayLines.join("\n") + (shouldTruncate &amp;&amp; !showFull ? "..." : "")}</span>
+<span class="cstat-no" title="statement not covered" >          {displayLines.join('\n') + (shouldTruncate &amp;&amp; !showFull ? '...' : '')}</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/Box&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;/Box&gt;</span>
@@ -1469,7 +1469,7 @@ const TaskPromptSection: React.FC&lt;{
  * Status dot component with similar height as text
  */
 const StatusDot: React.FC&lt;{
-  status: TaskResultDisplay["status"];
+  status: TaskResultDisplay['status'];
 }&gt; = <span class="fstat-no" title="function not covered" >({ status }) =&gt; (</span>
 <span class="cstat-no" title="statement not covered" >  &lt;Box marginLeft={1} marginRight={1}&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Text color={getStatusColor(status)}&gt;●&lt;/Text&gt;</span>
@@ -1480,7 +1480,7 @@ const StatusDot: React.FC&lt;{
  * Status indicator component
  */
 const StatusIndicator: React.FC&lt;{
-  status: TaskResultDisplay["status"];
+  status: TaskResultDisplay['status'];
 }&gt; = <span class="fstat-no" title="function not covered" >({ status }) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  const color = getStatusColor(status);</span>
 <span class="cstat-no" title="statement not covered" >  const text = getStatusText(status);</span>
@@ -1491,12 +1491,12 @@ const StatusIndicator: React.FC&lt;{
  * Tool calls list - format consistent with ToolInfo in ToolMessage.tsx
  */
 const ToolCallsList: React.FC&lt;{
-  toolCalls: TaskResultDisplay["toolCalls"];
+  toolCalls: TaskResultDisplay['toolCalls'];
   displayMode: DisplayMode;
 }&gt; = <span class="fstat-no" title="function not covered" >({ toolCalls, displayMode }) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  const calls = toolCalls || [];</span>
 <span class="cstat-no" title="statement not covered" >  const shouldTruncate = calls.length &gt; MAX_TOOL_CALLS;</span>
-<span class="cstat-no" title="statement not covered" >  const showAll = displayMode === "verbose";</span>
+<span class="cstat-no" title="statement not covered" >  const showAll = displayMode === 'verbose';</span>
 <span class="cstat-no" title="statement not covered" >  const displayCalls = showAll ? calls : calls.slice(-MAX_TOOL_CALLS); // Show last 5</span>
 &nbsp;
   // Reverse the order to show most recent first
@@ -1506,9 +1506,9 @@ const ToolCallsList: React.FC&lt;{
 <span class="cstat-no" title="statement not covered" >    &lt;Box flexDirection="column"&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Box flexDirection="row" marginBottom={1}&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text color={theme.text.primary}&gt;Tools:&lt;/Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >        {shouldTruncate &amp;&amp; displayMode === "default" &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >        {shouldTruncate &amp;&amp; displayMode === 'default' &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={Colors.Gray}&gt;</span>
-<span class="cstat-no" title="statement not covered" >            {" "}</span>
+<span class="cstat-no" title="statement not covered" >            {' '}</span>
 <span class="cstat-no" title="statement not covered" >            Showing the last {MAX_TOOL_CALLS} of {calls.length} tools.</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
         )}
@@ -1526,7 +1526,7 @@ const ToolCallsList: React.FC&lt;{
 const ToolCallItem: React.FC&lt;{
   toolCall: {
     name: string;
-    status: "executing" | "awaiting_approval" | "success" | "failed";
+    status: 'executing' | 'awaiting_approval' | 'success' | 'failed';
     error?: string;
     args?: Record&lt;string, unknown&gt;;
     result?: string;
@@ -1541,13 +1541,13 @@ const ToolCallItem: React.FC&lt;{
 <span class="cstat-no" title="statement not covered" >  const statusIcon = React.useMemo(() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const color = getStatusColor(toolCall.status);</span>
 <span class="cstat-no" title="statement not covered" >    switch (toolCall.status) {</span>
-<span class="cstat-no" title="statement not covered" >      case "executing":</span>
+<span class="cstat-no" title="statement not covered" >      case 'executing':</span>
 <span class="cstat-no" title="statement not covered" >        return &lt;Text color={color}&gt;⊷&lt;/Text&gt;; // Using same as ToolMessage</span>
-<span class="cstat-no" title="statement not covered" >      case "awaiting_approval":</span>
+<span class="cstat-no" title="statement not covered" >      case 'awaiting_approval':</span>
 <span class="cstat-no" title="statement not covered" >        return &lt;Text color={theme.status.warning}&gt;?&lt;/Text&gt;;</span>
-<span class="cstat-no" title="statement not covered" >      case "success":</span>
+<span class="cstat-no" title="statement not covered" >      case 'success':</span>
 <span class="cstat-no" title="statement not covered" >        return &lt;Text color={color}&gt;✓&lt;/Text&gt;;</span>
-<span class="cstat-no" title="statement not covered" >      case "failed":</span>
+<span class="cstat-no" title="statement not covered" >      case 'failed':</span>
 <span class="cstat-no" title="statement not covered" >        return (</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={color} bold&gt;</span>
             x
@@ -1559,19 +1559,19 @@ const ToolCallItem: React.FC&lt;{
 <span class="cstat-no" title="statement not covered" >  }, [toolCall.status]);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const description = React.useMemo(() =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (!toolCall.description) return "";</span>
-<span class="cstat-no" title="statement not covered" >    const firstLine = toolCall.description.split("\n")[0];</span>
+<span class="cstat-no" title="statement not covered" >    if (!toolCall.description) return '';</span>
+<span class="cstat-no" title="statement not covered" >    const firstLine = toolCall.description.split('\n')[0];</span>
 <span class="cstat-no" title="statement not covered" >    return firstLine.length &gt; 80</span>
-<span class="cstat-no" title="statement not covered" >      ? firstLine.substring(0, 80) + "..."</span>
+<span class="cstat-no" title="statement not covered" >      ? firstLine.substring(0, 80) + '...'</span>
 <span class="cstat-no" title="statement not covered" >      : firstLine;</span>
 <span class="cstat-no" title="statement not covered" >  }, [toolCall.description]);</span>
 &nbsp;
   // Get first line of resultDisplay for truncated output
 <span class="cstat-no" title="statement not covered" >  const truncatedOutput = React.useMemo(() =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (!toolCall.resultDisplay) return "";</span>
-<span class="cstat-no" title="statement not covered" >    const firstLine = toolCall.resultDisplay.split("\n")[0];</span>
+<span class="cstat-no" title="statement not covered" >    if (!toolCall.resultDisplay) return '';</span>
+<span class="cstat-no" title="statement not covered" >    const firstLine = toolCall.resultDisplay.split('\n')[0];</span>
 <span class="cstat-no" title="statement not covered" >    return firstLine.length &gt; 80</span>
-<span class="cstat-no" title="statement not covered" >      ? firstLine.substring(0, 80) + "..."</span>
+<span class="cstat-no" title="statement not covered" >      ? firstLine.substring(0, 80) + '...'</span>
 <span class="cstat-no" title="statement not covered" >      : firstLine;</span>
 <span class="cstat-no" title="statement not covered" >  }, [toolCall.resultDisplay]);</span>
 &nbsp;
@@ -1581,7 +1581,7 @@ const ToolCallItem: React.FC&lt;{
 <span class="cstat-no" title="statement not covered" >      &lt;Box flexDirection="row"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Box minWidth={STATUS_INDICATOR_WIDTH}&gt;{statusIcon}&lt;/Box&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text wrap="truncate-end"&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;Text&gt;{toolCall.name}&lt;/Text&gt;{" "}</span>
+<span class="cstat-no" title="statement not covered" >          &lt;Text&gt;{toolCall.name}&lt;/Text&gt;{' '}</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={Colors.Gray}&gt;{description}&lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          {toolCall.error &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Text color={theme.status.error}&gt; - {toolCall.error}&lt;/Text&gt;</span>
@@ -1651,15 +1651,15 @@ const ToolUsageStats: React.FC&lt;{
 <span class="cstat-no" title="statement not covered" >        • &lt;Text&gt;Total Calls:&lt;/Text&gt; {executionSummary.totalToolCalls}</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >        • &lt;Text&gt;Success Rate:&lt;/Text&gt;{" "}</span>
+<span class="cstat-no" title="statement not covered" >        • &lt;Text&gt;Success Rate:&lt;/Text&gt;{' '}</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text color={Colors.AccentGreen}&gt;</span>
 <span class="cstat-no" title="statement not covered" >          {executionSummary.successRate.toFixed(1)}%</span>
-<span class="cstat-no" title="statement not covered" >        &lt;/Text&gt;{" "}</span>
+<span class="cstat-no" title="statement not covered" >        &lt;/Text&gt;{' '}</span>
         (
 <span class="cstat-no" title="statement not covered" >        &lt;Text color={Colors.AccentGreen}&gt;</span>
 <span class="cstat-no" title="statement not covered" >          {executionSummary.successfulToolCalls} success</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >        ,{" "}</span>
+<span class="cstat-no" title="statement not covered" >        ,{' '}</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text color={Colors.AccentRed}&gt;</span>
 <span class="cstat-no" title="statement not covered" >          {executionSummary.failedToolCalls} failed</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Text&gt;</span>
@@ -1683,7 +1683,7 @@ const ResultsSection: React.FC&lt;{
     )}
 &nbsp;
     {/* Execution Summary section - hide when cancelled */}
-<span class="cstat-no" title="statement not covered" >    {data.status === "completed" &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >    {data.status === 'completed' &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Box flexDirection="column"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Box flexDirection="row" marginBottom={1}&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={theme.text.primary}&gt;Execution Summary:&lt;/Text&gt;</span>
@@ -1693,7 +1693,7 @@ const ResultsSection: React.FC&lt;{
     )}
 &nbsp;
     {/* Tool Usage section - hide when cancelled */}
-<span class="cstat-no" title="statement not covered" >    {data.status === "completed" &amp;&amp; data.executionSummary &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >    {data.status === 'completed' &amp;&amp; data.executionSummary &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Box flexDirection="column"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Box flexDirection="row" marginBottom={1}&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={theme.text.primary}&gt;Tool Usage:&lt;/Text&gt;</span>
@@ -1703,12 +1703,12 @@ const ResultsSection: React.FC&lt;{
     )}
 &nbsp;
     {/* Error reason for failed tasks */}
-<span class="cstat-no" title="statement not covered" >    {data.status === "cancelled" &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >    {data.status === 'cancelled' &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Box flexDirection="row"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text color={theme.status.warning}&gt;⏹ User Cancelled&lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/Box&gt;</span>
     )}
-<span class="cstat-no" title="statement not covered" >    {data.status === "failed" &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >    {data.status === 'failed' &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Box flexDirection="row"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text color={theme.status.error}&gt;Task Failed: &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text color={theme.status.error}&gt;{data.terminateReason}&lt;/Text&gt;</span>
@@ -1723,7 +1723,7 @@ const ResultsSection: React.FC&lt;{
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

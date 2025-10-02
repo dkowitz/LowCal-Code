@@ -273,20 +273,20 @@
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">97x</span>
+<span class="cline-any cline-yes">88x</span>
 <span class="cline-any cline-yes">58x</span>
 <span class="cline-any cline-yes">43x</span>
 <span class="cline-any cline-yes">43x</span>
@@ -422,30 +422,30 @@
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
-<span class="cline-any cline-yes">97x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
+<span class="cline-any cline-yes">88x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @license
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { useState, useEffect } from "react";
-import type { Suggestion } from "../components/SuggestionsDisplay.js";
-import type { CommandContext, SlashCommand } from "../commands/types.js";
+import { useState, useEffect } from 'react';
+import type { Suggestion } from '../components/SuggestionsDisplay.js';
+import type { CommandContext, SlashCommand } from '../commands/types.js';
 &nbsp;
 export interface UseSlashCompletionProps {
   enabled: boolean;
@@ -478,11 +478,11 @@ export function useSlashCompletion(props: UseSlashCompletionProps): {
       return;
     }
 &nbsp;
-    const fullPath = query?.substring(1) || "";
-    const hasTrailingSpace = !!query?.endsWith(" ");
+    const fullPath = query?.substring(1) || '';
+    const hasTrailingSpace = !!query?.endsWith(' ');
     const rawParts = fullPath.split(/\s+/).filter((p) =&gt; p);
     let commandPathParts = rawParts;
-    let partial = "";
+    let partial = '';
 &nbsp;
     if (!hasTrailingSpace &amp;&amp; rawParts.length &gt; 0) {
       partial = rawParts[rawParts.length - 1];
@@ -522,13 +522,13 @@ export function useSlashCompletion(props: UseSlashCompletionProps): {
       if (exactMatchAsParent) {
         leafCommand = exactMatchAsParent;
         currentLevel = exactMatchAsParent.subCommands;
-        partial = "";
+        partial = '';
       }
     }
 &nbsp;
     setIsPerfectMatch(false);
     if (!hasTrailingSpace) {
-      if (leafCommand &amp;&amp; partial === "" &amp;&amp; leafCommand.action) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+      if (leafCommand &amp;&amp; partial === '' &amp;&amp; leafCommand.action) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        setIsPerfectMatch(true);</span>
       } else if (currentLevel) {
         const perfectMatch = currentLevel.find(
@@ -546,14 +546,14 @@ export function useSlashCompletion(props: UseSlashCompletionProps): {
     const isArgumentCompletion =
       leafCommand?.completion &amp;&amp;
       (hasTrailingSpace ||
-        (rawParts.length &gt; depth &amp;&amp; depth &gt; 0 &amp;&amp; partial !== ""));
+        (rawParts.length &gt; depth &amp;&amp; depth &gt; 0 &amp;&amp; partial !== ''));
 &nbsp;
     if (hasTrailingSpace || exactMatchAsParent) {
       setCompletionStart(query.length);
       setCompletionEnd(query.length);
     } else if (partial) {
       if (isArgumentCompletion) {
-        const commandSoFar = `/${commandPathParts.join(" ")}`;
+        const commandSoFar = `/${commandPathParts.join(' ')}`;
         const argStartIndex =
           commandSoFar.length + (commandPathParts.length &gt; 0 ? <span class="branch-0 cbranch-no" title="branch not covered" >1 : 0);</span>
         setCompletionStart(argStartIndex);
@@ -569,7 +569,7 @@ export function useSlashCompletion(props: UseSlashCompletionProps): {
     if (isArgumentCompletion) {
       const fetchAndSetSuggestions = async () =&gt; {
         setIsLoadingSuggestions(true);
-        const argString = rawParts.slice(depth).join(" ");
+        const argString = rawParts.slice(depth).join(' ');
         const results =
           (await leafCommand!.completion!(commandContext, argString)) || [];
         const finalSuggestions = results.map((s) =&gt; ({ label: s, value: s }));
@@ -631,7 +631,7 @@ export function useSlashCompletion(props: UseSlashCompletionProps): {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

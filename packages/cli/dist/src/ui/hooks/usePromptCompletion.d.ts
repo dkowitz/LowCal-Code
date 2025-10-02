@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Config } from "@qwen-code/qwen-code-core";
-import type { TextBuffer } from "../components/shared/text-buffer.js";
+import type { Config } from '@qwen-code/qwen-code-core';
+import type { TextBuffer } from '../components/shared/text-buffer.js';
 export declare const PROMPT_COMPLETION_MIN_LENGTH = 5;
 export declare const PROMPT_COMPLETION_DEBOUNCE_MS = 250;
 export interface PromptCompletion {

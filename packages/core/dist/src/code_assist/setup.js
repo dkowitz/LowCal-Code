@@ -3,11 +3,11 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { UserTierId } from "./types.js";
-import { CodeAssistServer } from "./server.js";
+import { UserTierId } from './types.js';
+import { CodeAssistServer } from './server.js';
 export class ProjectIdRequiredError extends Error {
     constructor() {
-        super("This account requires setting the GOOGLE_CLOUD_PROJECT env var. See https://goo.gle/gemini-cli-auth-docs#workspace-gca");
+        super('This account requires setting the GOOGLE_CLOUD_PROJECT env var. See https://goo.gle/gemini-cli-auth-docs#workspace-gca');
     }
 }
 /**
@@ -16,12 +16,12 @@ export class ProjectIdRequiredError extends Error {
  * @returns the user's actual project id
  */
 export async function setupUser(client) {
-    const projectId = process.env["GOOGLE_CLOUD_PROJECT"] || undefined;
-    const caServer = new CodeAssistServer(client, projectId, {}, "", undefined);
+    const projectId = process.env['GOOGLE_CLOUD_PROJECT'] || undefined;
+    const caServer = new CodeAssistServer(client, projectId, {}, '', undefined);
     const coreClientMetadata = {
-        ideType: "IDE_UNSPECIFIED",
-        platform: "PLATFORM_UNSPECIFIED",
-        pluginType: "GEMINI",
+        ideType: 'IDE_UNSPECIFIED',
+        platform: 'PLATFORM_UNSPECIFIED',
+        pluginType: 'GEMINI',
     };
     const loadRes = await caServer.loadCodeAssist({
         cloudaicompanionProject: projectId,
@@ -92,8 +92,8 @@ function getOnboardTier(res) {
         }
     }
     return {
-        name: "",
-        description: "",
+        name: '',
+        description: '',
         id: UserTierId.LEGACY,
         userDefinedCloudaicompanionProject: true,
     };

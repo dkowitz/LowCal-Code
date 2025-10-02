@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { updateExtension } from "../../config/extension.js";
-import { getErrorMessage } from "../../utils/errors.js";
+import { updateExtension } from '../../config/extension.js';
+import { getErrorMessage } from '../../utils/errors.js';
 export async function handleUpdate(args) {
     try {
         // TODO(chrstnb): we should list extensions if the requested extension is not installed.
@@ -21,17 +21,17 @@ export async function handleUpdate(args) {
     }
 }
 export const updateCommand = {
-    command: "update <name>",
-    describe: "Updates an extension.",
+    command: 'update <name>',
+    describe: 'Updates an extension.',
     builder: (yargs) => yargs
-        .positional("name", {
-        describe: "The name of the extension to update.",
-        type: "string",
+        .positional('name', {
+        describe: 'The name of the extension to update.',
+        type: 'string',
     })
         .check((_argv) => true),
     handler: async (argv) => {
         await handleUpdate({
-            name: argv["name"],
+            name: argv['name'],
         });
     },
 };

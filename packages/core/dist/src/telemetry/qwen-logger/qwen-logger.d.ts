@@ -3,11 +3,11 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { HttpsProxyAgent } from "https-proxy-agent";
-import type { StartSessionEvent, UserPromptEvent, ToolCallEvent, ApiRequestEvent, ApiResponseEvent, ApiErrorEvent, FileOperationEvent, FlashFallbackEvent, LoopDetectedEvent, NextSpeakerCheckEvent, SlashCommandEvent, MalformedJsonResponseEvent, IdeConnectionEvent, KittySequenceOverflowEvent, ChatCompressionEvent, InvalidChunkEvent, ContentRetryEvent, ContentRetryFailureEvent, ConversationFinishedEvent, SubagentExecutionEvent } from "../types.js";
-import { EndSessionEvent } from "../types.js";
-import type { RumEvent, RumViewEvent, RumActionEvent, RumResourceEvent, RumExceptionEvent, RumPayload } from "./event-types.js";
-import type { Config } from "../../config/config.js";
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import type { StartSessionEvent, UserPromptEvent, ToolCallEvent, ApiRequestEvent, ApiResponseEvent, ApiErrorEvent, FileOperationEvent, FlashFallbackEvent, LoopDetectedEvent, NextSpeakerCheckEvent, SlashCommandEvent, MalformedJsonResponseEvent, IdeConnectionEvent, KittySequenceOverflowEvent, ChatCompressionEvent, InvalidChunkEvent, ContentRetryEvent, ContentRetryFailureEvent, ConversationFinishedEvent, SubagentExecutionEvent } from '../types.js';
+import { EndSessionEvent } from '../types.js';
+import type { RumEvent, RumViewEvent, RumActionEvent, RumResourceEvent, RumExceptionEvent, RumPayload } from './event-types.js';
+import type { Config } from '../../config/config.js';
 export interface LogResponse {
     nextRequestWaitMs?: number;
 }
@@ -40,7 +40,7 @@ export declare class QwenLogger {
     private generateUserId;
     static getInstance(config?: Config): QwenLogger | undefined;
     enqueueLogEvent(event: RumEvent): void;
-    createRumEvent(eventType: "view" | "action" | "exception" | "resource", type: string, name: string, properties: Partial<RumEvent>): RumEvent;
+    createRumEvent(eventType: 'view' | 'action' | 'exception' | 'resource', type: string, name: string, properties: Partial<RumEvent>): RumEvent;
     createViewEvent(type: string, name: string, properties: Partial<RumViewEvent>): RumEvent;
     createActionEvent(type: string, name: string, properties: Partial<RumActionEvent>): RumEvent;
     createResourceEvent(type: string, name: string, properties: Partial<RumResourceEvent>): RumEvent;

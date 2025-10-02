@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { vi } from "vitest";
-import type { SessionLoggingController } from "../services/SessionMarkdownLogger.js";
+import { vi } from 'vitest';
+import type { SessionLoggingController } from '../services/SessionMarkdownLogger.js';
 
 export const createMockLoggingController = (): SessionLoggingController => ({
   enableLogging: vi.fn().mockResolvedValue({ enabled: true }),

@@ -3,24 +3,24 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as fs from "node:fs/promises";
-import * as path from "node:path";
-import { isSubpath } from "./paths.js";
-import { marked } from "marked";
+import * as fs from 'node:fs/promises';
+import * as path from 'node:path';
+import { isSubpath } from './paths.js';
+import { marked } from 'marked';
 // Simple console logger for import processing
 const logger = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    debug: (...args) => console.debug("[DEBUG] [ImportProcessor]", ...args),
+    debug: (...args) => console.debug('[DEBUG] [ImportProcessor]', ...args),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    warn: (...args) => console.warn("[WARN] [ImportProcessor]", ...args),
+    warn: (...args) => console.warn('[WARN] [ImportProcessor]', ...args),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    error: (...args) => console.error("[ERROR] [ImportProcessor]", ...args),
+    error: (...args) => console.error('[ERROR] [ImportProcessor]', ...args),
 };
 // Helper to find the project root (looks for .git directory)
 async function findProjectRoot(startDir) {
     let currentDir = path.resolve(startDir);
     while (true) {
-        const gitPath = path.join(currentDir, ".git");
+        const gitPath = path.join(currentDir, '.git');
         try {
             const stats = await fs.lstat(gitPath);
             if (stats.isDirectory()) {
@@ -42,10 +42,10 @@ async function findProjectRoot(startDir) {
 }
 // Add a type guard for error objects
 function hasMessage(err) {
-    return (typeof err === "object" &&
+    return (typeof err === 'object' &&
         err !== null &&
-        "message" in err &&
-        typeof err.message === "string");
+        'message' in err &&
+        typeof err.message === 'string');
 }
 // Helper to find all code block and inline code regions using marked
 /**
@@ -58,7 +58,7 @@ function findImports(content) {
     const len = content.length;
     while (i < len) {
         // Find next @ symbol
-        i = content.indexOf("@", i);
+        i = content.indexOf('@', i);
         if (i === -1)
             break;
         // Check if it's a word boundary (not part of another word)
@@ -70,16 +70,16 @@ function findImports(content) {
         let j = i + 1;
         while (j < len &&
             !isWhitespace(content[j]) &&
-            content[j] !== "\n" &&
-            content[j] !== "\r") {
+            content[j] !== '\n' &&
+            content[j] !== '\r') {
             j++;
         }
         // Extract the path (everything after @)
         const importPath = content.slice(i + 1, j);
         // Basic validation (starts with ./ or / or letter)
         if (importPath.length > 0 &&
-            (importPath[0] === "." ||
-                importPath[0] === "/" ||
+            (importPath[0] === '.' ||
+                importPath[0] === '/' ||
                 isLetter(importPath[0]))) {
             imports.push({
                 start: i,
@@ -92,7 +92,7 @@ function findImports(content) {
     return imports;
 }
 function isWhitespace(char) {
-    return char === " " || char === "\t" || char === "\n" || char === "\r";
+    return char === ' ' || char === '\t' || char === '\n' || char === '\r';
 }
 function isLetter(char) {
     const code = char.charCodeAt(0);
@@ -105,7 +105,7 @@ function findCodeRegions(content) {
     // Map from raw content to a queue of its start indices in the original content.
     const rawContentIndices = new Map();
     function walk(token) {
-        if (token.type === "code" || token.type === "codespan") {
+        if (token.type === 'code' || token.type === 'codespan') {
             if (!rawContentIndices.has(token.raw)) {
                 const indices = [];
                 let lastIndex = -1;
@@ -122,7 +122,7 @@ function findCodeRegions(content) {
                 regions.push([idx, idx + token.raw.length]);
             }
         }
-        if ("tokens" in token && token.tokens) {
+        if ('tokens' in token && token.tokens) {
             for (const child of token.tokens) {
                 walk(child);
             }
@@ -148,7 +148,7 @@ export async function processImports(content, basePath, debugMode = false, impor
     processedFiles: new Set(),
     maxDepth: 5,
     currentDepth: 0,
-}, projectRoot, importFormat = "tree") {
+}, projectRoot, importFormat = 'tree') {
     if (!projectRoot) {
         projectRoot = await findProjectRoot(basePath);
     }
@@ -158,11 +158,11 @@ export async function processImports(content, basePath, debugMode = false, impor
         }
         return {
             content,
-            importTree: { path: importState.currentFile || "unknown" },
+            importTree: { path: importState.currentFile || 'unknown' },
         };
     }
     // --- FLAT FORMAT LOGIC ---
-    if (importFormat === "flat") {
+    if (importFormat === 'flat') {
         // Use a queue to process files in order of first encounter, and a set to avoid duplicates
         const flatFiles = [];
         // Track processed files across the entire operation
@@ -189,7 +189,7 @@ export async function processImports(content, basePath, debugMode = false, impor
                     continue;
                 }
                 // Validate import path
-                if (!validateImportPath(importPath, fileBasePath, [projectRoot || ""])) {
+                if (!validateImportPath(importPath, fileBasePath, [projectRoot || ''])) {
                     continue;
                 }
                 const fullPath = path.resolve(fileBasePath, importPath);
@@ -199,13 +199,13 @@ export async function processImports(content, basePath, debugMode = false, impor
                     continue;
                 try {
                     await fs.access(fullPath);
-                    const importedContent = await fs.readFile(fullPath, "utf-8");
+                    const importedContent = await fs.readFile(fullPath, 'utf-8');
                     // Process the imported file
                     await processFlat(importedContent, path.dirname(fullPath), normalizedFullPath, depth + 1);
                 }
                 catch (error) {
                     if (debugMode) {
-                        logger.warn(`Failed to import ${fullPath}: ${hasMessage(error) ? error.message : "Unknown error"}`);
+                        logger.warn(`Failed to import ${fullPath}: ${hasMessage(error) ? error.message : 'Unknown error'}`);
                     }
                     // Continue with other imports even if one fails
                 }
@@ -217,7 +217,7 @@ export async function processImports(content, basePath, debugMode = false, impor
         // Concatenate all unique files in order, Claude-style
         const flatContent = flatFiles
             .map((f) => `--- File: ${f.path} ---\n${f.content.trim()}\n--- End of File: ${f.path} ---`)
-            .join("\n\n");
+            .join('\n\n');
         return {
             content: flatContent,
             importTree: { path: rootPath }, // Tree not meaningful in flat mode
@@ -225,7 +225,7 @@ export async function processImports(content, basePath, debugMode = false, impor
     }
     // --- TREE FORMAT LOGIC (existing) ---
     const codeRegions = findCodeRegions(content);
-    let result = "";
+    let result = '';
     let lastIndex = 0;
     const imports = [];
     const importsList = findImports(content);
@@ -239,7 +239,7 @@ export async function processImports(content, basePath, debugMode = false, impor
             continue;
         }
         // Validate import path to prevent path traversal attacks
-        if (!validateImportPath(importPath, basePath, [projectRoot || ""])) {
+        if (!validateImportPath(importPath, basePath, [projectRoot || ''])) {
             result += `<!-- Import failed: ${importPath} - Path traversal attempt -->`;
             continue;
         }
@@ -250,7 +250,7 @@ export async function processImports(content, basePath, debugMode = false, impor
         }
         try {
             await fs.access(fullPath);
-            const fileContent = await fs.readFile(fullPath, "utf-8");
+            const fileContent = await fs.readFile(fullPath, 'utf-8');
             // Mark this file as processed for this import chain
             const newImportState = {
                 ...importState,
@@ -264,11 +264,11 @@ export async function processImports(content, basePath, debugMode = false, impor
             imports.push(imported.importTree);
         }
         catch (err) {
-            let message = "Unknown error";
+            let message = 'Unknown error';
             if (hasMessage(err)) {
                 message = err.message;
             }
-            else if (typeof err === "string") {
+            else if (typeof err === 'string') {
                 message = err;
             }
             logger.error(`Failed to import ${importPath}: ${message}`);
@@ -280,7 +280,7 @@ export async function processImports(content, basePath, debugMode = false, impor
     return {
         content: result,
         importTree: {
-            path: importState.currentFile || "unknown",
+            path: importState.currentFile || 'unknown',
             imports: imports.length > 0 ? imports : undefined,
         },
     };

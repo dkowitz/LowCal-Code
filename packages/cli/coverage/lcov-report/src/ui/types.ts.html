@@ -651,34 +651,34 @@ import type {
   CompressionStatus,
   ToolCallConfirmationDetails,
   ToolResultDisplay,
-} from "@qwen-code/qwen-code-core";
-import type { PartListUnion } from "@google/genai";
+} from '@qwen-code/qwen-code-core';
+import type { PartListUnion } from '@google/genai';
 &nbsp;
 // Only defining the state enum needed by the UI
 export enum StreamingState {
-  Idle = "idle",
-  Responding = "responding",
-  WaitingForConfirmation = "waiting_for_confirmation",
+  Idle = 'idle',
+  Responding = 'responding',
+  WaitingForConfirmation = 'waiting_for_confirmation',
 }
 &nbsp;
 // Copied from server/src/core/turn.ts for CLI usage
 export enum GeminiEventType {
-  Content = "content",
-  ToolCallRequest = "tool_call_request",
+  Content = 'content',
+  ToolCallRequest = 'tool_call_request',
   // Add other event types if the UI hook needs to handle them
 }
 &nbsp;
 export enum ToolCallStatus {
-  Pending = "Pending",
-  Canceled = "Canceled",
-  Confirming = "Confirming",
-  Executing = "Executing",
-  Success = "Success",
-  Error = "Error",
+  Pending = 'Pending',
+  Canceled = 'Canceled',
+  Confirming = 'Confirming',
+  Executing = 'Executing',
+  Success = 'Success',
+  Error = 'Error',
 }
 &nbsp;
 export interface ToolCallEvent {
-  type: "tool_call";
+  type: 'tool_call';
   status: ToolCallStatus;
   callId: string;
   name: string;
@@ -706,7 +706,7 @@ export interface CompressionProps {
 &nbsp;
 export interface SummaryProps {
   isPending: boolean;
-  stage: "generating" | "saving" | "completed";
+  stage: 'generating' | 'saving' | 'completed';
   filePath?: string; // Path to the saved summary file
 }
 &nbsp;
@@ -715,32 +715,32 @@ export interface HistoryItemBase {
 }
 &nbsp;
 export type HistoryItemUser = HistoryItemBase &amp; {
-  type: "user";
+  type: 'user';
   text: string;
 };
 &nbsp;
 export type HistoryItemGemini = HistoryItemBase &amp; {
-  type: "gemini";
+  type: 'gemini';
   text: string;
 };
 &nbsp;
 export type HistoryItemGeminiContent = HistoryItemBase &amp; {
-  type: "gemini_content";
+  type: 'gemini_content';
   text: string;
 };
 &nbsp;
 export type HistoryItemInfo = HistoryItemBase &amp; {
-  type: "info";
+  type: 'info';
   text: string;
 };
 &nbsp;
 export type HistoryItemError = HistoryItemBase &amp; {
-  type: "error";
+  type: 'error';
   text: string;
 };
 &nbsp;
 export type HistoryItemAbout = HistoryItemBase &amp; {
-  type: "about";
+  type: 'about';
   cliVersion: string;
   osVersion: string;
   sandboxEnv: string;
@@ -751,50 +751,50 @@ export type HistoryItemAbout = HistoryItemBase &amp; {
 };
 &nbsp;
 export type HistoryItemHelp = HistoryItemBase &amp; {
-  type: "help";
+  type: 'help';
   timestamp: Date;
 };
 &nbsp;
 export type HistoryItemStats = HistoryItemBase &amp; {
-  type: "stats";
+  type: 'stats';
   duration: string;
 };
 &nbsp;
 export type HistoryItemModelStats = HistoryItemBase &amp; {
-  type: "model_stats";
+  type: 'model_stats';
 };
 &nbsp;
 export type HistoryItemToolStats = HistoryItemBase &amp; {
-  type: "tool_stats";
+  type: 'tool_stats';
 };
 &nbsp;
 export type HistoryItemQuit = HistoryItemBase &amp; {
-  type: "quit";
+  type: 'quit';
   duration: string;
 };
 &nbsp;
 export type HistoryItemQuitConfirmation = HistoryItemBase &amp; {
-  type: "quit_confirmation";
+  type: 'quit_confirmation';
   duration: string;
 };
 &nbsp;
 export type HistoryItemToolGroup = HistoryItemBase &amp; {
-  type: "tool_group";
+  type: 'tool_group';
   tools: IndividualToolCallDisplay[];
 };
 &nbsp;
 export type HistoryItemUserShell = HistoryItemBase &amp; {
-  type: "user_shell";
+  type: 'user_shell';
   text: string;
 };
 &nbsp;
 export type HistoryItemCompression = HistoryItemBase &amp; {
-  type: "compression";
+  type: 'compression';
   compression: CompressionProps;
 };
 &nbsp;
 export type HistoryItemSummary = HistoryItemBase &amp; {
-  type: "summary";
+  type: 'summary';
   summary: SummaryProps;
 };
 &nbsp;
@@ -824,19 +824,19 @@ export type HistoryItem = HistoryItemWithoutId &amp; { id: number };
 &nbsp;
 // Message types used by internal command feedback (subset of HistoryItem types)
 export enum MessageType {
-  INFO = "info",
-  ERROR = "error",
-  USER = "user",
-  ABOUT = "about",
-  HELP = "help",
-  STATS = "stats",
-  MODEL_STATS = "model_stats",
-  TOOL_STATS = "tool_stats",
-  QUIT = "quit",
-  QUIT_CONFIRMATION = "quit_confirmation",
-  GEMINI = "gemini",
-  COMPRESSION = "compression",
-  SUMMARY = "summary",
+  INFO = 'info',
+  ERROR = 'error',
+  USER = 'user',
+  ABOUT = 'about',
+  HELP = 'help',
+  STATS = 'stats',
+  MODEL_STATS = 'model_stats',
+  TOOL_STATS = 'tool_stats',
+  QUIT = 'quit',
+  QUIT_CONFIRMATION = 'quit_confirmation',
+  GEMINI = 'gemini',
+  COMPRESSION = 'compression',
+  SUMMARY = 'summary',
 }
 &nbsp;
 // Simplified message structure for internal feedback
@@ -903,7 +903,7 @@ export type Message =
     };
 &nbsp;
 export interface ConsoleMessageItem {
-  type: "log" | "warn" | "error" | "debug" | "info";
+  type: 'log' | 'warn' | 'error' | 'debug' | 'info';
   content: string;
   count: number;
 }
@@ -913,7 +913,7 @@ export interface ConsoleMessageItem {
  * being submitted to the Gemini model.
  */
 export interface SubmitPromptResult {
-  type: "submit_prompt";
+  type: 'submit_prompt';
   content: PartListUnion;
 }
 &nbsp;
@@ -922,12 +922,12 @@ export interface SubmitPromptResult {
  */
 export type SlashCommandProcessorResult =
   | {
-      type: "schedule_tool";
+      type: 'schedule_tool';
       toolName: string;
       toolArgs: Record&lt;string, unknown&gt;;
     }
   | {
-      type: "handled"; // Indicates the command was processed and no further action is needed.
+      type: 'handled'; // Indicates the command was processed and no further action is needed.
     }
   | SubmitPromptResult;
 &nbsp;</pre></td></tr></table></pre>
@@ -937,7 +937,7 @@ export type SlashCommandProcessorResult =
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.879Z
+                at 2025-09-29T17:26:19.374Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

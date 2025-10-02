@@ -4,45 +4,45 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useReducer, useCallback, useMemo } from "react";
-import { Box, Text } from "ink";
-import { wizardReducer, initialWizardState } from "../reducers.js";
-import { LocationSelector } from "./LocationSelector.js";
-import { GenerationMethodSelector } from "./GenerationMethodSelector.js";
-import { DescriptionInput } from "./DescriptionInput.js";
-import { ToolSelector } from "./ToolSelector.js";
-import { ColorSelector } from "./ColorSelector.js";
-import { CreationSummary } from "./CreationSummary.js";
-import {} from "../types.js";
-import { WIZARD_STEPS } from "../constants.js";
-import { getStepKind } from "../utils.js";
-import { Colors } from "../../../colors.js";
-import { theme } from "../../../semantic-colors.js";
-import { TextEntryStep } from "./TextEntryStep.js";
-import { useKeypress } from "../../../hooks/useKeypress.js";
+import { useReducer, useCallback, useMemo } from 'react';
+import { Box, Text } from 'ink';
+import { wizardReducer, initialWizardState } from '../reducers.js';
+import { LocationSelector } from './LocationSelector.js';
+import { GenerationMethodSelector } from './GenerationMethodSelector.js';
+import { DescriptionInput } from './DescriptionInput.js';
+import { ToolSelector } from './ToolSelector.js';
+import { ColorSelector } from './ColorSelector.js';
+import { CreationSummary } from './CreationSummary.js';
+import {} from '../types.js';
+import { WIZARD_STEPS } from '../constants.js';
+import { getStepKind } from '../utils.js';
+import { Colors } from '../../../colors.js';
+import { theme } from '../../../semantic-colors.js';
+import { TextEntryStep } from './TextEntryStep.js';
+import { useKeypress } from '../../../hooks/useKeypress.js';
 /**
  * Main orchestrator component for the subagent creation wizard.
  */
 export function AgentCreationWizard({ onClose, config, }) {
     const [state, dispatch] = useReducer(wizardReducer, initialWizardState);
     const handleNext = useCallback(() => {
-        dispatch({ type: "GO_TO_NEXT_STEP" });
+        dispatch({ type: 'GO_TO_NEXT_STEP' });
     }, []);
     const handlePrevious = useCallback(() => {
-        dispatch({ type: "GO_TO_PREVIOUS_STEP" });
+        dispatch({ type: 'GO_TO_PREVIOUS_STEP' });
     }, []);
     const handleCancel = useCallback(() => {
-        dispatch({ type: "RESET_WIZARD" });
+        dispatch({ type: 'RESET_WIZARD' });
         onClose();
     }, [onClose]);
     // Centralized ESC key handling for the entire wizard
     useKeypress((key) => {
-        if (key.name !== "escape") {
+        if (key.name !== 'escape') {
             return;
         }
         // LLM DescriptionInput handles its own ESC logic when generating
         const kind = getStepKind(state.generationMethod, state.currentStep);
-        if (kind === "LLM_DESC" && state.isGenerating) {
+        if (kind === 'LLM_DESC' && state.isGenerating) {
             return; // Let DescriptionInput handle it
         }
         if (state.currentStep === WIZARD_STEPS.LOCATION_SELECTION) {
@@ -67,35 +67,35 @@ export function AgentCreationWizard({ onClose, config, }) {
             const kind = getStepKind(state.generationMethod, state.currentStep);
             const n = state.currentStep;
             switch (kind) {
-                case "LOCATION":
+                case 'LOCATION':
                     return `Step ${n}: Choose Location`;
-                case "GEN_METHOD":
+                case 'GEN_METHOD':
                     return `Step ${n}: Choose Generation Method`;
-                case "LLM_DESC":
+                case 'LLM_DESC':
                     return `Step ${n}: Describe Your Subagent`;
-                case "MANUAL_NAME":
+                case 'MANUAL_NAME':
                     return `Step ${n}: Enter Subagent Name`;
-                case "MANUAL_PROMPT":
+                case 'MANUAL_PROMPT':
                     return `Step ${n}: Enter System Prompt`;
-                case "MANUAL_DESC":
+                case 'MANUAL_DESC':
                     return `Step ${n}: Enter Description`;
-                case "TOOLS":
+                case 'TOOLS':
                     return `Step ${n}: Select Tools`;
-                case "COLOR":
+                case 'COLOR':
                     return `Step ${n}: Choose Background Color`;
-                case "FINAL":
+                case 'FINAL':
                     return `Step ${n}: Confirm and Save`;
                 default:
-                    return "Unknown Step";
+                    return 'Unknown Step';
             }
         };
         return (_jsx(Box, { children: _jsx(Text, { bold: true, children: getStepHeaderText() }) }));
     }, [state.currentStep, state.generationMethod]);
     const renderDebugContent = useCallback(() => {
-        if (process.env["NODE_ENV"] !== "development") {
+        if (process.env['NODE_ENV'] !== 'development') {
             return null;
         }
-        return (_jsx(Box, { borderStyle: "single", borderColor: theme.status.warning, padding: 1, children: _jsxs(Box, { flexDirection: "column", children: [_jsx(Text, { color: theme.status.warning, bold: true, children: "Debug Info:" }), _jsxs(Text, { color: Colors.Gray, children: ["Step: ", state.currentStep] }), _jsxs(Text, { color: Colors.Gray, children: ["Can Proceed: ", state.canProceed ? "Yes" : "No"] }), _jsxs(Text, { color: Colors.Gray, children: ["Generating: ", state.isGenerating ? "Yes" : "No"] }), _jsxs(Text, { color: Colors.Gray, children: ["Location: ", state.location] }), _jsxs(Text, { color: Colors.Gray, children: ["Method: ", state.generationMethod] }), state.validationErrors.length > 0 && (_jsxs(Text, { color: theme.status.error, children: ["Errors: ", state.validationErrors.join(", ")] }))] }) }));
+        return (_jsx(Box, { borderStyle: "single", borderColor: theme.status.warning, padding: 1, children: _jsxs(Box, { flexDirection: "column", children: [_jsx(Text, { color: theme.status.warning, bold: true, children: "Debug Info:" }), _jsxs(Text, { color: Colors.Gray, children: ["Step: ", state.currentStep] }), _jsxs(Text, { color: Colors.Gray, children: ["Can Proceed: ", state.canProceed ? 'Yes' : 'No'] }), _jsxs(Text, { color: Colors.Gray, children: ["Generating: ", state.isGenerating ? 'Yes' : 'No'] }), _jsxs(Text, { color: Colors.Gray, children: ["Location: ", state.location] }), _jsxs(Text, { color: Colors.Gray, children: ["Method: ", state.generationMethod] }), state.validationErrors.length > 0 && (_jsxs(Text, { color: theme.status.error, children: ["Errors: ", state.validationErrors.join(', ')] }))] }) }));
     }, [
         state.currentStep,
         state.canProceed,
@@ -108,22 +108,22 @@ export function AgentCreationWizard({ onClose, config, }) {
         const getNavigationInstructions = () => {
             // Special case: During generation in description input step, only show cancel option
             const kind = getStepKind(state.generationMethod, state.currentStep);
-            if (kind === "LLM_DESC" && state.isGenerating) {
-                return "Esc to cancel";
+            if (kind === 'LLM_DESC' && state.isGenerating) {
+                return 'Esc to cancel';
             }
-            if (getStepKind(state.generationMethod, state.currentStep) === "FINAL") {
-                return "Press Enter to save, e to save and edit, Esc to go back";
+            if (getStepKind(state.generationMethod, state.currentStep) === 'FINAL') {
+                return 'Press Enter to save, e to save and edit, Esc to go back';
             }
             // Steps that have ↑↓ navigation (RadioButtonSelect components)
             const kindForNav = getStepKind(state.generationMethod, state.currentStep);
-            const hasNavigation = kindForNav === "LOCATION" ||
-                kindForNav === "GEN_METHOD" ||
-                kindForNav === "TOOLS" ||
-                kindForNav === "COLOR";
-            const navigationPart = hasNavigation ? "↑↓ to navigate, " : "";
+            const hasNavigation = kindForNav === 'LOCATION' ||
+                kindForNav === 'GEN_METHOD' ||
+                kindForNav === 'TOOLS' ||
+                kindForNav === 'COLOR';
+            const navigationPart = hasNavigation ? '↑↓ to navigate, ' : '';
             const escAction = state.currentStep === WIZARD_STEPS.LOCATION_SELECTION
-                ? "cancel"
-                : "go back";
+                ? 'cancel'
+                : 'go back';
             return `Press Enter to continue, ${navigationPart}Esc to ${escAction}`;
         };
         return (_jsx(Box, { children: _jsx(Text, { color: theme.text.secondary, children: getNavigationInstructions() }) }));
@@ -131,39 +131,39 @@ export function AgentCreationWizard({ onClose, config, }) {
     const renderStepContent = useCallback(() => {
         const kind = getStepKind(state.generationMethod, state.currentStep);
         switch (kind) {
-            case "LOCATION":
+            case 'LOCATION':
                 return _jsx(LocationSelector, { ...stepProps });
-            case "GEN_METHOD":
+            case 'GEN_METHOD':
                 return _jsx(GenerationMethodSelector, { ...stepProps });
-            case "LLM_DESC":
+            case 'LLM_DESC':
                 return _jsx(DescriptionInput, { ...stepProps });
-            case "MANUAL_NAME":
+            case 'MANUAL_NAME':
                 return (_jsx(TextEntryStep, { state: state, dispatch: dispatch, onNext: handleNext, description: "Enter a clear, unique name for this subagent.", placeholder: "e.g., Code Reviewer", height: 1, initialText: state.generatedName, onChange: (t) => {
                         const value = t; // keep raw, trim later when validating
-                        dispatch({ type: "SET_GENERATED_NAME", name: value });
-                    }, validate: (t) => t.trim().length === 0 ? "Name cannot be empty." : null }, "manual-name"));
-            case "MANUAL_PROMPT":
+                        dispatch({ type: 'SET_GENERATED_NAME', name: value });
+                    }, validate: (t) => t.trim().length === 0 ? 'Name cannot be empty.' : null }, "manual-name"));
+            case 'MANUAL_PROMPT':
                 return (_jsx(TextEntryStep, { state: state, dispatch: dispatch, onNext: handleNext, description: "Write the system prompt that defines this subagent's behavior. Be comprehensive for best results.", placeholder: "e.g., You are an expert code reviewer...", height: 10, initialText: state.generatedSystemPrompt, onChange: (t) => {
                         dispatch({
-                            type: "SET_GENERATED_SYSTEM_PROMPT",
+                            type: 'SET_GENERATED_SYSTEM_PROMPT',
                             systemPrompt: t,
                         });
-                    }, validate: (t) => t.trim().length === 0 ? "System prompt cannot be empty." : null }, "manual-prompt"));
-            case "MANUAL_DESC":
+                    }, validate: (t) => t.trim().length === 0 ? 'System prompt cannot be empty.' : null }, "manual-prompt"));
+            case 'MANUAL_DESC':
                 return (_jsx(TextEntryStep, { state: state, dispatch: dispatch, onNext: handleNext, description: "Describe when and how this subagent should be used.", placeholder: "e.g., Reviews code for best practices and potential bugs.", height: 6, initialText: state.generatedDescription, onChange: (t) => {
-                        dispatch({ type: "SET_GENERATED_DESCRIPTION", description: t });
-                    }, validate: (t) => t.trim().length === 0 ? "Description cannot be empty." : null }, "manual-desc"));
-            case "TOOLS":
+                        dispatch({ type: 'SET_GENERATED_DESCRIPTION', description: t });
+                    }, validate: (t) => t.trim().length === 0 ? 'Description cannot be empty.' : null }, "manual-desc"));
+            case 'TOOLS':
                 return (_jsx(ToolSelector, { tools: state.selectedTools, onSelect: (tools) => {
-                        dispatch({ type: "SET_TOOLS", tools });
+                        dispatch({ type: 'SET_TOOLS', tools });
                         handleNext();
                     }, config: config }));
-            case "COLOR":
+            case 'COLOR':
                 return (_jsx(ColorSelector, { color: state.color, agentName: state.generatedName, onSelect: (color) => {
-                        dispatch({ type: "SET_BACKGROUND_COLOR", color });
+                        dispatch({ type: 'SET_BACKGROUND_COLOR', color });
                         handleNext();
                     } }));
-            case "FINAL":
+            case 'FINAL':
                 return _jsx(CreationSummary, { ...stepProps });
             default:
                 return (_jsx(Box, { children: _jsxs(Text, { color: theme.status.error, children: ["Invalid step: ", state.currentStep] }) }));

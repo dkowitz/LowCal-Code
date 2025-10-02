@@ -646,32 +646,32 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">11x</span>
-<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-yes">11x</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-yes">21x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-yes">3x</span>
 <span class="cline-any cline-yes">3x</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">11x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">11x</span>
@@ -1138,20 +1138,20 @@
 import type {
   MCPServerConfig,
   GeminiCLIExtension,
-} from "@qwen-code/qwen-code-core";
-import { Storage } from "@qwen-code/qwen-code-core";
-import * as fs from "node:fs";
-import * as path from "node:path";
-import * as os from "node:os";
-import { simpleGit } from "simple-git";
-import { SettingScope, loadSettings } from "../config/settings.js";
-import { getErrorMessage } from "../utils/errors.js";
-import { recursivelyHydrateStrings } from "./extensions/variables.js";
+} from '@qwen-code/qwen-code-core';
+import { Storage } from '@qwen-code/qwen-code-core';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as os from 'node:os';
+import { simpleGit } from 'simple-git';
+import { SettingScope, loadSettings } from '../config/settings.js';
+import { getErrorMessage } from '../utils/errors.js';
+import { recursivelyHydrateStrings } from './extensions/variables.js';
 &nbsp;
-export const EXTENSIONS_DIRECTORY_NAME = path.join(".qwen", "extensions");
-export const EXTENSIONS_CONFIG_FILENAME = "qwen-extension.json";
-export const EXTENSIONS_CONFIG_FILENAME_OLD = "gemini-extension.json";
-export const INSTALL_METADATA_FILENAME = ".qwen-extension-install.json";
+export const EXTENSIONS_DIRECTORY_NAME = path.join('.qwen', 'extensions');
+export const EXTENSIONS_CONFIG_FILENAME = 'qwen-extension.json';
+export const EXTENSIONS_CONFIG_FILENAME_OLD = 'gemini-extension.json';
+export const INSTALL_METADATA_FILENAME = '.qwen-extension-install.json';
 &nbsp;
 export interface Extension {
   path: string;
@@ -1170,7 +1170,7 @@ export interface ExtensionConfig {
 &nbsp;
 export interface ExtensionInstallMetadata {
   source: string;
-  type: "git" | "local";
+  type: 'git' | 'local';
 }
 &nbsp;
 export interface ExtensionUpdateInfo {
@@ -1202,7 +1202,7 @@ export class ExtensionStorage {
   }
 &nbsp;
   static async createTmpDir(): Promise&lt;string&gt; {
-    return await fs.promises.mkdtemp(path.join(os.tmpdir(), "qwen-extension"));
+    return await fs.promises.mkdtemp(path.join(os.tmpdir(), 'qwen-extension'));
   }
 }
 &nbsp;
@@ -1226,7 +1226,7 @@ export async function performWorkspaceExtensionMigration(
     try {
       const installMetadata: ExtensionInstallMetadata = {
         source: extension.path,
-        type: "local",
+        type: 'local',
       };
       await installExtension(installMetadata);
     } catch (_) {
@@ -1314,10 +1314,10 @@ export function loadExtension(extensionDir: string): Extension | null {
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   try {
-    const configContent = fs.readFileSync(configFilePath, "utf-8");
+    const configContent = fs.readFileSync(configFilePath, 'utf-8');
     const config = recursivelyHydrateStrings(JSON.parse(configContent), {
       extensionPath: extensionDir,
-      "/": path.sep,
+      '/': path.sep,
       pathSeparator: path.sep,
     }) as unknown as ExtensionConfig;
     if (!config.name || !config.version) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
@@ -1352,7 +1352,7 @@ function loadInstallMetadata(
 ): ExtensionInstallMetadata | undefined {
   const metadataFilePath = path.join(extensionDir, INSTALL_METADATA_FILENAME);
   try {
-    const configContent = fs.readFileSync(metadataFilePath, "utf-8");
+    const configContent = fs.readFileSync(metadataFilePath, 'utf-8');
     const metadata = JSON.parse(configContent) as ExtensionInstallMetadata;
     return metadata;
   } catch (_e) {
@@ -1362,7 +1362,7 @@ function loadInstallMetadata(
 &nbsp;
 function getContextFileNames(config: ExtensionConfig): string[] {
   if (!config.contextFileName) {
-    return ["QWEN.md"];
+    return ['QWEN.md'];
   } else if (!Array.isArray(config.contextFileName)) {
     return [config.contextFileName];
 <span class="branch-0 cbranch-no" title="branch not covered" >  }</span>
@@ -1401,7 +1401,7 @@ export function annotateActiveExtensions(
 &nbsp;
   if (
     lowerCaseEnabledExtensions.size === 1 &amp;&amp;
-    lowerCaseEnabledExtensions.has("none")
+    lowerCaseEnabledExtensions.has('none')
   ) {
     return extensions.map((extension) =&gt; ({
       name: extension.config.name,
@@ -1447,7 +1447,7 @@ async function cloneFromGit(
 ): Promise&lt;void&gt; {
   try {
     // TODO(chrstnb): Download the archive instead to avoid unnecessary .git info.
-    await simpleGit().clone(gitUrl, destination, ["--depth", "1"]);
+    await simpleGit().clone(gitUrl, destination, ['--depth', '1']);
 <span class="branch-0 cbranch-no" title="branch not covered" >  } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >    throw new Error(`Failed to clone Git repository from ${gitUrl}`, {</span>
 <span class="cstat-no" title="statement not covered" >      cause: error,</span>
@@ -1464,7 +1464,7 @@ export async function installExtension(
 &nbsp;
   // Convert relative paths to absolute paths for the metadata file.
   if (
-    installMetadata.type === "local" &amp;&amp;
+    installMetadata.type === 'local' &amp;&amp;
     !path.isAbsolute(installMetadata.source)
   ) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >    installMetadata.source = path.resolve(cwd, installMetadata.source);</span>
@@ -1472,7 +1472,7 @@ export async function installExtension(
 &nbsp;
   let localSourcePath: string;
   let tempDir: string | undefined;
-  if (installMetadata.type === "git") {
+  if (installMetadata.type === 'git') {
     tempDir = await ExtensionStorage.createTmpDir();
     await cloneFromGit(installMetadata.source, tempDir);
     localSourcePath = tempDir;
@@ -1596,7 +1596,7 @@ export async function updateExtension(
 &nbsp;
     const updatedExtension = loadExtension(extension.path);
     if (!updatedExtension) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >      throw new Error("Updated extension not found after installation.");</span>
+<span class="cstat-no" title="statement not covered" >      throw new Error('Updated extension not found after installation.');</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
     const updatedVersion = updatedExtension.config.version;
     return {
@@ -1620,7 +1620,7 @@ export function disableExtension(
   cwd: string = process.cwd(),
 ) {
   if (scope === SettingScope.System || scope === SettingScope.SystemDefaults) {
-    throw new Error("System and SystemDefaults scopes are not supported.");
+    throw new Error('System and SystemDefaults scopes are not supported.');
   }
   const settings = loadSettings(cwd);
   const settingsFile = settings.forScope(scope);
@@ -1631,7 +1631,7 @@ export function disableExtension(
   if (!disabledExtensions.includes(name)) {
     disabledExtensions.push(name);
     extensionSettings.disabled = disabledExtensions;
-    settings.setValue(scope, "extensions", extensionSettings);
+    settings.setValue(scope, 'extensions', extensionSettings);
   }
 }
 &nbsp;
@@ -1659,7 +1659,7 @@ function removeFromDisabledExtensions(
     extensionSettings.disabled = disabledExtensions.filter(
       (extension) =&gt; extension !== name,
     );
-    settings.setValue(scope, "extensions", extensionSettings);
+    settings.setValue(scope, 'extensions', extensionSettings);
   }
 }
 &nbsp;</pre></td></tr></table></pre>
@@ -1669,7 +1669,7 @@ function removeFromDisabledExtensions(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.879Z
+                at 2025-09-29T17:26:19.374Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

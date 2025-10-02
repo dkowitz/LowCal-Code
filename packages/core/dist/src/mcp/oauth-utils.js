@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getErrorMessage } from "../utils/errors.js";
+import { getErrorMessage } from '../utils/errors.js';
 /**
  * Utility class for common OAuth operations.
  */
@@ -19,12 +19,12 @@ export class OAuthUtils {
         if (!includePathSuffix) {
             // Standard discovery: use root-based well-known URLs
             return {
-                protectedResource: new URL("/.well-known/oauth-protected-resource", base).toString(),
-                authorizationServer: new URL("/.well-known/oauth-authorization-server", base).toString(),
+                protectedResource: new URL('/.well-known/oauth-protected-resource', base).toString(),
+                authorizationServer: new URL('/.well-known/oauth-authorization-server', base).toString(),
             };
         }
         // Path-based discovery: append path suffix to well-known URLs
-        const pathSuffix = serverUrl.pathname.replace(/\/$/, ""); // Remove trailing slash
+        const pathSuffix = serverUrl.pathname.replace(/\/$/, ''); // Remove trailing slash
         return {
             protectedResource: new URL(`/.well-known/oauth-protected-resource${pathSuffix}`, base).toString(),
             authorizationServer: new URL(`/.well-known/oauth-authorization-server${pathSuffix}`, base).toString(),
@@ -94,7 +94,7 @@ export class OAuthUtils {
         const endpointsToTry = [];
         // With issuer URLs with path components, try the following well-known
         // endpoints in order:
-        if (authServerUrlObj.pathname !== "/") {
+        if (authServerUrlObj.pathname !== '/') {
             // 1. OAuth 2.0 Authorization Server Metadata with path insertion
             endpointsToTry.push(new URL(`/.well-known/oauth-authorization-server${authServerUrlObj.pathname}`, base).toString());
             // 2. OpenID Connect Discovery 1.0 with path insertion
@@ -105,9 +105,9 @@ export class OAuthUtils {
         // With issuer URLs without path components, and those that failed previous
         // discoveries, try the following well-known endpoints in order:
         // 1. OAuth 2.0 Authorization Server Metadata
-        endpointsToTry.push(new URL("/.well-known/oauth-authorization-server", base).toString());
+        endpointsToTry.push(new URL('/.well-known/oauth-authorization-server', base).toString());
         // 2. OpenID Connect Discovery 1.0
-        endpointsToTry.push(new URL("/.well-known/openid-configuration", base).toString());
+        endpointsToTry.push(new URL('/.well-known/openid-configuration', base).toString());
         for (const endpoint of endpointsToTry) {
             const authServerMetadata = await this.fetchAuthorizationServerMetadata(endpoint);
             if (authServerMetadata) {
@@ -132,7 +132,7 @@ export class OAuthUtils {
             // If root discovery fails and we have a path, try path-based discovery
             if (!resourceMetadata) {
                 const url = new URL(serverUrl);
-                if (url.pathname && url.pathname !== "/") {
+                if (url.pathname && url.pathname !== '/') {
                     const pathBasedUrls = this.buildWellKnownUrls(serverUrl, true);
                     resourceMetadata = await this.fetchProtectedResourceMetadata(pathBasedUrls.protectedResource);
                 }
@@ -144,7 +144,7 @@ export class OAuthUtils {
                 if (authServerMetadata) {
                     const config = this.metadataToOAuthConfig(authServerMetadata);
                     if (authServerMetadata.registration_endpoint) {
-                        console.log("Dynamic client registration is supported at:", authServerMetadata.registration_endpoint);
+                        console.log('Dynamic client registration is supported at:', authServerMetadata.registration_endpoint);
                     }
                     return config;
                 }
@@ -155,7 +155,7 @@ export class OAuthUtils {
             if (authServerMetadata) {
                 const config = this.metadataToOAuthConfig(authServerMetadata);
                 if (authServerMetadata.registration_endpoint) {
-                    console.log("Dynamic client registration is supported at:", authServerMetadata.registration_endpoint);
+                    console.log('Dynamic client registration is supported at:', authServerMetadata.registration_endpoint);
                 }
                 return config;
             }
@@ -219,7 +219,7 @@ export class OAuthUtils {
      * @returns True if the URL appears to be an SSE endpoint
      */
     static isSSEEndpoint(url) {
-        return url.includes("/sse") || !url.includes("/mcp");
+        return url.includes('/sse') || !url.includes('/mcp');
     }
     /**
      * Build a resource parameter for OAuth requests.

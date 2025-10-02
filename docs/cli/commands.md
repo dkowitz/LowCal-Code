@@ -127,6 +127,7 @@ Slash commands provide meta-level control over the CLI itself.
   Extended behavior:
 
   The `/auth` dialog now supports four built-in provider options:
+
   1. QWEN OAuth — recommended; performs device/browser OAuth and manages tokens automatically.
   2. OpenRouter — for OpenAI-compatible hosted endpoints. Selecting this will pre-populate the provider's base URL and prompt you to enter an API key.
   3. LM Studio — for local LM Studio instances. Selecting this will pre-populate the LM Studio base URL and provide a dummy API key (local models typically don't require a real API key).

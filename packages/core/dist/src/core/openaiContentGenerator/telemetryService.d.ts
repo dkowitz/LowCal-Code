@@ -3,9 +3,9 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Config } from "../../config/config.js";
-import type { GenerateContentResponse } from "@google/genai";
-import type OpenAI from "openai";
+import type { Config } from '../../config/config.js';
+import type { GenerateContentResponse } from '@google/genai';
+import type OpenAI from 'openai';
 export interface RequestContext {
     userPromptId: string;
     model: string;

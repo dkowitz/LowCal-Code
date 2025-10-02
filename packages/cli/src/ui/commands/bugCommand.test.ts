@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import open from "open";
-import { bugCommand } from "./bugCommand.js";
-import { createMockCommandContext } from "../../test-utils/mockCommandContext.js";
-import { getCliVersion } from "../../utils/version.js";
-import { GIT_COMMIT_INFO } from "../../generated/git-commit.js";
-import { formatMemoryUsage } from "../utils/formatters.js";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import open from 'open';
+import { bugCommand } from './bugCommand.js';
+import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
+import { getCliVersion } from '../../utils/version.js';
+import { GIT_COMMIT_INFO } from '../../generated/git-commit.js';
+import { formatMemoryUsage } from '../utils/formatters.js';
 
 // Mock dependencies
-vi.mock("open");
-vi.mock("../../utils/version.js");
-vi.mock("../utils/formatters.js");
-vi.mock("@qwen-code/qwen-code-core");
-vi.mock("node:process", () => ({
+vi.mock('open');
+vi.mock('../../utils/version.js');
+vi.mock('../utils/formatters.js');
+vi.mock('@qwen-code/qwen-code-core');
+vi.mock('node:process', () => ({
   default: {
-    platform: "test-platform",
-    version: "v20.0.0",
+    platform: 'test-platform',
+    version: 'v20.0.0',
     // Keep other necessary process properties if needed by other parts of the code
     env: process.env,
     memoryUsage: () => ({ rss: 0 }),
   },
 }));
 
-describe("bugCommand", () => {
+describe('bugCommand', () => {
   beforeEach(() => {
-    vi.mocked(getCliVersion).mockResolvedValue("0.1.0");
-    vi.mocked(formatMemoryUsage).mockReturnValue("100 MB");
-    vi.mock("@qwen-code/qwen-code-core", () => ({
-      sessionId: "test-session-id",
+    vi.mocked(getCliVersion).mockResolvedValue('0.1.0');
+    vi.mocked(formatMemoryUsage).mockReturnValue('100 MB');
+    vi.mock('@qwen-code/qwen-code-core', () => ({
+      sessionId: 'test-session-id',
     }));
-    vi.stubEnv("SANDBOX", "qwen-test");
+    vi.stubEnv('SANDBOX', 'qwen-test');
   });
 
   afterEach(() => {
@@ -42,22 +42,22 @@ describe("bugCommand", () => {
     vi.clearAllMocks();
   });
 
-  it("should generate the default GitHub issue URL", async () => {
+  it('should generate the default GitHub issue URL', async () => {
     const mockContext = createMockCommandContext({
       services: {
         config: {
-          getModel: () => "qwen3-coder-plus",
+          getModel: () => 'qwen3-coder-plus',
           getBugCommand: () => undefined,
           getIdeClient: () => ({
-            getDetectedIdeDisplayName: () => "VSCode",
+            getDetectedIdeDisplayName: () => 'VSCode',
           }),
           getIdeMode: () => true,
         },
       },
     });
 
-    if (!bugCommand.action) throw new Error("Action is not defined");
-    await bugCommand.action(mockContext, "A test bug");
+    if (!bugCommand.action) throw new Error('Action is not defined');
+    await bugCommand.action(mockContext, 'A test bug');
 
     const expectedInfo = `
 * **CLI Version:** 0.1.0
@@ -70,30 +70,30 @@ describe("bugCommand", () => {
 * **IDE Client:** VSCode
 `;
     const expectedUrl =
-      "https://github.com/QwenLM/qwen-code/issues/new?template=bug_report.yml&title=A%20test%20bug&info=" +
+      'https://github.com/QwenLM/qwen-code/issues/new?template=bug_report.yml&title=A%20test%20bug&info=' +
       encodeURIComponent(expectedInfo);
 
     expect(open).toHaveBeenCalledWith(expectedUrl);
   });
 
-  it("should use a custom URL template from config if provided", async () => {
+  it('should use a custom URL template from config if provided', async () => {
     const customTemplate =
-      "https://internal.bug-tracker.com/new?desc={title}&details={info}";
+      'https://internal.bug-tracker.com/new?desc={title}&details={info}';
     const mockContext = createMockCommandContext({
       services: {
         config: {
-          getModel: () => "qwen3-coder-plus",
+          getModel: () => 'qwen3-coder-plus',
           getBugCommand: () => ({ urlTemplate: customTemplate }),
           getIdeClient: () => ({
-            getDetectedIdeDisplayName: () => "VSCode",
+            getDetectedIdeDisplayName: () => 'VSCode',
           }),
           getIdeMode: () => true,
         },
       },
     });
 
-    if (!bugCommand.action) throw new Error("Action is not defined");
-    await bugCommand.action(mockContext, "A custom bug");
+    if (!bugCommand.action) throw new Error('Action is not defined');
+    await bugCommand.action(mockContext, 'A custom bug');
 
     const expectedInfo = `
 * **CLI Version:** 0.1.0
@@ -106,8 +106,8 @@ describe("bugCommand", () => {
 * **IDE Client:** VSCode
 `;
     const expectedUrl = customTemplate
-      .replace("{title}", encodeURIComponent("A custom bug"))
-      .replace("{info}", encodeURIComponent(expectedInfo));
+      .replace('{title}', encodeURIComponent('A custom bug'))
+      .replace('{info}', encodeURIComponent(expectedInfo));
 
     expect(open).toHaveBeenCalledWith(expectedUrl);
   });

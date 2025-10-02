@@ -1,22 +1,22 @@
 import { jsxs as _jsxs, jsx as _jsx, Fragment as _Fragment } from "react/jsx-runtime";
-import { useCallback, useEffect, useState, useRef } from "react";
-import { Box, Text } from "ink";
-import { theme } from "../semantic-colors.js";
-import { SuggestionsDisplay } from "./SuggestionsDisplay.js";
-import { useInputHistory } from "../hooks/useInputHistory.js";
-import { logicalPosToOffset } from "./shared/text-buffer.js";
-import { cpSlice, cpLen, toCodePoints } from "../utils/textUtils.js";
-import chalk from "chalk";
-import stringWidth from "string-width";
-import { useShellHistory } from "../hooks/useShellHistory.js";
-import { useReverseSearchCompletion } from "../hooks/useReverseSearchCompletion.js";
-import { useCommandCompletion } from "../hooks/useCommandCompletion.js";
-import { useKeypress } from "../hooks/useKeypress.js";
-import { keyMatchers, Command } from "../keyMatchers.js";
-import { clipboardHasImage, saveClipboardImage, cleanupOldClipboardImages, } from "../utils/clipboardUtils.js";
-import * as path from "node:path";
-import { SCREEN_READER_USER_PREFIX } from "../textConstants.js";
-export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, config, slashCommands, commandContext, placeholder = "  Type your message or @path/to/file", focus = true, inputWidth, suggestionsWidth, shellModeActive, setShellModeActive, onEscapePromptChange, vimHandleInput, }) => {
+import { useCallback, useEffect, useState, useRef } from 'react';
+import { Box, Text } from 'ink';
+import { theme } from '../semantic-colors.js';
+import { SuggestionsDisplay } from './SuggestionsDisplay.js';
+import { useInputHistory } from '../hooks/useInputHistory.js';
+import { logicalPosToOffset } from './shared/text-buffer.js';
+import { cpSlice, cpLen, toCodePoints } from '../utils/textUtils.js';
+import chalk from 'chalk';
+import stringWidth from 'string-width';
+import { useShellHistory } from '../hooks/useShellHistory.js';
+import { useReverseSearchCompletion } from '../hooks/useReverseSearchCompletion.js';
+import { useCommandCompletion } from '../hooks/useCommandCompletion.js';
+import { useKeypress } from '../hooks/useKeypress.js';
+import { keyMatchers, Command } from '../keyMatchers.js';
+import { clipboardHasImage, saveClipboardImage, cleanupOldClipboardImages, } from '../utils/clipboardUtils.js';
+import * as path from 'node:path';
+import { SCREEN_READER_USER_PREFIX } from '../textConstants.js';
+export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, config, slashCommands, commandContext, placeholder = '  Type your message or @path/to/file', focus = true, inputWidth, suggestionsWidth, shellModeActive, setShellModeActive, onEscapePromptChange, vimHandleInput, }) => {
     const [justNavigatedHistory, setJustNavigatedHistory] = useState(false);
     const [escPressCount, setEscPressCount] = useState(0);
     const [showEscapePrompt, setShowEscapePrompt] = useState(false);
@@ -29,7 +29,7 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
         }
     }, [dirs.length, dirsChanged]);
     const [reverseSearchActive, setReverseSearchActive] = useState(false);
-    const [textBeforeReverseSearch, setTextBeforeReverseSearch] = useState("");
+    const [textBeforeReverseSearch, setTextBeforeReverseSearch] = useState('');
     const [cursorPosition, setCursorPosition] = useState([
         0, 0,
     ]);
@@ -65,7 +65,7 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
         }
         // Clear the buffer *before* calling onSubmit to prevent potential re-submission
         // if onSubmit triggers a re-render while the buffer still holds the old value.
-        buffer.setText("");
+        buffer.setText('');
         onSubmit(submittedValue);
         resetCompletionState();
         resetReverseSearchCompletionState();
@@ -127,13 +127,13 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
                     offset += col;
                     // Add spaces around the path if needed
                     let textToInsert = insertText;
-                    const charBefore = offset > 0 ? currentText[offset - 1] : "";
-                    const charAfter = offset < currentText.length ? currentText[offset] : "";
-                    if (charBefore && charBefore !== " " && charBefore !== "\n") {
-                        textToInsert = " " + textToInsert;
+                    const charBefore = offset > 0 ? currentText[offset - 1] : '';
+                    const charAfter = offset < currentText.length ? currentText[offset] : '';
+                    if (charBefore && charBefore !== ' ' && charBefore !== '\n') {
+                        textToInsert = ' ' + textToInsert;
                     }
-                    if (!charAfter || (charAfter !== " " && charAfter !== "\n")) {
-                        textToInsert = textToInsert + " ";
+                    if (!charAfter || (charAfter !== ' ' && charAfter !== '\n')) {
+                        textToInsert = textToInsert + ' ';
                     }
                     // Insert at cursor position
                     buffer.replaceRangeByOffset(offset, offset, textToInsert);
@@ -141,7 +141,7 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
             }
         }
         catch (error) {
-            console.error("Error handling clipboard image:", error);
+            console.error('Error handling clipboard image:', error);
         }
     }, [buffer, config]);
     const handleInput = useCallback((key) => {
@@ -158,16 +158,16 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
             return;
         }
         // Reset ESC count and hide prompt on any non-ESC key
-        if (key.name !== "escape") {
+        if (key.name !== 'escape') {
             if (escPressCount > 0 || showEscapePrompt) {
                 resetEscapeState();
             }
         }
-        if (key.sequence === "!" &&
-            buffer.text === "" &&
+        if (key.sequence === '!' &&
+            buffer.text === '' &&
             !completion.showSuggestions) {
             setShellModeActive(!shellModeActive);
-            buffer.setText(""); // Clear the '!' from input
+            buffer.setText(''); // Clear the '!' from input
             return;
         }
         if (keyMatchers[Command.ESCAPE](key)) {
@@ -191,7 +191,7 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
             }
             // Handle double ESC for clearing input
             if (escPressCount === 0) {
-                if (buffer.text === "") {
+                if (buffer.text === '') {
                     return;
                 }
                 setEscPressCount(1);
@@ -205,7 +205,7 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
             }
             else {
                 // clear input and immediately reset state
-                buffer.setText("");
+                buffer.setText('');
                 resetCompletionState();
                 resetEscapeState();
             }
@@ -283,7 +283,7 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
             }
         }
         // Handle Tab key for ghost text acceptance
-        if (key.name === "tab" &&
+        if (key.name === 'tab' &&
             !completion.showSuggestions &&
             completion.promptCompletion.text) {
             completion.promptCompletion.accept();
@@ -331,8 +331,8 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
             if (buffer.text.trim()) {
                 const [row, col] = buffer.cursor;
                 const line = buffer.lines[row];
-                const charBefore = col > 0 ? cpSlice(line, col - 1, col) : "";
-                if (charBefore === "\\") {
+                const charBefore = col > 0 ? cpSlice(line, col - 1, col) : '';
+                if (charBefore === '\\') {
                     buffer.backspace();
                     buffer.newline();
                 }
@@ -349,17 +349,17 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
         }
         // Ctrl+A (Home) / Ctrl+E (End)
         if (keyMatchers[Command.HOME](key)) {
-            buffer.move("home");
+            buffer.move('home');
             return;
         }
         if (keyMatchers[Command.END](key)) {
-            buffer.move("end");
+            buffer.move('end');
             return;
         }
         // Ctrl+C (Clear input)
         if (keyMatchers[Command.CLEAR_INPUT](key)) {
             if (buffer.text.length > 0) {
-                buffer.setText("");
+                buffer.setText('');
                 resetCompletionState();
             }
             return;
@@ -424,27 +424,27 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
         if (!completion.promptCompletion.text ||
             !buffer.text ||
             !completion.promptCompletion.text.startsWith(buffer.text)) {
-            return { inlineGhost: "", additionalLines: [] };
+            return { inlineGhost: '', additionalLines: [] };
         }
         const ghostSuffix = completion.promptCompletion.text.slice(buffer.text.length);
         if (!ghostSuffix) {
-            return { inlineGhost: "", additionalLines: [] };
+            return { inlineGhost: '', additionalLines: [] };
         }
-        const currentLogicalLine = buffer.lines[buffer.cursor[0]] || "";
+        const currentLogicalLine = buffer.lines[buffer.cursor[0]] || '';
         const cursorCol = buffer.cursor[1];
         const textBeforeCursor = cpSlice(currentLogicalLine, 0, cursorCol);
         const usedWidth = stringWidth(textBeforeCursor);
         const remainingWidth = Math.max(0, inputWidth - usedWidth);
-        const ghostTextLinesRaw = ghostSuffix.split("\n");
-        const firstLineRaw = ghostTextLinesRaw.shift() || "";
-        let inlineGhost = "";
-        let remainingFirstLine = "";
+        const ghostTextLinesRaw = ghostSuffix.split('\n');
+        const firstLineRaw = ghostTextLinesRaw.shift() || '';
+        let inlineGhost = '';
+        let remainingFirstLine = '';
         if (stringWidth(firstLineRaw) <= remainingWidth) {
             inlineGhost = firstLineRaw;
         }
         else {
-            const words = firstLineRaw.split(" ");
-            let currentLine = "";
+            const words = firstLineRaw.split(' ');
+            let currentLine = '';
             let wordIdx = 0;
             for (const word of words) {
                 const prospectiveLine = currentLine ? `${currentLine} ${word}` : word;
@@ -456,7 +456,7 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
             }
             inlineGhost = currentLine;
             if (words.length > wordIdx) {
-                remainingFirstLine = words.slice(wordIdx).join(" ");
+                remainingFirstLine = words.slice(wordIdx).join(' ');
             }
         }
         const linesToWrap = [];
@@ -464,13 +464,13 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
             linesToWrap.push(remainingFirstLine);
         }
         linesToWrap.push(...ghostTextLinesRaw);
-        const remainingGhostText = linesToWrap.join("\n");
+        const remainingGhostText = linesToWrap.join('\n');
         const additionalLines = [];
         if (remainingGhostText) {
-            const textLines = remainingGhostText.split("\n");
+            const textLines = remainingGhostText.split('\n');
             for (const textLine of textLines) {
-                const words = textLine.split(" ");
-                let currentLine = "";
+                const words = textLine.split(' ');
+                let currentLine = '';
                 for (const word of words) {
                     const prospectiveLine = currentLine ? `${currentLine} ${word}` : word;
                     const prospectiveWidth = stringWidth(prospectiveLine);
@@ -480,7 +480,7 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
                         }
                         let wordToProcess = word;
                         while (stringWidth(wordToProcess) > inputWidth) {
-                            let part = "";
+                            let part = '';
                             const wordCP = toCodePoints(wordToProcess);
                             let partWidth = 0;
                             let splitIndex = 0;
@@ -517,18 +517,18 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
         inputWidth,
     ]);
     const { inlineGhost, additionalLines } = getGhostTextLines();
-    return (_jsxs(_Fragment, { children: [_jsxs(Box, { borderStyle: "round", borderColor: shellModeActive ? theme.status.warning : theme.border.focused, paddingX: 1, children: [_jsx(Text, { color: shellModeActive ? theme.status.warning : theme.text.accent, children: shellModeActive ? (reverseSearchActive ? (_jsxs(Text, { color: theme.text.link, "aria-label": SCREEN_READER_USER_PREFIX, children: ["(r:)", " "] })) : ("! ")) : ("> ") }), _jsx(Box, { flexGrow: 1, flexDirection: "column", children: buffer.text.length === 0 && placeholder ? (focus ? (_jsxs(Text, { children: [chalk.inverse(placeholder.slice(0, 1)), _jsx(Text, { color: theme.text.secondary, children: placeholder.slice(1) })] })) : (_jsx(Text, { color: theme.text.secondary, children: placeholder }))) : (linesToRender
+    return (_jsxs(_Fragment, { children: [_jsxs(Box, { borderStyle: "round", borderColor: shellModeActive ? theme.status.warning : theme.border.focused, paddingX: 1, children: [_jsx(Text, { color: shellModeActive ? theme.status.warning : theme.text.accent, children: shellModeActive ? (reverseSearchActive ? (_jsxs(Text, { color: theme.text.link, "aria-label": SCREEN_READER_USER_PREFIX, children: ["(r:)", ' '] })) : ('! ')) : ('> ') }), _jsx(Box, { flexGrow: 1, flexDirection: "column", children: buffer.text.length === 0 && placeholder ? (focus ? (_jsxs(Text, { children: [chalk.inverse(placeholder.slice(0, 1)), _jsx(Text, { color: theme.text.secondary, children: placeholder.slice(1) })] })) : (_jsx(Text, { color: theme.text.secondary, children: placeholder }))) : (linesToRender
                             .map((lineText, visualIdxInRenderedSet) => {
                             const cursorVisualRow = cursorVisualRowAbsolute - scrollVisualRow;
                             let display = cpSlice(lineText, 0, inputWidth);
                             const isOnCursorLine = focus && visualIdxInRenderedSet === cursorVisualRow;
-                            const currentLineGhost = isOnCursorLine ? inlineGhost : "";
+                            const currentLineGhost = isOnCursorLine ? inlineGhost : '';
                             const ghostWidth = stringWidth(currentLineGhost);
                             if (focus && visualIdxInRenderedSet === cursorVisualRow) {
                                 const relativeVisualColForHighlight = cursorVisualColAbsolute;
                                 if (relativeVisualColForHighlight >= 0) {
                                     if (relativeVisualColForHighlight < cpLen(display)) {
-                                        const charToHighlight = cpSlice(display, relativeVisualColForHighlight, relativeVisualColForHighlight + 1) || " ";
+                                        const charToHighlight = cpSlice(display, relativeVisualColForHighlight, relativeVisualColForHighlight + 1) || ' ';
                                         const highlighted = chalk.inverse(charToHighlight);
                                         display =
                                             cpSlice(display, 0, relativeVisualColForHighlight) +
@@ -537,7 +537,7 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
                                     }
                                     else if (relativeVisualColForHighlight === cpLen(display)) {
                                         if (!currentLineGhost) {
-                                            display = display + chalk.inverse(" ");
+                                            display = display + chalk.inverse(' ');
                                         }
                                     }
                                 }
@@ -546,17 +546,17 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
                                 visualIdxInRenderedSet === cursorVisualRow &&
                                 cursorVisualColAbsolute ===
                                     // eslint-disable-next-line no-control-regex
-                                    cpLen(display.replace(/\x1b\[[0-9;]*m/g, "")) &&
+                                    cpLen(display.replace(/\x1b\[[0-9;]*m/g, '')) &&
                                 currentLineGhost;
                             const actualDisplayWidth = stringWidth(display);
                             const cursorWidth = showCursorBeforeGhost ? 1 : 0;
                             const totalContentWidth = actualDisplayWidth + cursorWidth + ghostWidth;
                             const trailingPadding = Math.max(0, inputWidth - totalContentWidth);
-                            return (_jsxs(Text, { children: [display, showCursorBeforeGhost && chalk.inverse(" "), currentLineGhost && (_jsx(Text, { color: theme.text.secondary, children: currentLineGhost })), trailingPadding > 0 && " ".repeat(trailingPadding)] }, `line-${visualIdxInRenderedSet}`));
+                            return (_jsxs(Text, { children: [display, showCursorBeforeGhost && chalk.inverse(' '), currentLineGhost && (_jsx(Text, { color: theme.text.secondary, children: currentLineGhost })), trailingPadding > 0 && ' '.repeat(trailingPadding)] }, `line-${visualIdxInRenderedSet}`));
                         })
                             .concat(additionalLines.map((ghostLine, index) => {
                             const padding = Math.max(0, inputWidth - stringWidth(ghostLine));
-                            return (_jsxs(Text, { color: theme.text.secondary, children: [ghostLine, " ".repeat(padding)] }, `ghost-line-${index}`));
+                            return (_jsxs(Text, { color: theme.text.secondary, children: [ghostLine, ' '.repeat(padding)] }, `ghost-line-${index}`));
                         }))) })] }), completion.showSuggestions && (_jsx(Box, { paddingRight: 2, children: _jsx(SuggestionsDisplay, { suggestions: completion.suggestions, activeIndex: completion.activeSuggestionIndex, isLoading: completion.isLoadingSuggestions, width: suggestionsWidth, scrollOffset: completion.visibleStartIndex, userInput: buffer.text }) })), reverseSearchActive && (_jsx(Box, { paddingRight: 2, children: _jsx(SuggestionsDisplay, { suggestions: reverseSearchCompletion.suggestions, activeIndex: reverseSearchCompletion.activeSuggestionIndex, isLoading: reverseSearchCompletion.isLoadingSuggestions, width: suggestionsWidth, scrollOffset: reverseSearchCompletion.visibleStartIndex, userInput: buffer.text }) }))] }));
 };
 //# sourceMappingURL=InputPrompt.js.map

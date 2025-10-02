@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getFolderStructure } from "./getFolderStructure.js";
+import { getFolderStructure } from './getFolderStructure.js';
 /**
  * Generates a string describing the current workspace directories and their structures.
  * @param {Config} config - The runtime configuration and services.
@@ -15,13 +15,13 @@ export async function getDirectoryContextString(config) {
     const folderStructures = await Promise.all(workspaceDirectories.map((dir) => getFolderStructure(dir, {
         fileService: config.getFileService(),
     })));
-    const folderStructure = folderStructures.join("\n");
+    const folderStructure = folderStructures.join('\n');
     let workingDirPreamble;
     if (workspaceDirectories.length === 1) {
         workingDirPreamble = `I'm currently working in the directory: ${workspaceDirectories[0]}`;
     }
     else {
-        const dirList = workspaceDirectories.map((dir) => `  - ${dir}`).join("\n");
+        const dirList = workspaceDirectories.map((dir) => `  - ${dir}`).join('\n');
         workingDirPreamble = `I'm currently working in the following directories:\n${dirList}`;
     }
     return `${workingDirPreamble}
@@ -38,10 +38,10 @@ ${folderStructure}`;
  */
 export async function getEnvironmentContext(config) {
     const today = new Date().toLocaleDateString(undefined, {
-        weekday: "long",
-        year: "numeric",
-        month: "long",
-        day: "numeric",
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
     });
     const platform = process.platform;
     const directoryContext = await getDirectoryContextString(config);
@@ -56,10 +56,10 @@ ${directoryContext}
     // Add full file context if the flag is set
     if (config.getFullContext()) {
         try {
-            const readManyFilesTool = toolRegistry.getTool("read_many_files");
+            const readManyFilesTool = toolRegistry.getTool('read_many_files');
             if (readManyFilesTool) {
                 const invocation = readManyFilesTool.build({
-                    paths: ["**/*"], // Read everything recursively
+                    paths: ['**/*'], // Read everything recursively
                     useDefaultExcludes: true, // Use default excludes
                 });
                 // Read all files in the target directory
@@ -70,18 +70,18 @@ ${directoryContext}
                     });
                 }
                 else {
-                    console.warn("Full context requested, but read_many_files returned no content.");
+                    console.warn('Full context requested, but read_many_files returned no content.');
                 }
             }
             else {
-                console.warn("Full context requested, but read_many_files tool not found.");
+                console.warn('Full context requested, but read_many_files tool not found.');
             }
         }
         catch (error) {
             // Not using reportError here as it's a startup/config phase, not a chat/generation phase error.
-            console.error("Error reading full file context:", error);
+            console.error('Error reading full file context:', error);
             initialParts.push({
-                text: "\n--- Error reading full file context ---",
+                text: '\n--- Error reading full file context ---',
             });
         }
     }

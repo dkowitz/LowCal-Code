@@ -19,39 +19,39 @@ export function getIdeInfo(ide) {
     switch (ide) {
         case DetectedIde.Devin:
             return {
-                displayName: "Devin",
+                displayName: 'Devin',
             };
         case DetectedIde.Replit:
             return {
-                displayName: "Replit",
+                displayName: 'Replit',
             };
         case DetectedIde.Cursor:
             return {
-                displayName: "Cursor",
+                displayName: 'Cursor',
             };
         case DetectedIde.CloudShell:
             return {
-                displayName: "Cloud Shell",
+                displayName: 'Cloud Shell',
             };
         case DetectedIde.Codespaces:
             return {
-                displayName: "GitHub Codespaces",
+                displayName: 'GitHub Codespaces',
             };
         case DetectedIde.FirebaseStudio:
             return {
-                displayName: "Firebase Studio",
+                displayName: 'Firebase Studio',
             };
         case DetectedIde.Trae:
             return {
-                displayName: "Trae",
+                displayName: 'Trae',
             };
         case DetectedIde.VSCode:
             return {
-                displayName: "VS Code",
+                displayName: 'VS Code',
             };
         case DetectedIde.VSCodeFork:
             return {
-                displayName: "IDE",
+                displayName: 'IDE',
             };
         default: {
             // This ensures that if a new IDE is added to the enum, we get a compile-time error.
@@ -61,25 +61,25 @@ export function getIdeInfo(ide) {
     }
 }
 export function detectIdeFromEnv() {
-    if (process.env["__COG_BASHRC_SOURCED"]) {
+    if (process.env['__COG_BASHRC_SOURCED']) {
         return DetectedIde.Devin;
     }
-    if (process.env["REPLIT_USER"]) {
+    if (process.env['REPLIT_USER']) {
         return DetectedIde.Replit;
     }
-    if (process.env["CURSOR_TRACE_ID"]) {
+    if (process.env['CURSOR_TRACE_ID']) {
         return DetectedIde.Cursor;
     }
-    if (process.env["CODESPACES"]) {
+    if (process.env['CODESPACES']) {
         return DetectedIde.Codespaces;
     }
-    if (process.env["EDITOR_IN_CLOUD_SHELL"] || process.env["CLOUD_SHELL"]) {
+    if (process.env['EDITOR_IN_CLOUD_SHELL'] || process.env['CLOUD_SHELL']) {
         return DetectedIde.CloudShell;
     }
-    if (process.env["TERM_PRODUCT"] === "Trae") {
+    if (process.env['TERM_PRODUCT'] === 'Trae') {
         return DetectedIde.Trae;
     }
-    if (process.env["MONOSPACE_ENV"]) {
+    if (process.env['MONOSPACE_ENV']) {
         return DetectedIde.FirebaseStudio;
     }
     return DetectedIde.VSCode;
@@ -88,14 +88,14 @@ function verifyVSCode(ide, ideProcessInfo) {
     if (ide !== DetectedIde.VSCode) {
         return ide;
     }
-    if (ideProcessInfo.command.toLowerCase().includes("code")) {
+    if (ideProcessInfo.command.toLowerCase().includes('code')) {
         return DetectedIde.VSCode;
     }
     return DetectedIde.VSCodeFork;
 }
 export function detectIde(ideProcessInfo) {
     // Only VSCode-based integrations are currently supported.
-    if (process.env["TERM_PROGRAM"] !== "vscode") {
+    if (process.env['TERM_PROGRAM'] !== 'vscode') {
         return undefined;
     }
     const ide = detectIdeFromEnv();

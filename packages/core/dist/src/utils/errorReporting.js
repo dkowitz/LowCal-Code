@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import fs from "node:fs/promises";
-import os from "node:os";
-import path from "node:path";
+import fs from 'node:fs/promises';
+import os from 'node:os';
+import path from 'node:path';
 let errorReportListener;
 export function setErrorReportListener(listener) {
     errorReportListener = listener;
@@ -17,9 +17,9 @@ export function setErrorReportListener(listener) {
  * @param type A string to identify the type of error (e.g., 'startChat', 'generateJson-api').
  * @param baseMessage The initial message to log to console.error before the report path.
  */
-export async function reportError(error, baseMessage, context, type = "general", reportingDir = os.tmpdir()) {
+export async function reportError(error, baseMessage, context, type = 'general', reportingDir = os.tmpdir()) {
     const isoTimestamp = new Date().toISOString();
-    const sanitizedTimestamp = isoTimestamp.replace(/[:.]/g, "-");
+    const sanitizedTimestamp = isoTimestamp.replace(/[:.]/g, '-');
     const reportFileName = `gemini-client-error-${type}-${sanitizedTimestamp}.json`;
     const reportPath = path.join(reportingDir, reportFileName);
     const notifyListener = (overrides) => {
@@ -39,9 +39,9 @@ export async function reportError(error, baseMessage, context, type = "general",
     if (error instanceof Error) {
         errorToReport = { message: error.message, stack: error.stack };
     }
-    else if (typeof error === "object" &&
+    else if (typeof error === 'object' &&
         error !== null &&
-        "message" in error) {
+        'message' in error) {
         errorToReport = {
             message: String(error.message),
         };
@@ -60,9 +60,9 @@ export async function reportError(error, baseMessage, context, type = "general",
     catch (stringifyError) {
         // This can happen if context contains something like BigInt
         console.error(`${baseMessage} Could not stringify report content (likely due to context):`, stringifyError);
-        console.error("Original error that triggered report generation:", error);
+        console.error('Original error that triggered report generation:', error);
         if (context) {
-            console.error("Original context could not be stringified or included in report.");
+            console.error('Original context could not be stringified or included in report.');
         }
         // Fallback: try to report only the error if context was the issue
         try {
@@ -94,20 +94,20 @@ export async function reportError(error, baseMessage, context, type = "general",
     catch (writeError) {
         console.error(`${baseMessage} Additionally, failed to write detailed error report:`, writeError);
         // Log the original error as a fallback if report writing fails
-        console.error("Original error that triggered report generation:", error);
+        console.error('Original error that triggered report generation:', error);
         if (context) {
             // Context was stringifiable, but writing the file failed.
             // We already have stringifiedReportContent, but it might be too large for console.
             // So, we try to log the original context object, and if that fails, its stringified version (truncated).
             try {
-                console.error("Original context:", context);
+                console.error('Original context:', context);
             }
             catch {
                 try {
-                    console.error("Original context (stringified, truncated):", JSON.stringify(context).substring(0, 1000));
+                    console.error('Original context (stringified, truncated):', JSON.stringify(context).substring(0, 1000));
                 }
                 catch {
-                    console.error("Original context could not be logged or stringified.");
+                    console.error('Original context could not be logged or stringified.');
                 }
             }
         }

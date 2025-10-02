@@ -3,14 +3,14 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useStdin, useStdout } from "ink";
-import { useEffect, useState } from "react";
+import { useStdin, useStdout } from 'ink';
+import { useEffect, useState } from 'react';
 // ANSI escape codes to enable/disable terminal focus reporting
-export const ENABLE_FOCUS_REPORTING = "\x1b[?1004h";
-export const DISABLE_FOCUS_REPORTING = "\x1b[?1004l";
+export const ENABLE_FOCUS_REPORTING = '\x1b[?1004h';
+export const DISABLE_FOCUS_REPORTING = '\x1b[?1004l';
 // ANSI escape codes for focus events
-export const FOCUS_IN = "\x1b[I";
-export const FOCUS_OUT = "\x1b[O";
+export const FOCUS_IN = '\x1b[I';
+export const FOCUS_OUT = '\x1b[O';
 export const useFocus = () => {
     const { stdin } = useStdin();
     const { stdout } = useStdout();
@@ -29,11 +29,11 @@ export const useFocus = () => {
         };
         // Enable focus reporting
         stdout?.write(ENABLE_FOCUS_REPORTING);
-        stdin?.on("data", handleData);
+        stdin?.on('data', handleData);
         return () => {
             // Disable focus reporting on cleanup
             stdout?.write(DISABLE_FOCUS_REPORTING);
-            stdin?.removeListener("data", handleData);
+            stdin?.removeListener('data', handleData);
         };
     }, [stdin, stdout]);
     return isFocused;

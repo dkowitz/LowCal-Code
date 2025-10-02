@@ -3,13 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { convert } from "html-to-text";
-import { ProxyAgent, setGlobalDispatcher } from "undici";
-import { ApprovalMode } from "../config/config.js";
-import { fetchWithTimeout, isPrivateIp } from "../utils/fetch.js";
-import { getResponseText } from "../utils/partUtils.js";
-import { ToolErrorType } from "./tool-error.js";
-import { BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, } from "./tools.js";
+import { convert } from 'html-to-text';
+import { ProxyAgent, setGlobalDispatcher } from 'undici';
+import { ApprovalMode } from '../config/config.js';
+import { fetchWithTimeout, isPrivateIp } from '../utils/fetch.js';
+import { getResponseText } from '../utils/partUtils.js';
+import { ToolErrorType } from './tool-error.js';
+import { BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, } from './tools.js';
 const URL_FETCH_TIMEOUT_MS = 10000;
 const MAX_CONTENT_LENGTH = 100000;
 /**
@@ -24,10 +24,10 @@ class WebFetchToolInvocation extends BaseToolInvocation {
     async executeDirectFetch(signal) {
         let url = this.params.url;
         // Convert GitHub blob URL to raw URL
-        if (url.includes("github.com") && url.includes("/blob/")) {
+        if (url.includes('github.com') && url.includes('/blob/')) {
             url = url
-                .replace("github.com", "raw.githubusercontent.com")
-                .replace("/blob/", "/");
+                .replace('github.com', 'raw.githubusercontent.com')
+                .replace('/blob/', '/');
             console.debug(`[WebFetchTool] Converted GitHub blob URL to raw URL: ${url}`);
         }
         try {
@@ -43,8 +43,8 @@ class WebFetchToolInvocation extends BaseToolInvocation {
             const textContent = convert(html, {
                 wordwrap: false,
                 selectors: [
-                    { selector: "a", options: { ignoreHref: true } },
-                    { selector: "img", format: "skip" },
+                    { selector: 'a', options: { ignoreHref: true } },
+                    { selector: 'img', format: 'skip' },
                 ],
             }).substring(0, MAX_CONTENT_LENGTH);
             console.debug(`[WebFetchTool] Converted HTML to text (${textContent.length} characters)`);
@@ -57,8 +57,8 @@ I have fetched the content from ${this.params.url}. Please use the following con
 ${textContent}
 ---`;
             console.debug(`[WebFetchTool] Processing content with prompt: "${this.params.prompt}"`);
-            const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: fallbackPrompt }] }], {}, signal);
-            const resultText = getResponseText(result) || "";
+            const result = await geminiClient.generateContent([{ role: 'user', parts: [{ text: fallbackPrompt }] }], {}, signal);
+            const resultText = getResponseText(result) || '';
             console.debug(`[WebFetchTool] Successfully processed content from ${this.params.url}`);
             return {
                 llmContent: resultText,
@@ -81,7 +81,7 @@ ${textContent}
     }
     getDescription() {
         const displayPrompt = this.params.prompt.length > 100
-            ? this.params.prompt.substring(0, 97) + "..."
+            ? this.params.prompt.substring(0, 97) + '...'
             : this.params.prompt;
         return `Fetching content from ${this.params.url} and processing with prompt: "${displayPrompt}"`;
     }
@@ -90,7 +90,7 @@ ${textContent}
             return false;
         }
         const confirmationDetails = {
-            type: "info",
+            type: 'info',
             title: `Confirm Web Fetch`,
             prompt: `Fetch content from ${this.params.url} and process with: ${this.params.prompt}`,
             urls: [this.params.url],
@@ -119,21 +119,21 @@ ${textContent}
  */
 export class WebFetchTool extends BaseDeclarativeTool {
     config;
-    static Name = "web_fetch";
+    static Name = 'web_fetch';
     constructor(config) {
-        super(WebFetchTool.Name, "WebFetch", 'Fetches content from a specified URL and processes it using an AI model\n- Takes a URL and a prompt as input\n- Fetches the URL content, converts HTML to markdown\n- Processes the content with the prompt using a small, fast model\n- Returns the model\'s response about the content\n- Use this tool when you need to retrieve and analyze web content\n\nUsage notes:\n  - IMPORTANT: If an MCP-provided web fetch tool is available, prefer using that tool instead of this one, as it may have fewer restrictions. All MCP-provided tools start with "mcp__".\n  - The URL must be a fully-formed valid URL\n  - The prompt should describe what information you want to extract from the page\n  - This tool is read-only and does not modify any files\n  - Results may be summarized if the content is very large\n  - Supports both public and private/localhost URLs using direct fetch', Kind.Fetch, {
+        super(WebFetchTool.Name, 'WebFetch', 'Fetches content from a specified URL and processes it using an AI model\n- Takes a URL and a prompt as input\n- Fetches the URL content, converts HTML to markdown\n- Processes the content with the prompt using a small, fast model\n- Returns the model\'s response about the content\n- Use this tool when you need to retrieve and analyze web content\n\nUsage notes:\n  - IMPORTANT: If an MCP-provided web fetch tool is available, prefer using that tool instead of this one, as it may have fewer restrictions. All MCP-provided tools start with "mcp__".\n  - The URL must be a fully-formed valid URL\n  - The prompt should describe what information you want to extract from the page\n  - This tool is read-only and does not modify any files\n  - Results may be summarized if the content is very large\n  - Supports both public and private/localhost URLs using direct fetch', Kind.Fetch, {
             properties: {
                 url: {
-                    description: "The URL to fetch content from",
-                    type: "string",
+                    description: 'The URL to fetch content from',
+                    type: 'string',
                 },
                 prompt: {
-                    description: "The prompt to run on the fetched content",
-                    type: "string",
+                    description: 'The prompt to run on the fetched content',
+                    type: 'string',
                 },
             },
-            required: ["url", "prompt"],
-            type: "object",
+            required: ['url', 'prompt'],
+            type: 'object',
         });
         this.config = config;
         const proxy = config.getProxy();
@@ -142,14 +142,14 @@ export class WebFetchTool extends BaseDeclarativeTool {
         }
     }
     validateToolParamValues(params) {
-        if (!params.url || params.url.trim() === "") {
+        if (!params.url || params.url.trim() === '') {
             return "The 'url' parameter cannot be empty.";
         }
-        if (!params.url.startsWith("http://") &&
-            !params.url.startsWith("https://")) {
+        if (!params.url.startsWith('http://') &&
+            !params.url.startsWith('https://')) {
             return "The 'url' must be a valid URL starting with http:// or https://.";
         }
-        if (!params.prompt || params.prompt.trim() === "") {
+        if (!params.prompt || params.prompt.trim() === '') {
             return "The 'prompt' parameter cannot be empty.";
         }
         return null;

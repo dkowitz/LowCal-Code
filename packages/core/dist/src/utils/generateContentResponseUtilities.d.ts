@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { GenerateContentResponse, Part, FunctionCall } from "@google/genai";
+import type { GenerateContentResponse, Part, FunctionCall } from '@google/genai';
 export declare function getResponseTextFromParts(parts: Part[]): string | undefined;
 export declare function getFunctionCalls(response: GenerateContentResponse): FunctionCall[] | undefined;
 export declare function getFunctionCallsFromParts(parts: Part[]): FunctionCall[] | undefined;

@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { useLoadingIndicator } from "./useLoadingIndicator.js";
-import { StreamingState } from "../types.js";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+import { useLoadingIndicator } from './useLoadingIndicator.js';
+import { StreamingState } from '../types.js';
 import {
   WITTY_LOADING_PHRASES,
   PHRASE_CHANGE_INTERVAL_MS,
-} from "./usePhraseCycler.js";
+} from './usePhraseCycler.js';
 
-describe("useLoadingIndicator", () => {
+describe('useLoadingIndicator', () => {
   beforeEach(() => {
     vi.useFakeTimers();
   });
@@ -23,7 +23,7 @@ describe("useLoadingIndicator", () => {
     act(() => vi.runOnlyPendingTimers);
   });
 
-  it("should initialize with default values when Idle", () => {
+  it('should initialize with default values when Idle', () => {
     const { result } = renderHook(() =>
       useLoadingIndicator(StreamingState.Idle),
     );
@@ -31,7 +31,7 @@ describe("useLoadingIndicator", () => {
     expect(result.current.currentLoadingPhrase).toBe(WITTY_LOADING_PHRASES[0]);
   });
 
-  it("should reflect values when Responding", async () => {
+  it('should reflect values when Responding', async () => {
     const { result } = renderHook(() =>
       useLoadingIndicator(StreamingState.Responding),
     );
@@ -52,7 +52,7 @@ describe("useLoadingIndicator", () => {
     );
   });
 
-  it("should show waiting phrase and retain elapsedTime when WaitingForConfirmation", async () => {
+  it('should show waiting phrase and retain elapsedTime when WaitingForConfirmation', async () => {
     const { result, rerender } = renderHook(
       ({ streamingState }) => useLoadingIndicator(streamingState),
       { initialProps: { streamingState: StreamingState.Responding } },
@@ -68,7 +68,7 @@ describe("useLoadingIndicator", () => {
     });
 
     expect(result.current.currentLoadingPhrase).toBe(
-      "Waiting for user confirmation...",
+      'Waiting for user confirmation...',
     );
     expect(result.current.elapsedTime).toBe(60); // Elapsed time should be retained
 
@@ -79,7 +79,7 @@ describe("useLoadingIndicator", () => {
     expect(result.current.elapsedTime).toBe(60);
   });
 
-  it("should reset elapsedTime and use a witty phrase when transitioning from WaitingForConfirmation to Responding", async () => {
+  it('should reset elapsedTime and use a witty phrase when transitioning from WaitingForConfirmation to Responding', async () => {
     const { result, rerender } = renderHook(
       ({ streamingState }) => useLoadingIndicator(streamingState),
       { initialProps: { streamingState: StreamingState.Responding } },
@@ -95,7 +95,7 @@ describe("useLoadingIndicator", () => {
     });
     expect(result.current.elapsedTime).toBe(5);
     expect(result.current.currentLoadingPhrase).toBe(
-      "Waiting for user confirmation...",
+      'Waiting for user confirmation...',
     );
 
     act(() => {
@@ -112,7 +112,7 @@ describe("useLoadingIndicator", () => {
     expect(result.current.elapsedTime).toBe(1);
   });
 
-  it("should reset timer and phrase when streamingState changes from Responding to Idle", async () => {
+  it('should reset timer and phrase when streamingState changes from Responding to Idle', async () => {
     const { result, rerender } = renderHook(
       ({ streamingState }) => useLoadingIndicator(streamingState),
       { initialProps: { streamingState: StreamingState.Responding } },

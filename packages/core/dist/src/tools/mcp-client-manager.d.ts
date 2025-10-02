@@ -3,11 +3,11 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { MCPServerConfig } from "../config/config.js";
-import type { ToolRegistry } from "./tool-registry.js";
-import type { PromptRegistry } from "../prompts/prompt-registry.js";
-import { MCPDiscoveryState } from "./mcp-client.js";
-import type { WorkspaceContext } from "../utils/workspaceContext.js";
+import type { MCPServerConfig } from '../config/config.js';
+import type { ToolRegistry } from './tool-registry.js';
+import type { PromptRegistry } from '../prompts/prompt-registry.js';
+import { MCPDiscoveryState } from './mcp-client.js';
+import type { WorkspaceContext } from '../utils/workspaceContext.js';
 /**
  * Manages the lifecycle of multiple MCP clients, including local child processes.
  * This class is responsible for starting, stopping, and discovering tools from

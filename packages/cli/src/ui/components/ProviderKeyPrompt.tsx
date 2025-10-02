@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { useState } from "react";
-import { Box, Text, useInput } from "ink";
-import { Colors } from "../colors.js";
+import type React from 'react';
+import { useState } from 'react';
+import { Box, Text, useInput } from 'ink';
+import { Colors } from '../colors.js';
 
 interface ProviderKeyPromptProps {
   prepopulatedBaseUrl: string;
@@ -24,40 +24,38 @@ export function ProviderKeyPrompt({
   onCancel,
   hideApiKeyInput = false,
 }: ProviderKeyPromptProps): React.JSX.Element {
-  const [apiKey, setApiKey] = useState(prepopulatedApiKey || "");
-  const [baseUrl, setBaseUrl] = useState(prepopulatedBaseUrl || "");
+  const [apiKey, setApiKey] = useState(prepopulatedApiKey || '');
+  const [baseUrl, setBaseUrl] = useState(prepopulatedBaseUrl || '');
   const allowApiKeyInput = !hideApiKeyInput;
-  const [currentField, setCurrentField] = useState<"apiKey" | "baseUrl">(
-    allowApiKeyInput && !prepopulatedApiKey ? "apiKey" : "baseUrl",
+  const [currentField, setCurrentField] = useState<'apiKey' | 'baseUrl'>(
+    allowApiKeyInput && !prepopulatedApiKey ? 'apiKey' : 'baseUrl',
   );
 
   useInput((input, key) => {
-    let cleanInput = (input || "")
-      .replace(/\u001b\[[0-9;]*[a-zA-Z]/g, "")
-      .replace(/\[200~/g, "")
-      .replace(/\[201~/g, "")
-      .replace(/^\[|~$/g, "");
+    let cleanInput = (input || '')
+      .replace(/\u001b\[[0-9;]*[a-zA-Z]/g, '')
+      .replace(/\[200~/g, '')
+      .replace(/\[201~/g, '')
+      .replace(/^\[|~$/g, '');
 
     cleanInput = cleanInput
-      .split("")
+      .split('')
       .filter((ch) => ch.charCodeAt(0) >= 32)
-      .join("");
+      .join('');
 
     if (cleanInput.length > 0) {
-      if (currentField === "apiKey") {
+      if (currentField === 'apiKey') {
         if (allowApiKeyInput) setApiKey((p) => p + cleanInput);
       } else setBaseUrl((p) => p + cleanInput);
       return;
     }
 
-    if (input.includes("\n") || input.includes("\r")) {
-      if (currentField === "apiKey" && allowApiKeyInput)
-        setCurrentField("baseUrl");
-      else
-        onSubmit(
-          allowApiKeyInput ? apiKey.trim() : prepopulatedApiKey.trim(),
-          baseUrl.trim(),
-        );
+    if (input.includes('\n') || input.includes('\r')) {
+      if (currentField === 'apiKey' && allowApiKeyInput) setCurrentField('baseUrl');
+      else onSubmit(
+        allowApiKeyInput ? apiKey.trim() : prepopulatedApiKey.trim(),
+        baseUrl.trim(),
+      );
       return;
     }
 
@@ -67,17 +65,17 @@ export function ProviderKeyPrompt({
     }
 
     if (key.tab && allowApiKeyInput) {
-      setCurrentField((c) => (c === "apiKey" ? "baseUrl" : "apiKey"));
+      setCurrentField((c) => (c === 'apiKey' ? 'baseUrl' : 'apiKey'));
       return;
     }
 
     if ((key.upArrow || key.downArrow) && allowApiKeyInput) {
-      setCurrentField((c) => (c === "apiKey" ? "baseUrl" : "apiKey"));
+      setCurrentField((c) => (c === 'apiKey' ? 'baseUrl' : 'apiKey'));
       return;
     }
 
     if (key.backspace || key.delete) {
-      if (currentField === "apiKey" && allowApiKeyInput)
+      if (currentField === 'apiKey' && allowApiKeyInput)
         setApiKey((p) => p.slice(0, -1));
       else setBaseUrl((p) => p.slice(0, -1));
       return;
@@ -107,7 +105,7 @@ export function ProviderKeyPrompt({
           <Box width={12}>
             <Text
               color={
-                currentField === "apiKey" ? Colors.AccentBlue : Colors.Gray
+                currentField === 'apiKey' ? Colors.AccentBlue : Colors.Gray
               }
             >
               API Key:
@@ -115,8 +113,8 @@ export function ProviderKeyPrompt({
           </Box>
           <Box flexGrow={1}>
             <Text>
-              {currentField === "apiKey" ? "> " : "  "}
-              {apiKey || " "}
+              {currentField === 'apiKey' ? '> ' : '  '}
+              {apiKey || ' '}
             </Text>
           </Box>
         </Box>
@@ -124,24 +122,17 @@ export function ProviderKeyPrompt({
 
       <Box marginTop={1} flexDirection="row">
         <Box width={12}>
-          <Text
-            color={currentField === "baseUrl" ? Colors.AccentBlue : Colors.Gray}
-          >
+          <Text color={currentField === 'baseUrl' ? Colors.AccentBlue : Colors.Gray}>
             Base URL:
           </Text>
         </Box>
         <Box flexGrow={1}>
-          <Text>
-            {currentField === "baseUrl" ? "> " : "  "}
-            {baseUrl}
-          </Text>
+          <Text>{currentField === 'baseUrl' ? '> ' : '  '}{baseUrl}</Text>
         </Box>
       </Box>
 
       <Box marginTop={1}>
-        <Text color={Colors.Gray}>
-          Press Enter to continue, Tab/↑↓ to navigate, Esc to cancel
-        </Text>
+        <Text color={Colors.Gray}>Press Enter to continue, Tab/↑↓ to navigate, Esc to cancel</Text>
       </Box>
     </Box>
   );

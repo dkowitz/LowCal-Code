@@ -405,10 +405,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type React from "react";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import type { SlashCommand } from "../commands/types.js";
+import type React from 'react';
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import type { SlashCommand } from '../commands/types.js';
 &nbsp;
 interface Help {
   commands: readonly SlashCommand[];
@@ -430,11 +430,11 @@ export const Help: React.FC&lt;Help&gt; = <span class="fstat-no" title="function
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         Add context
 <span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >      : Use{" "}</span>
+<span class="cstat-no" title="statement not covered" >      : Use{' '}</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         @
-<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{" "}</span>
-<span class="cstat-no" title="statement not covered" >      to specify files for context (e.g.,{" "}</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{' '}</span>
+<span class="cstat-no" title="statement not covered" >      to specify files for context (e.g.,{' '}</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         @src/myFile.ts
 <span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;</span>
@@ -444,15 +444,15 @@ export const Help: React.FC&lt;Help&gt; = <span class="fstat-no" title="function
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         Shell mode
 <span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >      : Execute shell commands via{" "}</span>
+<span class="cstat-no" title="statement not covered" >      : Execute shell commands via{' '}</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         !
-<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{" "}</span>
-<span class="cstat-no" title="statement not covered" >      (e.g.,{" "}</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{' '}</span>
+<span class="cstat-no" title="statement not covered" >      (e.g.,{' '}</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         !npm run start
 <span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >      ) or use natural language (e.g.{" "}</span>
+<span class="cstat-no" title="statement not covered" >      ) or use natural language (e.g.{' '}</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         start server
 <span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;</span>
@@ -471,27 +471,27 @@ export const Help: React.FC&lt;Help&gt; = <span class="fstat-no" title="function
 <span class="cstat-no" title="statement not covered" >        &lt;Box key={command.name} flexDirection="column"&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={Colors.Foreground}&gt;</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Text bold color={Colors.AccentPurple}&gt;</span>
-<span class="cstat-no" title="statement not covered" >              {" "}</span>
+<span class="cstat-no" title="statement not covered" >              {' '}</span>
 <span class="cstat-no" title="statement not covered" >              /{command.name}</span>
 <span class="cstat-no" title="statement not covered" >            &lt;/Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >            {command.description &amp;&amp; " - " + command.description}</span>
+<span class="cstat-no" title="statement not covered" >            {command.description &amp;&amp; ' - ' + command.description}</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          {command.subCommands &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >            command.subCommands.map((subCommand) =&gt; (</span>
 <span class="cstat-no" title="statement not covered" >              &lt;Text key={subCommand.name} color={Colors.Foreground}&gt;</span>
 <span class="cstat-no" title="statement not covered" >                &lt;Text bold color={Colors.AccentPurple}&gt;</span>
-<span class="cstat-no" title="statement not covered" >                  {"   "}</span>
+<span class="cstat-no" title="statement not covered" >                  {'   '}</span>
 <span class="cstat-no" title="statement not covered" >                  {subCommand.name}</span>
 <span class="cstat-no" title="statement not covered" >                &lt;/Text&gt;</span>
-<span class="cstat-no" title="statement not covered" >                {subCommand.description &amp;&amp; " - " + subCommand.description}</span>
+<span class="cstat-no" title="statement not covered" >                {subCommand.description &amp;&amp; ' - ' + subCommand.description}</span>
 <span class="cstat-no" title="statement not covered" >              &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >            ))}</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Box&gt;</span>
 <span class="cstat-no" title="statement not covered" >      ))}</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Text color={Colors.Foreground}&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
-<span class="cstat-no" title="statement not covered" >        {" "}</span>
-<span class="cstat-no" title="statement not covered" >        !{" "}</span>
+<span class="cstat-no" title="statement not covered" >        {' '}</span>
+<span class="cstat-no" title="statement not covered" >        !{' '}</span>
 <span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;</span>
       - shell command
 <span class="cstat-no" title="statement not covered" >    &lt;/Text&gt;</span>
@@ -505,62 +505,62 @@ export const Help: React.FC&lt;Help&gt; = <span class="fstat-no" title="function
 <span class="cstat-no" title="statement not covered" >    &lt;Text color={Colors.Foreground}&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         Alt+Left/Right
-<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{" "}</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{' '}</span>
       - Jump through words in the input
 <span class="cstat-no" title="statement not covered" >    &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Text color={Colors.Foreground}&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         Ctrl+C
-<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{" "}</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{' '}</span>
       - Close dialogs, cancel requests, or quit application
 <span class="cstat-no" title="statement not covered" >    &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Text color={Colors.Foreground}&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
-<span class="cstat-no" title="statement not covered" >        {process.platform === "win32" ? "Ctrl+Enter" : "Ctrl+J"}</span>
-<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{" "}</span>
-<span class="cstat-no" title="statement not covered" >      {process.platform === "linux"</span>
-<span class="cstat-no" title="statement not covered" >        ? "- New line (Alt+Enter works for certain linux distros)"</span>
-<span class="cstat-no" title="statement not covered" >        : "- New line"}</span>
+<span class="cstat-no" title="statement not covered" >        {process.platform === 'win32' ? 'Ctrl+Enter' : 'Ctrl+J'}</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{' '}</span>
+<span class="cstat-no" title="statement not covered" >      {process.platform === 'linux'</span>
+<span class="cstat-no" title="statement not covered" >        ? '- New line (Alt+Enter works for certain linux distros)'</span>
+<span class="cstat-no" title="statement not covered" >        : '- New line'}</span>
 <span class="cstat-no" title="statement not covered" >    &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Text color={Colors.Foreground}&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         Ctrl+L
-<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{" "}</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{' '}</span>
       - Clear the screen
 <span class="cstat-no" title="statement not covered" >    &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Text color={Colors.Foreground}&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
-<span class="cstat-no" title="statement not covered" >        {process.platform === "darwin" ? "Ctrl+X / Meta+Enter" : "Ctrl+X"}</span>
-<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{" "}</span>
+<span class="cstat-no" title="statement not covered" >        {process.platform === 'darwin' ? 'Ctrl+X / Meta+Enter' : 'Ctrl+X'}</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{' '}</span>
       - Open input in external editor
 <span class="cstat-no" title="statement not covered" >    &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Text color={Colors.Foreground}&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         Enter
-<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{" "}</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{' '}</span>
       - Send message
 <span class="cstat-no" title="statement not covered" >    &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Text color={Colors.Foreground}&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         Esc
-<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{" "}</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{' '}</span>
       - Cancel operation / Clear input (double press)
 <span class="cstat-no" title="statement not covered" >    &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Text color={Colors.Foreground}&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         Shift+Tab
-<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{" "}</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{' '}</span>
       - Cycle approval modes
 <span class="cstat-no" title="statement not covered" >    &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Text color={Colors.Foreground}&gt;</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         Up/Down
-<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{" "}</span>
+<span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;{' '}</span>
       - Cycle through your prompt history
 <span class="cstat-no" title="statement not covered" >    &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Box height={1} /&gt;</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Text color={Colors.Foreground}&gt;</span>
-<span class="cstat-no" title="statement not covered" >      For a full list of shortcuts, see{" "}</span>
+<span class="cstat-no" title="statement not covered" >      For a full list of shortcuts, see{' '}</span>
 <span class="cstat-no" title="statement not covered" >      &lt;Text bold color={Colors.AccentPurple}&gt;</span>
         docs/keyboard-shortcuts.md
 <span class="cstat-no" title="statement not covered" >      &lt;/Text&gt;</span>
@@ -574,7 +574,7 @@ export const Help: React.FC&lt;Help&gt; = <span class="fstat-no" title="function
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

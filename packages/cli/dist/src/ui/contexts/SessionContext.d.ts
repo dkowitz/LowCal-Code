@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type React from "react";
-import type { SessionMetrics, ModelMetrics } from "@qwen-code/qwen-code-core";
+import type React from 'react';
+import type { SessionMetrics, ModelMetrics } from '@qwen-code/qwen-code-core';
 export type { SessionMetrics, ModelMetrics };
 export interface SessionStatsState {
     sessionId: string;

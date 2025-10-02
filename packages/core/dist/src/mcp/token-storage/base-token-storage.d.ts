@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { TokenStorage, OAuthCredentials } from "./types.js";
+import type { TokenStorage, OAuthCredentials } from './types.js';
 export declare abstract class BaseTokenStorage implements TokenStorage {
     protected readonly serviceName: string;
     constructor(serviceName?: string);

@@ -3,102 +3,102 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { Theme } from "./theme.js";
+import { Theme } from './theme.js';
 const ayuDarkColors = {
-    type: "dark",
-    Background: "#0b0e14",
-    Foreground: "#bfbdb6",
-    LightBlue: "#59C2FF",
-    AccentBlue: "#39BAE6",
-    AccentPurple: "#D2A6FF",
-    AccentCyan: "#95E6CB",
-    AccentGreen: "#AAD94C",
-    AccentYellow: "#FFB454",
-    AccentRed: "#F26D78",
-    DiffAdded: "#293022",
-    DiffRemoved: "#3D1215",
-    Comment: "#646A71",
-    Gray: "#3D4149",
-    GradientColors: ["#FFB454", "#F26D78"],
+    type: 'dark',
+    Background: '#0b0e14',
+    Foreground: '#bfbdb6',
+    LightBlue: '#59C2FF',
+    AccentBlue: '#39BAE6',
+    AccentPurple: '#D2A6FF',
+    AccentCyan: '#95E6CB',
+    AccentGreen: '#AAD94C',
+    AccentYellow: '#FFB454',
+    AccentRed: '#F26D78',
+    DiffAdded: '#293022',
+    DiffRemoved: '#3D1215',
+    Comment: '#646A71',
+    Gray: '#3D4149',
+    GradientColors: ['#FFB454', '#F26D78'],
 };
-export const AyuDark = new Theme("Ayu", "dark", {
+export const AyuDark = new Theme('Ayu', 'dark', {
     hljs: {
-        display: "block",
-        overflowX: "auto",
-        padding: "0.5em",
+        display: 'block',
+        overflowX: 'auto',
+        padding: '0.5em',
         background: ayuDarkColors.Background,
         color: ayuDarkColors.Foreground,
     },
-    "hljs-keyword": {
+    'hljs-keyword': {
         color: ayuDarkColors.AccentYellow,
     },
-    "hljs-literal": {
+    'hljs-literal': {
         color: ayuDarkColors.AccentPurple,
     },
-    "hljs-symbol": {
+    'hljs-symbol': {
         color: ayuDarkColors.AccentCyan,
     },
-    "hljs-name": {
+    'hljs-name': {
         color: ayuDarkColors.LightBlue,
     },
-    "hljs-link": {
+    'hljs-link': {
         color: ayuDarkColors.AccentBlue,
     },
-    "hljs-function .hljs-keyword": {
+    'hljs-function .hljs-keyword': {
         color: ayuDarkColors.AccentYellow,
     },
-    "hljs-subst": {
+    'hljs-subst': {
         color: ayuDarkColors.Foreground,
     },
-    "hljs-string": {
+    'hljs-string': {
         color: ayuDarkColors.AccentGreen,
     },
-    "hljs-title": {
+    'hljs-title': {
         color: ayuDarkColors.AccentYellow,
     },
-    "hljs-type": {
+    'hljs-type': {
         color: ayuDarkColors.AccentBlue,
     },
-    "hljs-attribute": {
+    'hljs-attribute': {
         color: ayuDarkColors.AccentYellow,
     },
-    "hljs-bullet": {
+    'hljs-bullet': {
         color: ayuDarkColors.AccentYellow,
     },
-    "hljs-addition": {
+    'hljs-addition': {
         color: ayuDarkColors.AccentGreen,
     },
-    "hljs-variable": {
+    'hljs-variable': {
         color: ayuDarkColors.Foreground,
     },
-    "hljs-template-tag": {
+    'hljs-template-tag': {
         color: ayuDarkColors.AccentYellow,
     },
-    "hljs-template-variable": {
+    'hljs-template-variable': {
         color: ayuDarkColors.AccentYellow,
     },
-    "hljs-comment": {
+    'hljs-comment': {
         color: ayuDarkColors.Comment,
-        fontStyle: "italic",
+        fontStyle: 'italic',
     },
-    "hljs-quote": {
+    'hljs-quote': {
         color: ayuDarkColors.AccentCyan,
-        fontStyle: "italic",
+        fontStyle: 'italic',
     },
-    "hljs-deletion": {
+    'hljs-deletion': {
         color: ayuDarkColors.AccentRed,
     },
-    "hljs-meta": {
+    'hljs-meta': {
         color: ayuDarkColors.AccentYellow,
     },
-    "hljs-doctag": {
-        fontWeight: "bold",
+    'hljs-doctag': {
+        fontWeight: 'bold',
     },
-    "hljs-strong": {
-        fontWeight: "bold",
+    'hljs-strong': {
+        fontWeight: 'bold',
     },
-    "hljs-emphasis": {
-        fontStyle: "italic",
+    'hljs-emphasis': {
+        fontStyle: 'italic',
     },
 }, ayuDarkColors);
 //# sourceMappingURL=ayu.js.map

@@ -3,8 +3,8 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { CountTokensParameters } from "@google/genai";
-import type { RequestTokenizer, TokenizerConfig, TokenCalculationResult } from "./types.js";
+import type { CountTokensParameters } from '@google/genai';
+import type { RequestTokenizer, TokenizerConfig, TokenCalculationResult } from './types.js';
 /**
  * Simple request tokenizer that handles text and image content serially
  */

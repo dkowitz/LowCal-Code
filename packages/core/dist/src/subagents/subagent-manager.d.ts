@@ -3,9 +3,9 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { SubagentConfig, SubagentRuntimeConfig, SubagentLevel, ListSubagentsOptions, CreateSubagentOptions } from "./types.js";
-import { SubAgentScope } from "./subagent.js";
-import type { Config } from "../config/config.js";
+import type { SubagentConfig, SubagentRuntimeConfig, SubagentLevel, ListSubagentsOptions, CreateSubagentOptions } from './types.js';
+import { SubAgentScope } from './subagent.js';
+import type { Config } from '../config/config.js';
 /**
  * Manages subagent configurations stored as Markdown files with YAML frontmatter.
  * Provides CRUD operations, validation, and integration with the runtime system.
@@ -106,8 +106,8 @@ export declare class SubagentManager {
      * @returns Promise resolving to SubAgentScope
      */
     createSubagentScope(config: SubagentConfig, runtimeContext: Config, options?: {
-        eventEmitter?: import("./subagent-events.js").SubAgentEventEmitter;
-        hooks?: import("./subagent-hooks.js").SubagentHooks;
+        eventEmitter?: import('./subagent-events.js').SubAgentEventEmitter;
+        hooks?: import('./subagent-hooks.js').SubagentHooks;
     }): Promise<SubAgentScope>;
     /**
      * Converts a file-based SubagentConfig to runtime configuration

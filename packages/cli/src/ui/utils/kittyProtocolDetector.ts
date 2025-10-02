@@ -30,7 +30,7 @@ export async function detectAndEnableKittyProtocol(): Promise<boolean> {
       process.stdin.setRawMode(true);
     }
 
-    let responseBuffer = "";
+    let responseBuffer = '';
     let progressiveEnhancementReceived = false;
     let checkFinished = false;
 
@@ -38,15 +38,15 @@ export async function detectAndEnableKittyProtocol(): Promise<boolean> {
       responseBuffer += data.toString();
 
       // Check for progressive enhancement response (CSI ? <flags> u)
-      if (responseBuffer.includes("\x1b[?") && responseBuffer.includes("u")) {
+      if (responseBuffer.includes('\x1b[?') && responseBuffer.includes('u')) {
         progressiveEnhancementReceived = true;
       }
 
       // Check for device attributes response (CSI ? <attrs> c)
-      if (responseBuffer.includes("\x1b[?") && responseBuffer.includes("c")) {
+      if (responseBuffer.includes('\x1b[?') && responseBuffer.includes('c')) {
         if (!checkFinished) {
           checkFinished = true;
-          process.stdin.removeListener("data", handleData);
+          process.stdin.removeListener('data', handleData);
 
           if (!originalRawMode) {
             process.stdin.setRawMode(false);
@@ -54,13 +54,13 @@ export async function detectAndEnableKittyProtocol(): Promise<boolean> {
 
           if (progressiveEnhancementReceived) {
             // Enable the protocol
-            process.stdout.write("\x1b[>1u");
+            process.stdout.write('\x1b[>1u');
             protocolSupported = true;
             protocolEnabled = true;
 
             // Set up cleanup on exit
-            process.on("exit", disableProtocol);
-            process.on("SIGTERM", disableProtocol);
+            process.on('exit', disableProtocol);
+            process.on('SIGTERM', disableProtocol);
           }
 
           detectionComplete = true;
@@ -69,16 +69,16 @@ export async function detectAndEnableKittyProtocol(): Promise<boolean> {
       }
     };
 
-    process.stdin.on("data", handleData);
+    process.stdin.on('data', handleData);
 
     // Send queries
-    process.stdout.write("\x1b[?u"); // Query progressive enhancement
-    process.stdout.write("\x1b[c"); // Query device attributes
+    process.stdout.write('\x1b[?u'); // Query progressive enhancement
+    process.stdout.write('\x1b[c'); // Query device attributes
 
     // Timeout after 50ms
     setTimeout(() => {
       if (!checkFinished) {
-        process.stdin.removeListener("data", handleData);
+        process.stdin.removeListener('data', handleData);
         if (!originalRawMode) {
           process.stdin.setRawMode(false);
         }
@@ -91,7 +91,7 @@ export async function detectAndEnableKittyProtocol(): Promise<boolean> {
 
 function disableProtocol() {
   if (protocolEnabled) {
-    process.stdout.write("\x1b[<u");
+    process.stdout.write('\x1b[<u');
     protocolEnabled = false;
   }
 }

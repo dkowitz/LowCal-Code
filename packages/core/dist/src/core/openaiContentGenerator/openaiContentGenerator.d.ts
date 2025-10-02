@@ -1,9 +1,9 @@
-import type { ContentGenerator } from "../contentGenerator.js";
-import type { Config } from "../../config/config.js";
-import { type OpenAICompatibleProvider } from "./provider/index.js";
-import type { CountTokensParameters, CountTokensResponse, EmbedContentParameters, EmbedContentResponse, GenerateContentParameters, GenerateContentResponse } from "@google/genai";
-import { ContentGenerationPipeline } from "./pipeline.js";
-import type { ContentGeneratorConfig } from "../contentGenerator.js";
+import type { ContentGenerator } from '../contentGenerator.js';
+import type { Config } from '../../config/config.js';
+import { type OpenAICompatibleProvider } from './provider/index.js';
+import type { CountTokensParameters, CountTokensResponse, EmbedContentParameters, EmbedContentResponse, GenerateContentParameters, GenerateContentResponse } from '@google/genai';
+import { ContentGenerationPipeline } from './pipeline.js';
+import type { ContentGeneratorConfig } from '../contentGenerator.js';
 export declare class OpenAIContentGenerator implements ContentGenerator {
     protected pipeline: ContentGenerationPipeline;
     protected provider: OpenAICompatibleProvider;

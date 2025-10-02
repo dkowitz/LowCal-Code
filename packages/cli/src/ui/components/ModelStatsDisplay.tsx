@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import { formatDuration } from "../utils/formatters.js";
+import type React from 'react';
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import { formatDuration } from '../utils/formatters.js';
 import {
   calculateAverageLatency,
   calculateCacheHitRate,
   calculateErrorRate,
-} from "../utils/computeStats.js";
-import type { ModelMetrics } from "../contexts/SessionContext.js";
-import { useSessionStats } from "../contexts/SessionContext.js";
+} from '../utils/computeStats.js';
+import type { ModelMetrics } from '../contexts/SessionContext.js';
+import { useSessionStats } from '../contexts/SessionContext.js';
 
 const METRIC_COL_WIDTH = 28;
 const MODEL_COL_WIDTH = 22;

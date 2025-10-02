@@ -3,8 +3,8 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { IQwenOAuth2Client } from "./qwenOAuth2.js";
-import { type QwenCredentials } from "./qwenOAuth2.js";
+import type { IQwenOAuth2Client } from './qwenOAuth2.js';
+import { type QwenCredentials } from './qwenOAuth2.js';
 interface LockConfig {
     maxAttempts: number;
     attemptInterval: number;

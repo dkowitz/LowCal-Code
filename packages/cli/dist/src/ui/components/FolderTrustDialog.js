@@ -4,11 +4,11 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import { RadioButtonSelect } from "./shared/RadioButtonSelect.js";
-import { useKeypress } from "../hooks/useKeypress.js";
-import * as process from "node:process";
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
+import { useKeypress } from '../hooks/useKeypress.js';
+import * as process from 'node:process';
 export var FolderTrustChoice;
 (function (FolderTrustChoice) {
     FolderTrustChoice["TRUST_FOLDER"] = "trust_folder";
@@ -17,22 +17,22 @@ export var FolderTrustChoice;
 })(FolderTrustChoice || (FolderTrustChoice = {}));
 export const FolderTrustDialog = ({ onSelect, isRestarting, }) => {
     useKeypress((key) => {
-        if (key.name === "escape") {
+        if (key.name === 'escape') {
             onSelect(FolderTrustChoice.DO_NOT_TRUST);
         }
     }, { isActive: !isRestarting });
     useKeypress((key) => {
-        if (key.name === "r") {
+        if (key.name === 'r') {
             process.exit(0);
         }
     }, { isActive: !!isRestarting });
     const options = [
         {
-            label: "Trust folder",
+            label: 'Trust folder',
             value: FolderTrustChoice.TRUST_FOLDER,
         },
         {
-            label: "Trust parent folder",
+            label: 'Trust parent folder',
             value: FolderTrustChoice.TRUST_PARENT,
         },
         {

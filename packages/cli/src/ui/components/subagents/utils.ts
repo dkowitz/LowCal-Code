@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { COLOR_OPTIONS, TOTAL_WIZARD_STEPS } from "./constants.js";
+import { COLOR_OPTIONS, TOTAL_WIZARD_STEPS } from './constants.js';
 
 export const shouldShowColor = (color?: string): boolean =>
-  color !== undefined && color !== "auto";
+  color !== undefined && color !== 'auto';
 
 export const getColorForDisplay = (colorName?: string): string | undefined =>
-  !colorName || colorName === "auto"
+  !colorName || colorName === 'auto'
     ? undefined
     : COLOR_OPTIONS.find((color) => color.name === colorName)?.value;
 
@@ -22,8 +22,8 @@ export function sanitizeInput(input: string): string {
     input
       .trim()
       // eslint-disable-next-line no-control-regex
-      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // Remove control characters
-      .replace(/\s+/g, " ") // Normalize whitespace
+      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control characters
+      .replace(/\s+/g, ' ') // Normalize whitespace
   ); // Limit length
 }
 
@@ -42,61 +42,61 @@ export function fmtDuration(ms: number): string {
 
 // Dynamic step flow helpers (support manual and guided flows)
 export type StepKind =
-  | "LOCATION"
-  | "GEN_METHOD"
-  | "LLM_DESC"
-  | "MANUAL_NAME"
-  | "MANUAL_PROMPT"
-  | "MANUAL_DESC"
-  | "TOOLS"
-  | "COLOR"
-  | "FINAL";
+  | 'LOCATION'
+  | 'GEN_METHOD'
+  | 'LLM_DESC'
+  | 'MANUAL_NAME'
+  | 'MANUAL_PROMPT'
+  | 'MANUAL_DESC'
+  | 'TOOLS'
+  | 'COLOR'
+  | 'FINAL';
 
-export function getTotalSteps(method: "qwen" | "manual"): number {
-  return method === "manual" ? 8 : TOTAL_WIZARD_STEPS;
+export function getTotalSteps(method: 'qwen' | 'manual'): number {
+  return method === 'manual' ? 8 : TOTAL_WIZARD_STEPS;
 }
 
 export function getStepKind(
-  method: "qwen" | "manual",
+  method: 'qwen' | 'manual',
   stepNumber: number,
 ): StepKind {
-  if (method === "manual") {
+  if (method === 'manual') {
     switch (stepNumber) {
       case 1:
-        return "LOCATION";
+        return 'LOCATION';
       case 2:
-        return "GEN_METHOD";
+        return 'GEN_METHOD';
       case 3:
-        return "MANUAL_NAME";
+        return 'MANUAL_NAME';
       case 4:
-        return "MANUAL_PROMPT";
+        return 'MANUAL_PROMPT';
       case 5:
-        return "MANUAL_DESC";
+        return 'MANUAL_DESC';
       case 6:
-        return "TOOLS";
+        return 'TOOLS';
       case 7:
-        return "COLOR";
+        return 'COLOR';
       case 8:
-        return "FINAL";
+        return 'FINAL';
       default:
-        return "FINAL";
+        return 'FINAL';
     }
   }
 
   switch (stepNumber) {
     case 1:
-      return "LOCATION";
+      return 'LOCATION';
     case 2:
-      return "GEN_METHOD";
+      return 'GEN_METHOD';
     case 3:
-      return "LLM_DESC";
+      return 'LLM_DESC';
     case 4:
-      return "TOOLS";
+      return 'TOOLS';
     case 5:
-      return "COLOR";
+      return 'COLOR';
     case 6:
-      return "FINAL";
+      return 'FINAL';
     default:
-      return "FINAL";
+      return 'FINAL';
   }
 }

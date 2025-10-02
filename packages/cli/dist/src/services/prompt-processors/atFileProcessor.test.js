@@ -3,21 +3,21 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { createMockCommandContext } from "../../test-utils/mockCommandContext.js";
-import {} from "../../ui/commands/types.js";
-import { AtFileProcessor } from "./atFileProcessor.js";
-import { MessageType } from "../../ui/types.js";
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
+import {} from '../../ui/commands/types.js';
+import { AtFileProcessor } from './atFileProcessor.js';
+import { MessageType } from '../../ui/types.js';
 // Mock the core dependency
 const mockReadPathFromWorkspace = vi.hoisted(() => vi.fn());
-vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
+vi.mock('@qwen-code/qwen-code-core', async (importOriginal) => {
     const original = await importOriginal();
     return {
         ...original,
         readPathFromWorkspace: mockReadPathFromWorkspace,
     };
 });
-describe("AtFileProcessor", () => {
+describe('AtFileProcessor', () => {
     let context;
     let mockConfig;
     beforeEach(() => {
@@ -35,16 +35,16 @@ describe("AtFileProcessor", () => {
             { text: `content of ${path}` },
         ]);
     });
-    it("should not change the prompt if no @{ trigger is present", async () => {
+    it('should not change the prompt if no @{ trigger is present', async () => {
         const processor = new AtFileProcessor();
-        const prompt = [{ text: "This is a simple prompt." }];
+        const prompt = [{ text: 'This is a simple prompt.' }];
         const result = await processor.process(prompt, context);
         expect(result).toEqual(prompt);
         expect(mockReadPathFromWorkspace).not.toHaveBeenCalled();
     });
-    it("should not change the prompt if config service is missing", async () => {
+    it('should not change the prompt if config service is missing', async () => {
         const processor = new AtFileProcessor();
-        const prompt = [{ text: "Analyze @{file.txt}" }];
+        const prompt = [{ text: 'Analyze @{file.txt}' }];
         const contextWithoutConfig = createMockCommandContext({
             services: {
                 config: null,
@@ -54,94 +54,94 @@ describe("AtFileProcessor", () => {
         expect(result).toEqual(prompt);
         expect(mockReadPathFromWorkspace).not.toHaveBeenCalled();
     });
-    describe("Parsing Logic", () => {
-        it("should replace a single valid @{path/to/file.txt} placeholder", async () => {
+    describe('Parsing Logic', () => {
+        it('should replace a single valid @{path/to/file.txt} placeholder', async () => {
             const processor = new AtFileProcessor();
             const prompt = [
-                { text: "Analyze this file: @{path/to/file.txt}" },
+                { text: 'Analyze this file: @{path/to/file.txt}' },
             ];
             const result = await processor.process(prompt, context);
-            expect(mockReadPathFromWorkspace).toHaveBeenCalledWith("path/to/file.txt", mockConfig);
+            expect(mockReadPathFromWorkspace).toHaveBeenCalledWith('path/to/file.txt', mockConfig);
             expect(result).toEqual([
-                { text: "Analyze this file: " },
-                { text: "content of path/to/file.txt" },
+                { text: 'Analyze this file: ' },
+                { text: 'content of path/to/file.txt' },
             ]);
         });
-        it("should replace multiple different @{...} placeholders", async () => {
+        it('should replace multiple different @{...} placeholders', async () => {
             const processor = new AtFileProcessor();
             const prompt = [
-                { text: "Compare @{file1.js} with @{file2.js}" },
+                { text: 'Compare @{file1.js} with @{file2.js}' },
             ];
             const result = await processor.process(prompt, context);
             expect(mockReadPathFromWorkspace).toHaveBeenCalledTimes(2);
-            expect(mockReadPathFromWorkspace).toHaveBeenCalledWith("file1.js", mockConfig);
-            expect(mockReadPathFromWorkspace).toHaveBeenCalledWith("file2.js", mockConfig);
+            expect(mockReadPathFromWorkspace).toHaveBeenCalledWith('file1.js', mockConfig);
+            expect(mockReadPathFromWorkspace).toHaveBeenCalledWith('file2.js', mockConfig);
             expect(result).toEqual([
-                { text: "Compare " },
-                { text: "content of file1.js" },
-                { text: " with " },
-                { text: "content of file2.js" },
+                { text: 'Compare ' },
+                { text: 'content of file1.js' },
+                { text: ' with ' },
+                { text: 'content of file2.js' },
             ]);
         });
-        it("should handle placeholders at the beginning, middle, and end", async () => {
+        it('should handle placeholders at the beginning, middle, and end', async () => {
             const processor = new AtFileProcessor();
             const prompt = [
-                { text: "@{start.txt} in the @{middle.txt} and @{end.txt}" },
+                { text: '@{start.txt} in the @{middle.txt} and @{end.txt}' },
             ];
             const result = await processor.process(prompt, context);
             expect(result).toEqual([
-                { text: "content of start.txt" },
-                { text: " in the " },
-                { text: "content of middle.txt" },
-                { text: " and " },
-                { text: "content of end.txt" },
+                { text: 'content of start.txt' },
+                { text: ' in the ' },
+                { text: 'content of middle.txt' },
+                { text: ' and ' },
+                { text: 'content of end.txt' },
             ]);
         });
-        it("should correctly parse paths that contain balanced braces", async () => {
+        it('should correctly parse paths that contain balanced braces', async () => {
             const processor = new AtFileProcessor();
             const prompt = [
-                { text: "Analyze @{path/with/{braces}/file.txt}" },
+                { text: 'Analyze @{path/with/{braces}/file.txt}' },
             ];
             const result = await processor.process(prompt, context);
-            expect(mockReadPathFromWorkspace).toHaveBeenCalledWith("path/with/{braces}/file.txt", mockConfig);
+            expect(mockReadPathFromWorkspace).toHaveBeenCalledWith('path/with/{braces}/file.txt', mockConfig);
             expect(result).toEqual([
-                { text: "Analyze " },
-                { text: "content of path/with/{braces}/file.txt" },
+                { text: 'Analyze ' },
+                { text: 'content of path/with/{braces}/file.txt' },
             ]);
         });
-        it("should throw an error if the prompt contains an unclosed trigger", async () => {
+        it('should throw an error if the prompt contains an unclosed trigger', async () => {
             const processor = new AtFileProcessor();
-            const prompt = [{ text: "Hello @{world" }];
+            const prompt = [{ text: 'Hello @{world' }];
             // The new parser throws an error for unclosed injections.
             await expect(processor.process(prompt, context)).rejects.toThrow(/Unclosed injection/);
         });
     });
-    describe("Integration and Error Handling", () => {
-        it("should leave the placeholder unmodified if readPathFromWorkspace throws", async () => {
+    describe('Integration and Error Handling', () => {
+        it('should leave the placeholder unmodified if readPathFromWorkspace throws', async () => {
             const processor = new AtFileProcessor();
             const prompt = [
-                { text: "Analyze @{not-found.txt} and @{good-file.txt}" },
+                { text: 'Analyze @{not-found.txt} and @{good-file.txt}' },
             ];
             mockReadPathFromWorkspace.mockImplementation(async (path) => {
-                if (path === "not-found.txt") {
-                    throw new Error("File not found");
+                if (path === 'not-found.txt') {
+                    throw new Error('File not found');
                 }
                 return [{ text: `content of ${path}` }];
             });
             const result = await processor.process(prompt, context);
             expect(result).toEqual([
-                { text: "Analyze " },
-                { text: "@{not-found.txt}" }, // Placeholder is preserved as a text part
-                { text: " and " },
-                { text: "content of good-file.txt" },
+                { text: 'Analyze ' },
+                { text: '@{not-found.txt}' }, // Placeholder is preserved as a text part
+                { text: ' and ' },
+                { text: 'content of good-file.txt' },
             ]);
         });
     });
-    describe("UI Feedback", () => {
-        it("should call ui.addItem with an ERROR on failure", async () => {
+    describe('UI Feedback', () => {
+        it('should call ui.addItem with an ERROR on failure', async () => {
             const processor = new AtFileProcessor();
-            const prompt = [{ text: "Analyze @{bad-file.txt}" }];
-            mockReadPathFromWorkspace.mockRejectedValue(new Error("Access denied"));
+            const prompt = [{ text: 'Analyze @{bad-file.txt}' }];
+            mockReadPathFromWorkspace.mockRejectedValue(new Error('Access denied'));
             await processor.process(prompt, context);
             expect(context.ui.addItem).toHaveBeenCalledTimes(1);
             expect(context.ui.addItem).toHaveBeenCalledWith({
@@ -149,23 +149,23 @@ describe("AtFileProcessor", () => {
                 text: "Failed to inject content for '@{bad-file.txt}': Access denied",
             }, expect.any(Number));
         });
-        it("should call ui.addItem with a WARNING if the file was ignored", async () => {
+        it('should call ui.addItem with a WARNING if the file was ignored', async () => {
             const processor = new AtFileProcessor();
-            const prompt = [{ text: "Analyze @{ignored.txt}" }];
+            const prompt = [{ text: 'Analyze @{ignored.txt}' }];
             // Simulate an ignored file by returning an empty array.
             mockReadPathFromWorkspace.mockResolvedValue([]);
             const result = await processor.process(prompt, context);
             // The placeholder should be removed, resulting in only the prefix.
-            expect(result).toEqual([{ text: "Analyze " }]);
+            expect(result).toEqual([{ text: 'Analyze ' }]);
             expect(context.ui.addItem).toHaveBeenCalledTimes(1);
             expect(context.ui.addItem).toHaveBeenCalledWith({
                 type: MessageType.INFO,
                 text: "File '@{ignored.txt}' was ignored by .gitignore or .qwenignore and was not included in the prompt.",
             }, expect.any(Number));
         });
-        it("should NOT call ui.addItem on success", async () => {
+        it('should NOT call ui.addItem on success', async () => {
             const processor = new AtFileProcessor();
-            const prompt = [{ text: "Analyze @{good-file.txt}" }];
+            const prompt = [{ text: 'Analyze @{good-file.txt}' }];
             await processor.process(prompt, context);
             expect(context.ui.addItem).not.toHaveBeenCalled();
         });

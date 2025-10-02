@@ -4,26 +4,26 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { useState, useEffect, useMemo } from "react";
-import { Box, Text, useInput } from "ink";
-import Spinner from "ink-spinner";
-import Link from "ink-link";
-import qrcode from "qrcode-terminal";
-import { Colors } from "../colors.js";
-import type { DeviceAuthorizationInfo } from "../hooks/useQwenAuth.js";
+import type React from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { Box, Text, useInput } from 'ink';
+import Spinner from 'ink-spinner';
+import Link from 'ink-link';
+import qrcode from 'qrcode-terminal';
+import { Colors } from '../colors.js';
+import type { DeviceAuthorizationInfo } from '../hooks/useQwenAuth.js';
 
 interface QwenOAuthProgressProps {
   onTimeout: () => void;
   onCancel: () => void;
   deviceAuth?: DeviceAuthorizationInfo;
   authStatus?:
-    | "idle"
-    | "polling"
-    | "success"
-    | "error"
-    | "timeout"
-    | "rate_limit";
+    | 'idle'
+    | 'polling'
+    | 'success'
+    | 'error'
+    | 'timeout'
+    | 'rate_limit';
   authMessage?: string | null;
 }
 
@@ -89,7 +89,7 @@ function StatusDisplay({
   const formatTime = (seconds: number): string => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
-    return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   return (
@@ -125,11 +125,11 @@ export function QwenOAuthProgress({
 }: QwenOAuthProgressProps): React.JSX.Element {
   const defaultTimeout = deviceAuth?.expires_in || 300; // Default 5 minutes
   const [timeRemaining, setTimeRemaining] = useState<number>(defaultTimeout);
-  const [dots, setDots] = useState<string>("");
+  const [dots, setDots] = useState<string>('');
   const [qrCodeData, setQrCodeData] = useState<string | null>(null);
 
   useInput((input, key) => {
-    if (authStatus === "timeout") {
+    if (authStatus === 'timeout') {
       // Any key press in timeout state should trigger cancel to return to auth dialog
       onCancel();
     } else if (key.escape) {
@@ -153,7 +153,7 @@ export function QwenOAuthProgress({
           },
         );
       } catch (error) {
-        console.error("Failed to generate QR code:", error);
+        console.error('Failed to generate QR code:', error);
         setQrCodeData(null);
       }
     };
@@ -180,8 +180,8 @@ export function QwenOAuthProgress({
   useEffect(() => {
     const dotsTimer = setInterval(() => {
       setDots((prev) => {
-        if (prev.length >= 3) return "";
-        return prev + ".";
+        if (prev.length >= 3) return '';
+        return prev + '.';
       });
     }, 500);
 
@@ -201,7 +201,7 @@ export function QwenOAuthProgress({
   }, [deviceAuth?.verification_uri_complete, qrCodeData]);
 
   // Handle timeout state
-  if (authStatus === "timeout") {
+  if (authStatus === 'timeout') {
     return (
       <Box
         borderStyle="round"
@@ -248,7 +248,7 @@ export function QwenOAuthProgress({
         <Box marginTop={1} justifyContent="space-between">
           <Text color={Colors.Gray}>
             Time remaining: {Math.floor(timeRemaining / 60)}:
-            {(timeRemaining % 60).toString().padStart(2, "0")}
+            {(timeRemaining % 60).toString().padStart(2, '0')}
           </Text>
           <Text color={Colors.AccentPurple}>(Press ESC to cancel)</Text>
         </Box>

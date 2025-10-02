@@ -3,13 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as fs from "node:fs";
-import * as path from "node:path";
-import { homedir } from "node:os";
-import { getErrorMessage, isWithinRoot } from "@qwen-code/qwen-code-core";
-import stripJsonComments from "strip-json-comments";
-export const TRUSTED_FOLDERS_FILENAME = "trustedFolders.json";
-export const SETTINGS_DIRECTORY_NAME = ".qwen";
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { homedir } from 'node:os';
+import { getErrorMessage, isWithinRoot } from '@qwen-code/qwen-code-core';
+import stripJsonComments from 'strip-json-comments';
+export const TRUSTED_FOLDERS_FILENAME = 'trustedFolders.json';
+export const SETTINGS_DIRECTORY_NAME = '.qwen';
 export const USER_SETTINGS_DIR = path.join(homedir(), SETTINGS_DIRECTORY_NAME);
 export const USER_TRUSTED_FOLDERS_PATH = path.join(USER_SETTINGS_DIR, TRUSTED_FOLDERS_FILENAME);
 export var TrustLevel;
@@ -43,7 +43,7 @@ export function loadTrustedFolders() {
     // Load user trusted folders
     try {
         if (fs.existsSync(userPath)) {
-            const content = fs.readFileSync(userPath, "utf-8");
+            const content = fs.readFileSync(userPath, 'utf-8');
             const parsed = JSON.parse(stripJsonComments(content));
             if (parsed) {
                 Object.assign(userConfig, parsed);
@@ -65,10 +65,10 @@ export function saveTrustedFolders(trustedFoldersFile) {
         if (!fs.existsSync(dirPath)) {
             fs.mkdirSync(dirPath, { recursive: true });
         }
-        fs.writeFileSync(trustedFoldersFile.path, JSON.stringify(trustedFoldersFile.config, null, 2), "utf-8");
+        fs.writeFileSync(trustedFoldersFile.path, JSON.stringify(trustedFoldersFile.config, null, 2), 'utf-8');
     }
     catch (error) {
-        console.error("Error saving trusted folders file:", error);
+        console.error('Error saving trusted folders file:', error);
     }
 }
 export function isWorkspaceTrusted(settings) {

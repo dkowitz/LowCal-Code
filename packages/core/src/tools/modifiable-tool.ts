@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { EditorType } from "../utils/editor.js";
-import { openDiff } from "../utils/editor.js";
-import os from "node:os";
-import path from "node:path";
-import fs from "node:fs";
-import * as Diff from "diff";
-import { DEFAULT_DIFF_OPTIONS } from "./diffOptions.js";
-import { isNodeError } from "../utils/errors.js";
+import type { EditorType } from '../utils/editor.js';
+import { openDiff } from '../utils/editor.js';
+import os from 'node:os';
+import path from 'node:path';
+import fs from 'node:fs';
+import * as Diff from 'diff';
+import { DEFAULT_DIFF_OPTIONS } from './diffOptions.js';
+import { isNodeError } from '../utils/errors.js';
 import type {
   AnyDeclarativeTool,
   DeclarativeTool,
   ToolResult,
-} from "./tools.js";
+} from './tools.js';
 
 /**
  * A declarative tool that supports a modify operation.
@@ -51,7 +51,7 @@ export interface ModifyResult<ToolParams> {
 export function isModifiableDeclarativeTool(
   tool: AnyDeclarativeTool,
 ): tool is ModifiableDeclarativeTool<object> {
-  return "getModifyContext" in tool;
+  return 'getModifyContext' in tool;
 }
 
 function createTempFilesForModify(
@@ -60,7 +60,7 @@ function createTempFilesForModify(
   file_path: string,
 ): { oldPath: string; newPath: string } {
   const tempDir = os.tmpdir();
-  const diffDir = path.join(tempDir, "qwen-code-tool-modify-diffs");
+  const diffDir = path.join(tempDir, 'qwen-code-tool-modify-diffs');
 
   if (!fs.existsSync(diffDir)) {
     fs.mkdirSync(diffDir, { recursive: true });
@@ -78,8 +78,8 @@ function createTempFilesForModify(
     `qwen-code-modify-${fileName}-new-${timestamp}${ext}`,
   );
 
-  fs.writeFileSync(tempOldPath, currentContent, "utf8");
-  fs.writeFileSync(tempNewPath, proposedContent, "utf8");
+  fs.writeFileSync(tempOldPath, currentContent, 'utf8');
+  fs.writeFileSync(tempNewPath, proposedContent, 'utf8');
 
   return { oldPath: tempOldPath, newPath: tempNewPath };
 }
@@ -90,21 +90,21 @@ function getUpdatedParams<ToolParams>(
   originalParams: ToolParams,
   modifyContext: ModifyContext<ToolParams>,
 ): { updatedParams: ToolParams; updatedDiff: string } {
-  let oldContent = "";
-  let newContent = "";
+  let oldContent = '';
+  let newContent = '';
 
   try {
-    oldContent = fs.readFileSync(tmpOldPath, "utf8");
+    oldContent = fs.readFileSync(tmpOldPath, 'utf8');
   } catch (err) {
-    if (!isNodeError(err) || err.code !== "ENOENT") throw err;
-    oldContent = "";
+    if (!isNodeError(err) || err.code !== 'ENOENT') throw err;
+    oldContent = '';
   }
 
   try {
-    newContent = fs.readFileSync(tempNewPath, "utf8");
+    newContent = fs.readFileSync(tempNewPath, 'utf8');
   } catch (err) {
-    if (!isNodeError(err) || err.code !== "ENOENT") throw err;
-    newContent = "";
+    if (!isNodeError(err) || err.code !== 'ENOENT') throw err;
+    newContent = '';
   }
 
   const updatedParams = modifyContext.createUpdatedParams(
@@ -116,8 +116,8 @@ function getUpdatedParams<ToolParams>(
     path.basename(modifyContext.getFilePath(originalParams)),
     oldContent,
     newContent,
-    "Current",
-    "Proposed",
+    'Current',
+    'Proposed',
     DEFAULT_DIFF_OPTIONS,
   );
 

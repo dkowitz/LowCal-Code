@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useCallback, useEffect, useState } from "react";
-import { StreamingState } from "../types.js";
+import { useCallback, useEffect, useState } from 'react';
+import { StreamingState } from '../types.js';
 /**
  * Hook for managing message queuing during streaming responses.
  * Allows users to queue messages while the AI is responding and automatically
@@ -26,14 +26,14 @@ export function useMessageQueue({ streamingState, submitQuery, }) {
     // Get all queued messages as a single text string
     const getQueuedMessagesText = useCallback(() => {
         if (messageQueue.length === 0)
-            return "";
-        return messageQueue.join("\n\n");
+            return '';
+        return messageQueue.join('\n\n');
     }, [messageQueue]);
     // Process queued messages when streaming becomes idle
     useEffect(() => {
         if (streamingState === StreamingState.Idle && messageQueue.length > 0) {
             // Combine all messages with double newlines for clarity
-            const combinedMessage = messageQueue.join("\n\n");
+            const combinedMessage = messageQueue.join('\n\n');
             // Clear the queue and submit
             setMessageQueue([]);
             submitQuery(combinedMessage);

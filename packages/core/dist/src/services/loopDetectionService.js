@@ -3,12 +3,12 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { createHash } from "node:crypto";
-import { GeminiEventType } from "../core/turn.js";
-import { logLoopDetected } from "../telemetry/loggers.js";
-import { LoopDetectedEvent, LoopType } from "../telemetry/types.js";
-import { isFunctionCall, isFunctionResponse, } from "../utils/messageInspectors.js";
-import { DEFAULT_QWEN_FLASH_MODEL } from "../config/models.js";
+import { createHash } from 'node:crypto';
+import { GeminiEventType } from '../core/turn.js';
+import { logLoopDetected } from '../telemetry/loggers.js';
+import { LoopDetectedEvent, LoopType } from '../telemetry/types.js';
+import { isFunctionCall, isFunctionResponse, } from '../utils/messageInspectors.js';
+import { DEFAULT_QWEN_FLASH_MODEL } from '../config/models.js';
 const TOOL_CALL_LOOP_THRESHOLD = 5;
 const CONTENT_LOOP_THRESHOLD = 10;
 const CONTENT_CHUNK_SIZE = 50;
@@ -42,12 +42,12 @@ const MAX_LLM_CHECK_INTERVAL = 15;
  */
 export class LoopDetectionService {
     config;
-    promptId = "";
+    promptId = '';
     // Tool call tracking
     lastToolCallKey = null;
     toolCallRepetitionCount = 0;
     // Content streaming tracking
-    streamContentHistory = "";
+    streamContentHistory = '';
     contentStats = new Map();
     lastContentIndex = 0;
     loopDetected = false;
@@ -62,7 +62,7 @@ export class LoopDetectionService {
     getToolCallKey(toolCall) {
         const argsString = JSON.stringify(toolCall.args);
         const keyString = `${toolCall.name}:${argsString}`;
-        return createHash("sha256").update(keyString).digest("hex");
+        return createHash('sha256').update(keyString).digest('hex');
     }
     /**
      * Processes a stream event and checks for loop conditions.
@@ -202,7 +202,7 @@ export class LoopDetectionService {
         while (this.hasMoreChunksToProcess()) {
             // Extract current chunk of text
             const currentChunk = this.streamContentHistory.substring(this.lastContentIndex, this.lastContentIndex + CONTENT_CHUNK_SIZE);
-            const chunkHash = createHash("sha256").update(currentChunk).digest("hex");
+            const chunkHash = createHash('sha256').update(currentChunk).digest('hex');
             if (this.isLoopDetectedForChunk(currentChunk, chunkHash)) {
                 logLoopDetected(this.config, new LoopDetectedEvent(LoopType.CHANTING_IDENTICAL_SENTENCES, this.promptId));
                 return true;
@@ -290,21 +290,21 @@ For example, a series of 'tool_A' or 'tool_B' tool calls that make small, distin
 Please analyze the conversation history to determine the possibility that the conversation is stuck in a repetitive, non-productive state.`;
         const contents = [
             ...trimmedHistory,
-            { role: "user", parts: [{ text: prompt }] },
+            { role: 'user', parts: [{ text: prompt }] },
         ];
         const schema = {
-            type: "object",
+            type: 'object',
             properties: {
                 reasoning: {
-                    type: "string",
-                    description: "Your reasoning on if the conversation is looping without forward progress.",
+                    type: 'string',
+                    description: 'Your reasoning on if the conversation is looping without forward progress.',
                 },
                 confidence: {
-                    type: "number",
-                    description: "A number between 0.0 and 1.0 representing your confidence that the conversation is in an unproductive state.",
+                    type: 'number',
+                    description: 'A number between 0.0 and 1.0 representing your confidence that the conversation is in an unproductive state.',
                 },
             },
-            required: ["reasoning", "confidence"],
+            required: ['reasoning', 'confidence'],
         };
         let result;
         try {
@@ -317,10 +317,10 @@ Please analyze the conversation history to determine the possibility that the co
             this.config.getDebugMode() ? console.error(e) : console.debug(e);
             return false;
         }
-        if (typeof result["confidence"] === "number") {
-            if (result["confidence"] > 0.9) {
-                if (typeof result["reasoning"] === "string" && result["reasoning"]) {
-                    console.warn(result["reasoning"]);
+        if (typeof result['confidence'] === 'number') {
+            if (result['confidence'] > 0.9) {
+                if (typeof result['reasoning'] === 'string' && result['reasoning']) {
+                    console.warn(result['reasoning']);
                 }
                 logLoopDetected(this.config, new LoopDetectedEvent(LoopType.LLM_DETECTED_LOOP, this.promptId));
                 return true;
@@ -328,7 +328,7 @@ Please analyze the conversation history to determine the possibility that the co
             else {
                 this.llmCheckInterval = Math.round(MIN_LLM_CHECK_INTERVAL +
                     (MAX_LLM_CHECK_INTERVAL - MIN_LLM_CHECK_INTERVAL) *
-                        (1 - result["confidence"]));
+                        (1 - result['confidence']));
             }
         }
         return false;
@@ -349,7 +349,7 @@ Please analyze the conversation history to determine the possibility that the co
     }
     resetContentTracking(resetHistory = true) {
         if (resetHistory) {
-            this.streamContentHistory = "";
+            this.streamContentHistory = '';
         }
         this.contentStats.clear();
         this.lastContentIndex = 0;

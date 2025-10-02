@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { HttpsProxyAgent } from "https-proxy-agent";
+import { HttpsProxyAgent } from 'https-proxy-agent';
 import type {
   StartSessionEvent,
   UserPromptEvent,
@@ -24,37 +24,37 @@ import type {
   InvalidChunkEvent,
   ContentRetryEvent,
   ContentRetryFailureEvent,
-} from "../types.js";
-import { EventMetadataKey } from "./event-metadata-key.js";
-import type { Config } from "../../config/config.js";
-import { InstallationManager } from "../../utils/installationManager.js";
-import { UserAccountManager } from "../../utils/userAccountManager.js";
-import { safeJsonStringify } from "../../utils/safeJsonStringify.js";
-import { FixedDeque } from "mnemonist";
-import { GIT_COMMIT_INFO, CLI_VERSION } from "../../generated/git-commit.js";
-import { DetectedIde, detectIdeFromEnv } from "../../ide/detect-ide.js";
+} from '../types.js';
+import { EventMetadataKey } from './event-metadata-key.js';
+import type { Config } from '../../config/config.js';
+import { InstallationManager } from '../../utils/installationManager.js';
+import { UserAccountManager } from '../../utils/userAccountManager.js';
+import { safeJsonStringify } from '../../utils/safeJsonStringify.js';
+import { FixedDeque } from 'mnemonist';
+import { GIT_COMMIT_INFO, CLI_VERSION } from '../../generated/git-commit.js';
+import { DetectedIde, detectIdeFromEnv } from '../../ide/detect-ide.js';
 
 export enum EventNames {
-  START_SESSION = "start_session",
-  NEW_PROMPT = "new_prompt",
-  TOOL_CALL = "tool_call",
-  FILE_OPERATION = "file_operation",
-  API_REQUEST = "api_request",
-  API_RESPONSE = "api_response",
-  API_ERROR = "api_error",
-  END_SESSION = "end_session",
-  FLASH_FALLBACK = "flash_fallback",
-  LOOP_DETECTED = "loop_detected",
-  NEXT_SPEAKER_CHECK = "next_speaker_check",
-  SLASH_COMMAND = "slash_command",
-  MALFORMED_JSON_RESPONSE = "malformed_json_response",
-  IDE_CONNECTION = "ide_connection",
-  KITTY_SEQUENCE_OVERFLOW = "kitty_sequence_overflow",
-  CHAT_COMPRESSION = "chat_compression",
-  CONVERSATION_FINISHED = "conversation_finished",
-  INVALID_CHUNK = "invalid_chunk",
-  CONTENT_RETRY = "content_retry",
-  CONTENT_RETRY_FAILURE = "content_retry_failure",
+  START_SESSION = 'start_session',
+  NEW_PROMPT = 'new_prompt',
+  TOOL_CALL = 'tool_call',
+  FILE_OPERATION = 'file_operation',
+  API_REQUEST = 'api_request',
+  API_RESPONSE = 'api_response',
+  API_ERROR = 'api_error',
+  END_SESSION = 'end_session',
+  FLASH_FALLBACK = 'flash_fallback',
+  LOOP_DETECTED = 'loop_detected',
+  NEXT_SPEAKER_CHECK = 'next_speaker_check',
+  SLASH_COMMAND = 'slash_command',
+  MALFORMED_JSON_RESPONSE = 'malformed_json_response',
+  IDE_CONNECTION = 'ide_connection',
+  KITTY_SEQUENCE_OVERFLOW = 'kitty_sequence_overflow',
+  CHAT_COMPRESSION = 'chat_compression',
+  CONVERSATION_FINISHED = 'conversation_finished',
+  INVALID_CHUNK = 'invalid_chunk',
+  CONTENT_RETRY = 'content_retry',
+  CONTENT_RETRY_FAILURE = 'content_retry_failure',
 }
 
 export interface LogResponse {
@@ -72,7 +72,7 @@ export interface EventValue {
 }
 
 export interface LogEvent {
-  console_type: "GEMINI_CLI";
+  console_type: 'GEMINI_CLI';
   application: number;
   event_name: string;
   event_metadata: EventValue[][];
@@ -81,7 +81,7 @@ export interface LogEvent {
 }
 
 export interface LogRequest {
-  log_source_name: "CONCORD";
+  log_source_name: 'CONCORD';
   request_time_ms: number;
   log_event: LogEventEntry[][];
 }
@@ -96,21 +96,21 @@ export interface LogRequest {
  * methods might have in their runtimes.
  */
 function determineSurface(): string {
-  if (process.env["SURFACE"]) {
-    return process.env["SURFACE"];
-  } else if (process.env["GITHUB_SHA"]) {
-    return "GitHub";
-  } else if (process.env["TERM_PROGRAM"] === "vscode") {
+  if (process.env['SURFACE']) {
+    return process.env['SURFACE'];
+  } else if (process.env['GITHUB_SHA']) {
+    return 'GitHub';
+  } else if (process.env['TERM_PROGRAM'] === 'vscode') {
     return detectIdeFromEnv() || DetectedIde.VSCode;
   } else {
-    return "SURFACE_NOT_SET";
+    return 'SURFACE_NOT_SET';
   }
 }
 
 /**
  * Clearcut URL to send logging events to.
  */
-const CLEARCUT_URL = "https://play.googleapis.com/log?format=json&hasfast=true";
+const CLEARCUT_URL = 'https://play.googleapis.com/log?format=json&hasfast=true';
 
 /**
  * Interval in which buffered events are sent to clearcut.
@@ -135,7 +135,7 @@ export class ClearcutLogger {
   private static instance: ClearcutLogger;
   private config?: Config;
   private sessionData: EventValue[] = [];
-  private promptId: string = "";
+  private promptId: string = '';
   private readonly installationManager: InstallationManager;
   private readonly userAccountManager: UserAccountManager;
 
@@ -164,7 +164,7 @@ export class ClearcutLogger {
   private constructor(config: Config) {
     this.config = config;
     this.events = new FixedDeque<LogEventEntry[]>(Array, MAX_EVENTS);
-    this.promptId = config?.getSessionId() ?? "";
+    this.promptId = config?.getSessionId() ?? '';
     this.installationManager = new InstallationManager();
     this.userAccountManager = new UserAccountManager();
   }
@@ -207,7 +207,7 @@ export class ClearcutLogger {
       }
     } catch (error) {
       if (this.config?.getDebugMode()) {
-        console.error("ClearcutLogger: Failed to enqueue log event.", error);
+        console.error('ClearcutLogger: Failed to enqueue log event.', error);
       }
     }
   }
@@ -223,7 +223,7 @@ export class ClearcutLogger {
     data = this.addDefaultFields(data, totalAccounts);
 
     const logEvent: LogEvent = {
-      console_type: "GEMINI_CLI",
+      console_type: 'GEMINI_CLI',
       application: 102, // GEMINI_CLI
       event_name: eventName as string,
       event_metadata: [data],
@@ -245,7 +245,7 @@ export class ClearcutLogger {
     }
 
     this.flushToClearcut().catch((error) => {
-      console.debug("Error flushing to Clearcut:", error);
+      console.debug('Error flushing to Clearcut:', error);
     });
   }
 
@@ -253,7 +253,7 @@ export class ClearcutLogger {
     if (this.flushing) {
       if (this.config?.getDebugMode()) {
         console.debug(
-          "ClearcutLogger: Flush already in progress, marking pending flush.",
+          'ClearcutLogger: Flush already in progress, marking pending flush.',
         );
       }
       this.pendingFlush = true;
@@ -262,14 +262,14 @@ export class ClearcutLogger {
     this.flushing = true;
 
     if (this.config?.getDebugMode()) {
-      console.log("Flushing log events to Clearcut.");
+      console.log('Flushing log events to Clearcut.');
     }
     const eventsToSend = this.events.toArray() as LogEventEntry[][];
     this.events.clear();
 
     const request: LogRequest[] = [
       {
-        log_source_name: "CONCORD",
+        log_source_name: 'CONCORD',
         request_time_ms: Date.now(),
         log_event: eventsToSend,
       },
@@ -279,10 +279,10 @@ export class ClearcutLogger {
 
     try {
       const response = await fetch(CLEARCUT_URL, {
-        method: "POST",
+        method: 'POST',
         body: safeJsonStringify(request),
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
       });
 
@@ -307,7 +307,7 @@ export class ClearcutLogger {
       }
     } catch (e: unknown) {
       if (this.config?.getDebugMode()) {
-        console.error("Error flushing log events:", e as Error);
+        console.error('Error flushing log events:', e as Error);
       }
 
       // Re-queue failed events for retry
@@ -322,7 +322,7 @@ export class ClearcutLogger {
       // Fire and forget the pending flush
       this.flushToClearcut().catch((error) => {
         if (this.config?.getDebugMode()) {
-          console.debug("Error in pending flush to Clearcut:", error);
+          console.debug('Error in pending flush to Clearcut:', error);
         }
       });
     }
@@ -397,16 +397,16 @@ export class ClearcutLogger {
           EventMetadataKey.GEMINI_CLI_START_SESSION_MCP_SERVERS_COUNT,
         value: event.mcp_servers_count
           ? event.mcp_servers_count.toString()
-          : "",
+          : '',
       },
       {
         gemini_cli_key:
           EventMetadataKey.GEMINI_CLI_START_SESSION_MCP_TOOLS_COUNT,
-        value: event.mcp_tools_count?.toString() ?? "",
+        value: event.mcp_tools_count?.toString() ?? '',
       },
       {
         gemini_cli_key: EventMetadataKey.GEMINI_CLI_START_SESSION_MCP_TOOLS,
-        value: event.mcp_tools ? event.mcp_tools : "",
+        value: event.mcp_tools ? event.mcp_tools : '',
       },
     ];
     this.sessionData = data;
@@ -414,7 +414,7 @@ export class ClearcutLogger {
     // Flush start event immediately
     this.enqueueLogEvent(this.createLogEvent(EventNames.START_SESSION, data));
     this.flushToClearcut().catch((error) => {
-      console.debug("Error flushing to Clearcut:", error);
+      console.debug('Error flushing to Clearcut:', error);
     });
   }
 
@@ -649,7 +649,7 @@ export class ClearcutLogger {
   logFlashFallbackEvent(): void {
     this.enqueueLogEvent(this.createLogEvent(EventNames.FLASH_FALLBACK, []));
     this.flushToClearcut().catch((error) => {
-      console.debug("Error flushing to Clearcut:", error);
+      console.debug('Error flushing to Clearcut:', error);
     });
   }
 
@@ -740,7 +740,7 @@ export class ClearcutLogger {
     const data: EventValue[] = [
       {
         gemini_cli_key: EventMetadataKey.GEMINI_CLI_SESSION_ID,
-        value: this.config?.getSessionId() ?? "",
+        value: this.config?.getSessionId() ?? '',
       },
       {
         gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONVERSATION_TURN_COUNT,
@@ -780,7 +780,7 @@ export class ClearcutLogger {
     // Flush immediately on session end.
     this.enqueueLogEvent(this.createLogEvent(EventNames.END_SESSION, []));
     this.flushToClearcut().catch((error) => {
-      console.debug("Error flushing to Clearcut:", error);
+      console.debug('Error flushing to Clearcut:', error);
     });
   }
 
@@ -825,21 +825,24 @@ export class ClearcutLogger {
 
     if (event.provider) {
       data.push({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_PROVIDER,
+        gemini_cli_key:
+          EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_PROVIDER,
         value: event.provider,
       });
     }
 
-    if (typeof event.status_code === "number") {
+    if (typeof event.status_code === 'number') {
       data.push({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_STATUS_CODE,
+        gemini_cli_key:
+          EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_STATUS_CODE,
         value: String(event.status_code),
       });
     }
 
     if (event.error_message) {
       data.push({
-        gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_ERROR_MESSAGE,
+        gemini_cli_key:
+          EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_ERROR_MESSAGE,
         value: event.error_message,
       });
     }
@@ -886,7 +889,7 @@ export class ClearcutLogger {
       });
     }
 
-    if (typeof event.status_code === "number") {
+    if (typeof event.status_code === 'number') {
       data.push({
         gemini_cli_key:
           EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_FAILURE_STATUS_CODE,
@@ -918,7 +921,7 @@ export class ClearcutLogger {
     const defaultLogMetadata: EventValue[] = [
       {
         gemini_cli_key: EventMetadataKey.GEMINI_CLI_SESSION_ID,
-        value: this.config?.getSessionId() ?? "",
+        value: this.config?.getSessionId() ?? '',
       },
       {
         gemini_cli_key: EventMetadataKey.GEMINI_CLI_AUTH_TYPE,
@@ -959,10 +962,10 @@ export class ClearcutLogger {
     if (!proxyUrl) return undefined;
     // undici which is widely used in the repo can only support http & https proxy protocol,
     // https://github.com/nodejs/undici/issues/2224
-    if (proxyUrl.startsWith("http")) {
+    if (proxyUrl.startsWith('http')) {
       return new HttpsProxyAgent(proxyUrl);
     } else {
-      throw new Error("Unsupported proxy type");
+      throw new Error('Unsupported proxy type');
     }
   }
 

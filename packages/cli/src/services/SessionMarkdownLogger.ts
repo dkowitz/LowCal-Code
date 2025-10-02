@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import path from "node:path";
-import { promises as fs } from "node:fs";
-import type { HistoryItem } from "../ui/types.js";
+import path from 'node:path';
+import { promises as fs } from 'node:fs';
+import type { HistoryItem } from '../ui/types.js';
 
 export interface LoggingStatus {
   enabled: boolean;
@@ -99,15 +99,15 @@ export class SessionMarkdownLogger {
       return this.getStatus();
     }
 
-    const logDir = path.join(this.cwd, "logs");
+    const logDir = path.join(this.cwd, 'logs');
     await fs.mkdir(logDir, { recursive: true });
 
     const timestamp = new Date().toISOString();
-    const safeTimestamp = timestamp.replace(/[:]/g, "-");
+    const safeTimestamp = timestamp.replace(/[:]/g, '-');
     const filePath = path.join(logDir, `session-log-${safeTimestamp}.md`);
 
     const header = this.buildHeader(metadata, timestamp);
-    await fs.writeFile(filePath, header, "utf8");
+    await fs.writeFile(filePath, header, 'utf8');
 
     this.enabled = true;
     this.logFilePath = filePath;
@@ -115,15 +115,11 @@ export class SessionMarkdownLogger {
     this.lastError = undefined;
     this.loggedHistoryIds.clear();
 
-    await this.logEvent("Logging enabled", timestamp, {
-      message:
-        "Session logging activated. Subsequent events will appear below.",
+    await this.logEvent('Logging enabled', timestamp, {
+      message: 'Session logging activated. Subsequent events will appear below.',
       logFilePath: filePath,
     });
-    await this.logHistorySnapshot(
-      initialHistory,
-      "Initial conversation snapshot",
-    );
+    await this.logHistorySnapshot(initialHistory, 'Initial conversation snapshot');
 
     return this.getStatus();
   }
@@ -133,8 +129,8 @@ export class SessionMarkdownLogger {
       return this.getStatus();
     }
     const timestamp = new Date().toISOString();
-    await this.logEvent("Logging disabled", timestamp, {
-      message: reason ?? "Session logging deactivated.",
+    await this.logEvent('Logging disabled', timestamp, {
+      message: reason ?? 'Session logging deactivated.',
     });
     this.enabled = false;
     this.loggingStartedAt = undefined;
@@ -144,7 +140,7 @@ export class SessionMarkdownLogger {
 
   async logHistorySnapshot(
     history: HistoryItem[],
-    label = "Conversation snapshot",
+    label = 'Conversation snapshot',
   ): Promise<void> {
     if (!this.enabled) return;
     const timestamp = new Date().toISOString();
@@ -161,7 +157,7 @@ export class SessionMarkdownLogger {
       this.loggedHistoryIds.add(item.id);
     }
 
-    await this.enqueueWrite(contentLines.join("\n"));
+    await this.enqueueWrite(contentLines.join('\n'));
   }
 
   async logHistoryItem(item: HistoryItem): Promise<void> {
@@ -172,9 +168,7 @@ export class SessionMarkdownLogger {
     await this.enqueueWrite(content);
   }
 
-  async logCommandInvocation(
-    payload: CommandInvocationLogPayload,
-  ): Promise<void> {
+  async logCommandInvocation(payload: CommandInvocationLogPayload): Promise<void> {
     if (!this.enabled) return;
     const meta = {
       rawCommand: payload.rawCommand,
@@ -182,7 +176,7 @@ export class SessionMarkdownLogger {
       args: payload.args,
     };
     await this.logEvent(
-      `Command invoked: ${payload.canonicalPath.join(" ") || payload.rawCommand}`,
+      `Command invoked: ${payload.canonicalPath.join(' ') || payload.rawCommand}`,
       payload.timestamp,
       meta,
     );
@@ -196,13 +190,13 @@ export class SessionMarkdownLogger {
       outcome: payload.outcome,
     };
     if (payload.durationMs !== undefined) {
-      meta["durationMs"] = payload.durationMs;
+      meta['durationMs'] = payload.durationMs;
     }
     if (payload.details) {
-      meta["details"] = payload.details;
+      meta['details'] = payload.details;
     }
     await this.logEvent(
-      `Command completed: ${payload.canonicalPath.join(" ") || payload.rawCommand}`,
+      `Command completed: ${payload.canonicalPath.join(' ') || payload.rawCommand}`,
       payload.timestamp,
       meta,
     );
@@ -210,7 +204,7 @@ export class SessionMarkdownLogger {
 
   async logAppError(payload: AppErrorLogPayload): Promise<void> {
     if (!this.enabled) return;
-    await this.logEvent("Application error", payload.timestamp, {
+    await this.logEvent('Application error', payload.timestamp, {
       message: payload.message,
     });
   }
@@ -223,9 +217,9 @@ export class SessionMarkdownLogger {
       writeSucceeded: payload.writeSucceeded,
     };
     if (payload.reportPath) {
-      meta["reportPath"] = payload.reportPath;
+      meta['reportPath'] = payload.reportPath;
     }
-    await this.logEvent("Error report generated", payload.timestamp, meta, {
+    await this.logEvent('Error report generated', payload.timestamp, meta, {
       json: payload.report,
     });
   }
@@ -240,7 +234,7 @@ export class SessionMarkdownLogger {
 
     if (removed.length > 0 && current.length === 0) {
       this.loggedHistoryIds.clear();
-      void this.logEvent("History cleared", new Date().toISOString(), {
+      void this.logEvent('History cleared', new Date().toISOString(), {
         removedCount: removed.length,
       });
       return;
@@ -248,14 +242,11 @@ export class SessionMarkdownLogger {
 
     if (removed.length > 0 && added.length > 0) {
       this.loggedHistoryIds.clear();
-      void this.logEvent("History replaced", new Date().toISOString(), {
+      void this.logEvent('History replaced', new Date().toISOString(), {
         removedCount: removed.length,
         newCount: current.length,
       });
-      void this.logHistorySnapshot(
-        current,
-        "Conversation snapshot after replacement",
-      );
+      void this.logHistorySnapshot(current, 'Conversation snapshot after replacement');
       return;
     }
 
@@ -263,7 +254,7 @@ export class SessionMarkdownLogger {
       for (const item of removed) {
         this.loggedHistoryIds.delete(item.id);
       }
-      void this.logEvent("History entries removed", new Date().toISOString(), {
+      void this.logEvent('History entries removed', new Date().toISOString(), {
         removedCount: removed.length,
         removedIds: removed.map((item) => item.id),
       });
@@ -281,14 +272,16 @@ export class SessionMarkdownLogger {
     timestamp: string,
   ): string {
     const lines: string[] = [];
-    lines.push("# Session Log", "");
+    lines.push('# Session Log', '');
     lines.push(`- Generated at: ${timestamp}`);
     lines.push(`- Working directory: ${metadata.cwd}`);
     if (metadata.sessionId) {
       lines.push(`- Session ID: ${metadata.sessionId}`);
     }
     if (metadata.sessionStartTime) {
-      lines.push(`- Session start: ${metadata.sessionStartTime.toISOString()}`);
+      lines.push(
+        `- Session start: ${metadata.sessionStartTime.toISOString()}`,
+      );
     }
     if (metadata.model) {
       lines.push(`- Active model: ${metadata.model}`);
@@ -297,18 +290,15 @@ export class SessionMarkdownLogger {
       lines.push(`- Approval mode: ${metadata.approvalMode}`);
     }
     if (metadata.debugMode !== undefined) {
-      lines.push(`- Debug mode: ${metadata.debugMode ? "on" : "off"}`);
+      lines.push(`- Debug mode: ${metadata.debugMode ? 'on' : 'off'}`);
     }
-    if (
-      metadata.additionalContext &&
-      Object.keys(metadata.additionalContext).length > 0
-    ) {
-      lines.push("", "```json");
+    if (metadata.additionalContext && Object.keys(metadata.additionalContext).length > 0) {
+      lines.push('', '```json');
       lines.push(JSON.stringify(metadata.additionalContext, null, 2));
-      lines.push("```");
+      lines.push('```');
     }
-    lines.push("", "## Timeline", "");
-    return lines.join("\n");
+    lines.push('', '## Timeline', '');
+    return lines.join('\n');
   }
 
   private formatHistoryItem(item: HistoryItem, position?: number): string {
@@ -316,37 +306,31 @@ export class SessionMarkdownLogger {
     const headerLabel = position
       ? `${timestamp} — Message #${position} (${item.type})`
       : `${timestamp} — ${item.type}`;
-    const lines: string[] = [`### ${headerLabel}`, ""];
+    const lines: string[] = [`### ${headerLabel}`, ''];
 
-    if ("text" in item && item.text) {
-      lines.push("**Text:**", "```text", item.text, "```", "");
+    if ('text' in item && item.text) {
+      lines.push('**Text:**', '```text', item.text, '```', '');
     }
 
-    if (item.type === "tool_group" && item.tools) {
-      lines.push("**Tools:**");
+    if (item.type === 'tool_group' && item.tools) {
+      lines.push('**Tools:**');
       for (const tool of item.tools) {
         lines.push(
           `- ${tool.name} (${tool.status})${
-            tool.renderOutputAsMarkdown ? " [markdown]" : ""
+            tool.renderOutputAsMarkdown ? ' [markdown]' : ''
           }`,
         );
         if (tool.resultDisplay !== undefined) {
-          lines.push("  ```json");
+          lines.push('  ```json');
           lines.push(JSON.stringify(tool.resultDisplay, null, 2));
-          lines.push("  ```");
+          lines.push('  ```');
         }
       }
-      lines.push("");
+      lines.push('');
     }
 
-    lines.push(
-      "**Raw item:**",
-      "```json",
-      JSON.stringify(item, null, 2),
-      "```",
-      "",
-    );
-    return lines.join("\n");
+    lines.push('**Raw item:**', '```json', JSON.stringify(item, null, 2), '```', '');
+    return lines.join('\n');
   }
 
   private async logEvent(
@@ -356,18 +340,18 @@ export class SessionMarkdownLogger {
     extra?: { json?: unknown },
   ): Promise<void> {
     if (!this.enabled) return;
-    const lines: string[] = [`### ${timestamp} — ${title}`, ""];
+    const lines: string[] = [`### ${timestamp} — ${title}`, ''];
     if (metadata) {
-      lines.push("```json");
+      lines.push('```json');
       lines.push(JSON.stringify(metadata, null, 2));
-      lines.push("```", "");
+      lines.push('```', '');
     }
     if (extra?.json !== undefined) {
-      lines.push("```json");
+      lines.push('```json');
       lines.push(JSON.stringify(extra.json, null, 2));
-      lines.push("```", "");
+      lines.push('```', '');
     }
-    await this.enqueueWrite(lines.join("\n"));
+    await this.enqueueWrite(lines.join('\n'));
   }
 
   private async enqueueWrite(content: string): Promise<void> {
@@ -375,7 +359,7 @@ export class SessionMarkdownLogger {
       return;
     }
     this.writeQueue = this.writeQueue
-      .then(() => fs.appendFile(this.logFilePath!, `${content}\n`, "utf8"))
+      .then(() => fs.appendFile(this.logFilePath!, `${content}\n`, 'utf8'))
       .catch((error) => {
         this.lastError = error instanceof Error ? error.message : String(error);
       });

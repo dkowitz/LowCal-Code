@@ -4,23 +4,23 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import React, { useState, useEffect } from "react";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import { SettingScope } from "../../config/settings.js";
-import { getScopeItems, getScopeMessageForSetting, } from "../../utils/dialogScopeUtils.js";
-import { RadioButtonSelect } from "./shared/RadioButtonSelect.js";
-import { getDialogSettingKeys, getSettingValue, setPendingSettingValue, getDisplayValue, hasRestartRequiredSettings, saveModifiedSettings, getSettingDefinition, isDefaultValue, requiresRestart, getRestartRequiredFromModified, getDefaultValue, setPendingSettingValueAny, getNestedValue, } from "../../utils/settingsUtils.js";
-import { useVimMode } from "../contexts/VimModeContext.js";
-import { useKeypress } from "../hooks/useKeypress.js";
-import chalk from "chalk";
-import { cpSlice, cpLen, stripUnsafeCharacters } from "../utils/textUtils.js";
+import React, { useState, useEffect } from 'react';
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import { SettingScope } from '../../config/settings.js';
+import { getScopeItems, getScopeMessageForSetting, } from '../../utils/dialogScopeUtils.js';
+import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
+import { getDialogSettingKeys, getSettingValue, setPendingSettingValue, getDisplayValue, hasRestartRequiredSettings, saveModifiedSettings, getSettingDefinition, isDefaultValue, requiresRestart, getRestartRequiredFromModified, getDefaultValue, setPendingSettingValueAny, getNestedValue, } from '../../utils/settingsUtils.js';
+import { useVimMode } from '../contexts/VimModeContext.js';
+import { useKeypress } from '../hooks/useKeypress.js';
+import chalk from 'chalk';
+import { cpSlice, cpLen, stripUnsafeCharacters } from '../utils/textUtils.js';
 const maxItemsToShow = 8;
 export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
     // Get vim mode context to sync vim mode changes
     const { vimEnabled, toggleVimEnabled } = useVimMode();
     // Focus state: 'settings' or 'scope'
-    const [focusSection, setFocusSection] = useState("settings");
+    const [focusSection, setFocusSection] = useState('settings');
     // Scope selector state (User by default)
     const [selectedScope, setSelectedScope] = useState(SettingScope.User);
     // Active indices
@@ -45,11 +45,11 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
         const newRestartRequired = new Set();
         for (const [key, value] of globalPendingChanges.entries()) {
             const def = getSettingDefinition(key);
-            if (def?.type === "boolean" && typeof value === "boolean") {
+            if (def?.type === 'boolean' && typeof value === 'boolean') {
                 updated = setPendingSettingValue(key, value, updated);
             }
-            else if ((def?.type === "number" && typeof value === "number") ||
-                (def?.type === "string" && typeof value === "string")) {
+            else if ((def?.type === 'number' && typeof value === 'number') ||
+                (def?.type === 'string' && typeof value === 'string')) {
                 updated = setPendingSettingValueAny(key, value, updated);
             }
             newModified.add(key);
@@ -70,7 +70,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                 value: key,
                 type: definition?.type,
                 toggle: () => {
-                    if (definition?.type !== "boolean") {
+                    if (definition?.type !== 'boolean') {
                         // For non-boolean items, toggle will be handled via edit mode.
                         return;
                     }
@@ -83,10 +83,10 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                         console.log(`[DEBUG SettingsDialog] Saving ${key} immediately with value:`, newValue);
                         saveModifiedSettings(immediateSettings, immediateSettingsObject, settings, selectedScope);
                         // Special handling for vim mode to sync with VimModeContext
-                        if (key === "general.vimMode" && newValue !== vimEnabled) {
+                        if (key === 'general.vimMode' && newValue !== vimEnabled) {
                             // Call toggleVimEnabled to sync the VimModeContext local state
                             toggleVimEnabled().catch((error) => {
-                                console.error("Failed to toggle vim mode:", error);
+                                console.error('Failed to toggle vim mode:', error);
                             });
                         }
                         // Remove from modifiedSettings since it's now saved
@@ -117,7 +117,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                         setModifiedSettings((prev) => {
                             const updated = new Set(prev).add(key);
                             const needsRestart = hasRestartRequiredSettings(updated);
-                            console.log(`[DEBUG SettingsDialog] Modified settings:`, Array.from(updated), "Needs restart:", needsRestart);
+                            console.log(`[DEBUG SettingsDialog] Modified settings:`, Array.from(updated), 'Needs restart:', needsRestart);
                             if (needsRestart) {
                                 setShowRestartPrompt(true);
                                 setRestartRequiredSettings((prevRestart) => new Set(prevRestart).add(key));
@@ -138,7 +138,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
     const items = generateSettingsItems();
     // Generic edit state
     const [editingKey, setEditingKey] = useState(null);
-    const [editBuffer, setEditBuffer] = useState("");
+    const [editBuffer, setEditBuffer] = useState('');
     const [editCursorPos, setEditCursorPos] = useState(0); // Cursor position within edit buffer
     const [cursorVisible, setCursorVisible] = useState(true);
     useEffect(() => {
@@ -151,27 +151,27 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
     }, [editingKey]);
     const startEditing = (key, initial) => {
         setEditingKey(key);
-        const initialValue = initial ?? "";
+        const initialValue = initial ?? '';
         setEditBuffer(initialValue);
         setEditCursorPos(cpLen(initialValue)); // Position cursor at end of initial value
     };
     const commitEdit = (key) => {
         const definition = getSettingDefinition(key);
         const type = definition?.type;
-        if (editBuffer.trim() === "" && type === "number") {
+        if (editBuffer.trim() === '' && type === 'number') {
             // Nothing entered for a number; cancel edit
             setEditingKey(null);
-            setEditBuffer("");
+            setEditBuffer('');
             setEditCursorPos(0);
             return;
         }
         let parsed;
-        if (type === "number") {
+        if (type === 'number') {
             const numParsed = Number(editBuffer.trim());
             if (Number.isNaN(numParsed)) {
                 // Invalid number; cancel edit
                 setEditingKey(null);
-                setEditBuffer("");
+                setEditBuffer('');
                 setEditCursorPos(0);
                 return;
             }
@@ -226,7 +226,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
             });
         }
         setEditingKey(null);
-        setEditBuffer("");
+        setEditBuffer('');
         setEditCursorPos(0);
     };
     // Scope selector items
@@ -236,7 +236,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
     };
     const handleScopeSelect = (scope) => {
         handleScopeHighlight(scope);
-        setFocusSection("settings");
+        setFocusSection('settings');
     };
     // Scroll logic for settings
     const visibleItems = items.slice(scrollOffset, scrollOffset + maxItemsToShow);
@@ -245,18 +245,18 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
     const showScrollDown = true;
     useKeypress((key) => {
         const { name, ctrl } = key;
-        if (name === "tab") {
-            setFocusSection((prev) => (prev === "settings" ? "scope" : "settings"));
+        if (name === 'tab') {
+            setFocusSection((prev) => (prev === 'settings' ? 'scope' : 'settings'));
         }
-        if (focusSection === "settings") {
+        if (focusSection === 'settings') {
             // If editing, capture input and control keys
             if (editingKey) {
                 const definition = getSettingDefinition(editingKey);
                 const type = definition?.type;
                 if (key.paste && key.sequence) {
                     let pasted = key.sequence;
-                    if (type === "number") {
-                        pasted = key.sequence.replace(/[^0-9\-+.]/g, "");
+                    if (type === 'number') {
+                        pasted = key.sequence.replace(/[^0-9\-+.]/g, '');
                     }
                     if (pasted) {
                         setEditBuffer((b) => {
@@ -268,8 +268,8 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                     }
                     return;
                 }
-                if (name === "backspace" || name === "delete") {
-                    if (name === "backspace" && editCursorPos > 0) {
+                if (name === 'backspace' || name === 'delete') {
+                    if (name === 'backspace' && editCursorPos > 0) {
                         setEditBuffer((b) => {
                             const before = cpSlice(b, 0, editCursorPos - 1);
                             const after = cpSlice(b, editCursorPos);
@@ -277,7 +277,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                         });
                         setEditCursorPos((pos) => pos - 1);
                     }
-                    else if (name === "delete" && editCursorPos < cpLen(editBuffer)) {
+                    else if (name === 'delete' && editCursorPos < cpLen(editBuffer)) {
                         setEditBuffer((b) => {
                             const before = cpSlice(b, 0, editCursorPos);
                             const after = cpSlice(b, editCursorPos + 1);
@@ -287,17 +287,17 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                     }
                     return;
                 }
-                if (name === "escape") {
+                if (name === 'escape') {
                     commitEdit(editingKey);
                     return;
                 }
-                if (name === "return") {
+                if (name === 'return') {
                     commitEdit(editingKey);
                     return;
                 }
                 let ch = key.sequence;
                 let isValidChar = false;
-                if (type === "number") {
+                if (type === 'number') {
                     // Allow digits, minus, plus, and dot.
                     isValidChar = /[0-9\-+.]/.test(ch);
                 }
@@ -317,27 +317,27 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                     return;
                 }
                 // Arrow key navigation
-                if (name === "left") {
+                if (name === 'left') {
                     setEditCursorPos((pos) => Math.max(0, pos - 1));
                     return;
                 }
-                if (name === "right") {
+                if (name === 'right') {
                     setEditCursorPos((pos) => Math.min(cpLen(editBuffer), pos + 1));
                     return;
                 }
                 // Home and End keys
-                if (name === "home") {
+                if (name === 'home') {
                     setEditCursorPos(0);
                     return;
                 }
-                if (name === "end") {
+                if (name === 'end') {
                     setEditCursorPos(cpLen(editBuffer));
                     return;
                 }
                 // Block other keys while editing
                 return;
             }
-            if (name === "up" || name === "k") {
+            if (name === 'up' || name === 'k') {
                 // If editing, commit first
                 if (editingKey) {
                     commitEdit(editingKey);
@@ -352,7 +352,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                     setScrollOffset(newIndex);
                 }
             }
-            else if (name === "down" || name === "j") {
+            else if (name === 'down' || name === 'j') {
                 // If editing, commit first
                 if (editingKey) {
                     commitEdit(editingKey);
@@ -367,35 +367,35 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                     setScrollOffset(newIndex - maxItemsToShow + 1);
                 }
             }
-            else if (name === "return" || name === "space") {
+            else if (name === 'return' || name === 'space') {
                 const currentItem = items[activeSettingIndex];
-                if (currentItem?.type === "number" ||
-                    currentItem?.type === "string") {
+                if (currentItem?.type === 'number' ||
+                    currentItem?.type === 'string') {
                     startEditing(currentItem.value);
                 }
                 else {
                     currentItem?.toggle();
                 }
             }
-            else if (/^[0-9]$/.test(key.sequence || "") && !editingKey) {
+            else if (/^[0-9]$/.test(key.sequence || '') && !editingKey) {
                 const currentItem = items[activeSettingIndex];
-                if (currentItem?.type === "number") {
+                if (currentItem?.type === 'number') {
                     startEditing(currentItem.value, key.sequence);
                 }
             }
-            else if (ctrl && (name === "c" || name === "l")) {
+            else if (ctrl && (name === 'c' || name === 'l')) {
                 // Ctrl+C or Ctrl+L: Clear current setting and reset to default
                 const currentSetting = items[activeSettingIndex];
                 if (currentSetting) {
                     const defaultValue = getDefaultValue(currentSetting.value);
                     const defType = currentSetting.type;
-                    if (defType === "boolean") {
-                        const booleanDefaultValue = typeof defaultValue === "boolean" ? defaultValue : false;
+                    if (defType === 'boolean') {
+                        const booleanDefaultValue = typeof defaultValue === 'boolean' ? defaultValue : false;
                         setPendingSettings((prev) => setPendingSettingValue(currentSetting.value, booleanDefaultValue, prev));
                     }
-                    else if (defType === "number" || defType === "string") {
-                        if (typeof defaultValue === "number" ||
-                            typeof defaultValue === "string") {
+                    else if (defType === 'number' || defType === 'string') {
+                        if (typeof defaultValue === 'number' ||
+                            typeof defaultValue === 'string') {
                             setPendingSettings((prev) => setPendingSettingValueAny(currentSetting.value, defaultValue, prev));
                         }
                     }
@@ -414,12 +414,12 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                     // If this setting doesn't require restart, save it immediately
                     if (!requiresRestart(currentSetting.value)) {
                         const immediateSettings = new Set([currentSetting.value]);
-                        const toSaveValue = currentSetting.type === "boolean"
-                            ? typeof defaultValue === "boolean"
+                        const toSaveValue = currentSetting.type === 'boolean'
+                            ? typeof defaultValue === 'boolean'
                                 ? defaultValue
                                 : false
-                            : typeof defaultValue === "number" ||
-                                typeof defaultValue === "string"
+                            : typeof defaultValue === 'number' ||
+                                typeof defaultValue === 'string'
                                 ? defaultValue
                                 : undefined;
                         const immediateSettingsObject = toSaveValue !== undefined
@@ -437,12 +437,12 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                     }
                     else {
                         // Track default reset as a pending change if restart required
-                        if ((currentSetting.type === "boolean" &&
-                            typeof defaultValue === "boolean") ||
-                            (currentSetting.type === "number" &&
-                                typeof defaultValue === "number") ||
-                            (currentSetting.type === "string" &&
-                                typeof defaultValue === "string")) {
+                        if ((currentSetting.type === 'boolean' &&
+                            typeof defaultValue === 'boolean') ||
+                            (currentSetting.type === 'number' &&
+                                typeof defaultValue === 'number') ||
+                            (currentSetting.type === 'string' &&
+                                typeof defaultValue === 'string')) {
                             setGlobalPendingChanges((prev) => {
                                 const next = new Map(prev);
                                 next.set(currentSetting.value, defaultValue);
@@ -453,7 +453,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                 }
             }
         }
-        if (showRestartPrompt && name === "r") {
+        if (showRestartPrompt && name === 'r') {
             // Only save settings that require restart (non-restart settings were already saved immediately)
             const restartRequiredSettings = getRestartRequiredFromModified(modifiedSettings);
             const restartRequiredSet = new Set(restartRequiredSettings);
@@ -475,7 +475,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
             if (onRestartRequest)
                 onRestartRequest();
         }
-        if (name === "escape") {
+        if (name === 'escape') {
             if (editingKey) {
                 commitEdit(editingKey);
             }
@@ -485,7 +485,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
         }
     }, { isActive: true });
     return (_jsx(Box, { borderStyle: "round", borderColor: Colors.Gray, flexDirection: "row", padding: 1, width: "100%", height: "100%", children: _jsxs(Box, { flexDirection: "column", flexGrow: 1, children: [_jsx(Text, { bold: true, color: Colors.AccentBlue, children: "Settings" }), _jsx(Box, { height: 1 }), showScrollUp && _jsx(Text, { color: Colors.Gray, children: "\u25B2" }), visibleItems.map((item, idx) => {
-                    const isActive = focusSection === "settings" &&
+                    const isActive = focusSection === 'settings' &&
                         activeSettingIndex === idx + scrollOffset;
                     const scopeSettings = settings.forScope(selectedScope).settings;
                     const mergedSettings = settings.merged;
@@ -502,16 +502,16 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                         }
                         else if (cursorVisible && editCursorPos >= cpLen(editBuffer)) {
                             // Cursor is at the end - show inverted space
-                            displayValue = editBuffer + chalk.inverse(" ");
+                            displayValue = editBuffer + chalk.inverse(' ');
                         }
                         else {
                             // Cursor not visible
                             displayValue = editBuffer;
                         }
                     }
-                    else if (item.type === "number" || item.type === "string") {
+                    else if (item.type === 'number' || item.type === 'string') {
                         // For numbers/strings, get the actual current value from pending settings
-                        const path = item.value.split(".");
+                        const path = item.value.split('.');
                         const currentValue = getNestedValue(pendingSettings, path);
                         const defaultValue = getDefaultValue(item.value);
                         if (currentValue !== undefined && currentValue !== null) {
@@ -521,7 +521,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                             displayValue =
                                 defaultValue !== undefined && defaultValue !== null
                                     ? String(defaultValue)
-                                    : "";
+                                    : '';
                         }
                         // Add * if value differs from default OR if currently being modified
                         const isModified = modifiedSettings.has(item.value);
@@ -530,7 +530,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                             : defaultValue;
                         const isDifferentFromDefault = effectiveCurrentValue !== defaultValue;
                         if (isDifferentFromDefault || isModified) {
-                            displayValue += "*";
+                            displayValue += '*';
                         }
                     }
                     else {
@@ -540,11 +540,11 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                     const shouldBeGreyedOut = isDefaultValue(item.value, scopeSettings);
                     // Generate scope message for this setting
                     const scopeMessage = getScopeMessageForSetting(item.value, selectedScope, settings);
-                    return (_jsxs(React.Fragment, { children: [_jsxs(Box, { flexDirection: "row", alignItems: "center", children: [_jsx(Box, { minWidth: 2, flexShrink: 0, children: _jsx(Text, { color: isActive ? Colors.AccentGreen : Colors.Gray, children: isActive ? "●" : "" }) }), _jsx(Box, { minWidth: 50, children: _jsxs(Text, { color: isActive ? Colors.AccentGreen : Colors.Foreground, children: [item.label, scopeMessage && (_jsxs(Text, { color: Colors.Gray, children: [" ", scopeMessage] }))] }) }), _jsx(Box, { minWidth: 3 }), _jsx(Text, { color: isActive
+                    return (_jsxs(React.Fragment, { children: [_jsxs(Box, { flexDirection: "row", alignItems: "center", children: [_jsx(Box, { minWidth: 2, flexShrink: 0, children: _jsx(Text, { color: isActive ? Colors.AccentGreen : Colors.Gray, children: isActive ? '●' : '' }) }), _jsx(Box, { minWidth: 50, children: _jsxs(Text, { color: isActive ? Colors.AccentGreen : Colors.Foreground, children: [item.label, scopeMessage && (_jsxs(Text, { color: Colors.Gray, children: [" ", scopeMessage] }))] }) }), _jsx(Box, { minWidth: 3 }), _jsx(Text, { color: isActive
                                             ? Colors.AccentGreen
                                             : shouldBeGreyedOut
                                                 ? Colors.Gray
                                                 : Colors.Foreground, children: displayValue })] }), _jsx(Box, { height: 1 })] }, item.value));
-                }), showScrollDown && _jsx(Text, { color: Colors.Gray, children: "\u25BC" }), _jsx(Box, { height: 1 }), _jsxs(Box, { marginTop: 1, flexDirection: "column", children: [_jsxs(Text, { bold: focusSection === "scope", wrap: "truncate", children: [focusSection === "scope" ? "> " : "  ", "Apply To"] }), _jsx(RadioButtonSelect, { items: scopeItems, initialIndex: 0, onSelect: handleScopeSelect, onHighlight: handleScopeHighlight, isFocused: focusSection === "scope", showNumbers: focusSection === "scope" })] }), _jsx(Box, { height: 1 }), _jsx(Text, { color: Colors.Gray, children: "(Use Enter to select, Tab to change focus)" }), showRestartPrompt && (_jsx(Text, { color: Colors.AccentYellow, children: "To see changes, Qwen Code must be restarted. Press r to exit and apply changes now." }))] }) }));
+                }), showScrollDown && _jsx(Text, { color: Colors.Gray, children: "\u25BC" }), _jsx(Box, { height: 1 }), _jsxs(Box, { marginTop: 1, flexDirection: "column", children: [_jsxs(Text, { bold: focusSection === 'scope', wrap: "truncate", children: [focusSection === 'scope' ? '> ' : '  ', "Apply To"] }), _jsx(RadioButtonSelect, { items: scopeItems, initialIndex: 0, onSelect: handleScopeSelect, onHighlight: handleScopeHighlight, isFocused: focusSection === 'scope', showNumbers: focusSection === 'scope' })] }), _jsx(Box, { height: 1 }), _jsx(Text, { color: Colors.Gray, children: "(Use Enter to select, Tab to change focus)" }), showRestartPrompt && (_jsx(Text, { color: Colors.AccentYellow, children: "To see changes, Qwen Code must be restarted. Press r to exit and apply changes now." }))] }) }));
 }
 //# sourceMappingURL=SettingsDialog.js.map

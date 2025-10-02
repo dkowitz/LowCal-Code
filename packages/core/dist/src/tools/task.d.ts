@@ -3,11 +3,11 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { BaseDeclarativeTool, BaseToolInvocation } from "./tools.js";
-import type { ToolResult, ToolResultDisplay } from "./tools.js";
-import type { Config } from "../config/config.js";
-import type { SubagentManager } from "../subagents/subagent-manager.js";
-import { SubAgentEventEmitter } from "../subagents/subagent-events.js";
+import { BaseDeclarativeTool, BaseToolInvocation } from './tools.js';
+import type { ToolResult, ToolResultDisplay } from './tools.js';
+import type { Config } from '../config/config.js';
+import type { SubagentManager } from '../subagents/subagent-manager.js';
+import { SubAgentEventEmitter } from '../subagents/subagent-events.js';
 export interface TaskParams {
     description: string;
     prompt: string;

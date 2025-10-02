@@ -4,10 +4,10 @@ import { jsx as _jsx, Fragment as _Fragment, jsxs as _jsxs } from "react/jsx-run
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import { PrepareLabel } from "./PrepareLabel.js";
-import { isSlashCommand } from "../utils/commandUtils.js";
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import { PrepareLabel } from './PrepareLabel.js';
+import { isSlashCommand } from '../utils/commandUtils.js';
 export const MAX_SUGGESTIONS_TO_SHOW = 8;
 export function SuggestionsDisplay({ suggestions, activeIndex, isLoading, width, scrollOffset, userInput, }) {
     if (isLoading) {

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs from "node:fs/promises";
-import * as os from "node:os";
-import path from "node:path";
+import fs from 'node:fs/promises';
+import * as os from 'node:os';
+import path from 'node:path';
 
 type WarningCheck = {
   id: string;
@@ -15,7 +15,7 @@ type WarningCheck = {
 
 // Individual warning checks
 const homeDirectoryCheck: WarningCheck = {
-  id: "home-directory",
+  id: 'home-directory',
   check: async (workspaceRoot: string) => {
     try {
       const [workspaceRealPath, homeRealPath] = await Promise.all([
@@ -24,22 +24,22 @@ const homeDirectoryCheck: WarningCheck = {
       ]);
 
       if (workspaceRealPath === homeRealPath) {
-        return "You are running Qwen Code in your home directory. It is recommended to run in a project-specific directory.";
+        return 'You are running Qwen Code in your home directory. It is recommended to run in a project-specific directory.';
       }
       return null;
     } catch (_err: unknown) {
-      return "Could not verify the current directory due to a file system error.";
+      return 'Could not verify the current directory due to a file system error.';
     }
   },
 };
 
 const rootDirectoryCheck: WarningCheck = {
-  id: "root-directory",
+  id: 'root-directory',
   check: async (workspaceRoot: string) => {
     try {
       const workspaceRealPath = await fs.realpath(workspaceRoot);
       const errorMessage =
-        "Warning: You are running Qwen Code in the root directory. Your entire folder structure will be used for context. It is strongly recommended to run in a project-specific directory.";
+        'Warning: You are running Qwen Code in the root directory. Your entire folder structure will be used for context. It is strongly recommended to run in a project-specific directory.';
 
       // Check for Unix root directory
       if (path.dirname(workspaceRealPath) === workspaceRealPath) {
@@ -48,7 +48,7 @@ const rootDirectoryCheck: WarningCheck = {
 
       return null;
     } catch (_err: unknown) {
-      return "Could not verify the current directory due to a file system error.";
+      return 'Could not verify the current directory due to a file system error.';
     }
   },
 };

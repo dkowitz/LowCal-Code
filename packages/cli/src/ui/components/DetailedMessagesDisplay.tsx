@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import type { ConsoleMessageItem } from "../types.js";
-import { MaxSizedBox } from "./shared/MaxSizedBox.js";
+import type React from 'react';
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import type { ConsoleMessageItem } from '../types.js';
+import { MaxSizedBox } from './shared/MaxSizedBox.js';
 
 interface DetailedMessagesDisplayProps {
   messages: ConsoleMessageItem[];
@@ -43,22 +43,22 @@ export const DetailedMessagesDisplay: React.FC<
       <MaxSizedBox maxHeight={maxHeight} maxWidth={width - borderAndPadding}>
         {messages.map((msg, index) => {
           let textColor = Colors.Foreground;
-          let icon = "\u2139"; // Information source (ℹ)
+          let icon = '\u2139'; // Information source (ℹ)
 
           switch (msg.type) {
-            case "warn":
+            case 'warn':
               textColor = Colors.AccentYellow;
-              icon = "\u26A0"; // Warning sign (⚠)
+              icon = '\u26A0'; // Warning sign (⚠)
               break;
-            case "error":
+            case 'error':
               textColor = Colors.AccentRed;
-              icon = "\u2716"; // Heavy multiplication x (✖)
+              icon = '\u2716'; // Heavy multiplication x (✖)
               break;
-            case "debug":
+            case 'debug':
               textColor = Colors.Gray; // Or Colors.Gray
-              icon = "\u{1F50D}"; // Left-pointing magnifying glass (🔍)
+              icon = '\u{1F50D}'; // Left-pointing magnifying glass (🔍)
               break;
-            case "log":
+            case 'log':
             default:
               // Default textColor and icon are already set
               break;

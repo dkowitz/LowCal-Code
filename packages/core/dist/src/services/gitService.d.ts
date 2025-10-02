@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Storage } from "../config/storage.js";
+import type { Storage } from '../config/storage.js';
 export declare class GitService {
     private projectRoot;
     private storage;

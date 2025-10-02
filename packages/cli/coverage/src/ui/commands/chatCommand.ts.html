@@ -633,21 +633,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import * as fsPromises from "node:fs/promises";
-import React from "react";
-import { Text } from "ink";
-import { Colors } from "../colors.js";
+import * as fsPromises from 'node:fs/promises';
+import React from 'react';
+import { Text } from 'ink';
+import { Colors } from '../colors.js';
 import type {
   CommandContext,
   SlashCommand,
   MessageActionReturn,
   SlashCommandActionReturn,
-} from "./types.js";
-import { CommandKind } from "./types.js";
-import { decodeTagName } from "@qwen-code/qwen-code-core";
-import path from "node:path";
-import type { HistoryItemWithoutId } from "../types.js";
-import { MessageType } from "../types.js";
+} from './types.js';
+import { CommandKind } from './types.js';
+import { decodeTagName } from '@qwen-code/qwen-code-core';
+import path from 'node:path';
+import type { HistoryItemWithoutId } from '../types.js';
+import { MessageType } from '../types.js';
 &nbsp;
 interface ChatDetail {
   name: string;
@@ -664,8 +664,8 @@ const getSavedChatTags = async (
 <span class="cstat-no" title="statement not covered" >    return [];</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
   try {
-    const file_head = "checkpoint-";
-    const file_tail = ".json";
+    const file_head = 'checkpoint-';
+    const file_tail = '.json';
     const files = await fsPromises.readdir(geminiDir);
     const chatDetails: Array&lt;{ name: string; mtime: Date }&gt; = [];
 &nbsp;
@@ -694,16 +694,16 @@ const getSavedChatTags = async (
 };
 &nbsp;
 const listCommand: SlashCommand = {
-  name: "list",
-  description: "List saved conversation checkpoints",
+  name: 'list',
+  description: 'List saved conversation checkpoints',
   kind: CommandKind.BUILT_IN,
   action: async (context): Promise&lt;MessageActionReturn&gt; =&gt; {
     const chatDetails = await getSavedChatTags(context, false);
     if (chatDetails.length === 0) {
       return {
-        type: "message",
-        messageType: "info",
-        content: "No saved conversation checkpoints found.",
+        type: 'message',
+        messageType: 'info',
+        content: 'No saved conversation checkpoints found.',
       };
     }
 &nbsp;
@@ -711,35 +711,35 @@ const listCommand: SlashCommand = {
       ...chatDetails.map((chat) =&gt; chat.name.length),
     );
 &nbsp;
-    let message = "List of saved conversations:\n\n";
+    let message = 'List of saved conversations:\n\n';
     for (const chat of chatDetails) {
-      const paddedName = chat.name.padEnd(maxNameLength, " ");
+      const paddedName = chat.name.padEnd(maxNameLength, ' ');
       const isoString = chat.mtime.toISOString();
       const match = isoString.match(/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
-      const formattedDate = match ? `${match[1]} ${match[2]}` : "Invalid Date";
+      const formattedDate = match ? `${match[1]} ${match[2]}` : 'Invalid Date';
       message += `  - \u001b[36m${paddedName}\u001b[0m  \u001b[90m(saved on ${formattedDate})\u001b[0m\n`;
     }
     message += `\n\u001b[90mNote: Newest last, oldest first\u001b[0m`;
     return {
-      type: "message",
-      messageType: "info",
+      type: 'message',
+      messageType: 'info',
       content: message,
     };
   },
 };
 &nbsp;
 const saveCommand: SlashCommand = {
-  name: "save",
+  name: 'save',
   description:
-    "Save the current conversation as a checkpoint. Usage: /chat save &lt;tag&gt;",
+    'Save the current conversation as a checkpoint. Usage: /chat save &lt;tag&gt;',
   kind: CommandKind.BUILT_IN,
   action: async (context, args): Promise&lt;SlashCommandActionReturn | void&gt; =&gt; {
     const tag = args.trim();
     if (!tag) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "Missing tag. Usage: /chat save &lt;tag&gt;",
+        type: 'message',
+        messageType: 'error',
+        content: 'Missing tag. Usage: /chat save &lt;tag&gt;',
       };
     }
 &nbsp;
@@ -750,13 +750,13 @@ const saveCommand: SlashCommand = {
       const exists = await logger.checkpointExists(tag);
       if (exists) {
         return {
-          type: "confirm_action",
+          type: 'confirm_action',
           prompt: React.createElement(
             Text,
             null,
-            "A checkpoint with the tag ",
+            'A checkpoint with the tag ',
             React.createElement(Text, { color: Colors.AccentPurple }, tag),
-            " already exists. Do you want to overwrite it?",
+            ' already exists. Do you want to overwrite it?',
           ),
           originalInvocation: {
             raw: context.invocation?.<span class="branch-0 cbranch-no" title="branch not covered" >raw || `/chat save ${tag}`,</span>
@@ -768,9 +768,9 @@ const saveCommand: SlashCommand = {
     const chat = await config?.getGeminiClient()?.getChat();
     if (!chat) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
-<span class="cstat-no" title="statement not covered" >        type: "message",</span>
-<span class="cstat-no" title="statement not covered" >        messageType: "error",</span>
-<span class="cstat-no" title="statement not covered" >        content: "No chat client available to save conversation.",</span>
+<span class="cstat-no" title="statement not covered" >        type: 'message',</span>
+<span class="cstat-no" title="statement not covered" >        messageType: 'error',</span>
+<span class="cstat-no" title="statement not covered" >        content: 'No chat client available to save conversation.',</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
@@ -778,33 +778,33 @@ const saveCommand: SlashCommand = {
     if (history.length &gt; 2) {
       await logger.saveCheckpoint(history, tag);
       return {
-        type: "message",
-        messageType: "info",
+        type: 'message',
+        messageType: 'info',
         content: `Conversation checkpoint saved with tag: ${decodeTagName(tag)}.`,
       };
     } else {
       return {
-        type: "message",
-        messageType: "info",
-        content: "No conversation found to save.",
+        type: 'message',
+        messageType: 'info',
+        content: 'No conversation found to save.',
       };
     }
   },
 };
 &nbsp;
 const resumeCommand: SlashCommand = {
-  name: "resume",
-  altNames: ["load"],
+  name: 'resume',
+  altNames: ['load'],
   description:
-    "Resume a conversation from a checkpoint. Usage: /chat resume &lt;tag&gt;",
+    'Resume a conversation from a checkpoint. Usage: /chat resume &lt;tag&gt;',
   kind: CommandKind.BUILT_IN,
   action: async (context, args) =&gt; {
     const tag = args.trim();
     if (!tag) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "Missing tag. Usage: /chat resume &lt;tag&gt;",
+        type: 'message',
+        messageType: 'error',
+        content: 'Missing tag. Usage: /chat resume &lt;tag&gt;',
       };
     }
 &nbsp;
@@ -814,8 +814,8 @@ const resumeCommand: SlashCommand = {
 &nbsp;
     if (conversation.length === 0) {
       return {
-        type: "message",
-        messageType: "info",
+        type: 'message',
+        messageType: 'info',
         content: `No saved checkpoint found with tag: ${decodeTagName(tag)}.`,
       };
     }
@@ -835,7 +835,7 @@ const resumeCommand: SlashCommand = {
         item.parts
           ?.filter((m) =&gt; !!m.text)
           .map((m) =&gt; m.text)
-          .join(""<span class="branch-0 cbranch-no" title="branch not covered" >) || "";</span>
+          .join(''<span class="branch-0 cbranch-no" title="branch not covered" >) || '';</span>
       if (!text) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        continue;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
@@ -850,7 +850,7 @@ const resumeCommand: SlashCommand = {
       }
     }
     return {
-      type: "load_history",
+      type: 'load_history',
       history: uiHistory,
       clientHistory: conversation,
     };
@@ -864,16 +864,16 @@ const resumeCommand: SlashCommand = {
 };
 &nbsp;
 const deleteCommand: SlashCommand = {
-  name: "delete",
-  description: "Delete a conversation checkpoint. Usage: /chat delete &lt;tag&gt;",
+  name: 'delete',
+  description: 'Delete a conversation checkpoint. Usage: /chat delete &lt;tag&gt;',
   kind: CommandKind.BUILT_IN,
   action: async (context, args): Promise&lt;MessageActionReturn&gt; =&gt; {
     const tag = args.trim();
     if (!tag) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "Missing tag. Usage: /chat delete &lt;tag&gt;",
+        type: 'message',
+        messageType: 'error',
+        content: 'Missing tag. Usage: /chat delete &lt;tag&gt;',
       };
     }
 &nbsp;
@@ -883,14 +883,14 @@ const deleteCommand: SlashCommand = {
 &nbsp;
     if (deleted) {
       return {
-        type: "message",
-        messageType: "info",
+        type: 'message',
+        messageType: 'info',
         content: `Conversation checkpoint '${decodeTagName(tag)}' has been deleted.`,
       };
     } else {
       return {
-        type: "message",
-        messageType: "error",
+        type: 'message',
+        messageType: 'error',
         content: `Error: No checkpoint found with tag '${decodeTagName(tag)}'.`,
       };
     }
@@ -904,8 +904,8 @@ const deleteCommand: SlashCommand = {
 };
 &nbsp;
 export const chatCommand: SlashCommand = {
-  name: "chat",
-  description: "Manage conversation history.",
+  name: 'chat',
+  description: 'Manage conversation history.',
   kind: CommandKind.BUILT_IN,
   subCommands: [listCommand, saveCommand, resumeCommand, deleteCommand],
 };
@@ -916,7 +916,7 @@ export const chatCommand: SlashCommand = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

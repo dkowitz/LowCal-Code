@@ -3,24 +3,24 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { GeminiClient } from "../core/client.js";
-import type { ContentGeneratorConfig } from "../core/contentGenerator.js";
-import { AuthType } from "../core/contentGenerator.js";
-import { IdeClient } from "../ide/ide-client.js";
-import type { MCPOAuthConfig } from "../mcp/oauth-provider.js";
-import { PromptRegistry } from "../prompts/prompt-registry.js";
-import { FileDiscoveryService } from "../services/fileDiscoveryService.js";
-import { type FileSystemService } from "../services/fileSystemService.js";
-import { GitService } from "../services/gitService.js";
-import { SubagentManager } from "../subagents/subagent-manager.js";
-import type { TelemetryTarget } from "../telemetry/index.js";
-import { ToolRegistry } from "../tools/tool-registry.js";
-import type { AnyToolInvocation } from "../tools/tools.js";
-import { FileExclusions } from "../utils/ignorePatterns.js";
-import { WorkspaceContext } from "../utils/workspaceContext.js";
-import { DEFAULT_GEMINI_FLASH_MODEL } from "./models.js";
-import { Storage } from "./storage.js";
-import { type ModelSwitchEvent } from "../core/logger.js";
+import { GeminiClient } from '../core/client.js';
+import type { ContentGeneratorConfig } from '../core/contentGenerator.js';
+import { AuthType } from '../core/contentGenerator.js';
+import { IdeClient } from '../ide/ide-client.js';
+import type { MCPOAuthConfig } from '../mcp/oauth-provider.js';
+import { PromptRegistry } from '../prompts/prompt-registry.js';
+import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
+import { type FileSystemService } from '../services/fileSystemService.js';
+import { GitService } from '../services/gitService.js';
+import { SubagentManager } from '../subagents/subagent-manager.js';
+import type { TelemetryTarget } from '../telemetry/index.js';
+import { ToolRegistry } from '../tools/tool-registry.js';
+import type { AnyToolInvocation } from '../tools/tools.js';
+import { FileExclusions } from '../utils/ignorePatterns.js';
+import { WorkspaceContext } from '../utils/workspaceContext.js';
+import { DEFAULT_GEMINI_FLASH_MODEL } from './models.js';
+import { Storage } from './storage.js';
+import { type ModelSwitchEvent } from '../core/logger.js';
 export type { AnyToolInvocation, MCPOAuthConfig };
 export declare enum ApprovalMode {
     PLAN = "plan",
@@ -46,7 +46,7 @@ export interface TelemetrySettings {
     enabled?: boolean;
     target?: TelemetryTarget;
     otlpEndpoint?: string;
-    otlpProtocol?: "grpc" | "http";
+    otlpProtocol?: 'grpc' | 'http';
     logPrompts?: boolean;
     outfile?: string;
 }
@@ -91,7 +91,7 @@ export declare enum AuthProviderType {
     GOOGLE_CREDENTIALS = "google_credentials"
 }
 export interface SandboxConfig {
-    command: "docker" | "podman" | "sandbox-exec";
+    command: 'docker' | 'podman' | 'sandbox-exec';
     image: string;
 }
 export type FlashFallbackHandler = (currentModel: string, fallbackModel: string, error?: unknown) => Promise<boolean | string | null>;
@@ -263,7 +263,7 @@ export declare class Config {
     getContentGeneratorConfig(): ContentGeneratorConfig;
     getModel(): string;
     setModel(newModel: string, options?: {
-        reason?: ModelSwitchEvent["reason"];
+        reason?: ModelSwitchEvent['reason'];
         context?: string;
     }): Promise<void>;
     isInFallbackMode(): boolean;
@@ -302,7 +302,7 @@ export declare class Config {
     getTelemetryEnabled(): boolean;
     getTelemetryLogPromptsEnabled(): boolean;
     getTelemetryOtlpEndpoint(): string;
-    getTelemetryOtlpProtocol(): "grpc" | "http";
+    getTelemetryOtlpProtocol(): 'grpc' | 'http';
     getTelemetryTarget(): TelemetryTarget;
     getTelemetryOutfile(): string | undefined;
     getGitCoAuthor(): GitCoAuthorSettings;
@@ -349,7 +349,7 @@ export declare class Config {
     getContentGeneratorTimeout(): number | undefined;
     getContentGeneratorMaxRetries(): number | undefined;
     getContentGeneratorDisableCacheControl(): boolean | undefined;
-    getContentGeneratorSamplingParams(): ContentGeneratorConfig["samplingParams"];
+    getContentGeneratorSamplingParams(): ContentGeneratorConfig['samplingParams'];
     getCliVersion(): string | undefined;
     getSystemPromptMappings(): Array<{
         baseUrls?: string[];

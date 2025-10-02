@@ -3,11 +3,11 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Config } from "../config/config.js";
+import type { Config } from '../config/config.js';
 /**
  * An identifier for the shell type.
  */
-export type ShellType = "cmd" | "powershell" | "bash";
+export type ShellType = 'cmd' | 'powershell' | 'bash';
 /**
  * Defines the configuration required to execute a command string within a specific shell.
  */

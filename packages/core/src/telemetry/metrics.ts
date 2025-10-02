@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Attributes, Meter, Counter, Histogram } from "@opentelemetry/api";
-import { metrics, ValueType } from "@opentelemetry/api";
+import type { Attributes, Meter, Counter, Histogram } from '@opentelemetry/api';
+import { metrics, ValueType } from '@opentelemetry/api';
 import {
   SERVICE_NAME,
   METRIC_TOOL_CALL_COUNT,
@@ -20,14 +20,14 @@ import {
   METRIC_CONTENT_RETRY_COUNT,
   METRIC_CONTENT_RETRY_FAILURE_COUNT,
   METRIC_SUBAGENT_EXECUTION_COUNT,
-} from "./constants.js";
-import type { Config } from "../config/config.js";
-import type { DiffStat } from "../tools/tools.js";
+} from './constants.js';
+import type { Config } from '../config/config.js';
+import type { DiffStat } from '../tools/tools.js';
 
 export enum FileOperation {
-  CREATE = "create",
-  READ = "read",
-  UPDATE = "update",
+  CREATE = 'create',
+  READ = 'read',
+  UPDATE = 'update',
 }
 
 let cliMeter: Meter | undefined;
@@ -46,7 +46,7 @@ let isMetricsInitialized = false;
 
 function getCommonAttributes(config: Config): Attributes {
   return {
-    "session.id": config.getSessionId(),
+    'session.id': config.getSessionId(),
   };
 }
 
@@ -64,52 +64,52 @@ export function initializeMetrics(config: Config): void {
   if (!meter) return;
 
   toolCallCounter = meter.createCounter(METRIC_TOOL_CALL_COUNT, {
-    description: "Counts tool calls, tagged by function name and success.",
+    description: 'Counts tool calls, tagged by function name and success.',
     valueType: ValueType.INT,
   });
   toolCallLatencyHistogram = meter.createHistogram(METRIC_TOOL_CALL_LATENCY, {
-    description: "Latency of tool calls in milliseconds.",
-    unit: "ms",
+    description: 'Latency of tool calls in milliseconds.',
+    unit: 'ms',
     valueType: ValueType.INT,
   });
   apiRequestCounter = meter.createCounter(METRIC_API_REQUEST_COUNT, {
-    description: "Counts API requests, tagged by model and status.",
+    description: 'Counts API requests, tagged by model and status.',
     valueType: ValueType.INT,
   });
   apiRequestLatencyHistogram = meter.createHistogram(
     METRIC_API_REQUEST_LATENCY,
     {
-      description: "Latency of API requests in milliseconds.",
-      unit: "ms",
+      description: 'Latency of API requests in milliseconds.',
+      unit: 'ms',
       valueType: ValueType.INT,
     },
   );
   tokenUsageCounter = meter.createCounter(METRIC_TOKEN_USAGE, {
-    description: "Counts the total number of tokens used.",
+    description: 'Counts the total number of tokens used.',
     valueType: ValueType.INT,
   });
   fileOperationCounter = meter.createCounter(METRIC_FILE_OPERATION_COUNT, {
-    description: "Counts file operations (create, read, update).",
+    description: 'Counts file operations (create, read, update).',
     valueType: ValueType.INT,
   });
   chatCompressionCounter = meter.createCounter(EVENT_CHAT_COMPRESSION, {
-    description: "Counts chat compression events.",
+    description: 'Counts chat compression events.',
     valueType: ValueType.INT,
   });
 
   // New counters for content errors
   invalidChunkCounter = meter.createCounter(METRIC_INVALID_CHUNK_COUNT, {
-    description: "Counts invalid chunks received from a stream.",
+    description: 'Counts invalid chunks received from a stream.',
     valueType: ValueType.INT,
   });
   contentRetryCounter = meter.createCounter(METRIC_CONTENT_RETRY_COUNT, {
-    description: "Counts retries due to content errors (e.g., empty stream).",
+    description: 'Counts retries due to content errors (e.g., empty stream).',
     valueType: ValueType.INT,
   });
   contentRetryFailureCounter = meter.createCounter(
     METRIC_CONTENT_RETRY_FAILURE_COUNT,
     {
-      description: "Counts occurrences of all content retries failing.",
+      description: 'Counts occurrences of all content retries failing.',
       valueType: ValueType.INT,
     },
   );
@@ -117,13 +117,13 @@ export function initializeMetrics(config: Config): void {
     METRIC_SUBAGENT_EXECUTION_COUNT,
     {
       description:
-        "Counts subagent execution events, tagged by status and subagent name.",
+        'Counts subagent execution events, tagged by status and subagent name.',
       valueType: ValueType.INT,
     },
   );
 
   const sessionCounter = meter.createCounter(METRIC_SESSION_COUNT, {
-    description: "Count of CLI sessions started.",
+    description: 'Count of CLI sessions started.',
     valueType: ValueType.INT,
   });
   sessionCounter.add(1, getCommonAttributes(config));
@@ -146,8 +146,8 @@ export function recordToolCallMetrics(
   functionName: string,
   durationMs: number,
   success: boolean,
-  decision?: "accept" | "reject" | "modify" | "auto_accept",
-  tool_type?: "native" | "mcp",
+  decision?: 'accept' | 'reject' | 'modify' | 'auto_accept',
+  tool_type?: 'native' | 'mcp',
 ): void {
   if (!toolCallCounter || !toolCallLatencyHistogram || !isMetricsInitialized)
     return;
@@ -170,7 +170,7 @@ export function recordTokenUsageMetrics(
   config: Config,
   model: string,
   tokenCount: number,
-  type: "input" | "output" | "thought" | "cache" | "tool",
+  type: 'input' | 'output' | 'thought' | 'cache' | 'tool',
 ): void {
   if (!tokenUsageCounter || !isMetricsInitialized) return;
   tokenUsageCounter.add(tokenCount, {
@@ -196,7 +196,7 @@ export function recordApiResponseMetrics(
   const metricAttributes: Attributes = {
     ...getCommonAttributes(config),
     model,
-    status_code: statusCode ?? (error ? "error" : "ok"),
+    status_code: statusCode ?? (error ? 'error' : 'ok'),
   };
   apiRequestCounter.add(1, metricAttributes);
   apiRequestLatencyHistogram.record(durationMs, {
@@ -221,8 +221,8 @@ export function recordApiErrorMetrics(
   const metricAttributes: Attributes = {
     ...getCommonAttributes(config),
     model,
-    status_code: statusCode ?? "error",
-    error_type: errorType ?? "unknown",
+    status_code: statusCode ?? 'error',
+    error_type: errorType ?? 'unknown',
   };
   apiRequestCounter.add(1, metricAttributes);
   apiRequestLatencyHistogram.record(durationMs, {
@@ -245,17 +245,17 @@ export function recordFileOperationMetric(
     ...getCommonAttributes(config),
     operation,
   };
-  if (lines !== undefined) attributes["lines"] = lines;
-  if (mimetype !== undefined) attributes["mimetype"] = mimetype;
-  if (extension !== undefined) attributes["extension"] = extension;
+  if (lines !== undefined) attributes['lines'] = lines;
+  if (mimetype !== undefined) attributes['mimetype'] = mimetype;
+  if (extension !== undefined) attributes['extension'] = extension;
   if (diffStat !== undefined) {
-    attributes["ai_added_lines"] = diffStat.ai_added_lines;
-    attributes["ai_removed_lines"] = diffStat.ai_removed_lines;
-    attributes["user_added_lines"] = diffStat.user_added_lines;
-    attributes["user_removed_lines"] = diffStat.user_removed_lines;
+    attributes['ai_added_lines'] = diffStat.ai_added_lines;
+    attributes['ai_removed_lines'] = diffStat.ai_removed_lines;
+    attributes['user_added_lines'] = diffStat.user_added_lines;
+    attributes['user_removed_lines'] = diffStat.user_removed_lines;
   }
   if (programming_language !== undefined) {
-    attributes["programming_language"] = programming_language;
+    attributes['programming_language'] = programming_language;
   }
   fileOperationCounter.add(1, attributes);
 }
@@ -292,7 +292,7 @@ export function recordContentRetryFailure(config: Config): void {
 export function recordSubagentExecutionMetrics(
   config: Config,
   subagentName: string,
-  status: "started" | "completed" | "failed" | "cancelled",
+  status: 'started' | 'completed' | 'failed' | 'cancelled',
   terminateReason?: string,
 ): void {
   if (!subagentExecutionCounter || !isMetricsInitialized) return;
@@ -304,7 +304,7 @@ export function recordSubagentExecutionMetrics(
   };
 
   if (terminateReason) {
-    attributes["terminate_reason"] = terminateReason;
+    attributes['terminate_reason'] = terminateReason;
   }
 
   subagentExecutionCounter.add(1, attributes);

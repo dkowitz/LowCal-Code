@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { FunctionDeclaration, PartListUnion } from "@google/genai";
-import { ToolErrorType } from "./tool-error.js";
-import type { DiffUpdateResult } from "../ide/ideContext.js";
-import { SchemaValidator } from "../utils/schemaValidator.js";
-import { type SubagentStatsSummary } from "../subagents/subagent-statistics.js";
+import type { FunctionDeclaration, PartListUnion } from '@google/genai';
+import { ToolErrorType } from './tool-error.js';
+import type { DiffUpdateResult } from '../ide/ideContext.js';
+import { SchemaValidator } from '../utils/schemaValidator.js';
+import { type SubagentStatsSummary } from '../subagents/subagent-statistics.js';
 
 /**
  * Represents a validated and ready-to-execute tool call.
@@ -315,11 +315,11 @@ export type AnyDeclarativeTool = DeclarativeTool<object, ToolResult>;
  */
 export function isTool(obj: unknown): obj is AnyDeclarativeTool {
   return (
-    typeof obj === "object" &&
+    typeof obj === 'object' &&
     obj !== null &&
-    "name" in obj &&
-    "build" in obj &&
-    typeof (obj as AnyDeclarativeTool).build === "function"
+    'name' in obj &&
+    'build' in obj &&
+    typeof (obj as AnyDeclarativeTool).build === 'function'
   );
 }
 
@@ -355,14 +355,14 @@ export interface ToolResult {
  */
 export function hasCycleInSchema(schema: object): boolean {
   function resolveRef(ref: string): object | null {
-    if (!ref.startsWith("#/")) {
+    if (!ref.startsWith('#/')) {
       return null;
     }
-    const path = ref.substring(2).split("/");
+    const path = ref.substring(2).split('/');
     let current: unknown = schema;
     for (const segment of path) {
       if (
-        typeof current !== "object" ||
+        typeof current !== 'object' ||
         current === null ||
         !Object.prototype.hasOwnProperty.call(current, segment)
       ) {
@@ -378,7 +378,7 @@ export function hasCycleInSchema(schema: object): boolean {
     visitedRefs: Set<string>,
     pathRefs: Set<string>,
   ): boolean {
-    if (typeof node !== "object" || node === null) {
+    if (typeof node !== 'object' || node === null) {
       return false;
     }
 
@@ -391,9 +391,9 @@ export function hasCycleInSchema(schema: object): boolean {
       return false;
     }
 
-    if ("$ref" in node && typeof node.$ref === "string") {
+    if ('$ref' in node && typeof node.$ref === 'string') {
       const ref = node.$ref;
-      if (ref === "#/" || pathRefs.has(ref)) {
+      if (ref === '#/' || pathRefs.has(ref)) {
         // A ref to just '#/' is always a cycle.
         return true; // Cycle detected!
       }
@@ -434,12 +434,12 @@ export function hasCycleInSchema(schema: object): boolean {
 }
 
 export interface TaskResultDisplay {
-  type: "task_execution";
+  type: 'task_execution';
   subagentName: string;
   subagentColor?: string;
   taskDescription: string;
   taskPrompt: string;
-  status: "running" | "completed" | "failed" | "cancelled";
+  status: 'running' | 'completed' | 'failed' | 'cancelled';
   terminateReason?: string;
   result?: string;
   executionSummary?: SubagentStatsSummary;
@@ -451,7 +451,7 @@ export interface TaskResultDisplay {
   toolCalls?: Array<{
     callId: string;
     name: string;
-    status: "executing" | "awaiting_approval" | "success" | "failed";
+    status: 'executing' | 'awaiting_approval' | 'success' | 'failed';
     error?: string;
     args?: Record<string, unknown>;
     result?: string;
@@ -483,22 +483,22 @@ export interface DiffStat {
 }
 
 export interface TodoResultDisplay {
-  type: "todo_list";
+  type: 'todo_list';
   todos: Array<{
     id: string;
     content: string;
-    status: "pending" | "in_progress" | "completed";
+    status: 'pending' | 'in_progress' | 'completed';
   }>;
 }
 
 export interface PlanResultDisplay {
-  type: "plan_summary";
+  type: 'plan_summary';
   message: string;
   plan: string;
 }
 
 export interface ToolEditConfirmationDetails {
-  type: "edit";
+  type: 'edit';
   title: string;
   onConfirm: (
     outcome: ToolConfirmationOutcome,
@@ -520,7 +520,7 @@ export interface ToolConfirmationPayload {
 }
 
 export interface ToolExecuteConfirmationDetails {
-  type: "exec";
+  type: 'exec';
   title: string;
   onConfirm: (outcome: ToolConfirmationOutcome) => Promise<void>;
   command: string;
@@ -528,7 +528,7 @@ export interface ToolExecuteConfirmationDetails {
 }
 
 export interface ToolMcpConfirmationDetails {
-  type: "mcp";
+  type: 'mcp';
   title: string;
   serverName: string;
   toolName: string;
@@ -537,7 +537,7 @@ export interface ToolMcpConfirmationDetails {
 }
 
 export interface ToolInfoConfirmationDetails {
-  type: "info";
+  type: 'info';
   title: string;
   onConfirm: (outcome: ToolConfirmationOutcome) => Promise<void>;
   prompt: string;
@@ -552,31 +552,31 @@ export type ToolCallConfirmationDetails =
   | ToolPlanConfirmationDetails;
 
 export interface ToolPlanConfirmationDetails {
-  type: "plan";
+  type: 'plan';
   title: string;
   plan: string;
   onConfirm: (outcome: ToolConfirmationOutcome) => Promise<void>;
 }
 
 export enum ToolConfirmationOutcome {
-  ProceedOnce = "proceed_once",
-  ProceedAlways = "proceed_always",
-  ProceedAlwaysServer = "proceed_always_server",
-  ProceedAlwaysTool = "proceed_always_tool",
-  ModifyWithEditor = "modify_with_editor",
-  Cancel = "cancel",
+  ProceedOnce = 'proceed_once',
+  ProceedAlways = 'proceed_always',
+  ProceedAlwaysServer = 'proceed_always_server',
+  ProceedAlwaysTool = 'proceed_always_tool',
+  ModifyWithEditor = 'modify_with_editor',
+  Cancel = 'cancel',
 }
 
 export enum Kind {
-  Read = "read",
-  Edit = "edit",
-  Delete = "delete",
-  Move = "move",
-  Search = "search",
-  Execute = "execute",
-  Think = "think",
-  Fetch = "fetch",
-  Other = "other",
+  Read = 'read',
+  Edit = 'edit',
+  Delete = 'delete',
+  Move = 'move',
+  Search = 'search',
+  Execute = 'execute',
+  Think = 'think',
+  Fetch = 'fetch',
+  Other = 'other',
 }
 
 export interface ToolLocation {

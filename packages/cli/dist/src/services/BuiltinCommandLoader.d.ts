@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { ICommandLoader } from "./types.js";
-import type { SlashCommand } from "../ui/commands/types.js";
-import type { Config } from "@qwen-code/qwen-code-core";
+import type { ICommandLoader } from './types.js';
+import type { SlashCommand } from '../ui/commands/types.js';
+import type { Config } from '@qwen-code/qwen-code-core';
 /**
  * Loads the core, hard-coded slash commands that are an integral part
  * of the Gemini CLI application.

@@ -305,7 +305,7 @@ let protocolEnabled = false;
 <span class="cstat-no" title="statement not covered" >      process.stdin.setRawMode(true);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    let responseBuffer = "";</span>
+<span class="cstat-no" title="statement not covered" >    let responseBuffer = '';</span>
 <span class="cstat-no" title="statement not covered" >    let progressiveEnhancementReceived = false;</span>
 <span class="cstat-no" title="statement not covered" >    let checkFinished = false;</span>
 &nbsp;
@@ -313,15 +313,15 @@ let protocolEnabled = false;
 <span class="cstat-no" title="statement not covered" >      responseBuffer += data.toString();</span>
 &nbsp;
       // Check for progressive enhancement response (CSI ? &lt;flags&gt; u)
-<span class="cstat-no" title="statement not covered" >      if (responseBuffer.includes("\x1b[?") &amp;&amp; responseBuffer.includes("u")) {</span>
+<span class="cstat-no" title="statement not covered" >      if (responseBuffer.includes('\x1b[?') &amp;&amp; responseBuffer.includes('u')) {</span>
 <span class="cstat-no" title="statement not covered" >        progressiveEnhancementReceived = true;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
       // Check for device attributes response (CSI ? &lt;attrs&gt; c)
-<span class="cstat-no" title="statement not covered" >      if (responseBuffer.includes("\x1b[?") &amp;&amp; responseBuffer.includes("c")) {</span>
+<span class="cstat-no" title="statement not covered" >      if (responseBuffer.includes('\x1b[?') &amp;&amp; responseBuffer.includes('c')) {</span>
 <span class="cstat-no" title="statement not covered" >        if (!checkFinished) {</span>
 <span class="cstat-no" title="statement not covered" >          checkFinished = true;</span>
-<span class="cstat-no" title="statement not covered" >          process.stdin.removeListener("data", handleData);</span>
+<span class="cstat-no" title="statement not covered" >          process.stdin.removeListener('data', handleData);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >          if (!originalRawMode) {</span>
 <span class="cstat-no" title="statement not covered" >            process.stdin.setRawMode(false);</span>
@@ -329,13 +329,13 @@ let protocolEnabled = false;
 &nbsp;
 <span class="cstat-no" title="statement not covered" >          if (progressiveEnhancementReceived) {</span>
             // Enable the protocol
-<span class="cstat-no" title="statement not covered" >            process.stdout.write("\x1b[&gt;1u");</span>
+<span class="cstat-no" title="statement not covered" >            process.stdout.write('\x1b[&gt;1u');</span>
 <span class="cstat-no" title="statement not covered" >            protocolSupported = true;</span>
 <span class="cstat-no" title="statement not covered" >            protocolEnabled = true;</span>
 &nbsp;
             // Set up cleanup on exit
-<span class="cstat-no" title="statement not covered" >            process.on("exit", disableProtocol);</span>
-<span class="cstat-no" title="statement not covered" >            process.on("SIGTERM", disableProtocol);</span>
+<span class="cstat-no" title="statement not covered" >            process.on('exit', disableProtocol);</span>
+<span class="cstat-no" title="statement not covered" >            process.on('SIGTERM', disableProtocol);</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >          detectionComplete = true;</span>
@@ -344,16 +344,16 @@ let protocolEnabled = false;
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    process.stdin.on("data", handleData);</span>
+<span class="cstat-no" title="statement not covered" >    process.stdin.on('data', handleData);</span>
 &nbsp;
     // Send queries
-<span class="cstat-no" title="statement not covered" >    process.stdout.write("\x1b[?u"); // Query progressive enhancement</span>
-<span class="cstat-no" title="statement not covered" >    process.stdout.write("\x1b[c"); // Query device attributes</span>
+<span class="cstat-no" title="statement not covered" >    process.stdout.write('\x1b[?u'); // Query progressive enhancement</span>
+<span class="cstat-no" title="statement not covered" >    process.stdout.write('\x1b[c'); // Query device attributes</span>
 &nbsp;
     // Timeout after 50ms
 <span class="cstat-no" title="statement not covered" >    setTimeout(() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      if (!checkFinished) {</span>
-<span class="cstat-no" title="statement not covered" >        process.stdin.removeListener("data", handleData);</span>
+<span class="cstat-no" title="statement not covered" >        process.stdin.removeListener('data', handleData);</span>
 <span class="cstat-no" title="statement not covered" >        if (!originalRawMode) {</span>
 <span class="cstat-no" title="statement not covered" >          process.stdin.setRawMode(false);</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
@@ -366,7 +366,7 @@ let protocolEnabled = false;
 &nbsp;
 <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function disableProtocol() {</span></span>
 <span class="cstat-no" title="statement not covered" >  if (protocolEnabled) {</span>
-<span class="cstat-no" title="statement not covered" >    process.stdout.write("\x1b[&lt;u");</span>
+<span class="cstat-no" title="statement not covered" >    process.stdout.write('\x1b[&lt;u');</span>
 <span class="cstat-no" title="statement not covered" >    protocolEnabled = false;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
@@ -385,7 +385,7 @@ export function isKittyProtocolSupported(): boolean {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

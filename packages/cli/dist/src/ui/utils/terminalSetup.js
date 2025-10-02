@@ -21,13 +21,13 @@
  * The module will not modify existing shift+enter or ctrl+enter keybindings
  * to avoid conflicts with user customizations.
  */
-import { promises as fs } from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
-import { isKittyProtocolEnabled } from "./kittyProtocolDetector.js";
-import { VSCODE_SHIFT_ENTER_SEQUENCE } from "./platformConstants.js";
+import { promises as fs } from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+import { isKittyProtocolEnabled } from './kittyProtocolDetector.js';
+import { VSCODE_SHIFT_ENTER_SEQUENCE } from './platformConstants.js';
 const execAsync = promisify(exec);
 /**
  * Removes single-line JSON comments (// ...) from a string to allow parsing
@@ -35,41 +35,41 @@ const execAsync = promisify(exec);
  */
 function stripJsonComments(content) {
     // Remove single-line comments (// ...)
-    return content.replace(/^\s*\/\/.*$/gm, "");
+    return content.replace(/^\s*\/\/.*$/gm, '');
 }
 // Terminal detection
 async function detectTerminal() {
-    const termProgram = process.env["TERM_PROGRAM"];
+    const termProgram = process.env['TERM_PROGRAM'];
     // Check VS Code and its forks - check forks first to avoid false positives
     // Check for Cursor-specific indicators
-    if (process.env["CURSOR_TRACE_ID"] ||
-        process.env["VSCODE_GIT_ASKPASS_MAIN"]?.toLowerCase().includes("cursor")) {
-        return "cursor";
+    if (process.env['CURSOR_TRACE_ID'] ||
+        process.env['VSCODE_GIT_ASKPASS_MAIN']?.toLowerCase().includes('cursor')) {
+        return 'cursor';
     }
     // Check for Windsurf-specific indicators
-    if (process.env["VSCODE_GIT_ASKPASS_MAIN"]?.toLowerCase().includes("windsurf")) {
-        return "windsurf";
+    if (process.env['VSCODE_GIT_ASKPASS_MAIN']?.toLowerCase().includes('windsurf')) {
+        return 'windsurf';
     }
     // Check VS Code last since forks may also set VSCODE env vars
-    if (termProgram === "vscode" || process.env["VSCODE_GIT_IPC_HANDLE"]) {
-        return "vscode";
+    if (termProgram === 'vscode' || process.env['VSCODE_GIT_IPC_HANDLE']) {
+        return 'vscode';
     }
     // Check parent process name
-    if (os.platform() !== "win32") {
+    if (os.platform() !== 'win32') {
         try {
-            const { stdout } = await execAsync("ps -o comm= -p $PPID");
+            const { stdout } = await execAsync('ps -o comm= -p $PPID');
             const parentName = stdout.trim();
             // Check forks before VS Code to avoid false positives
-            if (parentName.includes("windsurf") || parentName.includes("Windsurf"))
-                return "windsurf";
-            if (parentName.includes("cursor") || parentName.includes("Cursor"))
-                return "cursor";
-            if (parentName.includes("code") || parentName.includes("Code"))
-                return "vscode";
+            if (parentName.includes('windsurf') || parentName.includes('Windsurf'))
+                return 'windsurf';
+            if (parentName.includes('cursor') || parentName.includes('Cursor'))
+                return 'cursor';
+            if (parentName.includes('code') || parentName.includes('Code'))
+                return 'vscode';
         }
         catch (error) {
             // Continue detection even if process check fails
-            console.debug("Parent process detection failed:", error);
+            console.debug('Parent process detection failed:', error);
         }
     }
     return null;
@@ -77,7 +77,7 @@ async function detectTerminal() {
 // Backup file helper
 async function backupFile(filePath) {
     try {
-        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
         const backupPath = `${filePath}.backup.${timestamp}`;
         await fs.copyFile(filePath, backupPath);
     }
@@ -89,17 +89,17 @@ async function backupFile(filePath) {
 // Helper function to get VS Code-style config directory
 function getVSCodeStyleConfigDir(appName) {
     const platform = os.platform();
-    if (platform === "darwin") {
-        return path.join(os.homedir(), "Library", "Application Support", appName, "User");
+    if (platform === 'darwin') {
+        return path.join(os.homedir(), 'Library', 'Application Support', appName, 'User');
     }
-    else if (platform === "win32") {
-        if (!process.env["APPDATA"]) {
+    else if (platform === 'win32') {
+        if (!process.env['APPDATA']) {
             return null;
         }
-        return path.join(process.env["APPDATA"], appName, "User");
+        return path.join(process.env['APPDATA'], appName, 'User');
     }
     else {
-        return path.join(os.homedir(), ".config", appName, "User");
+        return path.join(os.homedir(), '.config', appName, 'User');
     }
 }
 // Generic VS Code-style terminal configuration
@@ -111,12 +111,12 @@ async function configureVSCodeStyle(terminalName, appName) {
             message: `Could not determine ${terminalName} config path on Windows: APPDATA environment variable is not set.`,
         };
     }
-    const keybindingsFile = path.join(configDir, "keybindings.json");
+    const keybindingsFile = path.join(configDir, 'keybindings.json');
     try {
         await fs.mkdir(configDir, { recursive: true });
         let keybindings = [];
         try {
-            const content = await fs.readFile(keybindingsFile, "utf8");
+            const content = await fs.readFile(keybindingsFile, 'utf8');
             await backupFile(keybindingsFile);
             try {
                 const cleanContent = stripJsonComments(content);
@@ -145,25 +145,25 @@ async function configureVSCodeStyle(terminalName, appName) {
             // File doesn't exist, will create new one
         }
         const shiftEnterBinding = {
-            key: "shift+enter",
-            command: "workbench.action.terminal.sendSequence",
-            when: "terminalFocus",
+            key: 'shift+enter',
+            command: 'workbench.action.terminal.sendSequence',
+            when: 'terminalFocus',
             args: { text: VSCODE_SHIFT_ENTER_SEQUENCE },
         };
         const ctrlEnterBinding = {
-            key: "ctrl+enter",
-            command: "workbench.action.terminal.sendSequence",
-            when: "terminalFocus",
+            key: 'ctrl+enter',
+            command: 'workbench.action.terminal.sendSequence',
+            when: 'terminalFocus',
             args: { text: VSCODE_SHIFT_ENTER_SEQUENCE },
         };
         // Check if ANY shift+enter or ctrl+enter bindings already exist
         const existingShiftEnter = keybindings.find((kb) => {
             const binding = kb;
-            return binding.key === "shift+enter";
+            return binding.key === 'shift+enter';
         });
         const existingCtrlEnter = keybindings.find((kb) => {
             const binding = kb;
-            return binding.key === "ctrl+enter";
+            return binding.key === 'ctrl+enter';
         });
         if (existingShiftEnter || existingCtrlEnter) {
             const messages = [];
@@ -176,23 +176,23 @@ async function configureVSCodeStyle(terminalName, appName) {
             return {
                 success: false,
                 message: `Existing keybindings detected. Will not modify to avoid conflicts.\n` +
-                    messages.join("\n") +
-                    "\n" +
+                    messages.join('\n') +
+                    '\n' +
                     `Please check and modify manually if needed: ${keybindingsFile}`,
             };
         }
         // Check if our specific bindings already exist
         const hasOurShiftEnter = keybindings.some((kb) => {
             const binding = kb;
-            return (binding.key === "shift+enter" &&
-                binding.command === "workbench.action.terminal.sendSequence" &&
-                binding.args?.text === "\\\r\n");
+            return (binding.key === 'shift+enter' &&
+                binding.command === 'workbench.action.terminal.sendSequence' &&
+                binding.args?.text === '\\\r\n');
         });
         const hasOurCtrlEnter = keybindings.some((kb) => {
             const binding = kb;
-            return (binding.key === "ctrl+enter" &&
-                binding.command === "workbench.action.terminal.sendSequence" &&
-                binding.args?.text === "\\\r\n");
+            return (binding.key === 'ctrl+enter' &&
+                binding.command === 'workbench.action.terminal.sendSequence' &&
+                binding.args?.text === '\\\r\n');
         });
         if (!hasOurShiftEnter || !hasOurCtrlEnter) {
             if (!hasOurShiftEnter)
@@ -222,13 +222,13 @@ async function configureVSCodeStyle(terminalName, appName) {
 }
 // Terminal-specific configuration functions
 async function configureVSCode() {
-    return configureVSCodeStyle("VS Code", "Code");
+    return configureVSCodeStyle('VS Code', 'Code');
 }
 async function configureCursor() {
-    return configureVSCodeStyle("Cursor", "Cursor");
+    return configureVSCodeStyle('Cursor', 'Cursor');
 }
 async function configureWindsurf() {
-    return configureVSCodeStyle("Windsurf", "Windsurf");
+    return configureVSCodeStyle('Windsurf', 'Windsurf');
 }
 /**
  * Main terminal setup function that detects and configures the current terminal.
@@ -254,22 +254,22 @@ export async function terminalSetup() {
     if (isKittyProtocolEnabled()) {
         return {
             success: true,
-            message: "Your terminal is already configured for an optimal experience with multiline input (Shift+Enter and Ctrl+Enter).",
+            message: 'Your terminal is already configured for an optimal experience with multiline input (Shift+Enter and Ctrl+Enter).',
         };
     }
     const terminal = await detectTerminal();
     if (!terminal) {
         return {
             success: false,
-            message: "Could not detect terminal type. Supported terminals: VS Code, Cursor, and Windsurf.",
+            message: 'Could not detect terminal type. Supported terminals: VS Code, Cursor, and Windsurf.',
         };
     }
     switch (terminal) {
-        case "vscode":
+        case 'vscode':
             return configureVSCode();
-        case "cursor":
+        case 'cursor':
             return configureCursor();
-        case "windsurf":
+        case 'windsurf':
             return configureWindsurf();
         default:
             return {

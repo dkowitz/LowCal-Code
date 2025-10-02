@@ -3,13 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { AuthType, } from "../core/contentGenerator.js";
+import { AuthType } from '../core/contentGenerator.js';
 function normalizeBaseUrl(baseUrl) {
     if (!baseUrl) {
         return undefined;
     }
     try {
-        const parsed = new URL(baseUrl.startsWith("http") ? baseUrl : `https://${baseUrl}`);
+        const parsed = new URL(baseUrl.startsWith('http') ? baseUrl : `https://${baseUrl}`);
         return parsed.host;
     }
     catch {
@@ -21,14 +21,14 @@ function providerFromBaseUrl(config) {
     if (!host) {
         return undefined;
     }
-    if (host.includes("openrouter.ai")) {
-        return "openrouter";
+    if (host.includes('openrouter.ai')) {
+        return 'openrouter';
     }
-    if (host.includes("localhost") || host.includes("127.0.0.1")) {
-        return "lmstudio";
+    if (host.includes('localhost') || host.includes('127.0.0.1')) {
+        return 'lmstudio';
     }
-    if (host.includes("ollama")) {
-        return "ollama";
+    if (host.includes('ollama')) {
+        return 'ollama';
     }
     return host;
 }
@@ -38,24 +38,24 @@ function providerFromBaseUrl(config) {
 export function getProviderTelemetryTag(config) {
     const generatorConfig = config.getContentGeneratorConfig();
     if (!generatorConfig) {
-        return "unknown";
+        return 'unknown';
     }
     switch (generatorConfig.authType) {
         case AuthType.LOGIN_WITH_GOOGLE:
-            return "google-oauth";
+            return 'google-oauth';
         case AuthType.USE_GEMINI:
-            return "gemini-api-key";
+            return 'gemini-api-key';
         case AuthType.USE_VERTEX_AI:
-            return "vertex-ai";
+            return 'vertex-ai';
         case AuthType.CLOUD_SHELL:
-            return "cloud-shell";
+            return 'cloud-shell';
         case AuthType.QWEN_OAUTH:
-            return "qwen-oauth";
+            return 'qwen-oauth';
         case AuthType.USE_OPENAI: {
-            return providerFromBaseUrl(generatorConfig) ?? "openai-compatible";
+            return providerFromBaseUrl(generatorConfig) ?? 'openai-compatible';
         }
         default:
-            return generatorConfig.authType ?? "unknown";
+            return generatorConfig.authType ?? 'unknown';
     }
 }
 //# sourceMappingURL=providerTelemetry.js.map

@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { type DetectedIde } from "../ide/detect-ide.js";
-import type { DiffUpdateResult } from "../ide/ideContext.js";
+import { type DetectedIde } from '../ide/detect-ide.js';
+import type { DiffUpdateResult } from '../ide/ideContext.js';
 export type IDEConnectionState = {
     status: IDEConnectionStatus;
     details?: string;
@@ -47,7 +47,7 @@ export declare class IdeClient {
      */
     openDiff(filePath: string, newContent?: string): Promise<DiffUpdateResult>;
     closeDiff(filePath: string): Promise<string | undefined>;
-    resolveDiffFromCli(filePath: string, outcome: "accepted" | "rejected"): Promise<void>;
+    resolveDiffFromCli(filePath: string, outcome: 'accepted' | 'rejected'): Promise<void>;
     disconnect(): Promise<void>;
     getCurrentIde(): DetectedIde | undefined;
     getConnectionStatus(): IDEConnectionState;

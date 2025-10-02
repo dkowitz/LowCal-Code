@@ -4,10 +4,10 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import React from "react";
-import { Text, Box } from "ink";
-import { Colors } from "../colors.js";
-import { RenderInline, getPlainTextLength } from "./InlineMarkdownRenderer.js";
+import React from 'react';
+import { Text, Box } from 'ink';
+import { Colors } from '../colors.js';
+import { RenderInline, getPlainTextLength } from './InlineMarkdownRenderer.js';
 /**
  * Custom table renderer for markdown tables
  * We implement our own instead of using ink-table due to module compatibility issues
@@ -16,7 +16,7 @@ export const TableRenderer = ({ headers, rows, terminalWidth, }) => {
     // Calculate column widths using actual display width after markdown processing
     const columnWidths = headers.map((header, index) => {
         const headerWidth = getPlainTextLength(header);
-        const maxRowWidth = Math.max(...rows.map((row) => getPlainTextLength(row[index] || "")));
+        const maxRowWidth = Math.max(...rows.map((row) => getPlainTextLength(row[index] || '')));
         return Math.max(headerWidth, maxRowWidth) + 2; // Add padding
     });
     // Ensure table fits within terminal width
@@ -51,20 +51,20 @@ export const TableRenderer = ({ headers, rows, terminalWidth, }) => {
                         right = mid - 1;
                     }
                 }
-                cellContent = bestTruncated + "...";
+                cellContent = bestTruncated + '...';
             }
         }
         // Calculate exact padding needed
         const actualDisplayWidth = getPlainTextLength(cellContent);
         const paddingNeeded = Math.max(0, contentWidth - actualDisplayWidth);
-        return (_jsxs(Text, { children: [isHeader ? (_jsx(Text, { bold: true, color: Colors.AccentCyan, children: _jsx(RenderInline, { text: cellContent }) })) : (_jsx(RenderInline, { text: cellContent })), " ".repeat(paddingNeeded)] }));
+        return (_jsxs(Text, { children: [isHeader ? (_jsx(Text, { bold: true, color: Colors.AccentCyan, children: _jsx(RenderInline, { text: cellContent }) })) : (_jsx(RenderInline, { text: cellContent })), ' '.repeat(paddingNeeded)] }));
     };
     // Helper function to render border
     const renderBorder = (type) => {
         const chars = {
-            top: { left: "┌", middle: "┬", right: "┐", horizontal: "─" },
-            middle: { left: "├", middle: "┼", right: "┤", horizontal: "─" },
-            bottom: { left: "└", middle: "┴", right: "┘", horizontal: "─" },
+            top: { left: '┌', middle: '┬', right: '┐', horizontal: '─' },
+            middle: { left: '├', middle: '┼', right: '┤', horizontal: '─' },
+            bottom: { left: '└', middle: '┴', right: '┘', horizontal: '─' },
         };
         const char = chars[type];
         const borderParts = adjustedWidths.map((w) => char.horizontal.repeat(w));
@@ -75,10 +75,10 @@ export const TableRenderer = ({ headers, rows, terminalWidth, }) => {
     const renderRow = (cells, isHeader = false) => {
         const renderedCells = cells.map((cell, index) => {
             const width = adjustedWidths[index] || 0;
-            return renderCell(cell || "", width, isHeader);
+            return renderCell(cell || '', width, isHeader);
         });
-        return (_jsxs(Text, { children: ["\u2502", " ", renderedCells.map((cell, index) => (_jsxs(React.Fragment, { children: [cell, index < renderedCells.length - 1 ? " │ " : ""] }, index))), " ", "\u2502"] }));
+        return (_jsxs(Text, { children: ["\u2502", ' ', renderedCells.map((cell, index) => (_jsxs(React.Fragment, { children: [cell, index < renderedCells.length - 1 ? ' │ ' : ''] }, index))), ' ', "\u2502"] }));
     };
-    return (_jsxs(Box, { flexDirection: "column", marginY: 1, children: [renderBorder("top"), renderRow(headers, true), renderBorder("middle"), rows.map((row, index) => (_jsx(React.Fragment, { children: renderRow(row) }, index))), renderBorder("bottom")] }));
+    return (_jsxs(Box, { flexDirection: "column", marginY: 1, children: [renderBorder('top'), renderRow(headers, true), renderBorder('middle'), rows.map((row, index) => (_jsx(React.Fragment, { children: renderRow(row) }, index))), renderBorder('bottom')] }));
 };
 //# sourceMappingURL=TableRenderer.js.map

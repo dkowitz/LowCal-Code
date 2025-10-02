@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { StreamingState } from "../types.js";
+import { StreamingState } from '../types.js';
 export interface UseMessageQueueOptions {
     streamingState: StreamingState;
     submitQuery: (query: string) => void;

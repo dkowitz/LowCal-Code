@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Text } from "ink";
-import { Colors } from "../colors.js";
-import { tokenLimit } from "@qwen-code/qwen-code-core";
+import { Text } from 'ink';
+import { Colors } from '../colors.js';
+import { tokenLimit } from '@qwen-code/qwen-code-core';
 
 export const ContextUsageDisplay = ({
   promptTokenCount,

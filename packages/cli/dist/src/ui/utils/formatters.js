@@ -21,7 +21,7 @@ export const formatMemoryUsage = (bytes) => {
  */
 export const formatDuration = (milliseconds) => {
     if (milliseconds <= 0) {
-        return "0s";
+        return '0s';
     }
     if (milliseconds < 1000) {
         return `${Math.round(milliseconds)}ms`;
@@ -51,6 +51,6 @@ export const formatDuration = (milliseconds) => {
             return `${minutes}m`;
         return `${seconds}s`;
     }
-    return parts.join(" ");
+    return parts.join(' ');
 };
 //# sourceMappingURL=formatters.js.map

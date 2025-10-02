@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type React from "react";
+import type React from 'react';
 /**
  * Represents a single option for the RadioButtonSelect.
  * Requires a label for display and a value to be returned on selection.

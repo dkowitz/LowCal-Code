@@ -449,23 +449,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { type CreationWizardState, type WizardAction } from "./types.js";
-import { WIZARD_STEPS } from "./constants.js";
-import { getStepKind, getTotalSteps } from "./utils.js";
+import { type CreationWizardState, type WizardAction } from './types.js';
+import { WIZARD_STEPS } from './constants.js';
+import { getStepKind, getTotalSteps } from './utils.js';
 &nbsp;
 /**
  * Initial state for the creation wizard.
  */
 export const initialWizardState: CreationWizardState = {
   currentStep: WIZARD_STEPS.LOCATION_SELECTION,
-  location: "project",
-  generationMethod: "qwen",
-  userDescription: "",
-  generatedSystemPrompt: "",
-  generatedDescription: "",
-  generatedName: "",
+  location: 'project',
+  generationMethod: 'qwen',
+  userDescription: '',
+  generatedSystemPrompt: '',
+  generatedDescription: '',
+  generatedName: '',
   selectedTools: [],
-  color: "auto",
+  color: 'auto',
   isGenerating: false,
   validationErrors: [],
   canProceed: false,
@@ -479,7 +479,7 @@ export <span class="fstat-no" title="function not covered" >function wizardReduc
 <span class="cstat-no" title="statement not covered" >  action: WizardAction,</span>
 <span class="cstat-no" title="statement not covered" >): CreationWizardState {</span>
 <span class="cstat-no" title="statement not covered" >  switch (action.type) {</span>
-<span class="cstat-no" title="statement not covered" >    case "SET_STEP":</span>
+<span class="cstat-no" title="statement not covered" >    case 'SET_STEP':</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        ...state,</span>
 <span class="cstat-no" title="statement not covered" >        currentStep: Math.max(</span>
@@ -489,28 +489,28 @@ export <span class="fstat-no" title="function not covered" >function wizardReduc
 <span class="cstat-no" title="statement not covered" >        validationErrors: [],</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "SET_LOCATION":</span>
+<span class="cstat-no" title="statement not covered" >    case 'SET_LOCATION':</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        ...state,</span>
 <span class="cstat-no" title="statement not covered" >        location: action.location,</span>
 <span class="cstat-no" title="statement not covered" >        canProceed: true,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "SET_GENERATION_METHOD":</span>
+<span class="cstat-no" title="statement not covered" >    case 'SET_GENERATION_METHOD':</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        ...state,</span>
 <span class="cstat-no" title="statement not covered" >        generationMethod: action.method,</span>
 <span class="cstat-no" title="statement not covered" >        canProceed: true,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "SET_USER_DESCRIPTION":</span>
+<span class="cstat-no" title="statement not covered" >    case 'SET_USER_DESCRIPTION':</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        ...state,</span>
 <span class="cstat-no" title="statement not covered" >        userDescription: action.description,</span>
 <span class="cstat-no" title="statement not covered" >        canProceed: action.description.trim().length &gt;= 0,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "SET_GENERATED_CONTENT":</span>
+<span class="cstat-no" title="statement not covered" >    case 'SET_GENERATED_CONTENT':</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        ...state,</span>
 <span class="cstat-no" title="statement not covered" >        generatedName: action.name,</span>
@@ -520,56 +520,56 @@ export <span class="fstat-no" title="function not covered" >function wizardReduc
 <span class="cstat-no" title="statement not covered" >        canProceed: true,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "SET_GENERATED_NAME":</span>
+<span class="cstat-no" title="statement not covered" >    case 'SET_GENERATED_NAME':</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        ...state,</span>
 <span class="cstat-no" title="statement not covered" >        generatedName: action.name,</span>
 <span class="cstat-no" title="statement not covered" >        canProceed: action.name.trim().length &gt; 0,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "SET_GENERATED_SYSTEM_PROMPT":</span>
+<span class="cstat-no" title="statement not covered" >    case 'SET_GENERATED_SYSTEM_PROMPT':</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        ...state,</span>
 <span class="cstat-no" title="statement not covered" >        generatedSystemPrompt: action.systemPrompt,</span>
 <span class="cstat-no" title="statement not covered" >        canProceed: action.systemPrompt.trim().length &gt; 0,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "SET_GENERATED_DESCRIPTION":</span>
+<span class="cstat-no" title="statement not covered" >    case 'SET_GENERATED_DESCRIPTION':</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        ...state,</span>
 <span class="cstat-no" title="statement not covered" >        generatedDescription: action.description,</span>
 <span class="cstat-no" title="statement not covered" >        canProceed: action.description.trim().length &gt; 0,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "SET_TOOLS":</span>
+<span class="cstat-no" title="statement not covered" >    case 'SET_TOOLS':</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        ...state,</span>
 <span class="cstat-no" title="statement not covered" >        selectedTools: action.tools,</span>
 <span class="cstat-no" title="statement not covered" >        canProceed: true,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "SET_BACKGROUND_COLOR":</span>
+<span class="cstat-no" title="statement not covered" >    case 'SET_BACKGROUND_COLOR':</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        ...state,</span>
 <span class="cstat-no" title="statement not covered" >        color: action.color,</span>
 <span class="cstat-no" title="statement not covered" >        canProceed: true,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "SET_GENERATING":</span>
+<span class="cstat-no" title="statement not covered" >    case 'SET_GENERATING':</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        ...state,</span>
 <span class="cstat-no" title="statement not covered" >        isGenerating: action.isGenerating,</span>
 <span class="cstat-no" title="statement not covered" >        canProceed: !action.isGenerating,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "SET_VALIDATION_ERRORS":</span>
+<span class="cstat-no" title="statement not covered" >    case 'SET_VALIDATION_ERRORS':</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        ...state,</span>
 <span class="cstat-no" title="statement not covered" >        validationErrors: action.errors,</span>
 <span class="cstat-no" title="statement not covered" >        canProceed: action.errors.length === 0,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "GO_TO_NEXT_STEP":</span>
+<span class="cstat-no" title="statement not covered" >    case 'GO_TO_NEXT_STEP':</span>
 <span class="cstat-no" title="statement not covered" >      if (</span>
 <span class="cstat-no" title="statement not covered" >        state.canProceed &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >        state.currentStep &lt; getTotalSteps(state.generationMethod)</span>
@@ -583,7 +583,7 @@ export <span class="fstat-no" title="function not covered" >function wizardReduc
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      return state;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "GO_TO_PREVIOUS_STEP":</span>
+<span class="cstat-no" title="statement not covered" >    case 'GO_TO_PREVIOUS_STEP':</span>
 <span class="cstat-no" title="statement not covered" >      if (state.currentStep &gt; WIZARD_STEPS.LOCATION_SELECTION) {</span>
 <span class="cstat-no" title="statement not covered" >        return {</span>
 <span class="cstat-no" title="statement not covered" >          ...state,</span>
@@ -594,7 +594,7 @@ export <span class="fstat-no" title="function not covered" >function wizardReduc
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      return state;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    case "RESET_WIZARD":</span>
+<span class="cstat-no" title="statement not covered" >    case 'RESET_WIZARD':</span>
 <span class="cstat-no" title="statement not covered" >      return initialWizardState;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    default:</span>
@@ -608,26 +608,26 @@ export <span class="fstat-no" title="function not covered" >function wizardReduc
 <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function validateStep(step: number, state: CreationWizardState): boolean {</span></span>
 <span class="cstat-no" title="statement not covered" >  const kind = getStepKind(state.generationMethod, step);</span>
 <span class="cstat-no" title="statement not covered" >  switch (kind) {</span>
-<span class="cstat-no" title="statement not covered" >    case "LOCATION":</span>
-<span class="cstat-no" title="statement not covered" >    case "GEN_METHOD":</span>
+<span class="cstat-no" title="statement not covered" >    case 'LOCATION':</span>
+<span class="cstat-no" title="statement not covered" >    case 'GEN_METHOD':</span>
 <span class="cstat-no" title="statement not covered" >      return true;</span>
-<span class="cstat-no" title="statement not covered" >    case "LLM_DESC":</span>
+<span class="cstat-no" title="statement not covered" >    case 'LLM_DESC':</span>
 <span class="cstat-no" title="statement not covered" >      return state.userDescription.trim().length &gt;= 0;</span>
-<span class="cstat-no" title="statement not covered" >    case "MANUAL_NAME":</span>
+<span class="cstat-no" title="statement not covered" >    case 'MANUAL_NAME':</span>
 <span class="cstat-no" title="statement not covered" >      return state.generatedName.trim().length &gt; 0;</span>
-<span class="cstat-no" title="statement not covered" >    case "MANUAL_PROMPT":</span>
+<span class="cstat-no" title="statement not covered" >    case 'MANUAL_PROMPT':</span>
 <span class="cstat-no" title="statement not covered" >      return state.generatedSystemPrompt.trim().length &gt; 0;</span>
-<span class="cstat-no" title="statement not covered" >    case "MANUAL_DESC":</span>
+<span class="cstat-no" title="statement not covered" >    case 'MANUAL_DESC':</span>
 <span class="cstat-no" title="statement not covered" >      return state.generatedDescription.trim().length &gt; 0;</span>
-<span class="cstat-no" title="statement not covered" >    case "TOOLS":</span>
+<span class="cstat-no" title="statement not covered" >    case 'TOOLS':</span>
 <span class="cstat-no" title="statement not covered" >      return (</span>
 <span class="cstat-no" title="statement not covered" >        state.generatedName.length &gt; 0 &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >        state.generatedDescription.length &gt; 0 &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >        state.generatedSystemPrompt.length &gt; 0</span>
       );
-<span class="cstat-no" title="statement not covered" >    case "COLOR":</span>
+<span class="cstat-no" title="statement not covered" >    case 'COLOR':</span>
 <span class="cstat-no" title="statement not covered" >      return true;</span>
-<span class="cstat-no" title="statement not covered" >    case "FINAL":</span>
+<span class="cstat-no" title="statement not covered" >    case 'FINAL':</span>
 <span class="cstat-no" title="statement not covered" >      return state.color.length &gt; 0;</span>
 <span class="cstat-no" title="statement not covered" >    default:</span>
 <span class="cstat-no" title="statement not covered" >      return false;</span>
@@ -640,7 +640,7 @@ export <span class="fstat-no" title="function not covered" >function wizardReduc
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.879Z
+                at 2025-09-29T17:26:19.374Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

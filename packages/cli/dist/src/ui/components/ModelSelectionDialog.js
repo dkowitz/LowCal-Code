@@ -4,24 +4,24 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import React, { useState } from "react";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import { RadioButtonSelect, } from "./shared/RadioButtonSelect.js";
-import { useKeypress } from "../hooks/useKeypress.js";
-import { TextInput } from "./shared/TextInput.js";
+import React, { useState } from 'react';
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import { RadioButtonSelect, } from './shared/RadioButtonSelect.js';
+import { useKeypress } from '../hooks/useKeypress.js';
+import { TextInput } from './shared/TextInput.js';
 export const ModelSelectionDialog = ({ availableModels, currentModel, onSelect, onCancel, }) => {
-    const [searchQuery, setSearchQuery] = useState("");
+    const [searchQuery, setSearchQuery] = useState('');
     useKeypress((key) => {
-        if (key.name === "escape") {
+        if (key.name === 'escape') {
             onCancel();
         }
     }, { isActive: true });
     const filteredModels = availableModels.filter((model) => model.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
         model.id.toLowerCase().includes(searchQuery.toLowerCase()));
     const options = filteredModels.map((model) => {
-        const visionIndicator = model.isVision ? " [Vision]" : "";
-        const currentIndicator = model.id === currentModel ? " (current)" : "";
+        const visionIndicator = model.isVision ? ' [Vision]' : '';
+        const currentIndicator = model.id === currentModel ? ' (current)' : '';
         return {
             label: `${model.label}${visionIndicator}${currentIndicator}`,
             value: model.id,

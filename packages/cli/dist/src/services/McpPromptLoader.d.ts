@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Config } from "@qwen-code/qwen-code-core";
-import type { SlashCommand } from "../ui/commands/types.js";
-import type { ICommandLoader } from "./types.js";
-import type { PromptArgument } from "@modelcontextprotocol/sdk/types.js";
+import type { Config } from '@qwen-code/qwen-code-core';
+import type { SlashCommand } from '../ui/commands/types.js';
+import type { ICommandLoader } from './types.js';
+import type { PromptArgument } from '@modelcontextprotocol/sdk/types.js';
 /**
  * Discovers and loads executable slash commands from prompts exposed by
  * Model-Context-Protocol (MCP) servers.

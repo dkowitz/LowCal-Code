@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { APPROVAL_MODES, } from "@qwen-code/qwen-code-core";
-import { useEffect, useState } from "react";
-import { useKeypress } from "./useKeypress.js";
-import { MessageType } from "../types.js";
+import { APPROVAL_MODES, } from '@qwen-code/qwen-code-core';
+import { useEffect, useState } from 'react';
+import { useKeypress } from './useKeypress.js';
+import { MessageType } from '../types.js';
 export function useAutoAcceptIndicator({ config, addItem, }) {
     const currentConfigValue = config.getApprovalMode();
     const [showAutoAcceptIndicator, setShowAutoAcceptIndicator] = useState(currentConfigValue);
@@ -14,7 +14,7 @@ export function useAutoAcceptIndicator({ config, addItem, }) {
         setShowAutoAcceptIndicator(currentConfigValue);
     }, [currentConfigValue]);
     useKeypress((key) => {
-        if (!(key.shift && key.name === "tab")) {
+        if (!(key.shift && key.name === 'tab')) {
             return;
         }
         const currentMode = config.getApprovalMode();

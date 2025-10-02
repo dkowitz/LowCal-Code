@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { AnyDeclarativeTool, AnyToolInvocation } from "../index.js";
+import type { AnyDeclarativeTool, AnyToolInvocation } from '../index.js';
 /**
  * Checks if a tool invocation matches any of a list of patterns.
  *

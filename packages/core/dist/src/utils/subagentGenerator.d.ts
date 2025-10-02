@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { GeminiClient } from "../core/client.js";
+import type { GeminiClient } from '../core/client.js';
 export interface SubagentGeneratedContent {
     name: string;
     description: string;

@@ -899,13 +899,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import React from "react";
-import { Text, Box } from "ink";
-import { Colors } from "../colors.js";
-import { colorizeCode } from "./CodeColorizer.js";
-import { TableRenderer } from "./TableRenderer.js";
-import { RenderInline } from "./InlineMarkdownRenderer.js";
-import { useSettings } from "../contexts/SettingsContext.js";
+import React from 'react';
+import { Text, Box } from 'ink';
+import { Colors } from '../colors.js';
+import { colorizeCode } from './CodeColorizer.js';
+import { TableRenderer } from './TableRenderer.js';
+import { RenderInline } from './InlineMarkdownRenderer.js';
+import { useSettings } from '../contexts/SettingsContext.js';
 &nbsp;
 interface MarkdownDisplayProps {
   text: string;
@@ -943,7 +943,7 @@ const MarkdownDisplayInternal: React.FC&lt;MarkdownDisplayProps&gt; = ({
   let lastLineEmpty = true;
   let codeBlockContent: string[] = [];
   let codeBlockLang: string | null = null;
-  let codeBlockFence = "";
+  let codeBlockFence = '';
   let inTable = false;
   let tableRows: string[][] = [];
   let tableHeaders: string[] = [];
@@ -978,7 +978,7 @@ const MarkdownDisplayInternal: React.FC&lt;MarkdownDisplayProps&gt; = ({
         inCodeBlock = false;
         codeBlockContent = [];
         codeBlockLang = null;
-        codeBlockFence = "";
+        codeBlockFence = '';
       } else {
         codeBlockContent.push(line);
       }
@@ -1004,7 +1004,7 @@ const MarkdownDisplayInternal: React.FC&lt;MarkdownDisplayProps&gt; = ({
         lines[index + 1].match(tableSeparatorRegex)
       ) {
         inTable = true;
-        tableHeaders = tableRowMatch[1].split("|").map((cell) =&gt; cell.trim());
+        tableHeaders = tableRowMatch[1].split('|').map((cell) =&gt; cell.trim());
         tableRows = [];
       } else {
         // Not a table, treat as regular text
@@ -1020,10 +1020,10 @@ const MarkdownDisplayInternal: React.FC&lt;MarkdownDisplayProps&gt; = ({
       // Skip separator line - already handled
     } else if (inTable &amp;&amp; tableRowMatch) {
       // Add table row
-      const cells = tableRowMatch[1].split("|").map((cell) =&gt; cell.trim());
+      const cells = tableRowMatch[1].split('|').map((cell) =&gt; cell.trim());
       // Ensure row has same column count as headers
       while (cells.length &lt; tableHeaders.length) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >        cells.push("");</span>
+<span class="cstat-no" title="statement not covered" >        cells.push('');</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
       if (cells.length &gt; tableHeaders.length) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        cells.length = tableHeaders.length;</span>
@@ -1215,7 +1215,7 @@ const RenderCodeBlockInternal: React.FC&lt;RenderCodeBlockProps&gt; = ({
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      const truncatedContent = content.slice(0, MAX_CODE_LINES_WHEN_PENDING);</span>
 <span class="cstat-no" title="statement not covered" >      const colorizedTruncatedCode = colorizeCode(</span>
-<span class="cstat-no" title="statement not covered" >        truncatedContent.join("\n"),</span>
+<span class="cstat-no" title="statement not covered" >        truncatedContent.join('\n'),</span>
 <span class="cstat-no" title="statement not covered" >        lang,</span>
 <span class="cstat-no" title="statement not covered" >        availableTerminalHeight,</span>
 <span class="cstat-no" title="statement not covered" >        terminalWidth - CODE_BLOCK_PREFIX_PADDING,</span>
@@ -1231,7 +1231,7 @@ const RenderCodeBlockInternal: React.FC&lt;RenderCodeBlockProps&gt; = ({
 <span class="cstat-no" title="statement not covered" >    }</span>
   }
 &nbsp;
-  const fullContent = content.join("\n");
+  const fullContent = content.join('\n');
   const colorizedCode = colorizeCode(
     fullContent,
     lang,
@@ -1257,7 +1257,7 @@ const RenderCodeBlock = React.memo(RenderCodeBlockInternal);
 &nbsp;
 interface RenderListItemProps {
   itemText: string;
-  type: "ul" | "ol";
+  type: 'ul' | 'ol';
   marker: string;
   leadingWhitespace?: string;
 }
@@ -1266,9 +1266,9 @@ const RenderListItemInternal: React.FC&lt;RenderListItemProps&gt; = ({
   itemText,
   type,
   marker,
-  leadingWhitespace = "",
+  leadingWhitespace = '',
 }) =&gt; {
-  const prefix = type === "ol" ? `${marker}. ` : `${marker} `;
+  const prefix = type === 'ol' ? `${marker}. ` : `${marker} `;
   const prefixWidth = prefix.length;
   const indentation = leadingWhitespace.length;
 &nbsp;
@@ -1315,7 +1315,7 @@ export const MarkdownDisplay = React.memo(MarkdownDisplayInternal);
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.879Z
+                at 2025-09-29T17:26:19.374Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

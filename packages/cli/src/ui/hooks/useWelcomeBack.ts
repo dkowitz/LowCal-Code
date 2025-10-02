@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from 'react';
 import {
   getProjectSummaryInfo,
   type ProjectSummaryInfo,
   type Config,
-} from "@qwen-code/qwen-code-core";
-import { type Settings } from "../../config/settingsSchema.js";
+} from '@qwen-code/qwen-code-core';
+import { type Settings } from '../../config/settingsSchema.js';
 
 export interface WelcomeBackState {
   welcomeBackInfo: ProjectSummaryInfo | null;
   showWelcomeBackDialog: boolean;
-  welcomeBackChoice: "restart" | "continue" | null;
+  welcomeBackChoice: 'restart' | 'continue' | null;
   shouldFillInput: boolean;
   inputFillText: string | null;
 }
 
 export interface WelcomeBackActions {
-  handleWelcomeBackSelection: (choice: "restart" | "continue") => void;
+  handleWelcomeBackSelection: (choice: 'restart' | 'continue') => void;
   handleWelcomeBackClose: () => void;
   checkWelcomeBack: () => Promise<void>;
   clearInputFill: () => void;
@@ -37,7 +37,7 @@ export function useWelcomeBack(
     useState<ProjectSummaryInfo | null>(null);
   const [showWelcomeBackDialog, setShowWelcomeBackDialog] = useState(false);
   const [welcomeBackChoice, setWelcomeBackChoice] = useState<
-    "restart" | "continue" | null
+    'restart' | 'continue' | null
   >(null);
   const [shouldFillInput, setShouldFillInput] = useState(false);
   const [inputFillText, setInputFillText] = useState<string | null>(null);
@@ -57,17 +57,17 @@ export function useWelcomeBack(
       }
     } catch (error) {
       // Silently ignore errors - welcome back is not critical
-      console.debug("Welcome back check failed:", error);
+      console.debug('Welcome back check failed:', error);
     }
   }, [settings.enableWelcomeBack]);
 
   // Handle welcome back dialog selection
   const handleWelcomeBackSelection = useCallback(
-    (choice: "restart" | "continue") => {
+    (choice: 'restart' | 'continue') => {
       setWelcomeBackChoice(choice);
       setShowWelcomeBackDialog(false);
 
-      if (choice === "continue" && welcomeBackInfo?.content) {
+      if (choice === 'continue' && welcomeBackInfo?.content) {
         // Create the context message to fill in the input box
         const contextMessage = `@.qwen/PROJECT_SUMMARY.md, Based on our previous conversation,Let's continue?`;
 
@@ -81,7 +81,7 @@ export function useWelcomeBack(
   );
 
   const handleWelcomeBackClose = useCallback(() => {
-    setWelcomeBackChoice("restart"); // Default to restart when closed
+    setWelcomeBackChoice('restart'); // Default to restart when closed
     setShowWelcomeBackDialog(false);
   }, []);
 

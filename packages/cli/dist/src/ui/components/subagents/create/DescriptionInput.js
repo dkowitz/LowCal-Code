@@ -4,16 +4,16 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useCallback, useRef } from "react";
-import { Box, Text } from "ink";
-import Spinner from "ink-spinner";
-import { sanitizeInput } from "../utils.js";
-import { subagentGenerator } from "@qwen-code/qwen-code-core";
-import { useKeypress } from "../../../hooks/useKeypress.js";
-import { keyMatchers, Command } from "../../../keyMatchers.js";
-import { theme } from "../../../semantic-colors.js";
-import { Colors } from "../../../colors.js";
-import { TextInput } from "../../shared/TextInput.js";
+import { useCallback, useRef } from 'react';
+import { Box, Text } from 'ink';
+import Spinner from 'ink-spinner';
+import { sanitizeInput } from '../utils.js';
+import { subagentGenerator } from '@qwen-code/qwen-code-core';
+import { useKeypress } from '../../../hooks/useKeypress.js';
+import { keyMatchers, Command } from '../../../keyMatchers.js';
+import { theme } from '../../../semantic-colors.js';
+import { Colors } from '../../../colors.js';
+import { TextInput } from '../../shared/TextInput.js';
 /**
  * Step 3: Description input with LLM generation.
  */
@@ -22,7 +22,7 @@ export function DescriptionInput({ state, dispatch, onNext, config, }) {
     const handleTextChange = useCallback((text) => {
         const sanitized = sanitizeInput(text);
         dispatch({
-            type: "SET_USER_DESCRIPTION",
+            type: 'SET_USER_DESCRIPTION',
             description: sanitized,
         });
     }, [dispatch]);
@@ -35,7 +35,7 @@ export function DescriptionInput({ state, dispatch, onNext, config, }) {
             // Only dispatch if not aborted
             if (!abortController.signal.aborted) {
                 dispatch({
-                    type: "SET_GENERATED_CONTENT",
+                    type: 'SET_GENERATED_CONTENT',
                     name: generated.name,
                     description: generated.description,
                     systemPrompt: generated.systemPrompt,
@@ -56,24 +56,24 @@ export function DescriptionInput({ state, dispatch, onNext, config, }) {
             return;
         }
         // Start LLM generation
-        dispatch({ type: "SET_GENERATING", isGenerating: true });
+        dispatch({ type: 'SET_GENERATING', isGenerating: true });
         try {
             if (!config) {
-                throw new Error("Configuration not available");
+                throw new Error('Configuration not available');
             }
             // Use real LLM integration
             await handleGenerate(inputValue, dispatch, config);
         }
         catch (error) {
-            dispatch({ type: "SET_GENERATING", isGenerating: false });
+            dispatch({ type: 'SET_GENERATING', isGenerating: false });
             // Don't show error if it was cancelled by user
-            if (error instanceof Error && error.name === "AbortError") {
+            if (error instanceof Error && error.name === 'AbortError') {
                 return;
             }
             dispatch({
-                type: "SET_VALIDATION_ERRORS",
+                type: 'SET_VALIDATION_ERRORS',
                 errors: [
-                    `Failed to generate subagent: ${error instanceof Error ? error.message : "Unknown error"}`,
+                    `Failed to generate subagent: ${error instanceof Error ? error.message : 'Unknown error'}`,
                 ],
             });
         }
@@ -91,7 +91,7 @@ export function DescriptionInput({ state, dispatch, onNext, config, }) {
             if (abortControllerRef.current) {
                 // Cancel the ongoing generation
                 abortControllerRef.current.abort();
-                dispatch({ type: "SET_GENERATING", isGenerating: false });
+                dispatch({ type: 'SET_GENERATING', isGenerating: false });
             }
         }
     }, [dispatch]);
@@ -99,7 +99,7 @@ export function DescriptionInput({ state, dispatch, onNext, config, }) {
     useKeypress(handleGenerationKeypress, {
         isActive: state.isGenerating,
     });
-    const placeholder = "e.g., Expert code reviewer that reviews code based on best practices...";
-    return (_jsxs(Box, { flexDirection: "column", gap: 1, children: [_jsx(Box, { children: _jsx(Text, { color: Colors.Gray, children: "Describe what this subagent should do and when it should be used. (Be comprehensive for best results)" }) }), state.isGenerating ? (_jsxs(Box, { children: [_jsx(Box, { marginRight: 1, children: _jsx(Spinner, {}) }), _jsx(Text, { color: theme.text.accent, children: "Generating subagent configuration..." })] })) : (_jsx(TextInput, { value: state.userDescription || "", onChange: handleTextChange, onSubmit: handleSubmit, placeholder: placeholder, height: 10, isActive: !state.isGenerating, validationErrors: state.validationErrors }))] }));
+    const placeholder = 'e.g., Expert code reviewer that reviews code based on best practices...';
+    return (_jsxs(Box, { flexDirection: "column", gap: 1, children: [_jsx(Box, { children: _jsx(Text, { color: Colors.Gray, children: "Describe what this subagent should do and when it should be used. (Be comprehensive for best results)" }) }), state.isGenerating ? (_jsxs(Box, { children: [_jsx(Box, { marginRight: 1, children: _jsx(Spinner, {}) }), _jsx(Text, { color: theme.text.accent, children: "Generating subagent configuration..." })] })) : (_jsx(TextInput, { value: state.userDescription || '', onChange: handleTextChange, onSubmit: handleSubmit, placeholder: placeholder, height: 10, isActive: !state.isGenerating, validationErrors: state.validationErrors }))] }));
 }
 //# sourceMappingURL=DescriptionInput.js.map

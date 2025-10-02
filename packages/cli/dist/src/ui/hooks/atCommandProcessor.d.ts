@@ -3,13 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { PartListUnion } from "@google/genai";
-import type { Config } from "@qwen-code/qwen-code-core";
-import type { UseHistoryManagerReturn } from "./useHistoryManager.js";
+import type { PartListUnion } from '@google/genai';
+import type { Config } from '@qwen-code/qwen-code-core';
+import type { UseHistoryManagerReturn } from './useHistoryManager.js';
 interface HandleAtCommandParams {
     query: string;
     config: Config;
-    addItem: UseHistoryManagerReturn["addItem"];
+    addItem: UseHistoryManagerReturn['addItem'];
     onDebugMessage: (message: string) => void;
     messageId: number;
     signal: AbortSignal;

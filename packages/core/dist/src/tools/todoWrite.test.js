@@ -3,22 +3,22 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
-import { TodoWriteTool } from "./todoWrite.js";
-import * as fs from "fs/promises";
-import * as fsSync from "fs";
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { TodoWriteTool } from './todoWrite.js';
+import * as fs from 'fs/promises';
+import * as fsSync from 'fs';
 // Mock fs modules
-vi.mock("fs/promises");
-vi.mock("fs");
+vi.mock('fs/promises');
+vi.mock('fs');
 const mockFs = vi.mocked(fs);
 const mockFsSync = vi.mocked(fsSync);
-describe("TodoWriteTool", () => {
+describe('TodoWriteTool', () => {
     let tool;
     let mockAbortSignal;
     let mockConfig;
     beforeEach(() => {
         mockConfig = {
-            getSessionId: () => "test-session-123",
+            getSessionId: () => 'test-session-123',
         };
         tool = new TodoWriteTool(mockConfig);
         mockAbortSignal = new AbortController().signal;
@@ -27,108 +27,108 @@ describe("TodoWriteTool", () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
-    describe("validateToolParams", () => {
-        it("should validate correct parameters", () => {
+    describe('validateToolParams', () => {
+        it('should validate correct parameters', () => {
             const params = {
                 todos: [
-                    { id: "1", content: "Task 1", status: "pending" },
-                    { id: "2", content: "Task 2", status: "in_progress" },
+                    { id: '1', content: 'Task 1', status: 'pending' },
+                    { id: '2', content: 'Task 2', status: 'in_progress' },
                 ],
             };
             const result = tool.validateToolParams(params);
             expect(result).toBeNull();
         });
-        it("should accept empty todos array", () => {
+        it('should accept empty todos array', () => {
             const params = {
                 todos: [],
             };
             const result = tool.validateToolParams(params);
             expect(result).toBeNull();
         });
-        it("should accept single todo", () => {
+        it('should accept single todo', () => {
             const params = {
-                todos: [{ id: "1", content: "Task 1", status: "pending" }],
+                todos: [{ id: '1', content: 'Task 1', status: 'pending' }],
             };
             const result = tool.validateToolParams(params);
             expect(result).toBeNull();
         });
-        it("should reject todos with empty content", () => {
+        it('should reject todos with empty content', () => {
             const params = {
                 todos: [
-                    { id: "1", content: "", status: "pending" },
-                    { id: "2", content: "Task 2", status: "pending" },
+                    { id: '1', content: '', status: 'pending' },
+                    { id: '2', content: 'Task 2', status: 'pending' },
                 ],
             };
             const result = tool.validateToolParams(params);
             expect(result).toContain('Each todo must have a non-empty "content" string');
         });
-        it("should reject todos with empty id", () => {
+        it('should reject todos with empty id', () => {
             const params = {
                 todos: [
-                    { id: "", content: "Task 1", status: "pending" },
-                    { id: "2", content: "Task 2", status: "pending" },
+                    { id: '', content: 'Task 1', status: 'pending' },
+                    { id: '2', content: 'Task 2', status: 'pending' },
                 ],
             };
             const result = tool.validateToolParams(params);
             expect(result).toContain('non-empty "id" string');
         });
-        it("should reject todos with invalid status", () => {
+        it('should reject todos with invalid status', () => {
             const params = {
                 todos: [
                     {
-                        id: "1",
-                        content: "Task 1",
-                        status: "invalid",
+                        id: '1',
+                        content: 'Task 1',
+                        status: 'invalid',
                     },
-                    { id: "2", content: "Task 2", status: "pending" },
+                    { id: '2', content: 'Task 2', status: 'pending' },
                 ],
             };
             const result = tool.validateToolParams(params);
             expect(result).toContain('Each todo must have a valid "status" (pending, in_progress, completed)');
         });
-        it("should reject todos with duplicate IDs", () => {
+        it('should reject todos with duplicate IDs', () => {
             const params = {
                 todos: [
-                    { id: "1", content: "Task 1", status: "pending" },
-                    { id: "1", content: "Task 2", status: "pending" },
+                    { id: '1', content: 'Task 1', status: 'pending' },
+                    { id: '1', content: 'Task 2', status: 'pending' },
                 ],
             };
             const result = tool.validateToolParams(params);
-            expect(result).toContain("unique");
+            expect(result).toContain('unique');
         });
     });
-    describe("execute", () => {
-        it("should create new todos file when none exists", async () => {
+    describe('execute', () => {
+        it('should create new todos file when none exists', async () => {
             const params = {
                 todos: [
-                    { id: "1", content: "Task 1", status: "pending" },
-                    { id: "2", content: "Task 2", status: "in_progress" },
+                    { id: '1', content: 'Task 1', status: 'pending' },
+                    { id: '2', content: 'Task 2', status: 'in_progress' },
                 ],
             };
             // Mock file not existing
-            mockFs.readFile.mockRejectedValue({ code: "ENOENT" });
+            mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
             mockFs.mkdir.mockResolvedValue(undefined);
             mockFs.writeFile.mockResolvedValue(undefined);
             const invocation = tool.build(params);
             const result = await invocation.execute(mockAbortSignal);
-            expect(result.llmContent).toContain("success");
+            expect(result.llmContent).toContain('success');
             expect(result.returnDisplay).toEqual({
-                type: "todo_list",
+                type: 'todo_list',
                 todos: [
-                    { id: "1", content: "Task 1", status: "pending" },
-                    { id: "2", content: "Task 2", status: "in_progress" },
+                    { id: '1', content: 'Task 1', status: 'pending' },
+                    { id: '2', content: 'Task 2', status: 'in_progress' },
                 ],
             });
-            expect(mockFs.writeFile).toHaveBeenCalledWith(expect.stringContaining("test-session-123.json"), expect.stringContaining('"todos"'), "utf-8");
+            expect(mockFs.writeFile).toHaveBeenCalledWith(expect.stringContaining('test-session-123.json'), expect.stringContaining('"todos"'), 'utf-8');
         });
-        it("should replace todos with new ones", async () => {
+        it('should replace todos with new ones', async () => {
             const existingTodos = [
-                { id: "1", content: "Existing Task", status: "completed" },
+                { id: '1', content: 'Existing Task', status: 'completed' },
             ];
             const params = {
                 todos: [
-                    { id: "1", content: "Updated Task", status: "completed" },
-                    { id: "2", content: "New Task", status: "pending" },
+                    { id: '1', content: 'Updated Task', status: 'completed' },
+                    { id: '2', content: 'New Task', status: 'pending' },
                 ],
             };
             // Mock existing file
@@ -137,32 +137,32 @@ describe("TodoWriteTool", () => {
             mockFs.writeFile.mockResolvedValue(undefined);
             const invocation = tool.build(params);
             const result = await invocation.execute(mockAbortSignal);
-            expect(result.llmContent).toContain("success");
+            expect(result.llmContent).toContain('success');
             expect(result.returnDisplay).toEqual({
-                type: "todo_list",
+                type: 'todo_list',
                 todos: [
-                    { id: "1", content: "Updated Task", status: "completed" },
-                    { id: "2", content: "New Task", status: "pending" },
+                    { id: '1', content: 'Updated Task', status: 'completed' },
+                    { id: '2', content: 'New Task', status: 'pending' },
                 ],
             });
-            expect(mockFs.writeFile).toHaveBeenCalledWith(expect.stringContaining("test-session-123.json"), expect.stringMatching(/"Updated Task"/), "utf-8");
+            expect(mockFs.writeFile).toHaveBeenCalledWith(expect.stringContaining('test-session-123.json'), expect.stringMatching(/"Updated Task"/), 'utf-8');
         });
-        it("should handle file write errors", async () => {
+        it('should handle file write errors', async () => {
             const params = {
                 todos: [
-                    { id: "1", content: "Task 1", status: "pending" },
-                    { id: "2", content: "Task 2", status: "pending" },
+                    { id: '1', content: 'Task 1', status: 'pending' },
+                    { id: '2', content: 'Task 2', status: 'pending' },
                 ],
             };
-            mockFs.readFile.mockRejectedValue({ code: "ENOENT" });
+            mockFs.readFile.mockRejectedValue({ code: 'ENOENT' });
             mockFs.mkdir.mockResolvedValue(undefined);
-            mockFs.writeFile.mockRejectedValue(new Error("Write failed"));
+            mockFs.writeFile.mockRejectedValue(new Error('Write failed'));
             const invocation = tool.build(params);
             const result = await invocation.execute(mockAbortSignal);
             expect(result.llmContent).toContain('"success":false');
-            expect(result.returnDisplay).toContain("Error writing todos");
+            expect(result.returnDisplay).toContain('Error writing todos');
         });
-        it("should handle empty todos array", async () => {
+        it('should handle empty todos array', async () => {
             const params = {
                 todos: [],
             };
@@ -170,52 +170,52 @@ describe("TodoWriteTool", () => {
             mockFs.writeFile.mockResolvedValue(undefined);
             const invocation = tool.build(params);
             const result = await invocation.execute(mockAbortSignal);
-            expect(result.llmContent).toContain("success");
+            expect(result.llmContent).toContain('success');
             expect(result.returnDisplay).toEqual({
-                type: "todo_list",
+                type: 'todo_list',
                 todos: [],
             });
-            expect(mockFs.writeFile).toHaveBeenCalledWith(expect.stringContaining("test-session-123.json"), expect.stringContaining('"todos"'), "utf-8");
+            expect(mockFs.writeFile).toHaveBeenCalledWith(expect.stringContaining('test-session-123.json'), expect.stringContaining('"todos"'), 'utf-8');
         });
     });
-    describe("tool properties", () => {
-        it("should have correct tool name", () => {
-            expect(TodoWriteTool.Name).toBe("todo_write");
-            expect(tool.name).toBe("todo_write");
+    describe('tool properties', () => {
+        it('should have correct tool name', () => {
+            expect(TodoWriteTool.Name).toBe('todo_write');
+            expect(tool.name).toBe('todo_write');
         });
-        it("should have correct display name", () => {
-            expect(tool.displayName).toBe("TodoWrite");
+        it('should have correct display name', () => {
+            expect(tool.displayName).toBe('TodoWrite');
         });
-        it("should have correct kind", () => {
-            expect(tool.kind).toBe("think");
+        it('should have correct kind', () => {
+            expect(tool.kind).toBe('think');
         });
-        it("should have schema with required properties", () => {
+        it('should have schema with required properties', () => {
             const schema = tool.schema;
-            expect(schema.name).toBe("todo_write");
-            expect(schema.parametersJsonSchema).toHaveProperty("properties.todos");
-            expect(schema.parametersJsonSchema).not.toHaveProperty("properties.merge");
+            expect(schema.name).toBe('todo_write');
+            expect(schema.parametersJsonSchema).toHaveProperty('properties.todos');
+            expect(schema.parametersJsonSchema).not.toHaveProperty('properties.merge');
         });
     });
-    describe("getDescription", () => {
+    describe('getDescription', () => {
         it('should return "Create todos" when no todos file exists', () => {
             // Mock existsSync to return false (file doesn't exist)
             mockFsSync.existsSync.mockReturnValue(false);
             const params = {
-                todos: [{ id: "1", content: "Test todo", status: "pending" }],
+                todos: [{ id: '1', content: 'Test todo', status: 'pending' }],
             };
             const invocation = tool.build(params);
-            expect(invocation.getDescription()).toBe("Create todos");
+            expect(invocation.getDescription()).toBe('Create todos');
         });
         it('should return "Update todos" when todos file exists', () => {
             // Mock existsSync to return true (file exists)
             mockFsSync.existsSync.mockReturnValue(true);
             const params = {
                 todos: [
-                    { id: "1", content: "Updated todo", status: "completed" },
+                    { id: '1', content: 'Updated todo', status: 'completed' },
                 ],
             };
             const invocation = tool.build(params);
-            expect(invocation.getDescription()).toBe("Update todos");
+            expect(invocation.getDescription()).toBe('Update todos');
         });
     });
 });

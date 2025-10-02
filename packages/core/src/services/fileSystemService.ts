@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs from "node:fs/promises";
+import fs from 'node:fs/promises';
 
 /**
  * Interface for file system operations that may be delegated to different implementations
@@ -32,10 +32,10 @@ export interface FileSystemService {
  */
 export class StandardFileSystemService implements FileSystemService {
   async readTextFile(filePath: string): Promise<string> {
-    return fs.readFile(filePath, "utf-8");
+    return fs.readFile(filePath, 'utf-8');
   }
 
   async writeTextFile(filePath: string, content: string): Promise<void> {
-    await fs.writeFile(filePath, content, "utf-8");
+    await fs.writeFile(filePath, content, 'utf-8');
   }
 }

@@ -4,43 +4,43 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import open from "open";
-import process from "node:process";
+import open from 'open';
+import process from 'node:process';
 import {
   type CommandContext,
   type SlashCommand,
   CommandKind,
-} from "./types.js";
-import { MessageType } from "../types.js";
-import { GIT_COMMIT_INFO } from "../../generated/git-commit.js";
-import { formatMemoryUsage } from "../utils/formatters.js";
-import { getCliVersion } from "../../utils/version.js";
-import { sessionId } from "@qwen-code/qwen-code-core";
+} from './types.js';
+import { MessageType } from '../types.js';
+import { GIT_COMMIT_INFO } from '../../generated/git-commit.js';
+import { formatMemoryUsage } from '../utils/formatters.js';
+import { getCliVersion } from '../../utils/version.js';
+import { sessionId } from '@qwen-code/qwen-code-core';
 
 export const bugCommand: SlashCommand = {
-  name: "bug",
-  description: "submit a bug report",
+  name: 'bug',
+  description: 'submit a bug report',
   kind: CommandKind.BUILT_IN,
   action: async (context: CommandContext, args?: string): Promise<void> => {
-    const bugDescription = (args || "").trim();
+    const bugDescription = (args || '').trim();
     const { config } = context.services;
 
     const osVersion = `${process.platform} ${process.version}`;
-    let sandboxEnv = "no sandbox";
-    if (process.env["SANDBOX"] && process.env["SANDBOX"] !== "sandbox-exec") {
-      sandboxEnv = process.env["SANDBOX"].replace(/^qwen-(?:code-)?/, "");
-    } else if (process.env["SANDBOX"] === "sandbox-exec") {
+    let sandboxEnv = 'no sandbox';
+    if (process.env['SANDBOX'] && process.env['SANDBOX'] !== 'sandbox-exec') {
+      sandboxEnv = process.env['SANDBOX'].replace(/^qwen-(?:code-)?/, '');
+    } else if (process.env['SANDBOX'] === 'sandbox-exec') {
       sandboxEnv = `sandbox-exec (${
-        process.env["SEATBELT_PROFILE"] || "unknown"
+        process.env['SEATBELT_PROFILE'] || 'unknown'
       })`;
     }
-    const modelVersion = config?.getModel() || "Unknown";
+    const modelVersion = config?.getModel() || 'Unknown';
     const cliVersion = await getCliVersion();
     const memoryUsage = formatMemoryUsage(process.memoryUsage().rss);
     const ideClient =
       (context.services.config?.getIdeMode() &&
         context.services.config?.getIdeClient()?.getDetectedIdeDisplayName()) ||
-      "";
+      '';
 
     let info = `
 * **CLI Version:** ${cliVersion}
@@ -56,7 +56,7 @@ export const bugCommand: SlashCommand = {
     }
 
     let bugReportUrl =
-      "https://github.com/QwenLM/qwen-code/issues/new?template=bug_report.yml&title={title}&info={info}";
+      'https://github.com/QwenLM/qwen-code/issues/new?template=bug_report.yml&title={title}&info={info}';
 
     const bugCommandSettings = config?.getBugCommand();
     if (bugCommandSettings?.urlTemplate) {
@@ -64,8 +64,8 @@ export const bugCommand: SlashCommand = {
     }
 
     bugReportUrl = bugReportUrl
-      .replace("{title}", encodeURIComponent(bugDescription))
-      .replace("{info}", encodeURIComponent(info));
+      .replace('{title}', encodeURIComponent(bugDescription))
+      .replace('{info}', encodeURIComponent(info));
 
     context.ui.addItem(
       {

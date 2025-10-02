@@ -3,12 +3,12 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as fs from "node:fs";
-import type { ExportResult } from "@opentelemetry/core";
-import type { ReadableSpan, SpanExporter } from "@opentelemetry/sdk-trace-base";
-import type { ReadableLogRecord, LogRecordExporter } from "@opentelemetry/sdk-logs";
-import type { ResourceMetrics, PushMetricExporter } from "@opentelemetry/sdk-metrics";
-import { AggregationTemporality } from "@opentelemetry/sdk-metrics";
+import * as fs from 'node:fs';
+import type { ExportResult } from '@opentelemetry/core';
+import type { ReadableSpan, SpanExporter } from '@opentelemetry/sdk-trace-base';
+import type { ReadableLogRecord, LogRecordExporter } from '@opentelemetry/sdk-logs';
+import type { ResourceMetrics, PushMetricExporter } from '@opentelemetry/sdk-metrics';
+import { AggregationTemporality } from '@opentelemetry/sdk-metrics';
 declare class FileExporter {
     protected writeStream: fs.WriteStream;
     constructor(filePath: string);

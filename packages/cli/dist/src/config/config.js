@@ -3,52 +3,52 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ApprovalMode, Config, DEFAULT_GEMINI_EMBEDDING_MODEL, DEFAULT_GEMINI_MODEL, DEFAULT_MEMORY_FILE_FILTERING_OPTIONS, EditTool, FileDiscoveryService, getCurrentGeminiMdFilename, loadServerHierarchicalMemory, setGeminiMdFilename as setServerGeminiMdFilename, ShellTool, WriteFileTool, } from "@qwen-code/qwen-code-core";
-import * as fs from "node:fs";
-import { homedir } from "node:os";
-import * as path from "node:path";
-import process from "node:process";
-import { hideBin } from "yargs/helpers";
-import yargs from "yargs/yargs";
-import { extensionsCommand } from "../commands/extensions.js";
-import { mcpCommand } from "../commands/mcp.js";
-import { resolvePath } from "../utils/resolvePath.js";
-import { getCliVersion } from "../utils/version.js";
-import { annotateActiveExtensions } from "./extension.js";
-import { loadSandboxConfig } from "./sandboxConfig.js";
-import { setOpenAIApiKey, setOpenAIBaseUrl } from "./auth.js";
-import { appEvents, AppEvent } from "../utils/events.js";
-import { isWorkspaceTrusted } from "./trustedFolders.js";
+import { ApprovalMode, Config, DEFAULT_GEMINI_EMBEDDING_MODEL, DEFAULT_GEMINI_MODEL, DEFAULT_MEMORY_FILE_FILTERING_OPTIONS, EditTool, FileDiscoveryService, getCurrentGeminiMdFilename, loadServerHierarchicalMemory, setGeminiMdFilename as setServerGeminiMdFilename, ShellTool, WriteFileTool, } from '@qwen-code/qwen-code-core';
+import * as fs from 'node:fs';
+import { homedir } from 'node:os';
+import * as path from 'node:path';
+import process from 'node:process';
+import { hideBin } from 'yargs/helpers';
+import yargs from 'yargs/yargs';
+import { extensionsCommand } from '../commands/extensions.js';
+import { mcpCommand } from '../commands/mcp.js';
+import { resolvePath } from '../utils/resolvePath.js';
+import { getCliVersion } from '../utils/version.js';
+import { annotateActiveExtensions } from './extension.js';
+import { loadSandboxConfig } from './sandboxConfig.js';
+import { setOpenAIApiKey, setOpenAIBaseUrl } from './auth.js';
+import { appEvents, AppEvent } from '../utils/events.js';
+import { isWorkspaceTrusted } from './trustedFolders.js';
 // Simple console logger for now - replace with actual logger if available
 const logger = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    debug: (...args) => console.debug("[DEBUG]", ...args),
+    debug: (...args) => console.debug('[DEBUG]', ...args),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    warn: (...args) => console.warn("[WARN]", ...args),
+    warn: (...args) => console.warn('[WARN]', ...args),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    error: (...args) => console.error("[ERROR]", ...args),
+    error: (...args) => console.error('[ERROR]', ...args),
 };
 const VALID_APPROVAL_MODE_VALUES = [
-    "plan",
-    "default",
-    "auto-edit",
-    "yolo",
+    'plan',
+    'default',
+    'auto-edit',
+    'yolo',
 ];
 function formatApprovalModeError(value) {
-    return new Error(`Invalid approval mode: ${value}. Valid values are: ${VALID_APPROVAL_MODE_VALUES.join(", ")}`);
+    return new Error(`Invalid approval mode: ${value}. Valid values are: ${VALID_APPROVAL_MODE_VALUES.join(', ')}`);
 }
 function parseApprovalModeValue(value) {
     const normalized = value.trim().toLowerCase();
     switch (normalized) {
-        case "plan":
+        case 'plan':
             return ApprovalMode.PLAN;
-        case "default":
+        case 'default':
             return ApprovalMode.DEFAULT;
-        case "yolo":
+        case 'yolo':
             return ApprovalMode.YOLO;
-        case "auto_edit":
-        case "autoedit":
-        case "auto-edit":
+        case 'auto_edit':
+        case 'autoedit':
+        case 'auto-edit':
             return ApprovalMode.AUTO_EDIT;
         default:
             throw formatApprovalModeError(value);
@@ -57,165 +57,165 @@ function parseApprovalModeValue(value) {
 export async function parseArguments(settings) {
     const yargsInstance = yargs(hideBin(process.argv))
         // Set locale to English for consistent output, especially in tests
-        .locale("en")
-        .scriptName("qwen")
-        .usage("Usage: qwen [options] [command]\n\nQwen Code - Launch an interactive CLI, use -p/--prompt for non-interactive mode")
-        .command("$0", "Launch Qwen Code", (yargsInstance) => yargsInstance
-        .option("model", {
-        alias: "m",
-        type: "string",
+        .locale('en')
+        .scriptName('qwen')
+        .usage('Usage: qwen [options] [command]\n\nQwen Code - Launch an interactive CLI, use -p/--prompt for non-interactive mode')
+        .command('$0', 'Launch Qwen Code', (yargsInstance) => yargsInstance
+        .option('model', {
+        alias: 'm',
+        type: 'string',
         description: `Model`,
-        default: process.env["GEMINI_MODEL"],
+        default: process.env['GEMINI_MODEL'],
     })
-        .option("prompt", {
-        alias: "p",
-        type: "string",
-        description: "Prompt. Appended to input on stdin (if any).",
+        .option('prompt', {
+        alias: 'p',
+        type: 'string',
+        description: 'Prompt. Appended to input on stdin (if any).',
     })
-        .option("prompt-interactive", {
-        alias: "i",
-        type: "string",
-        description: "Execute the provided prompt and continue in interactive mode",
+        .option('prompt-interactive', {
+        alias: 'i',
+        type: 'string',
+        description: 'Execute the provided prompt and continue in interactive mode',
     })
-        .option("sandbox", {
-        alias: "s",
-        type: "boolean",
-        description: "Run in sandbox?",
+        .option('sandbox', {
+        alias: 's',
+        type: 'boolean',
+        description: 'Run in sandbox?',
     })
-        .option("sandbox-image", {
-        type: "string",
-        description: "Sandbox image URI.",
+        .option('sandbox-image', {
+        type: 'string',
+        description: 'Sandbox image URI.',
     })
-        .option("debug", {
-        alias: "d",
-        type: "boolean",
-        description: "Run in debug mode?",
+        .option('debug', {
+        alias: 'd',
+        type: 'boolean',
+        description: 'Run in debug mode?',
         default: false,
     })
-        .option("all-files", {
-        alias: ["a"],
-        type: "boolean",
-        description: "Include ALL files in context?",
+        .option('all-files', {
+        alias: ['a'],
+        type: 'boolean',
+        description: 'Include ALL files in context?',
         default: false,
     })
-        .option("show-memory-usage", {
-        type: "boolean",
-        description: "Show memory usage in status bar",
+        .option('show-memory-usage', {
+        type: 'boolean',
+        description: 'Show memory usage in status bar',
         default: false,
     })
-        .option("yolo", {
-        alias: "y",
-        type: "boolean",
-        description: "Automatically accept all actions (aka YOLO mode, see https://www.youtube.com/watch?v=xvFZjo5PgG0 for more details)?",
+        .option('yolo', {
+        alias: 'y',
+        type: 'boolean',
+        description: 'Automatically accept all actions (aka YOLO mode, see https://www.youtube.com/watch?v=xvFZjo5PgG0 for more details)?',
         default: false,
     })
-        .option("approval-mode", {
-        type: "string",
-        choices: ["plan", "default", "auto-edit", "yolo"],
-        description: "Set the approval mode: plan (plan only), default (prompt for approval), auto-edit (auto-approve edit tools), yolo (auto-approve all tools)",
+        .option('approval-mode', {
+        type: 'string',
+        choices: ['plan', 'default', 'auto-edit', 'yolo'],
+        description: 'Set the approval mode: plan (plan only), default (prompt for approval), auto-edit (auto-approve edit tools), yolo (auto-approve all tools)',
     })
-        .option("telemetry", {
-        type: "boolean",
-        description: "Enable telemetry? This flag specifically controls if telemetry is sent. Other --telemetry-* flags set specific values but do not enable telemetry on their own.",
+        .option('telemetry', {
+        type: 'boolean',
+        description: 'Enable telemetry? This flag specifically controls if telemetry is sent. Other --telemetry-* flags set specific values but do not enable telemetry on their own.',
     })
-        .option("telemetry-target", {
-        type: "string",
-        choices: ["local", "gcp"],
-        description: "Set the telemetry target (local or gcp). Overrides settings files.",
+        .option('telemetry-target', {
+        type: 'string',
+        choices: ['local', 'gcp'],
+        description: 'Set the telemetry target (local or gcp). Overrides settings files.',
     })
-        .option("telemetry-otlp-endpoint", {
-        type: "string",
-        description: "Set the OTLP endpoint for telemetry. Overrides environment variables and settings files.",
+        .option('telemetry-otlp-endpoint', {
+        type: 'string',
+        description: 'Set the OTLP endpoint for telemetry. Overrides environment variables and settings files.',
     })
-        .option("telemetry-otlp-protocol", {
-        type: "string",
-        choices: ["grpc", "http"],
-        description: "Set the OTLP protocol for telemetry (grpc or http). Overrides settings files.",
+        .option('telemetry-otlp-protocol', {
+        type: 'string',
+        choices: ['grpc', 'http'],
+        description: 'Set the OTLP protocol for telemetry (grpc or http). Overrides settings files.',
     })
-        .option("telemetry-log-prompts", {
-        type: "boolean",
-        description: "Enable or disable logging of user prompts for telemetry. Overrides settings files.",
+        .option('telemetry-log-prompts', {
+        type: 'boolean',
+        description: 'Enable or disable logging of user prompts for telemetry. Overrides settings files.',
     })
-        .option("telemetry-outfile", {
-        type: "string",
-        description: "Redirect all telemetry output to the specified file.",
+        .option('telemetry-outfile', {
+        type: 'string',
+        description: 'Redirect all telemetry output to the specified file.',
     })
-        .option("checkpointing", {
-        alias: "c",
-        type: "boolean",
-        description: "Enables checkpointing of file edits",
+        .option('checkpointing', {
+        alias: 'c',
+        type: 'boolean',
+        description: 'Enables checkpointing of file edits',
         default: false,
     })
-        .option("experimental-acp", {
-        type: "boolean",
-        description: "Starts the agent in ACP mode",
+        .option('experimental-acp', {
+        type: 'boolean',
+        description: 'Starts the agent in ACP mode',
     })
-        .option("allowed-mcp-server-names", {
-        type: "array",
+        .option('allowed-mcp-server-names', {
+        type: 'array',
         string: true,
-        description: "Allowed MCP server names",
+        description: 'Allowed MCP server names',
     })
-        .option("allowed-tools", {
-        type: "array",
+        .option('allowed-tools', {
+        type: 'array',
         string: true,
-        description: "Tools that are allowed to run without confirmation",
+        description: 'Tools that are allowed to run without confirmation',
     })
-        .option("extensions", {
-        alias: "e",
-        type: "array",
+        .option('extensions', {
+        alias: 'e',
+        type: 'array',
         string: true,
-        description: "A list of extensions to use. If not provided, all extensions are used.",
+        description: 'A list of extensions to use. If not provided, all extensions are used.',
     })
-        .option("list-extensions", {
-        alias: "l",
-        type: "boolean",
-        description: "List all available extensions and exit.",
+        .option('list-extensions', {
+        alias: 'l',
+        type: 'boolean',
+        description: 'List all available extensions and exit.',
     })
-        .option("proxy", {
-        type: "string",
-        description: "Proxy for qwen client, like schema://user:password@host:port",
+        .option('proxy', {
+        type: 'string',
+        description: 'Proxy for qwen client, like schema://user:password@host:port',
     })
-        .option("include-directories", {
-        type: "array",
+        .option('include-directories', {
+        type: 'array',
         string: true,
-        description: "Additional directories to include in the workspace (comma-separated or multiple --include-directories)",
+        description: 'Additional directories to include in the workspace (comma-separated or multiple --include-directories)',
         coerce: (dirs) => 
         // Handle comma-separated values
-        dirs.flatMap((dir) => dir.split(",").map((d) => d.trim())),
+        dirs.flatMap((dir) => dir.split(',').map((d) => d.trim())),
     })
-        .option("openai-logging", {
-        type: "boolean",
-        description: "Enable logging of OpenAI API calls for debugging and analysis",
+        .option('openai-logging', {
+        type: 'boolean',
+        description: 'Enable logging of OpenAI API calls for debugging and analysis',
     })
-        .option("openai-api-key", {
-        type: "string",
-        description: "OpenAI API key to use for authentication",
+        .option('openai-api-key', {
+        type: 'string',
+        description: 'OpenAI API key to use for authentication',
     })
-        .option("openai-base-url", {
-        type: "string",
-        description: "OpenAI base URL (for custom endpoints)",
+        .option('openai-base-url', {
+        type: 'string',
+        description: 'OpenAI base URL (for custom endpoints)',
     })
-        .option("tavily-api-key", {
-        type: "string",
-        description: "Tavily API key for web search functionality",
+        .option('tavily-api-key', {
+        type: 'string',
+        description: 'Tavily API key for web search functionality',
     })
-        .option("screen-reader", {
-        type: "boolean",
-        description: "Enable screen reader mode for accessibility.",
+        .option('screen-reader', {
+        type: 'boolean',
+        description: 'Enable screen reader mode for accessibility.',
         default: false,
     })
-        .option("vlm-switch-mode", {
-        type: "string",
-        choices: ["once", "session", "persist"],
-        description: "Default behavior when images are detected in input. Values: once (one-time switch), session (switch for entire session), persist (continue with current model). Overrides settings files.",
-        default: process.env["VLM_SWITCH_MODE"],
+        .option('vlm-switch-mode', {
+        type: 'string',
+        choices: ['once', 'session', 'persist'],
+        description: 'Default behavior when images are detected in input. Values: once (one-time switch), session (switch for entire session), persist (continue with current model). Overrides settings files.',
+        default: process.env['VLM_SWITCH_MODE'],
     })
         .check((argv) => {
-        if (argv.prompt && argv["promptInteractive"]) {
-            throw new Error("Cannot use both --prompt (-p) and --prompt-interactive (-i) together");
+        if (argv.prompt && argv['promptInteractive']) {
+            throw new Error('Cannot use both --prompt (-p) and --prompt-interactive (-i) together');
         }
-        if (argv.yolo && argv["approvalMode"]) {
-            throw new Error("Cannot use both --yolo (-y) and --approval-mode together. Use --approval-mode=yolo instead.");
+        if (argv.yolo && argv['approvalMode']) {
+            throw new Error('Cannot use both --yolo (-y) and --approval-mode together. Use --approval-mode=yolo instead.');
         }
         return true;
     }))
@@ -226,9 +226,9 @@ export async function parseArguments(settings) {
     }
     yargsInstance
         .version(await getCliVersion()) // This will enable the --version flag based on package.json
-        .alias("v", "version")
+        .alias('v', 'version')
         .help()
-        .alias("h", "help")
+        .alias('h', 'help')
         .strict()
         .demandCommand(0, 0); // Allow base command to run with no subcommands
     yargsInstance.wrap(yargsInstance.terminalWidth());
@@ -236,7 +236,7 @@ export async function parseArguments(settings) {
     // Handle case where MCP subcommands are executed - they should exit the process
     // and not return to main CLI logic
     if (result._.length > 0 &&
-        (result._[0] === "mcp" || result._[0] === "extensions")) {
+        (result._[0] === 'mcp' || result._[0] === 'extensions')) {
         // MCP commands handle their own execution and process exit
         process.exit(0);
     }
@@ -247,14 +247,14 @@ export async function parseArguments(settings) {
 // This function is now a thin wrapper around the server's implementation.
 // It's kept in the CLI for now as App.tsx directly calls it for memory refresh.
 // TODO: Consider if App.tsx should get memory via a server call or if Config should refresh itself.
-export async function loadHierarchicalGeminiMemory(currentWorkingDirectory, includeDirectoriesToReadGemini = [], debugMode, fileService, settings, extensionContextFilePaths = [], memoryImportFormat = "tree", fileFilteringOptions) {
+export async function loadHierarchicalGeminiMemory(currentWorkingDirectory, includeDirectoriesToReadGemini = [], debugMode, fileService, settings, extensionContextFilePaths = [], memoryImportFormat = 'tree', fileFilteringOptions) {
     // FIX: Use real, canonical paths for a reliable comparison to handle symlinks.
     const realCwd = fs.realpathSync(path.resolve(currentWorkingDirectory));
     const realHome = fs.realpathSync(path.resolve(homedir()));
     const isHomeDirectory = realCwd === realHome;
     // If it is the home directory, pass an empty string to the core memory
     // function to signal that it should skip the workspace search.
-    const effectiveCwd = isHomeDirectory ? "" : currentWorkingDirectory;
+    const effectiveCwd = isHomeDirectory ? '' : currentWorkingDirectory;
     if (debugMode) {
         logger.debug(`CLI: Delegating hierarchical memory load to server for CWD: ${currentWorkingDirectory} (memoryImportFormat: ${memoryImportFormat})`);
     }
@@ -263,9 +263,9 @@ export async function loadHierarchicalGeminiMemory(currentWorkingDirectory, incl
 }
 export async function loadCliConfig(settings, extensions, sessionId, argv, cwd = process.cwd()) {
     const debugMode = argv.debug ||
-        [process.env["DEBUG"], process.env["DEBUG_MODE"]].some((v) => v === "true" || v === "1") ||
+        [process.env['DEBUG'], process.env['DEBUG_MODE']].some((v) => v === 'true' || v === '1') ||
         false;
-    const memoryImportFormat = settings.context?.importFormat || "tree";
+    const memoryImportFormat = settings.context?.importFormat || 'tree';
     const ideMode = settings.ide?.enabled ?? false;
     const folderTrustFeature = settings.security?.folderTrust?.featureEnabled ?? false;
     const folderTrustSetting = settings.security?.folderTrust?.enabled ?? true;
@@ -287,7 +287,7 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
         }
         catch (e) {
             // Fall back to setting runtime env if persistence fails
-            process.env["OPENAI_API_KEY"] = argv.openaiApiKey;
+            process.env['OPENAI_API_KEY'] = argv.openaiApiKey;
         }
     }
     // Handle OpenAI base URL from command line
@@ -302,12 +302,12 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
             }
         }
         catch (e) {
-            process.env["OPENAI_BASE_URL"] = argv.openaiBaseUrl;
+            process.env['OPENAI_BASE_URL'] = argv.openaiBaseUrl;
         }
     }
     // Handle Tavily API key from command line
     if (argv.tavilyApiKey) {
-        process.env["TAVILY_API_KEY"] = argv.tavilyApiKey;
+        process.env['TAVILY_API_KEY'] = argv.tavilyApiKey;
     }
     // Set the context filename in the server's memoryTool module BEFORE loading memory
     // TODO(b/343434939): This is a bit of a hack. The contextFileName should ideally be passed
@@ -334,7 +334,7 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
         ? includeDirectories
         : [], debugMode, fileService, settings, extensionContextFilePaths, memoryImportFormat, fileFiltering);
     let mcpServers = mergeMcpServers(settings, activeExtensions);
-    const question = argv.promptInteractive || argv.prompt || "";
+    const question = argv.promptInteractive || argv.prompt || '';
     // Determine approval mode with backward compatibility
     let approvalMode;
     if (argv.approvalMode) {
@@ -430,9 +430,9 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
             target: (argv.telemetryTarget ??
                 settings.telemetry?.target),
             otlpEndpoint: argv.telemetryOtlpEndpoint ??
-                process.env["OTEL_EXPORTER_OTLP_ENDPOINT"] ??
+                process.env['OTEL_EXPORTER_OTLP_ENDPOINT'] ??
                 settings.telemetry?.otlpEndpoint,
-            otlpProtocol: ["grpc", "http"].find((p) => p ===
+            otlpProtocol: ['grpc', 'http'].find((p) => p ===
                 (argv.telemetryOtlpProtocol ?? settings.telemetry?.otlpProtocol)),
             logPrompts: argv.telemetryLogPrompts ?? settings.telemetry?.logPrompts,
             outfile: argv.telemetryOutfile ?? settings.telemetry?.outfile,
@@ -447,10 +447,10 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
         },
         checkpointing: argv.checkpointing || settings.general?.checkpointing?.enabled,
         proxy: argv.proxy ||
-            process.env["HTTPS_PROXY"] ||
-            process.env["https_proxy"] ||
-            process.env["HTTP_PROXY"] ||
-            process.env["http_proxy"],
+            process.env['HTTPS_PROXY'] ||
+            process.env['https_proxy'] ||
+            process.env['HTTP_PROXY'] ||
+            process.env['http_proxy'],
         cwd,
         fileDiscoveryService: fileService,
         bugCommand: settings.advanced?.bugCommand,
@@ -462,17 +462,17 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
         listExtensions: argv.listExtensions || false,
         extensions: allExtensions,
         blockedMcpServers,
-        noBrowser: !!process.env["NO_BROWSER"],
-        enableOpenAILogging: (typeof argv.openaiLogging === "undefined"
+        noBrowser: !!process.env['NO_BROWSER'],
+        enableOpenAILogging: (typeof argv.openaiLogging === 'undefined'
             ? settings.enableOpenAILogging
             : argv.openaiLogging) ?? false,
         systemPromptMappings: (settings.systemPromptMappings ?? [
             {
                 baseUrls: [
-                    "https://dashscope.aliyuncs.com/compatible-mode/v1/",
-                    "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/",
+                    'https://dashscope.aliyuncs.com/compatible-mode/v1/',
+                    'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/',
                 ],
-                modelNames: ["qwen3-coder-plus"],
+                modelNames: ['qwen3-coder-plus'],
                 template: 'SYSTEM_TEMPLATE:{"name":"qwen3_coder","params":{"is_git_repository":{RUNTIME_VARS_IS_GIT_REPO},"sandbox":"{RUNTIME_VARS_SANDBOX}"}}',
             },
         ]),
@@ -481,7 +481,7 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
         cliVersion,
         tavilyApiKey: argv.tavilyApiKey ||
             settings.tavilyApiKey ||
-            process.env["TAVILY_API_KEY"],
+            process.env['TAVILY_API_KEY'],
         summarizeToolOutput: settings.model?.summarizeToolOutput,
         ideMode,
         chatCompression: settings.model?.chatCompression,
@@ -505,7 +505,7 @@ function allowedMcpServers(mcpServers, allowMCPServers, blockedMcpServers) {
             if (!isAllowed) {
                 blockedMcpServers.push({
                     name: key,
-                    extensionName: server.extensionName || "",
+                    extensionName: server.extensionName || '',
                 });
             }
             return isAllowed;
@@ -514,7 +514,7 @@ function allowedMcpServers(mcpServers, allowMCPServers, blockedMcpServers) {
     else {
         blockedMcpServers.push(...Object.entries(mcpServers).map(([key, server]) => ({
             name: key,
-            extensionName: server.extensionName || "",
+            extensionName: server.extensionName || '',
         })));
         mcpServers = {};
     }

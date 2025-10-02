@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { type CommandModule } from "yargs";
-import { FatalConfigError, getErrorMessage } from "@qwen-code/qwen-code-core";
-import { enableExtension } from "../../config/extension.js";
-import { SettingScope } from "../../config/settings.js";
+import { type CommandModule } from 'yargs';
+import { FatalConfigError, getErrorMessage } from '@qwen-code/qwen-code-core';
+import { enableExtension } from '../../config/extension.js';
+import { SettingScope } from '../../config/settings.js';
 
 interface EnableArgs {
   name: string;
@@ -35,25 +35,25 @@ export async function handleEnable(args: EnableArgs) {
 }
 
 export const enableCommand: CommandModule = {
-  command: "disable [--scope] <name>",
-  describe: "Enables an extension.",
+  command: 'disable [--scope] <name>',
+  describe: 'Enables an extension.',
   builder: (yargs) =>
     yargs
-      .positional("name", {
-        describe: "The name of the extension to enable.",
-        type: "string",
+      .positional('name', {
+        describe: 'The name of the extension to enable.',
+        type: 'string',
       })
-      .option("scope", {
+      .option('scope', {
         describe:
-          "The scope to enable the extenison in. If not set, will be enabled in all scopes.",
-        type: "string",
+          'The scope to enable the extenison in. If not set, will be enabled in all scopes.',
+        type: 'string',
         choices: [SettingScope.User, SettingScope.Workspace],
       })
       .check((_argv) => true),
   handler: async (argv) => {
     await handleEnable({
-      name: argv["name"] as string,
-      scope: argv["scope"] as SettingScope,
+      name: argv['name'] as string,
+      scope: argv['scope'] as SettingScope,
     });
   },
 };

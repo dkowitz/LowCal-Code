@@ -3,18 +3,18 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { reportError } from "../utils/errorReporting.js";
-import {} from "../core/turn.js";
-import { CoreToolScheduler, } from "../core/coreToolScheduler.js";
-import { createContentGenerator } from "../core/contentGenerator.js";
-import { getEnvironmentContext } from "../utils/environmentContext.js";
-import { GeminiChat } from "../core/geminiChat.js";
-import { SubagentTerminateMode } from "./types.js";
-import { SubAgentEventType, } from "./subagent-events.js";
-import { SubagentStatistics, } from "./subagent-statistics.js";
-import { logSubagentExecution } from "../telemetry/loggers.js";
-import { SubagentExecutionEvent } from "../telemetry/types.js";
-import { TaskTool } from "../tools/task.js";
+import { reportError } from '../utils/errorReporting.js';
+import {} from '../core/turn.js';
+import { CoreToolScheduler, } from '../core/coreToolScheduler.js';
+import { createContentGenerator } from '../core/contentGenerator.js';
+import { getEnvironmentContext } from '../utils/environmentContext.js';
+import { GeminiChat } from '../core/geminiChat.js';
+import { SubagentTerminateMode } from './types.js';
+import { SubAgentEventType, } from './subagent-events.js';
+import { SubagentStatistics, } from './subagent-statistics.js';
+import { logSubagentExecution } from '../telemetry/loggers.js';
+import { SubagentExecutionEvent } from '../telemetry/types.js';
+import { TaskTool } from '../tools/task.js';
 /**
  * Manages the runtime context state for the subagent.
  * This class provides a mechanism to store and retrieve key-value pairs
@@ -69,7 +69,7 @@ function templateString(template, context) {
     const contextKeys = new Set(context.get_keys());
     const missingKeys = Array.from(requiredKeys).filter((key) => !contextKeys.has(key));
     if (missingKeys.length > 0) {
-        throw new Error(`Missing context values for the following keys: ${missingKeys.join(", ")}`);
+        throw new Error(`Missing context values for the following keys: ${missingKeys.join(', ')}`);
     }
     // Perform the replacement using a replacer function.
     return template.replace(placeholderRegex, (_match, key) => String(context.get(key)));
@@ -100,7 +100,7 @@ export class SubAgentScope {
     };
     toolUsage = new Map();
     eventEmitter;
-    finalText = "";
+    finalText = '';
     terminateMode = SubagentTerminateMode.ERROR;
     stats = new SubagentStatistics();
     hooks;
@@ -163,16 +163,16 @@ export class SubAgentScope {
                 this.terminateMode = SubagentTerminateMode.CANCELLED;
                 return;
             }
-            externalSignal.addEventListener("abort", onAbort, { once: true });
+            externalSignal.addEventListener('abort', onAbort, { once: true });
         }
         const toolRegistry = this.runtimeContext.getToolRegistry();
         // Prepare the list of tools available to the subagent.
         // If no explicit toolConfig or it contains "*" or is empty, inherit all tools.
         const toolsList = [];
         if (this.toolConfig) {
-            const asStrings = this.toolConfig.tools.filter((t) => typeof t === "string");
-            const hasWildcard = asStrings.includes("*");
-            const onlyInlineDecls = this.toolConfig.tools.filter((t) => typeof t !== "string");
+            const asStrings = this.toolConfig.tools.filter((t) => typeof t === 'string');
+            const hasWildcard = asStrings.includes('*');
+            const onlyInlineDecls = this.toolConfig.tools.filter((t) => typeof t !== 'string');
             if (hasWildcard || asStrings.length === 0) {
                 toolsList.push(...toolRegistry
                     .getFunctionDeclarations()
@@ -189,9 +189,9 @@ export class SubAgentScope {
                 .getFunctionDeclarations()
                 .filter((t) => t.name !== TaskTool.Name));
         }
-        const initialTaskText = String(context.get("task_prompt") ?? "Get Started!");
+        const initialTaskText = String(context.get('task_prompt') ?? 'Get Started!');
         let currentMessages = [
-            { role: "user", parts: [{ text: initialTaskText }] },
+            { role: 'user', parts: [{ text: initialTaskText }] },
         ];
         const startTime = Date.now();
         this.executionStats.startTimeMs = startTime;
@@ -203,11 +203,11 @@ export class SubAgentScope {
                 subagentId: this.subagentId,
                 name: this.name,
                 model: this.modelConfig.model,
-                tools: (this.toolConfig?.tools || ["*"]).map((t) => typeof t === "string" ? t : t.name),
+                tools: (this.toolConfig?.tools || ['*']).map((t) => typeof t === 'string' ? t : t.name),
                 timestamp: Date.now(),
             });
             // Log telemetry for subagent start
-            const startEvent = new SubagentExecutionEvent(this.name, "started");
+            const startEvent = new SubagentExecutionEvent(this.name, 'started');
             logSubagentExecution(this.runtimeContext, startEvent);
             while (true) {
                 // Check termination conditions.
@@ -238,7 +238,7 @@ export class SubAgentScope {
                     timestamp: Date.now(),
                 });
                 const functionCalls = [];
-                let roundText = "";
+                let roundText = '';
                 let lastUsage = undefined;
                 for await (const streamEvent of responseStream) {
                     if (abortController.signal.aborted) {
@@ -246,11 +246,11 @@ export class SubAgentScope {
                         return;
                     }
                     // Handle retry events
-                    if (streamEvent.type === "retry") {
+                    if (streamEvent.type === 'retry') {
                         continue;
                     }
                     // Handle chunk events
-                    if (streamEvent.type === "chunk") {
+                    if (streamEvent.type === 'chunk') {
                         const resp = streamEvent.value;
                         if (resp.functionCalls)
                             functionCalls.push(...resp.functionCalls);
@@ -314,10 +314,10 @@ export class SubAgentScope {
                     // Otherwise, nudge the model to finalize a result.
                     currentMessages = [
                         {
-                            role: "user",
+                            role: 'user',
                             parts: [
                                 {
-                                    text: "Please provide the final result now and stop calling tools.",
+                                    text: 'Please provide the final result now and stop calling tools.',
                                 },
                             ],
                         },
@@ -332,7 +332,7 @@ export class SubAgentScope {
             }
         }
         catch (error) {
-            console.error("Error during subagent execution:", error);
+            console.error('Error during subagent execution:', error);
             this.terminateMode = SubagentTerminateMode.ERROR;
             this.eventEmitter?.emit(SubAgentEventType.ERROR, {
                 subagentId: this.subagentId,
@@ -343,7 +343,7 @@ export class SubAgentScope {
         }
         finally {
             if (externalSignal)
-                externalSignal.removeEventListener("abort", onAbort);
+                externalSignal.removeEventListener('abort', onAbort);
             this.executionStats.totalDurationMs = Date.now() - startTime;
             const summary = this.stats.getSummary(Date.now());
             this.eventEmitter?.emit(SubAgentEventType.FINISH, {
@@ -360,11 +360,11 @@ export class SubAgentScope {
                 totalTokens: summary.totalTokens,
             });
             const completionEvent = new SubagentExecutionEvent(this.name, this.terminateMode === SubagentTerminateMode.GOAL
-                ? "completed"
-                : "failed", {
+                ? 'completed'
+                : 'failed', {
                 terminate_reason: this.terminateMode,
                 result: this.finalText,
-                execution_summary: this.stats.formatCompact("Subagent execution completed"),
+                execution_summary: this.stats.formatCompact('Subagent execution completed'),
             });
             logSubagentExecution(this.runtimeContext, completionEvent);
             await this.hooks?.onStop?.({
@@ -398,8 +398,8 @@ export class SubAgentScope {
                 for (const call of completedCalls) {
                     const toolName = call.request.name;
                     const duration = call.durationMs ?? 0;
-                    const success = call.status === "success";
-                    const errorMessage = call.status === "error" || call.status === "cancelled"
+                    const success = call.status === 'success';
+                    const errorMessage = call.status === 'error' || call.status === 'cancelled'
                         ? call.response.error?.message
                         : undefined;
                     // Update aggregate stats
@@ -424,7 +424,7 @@ export class SubAgentScope {
                     }
                     else {
                         tu.failure += 1;
-                        tu.lastError = errorMessage || "Unknown error";
+                        tu.lastError = errorMessage || 'Unknown error';
                     }
                     tu.totalDurationMs = (tu.totalDurationMs || 0) + duration;
                     tu.averageDurationMs =
@@ -439,7 +439,7 @@ export class SubAgentScope {
                         success,
                         error: errorMessage,
                         resultDisplay: call.response.resultDisplay
-                            ? typeof call.response.resultDisplay === "string"
+                            ? typeof call.response.resultDisplay === 'string'
                                 ? call.response.resultDisplay
                                 : JSON.stringify(call.response.resultDisplay)
                             : undefined,
@@ -464,7 +464,7 @@ export class SubAgentScope {
                     if (respParts) {
                         const parts = Array.isArray(respParts) ? respParts : [respParts];
                         for (const part of parts) {
-                            if (typeof part === "string") {
+                            if (typeof part === 'string') {
                                 toolResponseParts.push({ text: part });
                             }
                             else if (part) {
@@ -478,7 +478,7 @@ export class SubAgentScope {
             },
             onToolCallsUpdate: (calls) => {
                 for (const call of calls) {
-                    if (call.status !== "awaiting_approval")
+                    if (call.status !== 'awaiting_approval')
                         continue;
                     const waiting = call;
                     // Emit approval request event for UI visibility
@@ -513,7 +513,7 @@ export class SubAgentScope {
         });
         // Prepare requests and emit TOOL_CALL events
         const requests = functionCalls.map((fc) => {
-            const toolName = String(fc.name || "unknown");
+            const toolName = String(fc.name || 'unknown');
             const callId = fc.id ?? `${fc.name}-${Date.now()}`;
             const args = (fc.args ?? {});
             const request = {
@@ -557,10 +557,10 @@ export class SubAgentScope {
         // If all tool calls failed, inform the model so it can re-evaluate.
         if (functionCalls.length > 0 && toolResponseParts.length === 0) {
             toolResponseParts.push({
-                text: "All tool calls failed. Please analyze the errors and try an alternative approach.",
+                text: 'All tool calls failed. Please analyze the errors and try an alternative approach.',
             });
         }
-        return [{ role: "user", parts: toolResponseParts }];
+        return [{ role: 'user', parts: toolResponseParts }];
     }
     getEventEmitter() {
         return this.eventEmitter;
@@ -588,15 +588,15 @@ export class SubAgentScope {
     }
     async createChatObject(context) {
         if (!this.promptConfig.systemPrompt && !this.promptConfig.initialMessages) {
-            throw new Error("PromptConfig must have either `systemPrompt` or `initialMessages` defined.");
+            throw new Error('PromptConfig must have either `systemPrompt` or `initialMessages` defined.');
         }
         if (this.promptConfig.systemPrompt && this.promptConfig.initialMessages) {
-            throw new Error("PromptConfig cannot have both `systemPrompt` and `initialMessages` defined.");
+            throw new Error('PromptConfig cannot have both `systemPrompt` and `initialMessages` defined.');
         }
         const envParts = await getEnvironmentContext(this.runtimeContext);
         const envHistory = [
-            { role: "user", parts: envParts },
-            { role: "model", parts: [{ text: "Got it. Thanks for the context!" }] },
+            { role: 'user', parts: envParts },
+            { role: 'model', parts: [{ text: 'Got it. Thanks for the context!' }] },
         ];
         const start_history = [
             ...envHistory,
@@ -620,7 +620,7 @@ export class SubAgentScope {
             return new GeminiChat(this.runtimeContext, contentGenerator, generationConfig, start_history);
         }
         catch (error) {
-            await reportError(error, "Error initializing Gemini chat session.", start_history, "startChat");
+            await reportError(error, 'Error initializing Gemini chat session.', start_history, 'startChat');
             // The calling function will handle the undefined return.
             return undefined;
         }
@@ -638,20 +638,20 @@ export class SubAgentScope {
             const toolRegistry = this.runtimeContext.getToolRegistry();
             const tool = toolRegistry.getTool(toolName);
             if (!tool) {
-                return "";
+                return '';
             }
             const toolInstance = tool.build(args);
-            return toolInstance.getDescription() || "";
+            return toolInstance.getDescription() || '';
         }
         catch {
             // Safely ignore all runtime errors and return empty string
-            return "";
+            return '';
         }
     }
     buildChatSystemPrompt(context) {
         if (!this.promptConfig.systemPrompt) {
             // This should ideally be caught in createChatObject, but serves as a safeguard.
-            return "";
+            return '';
         }
         let finalPrompt = templateString(this.promptConfig.systemPrompt, context);
         // Add general non-interactive instructions.

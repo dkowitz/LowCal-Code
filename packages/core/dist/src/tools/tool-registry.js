@@ -3,15 +3,15 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { Kind, BaseDeclarativeTool, BaseToolInvocation } from "./tools.js";
-import { spawn } from "node:child_process";
-import { StringDecoder } from "node:string_decoder";
-import { connectAndDiscover } from "./mcp-client.js";
-import { McpClientManager } from "./mcp-client-manager.js";
-import { DiscoveredMCPTool } from "./mcp-tool.js";
-import { parse } from "shell-quote";
-import { ToolErrorType } from "./tool-error.js";
-import { safeJsonStringify } from "../utils/safeJsonStringify.js";
+import { Kind, BaseDeclarativeTool, BaseToolInvocation } from './tools.js';
+import { spawn } from 'node:child_process';
+import { StringDecoder } from 'node:string_decoder';
+import { connectAndDiscover } from './mcp-client.js';
+import { McpClientManager } from './mcp-client-manager.js';
+import { DiscoveredMCPTool } from './mcp-tool.js';
+import { parse } from 'shell-quote';
+import { ToolErrorType } from './tool-error.js';
+import { safeJsonStringify } from '../utils/safeJsonStringify.js';
 class DiscoveredToolInvocation extends BaseToolInvocation {
     config;
     toolName;
@@ -28,8 +28,8 @@ class DiscoveredToolInvocation extends BaseToolInvocation {
         const child = spawn(callCommand, [this.toolName]);
         child.stdin.write(JSON.stringify(this.params));
         child.stdin.end();
-        let stdout = "";
-        let stderr = "";
+        let stdout = '';
+        let stderr = '';
         let error = null;
         let code = null;
         let signal = null;
@@ -50,28 +50,28 @@ class DiscoveredToolInvocation extends BaseToolInvocation {
                 resolve();
             };
             const cleanup = () => {
-                child.stdout.removeListener("data", onStdout);
-                child.stderr.removeListener("data", onStderr);
-                child.removeListener("error", onError);
-                child.removeListener("close", onClose);
+                child.stdout.removeListener('data', onStdout);
+                child.stderr.removeListener('data', onStderr);
+                child.removeListener('error', onError);
+                child.removeListener('close', onClose);
                 if (child.connected) {
                     child.disconnect();
                 }
             };
-            child.stdout.on("data", onStdout);
-            child.stderr.on("data", onStderr);
-            child.on("error", onError);
-            child.on("close", onClose);
+            child.stdout.on('data', onStdout);
+            child.stderr.on('data', onStderr);
+            child.on('error', onError);
+            child.on('close', onClose);
         });
         // if there is any error, non-zero exit code, signal, or stderr, return error details instead of stdout
         if (error || code !== 0 || signal || stderr) {
             const llmContent = [
-                `Stdout: ${stdout || "(empty)"}`,
-                `Stderr: ${stderr || "(empty)"}`,
-                `Error: ${error ?? "(none)"}`,
-                `Exit Code: ${code ?? "(none)"}`,
-                `Signal: ${signal ?? "(none)"}`,
-            ].join("\n");
+                `Stdout: ${stdout || '(empty)'}`,
+                `Stderr: ${stderr || '(empty)'}`,
+                `Error: ${error ?? '(none)'}`,
+                `Exit Code: ${code ?? '(none)'}`,
+                `Signal: ${signal ?? '(none)'}`,
+            ].join('\n');
             return {
                 llmContent,
                 returnDisplay: llmContent,
@@ -219,19 +219,19 @@ export class ToolRegistry {
         try {
             const cmdParts = parse(discoveryCmd);
             if (cmdParts.length === 0) {
-                throw new Error("Tool discovery command is empty or contains only whitespace.");
+                throw new Error('Tool discovery command is empty or contains only whitespace.');
             }
             const proc = spawn(cmdParts[0], cmdParts.slice(1));
-            let stdout = "";
-            const stdoutDecoder = new StringDecoder("utf8");
-            let stderr = "";
-            const stderrDecoder = new StringDecoder("utf8");
+            let stdout = '';
+            const stdoutDecoder = new StringDecoder('utf8');
+            let stderr = '';
+            const stderrDecoder = new StringDecoder('utf8');
             let sizeLimitExceeded = false;
             const MAX_STDOUT_SIZE = 10 * 1024 * 1024; // 10MB limit
             const MAX_STDERR_SIZE = 10 * 1024 * 1024; // 10MB limit
             let stdoutByteLength = 0;
             let stderrByteLength = 0;
-            proc.stdout.on("data", (data) => {
+            proc.stdout.on('data', (data) => {
                 if (sizeLimitExceeded)
                     return;
                 if (stdoutByteLength + data.length > MAX_STDOUT_SIZE) {
@@ -242,7 +242,7 @@ export class ToolRegistry {
                 stdoutByteLength += data.length;
                 stdout += stdoutDecoder.write(data);
             });
-            proc.stderr.on("data", (data) => {
+            proc.stderr.on('data', (data) => {
                 if (sizeLimitExceeded)
                     return;
                 if (stderrByteLength + data.length > MAX_STDERR_SIZE) {
@@ -254,8 +254,8 @@ export class ToolRegistry {
                 stderr += stderrDecoder.write(data);
             });
             await new Promise((resolve, reject) => {
-                proc.on("error", reject);
-                proc.on("close", (code) => {
+                proc.on('error', reject);
+                proc.on('close', (code) => {
                     stdout += stdoutDecoder.end();
                     stderr += stderrDecoder.end();
                     if (sizeLimitExceeded) {
@@ -273,17 +273,17 @@ export class ToolRegistry {
             const functions = [];
             const discoveredItems = JSON.parse(stdout.trim());
             if (!discoveredItems || !Array.isArray(discoveredItems)) {
-                throw new Error("Tool discovery command did not return a JSON array of tools.");
+                throw new Error('Tool discovery command did not return a JSON array of tools.');
             }
             for (const tool of discoveredItems) {
-                if (tool && typeof tool === "object") {
-                    if (Array.isArray(tool["function_declarations"])) {
-                        functions.push(...tool["function_declarations"]);
+                if (tool && typeof tool === 'object') {
+                    if (Array.isArray(tool['function_declarations'])) {
+                        functions.push(...tool['function_declarations']);
                     }
-                    else if (Array.isArray(tool["functionDeclarations"])) {
-                        functions.push(...tool["functionDeclarations"]);
+                    else if (Array.isArray(tool['functionDeclarations'])) {
+                        functions.push(...tool['functionDeclarations']);
                     }
-                    else if (tool["name"]) {
+                    else if (tool['name']) {
                         functions.push(tool);
                     }
                 }
@@ -291,15 +291,15 @@ export class ToolRegistry {
             // register each function as a tool
             for (const func of functions) {
                 if (!func.name) {
-                    console.warn("Discovered a tool with no name. Skipping.");
+                    console.warn('Discovered a tool with no name. Skipping.');
                     continue;
                 }
                 const parameters = func.parametersJsonSchema &&
-                    typeof func.parametersJsonSchema === "object" &&
+                    typeof func.parametersJsonSchema === 'object' &&
                     !Array.isArray(func.parametersJsonSchema)
                     ? func.parametersJsonSchema
                     : {};
-                this.registerTool(new DiscoveredTool(this.config, func.name, func.description ?? "", parameters));
+                this.registerTool(new DiscoveredTool(this.config, func.name, func.description ?? '', parameters));
             }
         }
         catch (e) {

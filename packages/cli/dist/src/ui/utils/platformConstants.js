@@ -13,7 +13,7 @@
  * Kitty keyboard protocol sequences for enhanced keyboard input.
  * @see https://sw.kovidgoyal.net/kitty/keyboard-protocol/
  */
-export const KITTY_CTRL_C = "[99;5u";
+export const KITTY_CTRL_C = '[99;5u';
 /**
  * Kitty keyboard protocol keycodes
  */
@@ -28,7 +28,7 @@ export const CTRL_EXIT_PROMPT_DURATION_MS = 1000;
 /**
  * VS Code terminal integration constants
  */
-export const VSCODE_SHIFT_ENTER_SEQUENCE = "\\\r\n";
+export const VSCODE_SHIFT_ENTER_SEQUENCE = '\\\r\n';
 /**
  * Backslash + Enter detection window in milliseconds.
  * Used to detect Shift+Enter pattern where backslash

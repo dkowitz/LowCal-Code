@@ -3,21 +3,21 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { describe, it, expect, vi, beforeEach, } from "vitest";
-import { renderHook, act } from "@testing-library/react";
-import { useAutoAcceptIndicator } from "./useAutoAcceptIndicator.js";
-import { Config, ApprovalMode } from "@qwen-code/qwen-code-core";
-import { useKeypress } from "./useKeypress.js";
-import { MessageType } from "../types.js";
-vi.mock("./useKeypress.js");
-vi.mock("@qwen-code/qwen-code-core", async () => {
-    const actualServerModule = (await vi.importActual("@qwen-code/qwen-code-core"));
+import { describe, it, expect, vi, beforeEach, } from 'vitest';
+import { renderHook, act } from '@testing-library/react';
+import { useAutoAcceptIndicator } from './useAutoAcceptIndicator.js';
+import { Config, ApprovalMode } from '@qwen-code/qwen-code-core';
+import { useKeypress } from './useKeypress.js';
+import { MessageType } from '../types.js';
+vi.mock('./useKeypress.js');
+vi.mock('@qwen-code/qwen-code-core', async () => {
+    const actualServerModule = (await vi.importActual('@qwen-code/qwen-code-core'));
     return {
         ...actualServerModule,
         Config: vi.fn(),
     };
 });
-describe("useAutoAcceptIndicator", () => {
+describe('useAutoAcceptIndicator', () => {
     let mockConfigInstance;
     let capturedUseKeypressHandler;
     let mockedUseKeypress;
@@ -32,15 +32,15 @@ describe("useAutoAcceptIndicator", () => {
                 isTrustedFolder: vi.fn().mockReturnValue(true),
                 getCoreTools: vi.fn().mockReturnValue([]),
                 getToolDiscoveryCommand: vi.fn().mockReturnValue(undefined),
-                getTargetDir: vi.fn().mockReturnValue("."),
-                getApiKey: vi.fn().mockReturnValue("test-api-key"),
-                getModel: vi.fn().mockReturnValue("test-model"),
+                getTargetDir: vi.fn().mockReturnValue('.'),
+                getApiKey: vi.fn().mockReturnValue('test-api-key'),
+                getModel: vi.fn().mockReturnValue('test-model'),
                 getSandbox: vi.fn().mockReturnValue(false),
                 getDebugMode: vi.fn().mockReturnValue(false),
                 getQuestion: vi.fn().mockReturnValue(undefined),
                 getFullContext: vi.fn().mockReturnValue(false),
-                getUserAgent: vi.fn().mockReturnValue("test-user-agent"),
-                getUserMemory: vi.fn().mockReturnValue(""),
+                getUserAgent: vi.fn().mockReturnValue('test-user-agent'),
+                getUserMemory: vi.fn().mockReturnValue(''),
                 getGeminiMdFileCount: vi.fn().mockReturnValue(0),
                 getToolRegistry: vi
                     .fn()
@@ -58,7 +58,7 @@ describe("useAutoAcceptIndicator", () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockConfigInstance = new Config();
     });
-    it("should initialize with ApprovalMode.AUTO_EDIT if config.getApprovalMode returns ApprovalMode.AUTO_EDIT", () => {
+    it('should initialize with ApprovalMode.AUTO_EDIT if config.getApprovalMode returns ApprovalMode.AUTO_EDIT', () => {
         mockConfigInstance.getApprovalMode.mockReturnValue(ApprovalMode.AUTO_EDIT);
         const { result } = renderHook(() => useAutoAcceptIndicator({
             config: mockConfigInstance,
@@ -67,7 +67,7 @@ describe("useAutoAcceptIndicator", () => {
         expect(result.current).toBe(ApprovalMode.AUTO_EDIT);
         expect(mockConfigInstance.getApprovalMode).toHaveBeenCalledTimes(1);
     });
-    it("should initialize with ApprovalMode.DEFAULT if config.getApprovalMode returns ApprovalMode.DEFAULT", () => {
+    it('should initialize with ApprovalMode.DEFAULT if config.getApprovalMode returns ApprovalMode.DEFAULT', () => {
         mockConfigInstance.getApprovalMode.mockReturnValue(ApprovalMode.DEFAULT);
         const { result } = renderHook(() => useAutoAcceptIndicator({
             config: mockConfigInstance,
@@ -76,7 +76,7 @@ describe("useAutoAcceptIndicator", () => {
         expect(result.current).toBe(ApprovalMode.DEFAULT);
         expect(mockConfigInstance.getApprovalMode).toHaveBeenCalledTimes(1);
     });
-    it("should initialize with ApprovalMode.YOLO if config.getApprovalMode returns ApprovalMode.YOLO", () => {
+    it('should initialize with ApprovalMode.YOLO if config.getApprovalMode returns ApprovalMode.YOLO', () => {
         mockConfigInstance.getApprovalMode.mockReturnValue(ApprovalMode.YOLO);
         const { result } = renderHook(() => useAutoAcceptIndicator({
             config: mockConfigInstance,
@@ -85,7 +85,7 @@ describe("useAutoAcceptIndicator", () => {
         expect(result.current).toBe(ApprovalMode.YOLO);
         expect(mockConfigInstance.getApprovalMode).toHaveBeenCalledTimes(1);
     });
-    it("should initialize with ApprovalMode.PLAN if config.getApprovalMode returns ApprovalMode.PLAN", () => {
+    it('should initialize with ApprovalMode.PLAN if config.getApprovalMode returns ApprovalMode.PLAN', () => {
         mockConfigInstance.getApprovalMode.mockReturnValue(ApprovalMode.PLAN);
         const { result } = renderHook(() => useAutoAcceptIndicator({
             config: mockConfigInstance,
@@ -94,7 +94,7 @@ describe("useAutoAcceptIndicator", () => {
         expect(result.current).toBe(ApprovalMode.PLAN);
         expect(mockConfigInstance.getApprovalMode).toHaveBeenCalledTimes(1);
     });
-    it("should cycle approval modes when Shift+Tab is pressed", () => {
+    it('should cycle approval modes when Shift+Tab is pressed', () => {
         mockConfigInstance.getApprovalMode.mockReturnValue(ApprovalMode.DEFAULT);
         const { result } = renderHook(() => useAutoAcceptIndicator({
             config: mockConfigInstance,
@@ -103,7 +103,7 @@ describe("useAutoAcceptIndicator", () => {
         expect(result.current).toBe(ApprovalMode.DEFAULT);
         act(() => {
             capturedUseKeypressHandler({
-                name: "tab",
+                name: 'tab',
                 shift: true,
             });
         });
@@ -111,7 +111,7 @@ describe("useAutoAcceptIndicator", () => {
         expect(result.current).toBe(ApprovalMode.AUTO_EDIT);
         act(() => {
             capturedUseKeypressHandler({
-                name: "tab",
+                name: 'tab',
                 shift: true,
             });
         });
@@ -119,7 +119,7 @@ describe("useAutoAcceptIndicator", () => {
         expect(result.current).toBe(ApprovalMode.YOLO);
         act(() => {
             capturedUseKeypressHandler({
-                name: "tab",
+                name: 'tab',
                 shift: true,
             });
         });
@@ -127,14 +127,14 @@ describe("useAutoAcceptIndicator", () => {
         expect(result.current).toBe(ApprovalMode.PLAN);
         act(() => {
             capturedUseKeypressHandler({
-                name: "tab",
+                name: 'tab',
                 shift: true,
             });
         });
         expect(mockConfigInstance.setApprovalMode).toHaveBeenCalledWith(ApprovalMode.DEFAULT);
         expect(result.current).toBe(ApprovalMode.DEFAULT);
     });
-    it("should not toggle if only one key or other keys combinations are pressed", () => {
+    it('should not toggle if only one key or other keys combinations are pressed', () => {
         mockConfigInstance.getApprovalMode.mockReturnValue(ApprovalMode.DEFAULT);
         renderHook(() => useAutoAcceptIndicator({
             config: mockConfigInstance,
@@ -142,48 +142,48 @@ describe("useAutoAcceptIndicator", () => {
         }));
         act(() => {
             capturedUseKeypressHandler({
-                name: "tab",
+                name: 'tab',
                 shift: false,
             });
         });
         expect(mockConfigInstance.setApprovalMode).not.toHaveBeenCalled();
         act(() => {
             capturedUseKeypressHandler({
-                name: "unknown",
+                name: 'unknown',
                 shift: true,
             });
         });
         expect(mockConfigInstance.setApprovalMode).not.toHaveBeenCalled();
         act(() => {
             capturedUseKeypressHandler({
-                name: "a",
+                name: 'a',
                 shift: false,
                 ctrl: false,
             });
         });
         expect(mockConfigInstance.setApprovalMode).not.toHaveBeenCalled();
         act(() => {
-            capturedUseKeypressHandler({ name: "y", ctrl: false });
+            capturedUseKeypressHandler({ name: 'y', ctrl: false });
         });
         expect(mockConfigInstance.setApprovalMode).not.toHaveBeenCalled();
         act(() => {
-            capturedUseKeypressHandler({ name: "a", ctrl: true });
+            capturedUseKeypressHandler({ name: 'a', ctrl: true });
         });
         expect(mockConfigInstance.setApprovalMode).not.toHaveBeenCalled();
         act(() => {
-            capturedUseKeypressHandler({ name: "y", shift: true });
+            capturedUseKeypressHandler({ name: 'y', shift: true });
         });
         expect(mockConfigInstance.setApprovalMode).not.toHaveBeenCalled();
         act(() => {
             capturedUseKeypressHandler({
-                name: "a",
+                name: 'a',
                 ctrl: true,
                 shift: true,
             });
         });
         expect(mockConfigInstance.setApprovalMode).not.toHaveBeenCalled();
     });
-    it("should update indicator when config value changes externally (useEffect dependency)", () => {
+    it('should update indicator when config value changes externally (useEffect dependency)', () => {
         mockConfigInstance.getApprovalMode.mockReturnValue(ApprovalMode.DEFAULT);
         const { result, rerender } = renderHook((props) => useAutoAcceptIndicator(props), {
             initialProps: {
@@ -200,12 +200,12 @@ describe("useAutoAcceptIndicator", () => {
         expect(result.current).toBe(ApprovalMode.AUTO_EDIT);
         expect(mockConfigInstance.getApprovalMode).toHaveBeenCalledTimes(3);
     });
-    describe("in untrusted folders", () => {
+    describe('in untrusted folders', () => {
         beforeEach(() => {
             mockConfigInstance.isTrustedFolder.mockReturnValue(false);
         });
-        it("should show a warning when cycling from DEFAULT to AUTO_EDIT", () => {
-            const errorMessage = "Cannot enable privileged approval modes in an untrusted folder.";
+        it('should show a warning when cycling from DEFAULT to AUTO_EDIT', () => {
+            const errorMessage = 'Cannot enable privileged approval modes in an untrusted folder.';
             mockConfigInstance.getApprovalMode.mockReturnValue(ApprovalMode.DEFAULT);
             mockConfigInstance.setApprovalMode.mockImplementation(() => {
                 throw new Error(errorMessage);
@@ -216,7 +216,7 @@ describe("useAutoAcceptIndicator", () => {
                 addItem: mockAddItem,
             }));
             act(() => {
-                capturedUseKeypressHandler({ name: "tab", shift: true });
+                capturedUseKeypressHandler({ name: 'tab', shift: true });
             });
             expect(mockConfigInstance.setApprovalMode).toHaveBeenCalledWith(ApprovalMode.AUTO_EDIT);
             expect(mockAddItem).toHaveBeenCalledWith({
@@ -224,8 +224,8 @@ describe("useAutoAcceptIndicator", () => {
                 text: errorMessage,
             }, expect.any(Number));
         });
-        it("should show a warning when cycling from AUTO_EDIT to YOLO", () => {
-            const errorMessage = "Cannot enable privileged approval modes in an untrusted folder.";
+        it('should show a warning when cycling from AUTO_EDIT to YOLO', () => {
+            const errorMessage = 'Cannot enable privileged approval modes in an untrusted folder.';
             mockConfigInstance.getApprovalMode.mockReturnValue(ApprovalMode.AUTO_EDIT);
             mockConfigInstance.setApprovalMode.mockImplementation(() => {
                 throw new Error(errorMessage);
@@ -236,7 +236,7 @@ describe("useAutoAcceptIndicator", () => {
                 addItem: mockAddItem,
             }));
             act(() => {
-                capturedUseKeypressHandler({ name: "tab", shift: true });
+                capturedUseKeypressHandler({ name: 'tab', shift: true });
             });
             expect(mockConfigInstance.setApprovalMode).toHaveBeenCalledWith(ApprovalMode.YOLO);
             expect(mockAddItem).toHaveBeenCalledWith({
@@ -244,7 +244,7 @@ describe("useAutoAcceptIndicator", () => {
                 text: errorMessage,
             }, expect.any(Number));
         });
-        it("should cycle from YOLO to PLAN when Shift+Tab is pressed", () => {
+        it('should cycle from YOLO to PLAN when Shift+Tab is pressed', () => {
             mockConfigInstance.getApprovalMode.mockReturnValue(ApprovalMode.YOLO);
             const mockAddItem = vi.fn();
             renderHook(() => useAutoAcceptIndicator({
@@ -252,7 +252,7 @@ describe("useAutoAcceptIndicator", () => {
                 addItem: mockAddItem,
             }));
             act(() => {
-                capturedUseKeypressHandler({ name: "tab", shift: true });
+                capturedUseKeypressHandler({ name: 'tab', shift: true });
             });
             expect(mockConfigInstance.setApprovalMode).toHaveBeenCalledWith(ApprovalMode.PLAN);
             expect(mockConfigInstance.getApprovalMode()).toBe(ApprovalMode.PLAN);

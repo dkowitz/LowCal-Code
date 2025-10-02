@@ -1,10 +1,10 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Box, Text } from "ink";
-import Gradient from "ink-gradient";
-import { Colors } from "../colors.js";
-import { shortAsciiLogo, longAsciiLogo, tinyAsciiLogo } from "./AsciiArt.js";
-import { getAsciiArtWidth } from "../utils/textUtils.js";
-import { useTerminalSize } from "../hooks/useTerminalSize.js";
+import { Box, Text } from 'ink';
+import Gradient from 'ink-gradient';
+import { Colors } from '../colors.js';
+import { shortAsciiLogo, longAsciiLogo, tinyAsciiLogo } from './AsciiArt.js';
+import { getAsciiArtWidth } from '../utils/textUtils.js';
+import { useTerminalSize } from '../hooks/useTerminalSize.js';
 export const Header = ({ customAsciiArt, version, nightly, }) => {
     const { columns: terminalWidth } = useTerminalSize();
     let displayTitle;

@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { PartUnion } from "@google/genai";
-import type { FileSystemService } from "../services/fileSystemService.js";
-import { ToolErrorType } from "../tools/tool-error.js";
+import type { PartUnion } from '@google/genai';
+import type { FileSystemService } from '../services/fileSystemService.js';
+import { ToolErrorType } from '../tools/tool-error.js';
 export declare const DEFAULT_MAX_LINES_TEXT_FILE = 2000;
 export declare const DEFAULT_ENCODING: BufferEncoding;
 /**
@@ -32,7 +32,7 @@ export declare function isBinaryFile(filePath: string): Promise<boolean>;
  * @param filePath Path to the file.
  * @returns Promise that resolves to 'text', 'image', 'pdf', 'audio', 'video', 'binary' or 'svg'.
  */
-export declare function detectFileType(filePath: string): Promise<"text" | "image" | "pdf" | "audio" | "video" | "binary" | "svg">;
+export declare function detectFileType(filePath: string): Promise<'text' | 'image' | 'pdf' | 'audio' | 'video' | 'binary' | 'svg'>;
 export interface ProcessedFileReadResult {
     llmContent: PartUnion;
     returnDisplay: string;

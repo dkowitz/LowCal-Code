@@ -465,10 +465,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type React from "react";
-import { useState } from "react";
-import { Box, Text, useInput } from "ink";
-import { Colors } from "../colors.js";
+import type React from 'react';
+import { useState } from 'react';
+import { Box, Text, useInput } from 'ink';
+import { Colors } from '../colors.js';
 &nbsp;
 interface OpenAIKeyPromptProps {
   onSubmit: (apiKey: string, baseUrl: string, model: string) =&gt; void;
@@ -479,58 +479,58 @@ export function OpenAIKeyPrompt({
   onSubmit,
   onCancel,
 }: OpenAIKeyPromptProps): React.JSX.Element {
-  const [apiKey, setApiKey] = useState("");
-  const [baseUrl, setBaseUrl] = useState("");
-  const [model, setModel] = useState("");
+  const [apiKey, setApiKey] = useState('');
+  const [baseUrl, setBaseUrl] = useState('');
+  const [model, setModel] = useState('');
   const [currentField, setCurrentField] = useState&lt;
-    "apiKey" | "baseUrl" | "model"
-  &gt;("apiKey");
+    'apiKey' | 'baseUrl' | 'model'
+  &gt;('apiKey');
 &nbsp;
   useInput((input, key) =&gt; {
     // 过滤粘贴相关的控制序列
-    let cleanInput = (<span class="branch-0 cbranch-no" title="branch not covered" >input || "")</span>
+    let cleanInput = (<span class="branch-0 cbranch-no" title="branch not covered" >input || '')</span>
       // 过滤 ESC 开头的控制序列（如 \u001b[200~、\u001b[201~ 等）
-      .replace(/\u001b\[[0-9;]*[a-zA-Z]/g, "") // eslint-disable-line no-control-regex
+      .replace(/\u001b\[[0-9;]*[a-zA-Z]/g, '') // eslint-disable-line no-control-regex
       // 过滤粘贴开始标记 [200~
-      .replace(/\[200~/g, "")
+      .replace(/\[200~/g, '')
       // 过滤粘贴结束标记 [201~
-      .replace(/\[201~/g, "")
+      .replace(/\[201~/g, '')
       // 过滤单独的 [ 和 ~ 字符（可能是粘贴标记的残留）
-      .replace(/^\[|~$/g, "");
+      .replace(/^\[|~$/g, '');
 &nbsp;
     // 再过滤所有不可见字符（ASCII &lt; 32，除了回车换行）
     cleanInput = cleanInput
-      .split("")
+      .split('')
       .filter((ch) =&gt; ch.charCodeAt(0) &gt;= 32)
-      .join("");
+      .join('');
 &nbsp;
     if (cleanInput.length &gt; 0) {
-      if (currentField === "apiKey") {
+      if (currentField === 'apiKey') {
         setApiKey((prev) =&gt; prev + cleanInput);
-<span class="branch-0 cbranch-no" title="branch not covered" >      } else if (currentField === "baseUrl") {</span>
+<span class="branch-0 cbranch-no" title="branch not covered" >      } else if (currentField === 'baseUrl') {</span>
 <span class="cstat-no" title="statement not covered" >        setBaseUrl((prev) =&gt; prev + cleanInput);</span>
-<span class="cstat-no" title="statement not covered" >      } else if (currentField === "model") {</span>
+<span class="cstat-no" title="statement not covered" >      } else if (currentField === 'model') {</span>
 <span class="cstat-no" title="statement not covered" >        setModel((prev) =&gt; prev + cleanInput);</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
       return;
 <span class="branch-0 cbranch-no" title="branch not covered" >    }</span>
 &nbsp;
     // 检查是否是 Enter 键（通过检查输入是否包含换行符）
-    if (input.includes("\n") || input.includes("\r")) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >      if (currentField === "apiKey") {</span>
+    if (input.includes('\n') || input.includes('\r')) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >      if (currentField === 'apiKey') {</span>
         // 允许空 API key 跳转到下一个字段，让用户稍后可以返回修改
-<span class="cstat-no" title="statement not covered" >        setCurrentField("baseUrl");</span>
+<span class="cstat-no" title="statement not covered" >        setCurrentField('baseUrl');</span>
 <span class="cstat-no" title="statement not covered" >        return;</span>
-<span class="cstat-no" title="statement not covered" >      } else if (currentField === "baseUrl") {</span>
-<span class="cstat-no" title="statement not covered" >        setCurrentField("model");</span>
+<span class="cstat-no" title="statement not covered" >      } else if (currentField === 'baseUrl') {</span>
+<span class="cstat-no" title="statement not covered" >        setCurrentField('model');</span>
 <span class="cstat-no" title="statement not covered" >        return;</span>
-<span class="cstat-no" title="statement not covered" >      } else if (currentField === "model") {</span>
+<span class="cstat-no" title="statement not covered" >      } else if (currentField === 'model') {</span>
         // 只有在提交时才检查 API key 是否为空
 <span class="cstat-no" title="statement not covered" >        if (apiKey.trim()) {</span>
 <span class="cstat-no" title="statement not covered" >          onSubmit(apiKey.trim(), baseUrl.trim(), model.trim());</span>
 <span class="cstat-no" title="statement not covered" >        } else {</span>
           // 如果 API key 为空，回到 API key 字段
-<span class="cstat-no" title="statement not covered" >          setCurrentField("apiKey");</span>
+<span class="cstat-no" title="statement not covered" >          setCurrentField('apiKey');</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
@@ -543,42 +543,42 @@ export function OpenAIKeyPrompt({
 &nbsp;
     // Handle Tab key for field navigation
 <span class="cstat-no" title="statement not covered" >    if (key.tab) {</span>
-<span class="cstat-no" title="statement not covered" >      if (currentField === "apiKey") {</span>
-<span class="cstat-no" title="statement not covered" >        setCurrentField("baseUrl");</span>
-<span class="cstat-no" title="statement not covered" >      } else if (currentField === "baseUrl") {</span>
-<span class="cstat-no" title="statement not covered" >        setCurrentField("model");</span>
-<span class="cstat-no" title="statement not covered" >      } else if (currentField === "model") {</span>
-<span class="cstat-no" title="statement not covered" >        setCurrentField("apiKey");</span>
+<span class="cstat-no" title="statement not covered" >      if (currentField === 'apiKey') {</span>
+<span class="cstat-no" title="statement not covered" >        setCurrentField('baseUrl');</span>
+<span class="cstat-no" title="statement not covered" >      } else if (currentField === 'baseUrl') {</span>
+<span class="cstat-no" title="statement not covered" >        setCurrentField('model');</span>
+<span class="cstat-no" title="statement not covered" >      } else if (currentField === 'model') {</span>
+<span class="cstat-no" title="statement not covered" >        setCurrentField('apiKey');</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     // Handle arrow keys for field navigation
 <span class="cstat-no" title="statement not covered" >    if (key.upArrow) {</span>
-<span class="cstat-no" title="statement not covered" >      if (currentField === "baseUrl") {</span>
-<span class="cstat-no" title="statement not covered" >        setCurrentField("apiKey");</span>
-<span class="cstat-no" title="statement not covered" >      } else if (currentField === "model") {</span>
-<span class="cstat-no" title="statement not covered" >        setCurrentField("baseUrl");</span>
+<span class="cstat-no" title="statement not covered" >      if (currentField === 'baseUrl') {</span>
+<span class="cstat-no" title="statement not covered" >        setCurrentField('apiKey');</span>
+<span class="cstat-no" title="statement not covered" >      } else if (currentField === 'model') {</span>
+<span class="cstat-no" title="statement not covered" >        setCurrentField('baseUrl');</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (key.downArrow) {</span>
-<span class="cstat-no" title="statement not covered" >      if (currentField === "apiKey") {</span>
-<span class="cstat-no" title="statement not covered" >        setCurrentField("baseUrl");</span>
-<span class="cstat-no" title="statement not covered" >      } else if (currentField === "baseUrl") {</span>
-<span class="cstat-no" title="statement not covered" >        setCurrentField("model");</span>
+<span class="cstat-no" title="statement not covered" >      if (currentField === 'apiKey') {</span>
+<span class="cstat-no" title="statement not covered" >        setCurrentField('baseUrl');</span>
+<span class="cstat-no" title="statement not covered" >      } else if (currentField === 'baseUrl') {</span>
+<span class="cstat-no" title="statement not covered" >        setCurrentField('model');</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     // Handle backspace - check both key.backspace and delete key
     if (key.backspace || key.delete) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >      if (currentField === "apiKey") {</span>
+<span class="cstat-no" title="statement not covered" >      if (currentField === 'apiKey') {</span>
 <span class="cstat-no" title="statement not covered" >        setApiKey((prev) =&gt; prev.slice(0, -1));</span>
-<span class="cstat-no" title="statement not covered" >      } else if (currentField === "baseUrl") {</span>
+<span class="cstat-no" title="statement not covered" >      } else if (currentField === 'baseUrl') {</span>
 <span class="cstat-no" title="statement not covered" >        setBaseUrl((prev) =&gt; prev.slice(0, -1));</span>
-<span class="cstat-no" title="statement not covered" >      } else if (currentField === "model") {</span>
+<span class="cstat-no" title="statement not covered" >      } else if (currentField === 'model') {</span>
 <span class="cstat-no" title="statement not covered" >        setModel((prev) =&gt; prev.slice(0, -1));</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
@@ -598,7 +598,7 @@ export function OpenAIKeyPrompt({
       &lt;/Text&gt;
       &lt;Box marginTop={1}&gt;
         &lt;Text&gt;
-          Please enter your OpenAI configuration. You can get an API key from{" "}
+          Please enter your OpenAI configuration. You can get an API key from{' '}
           &lt;Text color={Colors.AccentBlue}&gt;
             https://bailian.console.aliyun.com/?tab=model#/api-key
           &lt;/Text&gt;
@@ -607,29 +607,29 @@ export function OpenAIKeyPrompt({
       &lt;Box marginTop={1} flexDirection="row"&gt;
         &lt;Box width={12}&gt;
           &lt;Text
-            color={currentField === "apiKey" ? Colors.<span class="branch-0 cbranch-no" title="branch not covered" >AccentBlue : Colors.Gray}</span>
+            color={currentField === 'apiKey' ? Colors.<span class="branch-0 cbranch-no" title="branch not covered" >AccentBlue : Colors.Gray}</span>
           &gt;
             API Key:
           &lt;/Text&gt;
         &lt;/Box&gt;
         &lt;Box flexGrow={1}&gt;
           &lt;Text&gt;
-            {currentField === "apiKey" ? <span class="branch-0 cbranch-no" title="branch not covered" >"&gt; " : "  "}</span>
-            {apiKey || " "}
+            {currentField === 'apiKey' ? <span class="branch-0 cbranch-no" title="branch not covered" >'&gt; ' : '  '}</span>
+            {apiKey || ' '}
           &lt;/Text&gt;
         &lt;/Box&gt;
       &lt;/Box&gt;
       &lt;Box marginTop={1} flexDirection="row"&gt;
         &lt;Box width={12}&gt;
           &lt;Text
-            color={currentField === <span class="branch-0 cbranch-no" title="branch not covered" >"baseUrl" ? Colors.AccentBlue : C</span>olors.Gray}
+            color={currentField === <span class="branch-0 cbranch-no" title="branch not covered" >'baseUrl' ? Colors.AccentBlue : C</span>olors.Gray}
           &gt;
             Base URL:
           &lt;/Text&gt;
         &lt;/Box&gt;
         &lt;Box flexGrow={1}&gt;
           &lt;Text&gt;
-            {currentField === <span class="branch-0 cbranch-no" title="branch not covered" >"baseUrl" ? "&gt; " : "</span>  "}
+            {currentField === <span class="branch-0 cbranch-no" title="branch not covered" >'baseUrl' ? '&gt; ' : '</span>  '}
             {baseUrl}
           &lt;/Text&gt;
         &lt;/Box&gt;
@@ -637,14 +637,14 @@ export function OpenAIKeyPrompt({
       &lt;Box marginTop={1} flexDirection="row"&gt;
         &lt;Box width={12}&gt;
           &lt;Text
-            color={currentField === <span class="branch-0 cbranch-no" title="branch not covered" >"model" ? Colors.AccentBlue : C</span>olors.Gray}
+            color={currentField === <span class="branch-0 cbranch-no" title="branch not covered" >'model' ? Colors.AccentBlue : C</span>olors.Gray}
           &gt;
             Model:
           &lt;/Text&gt;
         &lt;/Box&gt;
         &lt;Box flexGrow={1}&gt;
           &lt;Text&gt;
-            {currentField === <span class="branch-0 cbranch-no" title="branch not covered" >"model" ? "&gt; " : "</span>  "}
+            {currentField === <span class="branch-0 cbranch-no" title="branch not covered" >'model' ? '&gt; ' : '</span>  '}
             {model}
           &lt;/Text&gt;
         &lt;/Box&gt;
@@ -664,7 +664,7 @@ export function OpenAIKeyPrompt({
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.879Z
+                at 2025-09-29T17:26:19.374Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

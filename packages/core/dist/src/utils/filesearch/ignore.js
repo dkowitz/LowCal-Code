@@ -3,28 +3,28 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import fs from "node:fs";
-import path from "node:path";
-import ignore from "ignore";
-import picomatch from "picomatch";
-const hasFileExtension = picomatch("**/*[*.]*");
+import fs from 'node:fs';
+import path from 'node:path';
+import ignore from 'ignore';
+import picomatch from 'picomatch';
+const hasFileExtension = picomatch('**/*[*.]*');
 export function loadIgnoreRules(options) {
     const ignorer = new Ignore();
     if (options.useGitignore) {
-        const gitignorePath = path.join(options.projectRoot, ".gitignore");
+        const gitignorePath = path.join(options.projectRoot, '.gitignore');
         if (fs.existsSync(gitignorePath)) {
-            ignorer.add(fs.readFileSync(gitignorePath, "utf8"));
+            ignorer.add(fs.readFileSync(gitignorePath, 'utf8'));
         }
     }
     if (options.useGeminiignore) {
-        const geminiignorePath = path.join(options.projectRoot, ".qwenignore");
+        const geminiignorePath = path.join(options.projectRoot, '.qwenignore');
         if (fs.existsSync(geminiignorePath)) {
-            ignorer.add(fs.readFileSync(geminiignorePath, "utf8"));
+            ignorer.add(fs.readFileSync(geminiignorePath, 'utf8'));
         }
     }
-    const ignoreDirs = [".git", ...options.ignoreDirs];
+    const ignoreDirs = ['.git', ...options.ignoreDirs];
     ignorer.add(ignoreDirs.map((dir) => {
-        if (dir.endsWith("/")) {
+        if (dir.endsWith('/')) {
             return dir;
         }
         return `${dir}/`;
@@ -42,16 +42,16 @@ export class Ignore {
      * @returns The `Ignore` instance for chaining.
      */
     add(patterns) {
-        if (typeof patterns === "string") {
+        if (typeof patterns === 'string') {
             patterns = patterns.split(/\r?\n/);
         }
         for (const p of patterns) {
             const pattern = p.trim();
-            if (pattern === "" || pattern.startsWith("#")) {
+            if (pattern === '' || pattern.startsWith('#')) {
                 continue;
             }
             this.allPatterns.push(pattern);
-            const isPositiveDirPattern = pattern.endsWith("/") && !pattern.startsWith("!");
+            const isPositiveDirPattern = pattern.endsWith('/') && !pattern.startsWith('!');
             if (isPositiveDirPattern) {
                 this.dirIgnorer.add(pattern);
             }
@@ -100,7 +100,7 @@ export class Ignore {
      * @returns A string fingerprint of the ignore patterns.
      */
     getFingerprint() {
-        return this.allPatterns.join("\n");
+        return this.allPatterns.join('\n');
     }
 }
 //# sourceMappingURL=ignore.js.map

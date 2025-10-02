@@ -3,24 +3,24 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useEffect, useCallback } from "react";
-import { exec } from "node:child_process";
-import fs from "node:fs";
-import fsPromises from "node:fs/promises";
-import path from "node:path";
+import { useState, useEffect, useCallback } from 'react';
+import { exec } from 'node:child_process';
+import fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
+import path from 'node:path';
 export function useGitBranchName(cwd) {
     const [branchName, setBranchName] = useState(undefined);
-    const fetchBranchName = useCallback(() => exec("git rev-parse --abbrev-ref HEAD", { cwd }, (error, stdout, _stderr) => {
+    const fetchBranchName = useCallback(() => exec('git rev-parse --abbrev-ref HEAD', { cwd }, (error, stdout, _stderr) => {
         if (error) {
             setBranchName(undefined);
             return;
         }
         const branch = stdout.toString().trim();
-        if (branch && branch !== "HEAD") {
+        if (branch && branch !== 'HEAD') {
             setBranchName(branch);
         }
         else {
-            exec("git rev-parse --short HEAD", { cwd }, (error, stdout, _stderr) => {
+            exec('git rev-parse --short HEAD', { cwd }, (error, stdout, _stderr) => {
                 if (error) {
                     setBranchName(undefined);
                     return;
@@ -31,7 +31,7 @@ export function useGitBranchName(cwd) {
     }), [cwd, setBranchName]);
     useEffect(() => {
         fetchBranchName(); // Initial fetch
-        const gitLogsHeadPath = path.join(cwd, ".git", "logs", "HEAD");
+        const gitLogsHeadPath = path.join(cwd, '.git', 'logs', 'HEAD');
         let watcher;
         const setupWatcher = async () => {
             try {
@@ -39,7 +39,7 @@ export function useGitBranchName(cwd) {
                 await fsPromises.access(gitLogsHeadPath, fs.constants.F_OK);
                 watcher = fs.watch(gitLogsHeadPath, (eventType) => {
                     // Changes to .git/logs/HEAD (appends) indicate HEAD has likely changed
-                    if (eventType === "change" || eventType === "rename") {
+                    if (eventType === 'change' || eventType === 'rename') {
                         // Handle rename just in case
                         fetchBranchName();
                     }

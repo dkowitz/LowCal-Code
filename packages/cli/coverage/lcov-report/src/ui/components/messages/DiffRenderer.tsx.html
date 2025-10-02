@@ -809,23 +809,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type React from "react";
-import { Box, Text, useIsScreenReaderEnabled } from "ink";
-import { Colors } from "../../colors.js";
-import crypto from "node:crypto";
-import { colorizeCode, colorizeLine } from "../../utils/CodeColorizer.js";
-import { MaxSizedBox } from "../shared/MaxSizedBox.js";
-import { theme } from "../../semantic-colors.js";
+import type React from 'react';
+import { Box, Text, useIsScreenReaderEnabled } from 'ink';
+import { Colors } from '../../colors.js';
+import crypto from 'node:crypto';
+import { colorizeCode, colorizeLine } from '../../utils/CodeColorizer.js';
+import { MaxSizedBox } from '../shared/MaxSizedBox.js';
+import { theme } from '../../semantic-colors.js';
 &nbsp;
 interface DiffLine {
-  type: "add" | "del" | "context" | "hunk" | "other";
+  type: 'add' | 'del' | 'context' | 'hunk' | 'other';
   oldLine?: number;
   newLine?: number;
   content: string;
 }
 &nbsp;
 function parseDiffWithLineNumbers(diffContent: string): DiffLine[] {
-  const lines = diffContent.split("\n");
+  const lines = diffContent.split('\n');
   const result: DiffLine[] = [];
   let currentOldLine = 0;
   let currentNewLine = 0;
@@ -838,7 +838,7 @@ function parseDiffWithLineNumbers(diffContent: string): DiffLine[] {
       currentOldLine = parseInt(hunkMatch[1], 10);
       currentNewLine = parseInt(hunkMatch[2], 10);
       inHunk = true;
-      result.push({ type: "hunk", content: line });
+      result.push({ type: 'hunk', content: line });
       // We need to adjust the starting point because the first line number applies to the *first* actual line change/context,
       // but we increment *before* pushing that line. So decrement here.
       currentOldLine--;
@@ -848,46 +848,46 @@ function parseDiffWithLineNumbers(diffContent: string): DiffLine[] {
     if (!inHunk) {
       // Skip standard Git header lines more robustly
       if (
-        line.startsWith("--- ") ||
-        line.startsWith("+++ ") ||
-        line.startsWith("diff --git") ||
-        line.startsWith("index ") ||
-        line.startsWith("similarity index") ||
-        line.startsWith("rename from") ||
-        line.startsWith("rename to") ||
-        line.startsWith("new file mode") ||
-        line.startsWith("deleted file mode")
+        line.startsWith('--- ') ||
+        line.startsWith('+++ ') ||
+        line.startsWith('diff --git') ||
+        line.startsWith('index ') ||
+        line.startsWith('similarity index') ||
+        line.startsWith('rename from') ||
+        line.startsWith('rename to') ||
+        line.startsWith('new file mode') ||
+        line.startsWith('deleted file mode')
       )
         continue;
       // If it's not a hunk or header, skip (or handle as 'other' if needed)
       continue;
     }
-    if (line.startsWith("+")) {
+    if (line.startsWith('+')) {
       currentNewLine++; // Increment before pushing
       result.push({
-        type: "add",
+        type: 'add',
         newLine: currentNewLine,
         content: line.substring(1),
       });
-    } else if (line.startsWith("-")) {
+    } else if (line.startsWith('-')) {
       currentOldLine++; // Increment before pushing
       result.push({
-        type: "del",
+        type: 'del',
         oldLine: currentOldLine,
         content: line.substring(1),
       });
-    } else if (line.startsWith(" ")) {
+    } else if (line.startsWith(' ')) {
       currentOldLine++; // Increment before pushing
       currentNewLine++;
       result.push({
-        type: "context",
+        type: 'context',
         oldLine: currentOldLine,
         newLine: currentNewLine,
         content: line.substring(1),
       });
-    } else if (line.startsWith("\\")) {
+    } else if (line.startsWith('\\')) {
       // Handle "\ No newline at end of file"
-      result.push({ type: "other", content: line });
+      result.push({ type: 'other', content: line });
     }
   }
   return result;
@@ -899,7 +899,7 @@ interface DiffRendererProps {
   tabWidth?: number;
   availableTerminalHeight?: number;
   terminalWidth: number;
-  theme?: import("../../themes/theme.js").Theme;
+  theme?: import('../../themes/theme.js').Theme;
 }
 &nbsp;
 const DEFAULT_TAB_WIDTH = 4; // Spaces per tab for normalization
@@ -913,7 +913,7 @@ export const DiffRenderer: React.FC&lt;DiffRendererProps&gt; = ({
   theme,
 }) =&gt; {
   const screenReaderEnabled = useIsScreenReaderEnabled();
-  if (!diffContent || typeof diffContent !== "string") {
+  if (!diffContent || typeof diffContent !== 'string') {
     return &lt;Text color={Colors.AccentYellow}&gt;No diff content.&lt;/Text&gt;;
   }
 &nbsp;
@@ -941,11 +941,11 @@ export const DiffRenderer: React.FC&lt;DiffRendererProps&gt; = ({
   // Check if the diff represents a new file (only additions and header lines)
   const isNewFile = parsedLines.every(
     (line) =&gt;
-      line.type === "add" ||
-      line.type === "hunk" ||
-      line.type === "other" ||
-      line.content.startsWith("diff --git") ||
-      line.content.startsWith("new file mode"),
+      line.type === 'add' ||
+      line.type === 'hunk' ||
+      line.type === 'other' ||
+      line.content.startsWith('diff --git') ||
+      line.content.startsWith('new file mode'),
   );
 &nbsp;
   let renderedOutput;
@@ -953,11 +953,11 @@ export const DiffRenderer: React.FC&lt;DiffRendererProps&gt; = ({
   if (isNewFile) {
     // Extract only the added lines' content
     const addedContent = parsedLines
-      .filter((line) =&gt; line.type === "add")
+      .filter((line) =&gt; line.type === 'add')
       .map((line) =&gt; line.content)
-      .join("\n");
+      .join('\n');
     // Attempt to infer language from filename, default to plain text if no filename
-    const fileExtension = filename?.split(".").pop() || null;
+    const fileExtension = filename?.split('.').pop() || null;
     const language = fileExtension
       ? getLanguageFromExtension(fileExtension)
       : null;
@@ -991,12 +991,12 @@ const renderDiffContent = (
   // 1. Normalize whitespace (replace tabs with spaces) *before* further processing
   const normalizedLines = parsedLines.map((line) =&gt; ({
     ...line,
-    content: line.content.replace(/\t/g, " ".repeat(tabWidth)),
+    content: line.content.replace(/\t/g, ' '.repeat(tabWidth)),
   }));
 &nbsp;
   // Filter out non-displayable lines (hunks, potentially 'other') using the normalized list
   const displayableLines = normalizedLines.filter(
-    (l) =&gt; l.type !== "hunk" &amp;&amp; l.type !== "other",
+    (l) =&gt; l.type !== 'hunk' &amp;&amp; l.type !== 'other',
   );
 &nbsp;
   if (displayableLines.length === 0) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
@@ -1014,7 +1014,7 @@ const renderDiffContent = (
   );
   const gutterWidth = Math.max(1, maxLineNumber.toString().length);
 &nbsp;
-  const fileExtension = filename?.split(".").pop(<span class="branch-0 cbranch-no" title="branch not covered" >) || null;</span>
+  const fileExtension = filename?.split('.').pop(<span class="branch-0 cbranch-no" title="branch not covered" >) || null;</span>
   const language = fileExtension
     ? getLanguageFromExtension(fileExtension<span class="branch-0 cbranch-no" title="branch not covered" >)</span>
 <span class="cstat-no" title="statement not covered" >    : null;</span>
@@ -1023,7 +1023,7 @@ const renderDiffContent = (
   let baseIndentation = Infinity; // Start high to find the minimum
   for (const line of displayableLines) {
     // Only consider lines with actual content for indentation calculation
-    if (line.content.trim() === "") <span class="branch-0 cbranch-no" title="branch not covered" >continue;</span>
+    if (line.content.trim() === '') <span class="branch-0 cbranch-no" title="branch not covered" >continue;</span>
 &nbsp;
     const firstCharIndex = line.content.search(/\S/); // Find index of first non-whitespace char
     const currentIndent = firstCharIndex === <span class="branch-0 cbranch-no" title="branch not covered" >-1 ? 0 : f</span>irstCharIndex; // Indent is 0 if no non-whitespace found
@@ -1036,7 +1036,7 @@ const renderDiffContent = (
 &nbsp;
   const key = filename
     ? `diff-box-${filename<span class="branch-0 cbranch-no" title="branch not covered" >}`</span>
-<span class="cstat-no" title="statement not covered" >    : `diff-box-${crypto.createHash("sha1").update(JSON.stringify(parsedLines)).digest("hex")}`;</span>
+<span class="cstat-no" title="statement not covered" >    : `diff-box-${crypto.createHash('sha1').update(JSON.stringify(parsedLines)).digest('hex')}`;</span>
 &nbsp;
   let lastLineNumber: number | null = null;
   const MAX_CONTEXT_LINES_WITHOUT_GAP = 5;
@@ -1050,9 +1050,9 @@ const renderDiffContent = (
       {displayableLines.reduce&lt;React.ReactNode[]&gt;((acc, line, index) =&gt; {
         // Determine the relevant line number for gap calculation based on type
         let relevantLineNumberForGapCalc: number | null = null;
-        if (line.type === "add" || line.type === "context") {
+        if (line.type === 'add' || line.type === 'context') {
           relevantLineNumberForGapCalc = line.<span class="branch-0 cbranch-no" title="branch not covered" >newLine ?? null;</span>
-        } else if (line.type === "del") {
+        } else if (line.type === 'del') {
           // For deletions, the gap is typically in relation to the original file's line numbering
           relevantLineNumberForGapCalc = line.<span class="branch-0 cbranch-no" title="branch not covered" >oldLine ?? null;</span>
         }
@@ -1066,25 +1066,25 @@ const renderDiffContent = (
           acc.push(
             &lt;Box key={`gap-${index}`}&gt;
               &lt;Text wrap="truncate" color={Colors.Gray}&gt;
-                {"═".repeat(terminalWidth)}
+                {'═'.repeat(terminalWidth)}
               &lt;/Text&gt;
             &lt;/Box&gt;,
           );
         }
 &nbsp;
         const lineKey = `diff-line-${index}`;
-        let gutterNumStr = "";
-        let prefixSymbol = " ";
+        let gutterNumStr = '';
+        let prefixSymbol = ' ';
 &nbsp;
         switch (line.type) {
-          case "add":
-            gutterNumStr = (line.<span class="branch-0 cbranch-no" title="branch not covered" >newLine ?? "").t</span>oString();
-            prefixSymbol = "+";
+          case 'add':
+            gutterNumStr = (line.<span class="branch-0 cbranch-no" title="branch not covered" >newLine ?? '').t</span>oString();
+            prefixSymbol = '+';
             lastLineNumber = line.<span class="branch-0 cbranch-no" title="branch not covered" >newLine ?? null;</span>
             break;
-          case "del":
-            gutterNumStr = (line.<span class="branch-0 cbranch-no" title="branch not covered" >oldLine ?? "").t</span>oString();
-            prefixSymbol = "-";
+          case 'del':
+            gutterNumStr = (line.<span class="branch-0 cbranch-no" title="branch not covered" >oldLine ?? '').t</span>oString();
+            prefixSymbol = '-';
             // For deletions, update lastLineNumber based on oldLine if it's advancing.
             // This helps manage gaps correctly if there are multiple consecutive deletions
             // or if a deletion is followed by a context line far away in the original file.
@@ -1092,9 +1092,9 @@ const renderDiffContent = (
               lastLineNumber = line.oldLine;
             }
             break;
-          case "context":
-            gutterNumStr = (line.<span class="branch-0 cbranch-no" title="branch not covered" >newLine ?? "").t</span>oString();
-            prefixSymbol = " ";
+          case 'context':
+            gutterNumStr = (line.<span class="branch-0 cbranch-no" title="branch not covered" >newLine ?? '').t</span>oString();
+            prefixSymbol = ' ';
             lastLineNumber = line.<span class="branch-0 cbranch-no" title="branch not covered" >newLine ?? null;</span>
             break;
 <span class="branch-0 cbranch-no" title="branch not covered" >          default:</span>
@@ -1108,16 +1108,16 @@ const renderDiffContent = (
             &lt;Text
               color={theme.text.secondary}
               backgroundColor={
-                line.type === "add"
+                line.type === 'add'
                   ? theme.background.diff.added
-                  : line.type === "del"
+                  : line.type === 'del'
                     ? theme.background.diff.removed
                     : undefined
               }
             &gt;
-              {gutterNumStr.padStart(gutterWidth)}{" "}
+              {gutterNumStr.padStart(gutterWidth)}{' '}
             &lt;/Text&gt;
-            {line.type === "context" ? (
+            {line.type === 'context' ? (
               &lt;&gt;
                 &lt;Text&gt;{prefixSymbol} &lt;/Text&gt;
                 &lt;Text wrap="wrap"&gt;
@@ -1127,7 +1127,7 @@ const renderDiffContent = (
             ) : (
               &lt;Text
                 backgroundColor={
-                  line.type === "add"
+                  line.type === 'add'
                     ? theme.background.diff.added
                     : theme.background.diff.removed
                 }
@@ -1135,13 +1135,13 @@ const renderDiffContent = (
               &gt;
                 &lt;Text
                   color={
-                    line.type === "add"
+                    line.type === 'add'
                       ? theme.status.success
                       : theme.status.error
                   }
                 &gt;
                   {prefixSymbol}
-                &lt;/Text&gt;{" "}
+                &lt;/Text&gt;{' '}
                 {colorizeLine(displayContent, language)}
               &lt;/Text&gt;
             )}
@@ -1155,21 +1155,21 @@ const renderDiffContent = (
 &nbsp;
 const getLanguageFromExtension = (extension: string): string | null =&gt; {
   const languageMap: { [key: string]: string } = {
-    js: "javascript",
-    ts: "typescript",
-    py: "python",
-    json: "json",
-    css: "css",
-    html: "html",
-    sh: "bash",
-    md: "markdown",
-    yaml: "yaml",
-    yml: "yaml",
-    txt: "plaintext",
-    java: "java",
-    c: "c",
-    cpp: "cpp",
-    rb: "ruby",
+    js: 'javascript',
+    ts: 'typescript',
+    py: 'python',
+    json: 'json',
+    css: 'css',
+    html: 'html',
+    sh: 'bash',
+    md: 'markdown',
+    yaml: 'yaml',
+    yml: 'yaml',
+    txt: 'plaintext',
+    java: 'java',
+    c: 'c',
+    cpp: 'cpp',
+    rb: 'ruby',
   };
   return languageMap[extension] || null; // Return null if extension not found
 };
@@ -1180,7 +1180,7 @@ const getLanguageFromExtension = (extension: string): string | null =&gt; {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.879Z
+                at 2025-09-29T17:26:19.374Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

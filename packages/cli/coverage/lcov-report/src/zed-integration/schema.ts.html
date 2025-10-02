@@ -1001,22 +1001,22 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { z } from "zod";
+import { z } from 'zod';
 &nbsp;
 export const AGENT_METHODS = {
-  authenticate: "authenticate",
-  initialize: "initialize",
-  session_cancel: "session/cancel",
-  session_load: "session/load",
-  session_new: "session/new",
-  session_prompt: "session/prompt",
+  authenticate: 'authenticate',
+  initialize: 'initialize',
+  session_cancel: 'session/cancel',
+  session_load: 'session/load',
+  session_new: 'session/new',
+  session_prompt: 'session/prompt',
 };
 &nbsp;
 export const CLIENT_METHODS = {
-  fs_read_text_file: "fs/read_text_file",
-  fs_write_text_file: "fs/write_text_file",
-  session_request_permission: "session/request_permission",
-  session_update: "session/update",
+  fs_read_text_file: 'fs/read_text_file',
+  fs_write_text_file: 'fs/write_text_file',
+  session_request_permission: 'session/request_permission',
+  session_update: 'session/update',
 };
 &nbsp;
 export const PROTOCOL_VERSION = 1;
@@ -1139,13 +1139,13 @@ export const readTextFileRequestSchema = z.object({
 });
 &nbsp;
 export const permissionOptionKindSchema = z.union([
-  z.literal("allow_once"),
-  z.literal("allow_always"),
-  z.literal("reject_once"),
-  z.literal("reject_always"),
+  z.literal('allow_once'),
+  z.literal('allow_always'),
+  z.literal('reject_once'),
+  z.literal('reject_always'),
 ]);
 &nbsp;
-export const roleSchema = z.union([z.literal("assistant"), z.literal("user")]);
+export const roleSchema = z.union([z.literal('assistant'), z.literal('user')]);
 &nbsp;
 export const textResourceContentsSchema = z.object({
   mimeType: z.string().optional().nullable(),
@@ -1160,22 +1160,22 @@ export const blobResourceContentsSchema = z.object({
 });
 &nbsp;
 export const toolKindSchema = z.union([
-  z.literal("read"),
-  z.literal("edit"),
-  z.literal("delete"),
-  z.literal("move"),
-  z.literal("search"),
-  z.literal("execute"),
-  z.literal("think"),
-  z.literal("fetch"),
-  z.literal("other"),
+  z.literal('read'),
+  z.literal('edit'),
+  z.literal('delete'),
+  z.literal('move'),
+  z.literal('search'),
+  z.literal('execute'),
+  z.literal('think'),
+  z.literal('fetch'),
+  z.literal('other'),
 ]);
 &nbsp;
 export const toolCallStatusSchema = z.union([
-  z.literal("pending"),
-  z.literal("in_progress"),
-  z.literal("completed"),
-  z.literal("failed"),
+  z.literal('pending'),
+  z.literal('in_progress'),
+  z.literal('completed'),
+  z.literal('failed'),
 ]);
 &nbsp;
 export const writeTextFileResponseSchema = z.null();
@@ -1186,11 +1186,11 @@ export const readTextFileResponseSchema = z.object({
 &nbsp;
 export const requestPermissionOutcomeSchema = z.union([
   z.object({
-    outcome: z.literal("cancelled"),
+    outcome: z.literal('cancelled'),
   }),
   z.object({
     optionId: z.string(),
-    outcome: z.literal("selected"),
+    outcome: z.literal('selected'),
   }),
 ]);
 &nbsp;
@@ -1211,10 +1211,10 @@ export const newSessionResponseSchema = z.object({
 export const loadSessionResponseSchema = z.null();
 &nbsp;
 export const stopReasonSchema = z.union([
-  z.literal("end_turn"),
-  z.literal("max_tokens"),
-  z.literal("refusal"),
-  z.literal("cancelled"),
+  z.literal('end_turn'),
+  z.literal('max_tokens'),
+  z.literal('refusal'),
+  z.literal('cancelled'),
 ]);
 &nbsp;
 export const promptResponseSchema = z.object({
@@ -1228,11 +1228,11 @@ export const toolCallLocationSchema = z.object({
 &nbsp;
 export const planEntrySchema = z.object({
   content: z.string(),
-  priority: z.union([z.literal("high"), z.literal("medium"), z.literal("low")]),
+  priority: z.union([z.literal('high'), z.literal('medium'), z.literal('low')]),
   status: z.union([
-    z.literal("pending"),
-    z.literal("in_progress"),
-    z.literal("completed"),
+    z.literal('pending'),
+    z.literal('in_progress'),
+    z.literal('completed'),
   ]),
 });
 &nbsp;
@@ -1320,19 +1320,19 @@ export const contentBlockSchema = z.union([
   z.object({
     annotations: annotationsSchema.optional().nullable(),
     text: z.string(),
-    type: z.literal("text"),
+    type: z.literal('text'),
   }),
   z.object({
     annotations: annotationsSchema.optional().nullable(),
     data: z.string(),
     mimeType: z.string(),
-    type: z.literal("image"),
+    type: z.literal('image'),
   }),
   z.object({
     annotations: annotationsSchema.optional().nullable(),
     data: z.string(),
     mimeType: z.string(),
-    type: z.literal("audio"),
+    type: z.literal('audio'),
   }),
   z.object({
     annotations: annotationsSchema.optional().nullable(),
@@ -1341,26 +1341,26 @@ export const contentBlockSchema = z.union([
     name: z.string(),
     size: z.number().optional().nullable(),
     title: z.string().optional().nullable(),
-    type: z.literal("resource_link"),
+    type: z.literal('resource_link'),
     uri: z.string(),
   }),
   z.object({
     annotations: annotationsSchema.optional().nullable(),
     resource: embeddedResourceResourceSchema,
-    type: z.literal("resource"),
+    type: z.literal('resource'),
   }),
 ]);
 &nbsp;
 export const toolCallContentSchema = z.union([
   z.object({
     content: contentBlockSchema,
-    type: z.literal("content"),
+    type: z.literal('content'),
   }),
   z.object({
     newText: z.string(),
     oldText: z.string().nullable(),
     path: z.string(),
-    type: z.literal("diff"),
+    type: z.literal('diff'),
   }),
 ]);
 &nbsp;
@@ -1386,22 +1386,22 @@ export const promptRequestSchema = z.object({
 export const sessionUpdateSchema = z.union([
   z.object({
     content: contentBlockSchema,
-    sessionUpdate: z.literal("user_message_chunk"),
+    sessionUpdate: z.literal('user_message_chunk'),
   }),
   z.object({
     content: contentBlockSchema,
-    sessionUpdate: z.literal("agent_message_chunk"),
+    sessionUpdate: z.literal('agent_message_chunk'),
   }),
   z.object({
     content: contentBlockSchema,
-    sessionUpdate: z.literal("agent_thought_chunk"),
+    sessionUpdate: z.literal('agent_thought_chunk'),
   }),
   z.object({
     content: z.array(toolCallContentSchema).optional(),
     kind: toolKindSchema,
     locations: z.array(toolCallLocationSchema).optional(),
     rawInput: z.unknown().optional(),
-    sessionUpdate: z.literal("tool_call"),
+    sessionUpdate: z.literal('tool_call'),
     status: toolCallStatusSchema,
     title: z.string(),
     toolCallId: z.string(),
@@ -1411,14 +1411,14 @@ export const sessionUpdateSchema = z.union([
     kind: toolKindSchema.optional().nullable(),
     locations: z.array(toolCallLocationSchema).optional().nullable(),
     rawInput: z.unknown().optional(),
-    sessionUpdate: z.literal("tool_call_update"),
+    sessionUpdate: z.literal('tool_call_update'),
     status: toolCallStatusSchema.optional().nullable(),
     title: z.string().optional().nullable(),
     toolCallId: z.string(),
   }),
   z.object({
     entries: z.array(planEntrySchema),
-    sessionUpdate: z.literal("plan"),
+    sessionUpdate: z.literal('plan'),
   }),
 ]);
 &nbsp;
@@ -1468,7 +1468,7 @@ export const agentNotificationSchema = sessionNotificationSchema;
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.879Z
+                at 2025-09-29T17:26:19.374Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

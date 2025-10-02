@@ -4,25 +4,25 @@ import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import {} from "@qwen-code/qwen-code-core";
-import { RadioButtonSelect, } from "./shared/RadioButtonSelect.js";
-import { useKeypress } from "../hooks/useKeypress.js";
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import {} from '@qwen-code/qwen-code-core';
+import { RadioButtonSelect, } from './shared/RadioButtonSelect.js';
+import { useKeypress } from '../hooks/useKeypress.js';
 export function WelcomeBackDialog({ welcomeBackInfo, onSelect, onClose, }) {
     useKeypress((key) => {
-        if (key.name === "escape") {
+        if (key.name === 'escape') {
             onClose();
         }
     }, { isActive: true });
     const options = [
         {
-            label: "Start new chat session",
-            value: "restart",
+            label: 'Start new chat session',
+            value: 'restart',
         },
         {
-            label: "Continue previous conversation",
-            value: "continue",
+            label: 'Continue previous conversation',
+            value: 'continue',
         },
     ];
     // Extract data from welcomeBackInfo

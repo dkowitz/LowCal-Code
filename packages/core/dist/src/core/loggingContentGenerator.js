@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ApiRequestEvent, ApiResponseEvent, ApiErrorEvent, } from "../telemetry/types.js";
-import { logApiError, logApiRequest, logApiResponse, } from "../telemetry/loggers.js";
-import { toContents } from "../code_assist/converter.js";
-import { isStructuredError } from "../utils/quotaErrorDetection.js";
+import { ApiRequestEvent, ApiResponseEvent, ApiErrorEvent, } from '../telemetry/types.js';
+import { logApiError, logApiRequest, logApiResponse, } from '../telemetry/loggers.js';
+import { toContents } from '../code_assist/converter.js';
+import { isStructuredError } from '../utils/quotaErrorDetection.js';
 /**
  * A decorator that wraps a ContentGenerator to add logging to API calls.
  */
@@ -29,7 +29,7 @@ export class LoggingContentGenerator {
     }
     _logApiError(responseId, durationMs, error, prompt_id) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        const errorType = error instanceof Error ? error.name : "unknown";
+        const errorType = error instanceof Error ? error.name : 'unknown';
         logApiError(this.config, new ApiErrorEvent(responseId, this.config.getModel(), errorMessage, durationMs, prompt_id, this.config.getContentGeneratorConfig()?.authType, errorType, isStructuredError(error)
             ? error.status
             : undefined));
@@ -40,7 +40,7 @@ export class LoggingContentGenerator {
         try {
             const response = await this.wrapped.generateContent(req, userPromptId);
             const durationMs = Date.now() - startTime;
-            this._logApiResponse(response.responseId ?? "", durationMs, userPromptId, response.usageMetadata, JSON.stringify(response));
+            this._logApiResponse(response.responseId ?? '', durationMs, userPromptId, response.usageMetadata, JSON.stringify(response));
             return response;
         }
         catch (error) {
@@ -84,7 +84,7 @@ export class LoggingContentGenerator {
         }
         const durationMs = Date.now() - startTime;
         if (lastResponse) {
-            this._logApiResponse(lastResponse.responseId ?? "", durationMs, userPromptId, lastUsageMetadata, JSON.stringify(responses));
+            this._logApiResponse(lastResponse.responseId ?? '', durationMs, userPromptId, lastUsageMetadata, JSON.stringify(responses));
         }
     }
     async countTokens(req) {

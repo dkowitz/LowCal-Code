@@ -8,12 +8,12 @@ import {
   type CommandContext,
   type SlashCommand,
   CommandKind,
-} from "./types.js";
-import { MessageType } from "../types.js";
+} from './types.js';
+import { MessageType } from '../types.js';
 
 export const extensionsCommand: SlashCommand = {
-  name: "extensions",
-  description: "list active extensions",
+  name: 'extensions',
+  description: 'list active extensions',
   kind: CommandKind.BUILT_IN,
   action: async (context: CommandContext): Promise<void> => {
     const activeExtensions = context.services.config
@@ -23,7 +23,7 @@ export const extensionsCommand: SlashCommand = {
       context.ui.addItem(
         {
           type: MessageType.INFO,
-          text: "No active extensions.",
+          text: 'No active extensions.',
         },
         Date.now(),
       );
@@ -33,7 +33,7 @@ export const extensionsCommand: SlashCommand = {
     const extensionLines = activeExtensions.map(
       (ext) => `  - \u001b[36m${ext.name} (v${ext.version})\u001b[0m`,
     );
-    const message = `Active extensions:\n\n${extensionLines.join("\n")}\n`;
+    const message = `Active extensions:\n\n${extensionLines.join('\n')}\n`;
 
     context.ui.addItem(
       {

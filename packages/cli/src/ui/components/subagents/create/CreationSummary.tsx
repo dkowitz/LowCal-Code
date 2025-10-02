@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useCallback, useState, useEffect } from "react";
-import { Box, Text, useInput } from "ink";
-import type { WizardStepProps } from "../types.js";
+import { useCallback, useState, useEffect } from 'react';
+import { Box, Text, useInput } from 'ink';
+import type { WizardStepProps } from '../types.js';
 import type {
   SubagentManager,
   SubagentConfig,
-} from "@qwen-code/qwen-code-core";
-import { theme } from "../../../semantic-colors.js";
-import { shouldShowColor, getColorForDisplay } from "../utils.js";
-import { useLaunchEditor } from "../../../hooks/useLaunchEditor.js";
+} from '@qwen-code/qwen-code-core';
+import { theme } from '../../../semantic-colors.js';
+import { shouldShowColor, getColorForDisplay } from '../utils.js';
+import { useLaunchEditor } from '../../../hooks/useLaunchEditor.js';
 
 /**
  * Step 6: Final confirmation and actions.
@@ -32,7 +32,7 @@ export function CreationSummary({
 
   const truncateText = (text: string, maxLength: number): string => {
     if (text.length <= maxLength) return text;
-    return text.substring(0, maxLength - 3) + "...";
+    return text.substring(0, maxLength - 3) + '...';
   };
 
   // Check for warnings
@@ -56,14 +56,14 @@ export function CreationSummary({
           );
           if (existing) {
             const conflictLevel =
-              existing.level === "project" ? "project" : "user";
+              existing.level === 'project' ? 'project' : 'user';
             const targetLevel = state.location;
 
             if (conflictLevel === targetLevel) {
               allWarnings.push(
                 `Name "${state.generatedName}" already exists at ${conflictLevel} level - will overwrite existing subagent`,
               );
-            } else if (targetLevel === "project") {
+            } else if (targetLevel === 'project') {
               allWarnings.push(
                 `Name "${state.generatedName}" exists at user level - project level will take precedence`,
               );
@@ -76,7 +76,7 @@ export function CreationSummary({
         }
       } catch (error) {
         // Silently handle errors in warning checks
-        console.warn("Error checking subagent name availability:", error);
+        console.warn('Error checking subagent name availability:', error);
       }
 
       // Check length warnings
@@ -105,13 +105,13 @@ export function CreationSummary({
 
   // If no tools explicitly selected, it means "all tools" for this agent
   const toolsDisplay =
-    state.selectedTools.length === 0 ? "*" : state.selectedTools.join(", ");
+    state.selectedTools.length === 0 ? '*' : state.selectedTools.join(', ');
 
   // Common method to save subagent configuration
   const saveSubagent = useCallback(async (): Promise<SubagentManager> => {
     // Create SubagentManager instance
     if (!config) {
-      throw new Error("Configuration not available");
+      throw new Error('Configuration not available');
     }
     const subagentManager = config.getSubagentManager();
 
@@ -121,7 +121,7 @@ export function CreationSummary({
       description: state.generatedDescription,
       systemPrompt: state.generatedSystemPrompt,
       level: state.location,
-      filePath: "", // Will be set by manager
+      filePath: '', // Will be set by manager
       tools: Array.isArray(state.selectedTools)
         ? state.selectedTools
         : undefined,
@@ -154,7 +154,7 @@ export function CreationSummary({
       showSuccessAndClose();
     } catch (error) {
       setSaveError(
-        error instanceof Error ? error.message : "Unknown error occurred",
+        error instanceof Error ? error.message : 'Unknown error occurred',
       );
     }
   }, [saveSubagent, showSuccessAndClose]);
@@ -180,7 +180,7 @@ export function CreationSummary({
       showSuccessAndClose();
     } catch (error) {
       setSaveError(
-        `Failed to save and edit subagent: ${error instanceof Error ? error.message : "Unknown error"}`,
+        `Failed to save and edit subagent: ${error instanceof Error ? error.message : 'Unknown error'}`,
       );
     }
   }, [
@@ -195,12 +195,12 @@ export function CreationSummary({
   useInput((input, key) => {
     if (saveSuccess) return;
 
-    if (key.return || input === "s") {
+    if (key.return || input === 's') {
       handleSave();
       return;
     }
 
-    if (input === "e") {
+    if (input === 'e') {
       handleEdit();
       return;
     }
@@ -216,7 +216,7 @@ export function CreationSummary({
         </Box>
         <Box>
           <Text>
-            Subagent &quot;{state.generatedName}&quot; has been saved to{" "}
+            Subagent &quot;{state.generatedName}&quot; has been saved to{' '}
             {state.location} level.
           </Text>
         </Box>
@@ -237,9 +237,9 @@ export function CreationSummary({
         <Box>
           <Text color={theme.text.primary}>Location: </Text>
           <Text>
-            {state.location === "project"
-              ? "Project Level (.qwen/agents/)"
-              : "User Level (~/.qwen/agents/)"}
+            {state.location === 'project'
+              ? 'Project Level (.qwen/agents/)'
+              : 'User Level (~/.qwen/agents/)'}
           </Text>
         </Box>
 

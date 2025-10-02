@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { TextBuffer } from "../components/shared/text-buffer.js";
-import type { Suggestion } from "../components/SuggestionsDisplay.js";
+import type { TextBuffer } from '../components/shared/text-buffer.js';
+import type { Suggestion } from '../components/SuggestionsDisplay.js';
 export interface UseReverseSearchCompletionReturn {
     suggestions: Suggestion[];
     activeSuggestionIndex: number;

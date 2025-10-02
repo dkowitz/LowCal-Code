@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach, afterEach } from "vitest";
-import * as fsPromises from "node:fs/promises";
-import * as path from "node:path";
-import * as os from "node:os";
-import { bfsFileSearch } from "./bfsFileSearch.js";
-import { FileDiscoveryService } from "../services/fileDiscoveryService.js";
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import * as fsPromises from 'node:fs/promises';
+import * as path from 'node:path';
+import * as os from 'node:os';
+import { bfsFileSearch } from './bfsFileSearch.js';
+import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 
-describe("bfsFileSearch", () => {
+describe('bfsFileSearch', () => {
   let testRootDir: string;
 
   async function createEmptyDir(...pathSegments: string[]) {
@@ -29,7 +29,7 @@ describe("bfsFileSearch", () => {
 
   beforeEach(async () => {
     testRootDir = await fsPromises.mkdtemp(
-      path.join(os.tmpdir(), "bfs-file-search-test-"),
+      path.join(os.tmpdir(), 'bfs-file-search-test-'),
     );
   });
 
@@ -37,96 +37,96 @@ describe("bfsFileSearch", () => {
     await fsPromises.rm(testRootDir, { recursive: true, force: true });
   });
 
-  it("should find a file in the root directory", async () => {
-    const targetFilePath = await createTestFile("content", "target.txt");
-    const result = await bfsFileSearch(testRootDir, { fileName: "target.txt" });
+  it('should find a file in the root directory', async () => {
+    const targetFilePath = await createTestFile('content', 'target.txt');
+    const result = await bfsFileSearch(testRootDir, { fileName: 'target.txt' });
     expect(result).toEqual([targetFilePath]);
   });
 
-  it("should find a file in a nested directory", async () => {
+  it('should find a file in a nested directory', async () => {
     const targetFilePath = await createTestFile(
-      "content",
-      "a",
-      "b",
-      "target.txt",
+      'content',
+      'a',
+      'b',
+      'target.txt',
     );
-    const result = await bfsFileSearch(testRootDir, { fileName: "target.txt" });
+    const result = await bfsFileSearch(testRootDir, { fileName: 'target.txt' });
     expect(result).toEqual([targetFilePath]);
   });
 
-  it("should find multiple files with the same name", async () => {
-    const targetFilePath1 = await createTestFile("content1", "a", "target.txt");
-    const targetFilePath2 = await createTestFile("content2", "b", "target.txt");
-    const result = await bfsFileSearch(testRootDir, { fileName: "target.txt" });
+  it('should find multiple files with the same name', async () => {
+    const targetFilePath1 = await createTestFile('content1', 'a', 'target.txt');
+    const targetFilePath2 = await createTestFile('content2', 'b', 'target.txt');
+    const result = await bfsFileSearch(testRootDir, { fileName: 'target.txt' });
     result.sort();
     expect(result).toEqual([targetFilePath1, targetFilePath2].sort());
   });
 
-  it("should return an empty array if no file is found", async () => {
-    await createTestFile("content", "other.txt");
-    const result = await bfsFileSearch(testRootDir, { fileName: "target.txt" });
+  it('should return an empty array if no file is found', async () => {
+    await createTestFile('content', 'other.txt');
+    const result = await bfsFileSearch(testRootDir, { fileName: 'target.txt' });
     expect(result).toEqual([]);
   });
 
-  it("should ignore directories specified in ignoreDirs", async () => {
-    await createTestFile("content", "ignored", "target.txt");
+  it('should ignore directories specified in ignoreDirs', async () => {
+    await createTestFile('content', 'ignored', 'target.txt');
     const targetFilePath = await createTestFile(
-      "content",
-      "not-ignored",
-      "target.txt",
+      'content',
+      'not-ignored',
+      'target.txt',
     );
     const result = await bfsFileSearch(testRootDir, {
-      fileName: "target.txt",
-      ignoreDirs: ["ignored"],
+      fileName: 'target.txt',
+      ignoreDirs: ['ignored'],
     });
     expect(result).toEqual([targetFilePath]);
   });
 
-  it("should respect the maxDirs limit and not find the file", async () => {
-    await createTestFile("content", "a", "b", "c", "target.txt");
+  it('should respect the maxDirs limit and not find the file', async () => {
+    await createTestFile('content', 'a', 'b', 'c', 'target.txt');
     const result = await bfsFileSearch(testRootDir, {
-      fileName: "target.txt",
+      fileName: 'target.txt',
       maxDirs: 3,
     });
     expect(result).toEqual([]);
   });
 
-  it("should respect the maxDirs limit and find the file", async () => {
+  it('should respect the maxDirs limit and find the file', async () => {
     const targetFilePath = await createTestFile(
-      "content",
-      "a",
-      "b",
-      "c",
-      "target.txt",
+      'content',
+      'a',
+      'b',
+      'c',
+      'target.txt',
     );
     const result = await bfsFileSearch(testRootDir, {
-      fileName: "target.txt",
+      fileName: 'target.txt',
       maxDirs: 4,
     });
     expect(result).toEqual([targetFilePath]);
   });
 
-  describe("with FileDiscoveryService", () => {
+  describe('with FileDiscoveryService', () => {
     let projectRoot: string;
 
     beforeEach(async () => {
-      projectRoot = await createEmptyDir("project");
+      projectRoot = await createEmptyDir('project');
     });
 
-    it("should ignore gitignored files", async () => {
-      await createEmptyDir("project", ".git");
-      await createTestFile("node_modules/", "project", ".gitignore");
-      await createTestFile("content", "project", "node_modules", "target.txt");
+    it('should ignore gitignored files', async () => {
+      await createEmptyDir('project', '.git');
+      await createTestFile('node_modules/', 'project', '.gitignore');
+      await createTestFile('content', 'project', 'node_modules', 'target.txt');
       const targetFilePath = await createTestFile(
-        "content",
-        "project",
-        "not-ignored",
-        "target.txt",
+        'content',
+        'project',
+        'not-ignored',
+        'target.txt',
       );
 
       const fileService = new FileDiscoveryService(projectRoot);
       const result = await bfsFileSearch(projectRoot, {
-        fileName: "target.txt",
+        fileName: 'target.txt',
         fileService,
         fileFilteringOptions: {
           respectGitIgnore: true,
@@ -137,19 +137,19 @@ describe("bfsFileSearch", () => {
       expect(result).toEqual([targetFilePath]);
     });
 
-    it("should ignore geminiignored files", async () => {
-      await createTestFile("node_modules/", "project", ".qwenignore");
-      await createTestFile("content", "project", "node_modules", "target.txt");
+    it('should ignore geminiignored files', async () => {
+      await createTestFile('node_modules/', 'project', '.qwenignore');
+      await createTestFile('content', 'project', 'node_modules', 'target.txt');
       const targetFilePath = await createTestFile(
-        "content",
-        "project",
-        "not-ignored",
-        "target.txt",
+        'content',
+        'project',
+        'not-ignored',
+        'target.txt',
       );
 
       const fileService = new FileDiscoveryService(projectRoot);
       const result = await bfsFileSearch(projectRoot, {
-        fileName: "target.txt",
+        fileName: 'target.txt',
         fileService,
         fileFilteringOptions: {
           respectGitIgnore: false,
@@ -160,25 +160,25 @@ describe("bfsFileSearch", () => {
       expect(result).toEqual([targetFilePath]);
     });
 
-    it("should not ignore files if respect flags are false", async () => {
-      await createEmptyDir("project", ".git");
-      await createTestFile("node_modules/", "project", ".gitignore");
+    it('should not ignore files if respect flags are false', async () => {
+      await createEmptyDir('project', '.git');
+      await createTestFile('node_modules/', 'project', '.gitignore');
       const target1 = await createTestFile(
-        "content",
-        "project",
-        "node_modules",
-        "target.txt",
+        'content',
+        'project',
+        'node_modules',
+        'target.txt',
       );
       const target2 = await createTestFile(
-        "content",
-        "project",
-        "not-ignored",
-        "target.txt",
+        'content',
+        'project',
+        'not-ignored',
+        'target.txt',
       );
 
       const fileService = new FileDiscoveryService(projectRoot);
       const result = await bfsFileSearch(projectRoot, {
-        fileName: "target.txt",
+        fileName: 'target.txt',
         fileService,
         fileFilteringOptions: {
           respectGitIgnore: false,
@@ -190,7 +190,7 @@ describe("bfsFileSearch", () => {
     });
   });
 
-  it("should find all files in a complex directory structure", async () => {
+  it('should find all files in a complex directory structure', async () => {
     // Create a complex directory structure to test correctness at scale
     // without flaky performance checks.
     const numDirs = 50;
@@ -200,9 +200,9 @@ describe("bfsFileSearch", () => {
     const dirCreationPromises: Array<Promise<unknown>> = [];
     for (let i = 0; i < numDirs; i++) {
       dirCreationPromises.push(createEmptyDir(`dir${i}`));
-      dirCreationPromises.push(createEmptyDir(`dir${i}`, "subdir1"));
-      dirCreationPromises.push(createEmptyDir(`dir${i}`, "subdir2"));
-      dirCreationPromises.push(createEmptyDir(`dir${i}`, "subdir1", "deep"));
+      dirCreationPromises.push(createEmptyDir(`dir${i}`, 'subdir1'));
+      dirCreationPromises.push(createEmptyDir(`dir${i}`, 'subdir2'));
+      dirCreationPromises.push(createEmptyDir(`dir${i}`, 'subdir1', 'deep'));
     }
     await Promise.all(dirCreationPromises);
 
@@ -210,16 +210,16 @@ describe("bfsFileSearch", () => {
     for (let i = 0; i < numTargetDirs; i++) {
       // Add target files in some directories
       fileCreationPromises.push(
-        createTestFile("content", `dir${i}`, "QWEN.md"),
+        createTestFile('content', `dir${i}`, 'QWEN.md'),
       );
       fileCreationPromises.push(
-        createTestFile("content", `dir${i}`, "subdir1", "QWEN.md"),
+        createTestFile('content', `dir${i}`, 'subdir1', 'QWEN.md'),
       );
     }
     const expectedFiles = await Promise.all(fileCreationPromises);
 
     const result = await bfsFileSearch(testRootDir, {
-      fileName: "QWEN.md",
+      fileName: 'QWEN.md',
       // Provide a generous maxDirs limit to ensure it doesn't prematurely stop
       // in this large test case. Total dirs created is 200.
       maxDirs: 250,

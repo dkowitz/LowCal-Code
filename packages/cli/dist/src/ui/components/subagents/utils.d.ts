@@ -10,6 +10,6 @@ export declare const getColorForDisplay: (colorName?: string) => string | undefi
  */
 export declare function sanitizeInput(input: string): string;
 export declare function fmtDuration(ms: number): string;
-export type StepKind = "LOCATION" | "GEN_METHOD" | "LLM_DESC" | "MANUAL_NAME" | "MANUAL_PROMPT" | "MANUAL_DESC" | "TOOLS" | "COLOR" | "FINAL";
-export declare function getTotalSteps(method: "qwen" | "manual"): number;
-export declare function getStepKind(method: "qwen" | "manual", stepNumber: number): StepKind;
+export type StepKind = 'LOCATION' | 'GEN_METHOD' | 'LLM_DESC' | 'MANUAL_NAME' | 'MANUAL_PROMPT' | 'MANUAL_DESC' | 'TOOLS' | 'COLOR' | 'FINAL';
+export declare function getTotalSteps(method: 'qwen' | 'manual'): number;
+export declare function getStepKind(method: 'qwen' | 'manual', stepNumber: number): StepKind;

@@ -279,12 +279,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type { SandboxConfig } from "@qwen-code/qwen-code-core";
-import { FatalSandboxError } from "@qwen-code/qwen-code-core";
-import commandExists from "command-exists";
-import * as os from "node:os";
-import { getPackageJson } from "../utils/package.js";
-import type { Settings } from "./settings.js";
+import type { SandboxConfig } from '@qwen-code/qwen-code-core';
+import { FatalSandboxError } from '@qwen-code/qwen-code-core';
+import commandExists from 'command-exists';
+import * as os from 'node:os';
+import { getPackageJson } from '../utils/package.js';
+import type { Settings } from './settings.js';
 &nbsp;
 // This is a stripped-down version of the CliArgs interface from config.ts
 // to avoid circular dependencies.
@@ -293,43 +293,43 @@ interface SandboxCliArgs {
   sandboxImage?: string;
 }
 &nbsp;
-const VALID_SANDBOX_COMMANDS: ReadonlyArray&lt;SandboxConfig["command"]&gt; = [
-  "docker",
-  "podman",
-  "sandbox-exec",
+const VALID_SANDBOX_COMMANDS: ReadonlyArray&lt;SandboxConfig['command']&gt; = [
+  'docker',
+  'podman',
+  'sandbox-exec',
 ];
 &nbsp;
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function isSandboxCommand(value: string): value is SandboxConfig["command"] {</span></span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function isSandboxCommand(value: string): value is SandboxConfig['command'] {</span></span>
 <span class="cstat-no" title="statement not covered" >  return (VALID_SANDBOX_COMMANDS as readonly string[]).includes(value);</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 function getSandboxCommand(
   sandbox?: boolean | string,
-): SandboxConfig["command"] | "" {
+): SandboxConfig['command'] | '' {
   // If the SANDBOX env var is set, we're already inside the sandbox.
-  if (process.env["SANDBOX"]) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >    return "";</span>
+  if (process.env['SANDBOX']) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >    return '';</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   // note environment variable takes precedence over argument (from command line or settings)
   const environmentConfiguredSandbox =
-    process.env["GEMINI_SANDBOX"<span class="branch-0 cbranch-no" title="branch not covered" >]?.toLowerCase()</span>.trim() ?? "";
+    process.env['GEMINI_SANDBOX'<span class="branch-0 cbranch-no" title="branch not covered" >]?.toLowerCase()</span>.trim() ?? '';
   sandbox =
     environmentConfiguredSandbox?.length &gt; <span class="branch-0 cbranch-no" title="branch not covered" >0</span>
 <span class="cstat-no" title="statement not covered" >      ? environmentConfiguredSandbox</span>
       : sandbox;
-  if (sandbox === "1" || sandbox === "true") <span class="branch-0 cbranch-no" title="branch not covered" >sandbox = true;</span>
-  else if (sandbox === "0" || sandbox === "false" || !sandbox) sandbox = false;
+  if (sandbox === '1' || sandbox === 'true') <span class="branch-0 cbranch-no" title="branch not covered" >sandbox = true;</span>
+  else if (sandbox === '0' || sandbox === 'false' || !sandbox) sandbox = false;
 &nbsp;
   if (sandbox === false) {
-    return "";
+    return '';
 <span class="branch-0 cbranch-no" title="branch not covered" >  }</span>
 &nbsp;
-  if (typeof sandbox === "string" &amp;&amp; sandbox) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+  if (typeof sandbox === 'string' &amp;&amp; sandbox) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >    if (!isSandboxCommand(sandbox)) {</span>
 <span class="cstat-no" title="statement not covered" >      throw new FatalSandboxError(</span>
 <span class="cstat-no" title="statement not covered" >        `Invalid sandbox command '${sandbox}'. Must be one of ${VALID_SANDBOX_COMMANDS.join(</span>
-<span class="cstat-no" title="statement not covered" >          ", ",</span>
+<span class="cstat-no" title="statement not covered" >          ', ',</span>
 <span class="cstat-no" title="statement not covered" >        )}`,</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -344,23 +344,23 @@ function getSandboxCommand(
 &nbsp;
   // look for seatbelt, docker, or podman, in that order
   // for container-based sandboxing, require sandbox to be enabled explicitly
-  if (os.platform() === "darwin" &amp;&amp; commandExists.sync("sandbox-exec")) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >    return "sandbox-exec";</span>
-<span class="cstat-no" title="statement not covered" >  } else if (commandExists.sync("docker") &amp;&amp; sandbox === true) {</span>
-<span class="cstat-no" title="statement not covered" >    return "docker";</span>
-<span class="cstat-no" title="statement not covered" >  } else if (commandExists.sync("podman") &amp;&amp; sandbox === true) {</span>
-<span class="cstat-no" title="statement not covered" >    return "podman";</span>
+  if (os.platform() === 'darwin' &amp;&amp; commandExists.sync('sandbox-exec')) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+<span class="cstat-no" title="statement not covered" >    return 'sandbox-exec';</span>
+<span class="cstat-no" title="statement not covered" >  } else if (commandExists.sync('docker') &amp;&amp; sandbox === true) {</span>
+<span class="cstat-no" title="statement not covered" >    return 'docker';</span>
+<span class="cstat-no" title="statement not covered" >  } else if (commandExists.sync('podman') &amp;&amp; sandbox === true) {</span>
+<span class="cstat-no" title="statement not covered" >    return 'podman';</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   // throw an error if user requested sandbox but no command was found
 <span class="cstat-no" title="statement not covered" >  if (sandbox === true) {</span>
 <span class="cstat-no" title="statement not covered" >    throw new FatalSandboxError(</span>
-<span class="cstat-no" title="statement not covered" >      "GEMINI_SANDBOX is true but failed to determine command for sandbox; " +</span>
-        "install docker or podman or specify command in GEMINI_SANDBOX",
+<span class="cstat-no" title="statement not covered" >      'GEMINI_SANDBOX is true but failed to determine command for sandbox; ' +</span>
+        'install docker or podman or specify command in GEMINI_SANDBOX',
 <span class="cstat-no" title="statement not covered" >    );</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  return "";</span>
+<span class="cstat-no" title="statement not covered" >  return '';</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 export async function loadSandboxConfig(
@@ -373,7 +373,7 @@ export async function loadSandboxConfig(
   const packageJson = await getPackageJson();
   const image =
     argv.sandboxImage ??
-    process.env["GEMINI_SANDBOX_IMAGE"] ??
+    process.env['GEMINI_SANDBOX_IMAGE'] ??
     packageJson?.<span class="branch-0 cbranch-no" title="branch not covered" >config?.sandboxImageUri;</span>
 &nbsp;
   return <span class="branch-0 cbranch-no" title="branch not covered" >command &amp;&amp; <span class="branch-0 cbranch-no" title="branch not covered" >image ? {</span> command, image } : u</span>ndefined;
@@ -385,7 +385,7 @@ export async function loadSandboxConfig(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

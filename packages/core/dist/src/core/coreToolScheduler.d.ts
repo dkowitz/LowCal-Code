@@ -3,11 +3,11 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { ToolCallRequestInfo, ToolCallResponseInfo, ToolCallConfirmationDetails, ToolResultDisplay, EditorType, Config, ToolConfirmationPayload, AnyDeclarativeTool, AnyToolInvocation } from "../index.js";
-import { ToolConfirmationOutcome } from "../index.js";
-import type { Part, PartListUnion } from "@google/genai";
+import type { ToolCallRequestInfo, ToolCallResponseInfo, ToolCallConfirmationDetails, ToolResultDisplay, EditorType, Config, ToolConfirmationPayload, AnyDeclarativeTool, AnyToolInvocation } from '../index.js';
+import { ToolConfirmationOutcome } from '../index.js';
+import type { Part, PartListUnion } from '@google/genai';
 export type ValidatingToolCall = {
-    status: "validating";
+    status: 'validating';
     request: ToolCallRequestInfo;
     tool: AnyDeclarativeTool;
     invocation: AnyToolInvocation;
@@ -15,7 +15,7 @@ export type ValidatingToolCall = {
     outcome?: ToolConfirmationOutcome;
 };
 export type ScheduledToolCall = {
-    status: "scheduled";
+    status: 'scheduled';
     request: ToolCallRequestInfo;
     tool: AnyDeclarativeTool;
     invocation: AnyToolInvocation;
@@ -23,7 +23,7 @@ export type ScheduledToolCall = {
     outcome?: ToolConfirmationOutcome;
 };
 export type ErroredToolCall = {
-    status: "error";
+    status: 'error';
     request: ToolCallRequestInfo;
     response: ToolCallResponseInfo;
     tool?: AnyDeclarativeTool;
@@ -31,7 +31,7 @@ export type ErroredToolCall = {
     outcome?: ToolConfirmationOutcome;
 };
 export type SuccessfulToolCall = {
-    status: "success";
+    status: 'success';
     request: ToolCallRequestInfo;
     tool: AnyDeclarativeTool;
     response: ToolCallResponseInfo;
@@ -40,7 +40,7 @@ export type SuccessfulToolCall = {
     outcome?: ToolConfirmationOutcome;
 };
 export type ExecutingToolCall = {
-    status: "executing";
+    status: 'executing';
     request: ToolCallRequestInfo;
     tool: AnyDeclarativeTool;
     invocation: AnyToolInvocation;
@@ -49,7 +49,7 @@ export type ExecutingToolCall = {
     outcome?: ToolConfirmationOutcome;
 };
 export type CancelledToolCall = {
-    status: "cancelled";
+    status: 'cancelled';
     request: ToolCallRequestInfo;
     response: ToolCallResponseInfo;
     tool: AnyDeclarativeTool;
@@ -58,7 +58,7 @@ export type CancelledToolCall = {
     outcome?: ToolConfirmationOutcome;
 };
 export type WaitingToolCall = {
-    status: "awaiting_approval";
+    status: 'awaiting_approval';
     request: ToolCallRequestInfo;
     tool: AnyDeclarativeTool;
     invocation: AnyToolInvocation;
@@ -66,7 +66,7 @@ export type WaitingToolCall = {
     startTime?: number;
     outcome?: ToolConfirmationOutcome;
 };
-export type Status = ToolCall["status"];
+export type Status = ToolCall['status'];
 export type ToolCall = ValidatingToolCall | ScheduledToolCall | ErroredToolCall | SuccessfulToolCall | ExecutingToolCall | CancelledToolCall | WaitingToolCall;
 export type CompletedToolCall = SuccessfulToolCall | CancelledToolCall | ErroredToolCall;
 export type ConfirmHandler = (toolCall: WaitingToolCall) => Promise<ToolConfirmationOutcome>;

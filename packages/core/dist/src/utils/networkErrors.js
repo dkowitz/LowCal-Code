@@ -8,7 +8,7 @@ export class IdleStreamTimeoutError extends Error {
     constructor(idleMs, message = `Stream idle for ${idleMs}ms`) {
         super(message);
         this.idleMs = idleMs;
-        this.name = "IdleStreamTimeoutError";
+        this.name = 'IdleStreamTimeoutError';
     }
 }
 //# sourceMappingURL=networkErrors.js.map

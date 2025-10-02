@@ -3,20 +3,20 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { MessageType } from "../types.js";
+import { MessageType } from '../types.js';
 export function createShowMemoryAction(config, settings, addMessage) {
     return async () => {
         if (!config) {
             addMessage({
                 type: MessageType.ERROR,
-                content: "Configuration not available. Cannot show memory.",
+                content: 'Configuration not available. Cannot show memory.',
                 timestamp: new Date(),
             });
             return;
         }
         const debugMode = config.getDebugMode();
         if (debugMode) {
-            console.log("[DEBUG] Show Memory command invoked.");
+            console.log('[DEBUG] Show Memory command invoked.');
         }
         const currentMemory = config.getUserMemory();
         const fileCount = config.getGeminiMdFileCount();
@@ -30,10 +30,10 @@ export function createShowMemoryAction(config, settings, addMessage) {
         }
         if (fileCount > 0) {
             const allNamesTheSame = new Set(contextFileNames).size < 2;
-            const name = allNamesTheSame ? contextFileNames[0] : "context";
+            const name = allNamesTheSame ? contextFileNames[0] : 'context';
             addMessage({
                 type: MessageType.INFO,
-                content: `Loaded memory from ${fileCount} ${name} file${fileCount > 1 ? "s" : ""}.`,
+                content: `Loaded memory from ${fileCount} ${name} file${fileCount > 1 ? 's' : ''}.`,
                 timestamp: new Date(),
             });
         }
@@ -48,8 +48,8 @@ export function createShowMemoryAction(config, settings, addMessage) {
             addMessage({
                 type: MessageType.INFO,
                 content: fileCount > 0
-                    ? "Hierarchical memory (QWEN.md or other context files) is loaded but content is empty."
-                    : "No hierarchical memory (QWEN.md or other context files) is currently loaded.",
+                    ? 'Hierarchical memory (QWEN.md or other context files) is loaded but content is empty.'
+                    : 'No hierarchical memory (QWEN.md or other context files) is currently loaded.',
                 timestamp: new Date(),
             });
         }

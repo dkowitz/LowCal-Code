@@ -1,7 +1,7 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Box, Text } from "ink";
-import Spinner from "ink-spinner";
-import { Colors } from "../../colors.js";
+import { Box, Text } from 'ink';
+import Spinner from 'ink-spinner';
+import { Colors } from '../../colors.js';
 /*
  * Summary messages appear when the /chat summary command is run, and show a loading spinner
  * while summary generation is in progress, followed up by success confirmation.
@@ -10,15 +10,15 @@ export const SummaryMessage = ({ summary }) => {
     const getText = () => {
         if (summary.isPending) {
             switch (summary.stage) {
-                case "generating":
-                    return "Generating project summary...";
-                case "saving":
-                    return "Saving project summary...";
+                case 'generating':
+                    return 'Generating project summary...';
+                case 'saving':
+                    return 'Saving project summary...';
                 default:
-                    return "Processing summary...";
+                    return 'Processing summary...';
             }
         }
-        const baseMessage = "Project summary generated and saved successfully!";
+        const baseMessage = 'Project summary generated and saved successfully!';
         if (summary.filePath) {
             return `${baseMessage} Saved to: ${summary.filePath}`;
         }

@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { TokenStorage, OAuthCredentials } from "./types.js";
+import type { TokenStorage, OAuthCredentials } from './types.js';
 
 export abstract class BaseTokenStorage implements TokenStorage {
   protected readonly serviceName: string;
 
-  constructor(serviceName: string = "gemini-cli-mcp-oauth") {
+  constructor(serviceName: string = 'gemini-cli-mcp-oauth') {
     this.serviceName = serviceName;
   }
 
@@ -22,16 +22,16 @@ export abstract class BaseTokenStorage implements TokenStorage {
 
   protected validateCredentials(credentials: OAuthCredentials): void {
     if (!credentials.serverName) {
-      throw new Error("Server name is required");
+      throw new Error('Server name is required');
     }
     if (!credentials.token) {
-      throw new Error("Token is required");
+      throw new Error('Token is required');
     }
     if (!credentials.token.accessToken) {
-      throw new Error("Access token is required");
+      throw new Error('Access token is required');
     }
     if (!credentials.token.tokenType) {
-      throw new Error("Token type is required");
+      throw new Error('Token type is required');
     }
   }
 
@@ -44,6 +44,6 @@ export abstract class BaseTokenStorage implements TokenStorage {
   }
 
   protected sanitizeServerName(serverName: string): string {
-    return serverName.replace(/[^a-zA-Z0-9-_.]/g, "_");
+    return serverName.replace(/[^a-zA-Z0-9-_.]/g, '_');
   }
 }

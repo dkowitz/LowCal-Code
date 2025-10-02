@@ -3,82 +3,82 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { parse } from "shell-quote";
-import { detectCommandSubstitution, splitCommands, stripShellWrapper, } from "./shell-utils.js";
+import { parse } from 'shell-quote';
+import { detectCommandSubstitution, splitCommands, stripShellWrapper, } from './shell-utils.js';
 const READ_ONLY_ROOT_COMMANDS = new Set([
-    "awk",
-    "basename",
-    "cat",
-    "cd",
-    "column",
-    "cut",
-    "df",
-    "dirname",
-    "du",
-    "echo",
-    "env",
-    "find",
-    "git",
-    "grep",
-    "head",
-    "less",
-    "ls",
-    "more",
-    "printenv",
-    "printf",
-    "ps",
-    "pwd",
-    "rg",
-    "ripgrep",
-    "sed",
-    "sort",
-    "stat",
-    "tail",
-    "tree",
-    "uniq",
-    "wc",
-    "which",
-    "where",
-    "whoami",
+    'awk',
+    'basename',
+    'cat',
+    'cd',
+    'column',
+    'cut',
+    'df',
+    'dirname',
+    'du',
+    'echo',
+    'env',
+    'find',
+    'git',
+    'grep',
+    'head',
+    'less',
+    'ls',
+    'more',
+    'printenv',
+    'printf',
+    'ps',
+    'pwd',
+    'rg',
+    'ripgrep',
+    'sed',
+    'sort',
+    'stat',
+    'tail',
+    'tree',
+    'uniq',
+    'wc',
+    'which',
+    'where',
+    'whoami',
 ]);
 const BLOCKED_FIND_FLAGS = new Set([
-    "-delete",
-    "-exec",
-    "-execdir",
-    "-ok",
-    "-okdir",
+    '-delete',
+    '-exec',
+    '-execdir',
+    '-ok',
+    '-okdir',
 ]);
-const BLOCKED_FIND_PREFIXES = ["-fprint", "-fprintf"];
+const BLOCKED_FIND_PREFIXES = ['-fprint', '-fprintf'];
 const READ_ONLY_GIT_SUBCOMMANDS = new Set([
-    "blame",
-    "branch",
-    "cat-file",
-    "diff",
-    "grep",
-    "log",
-    "ls-files",
-    "remote",
-    "rev-parse",
-    "show",
-    "status",
-    "describe",
+    'blame',
+    'branch',
+    'cat-file',
+    'diff',
+    'grep',
+    'log',
+    'ls-files',
+    'remote',
+    'rev-parse',
+    'show',
+    'status',
+    'describe',
 ]);
 const BLOCKED_GIT_REMOTE_ACTIONS = new Set([
-    "add",
-    "remove",
-    "rename",
-    "set-url",
-    "prune",
-    "update",
+    'add',
+    'remove',
+    'rename',
+    'set-url',
+    'prune',
+    'update',
 ]);
 const BLOCKED_GIT_BRANCH_FLAGS = new Set([
-    "-d",
-    "-D",
-    "--delete",
-    "--move",
-    "-m",
+    '-d',
+    '-D',
+    '--delete',
+    '--move',
+    '-m',
 ]);
-const BLOCKED_SED_PREFIXES = ["-i"];
+const BLOCKED_SED_PREFIXES = ['-i'];
 const ENV_ASSIGNMENT_REGEX = /^[A-Za-z_][A-Za-z0-9_]*=/;
 function containsWriteRedirection(command) {
     let inSingleQuotes = false;
@@ -89,7 +89,7 @@ function containsWriteRedirection(command) {
             escapeNext = false;
             continue;
         }
-        if (char === "\\" && !inSingleQuotes) {
+        if (char === '\\' && !inSingleQuotes) {
             escapeNext = true;
             continue;
         }
@@ -101,7 +101,7 @@ function containsWriteRedirection(command) {
             inDoubleQuotes = !inDoubleQuotes;
             continue;
         }
-        if (!inSingleQuotes && !inDoubleQuotes && char === ">") {
+        if (!inSingleQuotes && !inDoubleQuotes && char === '>') {
             return true;
         }
     }
@@ -111,7 +111,7 @@ function normalizeTokens(segment) {
     const parsed = parse(segment);
     const tokens = [];
     for (const token of parsed) {
-        if (typeof token === "string") {
+        if (typeof token === 'string') {
             tokens.push(token);
         }
     }
@@ -147,7 +147,7 @@ function evaluateSedCommand(tokens) {
     const [, ...rest] = tokens;
     for (const token of rest) {
         if (BLOCKED_SED_PREFIXES.some((prefix) => token.startsWith(prefix)) ||
-            token === "--in-place") {
+            token === '--in-place') {
             return false;
         }
     }
@@ -171,9 +171,9 @@ function evaluateGitBranchArgs(args) {
 }
 function evaluateGitCommand(tokens) {
     let index = 1;
-    while (index < tokens.length && tokens[index].startsWith("-")) {
+    while (index < tokens.length && tokens[index].startsWith('-')) {
         const flag = tokens[index].toLowerCase();
-        if (flag === "--version" || flag === "--help") {
+        if (flag === '--version' || flag === '--help') {
             return true;
         }
         index++;
@@ -186,10 +186,10 @@ function evaluateGitCommand(tokens) {
         return false;
     }
     const args = tokens.slice(index + 1);
-    if (subcommand === "remote") {
+    if (subcommand === 'remote') {
         return evaluateGitRemoteArgs(args);
     }
-    if (subcommand === "branch") {
+    if (subcommand === 'branch') {
         return evaluateGitBranchArgs(args);
     }
     return true;
@@ -220,19 +220,19 @@ function evaluateShellSegment(segment) {
     if (!READ_ONLY_ROOT_COMMANDS.has(normalizedRoot)) {
         return false;
     }
-    if (normalizedRoot === "find") {
+    if (normalizedRoot === 'find') {
         return evaluateFindCommand([normalizedRoot, ...args]);
     }
-    if (normalizedRoot === "sed") {
+    if (normalizedRoot === 'sed') {
         return evaluateSedCommand([normalizedRoot, ...args]);
     }
-    if (normalizedRoot === "git") {
+    if (normalizedRoot === 'git') {
         return evaluateGitCommand([normalizedRoot, ...args]);
     }
     return true;
 }
 export function isShellCommandReadOnly(command) {
-    if (typeof command !== "string" || !command.trim()) {
+    if (typeof command !== 'string' || !command.trim()) {
         return false;
     }
     const segments = splitCommands(command);

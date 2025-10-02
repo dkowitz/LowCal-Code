@@ -3,15 +3,15 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ApprovalMode, checkCommandPermissions, escapeShellArg, getShellConfiguration, ShellExecutionService, flatMapTextParts, } from "@qwen-code/qwen-code-core";
-import { SHELL_INJECTION_TRIGGER, SHORTHAND_ARGS_PLACEHOLDER, } from "./types.js";
-import { extractInjections } from "./injectionParser.js";
+import { ApprovalMode, checkCommandPermissions, escapeShellArg, getShellConfiguration, ShellExecutionService, flatMapTextParts, } from '@qwen-code/qwen-code-core';
+import { SHELL_INJECTION_TRIGGER, SHORTHAND_ARGS_PLACEHOLDER, } from './types.js';
+import { extractInjections } from './injectionParser.js';
 export class ConfirmationRequiredError extends Error {
     commandsToConfirm;
     constructor(message, commandsToConfirm) {
         super(message);
         this.commandsToConfirm = commandsToConfirm;
-        this.name = "ConfirmationRequiredError";
+        this.name = 'ConfirmationRequiredError';
     }
 }
 /**
@@ -33,7 +33,7 @@ export class ShellProcessor {
         return flatMapTextParts(prompt, (text) => this.processString(text, context));
     }
     async processString(prompt, context) {
-        const userArgsRaw = context.invocation?.args || "";
+        const userArgsRaw = context.invocation?.args || '';
         if (!prompt.includes(SHELL_INJECTION_TRIGGER)) {
             return [
                 { text: prompt.replaceAll(SHORTHAND_ARGS_PLACEHOLDER, userArgsRaw) },
@@ -55,7 +55,7 @@ export class ShellProcessor {
         const userArgsEscaped = escapeShellArg(userArgsRaw, shell);
         const resolvedInjections = injections.map((injection) => {
             const command = injection.content;
-            if (command === "") {
+            if (command === '') {
                 return { ...injection, resolvedCommand: undefined };
             }
             const resolvedCommand = command.replaceAll(SHORTHAND_ARGS_PLACEHOLDER, userArgsEscaped);
@@ -70,7 +70,7 @@ export class ShellProcessor {
             const { allAllowed, disallowedCommands, blockReason, isHardDenial } = checkCommandPermissions(command, config, sessionShellAllowlist);
             if (!allAllowed) {
                 if (isHardDenial) {
-                    throw new Error(`${this.commandName} cannot be run. Blocked command: "${command}". Reason: ${blockReason || "Blocked by configuration."}`);
+                    throw new Error(`${this.commandName} cannot be run. Blocked command: "${command}". Reason: ${blockReason || 'Blocked by configuration.'}`);
                 }
                 // If not a hard denial, respect YOLO mode and auto-approve.
                 if (config.getApprovalMode() !== ApprovalMode.YOLO) {
@@ -80,9 +80,9 @@ export class ShellProcessor {
         }
         // Handle confirmation requirements.
         if (commandsToConfirm.size > 0) {
-            throw new ConfirmationRequiredError("Shell command confirmation required", Array.from(commandsToConfirm));
+            throw new ConfirmationRequiredError('Shell command confirmation required', Array.from(commandsToConfirm));
         }
-        let processedPrompt = "";
+        let processedPrompt = '';
         let lastIndex = 0;
         for (const injection of resolvedInjections) {
             // Append the text segment BEFORE the injection, substituting {{args}} with RAW input.

@@ -4,10 +4,10 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import React from "react";
-import { Text } from "ink";
-import { Colors } from "../colors.js";
-import stringWidth from "string-width";
+import React from 'react';
+import { Text } from 'ink';
+import { Colors } from '../colors.js';
+import stringWidth from 'string-width';
 // Constants for Markdown parsing
 const BOLD_MARKER_LENGTH = 2; // For "**"
 const ITALIC_MARKER_LENGTH = 1; // For "*" or "_"
@@ -32,36 +32,36 @@ const RenderInlineInternal = ({ text }) => {
         let renderedNode = null;
         const key = `m-${match.index}`;
         try {
-            if (fullMatch.startsWith("**") &&
-                fullMatch.endsWith("**") &&
+            if (fullMatch.startsWith('**') &&
+                fullMatch.endsWith('**') &&
                 fullMatch.length > BOLD_MARKER_LENGTH * 2) {
                 renderedNode = (_jsx(Text, { bold: true, children: fullMatch.slice(BOLD_MARKER_LENGTH, -BOLD_MARKER_LENGTH) }, key));
             }
             else if (fullMatch.length > ITALIC_MARKER_LENGTH * 2 &&
-                ((fullMatch.startsWith("*") && fullMatch.endsWith("*")) ||
-                    (fullMatch.startsWith("_") && fullMatch.endsWith("_"))) &&
+                ((fullMatch.startsWith('*') && fullMatch.endsWith('*')) ||
+                    (fullMatch.startsWith('_') && fullMatch.endsWith('_'))) &&
                 !/\w/.test(text.substring(match.index - 1, match.index)) &&
                 !/\w/.test(text.substring(inlineRegex.lastIndex, inlineRegex.lastIndex + 1)) &&
                 !/\S[./\\]/.test(text.substring(match.index - 2, match.index)) &&
                 !/[./\\]\S/.test(text.substring(inlineRegex.lastIndex, inlineRegex.lastIndex + 2))) {
                 renderedNode = (_jsx(Text, { italic: true, children: fullMatch.slice(ITALIC_MARKER_LENGTH, -ITALIC_MARKER_LENGTH) }, key));
             }
-            else if (fullMatch.startsWith("~~") &&
-                fullMatch.endsWith("~~") &&
+            else if (fullMatch.startsWith('~~') &&
+                fullMatch.endsWith('~~') &&
                 fullMatch.length > STRIKETHROUGH_MARKER_LENGTH * 2) {
                 renderedNode = (_jsx(Text, { strikethrough: true, children: fullMatch.slice(STRIKETHROUGH_MARKER_LENGTH, -STRIKETHROUGH_MARKER_LENGTH) }, key));
             }
-            else if (fullMatch.startsWith("`") &&
-                fullMatch.endsWith("`") &&
+            else if (fullMatch.startsWith('`') &&
+                fullMatch.endsWith('`') &&
                 fullMatch.length > INLINE_CODE_MARKER_LENGTH) {
                 const codeMatch = fullMatch.match(/^(`+)(.+?)\1$/s);
                 if (codeMatch && codeMatch[2]) {
                     renderedNode = (_jsx(Text, { color: Colors.AccentPurple, children: codeMatch[2] }, key));
                 }
             }
-            else if (fullMatch.startsWith("[") &&
-                fullMatch.includes("](") &&
-                fullMatch.endsWith(")")) {
+            else if (fullMatch.startsWith('[') &&
+                fullMatch.includes('](') &&
+                fullMatch.endsWith(')')) {
                 const linkMatch = fullMatch.match(/\[(.*?)\]\((.*?)\)/);
                 if (linkMatch) {
                     const linkText = linkMatch[1];
@@ -69,8 +69,8 @@ const RenderInlineInternal = ({ text }) => {
                     renderedNode = (_jsxs(Text, { children: [linkText, _jsxs(Text, { color: Colors.AccentBlue, children: [" (", url, ")"] })] }, key));
                 }
             }
-            else if (fullMatch.startsWith("<u>") &&
-                fullMatch.endsWith("</u>") &&
+            else if (fullMatch.startsWith('<u>') &&
+                fullMatch.endsWith('</u>') &&
                 fullMatch.length >
                     UNDERLINE_TAG_START_LENGTH + UNDERLINE_TAG_END_LENGTH - 1 // -1 because length is compared to combined length of start and end tags
             ) {
@@ -81,7 +81,7 @@ const RenderInlineInternal = ({ text }) => {
             }
         }
         catch (e) {
-            console.error("Error parsing inline markdown part:", fullMatch, e);
+            console.error('Error parsing inline markdown part:', fullMatch, e);
             renderedNode = null;
         }
         nodes.push(renderedNode ?? _jsx(Text, { children: fullMatch }, key));
@@ -99,13 +99,13 @@ export const RenderInline = React.memo(RenderInlineInternal);
  */
 export const getPlainTextLength = (text) => {
     const cleanText = text
-        .replace(/\*\*(.*?)\*\*/g, "$1")
-        .replace(/\*(.*?)\*/g, "$1")
-        .replace(/_(.*?)_/g, "$1")
-        .replace(/~~(.*?)~~/g, "$1")
-        .replace(/`(.*?)`/g, "$1")
-        .replace(/<u>(.*?)<\/u>/g, "$1")
-        .replace(/\[(.*?)\]\(.*?\)/g, "$1");
+        .replace(/\*\*(.*?)\*\*/g, '$1')
+        .replace(/\*(.*?)\*/g, '$1')
+        .replace(/_(.*?)_/g, '$1')
+        .replace(/~~(.*?)~~/g, '$1')
+        .replace(/`(.*?)`/g, '$1')
+        .replace(/<u>(.*?)<\/u>/g, '$1')
+        .replace(/\[(.*?)\]\(.*?\)/g, '$1');
     return stringWidth(cleanText);
 };
 //# sourceMappingURL=InlineMarkdownRenderer.js.map

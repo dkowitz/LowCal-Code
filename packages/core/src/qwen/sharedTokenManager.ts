@@ -4,24 +4,24 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import path from "node:path";
-import { promises as fs, unlinkSync } from "node:fs";
-import * as os from "os";
-import { randomUUID } from "node:crypto";
+import path from 'node:path';
+import { promises as fs, unlinkSync } from 'node:fs';
+import * as os from 'os';
+import { randomUUID } from 'node:crypto';
 
-import type { IQwenOAuth2Client } from "./qwenOAuth2.js";
+import type { IQwenOAuth2Client } from './qwenOAuth2.js';
 import {
   type QwenCredentials,
   type TokenRefreshData,
   type ErrorData,
   isErrorResponse,
   CredentialsClearRequiredError,
-} from "./qwenOAuth2.js";
+} from './qwenOAuth2.js';
 
 // File System Configuration
-const QWEN_DIR = ".qwen";
-const QWEN_CREDENTIAL_FILENAME = "oauth_creds.json";
-const QWEN_LOCK_FILENAME = "oauth_creds.lock";
+const QWEN_DIR = '.qwen';
+const QWEN_CREDENTIAL_FILENAME = 'oauth_creds.json';
+const QWEN_LOCK_FILENAME = 'oauth_creds.lock';
 
 // Token and Cache Configuration
 const TOKEN_REFRESH_BUFFER_MS = 30 * 1000; // 30 seconds
@@ -46,11 +46,11 @@ const DEFAULT_LOCK_CONFIG: LockConfig = {
  * Token manager error types for better error classification
  */
 export enum TokenError {
-  REFRESH_FAILED = "REFRESH_FAILED",
-  NO_REFRESH_TOKEN = "NO_REFRESH_TOKEN",
-  LOCK_TIMEOUT = "LOCK_TIMEOUT",
-  FILE_ACCESS_ERROR = "FILE_ACCESS_ERROR",
-  NETWORK_ERROR = "NETWORK_ERROR",
+  REFRESH_FAILED = 'REFRESH_FAILED',
+  NO_REFRESH_TOKEN = 'NO_REFRESH_TOKEN',
+  LOCK_TIMEOUT = 'LOCK_TIMEOUT',
+  FILE_ACCESS_ERROR = 'FILE_ACCESS_ERROR',
+  NETWORK_ERROR = 'NETWORK_ERROR',
 }
 
 /**
@@ -63,7 +63,7 @@ export class TokenManagerError extends Error {
     public originalError?: unknown,
   ) {
     super(message);
-    this.name = "TokenManagerError";
+    this.name = 'TokenManagerError';
   }
 }
 
@@ -84,27 +84,27 @@ interface MemoryCache {
  * @throws Error if the data is invalid
  */
 function validateCredentials(data: unknown): QwenCredentials {
-  if (!data || typeof data !== "object") {
-    throw new Error("Invalid credentials format");
+  if (!data || typeof data !== 'object') {
+    throw new Error('Invalid credentials format');
   }
 
   const creds = data as Partial<QwenCredentials>;
   const requiredFields = [
-    "access_token",
-    "refresh_token",
-    "token_type",
+    'access_token',
+    'refresh_token',
+    'token_type',
   ] as const;
 
   // Check required string fields
   for (const field of requiredFields) {
-    if (!creds[field] || typeof creds[field] !== "string") {
+    if (!creds[field] || typeof creds[field] !== 'string') {
       throw new Error(`Invalid credentials: missing ${field}`);
     }
   }
 
   // Check expiry_date
-  if (!creds.expiry_date || typeof creds.expiry_date !== "number") {
-    throw new Error("Invalid credentials: missing expiry_date");
+  if (!creds.expiry_date || typeof creds.expiry_date !== 'number') {
+    throw new Error('Invalid credentials: missing expiry_date');
   }
 
   return creds as QwenCredentials;
@@ -186,11 +186,11 @@ export class SharedTokenManager {
       }
     };
 
-    process.on("exit", this.cleanupFunction);
-    process.on("SIGINT", this.cleanupFunction);
-    process.on("SIGTERM", this.cleanupFunction);
-    process.on("uncaughtException", this.cleanupFunction);
-    process.on("unhandledRejection", this.cleanupFunction);
+    process.on('exit', this.cleanupFunction);
+    process.on('SIGINT', this.cleanupFunction);
+    process.on('SIGTERM', this.cleanupFunction);
+    process.on('uncaughtException', this.cleanupFunction);
+    process.on('unhandledRejection', this.cleanupFunction);
 
     this.cleanupHandlersRegistered = true;
   }
@@ -297,7 +297,7 @@ export class SharedTokenManager {
   private withTimeout<T>(
     promise: Promise<T>,
     timeoutMs: number,
-    operationType = "Operation",
+    operationType = 'Operation',
   ): Promise<T> {
     let timeoutId: NodeJS.Timeout;
 
@@ -337,7 +337,7 @@ export class SharedTokenManager {
       const stats = await this.withTimeout(
         fs.stat(filePath),
         3000,
-        "File operation",
+        'File operation',
       );
       const fileModTime = stats.mtimeMs;
 
@@ -351,8 +351,8 @@ export class SharedTokenManager {
       // Handle file access errors
       if (
         error instanceof Error &&
-        "code" in error &&
-        error.code !== "ENOENT"
+        'code' in error &&
+        error.code !== 'ENOENT'
       ) {
         // Clear cache atomically for non-missing file errors
         this.updateCacheState(null, 0, checkTime);
@@ -390,8 +390,8 @@ export class SharedTokenManager {
       // Handle file access errors
       if (
         error instanceof Error &&
-        "code" in error &&
-        error.code !== "ENOENT"
+        'code' in error &&
+        error.code !== 'ENOENT'
       ) {
         // Clear cache atomically for non-missing file errors
         this.updateCacheState(null, 0);
@@ -416,7 +416,7 @@ export class SharedTokenManager {
   ): Promise<void> {
     try {
       const filePath = this.getCredentialFilePath();
-      const content = await fs.readFile(filePath, "utf-8");
+      const content = await fs.readFile(filePath, 'utf-8');
       const parsedData = JSON.parse(content);
       const credentials = validateCredentials(parsedData);
 
@@ -440,7 +440,7 @@ export class SharedTokenManager {
       // Log validation errors for debugging but don't throw
       if (
         error instanceof Error &&
-        error.message.includes("Invalid credentials")
+        error.message.includes('Invalid credentials')
       ) {
         console.warn(`Failed to validate credentials file: ${error.message}`);
       }
@@ -471,7 +471,7 @@ export class SharedTokenManager {
         // console.debug('create a NO_REFRESH_TOKEN error');
         throw new TokenManagerError(
           TokenError.NO_REFRESH_TOKEN,
-          "No refresh token available for token refresh",
+          'No refresh token available for token refresh',
         );
       }
 
@@ -515,7 +515,7 @@ export class SharedTokenManager {
         const errorData = response as ErrorData;
         throw new TokenManagerError(
           TokenError.REFRESH_FAILED,
-          `Token refresh failed: ${errorData?.error || "Unknown error"} - ${errorData?.error_description || "No details provided"}`,
+          `Token refresh failed: ${errorData?.error || 'Unknown error'} - ${errorData?.error_description || 'No details provided'}`,
         );
       }
 
@@ -524,7 +524,7 @@ export class SharedTokenManager {
       if (!tokenData.access_token) {
         throw new TokenManagerError(
           TokenError.REFRESH_FAILED,
-          "Failed to refresh access token: no token returned",
+          'Failed to refresh access token: no token returned',
         );
       }
 
@@ -550,7 +550,7 @@ export class SharedTokenManager {
       // Handle credentials clear required error (400 status from refresh)
       if (error instanceof CredentialsClearRequiredError) {
         console.debug(
-          "SharedTokenManager: Clearing memory cache due to credentials clear requirement",
+          'SharedTokenManager: Clearing memory cache due to credentials clear requirement',
         );
         // Clear memory cache when credentials need to be cleared
         this.memoryCache.credentials = null;
@@ -572,9 +572,9 @@ export class SharedTokenManager {
       // Handle network-related errors
       if (
         error instanceof Error &&
-        (error.message.includes("fetch") ||
-          error.message.includes("network") ||
-          error.message.includes("timeout"))
+        (error.message.includes('fetch') ||
+          error.message.includes('network') ||
+          error.message.includes('timeout'))
       ) {
         throw new TokenManagerError(
           TokenError.NETWORK_ERROR,
@@ -611,7 +611,7 @@ export class SharedTokenManager {
       await this.withTimeout(
         fs.mkdir(dirPath, { recursive: true, mode: 0o700 }),
         5000,
-        "File operation",
+        'File operation',
       );
     } catch (error) {
       throw new TokenManagerError(
@@ -628,27 +628,27 @@ export class SharedTokenManager {
       await this.withTimeout(
         fs.writeFile(tempPath, credString, { mode: 0o600 }),
         5000,
-        "File operation",
+        'File operation',
       );
 
       // Atomic move to final location
       await this.withTimeout(
         fs.rename(tempPath, filePath),
         5000,
-        "File operation",
+        'File operation',
       );
 
       // Update cached file modification time atomically after successful write
       const stats = await this.withTimeout(
         fs.stat(filePath),
         5000,
-        "File operation",
+        'File operation',
       );
       this.memoryCache.fileModTime = stats.mtimeMs;
     } catch (error) {
       // Clean up temp file if it exists
       try {
-        await this.withTimeout(fs.unlink(tempPath), 1000, "File operation");
+        await this.withTimeout(fs.unlink(tempPath), 1000, 'File operation');
       } catch (_cleanupError) {
         // Ignore cleanup errors - temp file might not exist
       }
@@ -707,10 +707,10 @@ export class SharedTokenManager {
     for (let attempt = 0; attempt < maxAttempts; attempt++) {
       try {
         // Attempt to create lock file atomically (exclusive mode)
-        await fs.writeFile(lockPath, lockId, { flag: "wx" });
+        await fs.writeFile(lockPath, lockId, { flag: 'wx' });
         return; // Successfully acquired lock
       } catch (error: unknown) {
-        if ((error as NodeJS.ErrnoException).code === "EEXIST") {
+        if ((error as NodeJS.ErrnoException).code === 'EEXIST') {
           // Lock file already exists, check if it's stale
           try {
             const stats = await fs.stat(lockPath);
@@ -760,7 +760,7 @@ export class SharedTokenManager {
 
     throw new TokenManagerError(
       TokenError.LOCK_TIMEOUT,
-      "Failed to acquire file lock for token refresh: timeout exceeded",
+      'Failed to acquire file lock for token refresh: timeout exceeded',
     );
   }
 
@@ -775,7 +775,7 @@ export class SharedTokenManager {
     } catch (error) {
       // Lock file might already be removed by another process or timeout cleanup
       // This is not an error condition, but log for debugging
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
         console.warn(
           `Failed to release lock file ${lockPath}: ${error instanceof Error ? error.message : String(error)}`,
         );
@@ -843,11 +843,11 @@ export class SharedTokenManager {
     if (this.cleanupFunction && this.cleanupHandlersRegistered) {
       this.cleanupFunction();
 
-      process.removeListener("exit", this.cleanupFunction);
-      process.removeListener("SIGINT", this.cleanupFunction);
-      process.removeListener("SIGTERM", this.cleanupFunction);
-      process.removeListener("uncaughtException", this.cleanupFunction);
-      process.removeListener("unhandledRejection", this.cleanupFunction);
+      process.removeListener('exit', this.cleanupFunction);
+      process.removeListener('SIGINT', this.cleanupFunction);
+      process.removeListener('SIGTERM', this.cleanupFunction);
+      process.removeListener('uncaughtException', this.cleanupFunction);
+      process.removeListener('unhandledRejection', this.cleanupFunction);
 
       this.cleanupHandlersRegistered = false;
       this.cleanupFunction = null;

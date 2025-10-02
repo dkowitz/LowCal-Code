@@ -4,27 +4,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { memo } from "react";
-import type { HistoryItem } from "../types.js";
-import { UserMessage } from "./messages/UserMessage.js";
-import { UserShellMessage } from "./messages/UserShellMessage.js";
-import { GeminiMessage } from "./messages/GeminiMessage.js";
-import { InfoMessage } from "./messages/InfoMessage.js";
-import { ErrorMessage } from "./messages/ErrorMessage.js";
-import { ToolGroupMessage } from "./messages/ToolGroupMessage.js";
-import { GeminiMessageContent } from "./messages/GeminiMessageContent.js";
-import { CompressionMessage } from "./messages/CompressionMessage.js";
-import { SummaryMessage } from "./messages/SummaryMessage.js";
-import { Box } from "ink";
-import { AboutBox } from "./AboutBox.js";
-import { StatsDisplay } from "./StatsDisplay.js";
-import { ModelStatsDisplay } from "./ModelStatsDisplay.js";
-import { ToolStatsDisplay } from "./ToolStatsDisplay.js";
-import { SessionSummaryDisplay } from "./SessionSummaryDisplay.js";
-import type { Config } from "@qwen-code/qwen-code-core";
-import { Help } from "./Help.js";
-import type { SlashCommand } from "../commands/types.js";
+import type React from 'react';
+import { memo } from 'react';
+import type { HistoryItem } from '../types.js';
+import { UserMessage } from './messages/UserMessage.js';
+import { UserShellMessage } from './messages/UserShellMessage.js';
+import { GeminiMessage } from './messages/GeminiMessage.js';
+import { InfoMessage } from './messages/InfoMessage.js';
+import { ErrorMessage } from './messages/ErrorMessage.js';
+import { ToolGroupMessage } from './messages/ToolGroupMessage.js';
+import { GeminiMessageContent } from './messages/GeminiMessageContent.js';
+import { CompressionMessage } from './messages/CompressionMessage.js';
+import { SummaryMessage } from './messages/SummaryMessage.js';
+import { Box } from 'ink';
+import { AboutBox } from './AboutBox.js';
+import { StatsDisplay } from './StatsDisplay.js';
+import { ModelStatsDisplay } from './ModelStatsDisplay.js';
+import { ToolStatsDisplay } from './ToolStatsDisplay.js';
+import { SessionSummaryDisplay } from './SessionSummaryDisplay.js';
+import type { Config } from '@qwen-code/qwen-code-core';
+import { Help } from './Help.js';
+import type { SlashCommand } from '../commands/types.js';
 
 interface HistoryItemDisplayProps {
   item: HistoryItem;
@@ -47,9 +47,9 @@ const HistoryItemDisplayComponent: React.FC<HistoryItemDisplayProps> = ({
 }) => (
   <Box flexDirection="column" key={item.id}>
     {/* Render standard message types */}
-    {item.type === "user" && <UserMessage text={item.text} />}
-    {item.type === "user_shell" && <UserShellMessage text={item.text} />}
-    {item.type === "gemini" && (
+    {item.type === 'user' && <UserMessage text={item.text} />}
+    {item.type === 'user_shell' && <UserShellMessage text={item.text} />}
+    {item.type === 'gemini' && (
       <GeminiMessage
         text={item.text}
         isPending={isPending}
@@ -57,7 +57,7 @@ const HistoryItemDisplayComponent: React.FC<HistoryItemDisplayProps> = ({
         terminalWidth={terminalWidth}
       />
     )}
-    {item.type === "gemini_content" && (
+    {item.type === 'gemini_content' && (
       <GeminiMessageContent
         text={item.text}
         isPending={isPending}
@@ -65,9 +65,9 @@ const HistoryItemDisplayComponent: React.FC<HistoryItemDisplayProps> = ({
         terminalWidth={terminalWidth}
       />
     )}
-    {item.type === "info" && <InfoMessage text={item.text} />}
-    {item.type === "error" && <ErrorMessage text={item.text} />}
-    {item.type === "about" && (
+    {item.type === 'info' && <InfoMessage text={item.text} />}
+    {item.type === 'error' && <ErrorMessage text={item.text} />}
+    {item.type === 'about' && (
       <AboutBox
         cliVersion={item.cliVersion}
         osVersion={item.osVersion}
@@ -78,15 +78,15 @@ const HistoryItemDisplayComponent: React.FC<HistoryItemDisplayProps> = ({
         ideClient={item.ideClient}
       />
     )}
-    {item.type === "help" && commands && <Help commands={commands} />}
-    {item.type === "stats" && <StatsDisplay duration={item.duration} />}
-    {item.type === "model_stats" && <ModelStatsDisplay />}
-    {item.type === "tool_stats" && <ToolStatsDisplay />}
-    {item.type === "quit" && <SessionSummaryDisplay duration={item.duration} />}
-    {item.type === "quit_confirmation" && (
+    {item.type === 'help' && commands && <Help commands={commands} />}
+    {item.type === 'stats' && <StatsDisplay duration={item.duration} />}
+    {item.type === 'model_stats' && <ModelStatsDisplay />}
+    {item.type === 'tool_stats' && <ToolStatsDisplay />}
+    {item.type === 'quit' && <SessionSummaryDisplay duration={item.duration} />}
+    {item.type === 'quit_confirmation' && (
       <SessionSummaryDisplay duration={item.duration} />
     )}
-    {item.type === "tool_group" && (
+    {item.type === 'tool_group' && (
       <ToolGroupMessage
         toolCalls={item.tools}
         groupId={item.id}
@@ -96,13 +96,13 @@ const HistoryItemDisplayComponent: React.FC<HistoryItemDisplayProps> = ({
         isFocused={isFocused}
       />
     )}
-    {item.type === "compression" && (
+    {item.type === 'compression' && (
       <CompressionMessage compression={item.compression} />
     )}
-    {item.type === "summary" && <SummaryMessage summary={item.summary} />}
+    {item.type === 'summary' && <SummaryMessage summary={item.summary} />}
   </Box>
 );
 
-HistoryItemDisplayComponent.displayName = "HistoryItemDisplay";
+HistoryItemDisplayComponent.displayName = 'HistoryItemDisplay';
 
 export const HistoryItemDisplay = memo(HistoryItemDisplayComponent);

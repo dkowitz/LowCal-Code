@@ -12,21 +12,21 @@ import {
   it,
   vi,
   type MockedFunction,
-} from "vitest";
-import { act } from "react";
-import { renderHook } from "@testing-library/react";
-import { useEditorSettings } from "./useEditorSettings.js";
-import type { LoadedSettings } from "../../config/settings.js";
-import { SettingScope } from "../../config/settings.js";
-import { MessageType, type HistoryItem } from "../types.js";
+} from 'vitest';
+import { act } from 'react';
+import { renderHook } from '@testing-library/react';
+import { useEditorSettings } from './useEditorSettings.js';
+import type { LoadedSettings } from '../../config/settings.js';
+import { SettingScope } from '../../config/settings.js';
+import { MessageType, type HistoryItem } from '../types.js';
 import {
   type EditorType,
   checkHasEditorType,
   allowEditorTypeInSandbox,
-} from "@qwen-code/qwen-code-core";
+} from '@qwen-code/qwen-code-core';
 
-vi.mock("@qwen-code/qwen-code-core", async () => {
-  const actual = await vi.importActual("@qwen-code/qwen-code-core");
+vi.mock('@qwen-code/qwen-code-core', async () => {
+  const actual = await vi.importActual('@qwen-code/qwen-code-core');
   return {
     ...actual,
     checkHasEditorType: vi.fn(() => true),
@@ -37,11 +37,11 @@ vi.mock("@qwen-code/qwen-code-core", async () => {
 const mockCheckHasEditorType = vi.mocked(checkHasEditorType);
 const mockAllowEditorTypeInSandbox = vi.mocked(allowEditorTypeInSandbox);
 
-describe("useEditorSettings", () => {
+describe('useEditorSettings', () => {
   let mockLoadedSettings: LoadedSettings;
   let mockSetEditorError: MockedFunction<(error: string | null) => void>;
   let mockAddItem: MockedFunction<
-    (item: Omit<HistoryItem, "id">, timestamp: number) => void
+    (item: Omit<HistoryItem, 'id'>, timestamp: number) => void
   >;
 
   beforeEach(() => {
@@ -63,7 +63,7 @@ describe("useEditorSettings", () => {
     vi.restoreAllMocks();
   });
 
-  it("should initialize with dialog closed", () => {
+  it('should initialize with dialog closed', () => {
     const { result } = renderHook(() =>
       useEditorSettings(mockLoadedSettings, mockSetEditorError, mockAddItem),
     );
@@ -71,7 +71,7 @@ describe("useEditorSettings", () => {
     expect(result.current.isEditorDialogOpen).toBe(false);
   });
 
-  it("should open editor dialog when openEditorDialog is called", () => {
+  it('should open editor dialog when openEditorDialog is called', () => {
     const { result } = renderHook(() =>
       useEditorSettings(mockLoadedSettings, mockSetEditorError, mockAddItem),
     );
@@ -83,7 +83,7 @@ describe("useEditorSettings", () => {
     expect(result.current.isEditorDialogOpen).toBe(true);
   });
 
-  it("should close editor dialog when exitEditorDialog is called", () => {
+  it('should close editor dialog when exitEditorDialog is called', () => {
     const { result } = renderHook(() =>
       useEditorSettings(mockLoadedSettings, mockSetEditorError, mockAddItem),
     );
@@ -94,12 +94,12 @@ describe("useEditorSettings", () => {
     expect(result.current.isEditorDialogOpen).toBe(false);
   });
 
-  it("should handle editor selection successfully", () => {
+  it('should handle editor selection successfully', () => {
     const { result } = renderHook(() =>
       useEditorSettings(mockLoadedSettings, mockSetEditorError, mockAddItem),
     );
 
-    const editorType: EditorType = "vscode";
+    const editorType: EditorType = 'vscode';
     const scope = SettingScope.User;
 
     act(() => {
@@ -109,7 +109,7 @@ describe("useEditorSettings", () => {
 
     expect(mockLoadedSettings.setValue).toHaveBeenCalledWith(
       scope,
-      "preferredEditor",
+      'preferredEditor',
       editorType,
     );
 
@@ -125,7 +125,7 @@ describe("useEditorSettings", () => {
     expect(result.current.isEditorDialogOpen).toBe(false);
   });
 
-  it("should handle clearing editor preference (undefined editor)", () => {
+  it('should handle clearing editor preference (undefined editor)', () => {
     const { result } = renderHook(() =>
       useEditorSettings(mockLoadedSettings, mockSetEditorError, mockAddItem),
     );
@@ -139,14 +139,14 @@ describe("useEditorSettings", () => {
 
     expect(mockLoadedSettings.setValue).toHaveBeenCalledWith(
       scope,
-      "preferredEditor",
+      'preferredEditor',
       undefined,
     );
 
     expect(mockAddItem).toHaveBeenCalledWith(
       {
         type: MessageType.INFO,
-        text: "Editor preference cleared in Workspace settings.",
+        text: 'Editor preference cleared in Workspace settings.',
       },
       expect.any(Number),
     );
@@ -155,12 +155,12 @@ describe("useEditorSettings", () => {
     expect(result.current.isEditorDialogOpen).toBe(false);
   });
 
-  it("should handle different editor types", () => {
+  it('should handle different editor types', () => {
     const { result } = renderHook(() =>
       useEditorSettings(mockLoadedSettings, mockSetEditorError, mockAddItem),
     );
 
-    const editorTypes: EditorType[] = ["cursor", "windsurf", "vim"];
+    const editorTypes: EditorType[] = ['cursor', 'windsurf', 'vim'];
     const scope = SettingScope.User;
 
     editorTypes.forEach((editorType) => {
@@ -170,7 +170,7 @@ describe("useEditorSettings", () => {
 
       expect(mockLoadedSettings.setValue).toHaveBeenCalledWith(
         scope,
-        "preferredEditor",
+        'preferredEditor',
         editorType,
       );
 
@@ -184,12 +184,12 @@ describe("useEditorSettings", () => {
     });
   });
 
-  it("should handle different setting scopes", () => {
+  it('should handle different setting scopes', () => {
     const { result } = renderHook(() =>
       useEditorSettings(mockLoadedSettings, mockSetEditorError, mockAddItem),
     );
 
-    const editorType: EditorType = "vscode";
+    const editorType: EditorType = 'vscode';
     const scopes = [SettingScope.User, SettingScope.Workspace];
 
     scopes.forEach((scope) => {
@@ -199,7 +199,7 @@ describe("useEditorSettings", () => {
 
       expect(mockLoadedSettings.setValue).toHaveBeenCalledWith(
         scope,
-        "preferredEditor",
+        'preferredEditor',
         editorType,
       );
 
@@ -213,14 +213,14 @@ describe("useEditorSettings", () => {
     });
   });
 
-  it("should not set preference for unavailable editors", () => {
+  it('should not set preference for unavailable editors', () => {
     const { result } = renderHook(() =>
       useEditorSettings(mockLoadedSettings, mockSetEditorError, mockAddItem),
     );
 
     mockCheckHasEditorType.mockReturnValue(false);
 
-    const editorType: EditorType = "vscode";
+    const editorType: EditorType = 'vscode';
     const scope = SettingScope.User;
 
     act(() => {
@@ -233,14 +233,14 @@ describe("useEditorSettings", () => {
     expect(result.current.isEditorDialogOpen).toBe(true);
   });
 
-  it("should not set preference for editors not allowed in sandbox", () => {
+  it('should not set preference for editors not allowed in sandbox', () => {
     const { result } = renderHook(() =>
       useEditorSettings(mockLoadedSettings, mockSetEditorError, mockAddItem),
     );
 
     mockAllowEditorTypeInSandbox.mockReturnValue(false);
 
-    const editorType: EditorType = "vscode";
+    const editorType: EditorType = 'vscode';
     const scope = SettingScope.User;
 
     act(() => {
@@ -253,12 +253,12 @@ describe("useEditorSettings", () => {
     expect(result.current.isEditorDialogOpen).toBe(true);
   });
 
-  it("should handle errors during editor selection", () => {
+  it('should handle errors during editor selection', () => {
     const { result } = renderHook(() =>
       useEditorSettings(mockLoadedSettings, mockSetEditorError, mockAddItem),
     );
 
-    const errorMessage = "Failed to save settings";
+    const errorMessage = 'Failed to save settings';
     (
       mockLoadedSettings.setValue as MockedFunction<
         typeof mockLoadedSettings.setValue
@@ -267,7 +267,7 @@ describe("useEditorSettings", () => {
       throw new Error(errorMessage);
     });
 
-    const editorType: EditorType = "vscode";
+    const editorType: EditorType = 'vscode';
     const scope = SettingScope.User;
 
     act(() => {

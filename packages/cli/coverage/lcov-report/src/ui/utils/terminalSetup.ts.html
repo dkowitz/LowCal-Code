@@ -772,13 +772,13 @@
  * to avoid conflicts with user customizations.
  */
 &nbsp;
-import { promises as fs } from "node:fs";
-import * as os from "node:os";
-import * as path from "node:path";
-import { exec } from "node:child_process";
-import { promisify } from "node:util";
-import { isKittyProtocolEnabled } from "./kittyProtocolDetector.js";
-import { VSCODE_SHIFT_ENTER_SEQUENCE } from "./platformConstants.js";
+import { promises as fs } from 'node:fs';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { exec } from 'node:child_process';
+import { promisify } from 'node:util';
+import { isKittyProtocolEnabled } from './kittyProtocolDetector.js';
+import { VSCODE_SHIFT_ENTER_SEQUENCE } from './platformConstants.js';
 &nbsp;
 const execAsync = promisify(exec);
 &nbsp;
@@ -788,7 +788,7 @@ const execAsync = promisify(exec);
  */
 <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function stripJsonComments(content: string): string {</span></span>
   // Remove single-line comments (// ...)
-<span class="cstat-no" title="statement not covered" >  return content.replace(/^\s*\/\/.*$/gm, "");</span>
+<span class="cstat-no" title="statement not covered" >  return content.replace(/^\s*\/\/.*$/gm, '');</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 export interface TerminalSetupResult {
@@ -797,47 +797,47 @@ export interface TerminalSetupResult {
   requiresRestart?: boolean;
 }
 &nbsp;
-type SupportedTerminal = "vscode" | "cursor" | "windsurf";
+type SupportedTerminal = 'vscode' | 'cursor' | 'windsurf';
 &nbsp;
 // Terminal detection
 <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async function detectTerminal(): Promise&lt;SupportedTerminal | null&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >  const termProgram = process.env["TERM_PROGRAM"];</span>
+<span class="cstat-no" title="statement not covered" >  const termProgram = process.env['TERM_PROGRAM'];</span>
 &nbsp;
   // Check VS Code and its forks - check forks first to avoid false positives
   // Check for Cursor-specific indicators
 <span class="cstat-no" title="statement not covered" >  if (</span>
-<span class="cstat-no" title="statement not covered" >    process.env["CURSOR_TRACE_ID"] ||</span>
-<span class="cstat-no" title="statement not covered" >    process.env["VSCODE_GIT_ASKPASS_MAIN"]?.toLowerCase().includes("cursor")</span>
+<span class="cstat-no" title="statement not covered" >    process.env['CURSOR_TRACE_ID'] ||</span>
+<span class="cstat-no" title="statement not covered" >    process.env['VSCODE_GIT_ASKPASS_MAIN']?.toLowerCase().includes('cursor')</span>
 <span class="cstat-no" title="statement not covered" >  ) {</span>
-<span class="cstat-no" title="statement not covered" >    return "cursor";</span>
+<span class="cstat-no" title="statement not covered" >    return 'cursor';</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
   // Check for Windsurf-specific indicators
 <span class="cstat-no" title="statement not covered" >  if (</span>
-<span class="cstat-no" title="statement not covered" >    process.env["VSCODE_GIT_ASKPASS_MAIN"]?.toLowerCase().includes("windsurf")</span>
+<span class="cstat-no" title="statement not covered" >    process.env['VSCODE_GIT_ASKPASS_MAIN']?.toLowerCase().includes('windsurf')</span>
 <span class="cstat-no" title="statement not covered" >  ) {</span>
-<span class="cstat-no" title="statement not covered" >    return "windsurf";</span>
+<span class="cstat-no" title="statement not covered" >    return 'windsurf';</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
   // Check VS Code last since forks may also set VSCODE env vars
-<span class="cstat-no" title="statement not covered" >  if (termProgram === "vscode" || process.env["VSCODE_GIT_IPC_HANDLE"]) {</span>
-<span class="cstat-no" title="statement not covered" >    return "vscode";</span>
+<span class="cstat-no" title="statement not covered" >  if (termProgram === 'vscode' || process.env['VSCODE_GIT_IPC_HANDLE']) {</span>
+<span class="cstat-no" title="statement not covered" >    return 'vscode';</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   // Check parent process name
-<span class="cstat-no" title="statement not covered" >  if (os.platform() !== "win32") {</span>
+<span class="cstat-no" title="statement not covered" >  if (os.platform() !== 'win32') {</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      const { stdout } = await execAsync("ps -o comm= -p $PPID");</span>
+<span class="cstat-no" title="statement not covered" >      const { stdout } = await execAsync('ps -o comm= -p $PPID');</span>
 <span class="cstat-no" title="statement not covered" >      const parentName = stdout.trim();</span>
 &nbsp;
       // Check forks before VS Code to avoid false positives
-<span class="cstat-no" title="statement not covered" >      if (parentName.includes("windsurf") || parentName.includes("Windsurf"))</span>
-<span class="cstat-no" title="statement not covered" >        return "windsurf";</span>
-<span class="cstat-no" title="statement not covered" >      if (parentName.includes("cursor") || parentName.includes("Cursor"))</span>
-<span class="cstat-no" title="statement not covered" >        return "cursor";</span>
-<span class="cstat-no" title="statement not covered" >      if (parentName.includes("code") || parentName.includes("Code"))</span>
-<span class="cstat-no" title="statement not covered" >        return "vscode";</span>
+<span class="cstat-no" title="statement not covered" >      if (parentName.includes('windsurf') || parentName.includes('Windsurf'))</span>
+<span class="cstat-no" title="statement not covered" >        return 'windsurf';</span>
+<span class="cstat-no" title="statement not covered" >      if (parentName.includes('cursor') || parentName.includes('Cursor'))</span>
+<span class="cstat-no" title="statement not covered" >        return 'cursor';</span>
+<span class="cstat-no" title="statement not covered" >      if (parentName.includes('code') || parentName.includes('Code'))</span>
+<span class="cstat-no" title="statement not covered" >        return 'vscode';</span>
 <span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
       // Continue detection even if process check fails
-<span class="cstat-no" title="statement not covered" >      console.debug("Parent process detection failed:", error);</span>
+<span class="cstat-no" title="statement not covered" >      console.debug('Parent process detection failed:', error);</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -847,7 +847,7 @@ type SupportedTerminal = "vscode" | "cursor" | "windsurf";
 // Backup file helper
 <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async function backupFile(filePath: string): Promise&lt;void&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >  try {</span>
-<span class="cstat-no" title="statement not covered" >    const timestamp = new Date().toISOString().replace(/[:.]/g, "-");</span>
+<span class="cstat-no" title="statement not covered" >    const timestamp = new Date().toISOString().replace(/[:.]/g, '-');</span>
 <span class="cstat-no" title="statement not covered" >    const backupPath = `${filePath}.backup.${timestamp}`;</span>
 <span class="cstat-no" title="statement not covered" >    await fs.copyFile(filePath, backupPath);</span>
 <span class="cstat-no" title="statement not covered" >  } catch (error) {</span>
@@ -860,21 +860,21 @@ type SupportedTerminal = "vscode" | "cursor" | "windsurf";
 <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function getVSCodeStyleConfigDir(appName: string): string | null {</span></span>
 <span class="cstat-no" title="statement not covered" >  const platform = os.platform();</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  if (platform === "darwin") {</span>
+<span class="cstat-no" title="statement not covered" >  if (platform === 'darwin') {</span>
 <span class="cstat-no" title="statement not covered" >    return path.join(</span>
 <span class="cstat-no" title="statement not covered" >      os.homedir(),</span>
-<span class="cstat-no" title="statement not covered" >      "Library",</span>
-<span class="cstat-no" title="statement not covered" >      "Application Support",</span>
+<span class="cstat-no" title="statement not covered" >      'Library',</span>
+<span class="cstat-no" title="statement not covered" >      'Application Support',</span>
 <span class="cstat-no" title="statement not covered" >      appName,</span>
-<span class="cstat-no" title="statement not covered" >      "User",</span>
+<span class="cstat-no" title="statement not covered" >      'User',</span>
 <span class="cstat-no" title="statement not covered" >    );</span>
-<span class="cstat-no" title="statement not covered" >  } else if (platform === "win32") {</span>
-<span class="cstat-no" title="statement not covered" >    if (!process.env["APPDATA"]) {</span>
+<span class="cstat-no" title="statement not covered" >  } else if (platform === 'win32') {</span>
+<span class="cstat-no" title="statement not covered" >    if (!process.env['APPDATA']) {</span>
 <span class="cstat-no" title="statement not covered" >      return null;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >    return path.join(process.env["APPDATA"], appName, "User");</span>
+<span class="cstat-no" title="statement not covered" >    return path.join(process.env['APPDATA'], appName, 'User');</span>
 <span class="cstat-no" title="statement not covered" >  } else {</span>
-<span class="cstat-no" title="statement not covered" >    return path.join(os.homedir(), ".config", appName, "User");</span>
+<span class="cstat-no" title="statement not covered" >    return path.join(os.homedir(), '.config', appName, 'User');</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
@@ -892,14 +892,14 @@ type SupportedTerminal = "vscode" | "cursor" | "windsurf";
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  const keybindingsFile = path.join(configDir, "keybindings.json");</span>
+<span class="cstat-no" title="statement not covered" >  const keybindingsFile = path.join(configDir, 'keybindings.json');</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  try {</span>
 <span class="cstat-no" title="statement not covered" >    await fs.mkdir(configDir, { recursive: true });</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    let keybindings: unknown[] = [];</span>
 <span class="cstat-no" title="statement not covered" >    try {</span>
-<span class="cstat-no" title="statement not covered" >      const content = await fs.readFile(keybindingsFile, "utf8");</span>
+<span class="cstat-no" title="statement not covered" >      const content = await fs.readFile(keybindingsFile, 'utf8');</span>
 <span class="cstat-no" title="statement not covered" >      await backupFile(keybindingsFile);</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
 <span class="cstat-no" title="statement not covered" >        const cleanContent = stripJsonComments(content);</span>
@@ -929,28 +929,28 @@ type SupportedTerminal = "vscode" | "cursor" | "windsurf";
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const shiftEnterBinding = {</span>
-<span class="cstat-no" title="statement not covered" >      key: "shift+enter",</span>
-<span class="cstat-no" title="statement not covered" >      command: "workbench.action.terminal.sendSequence",</span>
-<span class="cstat-no" title="statement not covered" >      when: "terminalFocus",</span>
+<span class="cstat-no" title="statement not covered" >      key: 'shift+enter',</span>
+<span class="cstat-no" title="statement not covered" >      command: 'workbench.action.terminal.sendSequence',</span>
+<span class="cstat-no" title="statement not covered" >      when: 'terminalFocus',</span>
 <span class="cstat-no" title="statement not covered" >      args: { text: VSCODE_SHIFT_ENTER_SEQUENCE },</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const ctrlEnterBinding = {</span>
-<span class="cstat-no" title="statement not covered" >      key: "ctrl+enter",</span>
-<span class="cstat-no" title="statement not covered" >      command: "workbench.action.terminal.sendSequence",</span>
-<span class="cstat-no" title="statement not covered" >      when: "terminalFocus",</span>
+<span class="cstat-no" title="statement not covered" >      key: 'ctrl+enter',</span>
+<span class="cstat-no" title="statement not covered" >      command: 'workbench.action.terminal.sendSequence',</span>
+<span class="cstat-no" title="statement not covered" >      when: 'terminalFocus',</span>
 <span class="cstat-no" title="statement not covered" >      args: { text: VSCODE_SHIFT_ENTER_SEQUENCE },</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
     // Check if ANY shift+enter or ctrl+enter bindings already exist
 <span class="cstat-no" title="statement not covered" >    const existingShiftEnter = keybindings.find((kb) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      const binding = kb as { key?: string };</span>
-<span class="cstat-no" title="statement not covered" >      return binding.key === "shift+enter";</span>
+<span class="cstat-no" title="statement not covered" >      return binding.key === 'shift+enter';</span>
 <span class="cstat-no" title="statement not covered" >    });</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    const existingCtrlEnter = keybindings.find((kb) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      const binding = kb as { key?: string };</span>
-<span class="cstat-no" title="statement not covered" >      return binding.key === "ctrl+enter";</span>
+<span class="cstat-no" title="statement not covered" >      return binding.key === 'ctrl+enter';</span>
 <span class="cstat-no" title="statement not covered" >    });</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    if (existingShiftEnter || existingCtrlEnter) {</span>
@@ -965,8 +965,8 @@ type SupportedTerminal = "vscode" | "cursor" | "windsurf";
 <span class="cstat-no" title="statement not covered" >        success: false,</span>
 <span class="cstat-no" title="statement not covered" >        message:</span>
 <span class="cstat-no" title="statement not covered" >          `Existing keybindings detected. Will not modify to avoid conflicts.\n` +</span>
-<span class="cstat-no" title="statement not covered" >          messages.join("\n") +</span>
-<span class="cstat-no" title="statement not covered" >          "\n" +</span>
+<span class="cstat-no" title="statement not covered" >          messages.join('\n') +</span>
+<span class="cstat-no" title="statement not covered" >          '\n' +</span>
 <span class="cstat-no" title="statement not covered" >          `Please check and modify manually if needed: ${keybindingsFile}`,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -979,9 +979,9 @@ type SupportedTerminal = "vscode" | "cursor" | "windsurf";
         key?: string;
       };
 <span class="cstat-no" title="statement not covered" >      return (</span>
-<span class="cstat-no" title="statement not covered" >        binding.key === "shift+enter" &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >        binding.command === "workbench.action.terminal.sendSequence" &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >        binding.args?.text === "\\\r\n"</span>
+<span class="cstat-no" title="statement not covered" >        binding.key === 'shift+enter' &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >        binding.command === 'workbench.action.terminal.sendSequence' &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >        binding.args?.text === '\\\r\n'</span>
       );
 <span class="cstat-no" title="statement not covered" >    });</span>
 &nbsp;
@@ -992,9 +992,9 @@ type SupportedTerminal = "vscode" | "cursor" | "windsurf";
         key?: string;
       };
 <span class="cstat-no" title="statement not covered" >      return (</span>
-<span class="cstat-no" title="statement not covered" >        binding.key === "ctrl+enter" &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >        binding.command === "workbench.action.terminal.sendSequence" &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >        binding.args?.text === "\\\r\n"</span>
+<span class="cstat-no" title="statement not covered" >        binding.key === 'ctrl+enter' &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >        binding.command === 'workbench.action.terminal.sendSequence' &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >        binding.args?.text === '\\\r\n'</span>
       );
 <span class="cstat-no" title="statement not covered" >    });</span>
 &nbsp;
@@ -1025,15 +1025,15 @@ type SupportedTerminal = "vscode" | "cursor" | "windsurf";
 // Terminal-specific configuration functions
 &nbsp;
 <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async function configureVSCode(): Promise&lt;TerminalSetupResult&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >  return configureVSCodeStyle("VS Code", "Code");</span>
+<span class="cstat-no" title="statement not covered" >  return configureVSCodeStyle('VS Code', 'Code');</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async function configureCursor(): Promise&lt;TerminalSetupResult&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >  return configureVSCodeStyle("Cursor", "Cursor");</span>
+<span class="cstat-no" title="statement not covered" >  return configureVSCodeStyle('Cursor', 'Cursor');</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async function configureWindsurf(): Promise&lt;TerminalSetupResult&gt; {</span></span>
-<span class="cstat-no" title="statement not covered" >  return configureVSCodeStyle("Windsurf", "Windsurf");</span>
+<span class="cstat-no" title="statement not covered" >  return configureVSCodeStyle('Windsurf', 'Windsurf');</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 /**
@@ -1061,7 +1061,7 @@ type SupportedTerminal = "vscode" | "cursor" | "windsurf";
 <span class="cstat-no" title="statement not covered" >    return {</span>
 <span class="cstat-no" title="statement not covered" >      success: true,</span>
 <span class="cstat-no" title="statement not covered" >      message:</span>
-<span class="cstat-no" title="statement not covered" >        "Your terminal is already configured for an optimal experience with multiline input (Shift+Enter and Ctrl+Enter).",</span>
+<span class="cstat-no" title="statement not covered" >        'Your terminal is already configured for an optimal experience with multiline input (Shift+Enter and Ctrl+Enter).',</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -1071,16 +1071,16 @@ type SupportedTerminal = "vscode" | "cursor" | "windsurf";
 <span class="cstat-no" title="statement not covered" >    return {</span>
 <span class="cstat-no" title="statement not covered" >      success: false,</span>
 <span class="cstat-no" title="statement not covered" >      message:</span>
-<span class="cstat-no" title="statement not covered" >        "Could not detect terminal type. Supported terminals: VS Code, Cursor, and Windsurf.",</span>
+<span class="cstat-no" title="statement not covered" >        'Could not detect terminal type. Supported terminals: VS Code, Cursor, and Windsurf.',</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  switch (terminal) {</span>
-<span class="cstat-no" title="statement not covered" >    case "vscode":</span>
+<span class="cstat-no" title="statement not covered" >    case 'vscode':</span>
 <span class="cstat-no" title="statement not covered" >      return configureVSCode();</span>
-<span class="cstat-no" title="statement not covered" >    case "cursor":</span>
+<span class="cstat-no" title="statement not covered" >    case 'cursor':</span>
 <span class="cstat-no" title="statement not covered" >      return configureCursor();</span>
-<span class="cstat-no" title="statement not covered" >    case "windsurf":</span>
+<span class="cstat-no" title="statement not covered" >    case 'windsurf':</span>
 <span class="cstat-no" title="statement not covered" >      return configureWindsurf();</span>
 <span class="cstat-no" title="statement not covered" >    default:</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
@@ -1096,7 +1096,7 @@ type SupportedTerminal = "vscode" | "cursor" | "windsurf";
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.879Z
+                at 2025-09-29T17:26:19.374Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

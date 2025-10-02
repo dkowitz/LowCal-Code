@@ -727,15 +727,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { useState, useEffect, useMemo } from "react";
-import { Box, Text } from "ink";
-import { theme } from "../../../semantic-colors.js";
-import { Colors } from "../../../colors.js";
-import { useKeypress } from "../../../hooks/useKeypress.js";
-import { type SubagentConfig } from "@qwen-code/qwen-code-core";
+import { useState, useEffect, useMemo } from 'react';
+import { Box, Text } from 'ink';
+import { theme } from '../../../semantic-colors.js';
+import { Colors } from '../../../colors.js';
+import { useKeypress } from '../../../hooks/useKeypress.js';
+import { type SubagentConfig } from '@qwen-code/qwen-code-core';
 &nbsp;
 interface NavigationState {
-  currentBlock: "project" | "user" | "builtin";
+  currentBlock: 'project' | 'user' | 'builtin';
   projectIndex: number;
   userIndex: number;
   builtinIndex: number;
@@ -751,7 +751,7 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
 <span class="cstat-no" title="statement not covered" >  onAgentSelect,</span>
 <span class="cstat-no" title="statement not covered" >}: AgentSelectionStepProps) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  const [navigation, setNavigation] = useState&lt;NavigationState&gt;({</span>
-<span class="cstat-no" title="statement not covered" >    currentBlock: "project",</span>
+<span class="cstat-no" title="statement not covered" >    currentBlock: 'project',</span>
 <span class="cstat-no" title="statement not covered" >    projectIndex: 0,</span>
 <span class="cstat-no" title="statement not covered" >    userIndex: 0,</span>
 <span class="cstat-no" title="statement not covered" >    builtinIndex: 0,</span>
@@ -759,15 +759,15 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
 &nbsp;
   // Group agents by level
 <span class="cstat-no" title="statement not covered" >  const projectAgents = useMemo(</span>
-<span class="cstat-no" title="statement not covered" >    () =&gt; availableAgents.filter((agent) =&gt; agent.level === "project"),</span>
+<span class="cstat-no" title="statement not covered" >    () =&gt; availableAgents.filter((agent) =&gt; agent.level === 'project'),</span>
 <span class="cstat-no" title="statement not covered" >    [availableAgents],</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
 <span class="cstat-no" title="statement not covered" >  const userAgents = useMemo(</span>
-<span class="cstat-no" title="statement not covered" >    () =&gt; availableAgents.filter((agent) =&gt; agent.level === "user"),</span>
+<span class="cstat-no" title="statement not covered" >    () =&gt; availableAgents.filter((agent) =&gt; agent.level === 'user'),</span>
 <span class="cstat-no" title="statement not covered" >    [availableAgents],</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
 <span class="cstat-no" title="statement not covered" >  const builtinAgents = useMemo(</span>
-<span class="cstat-no" title="statement not covered" >    () =&gt; availableAgents.filter((agent) =&gt; agent.level === "builtin"),</span>
+<span class="cstat-no" title="statement not covered" >    () =&gt; availableAgents.filter((agent) =&gt; agent.level === 'builtin'),</span>
 <span class="cstat-no" title="statement not covered" >    [availableAgents],</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
 <span class="cstat-no" title="statement not covered" >  const projectNames = useMemo(</span>
@@ -778,11 +778,11 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
   // Initialize navigation state when agents are loaded (only once)
 <span class="cstat-no" title="statement not covered" >  useEffect(() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (projectAgents.length &gt; 0) {</span>
-<span class="cstat-no" title="statement not covered" >      setNavigation((prev) =&gt; ({ ...prev, currentBlock: "project" }));</span>
+<span class="cstat-no" title="statement not covered" >      setNavigation((prev) =&gt; ({ ...prev, currentBlock: 'project' }));</span>
 <span class="cstat-no" title="statement not covered" >    } else if (userAgents.length &gt; 0) {</span>
-<span class="cstat-no" title="statement not covered" >      setNavigation((prev) =&gt; ({ ...prev, currentBlock: "user" }));</span>
+<span class="cstat-no" title="statement not covered" >      setNavigation((prev) =&gt; ({ ...prev, currentBlock: 'user' }));</span>
 <span class="cstat-no" title="statement not covered" >    } else if (builtinAgents.length &gt; 0) {</span>
-<span class="cstat-no" title="statement not covered" >      setNavigation((prev) =&gt; ({ ...prev, currentBlock: "builtin" }));</span>
+<span class="cstat-no" title="statement not covered" >      setNavigation((prev) =&gt; ({ ...prev, currentBlock: 'builtin' }));</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }, [projectAgents, userAgents, builtinAgents]);</span>
 &nbsp;
@@ -791,44 +791,44 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
 <span class="cstat-no" title="statement not covered" >    (key) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      const { name } = key;</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      if (name === "up" || name === "k") {</span>
+<span class="cstat-no" title="statement not covered" >      if (name === 'up' || name === 'k') {</span>
 <span class="cstat-no" title="statement not covered" >        setNavigation((prev) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >          if (prev.currentBlock === "project") {</span>
+<span class="cstat-no" title="statement not covered" >          if (prev.currentBlock === 'project') {</span>
 <span class="cstat-no" title="statement not covered" >            if (prev.projectIndex &gt; 0) {</span>
 <span class="cstat-no" title="statement not covered" >              return { ...prev, projectIndex: prev.projectIndex - 1 };</span>
 <span class="cstat-no" title="statement not covered" >            } else if (builtinAgents.length &gt; 0) {</span>
               // Move to last item in builtin block
 <span class="cstat-no" title="statement not covered" >              return {</span>
 <span class="cstat-no" title="statement not covered" >                ...prev,</span>
-<span class="cstat-no" title="statement not covered" >                currentBlock: "builtin",</span>
+<span class="cstat-no" title="statement not covered" >                currentBlock: 'builtin',</span>
 <span class="cstat-no" title="statement not covered" >                builtinIndex: builtinAgents.length - 1,</span>
 <span class="cstat-no" title="statement not covered" >              };</span>
 <span class="cstat-no" title="statement not covered" >            } else if (userAgents.length &gt; 0) {</span>
               // Move to last item in user block
 <span class="cstat-no" title="statement not covered" >              return {</span>
 <span class="cstat-no" title="statement not covered" >                ...prev,</span>
-<span class="cstat-no" title="statement not covered" >                currentBlock: "user",</span>
+<span class="cstat-no" title="statement not covered" >                currentBlock: 'user',</span>
 <span class="cstat-no" title="statement not covered" >                userIndex: userAgents.length - 1,</span>
 <span class="cstat-no" title="statement not covered" >              };</span>
 <span class="cstat-no" title="statement not covered" >            } else {</span>
               // Wrap to last item in project block
 <span class="cstat-no" title="statement not covered" >              return { ...prev, projectIndex: projectAgents.length - 1 };</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
-<span class="cstat-no" title="statement not covered" >          } else if (prev.currentBlock === "user") {</span>
+<span class="cstat-no" title="statement not covered" >          } else if (prev.currentBlock === 'user') {</span>
 <span class="cstat-no" title="statement not covered" >            if (prev.userIndex &gt; 0) {</span>
 <span class="cstat-no" title="statement not covered" >              return { ...prev, userIndex: prev.userIndex - 1 };</span>
 <span class="cstat-no" title="statement not covered" >            } else if (projectAgents.length &gt; 0) {</span>
               // Move to last item in project block
 <span class="cstat-no" title="statement not covered" >              return {</span>
 <span class="cstat-no" title="statement not covered" >                ...prev,</span>
-<span class="cstat-no" title="statement not covered" >                currentBlock: "project",</span>
+<span class="cstat-no" title="statement not covered" >                currentBlock: 'project',</span>
 <span class="cstat-no" title="statement not covered" >                projectIndex: projectAgents.length - 1,</span>
 <span class="cstat-no" title="statement not covered" >              };</span>
 <span class="cstat-no" title="statement not covered" >            } else if (builtinAgents.length &gt; 0) {</span>
               // Move to last item in builtin block
 <span class="cstat-no" title="statement not covered" >              return {</span>
 <span class="cstat-no" title="statement not covered" >                ...prev,</span>
-<span class="cstat-no" title="statement not covered" >                currentBlock: "builtin",</span>
+<span class="cstat-no" title="statement not covered" >                currentBlock: 'builtin',</span>
 <span class="cstat-no" title="statement not covered" >                builtinIndex: builtinAgents.length - 1,</span>
 <span class="cstat-no" title="statement not covered" >              };</span>
 <span class="cstat-no" title="statement not covered" >            } else {</span>
@@ -843,14 +843,14 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
               // Move to last item in user block
 <span class="cstat-no" title="statement not covered" >              return {</span>
 <span class="cstat-no" title="statement not covered" >                ...prev,</span>
-<span class="cstat-no" title="statement not covered" >                currentBlock: "user",</span>
+<span class="cstat-no" title="statement not covered" >                currentBlock: 'user',</span>
 <span class="cstat-no" title="statement not covered" >                userIndex: userAgents.length - 1,</span>
 <span class="cstat-no" title="statement not covered" >              };</span>
 <span class="cstat-no" title="statement not covered" >            } else if (projectAgents.length &gt; 0) {</span>
               // Move to last item in project block
 <span class="cstat-no" title="statement not covered" >              return {</span>
 <span class="cstat-no" title="statement not covered" >                ...prev,</span>
-<span class="cstat-no" title="statement not covered" >                currentBlock: "project",</span>
+<span class="cstat-no" title="statement not covered" >                currentBlock: 'project',</span>
 <span class="cstat-no" title="statement not covered" >                projectIndex: projectAgents.length - 1,</span>
 <span class="cstat-no" title="statement not covered" >              };</span>
 <span class="cstat-no" title="statement not covered" >            } else {</span>
@@ -859,30 +859,30 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
 <span class="cstat-no" title="statement not covered" >            }</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >        });</span>
-<span class="cstat-no" title="statement not covered" >      } else if (name === "down" || name === "j") {</span>
+<span class="cstat-no" title="statement not covered" >      } else if (name === 'down' || name === 'j') {</span>
 <span class="cstat-no" title="statement not covered" >        setNavigation((prev) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >          if (prev.currentBlock === "project") {</span>
+<span class="cstat-no" title="statement not covered" >          if (prev.currentBlock === 'project') {</span>
 <span class="cstat-no" title="statement not covered" >            if (prev.projectIndex &lt; projectAgents.length - 1) {</span>
 <span class="cstat-no" title="statement not covered" >              return { ...prev, projectIndex: prev.projectIndex + 1 };</span>
 <span class="cstat-no" title="statement not covered" >            } else if (userAgents.length &gt; 0) {</span>
               // Move to first item in user block
-<span class="cstat-no" title="statement not covered" >              return { ...prev, currentBlock: "user", userIndex: 0 };</span>
+<span class="cstat-no" title="statement not covered" >              return { ...prev, currentBlock: 'user', userIndex: 0 };</span>
 <span class="cstat-no" title="statement not covered" >            } else if (builtinAgents.length &gt; 0) {</span>
               // Move to first item in builtin block
-<span class="cstat-no" title="statement not covered" >              return { ...prev, currentBlock: "builtin", builtinIndex: 0 };</span>
+<span class="cstat-no" title="statement not covered" >              return { ...prev, currentBlock: 'builtin', builtinIndex: 0 };</span>
 <span class="cstat-no" title="statement not covered" >            } else {</span>
               // Wrap to first item in project block
 <span class="cstat-no" title="statement not covered" >              return { ...prev, projectIndex: 0 };</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
-<span class="cstat-no" title="statement not covered" >          } else if (prev.currentBlock === "user") {</span>
+<span class="cstat-no" title="statement not covered" >          } else if (prev.currentBlock === 'user') {</span>
 <span class="cstat-no" title="statement not covered" >            if (prev.userIndex &lt; userAgents.length - 1) {</span>
 <span class="cstat-no" title="statement not covered" >              return { ...prev, userIndex: prev.userIndex + 1 };</span>
 <span class="cstat-no" title="statement not covered" >            } else if (builtinAgents.length &gt; 0) {</span>
               // Move to first item in builtin block
-<span class="cstat-no" title="statement not covered" >              return { ...prev, currentBlock: "builtin", builtinIndex: 0 };</span>
+<span class="cstat-no" title="statement not covered" >              return { ...prev, currentBlock: 'builtin', builtinIndex: 0 };</span>
 <span class="cstat-no" title="statement not covered" >            } else if (projectAgents.length &gt; 0) {</span>
               // Move to first item in project block
-<span class="cstat-no" title="statement not covered" >              return { ...prev, currentBlock: "project", projectIndex: 0 };</span>
+<span class="cstat-no" title="statement not covered" >              return { ...prev, currentBlock: 'project', projectIndex: 0 };</span>
 <span class="cstat-no" title="statement not covered" >            } else {</span>
               // Wrap to first item in user block
 <span class="cstat-no" title="statement not covered" >              return { ...prev, userIndex: 0 };</span>
@@ -893,22 +893,22 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
 <span class="cstat-no" title="statement not covered" >              return { ...prev, builtinIndex: prev.builtinIndex + 1 };</span>
 <span class="cstat-no" title="statement not covered" >            } else if (projectAgents.length &gt; 0) {</span>
               // Move to first item in project block
-<span class="cstat-no" title="statement not covered" >              return { ...prev, currentBlock: "project", projectIndex: 0 };</span>
+<span class="cstat-no" title="statement not covered" >              return { ...prev, currentBlock: 'project', projectIndex: 0 };</span>
 <span class="cstat-no" title="statement not covered" >            } else if (userAgents.length &gt; 0) {</span>
               // Move to first item in user block
-<span class="cstat-no" title="statement not covered" >              return { ...prev, currentBlock: "user", userIndex: 0 };</span>
+<span class="cstat-no" title="statement not covered" >              return { ...prev, currentBlock: 'user', userIndex: 0 };</span>
 <span class="cstat-no" title="statement not covered" >            } else {</span>
               // Wrap to first item in builtin block
 <span class="cstat-no" title="statement not covered" >              return { ...prev, builtinIndex: 0 };</span>
 <span class="cstat-no" title="statement not covered" >            }</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
 <span class="cstat-no" title="statement not covered" >        });</span>
-<span class="cstat-no" title="statement not covered" >      } else if (name === "return" || name === "space") {</span>
+<span class="cstat-no" title="statement not covered" >      } else if (name === 'return' || name === 'space') {</span>
         // Calculate global index and select current item
 <span class="cstat-no" title="statement not covered" >        let globalIndex: number;</span>
-<span class="cstat-no" title="statement not covered" >        if (navigation.currentBlock === "project") {</span>
+<span class="cstat-no" title="statement not covered" >        if (navigation.currentBlock === 'project') {</span>
 <span class="cstat-no" title="statement not covered" >          globalIndex = navigation.projectIndex;</span>
-<span class="cstat-no" title="statement not covered" >        } else if (navigation.currentBlock === "user") {</span>
+<span class="cstat-no" title="statement not covered" >        } else if (navigation.currentBlock === 'user') {</span>
           // User agents come after project agents in the availableAgents array
 <span class="cstat-no" title="statement not covered" >          globalIndex = projectAgents.length + navigation.userIndex;</span>
 <span class="cstat-no" title="statement not covered" >        } else {</span>
@@ -941,7 +941,7 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
 <span class="cstat-no" title="statement not covered" >  const renderAgentItem = (</span>
 <span class="cstat-no" title="statement not covered" >    agent: {</span>
       name: string;
-      level: "project" | "user" | "builtin";
+      level: 'project' | 'user' | 'builtin';
       isBuiltin?: boolean;
     },
 <span class="cstat-no" title="statement not covered" >    index: number,</span>
@@ -953,20 +953,20 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
 <span class="cstat-no" title="statement not covered" >      &lt;Box key={`${agent.name}-${agent.level}`} alignItems="center"&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Box minWidth={2} flexShrink={0}&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={isSelected ? theme.text.accent : theme.text.primary}&gt;</span>
-<span class="cstat-no" title="statement not covered" >            {isSelected ? "●" : " "}</span>
+<span class="cstat-no" title="statement not covered" >            {isSelected ? '●' : ' '}</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Box&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Text color={textColor} wrap="truncate"&gt;</span>
 <span class="cstat-no" title="statement not covered" >          {agent.name}</span>
 <span class="cstat-no" title="statement not covered" >          {agent.isBuiltin &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Text color={isSelected ? theme.text.accent : theme.text.secondary}&gt;</span>
-<span class="cstat-no" title="statement not covered" >              {" "}</span>
+<span class="cstat-no" title="statement not covered" >              {' '}</span>
               (built-in)
 <span class="cstat-no" title="statement not covered" >            &lt;/Text&gt;</span>
           )}
-<span class="cstat-no" title="statement not covered" >          {agent.level === "user" &amp;&amp; projectNames.has(agent.name) &amp;&amp; (</span>
+<span class="cstat-no" title="statement not covered" >          {agent.level === 'user' &amp;&amp; projectNames.has(agent.name) &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Text color={isSelected ? theme.status.warning : Colors.Gray}&gt;</span>
-<span class="cstat-no" title="statement not covered" >              {" "}</span>
+<span class="cstat-no" title="statement not covered" >              {' '}</span>
               (overridden by project level agent)
 <span class="cstat-no" title="statement not covered" >            &lt;/Text&gt;</span>
           )}
@@ -987,12 +987,12 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
 <span class="cstat-no" title="statement not covered" >      {projectAgents.length &gt; 0 &amp;&amp; (</span>
 <span class="cstat-no" title="statement not covered" >        &lt;Box flexDirection="column" marginBottom={1}&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={theme.text.primary} bold&gt;</span>
-<span class="cstat-no" title="statement not covered" >            Project Level ({projectAgents[0].filePath.replace(/\/[^/]+$/, "")})</span>
+<span class="cstat-no" title="statement not covered" >            Project Level ({projectAgents[0].filePath.replace(/\/[^/]+$/, '')})</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Box marginTop={1} flexDirection="column"&gt;</span>
 <span class="cstat-no" title="statement not covered" >            {projectAgents.map((agent, index) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >              const isSelected =</span>
-<span class="cstat-no" title="statement not covered" >                navigation.currentBlock === "project" &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >                navigation.currentBlock === 'project' &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >                navigation.projectIndex === index;</span>
 <span class="cstat-no" title="statement not covered" >              return renderAgentItem(agent, index, isSelected);</span>
 <span class="cstat-no" title="statement not covered" >            })}</span>
@@ -1007,12 +1007,12 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
 <span class="cstat-no" title="statement not covered" >          marginBottom={builtinAgents.length &gt; 0 ? 1 : 0}</span>
         &gt;
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={theme.text.primary} bold&gt;</span>
-<span class="cstat-no" title="statement not covered" >            User Level ({userAgents[0].filePath.replace(/\/[^/]+$/, "")})</span>
+<span class="cstat-no" title="statement not covered" >            User Level ({userAgents[0].filePath.replace(/\/[^/]+$/, '')})</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Box marginTop={1} flexDirection="column"&gt;</span>
 <span class="cstat-no" title="statement not covered" >            {userAgents.map((agent, index) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >              const isSelected =</span>
-<span class="cstat-no" title="statement not covered" >                navigation.currentBlock === "user" &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >                navigation.currentBlock === 'user' &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >                navigation.userIndex === index;</span>
 <span class="cstat-no" title="statement not covered" >              return renderAgentItem(agent, index, isSelected);</span>
 <span class="cstat-no" title="statement not covered" >            })}</span>
@@ -1029,7 +1029,7 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
 <span class="cstat-no" title="statement not covered" >          &lt;Box marginTop={1} flexDirection="column"&gt;</span>
 <span class="cstat-no" title="statement not covered" >            {builtinAgents.map((agent, index) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >              const isSelected =</span>
-<span class="cstat-no" title="statement not covered" >                navigation.currentBlock === "builtin" &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >                navigation.currentBlock === 'builtin' &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >                navigation.builtinIndex === index;</span>
 <span class="cstat-no" title="statement not covered" >              return renderAgentItem(agent, index, isSelected);</span>
 <span class="cstat-no" title="statement not covered" >            })}</span>
@@ -1057,7 +1057,7 @@ export const AgentSelectionStep = <span class="fstat-no" title="function not cov
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.879Z
+                at 2025-09-29T17:26:19.374Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

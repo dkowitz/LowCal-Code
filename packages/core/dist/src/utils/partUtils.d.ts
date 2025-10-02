@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { GenerateContentResponse, PartListUnion, PartUnion } from "@google/genai";
+import type { GenerateContentResponse, PartListUnion, PartUnion } from '@google/genai';
 /**
  * Converts a PartListUnion into a string.
  * If verbose is true, includes summary representations of non-text parts.

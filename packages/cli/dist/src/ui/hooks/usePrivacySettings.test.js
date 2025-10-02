@@ -3,15 +3,15 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { describe, it, expect, beforeEach, vi } from "vitest";
-import { renderHook, waitFor } from "@testing-library/react";
-import { CodeAssistServer, LoggingContentGenerator, UserTierId, } from "@qwen-code/qwen-code-core";
-import { usePrivacySettings } from "./usePrivacySettings.js";
+import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { renderHook, waitFor } from '@testing-library/react';
+import { CodeAssistServer, LoggingContentGenerator, UserTierId, } from '@qwen-code/qwen-code-core';
+import { usePrivacySettings } from './usePrivacySettings.js';
 // Mock the dependencies
-vi.mock("@qwen-code/qwen-code-core", () => {
+vi.mock('@qwen-code/qwen-code-core', () => {
     // Mock classes for instanceof checks
     class MockCodeAssistServer {
-        projectId = "test-project-id";
+        projectId = 'test-project-id';
         loadCodeAssist = vi.fn();
         getCodeAssistGlobalUserSetting = vi.fn();
         setCodeAssistGlobalUserSetting = vi.fn();
@@ -27,13 +27,13 @@ vi.mock("@qwen-code/qwen-code-core", () => {
         LoggingContentGenerator: MockLoggingContentGenerator,
         GeminiClient: vi.fn(),
         UserTierId: {
-            FREE: "free-tier",
-            LEGACY: "legacy-tier",
-            STANDARD: "standard-tier",
+            FREE: 'free-tier',
+            LEGACY: 'legacy-tier',
+            STANDARD: 'standard-tier',
         },
     };
 });
-describe("usePrivacySettings", () => {
+describe('usePrivacySettings', () => {
     let mockConfig;
     let mockClient;
     let mockCodeAssistServer;
@@ -41,7 +41,7 @@ describe("usePrivacySettings", () => {
     beforeEach(() => {
         vi.clearAllMocks();
         // Create mock CodeAssistServer instance
-        mockCodeAssistServer = new CodeAssistServer(null, "test-project-id");
+        mockCodeAssistServer = new CodeAssistServer(null, 'test-project-id');
         mockCodeAssistServer.loadCodeAssist.mockResolvedValue({
             currentTier: { id: UserTierId.FREE },
         });
@@ -79,9 +79,9 @@ describe("usePrivacySettings", () => {
         // Verify that getWrapped was called to unwrap the LoggingContentGenerator
         expect(mockLoggingContentGenerator.getWrapped).toHaveBeenCalled();
     });
-    it("should work with direct CodeAssistServer (no wrapper)", async () => {
+    it('should work with direct CodeAssistServer (no wrapper)', async () => {
         // Test case where the content generator is directly a CodeAssistServer
-        const directServer = new CodeAssistServer(null, "test-project-id");
+        const directServer = new CodeAssistServer(null, 'test-project-id');
         directServer.loadCodeAssist.mockResolvedValue({
             currentTier: { id: UserTierId.FREE },
         });
@@ -97,7 +97,7 @@ describe("usePrivacySettings", () => {
         expect(result.current.privacyState.isFreeTier).toBe(true);
         expect(result.current.privacyState.dataCollectionOptIn).toBe(true);
     });
-    it("should handle paid tier users correctly", async () => {
+    it('should handle paid tier users correctly', async () => {
         // Mock paid tier response
         mockCodeAssistServer.loadCodeAssist.mockResolvedValue({
             currentTier: { id: UserTierId.STANDARD },
@@ -110,7 +110,7 @@ describe("usePrivacySettings", () => {
         expect(result.current.privacyState.isFreeTier).toBe(false);
         expect(result.current.privacyState.dataCollectionOptIn).toBeUndefined();
     });
-    it("should throw error when content generator is not a CodeAssistServer", async () => {
+    it('should throw error when content generator is not a CodeAssistServer', async () => {
         // Mock a non-CodeAssistServer content generator
         const mockOtherGenerator = { someOtherMethod: vi.fn() };
         mockLoggingContentGenerator.getWrapped.mockReturnValue(mockOtherGenerator);
@@ -118,9 +118,9 @@ describe("usePrivacySettings", () => {
         await waitFor(() => {
             expect(result.current.privacyState.isLoading).toBe(false);
         });
-        expect(result.current.privacyState.error).toBe("Oauth not being used");
+        expect(result.current.privacyState.error).toBe('Oauth not being used');
     });
-    it("should throw error when CodeAssistServer has no projectId", async () => {
+    it('should throw error when CodeAssistServer has no projectId', async () => {
         // Mock CodeAssistServer without projectId
         const mockServerNoProject = {
             ...mockCodeAssistServer,
@@ -131,9 +131,9 @@ describe("usePrivacySettings", () => {
         await waitFor(() => {
             expect(result.current.privacyState.isLoading).toBe(false);
         });
-        expect(result.current.privacyState.error).toBe("Oauth not being used");
+        expect(result.current.privacyState.error).toBe('Oauth not being used');
     });
-    it("should update data collection opt-in setting", async () => {
+    it('should update data collection opt-in setting', async () => {
         const { result } = renderHook(() => usePrivacySettings(mockConfig));
         // Wait for initial load
         await waitFor(() => {
@@ -146,7 +146,7 @@ describe("usePrivacySettings", () => {
             expect(result.current.privacyState.dataCollectionOptIn).toBe(false);
         });
         expect(mockCodeAssistServer.setCodeAssistGlobalUserSetting).toHaveBeenCalledWith({
-            cloudaicompanionProject: "test-project-id",
+            cloudaicompanionProject: 'test-project-id',
             freeTierDataCollectionOptin: false,
         });
     });

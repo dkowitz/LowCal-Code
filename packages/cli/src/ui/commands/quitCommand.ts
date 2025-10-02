@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { formatDuration } from "../utils/formatters.js";
-import { CommandKind, type SlashCommand } from "./types.js";
+import { formatDuration } from '../utils/formatters.js';
+import { CommandKind, type SlashCommand } from './types.js';
 
 export const quitConfirmCommand: SlashCommand = {
-  name: "quit-confirm",
-  description: "Show quit confirmation dialog",
+  name: 'quit-confirm',
+  description: 'Show quit confirmation dialog',
   kind: CommandKind.BUILT_IN,
   action: (context) => {
     const now = Date.now();
@@ -17,15 +17,15 @@ export const quitConfirmCommand: SlashCommand = {
     const wallDuration = now - sessionStartTime.getTime();
 
     return {
-      type: "quit_confirmation",
+      type: 'quit_confirmation',
       messages: [
         {
-          type: "user",
+          type: 'user',
           text: `/quit-confirm`,
           id: now - 1,
         },
         {
-          type: "quit_confirmation",
+          type: 'quit_confirmation',
           duration: formatDuration(wallDuration),
           id: now,
         },
@@ -35,9 +35,9 @@ export const quitConfirmCommand: SlashCommand = {
 };
 
 export const quitCommand: SlashCommand = {
-  name: "quit",
-  altNames: ["exit"],
-  description: "exit the cli",
+  name: 'quit',
+  altNames: ['exit'],
+  description: 'exit the cli',
   kind: CommandKind.BUILT_IN,
   action: (context) => {
     const now = Date.now();
@@ -45,15 +45,15 @@ export const quitCommand: SlashCommand = {
     const wallDuration = now - sessionStartTime.getTime();
 
     return {
-      type: "quit",
+      type: 'quit',
       messages: [
         {
-          type: "user",
+          type: 'user',
           text: `/quit`, // Keep it consistent, even if /exit was used
           id: now - 1,
         },
         {
-          type: "quit",
+          type: 'quit',
           duration: formatDuration(wallDuration),
           id: now,
         },

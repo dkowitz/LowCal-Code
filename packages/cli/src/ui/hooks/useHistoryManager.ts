@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useRef, useCallback } from "react";
-import type { HistoryItem } from "../types.js";
+import { useState, useRef, useCallback } from 'react';
+import type { HistoryItem } from '../types.js';
 
 // Type for the updater function passed to updateHistoryItem
 type HistoryItemUpdater = (
   prevItem: HistoryItem,
-) => Partial<Omit<HistoryItem, "id">>;
+) => Partial<Omit<HistoryItem, 'id'>>;
 
 export interface UseHistoryManagerReturn {
   history: HistoryItem[];
-  addItem: (itemData: Omit<HistoryItem, "id">, baseTimestamp: number) => number; // Returns the generated ID
+  addItem: (itemData: Omit<HistoryItem, 'id'>, baseTimestamp: number) => number; // Returns the generated ID
   updateItem: (
     id: number,
-    updates: Partial<Omit<HistoryItem, "id">> | HistoryItemUpdater,
+    updates: Partial<Omit<HistoryItem, 'id'>> | HistoryItemUpdater,
   ) => void;
   clearItems: () => void;
   loadHistory: (newHistory: HistoryItem[]) => void;
@@ -45,7 +45,7 @@ export function useHistory(): UseHistoryManagerReturn {
 
   // Adds a new item to the history state with a unique ID.
   const addItem = useCallback(
-    (itemData: Omit<HistoryItem, "id">, baseTimestamp: number): number => {
+    (itemData: Omit<HistoryItem, 'id'>, baseTimestamp: number): number => {
       const id = getNextMessageId(baseTimestamp);
       const newItem: HistoryItem = { ...itemData, id } as HistoryItem;
 
@@ -54,8 +54,8 @@ export function useHistory(): UseHistoryManagerReturn {
           const lastItem = prevHistory[prevHistory.length - 1];
           // Prevent adding duplicate consecutive user messages
           if (
-            lastItem.type === "user" &&
-            newItem.type === "user" &&
+            lastItem.type === 'user' &&
+            newItem.type === 'user' &&
             lastItem.text === newItem.text
           ) {
             return prevHistory; // Don't add the duplicate
@@ -78,14 +78,14 @@ export function useHistory(): UseHistoryManagerReturn {
   const updateItem = useCallback(
     (
       id: number,
-      updates: Partial<Omit<HistoryItem, "id">> | HistoryItemUpdater,
+      updates: Partial<Omit<HistoryItem, 'id'>> | HistoryItemUpdater,
     ) => {
       setHistory((prevHistory) =>
         prevHistory.map((item) => {
           if (item.id === id) {
             // Apply updates based on whether it's an object or a function
             const newUpdates =
-              typeof updates === "function" ? updates(item) : updates;
+              typeof updates === 'function' ? updates(item) : updates;
             return { ...item, ...newUpdates } as HistoryItem;
           }
           return item;

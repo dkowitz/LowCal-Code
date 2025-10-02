@@ -3,14 +3,14 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useCallback, useMemo, useEffect } from "react";
-import { logicalPosToOffset } from "../components/shared/text-buffer.js";
-import { isSlashCommand } from "../utils/commandUtils.js";
-import { toCodePoints } from "../utils/textUtils.js";
-import { useAtCompletion } from "./useAtCompletion.js";
-import { useSlashCompletion } from "./useSlashCompletion.js";
-import { usePromptCompletion, PROMPT_COMPLETION_MIN_LENGTH, } from "./usePromptCompletion.js";
-import { useCompletion } from "./useCompletion.js";
+import { useCallback, useMemo, useEffect } from 'react';
+import { logicalPosToOffset } from '../components/shared/text-buffer.js';
+import { isSlashCommand } from '../utils/commandUtils.js';
+import { toCodePoints } from '../utils/textUtils.js';
+import { useAtCompletion } from './useAtCompletion.js';
+import { useSlashCompletion } from './useSlashCompletion.js';
+import { usePromptCompletion, PROMPT_COMPLETION_MIN_LENGTH, } from './usePromptCompletion.js';
+import { useCompletion } from './useCompletion.js';
 export var CompletionMode;
 (function (CompletionMode) {
     CompletionMode["IDLE"] = "IDLE";
@@ -23,7 +23,7 @@ export function useCommandCompletion(buffer, dirs, cwd, slashCommands, commandCo
     const cursorRow = buffer.cursor[0];
     const cursorCol = buffer.cursor[1];
     const { completionMode, query, completionStart, completionEnd } = useMemo(() => {
-        const currentLine = buffer.lines[cursorRow] || "";
+        const currentLine = buffer.lines[cursorRow] || '';
         if (cursorRow === 0 && isSlashCommand(currentLine.trim())) {
             return {
                 completionMode: CompletionMode.SLASH,
@@ -35,21 +35,21 @@ export function useCommandCompletion(buffer, dirs, cwd, slashCommands, commandCo
         const codePoints = toCodePoints(currentLine);
         for (let i = cursorCol - 1; i >= 0; i--) {
             const char = codePoints[i];
-            if (char === " ") {
+            if (char === ' ') {
                 let backslashCount = 0;
-                for (let j = i - 1; j >= 0 && codePoints[j] === "\\"; j--) {
+                for (let j = i - 1; j >= 0 && codePoints[j] === '\\'; j--) {
                     backslashCount++;
                 }
                 if (backslashCount % 2 === 0) {
                     break;
                 }
             }
-            else if (char === "@") {
+            else if (char === '@') {
                 let end = codePoints.length;
                 for (let i = cursorCol; i < codePoints.length; i++) {
-                    if (codePoints[i] === " ") {
+                    if (codePoints[i] === ' ') {
                         let backslashCount = 0;
-                        for (let j = i - 1; j >= 0 && codePoints[j] === "\\"; j--) {
+                        for (let j = i - 1; j >= 0 && codePoints[j] === '\\'; j--) {
                             backslashCount++;
                         }
                         if (backslashCount % 2 === 0) {
@@ -74,7 +74,7 @@ export function useCommandCompletion(buffer, dirs, cwd, slashCommands, commandCo
         if (isPromptCompletionEnabled &&
             trimmedText.length >= PROMPT_COMPLETION_MIN_LENGTH &&
             !isSlashCommand(trimmedText) &&
-            !trimmedText.includes("@")) {
+            !trimmedText.includes('@')) {
             return {
                 completionMode: CompletionMode.PROMPT,
                 query: trimmedText,
@@ -91,7 +91,7 @@ export function useCommandCompletion(buffer, dirs, cwd, slashCommands, commandCo
     }, [cursorRow, cursorCol, buffer.lines, buffer.text, config]);
     useAtCompletion({
         enabled: completionMode === CompletionMode.AT,
-        pattern: query || "",
+        pattern: query || '',
         config,
         cwd,
         setSuggestions,
@@ -148,14 +148,14 @@ export function useCommandCompletion(buffer, dirs, cwd, slashCommands, commandCo
         if (completionMode === CompletionMode.SLASH) {
             if (start === end &&
                 start > 1 &&
-                (buffer.lines[cursorRow] || "")[start - 1] !== " ") {
-                suggestionText = " " + suggestionText;
+                (buffer.lines[cursorRow] || '')[start - 1] !== ' ') {
+                suggestionText = ' ' + suggestionText;
             }
         }
-        const lineCodePoints = toCodePoints(buffer.lines[cursorRow] || "");
+        const lineCodePoints = toCodePoints(buffer.lines[cursorRow] || '');
         const charAfterCompletion = lineCodePoints[end];
-        if (charAfterCompletion !== " ") {
-            suggestionText += " ";
+        if (charAfterCompletion !== ' ') {
+            suggestionText += ' ';
         }
         buffer.replaceRangeByOffset(logicalPosToOffset(buffer.lines, cursorRow, start), logicalPosToOffset(buffer.lines, cursorRow, end), suggestionText);
     }, [

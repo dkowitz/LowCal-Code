@@ -3,14 +3,14 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { HttpsProxyAgent } from "https-proxy-agent";
-import { EventMetadataKey } from "./event-metadata-key.js";
-import { InstallationManager } from "../../utils/installationManager.js";
-import { UserAccountManager } from "../../utils/userAccountManager.js";
-import { safeJsonStringify } from "../../utils/safeJsonStringify.js";
-import { FixedDeque } from "mnemonist";
-import { GIT_COMMIT_INFO, CLI_VERSION } from "../../generated/git-commit.js";
-import { DetectedIde, detectIdeFromEnv } from "../../ide/detect-ide.js";
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import { EventMetadataKey } from './event-metadata-key.js';
+import { InstallationManager } from '../../utils/installationManager.js';
+import { UserAccountManager } from '../../utils/userAccountManager.js';
+import { safeJsonStringify } from '../../utils/safeJsonStringify.js';
+import { FixedDeque } from 'mnemonist';
+import { GIT_COMMIT_INFO, CLI_VERSION } from '../../generated/git-commit.js';
+import { DetectedIde, detectIdeFromEnv } from '../../ide/detect-ide.js';
 export var EventNames;
 (function (EventNames) {
     EventNames["START_SESSION"] = "start_session";
@@ -44,23 +44,23 @@ export var EventNames;
  * methods might have in their runtimes.
  */
 function determineSurface() {
-    if (process.env["SURFACE"]) {
-        return process.env["SURFACE"];
+    if (process.env['SURFACE']) {
+        return process.env['SURFACE'];
     }
-    else if (process.env["GITHUB_SHA"]) {
-        return "GitHub";
+    else if (process.env['GITHUB_SHA']) {
+        return 'GitHub';
     }
-    else if (process.env["TERM_PROGRAM"] === "vscode") {
+    else if (process.env['TERM_PROGRAM'] === 'vscode') {
         return detectIdeFromEnv() || DetectedIde.VSCode;
     }
     else {
-        return "SURFACE_NOT_SET";
+        return 'SURFACE_NOT_SET';
     }
 }
 /**
  * Clearcut URL to send logging events to.
  */
-const CLEARCUT_URL = "https://play.googleapis.com/log?format=json&hasfast=true";
+const CLEARCUT_URL = 'https://play.googleapis.com/log?format=json&hasfast=true';
 /**
  * Interval in which buffered events are sent to clearcut.
  */
@@ -81,7 +81,7 @@ export class ClearcutLogger {
     static instance;
     config;
     sessionData = [];
-    promptId = "";
+    promptId = '';
     installationManager;
     userAccountManager;
     /**
@@ -105,7 +105,7 @@ export class ClearcutLogger {
     constructor(config) {
         this.config = config;
         this.events = new FixedDeque(Array, MAX_EVENTS);
-        this.promptId = config?.getSessionId() ?? "";
+        this.promptId = config?.getSessionId() ?? '';
         this.installationManager = new InstallationManager();
         this.userAccountManager = new UserAccountManager();
     }
@@ -141,7 +141,7 @@ export class ClearcutLogger {
         }
         catch (error) {
             if (this.config?.getDebugMode()) {
-                console.error("ClearcutLogger: Failed to enqueue log event.", error);
+                console.error('ClearcutLogger: Failed to enqueue log event.', error);
             }
         }
     }
@@ -153,7 +153,7 @@ export class ClearcutLogger {
         const totalAccounts = this.userAccountManager.getLifetimeGoogleAccounts();
         data = this.addDefaultFields(data, totalAccounts);
         const logEvent = {
-            console_type: "GEMINI_CLI",
+            console_type: 'GEMINI_CLI',
             application: 102, // GEMINI_CLI
             event_name: eventName,
             event_metadata: [data],
@@ -172,26 +172,26 @@ export class ClearcutLogger {
             return;
         }
         this.flushToClearcut().catch((error) => {
-            console.debug("Error flushing to Clearcut:", error);
+            console.debug('Error flushing to Clearcut:', error);
         });
     }
     async flushToClearcut() {
         if (this.flushing) {
             if (this.config?.getDebugMode()) {
-                console.debug("ClearcutLogger: Flush already in progress, marking pending flush.");
+                console.debug('ClearcutLogger: Flush already in progress, marking pending flush.');
             }
             this.pendingFlush = true;
             return Promise.resolve({});
         }
         this.flushing = true;
         if (this.config?.getDebugMode()) {
-            console.log("Flushing log events to Clearcut.");
+            console.log('Flushing log events to Clearcut.');
         }
         const eventsToSend = this.events.toArray();
         this.events.clear();
         const request = [
             {
-                log_source_name: "CONCORD",
+                log_source_name: 'CONCORD',
                 request_time_ms: Date.now(),
                 log_event: eventsToSend,
             },
@@ -199,10 +199,10 @@ export class ClearcutLogger {
         let result = {};
         try {
             const response = await fetch(CLEARCUT_URL, {
-                method: "POST",
+                method: 'POST',
                 body: safeJsonStringify(request),
                 headers: {
-                    "Content-Type": "application/json",
+                    'Content-Type': 'application/json',
                 },
             });
             const responseBody = await response.text();
@@ -224,7 +224,7 @@ export class ClearcutLogger {
         }
         catch (e) {
             if (this.config?.getDebugMode()) {
-                console.error("Error flushing log events:", e);
+                console.error('Error flushing log events:', e);
             }
             // Re-queue failed events for retry
             this.requeueFailedEvents(eventsToSend);
@@ -236,7 +236,7 @@ export class ClearcutLogger {
             // Fire and forget the pending flush
             this.flushToClearcut().catch((error) => {
                 if (this.config?.getDebugMode()) {
-                    console.debug("Error in pending flush to Clearcut:", error);
+                    console.debug('Error in pending flush to Clearcut:', error);
                 }
             });
         }
@@ -300,22 +300,22 @@ export class ClearcutLogger {
                 gemini_cli_key: EventMetadataKey.GEMINI_CLI_START_SESSION_MCP_SERVERS_COUNT,
                 value: event.mcp_servers_count
                     ? event.mcp_servers_count.toString()
-                    : "",
+                    : '',
             },
             {
                 gemini_cli_key: EventMetadataKey.GEMINI_CLI_START_SESSION_MCP_TOOLS_COUNT,
-                value: event.mcp_tools_count?.toString() ?? "",
+                value: event.mcp_tools_count?.toString() ?? '',
             },
             {
                 gemini_cli_key: EventMetadataKey.GEMINI_CLI_START_SESSION_MCP_TOOLS,
-                value: event.mcp_tools ? event.mcp_tools : "",
+                value: event.mcp_tools ? event.mcp_tools : '',
             },
         ];
         this.sessionData = data;
         // Flush start event immediately
         this.enqueueLogEvent(this.createLogEvent(EventNames.START_SESSION, data));
         this.flushToClearcut().catch((error) => {
-            console.debug("Error flushing to Clearcut:", error);
+            console.debug('Error flushing to Clearcut:', error);
         });
     }
     logNewPromptEvent(event) {
@@ -519,7 +519,7 @@ export class ClearcutLogger {
     logFlashFallbackEvent() {
         this.enqueueLogEvent(this.createLogEvent(EventNames.FLASH_FALLBACK, []));
         this.flushToClearcut().catch((error) => {
-            console.debug("Error flushing to Clearcut:", error);
+            console.debug('Error flushing to Clearcut:', error);
         });
     }
     logLoopDetectedEvent(event) {
@@ -592,7 +592,7 @@ export class ClearcutLogger {
         const data = [
             {
                 gemini_cli_key: EventMetadataKey.GEMINI_CLI_SESSION_ID,
-                value: this.config?.getSessionId() ?? "",
+                value: this.config?.getSessionId() ?? '',
             },
             {
                 gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONVERSATION_TURN_COUNT,
@@ -624,7 +624,7 @@ export class ClearcutLogger {
         // Flush immediately on session end.
         this.enqueueLogEvent(this.createLogEvent(EventNames.END_SESSION, []));
         this.flushToClearcut().catch((error) => {
-            console.debug("Error flushing to Clearcut:", error);
+            console.debug('Error flushing to Clearcut:', error);
         });
     }
     logInvalidChunkEvent(event) {
@@ -665,7 +665,7 @@ export class ClearcutLogger {
                 value: event.provider,
             });
         }
-        if (typeof event.status_code === "number") {
+        if (typeof event.status_code === 'number') {
             data.push({
                 gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_STATUS_CODE,
                 value: String(event.status_code),
@@ -709,7 +709,7 @@ export class ClearcutLogger {
                 value: event.provider,
             });
         }
-        if (typeof event.status_code === "number") {
+        if (typeof event.status_code === 'number') {
             data.push({
                 gemini_cli_key: EventMetadataKey.GEMINI_CLI_CONTENT_RETRY_FAILURE_STATUS_CODE,
                 value: String(event.status_code),
@@ -733,7 +733,7 @@ export class ClearcutLogger {
         const defaultLogMetadata = [
             {
                 gemini_cli_key: EventMetadataKey.GEMINI_CLI_SESSION_ID,
-                value: this.config?.getSessionId() ?? "",
+                value: this.config?.getSessionId() ?? '',
             },
             {
                 gemini_cli_key: EventMetadataKey.GEMINI_CLI_AUTH_TYPE,
@@ -772,11 +772,11 @@ export class ClearcutLogger {
             return undefined;
         // undici which is widely used in the repo can only support http & https proxy protocol,
         // https://github.com/nodejs/undici/issues/2224
-        if (proxyUrl.startsWith("http")) {
+        if (proxyUrl.startsWith('http')) {
             return new HttpsProxyAgent(proxyUrl);
         }
         else {
-            throw new Error("Unsupported proxy type");
+            throw new Error('Unsupported proxy type');
         }
     }
     shutdown() {

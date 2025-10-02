@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useCallback, useEffect } from "react";
-import type { LoadedSettings } from "../../config/settings.js";
+import { useState, useCallback, useEffect } from 'react';
+import type { LoadedSettings } from '../../config/settings.js';
 import {
   AuthType,
   qwenOAuth2Events,
   QwenOAuth2Event,
-} from "@qwen-code/qwen-code-core";
+} from '@qwen-code/qwen-code-core';
 
 export interface DeviceAuthorizationInfo {
   verification_uri: string;
@@ -23,12 +23,12 @@ interface QwenAuthState {
   isQwenAuthenticating: boolean;
   deviceAuth: DeviceAuthorizationInfo | null;
   authStatus:
-    | "idle"
-    | "polling"
-    | "success"
-    | "error"
-    | "timeout"
-    | "rate_limit";
+    | 'idle'
+    | 'polling'
+    | 'success'
+    | 'error'
+    | 'timeout'
+    | 'rate_limit';
   authMessage: string | null;
 }
 
@@ -39,7 +39,7 @@ export const useQwenAuth = (
   const [qwenAuthState, setQwenAuthState] = useState<QwenAuthState>({
     isQwenAuthenticating: false,
     deviceAuth: null,
-    authStatus: "idle",
+    authStatus: 'idle',
     authMessage: null,
   });
 
@@ -53,7 +53,7 @@ export const useQwenAuth = (
       setQwenAuthState({
         isQwenAuthenticating: false,
         deviceAuth: null,
-        authStatus: "idle",
+        authStatus: 'idle',
         authMessage: null,
       });
       return;
@@ -62,7 +62,7 @@ export const useQwenAuth = (
     setQwenAuthState((prev) => ({
       ...prev,
       isQwenAuthenticating: true,
-      authStatus: "idle",
+      authStatus: 'idle',
     }));
 
     // Set up event listeners
@@ -75,12 +75,12 @@ export const useQwenAuth = (
           user_code: deviceAuth.user_code,
           expires_in: deviceAuth.expires_in,
         },
-        authStatus: "polling",
+        authStatus: 'polling',
       }));
     };
 
     const handleAuthProgress = (
-      status: "success" | "error" | "polling" | "timeout" | "rate_limit",
+      status: 'success' | 'error' | 'polling' | 'timeout' | 'rate_limit',
       message?: string,
     ) => {
       setQwenAuthState((prev) => ({
@@ -108,7 +108,7 @@ export const useQwenAuth = (
     setQwenAuthState({
       isQwenAuthenticating: false,
       deviceAuth: null,
-      authStatus: "idle",
+      authStatus: 'idle',
       authMessage: null,
     });
   }, []);

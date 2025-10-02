@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import {} from "yargs";
-import { disableExtension } from "../../config/extension.js";
-import { SettingScope } from "../../config/settings.js";
-import { getErrorMessage } from "../../utils/errors.js";
+import {} from 'yargs';
+import { disableExtension } from '../../config/extension.js';
+import { SettingScope } from '../../config/settings.js';
+import { getErrorMessage } from '../../utils/errors.js';
 export async function handleDisable(args) {
     try {
         disableExtension(args.name, args.scope);
@@ -18,24 +18,24 @@ export async function handleDisable(args) {
     }
 }
 export const disableCommand = {
-    command: "disable [--scope] <name>",
-    describe: "Disables an extension.",
+    command: 'disable [--scope] <name>',
+    describe: 'Disables an extension.',
     builder: (yargs) => yargs
-        .positional("name", {
-        describe: "The name of the extension to disable.",
-        type: "string",
+        .positional('name', {
+        describe: 'The name of the extension to disable.',
+        type: 'string',
     })
-        .option("scope", {
-        describe: "The scope to disable the extenison in.",
-        type: "string",
+        .option('scope', {
+        describe: 'The scope to disable the extenison in.',
+        type: 'string',
         default: SettingScope.User,
         choices: [SettingScope.User, SettingScope.Workspace],
     })
         .check((_argv) => true),
     handler: async (argv) => {
         await handleDisable({
-            name: argv["name"],
-            scope: argv["scope"],
+            name: argv['name'],
+            scope: argv['scope'],
         });
     },
 };

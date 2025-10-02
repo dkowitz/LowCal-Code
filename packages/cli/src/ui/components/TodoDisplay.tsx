@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
+import type React from 'react';
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
 
 export interface TodoItem {
   id: string;
   content: string;
-  status: "pending" | "in_progress" | "completed";
+  status: 'pending' | 'in_progress' | 'completed';
 }
 
 interface TodoDisplayProps {
@@ -19,9 +19,9 @@ interface TodoDisplayProps {
 }
 
 const STATUS_ICONS = {
-  pending: "○",
-  in_progress: "◐",
-  completed: "●",
+  pending: '○',
+  in_progress: '◐',
+  completed: '●',
 } as const;
 
 export const TodoDisplay: React.FC<TodoDisplayProps> = ({ todos }) => {
@@ -44,8 +44,8 @@ interface TodoItemRowProps {
 
 const TodoItemRow: React.FC<TodoItemRowProps> = ({ todo }) => {
   const statusIcon = STATUS_ICONS[todo.status];
-  const isCompleted = todo.status === "completed";
-  const isInProgress = todo.status === "in_progress";
+  const isCompleted = todo.status === 'completed';
+  const isInProgress = todo.status === 'in_progress';
 
   // Use the same color for both status icon and text, like RadioButtonSelect
   const itemColor = isCompleted

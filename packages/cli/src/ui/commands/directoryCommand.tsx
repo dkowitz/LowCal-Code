@@ -4,49 +4,49 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { SlashCommand, CommandContext } from "./types.js";
-import { CommandKind } from "./types.js";
-import { MessageType } from "../types.js";
-import * as os from "node:os";
-import * as path from "node:path";
-import { loadServerHierarchicalMemory } from "@qwen-code/qwen-code-core";
+import type { SlashCommand, CommandContext } from './types.js';
+import { CommandKind } from './types.js';
+import { MessageType } from '../types.js';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { loadServerHierarchicalMemory } from '@qwen-code/qwen-code-core';
 
 export function expandHomeDir(p: string): string {
   if (!p) {
-    return "";
+    return '';
   }
   let expandedPath = p;
-  if (p.toLowerCase().startsWith("%userprofile%")) {
-    expandedPath = os.homedir() + p.substring("%userprofile%".length);
-  } else if (p === "~" || p.startsWith("~/")) {
+  if (p.toLowerCase().startsWith('%userprofile%')) {
+    expandedPath = os.homedir() + p.substring('%userprofile%'.length);
+  } else if (p === '~' || p.startsWith('~/')) {
     expandedPath = os.homedir() + p.substring(1);
   }
   return path.normalize(expandedPath);
 }
 
 export const directoryCommand: SlashCommand = {
-  name: "directory",
-  altNames: ["dir"],
-  description: "Manage workspace directories",
+  name: 'directory',
+  altNames: ['dir'],
+  description: 'Manage workspace directories',
   kind: CommandKind.BUILT_IN,
   subCommands: [
     {
-      name: "add",
+      name: 'add',
       description:
-        "Add directories to the workspace. Use comma to separate multiple paths",
+        'Add directories to the workspace. Use comma to separate multiple paths',
       kind: CommandKind.BUILT_IN,
       action: async (context: CommandContext, args: string) => {
         const {
           ui: { addItem },
           services: { config },
         } = context;
-        const [...rest] = args.split(" ");
+        const [...rest] = args.split(' ');
 
         if (!config) {
           addItem(
             {
               type: MessageType.ERROR,
-              text: "Configuration is not available.",
+              text: 'Configuration is not available.',
             },
             Date.now(),
           );
@@ -56,14 +56,14 @@ export const directoryCommand: SlashCommand = {
         const workspaceContext = config.getWorkspaceContext();
 
         const pathsToAdd = rest
-          .join(" ")
-          .split(",")
+          .join(' ')
+          .split(',')
           .filter((p) => p);
         if (pathsToAdd.length === 0) {
           addItem(
             {
               type: MessageType.ERROR,
-              text: "Please provide at least one path to add.",
+              text: 'Please provide at least one path to add.',
             },
             Date.now(),
           );
@@ -72,10 +72,10 @@ export const directoryCommand: SlashCommand = {
 
         if (config.isRestrictiveSandbox()) {
           return {
-            type: "message" as const,
-            messageType: "error" as const,
+            type: 'message' as const,
+            messageType: 'error' as const,
             content:
-              "The /directory add command is not supported in restrictive sandbox profiles. Please use --include-directories when starting the session instead.",
+              'The /directory add command is not supported in restrictive sandbox profiles. Please use --include-directories when starting the session instead.',
           };
         }
 
@@ -105,7 +105,7 @@ export const directoryCommand: SlashCommand = {
                 config.getFileService(),
                 config.getExtensionContextFilePaths(),
                 context.services.settings.merged.context?.importFormat ||
-                  "tree", // Use setting or default to 'tree'
+                  'tree', // Use setting or default to 'tree'
                 config.getFileFilteringOptions(),
                 context.services.settings.merged.context?.discoveryMaxDirs,
               );
@@ -116,7 +116,7 @@ export const directoryCommand: SlashCommand = {
           addItem(
             {
               type: MessageType.INFO,
-              text: `Successfully added GEMINI.md files from the following directories if there are:\n- ${added.join("\n- ")}`,
+              text: `Successfully added GEMINI.md files from the following directories if there are:\n- ${added.join('\n- ')}`,
             },
             Date.now(),
           );
@@ -132,7 +132,7 @@ export const directoryCommand: SlashCommand = {
           addItem(
             {
               type: MessageType.INFO,
-              text: `Successfully added directories:\n- ${added.join("\n- ")}`,
+              text: `Successfully added directories:\n- ${added.join('\n- ')}`,
             },
             Date.now(),
           );
@@ -140,7 +140,7 @@ export const directoryCommand: SlashCommand = {
 
         if (errors.length > 0) {
           addItem(
-            { type: MessageType.ERROR, text: errors.join("\n") },
+            { type: MessageType.ERROR, text: errors.join('\n') },
             Date.now(),
           );
         }
@@ -148,8 +148,8 @@ export const directoryCommand: SlashCommand = {
       },
     },
     {
-      name: "show",
-      description: "Show all directories in the workspace",
+      name: 'show',
+      description: 'Show all directories in the workspace',
       kind: CommandKind.BUILT_IN,
       action: async (context: CommandContext) => {
         const {
@@ -160,7 +160,7 @@ export const directoryCommand: SlashCommand = {
           addItem(
             {
               type: MessageType.ERROR,
-              text: "Configuration is not available.",
+              text: 'Configuration is not available.',
             },
             Date.now(),
           );
@@ -168,7 +168,7 @@ export const directoryCommand: SlashCommand = {
         }
         const workspaceContext = config.getWorkspaceContext();
         const directories = workspaceContext.getDirectories();
-        const directoryList = directories.map((dir) => `- ${dir}`).join("\n");
+        const directoryList = directories.map((dir) => `- ${dir}`).join('\n');
         addItem(
           {
             type: MessageType.INFO,

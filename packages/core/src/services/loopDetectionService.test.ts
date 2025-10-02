@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Config } from "../config/config.js";
-import type { GeminiClient } from "../core/client.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import type { Config } from '../config/config.js';
+import type { GeminiClient } from '../core/client.js';
 import type {
   ServerGeminiContentEvent,
   ServerGeminiStreamEvent,
   ServerGeminiToolCallRequestEvent,
-} from "../core/turn.js";
-import { GeminiEventType } from "../core/turn.js";
-import * as loggers from "../telemetry/loggers.js";
-import { LoopType } from "../telemetry/types.js";
-import { LoopDetectionService } from "./loopDetectionService.js";
+} from '../core/turn.js';
+import { GeminiEventType } from '../core/turn.js';
+import * as loggers from '../telemetry/loggers.js';
+import { LoopType } from '../telemetry/types.js';
+import { LoopDetectionService } from './loopDetectionService.js';
 
-vi.mock("../telemetry/loggers.js", () => ({
+vi.mock('../telemetry/loggers.js', () => ({
   logLoopDetected: vi.fn(),
   logApiError: vi.fn(),
   logApiResponse: vi.fn(),
@@ -27,7 +27,7 @@ const TOOL_CALL_LOOP_THRESHOLD = 5;
 const CONTENT_LOOP_THRESHOLD = 10;
 const CONTENT_CHUNK_SIZE = 50;
 
-describe("LoopDetectionService", () => {
+describe('LoopDetectionService', () => {
   let service: LoopDetectionService;
   let mockConfig: Config;
 
@@ -47,9 +47,9 @@ describe("LoopDetectionService", () => {
     value: {
       name,
       args,
-      callId: "test-id",
+      callId: 'test-id',
       isClientInitiated: false,
-      prompt_id: "test-prompt-id",
+      prompt_id: 'test-prompt-id',
     },
   });
 
@@ -60,16 +60,16 @@ describe("LoopDetectionService", () => {
 
   const createRepetitiveContent = (id: number, length: number): string => {
     const baseString = `This is a unique sentence, id=${id}. `;
-    let content = "";
+    let content = '';
     while (content.length < length) {
       content += baseString;
     }
     return content.slice(0, length);
   };
 
-  describe("Tool Call Loop Detection", () => {
+  describe('Tool Call Loop Detection', () => {
     it(`should not detect a loop for fewer than TOOL_CALL_LOOP_THRESHOLD identical calls`, () => {
-      const event = createToolCallRequestEvent("testTool", { param: "value" });
+      const event = createToolCallRequestEvent('testTool', { param: 'value' });
       for (let i = 0; i < TOOL_CALL_LOOP_THRESHOLD - 1; i++) {
         expect(service.addAndCheck(event)).toBe(false);
       }
@@ -77,7 +77,7 @@ describe("LoopDetectionService", () => {
     });
 
     it(`should detect a loop on the TOOL_CALL_LOOP_THRESHOLD-th identical call`, () => {
-      const event = createToolCallRequestEvent("testTool", { param: "value" });
+      const event = createToolCallRequestEvent('testTool', { param: 'value' });
       for (let i = 0; i < TOOL_CALL_LOOP_THRESHOLD - 1; i++) {
         service.addAndCheck(event);
       }
@@ -85,8 +85,8 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);
     });
 
-    it("should detect a loop on subsequent identical calls", () => {
-      const event = createToolCallRequestEvent("testTool", { param: "value" });
+    it('should detect a loop on subsequent identical calls', () => {
+      const event = createToolCallRequestEvent('testTool', { param: 'value' });
       for (let i = 0; i < TOOL_CALL_LOOP_THRESHOLD; i++) {
         service.addAndCheck(event);
       }
@@ -94,15 +94,15 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);
     });
 
-    it("should not detect a loop for different tool calls", () => {
-      const event1 = createToolCallRequestEvent("testTool", {
-        param: "value1",
+    it('should not detect a loop for different tool calls', () => {
+      const event1 = createToolCallRequestEvent('testTool', {
+        param: 'value1',
       });
-      const event2 = createToolCallRequestEvent("testTool", {
-        param: "value2",
+      const event2 = createToolCallRequestEvent('testTool', {
+        param: 'value2',
       });
-      const event3 = createToolCallRequestEvent("anotherTool", {
-        param: "value1",
+      const event3 = createToolCallRequestEvent('anotherTool', {
+        param: 'value1',
       });
 
       for (let i = 0; i < TOOL_CALL_LOOP_THRESHOLD - 2; i++) {
@@ -112,12 +112,12 @@ describe("LoopDetectionService", () => {
       }
     });
 
-    it("should not reset tool call counter for other event types", () => {
-      const toolCallEvent = createToolCallRequestEvent("testTool", {
-        param: "value",
+    it('should not reset tool call counter for other event types', () => {
+      const toolCallEvent = createToolCallRequestEvent('testTool', {
+        param: 'value',
       });
       const otherEvent = {
-        type: "thought",
+        type: 'thought',
       } as unknown as ServerGeminiStreamEvent;
 
       // Send events just below the threshold
@@ -134,11 +134,11 @@ describe("LoopDetectionService", () => {
     });
   });
 
-  describe("Content Loop Detection", () => {
+  describe('Content Loop Detection', () => {
     const generateRandomString = (length: number) => {
-      let result = "";
+      let result = '';
       const characters =
-        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
       const charactersLength = characters.length;
       for (let i = 0; i < length; i++) {
         result += characters.charAt(
@@ -148,8 +148,8 @@ describe("LoopDetectionService", () => {
       return result;
     };
 
-    it("should not detect a loop for random content", () => {
-      service.reset("");
+    it('should not detect a loop for random content', () => {
+      service.reset('');
       for (let i = 0; i < 1000; i++) {
         const content = generateRandomString(10);
         const isLoop = service.addAndCheck(createContentEvent(content));
@@ -158,8 +158,8 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should detect a loop when a chunk of content repeats consecutively", () => {
-      service.reset("");
+    it('should detect a loop when a chunk of content repeats consecutively', () => {
+      service.reset('');
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
       let isLoop = false;
@@ -170,8 +170,8 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);
     });
 
-    it("should not detect a loop if repetitions are very far apart", () => {
-      service.reset("");
+    it('should not detect a loop if repetitions are very far apart', () => {
+      service.reset('');
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
       const fillerContent = generateRandomString(500);
 
@@ -185,25 +185,25 @@ describe("LoopDetectionService", () => {
     });
   });
 
-  describe("Content Loop Detection with Code Blocks", () => {
-    it("should not detect a loop when repetitive content is inside a code block", () => {
-      service.reset("");
+  describe('Content Loop Detection with Code Blocks', () => {
+    it('should not detect a loop when repetitive content is inside a code block', () => {
+      service.reset('');
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
-      service.addAndCheck(createContentEvent("```\n"));
+      service.addAndCheck(createContentEvent('```\n'));
 
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD; i++) {
         const isLoop = service.addAndCheck(createContentEvent(repeatedContent));
         expect(isLoop).toBe(false);
       }
 
-      const isLoop = service.addAndCheck(createContentEvent("\n```"));
+      const isLoop = service.addAndCheck(createContentEvent('\n```'));
       expect(isLoop).toBe(false);
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should not detect loops when content transitions into a code block", () => {
-      service.reset("");
+    it('should not detect loops when content transitions into a code block', () => {
+      service.reset('');
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
       // Add some repetitive content outside of code block
@@ -213,7 +213,7 @@ describe("LoopDetectionService", () => {
 
       // Now transition into a code block - this should prevent loop detection
       // even though we were already close to the threshold
-      const codeBlockStart = "```javascript\n";
+      const codeBlockStart = '```javascript\n';
       const isLoop = service.addAndCheck(createContentEvent(codeBlockStart));
       expect(isLoop).toBe(false);
 
@@ -228,11 +228,11 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should skip loop detection when already inside a code block (this.inCodeBlock)", () => {
-      service.reset("");
+    it('should skip loop detection when already inside a code block (this.inCodeBlock)', () => {
+      service.reset('');
 
       // Start with content that puts us inside a code block
-      service.addAndCheck(createContentEvent("Here is some code:\n```\n"));
+      service.addAndCheck(createContentEvent('Here is some code:\n```\n'));
 
       // Verify we are now inside a code block and any content should be ignored for loop detection
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
@@ -244,15 +244,15 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should correctly track inCodeBlock state with multiple fence transitions", () => {
-      service.reset("");
+    it('should correctly track inCodeBlock state with multiple fence transitions', () => {
+      service.reset('');
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
       // Outside code block - should track content
-      service.addAndCheck(createContentEvent("Normal text "));
+      service.addAndCheck(createContentEvent('Normal text '));
 
       // Enter code block (1 fence) - should stop tracking
-      const enterResult = service.addAndCheck(createContentEvent("```\n"));
+      const enterResult = service.addAndCheck(createContentEvent('```\n'));
       expect(enterResult).toBe(false);
 
       // Inside code block - should not track loops
@@ -264,25 +264,25 @@ describe("LoopDetectionService", () => {
       }
 
       // Exit code block (2nd fence) - should reset tracking but still return false
-      const exitResult = service.addAndCheck(createContentEvent("```\n"));
+      const exitResult = service.addAndCheck(createContentEvent('```\n'));
       expect(exitResult).toBe(false);
 
       // Enter code block again (3rd fence) - should stop tracking again
       const reenterResult = service.addAndCheck(
-        createContentEvent("```python\n"),
+        createContentEvent('```python\n'),
       );
       expect(reenterResult).toBe(false);
 
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should detect a loop when repetitive content is outside a code block", () => {
-      service.reset("");
+    it('should detect a loop when repetitive content is outside a code block', () => {
+      service.reset('');
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
-      service.addAndCheck(createContentEvent("```"));
-      service.addAndCheck(createContentEvent("\nsome code\n"));
-      service.addAndCheck(createContentEvent("```"));
+      service.addAndCheck(createContentEvent('```'));
+      service.addAndCheck(createContentEvent('\nsome code\n'));
+      service.addAndCheck(createContentEvent('```'));
 
       let isLoop = false;
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD; i++) {
@@ -292,23 +292,23 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);
     });
 
-    it("should handle content with multiple code blocks and no loops", () => {
-      service.reset("");
-      service.addAndCheck(createContentEvent("```\ncode1\n```"));
-      service.addAndCheck(createContentEvent("\nsome text\n"));
-      const isLoop = service.addAndCheck(createContentEvent("```\ncode2\n```"));
+    it('should handle content with multiple code blocks and no loops', () => {
+      service.reset('');
+      service.addAndCheck(createContentEvent('```\ncode1\n```'));
+      service.addAndCheck(createContentEvent('\nsome text\n'));
+      const isLoop = service.addAndCheck(createContentEvent('```\ncode2\n```'));
 
       expect(isLoop).toBe(false);
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should handle content with mixed code blocks and looping text", () => {
-      service.reset("");
+    it('should handle content with mixed code blocks and looping text', () => {
+      service.reset('');
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
-      service.addAndCheck(createContentEvent("```"));
-      service.addAndCheck(createContentEvent("\ncode1\n"));
-      service.addAndCheck(createContentEvent("```"));
+      service.addAndCheck(createContentEvent('```'));
+      service.addAndCheck(createContentEvent('\ncode1\n'));
+      service.addAndCheck(createContentEvent('```'));
 
       let isLoop = false;
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD; i++) {
@@ -319,25 +319,25 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);
     });
 
-    it("should not detect a loop for a long code block with some repeating tokens", () => {
-      service.reset("");
+    it('should not detect a loop for a long code block with some repeating tokens', () => {
+      service.reset('');
       const repeatingTokens =
-        "for (let i = 0; i < 10; i++) { console.log(i); }";
+        'for (let i = 0; i < 10; i++) { console.log(i); }';
 
-      service.addAndCheck(createContentEvent("```\n"));
+      service.addAndCheck(createContentEvent('```\n'));
 
       for (let i = 0; i < 20; i++) {
         const isLoop = service.addAndCheck(createContentEvent(repeatingTokens));
         expect(isLoop).toBe(false);
       }
 
-      const isLoop = service.addAndCheck(createContentEvent("\n```"));
+      const isLoop = service.addAndCheck(createContentEvent('\n```'));
       expect(isLoop).toBe(false);
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should reset tracking when a code fence is found", () => {
-      service.reset("");
+    it('should reset tracking when a code fence is found', () => {
+      service.reset('');
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
@@ -345,7 +345,7 @@ describe("LoopDetectionService", () => {
       }
 
       // This should not trigger a loop because of the reset
-      service.addAndCheck(createContentEvent("```"));
+      service.addAndCheck(createContentEvent('```'));
 
       // We are now in a code block, so loop detection should be off.
       // Let's add the repeated content again, it should not trigger a loop.
@@ -357,8 +357,8 @@ describe("LoopDetectionService", () => {
 
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
-    it("should reset tracking when a table is detected", () => {
-      service.reset("");
+    it('should reset tracking when a table is detected', () => {
+      service.reset('');
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
@@ -366,7 +366,7 @@ describe("LoopDetectionService", () => {
       }
 
       // This should reset tracking and not trigger a loop
-      service.addAndCheck(createContentEvent("| Column 1 | Column 2 |"));
+      service.addAndCheck(createContentEvent('| Column 1 | Column 2 |'));
 
       // Add more repeated content after table - should not trigger loop
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
@@ -377,8 +377,8 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should reset tracking when a list item is detected", () => {
-      service.reset("");
+    it('should reset tracking when a list item is detected', () => {
+      service.reset('');
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
@@ -386,7 +386,7 @@ describe("LoopDetectionService", () => {
       }
 
       // This should reset tracking and not trigger a loop
-      service.addAndCheck(createContentEvent("* List item"));
+      service.addAndCheck(createContentEvent('* List item'));
 
       // Add more repeated content after list - should not trigger loop
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
@@ -397,8 +397,8 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should reset tracking when a heading is detected", () => {
-      service.reset("");
+    it('should reset tracking when a heading is detected', () => {
+      service.reset('');
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
@@ -406,7 +406,7 @@ describe("LoopDetectionService", () => {
       }
 
       // This should reset tracking and not trigger a loop
-      service.addAndCheck(createContentEvent("## Heading"));
+      service.addAndCheck(createContentEvent('## Heading'));
 
       // Add more repeated content after heading - should not trigger loop
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
@@ -417,8 +417,8 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should reset tracking when a blockquote is detected", () => {
-      service.reset("");
+    it('should reset tracking when a blockquote is detected', () => {
+      service.reset('');
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
@@ -426,7 +426,7 @@ describe("LoopDetectionService", () => {
       }
 
       // This should reset tracking and not trigger a loop
-      service.addAndCheck(createContentEvent("> Quote text"));
+      service.addAndCheck(createContentEvent('> Quote text'));
 
       // Add more repeated content after blockquote - should not trigger loop
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
@@ -437,20 +437,20 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should reset tracking for various list item formats", () => {
+    it('should reset tracking for various list item formats', () => {
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
       // Test different list formats - make sure they start at beginning of line
       const listFormats = [
-        "* Bullet item",
-        "- Dash item",
-        "+ Plus item",
-        "1. Numbered item",
-        "42. Another numbered item",
+        '* Bullet item',
+        '- Dash item',
+        '+ Plus item',
+        '1. Numbered item',
+        '42. Another numbered item',
       ];
 
       listFormats.forEach((listFormat, index) => {
-        service.reset("");
+        service.reset('');
 
         // Build up to near threshold
         for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
@@ -458,7 +458,7 @@ describe("LoopDetectionService", () => {
         }
 
         // Reset should occur with list item - add newline to ensure it starts at beginning
-        service.addAndCheck(createContentEvent("\n" + listFormat));
+        service.addAndCheck(createContentEvent('\n' + listFormat));
 
         // Should not trigger loop after reset - use different content to avoid any cached state issues
         const newRepeatedContent = createRepetitiveContent(
@@ -476,18 +476,18 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should reset tracking for various table formats", () => {
+    it('should reset tracking for various table formats', () => {
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
       const tableFormats = [
-        "| Column 1 | Column 2 |",
-        "|---|---|",
-        "|++|++|",
-        "+---+---+",
+        '| Column 1 | Column 2 |',
+        '|---|---|',
+        '|++|++|',
+        '+---+---+',
       ];
 
       tableFormats.forEach((tableFormat, index) => {
-        service.reset("");
+        service.reset('');
 
         // Build up to near threshold
         for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
@@ -495,7 +495,7 @@ describe("LoopDetectionService", () => {
         }
 
         // Reset should occur with table format - add newline to ensure it starts at beginning
-        service.addAndCheck(createContentEvent("\n" + tableFormat));
+        service.addAndCheck(createContentEvent('\n' + tableFormat));
 
         // Should not trigger loop after reset - use different content to avoid any cached state issues
         const newRepeatedContent = createRepetitiveContent(
@@ -513,20 +513,20 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should reset tracking for various heading levels", () => {
+    it('should reset tracking for various heading levels', () => {
       const repeatedContent = createRepetitiveContent(1, CONTENT_CHUNK_SIZE);
 
       const headingFormats = [
-        "# H1 Heading",
-        "## H2 Heading",
-        "### H3 Heading",
-        "#### H4 Heading",
-        "##### H5 Heading",
-        "###### H6 Heading",
+        '# H1 Heading',
+        '## H2 Heading',
+        '### H3 Heading',
+        '#### H4 Heading',
+        '##### H5 Heading',
+        '###### H6 Heading',
       ];
 
       headingFormats.forEach((headingFormat, index) => {
-        service.reset("");
+        service.reset('');
 
         // Build up to near threshold
         for (let i = 0; i < CONTENT_LOOP_THRESHOLD - 1; i++) {
@@ -534,7 +534,7 @@ describe("LoopDetectionService", () => {
         }
 
         // Reset should occur with heading - add newline to ensure it starts at beginning
-        service.addAndCheck(createContentEvent("\n" + headingFormat));
+        service.addAndCheck(createContentEvent('\n' + headingFormat));
 
         // Should not trigger loop after reset - use different content to avoid any cached state issues
         const newRepeatedContent = createRepetitiveContent(
@@ -553,17 +553,17 @@ describe("LoopDetectionService", () => {
     });
   });
 
-  describe("Edge Cases", () => {
-    it("should handle empty content", () => {
-      const event = createContentEvent("");
+  describe('Edge Cases', () => {
+    it('should handle empty content', () => {
+      const event = createContentEvent('');
       expect(service.addAndCheck(event)).toBe(false);
     });
   });
 
-  describe("Divider Content Detection", () => {
-    it("should not detect a loop for repeating divider-like content", () => {
-      service.reset("");
-      const dividerContent = "-".repeat(CONTENT_CHUNK_SIZE);
+  describe('Divider Content Detection', () => {
+    it('should not detect a loop for repeating divider-like content', () => {
+      service.reset('');
+      const dividerContent = '-'.repeat(CONTENT_CHUNK_SIZE);
       let isLoop = false;
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD + 5; i++) {
         isLoop = service.addAndCheck(createContentEvent(dividerContent));
@@ -572,9 +572,9 @@ describe("LoopDetectionService", () => {
       expect(loggers.logLoopDetected).not.toHaveBeenCalled();
     });
 
-    it("should not detect a loop for repeating complex box-drawing dividers", () => {
-      service.reset("");
-      const dividerContent = "╭─".repeat(CONTENT_CHUNK_SIZE / 2);
+    it('should not detect a loop for repeating complex box-drawing dividers', () => {
+      service.reset('');
+      const dividerContent = '╭─'.repeat(CONTENT_CHUNK_SIZE / 2);
       let isLoop = false;
       for (let i = 0; i < CONTENT_LOOP_THRESHOLD + 5; i++) {
         isLoop = service.addAndCheck(createContentEvent(dividerContent));
@@ -584,11 +584,11 @@ describe("LoopDetectionService", () => {
     });
   });
 
-  describe("Reset Functionality", () => {
-    it("tool call should reset content count", () => {
-      const contentEvent = createContentEvent("Some content.");
-      const toolEvent = createToolCallRequestEvent("testTool", {
-        param: "value",
+  describe('Reset Functionality', () => {
+    it('tool call should reset content count', () => {
+      const contentEvent = createContentEvent('Some content.');
+      const toolEvent = createToolCallRequestEvent('testTool', {
+        param: 'value',
       });
       for (let i = 0; i < 9; i++) {
         service.addAndCheck(contentEvent);
@@ -597,16 +597,16 @@ describe("LoopDetectionService", () => {
       service.addAndCheck(toolEvent);
 
       // Should start fresh
-      expect(service.addAndCheck(createContentEvent("Fresh content."))).toBe(
+      expect(service.addAndCheck(createContentEvent('Fresh content.'))).toBe(
         false,
       );
     });
   });
 
-  describe("General Behavior", () => {
-    it("should return false for unhandled event types", () => {
+  describe('General Behavior', () => {
+    it('should return false for unhandled event types', () => {
       const otherEvent = {
-        type: "unhandled_event",
+        type: 'unhandled_event',
       } as unknown as ServerGeminiStreamEvent;
       expect(service.addAndCheck(otherEvent)).toBe(false);
       expect(service.addAndCheck(otherEvent)).toBe(false);
@@ -614,7 +614,7 @@ describe("LoopDetectionService", () => {
   });
 });
 
-describe("LoopDetectionService LLM Checks", () => {
+describe('LoopDetectionService LLM Checks', () => {
   let service: LoopDetectionService;
   let mockConfig: Config;
   let mockGeminiClient: GeminiClient;
@@ -647,12 +647,12 @@ describe("LoopDetectionService LLM Checks", () => {
     }
   };
 
-  it("should not trigger LLM check before LLM_CHECK_AFTER_TURNS", async () => {
+  it('should not trigger LLM check before LLM_CHECK_AFTER_TURNS', async () => {
     await advanceTurns(29);
     expect(mockGeminiClient.generateJson).not.toHaveBeenCalled();
   });
 
-  it("should trigger LLM check on the 30th turn", async () => {
+  it('should trigger LLM check on the 30th turn', async () => {
     mockGeminiClient.generateJson = vi
       .fn()
       .mockResolvedValue({ confidence: 0.1 });
@@ -660,11 +660,11 @@ describe("LoopDetectionService LLM Checks", () => {
     expect(mockGeminiClient.generateJson).toHaveBeenCalledTimes(1);
   });
 
-  it("should detect a cognitive loop when confidence is high", async () => {
+  it('should detect a cognitive loop when confidence is high', async () => {
     // First check at turn 30
     mockGeminiClient.generateJson = vi
       .fn()
-      .mockResolvedValue({ confidence: 0.85, reasoning: "Repetitive actions" });
+      .mockResolvedValue({ confidence: 0.85, reasoning: 'Repetitive actions' });
     await advanceTurns(30);
     expect(mockGeminiClient.generateJson).toHaveBeenCalledTimes(1);
 
@@ -674,30 +674,30 @@ describe("LoopDetectionService LLM Checks", () => {
 
     mockGeminiClient.generateJson = vi
       .fn()
-      .mockResolvedValue({ confidence: 0.95, reasoning: "Repetitive actions" });
+      .mockResolvedValue({ confidence: 0.95, reasoning: 'Repetitive actions' });
     const finalResult = await service.turnStarted(abortController.signal); // This is turn 37
 
     expect(finalResult).toBe(true);
     expect(loggers.logLoopDetected).toHaveBeenCalledWith(
       mockConfig,
       expect.objectContaining({
-        "event.name": "loop_detected",
+        'event.name': 'loop_detected',
         loop_type: LoopType.LLM_DETECTED_LOOP,
       }),
     );
   });
 
-  it("should not detect a loop when confidence is low", async () => {
+  it('should not detect a loop when confidence is low', async () => {
     mockGeminiClient.generateJson = vi
       .fn()
-      .mockResolvedValue({ confidence: 0.5, reasoning: "Looks okay" });
+      .mockResolvedValue({ confidence: 0.5, reasoning: 'Looks okay' });
     await advanceTurns(30);
     const result = await service.turnStarted(abortController.signal);
     expect(result).toBe(false);
     expect(loggers.logLoopDetected).not.toHaveBeenCalled();
   });
 
-  it("should adjust the check interval based on confidence", async () => {
+  it('should adjust the check interval based on confidence', async () => {
     // Confidence is 0.0, so interval should be MAX_LLM_CHECK_INTERVAL (15)
     mockGeminiClient.generateJson = vi
       .fn()
@@ -712,10 +712,10 @@ describe("LoopDetectionService LLM Checks", () => {
     expect(mockGeminiClient.generateJson).toHaveBeenCalledTimes(2);
   });
 
-  it("should handle errors from generateJson gracefully", async () => {
+  it('should handle errors from generateJson gracefully', async () => {
     mockGeminiClient.generateJson = vi
       .fn()
-      .mockRejectedValue(new Error("API error"));
+      .mockRejectedValue(new Error('API error'));
     await advanceTurns(30);
     const result = await service.turnStarted(abortController.signal);
     expect(result).toBe(false);

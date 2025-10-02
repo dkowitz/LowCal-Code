@@ -43,7 +43,6 @@ import { RadioButtonSelect } from './components/shared/RadioButtonSelect.js';
 import { ModelSelectionDialog } from './components/ModelSelectionDialog.js';
 import { ModelSwitchDialog, } from './components/ModelSwitchDialog.js';
 import { getOpenAIAvailableModelFromEnv, getFilteredQwenModels, fetchOpenAICompatibleModels, getLMStudioLoadedModel, } from './models/availableModels.js';
-import { createModelSourceKey } from './models/modelSourceKey.js';
 import { processVisionSwitchOutcome } from './hooks/useVisionAutoSwitch.js';
 import { AgentCreationWizard, AgentsManagerDialog, } from './components/subagents/index.js';
 import { Colors } from './colors.js';
@@ -230,7 +229,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = useState(false);
     const [availableModelsForDialog, setAvailableModelsForDialog] = useState([]);
     const [allAvailableModels, setAllAvailableModels] = useState([]);
-    const [modelSourceKey, setModelSourceKey] = useState(null);
     const [isFetchingModels, setIsFetchingModels] = useState(false);
     const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = useState(false);
     const [visionSwitchResolver, setVisionSwitchResolver] = useState(null);
@@ -514,44 +512,35 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     }, [visionSwitchResolver]);
     const handleModelSelectionOpen = useCallback(() => {
         (async () => {
-            if (isFetchingModels) {
-                return;
-            }
-            const contentGeneratorConfig = config.getContentGeneratorConfig();
-            if (!contentGeneratorConfig) {
-                setAvailableModelsForDialog([]);
-                setIsModelSelectionDialogOpen(true);
-                setModelSourceKey(null);
-                return;
-            }
-            const baseUrl = contentGeneratorConfig.authType === AuthType.USE_OPENAI
-                ? contentGeneratorConfig.baseUrl ||
-                    process.env['OPENAI_BASE_URL'] ||
-                    ''
-                : '';
-            const currentProviderId = settings.merged.security?.auth?.providerId ?? undefined;
-            const nextSourceKey = createModelSourceKey({
-                authType: contentGeneratorConfig.authType,
-                providerId: currentProviderId,
-                baseUrl,
-            });
-            if (allAvailableModels.length > 0 &&
-                modelSourceKey === nextSourceKey) {
+            if (allAvailableModels.length > 0) {
                 setAvailableModelsForDialog(allAvailableModels);
                 setIsModelSelectionDialogOpen(true);
                 return;
             }
+            if (isFetchingModels) {
+                return;
+            }
             setIsFetchingModels(true);
+            const contentGeneratorConfig = config.getContentGeneratorConfig();
+            if (!contentGeneratorConfig) {
+                setAvailableModelsForDialog([]);
+                setIsModelSelectionDialogOpen(true);
+                setIsFetchingModels(false);
+                return;
+            }
             let models = [];
             try {
                 if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
+                    const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
                     const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
                     if (baseUrl) {
                         models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
                     }
                     const openAIModel = getOpenAIAvailableModelFromEnv();
-                    if (openAIModel && !models.find(m => m.id === openAIModel.id)) {
-                        models.push(openAIModel);
+                    if (openAIModel) {
+                        if (!models.find(m => m.id === openAIModel.id)) {
+                            models.push(openAIModel);
+                        }
                     }
                 }
                 else {
@@ -559,21 +548,13 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 }
                 setAllAvailableModels(models);
                 setAvailableModelsForDialog(models);
-                setModelSourceKey(nextSourceKey);
                 setIsModelSelectionDialogOpen(true);
             }
             finally {
                 setIsFetchingModels(false);
             }
         })();
-    }, [
-        allAvailableModels,
-        config,
-        settings.merged.experimental?.visionModelPreview,
-        settings.merged.security?.auth?.providerId,
-        isFetchingModels,
-        modelSourceKey,
-    ]);
+    }, [allAvailableModels, config, settings.merged.experimental?.visionModelPreview, isFetchingModels]);
     const handleModelSelectionClose = useCallback(() => {
         setIsModelSelectionDialogOpen(false);
     }, []);

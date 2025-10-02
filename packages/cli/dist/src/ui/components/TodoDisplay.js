@@ -1,10 +1,10 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
 const STATUS_ICONS = {
-    pending: "○",
-    in_progress: "◐",
-    completed: "●",
+    pending: '○',
+    in_progress: '◐',
+    completed: '●',
 };
 export const TodoDisplay = ({ todos }) => {
     if (!todos || todos.length === 0) {
@@ -14,8 +14,8 @@ export const TodoDisplay = ({ todos }) => {
 };
 const TodoItemRow = ({ todo }) => {
     const statusIcon = STATUS_ICONS[todo.status];
-    const isCompleted = todo.status === "completed";
-    const isInProgress = todo.status === "in_progress";
+    const isCompleted = todo.status === 'completed';
+    const isInProgress = todo.status === 'in_progress';
     // Use the same color for both status icon and text, like RadioButtonSelect
     const itemColor = isCompleted
         ? Colors.Foreground

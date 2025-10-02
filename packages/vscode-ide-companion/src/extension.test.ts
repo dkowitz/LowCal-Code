@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as vscode from "vscode";
-import { activate } from "./extension.js";
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import * as vscode from 'vscode';
+import { activate } from './extension.js';
 
-vi.mock("vscode", () => ({
+vi.mock('vscode', () => ({
   window: {
     createOutputChannel: vi.fn(() => ({
       appendLine: vi.fn(),
@@ -51,7 +51,7 @@ vi.mock("vscode", () => ({
   })),
 }));
 
-describe("activate", () => {
+describe('activate', () => {
   let context: vscode.ExtensionContext;
 
   beforeEach(() => {
@@ -65,7 +65,7 @@ describe("activate", () => {
         update: vi.fn(),
       },
       extensionUri: {
-        fsPath: "/path/to/extension",
+        fsPath: '/path/to/extension',
       },
     } as unknown as vscode.ExtensionContext;
   });
@@ -74,34 +74,34 @@ describe("activate", () => {
     vi.restoreAllMocks();
   });
 
-  it("should show the info message on first activation", async () => {
+  it('should show the info message on first activation', async () => {
     const showInformationMessageMock = vi
       .mocked(vscode.window.showInformationMessage)
       .mockResolvedValue(undefined as never);
     vi.mocked(context.globalState.get).mockReturnValue(undefined);
     await activate(context);
     expect(showInformationMessageMock).toHaveBeenCalledWith(
-      "Qwen Code Companion extension successfully installed.",
+      'Qwen Code Companion extension successfully installed.',
     );
   });
 
-  it("should not show the info message on subsequent activations", async () => {
+  it('should not show the info message on subsequent activations', async () => {
     vi.mocked(context.globalState.get).mockReturnValue(true);
     await activate(context);
     expect(vscode.window.showInformationMessage).not.toHaveBeenCalled();
   });
 
-  it("should launch Qwen Code when the user clicks the button", async () => {
+  it('should launch Qwen Code when the user clicks the button', async () => {
     const showInformationMessageMock = vi
       .mocked(vscode.window.showInformationMessage)
-      .mockResolvedValue("Run Qwen Code" as never);
+      .mockResolvedValue('Run Qwen Code' as never);
     vi.mocked(context.globalState.get).mockReturnValue(undefined);
     await activate(context);
     expect(showInformationMessageMock).toHaveBeenCalled();
     await new Promise(process.nextTick); // Wait for the promise to resolve
     const commandCallback = vi
       .mocked(vscode.commands.registerCommand)
-      .mock.calls.find((call) => call[0] === "qwen-code.runQwenCode")?.[1];
+      .mock.calls.find((call) => call[0] === 'qwen-code.runQwenCode')?.[1];
 
     expect(commandCallback).toBeDefined();
   });

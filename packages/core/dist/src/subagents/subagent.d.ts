@@ -3,12 +3,12 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Config } from "../config/config.js";
-import type { PromptConfig, ModelConfig, RunConfig, ToolConfig } from "./types.js";
-import { SubagentTerminateMode } from "./types.js";
-import { type SubAgentEventEmitter } from "./subagent-events.js";
-import { type SubagentStatsSummary } from "./subagent-statistics.js";
-import type { SubagentHooks } from "./subagent-hooks.js";
+import type { Config } from '../config/config.js';
+import type { PromptConfig, ModelConfig, RunConfig, ToolConfig } from './types.js';
+import { SubagentTerminateMode } from './types.js';
+import { type SubAgentEventEmitter } from './subagent-events.js';
+import { type SubagentStatsSummary } from './subagent-statistics.js';
+import type { SubagentHooks } from './subagent-hooks.js';
 /**
  * @fileoverview Defines the configuration interfaces for a subagent.
  *

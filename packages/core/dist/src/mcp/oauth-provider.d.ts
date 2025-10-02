@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { OAuthToken } from "./token-storage/types.js";
+import type { OAuthToken } from './token-storage/types.js';
 /**
  * OAuth configuration for an MCP server.
  */

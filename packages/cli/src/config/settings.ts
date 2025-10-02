@@ -4,111 +4,111 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as fs from "node:fs";
-import * as path from "node:path";
-import { homedir, platform } from "node:os";
-import * as dotenv from "dotenv";
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import { homedir, platform } from 'node:os';
+import * as dotenv from 'dotenv';
 import {
   GEMINI_CONFIG_DIR as GEMINI_DIR,
   getErrorMessage,
   Storage,
-} from "@qwen-code/qwen-code-core";
-import stripJsonComments from "strip-json-comments";
-import { DefaultLight } from "../ui/themes/default-light.js";
-import { DefaultDark } from "../ui/themes/default.js";
-import { isWorkspaceTrusted } from "./trustedFolders.js";
-import type { Settings, MemoryImportFormat } from "./settingsSchema.js";
-import { mergeWith } from "lodash-es";
+} from '@qwen-code/qwen-code-core';
+import stripJsonComments from 'strip-json-comments';
+import { DefaultLight } from '../ui/themes/default-light.js';
+import { DefaultDark } from '../ui/themes/default.js';
+import { isWorkspaceTrusted } from './trustedFolders.js';
+import type { Settings, MemoryImportFormat } from './settingsSchema.js';
+import { mergeWith } from 'lodash-es';
 
 export type { Settings, MemoryImportFormat };
 
-export const SETTINGS_DIRECTORY_NAME = ".qwen";
+export const SETTINGS_DIRECTORY_NAME = '.qwen';
 export const USER_SETTINGS_PATH = Storage.getGlobalSettingsPath();
 export const USER_SETTINGS_DIR = path.dirname(USER_SETTINGS_PATH);
-export const DEFAULT_EXCLUDED_ENV_VARS = ["DEBUG", "DEBUG_MODE"];
+export const DEFAULT_EXCLUDED_ENV_VARS = ['DEBUG', 'DEBUG_MODE'];
 
 const MIGRATE_V2_OVERWRITE = false;
 
 const MIGRATION_MAP: Record<string, string> = {
-  preferredEditor: "general.preferredEditor",
-  vimMode: "general.vimMode",
-  disableAutoUpdate: "general.disableAutoUpdate",
-  disableUpdateNag: "general.disableUpdateNag",
-  checkpointing: "general.checkpointing",
-  theme: "ui.theme",
-  customThemes: "ui.customThemes",
-  hideWindowTitle: "ui.hideWindowTitle",
-  hideTips: "ui.hideTips",
-  hideBanner: "ui.hideBanner",
-  hideFooter: "ui.hideFooter",
-  showMemoryUsage: "ui.showMemoryUsage",
-  showLineNumbers: "ui.showLineNumbers",
-  accessibility: "ui.accessibility",
-  ideMode: "ide.enabled",
-  hasSeenIdeIntegrationNudge: "ide.hasSeenNudge",
-  usageStatisticsEnabled: "privacy.usageStatisticsEnabled",
-  telemetry: "telemetry",
-  model: "model.name",
-  maxSessionTurns: "model.maxSessionTurns",
-  summarizeToolOutput: "model.summarizeToolOutput",
-  chatCompression: "model.chatCompression",
-  skipNextSpeakerCheck: "model.skipNextSpeakerCheck",
-  contextFileName: "context.fileName",
-  memoryImportFormat: "context.importFormat",
-  memoryDiscoveryMaxDirs: "context.discoveryMaxDirs",
-  includeDirectories: "context.includeDirectories",
-  loadMemoryFromIncludeDirectories: "context.loadFromIncludeDirectories",
-  fileFiltering: "context.fileFiltering",
-  sandbox: "tools.sandbox",
-  shouldUseNodePtyShell: "tools.usePty",
-  allowedTools: "tools.allowed",
-  coreTools: "tools.core",
-  excludeTools: "tools.exclude",
-  toolDiscoveryCommand: "tools.discoveryCommand",
-  toolCallCommand: "tools.callCommand",
-  mcpServerCommand: "mcp.serverCommand",
-  allowMCPServers: "mcp.allowed",
-  excludeMCPServers: "mcp.excluded",
-  folderTrustFeature: "security.folderTrust.featureEnabled",
-  folderTrust: "security.folderTrust.enabled",
-  selectedAuthType: "security.auth.selectedType",
-  useExternalAuth: "security.auth.useExternal",
-  autoConfigureMaxOldSpaceSize: "advanced.autoConfigureMemory",
-  dnsResolutionOrder: "advanced.dnsResolutionOrder",
-  excludedProjectEnvVars: "advanced.excludedEnvVars",
-  bugCommand: "advanced.bugCommand",
+  preferredEditor: 'general.preferredEditor',
+  vimMode: 'general.vimMode',
+  disableAutoUpdate: 'general.disableAutoUpdate',
+  disableUpdateNag: 'general.disableUpdateNag',
+  checkpointing: 'general.checkpointing',
+  theme: 'ui.theme',
+  customThemes: 'ui.customThemes',
+  hideWindowTitle: 'ui.hideWindowTitle',
+  hideTips: 'ui.hideTips',
+  hideBanner: 'ui.hideBanner',
+  hideFooter: 'ui.hideFooter',
+  showMemoryUsage: 'ui.showMemoryUsage',
+  showLineNumbers: 'ui.showLineNumbers',
+  accessibility: 'ui.accessibility',
+  ideMode: 'ide.enabled',
+  hasSeenIdeIntegrationNudge: 'ide.hasSeenNudge',
+  usageStatisticsEnabled: 'privacy.usageStatisticsEnabled',
+  telemetry: 'telemetry',
+  model: 'model.name',
+  maxSessionTurns: 'model.maxSessionTurns',
+  summarizeToolOutput: 'model.summarizeToolOutput',
+  chatCompression: 'model.chatCompression',
+  skipNextSpeakerCheck: 'model.skipNextSpeakerCheck',
+  contextFileName: 'context.fileName',
+  memoryImportFormat: 'context.importFormat',
+  memoryDiscoveryMaxDirs: 'context.discoveryMaxDirs',
+  includeDirectories: 'context.includeDirectories',
+  loadMemoryFromIncludeDirectories: 'context.loadFromIncludeDirectories',
+  fileFiltering: 'context.fileFiltering',
+  sandbox: 'tools.sandbox',
+  shouldUseNodePtyShell: 'tools.usePty',
+  allowedTools: 'tools.allowed',
+  coreTools: 'tools.core',
+  excludeTools: 'tools.exclude',
+  toolDiscoveryCommand: 'tools.discoveryCommand',
+  toolCallCommand: 'tools.callCommand',
+  mcpServerCommand: 'mcp.serverCommand',
+  allowMCPServers: 'mcp.allowed',
+  excludeMCPServers: 'mcp.excluded',
+  folderTrustFeature: 'security.folderTrust.featureEnabled',
+  folderTrust: 'security.folderTrust.enabled',
+  selectedAuthType: 'security.auth.selectedType',
+  useExternalAuth: 'security.auth.useExternal',
+  autoConfigureMaxOldSpaceSize: 'advanced.autoConfigureMemory',
+  dnsResolutionOrder: 'advanced.dnsResolutionOrder',
+  excludedProjectEnvVars: 'advanced.excludedEnvVars',
+  bugCommand: 'advanced.bugCommand',
 };
 
 export function getSystemSettingsPath(): string {
-  if (process.env["QWEN_CODE_SYSTEM_SETTINGS_PATH"]) {
-    return process.env["QWEN_CODE_SYSTEM_SETTINGS_PATH"];
+  if (process.env['QWEN_CODE_SYSTEM_SETTINGS_PATH']) {
+    return process.env['QWEN_CODE_SYSTEM_SETTINGS_PATH'];
   }
-  if (platform() === "darwin") {
-    return "/Library/Application Support/QwenCode/settings.json";
-  } else if (platform() === "win32") {
-    return "C:\\ProgramData\\qwen-code\\settings.json";
+  if (platform() === 'darwin') {
+    return '/Library/Application Support/QwenCode/settings.json';
+  } else if (platform() === 'win32') {
+    return 'C:\\ProgramData\\qwen-code\\settings.json';
   } else {
-    return "/etc/qwen-code/settings.json";
+    return '/etc/qwen-code/settings.json';
   }
 }
 
 export function getSystemDefaultsPath(): string {
-  if (process.env["QWEN_CODE_SYSTEM_DEFAULTS_PATH"]) {
-    return process.env["QWEN_CODE_SYSTEM_DEFAULTS_PATH"];
+  if (process.env['QWEN_CODE_SYSTEM_DEFAULTS_PATH']) {
+    return process.env['QWEN_CODE_SYSTEM_DEFAULTS_PATH'];
   }
   return path.join(
     path.dirname(getSystemSettingsPath()),
-    "system-defaults.json",
+    'system-defaults.json',
   );
 }
 
-export type { DnsResolutionOrder } from "./settingsSchema.js";
+export type { DnsResolutionOrder } from './settingsSchema.js';
 
 export enum SettingScope {
-  User = "User",
-  Workspace = "Workspace",
-  System = "System",
-  SystemDefaults = "SystemDefaults",
+  User = 'User',
+  Workspace = 'Workspace',
+  System = 'System',
+  SystemDefaults = 'SystemDefaults',
 }
 
 export interface CheckpointingSettings {
@@ -139,7 +139,7 @@ function setNestedProperty(
   path: string,
   value: unknown,
 ) {
-  const keys = path.split(".");
+  const keys = path.split('.');
   const lastKey = keys.pop();
   if (!lastKey) return;
 
@@ -149,7 +149,7 @@ function setNestedProperty(
       current[key] = {};
     }
     const next = current[key];
-    if (typeof next === "object" && next !== null) {
+    if (typeof next === 'object' && next !== null) {
       current = next as Record<string, unknown>;
     } else {
       // This path is invalid, so we stop.
@@ -160,7 +160,7 @@ function setNestedProperty(
 }
 
 function needsMigration(settings: Record<string, unknown>): boolean {
-  return !("general" in settings);
+  return !('general' in settings);
 }
 
 function migrateSettingsToV2(
@@ -181,9 +181,9 @@ function migrateSettingsToV2(
   }
 
   // Preserve mcpServers at the top level
-  if (flatSettings["mcpServers"]) {
-    v2Settings["mcpServers"] = flatSettings["mcpServers"];
-    flatKeys.delete("mcpServers");
+  if (flatSettings['mcpServers']) {
+    v2Settings['mcpServers'] = flatSettings['mcpServers'];
+    flatKeys.delete('mcpServers');
   }
 
   // Carry over any unrecognized keys
@@ -196,10 +196,10 @@ function migrateSettingsToV2(
     const existingValue = v2Settings[remainingKey];
     if (
       existingValue &&
-      typeof existingValue === "object" &&
+      typeof existingValue === 'object' &&
       existingValue !== null &&
       !Array.isArray(existingValue) &&
-      typeof remainingValue === "object" &&
+      typeof remainingValue === 'object' &&
       remainingValue !== null &&
       !Array.isArray(remainingValue)
     ) {
@@ -219,10 +219,10 @@ function getNestedProperty(
   obj: Record<string, unknown>,
   path: string,
 ): unknown {
-  const keys = path.split(".");
+  const keys = path.split('.');
   let current: unknown = obj;
   for (const key of keys) {
-    if (typeof current !== "object" || current === null || !(key in current)) {
+    if (typeof current !== 'object' || current === null || !(key in current)) {
       return undefined;
     }
     current = (current as Record<string, unknown>)[key];
@@ -234,7 +234,7 @@ function deleteNestedProperty(
   obj: Record<string, unknown>,
   path: string,
 ): void {
-  const keys = path.split(".");
+  const keys = path.split('.');
   if (keys.length === 0) {
     return;
   }
@@ -249,7 +249,11 @@ function deleteNestedProperty(
 
     const key = keys[i];
     const value = current[key];
-    if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    if (
+      typeof value !== 'object' ||
+      value === null ||
+      Array.isArray(value)
+    ) {
       return;
     }
 
@@ -269,7 +273,7 @@ function deleteNestedProperty(
     const child = parent[key];
     if (
       child &&
-      typeof child === "object" &&
+      typeof child === 'object' &&
       !Array.isArray(child) &&
       Object.keys(child as Record<string, unknown>).length === 0
     ) {
@@ -289,10 +293,10 @@ function mergePlainObjects(
     const existing = result[key];
     if (
       existing &&
-      typeof existing === "object" &&
+      typeof existing === 'object' &&
       existing !== null &&
       !Array.isArray(existing) &&
-      typeof value === "object" &&
+      typeof value === 'object' &&
       value !== null &&
       !Array.isArray(value)
     ) {
@@ -336,7 +340,7 @@ export function migrateSettingsToV1(
     }
 
     if (
-      typeof value === "object" &&
+      typeof value === 'object' &&
       value !== null &&
       !Array.isArray(value) &&
       Object.keys(value as Record<string, unknown>).length === 0
@@ -364,11 +368,8 @@ function mergeSettings(
     if (!s) return s;
     try {
       const asAny = s as any;
-      if (typeof asAny.model === "string") {
-        return {
-          ...s,
-          model: { ...((s.model as any) ? {} : {}), name: asAny.model },
-        } as Settings;
+      if (typeof asAny.model === 'string') {
+        return { ...s, model: { ...(s.model as any ? {} : {}), name: asAny.model } } as Settings;
       }
     } catch (_e) {
       // ignore
@@ -623,7 +624,7 @@ function resolveEnvVarsInString(value: string): string {
   const envVarRegex = /\$(?:(\w+)|{([^}]+)})/g; // Find $VAR_NAME or ${VAR_NAME}
   return value.replace(envVarRegex, (match, varName1, varName2) => {
     const varName = varName1 || varName2;
-    if (process && process.env && typeof process.env[varName] === "string") {
+    if (process && process.env && typeof process.env[varName] === 'string') {
       return process.env[varName]!;
     }
     return match;
@@ -634,13 +635,13 @@ function resolveEnvVarsInObject<T>(obj: T): T {
   if (
     obj === null ||
     obj === undefined ||
-    typeof obj === "boolean" ||
-    typeof obj === "number"
+    typeof obj === 'boolean' ||
+    typeof obj === 'number'
   ) {
     return obj;
   }
 
-  if (typeof obj === "string") {
+  if (typeof obj === 'string') {
     return resolveEnvVarsInString(obj) as unknown as T;
   }
 
@@ -648,7 +649,7 @@ function resolveEnvVarsInObject<T>(obj: T): T {
     return obj.map((item) => resolveEnvVarsInObject(item)) as unknown as T;
   }
 
-  if (typeof obj === "object") {
+  if (typeof obj === 'object') {
     const newObj = { ...obj } as T;
     for (const key in newObj) {
       if (Object.prototype.hasOwnProperty.call(newObj, key)) {
@@ -665,22 +666,22 @@ function findEnvFile(startDir: string): string | null {
   let currentDir = path.resolve(startDir);
   while (true) {
     // prefer gemini-specific .env under GEMINI_DIR
-    const geminiEnvPath = path.join(currentDir, GEMINI_DIR, ".env");
+    const geminiEnvPath = path.join(currentDir, GEMINI_DIR, '.env');
     if (fs.existsSync(geminiEnvPath)) {
       return geminiEnvPath;
     }
-    const envPath = path.join(currentDir, ".env");
+    const envPath = path.join(currentDir, '.env');
     if (fs.existsSync(envPath)) {
       return envPath;
     }
     const parentDir = path.dirname(currentDir);
     if (parentDir === currentDir || !parentDir) {
       // check .env under home as fallback, again preferring gemini-specific .env
-      const homeGeminiEnvPath = path.join(homedir(), GEMINI_DIR, ".env");
+      const homeGeminiEnvPath = path.join(homedir(), GEMINI_DIR, '.env');
       if (fs.existsSync(homeGeminiEnvPath)) {
         return homeGeminiEnvPath;
       }
-      const homeEnvPath = path.join(homedir(), ".env");
+      const homeEnvPath = path.join(homedir(), '.env');
       if (fs.existsSync(homeEnvPath)) {
         return homeEnvPath;
       }
@@ -699,16 +700,16 @@ export function setUpCloudShellEnvironment(envFilePath: string | null): void {
   if (envFilePath && fs.existsSync(envFilePath)) {
     const envFileContent = fs.readFileSync(envFilePath);
     const parsedEnv = dotenv.parse(envFileContent);
-    if (parsedEnv["GOOGLE_CLOUD_PROJECT"]) {
+    if (parsedEnv['GOOGLE_CLOUD_PROJECT']) {
       // .env file takes precedence in Cloud Shell
-      process.env["GOOGLE_CLOUD_PROJECT"] = parsedEnv["GOOGLE_CLOUD_PROJECT"];
+      process.env['GOOGLE_CLOUD_PROJECT'] = parsedEnv['GOOGLE_CLOUD_PROJECT'];
     } else {
       // If not in .env, set to default and override global
-      process.env["GOOGLE_CLOUD_PROJECT"] = "cloudshell-gca";
+      process.env['GOOGLE_CLOUD_PROJECT'] = 'cloudshell-gca';
     }
   } else {
     // If no .env file, set to default and override global
-    process.env["GOOGLE_CLOUD_PROJECT"] = "cloudshell-gca";
+    process.env['GOOGLE_CLOUD_PROJECT'] = 'cloudshell-gca';
   }
 }
 
@@ -716,7 +717,7 @@ export function loadEnvironment(settings?: Settings): void {
   const envFilePath = findEnvFile(process.cwd());
 
   // Cloud Shell environment variable handling
-  if (process.env["CLOUD_SHELL"] === "true") {
+  if (process.env['CLOUD_SHELL'] === 'true') {
     setUpCloudShellEnvironment(envFilePath);
   }
 
@@ -730,7 +731,7 @@ export function loadEnvironment(settings?: Settings): void {
       if (fs.existsSync(workspaceSettingsPath)) {
         const workspaceContent = fs.readFileSync(
           workspaceSettingsPath,
-          "utf-8",
+          'utf-8',
         );
         const parsedWorkspaceSettings = JSON.parse(
           stripJsonComments(workspaceContent),
@@ -746,7 +747,7 @@ export function loadEnvironment(settings?: Settings): void {
     // Manually parse and load environment variables to handle exclusions correctly.
     // This avoids modifying environment variables that were already set from the shell.
     try {
-      const envFileContent = fs.readFileSync(envFilePath, "utf-8");
+      const envFileContent = fs.readFileSync(envFilePath, 'utf-8');
       const parsedEnv = dotenv.parse(envFileContent);
 
       const excludedVars =
@@ -809,16 +810,16 @@ export function loadSettings(workspaceDir: string): LoadedSettings {
   const loadAndMigrate = (filePath: string, scope: SettingScope): Settings => {
     try {
       if (fs.existsSync(filePath)) {
-        const content = fs.readFileSync(filePath, "utf-8");
+        const content = fs.readFileSync(filePath, 'utf-8');
         const rawSettings: unknown = JSON.parse(stripJsonComments(content));
 
         if (
-          typeof rawSettings !== "object" ||
+          typeof rawSettings !== 'object' ||
           rawSettings === null ||
           Array.isArray(rawSettings)
         ) {
           settingsErrors.push({
-            message: "Settings file is not a valid JSON object.",
+            message: 'Settings file is not a valid JSON object.',
             path: filePath,
           });
           return {};
@@ -834,7 +835,7 @@ export function loadSettings(workspaceDir: string): LoadedSettings {
                 fs.writeFileSync(
                   filePath,
                   JSON.stringify(migratedSettings, null, 2),
-                  "utf-8",
+                  'utf-8',
                 );
               } catch (e) {
                 console.error(
@@ -875,14 +876,14 @@ export function loadSettings(workspaceDir: string): LoadedSettings {
   }
 
   // Support legacy theme names
-  if (userSettings.ui?.theme === "VS") {
+  if (userSettings.ui?.theme === 'VS') {
     userSettings.ui.theme = DefaultLight.name;
-  } else if (userSettings.ui?.theme === "VS2015") {
+  } else if (userSettings.ui?.theme === 'VS2015') {
     userSettings.ui.theme = DefaultDark.name;
   }
-  if (workspaceSettings.ui?.theme === "VS") {
+  if (workspaceSettings.ui?.theme === 'VS') {
     workspaceSettings.ui.theme = DefaultLight.name;
-  } else if (workspaceSettings.ui?.theme === "VS2015") {
+  } else if (workspaceSettings.ui?.theme === 'VS2015') {
     workspaceSettings.ui.theme = DefaultDark.name;
   }
 
@@ -953,9 +954,9 @@ export function saveSettings(settingsFile: SettingsFile): void {
     fs.writeFileSync(
       settingsFile.path,
       JSON.stringify(settingsToSave, null, 2),
-      "utf-8",
+      'utf-8',
     );
   } catch (error) {
-    console.error("Error saving user settings file:", error);
+    console.error('Error saving user settings file:', error);
   }
 }

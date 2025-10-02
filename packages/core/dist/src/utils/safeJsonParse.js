@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { jsonrepair } from "jsonrepair";
+import { jsonrepair } from 'jsonrepair';
 /**
  * Safely parse JSON string with jsonrepair fallback for malformed JSON.
  * This function attempts to parse JSON normally first, and if that fails,
@@ -14,7 +14,7 @@ import { jsonrepair } from "jsonrepair";
  * @returns The parsed object or the fallback value
  */
 export function safeJsonParse(jsonString, fallbackValue = {}) {
-    if (!jsonString || typeof jsonString !== "string") {
+    if (!jsonString || typeof jsonString !== 'string') {
         return fallbackValue;
     }
     try {
@@ -29,7 +29,7 @@ export function safeJsonParse(jsonString, fallbackValue = {}) {
             return JSON.parse(repairedJson);
         }
         catch (repairError) {
-            console.error("Failed to parse JSON even with jsonrepair:", {
+            console.error('Failed to parse JSON even with jsonrepair:', {
                 originalError: error,
                 repairError,
                 jsonString,

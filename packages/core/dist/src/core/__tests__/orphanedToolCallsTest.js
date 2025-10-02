@@ -9,40 +9,40 @@
 export const createTestMessages = () => [
     // System message
     {
-        role: "system",
-        content: "You are a helpful assistant.",
+        role: 'system',
+        content: 'You are a helpful assistant.',
     },
     // User message
     {
-        role: "user",
-        content: "Please use a tool to help me.",
+        role: 'user',
+        content: 'Please use a tool to help me.',
     },
     // Assistant message with tool calls (some will be orphaned)
     {
-        role: "assistant",
-        content: "I will help you with that.",
+        role: 'assistant',
+        content: 'I will help you with that.',
         tool_calls: [
             {
-                id: "call_1",
-                type: "function",
+                id: 'call_1',
+                type: 'function',
                 function: {
-                    name: "search_web",
+                    name: 'search_web',
                     arguments: '{"query": "test"}',
                 },
             },
             {
-                id: "call_2",
-                type: "function",
+                id: 'call_2',
+                type: 'function',
                 function: {
-                    name: "calculate",
+                    name: 'calculate',
                     arguments: '{"expression": "2+2"}',
                 },
             },
             {
-                id: "call_3", // This will be orphaned
-                type: "function",
+                id: 'call_3', // This will be orphaned
+                type: 'function',
                 function: {
-                    name: "send_email",
+                    name: 'send_email',
                     arguments: '{"to": "test@example.com"}',
                 },
             },
@@ -50,52 +50,52 @@ export const createTestMessages = () => [
     },
     // Tool response for call_1
     {
-        role: "tool",
-        tool_call_id: "call_1",
-        content: "Search results: Found relevant information.",
+        role: 'tool',
+        tool_call_id: 'call_1',
+        content: 'Search results: Found relevant information.',
     },
     // Tool response for call_2
     {
-        role: "tool",
-        tool_call_id: "call_2",
-        content: "Calculation result: 4",
+        role: 'tool',
+        tool_call_id: 'call_2',
+        content: 'Calculation result: 4',
     },
     // Note: No tool response for call_3 (this creates the orphaned tool call issue)
     // User continues conversation
     {
-        role: "user",
-        content: "Thank you, that was helpful.",
+        role: 'user',
+        content: 'Thank you, that was helpful.',
     },
 ];
 export const expectedCleanedMessages = () => [
     // System message (unchanged)
     {
-        role: "system",
-        content: "You are a helpful assistant.",
+        role: 'system',
+        content: 'You are a helpful assistant.',
     },
     // User message (unchanged)
     {
-        role: "user",
-        content: "Please use a tool to help me.",
+        role: 'user',
+        content: 'Please use a tool to help me.',
     },
     // Assistant message with only valid tool calls
     {
-        role: "assistant",
-        content: "I will help you with that.",
+        role: 'assistant',
+        content: 'I will help you with that.',
         tool_calls: [
             {
-                id: "call_1",
-                type: "function",
+                id: 'call_1',
+                type: 'function',
                 function: {
-                    name: "search_web",
+                    name: 'search_web',
                     arguments: '{"query": "test"}',
                 },
             },
             {
-                id: "call_2",
-                type: "function",
+                id: 'call_2',
+                type: 'function',
                 function: {
-                    name: "calculate",
+                    name: 'calculate',
                     arguments: '{"expression": "2+2"}',
                 },
             },
@@ -104,19 +104,19 @@ export const expectedCleanedMessages = () => [
     },
     // Tool responses (unchanged because they have corresponding calls)
     {
-        role: "tool",
-        tool_call_id: "call_1",
-        content: "Search results: Found relevant information.",
+        role: 'tool',
+        tool_call_id: 'call_1',
+        content: 'Search results: Found relevant information.',
     },
     {
-        role: "tool",
-        tool_call_id: "call_2",
-        content: "Calculation result: 4",
+        role: 'tool',
+        tool_call_id: 'call_2',
+        content: 'Calculation result: 4',
     },
     // User message (unchanged)
     {
-        role: "user",
-        content: "Thank you, that was helpful.",
+        role: 'user',
+        content: 'Thank you, that was helpful.',
     },
 ];
 //# sourceMappingURL=orphanedToolCallsTest.js.map

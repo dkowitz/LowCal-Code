@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import path from "node:path";
-import { fdir } from "fdir";
-import * as cache from "./crawlCache.js";
+import path from 'node:path';
+import { fdir } from 'fdir';
+import * as cache from './crawlCache.js';
 function toPosixPath(p) {
     return p.split(path.sep).join(path.posix.sep);
 }
@@ -25,7 +25,7 @@ export async function crawl(options) {
         const api = new fdir()
             .withRelativePaths()
             .withDirs()
-            .withPathSeparator("/") // Always use unix style paths
+            .withPathSeparator('/') // Always use unix style paths
             .exclude((_, dirPath) => {
             const relativePath = path.posix.relative(posixCrawlDirectory, dirPath);
             return dirFilter(`${relativePath}/`);

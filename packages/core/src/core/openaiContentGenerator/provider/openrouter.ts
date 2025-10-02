@@ -1,6 +1,6 @@
-import type { Config } from "../../../config/config.js";
-import type { ContentGeneratorConfig } from "../../contentGenerator.js";
-import { DefaultOpenAICompatibleProvider } from "./default.js";
+import type { Config } from '../../../config/config.js';
+import type { ContentGeneratorConfig } from '../../contentGenerator.js';
+import { DefaultOpenAICompatibleProvider } from './default.js';
 
 export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleProvider {
   constructor(
@@ -13,8 +13,8 @@ export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleP
   static isOpenRouterProvider(
     contentGeneratorConfig: ContentGeneratorConfig,
   ): boolean {
-    const baseURL = contentGeneratorConfig.baseUrl || "";
-    return baseURL.includes("openrouter.ai");
+    const baseURL = contentGeneratorConfig.baseUrl || '';
+    return baseURL.includes('openrouter.ai');
   }
 
   override buildHeaders(): Record<string, string | undefined> {
@@ -24,8 +24,8 @@ export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleP
     // Add OpenRouter-specific headers
     return {
       ...baseHeaders,
-      "HTTP-Referer": "https://github.com/QwenLM/qwen-code.git",
-      "X-Title": "Qwen Code",
+      'HTTP-Referer': 'https://github.com/QwenLM/qwen-code.git',
+      'X-Title': 'Qwen Code',
     };
   }
 }

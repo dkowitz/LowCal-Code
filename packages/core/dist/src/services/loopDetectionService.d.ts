@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { ServerGeminiStreamEvent } from "../core/turn.js";
-import type { Config } from "../config/config.js";
+import type { ServerGeminiStreamEvent } from '../core/turn.js';
+import type { Config } from '../config/config.js';
 /**
  * Service for detecting and preventing infinite loops in AI responses.
  * Monitors tool call repetitions and content sentence repetitions.

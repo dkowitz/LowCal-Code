@@ -1,11 +1,11 @@
-import { DefaultOpenAICompatibleProvider } from "./default.js";
+import { DefaultOpenAICompatibleProvider } from './default.js';
 export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleProvider {
     constructor(contentGeneratorConfig, cliConfig) {
         super(contentGeneratorConfig, cliConfig);
     }
     static isOpenRouterProvider(contentGeneratorConfig) {
-        const baseURL = contentGeneratorConfig.baseUrl || "";
-        return baseURL.includes("openrouter.ai");
+        const baseURL = contentGeneratorConfig.baseUrl || '';
+        return baseURL.includes('openrouter.ai');
     }
     buildHeaders() {
         // Get base headers from parent class
@@ -13,8 +13,8 @@ export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleP
         // Add OpenRouter-specific headers
         return {
             ...baseHeaders,
-            "HTTP-Referer": "https://github.com/QwenLM/qwen-code.git",
-            "X-Title": "Qwen Code",
+            'HTTP-Referer': 'https://github.com/QwenLM/qwen-code.git',
+            'X-Title': 'Qwen Code',
         };
     }
 }

@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Box, Text } from "ink";
-import type React from "react";
-import { Colors } from "../colors.js";
-import type { RadioSelectItem } from "./shared/RadioButtonSelect.js";
-import { RadioButtonSelect } from "./shared/RadioButtonSelect.js";
-import { useKeypress } from "../hooks/useKeypress.js";
-import * as process from "node:process";
+import { Box, Text } from 'ink';
+import type React from 'react';
+import { Colors } from '../colors.js';
+import type { RadioSelectItem } from './shared/RadioButtonSelect.js';
+import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
+import { useKeypress } from '../hooks/useKeypress.js';
+import * as process from 'node:process';
 
 export enum FolderTrustChoice {
-  TRUST_FOLDER = "trust_folder",
-  TRUST_PARENT = "trust_parent",
-  DO_NOT_TRUST = "do_not_trust",
+  TRUST_FOLDER = 'trust_folder',
+  TRUST_PARENT = 'trust_parent',
+  DO_NOT_TRUST = 'do_not_trust',
 }
 
 interface FolderTrustDialogProps {
@@ -29,7 +29,7 @@ export const FolderTrustDialog: React.FC<FolderTrustDialogProps> = ({
 }) => {
   useKeypress(
     (key) => {
-      if (key.name === "escape") {
+      if (key.name === 'escape') {
         onSelect(FolderTrustChoice.DO_NOT_TRUST);
       }
     },
@@ -38,7 +38,7 @@ export const FolderTrustDialog: React.FC<FolderTrustDialogProps> = ({
 
   useKeypress(
     (key) => {
-      if (key.name === "r") {
+      if (key.name === 'r') {
         process.exit(0);
       }
     },
@@ -47,11 +47,11 @@ export const FolderTrustDialog: React.FC<FolderTrustDialogProps> = ({
 
   const options: Array<RadioSelectItem<FolderTrustChoice>> = [
     {
-      label: "Trust folder",
+      label: 'Trust folder',
       value: FolderTrustChoice.TRUST_FOLDER,
     },
     {
-      label: "Trust parent folder",
+      label: 'Trust parent folder',
       value: FolderTrustChoice.TRUST_PARENT,
     },
     {

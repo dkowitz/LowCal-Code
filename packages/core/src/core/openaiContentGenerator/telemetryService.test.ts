@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import type { RequestContext } from "./telemetryService.js";
-import { DefaultTelemetryService } from "./telemetryService.js";
-import type { Config } from "../../config/config.js";
-import { logApiError, logApiResponse } from "../../telemetry/loggers.js";
-import { ApiErrorEvent, ApiResponseEvent } from "../../telemetry/types.js";
-import { openaiLogger } from "../../utils/openaiLogger.js";
-import type { GenerateContentResponse } from "@google/genai";
-import type OpenAI from "openai";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import type { RequestContext } from './telemetryService.js';
+import { DefaultTelemetryService } from './telemetryService.js';
+import type { Config } from '../../config/config.js';
+import { logApiError, logApiResponse } from '../../telemetry/loggers.js';
+import { ApiErrorEvent, ApiResponseEvent } from '../../telemetry/types.js';
+import { openaiLogger } from '../../utils/openaiLogger.js';
+import type { GenerateContentResponse } from '@google/genai';
+import type OpenAI from 'openai';
 
 // Mock dependencies
-vi.mock("../../telemetry/loggers.js");
-vi.mock("../../utils/openaiLogger.js");
+vi.mock('../../telemetry/loggers.js');
+vi.mock('../../utils/openaiLogger.js');
 
 // Extended error interface for testing
 interface ExtendedError extends Error {
@@ -25,7 +25,7 @@ interface ExtendedError extends Error {
   code?: string;
 }
 
-describe("DefaultTelemetryService", () => {
+describe('DefaultTelemetryService', () => {
   let mockConfig: Config;
   let telemetryService: DefaultTelemetryService;
   let mockRequestContext: RequestContext;
@@ -33,14 +33,14 @@ describe("DefaultTelemetryService", () => {
   beforeEach(() => {
     // Create mock config
     mockConfig = {
-      getSessionId: vi.fn().mockReturnValue("test-session-id"),
+      getSessionId: vi.fn().mockReturnValue('test-session-id'),
     } as unknown as Config;
 
     // Create mock request context
     mockRequestContext = {
-      userPromptId: "test-prompt-id",
-      model: "test-model",
-      authType: "test-auth",
+      userPromptId: 'test-prompt-id',
+      model: 'test-model',
+      authType: 'test-auth',
       startTime: Date.now(),
       duration: 1000,
       isStreaming: false,
@@ -54,26 +54,26 @@ describe("DefaultTelemetryService", () => {
     vi.restoreAllMocks();
   });
 
-  describe("constructor", () => {
-    it("should create instance with default OpenAI logging disabled", () => {
+  describe('constructor', () => {
+    it('should create instance with default OpenAI logging disabled', () => {
       const service = new DefaultTelemetryService(mockConfig);
       expect(service).toBeInstanceOf(DefaultTelemetryService);
     });
 
-    it("should create instance with OpenAI logging enabled when specified", () => {
+    it('should create instance with OpenAI logging enabled when specified', () => {
       const service = new DefaultTelemetryService(mockConfig, true);
       expect(service).toBeInstanceOf(DefaultTelemetryService);
     });
   });
 
-  describe("logSuccess", () => {
+  describe('logSuccess', () => {
     beforeEach(() => {
       telemetryService = new DefaultTelemetryService(mockConfig, false);
     });
 
-    it("should log API response event with complete response data", async () => {
+    it('should log API response event with complete response data', async () => {
       const mockResponse: GenerateContentResponse = {
-        responseId: "test-response-id",
+        responseId: 'test-response-id',
         usageMetadata: {
           promptTokenCount: 100,
           candidatesTokenCount: 50,
@@ -89,11 +89,11 @@ describe("DefaultTelemetryService", () => {
       expect(logApiResponse).toHaveBeenCalledWith(
         mockConfig,
         expect.objectContaining({
-          response_id: "test-response-id",
-          model: "test-model",
+          response_id: 'test-response-id',
+          model: 'test-model',
           duration_ms: 1000,
-          prompt_id: "test-prompt-id",
-          auth_type: "test-auth",
+          prompt_id: 'test-prompt-id',
+          auth_type: 'test-auth',
           input_token_count: 100,
           output_token_count: 50,
           total_token_count: 150,
@@ -104,7 +104,7 @@ describe("DefaultTelemetryService", () => {
       );
     });
 
-    it("should handle response without responseId", async () => {
+    it('should handle response without responseId', async () => {
       const mockResponse: GenerateContentResponse = {
         usageMetadata: {
           promptTokenCount: 100,
@@ -118,18 +118,18 @@ describe("DefaultTelemetryService", () => {
       expect(logApiResponse).toHaveBeenCalledWith(
         mockConfig,
         expect.objectContaining({
-          response_id: "unknown",
-          model: "test-model",
+          response_id: 'unknown',
+          model: 'test-model',
           duration_ms: 1000,
-          prompt_id: "test-prompt-id",
-          auth_type: "test-auth",
+          prompt_id: 'test-prompt-id',
+          auth_type: 'test-auth',
         }),
       );
     });
 
-    it("should handle response without usage metadata", async () => {
+    it('should handle response without usage metadata', async () => {
       const mockResponse: GenerateContentResponse = {
-        responseId: "test-response-id",
+        responseId: 'test-response-id',
       } as GenerateContentResponse;
 
       await telemetryService.logSuccess(mockRequestContext, mockResponse);
@@ -137,28 +137,28 @@ describe("DefaultTelemetryService", () => {
       expect(logApiResponse).toHaveBeenCalledWith(
         mockConfig,
         expect.objectContaining({
-          response_id: "test-response-id",
-          model: "test-model",
+          response_id: 'test-response-id',
+          model: 'test-model',
           duration_ms: 1000,
-          prompt_id: "test-prompt-id",
-          auth_type: "test-auth",
+          prompt_id: 'test-prompt-id',
+          auth_type: 'test-auth',
         }),
       );
     });
 
-    it("should not log OpenAI interaction when logging is disabled", async () => {
+    it('should not log OpenAI interaction when logging is disabled', async () => {
       const mockResponse: GenerateContentResponse = {
-        responseId: "test-response-id",
+        responseId: 'test-response-id',
       } as GenerateContentResponse;
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       const mockOpenAIResponse = {
-        id: "test-id",
-        choices: [{ message: { content: "response" } }],
+        id: 'test-id',
+        choices: [{ message: { content: 'response' } }],
       } as OpenAI.Chat.ChatCompletion;
 
       await telemetryService.logSuccess(
@@ -171,21 +171,21 @@ describe("DefaultTelemetryService", () => {
       expect(openaiLogger.logInteraction).not.toHaveBeenCalled();
     });
 
-    it("should log OpenAI interaction when logging is enabled", async () => {
+    it('should log OpenAI interaction when logging is enabled', async () => {
       telemetryService = new DefaultTelemetryService(mockConfig, true);
 
       const mockResponse: GenerateContentResponse = {
-        responseId: "test-response-id",
+        responseId: 'test-response-id',
       } as GenerateContentResponse;
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       const mockOpenAIResponse = {
-        id: "test-id",
-        choices: [{ message: { content: "response" } }],
+        id: 'test-id',
+        choices: [{ message: { content: 'response' } }],
       } as OpenAI.Chat.ChatCompletion;
 
       await telemetryService.logSuccess(
@@ -201,16 +201,16 @@ describe("DefaultTelemetryService", () => {
       );
     });
 
-    it("should not log OpenAI interaction when request or response is missing", async () => {
+    it('should not log OpenAI interaction when request or response is missing', async () => {
       telemetryService = new DefaultTelemetryService(mockConfig, true);
 
       const mockResponse: GenerateContentResponse = {
-        responseId: "test-response-id",
+        responseId: 'test-response-id',
       } as GenerateContentResponse;
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       // Test with missing OpenAI response
@@ -235,77 +235,77 @@ describe("DefaultTelemetryService", () => {
     });
   });
 
-  describe("logError", () => {
+  describe('logError', () => {
     beforeEach(() => {
       telemetryService = new DefaultTelemetryService(mockConfig, false);
     });
 
-    it("should log API error event with Error instance", async () => {
-      const error = new Error("Test error message") as ExtendedError;
-      error.requestID = "test-request-id";
-      error.type = "TestError";
-      error.code = "TEST_CODE";
+    it('should log API error event with Error instance', async () => {
+      const error = new Error('Test error message') as ExtendedError;
+      error.requestID = 'test-request-id';
+      error.type = 'TestError';
+      error.code = 'TEST_CODE';
 
       await telemetryService.logError(mockRequestContext, error);
 
       expect(logApiError).toHaveBeenCalledWith(
         mockConfig,
         expect.objectContaining({
-          response_id: "test-request-id",
-          model: "test-model",
-          error: "Test error message",
+          response_id: 'test-request-id',
+          model: 'test-model',
+          error: 'Test error message',
           duration_ms: 1000,
-          prompt_id: "test-prompt-id",
-          auth_type: "test-auth",
-          error_type: "TestError",
-          status_code: "TEST_CODE",
+          prompt_id: 'test-prompt-id',
+          auth_type: 'test-auth',
+          error_type: 'TestError',
+          status_code: 'TEST_CODE',
         }),
       );
     });
 
-    it("should handle error without requestID", async () => {
-      const error = new Error("Test error message");
+    it('should handle error without requestID', async () => {
+      const error = new Error('Test error message');
 
       await telemetryService.logError(mockRequestContext, error);
 
       expect(logApiError).toHaveBeenCalledWith(
         mockConfig,
         expect.objectContaining({
-          response_id: "unknown",
-          model: "test-model",
-          error: "Test error message",
+          response_id: 'unknown',
+          model: 'test-model',
+          error: 'Test error message',
           duration_ms: 1000,
-          prompt_id: "test-prompt-id",
-          auth_type: "test-auth",
+          prompt_id: 'test-prompt-id',
+          auth_type: 'test-auth',
         }),
       );
     });
 
-    it("should handle non-Error objects", async () => {
-      const error = "String error message";
+    it('should handle non-Error objects', async () => {
+      const error = 'String error message';
 
       await telemetryService.logError(mockRequestContext, error);
 
       expect(logApiError).toHaveBeenCalledWith(
         mockConfig,
         expect.objectContaining({
-          response_id: "unknown",
-          model: "test-model",
-          error: "String error message",
+          response_id: 'unknown',
+          model: 'test-model',
+          error: 'String error message',
           duration_ms: 1000,
-          prompt_id: "test-prompt-id",
-          auth_type: "test-auth",
+          prompt_id: 'test-prompt-id',
+          auth_type: 'test-auth',
         }),
       );
     });
 
-    it("should handle null/undefined errors", async () => {
+    it('should handle null/undefined errors', async () => {
       await telemetryService.logError(mockRequestContext, null);
 
       expect(logApiError).toHaveBeenCalledWith(
         mockConfig,
         expect.objectContaining({
-          error: "null",
+          error: 'null',
         }),
       );
 
@@ -314,16 +314,16 @@ describe("DefaultTelemetryService", () => {
       expect(logApiError).toHaveBeenCalledWith(
         mockConfig,
         expect.objectContaining({
-          error: "undefined",
+          error: 'undefined',
         }),
       );
     });
 
-    it("should not log OpenAI interaction when logging is disabled", async () => {
-      const error = new Error("Test error");
+    it('should not log OpenAI interaction when logging is disabled', async () => {
+      const error = new Error('Test error');
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       await telemetryService.logError(
@@ -335,13 +335,13 @@ describe("DefaultTelemetryService", () => {
       expect(openaiLogger.logInteraction).not.toHaveBeenCalled();
     });
 
-    it("should log OpenAI interaction when logging is enabled", async () => {
+    it('should log OpenAI interaction when logging is enabled', async () => {
       telemetryService = new DefaultTelemetryService(mockConfig, true);
 
-      const error = new Error("Test error");
+      const error = new Error('Test error');
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       await telemetryService.logError(
@@ -357,10 +357,10 @@ describe("DefaultTelemetryService", () => {
       );
     });
 
-    it("should not log OpenAI interaction when request is missing", async () => {
+    it('should not log OpenAI interaction when request is missing', async () => {
       telemetryService = new DefaultTelemetryService(mockConfig, true);
 
-      const error = new Error("Test error");
+      const error = new Error('Test error');
 
       await telemetryService.logError(mockRequestContext, error, undefined);
 
@@ -368,15 +368,15 @@ describe("DefaultTelemetryService", () => {
     });
   });
 
-  describe("logStreamingSuccess", () => {
+  describe('logStreamingSuccess', () => {
     beforeEach(() => {
       telemetryService = new DefaultTelemetryService(mockConfig, false);
     });
 
-    it("should log streaming success with multiple responses", async () => {
+    it('should log streaming success with multiple responses', async () => {
       const mockResponses: GenerateContentResponse[] = [
         {
-          responseId: "response-1",
+          responseId: 'response-1',
           usageMetadata: {
             promptTokenCount: 50,
             candidatesTokenCount: 25,
@@ -384,7 +384,7 @@ describe("DefaultTelemetryService", () => {
           },
         } as GenerateContentResponse,
         {
-          responseId: "response-2",
+          responseId: 'response-2',
           usageMetadata: {
             promptTokenCount: 100,
             candidatesTokenCount: 50,
@@ -395,7 +395,7 @@ describe("DefaultTelemetryService", () => {
           },
         } as GenerateContentResponse,
         {
-          responseId: "response-3",
+          responseId: 'response-3',
         } as GenerateContentResponse,
       ];
 
@@ -407,11 +407,11 @@ describe("DefaultTelemetryService", () => {
       expect(logApiResponse).toHaveBeenCalledWith(
         mockConfig,
         expect.objectContaining({
-          response_id: "response-3",
-          model: "test-model",
+          response_id: 'response-3',
+          model: 'test-model',
           duration_ms: 1000,
-          prompt_id: "test-prompt-id",
-          auth_type: "test-auth",
+          prompt_id: 'test-prompt-id',
+          auth_type: 'test-auth',
           // Should use usage metadata from response-2 (last one with metadata)
           input_token_count: 100,
           output_token_count: 50,
@@ -423,7 +423,7 @@ describe("DefaultTelemetryService", () => {
       );
     });
 
-    it("should handle empty responses array", async () => {
+    it('should handle empty responses array', async () => {
       const mockResponses: GenerateContentResponse[] = [];
 
       await telemetryService.logStreamingSuccess(
@@ -434,22 +434,22 @@ describe("DefaultTelemetryService", () => {
       expect(logApiResponse).toHaveBeenCalledWith(
         mockConfig,
         expect.objectContaining({
-          response_id: "unknown",
-          model: "test-model",
+          response_id: 'unknown',
+          model: 'test-model',
           duration_ms: 1000,
-          prompt_id: "test-prompt-id",
-          auth_type: "test-auth",
+          prompt_id: 'test-prompt-id',
+          auth_type: 'test-auth',
         }),
       );
     });
 
-    it("should handle responses without usage metadata", async () => {
+    it('should handle responses without usage metadata', async () => {
       const mockResponses: GenerateContentResponse[] = [
         {
-          responseId: "response-1",
+          responseId: 'response-1',
         } as GenerateContentResponse,
         {
-          responseId: "response-2",
+          responseId: 'response-2',
         } as GenerateContentResponse,
       ];
 
@@ -461,19 +461,19 @@ describe("DefaultTelemetryService", () => {
       expect(logApiResponse).toHaveBeenCalledWith(
         mockConfig,
         expect.objectContaining({
-          response_id: "response-2",
-          model: "test-model",
+          response_id: 'response-2',
+          model: 'test-model',
           duration_ms: 1000,
-          prompt_id: "test-prompt-id",
-          auth_type: "test-auth",
+          prompt_id: 'test-prompt-id',
+          auth_type: 'test-auth',
         }),
       );
     });
 
-    it("should use the last response with usage metadata", async () => {
+    it('should use the last response with usage metadata', async () => {
       const mockResponses: GenerateContentResponse[] = [
         {
-          responseId: "response-1",
+          responseId: 'response-1',
           usageMetadata: {
             promptTokenCount: 50,
             candidatesTokenCount: 25,
@@ -481,10 +481,10 @@ describe("DefaultTelemetryService", () => {
           },
         } as GenerateContentResponse,
         {
-          responseId: "response-2",
+          responseId: 'response-2',
         } as GenerateContentResponse,
         {
-          responseId: "response-3",
+          responseId: 'response-3',
           usageMetadata: {
             promptTokenCount: 100,
             candidatesTokenCount: 50,
@@ -492,7 +492,7 @@ describe("DefaultTelemetryService", () => {
           },
         } as GenerateContentResponse,
         {
-          responseId: "response-4",
+          responseId: 'response-4',
         } as GenerateContentResponse,
       ];
 
@@ -504,7 +504,7 @@ describe("DefaultTelemetryService", () => {
       expect(logApiResponse).toHaveBeenCalledWith(
         mockConfig,
         expect.objectContaining({
-          response_id: "response-4",
+          response_id: 'response-4',
           // Should use usage metadata from response-3 (last one with metadata)
           input_token_count: 100,
           output_token_count: 50,
@@ -513,20 +513,20 @@ describe("DefaultTelemetryService", () => {
       );
     });
 
-    it("should not log OpenAI interaction when logging is disabled", async () => {
+    it('should not log OpenAI interaction when logging is disabled', async () => {
       const mockResponses: GenerateContentResponse[] = [
-        { responseId: "response-1" } as GenerateContentResponse,
+        { responseId: 'response-1' } as GenerateContentResponse,
       ];
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       const mockOpenAIChunks = [
         {
-          id: "test-id",
-          choices: [{ delta: { content: "response" } }],
+          id: 'test-id',
+          choices: [{ delta: { content: 'response' } }],
         } as OpenAI.Chat.ChatCompletionChunk,
       ];
 
@@ -540,42 +540,42 @@ describe("DefaultTelemetryService", () => {
       expect(openaiLogger.logInteraction).not.toHaveBeenCalled();
     });
 
-    it("should log OpenAI interaction when logging is enabled", async () => {
+    it('should log OpenAI interaction when logging is enabled', async () => {
       telemetryService = new DefaultTelemetryService(mockConfig, true);
 
       const mockResponses: GenerateContentResponse[] = [
-        { responseId: "response-1" } as GenerateContentResponse,
+        { responseId: 'response-1' } as GenerateContentResponse,
       ];
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       const mockOpenAIChunks = [
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
-              delta: { content: "Hello" },
+              delta: { content: 'Hello' },
               finish_reason: null,
             },
           ],
         } as OpenAI.Chat.ChatCompletionChunk,
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
-              delta: { content: " world" },
-              finish_reason: "stop",
+              delta: { content: ' world' },
+              finish_reason: 'stop',
             },
           ],
           usage: {
@@ -596,19 +596,19 @@ describe("DefaultTelemetryService", () => {
       expect(openaiLogger.logInteraction).toHaveBeenCalledWith(
         mockOpenAIRequest,
         expect.objectContaining({
-          id: "test-id",
-          object: "chat.completion",
+          id: 'test-id',
+          object: 'chat.completion',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
               message: {
-                role: "assistant",
-                content: "Hello world",
+                role: 'assistant',
+                content: 'Hello world',
                 refusal: null,
               },
-              finish_reason: "stop",
+              finish_reason: 'stop',
               logprobs: null,
             },
           ],
@@ -621,16 +621,16 @@ describe("DefaultTelemetryService", () => {
       );
     });
 
-    it("should not log OpenAI interaction when request or chunks are missing", async () => {
+    it('should not log OpenAI interaction when request or chunks are missing', async () => {
       telemetryService = new DefaultTelemetryService(mockConfig, true);
 
       const mockResponses: GenerateContentResponse[] = [
-        { responseId: "response-1" } as GenerateContentResponse,
+        { responseId: 'response-1' } as GenerateContentResponse,
       ];
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       // Test with missing OpenAI chunks
@@ -665,30 +665,30 @@ describe("DefaultTelemetryService", () => {
     });
   });
 
-  describe("RequestContext interface", () => {
-    it("should have all required properties", () => {
+  describe('RequestContext interface', () => {
+    it('should have all required properties', () => {
       const context: RequestContext = {
-        userPromptId: "test-prompt-id",
-        model: "test-model",
-        authType: "test-auth",
+        userPromptId: 'test-prompt-id',
+        model: 'test-model',
+        authType: 'test-auth',
         startTime: Date.now(),
         duration: 1000,
         isStreaming: false,
       };
 
-      expect(context.userPromptId).toBe("test-prompt-id");
-      expect(context.model).toBe("test-model");
-      expect(context.authType).toBe("test-auth");
-      expect(typeof context.startTime).toBe("number");
+      expect(context.userPromptId).toBe('test-prompt-id');
+      expect(context.model).toBe('test-model');
+      expect(context.authType).toBe('test-auth');
+      expect(typeof context.startTime).toBe('number');
       expect(context.duration).toBe(1000);
       expect(context.isStreaming).toBe(false);
     });
 
-    it("should support streaming context", () => {
+    it('should support streaming context', () => {
       const context: RequestContext = {
-        userPromptId: "test-prompt-id",
-        model: "test-model",
-        authType: "test-auth",
+        userPromptId: 'test-prompt-id',
+        model: 'test-model',
+        authType: 'test-auth',
         startTime: Date.now(),
         duration: 1000,
         isStreaming: true,
@@ -698,45 +698,45 @@ describe("DefaultTelemetryService", () => {
     });
   });
 
-  describe("combineOpenAIChunksForLogging", () => {
+  describe('combineOpenAIChunksForLogging', () => {
     beforeEach(() => {
       telemetryService = new DefaultTelemetryService(mockConfig, true);
     });
 
-    it("should combine simple text chunks correctly", async () => {
+    it('should combine simple text chunks correctly', async () => {
       const mockResponses: GenerateContentResponse[] = [
-        { responseId: "response-1" } as GenerateContentResponse,
+        { responseId: 'response-1' } as GenerateContentResponse,
       ];
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       const mockOpenAIChunks = [
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
-              delta: { content: "Hello" },
+              delta: { content: 'Hello' },
               finish_reason: null,
             },
           ],
         } as OpenAI.Chat.ChatCompletionChunk,
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
-              delta: { content: " world!" },
-              finish_reason: "stop",
+              delta: { content: ' world!' },
+              finish_reason: 'stop',
             },
           ],
           usage: {
@@ -757,19 +757,19 @@ describe("DefaultTelemetryService", () => {
       expect(openaiLogger.logInteraction).toHaveBeenCalledWith(
         mockOpenAIRequest,
         expect.objectContaining({
-          id: "test-id",
-          object: "chat.completion",
+          id: 'test-id',
+          object: 'chat.completion',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
               message: {
-                role: "assistant",
-                content: "Hello world!",
+                role: 'assistant',
+                content: 'Hello world!',
                 refusal: null,
               },
-              finish_reason: "stop",
+              finish_reason: 'stop',
               logprobs: null,
             },
           ],
@@ -782,22 +782,22 @@ describe("DefaultTelemetryService", () => {
       );
     });
 
-    it("should combine tool call chunks correctly", async () => {
+    it('should combine tool call chunks correctly', async () => {
       const mockResponses: GenerateContentResponse[] = [
-        { responseId: "response-1" } as GenerateContentResponse,
+        { responseId: 'response-1' } as GenerateContentResponse,
       ];
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       const mockOpenAIChunks = [
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
@@ -805,9 +805,9 @@ describe("DefaultTelemetryService", () => {
                 tool_calls: [
                   {
                     index: 0,
-                    id: "call_123",
-                    type: "function",
-                    function: { name: "get_weather", arguments: "" },
+                    id: 'call_123',
+                    type: 'function',
+                    function: { name: 'get_weather', arguments: '' },
                   },
                 ],
               },
@@ -816,10 +816,10 @@ describe("DefaultTelemetryService", () => {
           ],
         } as OpenAI.Chat.ChatCompletionChunk,
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
@@ -836,10 +836,10 @@ describe("DefaultTelemetryService", () => {
           ],
         } as OpenAI.Chat.ChatCompletionChunk,
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
@@ -851,7 +851,7 @@ describe("DefaultTelemetryService", () => {
                   },
                 ],
               },
-              finish_reason: "tool_calls",
+              finish_reason: 'tool_calls',
             },
           ],
           usage: {
@@ -872,29 +872,29 @@ describe("DefaultTelemetryService", () => {
       expect(openaiLogger.logInteraction).toHaveBeenCalledWith(
         mockOpenAIRequest,
         expect.objectContaining({
-          id: "test-id",
-          object: "chat.completion",
+          id: 'test-id',
+          object: 'chat.completion',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
               message: {
-                role: "assistant",
+                role: 'assistant',
                 content: null,
                 refusal: null,
                 tool_calls: [
                   {
-                    id: "call_123",
-                    type: "function",
+                    id: 'call_123',
+                    type: 'function',
                     function: {
-                      name: "get_weather",
+                      name: 'get_weather',
                       arguments: '{"location": "New York"}',
                     },
                   },
                 ],
               },
-              finish_reason: "tool_calls",
+              finish_reason: 'tool_calls',
               logprobs: null,
             },
           ],
@@ -907,35 +907,35 @@ describe("DefaultTelemetryService", () => {
       );
     });
 
-    it("should handle mixed content and tool calls", async () => {
+    it('should handle mixed content and tool calls', async () => {
       const mockResponses: GenerateContentResponse[] = [
-        { responseId: "response-1" } as GenerateContentResponse,
+        { responseId: 'response-1' } as GenerateContentResponse,
       ];
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       const mockOpenAIChunks = [
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
-              delta: { content: "Let me check the weather. " },
+              delta: { content: 'Let me check the weather. ' },
               finish_reason: null,
             },
           ],
         } as OpenAI.Chat.ChatCompletionChunk,
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
@@ -943,16 +943,16 @@ describe("DefaultTelemetryService", () => {
                 tool_calls: [
                   {
                     index: 0,
-                    id: "call_456",
-                    type: "function",
+                    id: 'call_456',
+                    type: 'function',
                     function: {
-                      name: "get_weather",
+                      name: 'get_weather',
                       arguments: '{"location": "Paris"}',
                     },
                   },
                 ],
               },
-              finish_reason: "tool_calls",
+              finish_reason: 'tool_calls',
             },
           ],
           usage: {
@@ -977,21 +977,21 @@ describe("DefaultTelemetryService", () => {
             {
               index: 0,
               message: {
-                role: "assistant",
-                content: "Let me check the weather. ",
+                role: 'assistant',
+                content: 'Let me check the weather. ',
                 refusal: null,
                 tool_calls: [
                   {
-                    id: "call_456",
-                    type: "function",
+                    id: 'call_456',
+                    type: 'function',
                     function: {
-                      name: "get_weather",
+                      name: 'get_weather',
                       arguments: '{"location": "Paris"}',
                     },
                   },
                 ],
               },
-              finish_reason: "tool_calls",
+              finish_reason: 'tool_calls',
               logprobs: null,
             },
           ],
@@ -999,22 +999,22 @@ describe("DefaultTelemetryService", () => {
       );
     });
 
-    it("should handle chunks with no content or tool calls", async () => {
+    it('should handle chunks with no content or tool calls', async () => {
       const mockResponses: GenerateContentResponse[] = [
-        { responseId: "response-1" } as GenerateContentResponse,
+        { responseId: 'response-1' } as GenerateContentResponse,
       ];
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       const mockOpenAIChunks = [
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
@@ -1024,15 +1024,15 @@ describe("DefaultTelemetryService", () => {
           ],
         } as OpenAI.Chat.ChatCompletionChunk,
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
               delta: {},
-              finish_reason: "stop",
+              finish_reason: 'stop',
             },
           ],
           usage: {
@@ -1057,11 +1057,11 @@ describe("DefaultTelemetryService", () => {
             {
               index: 0,
               message: {
-                role: "assistant",
+                role: 'assistant',
                 content: null,
                 refusal: null,
               },
-              finish_reason: "stop",
+              finish_reason: 'stop',
               logprobs: null,
             },
           ],
@@ -1069,27 +1069,27 @@ describe("DefaultTelemetryService", () => {
       );
     });
 
-    it("should use default values when usage is missing", async () => {
+    it('should use default values when usage is missing', async () => {
       const mockResponses: GenerateContentResponse[] = [
-        { responseId: "response-1" } as GenerateContentResponse,
+        { responseId: 'response-1' } as GenerateContentResponse,
       ];
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       const mockOpenAIChunks = [
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
-              delta: { content: "Hello" },
-              finish_reason: "stop",
+              delta: { content: 'Hello' },
+              finish_reason: 'stop',
             },
           ],
         } as OpenAI.Chat.ChatCompletionChunk,
@@ -1114,26 +1114,26 @@ describe("DefaultTelemetryService", () => {
       );
     });
 
-    it("should use default finish_reason when missing", async () => {
+    it('should use default finish_reason when missing', async () => {
       const mockResponses: GenerateContentResponse[] = [
-        { responseId: "response-1" } as GenerateContentResponse,
+        { responseId: 'response-1' } as GenerateContentResponse,
       ];
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       const mockOpenAIChunks = [
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
-              delta: { content: "Hello" },
+              delta: { content: 'Hello' },
               finish_reason: null,
             },
           ],
@@ -1154,7 +1154,7 @@ describe("DefaultTelemetryService", () => {
             {
               index: 0,
               message: expect.any(Object),
-              finish_reason: "stop",
+              finish_reason: 'stop',
               logprobs: null,
             },
           ],
@@ -1162,22 +1162,22 @@ describe("DefaultTelemetryService", () => {
       );
     });
 
-    it("should filter out empty tool calls", async () => {
+    it('should filter out empty tool calls', async () => {
       const mockResponses: GenerateContentResponse[] = [
-        { responseId: "response-1" } as GenerateContentResponse,
+        { responseId: 'response-1' } as GenerateContentResponse,
       ];
 
       const mockOpenAIRequest = {
-        model: "gpt-4",
-        messages: [{ role: "user", content: "test" }],
+        model: 'gpt-4',
+        messages: [{ role: 'user', content: 'test' }],
       } as OpenAI.Chat.ChatCompletionCreateParams;
 
       const mockOpenAIChunks = [
         {
-          id: "test-id",
-          object: "chat.completion.chunk",
+          id: 'test-id',
+          object: 'chat.completion.chunk',
           created: 1234567890,
-          model: "gpt-4",
+          model: 'gpt-4',
           choices: [
             {
               index: 0,
@@ -1185,19 +1185,19 @@ describe("DefaultTelemetryService", () => {
                 tool_calls: [
                   {
                     index: 0,
-                    id: "", // Empty ID should be filtered out
-                    type: "function",
-                    function: { name: "test", arguments: "{}" },
+                    id: '', // Empty ID should be filtered out
+                    type: 'function',
+                    function: { name: 'test', arguments: '{}' },
                   },
                   {
                     index: 1,
-                    id: "call_valid",
-                    type: "function",
-                    function: { name: "valid_call", arguments: "{}" },
+                    id: 'call_valid',
+                    type: 'function',
+                    function: { name: 'valid_call', arguments: '{}' },
                   },
                 ],
               },
-              finish_reason: "tool_calls",
+              finish_reason: 'tool_calls',
             },
           ],
         } as OpenAI.Chat.ChatCompletionChunk,
@@ -1217,21 +1217,21 @@ describe("DefaultTelemetryService", () => {
             {
               index: 0,
               message: {
-                role: "assistant",
+                role: 'assistant',
                 content: null,
                 refusal: null,
                 tool_calls: [
                   {
-                    id: "call_valid",
-                    type: "function",
+                    id: 'call_valid',
+                    type: 'function',
                     function: {
-                      name: "valid_call",
-                      arguments: "{}",
+                      name: 'valid_call',
+                      arguments: '{}',
                     },
                   },
                 ],
               },
-              finish_reason: "tool_calls",
+              finish_reason: 'tool_calls',
               logprobs: null,
             },
           ],
@@ -1240,14 +1240,14 @@ describe("DefaultTelemetryService", () => {
     });
   });
 
-  describe("integration with telemetry events", () => {
+  describe('integration with telemetry events', () => {
     beforeEach(() => {
       telemetryService = new DefaultTelemetryService(mockConfig, false);
     });
 
-    it("should create ApiResponseEvent with correct structure", async () => {
+    it('should create ApiResponseEvent with correct structure', async () => {
       const mockResponse: GenerateContentResponse = {
-        responseId: "test-response-id",
+        responseId: 'test-response-id',
         usageMetadata: {
           promptTokenCount: 100,
           candidatesTokenCount: 50,
@@ -1266,20 +1266,20 @@ describe("DefaultTelemetryService", () => {
       const callArgs = mockLogApiResponse.mock.calls[0];
       const event = callArgs[1] as ApiResponseEvent;
 
-      expect(event["event.name"]).toBe("api_response");
-      expect(event["event.timestamp"]).toBeDefined();
-      expect(event.response_id).toBe("test-response-id");
-      expect(event.model).toBe("test-model");
+      expect(event['event.name']).toBe('api_response');
+      expect(event['event.timestamp']).toBeDefined();
+      expect(event.response_id).toBe('test-response-id');
+      expect(event.model).toBe('test-model');
       expect(event.duration_ms).toBe(1000);
-      expect(event.prompt_id).toBe("test-prompt-id");
-      expect(event.auth_type).toBe("test-auth");
+      expect(event.prompt_id).toBe('test-prompt-id');
+      expect(event.auth_type).toBe('test-auth');
     });
 
-    it("should create ApiErrorEvent with correct structure", async () => {
-      const error = new Error("Test error message") as ExtendedError;
-      error.requestID = "test-request-id";
-      error.type = "TestError";
-      error.code = "TEST_CODE";
+    it('should create ApiErrorEvent with correct structure', async () => {
+      const error = new Error('Test error message') as ExtendedError;
+      error.requestID = 'test-request-id';
+      error.type = 'TestError';
+      error.code = 'TEST_CODE';
 
       await telemetryService.logError(mockRequestContext, error);
 
@@ -1292,16 +1292,16 @@ describe("DefaultTelemetryService", () => {
       const callArgs = mockLogApiError.mock.calls[0];
       const event = callArgs[1] as ApiErrorEvent;
 
-      expect(event["event.name"]).toBe("api_error");
-      expect(event["event.timestamp"]).toBeDefined();
-      expect(event.response_id).toBe("test-request-id");
-      expect(event.model).toBe("test-model");
-      expect(event.error).toBe("Test error message");
+      expect(event['event.name']).toBe('api_error');
+      expect(event['event.timestamp']).toBeDefined();
+      expect(event.response_id).toBe('test-request-id');
+      expect(event.model).toBe('test-model');
+      expect(event.error).toBe('Test error message');
       expect(event.duration_ms).toBe(1000);
-      expect(event.prompt_id).toBe("test-prompt-id");
-      expect(event.auth_type).toBe("test-auth");
-      expect(event.error_type).toBe("TestError");
-      expect(event.status_code).toBe("TEST_CODE");
+      expect(event.prompt_id).toBe('test-prompt-id');
+      expect(event.auth_type).toBe('test-auth');
+      expect(event.error_type).toBe('TestError');
+      expect(event.status_code).toBe('TEST_CODE');
     });
   });
 });

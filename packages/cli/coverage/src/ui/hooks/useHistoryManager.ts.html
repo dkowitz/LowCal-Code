@@ -206,22 +206,22 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">180x</span>
-<span class="cline-any cline-yes">180x</span>
+<span class="cline-any cline-yes">163x</span>
+<span class="cline-any cline-yes">163x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">180x</span>
+<span class="cline-any cline-yes">163x</span>
 <span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">180x</span>
+<span class="cline-any cline-yes">163x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">180x</span>
+<span class="cline-any cline-yes">163x</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-yes">180x</span>
+<span class="cline-any cline-yes">163x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">180x</span>
-<span class="cline-any cline-yes">180x</span>
+<span class="cline-any cline-yes">163x</span>
+<span class="cline-any cline-yes">163x</span>
 <span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -241,8 +241,8 @@
 <span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-yes">17x</span>
 <span class="cline-any cline-yes">17x</span>
-<span class="cline-any cline-yes">180x</span>
-<span class="cline-any cline-yes">180x</span>
+<span class="cline-any cline-yes">163x</span>
+<span class="cline-any cline-yes">163x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -251,8 +251,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">180x</span>
-<span class="cline-any cline-yes">180x</span>
+<span class="cline-any cline-yes">163x</span>
+<span class="cline-any cline-yes">163x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
@@ -268,43 +268,43 @@
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
 <span class="cline-any cline-yes">2x</span>
-<span class="cline-any cline-yes">180x</span>
-<span class="cline-any cline-yes">180x</span>
+<span class="cline-any cline-yes">163x</span>
+<span class="cline-any cline-yes">163x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">180x</span>
+<span class="cline-any cline-yes">163x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">180x</span>
+<span class="cline-any cline-yes">163x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">180x</span>
-<span class="cline-any cline-yes">180x</span>
-<span class="cline-any cline-yes">180x</span>
-<span class="cline-any cline-yes">180x</span>
-<span class="cline-any cline-yes">180x</span>
-<span class="cline-any cline-yes">180x</span>
-<span class="cline-any cline-yes">180x</span>
-<span class="cline-any cline-yes">180x</span>
+<span class="cline-any cline-yes">163x</span>
+<span class="cline-any cline-yes">163x</span>
+<span class="cline-any cline-yes">163x</span>
+<span class="cline-any cline-yes">163x</span>
+<span class="cline-any cline-yes">163x</span>
+<span class="cline-any cline-yes">163x</span>
+<span class="cline-any cline-yes">163x</span>
+<span class="cline-any cline-yes">163x</span>
 <span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @license
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { useState, useRef, useCallback } from "react";
-import type { HistoryItem } from "../types.js";
+import { useState, useRef, useCallback } from 'react';
+import type { HistoryItem } from '../types.js';
 &nbsp;
 // Type for the updater function passed to updateHistoryItem
 type HistoryItemUpdater = (
   prevItem: HistoryItem,
-) =&gt; Partial&lt;Omit&lt;HistoryItem, "id"&gt;&gt;;
+) =&gt; Partial&lt;Omit&lt;HistoryItem, 'id'&gt;&gt;;
 &nbsp;
 export interface UseHistoryManagerReturn {
   history: HistoryItem[];
-  addItem: (itemData: Omit&lt;HistoryItem, "id"&gt;, baseTimestamp: number) =&gt; number; // Returns the generated ID
+  addItem: (itemData: Omit&lt;HistoryItem, 'id'&gt;, baseTimestamp: number) =&gt; number; // Returns the generated ID
   updateItem: (
     id: number,
-    updates: Partial&lt;Omit&lt;HistoryItem, "id"&gt;&gt; | HistoryItemUpdater,
+    updates: Partial&lt;Omit&lt;HistoryItem, 'id'&gt;&gt; | HistoryItemUpdater,
   ) =&gt; void;
   clearItems: () =&gt; void;
   loadHistory: (newHistory: HistoryItem[]) =&gt; void;
@@ -332,7 +332,7 @@ export function useHistory(): UseHistoryManagerReturn {
 &nbsp;
   // Adds a new item to the history state with a unique ID.
   const addItem = useCallback(
-    (itemData: Omit&lt;HistoryItem, "id"&gt;, baseTimestamp: number): number =&gt; {
+    (itemData: Omit&lt;HistoryItem, 'id'&gt;, baseTimestamp: number): number =&gt; {
       const id = getNextMessageId(baseTimestamp);
       const newItem: HistoryItem = { ...itemData, id } as HistoryItem;
 &nbsp;
@@ -341,8 +341,8 @@ export function useHistory(): UseHistoryManagerReturn {
           const lastItem = prevHistory[prevHistory.length - 1];
           // Prevent adding duplicate consecutive user messages
           if (
-            lastItem.type === "user" &amp;&amp;
-            newItem.type === "user" &amp;&amp;
+            lastItem.type === 'user' &amp;&amp;
+            newItem.type === 'user' &amp;&amp;
             lastItem.text === newItem.text
           ) {
             return prevHistory; // Don't add the duplicate
@@ -365,14 +365,14 @@ export function useHistory(): UseHistoryManagerReturn {
   const updateItem = useCallback(
     (
       id: number,
-      updates: Partial&lt;Omit&lt;HistoryItem, "id"&gt;&gt; | HistoryItemUpdater,
+      updates: Partial&lt;Omit&lt;HistoryItem, 'id'&gt;&gt; | HistoryItemUpdater,
     ) =&gt; {
       setHistory((prevHistory) =&gt;
         prevHistory.map((item) =&gt; {
           if (item.id === id) {
             // Apply updates based on whether it's an object or a function
             const newUpdates =
-              typeof updates === <span class="branch-0 cbranch-no" title="branch not covered" >"function" ? updates(item) : u</span>pdates;
+              typeof updates === <span class="branch-0 cbranch-no" title="branch not covered" >'function' ? updates(item) : u</span>pdates;
             return { ...item, ...newUpdates } as HistoryItem;
           }
           return item;
@@ -403,7 +403,7 @@ export function useHistory(): UseHistoryManagerReturn {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

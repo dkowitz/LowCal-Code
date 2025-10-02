@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { render } from "ink-testing-library";
-import { describe, it, expect, vi } from "vitest";
-import { OpenAIKeyPrompt } from "./OpenAIKeyPrompt.js";
+import { render } from 'ink-testing-library';
+import { describe, it, expect, vi } from 'vitest';
+import { OpenAIKeyPrompt } from './OpenAIKeyPrompt.js';
 
-describe("OpenAIKeyPrompt", () => {
-  it("should render the prompt correctly", () => {
+describe('OpenAIKeyPrompt', () => {
+  it('should render the prompt correctly', () => {
     const onSubmit = vi.fn();
     const onCancel = vi.fn();
 
@@ -17,16 +17,16 @@ describe("OpenAIKeyPrompt", () => {
       <OpenAIKeyPrompt onSubmit={onSubmit} onCancel={onCancel} />,
     );
 
-    expect(lastFrame()).toContain("OpenAI Configuration Required");
+    expect(lastFrame()).toContain('OpenAI Configuration Required');
     expect(lastFrame()).toContain(
-      "https://bailian.console.aliyun.com/?tab=model#/api-key",
+      'https://bailian.console.aliyun.com/?tab=model#/api-key',
     );
     expect(lastFrame()).toContain(
-      "Press Enter to continue, Tab/↑↓ to navigate, Esc to cancel",
+      'Press Enter to continue, Tab/↑↓ to navigate, Esc to cancel',
     );
   });
 
-  it("should show the component with proper styling", () => {
+  it('should show the component with proper styling', () => {
     const onSubmit = vi.fn();
     const onCancel = vi.fn();
 
@@ -35,16 +35,16 @@ describe("OpenAIKeyPrompt", () => {
     );
 
     const output = lastFrame();
-    expect(output).toContain("OpenAI Configuration Required");
-    expect(output).toContain("API Key:");
-    expect(output).toContain("Base URL:");
-    expect(output).toContain("Model:");
+    expect(output).toContain('OpenAI Configuration Required');
+    expect(output).toContain('API Key:');
+    expect(output).toContain('Base URL:');
+    expect(output).toContain('Model:');
     expect(output).toContain(
-      "Press Enter to continue, Tab/↑↓ to navigate, Esc to cancel",
+      'Press Enter to continue, Tab/↑↓ to navigate, Esc to cancel',
     );
   });
 
-  it("should handle paste with control characters", async () => {
+  it('should handle paste with control characters', async () => {
     const onSubmit = vi.fn();
     const onCancel = vi.fn();
 
@@ -53,7 +53,7 @@ describe("OpenAIKeyPrompt", () => {
     );
 
     // Simulate paste with control characters
-    const pasteWithControlChars = "\x1b[200~sk-test123\x1b[201~";
+    const pasteWithControlChars = '\x1b[200~sk-test123\x1b[201~';
     stdin.write(pasteWithControlChars);
 
     // Wait a bit for processing

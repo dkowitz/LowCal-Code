@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ToolConfirmationOutcome } from "@qwen-code/qwen-code-core";
-import { Box, Text } from "ink";
-import type React from "react";
-import { Colors } from "../colors.js";
-import { RenderInline } from "../utils/InlineMarkdownRenderer.js";
-import type { RadioSelectItem } from "./shared/RadioButtonSelect.js";
-import { RadioButtonSelect } from "./shared/RadioButtonSelect.js";
-import { useKeypress } from "../hooks/useKeypress.js";
+import { ToolConfirmationOutcome } from '@qwen-code/qwen-code-core';
+import { Box, Text } from 'ink';
+import type React from 'react';
+import { Colors } from '../colors.js';
+import { RenderInline } from '../utils/InlineMarkdownRenderer.js';
+import type { RadioSelectItem } from './shared/RadioButtonSelect.js';
+import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
+import { useKeypress } from '../hooks/useKeypress.js';
 
 export interface ShellConfirmationRequest {
   commands: string[];
@@ -32,7 +32,7 @@ export const ShellConfirmationDialog: React.FC<
 
   useKeypress(
     (key) => {
-      if (key.name === "escape") {
+      if (key.name === 'escape') {
         onConfirm(ToolConfirmationOutcome.Cancel);
       }
     },
@@ -51,15 +51,15 @@ export const ShellConfirmationDialog: React.FC<
 
   const options: Array<RadioSelectItem<ToolConfirmationOutcome>> = [
     {
-      label: "Yes, allow once",
+      label: 'Yes, allow once',
       value: ToolConfirmationOutcome.ProceedOnce,
     },
     {
-      label: "Yes, allow always for this session",
+      label: 'Yes, allow always for this session',
       value: ToolConfirmationOutcome.ProceedAlways,
     },
     {
-      label: "No (esc)",
+      label: 'No (esc)',
       value: ToolConfirmationOutcome.Cancel,
     },
   ];

@@ -1,7 +1,7 @@
-import OpenAI from "openai";
-import type { Config } from "../../../config/config.js";
-import type { ContentGeneratorConfig } from "../../contentGenerator.js";
-import type { OpenAICompatibleProvider, DashScopeRequestMetadata } from "./types.js";
+import OpenAI from 'openai';
+import type { Config } from '../../../config/config.js';
+import type { ContentGeneratorConfig } from '../../contentGenerator.js';
+import type { OpenAICompatibleProvider, DashScopeRequestMetadata } from './types.js';
 export declare class DashScopeOpenAICompatibleProvider implements OpenAICompatibleProvider {
     private contentGeneratorConfig;
     private cliConfig;

@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Content } from "@google/genai";
-import { DEFAULT_QWEN_FLASH_MODEL } from "../config/models.js";
-import type { GeminiClient } from "../core/client.js";
-import type { GeminiChat } from "../core/geminiChat.js";
-import { isFunctionResponse } from "./messageInspectors.js";
+import type { Content } from '@google/genai';
+import { DEFAULT_QWEN_FLASH_MODEL } from '../config/models.js';
+import type { GeminiClient } from '../core/client.js';
+import type { GeminiChat } from '../core/geminiChat.js';
+import { isFunctionResponse } from './messageInspectors.js';
 
 const CHECK_PROMPT = `Analyze *only* the content and structure of your immediately preceding response (your last turn in the conversation history). Based *strictly* on that response, determine who should logically speak next: the 'user' or the 'model' (you).
 **Decision Rules (apply in order):**
@@ -17,26 +17,26 @@ const CHECK_PROMPT = `Analyze *only* the content and structure of your immediate
 3.  **Waiting for User:** If your last response completed a thought, statement, or task *and* does not meet the criteria for Rule 1 (Model Continues) or Rule 2 (Question to User), it implies a pause expecting user input or reaction. In this case, the **'user'** should speak next.`;
 
 const RESPONSE_SCHEMA: Record<string, unknown> = {
-  type: "object",
+  type: 'object',
   properties: {
     reasoning: {
-      type: "string",
+      type: 'string',
       description:
         "Brief explanation justifying the 'next_speaker' choice based *strictly* on the applicable rule and the content/structure of the preceding turn.",
     },
     next_speaker: {
-      type: "string",
-      enum: ["user", "model"],
+      type: 'string',
+      enum: ['user', 'model'],
       description:
-        "Who should speak next based *only* on the preceding turn and the decision rules",
+        'Who should speak next based *only* on the preceding turn and the decision rules',
     },
   },
-  required: ["reasoning", "next_speaker"],
+  required: ['reasoning', 'next_speaker'],
 };
 
 export interface NextSpeakerResponse {
   reasoning: string;
-  next_speaker: "user" | "model";
+  next_speaker: 'user' | 'model';
 }
 
 export async function checkNextSpeaker(
@@ -74,29 +74,29 @@ export async function checkNextSpeaker(
   ) {
     return {
       reasoning:
-        "The last message was a function response, so the model should speak next.",
-      next_speaker: "model",
+        'The last message was a function response, so the model should speak next.',
+      next_speaker: 'model',
     };
   }
 
   if (
     lastComprehensiveMessage &&
-    lastComprehensiveMessage.role === "model" &&
+    lastComprehensiveMessage.role === 'model' &&
     lastComprehensiveMessage.parts &&
     lastComprehensiveMessage.parts.length === 0
   ) {
-    lastComprehensiveMessage.parts.push({ text: "" });
+    lastComprehensiveMessage.parts.push({ text: '' });
     return {
       reasoning:
-        "The last message was a filler model message with no content (nothing for user to act on), model should speak next.",
-      next_speaker: "model",
+        'The last message was a filler model message with no content (nothing for user to act on), model should speak next.',
+      next_speaker: 'model',
     };
   }
 
   // Things checked out. Let's proceed to potentially making an LLM request.
 
   const lastMessage = curatedHistory[curatedHistory.length - 1];
-  if (!lastMessage || lastMessage.role !== "model") {
+  if (!lastMessage || lastMessage.role !== 'model') {
     // Cannot determine next speaker if the last turn wasn't from the model
     // or if history is empty.
     return null;
@@ -104,7 +104,7 @@ export async function checkNextSpeaker(
 
   const contents: Content[] = [
     ...curatedHistory,
-    { role: "user", parts: [{ text: CHECK_PROMPT }] },
+    { role: 'user', parts: [{ text: CHECK_PROMPT }] },
   ];
 
   try {
@@ -118,14 +118,14 @@ export async function checkNextSpeaker(
     if (
       parsedResponse &&
       parsedResponse.next_speaker &&
-      ["user", "model"].includes(parsedResponse.next_speaker)
+      ['user', 'model'].includes(parsedResponse.next_speaker)
     ) {
       return parsedResponse;
     }
     return null;
   } catch (error) {
     console.warn(
-      "Failed to talk to Gemini endpoint when seeing if conversation should continue.",
+      'Failed to talk to Gemini endpoint when seeing if conversation should continue.',
       error,
     );
     return null;

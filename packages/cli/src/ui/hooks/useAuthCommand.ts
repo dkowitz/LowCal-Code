@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useCallback, useEffect } from "react";
-import type { LoadedSettings, SettingScope } from "../../config/settings.js";
-import { AuthType, type Config } from "@qwen-code/qwen-code-core";
+import { useState, useCallback, useEffect } from 'react';
+import type { LoadedSettings, SettingScope } from '../../config/settings.js';
+import { AuthType, type Config } from '@qwen-code/qwen-code-core';
 import {
   clearCachedCredentialFile,
   getErrorMessage,
-} from "@qwen-code/qwen-code-core";
-import { runExitCleanup } from "../../utils/cleanup.js";
+} from '@qwen-code/qwen-code-core';
+import { runExitCleanup } from '../../utils/cleanup.js';
 
 export const useAuthCommand = (
   settings: LoadedSettings,
@@ -55,7 +55,7 @@ export const useAuthCommand = (
       if (authType) {
         await clearCachedCredentialFile();
 
-        settings.setValue(scope, "security.auth.selectedType", authType);
+        settings.setValue(scope, 'security.auth.selectedType', authType);
         if (
           authType === AuthType.LOGIN_WITH_GOOGLE &&
           config.isBrowserLaunchSuppressed()
@@ -73,22 +73,8 @@ Logging in with Google... Please restart Gemini CLI to continue.
       }
       setIsAuthDialogOpen(false);
       setAuthError(null);
-
-      // Refresh auth config after dialog close to apply any provider changes
-      if (authType) {
-        try {
-          setIsAuthenticating(true);
-          await config.refreshAuth(authType);
-          console.log(`Refreshed auth via "${authType}".`);
-        } catch (e) {
-          setAuthError(`Failed to refresh auth. Message: ${getErrorMessage(e)}`);
-          openAuthDialog();
-        } finally {
-          setIsAuthenticating(false);
-        }
-      }
     },
-    [settings, setAuthError, config, openAuthDialog],
+    [settings, setAuthError, config],
   );
 
   const cancelAuthentication = useCallback(() => {

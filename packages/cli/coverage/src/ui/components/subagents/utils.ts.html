@@ -273,13 +273,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { COLOR_OPTIONS, TOTAL_WIZARD_STEPS } from "./constants.js";
+import { COLOR_OPTIONS, TOTAL_WIZARD_STEPS } from './constants.js';
 &nbsp;
 export const shouldShowColor = <span class="fstat-no" title="function not covered" >(color?: string): boolean =&gt;</span>
-<span class="cstat-no" title="statement not covered" >  color !== undefined &amp;&amp; color !== "auto";</span>
+<span class="cstat-no" title="statement not covered" >  color !== undefined &amp;&amp; color !== 'auto';</span>
 &nbsp;
 export const getColorForDisplay = <span class="fstat-no" title="function not covered" >(colorName?: string): string | undefined =&gt;</span>
-<span class="cstat-no" title="statement not covered" >  !colorName || colorName === "auto"</span>
+<span class="cstat-no" title="statement not covered" >  !colorName || colorName === 'auto'</span>
 <span class="cstat-no" title="statement not covered" >    ? undefined</span>
 <span class="cstat-no" title="statement not covered" >    : COLOR_OPTIONS.find((color) =&gt; color.name === colorName)?.value;</span>
 &nbsp;
@@ -291,8 +291,8 @@ export <span class="fstat-no" title="function not covered" >function sanitizeInp
 <span class="cstat-no" title="statement not covered" >    input</span>
 <span class="cstat-no" title="statement not covered" >      .trim()</span>
       // eslint-disable-next-line no-control-regex
-<span class="cstat-no" title="statement not covered" >      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, "") // Remove control characters</span>
-<span class="cstat-no" title="statement not covered" >      .replace(/\s+/g, " ") // Normalize whitespace</span>
+<span class="cstat-no" title="statement not covered" >      .replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '') // Remove control characters</span>
+<span class="cstat-no" title="statement not covered" >      .replace(/\s+/g, ' ') // Normalize whitespace</span>
   ); // Limit length
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
@@ -311,62 +311,62 @@ export <span class="fstat-no" title="function not covered" >function fmtDuration
 &nbsp;
 // Dynamic step flow helpers (support manual and guided flows)
 export type StepKind =
-  | "LOCATION"
-  | "GEN_METHOD"
-  | "LLM_DESC"
-  | "MANUAL_NAME"
-  | "MANUAL_PROMPT"
-  | "MANUAL_DESC"
-  | "TOOLS"
-  | "COLOR"
-  | "FINAL";
+  | 'LOCATION'
+  | 'GEN_METHOD'
+  | 'LLM_DESC'
+  | 'MANUAL_NAME'
+  | 'MANUAL_PROMPT'
+  | 'MANUAL_DESC'
+  | 'TOOLS'
+  | 'COLOR'
+  | 'FINAL';
 &nbsp;
-export <span class="fstat-no" title="function not covered" >function getTotalSteps(method: "qwen" | "manual"): number {</span>
-<span class="cstat-no" title="statement not covered" >  return method === "manual" ? 8 : TOTAL_WIZARD_STEPS;</span>
+export <span class="fstat-no" title="function not covered" >function getTotalSteps(method: 'qwen' | 'manual'): number {</span>
+<span class="cstat-no" title="statement not covered" >  return method === 'manual' ? 8 : TOTAL_WIZARD_STEPS;</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
 export <span class="fstat-no" title="function not covered" >function getStepKind(</span>
-<span class="cstat-no" title="statement not covered" >  method: "qwen" | "manual",</span>
+<span class="cstat-no" title="statement not covered" >  method: 'qwen' | 'manual',</span>
 <span class="cstat-no" title="statement not covered" >  stepNumber: number,</span>
 <span class="cstat-no" title="statement not covered" >): StepKind {</span>
-<span class="cstat-no" title="statement not covered" >  if (method === "manual") {</span>
+<span class="cstat-no" title="statement not covered" >  if (method === 'manual') {</span>
 <span class="cstat-no" title="statement not covered" >    switch (stepNumber) {</span>
 <span class="cstat-no" title="statement not covered" >      case 1:</span>
-<span class="cstat-no" title="statement not covered" >        return "LOCATION";</span>
+<span class="cstat-no" title="statement not covered" >        return 'LOCATION';</span>
 <span class="cstat-no" title="statement not covered" >      case 2:</span>
-<span class="cstat-no" title="statement not covered" >        return "GEN_METHOD";</span>
+<span class="cstat-no" title="statement not covered" >        return 'GEN_METHOD';</span>
 <span class="cstat-no" title="statement not covered" >      case 3:</span>
-<span class="cstat-no" title="statement not covered" >        return "MANUAL_NAME";</span>
+<span class="cstat-no" title="statement not covered" >        return 'MANUAL_NAME';</span>
 <span class="cstat-no" title="statement not covered" >      case 4:</span>
-<span class="cstat-no" title="statement not covered" >        return "MANUAL_PROMPT";</span>
+<span class="cstat-no" title="statement not covered" >        return 'MANUAL_PROMPT';</span>
 <span class="cstat-no" title="statement not covered" >      case 5:</span>
-<span class="cstat-no" title="statement not covered" >        return "MANUAL_DESC";</span>
+<span class="cstat-no" title="statement not covered" >        return 'MANUAL_DESC';</span>
 <span class="cstat-no" title="statement not covered" >      case 6:</span>
-<span class="cstat-no" title="statement not covered" >        return "TOOLS";</span>
+<span class="cstat-no" title="statement not covered" >        return 'TOOLS';</span>
 <span class="cstat-no" title="statement not covered" >      case 7:</span>
-<span class="cstat-no" title="statement not covered" >        return "COLOR";</span>
+<span class="cstat-no" title="statement not covered" >        return 'COLOR';</span>
 <span class="cstat-no" title="statement not covered" >      case 8:</span>
-<span class="cstat-no" title="statement not covered" >        return "FINAL";</span>
+<span class="cstat-no" title="statement not covered" >        return 'FINAL';</span>
 <span class="cstat-no" title="statement not covered" >      default:</span>
-<span class="cstat-no" title="statement not covered" >        return "FINAL";</span>
+<span class="cstat-no" title="statement not covered" >        return 'FINAL';</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  switch (stepNumber) {</span>
 <span class="cstat-no" title="statement not covered" >    case 1:</span>
-<span class="cstat-no" title="statement not covered" >      return "LOCATION";</span>
+<span class="cstat-no" title="statement not covered" >      return 'LOCATION';</span>
 <span class="cstat-no" title="statement not covered" >    case 2:</span>
-<span class="cstat-no" title="statement not covered" >      return "GEN_METHOD";</span>
+<span class="cstat-no" title="statement not covered" >      return 'GEN_METHOD';</span>
 <span class="cstat-no" title="statement not covered" >    case 3:</span>
-<span class="cstat-no" title="statement not covered" >      return "LLM_DESC";</span>
+<span class="cstat-no" title="statement not covered" >      return 'LLM_DESC';</span>
 <span class="cstat-no" title="statement not covered" >    case 4:</span>
-<span class="cstat-no" title="statement not covered" >      return "TOOLS";</span>
+<span class="cstat-no" title="statement not covered" >      return 'TOOLS';</span>
 <span class="cstat-no" title="statement not covered" >    case 5:</span>
-<span class="cstat-no" title="statement not covered" >      return "COLOR";</span>
+<span class="cstat-no" title="statement not covered" >      return 'COLOR';</span>
 <span class="cstat-no" title="statement not covered" >    case 6:</span>
-<span class="cstat-no" title="statement not covered" >      return "FINAL";</span>
+<span class="cstat-no" title="statement not covered" >      return 'FINAL';</span>
 <span class="cstat-no" title="statement not covered" >    default:</span>
-<span class="cstat-no" title="statement not covered" >      return "FINAL";</span>
+<span class="cstat-no" title="statement not covered" >      return 'FINAL';</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;</pre></td></tr></table></pre>
@@ -376,7 +376,7 @@ export <span class="fstat-no" title="function not covered" >function getStepKind
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../../../prettify.js"></script>
         <script>

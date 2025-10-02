@@ -17,11 +17,11 @@ import type {
   ContentUnion,
   PartUnion,
   Candidate,
-} from "@google/genai";
-import { GenerateContentResponse, FinishReason } from "@google/genai";
-import type OpenAI from "openai";
-import { safeJsonParse } from "../../utils/safeJsonParse.js";
-import { StreamingToolCallParser } from "./streamingToolCallParser.js";
+} from '@google/genai';
+import { GenerateContentResponse, FinishReason } from '@google/genai';
+import type OpenAI from 'openai';
+import { safeJsonParse } from '../../utils/safeJsonParse.js';
+import { StreamingToolCallParser } from './streamingToolCallParser.js';
 
 /**
  * Tool call accumulator for streaming responses
@@ -40,7 +40,7 @@ interface ParsedParts {
   functionCalls: FunctionCall[];
   functionResponses: FunctionResponse[];
   mediaParts: Array<{
-    type: "image" | "audio" | "file";
+    type: 'image' | 'audio' | 'file';
     data: string;
     mimeType: string;
     fileUri?: string;
@@ -74,14 +74,14 @@ export class OpenAIContentConverter {
   convertGeminiToolParametersToOpenAI(
     parameters: Record<string, unknown>,
   ): Record<string, unknown> | undefined {
-    if (!parameters || typeof parameters !== "object") {
+    if (!parameters || typeof parameters !== 'object') {
       return parameters;
     }
 
     const converted = JSON.parse(JSON.stringify(parameters));
 
     const convertTypes = (obj: unknown): unknown => {
-      if (typeof obj !== "object" || obj === null) {
+      if (typeof obj !== 'object' || obj === null) {
         return obj;
       }
 
@@ -91,40 +91,40 @@ export class OpenAIContentConverter {
 
       const result: Record<string, unknown> = {};
       for (const [key, value] of Object.entries(obj)) {
-        if (key === "type" && typeof value === "string") {
+        if (key === 'type' && typeof value === 'string') {
           // Convert Gemini types to OpenAI JSON Schema types
           const lowerValue = value.toLowerCase();
-          if (lowerValue === "integer") {
-            result[key] = "integer";
-          } else if (lowerValue === "number") {
-            result[key] = "number";
+          if (lowerValue === 'integer') {
+            result[key] = 'integer';
+          } else if (lowerValue === 'number') {
+            result[key] = 'number';
           } else {
             result[key] = lowerValue;
           }
         } else if (
-          key === "minimum" ||
-          key === "maximum" ||
-          key === "multipleOf"
+          key === 'minimum' ||
+          key === 'maximum' ||
+          key === 'multipleOf'
         ) {
           // Ensure numeric constraints are actual numbers, not strings
-          if (typeof value === "string" && !isNaN(Number(value))) {
+          if (typeof value === 'string' && !isNaN(Number(value))) {
             result[key] = Number(value);
           } else {
             result[key] = value;
           }
         } else if (
-          key === "minLength" ||
-          key === "maxLength" ||
-          key === "minItems" ||
-          key === "maxItems"
+          key === 'minLength' ||
+          key === 'maxLength' ||
+          key === 'minItems' ||
+          key === 'maxItems'
         ) {
           // Ensure length constraints are integers, not strings
-          if (typeof value === "string" && !isNaN(Number(value))) {
+          if (typeof value === 'string' && !isNaN(Number(value))) {
             result[key] = parseInt(value, 10);
           } else {
             result[key] = value;
           }
-        } else if (typeof value === "object") {
+        } else if (typeof value === 'object') {
           result[key] = convertTypes(value);
         } else {
           result[key] = value;
@@ -149,7 +149,7 @@ export class OpenAIContentConverter {
       let actualTool: Tool;
 
       // Handle CallableTool vs Tool
-      if ("tool" in tool) {
+      if ('tool' in tool) {
         // This is a CallableTool
         actualTool = await (tool as CallableTool).tool();
       } else {
@@ -180,7 +180,7 @@ export class OpenAIContentConverter {
             }
 
             openAITools.push({
-              type: "function",
+              type: 'function',
               function: {
                 name: func.name,
                 description: func.description,
@@ -232,7 +232,7 @@ export class OpenAIContentConverter {
 
     if (systemText) {
       messages.push({
-        role: "system" as const,
+        role: 'system' as const,
         content: systemText,
       });
     }
@@ -261,8 +261,8 @@ export class OpenAIContentConverter {
     content: ContentUnion | PartUnion,
     messages: OpenAI.Chat.ChatCompletionMessageParam[],
   ): void {
-    if (typeof content === "string") {
-      messages.push({ role: "user" as const, content });
+    if (typeof content === 'string') {
+      messages.push({ role: 'user' as const, content });
       return;
     }
 
@@ -274,10 +274,10 @@ export class OpenAIContentConverter {
     if (parsedParts.functionResponses.length > 0) {
       for (const funcResponse of parsedParts.functionResponses) {
         messages.push({
-          role: "tool" as const,
-          tool_call_id: funcResponse.id || "",
+          role: 'tool' as const,
+          tool_call_id: funcResponse.id || '',
           content:
-            typeof funcResponse.response === "string"
+            typeof funcResponse.response === 'string'
               ? funcResponse.response
               : JSON.stringify(funcResponse.response),
         });
@@ -286,26 +286,26 @@ export class OpenAIContentConverter {
     }
 
     // Handle model messages with function calls
-    if (content.role === "model" && parsedParts.functionCalls.length > 0) {
+    if (content.role === 'model' && parsedParts.functionCalls.length > 0) {
       const toolCalls = parsedParts.functionCalls.map((fc, index) => ({
         id: fc.id || `call_${index}`,
-        type: "function" as const,
+        type: 'function' as const,
         function: {
-          name: fc.name || "",
+          name: fc.name || '',
           arguments: JSON.stringify(fc.args || {}),
         },
       }));
 
       messages.push({
-        role: "assistant" as const,
-        content: parsedParts.textParts.join("") || null,
+        role: 'assistant' as const,
+        content: parsedParts.textParts.join('') || null,
         tool_calls: toolCalls,
       });
       return;
     }
 
     // Handle regular messages with multimodal content
-    const role = content.role === "model" ? "assistant" : "user";
+    const role = content.role === 'model' ? 'assistant' : 'user';
     const openAIMessage = this.createMultimodalMessage(role, parsedParts);
 
     if (openAIMessage) {
@@ -321,34 +321,34 @@ export class OpenAIContentConverter {
     const functionCalls: FunctionCall[] = [];
     const functionResponses: FunctionResponse[] = [];
     const mediaParts: Array<{
-      type: "image" | "audio" | "file";
+      type: 'image' | 'audio' | 'file';
       data: string;
       mimeType: string;
       fileUri?: string;
     }> = [];
 
     for (const part of parts) {
-      if (typeof part === "string") {
+      if (typeof part === 'string') {
         textParts.push(part);
-      } else if ("text" in part && part.text) {
+      } else if ('text' in part && part.text) {
         textParts.push(part.text);
-      } else if ("functionCall" in part && part.functionCall) {
+      } else if ('functionCall' in part && part.functionCall) {
         functionCalls.push(part.functionCall);
-      } else if ("functionResponse" in part && part.functionResponse) {
+      } else if ('functionResponse' in part && part.functionResponse) {
         functionResponses.push(part.functionResponse);
-      } else if ("inlineData" in part && part.inlineData) {
+      } else if ('inlineData' in part && part.inlineData) {
         const { data, mimeType } = part.inlineData;
         if (data && mimeType) {
           const mediaType = this.getMediaType(mimeType);
           mediaParts.push({ type: mediaType, data, mimeType });
         }
-      } else if ("fileData" in part && part.fileData) {
+      } else if ('fileData' in part && part.fileData) {
         const { fileUri, mimeType } = part.fileData;
         if (fileUri && mimeType) {
           const mediaType = this.getMediaType(mimeType);
           mediaParts.push({
             type: mediaType,
-            data: "",
+            data: '',
             mimeType,
             fileUri,
           });
@@ -362,21 +362,21 @@ export class OpenAIContentConverter {
   /**
    * Determine media type from MIME type
    */
-  private getMediaType(mimeType: string): "image" | "audio" | "file" {
-    if (mimeType.startsWith("image/")) return "image";
-    if (mimeType.startsWith("audio/")) return "audio";
-    return "file";
+  private getMediaType(mimeType: string): 'image' | 'audio' | 'file' {
+    if (mimeType.startsWith('image/')) return 'image';
+    if (mimeType.startsWith('audio/')) return 'audio';
+    return 'file';
   }
 
   /**
    * Create multimodal OpenAI message from parsed parts
    */
   private createMultimodalMessage(
-    role: "user" | "assistant",
-    parsedParts: Pick<ParsedParts, "textParts" | "mediaParts">,
+    role: 'user' | 'assistant',
+    parsedParts: Pick<ParsedParts, 'textParts' | 'mediaParts'>,
   ): OpenAI.Chat.ChatCompletionMessageParam | null {
     const { textParts, mediaParts } = parsedParts;
-    const content = textParts.map((text) => ({ type: "text" as const, text }));
+    const content = textParts.map((text) => ({ type: 'text' as const, text }));
 
     // If no media parts, return simple text message
     if (mediaParts.length === 0) {
@@ -385,9 +385,9 @@ export class OpenAIContentConverter {
 
     // For assistant messages with media, convert to text only
     // since OpenAI assistant messages don't support media content arrays
-    if (role === "assistant") {
+    if (role === 'assistant') {
       return content.length > 0
-        ? { role: "assistant" as const, content }
+        ? { role: 'assistant' as const, content }
         : null;
     }
 
@@ -395,30 +395,30 @@ export class OpenAIContentConverter {
 
     // Add media content
     for (const mediaPart of mediaParts) {
-      if (mediaPart.type === "image") {
+      if (mediaPart.type === 'image') {
         if (mediaPart.fileUri) {
           // For file URIs, use the URI directly
           contentArray.push({
-            type: "image_url" as const,
+            type: 'image_url' as const,
             image_url: { url: mediaPart.fileUri },
           });
         } else if (mediaPart.data) {
           // For inline data, create data URL
           const dataUrl = `data:${mediaPart.mimeType};base64,${mediaPart.data}`;
           contentArray.push({
-            type: "image_url" as const,
+            type: 'image_url' as const,
             image_url: { url: dataUrl },
           });
         }
-      } else if (mediaPart.type === "audio" && mediaPart.data) {
+      } else if (mediaPart.type === 'audio' && mediaPart.data) {
         // Convert audio format from MIME type
         const format = this.getAudioFormat(mediaPart.mimeType);
         if (format) {
           contentArray.push({
-            type: "input_audio" as const,
+            type: 'input_audio' as const,
             input_audio: {
               data: mediaPart.data,
-              format: format as "wav" | "mp3",
+              format: format as 'wav' | 'mp3',
             },
           });
         }
@@ -428,16 +428,16 @@ export class OpenAIContentConverter {
     }
 
     return contentArray.length > 0
-      ? { role: "user" as const, content: contentArray }
+      ? { role: 'user' as const, content: contentArray }
       : null;
   }
 
   /**
    * Convert MIME type to OpenAI audio format
    */
-  private getAudioFormat(mimeType: string): "wav" | "mp3" | null {
-    if (mimeType.includes("wav")) return "wav";
-    if (mimeType.includes("mp3") || mimeType.includes("mpeg")) return "mp3";
+  private getAudioFormat(mimeType: string): 'wav' | 'mp3' | null {
+    if (mimeType.includes('wav')) return 'wav';
+    if (mimeType.includes('mp3') || mimeType.includes('mpeg')) return 'mp3';
     return null;
   }
 
@@ -448,11 +448,11 @@ export class OpenAIContentConverter {
     content: unknown,
   ): content is { role: string; parts: Part[] } {
     return (
-      typeof content === "object" &&
+      typeof content === 'object' &&
       content !== null &&
-      "role" in content &&
-      "parts" in content &&
-      Array.isArray((content as Record<string, unknown>)["parts"])
+      'role' in content &&
+      'parts' in content &&
+      Array.isArray((content as Record<string, unknown>)['parts'])
     );
   }
 
@@ -460,7 +460,7 @@ export class OpenAIContentConverter {
    * Extract text content from various Gemini content union types
    */
   private extractTextFromContentUnion(contentUnion: unknown): string {
-    if (typeof contentUnion === "string") {
+    if (typeof contentUnion === 'string') {
       return contentUnion;
     }
 
@@ -468,26 +468,26 @@ export class OpenAIContentConverter {
       return contentUnion
         .map((item) => this.extractTextFromContentUnion(item))
         .filter(Boolean)
-        .join("\n");
+        .join('\n');
     }
 
-    if (typeof contentUnion === "object" && contentUnion !== null) {
-      if ("parts" in contentUnion) {
+    if (typeof contentUnion === 'object' && contentUnion !== null) {
+      if ('parts' in contentUnion) {
         const content = contentUnion as Content;
         return (
           content.parts
             ?.map((part: Part) => {
-              if (typeof part === "string") return part;
-              if ("text" in part) return part.text || "";
-              return "";
+              if (typeof part === 'string') return part;
+              if ('text' in part) return part.text || '';
+              return '';
             })
             .filter(Boolean)
-            .join("\n") || ""
+            .join('\n') || ''
         );
       }
     }
 
-    return "";
+    return '';
   }
 
   /**
@@ -535,10 +535,10 @@ export class OpenAIContentConverter {
       {
         content: {
           parts,
-          role: "model" as const,
+          role: 'model' as const,
         },
         finishReason: this.mapOpenAIFinishReasonToGemini(
-          choice.finish_reason || "stop",
+          choice.finish_reason || 'stop',
         ),
         index: 0,
         safetyRatings: [],
@@ -593,7 +593,7 @@ export class OpenAIContentConverter {
 
       // Handle text content
       if (choice.delta?.content) {
-        if (typeof choice.delta.content === "string") {
+        if (typeof choice.delta.content === 'string') {
           parts.push({ text: choice.delta.content });
         }
       }
@@ -615,7 +615,7 @@ export class OpenAIContentConverter {
             // Handle metadata-only chunks (id and/or name without arguments)
             this.streamingToolCallParser.addChunk(
               index,
-              "", // Empty chunk for metadata-only updates
+              '', // Empty chunk for metadata-only updates
               toolCall.id,
               toolCall.function?.name,
             );
@@ -650,7 +650,7 @@ export class OpenAIContentConverter {
       const candidate: Candidate = {
         content: {
           parts,
-          role: "model" as const,
+          role: 'model' as const,
         },
         index: 0,
         safetyRatings: [],
@@ -720,33 +720,33 @@ export class OpenAIContentConverter {
       const textParts: string[] = [];
 
       for (const part of content.parts) {
-        if ("text" in part && part.text) {
+        if ('text' in part && part.text) {
           textParts.push(part.text);
-        } else if ("functionCall" in part && part.functionCall) {
+        } else if ('functionCall' in part && part.functionCall) {
           toolCalls.push({
             id: part.functionCall.id || `call_${toolCalls.length}`,
-            type: "function" as const,
+            type: 'function' as const,
             function: {
-              name: part.functionCall.name || "",
+              name: part.functionCall.name || '',
               arguments: JSON.stringify(part.functionCall.args || {}),
             },
           });
         }
       }
 
-      messageContent = textParts.join("").trimEnd();
+      messageContent = textParts.join('').trimEnd();
     }
 
     const choice: OpenAI.Chat.ChatCompletion.Choice = {
       index: 0,
       message: {
-        role: "assistant",
+        role: 'assistant',
         content: messageContent,
         refusal: null,
       },
       finish_reason: this.mapGeminiFinishReasonToOpenAI(
         candidate?.finishReason,
-      ) as OpenAI.Chat.ChatCompletion.Choice["finish_reason"],
+      ) as OpenAI.Chat.ChatCompletion.Choice['finish_reason'],
       logprobs: null,
     };
 
@@ -756,7 +756,7 @@ export class OpenAIContentConverter {
 
     const openaiResponse: OpenAI.Chat.ChatCompletion = {
       id: response.responseId || `chatcmpl-${Date.now()}`,
-      object: "chat.completion",
+      object: 'chat.completion',
       created: response.createTime
         ? Number(response.createTime)
         : Math.floor(Date.now() / 1000),
@@ -803,26 +803,26 @@ export class OpenAIContentConverter {
    * Map Gemini finish reasons to OpenAI finish reasons
    */
   private mapGeminiFinishReasonToOpenAI(geminiReason?: unknown): string {
-    if (!geminiReason) return "stop";
+    if (!geminiReason) return 'stop';
 
     switch (geminiReason) {
-      case "STOP":
+      case 'STOP':
       case 1: // FinishReason.STOP
-        return "stop";
-      case "MAX_TOKENS":
+        return 'stop';
+      case 'MAX_TOKENS':
       case 2: // FinishReason.MAX_TOKENS
-        return "length";
-      case "SAFETY":
+        return 'length';
+      case 'SAFETY':
       case 3: // FinishReason.SAFETY
-        return "content_filter";
-      case "RECITATION":
+        return 'content_filter';
+      case 'RECITATION':
       case 4: // FinishReason.RECITATION
-        return "content_filter";
-      case "OTHER":
+        return 'content_filter';
+      case 'OTHER':
       case 5: // FinishReason.OTHER
-        return "stop";
+        return 'stop';
       default:
-        return "stop";
+        return 'stop';
     }
   }
 
@@ -839,8 +839,8 @@ export class OpenAIContentConverter {
     // First pass: collect all tool call IDs and tool response IDs
     for (const message of messages) {
       if (
-        message.role === "assistant" &&
-        "tool_calls" in message &&
+        message.role === 'assistant' &&
+        'tool_calls' in message &&
         message.tool_calls
       ) {
         for (const toolCall of message.tool_calls) {
@@ -849,8 +849,8 @@ export class OpenAIContentConverter {
           }
         }
       } else if (
-        message.role === "tool" &&
-        "tool_call_id" in message &&
+        message.role === 'tool' &&
+        'tool_call_id' in message &&
         message.tool_call_id
       ) {
         toolResponseIds.add(message.tool_call_id);
@@ -860,8 +860,8 @@ export class OpenAIContentConverter {
     // Second pass: filter out orphaned messages
     for (const message of messages) {
       if (
-        message.role === "assistant" &&
-        "tool_calls" in message &&
+        message.role === 'assistant' &&
+        'tool_calls' in message &&
         message.tool_calls
       ) {
         // Filter out tool calls that don't have corresponding responses
@@ -879,7 +879,7 @@ export class OpenAIContentConverter {
           ).tool_calls = validToolCalls;
           cleaned.push(cleanedMessage);
         } else if (
-          typeof message.content === "string" &&
+          typeof message.content === 'string' &&
           message.content.trim()
         ) {
           // Keep the message if it has text content, but remove tool calls
@@ -893,8 +893,8 @@ export class OpenAIContentConverter {
         }
         // If no valid tool calls and no content, skip the message entirely
       } else if (
-        message.role === "tool" &&
-        "tool_call_id" in message &&
+        message.role === 'tool' &&
+        'tool_call_id' in message &&
         message.tool_call_id
       ) {
         // Only keep tool responses that have corresponding tool calls
@@ -914,8 +914,8 @@ export class OpenAIContentConverter {
     // Collect all remaining tool call IDs
     for (const message of cleaned) {
       if (
-        message.role === "assistant" &&
-        "tool_calls" in message &&
+        message.role === 'assistant' &&
+        'tool_calls' in message &&
         message.tool_calls
       ) {
         for (const toolCall of message.tool_calls) {
@@ -930,8 +930,8 @@ export class OpenAIContentConverter {
     const finalToolResponseIds = new Set<string>();
     for (const message of cleaned) {
       if (
-        message.role === "tool" &&
-        "tool_call_id" in message &&
+        message.role === 'tool' &&
+        'tool_call_id' in message &&
         message.tool_call_id
       ) {
         finalToolResponseIds.add(message.tool_call_id);
@@ -941,8 +941,8 @@ export class OpenAIContentConverter {
     // Remove any remaining orphaned tool calls
     for (const message of cleaned) {
       if (
-        message.role === "assistant" &&
-        "tool_calls" in message &&
+        message.role === 'assistant' &&
+        'tool_calls' in message &&
         message.tool_calls
       ) {
         const finalValidToolCalls = message.tool_calls.filter(
@@ -958,7 +958,7 @@ export class OpenAIContentConverter {
           ).tool_calls = finalValidToolCalls;
           finalCleaned.push(cleanedMessage);
         } else if (
-          typeof message.content === "string" &&
+          typeof message.content === 'string' &&
           message.content.trim()
         ) {
           const cleanedMessage = { ...message };
@@ -986,24 +986,24 @@ export class OpenAIContentConverter {
     const merged: OpenAI.Chat.ChatCompletionMessageParam[] = [];
 
     for (const message of messages) {
-      if (message.role === "assistant" && merged.length > 0) {
+      if (message.role === 'assistant' && merged.length > 0) {
         const lastMessage = merged[merged.length - 1];
 
         // If the last message is also an assistant message, merge them
-        if (lastMessage.role === "assistant") {
+        if (lastMessage.role === 'assistant') {
           // Combine content
           const combinedContent = [
-            typeof lastMessage.content === "string" ? lastMessage.content : "",
-            typeof message.content === "string" ? message.content : "",
+            typeof lastMessage.content === 'string' ? lastMessage.content : '',
+            typeof message.content === 'string' ? message.content : '',
           ]
             .filter(Boolean)
-            .join("");
+            .join('');
 
           // Combine tool calls
           const lastToolCalls =
-            "tool_calls" in lastMessage ? lastMessage.tool_calls || [] : [];
+            'tool_calls' in lastMessage ? lastMessage.tool_calls || [] : [];
           const currentToolCalls =
-            "tool_calls" in message ? message.tool_calls || [] : [];
+            'tool_calls' in message ? message.tool_calls || [] : [];
           const combinedToolCalls = [...lastToolCalls, ...currentToolCalls];
 
           // Update the last message with combined data

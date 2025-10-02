@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { MCPOAuthConfig } from "./oauth-provider.js";
-import { getErrorMessage } from "../utils/errors.js";
+import type { MCPOAuthConfig } from './oauth-provider.js';
+import { getErrorMessage } from '../utils/errors.js';
 
 /**
  * OAuth authorization server metadata as per RFC 8414.
@@ -54,18 +54,18 @@ export class OAuthUtils {
       // Standard discovery: use root-based well-known URLs
       return {
         protectedResource: new URL(
-          "/.well-known/oauth-protected-resource",
+          '/.well-known/oauth-protected-resource',
           base,
         ).toString(),
         authorizationServer: new URL(
-          "/.well-known/oauth-authorization-server",
+          '/.well-known/oauth-authorization-server',
           base,
         ).toString(),
       };
     }
 
     // Path-based discovery: append path suffix to well-known URLs
-    const pathSuffix = serverUrl.pathname.replace(/\/$/, ""); // Remove trailing slash
+    const pathSuffix = serverUrl.pathname.replace(/\/$/, ''); // Remove trailing slash
     return {
       protectedResource: new URL(
         `/.well-known/oauth-protected-resource${pathSuffix}`,
@@ -157,7 +157,7 @@ export class OAuthUtils {
 
     // With issuer URLs with path components, try the following well-known
     // endpoints in order:
-    if (authServerUrlObj.pathname !== "/") {
+    if (authServerUrlObj.pathname !== '/') {
       // 1. OAuth 2.0 Authorization Server Metadata with path insertion
       endpointsToTry.push(
         new URL(
@@ -188,12 +188,12 @@ export class OAuthUtils {
 
     // 1. OAuth 2.0 Authorization Server Metadata
     endpointsToTry.push(
-      new URL("/.well-known/oauth-authorization-server", base).toString(),
+      new URL('/.well-known/oauth-authorization-server', base).toString(),
     );
 
     // 2. OpenID Connect Discovery 1.0
     endpointsToTry.push(
-      new URL("/.well-known/openid-configuration", base).toString(),
+      new URL('/.well-known/openid-configuration', base).toString(),
     );
 
     for (const endpoint of endpointsToTry) {
@@ -231,7 +231,7 @@ export class OAuthUtils {
       // If root discovery fails and we have a path, try path-based discovery
       if (!resourceMetadata) {
         const url = new URL(serverUrl);
-        if (url.pathname && url.pathname !== "/") {
+        if (url.pathname && url.pathname !== '/') {
           const pathBasedUrls = this.buildWellKnownUrls(serverUrl, true);
           resourceMetadata = await this.fetchProtectedResourceMetadata(
             pathBasedUrls.protectedResource,
@@ -249,7 +249,7 @@ export class OAuthUtils {
           const config = this.metadataToOAuthConfig(authServerMetadata);
           if (authServerMetadata.registration_endpoint) {
             console.log(
-              "Dynamic client registration is supported at:",
+              'Dynamic client registration is supported at:',
               authServerMetadata.registration_endpoint,
             );
           }
@@ -266,7 +266,7 @@ export class OAuthUtils {
         const config = this.metadataToOAuthConfig(authServerMetadata);
         if (authServerMetadata.registration_endpoint) {
           console.log(
-            "Dynamic client registration is supported at:",
+            'Dynamic client registration is supported at:',
             authServerMetadata.registration_endpoint,
           );
         }
@@ -347,7 +347,7 @@ export class OAuthUtils {
    * @returns True if the URL appears to be an SSE endpoint
    */
   static isSSEEndpoint(url: string): boolean {
-    return url.includes("/sse") || !url.includes("/mcp");
+    return url.includes('/sse') || !url.includes('/mcp');
   }
 
   /**

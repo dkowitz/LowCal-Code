@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { promises as fs } from "node:fs";
-import { join } from "node:path";
-import { Storage } from "@qwen-code/qwen-code-core";
+import { promises as fs } from 'node:fs';
+import { join } from 'node:path';
+import { Storage } from '@qwen-code/qwen-code-core';
 const cleanupFunctions = [];
 export function registerCleanup(fn) {
     cleanupFunctions.push(fn);
@@ -24,7 +24,7 @@ export async function runExitCleanup() {
 export async function cleanupCheckpoints() {
     const storage = new Storage(process.cwd());
     const tempDir = storage.getProjectTempDir();
-    const checkpointsDir = join(tempDir, "checkpoints");
+    const checkpointsDir = join(tempDir, 'checkpoints');
     try {
         await fs.rm(checkpointsDir, { recursive: true, force: true });
     }

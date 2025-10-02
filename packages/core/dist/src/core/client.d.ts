@@ -3,13 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { type Content, type GenerateContentConfig, type GenerateContentResponse, type PartListUnion } from "@google/genai";
-import type { UserTierId } from "../code_assist/types.js";
-import type { Config } from "../config/config.js";
-import type { ContentGenerator, ContentGeneratorConfig } from "./contentGenerator.js";
-import { GeminiChat } from "./geminiChat.js";
-import type { ChatCompressionInfo, ServerGeminiStreamEvent } from "./turn.js";
-import { Turn } from "./turn.js";
+import { type Content, type GenerateContentConfig, type GenerateContentResponse, type PartListUnion } from '@google/genai';
+import type { UserTierId } from '../code_assist/types.js';
+import type { Config } from '../config/config.js';
+import type { ContentGenerator, ContentGeneratorConfig } from './contentGenerator.js';
+import { GeminiChat } from './geminiChat.js';
+import type { ChatCompressionInfo, ServerGeminiStreamEvent } from './turn.js';
+import { Turn } from './turn.js';
 /**
  * Returns the index of the content after the fraction of the total characters in the history.
  *

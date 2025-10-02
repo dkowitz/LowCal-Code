@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { ModelConfig, RunConfig, SubagentConfig, ValidationResult } from "./types.js";
+import type { ModelConfig, RunConfig, SubagentConfig, ValidationResult } from './types.js';
 /**
  * Validates subagent configurations to ensure they are well-formed
  * and compatible with the runtime system.

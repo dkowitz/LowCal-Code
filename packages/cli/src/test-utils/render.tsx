@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { render } from "ink-testing-library";
-import type React from "react";
-import { KeypressProvider } from "../ui/contexts/KeypressContext.js";
+import { render } from 'ink-testing-library';
+import type React from 'react';
+import { KeypressProvider } from '../ui/contexts/KeypressContext.js';
 
 export const renderWithProviders = (
   component: React.ReactElement,

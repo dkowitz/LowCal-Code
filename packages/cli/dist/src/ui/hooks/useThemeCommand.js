@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useCallback, useEffect } from "react";
-import { themeManager } from "../themes/theme-manager.js";
-import { MessageType } from "../types.js";
-import process from "node:process";
+import { useState, useCallback, useEffect } from 'react';
+import { themeManager } from '../themes/theme-manager.js';
+import { MessageType } from '../types.js';
+import process from 'node:process';
 export const useThemeCommand = (loadedSettings, setThemeError, addItem) => {
     const [isThemeDialogOpen, setIsThemeDialogOpen] = useState(false);
     // Check for invalid theme configuration on startup
@@ -21,10 +21,10 @@ export const useThemeCommand = (loadedSettings, setThemeError, addItem) => {
         }
     }, [loadedSettings.merged.ui?.theme, setThemeError]);
     const openThemeDialog = useCallback(() => {
-        if (process.env["NO_COLOR"]) {
+        if (process.env['NO_COLOR']) {
             addItem({
                 type: MessageType.INFO,
-                text: "Theme configuration unavailable due to NO_COLOR env variable.",
+                text: 'Theme configuration unavailable due to NO_COLOR env variable.',
             }, Date.now());
             return;
         }
@@ -58,7 +58,7 @@ export const useThemeCommand = (loadedSettings, setThemeError, addItem) => {
                 setIsThemeDialogOpen(true);
                 return;
             }
-            loadedSettings.setValue(scope, "ui.theme", themeName); // Update the merged settings
+            loadedSettings.setValue(scope, 'ui.theme', themeName); // Update the merged settings
             if (loadedSettings.merged.ui?.customThemes) {
                 themeManager.loadCustomThemes(loadedSettings.merged.ui?.customThemes);
             }

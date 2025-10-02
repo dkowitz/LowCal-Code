@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { CommandContext } from "../../ui/commands/types.js";
-import type { PartUnion } from "@google/genai";
+import type { CommandContext } from '../../ui/commands/types.js';
+import type { PartUnion } from '@google/genai';
 /**
  * Defines the input/output type for prompt processors.
  */

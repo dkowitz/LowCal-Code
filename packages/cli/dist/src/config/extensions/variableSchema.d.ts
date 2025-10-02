@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 export interface VariableDefinition {
-    type: "string";
+    type: 'string';
     description: string;
     default?: string;
     required?: boolean;
@@ -17,7 +17,7 @@ export declare const VARIABLE_SCHEMA: {
         readonly type: "string";
         readonly description: "The path of the extension in the filesystem.";
     };
-    readonly "/": {
+    readonly '/': {
         readonly type: "string";
         readonly description: "The path separator.";
     };

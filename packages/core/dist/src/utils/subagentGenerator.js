@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { DEFAULT_QWEN_MODEL } from "../config/models.js";
+import { DEFAULT_QWEN_MODEL } from '../config/models.js';
 const SYSTEM_PROMPT = `You are an elite AI agent architect specializing in crafting high-performance agent configurations. Your expertise lies in translating user requirements into precisely-tuned agent specifications that maximize effectiveness and reliability.
 
 **Important Context**: You may have access to project-specific instructions from QWEN.md files and other context that may include coding standards, project structure, and custom requirements. Consider this context when creating agents to ensure they align with the project's established patterns and practices.
@@ -71,22 +71,22 @@ Remember: The agents you create should be autonomous experts capable of handling
 `;
 const createUserPrompt = (userInput) => `Create an agent configuration based on this request: "${userInput}"`;
 const RESPONSE_SCHEMA = {
-    type: "object",
+    type: 'object',
     properties: {
         name: {
-            type: "string",
+            type: 'string',
             description: "A unique, descriptive identifier using lowercase letters, numbers, and hyphens (e.g., 'code-reviewer', 'api-docs-writer', 'test-generator')",
         },
         description: {
-            type: "string",
+            type: 'string',
             description: "A precise, actionable description starting with 'Use this agent when...' that clearly defines the triggering conditions and use cases",
         },
         systemPrompt: {
-            type: "string",
+            type: 'string',
             description: "The complete system prompt that will govern the agent's behavior, written in second person ('You are...', 'You will...') and structured for maximum clarity and effectiveness",
         },
     },
-    required: ["name", "description", "systemPrompt"],
+    required: ['name', 'description', 'systemPrompt'],
 };
 /**
  * Generates subagent configuration content using LLM.
@@ -98,10 +98,10 @@ const RESPONSE_SCHEMA = {
  */
 export async function subagentGenerator(userDescription, geminiClient, abortSignal) {
     if (!userDescription.trim()) {
-        throw new Error("User description cannot be empty");
+        throw new Error('User description cannot be empty');
     }
     const userPrompt = createUserPrompt(userDescription);
-    const contents = [{ role: "user", parts: [{ text: userPrompt }] }];
+    const contents = [{ role: 'user', parts: [{ text: userPrompt }] }];
     const parsedResponse = (await geminiClient.generateJson(contents, RESPONSE_SCHEMA, abortSignal, DEFAULT_QWEN_MODEL, {
         systemInstruction: SYSTEM_PROMPT,
     }));
@@ -109,7 +109,7 @@ export async function subagentGenerator(userDescription, geminiClient, abortSign
         !parsedResponse.name ||
         !parsedResponse.description ||
         !parsedResponse.systemPrompt) {
-        throw new Error("Invalid response from LLM: missing required fields");
+        throw new Error('Invalid response from LLM: missing required fields');
     }
     return parsedResponse;
 }

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
+import type React from 'react';
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
 
 interface ConsoleSummaryDisplayProps {
   errorCount: number;
@@ -20,13 +20,13 @@ export const ConsoleSummaryDisplay: React.FC<ConsoleSummaryDisplayProps> = ({
     return null;
   }
 
-  const errorIcon = "\u2716"; // Heavy multiplication x (✖)
+  const errorIcon = '\u2716'; // Heavy multiplication x (✖)
 
   return (
     <Box>
       {errorCount > 0 && (
         <Text color={Colors.AccentRed}>
-          {errorIcon} {errorCount} error{errorCount > 1 ? "s" : ""}{" "}
+          {errorIcon} {errorCount} error{errorCount > 1 ? 's' : ''}{' '}
           <Text color={Colors.Gray}>(ctrl+o for details)</Text>
         </Text>
       )}

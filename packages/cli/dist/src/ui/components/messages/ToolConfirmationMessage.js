@@ -1,21 +1,21 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { Box, Text } from "ink";
-import { DiffRenderer } from "./DiffRenderer.js";
-import { Colors } from "../../colors.js";
-import { RenderInline } from "../../utils/InlineMarkdownRenderer.js";
-import { MarkdownDisplay } from "../../utils/MarkdownDisplay.js";
-import { ToolConfirmationOutcome } from "@qwen-code/qwen-code-core";
-import { RadioButtonSelect } from "../shared/RadioButtonSelect.js";
-import { MaxSizedBox } from "../shared/MaxSizedBox.js";
-import { useKeypress } from "../../hooks/useKeypress.js";
+import { Box, Text } from 'ink';
+import { DiffRenderer } from './DiffRenderer.js';
+import { Colors } from '../../colors.js';
+import { RenderInline } from '../../utils/InlineMarkdownRenderer.js';
+import { MarkdownDisplay } from '../../utils/MarkdownDisplay.js';
+import { ToolConfirmationOutcome } from '@qwen-code/qwen-code-core';
+import { RadioButtonSelect } from '../shared/RadioButtonSelect.js';
+import { MaxSizedBox } from '../shared/MaxSizedBox.js';
+import { useKeypress } from '../../hooks/useKeypress.js';
 export const ToolConfirmationMessage = ({ confirmationDetails, config, isFocused = true, availableTerminalHeight, terminalWidth, compactMode = false, }) => {
     const { onConfirm } = confirmationDetails;
     const childWidth = terminalWidth - 2; // 2 for padding
     const handleConfirm = async (outcome) => {
-        if (confirmationDetails.type === "edit") {
+        if (confirmationDetails.type === 'edit') {
             const ideClient = config.getIdeClient();
             if (config.getIdeMode()) {
-                const cliOutcome = outcome === ToolConfirmationOutcome.Cancel ? "rejected" : "accepted";
+                const cliOutcome = outcome === ToolConfirmationOutcome.Cancel ? 'rejected' : 'accepted';
                 await ideClient?.resolveDiffFromCli(confirmationDetails.filePath, cliOutcome);
             }
         }
@@ -25,7 +25,7 @@ export const ToolConfirmationMessage = ({ confirmationDetails, config, isFocused
     useKeypress((key) => {
         if (!isFocused)
             return;
-        if (key.name === "escape" || (key.ctrl && key.name === "c")) {
+        if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
             handleConfirm(ToolConfirmationOutcome.Cancel);
         }
     }, { isActive: isFocused });
@@ -34,15 +34,15 @@ export const ToolConfirmationMessage = ({ confirmationDetails, config, isFocused
     if (compactMode) {
         const compactOptions = [
             {
-                label: "Yes, allow once",
+                label: 'Yes, allow once',
                 value: ToolConfirmationOutcome.ProceedOnce,
             },
             {
-                label: "Allow always",
+                label: 'Allow always',
                 value: ToolConfirmationOutcome.ProceedAlways,
             },
             {
-                label: "No",
+                label: 'No',
                 value: ToolConfirmationOutcome.Cancel,
             },
         ];
@@ -57,7 +57,7 @@ export const ToolConfirmationMessage = ({ confirmationDetails, config, isFocused
     function availableBodyContentHeight() {
         if (options.length === 0) {
             // This should not happen in practice as options are always added before this is called.
-            throw new Error("Options not provided for confirmation message");
+            throw new Error('Options not provided for confirmation message');
         }
         if (availableTerminalHeight === undefined) {
             return undefined;
@@ -76,44 +76,44 @@ export const ToolConfirmationMessage = ({ confirmationDetails, config, isFocused
             HEIGHT_OPTIONS;
         return Math.max(availableTerminalHeight - surroundingElementsHeight, 1);
     }
-    if (confirmationDetails.type === "edit") {
+    if (confirmationDetails.type === 'edit') {
         if (confirmationDetails.isModifying) {
             return (_jsxs(Box, { minWidth: "90%", borderStyle: "round", borderColor: Colors.Gray, justifyContent: "space-around", padding: 1, overflow: "hidden", children: [_jsx(Text, { children: "Modify in progress: " }), _jsx(Text, { color: Colors.AccentGreen, children: "Save and close external editor to continue" })] }));
         }
         question = `Apply this change?`;
         options.push({
-            label: "Yes, allow once",
+            label: 'Yes, allow once',
             value: ToolConfirmationOutcome.ProceedOnce,
         });
         if (isTrustedFolder) {
             options.push({
-                label: "Yes, allow always",
+                label: 'Yes, allow always',
                 value: ToolConfirmationOutcome.ProceedAlways,
             });
         }
         if (config.getIdeMode()) {
             options.push({
-                label: "No (esc)",
+                label: 'No (esc)',
                 value: ToolConfirmationOutcome.Cancel,
             });
         }
         else {
             options.push({
-                label: "Modify with external editor",
+                label: 'Modify with external editor',
                 value: ToolConfirmationOutcome.ModifyWithEditor,
             });
             options.push({
-                label: "No, suggest changes (esc)",
+                label: 'No, suggest changes (esc)',
                 value: ToolConfirmationOutcome.Cancel,
             });
         }
         bodyContent = (_jsx(DiffRenderer, { diffContent: confirmationDetails.fileDiff, filename: confirmationDetails.fileName, availableTerminalHeight: availableBodyContentHeight(), terminalWidth: childWidth }));
     }
-    else if (confirmationDetails.type === "exec") {
+    else if (confirmationDetails.type === 'exec') {
         const executionProps = confirmationDetails;
         question = `Allow execution of: '${executionProps.rootCommand}'?`;
         options.push({
-            label: "Yes, allow once",
+            label: 'Yes, allow once',
             value: ToolConfirmationOutcome.ProceedOnce,
         });
         if (isTrustedFolder) {
@@ -123,7 +123,7 @@ export const ToolConfirmationMessage = ({ confirmationDetails, config, isFocused
             });
         }
         options.push({
-            label: "No, suggest changes (esc)",
+            label: 'No, suggest changes (esc)',
             value: ToolConfirmationOutcome.Cancel,
         });
         let bodyContentHeight = availableBodyContentHeight();
@@ -132,43 +132,43 @@ export const ToolConfirmationMessage = ({ confirmationDetails, config, isFocused
         }
         bodyContent = (_jsx(Box, { flexDirection: "column", children: _jsx(Box, { paddingX: 1, marginLeft: 1, children: _jsx(MaxSizedBox, { maxHeight: bodyContentHeight, maxWidth: Math.max(childWidth - 4, 1), children: _jsx(Box, { children: _jsx(Text, { color: Colors.AccentCyan, children: executionProps.command }) }) }) }) }));
     }
-    else if (confirmationDetails.type === "plan") {
+    else if (confirmationDetails.type === 'plan') {
         const planProps = confirmationDetails;
         question = planProps.title;
         options.push({
-            label: "Yes, and auto-accept edits",
+            label: 'Yes, and auto-accept edits',
             value: ToolConfirmationOutcome.ProceedAlways,
         });
         options.push({
-            label: "Yes, and manually approve edits",
+            label: 'Yes, and manually approve edits',
             value: ToolConfirmationOutcome.ProceedOnce,
         });
         options.push({
-            label: "No, keep planning (esc)",
+            label: 'No, keep planning (esc)',
             value: ToolConfirmationOutcome.Cancel,
         });
         bodyContent = (_jsx(Box, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: _jsx(MarkdownDisplay, { text: planProps.plan, isPending: false, availableTerminalHeight: availableBodyContentHeight(), terminalWidth: childWidth }) }));
     }
-    else if (confirmationDetails.type === "info") {
+    else if (confirmationDetails.type === 'info') {
         const infoProps = confirmationDetails;
         const displayUrls = infoProps.urls &&
             !(infoProps.urls.length === 1 && infoProps.urls[0] === infoProps.prompt);
         question = `Do you want to proceed?`;
         options.push({
-            label: "Yes, allow once",
+            label: 'Yes, allow once',
             value: ToolConfirmationOutcome.ProceedOnce,
         });
         if (isTrustedFolder) {
             options.push({
-                label: "Yes, allow always",
+                label: 'Yes, allow always',
                 value: ToolConfirmationOutcome.ProceedAlways,
             });
         }
         options.push({
-            label: "No, suggest changes (esc)",
+            label: 'No, suggest changes (esc)',
             value: ToolConfirmationOutcome.Cancel,
         });
-        bodyContent = (_jsxs(Box, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [_jsx(Text, { color: Colors.AccentCyan, children: _jsx(RenderInline, { text: infoProps.prompt }) }), displayUrls && infoProps.urls && infoProps.urls.length > 0 && (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { children: "URLs to fetch:" }), infoProps.urls.map((url) => (_jsxs(Text, { children: [" ", "- ", _jsx(RenderInline, { text: url })] }, url)))] }))] }));
+        bodyContent = (_jsxs(Box, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [_jsx(Text, { color: Colors.AccentCyan, children: _jsx(RenderInline, { text: infoProps.prompt }) }), displayUrls && infoProps.urls && infoProps.urls.length > 0 && (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { children: "URLs to fetch:" }), infoProps.urls.map((url) => (_jsxs(Text, { children: [' ', "- ", _jsx(RenderInline, { text: url })] }, url)))] }))] }));
     }
     else {
         // mcp tool confirmation
@@ -176,7 +176,7 @@ export const ToolConfirmationMessage = ({ confirmationDetails, config, isFocused
         bodyContent = (_jsxs(Box, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [_jsxs(Text, { color: Colors.AccentCyan, children: ["MCP Server: ", mcpProps.serverName] }), _jsxs(Text, { color: Colors.AccentCyan, children: ["Tool: ", mcpProps.toolName] })] }));
         question = `Allow execution of MCP tool "${mcpProps.toolName}" from server "${mcpProps.serverName}"?`;
         options.push({
-            label: "Yes, allow once",
+            label: 'Yes, allow once',
             value: ToolConfirmationOutcome.ProceedOnce,
         });
         if (isTrustedFolder) {
@@ -190,7 +190,7 @@ export const ToolConfirmationMessage = ({ confirmationDetails, config, isFocused
             });
         }
         options.push({
-            label: "No, suggest changes (esc)",
+            label: 'No, suggest changes (esc)',
             value: ToolConfirmationOutcome.Cancel,
         });
     }

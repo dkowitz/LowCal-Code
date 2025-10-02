@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useMemo, useEffect } from "react";
-import { Box, Text } from "ink";
-import { RadioButtonSelect } from "../../shared/RadioButtonSelect.js";
-import type { ToolCategory } from "../types.js";
-import { Kind, type Config } from "@qwen-code/qwen-code-core";
-import { Colors } from "../../../colors.js";
+import { useState, useMemo, useEffect } from 'react';
+import { Box, Text } from 'ink';
+import { RadioButtonSelect } from '../../shared/RadioButtonSelect.js';
+import type { ToolCategory } from '../types.js';
+import { Kind, type Config } from '@qwen-code/qwen-code-core';
+import { Colors } from '../../../colors.js';
 
 interface ToolOption {
   label: string;
@@ -44,15 +44,15 @@ export function ToolSelector({
       return {
         toolCategories: [
           {
-            id: "all",
-            name: "All Tools (Default)",
+            id: 'all',
+            name: 'All Tools (Default)',
             tools: [],
           },
         ],
         readTools: [],
         editTools: [],
         executeTools: [],
-        initialCategory: "all",
+        initialCategory: 'all',
       };
     }
 
@@ -88,37 +88,37 @@ export function ToolSelector({
 
     const toolCategories = [
       {
-        id: "all",
-        name: "All Tools",
+        id: 'all',
+        name: 'All Tools',
         tools: [],
       },
       {
-        id: "read",
-        name: "Read-only Tools",
+        id: 'read',
+        name: 'Read-only Tools',
         tools: readTools,
       },
       {
-        id: "edit",
-        name: "Read & Edit Tools",
+        id: 'edit',
+        name: 'Read & Edit Tools',
         tools: [...readTools, ...editTools],
       },
       {
-        id: "execute",
-        name: "Read & Edit & Execution Tools",
+        id: 'execute',
+        name: 'Read & Edit & Execution Tools',
         tools: [...readTools, ...editTools, ...executeTools],
       },
-    ].filter((category) => category.id === "all" || category.tools.length > 0);
+    ].filter((category) => category.id === 'all' || category.tools.length > 0);
 
     // Determine initial category based on tools prop
-    let initialCategory = "all"; // default to first option
+    let initialCategory = 'all'; // default to first option
 
     if (tools.length === 0) {
       // Empty array represents all tools
-      initialCategory = "all";
+      initialCategory = 'all';
     } else {
       // Try to match tools array to a category
       const matchingCategory = toolCategories.find((category) => {
-        if (category.id === "all") return false;
+        if (category.id === 'all') return false;
 
         // Check if the tools array exactly matches this category's tools
         const categoryToolsSet = new Set(category.tools);
@@ -166,7 +166,7 @@ export function ToolSelector({
   const handleSelect = (selectedValue: string) => {
     const category = toolCategories.find((cat) => cat.id === selectedValue);
     if (category) {
-      if (category.id === "all") {
+      if (category.id === 'all') {
         onSelect([]); // Empty array for 'all'
       } else {
         onSelect(category.tools);
@@ -199,7 +199,7 @@ export function ToolSelector({
       {/* Show help information or tools for selected category */}
       {currentCategory && (
         <Box flexDirection="column">
-          {currentCategory.id === "all" ? (
+          {currentCategory.id === 'all' ? (
             <Text color={Colors.Gray}>
               All tools selected, including MCP tools
             </Text>
@@ -223,17 +223,17 @@ export function ToolSelector({
                     <>
                       {categoryReadTools.length > 0 && (
                         <Text color={Colors.Gray}>
-                          • Read-only tools: {categoryReadTools.join(", ")}
+                          • Read-only tools: {categoryReadTools.join(', ')}
                         </Text>
                       )}
                       {categoryEditTools.length > 0 && (
                         <Text color={Colors.Gray}>
-                          • Edit tools: {categoryEditTools.join(", ")}
+                          • Edit tools: {categoryEditTools.join(', ')}
                         </Text>
                       )}
                       {categoryExecuteTools.length > 0 && (
                         <Text color={Colors.Gray}>
-                          • Execution tools: {categoryExecuteTools.join(", ")}
+                          • Execution tools: {categoryExecuteTools.join(', ')}
                         </Text>
                       )}
                     </>

@@ -4,69 +4,69 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Content } from "@google/genai";
-import * as path from "node:path";
-import process from "node:process";
-import { GeminiClient } from "../core/client.js";
-import type { ContentGeneratorConfig } from "../core/contentGenerator.js";
+import type { Content } from '@google/genai';
+import * as path from 'node:path';
+import process from 'node:process';
+import { GeminiClient } from '../core/client.js';
+import type { ContentGeneratorConfig } from '../core/contentGenerator.js';
 import {
   AuthType,
   createContentGeneratorConfig,
-} from "../core/contentGenerator.js";
-import { IdeClient } from "../ide/ide-client.js";
-import type { MCPOAuthConfig } from "../mcp/oauth-provider.js";
-import { PromptRegistry } from "../prompts/prompt-registry.js";
-import { FileDiscoveryService } from "../services/fileDiscoveryService.js";
+} from '../core/contentGenerator.js';
+import { IdeClient } from '../ide/ide-client.js';
+import type { MCPOAuthConfig } from '../mcp/oauth-provider.js';
+import { PromptRegistry } from '../prompts/prompt-registry.js';
+import { FileDiscoveryService } from '../services/fileDiscoveryService.js';
 import {
   type FileSystemService,
   StandardFileSystemService,
-} from "../services/fileSystemService.js";
-import { GitService } from "../services/gitService.js";
-import { SubagentManager } from "../subagents/subagent-manager.js";
-import type { TelemetryTarget } from "../telemetry/index.js";
+} from '../services/fileSystemService.js';
+import { GitService } from '../services/gitService.js';
+import { SubagentManager } from '../subagents/subagent-manager.js';
+import type { TelemetryTarget } from '../telemetry/index.js';
 import {
   DEFAULT_OTLP_ENDPOINT,
   DEFAULT_TELEMETRY_TARGET,
   initializeTelemetry,
   StartSessionEvent,
-} from "../telemetry/index.js";
-import { logCliConfiguration, logIdeConnection } from "../telemetry/loggers.js";
-import { IdeConnectionEvent, IdeConnectionType } from "../telemetry/types.js";
-import { EditTool } from "../tools/edit.js";
-import { ExitPlanModeTool } from "../tools/exitPlanMode.js";
-import { GlobTool } from "../tools/glob.js";
-import { GrepTool } from "../tools/grep.js";
-import { LSTool } from "../tools/ls.js";
-import { MemoryTool, setGeminiMdFilename } from "../tools/memoryTool.js";
-import { ReadFileTool } from "../tools/read-file.js";
-import { ReadManyFilesTool } from "../tools/read-many-files.js";
-import { RipGrepTool } from "../tools/ripGrep.js";
-import { ShellTool } from "../tools/shell.js";
-import { TaskTool } from "../tools/task.js";
-import { TodoWriteTool } from "../tools/todoWrite.js";
-import { ToolRegistry } from "../tools/tool-registry.js";
-import type { AnyToolInvocation } from "../tools/tools.js";
-import { WebFetchTool } from "../tools/web-fetch.js";
-import { WebSearchTool } from "../tools/web-search.js";
-import { WriteFileTool } from "../tools/write-file.js";
-import { shouldAttemptBrowserLaunch } from "../utils/browser.js";
-import { FileExclusions } from "../utils/ignorePatterns.js";
-import { WorkspaceContext } from "../utils/workspaceContext.js";
+} from '../telemetry/index.js';
+import { logCliConfiguration, logIdeConnection } from '../telemetry/loggers.js';
+import { IdeConnectionEvent, IdeConnectionType } from '../telemetry/types.js';
+import { EditTool } from '../tools/edit.js';
+import { ExitPlanModeTool } from '../tools/exitPlanMode.js';
+import { GlobTool } from '../tools/glob.js';
+import { GrepTool } from '../tools/grep.js';
+import { LSTool } from '../tools/ls.js';
+import { MemoryTool, setGeminiMdFilename } from '../tools/memoryTool.js';
+import { ReadFileTool } from '../tools/read-file.js';
+import { ReadManyFilesTool } from '../tools/read-many-files.js';
+import { RipGrepTool } from '../tools/ripGrep.js';
+import { ShellTool } from '../tools/shell.js';
+import { TaskTool } from '../tools/task.js';
+import { TodoWriteTool } from '../tools/todoWrite.js';
+import { ToolRegistry } from '../tools/tool-registry.js';
+import type { AnyToolInvocation } from '../tools/tools.js';
+import { WebFetchTool } from '../tools/web-fetch.js';
+import { WebSearchTool } from '../tools/web-search.js';
+import { WriteFileTool } from '../tools/write-file.js';
+import { shouldAttemptBrowserLaunch } from '../utils/browser.js';
+import { FileExclusions } from '../utils/ignorePatterns.js';
+import { WorkspaceContext } from '../utils/workspaceContext.js';
 import {
   DEFAULT_GEMINI_EMBEDDING_MODEL,
   DEFAULT_GEMINI_FLASH_MODEL,
-} from "./models.js";
-import { Storage } from "./storage.js";
-import { Logger, type ModelSwitchEvent } from "../core/logger.js";
+} from './models.js';
+import { Storage } from './storage.js';
+import { Logger, type ModelSwitchEvent } from '../core/logger.js';
 
 // Re-export OAuth config type
 export type { AnyToolInvocation, MCPOAuthConfig };
 
 export enum ApprovalMode {
-  PLAN = "plan",
-  DEFAULT = "default",
-  AUTO_EDIT = "auto-edit",
-  YOLO = "yolo",
+  PLAN = 'plan',
+  DEFAULT = 'default',
+  AUTO_EDIT = 'auto-edit',
+  YOLO = 'yolo',
 }
 
 export const APPROVAL_MODES = Object.values(ApprovalMode);
@@ -92,7 +92,7 @@ export interface TelemetrySettings {
   enabled?: boolean;
   target?: TelemetryTarget;
   otlpEndpoint?: string;
-  otlpProtocol?: "grpc" | "http";
+  otlpProtocol?: 'grpc' | 'http';
   logPrompts?: boolean;
   outfile?: string;
 }
@@ -152,12 +152,12 @@ export class MCPServerConfig {
 }
 
 export enum AuthProviderType {
-  DYNAMIC_DISCOVERY = "dynamic_discovery",
-  GOOGLE_CREDENTIALS = "google_credentials",
+  DYNAMIC_DISCOVERY = 'dynamic_discovery',
+  GOOGLE_CREDENTIALS = 'google_credentials',
 }
 
 export interface SandboxConfig {
-  command: "docker" | "podman" | "sandbox-exec";
+  command: 'docker' | 'podman' | 'sandbox-exec';
   image: string;
 }
 
@@ -363,7 +363,7 @@ export class Config {
     this.toolCallCommand = params.toolCallCommand;
     this.mcpServerCommand = params.mcpServerCommand;
     this.mcpServers = params.mcpServers;
-    this.userMemory = params.userMemory ?? "";
+    this.userMemory = params.userMemory ?? '';
     this.geminiMdFileCount = params.geminiMdFileCount ?? 0;
     this.approvalMode = params.approvalMode ?? ApprovalMode.DEFAULT;
     this.showMemoryUsage = params.showMemoryUsage ?? false;
@@ -378,8 +378,8 @@ export class Config {
     };
     this.gitCoAuthor = {
       enabled: params.gitCoAuthor?.enabled ?? true,
-      name: params.gitCoAuthor?.name ?? "Qwen-Coder",
-      email: params.gitCoAuthor?.email ?? "qwen-coder@alibabacloud.com",
+      name: params.gitCoAuthor?.name ?? 'Qwen-Coder',
+      email: params.gitCoAuthor?.email ?? 'qwen-coder@alibabacloud.com',
     };
     this.usageStatisticsEnabled = params.usageStatisticsEnabled ?? true;
 
@@ -438,7 +438,7 @@ export class Config {
     // Initialize logger asynchronously
     this.logger = new Logger(this.sessionId, this.storage);
     this.logger.initialize().catch((error) => {
-      console.debug("Failed to initialize logger:", error);
+      console.debug('Failed to initialize logger:', error);
     });
 
     if (params.contextFileName) {
@@ -457,7 +457,7 @@ export class Config {
    */
   async initialize(): Promise<void> {
     if (this.initialized) {
-      throw Error("Config was already initialized");
+      throw Error('Config was already initialized');
     }
     this.initialized = true;
     this.ideClient = await IdeClient.getInstance();
@@ -535,7 +535,7 @@ export class Config {
   async setModel(
     newModel: string,
     options?: {
-      reason?: ModelSwitchEvent["reason"];
+      reason?: ModelSwitchEvent['reason'];
       context?: string;
     },
   ): Promise<void> {
@@ -552,13 +552,13 @@ export class Config {
       const switchEvent: ModelSwitchEvent = {
         fromModel: oldModel,
         toModel: newModel,
-        reason: options?.reason || "manual",
+        reason: options?.reason || 'manual',
         context: options?.context,
       };
 
       // Log asynchronously to avoid blocking
       this.logger.logModelSwitch(switchEvent).catch((error) => {
-        console.debug("Failed to log model switch:", error);
+        console.debug('Failed to log model switch:', error);
       });
     }
 
@@ -570,7 +570,7 @@ export class Config {
         await geminiClient.reinitialize();
       } catch (error) {
         console.error(
-          "Failed to reinitialize chat with updated config:",
+          'Failed to reinitialize chat with updated config:',
           error,
         );
         throw error; // Re-throw to let callers handle the error
@@ -616,12 +616,12 @@ export class Config {
 
   isRestrictiveSandbox(): boolean {
     const sandboxConfig = this.getSandbox();
-    const seatbeltProfile = process.env["SEATBELT_PROFILE"];
+    const seatbeltProfile = process.env['SEATBELT_PROFILE'];
     return (
       !!sandboxConfig &&
-      sandboxConfig.command === "sandbox-exec" &&
+      sandboxConfig.command === 'sandbox-exec' &&
       !!seatbeltProfile &&
-      seatbeltProfile.startsWith("restrictive-")
+      seatbeltProfile.startsWith('restrictive-')
     );
   }
 
@@ -712,7 +712,7 @@ export class Config {
       mode !== ApprovalMode.PLAN
     ) {
       throw new Error(
-        "Cannot enable privileged approval modes in an untrusted folder.",
+        'Cannot enable privileged approval modes in an untrusted folder.',
       );
     }
     this.approvalMode = mode;
@@ -738,8 +738,8 @@ export class Config {
     return this.telemetrySettings.otlpEndpoint ?? DEFAULT_OTLP_ENDPOINT;
   }
 
-  getTelemetryOtlpProtocol(): "grpc" | "http" {
-    return this.telemetrySettings.otlpProtocol ?? "grpc";
+  getTelemetryOtlpProtocol(): 'grpc' | 'http' {
+    return this.telemetrySettings.otlpProtocol ?? 'grpc';
   }
 
   getTelemetryTarget(): TelemetryTarget {
@@ -919,9 +919,9 @@ export class Config {
     return this.contentGenerator?.disableCacheControl;
   }
 
-  getContentGeneratorSamplingParams(): ContentGeneratorConfig["samplingParams"] {
+  getContentGeneratorSamplingParams(): ContentGeneratorConfig['samplingParams'] {
     return this.contentGenerator?.samplingParams as
-      | ContentGeneratorConfig["samplingParams"]
+      | ContentGeneratorConfig['samplingParams']
       | undefined;
   }
 

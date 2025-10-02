@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import stripAnsi from "strip-ansi";
-import { stripVTControlCharacters } from "node:util";
+import stripAnsi from 'strip-ansi';
+import { stripVTControlCharacters } from 'node:util';
 /**
  * Calculates the maximum width of a multi-line ASCII art string.
  * @param asciiArt The ASCII art string.
@@ -14,7 +14,7 @@ export const getAsciiArtWidth = (asciiArt) => {
     if (!asciiArt) {
         return 0;
     }
-    const lines = asciiArt.split("\n");
+    const lines = asciiArt.split('\n');
     return Math.max(...lines.map((line) => line.length));
 };
 /*
@@ -33,7 +33,7 @@ export function cpLen(str) {
 export function cpSlice(str, start, end) {
     // Slice by code‑point indices and re‑join.
     const arr = toCodePoints(str).slice(start, end);
-    return arr.join("");
+    return arr.join('');
 }
 /**
  * Strip characters that can break terminal rendering.
@@ -75,6 +75,6 @@ export function stripUnsafeCharacters(str) {
         // Preserve all other characters including Unicode/emojis
         return true;
     })
-        .join("");
+        .join('');
 }
 //# sourceMappingURL=textUtils.js.map

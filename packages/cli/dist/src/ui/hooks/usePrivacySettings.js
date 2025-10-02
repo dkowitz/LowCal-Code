@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useEffect, useCallback } from "react";
-import { CodeAssistServer, UserTierId, LoggingContentGenerator, } from "@qwen-code/qwen-code-core";
+import { useState, useEffect, useCallback } from 'react';
+import { CodeAssistServer, UserTierId, LoggingContentGenerator, } from '@qwen-code/qwen-code-core';
 export const usePrivacySettings = (config) => {
     const [privacyState, setPrivacyState] = useState({
         isLoading: true,
@@ -72,10 +72,10 @@ function getCodeAssistServer(config) {
     }
     // Neither of these cases should ever happen.
     if (!(server instanceof CodeAssistServer)) {
-        throw new Error("Oauth not being used");
+        throw new Error('Oauth not being used');
     }
     else if (!server.projectId) {
-        throw new Error("Oauth not being used");
+        throw new Error('Oauth not being used');
     }
     return server;
 }
@@ -83,14 +83,14 @@ async function getTier(server) {
     const loadRes = await server.loadCodeAssist({
         cloudaicompanionProject: server.projectId,
         metadata: {
-            ideType: "IDE_UNSPECIFIED",
-            platform: "PLATFORM_UNSPECIFIED",
-            pluginType: "GEMINI",
+            ideType: 'IDE_UNSPECIFIED',
+            platform: 'PLATFORM_UNSPECIFIED',
+            pluginType: 'GEMINI',
             duetProject: server.projectId,
         },
     });
     if (!loadRes.currentTier) {
-        throw new Error("User does not have a current tier");
+        throw new Error('User does not have a current tier');
     }
     return loadRes.currentTier.id;
 }
@@ -100,7 +100,7 @@ async function getRemoteDataCollectionOptIn(server) {
         return resp.freeTierDataCollectionOptin;
     }
     catch (error) {
-        if (error && typeof error === "object" && "response" in error) {
+        if (error && typeof error === 'object' && 'response' in error) {
             const gaxiosError = error;
             if (gaxiosError.response?.status === 404) {
                 return true;

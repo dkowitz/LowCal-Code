@@ -3,13 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { MessageType } from "../types.js";
-import { formatDuration } from "../utils/formatters.js";
-import { CommandKind, } from "./types.js";
+import { MessageType } from '../types.js';
+import { formatDuration } from '../utils/formatters.js';
+import { CommandKind, } from './types.js';
 export const statsCommand = {
-    name: "stats",
-    altNames: ["usage"],
-    description: "check session stats. Usage: /stats [model|tools]",
+    name: 'stats',
+    altNames: ['usage'],
+    description: 'check session stats. Usage: /stats [model|tools]',
     kind: CommandKind.BUILT_IN,
     action: (context) => {
         const now = new Date();
@@ -17,7 +17,7 @@ export const statsCommand = {
         if (!sessionStartTime) {
             context.ui.addItem({
                 type: MessageType.ERROR,
-                text: "Session start time is unavailable, cannot calculate stats.",
+                text: 'Session start time is unavailable, cannot calculate stats.',
             }, Date.now());
             return;
         }
@@ -30,8 +30,8 @@ export const statsCommand = {
     },
     subCommands: [
         {
-            name: "model",
-            description: "Show model-specific usage statistics.",
+            name: 'model',
+            description: 'Show model-specific usage statistics.',
             kind: CommandKind.BUILT_IN,
             action: (context) => {
                 context.ui.addItem({
@@ -40,8 +40,8 @@ export const statsCommand = {
             },
         },
         {
-            name: "tools",
-            description: "Show tool-specific usage statistics.",
+            name: 'tools',
+            description: 'Show tool-specific usage statistics.',
             kind: CommandKind.BUILT_IN,
             action: (context) => {
                 context.ui.addItem({

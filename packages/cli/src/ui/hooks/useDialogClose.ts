@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useCallback } from "react";
-import { SettingScope } from "../../config/settings.js";
-import type { AuthType } from "@qwen-code/qwen-code-core";
+import { useCallback } from 'react';
+import { SettingScope } from '../../config/settings.js';
+import type { AuthType } from '@qwen-code/qwen-code-core';
 
 export interface DialogCloseOptions {
   // Theme dialog

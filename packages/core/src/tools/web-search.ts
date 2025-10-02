@@ -13,11 +13,11 @@ import {
   type ToolCallConfirmationDetails,
   type ToolInfoConfirmationDetails,
   ToolConfirmationOutcome,
-} from "./tools.js";
+} from './tools.js';
 
-import type { Config } from "../config/config.js";
-import { ApprovalMode } from "../config/config.js";
-import { getErrorMessage } from "../utils/errors.js";
+import type { Config } from '../config/config.js';
+import { ApprovalMode } from '../config/config.js';
+import { getErrorMessage } from '../utils/errors.js';
 
 interface TavilyResultItem {
   title: string;
@@ -73,8 +73,8 @@ class WebSearchToolInvocation extends BaseToolInvocation<
     }
 
     const confirmationDetails: ToolInfoConfirmationDetails = {
-      type: "info",
-      title: "Confirm Web Search",
+      type: 'info',
+      title: 'Confirm Web Search',
       prompt: `Search the web for: "${this.params.query}"`,
       onConfirm: async (outcome: ToolConfirmationOutcome) => {
         if (outcome === ToolConfirmationOutcome.ProceedAlways) {
@@ -87,26 +87,26 @@ class WebSearchToolInvocation extends BaseToolInvocation<
 
   async execute(signal: AbortSignal): Promise<WebSearchToolResult> {
     const apiKey =
-      this.config.getTavilyApiKey() || process.env["TAVILY_API_KEY"];
+      this.config.getTavilyApiKey() || process.env['TAVILY_API_KEY'];
     if (!apiKey) {
       return {
         llmContent:
-          "Web search is disabled because TAVILY_API_KEY is not configured. Please set it in your settings.json, .env file, or via --tavily-api-key command line argument to enable web search.",
+          'Web search is disabled because TAVILY_API_KEY is not configured. Please set it in your settings.json, .env file, or via --tavily-api-key command line argument to enable web search.',
         returnDisplay:
-          "Web search disabled. Configure TAVILY_API_KEY to enable Tavily search.",
+          'Web search disabled. Configure TAVILY_API_KEY to enable Tavily search.',
       };
     }
 
     try {
-      const response = await fetch("https://api.tavily.com/search", {
-        method: "POST",
+      const response = await fetch('https://api.tavily.com/search', {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           api_key: apiKey,
           query: this.params.query,
-          search_depth: "advanced",
+          search_depth: 'advanced',
           max_results: 5,
           include_answer: true,
         }),
@@ -114,9 +114,9 @@ class WebSearchToolInvocation extends BaseToolInvocation<
       });
 
       if (!response.ok) {
-        const text = await response.text().catch(() => "");
+        const text = await response.text().catch(() => '');
         throw new Error(
-          `Tavily API error: ${response.status} ${response.statusText}${text ? ` - ${text}` : ""}`,
+          `Tavily API error: ${response.status} ${response.statusText}${text ? ` - ${text}` : ''}`,
         );
       }
 
@@ -128,26 +128,26 @@ class WebSearchToolInvocation extends BaseToolInvocation<
       }));
 
       const sourceListFormatted = sources.map(
-        (s, i) => `[${i + 1}] ${s.title || "Untitled"} (${s.url})`,
+        (s, i) => `[${i + 1}] ${s.title || 'Untitled'} (${s.url})`,
       );
 
-      let content = data.answer?.trim() || "";
+      let content = data.answer?.trim() || '';
       if (!content) {
         // Fallback: build a concise summary from top results
         content = sources
           .slice(0, 3)
           .map((s, i) => `${i + 1}. ${s.title} - ${s.url}`)
-          .join("\n");
+          .join('\n');
       }
 
       if (sourceListFormatted.length > 0) {
-        content += `\n\nSources:\n${sourceListFormatted.join("\n")}`;
+        content += `\n\nSources:\n${sourceListFormatted.join('\n')}`;
       }
 
       if (!content.trim()) {
         return {
           llmContent: `No search results or information found for query: "${this.params.query}"`,
-          returnDisplay: "No information found.",
+          returnDisplay: 'No information found.',
         };
       }
 
@@ -176,23 +176,23 @@ export class WebSearchTool extends BaseDeclarativeTool<
   WebSearchToolParams,
   WebSearchToolResult
 > {
-  static readonly Name: string = "web_search";
+  static readonly Name: string = 'web_search';
 
   constructor(private readonly config: Config) {
     super(
       WebSearchTool.Name,
-      "WebSearch",
-      "Performs a web search using the Tavily API and returns a concise answer with sources. Requires the TAVILY_API_KEY environment variable.",
+      'WebSearch',
+      'Performs a web search using the Tavily API and returns a concise answer with sources. Requires the TAVILY_API_KEY environment variable.',
       Kind.Search,
       {
-        type: "object",
+        type: 'object',
         properties: {
           query: {
-            type: "string",
-            description: "The search query to find information on the web.",
+            type: 'string',
+            description: 'The search query to find information on the web.',
           },
         },
-        required: ["query"],
+        required: ['query'],
       },
     );
   }
@@ -205,7 +205,7 @@ export class WebSearchTool extends BaseDeclarativeTool<
   protected override validateToolParamValues(
     params: WebSearchToolParams,
   ): string | null {
-    if (!params.query || params.query.trim() === "") {
+    if (!params.query || params.query.trim() === '') {
       return "The 'query' parameter cannot be empty.";
     }
     return null;

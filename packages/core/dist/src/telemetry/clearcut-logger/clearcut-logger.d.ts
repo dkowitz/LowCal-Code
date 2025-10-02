@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { HttpsProxyAgent } from "https-proxy-agent";
-import type { StartSessionEvent, UserPromptEvent, ToolCallEvent, ApiRequestEvent, ApiResponseEvent, ApiErrorEvent, LoopDetectedEvent, NextSpeakerCheckEvent, SlashCommandEvent, MalformedJsonResponseEvent, IdeConnectionEvent, ConversationFinishedEvent, KittySequenceOverflowEvent, ChatCompressionEvent, FileOperationEvent, InvalidChunkEvent, ContentRetryEvent, ContentRetryFailureEvent } from "../types.js";
-import { EventMetadataKey } from "./event-metadata-key.js";
-import type { Config } from "../../config/config.js";
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import type { StartSessionEvent, UserPromptEvent, ToolCallEvent, ApiRequestEvent, ApiResponseEvent, ApiErrorEvent, LoopDetectedEvent, NextSpeakerCheckEvent, SlashCommandEvent, MalformedJsonResponseEvent, IdeConnectionEvent, ConversationFinishedEvent, KittySequenceOverflowEvent, ChatCompressionEvent, FileOperationEvent, InvalidChunkEvent, ContentRetryEvent, ContentRetryFailureEvent } from '../types.js';
+import { EventMetadataKey } from './event-metadata-key.js';
+import type { Config } from '../../config/config.js';
 export declare enum EventNames {
     START_SESSION = "start_session",
     NEW_PROMPT = "new_prompt",
@@ -41,7 +41,7 @@ export interface EventValue {
     value: string;
 }
 export interface LogEvent {
-    console_type: "GEMINI_CLI";
+    console_type: 'GEMINI_CLI';
     application: number;
     event_name: string;
     event_metadata: EventValue[][];
@@ -49,7 +49,7 @@ export interface LogEvent {
     client_install_id?: string;
 }
 export interface LogRequest {
-    log_source_name: "CONCORD";
+    log_source_name: 'CONCORD';
     request_time_ms: number;
     log_event: LogEventEntry[][];
 }

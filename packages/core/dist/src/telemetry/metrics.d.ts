@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Meter } from "@opentelemetry/api";
-import type { Config } from "../config/config.js";
-import type { DiffStat } from "../tools/tools.js";
+import type { Meter } from '@opentelemetry/api';
+import type { Config } from '../config/config.js';
+import type { DiffStat } from '../tools/tools.js';
 export declare enum FileOperation {
     CREATE = "create",
     READ = "read",
@@ -17,8 +17,8 @@ export declare function recordChatCompressionMetrics(config: Config, args: {
     tokens_before: number;
     tokens_after: number;
 }): void;
-export declare function recordToolCallMetrics(config: Config, functionName: string, durationMs: number, success: boolean, decision?: "accept" | "reject" | "modify" | "auto_accept", tool_type?: "native" | "mcp"): void;
-export declare function recordTokenUsageMetrics(config: Config, model: string, tokenCount: number, type: "input" | "output" | "thought" | "cache" | "tool"): void;
+export declare function recordToolCallMetrics(config: Config, functionName: string, durationMs: number, success: boolean, decision?: 'accept' | 'reject' | 'modify' | 'auto_accept', tool_type?: 'native' | 'mcp'): void;
+export declare function recordTokenUsageMetrics(config: Config, model: string, tokenCount: number, type: 'input' | 'output' | 'thought' | 'cache' | 'tool'): void;
 export declare function recordApiResponseMetrics(config: Config, model: string, durationMs: number, statusCode?: number | string, error?: string): void;
 export declare function recordApiErrorMetrics(config: Config, model: string, durationMs: number, statusCode?: number | string, errorType?: string): void;
 export declare function recordFileOperationMetric(config: Config, operation: FileOperation, lines?: number, mimetype?: string, extension?: string, diffStat?: DiffStat, programming_language?: string): void;
@@ -37,4 +37,4 @@ export declare function recordContentRetryFailure(config: Config): void;
 /**
  * Records a metric for subagent execution events.
  */
-export declare function recordSubagentExecutionMetrics(config: Config, subagentName: string, status: "started" | "completed" | "failed" | "cancelled", terminateReason?: string): void;
+export declare function recordSubagentExecutionMetrics(config: Config, subagentName: string, status: 'started' | 'completed' | 'failed' | 'cancelled', terminateReason?: string): void;

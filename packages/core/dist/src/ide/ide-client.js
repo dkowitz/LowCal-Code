@@ -3,22 +3,22 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as fs from "node:fs";
-import { isSubpath } from "../utils/paths.js";
-import { detectIde, getIdeInfo } from "../ide/detect-ide.js";
-import { ideContext, IdeContextNotificationSchema, IdeDiffAcceptedNotificationSchema, IdeDiffClosedNotificationSchema, CloseDiffResponseSchema, } from "../ide/ideContext.js";
-import { getIdeProcessInfo } from "./process-utils.js";
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
-import * as os from "node:os";
-import * as path from "node:path";
-import { EnvHttpProxyAgent } from "undici";
+import * as fs from 'node:fs';
+import { isSubpath } from '../utils/paths.js';
+import { detectIde, getIdeInfo } from '../ide/detect-ide.js';
+import { ideContext, IdeContextNotificationSchema, IdeDiffAcceptedNotificationSchema, IdeDiffClosedNotificationSchema, CloseDiffResponseSchema, } from '../ide/ideContext.js';
+import { getIdeProcessInfo } from './process-utils.js';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
+import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { EnvHttpProxyAgent } from 'undici';
 const logger = {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    debug: (...args) => console.debug("[DEBUG] [IDEClient]", ...args),
+    debug: (...args) => console.debug('[DEBUG] [IDEClient]', ...args),
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    error: (...args) => console.error("[ERROR] [IDEClient]", ...args),
+    error: (...args) => console.error('[ERROR] [IDEClient]', ...args),
 };
 export var IDEConnectionStatus;
 (function (IDEConnectionStatus) {
@@ -44,7 +44,7 @@ export class IdeClient {
     client = undefined;
     state = {
         status: IDEConnectionStatus.Disconnected,
-        details: "IDE integration is currently disabled. To enable it, run /ide enable.",
+        details: 'IDE integration is currently disabled. To enable it, run /ide enable.',
     };
     currentIde;
     currentIdeDisplayName;
@@ -78,7 +78,7 @@ export class IdeClient {
         this.setState(IDEConnectionStatus.Connecting);
         const configFromFile = await this.getConnectionConfigFromFile();
         const workspacePath = configFromFile?.workspacePath ??
-            process.env["QWEN_CODE_IDE_WORKSPACE_PATH"];
+            process.env['QWEN_CODE_IDE_WORKSPACE_PATH'];
         const { isValid, error } = IdeClient.validateWorkspacePath(workspacePath, this.currentIdeDisplayName, process.cwd());
         if (!isValid) {
             this.setState(IDEConnectionStatus.Disconnected, error, true);
@@ -169,11 +169,11 @@ export class IdeClient {
         const content = await this.closeDiff(filePath);
         const resolver = this.diffResponses.get(filePath);
         if (resolver) {
-            if (outcome === "accepted") {
-                resolver({ status: "accepted", content });
+            if (outcome === 'accepted') {
+                resolver({ status: 'accepted', content });
             }
             else {
-                resolver({ status: "rejected", content: undefined });
+                resolver({ status: 'rejected', content: undefined });
             }
             this.diffResponses.delete(filePath);
         }
@@ -186,7 +186,7 @@ export class IdeClient {
             await this.closeDiff(filePath);
         }
         this.diffResponses.clear();
-        this.setState(IDEConnectionStatus.Disconnected, "IDE integration disabled. To enable it again, run /ide enable.");
+        this.setState(IDEConnectionStatus.Disconnected, 'IDE integration disabled. To enable it again, run /ide enable.');
         this.client?.close();
     }
     getCurrentIde() {
@@ -230,7 +230,7 @@ export class IdeClient {
                 error: `Failed to connect to IDE companion extension in ${currentIdeDisplayName}. Please ensure the extension is running. To install the extension, run /ide install.`,
             };
         }
-        if (ideWorkspacePath === "") {
+        if (ideWorkspacePath === '') {
             return {
                 isValid: false,
                 error: `To use this feature, please open a workspace folder in ${currentIdeDisplayName} and try again.`,
@@ -245,24 +245,24 @@ export class IdeClient {
         if (!isWithinWorkspace) {
             return {
                 isValid: false,
-                error: `Directory mismatch. Qwen Code is running in a different location than the open workspace in ${currentIdeDisplayName}. Please run the CLI from one of the following directories: ${ideWorkspacePaths.join(", ")}`,
+                error: `Directory mismatch. Qwen Code is running in a different location than the open workspace in ${currentIdeDisplayName}. Please run the CLI from one of the following directories: ${ideWorkspacePaths.join(', ')}`,
             };
         }
         return { isValid: true };
     }
     getPortFromEnv() {
-        const port = process.env["QWEN_CODE_IDE_SERVER_PORT"];
+        const port = process.env['QWEN_CODE_IDE_SERVER_PORT'];
         if (!port) {
             return undefined;
         }
         return port;
     }
     getStdioConfigFromEnv() {
-        const command = process.env["QWEN_CODE_IDE_SERVER_STDIO_COMMAND"];
+        const command = process.env['QWEN_CODE_IDE_SERVER_STDIO_COMMAND'];
         if (!command) {
             return undefined;
         }
-        const argsStr = process.env["QWEN_CODE_IDE_SERVER_STDIO_ARGS"];
+        const argsStr = process.env['QWEN_CODE_IDE_SERVER_STDIO_ARGS'];
         let args = [];
         if (argsStr) {
             try {
@@ -271,11 +271,11 @@ export class IdeClient {
                     args = parsedArgs;
                 }
                 else {
-                    logger.error("QWEN_CODE_IDE_SERVER_STDIO_ARGS must be a JSON array string.");
+                    logger.error('QWEN_CODE_IDE_SERVER_STDIO_ARGS must be a JSON array string.');
                 }
             }
             catch (e) {
-                logger.error("Failed to parse QWEN_CODE_IDE_SERVER_STDIO_ARGS:", e);
+                logger.error('Failed to parse QWEN_CODE_IDE_SERVER_STDIO_ARGS:', e);
             }
         }
         return { command, args };
@@ -286,7 +286,7 @@ export class IdeClient {
         }
         try {
             const portFile = path.join(os.tmpdir(), `qwen-code-ide-server-${this.ideProcessInfo.pid}.json`);
-            const portFileContents = await fs.promises.readFile(portFile, "utf8");
+            const portFileContents = await fs.promises.readFile(portFile, 'utf8');
             return JSON.parse(portFileContents);
         }
         catch (_) {
@@ -295,11 +295,11 @@ export class IdeClient {
     }
     createProxyAwareFetch() {
         // ignore proxy for 'localhost' by deafult to allow connecting to the ide mcp server
-        const existingNoProxy = process.env["NO_PROXY"] || "";
+        const existingNoProxy = process.env['NO_PROXY'] || '';
         const agent = new EnvHttpProxyAgent({
-            noProxy: [existingNoProxy, "localhost"].filter(Boolean).join(","),
+            noProxy: [existingNoProxy, 'localhost'].filter(Boolean).join(','),
         });
-        const undiciPromise = import("undici");
+        const undiciPromise = import('undici');
         return async (url, init) => {
             const { fetch: fetchFn } = await undiciPromise;
             const fetchOptions = {
@@ -337,7 +337,7 @@ export class IdeClient {
             const { filePath, content } = notification.params;
             const resolver = this.diffResponses.get(filePath);
             if (resolver) {
-                resolver({ status: "accepted", content });
+                resolver({ status: 'accepted', content });
                 this.diffResponses.delete(filePath);
             }
             else {
@@ -348,7 +348,7 @@ export class IdeClient {
             const { filePath } = notification.params;
             const resolver = this.diffResponses.get(filePath);
             if (resolver) {
-                resolver({ status: "rejected", content: undefined });
+                resolver({ status: 'rejected', content: undefined });
                 this.diffResponses.delete(filePath);
             }
             else {
@@ -359,11 +359,11 @@ export class IdeClient {
     async establishHttpConnection(port) {
         let transport;
         try {
-            logger.debug("Attempting to connect to IDE via HTTP SSE");
+            logger.debug('Attempting to connect to IDE via HTTP SSE');
             this.client = new Client({
-                name: "streamable-http-client",
+                name: 'streamable-http-client',
                 // TODO(#3487): use the CLI version here.
-                version: "1.0.0",
+                version: '1.0.0',
             });
             transport = new StreamableHTTPClientTransport(new URL(`http://${getIdeServerHost()}:${port}/mcp`), {
                 fetch: this.createProxyAwareFetch(),
@@ -380,7 +380,7 @@ export class IdeClient {
                     await transport.close();
                 }
                 catch (closeError) {
-                    logger.debug("Failed to close transport:", closeError);
+                    logger.debug('Failed to close transport:', closeError);
                 }
             }
             return false;
@@ -389,11 +389,11 @@ export class IdeClient {
     async establishStdioConnection({ command, args, }) {
         let transport;
         try {
-            logger.debug("Attempting to connect to IDE via stdio");
+            logger.debug('Attempting to connect to IDE via stdio');
             this.client = new Client({
-                name: "stdio-client",
+                name: 'stdio-client',
                 // TODO(#3487): use the CLI version here.
-                version: "1.0.0",
+                version: '1.0.0',
             });
             transport = new StdioClientTransport({
                 command,
@@ -410,7 +410,7 @@ export class IdeClient {
                     await transport.close();
                 }
                 catch (closeError) {
-                    logger.debug("Failed to close transport:", closeError);
+                    logger.debug('Failed to close transport:', closeError);
                 }
             }
             return false;
@@ -418,7 +418,7 @@ export class IdeClient {
     }
 }
 function getIdeServerHost() {
-    const isInContainer = fs.existsSync("/.dockerenv") || fs.existsSync("/run/.containerenv");
-    return isInContainer ? "host.docker.internal" : "localhost";
+    const isInContainer = fs.existsSync('/.dockerenv') || fs.existsSync('/run/.containerenv');
+    return isInContainer ? 'host.docker.internal' : 'localhost';
 }
 //# sourceMappingURL=ide-client.js.map

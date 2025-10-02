@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { type CreationWizardState, type WizardAction } from "./types.js";
-import { WIZARD_STEPS } from "./constants.js";
-import { getStepKind, getTotalSteps } from "./utils.js";
+import { type CreationWizardState, type WizardAction } from './types.js';
+import { WIZARD_STEPS } from './constants.js';
+import { getStepKind, getTotalSteps } from './utils.js';
 
 /**
  * Initial state for the creation wizard.
  */
 export const initialWizardState: CreationWizardState = {
   currentStep: WIZARD_STEPS.LOCATION_SELECTION,
-  location: "project",
-  generationMethod: "qwen",
-  userDescription: "",
-  generatedSystemPrompt: "",
-  generatedDescription: "",
-  generatedName: "",
+  location: 'project',
+  generationMethod: 'qwen',
+  userDescription: '',
+  generatedSystemPrompt: '',
+  generatedDescription: '',
+  generatedName: '',
   selectedTools: [],
-  color: "auto",
+  color: 'auto',
   isGenerating: false,
   validationErrors: [],
   canProceed: false,
@@ -34,7 +34,7 @@ export function wizardReducer(
   action: WizardAction,
 ): CreationWizardState {
   switch (action.type) {
-    case "SET_STEP":
+    case 'SET_STEP':
       return {
         ...state,
         currentStep: Math.max(
@@ -44,28 +44,28 @@ export function wizardReducer(
         validationErrors: [],
       };
 
-    case "SET_LOCATION":
+    case 'SET_LOCATION':
       return {
         ...state,
         location: action.location,
         canProceed: true,
       };
 
-    case "SET_GENERATION_METHOD":
+    case 'SET_GENERATION_METHOD':
       return {
         ...state,
         generationMethod: action.method,
         canProceed: true,
       };
 
-    case "SET_USER_DESCRIPTION":
+    case 'SET_USER_DESCRIPTION':
       return {
         ...state,
         userDescription: action.description,
         canProceed: action.description.trim().length >= 0,
       };
 
-    case "SET_GENERATED_CONTENT":
+    case 'SET_GENERATED_CONTENT':
       return {
         ...state,
         generatedName: action.name,
@@ -75,56 +75,56 @@ export function wizardReducer(
         canProceed: true,
       };
 
-    case "SET_GENERATED_NAME":
+    case 'SET_GENERATED_NAME':
       return {
         ...state,
         generatedName: action.name,
         canProceed: action.name.trim().length > 0,
       };
 
-    case "SET_GENERATED_SYSTEM_PROMPT":
+    case 'SET_GENERATED_SYSTEM_PROMPT':
       return {
         ...state,
         generatedSystemPrompt: action.systemPrompt,
         canProceed: action.systemPrompt.trim().length > 0,
       };
 
-    case "SET_GENERATED_DESCRIPTION":
+    case 'SET_GENERATED_DESCRIPTION':
       return {
         ...state,
         generatedDescription: action.description,
         canProceed: action.description.trim().length > 0,
       };
 
-    case "SET_TOOLS":
+    case 'SET_TOOLS':
       return {
         ...state,
         selectedTools: action.tools,
         canProceed: true,
       };
 
-    case "SET_BACKGROUND_COLOR":
+    case 'SET_BACKGROUND_COLOR':
       return {
         ...state,
         color: action.color,
         canProceed: true,
       };
 
-    case "SET_GENERATING":
+    case 'SET_GENERATING':
       return {
         ...state,
         isGenerating: action.isGenerating,
         canProceed: !action.isGenerating,
       };
 
-    case "SET_VALIDATION_ERRORS":
+    case 'SET_VALIDATION_ERRORS':
       return {
         ...state,
         validationErrors: action.errors,
         canProceed: action.errors.length === 0,
       };
 
-    case "GO_TO_NEXT_STEP":
+    case 'GO_TO_NEXT_STEP':
       if (
         state.canProceed &&
         state.currentStep < getTotalSteps(state.generationMethod)
@@ -138,7 +138,7 @@ export function wizardReducer(
       }
       return state;
 
-    case "GO_TO_PREVIOUS_STEP":
+    case 'GO_TO_PREVIOUS_STEP':
       if (state.currentStep > WIZARD_STEPS.LOCATION_SELECTION) {
         return {
           ...state,
@@ -149,7 +149,7 @@ export function wizardReducer(
       }
       return state;
 
-    case "RESET_WIZARD":
+    case 'RESET_WIZARD':
       return initialWizardState;
 
     default:
@@ -163,26 +163,26 @@ export function wizardReducer(
 function validateStep(step: number, state: CreationWizardState): boolean {
   const kind = getStepKind(state.generationMethod, step);
   switch (kind) {
-    case "LOCATION":
-    case "GEN_METHOD":
+    case 'LOCATION':
+    case 'GEN_METHOD':
       return true;
-    case "LLM_DESC":
+    case 'LLM_DESC':
       return state.userDescription.trim().length >= 0;
-    case "MANUAL_NAME":
+    case 'MANUAL_NAME':
       return state.generatedName.trim().length > 0;
-    case "MANUAL_PROMPT":
+    case 'MANUAL_PROMPT':
       return state.generatedSystemPrompt.trim().length > 0;
-    case "MANUAL_DESC":
+    case 'MANUAL_DESC':
       return state.generatedDescription.trim().length > 0;
-    case "TOOLS":
+    case 'TOOLS':
       return (
         state.generatedName.length > 0 &&
         state.generatedDescription.length > 0 &&
         state.generatedSystemPrompt.length > 0
       );
-    case "COLOR":
+    case 'COLOR':
       return true;
-    case "FINAL":
+    case 'FINAL':
       return state.color.length > 0;
     default:
       return false;

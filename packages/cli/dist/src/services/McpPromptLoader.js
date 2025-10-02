@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getErrorMessage, getMCPServerPrompts, } from "@qwen-code/qwen-code-core";
-import { CommandKind } from "../ui/commands/types.js";
+import { getErrorMessage, getMCPServerPrompts, } from '@qwen-code/qwen-code-core';
+import { CommandKind } from '../ui/commands/types.js';
 /**
  * Discovers and loads executable slash commands from prompts exposed by
  * Model-Context-Protocol (MCP) servers.
@@ -37,14 +37,14 @@ export class McpPromptLoader {
                     kind: CommandKind.MCP_PROMPT,
                     subCommands: [
                         {
-                            name: "help",
-                            description: "Show help for this prompt",
+                            name: 'help',
+                            description: 'Show help for this prompt',
                             kind: CommandKind.MCP_PROMPT,
                             action: async () => {
                                 if (!prompt.arguments || prompt.arguments.length === 0) {
                                     return {
-                                        type: "message",
-                                        messageType: "info",
+                                        type: 'message',
+                                        messageType: 'info',
                                         content: `Prompt "${prompt.name}" has no arguments.`,
                                     };
                                 }
@@ -58,11 +58,11 @@ export class McpPromptLoader {
                                     if (arg.description) {
                                         helpMessage += `    ${arg.description}\n`;
                                     }
-                                    helpMessage += `    (required: ${arg.required ? "yes" : "no"})\n\n`;
+                                    helpMessage += `    (required: ${arg.required ? 'yes' : 'no'})\n\n`;
                                 }
                                 return {
-                                    type: "message",
-                                    messageType: "info",
+                                    type: 'message',
+                                    messageType: 'info',
                                     content: helpMessage,
                                 };
                             },
@@ -71,16 +71,16 @@ export class McpPromptLoader {
                     action: async (context, args) => {
                         if (!this.config) {
                             return {
-                                type: "message",
-                                messageType: "error",
-                                content: "Config not loaded.",
+                                type: 'message',
+                                messageType: 'error',
+                                content: 'Config not loaded.',
                             };
                         }
                         const promptInputs = this.parseArgs(args, prompt.arguments);
                         if (promptInputs instanceof Error) {
                             return {
-                                type: "message",
-                                messageType: "error",
+                                type: 'message',
+                                messageType: 'error',
                                 content: promptInputs.message,
                             };
                         }
@@ -89,35 +89,35 @@ export class McpPromptLoader {
                             const mcpServerConfig = mcpServers[serverName];
                             if (!mcpServerConfig) {
                                 return {
-                                    type: "message",
-                                    messageType: "error",
+                                    type: 'message',
+                                    messageType: 'error',
                                     content: `MCP server config not found for '${serverName}'.`,
                                 };
                             }
                             const result = await prompt.invoke(promptInputs);
-                            if (result["error"]) {
+                            if (result['error']) {
                                 return {
-                                    type: "message",
-                                    messageType: "error",
-                                    content: `Error invoking prompt: ${result["error"]}`,
+                                    type: 'message',
+                                    messageType: 'error',
+                                    content: `Error invoking prompt: ${result['error']}`,
                                 };
                             }
-                            if (!result.messages?.[0]?.content?.["text"]) {
+                            if (!result.messages?.[0]?.content?.['text']) {
                                 return {
-                                    type: "message",
-                                    messageType: "error",
-                                    content: "Received an empty or invalid prompt response from the server.",
+                                    type: 'message',
+                                    messageType: 'error',
+                                    content: 'Received an empty or invalid prompt response from the server.',
                                 };
                             }
                             return {
-                                type: "submit_prompt",
+                                type: 'submit_prompt',
                                 content: JSON.stringify(result.messages[0].content.text),
                             };
                         }
                         catch (error) {
                             return {
-                                type: "message",
-                                messageType: "error",
+                                type: 'message',
+                                messageType: 'error',
                                 content: `Error: ${getErrorMessage(error)}`,
                             };
                         }
@@ -161,7 +161,7 @@ export class McpPromptLoader {
         while ((match = namedArgRegex.exec(userArgs)) !== null) {
             const key = match[1];
             // Extract the quoted or unquoted argument and remove escape chars.
-            const value = (match[2] ?? match[3]).replace(/\\(.)/g, "$1");
+            const value = (match[2] ?? match[3]).replace(/\\(.)/g, '$1');
             argValues[key] = value;
             // Capture text between matches as potential positional args
             if (match.index > lastIndex) {
@@ -173,13 +173,13 @@ export class McpPromptLoader {
         if (lastIndex < userArgs.length) {
             positionalParts.push(userArgs.substring(lastIndex));
         }
-        const positionalArgsString = positionalParts.join("").trim();
+        const positionalArgsString = positionalParts.join('').trim();
         // extracts either quoted strings or non-quoted sequences of non-space characters.
         const positionalArgRegex = /(?:"((?:\\.|[^"\\])*)"|([^ ]+))/g;
         const positionalArgs = [];
         while ((match = positionalArgRegex.exec(positionalArgsString)) !== null) {
             // Extract the quoted or unquoted argument and remove escape chars.
-            positionalArgs.push((match[1] ?? match[2]).replace(/\\(.)/g, "$1"));
+            positionalArgs.push((match[1] ?? match[2]).replace(/\\(.)/g, '$1'));
         }
         if (!promptArgs) {
             return promptInputs;
@@ -193,7 +193,7 @@ export class McpPromptLoader {
         if (unfilledArgs.length === 1) {
             // If we have only one unfilled arg, we don't require quotes we just
             // join all the given arguments together as if they were quoted.
-            promptInputs[unfilledArgs[0].name] = positionalArgs.join(" ");
+            promptInputs[unfilledArgs[0].name] = positionalArgs.join(' ');
         }
         else {
             const missingArgs = [];
@@ -208,7 +208,7 @@ export class McpPromptLoader {
             if (missingArgs.length > 0) {
                 const missingArgNames = missingArgs
                     .map((name) => `--${name}`)
-                    .join(", ");
+                    .join(', ');
                 return new Error(`Missing required argument(s): ${missingArgNames}`);
             }
         }

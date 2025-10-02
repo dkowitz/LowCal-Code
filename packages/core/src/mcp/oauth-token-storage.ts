@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { promises as fs } from "node:fs";
-import * as path from "node:path";
-import { Storage } from "../config/storage.js";
-import { getErrorMessage } from "../utils/errors.js";
-import type { OAuthToken, OAuthCredentials } from "./token-storage/types.js";
+import { promises as fs } from 'node:fs';
+import * as path from 'node:path';
+import { Storage } from '../config/storage.js';
+import { getErrorMessage } from '../utils/errors.js';
+import type { OAuthToken, OAuthCredentials } from './token-storage/types.js';
 
 /**
  * Class for managing MCP OAuth token storage and retrieval.
@@ -41,7 +41,7 @@ export class MCPOAuthTokenStorage {
 
     try {
       const tokenFile = this.getTokenFilePath();
-      const data = await fs.readFile(tokenFile, "utf-8");
+      const data = await fs.readFile(tokenFile, 'utf-8');
       const tokens = JSON.parse(data) as OAuthCredentials[];
 
       for (const credential of tokens) {
@@ -49,7 +49,7 @@ export class MCPOAuthTokenStorage {
       }
     } catch (error) {
       // File doesn't exist or is invalid, return empty map
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
         console.error(
           `Failed to load MCP OAuth tokens: ${getErrorMessage(error)}`,
         );
@@ -171,7 +171,7 @@ export class MCPOAuthTokenStorage {
       const tokenFile = this.getTokenFilePath();
       await fs.unlink(tokenFile);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
         console.error(
           `Failed to clear MCP OAuth tokens: ${getErrorMessage(error)}`,
         );

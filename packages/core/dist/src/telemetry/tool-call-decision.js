@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ToolConfirmationOutcome } from "../tools/tools.js";
+import { ToolConfirmationOutcome } from '../tools/tools.js';
 export var ToolCallDecision;
 (function (ToolCallDecision) {
     ToolCallDecision["ACCEPT"] = "accept";

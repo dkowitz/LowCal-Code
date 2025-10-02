@@ -431,21 +431,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import type React from "react";
-import { useState } from "react";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
+import type React from 'react';
+import { useState } from 'react';
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
 import {
   EDITOR_DISPLAY_NAMES,
   editorSettingsManager,
   type EditorDisplay,
-} from "../editors/editorSettingsManager.js";
-import { RadioButtonSelect } from "./shared/RadioButtonSelect.js";
-import type { LoadedSettings } from "../../config/settings.js";
-import { SettingScope } from "../../config/settings.js";
-import type { EditorType } from "@qwen-code/qwen-code-core";
-import { isEditorAvailable } from "@qwen-code/qwen-code-core";
-import { useKeypress } from "../hooks/useKeypress.js";
+} from '../editors/editorSettingsManager.js';
+import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
+import type { LoadedSettings } from '../../config/settings.js';
+import { SettingScope } from '../../config/settings.js';
+import type { EditorType } from '@qwen-code/qwen-code-core';
+import { isEditorAvailable } from '@qwen-code/qwen-code-core';
+import { useKeypress } from '../hooks/useKeypress.js';
 &nbsp;
 interface EditorDialogProps {
   onSelect: (editorType: EditorType | undefined, scope: SettingScope) =&gt; void;
@@ -461,15 +461,15 @@ export <span class="fstat-no" title="function not covered" >function EditorSetti
 <span class="cstat-no" title="statement not covered" >  const [selectedScope, setSelectedScope] = useState&lt;SettingScope&gt;(</span>
 <span class="cstat-no" title="statement not covered" >    SettingScope.User,</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
-<span class="cstat-no" title="statement not covered" >  const [focusedSection, setFocusedSection] = useState&lt;"editor" | "scope"&gt;(</span>
-<span class="cstat-no" title="statement not covered" >    "editor",</span>
+<span class="cstat-no" title="statement not covered" >  const [focusedSection, setFocusedSection] = useState&lt;'editor' | 'scope'&gt;(</span>
+<span class="cstat-no" title="statement not covered" >    'editor',</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
 <span class="cstat-no" title="statement not covered" >  useKeypress(</span>
 <span class="cstat-no" title="statement not covered" >    (key) =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      if (key.name === "tab") {</span>
-<span class="cstat-no" title="statement not covered" >        setFocusedSection((prev) =&gt; (prev === "editor" ? "scope" : "editor"));</span>
+<span class="cstat-no" title="statement not covered" >      if (key.name === 'tab') {</span>
+<span class="cstat-no" title="statement not covered" >        setFocusedSection((prev) =&gt; (prev === 'editor' ? 'scope' : 'editor'));</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
-<span class="cstat-no" title="statement not covered" >      if (key.name === "escape") {</span>
+<span class="cstat-no" title="statement not covered" >      if (key.name === 'escape') {</span>
 <span class="cstat-no" title="statement not covered" >        onExit();</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
@@ -492,12 +492,12 @@ export <span class="fstat-no" title="function not covered" >function EditorSetti
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const scopeItems = [</span>
-<span class="cstat-no" title="statement not covered" >    { label: "User Settings", value: SettingScope.User },</span>
-<span class="cstat-no" title="statement not covered" >    { label: "Workspace Settings", value: SettingScope.Workspace },</span>
+<span class="cstat-no" title="statement not covered" >    { label: 'User Settings', value: SettingScope.User },</span>
+<span class="cstat-no" title="statement not covered" >    { label: 'Workspace Settings', value: SettingScope.Workspace },</span>
 <span class="cstat-no" title="statement not covered" >  ];</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  const handleEditorSelect = (editorType: EditorType | "not_set") =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >    if (editorType === "not_set") {</span>
+<span class="cstat-no" title="statement not covered" >  const handleEditorSelect = (editorType: EditorType | 'not_set') =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    if (editorType === 'not_set') {</span>
 <span class="cstat-no" title="statement not covered" >      onSelect(undefined, selectedScope);</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -506,10 +506,10 @@ export <span class="fstat-no" title="function not covered" >function EditorSetti
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const handleScopeSelect = (scope: SettingScope) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    setSelectedScope(scope);</span>
-<span class="cstat-no" title="statement not covered" >    setFocusedSection("editor");</span>
+<span class="cstat-no" title="statement not covered" >    setFocusedSection('editor');</span>
 <span class="cstat-no" title="statement not covered" >  };</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  let otherScopeModifiedMessage = "";</span>
+<span class="cstat-no" title="statement not covered" >  let otherScopeModifiedMessage = '';</span>
 <span class="cstat-no" title="statement not covered" >  const otherScope =</span>
 <span class="cstat-no" title="statement not covered" >    selectedScope === SettingScope.User</span>
 <span class="cstat-no" title="statement not covered" >      ? SettingScope.Workspace</span>
@@ -525,7 +525,7 @@ export <span class="fstat-no" title="function not covered" >function EditorSetti
 <span class="cstat-no" title="statement not covered" >        : `(Modified in ${otherScope})`;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >  let mergedEditorName = "None";</span>
+<span class="cstat-no" title="statement not covered" >  let mergedEditorName = 'None';</span>
 <span class="cstat-no" title="statement not covered" >  if (</span>
 <span class="cstat-no" title="statement not covered" >    settings.merged.general?.preferredEditor &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >    isEditorAvailable(settings.merged.general?.preferredEditor)</span>
@@ -545,8 +545,8 @@ export <span class="fstat-no" title="function not covered" >function EditorSetti
 <span class="cstat-no" title="statement not covered" >      width="100%"</span>
     &gt;
 <span class="cstat-no" title="statement not covered" >      &lt;Box flexDirection="column" width="45%" paddingRight={2}&gt;</span>
-<span class="cstat-no" title="statement not covered" >        &lt;Text bold={focusedSection === "editor"}&gt;</span>
-<span class="cstat-no" title="statement not covered" >          {focusedSection === "editor" ? "&gt; " : "  "}Select Editor{" "}</span>
+<span class="cstat-no" title="statement not covered" >        &lt;Text bold={focusedSection === 'editor'}&gt;</span>
+<span class="cstat-no" title="statement not covered" >          {focusedSection === 'editor' ? '&gt; ' : '  '}Select Editor{' '}</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={Colors.Gray}&gt;{otherScopeModifiedMessage}&lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;RadioButtonSelect</span>
@@ -557,19 +557,19 @@ export <span class="fstat-no" title="function not covered" >function EditorSetti
 <span class="cstat-no" title="statement not covered" >          }))}</span>
 <span class="cstat-no" title="statement not covered" >          initialIndex={editorIndex}</span>
 <span class="cstat-no" title="statement not covered" >          onSelect={handleEditorSelect}</span>
-<span class="cstat-no" title="statement not covered" >          isFocused={focusedSection === "editor"}</span>
+<span class="cstat-no" title="statement not covered" >          isFocused={focusedSection === 'editor'}</span>
 <span class="cstat-no" title="statement not covered" >          key={selectedScope}</span>
 <span class="cstat-no" title="statement not covered" >        /&gt;</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        &lt;Box marginTop={1} flexDirection="column"&gt;</span>
-<span class="cstat-no" title="statement not covered" >          &lt;Text bold={focusedSection === "scope"}&gt;</span>
-<span class="cstat-no" title="statement not covered" >            {focusedSection === "scope" ? "&gt; " : "  "}Apply To</span>
+<span class="cstat-no" title="statement not covered" >          &lt;Text bold={focusedSection === 'scope'}&gt;</span>
+<span class="cstat-no" title="statement not covered" >            {focusedSection === 'scope' ? '&gt; ' : '  '}Apply To</span>
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;RadioButtonSelect</span>
 <span class="cstat-no" title="statement not covered" >            items={scopeItems}</span>
 <span class="cstat-no" title="statement not covered" >            initialIndex={0}</span>
 <span class="cstat-no" title="statement not covered" >            onSelect={handleScopeSelect}</span>
-<span class="cstat-no" title="statement not covered" >            isFocused={focusedSection === "scope"}</span>
+<span class="cstat-no" title="statement not covered" >            isFocused={focusedSection === 'scope'}</span>
 <span class="cstat-no" title="statement not covered" >          /&gt;</span>
 <span class="cstat-no" title="statement not covered" >        &lt;/Box&gt;</span>
 &nbsp;
@@ -588,10 +588,10 @@ export <span class="fstat-no" title="function not covered" >function EditorSetti
             cannot be used in sandbox mode.
 <span class="cstat-no" title="statement not covered" >          &lt;/Text&gt;</span>
 <span class="cstat-no" title="statement not covered" >          &lt;Text color={Colors.Gray}&gt;</span>
-<span class="cstat-no" title="statement not covered" >            Your preferred editor is:{" "}</span>
+<span class="cstat-no" title="statement not covered" >            Your preferred editor is:{' '}</span>
 <span class="cstat-no" title="statement not covered" >            &lt;Text</span>
 <span class="cstat-no" title="statement not covered" >              color={</span>
-<span class="cstat-no" title="statement not covered" >                mergedEditorName === "None"</span>
+<span class="cstat-no" title="statement not covered" >                mergedEditorName === 'None'</span>
 <span class="cstat-no" title="statement not covered" >                  ? Colors.AccentRed</span>
 <span class="cstat-no" title="statement not covered" >                  : Colors.AccentCyan</span>
               }
@@ -613,7 +613,7 @@ export <span class="fstat-no" title="function not covered" >function EditorSetti
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.879Z
+                at 2025-09-29T17:26:19.374Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

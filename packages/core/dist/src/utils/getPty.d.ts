@@ -5,7 +5,7 @@
  */
 export type PtyImplementation = {
     module: any;
-    name: "lydell-node-pty" | "node-pty";
+    name: 'lydell-node-pty' | 'node-pty';
 } | null;
 export interface PtyProcess {
     readonly pid: number;

@@ -3,5 +3,5 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { SessionLoggingController } from "../services/SessionMarkdownLogger.js";
+import type { SessionLoggingController } from '../services/SessionMarkdownLogger.js';
 export declare const createMockLoggingController: () => SessionLoggingController;

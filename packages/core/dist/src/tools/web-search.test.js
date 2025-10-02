@@ -3,16 +3,16 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { WebSearchTool } from "./web-search.js";
-import { GeminiClient } from "../core/client.js";
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { WebSearchTool } from './web-search.js';
+import { GeminiClient } from '../core/client.js';
 // Mock GeminiClient and Config constructor
-vi.mock("../core/client.js");
-vi.mock("../config/config.js");
+vi.mock('../core/client.js');
+vi.mock('../config/config.js');
 // Mock global fetch
 const mockFetch = vi.fn();
 global.fetch = mockFetch;
-describe("WebSearchTool", () => {
+describe('WebSearchTool', () => {
     const abortSignal = new AbortController().signal;
     let mockGeminiClient;
     let tool;
@@ -21,7 +21,7 @@ describe("WebSearchTool", () => {
         const mockConfigInstance = {
             getGeminiClient: () => mockGeminiClient,
             getProxy: () => undefined,
-            getTavilyApiKey: () => "test-api-key", // Add the missing method
+            getTavilyApiKey: () => 'test-api-key', // Add the missing method
         };
         mockGeminiClient = new GeminiClient(mockConfigInstance);
         tool = new WebSearchTool(mockConfigInstance);
@@ -29,37 +29,37 @@ describe("WebSearchTool", () => {
     afterEach(() => {
         vi.restoreAllMocks();
     });
-    describe("build", () => {
-        it("should return an invocation for a valid query", () => {
-            const params = { query: "test query" };
+    describe('build', () => {
+        it('should return an invocation for a valid query', () => {
+            const params = { query: 'test query' };
             const invocation = tool.build(params);
             expect(invocation).toBeDefined();
             expect(invocation.params).toEqual(params);
         });
-        it("should throw an error for an empty query", () => {
-            const params = { query: "" };
+        it('should throw an error for an empty query', () => {
+            const params = { query: '' };
             expect(() => tool.build(params)).toThrow("The 'query' parameter cannot be empty.");
         });
-        it("should throw an error for a query with only whitespace", () => {
-            const params = { query: "   " };
+        it('should throw an error for a query with only whitespace', () => {
+            const params = { query: '   ' };
             expect(() => tool.build(params)).toThrow("The 'query' parameter cannot be empty.");
         });
     });
-    describe("getDescription", () => {
-        it("should return a description of the search", () => {
-            const params = { query: "test query" };
+    describe('getDescription', () => {
+        it('should return a description of the search', () => {
+            const params = { query: 'test query' };
             const invocation = tool.build(params);
             expect(invocation.getDescription()).toBe('Searching the web for: "test query"');
         });
     });
-    describe("execute", () => {
-        it("should return search results for a successful query", async () => {
-            const params = { query: "successful query" };
+    describe('execute', () => {
+        it('should return search results for a successful query', async () => {
+            const params = { query: 'successful query' };
             // Mock the fetch response
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 json: async () => ({
-                    answer: "Here are your results.",
+                    answer: 'Here are your results.',
                     results: [],
                 }),
             });
@@ -69,41 +69,41 @@ describe("WebSearchTool", () => {
             expect(result.returnDisplay).toBe('Search results for "successful query" returned.');
             expect(result.sources).toEqual([]);
         });
-        it("should handle no search results found", async () => {
-            const params = { query: "no results query" };
+        it('should handle no search results found', async () => {
+            const params = { query: 'no results query' };
             // Mock the fetch response
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 json: async () => ({
-                    answer: "",
+                    answer: '',
                     results: [],
                 }),
             });
             const invocation = tool.build(params);
             const result = await invocation.execute(abortSignal);
             expect(result.llmContent).toBe('No search results or information found for query: "no results query"');
-            expect(result.returnDisplay).toBe("No information found.");
+            expect(result.returnDisplay).toBe('No information found.');
         });
-        it("should handle API errors gracefully", async () => {
-            const params = { query: "error query" };
+        it('should handle API errors gracefully', async () => {
+            const params = { query: 'error query' };
             // Mock the fetch to reject
-            mockFetch.mockRejectedValueOnce(new Error("API Failure"));
+            mockFetch.mockRejectedValueOnce(new Error('API Failure'));
             const invocation = tool.build(params);
             const result = await invocation.execute(abortSignal);
-            expect(result.llmContent).toContain("Error:");
-            expect(result.llmContent).toContain("API Failure");
-            expect(result.returnDisplay).toBe("Error performing web search.");
+            expect(result.llmContent).toContain('Error:');
+            expect(result.llmContent).toContain('API Failure');
+            expect(result.returnDisplay).toBe('Error performing web search.');
         });
-        it("should correctly format results with sources", async () => {
-            const params = { query: "grounding query" };
+        it('should correctly format results with sources', async () => {
+            const params = { query: 'grounding query' };
             // Mock the fetch response
             mockFetch.mockResolvedValueOnce({
                 ok: true,
                 json: async () => ({
-                    answer: "This is a test response.",
+                    answer: 'This is a test response.',
                     results: [
-                        { title: "Example Site", url: "https://example.com" },
-                        { title: "Google", url: "https://google.com" },
+                        { title: 'Example Site', url: 'https://example.com' },
+                        { title: 'Google', url: 'https://google.com' },
                     ],
                 }),
             });

@@ -3,14 +3,14 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Content, FunctionDeclaration } from "@google/genai";
+import type { Content, FunctionDeclaration } from '@google/genai';
 /**
  * Represents the storage level for a subagent configuration.
  * - 'project': Stored in `.qwen/agents/` within the project directory
  * - 'user': Stored in `~/.qwen/agents/` in the user's home directory
  * - 'builtin': Built-in agents embedded in the codebase, always available
  */
-export type SubagentLevel = "project" | "user" | "builtin";
+export type SubagentLevel = 'project' | 'user' | 'builtin';
 /**
  * Core configuration for a subagent as stored in Markdown files.
  * This interface represents the file-based configuration that gets
@@ -90,9 +90,9 @@ export interface ListSubagentsOptions {
     /** Filter by tool availability */
     hasTool?: string;
     /** Sort order for results */
-    sortBy?: "name" | "lastModified" | "level";
+    sortBy?: 'name' | 'lastModified' | 'level';
     /** Sort direction */
-    sortOrder?: "asc" | "desc";
+    sortOrder?: 'asc' | 'desc';
     /** Force refresh from disk, bypassing cache. Defaults to false. */
     force?: boolean;
 }

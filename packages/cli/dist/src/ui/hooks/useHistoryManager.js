@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useRef, useCallback } from "react";
+import { useState, useRef, useCallback } from 'react';
 /**
  * Custom hook to manage the chat history state.
  *
@@ -29,8 +29,8 @@ export function useHistory() {
             if (prevHistory.length > 0) {
                 const lastItem = prevHistory[prevHistory.length - 1];
                 // Prevent adding duplicate consecutive user messages
-                if (lastItem.type === "user" &&
-                    newItem.type === "user" &&
+                if (lastItem.type === 'user' &&
+                    newItem.type === 'user' &&
                     lastItem.text === newItem.text) {
                     return prevHistory; // Don't add the duplicate
                 }
@@ -50,7 +50,7 @@ export function useHistory() {
         setHistory((prevHistory) => prevHistory.map((item) => {
             if (item.id === id) {
                 // Apply updates based on whether it's an object or a function
-                const newUpdates = typeof updates === "function" ? updates(item) : updates;
+                const newUpdates = typeof updates === 'function' ? updates(item) : updates;
                 return { ...item, ...newUpdates };
             }
             return item;

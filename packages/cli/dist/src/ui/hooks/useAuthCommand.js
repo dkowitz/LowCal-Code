@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useCallback, useEffect } from "react";
-import { AuthType } from "@qwen-code/qwen-code-core";
-import { clearCachedCredentialFile, getErrorMessage, } from "@qwen-code/qwen-code-core";
-import { runExitCleanup } from "../../utils/cleanup.js";
+import { useState, useCallback, useEffect } from 'react';
+import { AuthType } from '@qwen-code/qwen-code-core';
+import { clearCachedCredentialFile, getErrorMessage, } from '@qwen-code/qwen-code-core';
+import { runExitCleanup } from '../../utils/cleanup.js';
 export const useAuthCommand = (settings, setAuthError, config) => {
     const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(settings.merged.security?.auth?.selectedType === undefined);
     const openAuthDialog = useCallback(() => {
@@ -37,7 +37,7 @@ export const useAuthCommand = (settings, setAuthError, config) => {
     const handleAuthSelect = useCallback(async (authType, scope) => {
         if (authType) {
             await clearCachedCredentialFile();
-            settings.setValue(scope, "security.auth.selectedType", authType);
+            settings.setValue(scope, 'security.auth.selectedType', authType);
             if (authType === AuthType.LOGIN_WITH_GOOGLE &&
                 config.isBrowserLaunchSuppressed()) {
                 runExitCleanup();
@@ -51,22 +51,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
         }
         setIsAuthDialogOpen(false);
         setAuthError(null);
-        // Refresh auth config after dialog close to apply any provider changes
-        if (authType) {
-            try {
-                setIsAuthenticating(true);
-                await config.refreshAuth(authType);
-                console.log(`Refreshed auth via "${authType}".`);
-            }
-            catch (e) {
-                setAuthError(`Failed to refresh auth. Message: ${getErrorMessage(e)}`);
-                openAuthDialog();
-            }
-            finally {
-                setIsAuthenticating(false);
-            }
-        }
-    }, [settings, setAuthError, config, openAuthDialog]);
+    }, [settings, setAuthError, config]);
     const cancelAuthentication = useCallback(() => {
         setIsAuthenticating(false);
     }, []);

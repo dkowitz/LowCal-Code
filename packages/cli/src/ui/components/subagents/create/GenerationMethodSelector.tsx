@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Box } from "ink";
-import { RadioButtonSelect } from "../../shared/RadioButtonSelect.js";
-import type { WizardStepProps } from "../types.js";
+import { Box } from 'ink';
+import { RadioButtonSelect } from '../../shared/RadioButtonSelect.js';
+import type { WizardStepProps } from '../types.js';
 
 interface GenerationOption {
   label: string;
-  value: "qwen" | "manual";
+  value: 'qwen' | 'manual';
 }
 
 const generationOptions: GenerationOption[] = [
   {
-    label: "Generate with Qwen Code (Recommended)",
-    value: "qwen",
+    label: 'Generate with Qwen Code (Recommended)',
+    value: 'qwen',
   },
   {
-    label: "Manual Creation",
-    value: "manual",
+    label: 'Manual Creation',
+    value: 'manual',
   },
 ];
 
@@ -34,8 +34,8 @@ export function GenerationMethodSelector({
   onPrevious: _onPrevious,
 }: WizardStepProps) {
   const handleSelect = (selectedValue: string) => {
-    const method = selectedValue as "qwen" | "manual";
-    dispatch({ type: "SET_GENERATION_METHOD", method });
+    const method = selectedValue as 'qwen' | 'manual';
+    dispatch({ type: 'SET_GENERATION_METHOD', method });
     onNext();
   };
 

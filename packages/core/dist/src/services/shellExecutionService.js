@@ -3,14 +3,14 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import pkg from "@xterm/headless";
-import { spawn as cpSpawn } from "child_process";
-import os from "os";
-import stripAnsi from "strip-ansi";
-import { TextDecoder } from "util";
-import { getPty } from "../utils/getPty.js";
-import { getCachedEncodingForBuffer } from "../utils/systemEncoding.js";
-import { isBinary } from "../utils/textUtils.js";
+import pkg from '@xterm/headless';
+import { spawn as cpSpawn } from 'child_process';
+import os from 'os';
+import stripAnsi from 'strip-ansi';
+import { TextDecoder } from 'util';
+import { getPty } from '../utils/getPty.js';
+import { getCachedEncodingForBuffer } from '../utils/systemEncoding.js';
+import { isBinary } from '../utils/textUtils.js';
 const { Terminal } = pkg;
 const SIGKILL_TIMEOUT_MS = 200;
 // @ts-expect-error getFullText is not a public API.
@@ -19,9 +19,9 @@ const getFullText = (terminal) => {
     const lines = [];
     for (let i = 0; i < buffer.length; i++) {
         const line = buffer.getLine(i);
-        lines.push(line ? line.translateToString(true) : "");
+        lines.push(line ? line.translateToString(true) : '');
     }
-    return lines.join("\n").trim();
+    return lines.join('\n').trim();
 };
 /**
  * A centralized service for executing shell commands with robust process
@@ -55,25 +55,25 @@ export class ShellExecutionService {
     }
     static childProcessFallback(commandToExecute, cwd, onOutputEvent, abortSignal) {
         try {
-            const isWindows = os.platform() === "win32";
+            const isWindows = os.platform() === 'win32';
             const child = cpSpawn(commandToExecute, [], {
                 cwd,
-                stdio: ["ignore", "pipe", "pipe"],
+                stdio: ['ignore', 'pipe', 'pipe'],
                 windowsVerbatimArguments: true,
-                shell: isWindows ? true : "bash",
+                shell: isWindows ? true : 'bash',
                 detached: !isWindows,
                 env: {
                     ...process.env,
-                    QWEN_CODE: "1",
-                    TERM: "xterm-256color",
-                    PAGER: "cat",
+                    QWEN_CODE: '1',
+                    TERM: 'xterm-256color',
+                    PAGER: 'cat',
                 },
             });
             const result = new Promise((resolve) => {
                 let stdoutDecoder = null;
                 let stderrDecoder = null;
-                let stdout = "";
-                let stderr = "";
+                let stdout = '';
+                let stderr = '';
                 const outputChunks = [];
                 let error = null;
                 let exited = false;
@@ -88,8 +88,8 @@ export class ShellExecutionService {
                             stderrDecoder = new TextDecoder(encoding);
                         }
                         catch {
-                            stdoutDecoder = new TextDecoder("utf-8");
-                            stderrDecoder = new TextDecoder("utf-8");
+                            stdoutDecoder = new TextDecoder('utf-8');
+                            stderrDecoder = new TextDecoder('utf-8');
                         }
                     }
                     outputChunks.push(data);
@@ -98,25 +98,25 @@ export class ShellExecutionService {
                         sniffedBytes = sniffBuffer.length;
                         if (isBinary(sniffBuffer)) {
                             isStreamingRawContent = false;
-                            onOutputEvent({ type: "binary_detected" });
+                            onOutputEvent({ type: 'binary_detected' });
                         }
                     }
-                    const decoder = stream === "stdout" ? stdoutDecoder : stderrDecoder;
+                    const decoder = stream === 'stdout' ? stdoutDecoder : stderrDecoder;
                     const decodedChunk = decoder.decode(data, { stream: true });
                     const strippedChunk = stripAnsi(decodedChunk);
-                    if (stream === "stdout") {
+                    if (stream === 'stdout') {
                         stdout += strippedChunk;
                     }
                     else {
                         stderr += strippedChunk;
                     }
                     if (isStreamingRawContent) {
-                        onOutputEvent({ type: "data", chunk: strippedChunk });
+                        onOutputEvent({ type: 'data', chunk: strippedChunk });
                     }
                     else {
                         const totalBytes = outputChunks.reduce((sum, chunk) => sum + chunk.length, 0);
                         onOutputEvent({
-                            type: "binary_progress",
+                            type: 'binary_progress',
                             bytesReceived: totalBytes,
                         });
                     }
@@ -124,8 +124,8 @@ export class ShellExecutionService {
                 const handleExit = (code, signal) => {
                     const { finalBuffer } = cleanup();
                     // Ensure we don't add an extra newline if stdout already ends with one.
-                    const separator = stdout.endsWith("\n") ? "" : "\n";
-                    const combinedOutput = stdout + (stderr ? (stdout ? separator : "") + stderr : "");
+                    const separator = stdout.endsWith('\n') ? '' : '\n';
+                    const combinedOutput = stdout + (stderr ? (stdout ? separator : '') + stderr : '');
                     resolve({
                         rawOutput: finalBuffer,
                         output: combinedOutput.trim(),
@@ -134,42 +134,42 @@ export class ShellExecutionService {
                         error,
                         aborted: abortSignal.aborted,
                         pid: child.pid,
-                        executionMethod: "child_process",
+                        executionMethod: 'child_process',
                     });
                 };
-                child.stdout.on("data", (data) => handleOutput(data, "stdout"));
-                child.stderr.on("data", (data) => handleOutput(data, "stderr"));
-                child.on("error", (err) => {
+                child.stdout.on('data', (data) => handleOutput(data, 'stdout'));
+                child.stderr.on('data', (data) => handleOutput(data, 'stderr'));
+                child.on('error', (err) => {
                     error = err;
                     handleExit(1, null);
                 });
                 const abortHandler = async () => {
                     if (child.pid && !exited) {
                         if (isWindows) {
-                            cpSpawn("taskkill", ["/pid", child.pid.toString(), "/f", "/t"]);
+                            cpSpawn('taskkill', ['/pid', child.pid.toString(), '/f', '/t']);
                         }
                         else {
                             try {
-                                process.kill(-child.pid, "SIGTERM");
+                                process.kill(-child.pid, 'SIGTERM');
                                 await new Promise((res) => setTimeout(res, SIGKILL_TIMEOUT_MS));
                                 if (!exited) {
-                                    process.kill(-child.pid, "SIGKILL");
+                                    process.kill(-child.pid, 'SIGKILL');
                                 }
                             }
                             catch (_e) {
                                 if (!exited)
-                                    child.kill("SIGKILL");
+                                    child.kill('SIGKILL');
                             }
                         }
                     }
                 };
-                abortSignal.addEventListener("abort", abortHandler, { once: true });
-                child.on("exit", (code, signal) => {
+                abortSignal.addEventListener('abort', abortHandler, { once: true });
+                child.on('exit', (code, signal) => {
                     handleExit(code, signal);
                 });
                 function cleanup() {
                     exited = true;
-                    abortSignal.removeEventListener("abort", abortHandler);
+                    abortSignal.removeEventListener('abort', abortHandler);
                     if (stdoutDecoder) {
                         const remaining = stdoutDecoder.decode();
                         if (remaining) {
@@ -194,13 +194,13 @@ export class ShellExecutionService {
                 pid: undefined,
                 result: Promise.resolve({
                     error,
-                    rawOutput: Buffer.from(""),
-                    output: "",
+                    rawOutput: Buffer.from(''),
+                    output: '',
                     exitCode: 1,
                     signal: null,
                     aborted: false,
                     pid: undefined,
-                    executionMethod: "none",
+                    executionMethod: 'none',
                 }),
             };
         }
@@ -209,21 +209,21 @@ export class ShellExecutionService {
         try {
             const cols = terminalColumns ?? 80;
             const rows = terminalRows ?? 30;
-            const isWindows = os.platform() === "win32";
-            const shell = isWindows ? "cmd.exe" : "bash";
+            const isWindows = os.platform() === 'win32';
+            const shell = isWindows ? 'cmd.exe' : 'bash';
             const args = isWindows
                 ? `/c ${commandToExecute}`
-                : ["-c", commandToExecute];
+                : ['-c', commandToExecute];
             const ptyProcess = ptyInfo?.module.spawn(shell, args, {
                 cwd,
-                name: "xterm-color",
+                name: 'xterm-color',
                 cols,
                 rows,
                 env: {
                     ...process.env,
-                    QWEN_CODE: "1",
-                    TERM: "xterm-256color",
-                    PAGER: "cat",
+                    QWEN_CODE: '1',
+                    TERM: 'xterm-256color',
+                    PAGER: 'cat',
                 },
                 handleFlowControl: true,
             });
@@ -235,7 +235,7 @@ export class ShellExecutionService {
                 });
                 let processingChain = Promise.resolve();
                 let decoder = null;
-                let output = "";
+                let output = '';
                 const outputChunks = [];
                 const error = null;
                 let exited = false;
@@ -250,7 +250,7 @@ export class ShellExecutionService {
                                 decoder = new TextDecoder(encoding);
                             }
                             catch {
-                                decoder = new TextDecoder("utf-8");
+                                decoder = new TextDecoder('utf-8');
                             }
                         }
                         outputChunks.push(data);
@@ -259,7 +259,7 @@ export class ShellExecutionService {
                             sniffedBytes = sniffBuffer.length;
                             if (isBinary(sniffBuffer)) {
                                 isStreamingRawContent = false;
-                                onOutputEvent({ type: "binary_detected" });
+                                onOutputEvent({ type: 'binary_detected' });
                             }
                         }
                         if (isStreamingRawContent) {
@@ -267,14 +267,14 @@ export class ShellExecutionService {
                             headlessTerminal.write(decodedChunk, () => {
                                 const newStrippedOutput = getFullText(headlessTerminal);
                                 output = newStrippedOutput;
-                                onOutputEvent({ type: "data", chunk: newStrippedOutput });
+                                onOutputEvent({ type: 'data', chunk: newStrippedOutput });
                                 resolve();
                             });
                         }
                         else {
                             const totalBytes = outputChunks.reduce((sum, chunk) => sum + chunk.length, 0);
                             onOutputEvent({
-                                type: "binary_progress",
+                                type: 'binary_progress',
                                 bytesReceived: totalBytes,
                             });
                             resolve();
@@ -282,12 +282,12 @@ export class ShellExecutionService {
                     }));
                 };
                 ptyProcess.onData((data) => {
-                    const bufferData = Buffer.from(data, "utf-8");
+                    const bufferData = Buffer.from(data, 'utf-8');
                     handleOutput(bufferData);
                 });
                 ptyProcess.onExit(({ exitCode, signal }) => {
                     exited = true;
-                    abortSignal.removeEventListener("abort", abortHandler);
+                    abortSignal.removeEventListener('abort', abortHandler);
                     processingChain.then(() => {
                         const finalBuffer = Buffer.concat(outputChunks);
                         resolve({
@@ -298,16 +298,16 @@ export class ShellExecutionService {
                             error,
                             aborted: abortSignal.aborted,
                             pid: ptyProcess.pid,
-                            executionMethod: ptyInfo?.name ?? "node-pty",
+                            executionMethod: ptyInfo?.name ?? 'node-pty',
                         });
                     });
                 });
                 const abortHandler = async () => {
                     if (ptyProcess.pid && !exited) {
-                        ptyProcess.kill("SIGHUP");
+                        ptyProcess.kill('SIGHUP');
                     }
                 };
-                abortSignal.addEventListener("abort", abortHandler, { once: true });
+                abortSignal.addEventListener('abort', abortHandler, { once: true });
             });
             return { pid: ptyProcess.pid, result };
         }
@@ -317,13 +317,13 @@ export class ShellExecutionService {
                 pid: undefined,
                 result: Promise.resolve({
                     error,
-                    rawOutput: Buffer.from(""),
-                    output: "",
+                    rawOutput: Buffer.from(''),
+                    output: '',
                     exitCode: 1,
                     signal: null,
                     aborted: false,
                     pid: undefined,
-                    executionMethod: "none",
+                    executionMethod: 'none',
                 }),
             };
         }

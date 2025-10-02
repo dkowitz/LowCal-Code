@@ -3,11 +3,11 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Suggestion } from "../components/SuggestionsDisplay.js";
-import type { CommandContext, SlashCommand } from "../commands/types.js";
-import type { TextBuffer } from "../components/shared/text-buffer.js";
-import type { PromptCompletion } from "./usePromptCompletion.js";
-import type { Config } from "@qwen-code/qwen-code-core";
+import type { Suggestion } from '../components/SuggestionsDisplay.js';
+import type { CommandContext, SlashCommand } from '../commands/types.js';
+import type { TextBuffer } from '../components/shared/text-buffer.js';
+import type { PromptCompletion } from './usePromptCompletion.js';
+import type { Config } from '@qwen-code/qwen-code-core';
 export declare enum CompletionMode {
     IDLE = "IDLE",
     AT = "AT",

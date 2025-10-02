@@ -1,11 +1,11 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useEffect, useState } from "react";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import process from "node:process";
-import { formatMemoryUsage } from "../utils/formatters.js";
+import { useEffect, useState } from 'react';
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import process from 'node:process';
+import { formatMemoryUsage } from '../utils/formatters.js';
 export const MemoryUsageDisplay = () => {
-    const [memoryUsage, setMemoryUsage] = useState("");
+    const [memoryUsage, setMemoryUsage] = useState('');
     const [memoryUsageColor, setMemoryUsageColor] = useState(Colors.Gray);
     useEffect(() => {
         const updateMemory = () => {

@@ -4,21 +4,21 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import React from "react";
-import { Text, Box } from "ink";
-import { common, createLowlight } from "lowlight";
-import { themeManager } from "../themes/theme-manager.js";
-import { MaxSizedBox, MINIMUM_MAX_HEIGHT, } from "../components/shared/MaxSizedBox.js";
+import React from 'react';
+import { Text, Box } from 'ink';
+import { common, createLowlight } from 'lowlight';
+import { themeManager } from '../themes/theme-manager.js';
+import { MaxSizedBox, MINIMUM_MAX_HEIGHT, } from '../components/shared/MaxSizedBox.js';
 // Configure theming and parsing utilities.
 const lowlight = createLowlight(common);
 function renderHastNode(node, theme, inheritedColor) {
-    if (node.type === "text") {
+    if (node.type === 'text') {
         // Use the color passed down from parent element, if any
         return _jsx(Text, { color: inheritedColor, children: node.value });
     }
     // Handle Element Nodes: Determine color and pass it down, don't wrap
-    if (node.type === "element") {
-        const nodeClasses = node.properties?.["className"] || [];
+    if (node.type === 'element') {
+        const nodeClasses = node.properties?.['className'] || [];
         let elementColor = undefined;
         // Find color defined specifically for this element's class
         for (let i = nodeClasses.length - 1; i >= 0; i--) {
@@ -39,7 +39,7 @@ function renderHastNode(node, theme, inheritedColor) {
         return _jsx(React.Fragment, { children: children });
     }
     // Handle Root Node: Start recursion with initially inherited color
-    if (node.type === "root") {
+    if (node.type === 'root') {
         // Check if children array is empty - this happens when lowlight can't detect language – fall back to plain text
         if (!node.children || node.children.length === 0) {
             return null;
@@ -75,13 +75,13 @@ export function colorizeLine(line, language, theme) {
  * @returns A React.ReactNode containing Ink <Text> elements for the highlighted code.
  */
 export function colorizeCode(code, language, availableHeight, maxWidth, theme, settings) {
-    const codeToHighlight = code.replace(/\n$/, "");
+    const codeToHighlight = code.replace(/\n$/, '');
     const activeTheme = theme || themeManager.getActiveTheme();
     const showLineNumbers = settings?.merged.ui?.showLineNumbers ?? true;
     try {
         // Render the HAST tree using the adapted theme
         // Apply the theme's default foreground color to the top-level Text element
-        let lines = codeToHighlight.split("\n");
+        let lines = codeToHighlight.split('\n');
         const padWidth = String(lines.length).length; // Calculate padding width based on number of lines
         let hiddenLinesCount = 0;
         // Optimization to avoid highlighting lines that cannot possibly be displayed.
@@ -95,16 +95,16 @@ export function colorizeCode(code, language, availableHeight, maxWidth, theme, s
         }
         return (_jsx(MaxSizedBox, { maxHeight: availableHeight, maxWidth: maxWidth, additionalHiddenLinesCount: hiddenLinesCount, overflowDirection: "top", children: lines.map((line, index) => {
                 const contentToRender = highlightAndRenderLine(line, language, activeTheme);
-                return (_jsxs(Box, { children: [showLineNumbers && (_jsx(Text, { color: activeTheme.colors.Gray, children: `${String(index + 1 + hiddenLinesCount).padStart(padWidth, " ")} ` })), _jsx(Text, { color: activeTheme.defaultColor, wrap: "wrap", children: contentToRender })] }, index));
+                return (_jsxs(Box, { children: [showLineNumbers && (_jsx(Text, { color: activeTheme.colors.Gray, children: `${String(index + 1 + hiddenLinesCount).padStart(padWidth, ' ')} ` })), _jsx(Text, { color: activeTheme.defaultColor, wrap: "wrap", children: contentToRender })] }, index));
             }) }));
     }
     catch (error) {
         console.error(`[colorizeCode] Error highlighting code for language "${language}":`, error);
         // Fall back to plain text with default color on error
         // Also display line numbers in fallback
-        const lines = codeToHighlight.split("\n");
+        const lines = codeToHighlight.split('\n');
         const padWidth = String(lines.length).length; // Calculate padding width based on number of lines
-        return (_jsx(MaxSizedBox, { maxHeight: availableHeight, maxWidth: maxWidth, overflowDirection: "top", children: lines.map((line, index) => (_jsxs(Box, { children: [showLineNumbers && (_jsx(Text, { color: activeTheme.defaultColor, children: `${String(index + 1).padStart(padWidth, " ")} ` })), _jsx(Text, { color: activeTheme.colors.Gray, children: line })] }, index))) }));
+        return (_jsx(MaxSizedBox, { maxHeight: availableHeight, maxWidth: maxWidth, overflowDirection: "top", children: lines.map((line, index) => (_jsxs(Box, { children: [showLineNumbers && (_jsx(Text, { color: activeTheme.defaultColor, children: `${String(index + 1).padStart(padWidth, ' ')} ` })), _jsx(Text, { color: activeTheme.colors.Gray, children: line })] }, index))) }));
     }
 }
 //# sourceMappingURL=CodeColorizer.js.map

@@ -7,15 +7,15 @@
 import {
   flatMapTextParts,
   readPathFromWorkspace,
-} from "@qwen-code/qwen-code-core";
-import type { CommandContext } from "../../ui/commands/types.js";
-import { MessageType } from "../../ui/types.js";
+} from '@qwen-code/qwen-code-core';
+import type { CommandContext } from '../../ui/commands/types.js';
+import { MessageType } from '../../ui/types.js';
 import {
   AT_FILE_INJECTION_TRIGGER,
   type IPromptProcessor,
   type PromptPipelineContent,
-} from "./types.js";
-import { extractInjections } from "./injectionParser.js";
+} from './types.js';
+import { extractInjections } from './injectionParser.js';
 
 export class AtFileProcessor implements IPromptProcessor {
   constructor(private readonly commandName?: string) {}

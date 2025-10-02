@@ -11,34 +11,34 @@ import type {
   MCPServerConfig,
   SandboxConfig,
   ToolRegistry,
-} from "@qwen-code/qwen-code-core";
+} from '@qwen-code/qwen-code-core';
 import {
   ApprovalMode,
   Config as ServerConfig,
   ideContext,
-} from "@qwen-code/qwen-code-core";
-import { waitFor } from "@testing-library/react";
-import { EventEmitter } from "node:events";
-import process from "node:process";
-import type { Mock } from "vitest";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import * as auth from "../config/auth.js";
+} from '@qwen-code/qwen-code-core';
+import { waitFor } from '@testing-library/react';
+import { EventEmitter } from 'node:events';
+import process from 'node:process';
+import type { Mock } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import * as auth from '../config/auth.js';
 import {
   LoadedSettings,
   type Settings,
   type SettingsFile,
-} from "../config/settings.js";
-import { renderWithProviders } from "../test-utils/render.js";
-import { updateEventEmitter } from "../utils/updateEventEmitter.js";
-import { AppWrapper as App } from "./App.js";
-import { Tips } from "./components/Tips.js";
-import { useConsoleMessages } from "./hooks/useConsoleMessages.js";
-import { useGeminiStream } from "./hooks/useGeminiStream.js";
-import * as useTerminalSize from "./hooks/useTerminalSize.js";
-import type { ConsoleMessageItem } from "./types.js";
-import { StreamingState, ToolCallStatus } from "./types.js";
-import type { UpdateObject } from "./utils/updateCheck.js";
-import { checkForUpdates } from "./utils/updateCheck.js";
+} from '../config/settings.js';
+import { renderWithProviders } from '../test-utils/render.js';
+import { updateEventEmitter } from '../utils/updateEventEmitter.js';
+import { AppWrapper as App } from './App.js';
+import { Tips } from './components/Tips.js';
+import { useConsoleMessages } from './hooks/useConsoleMessages.js';
+import { useGeminiStream } from './hooks/useGeminiStream.js';
+import * as useTerminalSize from './hooks/useTerminalSize.js';
+import type { ConsoleMessageItem } from './types.js';
+import { StreamingState, ToolCallStatus } from './types.js';
+import type { UpdateObject } from './utils/updateCheck.js';
+import { checkForUpdates } from './utils/updateCheck.js';
 
 // Define a more complete mock server config based on actual Config
 interface MockServerConfig {
@@ -126,19 +126,19 @@ interface MockServerConfig {
 }
 
 // Mock @qwen-code/qwen-code-core and its Config class
-vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
+vi.mock('@qwen-code/qwen-code-core', async (importOriginal) => {
   const actualCore =
-    await importOriginal<typeof import("@qwen-code/qwen-code-core")>();
+    await importOriginal<typeof import('@qwen-code/qwen-code-core')>();
   const ConfigClassMock = vi
     .fn()
     .mockImplementation((optionsPassedToConstructor) => {
       const opts = { ...optionsPassedToConstructor }; // Clone
       // Basic mock structure, will be extended by the instance in tests
       return {
-        apiKey: opts.apiKey || "test-key",
-        model: opts.model || "test-model-in-mock-factory",
+        apiKey: opts.apiKey || 'test-key',
+        model: opts.model || 'test-model-in-mock-factory',
         sandbox: opts.sandbox,
-        targetDir: opts.targetDir || "/test/dir",
+        targetDir: opts.targetDir || '/test/dir',
         debugMode: opts.debugMode || false,
         question: opts.question,
         fullContext: opts.fullContext ?? false,
@@ -147,19 +147,19 @@ vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
         toolCallCommand: opts.toolCallCommand,
         mcpServerCommand: opts.mcpServerCommand,
         mcpServers: opts.mcpServers,
-        userAgent: opts.userAgent || "test-agent",
-        userMemory: opts.userMemory || "",
+        userAgent: opts.userAgent || 'test-agent',
+        userMemory: opts.userMemory || '',
         geminiMdFileCount: opts.geminiMdFileCount || 0,
         approvalMode: opts.approvalMode ?? ApprovalMode.DEFAULT,
         vertexai: opts.vertexai,
         showMemoryUsage: opts.showMemoryUsage ?? false,
         accessibility: opts.accessibility ?? {},
-        embeddingModel: opts.embeddingModel || "test-embedding-model",
+        embeddingModel: opts.embeddingModel || 'test-embedding-model',
 
-        getApiKey: vi.fn(() => opts.apiKey || "test-key"),
-        getModel: vi.fn(() => opts.model || "test-model-in-mock-factory"),
+        getApiKey: vi.fn(() => opts.apiKey || 'test-key'),
+        getModel: vi.fn(() => opts.model || 'test-model-in-mock-factory'),
         getSandbox: vi.fn(() => opts.sandbox),
-        getTargetDir: vi.fn(() => opts.targetDir || "/test/dir"),
+        getTargetDir: vi.fn(() => opts.targetDir || '/test/dir'),
         getToolRegistry: vi.fn(() => ({}) as ToolRegistry), // Simple mock
         getDebugMode: vi.fn(() => opts.debugMode || false),
         getQuestion: vi.fn(() => opts.question),
@@ -172,8 +172,8 @@ vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
         getPromptRegistry: vi.fn(),
         getExtensions: vi.fn(() => []),
         getBlockedMcpServers: vi.fn(() => []),
-        getUserAgent: vi.fn(() => opts.userAgent || "test-agent"),
-        getUserMemory: vi.fn(() => opts.userMemory || ""),
+        getUserAgent: vi.fn(() => opts.userAgent || 'test-agent'),
+        getUserMemory: vi.fn(() => opts.userMemory || ''),
         setUserMemory: vi.fn(),
         getGeminiMdFileCount: vi.fn(() => opts.geminiMdFileCount || 0),
         setGeminiMdFileCount: vi.fn(),
@@ -188,20 +188,20 @@ vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
           getUserTier: vi.fn(),
         })),
         getCheckpointingEnabled: vi.fn(() => opts.checkpointing ?? true),
-        getAllGeminiMdFilenames: vi.fn(() => ["QWEN.md"]),
+        getAllGeminiMdFilenames: vi.fn(() => ['QWEN.md']),
         setFlashFallbackHandler: vi.fn(),
-        getSessionId: vi.fn(() => "test-session-id"),
+        getSessionId: vi.fn(() => 'test-session-id'),
         getUserTier: vi.fn().mockResolvedValue(undefined),
         getIdeMode: vi.fn(() => true),
         getWorkspaceContext: vi.fn(() => ({
           getDirectories: vi.fn(() => []),
         })),
         getIdeClient: vi.fn(() => ({
-          getCurrentIde: vi.fn(() => "vscode"),
-          getDetectedIdeDisplayName: vi.fn(() => "VSCode"),
+          getCurrentIde: vi.fn(() => 'vscode'),
+          getDetectedIdeDisplayName: vi.fn(() => 'VSCode'),
           addStatusChangeListener: vi.fn(),
           removeStatusChangeListener: vi.fn(),
-          getConnectionStatus: vi.fn(() => "connected"),
+          getConnectionStatus: vi.fn(() => 'connected'),
         })),
         isTrustedFolder: vi.fn(() => true),
         getScreenReader: vi.fn(() => false),
@@ -217,16 +217,16 @@ vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
     ...actualCore,
     Config: ConfigClassMock,
     MCPServerConfig: actualCore.MCPServerConfig,
-    getAllGeminiMdFilenames: vi.fn(() => ["QWEN.md"]),
+    getAllGeminiMdFilenames: vi.fn(() => ['QWEN.md']),
     ideContext: ideContextMock,
     isGitRepository: vi.fn(),
   };
 });
 
 // Mock heavy dependencies or those with side effects
-vi.mock("./hooks/useGeminiStream", () => ({
+vi.mock('./hooks/useGeminiStream', () => ({
   useGeminiStream: vi.fn(() => ({
-    streamingState: "Idle",
+    streamingState: 'Idle',
     submitQuery: vi.fn(),
     initError: null,
     pendingHistoryItems: [],
@@ -235,7 +235,7 @@ vi.mock("./hooks/useGeminiStream", () => ({
   })),
 }));
 
-vi.mock("./hooks/useAuthCommand", () => ({
+vi.mock('./hooks/useAuthCommand', () => ({
   useAuthCommand: vi.fn(() => ({
     isAuthDialogOpen: false,
     openAuthDialog: vi.fn(),
@@ -246,7 +246,7 @@ vi.mock("./hooks/useAuthCommand", () => ({
   })),
 }));
 
-vi.mock("./hooks/useFolderTrust", () => ({
+vi.mock('./hooks/useFolderTrust', () => ({
   useFolderTrust: vi.fn(() => ({
     isTrusted: undefined,
     isFolderTrustDialogOpen: false,
@@ -255,13 +255,13 @@ vi.mock("./hooks/useFolderTrust", () => ({
   })),
 }));
 
-vi.mock("./hooks/useLogger", () => ({
+vi.mock('./hooks/useLogger', () => ({
   useLogger: vi.fn(() => ({
     getPreviousUserMessages: vi.fn().mockResolvedValue([]),
   })),
 }));
 
-vi.mock("./hooks/useConsoleMessages.js", () => ({
+vi.mock('./hooks/useConsoleMessages.js', () => ({
   useConsoleMessages: vi.fn(() => ({
     consoleMessages: [],
     handleNewMessage: vi.fn(),
@@ -269,45 +269,45 @@ vi.mock("./hooks/useConsoleMessages.js", () => ({
   })),
 }));
 
-vi.mock("../config/config.js", async (importOriginal) => {
+vi.mock('../config/config.js', async (importOriginal) => {
   const actual = await importOriginal();
   return {
     // @ts-expect-error - this is fine
     ...actual,
     loadHierarchicalGeminiMemory: vi
       .fn()
-      .mockResolvedValue({ memoryContent: "", fileCount: 0 }),
+      .mockResolvedValue({ memoryContent: '', fileCount: 0 }),
   };
 });
 
-vi.mock("./components/Tips.js", () => ({
+vi.mock('./components/Tips.js', () => ({
   Tips: vi.fn(() => null),
 }));
 
-vi.mock("./components/Header.js", () => ({
+vi.mock('./components/Header.js', () => ({
   Header: vi.fn(() => null),
 }));
 
-vi.mock("./utils/updateCheck.js", () => ({
+vi.mock('./utils/updateCheck.js', () => ({
   checkForUpdates: vi.fn(),
 }));
 
-vi.mock("../config/auth.js", () => ({
+vi.mock('../config/auth.js', () => ({
   validateAuthMethod: vi.fn(),
 }));
 
-vi.mock("../hooks/useTerminalSize.js", () => ({
+vi.mock('../hooks/useTerminalSize.js', () => ({
   useTerminalSize: vi.fn(),
 }));
 
 const mockedCheckForUpdates = vi.mocked(checkForUpdates);
 const { isGitRepository: mockedIsGitRepository } = vi.mocked(
-  await import("@qwen-code/qwen-code-core"),
+  await import('@qwen-code/qwen-code-core'),
 );
 
-vi.mock("node:child_process");
+vi.mock('node:child_process');
 
-describe("App UI", () => {
+describe('App UI', () => {
   let mockConfig: MockServerConfig;
   let mockSettings: LoadedSettings;
   let mockVersion: string;
@@ -321,19 +321,19 @@ describe("App UI", () => {
     } = {},
   ): LoadedSettings => {
     const systemSettingsFile: SettingsFile = {
-      path: "/system/settings.json",
+      path: '/system/settings.json',
       settings: settings.system || {},
     };
     const systemDefaultsFile: SettingsFile = {
-      path: "/system/system-defaults.json",
+      path: '/system/system-defaults.json',
       settings: {},
     };
     const userSettingsFile: SettingsFile = {
-      path: "/user/settings.json",
+      path: '/user/settings.json',
       settings: settings.user || {},
     };
     const workspaceSettingsFile: SettingsFile = {
-      path: "/workspace/.gemini/settings.json",
+      path: '/workspace/.gemini/settings.json',
       settings: settings.workspace || {},
     };
     return new LoadedSettings(
@@ -348,25 +348,25 @@ describe("App UI", () => {
   };
 
   beforeEach(() => {
-    vi.spyOn(useTerminalSize, "useTerminalSize").mockReturnValue({
+    vi.spyOn(useTerminalSize, 'useTerminalSize').mockReturnValue({
       columns: 120,
       rows: 24,
     });
 
     const ServerConfigMocked = vi.mocked(ServerConfig, true);
     mockConfig = new ServerConfigMocked({
-      embeddingModel: "test-embedding-model",
+      embeddingModel: 'test-embedding-model',
       sandbox: undefined,
-      targetDir: "/test/dir",
+      targetDir: '/test/dir',
       debugMode: false,
-      userMemory: "",
+      userMemory: '',
       geminiMdFileCount: 0,
       showMemoryUsage: false,
-      sessionId: "test-session-id",
-      cwd: "/tmp",
-      model: "model",
+      sessionId: 'test-session-id',
+      cwd: '/tmp',
+      model: 'model',
     }) as unknown as MockServerConfig;
-    mockVersion = "0.0.0-test";
+    mockVersion = '0.0.0-test';
 
     // Ensure the getShowMemoryUsage mock function is specifically set up if not covered by constructor mock
     if (!mockConfig.getShowMemoryUsage) {
@@ -376,13 +376,13 @@ describe("App UI", () => {
 
     // Ensure a theme is set so the theme dialog does not appear.
     mockSettings = createMockSettings({
-      workspace: { ui: { theme: "Default" } },
+      workspace: { ui: { theme: 'Default' } },
     });
 
     // Ensure getWorkspaceContext is available if not added by the constructor
     if (!mockConfig.getWorkspaceContext) {
       mockConfig.getWorkspaceContext = vi.fn(() => ({
-        getDirectories: vi.fn(() => ["/test/dir"]),
+        getDirectories: vi.fn(() => ['/test/dir']),
       }));
     }
     vi.mocked(ideContext.getIdeContext).mockReturnValue(undefined);
@@ -396,11 +396,11 @@ describe("App UI", () => {
     vi.clearAllMocks(); // Clear mocks after each test
   });
 
-  describe("handleAutoUpdate", () => {
+  describe('handleAutoUpdate', () => {
     let spawnEmitter: EventEmitter;
 
     beforeEach(async () => {
-      const { spawn } = await import("node:child_process");
+      const { spawn } = await import('node:child_process');
       spawnEmitter = new EventEmitter();
       (
         spawnEmitter as EventEmitter & {
@@ -418,22 +418,22 @@ describe("App UI", () => {
     });
 
     afterEach(() => {
-      delete process.env["GEMINI_CLI_DISABLE_AUTOUPDATER"];
+      delete process.env['GEMINI_CLI_DISABLE_AUTOUPDATER'];
     });
 
-    it("should not start the update process when running from git", async () => {
+    it('should not start the update process when running from git', async () => {
       mockedIsGitRepository.mockResolvedValue(true);
       const info: UpdateObject = {
         update: {
-          name: "@qwen-code/qwen-code",
-          latest: "1.1.0",
-          current: "1.0.0",
-          type: "major" as const,
+          name: '@qwen-code/qwen-code',
+          latest: '1.1.0',
+          current: '1.0.0',
+          type: 'major' as const,
         },
-        message: "Qwen Code update available!",
+        message: 'Qwen Code update available!',
       };
       mockedCheckForUpdates.mockResolvedValue(info);
-      const { spawn } = await import("node:child_process");
+      const { spawn } = await import('node:child_process');
 
       const { unmount } = renderWithProviders(
         <App
@@ -450,16 +450,16 @@ describe("App UI", () => {
       });
     });
 
-    it("should show a success message when update succeeds", async () => {
+    it('should show a success message when update succeeds', async () => {
       mockedIsGitRepository.mockResolvedValue(false);
       const info: UpdateObject = {
         update: {
-          name: "@qwen-code/qwen-code",
-          latest: "1.1.0",
-          current: "1.0.0",
-          type: "major" as const,
+          name: '@qwen-code/qwen-code',
+          latest: '1.1.0',
+          current: '1.0.0',
+          type: 'major' as const,
         },
-        message: "Update available",
+        message: 'Update available',
       };
       mockedCheckForUpdates.mockResolvedValue(info);
 
@@ -472,26 +472,26 @@ describe("App UI", () => {
       );
       currentUnmount = unmount;
 
-      updateEventEmitter.emit("update-success", info);
+      updateEventEmitter.emit('update-success', info);
 
       // Wait for the success message to appear
       await waitFor(() => {
         expect(lastFrame()).toContain(
-          "Update successful! The new version will be used on your next run.",
+          'Update successful! The new version will be used on your next run.',
         );
       });
     });
 
-    it("should show an error message when update fails", async () => {
+    it('should show an error message when update fails', async () => {
       mockedIsGitRepository.mockResolvedValue(false);
       const info: UpdateObject = {
         update: {
-          name: "@qwen-code/qwen-code",
-          latest: "1.1.0",
-          current: "1.0.0",
-          type: "major" as const,
+          name: '@qwen-code/qwen-code',
+          latest: '1.1.0',
+          current: '1.0.0',
+          type: 'major' as const,
         },
-        message: "Update available",
+        message: 'Update available',
       };
       mockedCheckForUpdates.mockResolvedValue(info);
 
@@ -504,26 +504,26 @@ describe("App UI", () => {
       );
       currentUnmount = unmount;
 
-      updateEventEmitter.emit("update-failed", info);
+      updateEventEmitter.emit('update-failed', info);
 
       // Wait for the error message to appear
       await waitFor(() => {
         expect(lastFrame()).toContain(
-          "Automatic update failed. Please try updating manually",
+          'Automatic update failed. Please try updating manually',
         );
       });
     });
 
-    it("should show an error message when spawn fails", async () => {
+    it('should show an error message when spawn fails', async () => {
       mockedIsGitRepository.mockResolvedValue(false);
       const info: UpdateObject = {
         update: {
-          name: "@qwen-code/qwen-code",
-          latest: "1.1.0",
-          current: "1.0.0",
-          type: "major" as const,
+          name: '@qwen-code/qwen-code',
+          latest: '1.1.0',
+          current: '1.0.0',
+          type: 'major' as const,
         },
-        message: "Update available",
+        message: 'Update available',
       };
       mockedCheckForUpdates.mockResolvedValue(info);
 
@@ -538,30 +538,30 @@ describe("App UI", () => {
 
       // We are testing the App's reaction to an `update-failed` event,
       // which is what should be emitted when a spawn error occurs elsewhere.
-      updateEventEmitter.emit("update-failed", info);
+      updateEventEmitter.emit('update-failed', info);
 
       // Wait for the error message to appear
       await waitFor(() => {
         expect(lastFrame()).toContain(
-          "Automatic update failed. Please try updating manually",
+          'Automatic update failed. Please try updating manually',
         );
       });
     });
 
-    it("should not auto-update if GEMINI_CLI_DISABLE_AUTOUPDATER is true", async () => {
+    it('should not auto-update if GEMINI_CLI_DISABLE_AUTOUPDATER is true', async () => {
       mockedIsGitRepository.mockResolvedValue(false);
-      process.env["GEMINI_CLI_DISABLE_AUTOUPDATER"] = "true";
+      process.env['GEMINI_CLI_DISABLE_AUTOUPDATER'] = 'true';
       const info: UpdateObject = {
         update: {
-          name: "@qwen-code/qwen-code",
-          latest: "1.1.0",
-          current: "1.0.0",
-          type: "major" as const,
+          name: '@qwen-code/qwen-code',
+          latest: '1.1.0',
+          current: '1.0.0',
+          type: 'major' as const,
         },
-        message: "Update available",
+        message: 'Update available',
       };
       mockedCheckForUpdates.mockResolvedValue(info);
-      const { spawn } = await import("node:child_process");
+      const { spawn } = await import('node:child_process');
 
       const { unmount } = renderWithProviders(
         <App
@@ -579,14 +579,14 @@ describe("App UI", () => {
     });
   });
 
-  it("should display active file when available", async () => {
+  it('should display active file when available', async () => {
     vi.mocked(ideContext.getIdeContext).mockReturnValue({
       workspaceState: {
         openFiles: [
           {
-            path: "/path/to/my-file.ts",
+            path: '/path/to/my-file.ts',
             isActive: true,
-            selectedText: "hello",
+            selectedText: 'hello',
             timestamp: 0,
           },
         ],
@@ -602,10 +602,10 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).toContain("1 open file (ctrl+g to view)");
+    expect(lastFrame()).toContain('1 open file (ctrl+g to view)');
   });
 
-  it("should not display any files when not available", async () => {
+  it('should not display any files when not available', async () => {
     vi.mocked(ideContext.getIdeContext).mockReturnValue({
       workspaceState: {
         openFiles: [],
@@ -621,26 +621,26 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).not.toContain("Open File");
+    expect(lastFrame()).not.toContain('Open File');
   });
 
-  it("should display active file and other open files", async () => {
+  it('should display active file and other open files', async () => {
     vi.mocked(ideContext.getIdeContext).mockReturnValue({
       workspaceState: {
         openFiles: [
           {
-            path: "/path/to/my-file.ts",
+            path: '/path/to/my-file.ts',
             isActive: true,
-            selectedText: "hello",
+            selectedText: 'hello',
             timestamp: 0,
           },
           {
-            path: "/path/to/another-file.ts",
+            path: '/path/to/another-file.ts',
             isActive: false,
             timestamp: 1,
           },
           {
-            path: "/path/to/third-file.ts",
+            path: '/path/to/third-file.ts',
             isActive: false,
             timestamp: 2,
           },
@@ -657,24 +657,24 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).toContain("3 open files (ctrl+g to view)");
+    expect(lastFrame()).toContain('3 open files (ctrl+g to view)');
   });
 
-  it("should display active file and other context", async () => {
+  it('should display active file and other context', async () => {
     vi.mocked(ideContext.getIdeContext).mockReturnValue({
       workspaceState: {
         openFiles: [
           {
-            path: "/path/to/my-file.ts",
+            path: '/path/to/my-file.ts',
             isActive: true,
-            selectedText: "hello",
+            selectedText: 'hello',
             timestamp: 0,
           },
         ],
       },
     });
     mockConfig.getGeminiMdFileCount.mockReturnValue(1);
-    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["QWEN.md"]);
+    mockConfig.getAllGeminiMdFilenames.mockReturnValue(['QWEN.md']);
 
     const { lastFrame, unmount } = renderWithProviders(
       <App
@@ -686,13 +686,13 @@ describe("App UI", () => {
     currentUnmount = unmount;
     await Promise.resolve();
     expect(lastFrame()).toContain(
-      "Using: 1 open file (ctrl+g to view) | 1 QWEN.md file",
+      'Using: 1 open file (ctrl+g to view) | 1 QWEN.md file',
     );
   });
 
   it('should display default "QWEN.md" in footer when contextFileName is not set and count is 1', async () => {
     mockConfig.getGeminiMdFileCount.mockReturnValue(1);
-    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["QWEN.md"]);
+    mockConfig.getAllGeminiMdFilenames.mockReturnValue(['QWEN.md']);
     // For this test, ensure showMemoryUsage is false or debugMode is false if it relies on that
     mockConfig.getDebugMode.mockReturnValue(false);
     mockConfig.getShowMemoryUsage.mockReturnValue(false);
@@ -706,12 +706,12 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve(); // Wait for any async updates
-    expect(lastFrame()).toContain("Using: 1 QWEN.md file");
+    expect(lastFrame()).toContain('Using: 1 QWEN.md file');
   });
 
   it('should display default "QWEN.md" with plural when contextFileName is not set and count is > 1', async () => {
     mockConfig.getGeminiMdFileCount.mockReturnValue(2);
-    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["QWEN.md", "QWEN.md"]);
+    mockConfig.getAllGeminiMdFilenames.mockReturnValue(['QWEN.md', 'QWEN.md']);
     mockConfig.getDebugMode.mockReturnValue(false);
     mockConfig.getShowMemoryUsage.mockReturnValue(false);
 
@@ -724,18 +724,18 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).toContain("Using: 2 QWEN.md files");
+    expect(lastFrame()).toContain('Using: 2 QWEN.md files');
   });
 
-  it("should display custom contextFileName in footer when set and count is 1", async () => {
+  it('should display custom contextFileName in footer when set and count is 1', async () => {
     mockSettings = createMockSettings({
       workspace: {
-        context: { fileName: "AGENTS.md" },
-        ui: { theme: "Default" },
+        context: { fileName: 'AGENTS.md' },
+        ui: { theme: 'Default' },
       },
     });
     mockConfig.getGeminiMdFileCount.mockReturnValue(1);
-    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["AGENTS.md"]);
+    mockConfig.getAllGeminiMdFilenames.mockReturnValue(['AGENTS.md']);
     mockConfig.getDebugMode.mockReturnValue(false);
     mockConfig.getShowMemoryUsage.mockReturnValue(false);
 
@@ -748,20 +748,20 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).toContain("Using: 1 AGENTS.md file");
+    expect(lastFrame()).toContain('Using: 1 AGENTS.md file');
   });
 
-  it("should display a generic message when multiple context files with different names are provided", async () => {
+  it('should display a generic message when multiple context files with different names are provided', async () => {
     mockSettings = createMockSettings({
       workspace: {
-        context: { fileName: ["AGENTS.md", "CONTEXT.md"] },
-        ui: { theme: "Default" },
+        context: { fileName: ['AGENTS.md', 'CONTEXT.md'] },
+        ui: { theme: 'Default' },
       },
     });
     mockConfig.getGeminiMdFileCount.mockReturnValue(2);
     mockConfig.getAllGeminiMdFilenames.mockReturnValue([
-      "AGENTS.md",
-      "CONTEXT.md",
+      'AGENTS.md',
+      'CONTEXT.md',
     ]);
     mockConfig.getDebugMode.mockReturnValue(false);
     mockConfig.getShowMemoryUsage.mockReturnValue(false);
@@ -775,21 +775,21 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).toContain("Using: 2 context files");
+    expect(lastFrame()).toContain('Using: 2 context files');
   });
 
-  it("should display custom contextFileName with plural when set and count is > 1", async () => {
+  it('should display custom contextFileName with plural when set and count is > 1', async () => {
     mockSettings = createMockSettings({
       workspace: {
-        context: { fileName: "MY_NOTES.TXT" },
-        ui: { theme: "Default" },
+        context: { fileName: 'MY_NOTES.TXT' },
+        ui: { theme: 'Default' },
       },
     });
     mockConfig.getGeminiMdFileCount.mockReturnValue(3);
     mockConfig.getAllGeminiMdFilenames.mockReturnValue([
-      "MY_NOTES.TXT",
-      "MY_NOTES.TXT",
-      "MY_NOTES.TXT",
+      'MY_NOTES.TXT',
+      'MY_NOTES.TXT',
+      'MY_NOTES.TXT',
     ]);
     mockConfig.getDebugMode.mockReturnValue(false);
     mockConfig.getShowMemoryUsage.mockReturnValue(false);
@@ -803,14 +803,14 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).toContain("Using: 3 MY_NOTES.TXT files");
+    expect(lastFrame()).toContain('Using: 3 MY_NOTES.TXT files');
   });
 
-  it("should not display context file message if count is 0, even if contextFileName is set", async () => {
+  it('should not display context file message if count is 0, even if contextFileName is set', async () => {
     mockSettings = createMockSettings({
       workspace: {
-        context: { fileName: "ANY_FILE.MD" },
-        ui: { theme: "Default" },
+        context: { fileName: 'ANY_FILE.MD' },
+        ui: { theme: 'Default' },
       },
     });
     mockConfig.getGeminiMdFileCount.mockReturnValue(0);
@@ -827,12 +827,12 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).not.toContain("ANY_FILE.MD");
+    expect(lastFrame()).not.toContain('ANY_FILE.MD');
   });
 
-  it("should display QWEN.md and MCP server count when both are present", async () => {
+  it('should display QWEN.md and MCP server count when both are present', async () => {
     mockConfig.getGeminiMdFileCount.mockReturnValue(2);
-    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["QWEN.md", "QWEN.md"]);
+    mockConfig.getAllGeminiMdFilenames.mockReturnValue(['QWEN.md', 'QWEN.md']);
     mockConfig.getMcpServers.mockReturnValue({
       server1: {} as MCPServerConfig,
     });
@@ -848,10 +848,10 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).toContain("1 MCP server");
+    expect(lastFrame()).toContain('1 MCP server');
   });
 
-  it("should display only MCP server count when QWEN.md count is 0", async () => {
+  it('should display only MCP server count when QWEN.md count is 0', async () => {
     mockConfig.getGeminiMdFileCount.mockReturnValue(0);
     mockConfig.getAllGeminiMdFilenames.mockReturnValue([]);
     mockConfig.getMcpServers.mockReturnValue({
@@ -870,10 +870,10 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).toContain("Using: 2 MCP servers (ctrl+t to view)");
+    expect(lastFrame()).toContain('Using: 2 MCP servers (ctrl+t to view)');
   });
 
-  it("should display Tips component by default", async () => {
+  it('should display Tips component by default', async () => {
     const { unmount } = renderWithProviders(
       <App
         config={mockConfig as unknown as ServerConfig}
@@ -886,7 +886,7 @@ describe("App UI", () => {
     expect(vi.mocked(Tips)).toHaveBeenCalled();
   });
 
-  it("should not display Tips component when hideTips is true", async () => {
+  it('should not display Tips component when hideTips is true', async () => {
     mockSettings = createMockSettings({
       workspace: {
         ui: { hideTips: true },
@@ -905,8 +905,8 @@ describe("App UI", () => {
     expect(vi.mocked(Tips)).not.toHaveBeenCalled();
   });
 
-  it("should display Header component by default", async () => {
-    const { Header } = await import("./components/Header.js");
+  it('should display Header component by default', async () => {
+    const { Header } = await import('./components/Header.js');
     const { unmount } = renderWithProviders(
       <App
         config={mockConfig as unknown as ServerConfig}
@@ -919,8 +919,8 @@ describe("App UI", () => {
     expect(vi.mocked(Header)).toHaveBeenCalled();
   });
 
-  it("should not display Header component when hideBanner is true", async () => {
-    const { Header } = await import("./components/Header.js");
+  it('should not display Header component when hideBanner is true', async () => {
+    const { Header } = await import('./components/Header.js');
     mockSettings = createMockSettings({
       user: { ui: { hideBanner: true } },
     });
@@ -937,7 +937,7 @@ describe("App UI", () => {
     expect(vi.mocked(Header)).not.toHaveBeenCalled();
   });
 
-  it("should display Footer component by default", async () => {
+  it('should display Footer component by default', async () => {
     const { lastFrame, unmount } = renderWithProviders(
       <App
         config={mockConfig as unknown as ServerConfig}
@@ -948,10 +948,10 @@ describe("App UI", () => {
     currentUnmount = unmount;
     await Promise.resolve();
     // Footer should render - look for target directory which is always shown
-    expect(lastFrame()).toContain("/test/dir");
+    expect(lastFrame()).toContain('/test/dir');
   });
 
-  it("should not display Footer component when hideFooter is true", async () => {
+  it('should not display Footer component when hideFooter is true', async () => {
     mockSettings = createMockSettings({
       user: { ui: { hideFooter: true } },
     });
@@ -966,10 +966,10 @@ describe("App UI", () => {
     currentUnmount = unmount;
     await Promise.resolve();
     // Footer should not render - target directory should not appear
-    expect(lastFrame()).not.toContain("/test/dir");
+    expect(lastFrame()).not.toContain('/test/dir');
   });
 
-  it("should show footer if system says show, but workspace and user settings say hide", async () => {
+  it('should show footer if system says show, but workspace and user settings say hide', async () => {
     mockSettings = createMockSettings({
       system: { ui: { hideFooter: false } },
       user: { ui: { hideFooter: true } },
@@ -986,10 +986,10 @@ describe("App UI", () => {
     currentUnmount = unmount;
     await Promise.resolve();
     // Footer should render because system overrides - look for target directory
-    expect(lastFrame()).toContain("/test/dir");
+    expect(lastFrame()).toContain('/test/dir');
   });
 
-  it("should show tips if system says show, but workspace and user settings say hide", async () => {
+  it('should show tips if system says show, but workspace and user settings say hide', async () => {
     mockSettings = createMockSettings({
       system: { ui: { hideTips: false } },
       user: { ui: { hideTips: true } },
@@ -1008,11 +1008,11 @@ describe("App UI", () => {
     expect(vi.mocked(Tips)).toHaveBeenCalled();
   });
 
-  describe("when no theme is set", () => {
+  describe('when no theme is set', () => {
     let originalNoColor: string | undefined;
 
     beforeEach(() => {
-      originalNoColor = process.env["NO_COLOR"];
+      originalNoColor = process.env['NO_COLOR'];
       // Ensure no theme is set for these tests
       mockSettings = createMockSettings({});
       mockConfig.getDebugMode.mockReturnValue(false);
@@ -1020,11 +1020,11 @@ describe("App UI", () => {
     });
 
     afterEach(() => {
-      process.env["NO_COLOR"] = originalNoColor;
+      process.env['NO_COLOR'] = originalNoColor;
     });
 
-    it("should display theme dialog if NO_COLOR is not set", async () => {
-      delete process.env["NO_COLOR"];
+    it('should display theme dialog if NO_COLOR is not set', async () => {
+      delete process.env['NO_COLOR'];
 
       const { lastFrame, unmount } = renderWithProviders(
         <App
@@ -1038,8 +1038,8 @@ describe("App UI", () => {
       expect(lastFrame()).toContain("I'm Feeling Lucky (esc to cancel");
     });
 
-    it("should display a message if NO_COLOR is set", async () => {
-      process.env["NO_COLOR"] = "true";
+    it('should display a message if NO_COLOR is set', async () => {
+      process.env['NO_COLOR'] = 'true';
 
       const { lastFrame, unmount } = renderWithProviders(
         <App
@@ -1051,11 +1051,11 @@ describe("App UI", () => {
       currentUnmount = unmount;
 
       expect(lastFrame()).toContain("I'm Feeling Lucky (esc to cancel");
-      expect(lastFrame()).not.toContain("Select Theme");
+      expect(lastFrame()).not.toContain('Select Theme');
     });
   });
 
-  it("should render the initial UI correctly", () => {
+  it('should render the initial UI correctly', () => {
     const { lastFrame, unmount } = renderWithProviders(
       <App
         config={mockConfig as unknown as ServerConfig}
@@ -1067,7 +1067,7 @@ describe("App UI", () => {
     expect(lastFrame()).toMatchSnapshot();
   });
 
-  it("should render correctly with the prompt input box", () => {
+  it('should render correctly with the prompt input box', () => {
     vi.mocked(useGeminiStream).mockReturnValue({
       streamingState: StreamingState.Idle,
       submitQuery: vi.fn(),
@@ -1088,11 +1088,11 @@ describe("App UI", () => {
     expect(lastFrame()).toMatchSnapshot();
   });
 
-  describe("with initial prompt from --prompt-interactive", () => {
-    it("should submit the initial prompt automatically", async () => {
+  describe('with initial prompt from --prompt-interactive', () => {
+    it('should submit the initial prompt automatically', async () => {
       const mockSubmitQuery = vi.fn();
 
-      mockConfig.getQuestion = vi.fn(() => "hello from prompt-interactive");
+      mockConfig.getQuestion = vi.fn(() => 'hello from prompt-interactive');
 
       vi.mocked(useGeminiStream).mockReturnValue({
         streamingState: StreamingState.Idle,
@@ -1129,19 +1129,19 @@ describe("App UI", () => {
       await new Promise((resolve) => setTimeout(resolve, 0));
 
       expect(mockSubmitQuery).toHaveBeenCalledWith(
-        "hello from prompt-interactive",
+        'hello from prompt-interactive',
       );
     });
   });
 
-  describe("errorCount", () => {
-    it("should correctly sum the counts of error messages", async () => {
+  describe('errorCount', () => {
+    it('should correctly sum the counts of error messages', async () => {
       const mockConsoleMessages: ConsoleMessageItem[] = [
-        { type: "error", content: "First error", count: 1 },
-        { type: "log", content: "some log", count: 1 },
-        { type: "error", content: "Second error", count: 3 },
-        { type: "warn", content: "a warning", count: 1 },
-        { type: "error", content: "Third error", count: 1 },
+        { type: 'error', content: 'First error', count: 1 },
+        { type: 'log', content: 'some log', count: 1 },
+        { type: 'error', content: 'Second error', count: 3 },
+        { type: 'warn', content: 'a warning', count: 1 },
+        { type: 'error', content: 'Third error', count: 1 },
       ];
 
       vi.mocked(useConsoleMessages).mockReturnValue({
@@ -1161,22 +1161,22 @@ describe("App UI", () => {
       await Promise.resolve();
 
       // Total error count should be 1 + 3 + 1 = 5
-      expect(lastFrame()).toContain("5 errors");
+      expect(lastFrame()).toContain('5 errors');
     });
   });
 
-  describe("auth validation", () => {
-    it("should call validateAuthMethod when useExternalAuth is false", async () => {
-      const validateAuthMethodSpy = vi.spyOn(auth, "validateAuthMethod");
+  describe('auth validation', () => {
+    it('should call validateAuthMethod when useExternalAuth is false', async () => {
+      const validateAuthMethodSpy = vi.spyOn(auth, 'validateAuthMethod');
       mockSettings = createMockSettings({
         workspace: {
           security: {
             auth: {
-              selectedType: "USE_GEMINI" as AuthType,
+              selectedType: 'USE_GEMINI' as AuthType,
               useExternal: false,
             },
           },
-          ui: { theme: "Default" },
+          ui: { theme: 'Default' },
         },
       });
 
@@ -1189,20 +1189,20 @@ describe("App UI", () => {
       );
       currentUnmount = unmount;
 
-      expect(validateAuthMethodSpy).toHaveBeenCalledWith("USE_GEMINI");
+      expect(validateAuthMethodSpy).toHaveBeenCalledWith('USE_GEMINI');
     });
 
-    it("should NOT call validateAuthMethod when useExternalAuth is true", async () => {
-      const validateAuthMethodSpy = vi.spyOn(auth, "validateAuthMethod");
+    it('should NOT call validateAuthMethod when useExternalAuth is true', async () => {
+      const validateAuthMethodSpy = vi.spyOn(auth, 'validateAuthMethod');
       mockSettings = createMockSettings({
         workspace: {
           security: {
             auth: {
-              selectedType: "USE_GEMINI" as AuthType,
+              selectedType: 'USE_GEMINI' as AuthType,
               useExternal: true,
             },
           },
-          ui: { theme: "Default" },
+          ui: { theme: 'Default' },
         },
       });
 
@@ -1219,9 +1219,9 @@ describe("App UI", () => {
     });
   });
 
-  describe("when in a narrow terminal", () => {
-    it("should render with a column layout", () => {
-      vi.spyOn(useTerminalSize, "useTerminalSize").mockReturnValue({
+  describe('when in a narrow terminal', () => {
+    it('should render with a column layout', () => {
+      vi.spyOn(useTerminalSize, 'useTerminalSize').mockReturnValue({
         columns: 60,
         rows: 24,
       });
@@ -1238,19 +1238,19 @@ describe("App UI", () => {
     });
   });
 
-  describe("NO_COLOR smoke test", () => {
+  describe('NO_COLOR smoke test', () => {
     let originalNoColor: string | undefined;
 
     beforeEach(() => {
-      originalNoColor = process.env["NO_COLOR"];
+      originalNoColor = process.env['NO_COLOR'];
     });
 
     afterEach(() => {
-      process.env["NO_COLOR"] = originalNoColor;
+      process.env['NO_COLOR'] = originalNoColor;
     });
 
-    it("should render without errors when NO_COLOR is set", async () => {
-      process.env["NO_COLOR"] = "true";
+    it('should render without errors when NO_COLOR is set', async () => {
+      process.env['NO_COLOR'] = 'true';
 
       const { lastFrame, unmount } = renderWithProviders(
         <App
@@ -1262,13 +1262,13 @@ describe("App UI", () => {
       currentUnmount = unmount;
 
       expect(lastFrame()).toBeTruthy();
-      expect(lastFrame()).toContain("Type your message or @path/to/file");
+      expect(lastFrame()).toContain('Type your message or @path/to/file');
     });
   });
 
-  describe("FolderTrustDialog", () => {
-    it("should display the folder trust dialog when isFolderTrustDialogOpen is true", async () => {
-      const { useFolderTrust } = await import("./hooks/useFolderTrust.js");
+  describe('FolderTrustDialog', () => {
+    it('should display the folder trust dialog when isFolderTrustDialogOpen is true', async () => {
+      const { useFolderTrust } = await import('./hooks/useFolderTrust.js');
       vi.mocked(useFolderTrust).mockReturnValue({
         isTrusted: undefined,
         isFolderTrustDialogOpen: true,
@@ -1285,11 +1285,11 @@ describe("App UI", () => {
       );
       currentUnmount = unmount;
       await Promise.resolve();
-      expect(lastFrame()).toContain("Do you trust this folder?");
+      expect(lastFrame()).toContain('Do you trust this folder?');
     });
 
-    it("should display the folder trust dialog when the feature is enabled but the folder is not trusted", async () => {
-      const { useFolderTrust } = await import("./hooks/useFolderTrust.js");
+    it('should display the folder trust dialog when the feature is enabled but the folder is not trusted', async () => {
+      const { useFolderTrust } = await import('./hooks/useFolderTrust.js');
       vi.mocked(useFolderTrust).mockReturnValue({
         isTrusted: false,
         isFolderTrustDialogOpen: true,
@@ -1307,11 +1307,11 @@ describe("App UI", () => {
       );
       currentUnmount = unmount;
       await Promise.resolve();
-      expect(lastFrame()).toContain("Do you trust this folder?");
+      expect(lastFrame()).toContain('Do you trust this folder?');
     });
 
-    it("should not display the folder trust dialog when the feature is disabled", async () => {
-      const { useFolderTrust } = await import("./hooks/useFolderTrust.js");
+    it('should not display the folder trust dialog when the feature is disabled', async () => {
+      const { useFolderTrust } = await import('./hooks/useFolderTrust.js');
       vi.mocked(useFolderTrust).mockReturnValue({
         isTrusted: false,
         isFolderTrustDialogOpen: false,
@@ -1329,11 +1329,11 @@ describe("App UI", () => {
       );
       currentUnmount = unmount;
       await Promise.resolve();
-      expect(lastFrame()).not.toContain("Do you trust this folder?");
+      expect(lastFrame()).not.toContain('Do you trust this folder?');
     });
   });
 
-  describe("Message Queuing", () => {
+  describe('Message Queuing', () => {
     let mockSubmitQuery: Mock;
 
     beforeEach(() => {
@@ -1345,7 +1345,7 @@ describe("App UI", () => {
       vi.useRealTimers();
     });
 
-    it("should queue messages when handleFinalSubmit is called during streaming", () => {
+    it('should queue messages when handleFinalSubmit is called during streaming', () => {
       vi.mocked(useGeminiStream).mockReturnValue({
         streamingState: StreamingState.Responding,
         submitQuery: mockSubmitQuery,
@@ -1368,7 +1368,7 @@ describe("App UI", () => {
       expect(mockSubmitQuery).not.toHaveBeenCalled();
     });
 
-    it("should auto-send queued messages when transitioning from Responding to Idle", async () => {
+    it('should auto-send queued messages when transitioning from Responding to Idle', async () => {
       const mockSubmitQueryFn = vi.fn();
 
       // Start with Responding state
@@ -1416,7 +1416,7 @@ describe("App UI", () => {
       // This test verifies the auto-send mechanism works when state transitions
     });
 
-    it("should display queued messages with dimmed color", () => {
+    it('should display queued messages with dimmed color', () => {
       // This test would require being able to simulate handleFinalSubmit
       // and then checking the rendered output for the queued messages
       // with the ▸ prefix and dimColor styling
@@ -1426,7 +1426,7 @@ describe("App UI", () => {
         submitQuery: mockSubmitQuery,
         initError: null,
         pendingHistoryItems: [],
-        thought: { subject: "Processing", description: "Processing..." },
+        thought: { subject: 'Processing', description: 'Processing...' },
         cancelOngoingRequest: vi.fn(),
       });
 
@@ -1445,7 +1445,7 @@ describe("App UI", () => {
       expect(output).toBeDefined();
     });
 
-    it("should clear message queue after sending", async () => {
+    it('should clear message queue after sending', async () => {
       const mockSubmitQueryFn = vi.fn();
 
       // Start with idle to allow message queue to process
@@ -1475,7 +1475,7 @@ describe("App UI", () => {
       expect(lastFrame()).toBeDefined();
     });
 
-    it("should handle empty messages by filtering them out", () => {
+    it('should handle empty messages by filtering them out', () => {
       // The handleFinalSubmit function trims and checks if length > 0
       // before adding to queue, so empty messages are filtered
 
@@ -1502,7 +1502,7 @@ describe("App UI", () => {
       expect(mockSubmitQuery).not.toHaveBeenCalled();
     });
 
-    it("should combine multiple queued messages with double newlines", async () => {
+    it('should combine multiple queued messages with double newlines', async () => {
       // This test verifies that when multiple messages are queued,
       // they are combined with '\n\n' as the separator
 
@@ -1533,7 +1533,7 @@ describe("App UI", () => {
       expect(lastFrame()).toBeDefined();
     });
 
-    it("should limit displayed messages to MAX_DISPLAYED_QUEUED_MESSAGES", () => {
+    it('should limit displayed messages to MAX_DISPLAYED_QUEUED_MESSAGES', () => {
       // This test verifies the display logic handles multiple messages correctly
       // by checking that the MAX_DISPLAYED_QUEUED_MESSAGES constant is respected
 
@@ -1542,7 +1542,7 @@ describe("App UI", () => {
         submitQuery: mockSubmitQuery,
         initError: null,
         pendingHistoryItems: [],
-        thought: { subject: "Processing", description: "Processing..." },
+        thought: { subject: 'Processing', description: 'Processing...' },
         cancelOngoingRequest: vi.fn(),
       });
 
@@ -1562,10 +1562,10 @@ describe("App UI", () => {
       expect(output).toBeDefined();
 
       // Check that the component renders without errors when there are messages to display
-      expect(output).not.toContain("Error");
+      expect(output).not.toContain('Error');
     });
 
-    it("should render message queue display without errors", () => {
+    it('should render message queue display without errors', () => {
       // Test that the message queue display logic renders correctly
       // This verifies the UI changes for performance improvements work
 
@@ -1574,7 +1574,7 @@ describe("App UI", () => {
         submitQuery: mockSubmitQuery,
         initError: null,
         pendingHistoryItems: [],
-        thought: { subject: "Processing", description: "Processing..." },
+        thought: { subject: 'Processing', description: 'Processing...' },
         cancelOngoingRequest: vi.fn(),
       });
 
@@ -1591,28 +1591,28 @@ describe("App UI", () => {
 
       // Verify component renders without errors
       expect(output).toBeDefined();
-      expect(output).not.toContain("Error");
+      expect(output).not.toContain('Error');
 
       // Verify the component structure is intact (loading indicator should be present)
-      expect(output).toContain("esc to cancel");
+      expect(output).toContain('esc to cancel');
     });
   });
 
-  describe("debug keystroke logging", () => {
+  describe('debug keystroke logging', () => {
     let consoleLogSpy: ReturnType<typeof vi.spyOn>;
 
     beforeEach(() => {
-      consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
     });
 
     afterEach(() => {
       consoleLogSpy.mockRestore();
     });
 
-    it("should pass debugKeystrokeLogging setting to KeypressProvider", () => {
+    it('should pass debugKeystrokeLogging setting to KeypressProvider', () => {
       const mockSettingsWithDebug = createMockSettings({
         workspace: {
-          ui: { theme: "Default" },
+          ui: { theme: 'Default' },
           general: { debugKeystrokeLogging: true },
         },
       });
@@ -1634,7 +1634,7 @@ describe("App UI", () => {
       );
     });
 
-    it("should use default false value when debugKeystrokeLogging is not set", () => {
+    it('should use default false value when debugKeystrokeLogging is not set', () => {
       const { lastFrame, unmount } = renderWithProviders(
         <App
           config={mockConfig as unknown as ServerConfig}
@@ -1653,8 +1653,8 @@ describe("App UI", () => {
     });
   });
 
-  describe("Ctrl+C behavior", () => {
-    it("should call cancel but only clear the prompt when a tool is executing", async () => {
+  describe('Ctrl+C behavior', () => {
+    it('should call cancel but only clear the prompt when a tool is executing', async () => {
       const mockCancel = vi.fn();
       let onCancelSubmitCallback = () => {};
 
@@ -1683,14 +1683,14 @@ describe("App UI", () => {
             initError: null,
             pendingHistoryItems: [
               {
-                type: "tool_group",
+                type: 'tool_group',
                 tools: [
                   {
-                    name: "test_tool",
+                    name: 'test_tool',
                     status: ToolCallStatus.Executing,
-                    callId: "test-call-id",
-                    description: "Test tool description",
-                    resultDisplay: "Test result",
+                    callId: 'test-call-id',
+                    description: 'Test tool description',
+                    resultDisplay: 'Test result',
                     confirmationDetails: undefined,
                   },
                 ],
@@ -1715,14 +1715,14 @@ describe("App UI", () => {
       currentUnmount = unmount;
 
       // Simulate user typing something into the prompt while a tool is running.
-      stdin.write("some text");
+      stdin.write('some text');
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // Verify the text is in the prompt.
-      expect(lastFrame()).toContain("some text");
+      expect(lastFrame()).toContain('some text');
 
       // Simulate Ctrl+C.
-      stdin.write("\x03");
+      stdin.write('\x03');
       await new Promise((resolve) => setTimeout(resolve, 100));
 
       // The main cancellation handler SHOULD be called.
@@ -1731,7 +1731,7 @@ describe("App UI", () => {
       // The prompt should now be empty as a result of the cancellation handler's logic.
       // We can't directly test the buffer's state, but we can see the rendered output.
       await waitFor(() => {
-        expect(lastFrame()).not.toContain("some text");
+        expect(lastFrame()).not.toContain('some text');
       });
     });
   });

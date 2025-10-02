@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useCallback } from "react";
-import { MessageType } from "../types.js";
-import { allowEditorTypeInSandbox, checkHasEditorType, } from "@qwen-code/qwen-code-core";
+import { useState, useCallback } from 'react';
+import { MessageType } from '../types.js';
+import { allowEditorTypeInSandbox, checkHasEditorType, } from '@qwen-code/qwen-code-core';
 export const useEditorSettings = (loadedSettings, setEditorError, addItem) => {
     const [isEditorDialogOpen, setIsEditorDialogOpen] = useState(false);
     const openEditorDialog = useCallback(() => {
@@ -18,10 +18,10 @@ export const useEditorSettings = (loadedSettings, setEditorError, addItem) => {
             return;
         }
         try {
-            loadedSettings.setValue(scope, "preferredEditor", editorType);
+            loadedSettings.setValue(scope, 'preferredEditor', editorType);
             addItem({
                 type: MessageType.INFO,
-                text: `Editor preference ${editorType ? `set to "${editorType}"` : "cleared"} in ${scope} settings.`,
+                text: `Editor preference ${editorType ? `set to "${editorType}"` : 'cleared'} in ${scope} settings.`,
             }, Date.now());
             setEditorError(null);
             setIsEditorDialogOpen(false);

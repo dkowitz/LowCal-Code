@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">7.5% </span>
+                <span class="strong">8.82% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>6/80</span>
+                <span class='fraction'>6/68</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">7.5% </span>
+                <span class="strong">8.82% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>6/80</span>
+                <span class='fraction'>6/68</span>
             </div>
         
             
@@ -154,21 +154,7 @@
 <a name='L89'></a><a href='#L89'>89</a>
 <a name='L90'></a><a href='#L90'>90</a>
 <a name='L91'></a><a href='#L91'>91</a>
-<a name='L92'></a><a href='#L92'>92</a>
-<a name='L93'></a><a href='#L93'>93</a>
-<a name='L94'></a><a href='#L94'>94</a>
-<a name='L95'></a><a href='#L95'>95</a>
-<a name='L96'></a><a href='#L96'>96</a>
-<a name='L97'></a><a href='#L97'>97</a>
-<a name='L98'></a><a href='#L98'>98</a>
-<a name='L99'></a><a href='#L99'>99</a>
-<a name='L100'></a><a href='#L100'>100</a>
-<a name='L101'></a><a href='#L101'>101</a>
-<a name='L102'></a><a href='#L102'>102</a>
-<a name='L103'></a><a href='#L103'>103</a>
-<a name='L104'></a><a href='#L104'>104</a>
-<a name='L105'></a><a href='#L105'>105</a>
-<a name='L106'></a><a href='#L106'>106</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L92'></a><a href='#L92'>92</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -237,20 +223,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -279,14 +251,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { useState, useCallback, useEffect } from "react";
-import type { LoadedSettings, SettingScope } from "../../config/settings.js";
-import { AuthType, type Config } from "@qwen-code/qwen-code-core";
+import { useState, useCallback, useEffect } from 'react';
+import type { LoadedSettings, SettingScope } from '../../config/settings.js';
+import { AuthType, type Config } from '@qwen-code/qwen-code-core';
 import {
   clearCachedCredentialFile,
   getErrorMessage,
-} from "@qwen-code/qwen-code-core";
-import { runExitCleanup } from "../../utils/cleanup.js";
+} from '@qwen-code/qwen-code-core';
+import { runExitCleanup } from '../../utils/cleanup.js';
 &nbsp;
 export const useAuthCommand = <span class="fstat-no" title="function not covered" >(</span>
 <span class="cstat-no" title="statement not covered" >  settings: LoadedSettings,</span>
@@ -330,7 +302,7 @@ export const useAuthCommand = <span class="fstat-no" title="function not covered
 <span class="cstat-no" title="statement not covered" >      if (authType) {</span>
 <span class="cstat-no" title="statement not covered" >        await clearCachedCredentialFile();</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >        settings.setValue(scope, "security.auth.selectedType", authType);</span>
+<span class="cstat-no" title="statement not covered" >        settings.setValue(scope, 'security.auth.selectedType', authType);</span>
 <span class="cstat-no" title="statement not covered" >        if (</span>
 <span class="cstat-no" title="statement not covered" >          authType === AuthType.LOGIN_WITH_GOOGLE &amp;&amp;</span>
 <span class="cstat-no" title="statement not covered" >          config.isBrowserLaunchSuppressed()</span>
@@ -348,22 +320,8 @@ Logging in with Google... Please restart Gemini CLI to continue.
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      setIsAuthDialogOpen(false);</span>
 <span class="cstat-no" title="statement not covered" >      setAuthError(null);</span>
-&nbsp;
-      // Refresh auth config after dialog close to apply any provider changes
-<span class="cstat-no" title="statement not covered" >      if (authType) {</span>
-<span class="cstat-no" title="statement not covered" >        try {</span>
-<span class="cstat-no" title="statement not covered" >          setIsAuthenticating(true);</span>
-<span class="cstat-no" title="statement not covered" >          await config.refreshAuth(authType);</span>
-<span class="cstat-no" title="statement not covered" >          console.log(`Refreshed auth via "${authType}".`);</span>
-<span class="cstat-no" title="statement not covered" >        } catch (e) {</span>
-<span class="cstat-no" title="statement not covered" >          setAuthError(`Failed to refresh auth. Message: ${getErrorMessage(e)}`);</span>
-<span class="cstat-no" title="statement not covered" >          openAuthDialog();</span>
-<span class="cstat-no" title="statement not covered" >        } finally {</span>
-<span class="cstat-no" title="statement not covered" >          setIsAuthenticating(false);</span>
-<span class="cstat-no" title="statement not covered" >        }</span>
-<span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
-<span class="cstat-no" title="statement not covered" >    [settings, setAuthError, config, openAuthDialog],</span>
+<span class="cstat-no" title="statement not covered" >    [settings, setAuthError, config],</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const cancelAuthentication = useCallback(() =&gt; {</span>
@@ -385,7 +343,7 @@ Logging in with Google... Please restart Gemini CLI to continue.
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.879Z
+                at 2025-09-29T17:26:19.374Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

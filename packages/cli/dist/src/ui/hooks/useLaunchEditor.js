@@ -3,10 +3,10 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useCallback } from "react";
-import { useStdin } from "ink";
-import { spawnSync } from "child_process";
-import { useSettings } from "../contexts/SettingsContext.js";
+import { useCallback } from 'react';
+import { useStdin } from 'ink';
+import { spawnSync } from 'child_process';
+import { useSettings } from '../contexts/SettingsContext.js';
 /**
  * Determines the editor command to use based on user preferences and platform.
  */
@@ -16,12 +16,12 @@ function getEditorCommand(preferredEditor) {
     }
     // Platform-specific defaults with UI preference for macOS
     switch (process.platform) {
-        case "darwin":
-            return "open -t"; // TextEdit in plain text mode
-        case "win32":
-            return "notepad";
+        case 'darwin':
+            return 'open -t'; // TextEdit in plain text mode
+        case 'win32':
+            return 'notepad';
         default:
-            return process.env["VISUAL"] || process.env["EDITOR"] || "vi";
+            return process.env['VISUAL'] || process.env['EDITOR'] || 'vi';
     }
 }
 /**
@@ -37,10 +37,10 @@ export function useLaunchEditor() {
         // Handle different editor command formats
         let editorCommand;
         let editorArgs;
-        if (editor === "open -t") {
+        if (editor === 'open -t') {
             // macOS TextEdit in plain text mode
-            editorCommand = "open";
-            editorArgs = ["-t", filePath];
+            editorCommand = 'open';
+            editorArgs = ['-t', filePath];
         }
         else {
             // Standard editor command
@@ -52,11 +52,11 @@ export function useLaunchEditor() {
         try {
             setRawMode?.(false);
             const { status, error } = spawnSync(editorCommand, editorArgs, {
-                stdio: "inherit",
+                stdio: 'inherit',
             });
             if (error)
                 throw error;
-            if (typeof status === "number" && status !== 0) {
+            if (typeof status === 'number' && status !== 0) {
                 throw new Error(`Editor exited with status ${status}`);
             }
         }

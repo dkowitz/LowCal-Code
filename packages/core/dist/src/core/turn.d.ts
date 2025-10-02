@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Part, PartListUnion, GenerateContentResponse, FunctionDeclaration, FinishReason } from "@google/genai";
-import type { ToolCallConfirmationDetails, ToolResult, ToolResultDisplay } from "../tools/tools.js";
-import type { ToolErrorType } from "../tools/tool-error.js";
-import type { GeminiChat } from "./geminiChat.js";
+import type { Part, PartListUnion, GenerateContentResponse, FunctionDeclaration, FinishReason } from '@google/genai';
+import type { ToolCallConfirmationDetails, ToolResult, ToolResultDisplay } from '../tools/tools.js';
+import type { ToolErrorType } from '../tools/tool-error.js';
+import type { GeminiChat } from './geminiChat.js';
 export interface ServerTool {
     name: string;
     schema: FunctionDeclaration;

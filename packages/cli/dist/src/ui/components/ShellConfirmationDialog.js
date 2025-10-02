@@ -4,16 +4,16 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { ToolConfirmationOutcome } from "@qwen-code/qwen-code-core";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import { RenderInline } from "../utils/InlineMarkdownRenderer.js";
-import { RadioButtonSelect } from "./shared/RadioButtonSelect.js";
-import { useKeypress } from "../hooks/useKeypress.js";
+import { ToolConfirmationOutcome } from '@qwen-code/qwen-code-core';
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import { RenderInline } from '../utils/InlineMarkdownRenderer.js';
+import { RadioButtonSelect } from './shared/RadioButtonSelect.js';
+import { useKeypress } from '../hooks/useKeypress.js';
 export const ShellConfirmationDialog = ({ request }) => {
     const { commands, onConfirm } = request;
     useKeypress((key) => {
-        if (key.name === "escape") {
+        if (key.name === 'escape') {
             onConfirm(ToolConfirmationOutcome.Cancel);
         }
     }, { isActive: true });
@@ -29,15 +29,15 @@ export const ShellConfirmationDialog = ({ request }) => {
     };
     const options = [
         {
-            label: "Yes, allow once",
+            label: 'Yes, allow once',
             value: ToolConfirmationOutcome.ProceedOnce,
         },
         {
-            label: "Yes, allow always for this session",
+            label: 'Yes, allow always for this session',
             value: ToolConfirmationOutcome.ProceedAlways,
         },
         {
-            label: "No (esc)",
+            label: 'No (esc)',
             value: ToolConfirmationOutcome.Cancel,
         },
     ];

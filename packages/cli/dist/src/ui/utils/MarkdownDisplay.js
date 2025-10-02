@@ -4,13 +4,13 @@ import { Fragment as _Fragment, jsx as _jsx, jsxs as _jsxs } from "react/jsx-run
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import React from "react";
-import { Text, Box } from "ink";
-import { Colors } from "../colors.js";
-import { colorizeCode } from "./CodeColorizer.js";
-import { TableRenderer } from "./TableRenderer.js";
-import { RenderInline } from "./InlineMarkdownRenderer.js";
-import { useSettings } from "../contexts/SettingsContext.js";
+import React from 'react';
+import { Text, Box } from 'ink';
+import { Colors } from '../colors.js';
+import { colorizeCode } from './CodeColorizer.js';
+import { TableRenderer } from './TableRenderer.js';
+import { RenderInline } from './InlineMarkdownRenderer.js';
+import { useSettings } from '../contexts/SettingsContext.js';
 // Constants for Markdown parsing and rendering
 const EMPTY_LINE_HEIGHT = 1;
 const CODE_BLOCK_PREFIX_PADDING = 1;
@@ -32,7 +32,7 @@ const MarkdownDisplayInternal = ({ text, isPending, availableTerminalHeight, ter
     let lastLineEmpty = true;
     let codeBlockContent = [];
     let codeBlockLang = null;
-    let codeBlockFence = "";
+    let codeBlockFence = '';
     let inTable = false;
     let tableRows = [];
     let tableHeaders = [];
@@ -53,7 +53,7 @@ const MarkdownDisplayInternal = ({ text, isPending, availableTerminalHeight, ter
                 inCodeBlock = false;
                 codeBlockContent = [];
                 codeBlockLang = null;
-                codeBlockFence = "";
+                codeBlockFence = '';
             }
             else {
                 codeBlockContent.push(line);
@@ -77,7 +77,7 @@ const MarkdownDisplayInternal = ({ text, isPending, availableTerminalHeight, ter
             if (index + 1 < lines.length &&
                 lines[index + 1].match(tableSeparatorRegex)) {
                 inTable = true;
-                tableHeaders = tableRowMatch[1].split("|").map((cell) => cell.trim());
+                tableHeaders = tableRowMatch[1].split('|').map((cell) => cell.trim());
                 tableRows = [];
             }
             else {
@@ -90,10 +90,10 @@ const MarkdownDisplayInternal = ({ text, isPending, availableTerminalHeight, ter
         }
         else if (inTable && tableRowMatch) {
             // Add table row
-            const cells = tableRowMatch[1].split("|").map((cell) => cell.trim());
+            const cells = tableRowMatch[1].split('|').map((cell) => cell.trim());
             // Ensure row has same column count as headers
             while (cells.length < tableHeaders.length) {
-                cells.push("");
+                cells.push('');
             }
             if (cells.length > tableHeaders.length) {
                 cells.length = tableHeaders.length;
@@ -185,17 +185,17 @@ const RenderCodeBlockInternal = ({ content, lang, isPending, availableTerminalHe
                 return (_jsx(Box, { paddingLeft: CODE_BLOCK_PREFIX_PADDING, children: _jsx(Text, { color: Colors.Gray, children: "... code is being written ..." }) }));
             }
             const truncatedContent = content.slice(0, MAX_CODE_LINES_WHEN_PENDING);
-            const colorizedTruncatedCode = colorizeCode(truncatedContent.join("\n"), lang, availableTerminalHeight, terminalWidth - CODE_BLOCK_PREFIX_PADDING, undefined, settings);
+            const colorizedTruncatedCode = colorizeCode(truncatedContent.join('\n'), lang, availableTerminalHeight, terminalWidth - CODE_BLOCK_PREFIX_PADDING, undefined, settings);
             return (_jsxs(Box, { paddingLeft: CODE_BLOCK_PREFIX_PADDING, flexDirection: "column", children: [colorizedTruncatedCode, _jsx(Text, { color: Colors.Gray, children: "... generating more ..." })] }));
         }
     }
-    const fullContent = content.join("\n");
+    const fullContent = content.join('\n');
     const colorizedCode = colorizeCode(fullContent, lang, availableTerminalHeight, terminalWidth - CODE_BLOCK_PREFIX_PADDING, undefined, settings);
     return (_jsx(Box, { paddingLeft: CODE_BLOCK_PREFIX_PADDING, flexDirection: "column", width: terminalWidth, flexShrink: 0, children: colorizedCode }));
 };
 const RenderCodeBlock = React.memo(RenderCodeBlockInternal);
-const RenderListItemInternal = ({ itemText, type, marker, leadingWhitespace = "", }) => {
-    const prefix = type === "ol" ? `${marker}. ` : `${marker} `;
+const RenderListItemInternal = ({ itemText, type, marker, leadingWhitespace = '', }) => {
+    const prefix = type === 'ol' ? `${marker}. ` : `${marker} `;
     const prefixWidth = prefix.length;
     const indentation = leadingWhitespace.length;
     return (_jsxs(Box, { paddingLeft: indentation + LIST_ITEM_PREFIX_PADDING, flexDirection: "row", children: [_jsx(Box, { width: prefixWidth, children: _jsx(Text, { children: prefix }) }), _jsx(Box, { flexGrow: LIST_ITEM_TEXT_FLEX_GROW, children: _jsx(Text, { wrap: "wrap", children: _jsx(RenderInline, { text: itemText }) }) })] }));

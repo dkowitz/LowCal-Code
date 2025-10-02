@@ -941,13 +941,13 @@ import type {
   SlashCommand,
   CommandContext,
   MessageActionReturn,
-} from "./types.js";
-import { CommandKind } from "./types.js";
-import { ApprovalMode, APPROVAL_MODES } from "@qwen-code/qwen-code-core";
-import { SettingScope } from "../../config/settings.js";
+} from './types.js';
+import { CommandKind } from './types.js';
+import { ApprovalMode, APPROVAL_MODES } from '@qwen-code/qwen-code-core';
+import { SettingScope } from '../../config/settings.js';
 &nbsp;
 const USAGE_MESSAGE =
-  "Usage: /approval-mode &lt;mode&gt; [--session|--user|--project]";
+  'Usage: /approval-mode &lt;mode&gt; [--session|--user|--project]';
 &nbsp;
 const normalizeInputMode = (value: string): string =&gt;
   value.trim().toLowerCase();
@@ -974,7 +974,7 @@ const parseApprovalMode = (value: string | null): ApprovalMode | null =&gt; {
 <span class="cstat-no" title="statement not covered" >    return null;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
-  const normalized = normalizeInputMode(value).replace(/_/g, "-");
+  const normalized = normalizeInputMode(value).replace(/_/g, '-');
   const matchIndex = APPROVAL_MODES.findIndex(
     (candidate) =&gt; candidate === normalized,
   );
@@ -985,13 +985,13 @@ const parseApprovalMode = (value: string | null): ApprovalMode | null =&gt; {
 const formatModeDescription = (mode: ApprovalMode): string =&gt; {
   switch (mode) {
     case ApprovalMode.PLAN:
-      return "Plan mode - Analyze only, do not modify files or execute commands";
+      return 'Plan mode - Analyze only, do not modify files or execute commands';
     case ApprovalMode.DEFAULT:
-      return "Default mode - Require approval for file edits or shell commands";
+      return 'Default mode - Require approval for file edits or shell commands';
     case ApprovalMode.AUTO_EDIT:
-      return "Auto-edit mode - Automatically approve file edits";
+      return 'Auto-edit mode - Automatically approve file edits';
     case ApprovalMode.YOLO:
-      return "YOLO mode - Automatically approve all tools";
+      return 'YOLO mode - Automatically approve all tools';
 <span class="branch-0 cbranch-no" title="branch not covered" >    default:</span>
 <span class="cstat-no" title="statement not covered" >      return `${mode} mode`;</span>
   }
@@ -1001,44 +1001,44 @@ const parseApprovalArgs = (
   args: string,
 ): {
   mode: string | null;
-  scope: "session" | "user" | "project";
+  scope: 'session' | 'user' | 'project';
   error?: string;
 } =&gt; {
   const trimmedArgs = args.trim();
   if (!trimmedArgs) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >    return { mode: null, scope: "session" };</span>
+<span class="cstat-no" title="statement not covered" >    return { mode: null, scope: 'session' };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   const tokens = tokenizeArgs(trimmedArgs);
   let mode: string | null = null;
-  let scope: "session" | "user" | "project" = "session";
+  let scope: 'session' | 'user' | 'project' = 'session';
   let scopeFlag: string | null = null;
 &nbsp;
   // Find scope flag and mode
   for (const token of tokens) {
-    if (token === "--session" || token === "--user" || token === "--project") {
+    if (token === '--session' || token === '--user' || token === '--project') {
       if (scopeFlag) {
         return {
           mode: null,
-          scope: "session",
-          error: "Multiple scope flags provided",
+          scope: 'session',
+          error: 'Multiple scope flags provided',
         };
       }
       scopeFlag = token;
-      scope = token.substring(2) as "session" | "user" | "project";
+      scope = token.substring(2) as 'session' | 'user' | 'project';
     } else if (!mode) {
       mode = token;
 <span class="branch-0 cbranch-no" title="branch not covered" >    } else {</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
 <span class="cstat-no" title="statement not covered" >        mode: null,</span>
-<span class="cstat-no" title="statement not covered" >        scope: "session",</span>
-<span class="cstat-no" title="statement not covered" >        error: "Invalid arguments provided",</span>
+<span class="cstat-no" title="statement not covered" >        scope: 'session',</span>
+<span class="cstat-no" title="statement not covered" >        error: 'Invalid arguments provided',</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
   }
 &nbsp;
   if (!mode) {
-    return { mode: null, scope: "session", error: "Missing approval mode" };
+    return { mode: null, scope: 'session', error: 'Missing approval mode' };
   }
 &nbsp;
   return { mode, scope };
@@ -1047,16 +1047,16 @@ const parseApprovalArgs = (
 const setApprovalModeWithScope = async (
   context: CommandContext,
   mode: ApprovalMode,
-  scope: "session" | "user" | "project",
+  scope: 'session' | 'user' | 'project',
 ): Promise&lt;MessageActionReturn&gt; =&gt; {
   const { services } = context;
   const { config } = services;
 &nbsp;
   if (!config) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >    return {</span>
-<span class="cstat-no" title="statement not covered" >      type: "message",</span>
-<span class="cstat-no" title="statement not covered" >      messageType: "error",</span>
-<span class="cstat-no" title="statement not covered" >      content: "Configuration not available.",</span>
+<span class="cstat-no" title="statement not covered" >      type: 'message',</span>
+<span class="cstat-no" title="statement not covered" >      messageType: 'error',</span>
+<span class="cstat-no" title="statement not covered" >      content: 'Configuration not available.',</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -1065,24 +1065,24 @@ const setApprovalModeWithScope = async (
     config.setApprovalMode(mode);
 &nbsp;
     // If scope is not session, also persist to settings
-    if (scope !== "session") {
+    if (scope !== 'session') {
       const { settings } = context.services;
-      if (!settings || typeof settings.setValue !== "function") <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+      if (!settings || typeof settings.setValue !== 'function') <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        return {</span>
-<span class="cstat-no" title="statement not covered" >          type: "message",</span>
-<span class="cstat-no" title="statement not covered" >          messageType: "error",</span>
+<span class="cstat-no" title="statement not covered" >          type: 'message',</span>
+<span class="cstat-no" title="statement not covered" >          messageType: 'error',</span>
 <span class="cstat-no" title="statement not covered" >          content:</span>
-<span class="cstat-no" title="statement not covered" >            "Settings service is not available; unable to persist the approval mode.",</span>
+<span class="cstat-no" title="statement not covered" >            'Settings service is not available; unable to persist the approval mode.',</span>
 <span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
       const settingScope =
-        scope === "user" ? SettingScope.User : SettingScope.Workspace;
-      const scopeLabel = scope === "user" ? "user" : "project";
+        scope === 'user' ? SettingScope.User : SettingScope.Workspace;
+      const scopeLabel = scope === 'user' ? 'user' : 'project';
       let settingsPath: string | undefined;
 &nbsp;
       try {
-        if (typeof settings.forScope === "function") {
+        if (typeof settings.forScope === 'function') {
           settingsPath = settings.forScope(settingScope)?.path;
         }
 <span class="branch-0 cbranch-no" title="branch not covered" >      } catch (_error) {</span>
@@ -1090,43 +1090,43 @@ const setApprovalModeWithScope = async (
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
       try {
-        settings.setValue(settingScope, "approvalMode", mode);
+        settings.setValue(settingScope, 'approvalMode', mode);
 <span class="branch-0 cbranch-no" title="branch not covered" >      } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >        return {</span>
-<span class="cstat-no" title="statement not covered" >          type: "message",</span>
-<span class="cstat-no" title="statement not covered" >          messageType: "error",</span>
+<span class="cstat-no" title="statement not covered" >          type: 'message',</span>
+<span class="cstat-no" title="statement not covered" >          messageType: 'error',</span>
 <span class="cstat-no" title="statement not covered" >          content: `Failed to save approval mode: ${(error as Error).message}`,</span>
 <span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
-      const locationSuffix = settingsPath ? ` at ${settingsPath<span class="branch-0 cbranch-no" title="branch not covered" >}` : "";</span>
+      const locationSuffix = settingsPath ? ` at ${settingsPath<span class="branch-0 cbranch-no" title="branch not covered" >}` : '';</span>
 &nbsp;
       const scopeSuffix = ` (saved to ${scopeLabel} settings${locationSuffix})`;
 &nbsp;
       return {
-        type: "message",
-        messageType: "info",
+        type: 'message',
+        messageType: 'info',
         content: `Approval mode changed to: ${mode}${scopeSuffix}`,
       };
     }
 &nbsp;
     return {
-      type: "message",
-      messageType: "info",
+      type: 'message',
+      messageType: 'info',
       content: `Approval mode changed to: ${mode}`,
     };
   } catch (error) {
     return {
-      type: "message",
-      messageType: "error",
+      type: 'message',
+      messageType: 'error',
       content: `Failed to change approval mode: ${(error as Error).message}`,
     };
   }
 };
 &nbsp;
 export const approvalModeCommand: SlashCommand = {
-  name: "approval-mode",
-  description: "View or change the approval mode for tool usage",
+  name: 'approval-mode',
+  description: 'View or change the approval mode for tool usage',
   kind: CommandKind.BUILT_IN,
   action: async (
     context: CommandContext,
@@ -1135,16 +1135,16 @@ export const approvalModeCommand: SlashCommand = {
     const { config } = context.services;
     if (!config) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "Configuration not available.",
+        type: 'message',
+        messageType: 'error',
+        content: 'Configuration not available.',
       };
     }
 &nbsp;
     // If no arguments provided, show current mode and available options
-    if (!args || args.trim() === "") {
+    if (!args || args.trim() === '') {
       const currentMode =
-        typeof config.getApprovalMode === "function"
+        typeof config.getApprovalMode === 'function'
           ? config.getApprovalMode(<span class="branch-0 cbranch-no" title="branch not covered" >)</span>
 <span class="cstat-no" title="statement not covered" >          : null;</span>
 &nbsp;
@@ -1152,20 +1152,20 @@ export const approvalModeCommand: SlashCommand = {
 &nbsp;
       if (currentMode) {
         messageLines.push(`Current approval mode: ${currentMode}`);
-        messageLines.push("");
+        messageLines.push('');
       }
 &nbsp;
-      messageLines.push("Available approval modes:");
+      messageLines.push('Available approval modes:');
       for (const mode of APPROVAL_MODES) {
         messageLines.push(`  - ${mode}: ${formatModeDescription(mode)}`);
       }
-      messageLines.push("");
+      messageLines.push('');
       messageLines.push(USAGE_MESSAGE);
 &nbsp;
       return {
-        type: "message",
-        messageType: "info",
-        content: messageLines.join("\n"),
+        type: 'message',
+        messageType: 'info',
+        content: messageLines.join('\n'),
       };
     }
 &nbsp;
@@ -1174,16 +1174,16 @@ export const approvalModeCommand: SlashCommand = {
 &nbsp;
     if (parsed.error) {
       return {
-        type: "message",
-        messageType: "error",
+        type: 'message',
+        messageType: 'error',
         content: `${parsed.error}. ${USAGE_MESSAGE}`,
       };
     }
 &nbsp;
     if (!parsed.mode) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      return {</span>
-<span class="cstat-no" title="statement not covered" >        type: "message",</span>
-<span class="cstat-no" title="statement not covered" >        messageType: "info",</span>
+<span class="cstat-no" title="statement not covered" >        type: 'message',</span>
+<span class="cstat-no" title="statement not covered" >        messageType: 'info',</span>
 <span class="cstat-no" title="statement not covered" >        content: USAGE_MESSAGE,</span>
 <span class="cstat-no" title="statement not covered" >      };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -1192,14 +1192,14 @@ export const approvalModeCommand: SlashCommand = {
 &nbsp;
     if (!requestedMode) {
       let message = `Invalid approval mode: ${parsed.mode}\n\n`;
-      message += "Available approval modes:\n";
+      message += 'Available approval modes:\n';
       for (const mode of APPROVAL_MODES) {
         message += `  - ${mode}: ${formatModeDescription(mode)}\n`;
       }
       message += `\n${USAGE_MESSAGE}`;
       return {
-        type: "message",
-        messageType: "error",
+        type: 'message',
+        messageType: 'error',
         content: message,
       };
     }
@@ -1212,8 +1212,8 @@ export const approvalModeCommand: SlashCommand = {
     kind: CommandKind.BUILT_IN,
     subCommands: [
       {
-        name: "--session",
-        description: "Apply to current session only (temporary)",
+        name: '--session',
+        description: 'Apply to current session only (temporary)',
         kind: CommandKind.BUILT_IN,
         action: async (
           context: CommandContext,
@@ -1221,17 +1221,17 @@ export const approvalModeCommand: SlashCommand = {
         ): Promise&lt;MessageActionReturn&gt; =&gt; {
           if (args.trim().length &gt; 0) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >            return {</span>
-<span class="cstat-no" title="statement not covered" >              type: "message",</span>
-<span class="cstat-no" title="statement not covered" >              messageType: "error",</span>
-<span class="cstat-no" title="statement not covered" >              content: "Scope subcommands do not accept additional arguments.",</span>
+<span class="cstat-no" title="statement not covered" >              type: 'message',</span>
+<span class="cstat-no" title="statement not covered" >              messageType: 'error',</span>
+<span class="cstat-no" title="statement not covered" >              content: 'Scope subcommands do not accept additional arguments.',</span>
 <span class="cstat-no" title="statement not covered" >            };</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
-          return setApprovalModeWithScope(context, mode, "session");
+          return setApprovalModeWithScope(context, mode, 'session');
         },
       },
       {
-        name: "--project",
-        description: "Persist for this project/workspace",
+        name: '--project',
+        description: 'Persist for this project/workspace',
         kind: CommandKind.BUILT_IN,
         action: async (
           context: CommandContext,
@@ -1239,17 +1239,17 @@ export const approvalModeCommand: SlashCommand = {
         ): Promise&lt;MessageActionReturn&gt; =&gt; {
           if (args.trim().length &gt; 0) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >            return {</span>
-<span class="cstat-no" title="statement not covered" >              type: "message",</span>
-<span class="cstat-no" title="statement not covered" >              messageType: "error",</span>
-<span class="cstat-no" title="statement not covered" >              content: "Scope subcommands do not accept additional arguments.",</span>
+<span class="cstat-no" title="statement not covered" >              type: 'message',</span>
+<span class="cstat-no" title="statement not covered" >              messageType: 'error',</span>
+<span class="cstat-no" title="statement not covered" >              content: 'Scope subcommands do not accept additional arguments.',</span>
 <span class="cstat-no" title="statement not covered" >            };</span>
 <span class="cstat-no" title="statement not covered" >          }</span>
-          return setApprovalModeWithScope(context, mode, "project");
+          return setApprovalModeWithScope(context, mode, 'project');
         },
       },
       {
-        name: "--user",
-        description: "Persist for this user on this machine",
+        name: '--user',
+        description: 'Persist for this user on this machine',
         kind: CommandKind.BUILT_IN,
         action: async (
           context: CommandContext,
@@ -1257,12 +1257,12 @@ export const approvalModeCommand: SlashCommand = {
         ): Promise&lt;MessageActionReturn&gt; =&gt; {
           if (args.trim().length &gt; 0) {
             return {
-              type: "message",
-              messageType: "error",
-              content: "Scope subcommands do not accept additional arguments.",
+              type: 'message',
+              messageType: 'error',
+              content: 'Scope subcommands do not accept additional arguments.',
             };
           }
-          return setApprovalModeWithScope(context, mode, "user");
+          return setApprovalModeWithScope(context, mode, 'user');
         },
       },
     ],
@@ -1275,8 +1275,8 @@ export const approvalModeCommand: SlashCommand = {
         const parsed = parseApprovalArgs(`${mode} ${args}`);
         if (parsed.error) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >          return {</span>
-<span class="cstat-no" title="statement not covered" >            type: "message",</span>
-<span class="cstat-no" title="statement not covered" >            messageType: "error",</span>
+<span class="cstat-no" title="statement not covered" >            type: 'message',</span>
+<span class="cstat-no" title="statement not covered" >            messageType: 'error',</span>
 <span class="cstat-no" title="statement not covered" >            content: `${parsed.error}. ${USAGE_MESSAGE}`,</span>
 <span class="cstat-no" title="statement not covered" >          };</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
@@ -1284,8 +1284,8 @@ export const approvalModeCommand: SlashCommand = {
         const normalizedMode = parseApprovalMode(parsed.mode);
         if (!normalizedMode) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >          return {</span>
-<span class="cstat-no" title="statement not covered" >            type: "message",</span>
-<span class="cstat-no" title="statement not covered" >            messageType: "error",</span>
+<span class="cstat-no" title="statement not covered" >            type: 'message',</span>
+<span class="cstat-no" title="statement not covered" >            messageType: 'error',</span>
 <span class="cstat-no" title="statement not covered" >            content: `Invalid approval mode: ${parsed.mode}. ${USAGE_MESSAGE}`,</span>
 <span class="cstat-no" title="statement not covered" >          };</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
@@ -1293,32 +1293,32 @@ export const approvalModeCommand: SlashCommand = {
         return setApprovalModeWithScope(context, normalizedMode, parsed.scope);
 <span class="branch-0 cbranch-no" title="branch not covered" >      }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >      return setApprovalModeWithScope(context, mode, "session");</span>
+<span class="cstat-no" title="statement not covered" >      return setApprovalModeWithScope(context, mode, 'session');</span>
     },
   })),
   completion: async (_context: CommandContext, partialArg: string) =&gt; {
     const tokens = tokenizeArgs(partialArg);
     const hasTrailingSpace = /\s$/.test(partialArg);
     const currentSegment = hasTrailingSpace
-      ? ""
+      ? ''
       : tokens.length &gt; 0
         ? tokens[tokens.length - 1]
-        : "";
+        : '';
 &nbsp;
     const normalizedCurrent = normalizeInputMode(currentSegment).replace(
       /_/g,
-      "-",
+      '-',
     );
 &nbsp;
-    const scopeValues = ["--session", "--project", "--user"];
+    const scopeValues = ['--session', '--project', '--user'];
 &nbsp;
     const normalizeToken = (token: string) =&gt;
-      normalizeInputMode(token).replace(/_/g, "-");
+      normalizeInputMode(token).replace(/_/g, '-');
 &nbsp;
     const normalizedTokens = tokens.map(normalizeToken);
 &nbsp;
     if (tokens.length === 0) {
-      if (currentSegment.startsWith("-")) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+      if (currentSegment.startsWith('-')) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        return scopeValues.filter((scope) =&gt; scope.startsWith(currentSegment));</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
       return APPROVAL_MODES;
@@ -1326,7 +1326,7 @@ export const approvalModeCommand: SlashCommand = {
 &nbsp;
     if (tokens.length === 1 &amp;&amp; !hasTrailingSpace) {
       const originalToken = tokens[0];
-      if (originalToken.startsWith("-")) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
+      if (originalToken.startsWith('-')) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >        return scopeValues.filter((scope) =&gt;</span>
 <span class="cstat-no" title="statement not covered" >          scope.startsWith(normalizedCurrent),</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
@@ -1372,7 +1372,7 @@ export const approvalModeCommand: SlashCommand = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

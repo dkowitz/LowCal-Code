@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { SubagentConfig } from "./types.js";
+import type { SubagentConfig } from './types.js';
 
 /**
  * Registry of built-in subagents that are always available to all users.
@@ -12,12 +12,12 @@ import type { SubagentConfig } from "./types.js";
  */
 export class BuiltinAgentRegistry {
   private static readonly BUILTIN_AGENTS: Array<
-    Omit<SubagentConfig, "level" | "filePath">
+    Omit<SubagentConfig, 'level' | 'filePath'>
   > = [
     {
-      name: "general-purpose",
+      name: 'general-purpose',
       description:
-        "General-purpose agent for researching complex questions, searching for code, and executing multi-step tasks. When you are searching for a keyword or file and are not confident that you will find the right match in the first few tries use this agent to perform the search for you.",
+        'General-purpose agent for researching complex questions, searching for code, and executing multi-step tasks. When you are searching for a keyword or file and are not confident that you will find the right match in the first few tries use this agent to perform the search for you.',
       systemPrompt: `You are a general-purpose research and code analysis agent. Given the user's message, you should use the tools available to complete the task. Do what has been asked; nothing more, nothing less. When you complete the task simply respond with a detailed writeup.
 
 Your strengths:
@@ -51,7 +51,7 @@ Notes:
   static getBuiltinAgents(): SubagentConfig[] {
     return this.BUILTIN_AGENTS.map((agent) => ({
       ...agent,
-      level: "builtin" as const,
+      level: 'builtin' as const,
       filePath: `<builtin:${agent.name}>`,
       isBuiltin: true,
     }));
@@ -70,7 +70,7 @@ Notes:
 
     return {
       ...agent,
-      level: "builtin" as const,
+      level: 'builtin' as const,
       filePath: `<builtin:${name}>`,
       isBuiltin: true,
     };

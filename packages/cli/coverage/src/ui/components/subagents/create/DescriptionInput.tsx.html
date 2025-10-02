@@ -415,17 +415,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-import { useCallback, useRef } from "react";
-import { Box, Text } from "ink";
-import Spinner from "ink-spinner";
-import type { WizardStepProps, WizardAction } from "../types.js";
-import { sanitizeInput } from "../utils.js";
-import { type Config, subagentGenerator } from "@qwen-code/qwen-code-core";
-import { useKeypress, type Key } from "../../../hooks/useKeypress.js";
-import { keyMatchers, Command } from "../../../keyMatchers.js";
-import { theme } from "../../../semantic-colors.js";
-import { Colors } from "../../../colors.js";
-import { TextInput } from "../../shared/TextInput.js";
+import { useCallback, useRef } from 'react';
+import { Box, Text } from 'ink';
+import Spinner from 'ink-spinner';
+import type { WizardStepProps, WizardAction } from '../types.js';
+import { sanitizeInput } from '../utils.js';
+import { type Config, subagentGenerator } from '@qwen-code/qwen-code-core';
+import { useKeypress, type Key } from '../../../hooks/useKeypress.js';
+import { keyMatchers, Command } from '../../../keyMatchers.js';
+import { theme } from '../../../semantic-colors.js';
+import { Colors } from '../../../colors.js';
+import { TextInput } from '../../shared/TextInput.js';
 &nbsp;
 /**
  * Step 3: Description input with LLM generation.
@@ -442,7 +442,7 @@ export <span class="fstat-no" title="function not covered" >function Description
 <span class="cstat-no" title="statement not covered" >    (text: string) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      const sanitized = sanitizeInput(text);</span>
 <span class="cstat-no" title="statement not covered" >      dispatch({</span>
-<span class="cstat-no" title="statement not covered" >        type: "SET_USER_DESCRIPTION",</span>
+<span class="cstat-no" title="statement not covered" >        type: 'SET_USER_DESCRIPTION',</span>
 <span class="cstat-no" title="statement not covered" >        description: sanitized,</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
@@ -470,7 +470,7 @@ export <span class="fstat-no" title="function not covered" >function Description
         // Only dispatch if not aborted
 <span class="cstat-no" title="statement not covered" >        if (!abortController.signal.aborted) {</span>
 <span class="cstat-no" title="statement not covered" >          dispatch({</span>
-<span class="cstat-no" title="statement not covered" >            type: "SET_GENERATED_CONTENT",</span>
+<span class="cstat-no" title="statement not covered" >            type: 'SET_GENERATED_CONTENT',</span>
 <span class="cstat-no" title="statement not covered" >            name: generated.name,</span>
 <span class="cstat-no" title="statement not covered" >            description: generated.description,</span>
 <span class="cstat-no" title="statement not covered" >            systemPrompt: generated.systemPrompt,</span>
@@ -495,27 +495,27 @@ export <span class="fstat-no" title="function not covered" >function Description
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
     // Start LLM generation
-<span class="cstat-no" title="statement not covered" >    dispatch({ type: "SET_GENERATING", isGenerating: true });</span>
+<span class="cstat-no" title="statement not covered" >    dispatch({ type: 'SET_GENERATING', isGenerating: true });</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      if (!config) {</span>
-<span class="cstat-no" title="statement not covered" >        throw new Error("Configuration not available");</span>
+<span class="cstat-no" title="statement not covered" >        throw new Error('Configuration not available');</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
       // Use real LLM integration
 <span class="cstat-no" title="statement not covered" >      await handleGenerate(inputValue, dispatch, config);</span>
 <span class="cstat-no" title="statement not covered" >    } catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >      dispatch({ type: "SET_GENERATING", isGenerating: false });</span>
+<span class="cstat-no" title="statement not covered" >      dispatch({ type: 'SET_GENERATING', isGenerating: false });</span>
 &nbsp;
       // Don't show error if it was cancelled by user
-<span class="cstat-no" title="statement not covered" >      if (error instanceof Error &amp;&amp; error.name === "AbortError") {</span>
+<span class="cstat-no" title="statement not covered" >      if (error instanceof Error &amp;&amp; error.name === 'AbortError') {</span>
 <span class="cstat-no" title="statement not covered" >        return;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      dispatch({</span>
-<span class="cstat-no" title="statement not covered" >        type: "SET_VALIDATION_ERRORS",</span>
+<span class="cstat-no" title="statement not covered" >        type: 'SET_VALIDATION_ERRORS',</span>
 <span class="cstat-no" title="statement not covered" >        errors: [</span>
-<span class="cstat-no" title="statement not covered" >          `Failed to generate subagent: ${error instanceof Error ? error.message : "Unknown error"}`,</span>
+<span class="cstat-no" title="statement not covered" >          `Failed to generate subagent: ${error instanceof Error ? error.message : 'Unknown error'}`,</span>
 <span class="cstat-no" title="statement not covered" >        ],</span>
 <span class="cstat-no" title="statement not covered" >      });</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
@@ -535,7 +535,7 @@ export <span class="fstat-no" title="function not covered" >function Description
 <span class="cstat-no" title="statement not covered" >        if (abortControllerRef.current) {</span>
           // Cancel the ongoing generation
 <span class="cstat-no" title="statement not covered" >          abortControllerRef.current.abort();</span>
-<span class="cstat-no" title="statement not covered" >          dispatch({ type: "SET_GENERATING", isGenerating: false });</span>
+<span class="cstat-no" title="statement not covered" >          dispatch({ type: 'SET_GENERATING', isGenerating: false });</span>
 <span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
@@ -548,7 +548,7 @@ export <span class="fstat-no" title="function not covered" >function Description
 <span class="cstat-no" title="statement not covered" >  });</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const placeholder =</span>
-<span class="cstat-no" title="statement not covered" >    "e.g., Expert code reviewer that reviews code based on best practices...";</span>
+<span class="cstat-no" title="statement not covered" >    'e.g., Expert code reviewer that reviews code based on best practices...';</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  return (</span>
 <span class="cstat-no" title="statement not covered" >    &lt;Box flexDirection="column" gap={1}&gt;</span>
@@ -570,7 +570,7 @@ export <span class="fstat-no" title="function not covered" >function Description
 <span class="cstat-no" title="statement not covered" >        &lt;/Box&gt;</span>
       ) : (
 <span class="cstat-no" title="statement not covered" >        &lt;TextInput</span>
-<span class="cstat-no" title="statement not covered" >          value={state.userDescription || ""}</span>
+<span class="cstat-no" title="statement not covered" >          value={state.userDescription || ''}</span>
 <span class="cstat-no" title="statement not covered" >          onChange={handleTextChange}</span>
 <span class="cstat-no" title="statement not covered" >          onSubmit={handleSubmit}</span>
 <span class="cstat-no" title="statement not covered" >          placeholder={placeholder}</span>
@@ -589,7 +589,7 @@ export <span class="fstat-no" title="function not covered" >function Description
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../../../../prettify.js"></script>
         <script>

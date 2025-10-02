@@ -3,18 +3,18 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as fs from "fs/promises";
-import * as path from "path";
-import * as os from "os";
+import * as fs from 'fs/promises';
+import * as path from 'path';
+import * as os from 'os';
 // Note: yaml package would need to be added as a dependency
 // For now, we'll use a simple YAML parser implementation
-import { parse as parseYaml, stringify as stringifyYaml, } from "../utils/yaml-parser.js";
-import { SubagentError, SubagentErrorCode } from "./types.js";
-import { SubagentValidator } from "./validation.js";
-import { SubAgentScope } from "./subagent.js";
-import { BuiltinAgentRegistry } from "./builtin-agents.js";
-const QWEN_CONFIG_DIR = ".qwen";
-const AGENT_CONFIG_DIR = "agents";
+import { parse as parseYaml, stringify as stringifyYaml, } from '../utils/yaml-parser.js';
+import { SubagentError, SubagentErrorCode } from './types.js';
+import { SubagentValidator } from './validation.js';
+import { SubAgentScope } from './subagent.js';
+import { BuiltinAgentRegistry } from './builtin-agents.js';
+const QWEN_CONFIG_DIR = '.qwen';
+const AGENT_CONFIG_DIR = 'agents';
 /**
  * Manages subagent configurations stored as Markdown files with YAML frontmatter.
  * Provides CRUD operations, validation, and integration with the runtime system.
@@ -62,12 +62,12 @@ export class SubagentManager {
         // Serialize and write the file
         const content = this.serializeSubagent(finalConfig);
         try {
-            await fs.writeFile(filePath, content, "utf8");
+            await fs.writeFile(filePath, content, 'utf8');
             // Clear cache after successful creation
             this.clearCache();
         }
         catch (error) {
-            throw new SubagentError(`Failed to write subagent file: ${error instanceof Error ? error.message : "Unknown error"}`, SubagentErrorCode.FILE_ERROR, config.name);
+            throw new SubagentError(`Failed to write subagent file: ${error instanceof Error ? error.message : 'Unknown error'}`, SubagentErrorCode.FILE_ERROR, config.name);
         }
     }
     /**
@@ -82,18 +82,18 @@ export class SubagentManager {
     async loadSubagent(name, level) {
         if (level) {
             // Search only the specified level
-            if (level === "builtin") {
+            if (level === 'builtin') {
                 return BuiltinAgentRegistry.getBuiltinAgent(name);
             }
             return this.findSubagentByNameAtLevel(name, level);
         }
         // Try project level first
-        const projectConfig = await this.findSubagentByNameAtLevel(name, "project");
+        const projectConfig = await this.findSubagentByNameAtLevel(name, 'project');
         if (projectConfig) {
             return projectConfig;
         }
         // Try user level
-        const userConfig = await this.findSubagentByNameAtLevel(name, "user");
+        const userConfig = await this.findSubagentByNameAtLevel(name, 'user');
         if (userConfig) {
             return userConfig;
         }
@@ -123,12 +123,12 @@ export class SubagentManager {
         // Write the updated configuration
         const content = this.serializeSubagent(updatedConfig);
         try {
-            await fs.writeFile(existing.filePath, content, "utf8");
+            await fs.writeFile(existing.filePath, content, 'utf8');
             // Clear cache after successful update
             this.clearCache();
         }
         catch (error) {
-            throw new SubagentError(`Failed to update subagent file: ${error instanceof Error ? error.message : "Unknown error"}`, SubagentErrorCode.FILE_ERROR, name);
+            throw new SubagentError(`Failed to update subagent file: ${error instanceof Error ? error.message : 'Unknown error'}`, SubagentErrorCode.FILE_ERROR, name);
         }
     }
     /**
@@ -145,11 +145,11 @@ export class SubagentManager {
         }
         const levelsToCheck = level
             ? [level]
-            : ["project", "user"];
+            : ['project', 'user'];
         let deleted = false;
         for (const currentLevel of levelsToCheck) {
             // Skip builtin level for deletion
-            if (currentLevel === "builtin") {
+            if (currentLevel === 'builtin') {
                 continue;
             }
             // Find the actual subagent file by scanning and parsing
@@ -181,7 +181,7 @@ export class SubagentManager {
         const seenNames = new Set();
         const levelsToCheck = options.level
             ? [options.level]
-            : ["project", "user", "builtin"];
+            : ['project', 'user', 'builtin'];
         // Check if we should use cache or force refresh
         const shouldUseCache = !options.force && this.subagentsCache !== null;
         // Initialize cache if it doesn't exist or we're forcing a refresh
@@ -210,10 +210,10 @@ export class SubagentManager {
             subagents.sort((a, b) => {
                 let comparison = 0;
                 switch (options.sortBy) {
-                    case "name":
+                    case 'name':
                         comparison = a.name.localeCompare(b.name);
                         break;
-                    case "level": {
+                    case 'level': {
                         // Project comes before user, user comes before builtin
                         const levelOrder = { project: 0, user: 1, builtin: 2 };
                         comparison = levelOrder[a.level] - levelOrder[b.level];
@@ -223,7 +223,7 @@ export class SubagentManager {
                         comparison = 0;
                         break;
                 }
-                return options.sortOrder === "desc" ? -comparison : comparison;
+                return options.sortOrder === 'desc' ? -comparison : comparison;
             });
         }
         return subagents;
@@ -236,7 +236,7 @@ export class SubagentManager {
      */
     async refreshCache() {
         this.subagentsCache = new Map();
-        const levels = ["project", "user", "builtin"];
+        const levels = ['project', 'user', 'builtin'];
         for (const level of levels) {
             const levelSubagents = await this.listSubagentsAtLevel(level);
             this.subagentsCache.set(level, levelSubagents);
@@ -271,10 +271,10 @@ export class SubagentManager {
     async parseSubagentFile(filePath, level) {
         let content;
         try {
-            content = await fs.readFile(filePath, "utf8");
+            content = await fs.readFile(filePath, 'utf8');
         }
         catch (error) {
-            throw new SubagentError(`Failed to read subagent file: ${error instanceof Error ? error.message : "Unknown error"}`, SubagentErrorCode.FILE_ERROR);
+            throw new SubagentError(`Failed to read subagent file: ${error instanceof Error ? error.message : 'Unknown error'}`, SubagentErrorCode.FILE_ERROR);
         }
         return this.parseSubagentContent(content, filePath, level);
     }
@@ -292,28 +292,28 @@ export class SubagentManager {
             const frontmatterRegex = /^---\n([\s\S]*?)\n---\n([\s\S]*)$/;
             const match = content.match(frontmatterRegex);
             if (!match) {
-                throw new Error("Invalid format: missing YAML frontmatter");
+                throw new Error('Invalid format: missing YAML frontmatter');
             }
             const [, frontmatterYaml, systemPrompt] = match;
             // Parse YAML frontmatter
             const frontmatter = parseYaml(frontmatterYaml);
             // Extract required fields and convert to strings
-            const nameRaw = frontmatter["name"];
-            const descriptionRaw = frontmatter["description"];
-            if (nameRaw == null || nameRaw === "") {
+            const nameRaw = frontmatter['name'];
+            const descriptionRaw = frontmatter['description'];
+            if (nameRaw == null || nameRaw === '') {
                 throw new Error('Missing "name" in frontmatter');
             }
-            if (descriptionRaw == null || descriptionRaw === "") {
+            if (descriptionRaw == null || descriptionRaw === '') {
                 throw new Error('Missing "description" in frontmatter');
             }
             // Convert to strings (handles numbers, booleans, etc.)
             const name = String(nameRaw);
             const description = String(descriptionRaw);
             // Extract optional fields
-            const tools = frontmatter["tools"];
-            const modelConfig = frontmatter["modelConfig"];
-            const runConfig = frontmatter["runConfig"];
-            const color = frontmatter["color"];
+            const tools = frontmatter['tools'];
+            const modelConfig = frontmatter['modelConfig'];
+            const runConfig = frontmatter['runConfig'];
+            const color = frontmatter['color'];
             const config = {
                 name,
                 description,
@@ -328,12 +328,12 @@ export class SubagentManager {
             // Validate the parsed configuration
             const validation = this.validator.validateConfig(config);
             if (!validation.isValid) {
-                throw new Error(`Validation failed: ${validation.errors.join(", ")}`);
+                throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
             }
             return config;
         }
         catch (error) {
-            throw new SubagentError(`Failed to parse subagent file: ${error instanceof Error ? error.message : "Unknown error"}`, SubagentErrorCode.INVALID_CONFIG);
+            throw new SubagentError(`Failed to parse subagent file: ${error instanceof Error ? error.message : 'Unknown error'}`, SubagentErrorCode.INVALID_CONFIG);
         }
     }
     /**
@@ -349,17 +349,17 @@ export class SubagentManager {
             description: config.description,
         };
         if (config.tools && config.tools.length > 0) {
-            frontmatter["tools"] = config.tools;
+            frontmatter['tools'] = config.tools;
         }
         // No outputs section
         if (config.modelConfig) {
-            frontmatter["modelConfig"] = config.modelConfig;
+            frontmatter['modelConfig'] = config.modelConfig;
         }
         if (config.runConfig) {
-            frontmatter["runConfig"] = config.runConfig;
+            frontmatter['runConfig'] = config.runConfig;
         }
-        if (config.color && config.color !== "auto") {
-            frontmatter["color"] = config.color;
+        if (config.color && config.color !== 'auto') {
+            frontmatter['color'] = config.color;
         }
         // Serialize to YAML
         const yamlContent = stringifyYaml(frontmatter, {
@@ -488,10 +488,10 @@ export class SubagentManager {
      * @returns Absolute file path
      */
     getSubagentPath(name, level) {
-        if (level === "builtin") {
+        if (level === 'builtin') {
             return `<builtin:${name}>`;
         }
-        const baseDir = level === "project"
+        const baseDir = level === 'project'
             ? path.join(this.config.getProjectRoot(), QWEN_CONFIG_DIR, AGENT_CONFIG_DIR)
             : path.join(os.homedir(), QWEN_CONFIG_DIR, AGENT_CONFIG_DIR);
         return path.join(baseDir, `${name}.md`);
@@ -505,7 +505,7 @@ export class SubagentManager {
      */
     async listSubagentsAtLevel(level) {
         // Handle built-in agents
-        if (level === "builtin") {
+        if (level === 'builtin') {
             return BuiltinAgentRegistry.getBuiltinAgents();
         }
         const projectRoot = this.config.getProjectRoot();
@@ -513,16 +513,16 @@ export class SubagentManager {
         const isHomeDirectory = path.resolve(projectRoot) === path.resolve(homeDir);
         // If project level is requested but project root is same as home directory,
         // return empty array to avoid conflicts between project and global agents
-        if (level === "project" && isHomeDirectory) {
+        if (level === 'project' && isHomeDirectory) {
             return [];
         }
-        let baseDir = level === "project" ? projectRoot : homeDir;
+        let baseDir = level === 'project' ? projectRoot : homeDir;
         baseDir = path.join(baseDir, QWEN_CONFIG_DIR, AGENT_CONFIG_DIR);
         try {
             const files = await fs.readdir(baseDir);
             const subagents = [];
             for (const file of files) {
-                if (!file.endsWith(".md"))
+                if (!file.endsWith('.md'))
                     continue;
                 const filePath = path.join(baseDir, file);
                 try {

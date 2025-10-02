@@ -3,26 +3,26 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { GoogleAuth } from "google-auth-library";
+import { GoogleAuth } from 'google-auth-library';
 const ALLOWED_HOSTS = [/^.+\.googleapis\.com$/, /^(.*\.)?luci\.app$/];
 export class GoogleCredentialProvider {
     config;
     auth;
     // Properties required by OAuthClientProvider, with no-op values
-    redirectUrl = "";
+    redirectUrl = '';
     clientMetadata = {
-        client_name: "Gemini CLI (Google ADC)",
+        client_name: 'Gemini CLI (Google ADC)',
         redirect_uris: [],
         grant_types: [],
         response_types: [],
-        token_endpoint_auth_method: "none",
+        token_endpoint_auth_method: 'none',
     };
     _clientInformation;
     constructor(config) {
         this.config = config;
         const url = this.config?.url || this.config?.httpUrl;
         if (!url) {
-            throw new Error("URL must be provided in the config for Google Credentials provider");
+            throw new Error('URL must be provided in the config for Google Credentials provider');
         }
         const hostname = new URL(url).hostname;
         if (!ALLOWED_HOSTS.some((pattern) => pattern.test(hostname))) {
@@ -30,7 +30,7 @@ export class GoogleCredentialProvider {
         }
         const scopes = this.config?.oauth?.scopes;
         if (!scopes || scopes.length === 0) {
-            throw new Error("Scopes must be provided in the oauth config for Google Credentials provider");
+            throw new Error('Scopes must be provided in the oauth config for Google Credentials provider');
         }
         this.auth = new GoogleAuth({
             scopes,
@@ -46,12 +46,12 @@ export class GoogleCredentialProvider {
         const client = await this.auth.getClient();
         const accessTokenResponse = await client.getAccessToken();
         if (!accessTokenResponse.token) {
-            console.error("Failed to get access token from Google ADC");
+            console.error('Failed to get access token from Google ADC');
             return undefined;
         }
         const tokens = {
             access_token: accessTokenResponse.token,
-            token_type: "Bearer",
+            token_type: 'Bearer',
         };
         return tokens;
     }
@@ -66,7 +66,7 @@ export class GoogleCredentialProvider {
     }
     codeVerifier() {
         // No-op
-        return "";
+        return '';
     }
 }
 //# sourceMappingURL=google-auth-provider.js.map

@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { ToolInvocation, ToolResult } from "./tools.js";
-import { BaseDeclarativeTool } from "./tools.js";
-import type { Config } from "../config/config.js";
-import type { ModifiableDeclarativeTool, ModifyContext } from "./modifiable-tool.js";
+import type { ToolInvocation, ToolResult } from './tools.js';
+import { BaseDeclarativeTool } from './tools.js';
+import type { Config } from '../config/config.js';
+import type { ModifiableDeclarativeTool, ModifyContext } from './modifiable-tool.js';
 export declare function applyReplacement(currentContent: string | null, oldString: string, newString: string, isNewFile: boolean): string;
 /**
  * Parameters for the Edit tool

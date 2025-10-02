@@ -5,7 +5,7 @@ type TokenCount = number;
  * - 'input': Maximum input context window size
  * - 'output': Maximum output tokens that can be generated in a single response
  */
-export type TokenLimitType = "input" | "output";
+export type TokenLimitType = 'input' | 'output';
 export declare const DEFAULT_TOKEN_LIMIT: TokenCount;
 export declare const DEFAULT_OUTPUT_TOKEN_LIMIT: TokenCount;
 /** Robust normalizer: strips provider prefixes, pipes/colons, date/version suffixes, etc. */

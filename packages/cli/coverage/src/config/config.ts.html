@@ -23,9 +23,9 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">92.81% </span>
+                <span class="strong">93.7% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>581/626</span>
+                <span class='fraction'>581/620</span>
             </div>
         
             
@@ -44,9 +44,9 @@
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">92.81% </span>
+                <span class="strong">93.7% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>581/626</span>
+                <span class='fraction'>581/620</span>
             </div>
         
             
@@ -825,13 +825,7 @@
 <a name='L760'></a><a href='#L760'>760</a>
 <a name='L761'></a><a href='#L761'>761</a>
 <a name='L762'></a><a href='#L762'>762</a>
-<a name='L763'></a><a href='#L763'>763</a>
-<a name='L764'></a><a href='#L764'>764</a>
-<a name='L765'></a><a href='#L765'>765</a>
-<a name='L766'></a><a href='#L766'>766</a>
-<a name='L767'></a><a href='#L767'>767</a>
-<a name='L768'></a><a href='#L768'>768</a>
-<a name='L769'></a><a href='#L769'>769</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L763'></a><a href='#L763'>763</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1253,9 +1247,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1266,9 +1257,6 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">118x</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1610,7 +1598,7 @@ import type {
   FileFilteringOptions,
   MCPServerConfig,
   TelemetryTarget,
-} from "@qwen-code/qwen-code-core";
+} from '@qwen-code/qwen-code-core';
 import {
   ApprovalMode,
   Config,
@@ -1624,48 +1612,48 @@ import {
   setGeminiMdFilename as setServerGeminiMdFilename,
   ShellTool,
   WriteFileTool,
-} from "@qwen-code/qwen-code-core";
-import * as fs from "node:fs";
-import { homedir } from "node:os";
-import * as path from "node:path";
-import process from "node:process";
-import { hideBin } from "yargs/helpers";
-import yargs from "yargs/yargs";
-import { extensionsCommand } from "../commands/extensions.js";
-import { mcpCommand } from "../commands/mcp.js";
-import type { Settings } from "./settings.js";
+} from '@qwen-code/qwen-code-core';
+import * as fs from 'node:fs';
+import { homedir } from 'node:os';
+import * as path from 'node:path';
+import process from 'node:process';
+import { hideBin } from 'yargs/helpers';
+import yargs from 'yargs/yargs';
+import { extensionsCommand } from '../commands/extensions.js';
+import { mcpCommand } from '../commands/mcp.js';
+import type { Settings } from './settings.js';
 &nbsp;
-import { resolvePath } from "../utils/resolvePath.js";
-import { getCliVersion } from "../utils/version.js";
-import type { Extension } from "./extension.js";
-import { annotateActiveExtensions } from "./extension.js";
-import { loadSandboxConfig } from "./sandboxConfig.js";
-import { setOpenAIApiKey, setOpenAIBaseUrl } from "./auth.js";
-import { appEvents, AppEvent } from "../utils/events.js";
+import { resolvePath } from '../utils/resolvePath.js';
+import { getCliVersion } from '../utils/version.js';
+import type { Extension } from './extension.js';
+import { annotateActiveExtensions } from './extension.js';
+import { loadSandboxConfig } from './sandboxConfig.js';
+import { setOpenAIApiKey, setOpenAIBaseUrl } from './auth.js';
+import { appEvents, AppEvent } from '../utils/events.js';
 &nbsp;
-import { isWorkspaceTrusted } from "./trustedFolders.js";
+import { isWorkspaceTrusted } from './trustedFolders.js';
 &nbsp;
 // Simple console logger for now - replace with actual logger if available
 const logger = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  debug: <span class="fstat-no" title="function not covered" >(...args: any[]) =&gt; console.debug("[DEBUG]", ...args),</span>
+  debug: <span class="fstat-no" title="function not covered" >(...args: any[]) =&gt; console.debug('[DEBUG]', ...args),</span>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  warn: (...args: any[]) =&gt; console.warn("[WARN]", ...args),
+  warn: (...args: any[]) =&gt; console.warn('[WARN]', ...args),
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  error: <span class="fstat-no" title="function not covered" >(...args: any[]) =&gt; console.error("[ERROR]", ...args),</span>
+  error: <span class="fstat-no" title="function not covered" >(...args: any[]) =&gt; console.error('[ERROR]', ...args),</span>
 };
 &nbsp;
 const VALID_APPROVAL_MODE_VALUES = [
-  "plan",
-  "default",
-  "auto-edit",
-  "yolo",
+  'plan',
+  'default',
+  'auto-edit',
+  'yolo',
 ] as const;
 &nbsp;
 function formatApprovalModeError(value: string): Error {
   return new Error(
     `Invalid approval mode: ${value}. Valid values are: ${VALID_APPROVAL_MODE_VALUES.join(
-      ", ",
+      ', ',
     )}`,
   );
 }
@@ -1673,15 +1661,15 @@ function formatApprovalModeError(value: string): Error {
 function parseApprovalModeValue(value: string): ApprovalMode {
   const normalized = value.trim().toLowerCase();
   switch (normalized) {
-    case "plan":
+    case 'plan':
       return ApprovalMode.PLAN;
-    case "default":
+    case 'default':
       return ApprovalMode.DEFAULT;
-    case "yolo":
+    case 'yolo':
       return ApprovalMode.YOLO;
-<span class="branch-0 cbranch-no" title="branch not covered" >    case "auto_edit":</span>
-    case "autoedit":
-    case "auto-edit":
+<span class="branch-0 cbranch-no" title="branch not covered" >    case 'auto_edit':</span>
+    case 'autoedit':
+    case 'auto-edit':
       return ApprovalMode.AUTO_EDIT;
     default:
       throw formatApprovalModeError(value);
@@ -1724,184 +1712,184 @@ export interface CliArgs {
 export async function parseArguments(settings: Settings): Promise&lt;CliArgs&gt; {
   const yargsInstance = yargs(hideBin(process.argv))
     // Set locale to English for consistent output, especially in tests
-    .locale("en")
-    .scriptName("qwen")
+    .locale('en')
+    .scriptName('qwen')
     .usage(
-      "Usage: qwen [options] [command]\n\nQwen Code - Launch an interactive CLI, use -p/--prompt for non-interactive mode",
+      'Usage: qwen [options] [command]\n\nQwen Code - Launch an interactive CLI, use -p/--prompt for non-interactive mode',
     )
-    .command("$0", "Launch Qwen Code", (yargsInstance) =&gt;
+    .command('$0', 'Launch Qwen Code', (yargsInstance) =&gt;
       yargsInstance
-        .option("model", {
-          alias: "m",
-          type: "string",
+        .option('model', {
+          alias: 'm',
+          type: 'string',
           description: `Model`,
-          default: process.env["GEMINI_MODEL"],
+          default: process.env['GEMINI_MODEL'],
         })
-        .option("prompt", {
-          alias: "p",
-          type: "string",
-          description: "Prompt. Appended to input on stdin (if any).",
+        .option('prompt', {
+          alias: 'p',
+          type: 'string',
+          description: 'Prompt. Appended to input on stdin (if any).',
         })
-        .option("prompt-interactive", {
-          alias: "i",
-          type: "string",
+        .option('prompt-interactive', {
+          alias: 'i',
+          type: 'string',
           description:
-            "Execute the provided prompt and continue in interactive mode",
+            'Execute the provided prompt and continue in interactive mode',
         })
-        .option("sandbox", {
-          alias: "s",
-          type: "boolean",
-          description: "Run in sandbox?",
+        .option('sandbox', {
+          alias: 's',
+          type: 'boolean',
+          description: 'Run in sandbox?',
         })
-        .option("sandbox-image", {
-          type: "string",
-          description: "Sandbox image URI.",
+        .option('sandbox-image', {
+          type: 'string',
+          description: 'Sandbox image URI.',
         })
-        .option("debug", {
-          alias: "d",
-          type: "boolean",
-          description: "Run in debug mode?",
+        .option('debug', {
+          alias: 'd',
+          type: 'boolean',
+          description: 'Run in debug mode?',
           default: false,
         })
-        .option("all-files", {
-          alias: ["a"],
-          type: "boolean",
-          description: "Include ALL files in context?",
+        .option('all-files', {
+          alias: ['a'],
+          type: 'boolean',
+          description: 'Include ALL files in context?',
           default: false,
         })
-        .option("show-memory-usage", {
-          type: "boolean",
-          description: "Show memory usage in status bar",
+        .option('show-memory-usage', {
+          type: 'boolean',
+          description: 'Show memory usage in status bar',
           default: false,
         })
-        .option("yolo", {
-          alias: "y",
-          type: "boolean",
+        .option('yolo', {
+          alias: 'y',
+          type: 'boolean',
           description:
-            "Automatically accept all actions (aka YOLO mode, see https://www.youtube.com/watch?v=xvFZjo5PgG0 for more details)?",
+            'Automatically accept all actions (aka YOLO mode, see https://www.youtube.com/watch?v=xvFZjo5PgG0 for more details)?',
           default: false,
         })
-        .option("approval-mode", {
-          type: "string",
-          choices: ["plan", "default", "auto-edit", "yolo"],
+        .option('approval-mode', {
+          type: 'string',
+          choices: ['plan', 'default', 'auto-edit', 'yolo'],
           description:
-            "Set the approval mode: plan (plan only), default (prompt for approval), auto-edit (auto-approve edit tools), yolo (auto-approve all tools)",
+            'Set the approval mode: plan (plan only), default (prompt for approval), auto-edit (auto-approve edit tools), yolo (auto-approve all tools)',
         })
-        .option("telemetry", {
-          type: "boolean",
+        .option('telemetry', {
+          type: 'boolean',
           description:
-            "Enable telemetry? This flag specifically controls if telemetry is sent. Other --telemetry-* flags set specific values but do not enable telemetry on their own.",
+            'Enable telemetry? This flag specifically controls if telemetry is sent. Other --telemetry-* flags set specific values but do not enable telemetry on their own.',
         })
-        .option("telemetry-target", {
-          type: "string",
-          choices: ["local", "gcp"],
+        .option('telemetry-target', {
+          type: 'string',
+          choices: ['local', 'gcp'],
           description:
-            "Set the telemetry target (local or gcp). Overrides settings files.",
+            'Set the telemetry target (local or gcp). Overrides settings files.',
         })
-        .option("telemetry-otlp-endpoint", {
-          type: "string",
+        .option('telemetry-otlp-endpoint', {
+          type: 'string',
           description:
-            "Set the OTLP endpoint for telemetry. Overrides environment variables and settings files.",
+            'Set the OTLP endpoint for telemetry. Overrides environment variables and settings files.',
         })
-        .option("telemetry-otlp-protocol", {
-          type: "string",
-          choices: ["grpc", "http"],
+        .option('telemetry-otlp-protocol', {
+          type: 'string',
+          choices: ['grpc', 'http'],
           description:
-            "Set the OTLP protocol for telemetry (grpc or http). Overrides settings files.",
+            'Set the OTLP protocol for telemetry (grpc or http). Overrides settings files.',
         })
-        .option("telemetry-log-prompts", {
-          type: "boolean",
+        .option('telemetry-log-prompts', {
+          type: 'boolean',
           description:
-            "Enable or disable logging of user prompts for telemetry. Overrides settings files.",
+            'Enable or disable logging of user prompts for telemetry. Overrides settings files.',
         })
-        .option("telemetry-outfile", {
-          type: "string",
-          description: "Redirect all telemetry output to the specified file.",
+        .option('telemetry-outfile', {
+          type: 'string',
+          description: 'Redirect all telemetry output to the specified file.',
         })
-        .option("checkpointing", {
-          alias: "c",
-          type: "boolean",
-          description: "Enables checkpointing of file edits",
+        .option('checkpointing', {
+          alias: 'c',
+          type: 'boolean',
+          description: 'Enables checkpointing of file edits',
           default: false,
         })
-        .option("experimental-acp", {
-          type: "boolean",
-          description: "Starts the agent in ACP mode",
+        .option('experimental-acp', {
+          type: 'boolean',
+          description: 'Starts the agent in ACP mode',
         })
-        .option("allowed-mcp-server-names", {
-          type: "array",
+        .option('allowed-mcp-server-names', {
+          type: 'array',
           string: true,
-          description: "Allowed MCP server names",
+          description: 'Allowed MCP server names',
         })
-        .option("allowed-tools", {
-          type: "array",
+        .option('allowed-tools', {
+          type: 'array',
           string: true,
-          description: "Tools that are allowed to run without confirmation",
+          description: 'Tools that are allowed to run without confirmation',
         })
-        .option("extensions", {
-          alias: "e",
-          type: "array",
-          string: true,
-          description:
-            "A list of extensions to use. If not provided, all extensions are used.",
-        })
-        .option("list-extensions", {
-          alias: "l",
-          type: "boolean",
-          description: "List all available extensions and exit.",
-        })
-        .option("proxy", {
-          type: "string",
-          description:
-            "Proxy for qwen client, like schema://user:password@host:port",
-        })
-        .option("include-directories", {
-          type: "array",
+        .option('extensions', {
+          alias: 'e',
+          type: 'array',
           string: true,
           description:
-            "Additional directories to include in the workspace (comma-separated or multiple --include-directories)",
+            'A list of extensions to use. If not provided, all extensions are used.',
+        })
+        .option('list-extensions', {
+          alias: 'l',
+          type: 'boolean',
+          description: 'List all available extensions and exit.',
+        })
+        .option('proxy', {
+          type: 'string',
+          description:
+            'Proxy for qwen client, like schema://user:password@host:port',
+        })
+        .option('include-directories', {
+          type: 'array',
+          string: true,
+          description:
+            'Additional directories to include in the workspace (comma-separated or multiple --include-directories)',
           coerce: (dirs: string[]) =&gt;
             // Handle comma-separated values
-            dirs.flatMap((dir) =&gt; dir.split(",").map((d) =&gt; d.trim())),
+            dirs.flatMap((dir) =&gt; dir.split(',').map((d) =&gt; d.trim())),
         })
-        .option("openai-logging", {
-          type: "boolean",
+        .option('openai-logging', {
+          type: 'boolean',
           description:
-            "Enable logging of OpenAI API calls for debugging and analysis",
+            'Enable logging of OpenAI API calls for debugging and analysis',
         })
-        .option("openai-api-key", {
-          type: "string",
-          description: "OpenAI API key to use for authentication",
+        .option('openai-api-key', {
+          type: 'string',
+          description: 'OpenAI API key to use for authentication',
         })
-        .option("openai-base-url", {
-          type: "string",
-          description: "OpenAI base URL (for custom endpoints)",
+        .option('openai-base-url', {
+          type: 'string',
+          description: 'OpenAI base URL (for custom endpoints)',
         })
-        .option("tavily-api-key", {
-          type: "string",
-          description: "Tavily API key for web search functionality",
+        .option('tavily-api-key', {
+          type: 'string',
+          description: 'Tavily API key for web search functionality',
         })
-        .option("screen-reader", {
-          type: "boolean",
-          description: "Enable screen reader mode for accessibility.",
+        .option('screen-reader', {
+          type: 'boolean',
+          description: 'Enable screen reader mode for accessibility.',
           default: false,
         })
-        .option("vlm-switch-mode", {
-          type: "string",
-          choices: ["once", "session", "persist"],
+        .option('vlm-switch-mode', {
+          type: 'string',
+          choices: ['once', 'session', 'persist'],
           description:
-            "Default behavior when images are detected in input. Values: once (one-time switch), session (switch for entire session), persist (continue with current model). Overrides settings files.",
-          default: process.env["VLM_SWITCH_MODE"],
+            'Default behavior when images are detected in input. Values: once (one-time switch), session (switch for entire session), persist (continue with current model). Overrides settings files.',
+          default: process.env['VLM_SWITCH_MODE'],
         })
         .check((argv) =&gt; {
-          if (argv.prompt &amp;&amp; argv["promptInteractive"]) {
+          if (argv.prompt &amp;&amp; argv['promptInteractive']) {
             throw new Error(
-              "Cannot use both --prompt (-p) and --prompt-interactive (-i) together",
+              'Cannot use both --prompt (-p) and --prompt-interactive (-i) together',
             );
           }
-          if (argv.yolo &amp;&amp; argv["approvalMode"]) {
+          if (argv.yolo &amp;&amp; argv['approvalMode']) {
             throw new Error(
-              "Cannot use both --yolo (-y) and --approval-mode together. Use --approval-mode=yolo instead.",
+              'Cannot use both --yolo (-y) and --approval-mode together. Use --approval-mode=yolo instead.',
             );
           }
           return true;
@@ -1916,9 +1904,9 @@ export async function parseArguments(settings: Settings): Promise&lt;CliArgs&gt;
 &nbsp;
   yargsInstance
     .version(await getCliVersion()) // This will enable the --version flag based on package.json
-    .alias("v", "version")
+    .alias('v', 'version')
     .help()
-    .alias("h", "help")
+    .alias('h', 'help')
     .strict()
     .demandCommand(0, 0); // Allow base command to run with no subcommands
 &nbsp;
@@ -1929,7 +1917,7 @@ export async function parseArguments(settings: Settings): Promise&lt;CliArgs&gt;
   // and not return to main CLI logic
   if (
     result._.length &gt; <span class="branch-0 cbranch-no" title="branch not covered" >0 &amp;&amp;</span>
-<span class="cstat-no" title="statement not covered" >    (result._[0] === "mcp" || result._[0] === "extensions")</span>
+<span class="cstat-no" title="statement not covered" >    (result._[0] === 'mcp' || result._[0] === 'extensions')</span>
   ) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
     // MCP commands handle their own execution and process exit
 <span class="cstat-no" title="statement not covered" >    process.exit(0);</span>
@@ -1950,7 +1938,7 @@ export async function loadHierarchicalGeminiMemory(
   fileService: FileDiscoveryService,
   settings: Settings,
   extensionContextFilePaths: string[] = [],
-  memoryImportFormat: "flat" | "tree" = "tree",
+  memoryImportFormat: 'flat' | 'tree' = 'tree',
   fileFilteringOptions?: FileFilteringOptions,
 ): Promise&lt;{ memoryContent: string; fileCount: number }&gt; {
   // FIX: Use real, canonical paths for a reliable comparison to handle symlinks.
@@ -1960,7 +1948,7 @@ export async function loadHierarchicalGeminiMemory(
 &nbsp;
   // If it is the home directory, pass an empty string to the core memory
   // function to signal that it should skip the workspace search.
-  const effectiveCwd = <span class="branch-0 cbranch-no" title="branch not covered" >isHomeDirectory ? "" : c</span>urrentWorkingDirectory;
+  const effectiveCwd = <span class="branch-0 cbranch-no" title="branch not covered" >isHomeDirectory ? '' : c</span>urrentWorkingDirectory;
 &nbsp;
   if (debugMode) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >    logger.debug(</span>
@@ -1990,11 +1978,11 @@ export async function loadCliConfig(
 ): Promise&lt;Config&gt; {
   const debugMode =
     argv.debug ||
-    [process.env["DEBUG"], process.env["DEBUG_MODE"]].some(
-      (v) =&gt; v === "true" || v === "1",
+    [process.env['DEBUG'], process.env['DEBUG_MODE']].some(
+      (v) =&gt; v === 'true' || v === '1',
     ) ||
     false;
-  const memoryImportFormat = settings.context?.importFormat || "tree";
+  const memoryImportFormat = settings.context?.importFormat || 'tree';
 &nbsp;
   const ideMode = settings.<span class="branch-0 cbranch-no" title="branch not covered" >ide?.enabled ?? f</span>alse;
 &nbsp;
@@ -2019,16 +2007,13 @@ export async function loadCliConfig(
 <span class="cstat-no" title="statement not covered" >      const envPath = setOpenAIApiKey(argv.openaiApiKey);</span>
       // Notify UI about where credentials were saved (App.tsx listens to ShowInfo)
 <span class="cstat-no" title="statement not covered" >      try {</span>
-<span class="cstat-no" title="statement not covered" >        appEvents.emit(</span>
-<span class="cstat-no" title="statement not covered" >          AppEvent.ShowInfo,</span>
-<span class="cstat-no" title="statement not covered" >          `Saved OPENAI_API_KEY to: ${envPath}`,</span>
-<span class="cstat-no" title="statement not covered" >        );</span>
+<span class="cstat-no" title="statement not covered" >        appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_API_KEY to: ${envPath}`);</span>
 <span class="cstat-no" title="statement not covered" >      } catch (e) {</span>
         // ignore
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    } catch (e) {</span>
       // Fall back to setting runtime env if persistence fails
-<span class="cstat-no" title="statement not covered" >      process.env["OPENAI_API_KEY"] = argv.openaiApiKey;</span>
+<span class="cstat-no" title="statement not covered" >      process.env['OPENAI_API_KEY'] = argv.openaiApiKey;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -2037,21 +2022,18 @@ export async function loadCliConfig(
 <span class="cstat-no" title="statement not covered" >    try {</span>
 <span class="cstat-no" title="statement not covered" >      const envPath = setOpenAIBaseUrl(argv.openaiBaseUrl);</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
-<span class="cstat-no" title="statement not covered" >        appEvents.emit(</span>
-<span class="cstat-no" title="statement not covered" >          AppEvent.ShowInfo,</span>
-<span class="cstat-no" title="statement not covered" >          `Saved OPENAI_BASE_URL to: ${envPath}`,</span>
-<span class="cstat-no" title="statement not covered" >        );</span>
+<span class="cstat-no" title="statement not covered" >        appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_BASE_URL to: ${envPath}`);</span>
 <span class="cstat-no" title="statement not covered" >      } catch (e) {</span>
         // ignore
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    } catch (e) {</span>
-<span class="cstat-no" title="statement not covered" >      process.env["OPENAI_BASE_URL"] = argv.openaiBaseUrl;</span>
+<span class="cstat-no" title="statement not covered" >      process.env['OPENAI_BASE_URL'] = argv.openaiBaseUrl;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   // Handle Tavily API key from command line
   if (argv.tavilyApiKey) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
-<span class="cstat-no" title="statement not covered" >    process.env["TAVILY_API_KEY"] = argv.tavilyApiKey;</span>
+<span class="cstat-no" title="statement not covered" >    process.env['TAVILY_API_KEY'] = argv.tavilyApiKey;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
   // Set the context filename in the server's memoryTool module BEFORE loading memory
@@ -2095,7 +2077,7 @@ export async function loadCliConfig(
   );
 &nbsp;
   let mcpServers = mergeMcpServers(settings, activeExtensions);
-  const question = argv.promptInteractive || argv.prompt || "";
+  const question = argv.promptInteractive || argv.prompt || '';
 &nbsp;
   // Determine approval mode with backward compatibility
   let approvalMode: ApprovalMode;
@@ -2222,9 +2204,9 @@ export async function loadCliConfig(
         settings.telemetry?.target) as TelemetryTarget,
       otlpEndpoint:
         argv.telemetryOtlpEndpoint ??
-        process.env["OTEL_EXPORTER_OTLP_ENDPOINT"] ??
+        process.env['OTEL_EXPORTER_OTLP_ENDPOINT'] ??
         settings.telemetry?.otlpEndpoint,
-      otlpProtocol: (["grpc", "http"] as const).find(
+      otlpProtocol: (['grpc', 'http'] as const).find(
         (p) =&gt;
           p ===
           (argv.telemetryOtlpProtocol ?? settings.telemetry?.otlpProtocol),
@@ -2245,10 +2227,10 @@ export async function loadCliConfig(
       argv.checkpointing || settings.<span class="branch-0 cbranch-no" title="branch not covered" >general?.checkpointing?.enabled,</span>
     proxy:
       argv.proxy ||
-      process.env["HTTPS_PROXY"] ||
-      process.env["https_proxy"] ||
-      process.env["HTTP_PROXY"] ||
-      process.env["http_proxy"],
+      process.env['HTTPS_PROXY'] ||
+      process.env['https_proxy'] ||
+      process.env['HTTP_PROXY'] ||
+      process.env['http_proxy'],
     cwd,
     fileDiscoveryService: fileService,
     bugCommand: settings.<span class="branch-0 cbranch-no" title="branch not covered" >advanced?.bugCommand,</span>
@@ -2260,29 +2242,29 @@ export async function loadCliConfig(
     listExtensions: argv.listExtensions || false,
     extensions: allExtensions,
     blockedMcpServers,
-    noBrowser: !!process.env["NO_BROWSER"],
+    noBrowser: !!process.env['NO_BROWSER'],
     enableOpenAILogging:
-      (typeof argv.openaiLogging === "undefined"
+      (typeof argv.openaiLogging === 'undefined'
         ? settings.<span class="branch-0 cbranch-no" title="branch not covered" >enableOpenAILogging</span>
         : argv.openaiLogging) ?? false,
     systemPromptMappings: (settings.systemPromptMappings ?? [
       {
         baseUrls: [
-          "https://dashscope.aliyuncs.com/compatible-mode/v1/",
-          "https://dashscope-intl.aliyuncs.com/compatible-mode/v1/",
+          'https://dashscope.aliyuncs.com/compatible-mode/v1/',
+          'https://dashscope-intl.aliyuncs.com/compatible-mode/v1/',
         ],
-        modelNames: ["qwen3-coder-plus"],
+        modelNames: ['qwen3-coder-plus'],
         template:
           'SYSTEM_TEMPLATE:{"name":"qwen3_coder","params":{"is_git_repository":{RUNTIME_VARS_IS_GIT_REPO},"sandbox":"{RUNTIME_VARS_SANDBOX}"}}',
       },
-    ]) as ConfigParameters["systemPromptMappings"],
+    ]) as ConfigParameters['systemPromptMappings'],
     authType: settings.security?.<span class="branch-0 cbranch-no" title="branch not covered" >auth?.selectedType,</span>
     contentGenerator: settings.contentGenerator,
     cliVersion,
     tavilyApiKey:
       argv.tavilyApiKey ||
       settings.tavilyApiKey ||
-      process.env["TAVILY_API_KEY"],
+      process.env['TAVILY_API_KEY'],
     summarizeToolOutput: settings.model?.summarizeToolOutput,
     ideMode,
     chatCompression: settings.model?.chatCompression,
@@ -2312,7 +2294,7 @@ function allowedMcpServers(
         if (!isAllowed) {
           blockedMcpServers.push({
             name: key,
-            extensionName: server.extensionName || "",
+            extensionName: server.extensionName || '',
           });
         }
         return isAllowed;
@@ -2322,7 +2304,7 @@ function allowedMcpServers(
     blockedMcpServers.push(
       ...Object.entries(mcpServers).map(([key, server]) =&gt; ({
         name: key,
-        extensionName: server.extensionName || "",
+        extensionName: server.extensionName || '',
       })),
     );
     mcpServers = {};
@@ -2374,7 +2356,7 @@ function mergeExcludeTools(
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-09-30T22:44:16.802Z
+                at 2025-09-29T17:26:19.148Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Box, Newline, Text } from "ink";
-import { Colors } from "../colors.js";
-import { useKeypress } from "../hooks/useKeypress.js";
+import { Box, Newline, Text } from 'ink';
+import { Colors } from '../colors.js';
+import { useKeypress } from '../hooks/useKeypress.js';
 
 interface GeminiPrivacyNoticeProps {
   onExit: () => void;
@@ -15,7 +15,7 @@ interface GeminiPrivacyNoticeProps {
 export const GeminiPrivacyNotice = ({ onExit }: GeminiPrivacyNoticeProps) => {
   useKeypress(
     (key) => {
-      if (key.name === "escape") {
+      if (key.name === 'escape') {
         onExit();
       }
     },
@@ -41,18 +41,18 @@ export const GeminiPrivacyNotice = ({ onExit }: GeminiPrivacyNoticeProps) => {
       </Text>
       <Newline />
       <Text>
-        <Text color={Colors.AccentBlue}>[1]</Text>{" "}
+        <Text color={Colors.AccentBlue}>[1]</Text>{' '}
         https://ai.google.dev/docs/gemini_api_overview
       </Text>
       <Text>
         <Text color={Colors.AccentRed}>[2]</Text> https://aistudio.google.com/
       </Text>
       <Text>
-        <Text color={Colors.AccentGreen}>[3]</Text>{" "}
+        <Text color={Colors.AccentGreen}>[3]</Text>{' '}
         https://developers.google.com/terms
       </Text>
       <Text>
-        <Text color={Colors.AccentPurple}>[4]</Text>{" "}
+        <Text color={Colors.AccentPurple}>[4]</Text>{' '}
         https://ai.google.dev/gemini-api/terms
       </Text>
       <Newline />

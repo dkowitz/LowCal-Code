@@ -3,11 +3,11 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import os from "node:os";
-import { quote } from "shell-quote";
-import { doesToolInvocationMatch } from "./tool-utils.js";
-import { isShellCommandReadOnly } from "./shellReadOnlyChecker.js";
-const SHELL_TOOL_NAMES = ["run_shell_command", "ShellTool"];
+import os from 'node:os';
+import { quote } from 'shell-quote';
+import { doesToolInvocationMatch } from './tool-utils.js';
+import { isShellCommandReadOnly } from './shellReadOnlyChecker.js';
+const SHELL_TOOL_NAMES = ['run_shell_command', 'ShellTool'];
 /**
  * Determines the appropriate shell configuration for the current platform.
  *
@@ -18,17 +18,17 @@ const SHELL_TOOL_NAMES = ["run_shell_command", "ShellTool"];
  */
 export function getShellConfiguration() {
     if (isWindows()) {
-        const comSpec = process.env["ComSpec"] || "cmd.exe";
+        const comSpec = process.env['ComSpec'] || 'cmd.exe';
         const executable = comSpec.toLowerCase();
-        if (executable.endsWith("powershell.exe") ||
-            executable.endsWith("pwsh.exe")) {
+        if (executable.endsWith('powershell.exe') ||
+            executable.endsWith('pwsh.exe')) {
             // For PowerShell, the arguments are different.
             // -NoProfile: Speeds up startup.
             // -Command: Executes the following command.
             return {
                 executable: comSpec,
-                argsPrefix: ["-NoProfile", "-Command"],
-                shell: "powershell",
+                argsPrefix: ['-NoProfile', '-Command'],
+                shell: 'powershell',
             };
         }
         // Default to cmd.exe for anything else on Windows.
@@ -38,17 +38,17 @@ export function getShellConfiguration() {
         // /c: Carries out the command specified by the string and then terminates.
         return {
             executable: comSpec,
-            argsPrefix: ["/d", "/s", "/c"],
-            shell: "cmd",
+            argsPrefix: ['/d', '/s', '/c'],
+            shell: 'cmd',
         };
     }
     // Unix-like systems (Linux, macOS)
-    return { executable: "bash", argsPrefix: ["-c"], shell: "bash" };
+    return { executable: 'bash', argsPrefix: ['-c'], shell: 'bash' };
 }
 /**
  * Export the platform detection constant for use in process management (e.g., killing processes).
  */
-export const isWindows = () => os.platform() === "win32";
+export const isWindows = () => os.platform() === 'win32';
 /**
  * Escapes a string so that it can be safely used as a single argument
  * in a shell command, preventing command injection.
@@ -59,16 +59,16 @@ export const isWindows = () => os.platform() === "win32";
  */
 export function escapeShellArg(arg, shell) {
     if (!arg) {
-        return "";
+        return '';
     }
     switch (shell) {
-        case "powershell":
+        case 'powershell':
             // For PowerShell, wrap in single quotes and escape internal single quotes by doubling them.
             return `'${arg.replace(/'/g, "''")}'`;
-        case "cmd":
+        case 'cmd':
             // Simple Windows escaping for cmd.exe: wrap in double quotes and escape inner double quotes.
             return `"${arg.replace(/"/g, '""')}"`;
-        case "bash":
+        case 'bash':
         default:
             // POSIX shell escaping using shell-quote.
             return quote([arg]);
@@ -82,14 +82,14 @@ export function escapeShellArg(arg, shell) {
  */
 export function splitCommands(command) {
     const commands = [];
-    let currentCommand = "";
+    let currentCommand = '';
     let inSingleQuotes = false;
     let inDoubleQuotes = false;
     let i = 0;
     while (i < command.length) {
         const char = command[i];
         const nextChar = command[i + 1];
-        if (char === "\\" && i < command.length - 1) {
+        if (char === '\\' && i < command.length - 1) {
             currentCommand += char + command[i + 1];
             i += 2;
             continue;
@@ -101,15 +101,15 @@ export function splitCommands(command) {
             inDoubleQuotes = !inDoubleQuotes;
         }
         if (!inSingleQuotes && !inDoubleQuotes) {
-            if ((char === "&" && nextChar === "&") ||
-                (char === "|" && nextChar === "|")) {
+            if ((char === '&' && nextChar === '&') ||
+                (char === '|' && nextChar === '|')) {
                 commands.push(currentCommand.trim());
-                currentCommand = "";
+                currentCommand = '';
                 i++; // Skip the next character
             }
-            else if (char === ";" || char === "&" || char === "|") {
+            else if (char === ';' || char === '&' || char === '|') {
                 commands.push(currentCommand.trim());
-                currentCommand = "";
+                currentCommand = '';
             }
             else {
                 currentCommand += char;
@@ -192,7 +192,7 @@ export function detectCommandSubstitution(command) {
         const char = command[i];
         const nextChar = command[i + 1];
         // Handle escaping - only works outside single quotes
-        if (char === "\\" && !inSingleQuotes) {
+        if (char === '\\' && !inSingleQuotes) {
             i += 2; // Skip the escaped character
             continue;
         }
@@ -203,23 +203,23 @@ export function detectCommandSubstitution(command) {
         else if (char === '"' && !inSingleQuotes && !inBackticks) {
             inDoubleQuotes = !inDoubleQuotes;
         }
-        else if (char === "`" && !inSingleQuotes) {
+        else if (char === '`' && !inSingleQuotes) {
             // Backticks work outside single quotes (including in double quotes)
             inBackticks = !inBackticks;
         }
         // Check for command substitution patterns that would be executed
         if (!inSingleQuotes) {
             // $(...) command substitution - works in double quotes and unquoted
-            if (char === "$" && nextChar === "(") {
+            if (char === '$' && nextChar === '(') {
                 return true;
             }
             // <(...) process substitution - works unquoted only (not in double quotes)
-            if (char === "<" && nextChar === "(" && !inDoubleQuotes && !inBackticks) {
+            if (char === '<' && nextChar === '(' && !inDoubleQuotes && !inBackticks) {
                 return true;
             }
             // Backtick command substitution - check for opening backtick
             // (We track the state above, so this catches the start of backtick substitution)
-            if (char === "`" && !inBackticks) {
+            if (char === '`' && !inBackticks) {
                 return true;
             }
         }
@@ -257,14 +257,14 @@ export function checkCommandPermissions(command, config, sessionAllowlist) {
         return {
             allAllowed: false,
             disallowedCommands: [command],
-            blockReason: "Command substitution using $(), <(), or >() is not allowed for security reasons",
+            blockReason: 'Command substitution using $(), <(), or >() is not allowed for security reasons',
             isHardDenial: true,
         };
     }
-    const normalize = (cmd) => cmd.trim().replace(/\s+/g, " ");
+    const normalize = (cmd) => cmd.trim().replace(/\s+/g, ' ');
     const commandsToValidate = splitCommands(command).map(normalize);
     const invocation = {
-        params: { command: "" },
+        params: { command: '' },
     };
     // 1. Blocklist Check (Highest Priority)
     const excludeTools = config.getExcludeTools() || [];
@@ -273,13 +273,13 @@ export function checkCommandPermissions(command, config, sessionAllowlist) {
         return {
             allAllowed: false,
             disallowedCommands: commandsToValidate,
-            blockReason: "Shell tool is globally disabled in configuration",
+            blockReason: 'Shell tool is globally disabled in configuration',
             isHardDenial: true,
         };
     }
     for (const cmd of commandsToValidate) {
-        invocation.params["command"] = cmd;
-        if (doesToolInvocationMatch("run_shell_command", invocation, excludeTools)) {
+        invocation.params['command'] = cmd;
+        if (doesToolInvocationMatch('run_shell_command', invocation, excludeTools)) {
             return {
                 allAllowed: false,
                 disallowedCommands: [cmd],
@@ -301,11 +301,11 @@ export function checkCommandPermissions(command, config, sessionAllowlist) {
         // All commands must be in either the session or global allowlist.
         const normalizedSessionAllowlist = new Set([...sessionAllowlist].flatMap((cmd) => SHELL_TOOL_NAMES.map((name) => `${name}(${cmd})`)));
         for (const cmd of commandsToValidate) {
-            invocation.params["command"] = cmd;
-            const isSessionAllowed = doesToolInvocationMatch("run_shell_command", invocation, [...normalizedSessionAllowlist]);
+            invocation.params['command'] = cmd;
+            const isSessionAllowed = doesToolInvocationMatch('run_shell_command', invocation, [...normalizedSessionAllowlist]);
             if (isSessionAllowed)
                 continue;
-            const isGloballyAllowed = doesToolInvocationMatch("run_shell_command", invocation, coreTools);
+            const isGloballyAllowed = doesToolInvocationMatch('run_shell_command', invocation, coreTools);
             if (isGloballyAllowed)
                 continue;
             disallowedCommands.push(cmd);
@@ -316,7 +316,7 @@ export function checkCommandPermissions(command, config, sessionAllowlist) {
                 disallowedCommands,
                 blockReason: `Command(s) not on the global or session allowlist. Disallowed commands: ${disallowedCommands
                     .map((c) => JSON.stringify(c))
-                    .join(", ")}`,
+                    .join(', ')}`,
                 isHardDenial: false, // This is a soft denial; confirmation is possible.
             };
         }
@@ -326,8 +326,8 @@ export function checkCommandPermissions(command, config, sessionAllowlist) {
         const hasSpecificAllowedCommands = coreTools.filter((tool) => SHELL_TOOL_NAMES.some((name) => tool.startsWith(`${name}(`))).length > 0;
         if (hasSpecificAllowedCommands) {
             for (const cmd of commandsToValidate) {
-                invocation.params["command"] = cmd;
-                const isGloballyAllowed = doesToolInvocationMatch("run_shell_command", invocation, coreTools);
+                invocation.params['command'] = cmd;
+                const isGloballyAllowed = doesToolInvocationMatch('run_shell_command', invocation, coreTools);
                 if (!isGloballyAllowed) {
                     disallowedCommands.push(cmd);
                 }
@@ -338,7 +338,7 @@ export function checkCommandPermissions(command, config, sessionAllowlist) {
                     disallowedCommands,
                     blockReason: `Command(s) not in the allowed commands list. Disallowed commands: ${disallowedCommands
                         .map((c) => JSON.stringify(c))
-                        .join(", ")}`,
+                        .join(', ')}`,
                     isHardDenial: false, // This is a soft denial.
                 };
             }
@@ -375,7 +375,7 @@ export function isCommandNeedsPermission(command) {
     }
     return {
         requiresPermission: true,
-        reason: "Command requires permission to execute.",
+        reason: 'Command requires permission to execute.',
     };
 }
 //# sourceMappingURL=shell-utils.js.map

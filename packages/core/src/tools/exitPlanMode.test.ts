@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { ExitPlanModeTool, type ExitPlanModeParams } from "./exitPlanMode.js";
-import { ApprovalMode, type Config } from "../config/config.js";
-import { ToolConfirmationOutcome } from "./tools.js";
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { ExitPlanModeTool, type ExitPlanModeParams } from './exitPlanMode.js';
+import { ApprovalMode, type Config } from '../config/config.js';
+import { ToolConfirmationOutcome } from './tools.js';
 
-describe("ExitPlanModeTool", () => {
+describe('ExitPlanModeTool', () => {
   let tool: ExitPlanModeTool;
   let mockConfig: Config;
   let approvalMode: ApprovalMode;
@@ -26,78 +26,78 @@ describe("ExitPlanModeTool", () => {
     tool = new ExitPlanModeTool(mockConfig);
   });
 
-  describe("constructor and metadata", () => {
-    it("should have correct tool name", () => {
-      expect(tool.name).toBe("exit_plan_mode");
-      expect(ExitPlanModeTool.Name).toBe("exit_plan_mode");
+  describe('constructor and metadata', () => {
+    it('should have correct tool name', () => {
+      expect(tool.name).toBe('exit_plan_mode');
+      expect(ExitPlanModeTool.Name).toBe('exit_plan_mode');
     });
 
-    it("should have correct display name", () => {
-      expect(tool.displayName).toBe("ExitPlanMode");
+    it('should have correct display name', () => {
+      expect(tool.displayName).toBe('ExitPlanMode');
     });
 
-    it("should have correct kind", () => {
-      expect(tool.kind).toBe("think");
+    it('should have correct kind', () => {
+      expect(tool.kind).toBe('think');
     });
 
-    it("should have correct schema", () => {
+    it('should have correct schema', () => {
       expect(tool.schema).toEqual({
-        name: "exit_plan_mode",
+        name: 'exit_plan_mode',
         description: expect.stringContaining(
-          "Use this tool when you are in plan mode",
+          'Use this tool when you are in plan mode',
         ),
         parametersJsonSchema: {
-          type: "object",
+          type: 'object',
           properties: {
             plan: {
-              type: "string",
-              description: expect.stringContaining("The plan you came up with"),
+              type: 'string',
+              description: expect.stringContaining('The plan you came up with'),
             },
           },
-          required: ["plan"],
+          required: ['plan'],
           additionalProperties: false,
-          $schema: "http://json-schema.org/draft-07/schema#",
+          $schema: 'http://json-schema.org/draft-07/schema#',
         },
       });
     });
   });
 
-  describe("validateToolParams", () => {
-    it("should accept valid parameters", () => {
+  describe('validateToolParams', () => {
+    it('should accept valid parameters', () => {
       const params: ExitPlanModeParams = {
-        plan: "This is a comprehensive plan for the implementation.",
+        plan: 'This is a comprehensive plan for the implementation.',
       };
 
       const result = tool.validateToolParams(params);
       expect(result).toBeNull();
     });
 
-    it("should reject missing plan parameter", () => {
+    it('should reject missing plan parameter', () => {
       const params = {} as ExitPlanModeParams;
 
       const result = tool.validateToolParams(params);
       expect(result).toBe('Parameter "plan" must be a non-empty string.');
     });
 
-    it("should reject empty plan parameter", () => {
+    it('should reject empty plan parameter', () => {
       const params: ExitPlanModeParams = {
-        plan: "",
+        plan: '',
       };
 
       const result = tool.validateToolParams(params);
       expect(result).toBe('Parameter "plan" must be a non-empty string.');
     });
 
-    it("should reject whitespace-only plan parameter", () => {
+    it('should reject whitespace-only plan parameter', () => {
       const params: ExitPlanModeParams = {
-        plan: "   \n\t  ",
+        plan: '   \n\t  ',
       };
 
       const result = tool.validateToolParams(params);
       expect(result).toBe('Parameter "plan" must be a non-empty string.');
     });
 
-    it("should reject non-string plan parameter", () => {
+    it('should reject non-string plan parameter', () => {
       const params = {
         plan: 123,
       } as unknown as ExitPlanModeParams;
@@ -107,10 +107,10 @@ describe("ExitPlanModeTool", () => {
     });
   });
 
-  describe("tool execution", () => {
-    it("should execute successfully through tool interface after approval", async () => {
+  describe('tool execution', () => {
+    it('should execute successfully through tool interface after approval', async () => {
       const params: ExitPlanModeParams = {
-        plan: "This is my implementation plan:\n1. Step 1\n2. Step 2\n3. Step 3",
+        plan: 'This is my implementation plan:\n1. Step 1\n2. Step 2\n3. Step 3',
       };
       const signal = new AbortController().signal;
 
@@ -121,8 +121,8 @@ describe("ExitPlanModeTool", () => {
 
       const confirmation = await invocation.shouldConfirmExecute(signal);
       expect(confirmation).toMatchObject({
-        type: "plan",
-        title: "Would you like to proceed?",
+        type: 'plan',
+        title: 'Would you like to proceed?',
         plan: params.plan,
       });
 
@@ -132,13 +132,13 @@ describe("ExitPlanModeTool", () => {
 
       const result = await invocation.execute(signal);
       const expectedLlmMessage =
-        "User has approved your plan. You can now start coding. Start with updating your todo list if applicable.";
+        'User has approved your plan. You can now start coding. Start with updating your todo list if applicable.';
 
       expect(result).toEqual({
         llmContent: expectedLlmMessage,
         returnDisplay: {
-          type: "plan_summary",
-          message: "User approved the plan.",
+          type: 'plan_summary',
+          message: 'User approved the plan.',
           plan: params.plan,
         },
       });
@@ -149,9 +149,9 @@ describe("ExitPlanModeTool", () => {
       expect(approvalMode).toBe(ApprovalMode.DEFAULT);
     });
 
-    it("should request confirmation with plan details", async () => {
+    it('should request confirmation with plan details', async () => {
       const params: ExitPlanModeParams = {
-        plan: "Simple plan",
+        plan: 'Simple plan',
       };
       const signal = new AbortController().signal;
 
@@ -159,8 +159,8 @@ describe("ExitPlanModeTool", () => {
       const confirmation = await invocation.shouldConfirmExecute(signal);
 
       if (confirmation) {
-        expect(confirmation.type).toBe("plan");
-        if (confirmation.type === "plan") {
+        expect(confirmation.type).toBe('plan');
+        if (confirmation.type === 'plan') {
           expect(confirmation.plan).toBe(params.plan);
         }
 
@@ -173,9 +173,9 @@ describe("ExitPlanModeTool", () => {
       expect(approvalMode).toBe(ApprovalMode.AUTO_EDIT);
     });
 
-    it("should remain in plan mode when confirmation is rejected", async () => {
+    it('should remain in plan mode when confirmation is rejected', async () => {
       const params: ExitPlanModeParams = {
-        plan: "Remain in planning",
+        plan: 'Remain in planning',
       };
       const signal = new AbortController().signal;
 
@@ -192,10 +192,10 @@ describe("ExitPlanModeTool", () => {
         llmContent: JSON.stringify({
           success: false,
           plan: params.plan,
-          error: "Plan execution was not approved. Remaining in plan mode.",
+          error: 'Plan execution was not approved. Remaining in plan mode.',
         }),
         returnDisplay:
-          "Plan execution was not approved. Remaining in plan mode.",
+          'Plan execution was not approved. Remaining in plan mode.',
       });
 
       expect(mockConfig.setApprovalMode).toHaveBeenCalledWith(
@@ -204,20 +204,20 @@ describe("ExitPlanModeTool", () => {
       expect(approvalMode).toBe(ApprovalMode.PLAN);
     });
 
-    it("should have correct description", () => {
+    it('should have correct description', () => {
       const params: ExitPlanModeParams = {
-        plan: "Test plan",
+        plan: 'Test plan',
       };
 
       const invocation = tool.build(params);
       expect(invocation.getDescription()).toBe(
-        "Present implementation plan for user approval",
+        'Present implementation plan for user approval',
       );
     });
 
-    it("should handle execution errors gracefully", async () => {
+    it('should handle execution errors gracefully', async () => {
       const params: ExitPlanModeParams = {
-        plan: "Test plan",
+        plan: 'Test plan',
       };
 
       const invocation = tool.build(params);
@@ -231,13 +231,13 @@ describe("ExitPlanModeTool", () => {
 
       // Create a spy to simulate an error during the execution
       const consoleSpy = vi
-        .spyOn(console, "error")
+        .spyOn(console, 'error')
         .mockImplementation(() => {});
 
       // Mock JSON.stringify to throw an error in the rejection path
       const originalStringify = JSON.stringify;
-      vi.spyOn(JSON, "stringify").mockImplementationOnce(() => {
-        throw new Error("JSON stringify error");
+      vi.spyOn(JSON, 'stringify').mockImplementationOnce(() => {
+        throw new Error('JSON stringify error');
       });
 
       const result = await invocation.execute(new AbortController().signal);
@@ -245,13 +245,13 @@ describe("ExitPlanModeTool", () => {
       expect(result).toEqual({
         llmContent: JSON.stringify({
           success: false,
-          error: "Failed to present plan. Detail: JSON stringify error",
+          error: 'Failed to present plan. Detail: JSON stringify error',
         }),
-        returnDisplay: "Error presenting plan: JSON stringify error",
+        returnDisplay: 'Error presenting plan: JSON stringify error',
       });
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        "[ExitPlanModeTool] Error executing exit_plan_mode: JSON stringify error",
+        '[ExitPlanModeTool] Error executing exit_plan_mode: JSON stringify error',
       );
 
       // Restore original JSON.stringify
@@ -259,9 +259,9 @@ describe("ExitPlanModeTool", () => {
       consoleSpy.mockRestore();
     });
 
-    it("should return empty tool locations", () => {
+    it('should return empty tool locations', () => {
       const params: ExitPlanModeParams = {
-        plan: "Test plan",
+        plan: 'Test plan',
       };
 
       const invocation = tool.build(params);
@@ -269,24 +269,24 @@ describe("ExitPlanModeTool", () => {
     });
   });
 
-  describe("tool description", () => {
-    it("should contain usage guidelines", () => {
+  describe('tool description', () => {
+    it('should contain usage guidelines', () => {
       expect(tool.description).toContain(
-        "Only use this tool when the task requires planning",
+        'Only use this tool when the task requires planning',
       );
       expect(tool.description).toContain(
-        "Do not use the exit plan mode tool because you are not planning",
+        'Do not use the exit plan mode tool because you are not planning',
       );
       expect(tool.description).toContain(
-        "Use the exit plan mode tool after you have finished planning",
+        'Use the exit plan mode tool after you have finished planning',
       );
     });
 
-    it("should contain examples", () => {
+    it('should contain examples', () => {
       expect(tool.description).toContain(
-        "Search for and understand the implementation of vim mode",
+        'Search for and understand the implementation of vim mode',
       );
-      expect(tool.description).toContain("Help me implement yank mode for vim");
+      expect(tool.description).toContain('Help me implement yank mode for vim');
     });
   });
 });

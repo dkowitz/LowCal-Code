@@ -1,8 +1,8 @@
-import {} from "./provider/index.js";
-import { ContentGenerationPipeline } from "./pipeline.js";
-import { DefaultTelemetryService } from "./telemetryService.js";
-import { EnhancedErrorHandler } from "./errorHandler.js";
-import { getDefaultTokenizer } from "../../utils/request-tokenizer/index.js";
+import {} from './provider/index.js';
+import { ContentGenerationPipeline } from './pipeline.js';
+import { DefaultTelemetryService } from './telemetryService.js';
+import { EnhancedErrorHandler } from './errorHandler.js';
+import { getDefaultTokenizer } from '../../utils/request-tokenizer/index.js';
 export class OpenAIContentGenerator {
     pipeline;
     provider;
@@ -44,14 +44,14 @@ export class OpenAIContentGenerator {
             // Use the new high-performance request tokenizer
             const tokenizer = getDefaultTokenizer();
             const result = await tokenizer.calculateTokens(request, {
-                textEncoding: "cl100k_base", // Use GPT-4 encoding for consistency
+                textEncoding: 'cl100k_base', // Use GPT-4 encoding for consistency
             });
             return {
                 totalTokens: result.totalTokens,
             };
         }
         catch (error) {
-            console.warn("Failed to calculate tokens with new tokenizer, falling back to simple method:", error);
+            console.warn('Failed to calculate tokens with new tokenizer, falling back to simple method:', error);
             // Fallback to original simple method
             const content = JSON.stringify(request.contents);
             const totalTokens = Math.ceil(content.length / 4); // Rough estimate: 1 token ≈ 4 characters
@@ -62,38 +62,38 @@ export class OpenAIContentGenerator {
     }
     async embedContent(request) {
         // Extract text from contents
-        let text = "";
+        let text = '';
         if (Array.isArray(request.contents)) {
             text = request.contents
                 .map((content) => {
-                if (typeof content === "string")
+                if (typeof content === 'string')
                     return content;
-                if ("parts" in content && content.parts) {
+                if ('parts' in content && content.parts) {
                     return content.parts
-                        .map((part) => typeof part === "string"
+                        .map((part) => typeof part === 'string'
                         ? part
-                        : "text" in part
-                            ? part.text || ""
-                            : "")
-                        .join(" ");
+                        : 'text' in part
+                            ? part.text || ''
+                            : '')
+                        .join(' ');
                 }
-                return "";
+                return '';
             })
-                .join(" ");
+                .join(' ');
         }
         else if (request.contents) {
-            if (typeof request.contents === "string") {
+            if (typeof request.contents === 'string') {
                 text = request.contents;
             }
-            else if ("parts" in request.contents && request.contents.parts) {
+            else if ('parts' in request.contents && request.contents.parts) {
                 text = request.contents.parts
-                    .map((part) => typeof part === "string" ? part : "text" in part ? part.text : "")
-                    .join(" ");
+                    .map((part) => typeof part === 'string' ? part : 'text' in part ? part.text : '')
+                    .join(' ');
             }
         }
         try {
             const embedding = await this.pipeline.client.embeddings.create({
-                model: "text-embedding-ada-002", // Default embedding model
+                model: 'text-embedding-ada-002', // Default embedding model
                 input: text,
             });
             return {
@@ -105,7 +105,7 @@ export class OpenAIContentGenerator {
             };
         }
         catch (error) {
-            console.error("OpenAI API Embedding Error:", error);
+            console.error('OpenAI API Embedding Error:', error);
             throw new Error(`OpenAI API error: ${error instanceof Error ? error.message : String(error)}`);
         }
     }

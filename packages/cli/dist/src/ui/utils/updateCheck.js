@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import updateNotifier from "update-notifier";
-import semver from "semver";
-import { getPackageJson } from "../../utils/package.js";
+import updateNotifier from 'update-notifier';
+import semver from 'semver';
+import { getPackageJson } from '../../utils/package.js';
 export const FETCH_TIMEOUT_MS = 2000;
 /**
  * From a nightly and stable update, determines which is the "best" one to offer.
@@ -26,7 +26,7 @@ function getBestAvailableUpdate(nightly, stable) {
 export async function checkForUpdates() {
     try {
         // Skip update check when running from source (development mode)
-        if (process.env["DEV"] === "true") {
+        if (process.env['DEV'] === 'true') {
             return null;
         }
         const packageJson = await getPackageJson();
@@ -34,7 +34,7 @@ export async function checkForUpdates() {
             return null;
         }
         const { name, version: currentVersion } = packageJson;
-        const isNightly = currentVersion.includes("nightly");
+        const isNightly = currentVersion.includes('nightly');
         const createNotifier = (distTag) => updateNotifier({
             pkg: {
                 name,
@@ -46,8 +46,8 @@ export async function checkForUpdates() {
         });
         if (isNightly) {
             const [nightlyUpdateInfo, latestUpdateInfo] = await Promise.all([
-                createNotifier("nightly").fetchInfo(),
-                createNotifier("latest").fetchInfo(),
+                createNotifier('nightly').fetchInfo(),
+                createNotifier('latest').fetchInfo(),
             ]);
             const bestUpdate = getBestAvailableUpdate(nightlyUpdateInfo, latestUpdateInfo);
             if (bestUpdate && semver.gt(bestUpdate.latest, currentVersion)) {
@@ -59,7 +59,7 @@ export async function checkForUpdates() {
             }
         }
         else {
-            const updateInfo = await createNotifier("latest").fetchInfo();
+            const updateInfo = await createNotifier('latest').fetchInfo();
             if (updateInfo && semver.gt(updateInfo.latest, currentVersion)) {
                 const message = `Qwen Code update available! ${currentVersion} → ${updateInfo.latest}`;
                 return {
@@ -71,7 +71,7 @@ export async function checkForUpdates() {
         return null;
     }
     catch (e) {
-        console.warn("Failed to check for updates: " + e);
+        console.warn('Failed to check for updates: ' + e);
         return null;
     }
 }

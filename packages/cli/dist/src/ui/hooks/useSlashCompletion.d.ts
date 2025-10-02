@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Suggestion } from "../components/SuggestionsDisplay.js";
-import type { CommandContext, SlashCommand } from "../commands/types.js";
+import type { Suggestion } from '../components/SuggestionsDisplay.js';
+import type { CommandContext, SlashCommand } from '../commands/types.js';
 export interface UseSlashCompletionProps {
     enabled: boolean;
     query: string | null;

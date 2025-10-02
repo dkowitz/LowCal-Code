@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import * as path from "node:path";
-import * as os from "node:os";
-import * as crypto from "node:crypto";
-import * as fs from "node:fs";
+import * as path from 'node:path';
+import * as os from 'node:os';
+import * as crypto from 'node:crypto';
+import * as fs from 'node:fs';
 
-export const GEMINI_DIR = ".qwen";
-export const GOOGLE_ACCOUNTS_FILENAME = "google_accounts.json";
-const TMP_DIR_NAME = "tmp";
+export const GEMINI_DIR = '.qwen';
+export const GOOGLE_ACCOUNTS_FILENAME = 'google_accounts.json';
+const TMP_DIR_NAME = 'tmp';
 
 export class Storage {
   private readonly targetDir: string;
@@ -23,21 +23,21 @@ export class Storage {
   static getGlobalGeminiDir(): string {
     const homeDir = os.homedir();
     if (!homeDir) {
-      return path.join(os.tmpdir(), ".qwen");
+      return path.join(os.tmpdir(), '.qwen');
     }
     return path.join(homeDir, GEMINI_DIR);
   }
 
   static getMcpOAuthTokensPath(): string {
-    return path.join(Storage.getGlobalGeminiDir(), "mcp-oauth-tokens.json");
+    return path.join(Storage.getGlobalGeminiDir(), 'mcp-oauth-tokens.json');
   }
 
   static getGlobalSettingsPath(): string {
-    return path.join(Storage.getGlobalGeminiDir(), "settings.json");
+    return path.join(Storage.getGlobalGeminiDir(), 'settings.json');
   }
 
   static getInstallationIdPath(): string {
-    return path.join(Storage.getGlobalGeminiDir(), "installation_id");
+    return path.join(Storage.getGlobalGeminiDir(), 'installation_id');
   }
 
   static getGoogleAccountsPath(): string {
@@ -45,11 +45,11 @@ export class Storage {
   }
 
   static getUserCommandsDir(): string {
-    return path.join(Storage.getGlobalGeminiDir(), "commands");
+    return path.join(Storage.getGlobalGeminiDir(), 'commands');
   }
 
   static getGlobalMemoryFilePath(): string {
-    return path.join(Storage.getGlobalGeminiDir(), "memory.md");
+    return path.join(Storage.getGlobalGeminiDir(), 'memory.md');
   }
 
   static getGlobalTempDir(): string {
@@ -71,7 +71,7 @@ export class Storage {
   }
 
   static getOAuthCredsPath(): string {
-    return path.join(Storage.getGlobalGeminiDir(), "oauth_creds.json");
+    return path.join(Storage.getGlobalGeminiDir(), 'oauth_creds.json');
   }
 
   getProjectRoot(): string {
@@ -79,36 +79,36 @@ export class Storage {
   }
 
   private getFilePathHash(filePath: string): string {
-    return crypto.createHash("sha256").update(filePath).digest("hex");
+    return crypto.createHash('sha256').update(filePath).digest('hex');
   }
 
   getHistoryDir(): string {
     const hash = this.getFilePathHash(this.getProjectRoot());
-    const historyDir = path.join(Storage.getGlobalGeminiDir(), "history");
+    const historyDir = path.join(Storage.getGlobalGeminiDir(), 'history');
     return path.join(historyDir, hash);
   }
 
   getWorkspaceSettingsPath(): string {
-    return path.join(this.getGeminiDir(), "settings.json");
+    return path.join(this.getGeminiDir(), 'settings.json');
   }
 
   getProjectCommandsDir(): string {
-    return path.join(this.getGeminiDir(), "commands");
+    return path.join(this.getGeminiDir(), 'commands');
   }
 
   getProjectTempCheckpointsDir(): string {
-    return path.join(this.getProjectTempDir(), "checkpoints");
+    return path.join(this.getProjectTempDir(), 'checkpoints');
   }
 
   getExtensionsDir(): string {
-    return path.join(this.getGeminiDir(), "extensions");
+    return path.join(this.getGeminiDir(), 'extensions');
   }
 
   getExtensionsConfigPath(): string {
-    return path.join(this.getExtensionsDir(), "qwen-extension.json");
+    return path.join(this.getExtensionsDir(), 'qwen-extension.json');
   }
 
   getHistoryFilePath(): string {
-    return path.join(this.getProjectTempDir(), "shell_history");
+    return path.join(this.getProjectTempDir(), 'shell_history');
   }
 }

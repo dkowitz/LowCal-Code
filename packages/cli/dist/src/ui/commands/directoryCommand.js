@@ -3,61 +3,61 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { CommandKind } from "./types.js";
-import { MessageType } from "../types.js";
-import * as os from "node:os";
-import * as path from "node:path";
-import { loadServerHierarchicalMemory } from "@qwen-code/qwen-code-core";
+import { CommandKind } from './types.js';
+import { MessageType } from '../types.js';
+import * as os from 'node:os';
+import * as path from 'node:path';
+import { loadServerHierarchicalMemory } from '@qwen-code/qwen-code-core';
 export function expandHomeDir(p) {
     if (!p) {
-        return "";
+        return '';
     }
     let expandedPath = p;
-    if (p.toLowerCase().startsWith("%userprofile%")) {
-        expandedPath = os.homedir() + p.substring("%userprofile%".length);
+    if (p.toLowerCase().startsWith('%userprofile%')) {
+        expandedPath = os.homedir() + p.substring('%userprofile%'.length);
     }
-    else if (p === "~" || p.startsWith("~/")) {
+    else if (p === '~' || p.startsWith('~/')) {
         expandedPath = os.homedir() + p.substring(1);
     }
     return path.normalize(expandedPath);
 }
 export const directoryCommand = {
-    name: "directory",
-    altNames: ["dir"],
-    description: "Manage workspace directories",
+    name: 'directory',
+    altNames: ['dir'],
+    description: 'Manage workspace directories',
     kind: CommandKind.BUILT_IN,
     subCommands: [
         {
-            name: "add",
-            description: "Add directories to the workspace. Use comma to separate multiple paths",
+            name: 'add',
+            description: 'Add directories to the workspace. Use comma to separate multiple paths',
             kind: CommandKind.BUILT_IN,
             action: async (context, args) => {
                 const { ui: { addItem }, services: { config }, } = context;
-                const [...rest] = args.split(" ");
+                const [...rest] = args.split(' ');
                 if (!config) {
                     addItem({
                         type: MessageType.ERROR,
-                        text: "Configuration is not available.",
+                        text: 'Configuration is not available.',
                     }, Date.now());
                     return;
                 }
                 const workspaceContext = config.getWorkspaceContext();
                 const pathsToAdd = rest
-                    .join(" ")
-                    .split(",")
+                    .join(' ')
+                    .split(',')
                     .filter((p) => p);
                 if (pathsToAdd.length === 0) {
                     addItem({
                         type: MessageType.ERROR,
-                        text: "Please provide at least one path to add.",
+                        text: 'Please provide at least one path to add.',
                     }, Date.now());
                     return;
                 }
                 if (config.isRestrictiveSandbox()) {
                     return {
-                        type: "message",
-                        messageType: "error",
-                        content: "The /directory add command is not supported in restrictive sandbox profiles. Please use --include-directories when starting the session instead.",
+                        type: 'message',
+                        messageType: 'error',
+                        content: 'The /directory add command is not supported in restrictive sandbox profiles. Please use --include-directories when starting the session instead.',
                     };
                 }
                 const added = [];
@@ -78,7 +78,7 @@ export const directoryCommand = {
                             ...config.getWorkspaceContext().getDirectories(),
                             ...pathsToAdd,
                         ], config.getDebugMode(), config.getFileService(), config.getExtensionContextFilePaths(), context.services.settings.merged.context?.importFormat ||
-                            "tree", // Use setting or default to 'tree'
+                            'tree', // Use setting or default to 'tree'
                         config.getFileFilteringOptions(), context.services.settings.merged.context?.discoveryMaxDirs);
                         config.setUserMemory(memoryContent);
                         config.setGeminiMdFileCount(fileCount);
@@ -86,7 +86,7 @@ export const directoryCommand = {
                     }
                     addItem({
                         type: MessageType.INFO,
-                        text: `Successfully added GEMINI.md files from the following directories if there are:\n- ${added.join("\n- ")}`,
+                        text: `Successfully added GEMINI.md files from the following directories if there are:\n- ${added.join('\n- ')}`,
                     }, Date.now());
                 }
                 catch (error) {
@@ -99,31 +99,31 @@ export const directoryCommand = {
                     }
                     addItem({
                         type: MessageType.INFO,
-                        text: `Successfully added directories:\n- ${added.join("\n- ")}`,
+                        text: `Successfully added directories:\n- ${added.join('\n- ')}`,
                     }, Date.now());
                 }
                 if (errors.length > 0) {
-                    addItem({ type: MessageType.ERROR, text: errors.join("\n") }, Date.now());
+                    addItem({ type: MessageType.ERROR, text: errors.join('\n') }, Date.now());
                 }
                 return;
             },
         },
         {
-            name: "show",
-            description: "Show all directories in the workspace",
+            name: 'show',
+            description: 'Show all directories in the workspace',
             kind: CommandKind.BUILT_IN,
             action: async (context) => {
                 const { ui: { addItem }, services: { config }, } = context;
                 if (!config) {
                     addItem({
                         type: MessageType.ERROR,
-                        text: "Configuration is not available.",
+                        text: 'Configuration is not available.',
                     }, Date.now());
                     return;
                 }
                 const workspaceContext = config.getWorkspaceContext();
                 const directories = workspaceContext.getDirectories();
-                const directoryList = directories.map((dir) => `- ${dir}`).join("\n");
+                const directoryList = directories.map((dir) => `- ${dir}`).join('\n');
                 addItem({
                     type: MessageType.INFO,
                     text: `Current workspace directories:\n${directoryList}`,

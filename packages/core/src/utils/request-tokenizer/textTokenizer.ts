@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { TiktokenEncoding, Tiktoken } from "tiktoken";
-import { get_encoding } from "tiktoken";
+import type { TiktokenEncoding, Tiktoken } from 'tiktoken';
+import { get_encoding } from 'tiktoken';
 
 /**
  * Text tokenizer for calculating text tokens using tiktoken
@@ -14,7 +14,7 @@ export class TextTokenizer {
   private encoding: Tiktoken | null = null;
   private encodingName: string;
 
-  constructor(encodingName: string = "cl100k_base") {
+  constructor(encodingName: string = 'cl100k_base') {
     this.encodingName = encodingName;
   }
 
@@ -48,7 +48,7 @@ export class TextTokenizer {
       try {
         return this.encoding.encode(text).length;
       } catch (error) {
-        console.warn("Error encoding text with tiktoken:", error);
+        console.warn('Error encoding text with tiktoken:', error);
       }
     }
 
@@ -71,14 +71,14 @@ export class TextTokenizer {
           return this.encoding ? this.encoding.encode(text).length : 0;
         });
       } catch (error) {
-        console.warn("Error encoding texts with tiktoken:", error);
+        console.warn('Error encoding texts with tiktoken:', error);
         // In case of error, return fallback estimation for all texts
-        return texts.map((text) => Math.ceil((text || "").length / 4));
+        return texts.map((text) => Math.ceil((text || '').length / 4));
       }
     }
 
     // Fallback for batch processing
-    return texts.map((text) => Math.ceil((text || "").length / 4));
+    return texts.map((text) => Math.ceil((text || '').length / 4));
   }
 
   /**
@@ -89,7 +89,7 @@ export class TextTokenizer {
       try {
         this.encoding.free();
       } catch (error) {
-        console.warn("Error freeing tiktoken encoding:", error);
+        console.warn('Error freeing tiktoken encoding:', error);
       }
       this.encoding = null;
     }

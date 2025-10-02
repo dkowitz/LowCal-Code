@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useCallback, useRef } from "react";
-import { Box, Text } from "ink";
-import Spinner from "ink-spinner";
-import type { WizardStepProps, WizardAction } from "../types.js";
-import { sanitizeInput } from "../utils.js";
-import { type Config, subagentGenerator } from "@qwen-code/qwen-code-core";
-import { useKeypress, type Key } from "../../../hooks/useKeypress.js";
-import { keyMatchers, Command } from "../../../keyMatchers.js";
-import { theme } from "../../../semantic-colors.js";
-import { Colors } from "../../../colors.js";
-import { TextInput } from "../../shared/TextInput.js";
+import { useCallback, useRef } from 'react';
+import { Box, Text } from 'ink';
+import Spinner from 'ink-spinner';
+import type { WizardStepProps, WizardAction } from '../types.js';
+import { sanitizeInput } from '../utils.js';
+import { type Config, subagentGenerator } from '@qwen-code/qwen-code-core';
+import { useKeypress, type Key } from '../../../hooks/useKeypress.js';
+import { keyMatchers, Command } from '../../../keyMatchers.js';
+import { theme } from '../../../semantic-colors.js';
+import { Colors } from '../../../colors.js';
+import { TextInput } from '../../shared/TextInput.js';
 
 /**
  * Step 3: Description input with LLM generation.
@@ -31,7 +31,7 @@ export function DescriptionInput({
     (text: string) => {
       const sanitized = sanitizeInput(text);
       dispatch({
-        type: "SET_USER_DESCRIPTION",
+        type: 'SET_USER_DESCRIPTION',
         description: sanitized,
       });
     },
@@ -59,7 +59,7 @@ export function DescriptionInput({
         // Only dispatch if not aborted
         if (!abortController.signal.aborted) {
           dispatch({
-            type: "SET_GENERATED_CONTENT",
+            type: 'SET_GENERATED_CONTENT',
             name: generated.name,
             description: generated.description,
             systemPrompt: generated.systemPrompt,
@@ -84,27 +84,27 @@ export function DescriptionInput({
     }
 
     // Start LLM generation
-    dispatch({ type: "SET_GENERATING", isGenerating: true });
+    dispatch({ type: 'SET_GENERATING', isGenerating: true });
 
     try {
       if (!config) {
-        throw new Error("Configuration not available");
+        throw new Error('Configuration not available');
       }
 
       // Use real LLM integration
       await handleGenerate(inputValue, dispatch, config);
     } catch (error) {
-      dispatch({ type: "SET_GENERATING", isGenerating: false });
+      dispatch({ type: 'SET_GENERATING', isGenerating: false });
 
       // Don't show error if it was cancelled by user
-      if (error instanceof Error && error.name === "AbortError") {
+      if (error instanceof Error && error.name === 'AbortError') {
         return;
       }
 
       dispatch({
-        type: "SET_VALIDATION_ERRORS",
+        type: 'SET_VALIDATION_ERRORS',
         errors: [
-          `Failed to generate subagent: ${error instanceof Error ? error.message : "Unknown error"}`,
+          `Failed to generate subagent: ${error instanceof Error ? error.message : 'Unknown error'}`,
         ],
       });
     }
@@ -124,7 +124,7 @@ export function DescriptionInput({
         if (abortControllerRef.current) {
           // Cancel the ongoing generation
           abortControllerRef.current.abort();
-          dispatch({ type: "SET_GENERATING", isGenerating: false });
+          dispatch({ type: 'SET_GENERATING', isGenerating: false });
         }
       }
     },
@@ -137,7 +137,7 @@ export function DescriptionInput({
   });
 
   const placeholder =
-    "e.g., Expert code reviewer that reviews code based on best practices...";
+    'e.g., Expert code reviewer that reviews code based on best practices...';
 
   return (
     <Box flexDirection="column" gap={1}>
@@ -159,7 +159,7 @@ export function DescriptionInput({
         </Box>
       ) : (
         <TextInput
-          value={state.userDescription || ""}
+          value={state.userDescription || ''}
           onChange={handleTextChange}
           onSubmit={handleSubmit}
           placeholder={placeholder}

@@ -3,13 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useCallback } from "react";
+import { useState, useCallback } from 'react';
 export function useInputHistory({ userMessages, onSubmit, isActive, currentQuery, onChange, }) {
     const [historyIndex, setHistoryIndex] = useState(-1);
-    const [originalQueryBeforeNav, setOriginalQueryBeforeNav] = useState("");
+    const [originalQueryBeforeNav, setOriginalQueryBeforeNav] = useState('');
     const resetHistoryNav = useCallback(() => {
         setHistoryIndex(-1);
-        setOriginalQueryBeforeNav("");
+        setOriginalQueryBeforeNav('');
     }, []);
     const handleSubmit = useCallback((value) => {
         const trimmedValue = value.trim();

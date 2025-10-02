@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { useEffect, useState } from "react";
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import process from "node:process";
-import { formatMemoryUsage } from "../utils/formatters.js";
+import type React from 'react';
+import { useEffect, useState } from 'react';
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import process from 'node:process';
+import { formatMemoryUsage } from '../utils/formatters.js';
 
 export const MemoryUsageDisplay: React.FC = () => {
-  const [memoryUsage, setMemoryUsage] = useState<string>("");
+  const [memoryUsage, setMemoryUsage] = useState<string>('');
   const [memoryUsageColor, setMemoryUsageColor] = useState<string>(Colors.Gray);
 
   useEffect(() => {

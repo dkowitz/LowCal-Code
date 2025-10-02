@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Settings, SettingScope, LoadedSettings } from "../config/settings.js";
-import type { SettingDefinition } from "../config/settingsSchema.js";
+import type { Settings, SettingScope, LoadedSettings } from '../config/settings.js';
+import type { SettingDefinition } from '../config/settingsSchema.js';
 /**
  * Get all settings grouped by category
  */
@@ -24,7 +24,7 @@ export declare function requiresRestart(key: string): boolean;
 /**
  * Get the default value for a setting
  */
-export declare function getDefaultValue(key: string): SettingDefinition["default"];
+export declare function getDefaultValue(key: string): SettingDefinition['default'];
 /**
  * Get all setting keys that require restart
  */
@@ -37,7 +37,7 @@ export declare function getNestedValue(obj: Record<string, unknown>, path: strin
  * Get the effective value for a setting, considering inheritance from higher scopes
  * Always returns a value (never undefined) - falls back to default if not set anywhere
  */
-export declare function getEffectiveValue(key: string, settings: Settings, mergedSettings: Settings): SettingDefinition["default"];
+export declare function getEffectiveValue(key: string, settings: Settings, mergedSettings: Settings): SettingDefinition['default'];
 /**
  * Get all setting keys from the schema
  */
@@ -45,7 +45,7 @@ export declare function getAllSettingKeys(): string[];
 /**
  * Get settings by type
  */
-export declare function getSettingsByType(type: SettingDefinition["type"]): Array<SettingDefinition & {
+export declare function getSettingsByType(type: SettingDefinition['type']): Array<SettingDefinition & {
     key: string;
 }>;
 /**
@@ -75,7 +75,7 @@ export declare function getDialogSettingsByCategory(): Record<string, Array<Sett
 /**
  * Get settings by type that should be shown in the dialog
  */
-export declare function getDialogSettingsByType(type: SettingDefinition["type"]): Array<SettingDefinition & {
+export declare function getDialogSettingsByType(type: SettingDefinition['type']): Array<SettingDefinition & {
     key: string;
 }>;
 /**

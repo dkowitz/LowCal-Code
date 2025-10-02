@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from "react";
-import { Box, Text, useIsScreenReaderEnabled } from "ink";
-import { Colors } from "../../colors.js";
-import crypto from "node:crypto";
-import { colorizeCode, colorizeLine } from "../../utils/CodeColorizer.js";
-import { MaxSizedBox } from "../shared/MaxSizedBox.js";
-import { theme } from "../../semantic-colors.js";
+import type React from 'react';
+import { Box, Text, useIsScreenReaderEnabled } from 'ink';
+import { Colors } from '../../colors.js';
+import crypto from 'node:crypto';
+import { colorizeCode, colorizeLine } from '../../utils/CodeColorizer.js';
+import { MaxSizedBox } from '../shared/MaxSizedBox.js';
+import { theme } from '../../semantic-colors.js';
 
 interface DiffLine {
-  type: "add" | "del" | "context" | "hunk" | "other";
+  type: 'add' | 'del' | 'context' | 'hunk' | 'other';
   oldLine?: number;
   newLine?: number;
   content: string;
 }
 
 function parseDiffWithLineNumbers(diffContent: string): DiffLine[] {
-  const lines = diffContent.split("\n");
+  const lines = diffContent.split('\n');
   const result: DiffLine[] = [];
   let currentOldLine = 0;
   let currentNewLine = 0;
@@ -33,7 +33,7 @@ function parseDiffWithLineNumbers(diffContent: string): DiffLine[] {
       currentOldLine = parseInt(hunkMatch[1], 10);
       currentNewLine = parseInt(hunkMatch[2], 10);
       inHunk = true;
-      result.push({ type: "hunk", content: line });
+      result.push({ type: 'hunk', content: line });
       // We need to adjust the starting point because the first line number applies to the *first* actual line change/context,
       // but we increment *before* pushing that line. So decrement here.
       currentOldLine--;
@@ -43,46 +43,46 @@ function parseDiffWithLineNumbers(diffContent: string): DiffLine[] {
     if (!inHunk) {
       // Skip standard Git header lines more robustly
       if (
-        line.startsWith("--- ") ||
-        line.startsWith("+++ ") ||
-        line.startsWith("diff --git") ||
-        line.startsWith("index ") ||
-        line.startsWith("similarity index") ||
-        line.startsWith("rename from") ||
-        line.startsWith("rename to") ||
-        line.startsWith("new file mode") ||
-        line.startsWith("deleted file mode")
+        line.startsWith('--- ') ||
+        line.startsWith('+++ ') ||
+        line.startsWith('diff --git') ||
+        line.startsWith('index ') ||
+        line.startsWith('similarity index') ||
+        line.startsWith('rename from') ||
+        line.startsWith('rename to') ||
+        line.startsWith('new file mode') ||
+        line.startsWith('deleted file mode')
       )
         continue;
       // If it's not a hunk or header, skip (or handle as 'other' if needed)
       continue;
     }
-    if (line.startsWith("+")) {
+    if (line.startsWith('+')) {
       currentNewLine++; // Increment before pushing
       result.push({
-        type: "add",
+        type: 'add',
         newLine: currentNewLine,
         content: line.substring(1),
       });
-    } else if (line.startsWith("-")) {
+    } else if (line.startsWith('-')) {
       currentOldLine++; // Increment before pushing
       result.push({
-        type: "del",
+        type: 'del',
         oldLine: currentOldLine,
         content: line.substring(1),
       });
-    } else if (line.startsWith(" ")) {
+    } else if (line.startsWith(' ')) {
       currentOldLine++; // Increment before pushing
       currentNewLine++;
       result.push({
-        type: "context",
+        type: 'context',
         oldLine: currentOldLine,
         newLine: currentNewLine,
         content: line.substring(1),
       });
-    } else if (line.startsWith("\\")) {
+    } else if (line.startsWith('\\')) {
       // Handle "\ No newline at end of file"
-      result.push({ type: "other", content: line });
+      result.push({ type: 'other', content: line });
     }
   }
   return result;
@@ -94,7 +94,7 @@ interface DiffRendererProps {
   tabWidth?: number;
   availableTerminalHeight?: number;
   terminalWidth: number;
-  theme?: import("../../themes/theme.js").Theme;
+  theme?: import('../../themes/theme.js').Theme;
 }
 
 const DEFAULT_TAB_WIDTH = 4; // Spaces per tab for normalization
@@ -108,7 +108,7 @@ export const DiffRenderer: React.FC<DiffRendererProps> = ({
   theme,
 }) => {
   const screenReaderEnabled = useIsScreenReaderEnabled();
-  if (!diffContent || typeof diffContent !== "string") {
+  if (!diffContent || typeof diffContent !== 'string') {
     return <Text color={Colors.AccentYellow}>No diff content.</Text>;
   }
 
@@ -136,11 +136,11 @@ export const DiffRenderer: React.FC<DiffRendererProps> = ({
   // Check if the diff represents a new file (only additions and header lines)
   const isNewFile = parsedLines.every(
     (line) =>
-      line.type === "add" ||
-      line.type === "hunk" ||
-      line.type === "other" ||
-      line.content.startsWith("diff --git") ||
-      line.content.startsWith("new file mode"),
+      line.type === 'add' ||
+      line.type === 'hunk' ||
+      line.type === 'other' ||
+      line.content.startsWith('diff --git') ||
+      line.content.startsWith('new file mode'),
   );
 
   let renderedOutput;
@@ -148,11 +148,11 @@ export const DiffRenderer: React.FC<DiffRendererProps> = ({
   if (isNewFile) {
     // Extract only the added lines' content
     const addedContent = parsedLines
-      .filter((line) => line.type === "add")
+      .filter((line) => line.type === 'add')
       .map((line) => line.content)
-      .join("\n");
+      .join('\n');
     // Attempt to infer language from filename, default to plain text if no filename
-    const fileExtension = filename?.split(".").pop() || null;
+    const fileExtension = filename?.split('.').pop() || null;
     const language = fileExtension
       ? getLanguageFromExtension(fileExtension)
       : null;
@@ -186,12 +186,12 @@ const renderDiffContent = (
   // 1. Normalize whitespace (replace tabs with spaces) *before* further processing
   const normalizedLines = parsedLines.map((line) => ({
     ...line,
-    content: line.content.replace(/\t/g, " ".repeat(tabWidth)),
+    content: line.content.replace(/\t/g, ' '.repeat(tabWidth)),
   }));
 
   // Filter out non-displayable lines (hunks, potentially 'other') using the normalized list
   const displayableLines = normalizedLines.filter(
-    (l) => l.type !== "hunk" && l.type !== "other",
+    (l) => l.type !== 'hunk' && l.type !== 'other',
   );
 
   if (displayableLines.length === 0) {
@@ -209,7 +209,7 @@ const renderDiffContent = (
   );
   const gutterWidth = Math.max(1, maxLineNumber.toString().length);
 
-  const fileExtension = filename?.split(".").pop() || null;
+  const fileExtension = filename?.split('.').pop() || null;
   const language = fileExtension
     ? getLanguageFromExtension(fileExtension)
     : null;
@@ -218,7 +218,7 @@ const renderDiffContent = (
   let baseIndentation = Infinity; // Start high to find the minimum
   for (const line of displayableLines) {
     // Only consider lines with actual content for indentation calculation
-    if (line.content.trim() === "") continue;
+    if (line.content.trim() === '') continue;
 
     const firstCharIndex = line.content.search(/\S/); // Find index of first non-whitespace char
     const currentIndent = firstCharIndex === -1 ? 0 : firstCharIndex; // Indent is 0 if no non-whitespace found
@@ -231,7 +231,7 @@ const renderDiffContent = (
 
   const key = filename
     ? `diff-box-${filename}`
-    : `diff-box-${crypto.createHash("sha1").update(JSON.stringify(parsedLines)).digest("hex")}`;
+    : `diff-box-${crypto.createHash('sha1').update(JSON.stringify(parsedLines)).digest('hex')}`;
 
   let lastLineNumber: number | null = null;
   const MAX_CONTEXT_LINES_WITHOUT_GAP = 5;
@@ -245,9 +245,9 @@ const renderDiffContent = (
       {displayableLines.reduce<React.ReactNode[]>((acc, line, index) => {
         // Determine the relevant line number for gap calculation based on type
         let relevantLineNumberForGapCalc: number | null = null;
-        if (line.type === "add" || line.type === "context") {
+        if (line.type === 'add' || line.type === 'context') {
           relevantLineNumberForGapCalc = line.newLine ?? null;
-        } else if (line.type === "del") {
+        } else if (line.type === 'del') {
           // For deletions, the gap is typically in relation to the original file's line numbering
           relevantLineNumberForGapCalc = line.oldLine ?? null;
         }
@@ -261,25 +261,25 @@ const renderDiffContent = (
           acc.push(
             <Box key={`gap-${index}`}>
               <Text wrap="truncate" color={Colors.Gray}>
-                {"═".repeat(terminalWidth)}
+                {'═'.repeat(terminalWidth)}
               </Text>
             </Box>,
           );
         }
 
         const lineKey = `diff-line-${index}`;
-        let gutterNumStr = "";
-        let prefixSymbol = " ";
+        let gutterNumStr = '';
+        let prefixSymbol = ' ';
 
         switch (line.type) {
-          case "add":
-            gutterNumStr = (line.newLine ?? "").toString();
-            prefixSymbol = "+";
+          case 'add':
+            gutterNumStr = (line.newLine ?? '').toString();
+            prefixSymbol = '+';
             lastLineNumber = line.newLine ?? null;
             break;
-          case "del":
-            gutterNumStr = (line.oldLine ?? "").toString();
-            prefixSymbol = "-";
+          case 'del':
+            gutterNumStr = (line.oldLine ?? '').toString();
+            prefixSymbol = '-';
             // For deletions, update lastLineNumber based on oldLine if it's advancing.
             // This helps manage gaps correctly if there are multiple consecutive deletions
             // or if a deletion is followed by a context line far away in the original file.
@@ -287,9 +287,9 @@ const renderDiffContent = (
               lastLineNumber = line.oldLine;
             }
             break;
-          case "context":
-            gutterNumStr = (line.newLine ?? "").toString();
-            prefixSymbol = " ";
+          case 'context':
+            gutterNumStr = (line.newLine ?? '').toString();
+            prefixSymbol = ' ';
             lastLineNumber = line.newLine ?? null;
             break;
           default:
@@ -303,16 +303,16 @@ const renderDiffContent = (
             <Text
               color={theme.text.secondary}
               backgroundColor={
-                line.type === "add"
+                line.type === 'add'
                   ? theme.background.diff.added
-                  : line.type === "del"
+                  : line.type === 'del'
                     ? theme.background.diff.removed
                     : undefined
               }
             >
-              {gutterNumStr.padStart(gutterWidth)}{" "}
+              {gutterNumStr.padStart(gutterWidth)}{' '}
             </Text>
-            {line.type === "context" ? (
+            {line.type === 'context' ? (
               <>
                 <Text>{prefixSymbol} </Text>
                 <Text wrap="wrap">
@@ -322,7 +322,7 @@ const renderDiffContent = (
             ) : (
               <Text
                 backgroundColor={
-                  line.type === "add"
+                  line.type === 'add'
                     ? theme.background.diff.added
                     : theme.background.diff.removed
                 }
@@ -330,13 +330,13 @@ const renderDiffContent = (
               >
                 <Text
                   color={
-                    line.type === "add"
+                    line.type === 'add'
                       ? theme.status.success
                       : theme.status.error
                   }
                 >
                   {prefixSymbol}
-                </Text>{" "}
+                </Text>{' '}
                 {colorizeLine(displayContent, language)}
               </Text>
             )}
@@ -350,21 +350,21 @@ const renderDiffContent = (
 
 const getLanguageFromExtension = (extension: string): string | null => {
   const languageMap: { [key: string]: string } = {
-    js: "javascript",
-    ts: "typescript",
-    py: "python",
-    json: "json",
-    css: "css",
-    html: "html",
-    sh: "bash",
-    md: "markdown",
-    yaml: "yaml",
-    yml: "yaml",
-    txt: "plaintext",
-    java: "java",
-    c: "c",
-    cpp: "cpp",
-    rb: "ruby",
+    js: 'javascript',
+    ts: 'typescript',
+    py: 'python',
+    json: 'json',
+    css: 'css',
+    html: 'html',
+    sh: 'bash',
+    md: 'markdown',
+    yaml: 'yaml',
+    yml: 'yaml',
+    txt: 'plaintext',
+    java: 'java',
+    c: 'c',
+    cpp: 'cpp',
+    rb: 'ruby',
   };
   return languageMap[extension] || null; // Return null if extension not found
 };

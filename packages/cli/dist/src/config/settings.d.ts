@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Settings, MemoryImportFormat } from "./settingsSchema.js";
+import type { Settings, MemoryImportFormat } from './settingsSchema.js';
 export type { Settings, MemoryImportFormat };
 export declare const SETTINGS_DIRECTORY_NAME = ".qwen";
 export declare const USER_SETTINGS_PATH: string;
@@ -11,7 +11,7 @@ export declare const USER_SETTINGS_DIR: string;
 export declare const DEFAULT_EXCLUDED_ENV_VARS: string[];
 export declare function getSystemSettingsPath(): string;
 export declare function getSystemDefaultsPath(): string;
-export type { DnsResolutionOrder } from "./settingsSchema.js";
+export type { DnsResolutionOrder } from './settingsSchema.js';
 export declare enum SettingScope {
     User = "User",
     Workspace = "Workspace",

@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { Colors } from "../colors.js";
+import { Colors } from '../colors.js';
 // --- Thresholds ---
 export const TOOL_SUCCESS_RATE_HIGH = 95;
 export const TOOL_SUCCESS_RATE_MEDIUM = 85;

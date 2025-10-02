@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useCallback, useEffect } from "react";
-import { FolderTrustChoice } from "../components/FolderTrustDialog.js";
-import { loadTrustedFolders, TrustLevel, isWorkspaceTrusted, } from "../../config/trustedFolders.js";
-import * as process from "node:process";
+import { useState, useCallback, useEffect } from 'react';
+import { FolderTrustChoice } from '../components/FolderTrustDialog.js';
+import { loadTrustedFolders, TrustLevel, isWorkspaceTrusted, } from '../../config/trustedFolders.js';
+import * as process from 'node:process';
 export const useFolderTrust = (settings, onTrustChange) => {
     const [isTrusted, setIsTrusted] = useState(undefined);
     const [isFolderTrustDialogOpen, setIsFolderTrustDialogOpen] = useState(false);

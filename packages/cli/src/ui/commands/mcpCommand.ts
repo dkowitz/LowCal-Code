@@ -9,9 +9,9 @@ import type {
   SlashCommandActionReturn,
   CommandContext,
   MessageActionReturn,
-} from "./types.js";
-import { CommandKind } from "./types.js";
-import type { DiscoveredMCPPrompt } from "@qwen-code/qwen-code-core";
+} from './types.js';
+import { CommandKind } from './types.js';
+import type { DiscoveredMCPPrompt } from '@qwen-code/qwen-code-core';
 import {
   DiscoveredMCPTool,
   getMCPDiscoveryState,
@@ -20,14 +20,14 @@ import {
   MCPServerStatus,
   mcpServerRequiresOAuth,
   getErrorMessage,
-} from "@qwen-code/qwen-code-core";
+} from '@qwen-code/qwen-code-core';
 
-const COLOR_GREEN = "\u001b[32m";
-const COLOR_YELLOW = "\u001b[33m";
-const COLOR_RED = "\u001b[31m";
-const COLOR_CYAN = "\u001b[36m";
-const COLOR_GREY = "\u001b[90m";
-const RESET_COLOR = "\u001b[0m";
+const COLOR_GREEN = '\u001b[32m';
+const COLOR_YELLOW = '\u001b[33m';
+const COLOR_RED = '\u001b[31m';
+const COLOR_CYAN = '\u001b[36m';
+const COLOR_GREY = '\u001b[90m';
+const RESET_COLOR = '\u001b[0m';
 
 const getMcpStatus = async (
   context: CommandContext,
@@ -38,18 +38,18 @@ const getMcpStatus = async (
   const { config } = context.services;
   if (!config) {
     return {
-      type: "message",
-      messageType: "error",
-      content: "Config not loaded.",
+      type: 'message',
+      messageType: 'error',
+      content: 'Config not loaded.',
     };
   }
 
   const toolRegistry = config.getToolRegistry();
   if (!toolRegistry) {
     return {
-      type: "message",
-      messageType: "error",
-      content: "Could not retrieve tool registry.",
+      type: 'message',
+      messageType: 'error',
+      content: 'Could not retrieve tool registry.',
     };
   }
 
@@ -59,10 +59,10 @@ const getMcpStatus = async (
 
   if (serverNames.length === 0 && blockedMcpServers.length === 0) {
     const docsUrl =
-      "https://qwenlm.github.io/qwen-code-docs/en/tools/mcp-server/#how-to-set-up-your-mcp-server";
+      'https://qwenlm.github.io/qwen-code-docs/en/tools/mcp-server/#how-to-set-up-your-mcp-server';
     return {
-      type: "message",
-      messageType: "info",
+      type: 'message',
+      messageType: 'info',
       content: `No MCP servers configured. Please view MCP documentation in your browser: ${docsUrl} or use the cli /docs command`,
     };
   }
@@ -73,7 +73,7 @@ const getMcpStatus = async (
   );
   const discoveryState = getMCPDiscoveryState();
 
-  let message = "";
+  let message = '';
 
   // Add overall discovery status message if needed
   if (
@@ -84,7 +84,7 @@ const getMcpStatus = async (
     message += `${COLOR_CYAN}Note: First startup may take longer. Tool availability will update automatically.${RESET_COLOR}\n\n`;
   }
 
-  message += "Configured MCP servers:\n\n";
+  message += 'Configured MCP servers:\n\n';
 
   const allTools = toolRegistry.getAllTools();
   for (const serverName of serverNames) {
@@ -106,21 +106,21 @@ const getMcpStatus = async (
         : originalStatus;
 
     // Add status indicator with descriptive text
-    let statusIndicator = "";
-    let statusText = "";
+    let statusIndicator = '';
+    let statusText = '';
     switch (status) {
       case MCPServerStatus.CONNECTED:
-        statusIndicator = "🟢";
-        statusText = "Ready";
+        statusIndicator = '🟢';
+        statusText = 'Ready';
         break;
       case MCPServerStatus.CONNECTING:
-        statusIndicator = "🔄";
-        statusText = "Starting... (first startup may take longer)";
+        statusIndicator = '🔄';
+        statusText = 'Starting... (first startup may take longer)';
         break;
       case MCPServerStatus.DISCONNECTED:
       default:
-        statusIndicator = "🔴";
-        statusText = "Disconnected";
+        statusIndicator = '🔴';
+        statusText = 'Disconnected';
         break;
     }
 
@@ -140,7 +140,7 @@ const getMcpStatus = async (
       needsAuthHint = true;
       try {
         const { MCPOAuthTokenStorage } = await import(
-          "@qwen-code/qwen-code-core"
+          '@qwen-code/qwen-code-core'
         );
         const hasToken = await MCPOAuthTokenStorage.getToken(serverName);
         if (hasToken) {
@@ -164,18 +164,18 @@ const getMcpStatus = async (
       const parts = [];
       if (serverTools.length > 0) {
         parts.push(
-          `${serverTools.length} ${serverTools.length === 1 ? "tool" : "tools"}`,
+          `${serverTools.length} ${serverTools.length === 1 ? 'tool' : 'tools'}`,
         );
       }
       if (serverPrompts.length > 0) {
         parts.push(
           `${serverPrompts.length} ${
-            serverPrompts.length === 1 ? "prompt" : "prompts"
+            serverPrompts.length === 1 ? 'prompt' : 'prompts'
           }`,
         );
       }
       if (parts.length > 0) {
-        message += ` (${parts.join(", ")})`;
+        message += ` (${parts.join(', ')})`;
       } else {
         message += ` (0 tools)`;
       }
@@ -187,17 +187,17 @@ const getMcpStatus = async (
 
     // Add server description with proper handling of multi-line descriptions
     if (showDescriptions && server?.description) {
-      const descLines = server.description.trim().split("\n");
+      const descLines = server.description.trim().split('\n');
       if (descLines) {
-        message += ":\n";
+        message += ':\n';
         for (const descLine of descLines) {
           message += `    ${COLOR_GREEN}${descLine}${RESET_COLOR}\n`;
         }
       } else {
-        message += "\n";
+        message += '\n';
       }
     } else {
-      message += "\n";
+      message += '\n';
     }
 
     // Reset formatting after server entry
@@ -211,14 +211,14 @@ const getMcpStatus = async (
           message += `  - ${COLOR_CYAN}${tool.name}${RESET_COLOR}`;
 
           // Handle multi-line descriptions by properly indenting and preserving formatting
-          const descLines = tool.description.trim().split("\n");
+          const descLines = tool.description.trim().split('\n');
           if (descLines) {
-            message += ":\n";
+            message += ':\n';
             for (const descLine of descLines) {
               message += `      ${COLOR_GREEN}${descLine}${RESET_COLOR}\n`;
             }
           } else {
-            message += "\n";
+            message += '\n';
           }
           // Reset is handled inline with each line now
         } else {
@@ -233,7 +233,7 @@ const getMcpStatus = async (
 
           const paramsLines = JSON.stringify(parameters, null, 2)
             .trim()
-            .split("\n");
+            .split('\n');
           if (paramsLines) {
             for (const paramsLine of paramsLines) {
               message += `      ${COLOR_GREEN}${paramsLine}${RESET_COLOR}\n`;
@@ -244,20 +244,20 @@ const getMcpStatus = async (
     }
     if (serverPrompts.length > 0) {
       if (serverTools.length > 0) {
-        message += "\n";
+        message += '\n';
       }
       message += `  ${COLOR_CYAN}Prompts:${RESET_COLOR}\n`;
       serverPrompts.forEach((prompt: DiscoveredMCPPrompt) => {
         if (showDescriptions && prompt.description) {
           message += `  - ${COLOR_CYAN}${prompt.name}${RESET_COLOR}`;
-          const descLines = prompt.description.trim().split("\n");
+          const descLines = prompt.description.trim().split('\n');
           if (descLines) {
-            message += ":\n";
+            message += ':\n';
             for (const descLine of descLines) {
               message += `      ${COLOR_GREEN}${descLine}${RESET_COLOR}\n`;
             }
           } else {
-            message += "\n";
+            message += '\n';
           }
         } else {
           message += `  - ${COLOR_CYAN}${prompt.name}${RESET_COLOR}\n`;
@@ -266,13 +266,13 @@ const getMcpStatus = async (
     }
 
     if (serverTools.length === 0 && serverPrompts.length === 0) {
-      message += "  No tools or prompts available\n";
+      message += '  No tools or prompts available\n';
     } else if (serverTools.length === 0) {
-      message += "  No tools available";
+      message += '  No tools available';
       if (originalStatus === MCPServerStatus.DISCONNECTED && needsAuthHint) {
         message += ` ${COLOR_GREY}(type: "/mcp auth ${serverName}" to authenticate this server)${RESET_COLOR}`;
       }
-      message += "\n";
+      message += '\n';
     } else if (
       originalStatus === MCPServerStatus.DISCONNECTED &&
       needsAuthHint
@@ -280,7 +280,7 @@ const getMcpStatus = async (
       // This case is for when serverTools.length > 0
       message += `  ${COLOR_GREY}(type: "/mcp auth ${serverName}" to authenticate this server)${RESET_COLOR}\n`;
     }
-    message += "\n";
+    message += '\n';
   }
 
   for (const server of blockedMcpServers) {
@@ -293,29 +293,29 @@ const getMcpStatus = async (
 
   // Add helpful tips when no arguments are provided
   if (showTips) {
-    message += "\n";
+    message += '\n';
     message += `${COLOR_CYAN}💡 Tips:${RESET_COLOR}\n`;
     message += `  • Use ${COLOR_CYAN}/mcp desc${RESET_COLOR} to show server and tool descriptions\n`;
     message += `  • Use ${COLOR_CYAN}/mcp schema${RESET_COLOR} to show tool parameter schemas\n`;
     message += `  • Use ${COLOR_CYAN}/mcp nodesc${RESET_COLOR} to hide descriptions\n`;
     message += `  • Use ${COLOR_CYAN}/mcp auth <server-name>${RESET_COLOR} to authenticate with OAuth-enabled servers\n`;
     message += `  • Press ${COLOR_CYAN}Ctrl+T${RESET_COLOR} to toggle tool descriptions on/off\n`;
-    message += "\n";
+    message += '\n';
   }
 
   // Make sure to reset any ANSI formatting at the end to prevent it from affecting the terminal
   message += RESET_COLOR;
 
   return {
-    type: "message",
-    messageType: "info",
+    type: 'message',
+    messageType: 'info',
     content: message,
   };
 };
 
 const authCommand: SlashCommand = {
-  name: "auth",
-  description: "Authenticate with an OAuth-enabled MCP server",
+  name: 'auth',
+  description: 'Authenticate with an OAuth-enabled MCP server',
   kind: CommandKind.BUILT_IN,
   action: async (
     context: CommandContext,
@@ -326,9 +326,9 @@ const authCommand: SlashCommand = {
 
     if (!config) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "Config not loaded.",
+        type: 'message',
+        messageType: 'error',
+        content: 'Config not loaded.',
       };
     }
 
@@ -342,24 +342,24 @@ const authCommand: SlashCommand = {
 
       if (oauthServers.length === 0) {
         return {
-          type: "message",
-          messageType: "info",
-          content: "No MCP servers configured with OAuth authentication.",
+          type: 'message',
+          messageType: 'info',
+          content: 'No MCP servers configured with OAuth authentication.',
         };
       }
 
       return {
-        type: "message",
-        messageType: "info",
-        content: `MCP servers with OAuth authentication:\n${oauthServers.map((s) => `  - ${s}`).join("\n")}\n\nUse /mcp auth <server-name> to authenticate.`,
+        type: 'message',
+        messageType: 'info',
+        content: `MCP servers with OAuth authentication:\n${oauthServers.map((s) => `  - ${s}`).join('\n')}\n\nUse /mcp auth <server-name> to authenticate.`,
       };
     }
 
     const server = mcpServers[serverName];
     if (!server) {
       return {
-        type: "message",
-        messageType: "error",
+        type: 'message',
+        messageType: 'error',
         content: `MCP server '${serverName}' not found.`,
       };
     }
@@ -370,14 +370,14 @@ const authCommand: SlashCommand = {
     try {
       context.ui.addItem(
         {
-          type: "info",
+          type: 'info',
           text: `Starting OAuth authentication for MCP server '${serverName}'...`,
         },
         Date.now(),
       );
 
       // Import dynamically to avoid circular dependencies
-      const { MCPOAuthProvider } = await import("@qwen-code/qwen-code-core");
+      const { MCPOAuthProvider } = await import('@qwen-code/qwen-code-core');
 
       let oauthConfig = server.oauth;
       if (!oauthConfig) {
@@ -394,7 +394,7 @@ const authCommand: SlashCommand = {
 
       context.ui.addItem(
         {
-          type: "info",
+          type: 'info',
           text: `✅ Successfully authenticated with MCP server '${serverName}'!`,
         },
         Date.now(),
@@ -405,7 +405,7 @@ const authCommand: SlashCommand = {
       if (toolRegistry) {
         context.ui.addItem(
           {
-            type: "info",
+            type: 'info',
             text: `Re-discovering tools from '${serverName}'...`,
           },
           Date.now(),
@@ -422,14 +422,14 @@ const authCommand: SlashCommand = {
       context.ui.reloadCommands();
 
       return {
-        type: "message",
-        messageType: "info",
+        type: 'message',
+        messageType: 'info',
         content: `Successfully authenticated and refreshed tools for '${serverName}'.`,
       };
     } catch (error) {
       return {
-        type: "message",
-        messageType: "error",
+        type: 'message',
+        messageType: 'error',
         content: `Failed to authenticate with MCP server '${serverName}': ${getErrorMessage(error)}`,
       };
     }
@@ -446,18 +446,18 @@ const authCommand: SlashCommand = {
 };
 
 const listCommand: SlashCommand = {
-  name: "list",
-  description: "List configured MCP servers and tools",
+  name: 'list',
+  description: 'List configured MCP servers and tools',
   kind: CommandKind.BUILT_IN,
   action: async (context: CommandContext, args: string) => {
     const lowerCaseArgs = args.toLowerCase().split(/\s+/).filter(Boolean);
 
     const hasDesc =
-      lowerCaseArgs.includes("desc") || lowerCaseArgs.includes("descriptions");
+      lowerCaseArgs.includes('desc') || lowerCaseArgs.includes('descriptions');
     const hasNodesc =
-      lowerCaseArgs.includes("nodesc") ||
-      lowerCaseArgs.includes("nodescriptions");
-    const showSchema = lowerCaseArgs.includes("schema");
+      lowerCaseArgs.includes('nodesc') ||
+      lowerCaseArgs.includes('nodescriptions');
+    const showSchema = lowerCaseArgs.includes('schema');
 
     // Show descriptions if `desc` or `schema` is present,
     // but `nodesc` takes precedence and disables them.
@@ -471,8 +471,8 @@ const listCommand: SlashCommand = {
 };
 
 const refreshCommand: SlashCommand = {
-  name: "refresh",
-  description: "Restarts MCP servers.",
+  name: 'refresh',
+  description: 'Restarts MCP servers.',
   kind: CommandKind.BUILT_IN,
   action: async (
     context: CommandContext,
@@ -480,25 +480,25 @@ const refreshCommand: SlashCommand = {
     const { config } = context.services;
     if (!config) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "Config not loaded.",
+        type: 'message',
+        messageType: 'error',
+        content: 'Config not loaded.',
       };
     }
 
     const toolRegistry = config.getToolRegistry();
     if (!toolRegistry) {
       return {
-        type: "message",
-        messageType: "error",
-        content: "Could not retrieve tool registry.",
+        type: 'message',
+        messageType: 'error',
+        content: 'Could not retrieve tool registry.',
       };
     }
 
     context.ui.addItem(
       {
-        type: "info",
-        text: "Restarting MCP servers...",
+        type: 'info',
+        text: 'Restarting MCP servers...',
       },
       Date.now(),
     );
@@ -519,9 +519,9 @@ const refreshCommand: SlashCommand = {
 };
 
 export const mcpCommand: SlashCommand = {
-  name: "mcp",
+  name: 'mcp',
   description:
-    "list configured MCP servers and tools, or authenticate with OAuth-enabled servers",
+    'list configured MCP servers and tools, or authenticate with OAuth-enabled servers',
   kind: CommandKind.BUILT_IN,
   subCommands: [listCommand, authCommand, refreshCommand],
   // Default action when no subcommand is provided

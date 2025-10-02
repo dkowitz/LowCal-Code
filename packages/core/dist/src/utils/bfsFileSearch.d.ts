@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { FileDiscoveryService } from "../services/fileDiscoveryService.js";
-import type { FileFilteringOptions } from "../config/config.js";
+import type { FileDiscoveryService } from '../services/fileDiscoveryService.js';
+import type { FileFilteringOptions } from '../config/config.js';
 interface BfsFileSearchOptions {
     fileName: string;
     ignoreDirs?: string[];

@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Config } from "../config/config.js";
-import type { ToolInvocation, ToolResult } from "./tools.js";
-import { BaseDeclarativeTool } from "./tools.js";
+import type { Config } from '../config/config.js';
+import type { ToolInvocation, ToolResult } from './tools.js';
+import { BaseDeclarativeTool } from './tools.js';
 export declare const OUTPUT_UPDATE_INTERVAL_MS = 1000;
 export interface ShellToolParams {
     command: string;

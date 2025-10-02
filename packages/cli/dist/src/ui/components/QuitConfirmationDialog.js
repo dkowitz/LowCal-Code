@@ -4,10 +4,10 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { Box, Text } from "ink";
-import { Colors } from "../colors.js";
-import { RadioButtonSelect, } from "./shared/RadioButtonSelect.js";
-import { useKeypress } from "../hooks/useKeypress.js";
+import { Box, Text } from 'ink';
+import { Colors } from '../colors.js';
+import { RadioButtonSelect, } from './shared/RadioButtonSelect.js';
+import { useKeypress } from '../hooks/useKeypress.js';
 export var QuitChoice;
 (function (QuitChoice) {
     QuitChoice["CANCEL"] = "cancel";
@@ -17,25 +17,25 @@ export var QuitChoice;
 })(QuitChoice || (QuitChoice = {}));
 export const QuitConfirmationDialog = ({ onSelect, }) => {
     useKeypress((key) => {
-        if (key.name === "escape") {
+        if (key.name === 'escape') {
             onSelect(QuitChoice.CANCEL);
         }
     }, { isActive: true });
     const options = [
         {
-            label: "Quit immediately (/quit)",
+            label: 'Quit immediately (/quit)',
             value: QuitChoice.QUIT,
         },
         {
-            label: "Generate summary and quit (/summary)",
+            label: 'Generate summary and quit (/summary)',
             value: QuitChoice.SUMMARY_AND_QUIT,
         },
         {
-            label: "Save conversation and quit (/chat save)",
+            label: 'Save conversation and quit (/chat save)',
             value: QuitChoice.SAVE_AND_QUIT,
         },
         {
-            label: "Cancel (stay in application)",
+            label: 'Cancel (stay in application)',
             value: QuitChoice.CANCEL,
         },
     ];

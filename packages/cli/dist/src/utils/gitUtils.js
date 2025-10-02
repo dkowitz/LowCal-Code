@@ -3,17 +3,17 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { execSync } from "node:child_process";
-import { ProxyAgent } from "undici";
+import { execSync } from 'node:child_process';
+import { ProxyAgent } from 'undici';
 /**
  * Checks if a directory is within a git repository hosted on GitHub.
  * @returns true if the directory is in a git repository with a github.com remote, false otherwise
  */
 export const isGitHubRepository = () => {
     try {
-        const remotes = (execSync("git remote -v", {
-            encoding: "utf-8",
-        }) || "").trim();
+        const remotes = (execSync('git remote -v', {
+            encoding: 'utf-8',
+        }) || '').trim();
         const pattern = /github\.com/;
         return pattern.test(remotes);
     }
@@ -29,9 +29,9 @@ export const isGitHubRepository = () => {
  * @throws error if the exec command fails.
  */
 export const getGitRepoRoot = () => {
-    const gitRepoRoot = (execSync("git rev-parse --show-toplevel", {
-        encoding: "utf-8",
-    }) || "").trim();
+    const gitRepoRoot = (execSync('git rev-parse --show-toplevel', {
+        encoding: 'utf-8',
+    }) || '').trim();
     if (!gitRepoRoot) {
         throw new Error(`Git repo returned empty value`);
     }
@@ -46,11 +46,11 @@ export const getLatestGitHubRelease = async (proxy) => {
         const controller = new AbortController();
         const endpoint = `https://api.github.com/repos/google-github-actions/run-gemini-cli/releases/latest`;
         const response = await fetch(endpoint, {
-            method: "GET",
+            method: 'GET',
             headers: {
-                Accept: "application/vnd.github+json",
-                "Content-Type": "application/json",
-                "X-GitHub-Api-Version": "2022-11-28",
+                Accept: 'application/vnd.github+json',
+                'Content-Type': 'application/json',
+                'X-GitHub-Api-Version': '2022-11-28',
             },
             dispatcher: proxy ? new ProxyAgent(proxy) : undefined,
             signal: AbortSignal.any([AbortSignal.timeout(30_000), controller.signal]),
@@ -75,8 +75,8 @@ export const getLatestGitHubRelease = async (proxy) => {
  * @throws error if the exec command fails.
  */
 export function getGitHubRepoInfo() {
-    const remoteUrl = execSync("git remote get-url origin", {
-        encoding: "utf-8",
+    const remoteUrl = execSync('git remote get-url origin', {
+        encoding: 'utf-8',
     }).trim();
     // Matches either https://github.com/owner/repo.git or git@github.com:owner/repo.git
     const match = remoteUrl.match(/(?:https?:\/\/|git@)github\.com(?::|\/)([^/]+)\/([^/]+?)(?:\.git)?$/);

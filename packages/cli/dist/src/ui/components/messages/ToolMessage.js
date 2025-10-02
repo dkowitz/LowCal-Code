@@ -4,18 +4,18 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import React from "react";
-import { Box, Text } from "ink";
-import { ToolCallStatus } from "../../types.js";
-import { DiffRenderer } from "./DiffRenderer.js";
-import { Colors } from "../../colors.js";
-import { MarkdownDisplay } from "../../utils/MarkdownDisplay.js";
-import { GeminiRespondingSpinner } from "../GeminiRespondingSpinner.js";
-import { MaxSizedBox } from "../shared/MaxSizedBox.js";
-import { TodoDisplay } from "../TodoDisplay.js";
-import { TOOL_STATUS } from "../../constants.js";
-import { AgentExecutionDisplay } from "../subagents/index.js";
-import { PlanSummaryDisplay } from "../PlanSummaryDisplay.js";
+import React from 'react';
+import { Box, Text } from 'ink';
+import { ToolCallStatus } from '../../types.js';
+import { DiffRenderer } from './DiffRenderer.js';
+import { Colors } from '../../colors.js';
+import { MarkdownDisplay } from '../../utils/MarkdownDisplay.js';
+import { GeminiRespondingSpinner } from '../GeminiRespondingSpinner.js';
+import { MaxSizedBox } from '../shared/MaxSizedBox.js';
+import { TodoDisplay } from '../TodoDisplay.js';
+import { TOOL_STATUS } from '../../constants.js';
+import { AgentExecutionDisplay } from '../subagents/index.js';
+import { PlanSummaryDisplay } from '../PlanSummaryDisplay.js';
 const STATIC_HEIGHT = 1;
 const RESERVED_LINE_COUNT = 5; // for tool name, status, padding etc.
 const STATUS_INDICATOR_WIDTH = 3;
@@ -28,49 +28,49 @@ const MAXIMUM_RESULT_DISPLAY_CHARACTERS = 1000000;
  */
 const useResultDisplayRenderer = (resultDisplay) => React.useMemo(() => {
     if (!resultDisplay) {
-        return { type: "none" };
+        return { type: 'none' };
     }
     // Check for TodoResultDisplay
-    if (typeof resultDisplay === "object" &&
+    if (typeof resultDisplay === 'object' &&
         resultDisplay !== null &&
-        "type" in resultDisplay &&
-        resultDisplay.type === "todo_list") {
+        'type' in resultDisplay &&
+        resultDisplay.type === 'todo_list') {
         return {
-            type: "todo",
+            type: 'todo',
             data: resultDisplay,
         };
     }
-    if (typeof resultDisplay === "object" &&
+    if (typeof resultDisplay === 'object' &&
         resultDisplay !== null &&
-        "type" in resultDisplay &&
-        resultDisplay.type === "plan_summary") {
+        'type' in resultDisplay &&
+        resultDisplay.type === 'plan_summary') {
         return {
-            type: "plan",
+            type: 'plan',
             data: resultDisplay,
         };
     }
     // Check for SubagentExecutionResultDisplay (for non-task tools)
-    if (typeof resultDisplay === "object" &&
+    if (typeof resultDisplay === 'object' &&
         resultDisplay !== null &&
-        "type" in resultDisplay &&
-        resultDisplay.type === "task_execution") {
+        'type' in resultDisplay &&
+        resultDisplay.type === 'task_execution') {
         return {
-            type: "task",
+            type: 'task',
             data: resultDisplay,
         };
     }
     // Check for FileDiff
-    if (typeof resultDisplay === "object" &&
+    if (typeof resultDisplay === 'object' &&
         resultDisplay !== null &&
-        "fileDiff" in resultDisplay) {
+        'fileDiff' in resultDisplay) {
         return {
-            type: "diff",
+            type: 'diff',
             data: resultDisplay,
         };
     }
     // Default to string
     return {
-        type: "string",
+        type: 'string',
         data: resultDisplay,
     };
 }, [resultDisplay]);
@@ -90,7 +90,7 @@ const StringResultRenderer = ({ data, renderAsMarkdown, availableHeight, childWi
     let displayData = data;
     // Truncate if too long
     if (displayData.length > MAXIMUM_RESULT_DISPLAY_CHARACTERS) {
-        displayData = "..." + displayData.slice(-MAXIMUM_RESULT_DISPLAY_CHARACTERS);
+        displayData = '...' + displayData.slice(-MAXIMUM_RESULT_DISPLAY_CHARACTERS);
     }
     if (renderAsMarkdown) {
         return (_jsx(Box, { flexDirection: "column", children: _jsx(MarkdownDisplay, { text: displayData, isPending: false, availableTerminalHeight: availableHeight, terminalWidth: childWidth }) }));
@@ -101,7 +101,7 @@ const StringResultRenderer = ({ data, renderAsMarkdown, availableHeight, childWi
  * Component to render diff results
  */
 const DiffResultRenderer = ({ data, availableHeight, childWidth }) => (_jsx(DiffRenderer, { diffContent: data.fileDiff, filename: data.fileName, availableTerminalHeight: availableHeight, terminalWidth: childWidth }));
-export const ToolMessage = ({ name, description, resultDisplay, status, availableTerminalHeight, terminalWidth, emphasis = "medium", renderOutputAsMarkdown = true, config, }) => {
+export const ToolMessage = ({ name, description, resultDisplay, status, availableTerminalHeight, terminalWidth, emphasis = 'medium', renderOutputAsMarkdown = true, config, }) => {
     const availableHeight = availableTerminalHeight
         ? Math.max(availableTerminalHeight - STATIC_HEIGHT - RESERVED_LINE_COUNT, MIN_LINES_SHOWN + 1)
         : undefined;
@@ -114,17 +114,17 @@ export const ToolMessage = ({ name, description, resultDisplay, status, availabl
     const childWidth = terminalWidth - 3; // account for padding.
     // Use the custom hook to determine the display type
     const displayRenderer = useResultDisplayRenderer(resultDisplay);
-    return (_jsxs(Box, { paddingX: 1, paddingY: 0, flexDirection: "column", children: [_jsxs(Box, { minHeight: 1, children: [_jsx(ToolStatusIndicator, { status: status }), _jsx(ToolInfo, { name: name, status: status, description: description, emphasis: emphasis }), emphasis === "high" && _jsx(TrailingIndicator, {})] }), displayRenderer.type !== "none" && (_jsx(Box, { paddingLeft: STATUS_INDICATOR_WIDTH, width: "100%", marginTop: 1, children: _jsxs(Box, { flexDirection: "column", children: [displayRenderer.type === "todo" && (_jsx(TodoResultRenderer, { data: displayRenderer.data })), displayRenderer.type === "plan" && (_jsx(PlanResultRenderer, { data: displayRenderer.data, availableHeight: availableHeight, childWidth: childWidth })), displayRenderer.type === "task" && (_jsx(SubagentExecutionRenderer, { data: displayRenderer.data, availableHeight: availableHeight, childWidth: childWidth, config: config })), displayRenderer.type === "string" && (_jsx(StringResultRenderer, { data: displayRenderer.data, renderAsMarkdown: renderOutputAsMarkdown, availableHeight: availableHeight, childWidth: childWidth })), displayRenderer.type === "diff" && (_jsx(DiffResultRenderer, { data: displayRenderer.data, availableHeight: availableHeight, childWidth: childWidth }))] }) }))] }));
+    return (_jsxs(Box, { paddingX: 1, paddingY: 0, flexDirection: "column", children: [_jsxs(Box, { minHeight: 1, children: [_jsx(ToolStatusIndicator, { status: status }), _jsx(ToolInfo, { name: name, status: status, description: description, emphasis: emphasis }), emphasis === 'high' && _jsx(TrailingIndicator, {})] }), displayRenderer.type !== 'none' && (_jsx(Box, { paddingLeft: STATUS_INDICATOR_WIDTH, width: "100%", marginTop: 1, children: _jsxs(Box, { flexDirection: "column", children: [displayRenderer.type === 'todo' && (_jsx(TodoResultRenderer, { data: displayRenderer.data })), displayRenderer.type === 'plan' && (_jsx(PlanResultRenderer, { data: displayRenderer.data, availableHeight: availableHeight, childWidth: childWidth })), displayRenderer.type === 'task' && (_jsx(SubagentExecutionRenderer, { data: displayRenderer.data, availableHeight: availableHeight, childWidth: childWidth, config: config })), displayRenderer.type === 'string' && (_jsx(StringResultRenderer, { data: displayRenderer.data, renderAsMarkdown: renderOutputAsMarkdown, availableHeight: availableHeight, childWidth: childWidth })), displayRenderer.type === 'diff' && (_jsx(DiffResultRenderer, { data: displayRenderer.data, availableHeight: availableHeight, childWidth: childWidth }))] }) }))] }));
 };
-const ToolStatusIndicator = ({ status, }) => (_jsxs(Box, { minWidth: STATUS_INDICATOR_WIDTH, children: [status === ToolCallStatus.Pending && (_jsx(Text, { color: Colors.AccentGreen, children: TOOL_STATUS.PENDING })), status === ToolCallStatus.Executing && (_jsx(GeminiRespondingSpinner, { spinnerType: "toggle", nonRespondingDisplay: TOOL_STATUS.EXECUTING })), status === ToolCallStatus.Success && (_jsx(Text, { color: Colors.AccentGreen, "aria-label": "Success:", children: TOOL_STATUS.SUCCESS })), status === ToolCallStatus.Confirming && (_jsx(Text, { color: Colors.AccentYellow, "aria-label": "Confirming:", children: TOOL_STATUS.CONFIRMING })), status === ToolCallStatus.Canceled && (_jsx(Text, { color: Colors.AccentYellow, "aria-label": "Canceled:", bold: true, children: TOOL_STATUS.CANCELED })), status === ToolCallStatus.Error && (_jsx(Text, { color: Colors.AccentRed, "aria-label": "Error:", bold: true, children: TOOL_STATUS.ERROR }))] }));
+const ToolStatusIndicator = ({ status, }) => (_jsxs(Box, { minWidth: STATUS_INDICATOR_WIDTH, children: [status === ToolCallStatus.Pending && (_jsx(Text, { color: Colors.AccentGreen, children: TOOL_STATUS.PENDING })), status === ToolCallStatus.Executing && (_jsx(GeminiRespondingSpinner, { spinnerType: "toggle", nonRespondingDisplay: TOOL_STATUS.EXECUTING })), status === ToolCallStatus.Success && (_jsx(Text, { color: Colors.AccentGreen, "aria-label": 'Success:', children: TOOL_STATUS.SUCCESS })), status === ToolCallStatus.Confirming && (_jsx(Text, { color: Colors.AccentYellow, "aria-label": 'Confirming:', children: TOOL_STATUS.CONFIRMING })), status === ToolCallStatus.Canceled && (_jsx(Text, { color: Colors.AccentYellow, "aria-label": 'Canceled:', bold: true, children: TOOL_STATUS.CANCELED })), status === ToolCallStatus.Error && (_jsx(Text, { color: Colors.AccentRed, "aria-label": 'Error:', bold: true, children: TOOL_STATUS.ERROR }))] }));
 const ToolInfo = ({ name, description, status, emphasis, }) => {
     const nameColor = React.useMemo(() => {
         switch (emphasis) {
-            case "high":
+            case 'high':
                 return Colors.Foreground;
-            case "medium":
+            case 'medium':
                 return Colors.Foreground;
-            case "low":
+            case 'low':
                 return Colors.Gray;
             default: {
                 const exhaustiveCheck = emphasis;
@@ -134,5 +134,5 @@ const ToolInfo = ({ name, description, status, emphasis, }) => {
     }, [emphasis]);
     return (_jsx(Box, { children: _jsxs(Text, { wrap: "truncate-end", strikethrough: status === ToolCallStatus.Canceled, children: [_jsx(Text, { color: nameColor, bold: true, children: name }), _jsx(Text, { children: " " }), _jsx(Text, { color: Colors.Gray, children: description })] }) }));
 };
-const TrailingIndicator = () => (_jsxs(Text, { color: Colors.Foreground, wrap: "truncate", children: [" ", "\u2190"] }));
+const TrailingIndicator = () => (_jsxs(Text, { color: Colors.Foreground, wrap: "truncate", children: [' ', "\u2190"] }));
 //# sourceMappingURL=ToolMessage.js.map

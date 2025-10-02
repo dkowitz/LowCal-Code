@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useEffect, useCallback } from "react";
-import { useCompletion } from "./useCompletion.js";
+import { useEffect, useCallback } from 'react';
+import { useCompletion } from './useCompletion.js';
 export function useReverseSearchCompletion(buffer, shellHistory, reverseSearchActive) {
     const { suggestions, activeSuggestionIndex, visibleStartIndex, showSuggestions, isLoadingSuggestions, setSuggestions, setShowSuggestions, setActiveSuggestionIndex, resetCompletionState, navigateUp, navigateDown, } = useCompletion();
     useEffect(() => {

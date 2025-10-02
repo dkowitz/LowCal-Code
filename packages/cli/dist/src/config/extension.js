@@ -3,18 +3,18 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { Storage } from "@qwen-code/qwen-code-core";
-import * as fs from "node:fs";
-import * as path from "node:path";
-import * as os from "node:os";
-import { simpleGit } from "simple-git";
-import { SettingScope, loadSettings } from "../config/settings.js";
-import { getErrorMessage } from "../utils/errors.js";
-import { recursivelyHydrateStrings } from "./extensions/variables.js";
-export const EXTENSIONS_DIRECTORY_NAME = path.join(".qwen", "extensions");
-export const EXTENSIONS_CONFIG_FILENAME = "qwen-extension.json";
-export const EXTENSIONS_CONFIG_FILENAME_OLD = "gemini-extension.json";
-export const INSTALL_METADATA_FILENAME = ".qwen-extension-install.json";
+import { Storage } from '@qwen-code/qwen-code-core';
+import * as fs from 'node:fs';
+import * as path from 'node:path';
+import * as os from 'node:os';
+import { simpleGit } from 'simple-git';
+import { SettingScope, loadSettings } from '../config/settings.js';
+import { getErrorMessage } from '../utils/errors.js';
+import { recursivelyHydrateStrings } from './extensions/variables.js';
+export const EXTENSIONS_DIRECTORY_NAME = path.join('.qwen', 'extensions');
+export const EXTENSIONS_CONFIG_FILENAME = 'qwen-extension.json';
+export const EXTENSIONS_CONFIG_FILENAME_OLD = 'gemini-extension.json';
+export const INSTALL_METADATA_FILENAME = '.qwen-extension-install.json';
 export class ExtensionStorage {
     extensionName;
     constructor(extensionName) {
@@ -31,7 +31,7 @@ export class ExtensionStorage {
         return storage.getExtensionsDir();
     }
     static async createTmpDir() {
-        return await fs.promises.mkdtemp(path.join(os.tmpdir(), "qwen-extension"));
+        return await fs.promises.mkdtemp(path.join(os.tmpdir(), 'qwen-extension'));
     }
 }
 export function getWorkspaceExtensions(workspaceDir) {
@@ -46,7 +46,7 @@ export async function performWorkspaceExtensionMigration(extensions) {
         try {
             const installMetadata = {
                 source: extension.path,
-                type: "local",
+                type: 'local',
             };
             await installExtension(installMetadata);
         }
@@ -113,10 +113,10 @@ export function loadExtension(extensionDir) {
         configFilePath = oldConfigFilePath;
     }
     try {
-        const configContent = fs.readFileSync(configFilePath, "utf-8");
+        const configContent = fs.readFileSync(configFilePath, 'utf-8');
         const config = recursivelyHydrateStrings(JSON.parse(configContent), {
             extensionPath: extensionDir,
-            "/": path.sep,
+            '/': path.sep,
             pathSeparator: path.sep,
         });
         if (!config.name || !config.version) {
@@ -141,7 +141,7 @@ export function loadExtension(extensionDir) {
 function loadInstallMetadata(extensionDir) {
     const metadataFilePath = path.join(extensionDir, INSTALL_METADATA_FILENAME);
     try {
-        const configContent = fs.readFileSync(metadataFilePath, "utf-8");
+        const configContent = fs.readFileSync(metadataFilePath, 'utf-8');
         const metadata = JSON.parse(configContent);
         return metadata;
     }
@@ -151,7 +151,7 @@ function loadInstallMetadata(extensionDir) {
 }
 function getContextFileNames(config) {
     if (!config.contextFileName) {
-        return ["QWEN.md"];
+        return ['QWEN.md'];
     }
     else if (!Array.isArray(config.contextFileName)) {
         return [config.contextFileName];
@@ -179,7 +179,7 @@ export function annotateActiveExtensions(extensions, enabledExtensionNames, work
     }
     const lowerCaseEnabledExtensions = new Set(enabledExtensionNames.map((e) => e.trim().toLowerCase()));
     if (lowerCaseEnabledExtensions.size === 1 &&
-        lowerCaseEnabledExtensions.has("none")) {
+        lowerCaseEnabledExtensions.has('none')) {
         return extensions.map((extension) => ({
             name: extension.config.name,
             version: extension.config.version,
@@ -214,7 +214,7 @@ export function annotateActiveExtensions(extensions, enabledExtensionNames, work
 async function cloneFromGit(gitUrl, destination) {
     try {
         // TODO(chrstnb): Download the archive instead to avoid unnecessary .git info.
-        await simpleGit().clone(gitUrl, destination, ["--depth", "1"]);
+        await simpleGit().clone(gitUrl, destination, ['--depth', '1']);
     }
     catch (error) {
         throw new Error(`Failed to clone Git repository from ${gitUrl}`, {
@@ -226,13 +226,13 @@ export async function installExtension(installMetadata, cwd = process.cwd()) {
     const extensionsDir = ExtensionStorage.getUserExtensionsDir();
     await fs.promises.mkdir(extensionsDir, { recursive: true });
     // Convert relative paths to absolute paths for the metadata file.
-    if (installMetadata.type === "local" &&
+    if (installMetadata.type === 'local' &&
         !path.isAbsolute(installMetadata.source)) {
         installMetadata.source = path.resolve(cwd, installMetadata.source);
     }
     let localSourcePath;
     let tempDir;
-    if (installMetadata.type === "git") {
+    if (installMetadata.type === 'git') {
         tempDir = await ExtensionStorage.createTmpDir();
         await cloneFromGit(installMetadata.source, tempDir);
         localSourcePath = tempDir;
@@ -321,7 +321,7 @@ export async function updateExtension(extensionName, cwd = process.cwd()) {
         await installExtension(extension.installMetadata, cwd);
         const updatedExtension = loadExtension(extension.path);
         if (!updatedExtension) {
-            throw new Error("Updated extension not found after installation.");
+            throw new Error('Updated extension not found after installation.');
         }
         const updatedVersion = updatedExtension.config.version;
         return {
@@ -340,7 +340,7 @@ export async function updateExtension(extensionName, cwd = process.cwd()) {
 }
 export function disableExtension(name, scope, cwd = process.cwd()) {
     if (scope === SettingScope.System || scope === SettingScope.SystemDefaults) {
-        throw new Error("System and SystemDefaults scopes are not supported.");
+        throw new Error('System and SystemDefaults scopes are not supported.');
     }
     const settings = loadSettings(cwd);
     const settingsFile = settings.forScope(scope);
@@ -351,7 +351,7 @@ export function disableExtension(name, scope, cwd = process.cwd()) {
     if (!disabledExtensions.includes(name)) {
         disabledExtensions.push(name);
         extensionSettings.disabled = disabledExtensions;
-        settings.setValue(scope, "extensions", extensionSettings);
+        settings.setValue(scope, 'extensions', extensionSettings);
     }
 }
 export function enableExtension(name, scopes) {
@@ -371,7 +371,7 @@ function removeFromDisabledExtensions(name, scopes, cwd = process.cwd()) {
         };
         const disabledExtensions = extensionSettings.disabled || [];
         extensionSettings.disabled = disabledExtensions.filter((extension) => extension !== name);
-        settings.setValue(scope, "extensions", extensionSettings);
+        settings.setValue(scope, 'extensions', extensionSettings);
     }
 }
 //# sourceMappingURL=extension.js.map

@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { uninstallExtension } from "../../config/extension.js";
-import { getErrorMessage } from "../../utils/errors.js";
+import { uninstallExtension } from '../../config/extension.js';
+import { getErrorMessage } from '../../utils/errors.js';
 export async function handleUninstall(args) {
     try {
         await uninstallExtension(args.name);
@@ -16,22 +16,22 @@ export async function handleUninstall(args) {
     }
 }
 export const uninstallCommand = {
-    command: "uninstall <name>",
-    describe: "Uninstalls an extension.",
+    command: 'uninstall <name>',
+    describe: 'Uninstalls an extension.',
     builder: (yargs) => yargs
-        .positional("name", {
-        describe: "The name of the extension to uninstall.",
-        type: "string",
+        .positional('name', {
+        describe: 'The name of the extension to uninstall.',
+        type: 'string',
     })
         .check((argv) => {
         if (!argv.name) {
-            throw new Error("Please include the name of the extension to uninstall as a positional argument.");
+            throw new Error('Please include the name of the extension to uninstall as a positional argument.');
         }
         return true;
     }),
     handler: async (argv) => {
         await handleUninstall({
-            name: argv["name"],
+            name: argv['name'],
         });
     },
 };
