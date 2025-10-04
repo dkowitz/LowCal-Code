@@ -1,12 +1,7 @@
-/**
- * @license
- * Copyright 2025 Qwen
- * SPDX-License-Identifier: Apache-2.0
- */
 import { AuthType } from '@qwen-code/qwen-code-core';
 import { CommandKind } from './types.js';
 import { AVAILABLE_MODELS_QWEN, fetchOpenAICompatibleModels, getOpenAIAvailableModelFromEnv, } from '../models/availableModels.js';
-async function getAvailableModelsForAuthType(authType) {
+async function getAvailableModelsForAuthType(authType, context) {
     switch (authType) {
         case AuthType.QWEN_OAUTH:
             return AVAILABLE_MODELS_QWEN;
@@ -15,17 +10,18 @@ async function getAvailableModelsForAuthType(authType) {
             const openAIModel = getOpenAIAvailableModelFromEnv();
             if (openAIModel)
                 return [openAIModel];
-            // If an OpenAI-compatible base URL is provided, assume models are available
-            const baseUrl = process.env['OPENAI_BASE_URL']?.trim();
+            // Use provider-specific settings from config
+            const { providerId, providers } = context.services.settings.merged.security?.auth || {};
+            const provider = providers?.[providerId];
+            const baseUrl = provider?.baseUrl?.trim() || process.env['OPENAI_BASE_URL']?.trim();
+            const apiKey = provider?.apiKey?.trim() || process.env['OPENAI_API_KEY']?.trim();
             if (baseUrl) {
-                const apiKey = process.env['OPENAI_API_KEY']?.trim();
                 return await fetchOpenAICompatibleModels(baseUrl, apiKey);
             }
             return [];
         }
         default:
             // For other auth types, return empty array for now
-            // This can be expanded later according to the design doc
             return [];
     }
 }
@@ -59,7 +55,7 @@ export const modelCommand = {
                 content: 'Authentication type not available.',
             };
         }
-        const availableModels = await getAvailableModelsForAuthType(authType);
+        const availableModels = await getAvailableModelsForAuthType(authType, context);
         if (availableModels.length === 0) {
             return {
                 type: 'message',

@@ -129,10 +129,8 @@ export function AuthDialog({
     }
   };
   const items = [
-    { label: 'Qwen OAuth', value: AuthType.QWEN_OAUTH },
     { label: 'OpenRouter (OpenAI-compatible)', value: 'openrouter' },
     { label: 'LM Studio (local)', value: 'lmstudio' },
-    { label: 'OpenAI', value: AuthType.USE_OPENAI },
   ];
   // Try to detect OpenAI-compatible provider from environment first so the
   // auth dialog can default to the provider the user last configured.

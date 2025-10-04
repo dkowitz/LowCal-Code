@@ -1,9 +1,3 @@
-/**
- * @license
- * Copyright 2025 Qwen
- * SPDX-License-Identifier: Apache-2.0
- */
-
 import { AuthType } from '@qwen-code/qwen-code-core';
 import type {
   SlashCommand,
@@ -21,6 +15,7 @@ import {
 
 async function getAvailableModelsForAuthType(
   authType: AuthType,
+  context: CommandContext
 ): Promise<AvailableModel[]> {
   switch (authType) {
     case AuthType.QWEN_OAUTH:
@@ -30,10 +25,13 @@ async function getAvailableModelsForAuthType(
       const openAIModel = getOpenAIAvailableModelFromEnv();
       if (openAIModel) return [openAIModel];
 
-      // If an OpenAI-compatible base URL is provided, assume models are available
-      const baseUrl = process.env['OPENAI_BASE_URL']?.trim();
+      // Use provider-specific settings from config
+      const { providerId, providers } = context.services.settings.merged.security?.auth || {};
+      const provider = providers?.[providerId as 'openrouter' | 'lmstudio' | 'openai'];
+      const baseUrl = provider?.baseUrl?.trim() || process.env['OPENAI_BASE_URL']?.trim();
+      const apiKey = (provider as any)?.apiKey?.trim() || process.env['OPENAI_API_KEY']?.trim();
+
       if (baseUrl) {
-        const apiKey = process.env['OPENAI_API_KEY']?.trim();
         return await fetchOpenAICompatibleModels(baseUrl, apiKey);
       }
 
@@ -41,7 +39,6 @@ async function getAvailableModelsForAuthType(
     }
     default:
       // For other auth types, return empty array for now
-      // This can be expanded later according to the design doc
       return [];
   }
 }
@@ -82,7 +79,7 @@ export const modelCommand: SlashCommand = {
       };
     }
 
-    const availableModels = await getAvailableModelsForAuthType(authType);
+    const availableModels = await getAvailableModelsForAuthType(authType, context);
 
     if (availableModels.length === 0) {
       return {
