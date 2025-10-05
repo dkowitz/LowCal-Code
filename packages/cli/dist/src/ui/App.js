@@ -230,6 +230,22 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [availableModelsForDialog, setAvailableModelsForDialog] = useState([]);
     const [allAvailableModels, setAllAvailableModels] = useState([]);
     const [isFetchingModels, setIsFetchingModels] = useState(false);
+    // Invalidate cached model lists when auth/provider changes so discovery is
+    // re-run for the currently selected provider. This ensures that after the
+    // user switches authentication/provider, the model selection dialog will show
+    // provider-appropriate models instead of stale cached entries.
+    useEffect(() => {
+        // Clear cached model lists prepared for the dialog and the global cache.
+        setAllAvailableModels([]);
+        setAvailableModelsForDialog([]);
+        // If the dialog is already open, close it so next open triggers a fresh fetch.
+        setIsModelSelectionDialogOpen(false);
+        // Note: we intentionally keep this effect minimal — it only clears UI cache
+        // state when either the selected authType or providerId changes.
+    }, [
+        settings.merged.security?.auth?.selectedType,
+        settings.merged.security?.auth?.providerId,
+    ]);
     const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = useState(false);
     const [visionSwitchResolver, setVisionSwitchResolver] = useState(null);
     useEffect(() => {
