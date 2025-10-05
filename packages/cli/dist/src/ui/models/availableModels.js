@@ -32,10 +32,14 @@ export function getOpenAIAvailableModelFromEnv() {
  */
 export async function fetchOpenAICompatibleModels(baseUrl, apiKey) {
     try {
+        const isLMStudio = baseUrl.includes('127.0.0.1:1234') || baseUrl.includes('localhost:1234');
         // Normalize the base URL to avoid double /v1 paths
         // If baseUrl already ends with /v1, don't add another /v1
         let url;
-        if (baseUrl.endsWith('/v1')) {
+        if (isLMStudio) {
+            url = baseUrl.replace(/\/v1\/?$/, '') + '/api/v0/models';
+        }
+        else if (baseUrl.endsWith('/v1')) {
             url = baseUrl + '/models';
         }
         else {
@@ -52,6 +56,15 @@ export async function fetchOpenAICompatibleModels(baseUrl, apiKey) {
         const data = await resp.json();
         // OpenAI responses typically have "data" array with id fields
         const models = Array.isArray(data?.data) ? data.data : [];
+        if (isLMStudio) {
+            return models
+                .map((m) => ({
+                id: m.id || m.name,
+                label: m.id || m.name,
+                contextLength: m.max_context_length,
+            }))
+                .filter((m) => !!m.id);
+        }
         return models
             .map((m) => ({
             id: m.id || m.name,
@@ -59,7 +72,9 @@ export async function fetchOpenAICompatibleModels(baseUrl, apiKey) {
             // OpenRouter includes pricing and context_length in the model object
             // pricing.prompt is for input tokens, pricing.completion is for output tokens
             inputPrice: typeof m.pricing?.prompt === 'string' ? m.pricing.prompt : undefined,
-            outputPrice: typeof m.pricing?.completion === 'string' ? m.pricing.completion : undefined,
+            outputPrice: typeof m.pricing?.completion === 'string'
+                ? m.pricing.completion
+                : undefined,
             contextLength: typeof m.context_length === 'number'
                 ? m.context_length
                 : typeof m.top_provider?.context_length === 'number'

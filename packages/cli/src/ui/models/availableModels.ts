@@ -60,15 +60,20 @@ export async function fetchOpenAICompatibleModels(
   apiKey?: string,
 ): Promise<AvailableModel[]> {
   try {
+    const isLMStudio =
+      baseUrl.includes('127.0.0.1:1234') || baseUrl.includes('localhost:1234');
+
     // Normalize the base URL to avoid double /v1 paths
     // If baseUrl already ends with /v1, don't add another /v1
     let url: string;
-    if (baseUrl.endsWith('/v1')) {
+    if (isLMStudio) {
+      url = baseUrl.replace(/\/v1\/?$/, '') + '/api/v0/models';
+    } else if (baseUrl.endsWith('/v1')) {
       url = baseUrl + '/models';
     } else {
       url = baseUrl.replace(/\/*$/, '') + '/v1/models';
     }
-    
+
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
     };
@@ -79,14 +84,29 @@ export async function fetchOpenAICompatibleModels(
     const data = await resp.json();
     // OpenAI responses typically have "data" array with id fields
     const models: any[] = Array.isArray(data?.data) ? data.data : [];
+
+    if (isLMStudio) {
+      return models
+        .map((m) => ({
+          id: m.id || m.name,
+          label: m.id || m.name,
+          contextLength: m.max_context_length,
+        }))
+        .filter((m) => !!m.id);
+    }
+
     return models
       .map((m) => ({
         id: m.id || m.name,
         label: m.id || m.name,
         // OpenRouter includes pricing and context_length in the model object
         // pricing.prompt is for input tokens, pricing.completion is for output tokens
-        inputPrice: typeof m.pricing?.prompt === 'string' ? m.pricing.prompt : undefined,
-        outputPrice: typeof m.pricing?.completion === 'string' ? m.pricing.completion : undefined,
+        inputPrice:
+          typeof m.pricing?.prompt === 'string' ? m.pricing.prompt : undefined,
+        outputPrice:
+          typeof m.pricing?.completion === 'string'
+            ? m.pricing.completion
+            : undefined,
         contextLength:
           typeof m.context_length === 'number'
             ? m.context_length
