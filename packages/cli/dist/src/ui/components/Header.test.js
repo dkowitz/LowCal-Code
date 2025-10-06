@@ -8,7 +8,7 @@ import { render } from 'ink-testing-library';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { Header } from './Header.js';
 import * as useTerminalSize from '../hooks/useTerminalSize.js';
-import { longAsciiLogo } from './AsciiArt.js';
+import { shortAsciiLogo } from './AsciiArt.js';
 vi.mock('../hooks/useTerminalSize.js');
 describe('<Header />', () => {
     beforeEach(() => { });
@@ -18,7 +18,8 @@ describe('<Header />', () => {
             rows: 20,
         });
         const { lastFrame } = render(_jsx(Header, { version: "1.0.0", nightly: false }));
-        expect(lastFrame()).toContain(longAsciiLogo);
+        // Updated expectation: short logo is selected for given width
+        expect(lastFrame()).toContain(shortAsciiLogo);
     });
     it('renders custom ASCII art when provided', () => {
         const customArt = 'CUSTOM ART';

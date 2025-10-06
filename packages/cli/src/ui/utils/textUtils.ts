@@ -16,7 +16,8 @@ export const getAsciiArtWidth = (asciiArt: string): number => {
   if (!asciiArt) {
     return 0;
   }
-  const lines = asciiArt.split('\n');
+  // Split into lines and ignore empty leading/trailing lines which can affect width calculation.
+  const lines = asciiArt.split('\n').filter((line) => line.length > 0);
   return Math.max(...lines.map((line) => line.length));
 };
 

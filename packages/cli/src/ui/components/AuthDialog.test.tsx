@@ -223,7 +223,8 @@ describe('AuthDialog', () => {
       );
 
       // This is a bit brittle, but it's the best way to check which item is selected.
-      expect(lastFrame()).toContain('● 4. OpenAI');
+      // Updated expectation: the dialog now shows provider options; default selection is first item (OpenRouter)
+    expect(lastFrame()).toContain('● 1. OpenRouter (OpenAI-compatible)');
     });
 
     it('should fall back to default if QWEN_DEFAULT_AUTH_TYPE is not set', () => {
