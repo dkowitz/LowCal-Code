@@ -55,7 +55,14 @@ export const modelCommand = {
                 content: 'Authentication type not available.',
             };
         }
-        const availableModels = await getAvailableModelsForAuthType(authType, context);
+        let availableModels = await getAvailableModelsForAuthType(authType, context);
+        // If using LM Studio provider, prefer filesystem-configured models
+        if (authType === AuthType.USE_OPENAI) {
+            const lmModels = await (await import('../models/availableModels.js')).getLMStudioConfiguredModels();
+            if (lmModels.length > 0) {
+                availableModels = lmModels;
+            }
+        }
         if (availableModels.length === 0) {
             return {
                 type: 'message',

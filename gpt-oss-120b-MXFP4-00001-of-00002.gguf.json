@@ -1,0 +1,22 @@
+{
+  "preset": "",
+  "operation": {
+    "fields": []
+  },
+  "load": {
+    "fields": [
+      {
+        "key": "llm.load.llama.flashAttention",
+        "value": true
+      },
+      {
+        "key": "llm.load.llama.tryMmap",
+        "value": false
+      },
+      {
+        "key": "llm.load.contextLength",
+        "value": 131072
+      }
+    ]
+  }
+}

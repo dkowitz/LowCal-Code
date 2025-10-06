@@ -4,6 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
+import fs from 'fs/promises';
+import path from 'path';
+import os from 'os';
+
 export type AvailableModel = {
   id: string;
   label: string;
@@ -16,9 +20,24 @@ export type AvailableModel = {
    */
   outputPrice?: string;
   /**
-   * Context window size in tokens. Only populated for OpenRouter models.
+   * Legacy single context length field (kept for compatibility). Prefer using
+   * configuredContextLength and maxContextLength when available.
    */
   contextLength?: number;
+  /**
+   * Context window size configured by the user in LM Studio JSON files.
+   */
+  configuredContextLength?: number;
+  /**
+   * Max/context length reported by the provider (LM Studio REST API).
+   */
+  maxContextLength?: number;
+  /** Original configured filename-derived model id (if from filesystem) */
+  configuredName?: string;
+  /** True if we couldn't find a matching REST id for this configured model */
+  unmatched?: boolean;
+  /** If matched, the REST provider id we matched to */
+  matchedRestId?: string;
   isVision?: boolean;
 };
 
@@ -90,7 +109,7 @@ export async function fetchOpenAICompatibleModels(
         .map((m) => ({
           id: m.id || m.name,
           label: m.id || m.name,
-          contextLength: m.max_context_length,
+          maxContextLength: m.max_context_length,
         }))
         .filter((m) => !!m.id);
     }
@@ -122,9 +141,117 @@ export async function fetchOpenAICompatibleModels(
 }
 
 /**
- * Query LM Studio for the currently loaded model.
- * Returns the model id or null if not found.
+ * Read LM Studio user model configuration files from the user's home directory.
+ * We traverse ~/.lmstudio/.internal/user-concrete-model-default-config/ recursively
+ * and parse JSON files looking for the configured context length at key
+ * "llm.load.contextLength" (commonly found under load.fields entries).
+ * Only models with an explicit configured contextLength are returned.
  */
+export async function getLMStudioConfiguredModels(): Promise<AvailableModel[]> {
+  const configDir = path.join(os.homedir(), '.lmstudio', '.internal', 'user-concrete-model-default-config');
+  try {
+    // Check dir exists
+    const stat = await fs.stat(configDir).catch(() => null);
+    if (!stat || !stat.isDirectory()) return [];
+
+    const files: string[] = [];
+
+    async function walk(dir: string) {
+      const entries = await fs.readdir(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          await walk(full);
+        } else if (entry.isFile() && entry.name.toLowerCase().endsWith('.json')) {
+          files.push(full);
+        }
+      }
+    }
+
+    await walk(configDir);
+
+    const results: AvailableModel[] = [];
+    // load any persisted mappings
+    let mappings: Record<string, string> = {};
+    try {
+      // dynamic import to avoid circular deps in runtime bundle
+      const storage = await import('./modelMappingStorage.js');
+      mappings = await storage.loadMappings();
+    } catch (e) {
+      mappings = {};
+    }
+
+    for (const filePath of files) {
+      try {
+        const raw = await fs.readFile(filePath, { encoding: 'utf8' });
+        const obj = JSON.parse(raw);
+        const ctx = extractContextLengthFromConfig(obj);
+        if (typeof ctx === 'number' && Number.isFinite(ctx) && ctx > 0) {
+          // derive model id/label from filename
+          const base = path.basename(filePath, '.json');
+          // remove trailing .gguf or -GGUF variants if present
+          const cleaned = base.replace(/(\.gguf|-gguf)$/i, '');
+          const mapped = mappings[cleaned];
+          const model: AvailableModel = { id: cleaned, label: cleaned, configuredName: cleaned, configuredContextLength: ctx };
+          if (mapped) {
+            model.matchedRestId = mapped;
+            model.id = mapped;
+            model.label = mapped;
+          }
+          results.push(model);
+        }
+      } catch (e) {
+        // ignore parse/read errors for individual files
+        continue;
+      }
+    }
+
+    return results;
+  } catch (e) {
+    return [];
+  }
+}
+
+function extractContextLengthFromConfig(obj: any): number | undefined {
+  // Common LM Studio schema: obj.load.fields is array of {key, value}
+  if (obj && obj.load && Array.isArray(obj.load.fields)) {
+    for (const f of obj.load.fields) {
+      if (f && (f.key === 'llm.load.contextLength' || f.key === 'llm.load.contextlength')) {
+        const v = f.value;
+        if (typeof v === 'number') return v;
+        const n = Number(v);
+        if (!Number.isNaN(n)) return n;
+      }
+    }
+  }
+
+  // Fallback: deep search for property name 'llm.load.contextLength'
+  let found: number | undefined;
+  function recurse(o: any) {
+    if (found !== undefined) return;
+    if (o && typeof o === 'object') {
+      for (const k of Object.keys(o)) {
+        if (k === 'llm.load.contextLength' || k === 'llm.load.contextlength') {
+          const v = o[k];
+          if (typeof v === 'number') {
+            found = v;
+            return;
+          }
+          const n = Number(v);
+          if (!Number.isNaN(n)) {
+            found = n;
+            return;
+          }
+        }
+        const val = o[k];
+        if (val && typeof val === 'object') recurse(val);
+      }
+    }
+  }
+  recurse(obj);
+  return found;
+}
+
 export async function getLMStudioLoadedModel(
   baseUrl: string,
 ): Promise<string | null> {
@@ -140,7 +267,6 @@ export async function getLMStudioLoadedModel(
     const loadedModel = models.find((m) => m.state === 'loaded');
     return loadedModel?.id || null;
   } catch (e) {
-    // swallow errors and return null
     return null;
   }
 }

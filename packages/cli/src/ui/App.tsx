@@ -55,6 +55,7 @@ import { ShellConfirmationDialog } from './components/ShellConfirmationDialog.js
 import { QuitConfirmationDialog } from './components/QuitConfirmationDialog.js';
 import { RadioButtonSelect } from './components/shared/RadioButtonSelect.js';
 import { ModelSelectionDialog } from './components/ModelSelectionDialog.js';
+import { ModelMappingDialog } from './components/ModelMappingDialog.js';
 import {
   ModelSwitchDialog,
   type VisionSwitchOutcome,
@@ -63,6 +64,7 @@ import {
   getOpenAIAvailableModelFromEnv,
   getFilteredQwenModels,
   fetchOpenAICompatibleModels,
+  getLMStudioConfiguredModels,
   getLMStudioLoadedModel,
   type AvailableModel,
 } from './models/availableModels.js';
@@ -338,6 +340,41 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     useState<AvailableModel[]>([]);
   const [allAvailableModels, setAllAvailableModels] = useState<AvailableModel[]>([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
+
+  // Model mapping dialog state
+  const [isModelMappingDialogOpen, setIsModelMappingDialogOpen] = useState(false);
+  const [pendingModelMappings, setPendingModelMappings] = useState<{
+    unmatched: AvailableModel[];
+    restModels: AvailableModel[];
+    takenRestIds?: string[];
+  } | null>(null);
+
+  // Helper to open mapping dialog with pre-filtered rest models
+  const openModelMappingDialog = useCallback((unmatched: AvailableModel[], restModels: AvailableModel[]) => {
+    const taken = allAvailableModels.filter(m => m.matchedRestId).map(m => m.matchedRestId!).filter(Boolean);
+    const filteredRest = restModels.filter(r => !taken.includes(r.id));
+    setPendingModelMappings({ unmatched, restModels: filteredRest, takenRestIds: taken });
+    setIsModelMappingDialogOpen(true);
+  }, [allAvailableModels]);
+
+  // Ensure function is used to avoid unused var lint during build (no-op)
+  useEffect(() => {
+    // no-op: referenced to silence unused variable detection during build
+    if (typeof openModelMappingDialog === 'function') return;
+  }, [openModelMappingDialog]);
+
+  // Render mapping dialog when open
+  const renderModelMappingDialog = () => {
+    if (!isModelMappingDialogOpen || !pendingModelMappings) return null;
+    const mappingProps = {
+      unmatched: pendingModelMappings.unmatched,
+      restModels: pendingModelMappings.restModels,
+      onApply: applyModelMappings,
+      onCancel: () => { setIsModelMappingDialogOpen(false); setPendingModelMappings(null); },
+    };
+    // Use imported symbol rather than require() so bundlers and ESM environments work.
+    return <ModelMappingDialog {...mappingProps} />;
+  };
 
   // Invalidate cached model lists when auth/provider changes so discovery is
   // re-run for the currently selected provider. This ensures that after the
@@ -802,21 +839,129 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       let models: AvailableModel[] = [];
       try {
         if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
-          const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
-          const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
-          if (baseUrl) {
-            models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
-          }
-          const openAIModel = getOpenAIAvailableModelFromEnv();
-          if (openAIModel) {
-            if (!models.find(m => m.id === openAIModel.id)) {
-              models.push(openAIModel);
+          // Prefer filesystem-configured LM Studio models (manual configs under ~/.lmstudio/...)
+          const configured = await getLMStudioConfiguredModels();
+          if (configured.length > 0) {
+            models = configured;
+          } else {
+            const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
+            const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
+            if (baseUrl) {
+              models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
+            }
+            const openAIModel = getOpenAIAvailableModelFromEnv();
+            if (openAIModel) {
+              if (!models.find(m => m.id === openAIModel.id)) {
+                models.push(openAIModel);
+              }
             }
           }
         } else {
           models = getFilteredQwenModels(settings.merged.experimental?.visionModelPreview ?? true);
         }
         
+        // Deduplicate models by id to avoid duplicate labels / React key collisions
+        const seenIds = new Set<string>();
+        models = models.filter(m => {
+          if (!m || !m.id) return false;
+          if (seenIds.has(m.id)) return false;
+          seenIds.add(m.id);
+          return true;
+        });
+
+        // Merge configured context lengths and max context lengths if we have both sources
+        if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
+          // Fetch REST models again to obtain provider model ids and max ctx if we didn't already
+          const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
+          const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
+          if (baseUrl) {
+            try {
+              const restModels = await fetchOpenAICompatibleModels(baseUrl, apiKey);
+              // Create a map from rest id to model data for quick lookup
+              const restById = new Map(restModels.map(m => [m.id, m]));
+
+              // Debug: print REST model ids (short list) to the debug console
+              console.debug('[LMStudio] REST models:', restModels.map(r => r.id).slice(0, 50));
+
+              // If there are persisted mappings, apply them to restModels for convenience
+              try {
+                const storage = await import('./models/modelMappingStorage.js');
+                const existing = await storage.loadMappings();
+                // promote mappings to restModels list if present
+                for (const v of Object.values(existing)) {
+                  // if restModels contains v, ensure there is an entry in models that maps to it
+                  const idx = restModels.findIndex(r => r.id === v as string);
+                  if (idx !== -1) {
+                    // nothing to do here for restModels; mapping applied earlier when reading configured models
+                  }
+                }
+              } catch (e) {
+                // ignore mapping load errors
+              }
+
+              // For each model in `models` (which may be configured-only), try to match to REST entry
+              models = models.map(m => {
+                // direct match
+                const rest = restById.get(m.id);
+                if (rest) {
+                  console.debug(`[LMStudio] Matched configured '${m.id}' -> REST '${rest.id}' (exact)`);
+                  return { ...m, maxContextLength: rest.maxContextLength ?? rest.contextLength };
+                }
+                // token-based normalization + overlap score
+                const normalize = (s: string) => s.toLowerCase().replace(/[^a-z0-9]/g, ' ');
+                const tokens = Array.from(new Set(normalize(m.id).split(/\s+/).filter(Boolean)));
+                let best: { rid?: string; score: number } = { score: 0 };
+                for (const [rid] of restById) {
+                  const rtokens = Array.from(new Set(normalize(rid).split(/\s+/).filter(Boolean)));
+                  const intersection = tokens.filter(t => rtokens.includes(t)).length;
+                  const union = new Set([...tokens, ...rtokens]).size;
+                  const jaccard = union === 0 ? 0 : intersection / union;
+                  // also compute simple prefix/suffix boost
+                  const prefix = rid.toLowerCase().startsWith(m.id.toLowerCase()) ? 0.2 : 0;
+                  const contains = rid.toLowerCase().includes(m.id.toLowerCase()) ? 0.1 : 0;
+                  const score = jaccard + prefix + contains;
+                  if (score > best.score) best = { rid, score };
+                }
+                // accept candidate if score >= 0.45
+                if (best.rid && best.score >= 0.45) {
+                  const matchRid = best.rid;
+                  const rmodel = restById.get(matchRid)!;
+                  console.debug(`[LMStudio] Matched configured '${m.id}' -> REST '${matchRid}' (score=${best.score.toFixed(2)})`);
+                  return { ...m, id: matchRid, label: rmodel.label ?? matchRid, maxContextLength: rmodel.maxContextLength ?? rmodel.contextLength, matchedRestId: matchRid };
+                }
+                console.debug(`[LMStudio] No REST match for configured '${m.id}' (bestScore=${best.score.toFixed(2)})`);
+                return { ...m, unmatched: true };
+              });
+
+              // If there are unmatched models, present an interactive mapping dialog to the user
+              const unmatched = models.filter(m => m.unmatched);
+              if (unmatched.length > 0) {
+                try {
+                  // Show the interactive mapping dialog and wait for selection
+                  // load dialog module (side-effect import not used directly)
+                  await import('./components/ModelMappingDialog.js');
+                  setAllAvailableModels(models);
+                  setAvailableModelsForDialog(models);
+                  // Store unmatched/restModels in ref/state for dialog rendering
+                  // Pre-filter restModels to exclude any REST ids already matched algorithmically
+                  const taken = models.filter(m => m.matchedRestId).map(m => m.matchedRestId!).filter(Boolean);
+                  const filteredRest = restModels.filter(r => !taken.includes(r.id));
+                  setPendingModelMappings({ unmatched, restModels: filteredRest, takenRestIds: taken });
+                  setIsModelMappingDialogOpen(true);
+                  // Wait for mapping result via state (mapping handler will persist and update models)
+                  // For now we return early so the UI shows the mapping dialog
+                  setIsFetchingModels(false);
+                  return;
+                } catch (e) {
+                  console.debug('[LMStudio] Failed to open mapping dialog', e);
+                }
+              }
+            } catch (e) {
+              // ignore REST enrich failures; keep models as-is
+            }
+          }
+        }
+
         setAllAvailableModels(models);
         setAvailableModelsForDialog(models);
         setIsModelSelectionDialogOpen(true);
@@ -826,6 +971,36 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     })();
   }, [allAvailableModels, config, settings.merged.experimental?.visionModelPreview, isFetchingModels]);
 
+  // Handler to apply mappings from ModelMappingDialog
+  const applyModelMappings = useCallback(async (mappings: Record<string, string>) => {
+    try {
+      console.debug('[LMStudio] Applying mappings from dialog:', mappings);
+      const storage = await import('./models/modelMappingStorage.js');
+      const existing = await storage.loadMappings();
+      console.debug('[LMStudio] Existing mappings:', existing);
+      const merged = { ...existing, ...mappings };
+      await storage.saveMappings(merged);
+      console.debug('[LMStudio] Persisted merged mappings:', merged);
+
+      // Update current models with applied mappings
+      const updated = allAvailableModels.map(m => {
+        if (m.configuredName && mappings[m.configuredName]) {
+          return { ...m, id: mappings[m.configuredName], label: mappings[m.configuredName], matchedRestId: mappings[m.configuredName], unmatched: false };
+        }
+        return m;
+      });
+      setAllAvailableModels(updated);
+      setAvailableModelsForDialog(updated);
+    } catch (e) {
+      console.error('Failed to persist model mappings:', e);
+    } finally {
+      setIsModelMappingDialogOpen(false);
+      setPendingModelMappings(null);
+    }
+  }, [allAvailableModels]);
+
+
+
   const handleModelSelectionClose = useCallback(() => {
     setIsModelSelectionDialogOpen(false);
   }, []);
@@ -833,6 +1008,19 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const handleModelSelect = useCallback(
     async (modelId: string) => {
       try {
+  // If this model was a mapped configured model, persist the mapping
+  try {
+    const mappedEntry = allAvailableModels.find(m => m.id === modelId && m.configuredName && m.matchedRestId === modelId);
+    if (mappedEntry && mappedEntry.configuredName) {
+      const storage = await import('./models/modelMappingStorage.js');
+      const existing = await storage.loadMappings();
+      const merged = { ...existing, [mappedEntry.configuredName]: modelId };
+      await storage.saveMappings(merged);
+    }
+  } catch (e) {
+    // ignore mapping persistence errors
+  }
+
   // Unload previous model by setting new model (config.setModel will reinitialize client)
   await config.setModel(modelId);
         setCurrentModel(modelId);
@@ -1427,6 +1615,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         >
           {(item) => item}
         </Static>
+        {/* Model mapping dialog (renders above other dialogs) */}
+        {renderModelMappingDialog()}
         <OverflowProvider>
           <Box ref={pendingHistoryItemRef} flexDirection="column">
             {pendingHistoryItems.map((item) => (
@@ -1761,7 +1951,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                   shellModeActive={shellModeActive}
                   setShellModeActive={setShellModeActive}
                   onEscapePromptChange={handleEscapePromptChange}
-                  focus={isFocused}
+                  focus={isFocused && !isModelMappingDialogOpen}
                   vimHandleInput={vimHandleInput}
                   placeholder={placeholder}
                 />

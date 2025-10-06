@@ -30,13 +30,20 @@ export const ModelSelectionDialog = ({ availableModels, currentModel, onSelect, 
             const outputFormatted = formatPrice(model.outputPrice);
             priceInfo = ` ${inputFormatted}/${outputFormatted} per 1M tokens`;
         }
-        // Format context length with comma separators
-        const ctxInfo = model.contextLength
-            ? ` (${model.contextLength.toLocaleString()} ctx)`
-            : '';
+        // Format context length with comma separators and show configured / max when available
+        const configured = model.configuredContextLength;
+        const max = model.maxContextLength ?? model.contextLength;
+        const ctxInfo = configured && max
+            ? ` (${configured.toLocaleString()} / ${max.toLocaleString()} ctx)`
+            : configured
+                ? ` (${configured.toLocaleString()} ctx)`
+                : max
+                    ? ` (${max.toLocaleString()} ctx)`
+                    : '';
         const currentIndicator = model.id === currentModel ? ' (current)' : '';
+        const unmatchedIndicator = model.unmatched ? ' [unmatched]' : '';
         return {
-            label: `${model.label}${visionIndicator}${priceInfo}${ctxInfo}${currentIndicator}`,
+            label: `${model.label}${visionIndicator}${priceInfo}${ctxInfo}${unmatchedIndicator}${currentIndicator}`,
             value: model.id,
         };
     });

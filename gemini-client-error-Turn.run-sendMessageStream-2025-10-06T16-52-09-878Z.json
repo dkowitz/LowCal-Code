@@ -1,0 +1,27 @@
+{
+  "error": {
+    "message": "Stream idle for 15000ms",
+    "stack": "IdleStreamTimeoutError: Stream idle for 15000ms\n    at Timeout.<anonymous> (file:///home/atmandk/LowCal-Code/bundle/gemini.js:146399:24)\n    at listOnTimeout (node:internal/timers:608:17)\n    at process.processTimers (node:internal/timers:543:7)"
+  },
+  "context": [
+    {
+      "role": "user",
+      "parts": [
+        {
+          "text": "This is the Qwen Code. We are setting up the context for our chat.\nToday's date is Monday, October 6, 2025 (formatted according to the user's locale).\nMy operating system is: linux\nI'm currently working in the directory: /home/atmandk/LowCal-dev\nHere is the folder structure of the current working directories:\n\nShowing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.\n\n/home/atmandk/LowCal-dev/\n├───.gitignore\n├───apis.md\n├───auth_choices.md\n├───CHANGELOG.md\n├───context_manage.md\n├───CONTEXT_MANAGEMENT_SOLUTION.md\n├───CONTRIBUTING.md\n├───conversation.md\n├───convo.txt\n├───DEBUG_CONSOLE_IMPLEMENTATION.md\n├───Dockerfile\n├───Error log summary.txt\n├───error_analysis.md\n├───esbuild.config.js\n├───eslint.config.js\n├───gemini-client-error-generateContent-api-2025-10-06T14-41-51-031Z.json\n├───gemini-client-error-Turn.run-sendMessageStream-2025-10-06T14-45-14-360Z.json\n├───LICENSE\n├───LM_apis.md\n├───Makefile\n├───...\n└───..."
+        }
+      ]
+    },
+    {
+      "role": "model",
+      "parts": [
+        {
+          "text": "Got it. Thanks for the context!"
+        }
+      ]
+    },
+    [
+      "Ok, we want to re-write how our /model command handles LM Studio models to display available models for selection.  In the LM Studio application, the user can configure the context length of each model and save that setting, which is recalled and applied when the model is loaded.  I've found that these settings are saved in json files in folders in /home/atmandk/.lmstudio/.internal/user-concrete-model-default-config/.  Currently, we use the REST api to fetch the available models and their MAX ctx size.  What we want is to fetch their CONFIGURED ctx size, because that is what we actually have to work with when the model is loaded.  Only models that have been configured manually have configuration files, and we only want to see these models, because unconfigured models have a default ctx length of 4k, which is useless for our application.  SO - we want to re-write our /model command for LM Studio to traverse the folders, find the json configuration files, and use those to list available models, along with their configured context size, rather than use the REST api at all.  Let me know if you understand the task."
+    ]
+  ]
+}
