@@ -25,7 +25,7 @@ const INVALID_CONTENT_RETRY_OPTIONS = {
     initialDelayMs: 500,
 };
 const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 15000;
-const LM_STUDIO_STREAM_IDLE_TIMEOUT_MS = 60000;
+const LM_STUDIO_STREAM_IDLE_TIMEOUT_MS = 0;
 function resolveStreamIdleTimeout(config) {
     const providerTag = getProviderTelemetryTag(config);
     if (providerTag === 'lmstudio') {
@@ -153,13 +153,14 @@ export class GeminiChat {
     // model.
     sendPromise = Promise.resolve();
     streamIdleTimeoutMs;
-    constructor(config, contentGenerator, generationConfig = {}, history = []) {
+    constructor(config, contentGenerator, generationConfig = {}, history = [], options = {}) {
         this.config = config;
         this.contentGenerator = contentGenerator;
         this.generationConfig = generationConfig;
         this.history = history;
         validateHistory(history);
-        this.streamIdleTimeoutMs = resolveStreamIdleTimeout(config);
+        this.streamIdleTimeoutMs =
+            options.streamIdleTimeoutOverride ?? resolveStreamIdleTimeout(config);
     }
     /**
      * Handles falling back to Flash model when persistent 429 errors occur for OAuth users.

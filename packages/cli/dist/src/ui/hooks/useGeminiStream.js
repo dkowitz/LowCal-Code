@@ -29,7 +29,7 @@ var StreamProcessingStatus;
  * Manages the Gemini stream, including user input, command processing,
  * API interaction, and tool call lifecycle.
  */
-export const useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, handleSlashCommand, shellModeActive, getPreferredEditor, onAuthError, performMemoryRefresh, modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError, onEditorClose, onCancelSubmit, visionModelPreviewEnabled, onVisionSwitchRequired) => {
+export const useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, handleSlashCommand, shellModeActive, getPreferredEditor, onAuthError, performMemoryRefresh, modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError, onEditorClose, onCancelSubmit, visionModelPreviewEnabled, onVisionSwitchRequired, refreshProviderState) => {
     const [initError, setInitError] = useState(null);
     const abortControllerRef = useRef(null);
     const turnCancelledRef = useRef(false);
@@ -482,6 +482,16 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         setIsResponding(true);
         setInitError(null);
         try {
+            if (refreshProviderState) {
+                try {
+                    await refreshProviderState();
+                }
+                catch (error) {
+                    if (config.getDebugMode()) {
+                        console.debug('[LMStudio] Failed to refresh provider state:', error);
+                    }
+                }
+            }
             const stream = geminiClient.sendMessageStream(finalQueryToSend, abortSignal, prompt_id);
             const processingStatus = await processGeminiStreamEvents(stream, userMessageTimestamp, abortSignal);
             if (processingStatus === StreamProcessingStatus.UserCancelled) {
@@ -541,6 +551,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         handleLoopDetectedEvent,
         handleVisionSwitch,
         restoreOriginalModel,
+        refreshProviderState,
     ]);
     const handleCompletedTools = useCallback(async (completedToolCallsFromScheduler) => {
         if (isResponding) {

@@ -256,6 +256,7 @@ export function useVisionAutoSwitch(
       if (config.getApprovalMode() === ApprovalMode.YOLO) {
         const vlModelId = getDefaultVisionModel();
         originalModelRef.current = config.getModel();
+        config.setModelContextLimit(vlModelId, undefined);
         await config.setModel(vlModelId, {
           reason: 'vision_auto_switch',
           context: 'YOLO mode auto-switch for image content',
@@ -292,6 +293,7 @@ export function useVisionAutoSwitch(
         if (visionSwitchResult.modelOverride) {
           // One-time model override
           originalModelRef.current = config.getModel();
+          config.setModelContextLimit(visionSwitchResult.modelOverride, undefined);
           await config.setModel(visionSwitchResult.modelOverride, {
             reason: 'vision_auto_switch',
             context: `Default VLM switch mode: ${defaultVlmSwitchMode} (one-time override)`,
@@ -302,6 +304,7 @@ export function useVisionAutoSwitch(
           };
         } else if (visionSwitchResult.persistSessionModel) {
           // Persistent session model change
+          config.setModelContextLimit(visionSwitchResult.persistSessionModel, undefined);
           await config.setModel(visionSwitchResult.persistSessionModel, {
             reason: 'vision_auto_switch',
             context: `Default VLM switch mode: ${defaultVlmSwitchMode} (session persistent)`,
@@ -319,6 +322,7 @@ export function useVisionAutoSwitch(
         if (visionSwitchResult.modelOverride) {
           // One-time model override
           originalModelRef.current = config.getModel();
+          config.setModelContextLimit(visionSwitchResult.modelOverride, undefined);
           await config.setModel(visionSwitchResult.modelOverride, {
             reason: 'vision_auto_switch',
             context: 'User-prompted vision switch (one-time override)',
@@ -329,6 +333,7 @@ export function useVisionAutoSwitch(
           };
         } else if (visionSwitchResult.persistSessionModel) {
           // Persistent session model change
+          config.setModelContextLimit(visionSwitchResult.persistSessionModel, undefined);
           await config.setModel(visionSwitchResult.persistSessionModel, {
             reason: 'vision_auto_switch',
             context: 'User-prompted vision switch (session persistent)',

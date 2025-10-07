@@ -16,7 +16,7 @@ export declare const useGeminiStream: (geminiClient: GeminiClient, history: Hist
     modelOverride?: string;
     persistSessionModel?: string;
     showGuidance?: boolean;
-}>) => {
+}>, refreshProviderState?: () => Promise<void>) => {
     streamingState: StreamingState;
     submitQuery: (query: PartListUnion, options?: {
         isContinuation: boolean;

@@ -15,6 +15,7 @@ import type { OpenAICompatibleProvider } from './provider/index.js';
 import { OpenAIContentConverter } from './converter.js';
 import type { TelemetryService, RequestContext } from './telemetryService.js';
 import type { ErrorHandler } from './errorHandler.js';
+import { openaiLogger } from '../../utils/openaiLogger.js';
 
 export interface PipelineConfig {
   cliConfig: Config;
@@ -28,6 +29,7 @@ export class ContentGenerationPipeline {
   client: OpenAI;
   private converter: OpenAIContentConverter;
   private contentGeneratorConfig: ContentGeneratorConfig;
+  private readonly enableOpenAILogging: boolean;
 
   constructor(private config: PipelineConfig) {
     this.contentGeneratorConfig = config.contentGeneratorConfig;
@@ -35,6 +37,7 @@ export class ContentGenerationPipeline {
     this.converter = new OpenAIContentConverter(
       this.contentGeneratorConfig.model,
     );
+    this.enableOpenAILogging = !!this.contentGeneratorConfig.enableOpenAILogging;
   }
 
   async execute(
@@ -342,6 +345,14 @@ export class ContentGenerationPipeline {
         userPromptId,
         isStreaming,
       );
+
+      if (this.enableOpenAILogging) {
+        try {
+          await openaiLogger.logInteraction(openaiRequest, undefined);
+        } catch (error) {
+          console.warn('Failed to log OpenAI request payload:', error);
+        }
+      }
 
       const result = await executor(openaiRequest, context);
 

@@ -224,6 +224,7 @@ export declare class Config {
     private readonly systemPromptMappings?;
     private readonly maxSessionTurns;
     private readonly sessionTokenLimit;
+    private readonly modelContextLimits;
     private readonly listExtensions;
     private readonly _extensions;
     private readonly _blockedMcpServers;
@@ -266,6 +267,9 @@ export declare class Config {
         reason?: ModelSwitchEvent['reason'];
         context?: string;
     }): Promise<void>;
+    setModelContextLimit(model: string, limit?: number): void;
+    getModelContextLimit(model?: string): number | undefined;
+    getEffectiveContextLimit(model?: string): number;
     isInFallbackMode(): boolean;
     setFallbackMode(active: boolean): void;
     setFlashFallbackHandler(handler: FlashFallbackHandler): void;

@@ -19,7 +19,8 @@ export declare class TokenBudgetExceededError extends Error {
 }
 export declare class TokenBudgetManager {
     private readonly contentGenerator;
-    constructor(contentGenerator: ContentGenerator);
+    private readonly getContextLimit?;
+    constructor(contentGenerator: ContentGenerator, getContextLimit?: ((model: string) => number | undefined) | undefined);
     /**
      * Evaluate the total token requirement for a prospective request and compute
      * how it relates to the model's context window.

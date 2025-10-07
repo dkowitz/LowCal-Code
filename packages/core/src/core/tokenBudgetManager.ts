@@ -30,14 +30,21 @@ export class TokenBudgetExceededError extends Error {
 }
 
 export class TokenBudgetManager {
-  constructor(private readonly contentGenerator: ContentGenerator) {}
+  constructor(
+    private readonly contentGenerator: ContentGenerator,
+    private readonly getContextLimit?: (model: string) => number | undefined,
+  ) {}
 
   /**
    * Evaluate the total token requirement for a prospective request and compute
    * how it relates to the model's context window.
    */
   async evaluate(model: string, contents: Content[]): Promise<TokenBudgetSnapshot> {
-    const limit = tokenLimit(model, 'input');
+    const computedLimit = this.getContextLimit?.(model);
+    const limit =
+      typeof computedLimit === 'number' && Number.isFinite(computedLimit)
+        ? computedLimit
+        : tokenLimit(model, 'input');
     const buffer = this.getSafetyBuffer(limit);
     const effectiveLimit = Math.max(
       0,

@@ -22,6 +22,7 @@ export declare class ContentGenerationPipeline {
     client: OpenAI;
     private converter;
     private contentGeneratorConfig;
+    private readonly enableOpenAILogging;
     constructor(config: PipelineConfig);
     execute(request: GenerateContentParameters, userPromptId: string): Promise<GenerateContentResponse>;
     executeStream(request: GenerateContentParameters, userPromptId: string): Promise<AsyncGenerator<GenerateContentResponse>>;

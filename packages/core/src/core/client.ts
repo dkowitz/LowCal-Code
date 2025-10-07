@@ -68,7 +68,6 @@ import {
   getPlanModeSystemReminder,
   getSubagentSystemReminder,
 } from './prompts.js';
-import { tokenLimit } from './tokenLimits.js';
 import type {
   ChatCompressionInfo,
   ServerGeminiStreamEvent,
@@ -189,6 +188,7 @@ export class GeminiClient {
     );
     this.tokenBudgetManager = new TokenBudgetManager(
       this.getContentGenerator(),
+      (model) => this.config.getEffectiveContextLimit(model),
     );
     /**
      * Always take the model from contentGeneratorConfig to initialize,
@@ -345,6 +345,15 @@ export class GeminiClient {
       },
       ...(extraHistory ?? []),
     ];
+
+    let streamIdleTimeoutOverride: number | undefined;
+    const activeContentGenerator = this.getContentGenerator();
+    if (activeContentGenerator instanceof OpenAIContentGenerator) {
+      const provider = activeContentGenerator.getProvider();
+      if (provider instanceof LMStudioOpenAICompatibleProvider) {
+        streamIdleTimeoutOverride = 0;
+      }
+    }
     try {
       const userMemory = this.config.getUserMemory();
       const systemInstruction = getCoreSystemPrompt(
@@ -372,6 +381,7 @@ export class GeminiClient {
           tools,
         },
         history,
+        { streamIdleTimeoutOverride },
       );
     } catch (error) {
       await reportError(
@@ -583,6 +593,8 @@ export class GeminiClient {
     // Track the original model from the first call to detect model switching
     const initialModel = originalModel || this.config.getModel();
 
+    const providerTag = getProviderTelemetryTag(this.config);
+
     const compressed = await this.tryCompressChat(prompt_id);
 
     if (compressed.compressionStatus === CompressionStatus.COMPRESSED) {
@@ -728,7 +740,15 @@ export class GeminiClient {
         event.type === GeminiEventType.Error &&
         isRecoverableStreamErrorMessage(event.value?.error?.message)
       ) {
-        console.debug(`[Agent] Recoverable error, using non-streaming fallback`);
+        if (providerTag === 'lmstudio') {
+          console.debug(
+            '[Agent] Recoverable stream error encountered; skipping non-streaming fallback for LM Studio.',
+          );
+          continue;
+        }
+        console.debug(
+          `[Agent] Recoverable error, using non-streaming fallback`,
+        );
         const fallbackEvents = await this.runNonStreamingFallback(
           prompt_id,
           requestToSent,
@@ -766,7 +786,7 @@ export class GeminiClient {
         return turn;
       }
 
-      if (this.config.getSkipNextSpeakerCheck()) {
+      if (providerTag === 'lmstudio' || this.config.getSkipNextSpeakerCheck()) {
         return turn;
       }
 
@@ -1283,6 +1303,7 @@ export class GeminiClient {
     }
 
     const model = this.config.getModel();
+    const contextLimit = this.config.getEffectiveContextLimit(model);
 
     const { totalTokens: originalTokenCount } =
       await this.getContentGenerator().countTokens({
@@ -1307,7 +1328,7 @@ export class GeminiClient {
     if (!force) {
       const threshold =
         contextPercentageThreshold ?? COMPRESSION_TOKEN_THRESHOLD;
-      if (originalTokenCount < threshold * tokenLimit(model)) {
+      if (originalTokenCount < threshold * contextLimit) {
         return {
           originalTokenCount,
           newTokenCount: originalTokenCount,

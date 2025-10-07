@@ -58,6 +58,7 @@ import {
 } from './models.js';
 import { Storage } from './storage.js';
 import { Logger, type ModelSwitchEvent } from '../core/logger.js';
+import { tokenLimit } from '../core/tokenLimits.js';
 
 // Re-export OAuth config type
 export type { AnyToolInvocation, MCPOAuthConfig };
@@ -304,6 +305,7 @@ export class Config {
   }>;
   private readonly maxSessionTurns: number;
   private readonly sessionTokenLimit: number;
+  private readonly modelContextLimits = new Map<string, number>();
   private readonly listExtensions: boolean;
   private readonly _extensions: GeminiCLIExtension[];
   private readonly _blockedMcpServers: Array<{
@@ -576,6 +578,35 @@ export class Config {
         throw error; // Re-throw to let callers handle the error
       }
     }
+  }
+
+  setModelContextLimit(model: string, limit?: number): void {
+    if (!model) {
+      return;
+    }
+    if (typeof limit === 'number' && Number.isFinite(limit) && limit > 0) {
+      this.modelContextLimits.set(model, limit);
+    } else {
+      this.modelContextLimits.delete(model);
+    }
+  }
+
+  getModelContextLimit(model?: string): number | undefined {
+    const key = model ?? this.getModel();
+    if (!key) {
+      return undefined;
+    }
+    return this.modelContextLimits.get(key);
+  }
+
+  getEffectiveContextLimit(model?: string): number {
+    const key = model ?? this.getModel();
+    const override = key ? this.modelContextLimits.get(key) : undefined;
+    if (override && override > 0) {
+      return override;
+    }
+    const fallback = key ?? '';
+    return tokenLimit(fallback, 'input');
   }
 
   isInFallbackMode(): boolean {

@@ -1,10 +1,16 @@
 import OpenAI from 'openai';
+import { Agent } from 'undici';
 import type { Config } from '../../../config/config.js';
 import type { ContentGeneratorConfig } from '../../contentGenerator.js';
 import { DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT } from '../constants.js';
 import { DefaultOpenAICompatibleProvider } from './default.js';
 
-const LM_STUDIO_MIN_TIMEOUT_MS = 60000;
+const LM_STUDIO_MIN_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes; local loads can be slow
+
+const lmStudioDispatcher = new Agent({
+  bodyTimeout: 0, // allow arbitrarily long gaps while the model loads or processes the prompt
+  headersTimeout: 0,
+});
 
 export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatibleProvider {
   constructor(
@@ -48,6 +54,9 @@ export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
       timeout: effectiveTimeout,
       maxRetries,
       defaultHeaders: this.buildHeaders(),
+      fetchOptions: {
+        dispatcher: lmStudioDispatcher,
+      },
     });
   }
 

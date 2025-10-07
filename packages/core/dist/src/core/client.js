@@ -26,7 +26,6 @@ import { GeminiChat } from './geminiChat.js';
 import { OpenAIContentGenerator } from './openaiContentGenerator/openaiContentGenerator.js';
 import { LMStudioOpenAICompatibleProvider } from './openaiContentGenerator/provider/lmstudio.js';
 import { getCompressionPrompt, getCoreSystemPrompt, getCustomSystemPrompt, getPlanModeSystemReminder, getSubagentSystemReminder, } from './prompts.js';
-import { tokenLimit } from './tokenLimits.js';
 import { CompressionStatus, GeminiEventType, Turn } from './turn.js';
 import { TokenBudgetExceededError, TokenBudgetManager, } from './tokenBudgetManager.js';
 import { getProviderTelemetryTag } from '../utils/providerTelemetry.js';
@@ -106,7 +105,7 @@ export class GeminiClient {
     }
     async initialize(contentGeneratorConfig, extraHistory) {
         this.contentGenerator = await createContentGenerator(contentGeneratorConfig, this.config, this.config.getSessionId());
-        this.tokenBudgetManager = new TokenBudgetManager(this.getContentGenerator());
+        this.tokenBudgetManager = new TokenBudgetManager(this.getContentGenerator(), (model) => this.config.getEffectiveContextLimit(model));
         /**
          * Always take the model from contentGeneratorConfig to initialize,
          * despite the `this.config.contentGeneratorConfig` is not updated yet because in
@@ -235,6 +234,14 @@ export class GeminiClient {
             },
             ...(extraHistory ?? []),
         ];
+        let streamIdleTimeoutOverride;
+        const activeContentGenerator = this.getContentGenerator();
+        if (activeContentGenerator instanceof OpenAIContentGenerator) {
+            const provider = activeContentGenerator.getProvider();
+            if (provider instanceof LMStudioOpenAICompatibleProvider) {
+                streamIdleTimeoutOverride = 0;
+            }
+        }
         try {
             const userMemory = this.config.getUserMemory();
             const systemInstruction = getCoreSystemPrompt(userMemory, {}, model || this.config.getModel());
@@ -251,7 +258,7 @@ export class GeminiClient {
                 systemInstruction,
                 ...generateContentConfigWithThinking,
                 tools,
-            }, history);
+            }, history, { streamIdleTimeoutOverride });
         }
         catch (error) {
             await reportError(error, 'Error initializing Gemini chat session.', history, 'startChat');
@@ -418,6 +425,7 @@ export class GeminiClient {
         }
         // Track the original model from the first call to detect model switching
         const initialModel = originalModel || this.config.getModel();
+        const providerTag = getProviderTelemetryTag(this.config);
         const compressed = await this.tryCompressChat(prompt_id);
         if (compressed.compressionStatus === CompressionStatus.COMPRESSED) {
             yield { type: GeminiEventType.ChatCompressed, value: compressed };
@@ -530,6 +538,10 @@ export class GeminiClient {
             }
             if (event.type === GeminiEventType.Error &&
                 isRecoverableStreamErrorMessage(event.value?.error?.message)) {
+                if (providerTag === 'lmstudio') {
+                    console.debug('[Agent] Recoverable stream error encountered; skipping non-streaming fallback for LM Studio.');
+                    continue;
+                }
                 console.debug(`[Agent] Recoverable error, using non-streaming fallback`);
                 const fallbackEvents = await this.runNonStreamingFallback(prompt_id, requestToSent);
                 for (const fallbackEvent of fallbackEvents) {
@@ -561,7 +573,7 @@ export class GeminiClient {
                 // Don't continue with recursive call to prevent unwanted Flash execution
                 return turn;
             }
-            if (this.config.getSkipNextSpeakerCheck()) {
+            if (providerTag === 'lmstudio' || this.config.getSkipNextSpeakerCheck()) {
                 return turn;
             }
             const nextSpeakerCheck = await checkNextSpeaker(this.getChat(), this, signal);
@@ -888,6 +900,7 @@ export class GeminiClient {
             };
         }
         const model = this.config.getModel();
+        const contextLimit = this.config.getEffectiveContextLimit(model);
         const { totalTokens: originalTokenCount } = await this.getContentGenerator().countTokens({
             model,
             contents: curatedHistory,
@@ -905,7 +918,7 @@ export class GeminiClient {
         // Don't compress if not forced and we are under the limit.
         if (!force) {
             const threshold = contextPercentageThreshold ?? COMPRESSION_TOKEN_THRESHOLD;
-            if (originalTokenCount < threshold * tokenLimit(model)) {
+            if (originalTokenCount < threshold * contextLimit) {
                 return {
                     originalTokenCount,
                     newTokenCount: originalTokenCount,

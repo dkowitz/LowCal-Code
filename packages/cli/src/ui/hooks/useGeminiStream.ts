@@ -95,6 +95,7 @@ export const useGeminiStream = (
     persistSessionModel?: string;
     showGuidance?: boolean;
   }>,
+  refreshProviderState?: () => Promise<void>,
 ) => {
   const [initError, setInitError] = useState<string | null>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
@@ -802,6 +803,16 @@ export const useGeminiStream = (
       setInitError(null);
 
       try {
+        if (refreshProviderState) {
+          try {
+            await refreshProviderState();
+          } catch (error) {
+            if (config.getDebugMode()) {
+              console.debug('[LMStudio] Failed to refresh provider state:', error);
+            }
+          }
+        }
+
         const stream = geminiClient.sendMessageStream(
           finalQueryToSend,
           abortSignal,
@@ -880,6 +891,7 @@ export const useGeminiStream = (
       handleLoopDetectedEvent,
       handleVisionSwitch,
       restoreOriginalModel,
+      refreshProviderState,
     ],
   );
 

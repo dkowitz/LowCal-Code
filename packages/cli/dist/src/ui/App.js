@@ -154,6 +154,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [isTrustedFolderState, setIsTrustedFolder] = useState(config.isTrustedFolder());
     const [currentModel, setCurrentModel] = useState(config.getModel());
     const [lmStudioModel, setLmStudioModel] = useState(null);
+    const lastLmStudioModelFetchRef = useRef(0);
     // If the user has a saved model in settings, ensure the config and UI
     // reflect it on startup. This will restore the last-used model across
     // restarts.
@@ -183,31 +184,96 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         settings.merged.model?.name,
         settings.merged.security?.auth?.providerId,
     ]);
-    useEffect(() => {
-        const authType = settings.merged.security?.auth?.selectedType;
-        const providerId = settings.merged.security?.auth?.providerId;
-        const baseUrl = process.env['OPENAI_BASE_URL'];
-        let interval = undefined;
-        if (authType === AuthType.USE_OPENAI &&
-            providerId === 'lmstudio' &&
-            baseUrl) {
-            const fetchLmStudioModel = async () => {
-                const loadedModel = await getLMStudioLoadedModel(baseUrl);
-                setLmStudioModel(loadedModel);
-            };
-            fetchLmStudioModel(); // Initial fetch
-            interval = setInterval(fetchLmStudioModel, 15000); // Poll every 15 seconds
+    const refreshLmStudioModel = useCallback(async (force = false) => {
+        const contentGeneratorConfig = config.getContentGeneratorConfig();
+        if (!contentGeneratorConfig) {
+            return;
         }
-        return () => {
-            if (interval) {
-                clearInterval(interval);
+        const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
+        const providerId = settings.merged.security?.auth?.providerId;
+        const isLmStudioProvider = providerId === 'lmstudio' ||
+            baseUrl.includes('127.0.0.1:1234') ||
+            baseUrl.includes('localhost:1234');
+        if (!isLmStudioProvider || !baseUrl) {
+            setLmStudioModel(null);
+            lastLmStudioModelFetchRef.current = 0;
+            return;
+        }
+        const now = Date.now();
+        if (!force && now - lastLmStudioModelFetchRef.current < 60000) {
+            return;
+        }
+        lastLmStudioModelFetchRef.current = now;
+        try {
+            const loadedModel = await getLMStudioLoadedModel(baseUrl);
+            setLmStudioModel(loadedModel);
+        }
+        catch (error) {
+            if (config.getDebugMode()) {
+                console.debug('[LMStudio] Failed to fetch loaded model:', error);
             }
+        }
+    }, [config, settings.merged.security?.auth?.providerId]);
+    useEffect(() => {
+        void refreshLmStudioModel(true);
+    }, [refreshLmStudioModel]);
+    useEffect(() => {
+        const activeModel = config.getModel();
+        const providerId = settings.merged.security?.auth?.providerId;
+        const contentGeneratorConfig = config.getContentGeneratorConfig();
+        const baseUrl = contentGeneratorConfig?.baseUrl || '';
+        const isLmStudioProvider = providerId === 'lmstudio' ||
+            baseUrl.includes('127.0.0.1:1234') ||
+            baseUrl.includes('localhost:1234');
+        if (!activeModel) {
+            return;
+        }
+        if (!isLmStudioProvider) {
+            config.setModelContextLimit(activeModel, undefined);
+            return;
+        }
+        let cancelled = false;
+        (async () => {
+            try {
+                const configuredModels = await getLMStudioConfiguredModels();
+                let override = configuredModels.find((model) => model.id === activeModel ||
+                    model.label === activeModel ||
+                    model.matchedRestId === activeModel)?.configuredContextLength;
+                if (!override) {
+                    try {
+                        const storage = await import('./models/modelMappingStorage.js');
+                        const existingMappings = await storage.loadMappings();
+                        const configuredEntry = Object.entries(existingMappings).find(([_configuredName, mappedId]) => mappedId === activeModel);
+                        if (configuredEntry) {
+                            const [configuredName] = configuredEntry;
+                            const matched = configuredModels.find((model) => model.configuredName === configuredName ||
+                                model.id === configuredName);
+                            override = matched?.configuredContextLength;
+                        }
+                    }
+                    catch (error) {
+                        if (config.getDebugMode()) {
+                            console.debug('Failed to load LM Studio model mappings:', error);
+                        }
+                    }
+                }
+                if (!cancelled) {
+                    config.setModelContextLimit(activeModel, override);
+                }
+            }
+            catch (error) {
+                if (config.getDebugMode()) {
+                    console.debug('Failed to resolve LM Studio context length:', error);
+                }
+                if (!cancelled) {
+                    config.setModelContextLimit(activeModel, undefined);
+                }
+            }
+        })();
+        return () => {
+            cancelled = true;
         };
-    }, [
-        settings.merged.security?.auth?.selectedType,
-        settings.merged.security?.auth?.providerId,
-        process.env['OPENAI_BASE_URL'],
-    ]);
+    }, [config, currentModel, settings.merged.security?.auth?.providerId]);
     useEffect(() => {
         const providerId = settings.merged.security?.auth?.providerId;
         if (providerId !== 'lmstudio') {
@@ -764,10 +830,16 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     }, []);
     const handleModelSelect = useCallback(async (modelId) => {
         try {
+            const selectedModel = allAvailableModels.find((model) => model.id === modelId || model.matchedRestId === modelId);
+            const configuredContextLength = selectedModel?.configuredContextLength ??
+                selectedModel?.maxContextLength ??
+                selectedModel?.contextLength;
             // If this model was a mapped configured model, persist the mapping
             try {
-                const mappedEntry = allAvailableModels.find(m => m.id === modelId && m.configuredName && m.matchedRestId === modelId);
-                if (mappedEntry && mappedEntry.configuredName) {
+                const mappedEntry = allAvailableModels.find((m) => m.id === modelId &&
+                    m.configuredName &&
+                    m.matchedRestId === modelId);
+                if (mappedEntry?.configuredName) {
                     const storage = await import('./models/modelMappingStorage.js');
                     const existing = await storage.loadMappings();
                     const merged = { ...existing, [mappedEntry.configuredName]: modelId };
@@ -777,6 +849,13 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             catch (e) {
                 // ignore mapping persistence errors
             }
+            config.setModelContextLimit(modelId, configuredContextLength);
+            const contentGeneratorConfig = config.getContentGeneratorConfig();
+            const baseUrl = contentGeneratorConfig?.baseUrl || '';
+            const providerId = settings.merged.security?.auth?.providerId;
+            const isLmStudioProvider = providerId === 'lmstudio' ||
+                baseUrl.includes('127.0.0.1:1234') ||
+                baseUrl.includes('localhost:1234');
             // Unload previous model by setting new model (config.setModel will reinitialize client)
             await config.setModel(modelId);
             setCurrentModel(modelId);
@@ -800,15 +879,22 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 type: MessageType.INFO,
                 text: `Switched model to \`${modelId}\` for this session.`,
             }, Date.now());
-            // Send a small warm-up query to prime the model (non-blocking)
-            try {
-                const gemini = config.getGeminiClient();
-                if (gemini) {
-                    void gemini.generateContent([{ role: 'user', parts: [{ text: 'Say hello.' }] }], {}, new AbortController().signal, modelId).catch(() => { });
+            // Send a small warm-up query to prime remote models (non-blocking)
+            if (!isLmStudioProvider) {
+                try {
+                    const gemini = config.getGeminiClient();
+                    if (gemini) {
+                        void gemini
+                            .generateContent([{ role: 'user', parts: [{ text: 'Say hello.' }] }], {}, new AbortController().signal, modelId)
+                            .catch(() => { });
+                    }
+                }
+                catch (e) {
+                    // ignore warm-up errors
                 }
             }
-            catch (e) {
-                // ignore warm-up errors
+            if (isLmStudioProvider) {
+                await refreshLmStudioModel(true);
             }
         }
         catch (error) {
@@ -818,7 +904,14 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 text: `Failed to switch to model \`${modelId}\`. Please try again.`,
             }, Date.now());
         }
-    }, [config, setCurrentModel, addItem]);
+    }, [
+        allAvailableModels,
+        config,
+        setCurrentModel,
+        addItem,
+        settings.merged.security?.auth?.providerId,
+        refreshLmStudioModel,
+    ]);
     // available models for dialog are populated via handleModelSelectionOpen
     // Core hooks and processors
     const { vimEnabled: vimModeEnabled, vimMode, toggleVimEnabled, } = useVimMode();
@@ -834,7 +927,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [userMessages, setUserMessages] = useState([]);
     // Stable reference for cancel handler to avoid circular dependency
     const cancelHandlerRef = useRef(() => { });
-    const { streamingState, submitQuery, initError, pendingHistoryItems: pendingGeminiHistoryItems, thought, cancelOngoingRequest, } = useGeminiStream(config.getGeminiClient(), history, addItem, config, setDebugMessage, handleSlashCommand, shellModeActive, getPreferredEditor, onAuthError, performMemoryRefresh, modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError, refreshStatic, () => cancelHandlerRef.current(), settings.merged.experimental?.visionModelPreview ?? true, handleVisionSwitchRequired);
+    const { streamingState, submitQuery, initError, pendingHistoryItems: pendingGeminiHistoryItems, thought, cancelOngoingRequest, } = useGeminiStream(config.getGeminiClient(), history, addItem, config, setDebugMessage, handleSlashCommand, shellModeActive, getPreferredEditor, onAuthError, performMemoryRefresh, modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError, refreshStatic, () => cancelHandlerRef.current(), settings.merged.experimental?.visionModelPreview ?? true, handleVisionSwitchRequired, refreshLmStudioModel);
     const pendingHistoryItems = useMemo(() => [...pendingSlashCommandHistoryItems, ...pendingGeminiHistoryItems].map((item, index) => ({
         ...item,
         id: index,

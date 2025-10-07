@@ -38,6 +38,7 @@ import { WorkspaceContext } from '../utils/workspaceContext.js';
 import { DEFAULT_GEMINI_EMBEDDING_MODEL, DEFAULT_GEMINI_FLASH_MODEL, } from './models.js';
 import { Storage } from './storage.js';
 import { Logger } from '../core/logger.js';
+import { tokenLimit } from '../core/tokenLimits.js';
 export var ApprovalMode;
 (function (ApprovalMode) {
     ApprovalMode["PLAN"] = "plan";
@@ -159,6 +160,7 @@ export class Config {
     systemPromptMappings;
     maxSessionTurns;
     sessionTokenLimit;
+    modelContextLimits = new Map();
     listExtensions;
     _extensions;
     _blockedMcpServers;
@@ -377,6 +379,33 @@ export class Config {
                 throw error; // Re-throw to let callers handle the error
             }
         }
+    }
+    setModelContextLimit(model, limit) {
+        if (!model) {
+            return;
+        }
+        if (typeof limit === 'number' && Number.isFinite(limit) && limit > 0) {
+            this.modelContextLimits.set(model, limit);
+        }
+        else {
+            this.modelContextLimits.delete(model);
+        }
+    }
+    getModelContextLimit(model) {
+        const key = model ?? this.getModel();
+        if (!key) {
+            return undefined;
+        }
+        return this.modelContextLimits.get(key);
+    }
+    getEffectiveContextLimit(model) {
+        const key = model ?? this.getModel();
+        const override = key ? this.modelContextLimits.get(key) : undefined;
+        if (override && override > 0) {
+            return override;
+        }
+        const fallback = key ?? '';
+        return tokenLimit(fallback, 'input');
     }
     isInFallbackMode() {
         return this.inFallbackMode;

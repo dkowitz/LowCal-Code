@@ -64,7 +64,7 @@ const INVALID_CONTENT_RETRY_OPTIONS: ContentRetryOptions = {
 };
 
 const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 15000;
-const LM_STUDIO_STREAM_IDLE_TIMEOUT_MS = 60000;
+const LM_STUDIO_STREAM_IDLE_TIMEOUT_MS = 0;
 
 function resolveStreamIdleTimeout(config: Config): number {
   const providerTag = getProviderTelemetryTag(config);
@@ -206,9 +206,11 @@ export class GeminiChat {
     private readonly contentGenerator: ContentGenerator,
     private readonly generationConfig: GenerateContentConfig = {},
     private history: Content[] = [],
+    options: { streamIdleTimeoutOverride?: number } = {},
   ) {
     validateHistory(history);
-    this.streamIdleTimeoutMs = resolveStreamIdleTimeout(config);
+    this.streamIdleTimeoutMs =
+      options.streamIdleTimeoutOverride ?? resolveStreamIdleTimeout(config);
   }
 
   /**

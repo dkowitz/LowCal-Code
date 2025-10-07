@@ -5,16 +5,19 @@
  */
 import { GenerateContentResponse, } from '@google/genai';
 import { OpenAIContentConverter } from './converter.js';
+import { openaiLogger } from '../../utils/openaiLogger.js';
 export class ContentGenerationPipeline {
     config;
     client;
     converter;
     contentGeneratorConfig;
+    enableOpenAILogging;
     constructor(config) {
         this.config = config;
         this.contentGeneratorConfig = config.contentGeneratorConfig;
         this.client = this.config.provider.buildClient();
         this.converter = new OpenAIContentConverter(this.contentGeneratorConfig.model);
+        this.enableOpenAILogging = !!this.contentGeneratorConfig.enableOpenAILogging;
     }
     async execute(request, userPromptId) {
         return this.executeWithErrorHandling(request, userPromptId, false, async (openaiRequest, context) => {
@@ -200,6 +203,14 @@ export class ContentGenerationPipeline {
         const context = this.createRequestContext(userPromptId, isStreaming);
         try {
             const openaiRequest = await this.buildRequest(request, userPromptId, isStreaming);
+            if (this.enableOpenAILogging) {
+                try {
+                    await openaiLogger.logInteraction(openaiRequest, undefined);
+                }
+                catch (error) {
+                    console.warn('Failed to log OpenAI request payload:', error);
+                }
+            }
             const result = await executor(openaiRequest, context);
             context.duration = Date.now() - context.startTime;
             return result;
