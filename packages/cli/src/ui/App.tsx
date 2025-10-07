@@ -839,11 +839,27 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       let models: AvailableModel[] = [];
       try {
         if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
-          // Prefer filesystem-configured LM Studio models (manual configs under ~/.lmstudio/...)
-          const configured = await getLMStudioConfiguredModels();
-          if (configured.length > 0) {
-            models = configured;
+          const providerId = settings.merged.security?.auth?.providerId;
+          // If provider is LM Studio, prefer filesystem-configured models and enable mapping UX.
+          if (providerId === 'lmstudio') {
+            const configured = await getLMStudioConfiguredModels();
+            if (configured.length > 0) {
+              models = configured;
+            } else {
+              const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
+              const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
+              if (baseUrl) {
+                models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
+              }
+              const openAIModel = getOpenAIAvailableModelFromEnv();
+              if (openAIModel) {
+                if (!models.find(m => m.id === openAIModel.id)) {
+                  models.push(openAIModel);
+                }
+              }
+            }
           } else {
+            // For non-LMStudio OpenAI-compatible providers (e.g. OpenRouter), just fetch REST models and do not show LM Studio mapping UX.
             const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
             const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
             if (baseUrl) {
