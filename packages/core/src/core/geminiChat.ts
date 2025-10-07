@@ -63,7 +63,24 @@ const INVALID_CONTENT_RETRY_OPTIONS: ContentRetryOptions = {
   initialDelayMs: 500,
 };
 
-const STREAM_IDLE_TIMEOUT_MS = 15000;
+const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 15000;
+const LM_STUDIO_STREAM_IDLE_TIMEOUT_MS = 60000;
+
+function resolveStreamIdleTimeout(config: Config): number {
+  const providerTag = getProviderTelemetryTag(config);
+  if (providerTag === 'lmstudio') {
+    return LM_STUDIO_STREAM_IDLE_TIMEOUT_MS;
+  }
+  const generatorConfig = config.getContentGeneratorConfig();
+  const baseUrl = generatorConfig?.baseUrl ?? '';
+  if (
+    baseUrl.includes('127.0.0.1:1234') ||
+    baseUrl.includes('localhost:1234')
+  ) {
+    return LM_STUDIO_STREAM_IDLE_TIMEOUT_MS;
+  }
+  return DEFAULT_STREAM_IDLE_TIMEOUT_MS;
+}
 /**
  * Returns true if the response is valid, false otherwise.
  *
@@ -182,6 +199,7 @@ export class GeminiChat {
   // A promise to represent the current state of the message being sent to the
   // model.
   private sendPromise: Promise<void> = Promise.resolve();
+  private readonly streamIdleTimeoutMs: number;
 
   constructor(
     private readonly config: Config,
@@ -190,6 +208,7 @@ export class GeminiChat {
     private history: Content[] = [],
   ) {
     validateHistory(history);
+    this.streamIdleTimeoutMs = resolveStreamIdleTimeout(config);
   }
 
   /**
@@ -820,7 +839,7 @@ export class GeminiChat {
     _promptId: string,
     _providerTag: string,
   ): Promise<IteratorResult<GenerateContentResponse>> {
-    if (STREAM_IDLE_TIMEOUT_MS <= 0) {
+    if (this.streamIdleTimeoutMs <= 0) {
       return stream.next();
     }
 
@@ -831,8 +850,8 @@ export class GeminiChat {
         stream.next(),
         new Promise<IteratorResult<GenerateContentResponse>>((_, reject) => {
           timeoutHandle = setTimeout(() => {
-            reject(new IdleStreamTimeoutError(STREAM_IDLE_TIMEOUT_MS));
-          }, STREAM_IDLE_TIMEOUT_MS);
+            reject(new IdleStreamTimeoutError(this.streamIdleTimeoutMs));
+          }, this.streamIdleTimeoutMs);
         }),
       ]);
       return result;

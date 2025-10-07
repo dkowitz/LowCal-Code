@@ -1,6 +1,10 @@
+import OpenAI from 'openai';
 import type { Config } from '../../../config/config.js';
 import type { ContentGeneratorConfig } from '../../contentGenerator.js';
+import { DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT } from '../constants.js';
 import { DefaultOpenAICompatibleProvider } from './default.js';
+
+const LM_STUDIO_MIN_TIMEOUT_MS = 60000;
 
 export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatibleProvider {
   constructor(
@@ -26,6 +30,25 @@ export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
     const { 'User-Agent': _userAgent, ...filteredHeaders } = baseHeaders;
     
     return filteredHeaders;
+  }
+
+  override buildClient(): OpenAI {
+    const {
+      apiKey,
+      baseUrl,
+      timeout = DEFAULT_TIMEOUT,
+      maxRetries = DEFAULT_MAX_RETRIES,
+    } = this.contentGeneratorConfig;
+
+    const effectiveTimeout = Math.max(timeout ?? 0, LM_STUDIO_MIN_TIMEOUT_MS);
+
+    return new OpenAI({
+      apiKey,
+      baseURL: baseUrl,
+      timeout: effectiveTimeout,
+      maxRetries,
+      defaultHeaders: this.buildHeaders(),
+    });
   }
 
   /**

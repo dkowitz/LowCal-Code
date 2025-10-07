@@ -185,25 +185,29 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     ]);
     useEffect(() => {
         const authType = settings.merged.security?.auth?.selectedType;
+        const providerId = settings.merged.security?.auth?.providerId;
         const baseUrl = process.env['OPENAI_BASE_URL'];
         let interval = undefined;
         if (authType === AuthType.USE_OPENAI &&
-            baseUrl?.includes('127.0.0.1')) {
+            providerId === 'lmstudio' &&
+            baseUrl) {
             const fetchLmStudioModel = async () => {
-                if (baseUrl) {
-                    const loadedModel = await getLMStudioLoadedModel(baseUrl);
-                    setLmStudioModel(loadedModel);
-                }
+                const loadedModel = await getLMStudioLoadedModel(baseUrl);
+                setLmStudioModel(loadedModel);
             };
             fetchLmStudioModel(); // Initial fetch
-            interval = setInterval(fetchLmStudioModel, 5000); // Poll every 5 seconds
+            interval = setInterval(fetchLmStudioModel, 15000); // Poll every 15 seconds
         }
         return () => {
             if (interval) {
                 clearInterval(interval);
             }
         };
-    }, [settings.merged.security?.auth?.selectedType, JSON.stringify(process.env)]);
+    }, [
+        settings.merged.security?.auth?.selectedType,
+        settings.merged.security?.auth?.providerId,
+        process.env['OPENAI_BASE_URL'],
+    ]);
     useEffect(() => {
         const providerId = settings.merged.security?.auth?.providerId;
         if (providerId !== 'lmstudio') {

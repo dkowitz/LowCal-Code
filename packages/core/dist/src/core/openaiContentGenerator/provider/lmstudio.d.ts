@@ -1,3 +1,4 @@
+import OpenAI from 'openai';
 import type { Config } from '../../../config/config.js';
 import type { ContentGeneratorConfig } from '../../contentGenerator.js';
 import { DefaultOpenAICompatibleProvider } from './default.js';
@@ -5,6 +6,7 @@ export declare class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompa
     constructor(contentGeneratorConfig: ContentGeneratorConfig, cliConfig: Config);
     static isLMStudioProvider(contentGeneratorConfig: ContentGeneratorConfig): boolean;
     buildHeaders(): Record<string, string | undefined>;
+    buildClient(): OpenAI;
     /**
      * Attempt to unload the current model in LM Studio.
      *

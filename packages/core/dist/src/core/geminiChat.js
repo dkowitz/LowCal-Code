@@ -24,7 +24,21 @@ const INVALID_CONTENT_RETRY_OPTIONS = {
     maxAttempts: 3, // 1 initial call + 2 retries
     initialDelayMs: 500,
 };
-const STREAM_IDLE_TIMEOUT_MS = 15000;
+const DEFAULT_STREAM_IDLE_TIMEOUT_MS = 15000;
+const LM_STUDIO_STREAM_IDLE_TIMEOUT_MS = 60000;
+function resolveStreamIdleTimeout(config) {
+    const providerTag = getProviderTelemetryTag(config);
+    if (providerTag === 'lmstudio') {
+        return LM_STUDIO_STREAM_IDLE_TIMEOUT_MS;
+    }
+    const generatorConfig = config.getContentGeneratorConfig();
+    const baseUrl = generatorConfig?.baseUrl ?? '';
+    if (baseUrl.includes('127.0.0.1:1234') ||
+        baseUrl.includes('localhost:1234')) {
+        return LM_STUDIO_STREAM_IDLE_TIMEOUT_MS;
+    }
+    return DEFAULT_STREAM_IDLE_TIMEOUT_MS;
+}
 /**
  * Returns true if the response is valid, false otherwise.
  *
@@ -138,12 +152,14 @@ export class GeminiChat {
     // A promise to represent the current state of the message being sent to the
     // model.
     sendPromise = Promise.resolve();
+    streamIdleTimeoutMs;
     constructor(config, contentGenerator, generationConfig = {}, history = []) {
         this.config = config;
         this.contentGenerator = contentGenerator;
         this.generationConfig = generationConfig;
         this.history = history;
         validateHistory(history);
+        this.streamIdleTimeoutMs = resolveStreamIdleTimeout(config);
     }
     /**
      * Handles falling back to Flash model when persistent 429 errors occur for OAuth users.
@@ -586,7 +602,7 @@ export class GeminiChat {
         this.recordHistory(userInput, modelOutput);
     }
     async nextStreamChunkWithWatchdog(stream, _promptId, _providerTag) {
-        if (STREAM_IDLE_TIMEOUT_MS <= 0) {
+        if (this.streamIdleTimeoutMs <= 0) {
             return stream.next();
         }
         let timeoutHandle;
@@ -595,8 +611,8 @@ export class GeminiChat {
                 stream.next(),
                 new Promise((_, reject) => {
                     timeoutHandle = setTimeout(() => {
-                        reject(new IdleStreamTimeoutError(STREAM_IDLE_TIMEOUT_MS));
-                    }, STREAM_IDLE_TIMEOUT_MS);
+                        reject(new IdleStreamTimeoutError(this.streamIdleTimeoutMs));
+                    }, this.streamIdleTimeoutMs);
                 }),
             ]);
             return result;

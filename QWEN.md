@@ -1,105 +1,68 @@
-# QWEN.md – Project Context for LowCal‑dev
+# QWEN.md – Project Context for LowCal-dev
 
-## 📦 Project Overview
-**Qwen Code** is an AI‑powered command‑line workflow tool that lets developers interact with large code models (e.g. Qwen3‑Coder) directly from the terminal.  It consists of a **CLI package** (`packages/cli`) and a **core server** (`packages/core`) plus a collection of helper tools (file system, shell, web fetch/search, memory).  The repository is written in **TypeScript**, runs on **Node ≥20**, and uses **npm workspaces** for the multiple packages.
+This file provides instructional context for future interactions with the LowCal-dev repository. It is generated from an analysis of the repository structure, key files, and documentation present in the project. It aims to guide how the AI should approach tasks related to this codebase.
 
----
-## 🗂️ Directory Layout (high‑level)
-```
-LowCal-dev/
-├─ bundle/                # Built distributable (gemini.js) – entry point for `qwen` binary
-├─ docs/                  # Full documentation site (Markdown, assets)
-├─ integration-tests/     # End‑to‑end test suite (Vitest)
-├─ packages/
-│   ├─ cli/               # CLI implementation (yargs, REPL, UI)
-│   └─ core/              # Server, tool registry, model adapters
-├─ scripts/               # Build / release helper scripts
-├─ .gitignore, Makefile,  # Project‑level tooling & metadata
-├─ package.json           # Workspace root (defines npm scripts, deps)
-└─ README.md             # High‑level readme shown on GitHub/NPM
-```
+## Project Overview (Code Project)
 
----
-## ⚙️ Building & Running
-The project follows the standard **npm** workflow; a `Makefile` provides shortcuts.
-| Action | Command (via npm) | Shortcut (`make`) |
-|--------|-------------------|------------------|
-| Install dependencies | `npm ci` | `make install` |
-| Build all packages & sandbox | `npm run build:all` | `make build-all` |
-| Run the CLI (development) | `npm run start` | `make start` |
-| Debug mode (inspect) | `npm run debug` | `make debug` |
-| Run tests (workspace aware) | `npm run test --workspaces` | `make test` |
-| Lint | `npm run lint` | `make lint` |
-| Format with Prettier | `npm run format` | `make format` |
-| Full pre‑flight check (format + lint + build + typecheck + tests) | `npm run preflight` | `make preflight` |
+LowCal-dev hosts the Qwen Code ecosystem, a CLI and core server for AI-assisted developer workflows. The repository is organized as a TypeScript/Node.js workspace with multiple packages:
 
-> **Tip:** The binary exposed after a successful build is `bundle/gemini.js`; it is linked as the `qwen` command in `package.json`.
+- packages/cli: Command-line interface for interacting with Qwen Code
+- packages/core: Core backend and tooling registry
+- bundle/: Built distributable and entry point gemini.js
+- docs/: Documentation site and markdown sources
+- integration-tests/: End-to-end test suites
+- scripts/: Build and release helpers
 
----
-## 🧪 Testing & Quality Gates
-* **Unit / integration tests** – Vitest (`npm run test`).
-* **Terminal‑bench benchmarks** – `npm run test:terminal-bench` (used for performance evaluation).
-* **Linting** – ESLint with Prettier (`npm run lint`, `npm run format`).
-* **Type checking** – `npm run typecheck` (runs per‑workspace if present).
+Key characteristics:
+- Language: TypeScript
+- Runtime: Node.js (>= 20)
+- Build system: npm workspaces
+- Testing: Vitest
+- Linting: ESLint + Prettier
 
-All CI pipelines expect the *preflight* script to pass without errors.
+## Building and Running
 
----
-## 📚 Documentation
-The authoritative docs live under `docs/`.  Key entry points:
-* `docs/index.md` – navigation hub.
-* `docs/cli/**` – CLI usage, commands, configuration, token handling.
-* `docs/core/**` – core server and tool API details.
-* `docs/tools/**` – descriptions of each tool (`read_file`, `run_shell_command`, etc.).
-* `docs/troubleshooting.md` – common issues & FAQ.
+- Install dependencies: npm ci
+- Build all packages: npm run build:all
+- Run the CLI in development: npm run start
+- Run tests: npm run test --workspaces
+- Preflight (format + lint + build + typecheck + tests): npm run preflight
 
-You can open any file directly; the repository also ships a generated website (see `package.json` scripts for building docs).
+Notes:
+- The repo root runs a workspace with multiple packages. Individual package.json files control per-package behavior.
+- The main binary is bundle/gemini.js exposed as qwen via package.json bin field.
 
----
-## 🛠️ Development Conventions
-| Area | Convention |
-|------|------------|
-| **Code style** | ESLint + Prettier (`npm run lint`, `npm run format`).  The repo enforces `eslint-config-prettier` and a custom license‑header rule.
-| **TypeScript** | Strict mode enabled via `tsconfig.json`.  Each workspace may have its own `tsconfig.*`; run `npm run typecheck` to verify.
-| **Commit workflow** | Use the provided scripts (`scripts/generate-git-commit-info.js`) for consistent commit messages.  The CI expects a clean changelog generated by `npm run generate`.
-| **Testing** | Write Vitest tests under `**/*.test.ts` or `integration-tests/`.  Run `npm run test:ci` in CI environments.
-| **Release** | Bump version with `npm run release:version`; the script updates package versions and changelog.
+## Development Conventions
 
----
-## 📦 Key npm Scripts (excerpt)
-```json
-"scripts": {
-  "start": "node scripts/start.js",
-  "build": "node scripts/build.js",
-  "bundle": "npm run generate && node esbuild.config.js && node scripts/copy_bundle_assets.js",
-  "test": "npm run test --workspaces --if-present",
-  "lint": "eslint . --ext .ts,.tsx && eslint integration-tests",
-  "format": "prettier --experimental-cli --write .",
-  "typecheck": "npm run typecheck --workspaces --if-present",
-  "preflight": "npm run clean && npm ci && npm run format && npm run lint:ci && npm run build && npm run typecheck && npm run test:ci"
-}
-```
+- Code style: ESLint + Prettier; strict TypeScript; adhere to existing conventions across packages.
+- Testing: Vitest-based tests across packages; ensure unit and integration tests pass.
+- Commits: Use conventional commits; changelog is generated by scripts.
+- Building: Use root Makefile wrappers; per-package build scripts exist under scripts/build.js and package.json definitions.
 
----
-## 📦 Runtime Dependencies (runtime only)
-* `@lvce-editor/ripgrep` – fast file searching.
-* `simple-git` – Git operations for automation.
-* `strip-ansi` – clean console output.
+## How to Use This File (Memory & Context)
 
-Optional native dependencies (`node‑pty`) are used when a PTY is required; they are listed under `optionalDependencies` and loaded conditionally.
+- QWEN.md is loaded hierarchically as context for the AI. It can be loaded from various locations such as global (~/.qwen/QWEN.md) and project-specific QWEN.md. See memory components in docs.
+- The memory system concatenates content from multiple QWEN.md sources, providing hierarchy-based guidance to the model during tool use.
 
----
-## 🎯 Typical Workflow for a Contributor
-1. **Clone & install**: `git clone … && make install`
-2. **Run the CLI locally**: `make start` (or `npm run start`).
-3. **Make changes** in `packages/cli` or `packages/core`.
-4. **Run preflight**: `make preflight` – ensures formatting, linting, type‑checking and tests all pass.
-5. **Commit** using the conventional format (generated by `scripts/generate-git-commit-info.js`).
-6. **Create a PR** – CI will run the same preflight steps.
+## Context File Hierarchy and Loading
 
----
-## 📄 License & Attribution
-The project is licensed under the MIT license (`LICENSE`).  It is derived from Google’s Gemini CLI; see the *Acknowledgments* section in `README.md` for full attribution.
+- Global QWEN.md: ~/.qwen/QWEN.md
+- Project/Ancestor QWEN.md: located in project roots and ancestor directories that contain context files
+- Sub-directory QWEN.md: within nested directories for component-specific context
 
----
-*This QWEN.md file is generated to give future interactions a concise, searchable snapshot of the LowCal‑dev repository.*
+Content is merged with separators to indicate origin. The UI displays the loaded context count in the footer.
+
+## Tools and Core Concepts
+
+- read_file, write_file, list_directory, glob, search_file_content, edit, web_fetch, web_search, save_memory are core tools.
+- The core orchestrates model calls, tool usage, and memory management.
+- Slot-based subagents provide specialized tasks via /agents commands.
+
+## Development Plan (High-Level)
+1. Inspect repository for a plan to generate QWEN.md and ensure alignment with current structure.
+2. Compile a comprehensive QWEN.md that documents: project overview, building/running steps, conventions, and context-loading behavior.
+3. Save the content to QWEN.md and verify formatting.
+4. Outline follow-up steps for verification (lint/build/test) if requested.
+
+## Change Log (Provenance)
+- Generated by interactive planning for LowCal-dev context generation.

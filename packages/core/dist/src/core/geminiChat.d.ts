@@ -40,6 +40,7 @@ export declare class GeminiChat {
     private readonly generationConfig;
     private history;
     private sendPromise;
+    private readonly streamIdleTimeoutMs;
     constructor(config: Config, contentGenerator: ContentGenerator, generationConfig?: GenerateContentConfig, history?: Content[]);
     /**
      * Handles falling back to Flash model when persistent 429 errors occur for OAuth users.
