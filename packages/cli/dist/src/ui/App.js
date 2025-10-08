@@ -155,6 +155,18 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [currentModel, setCurrentModel] = useState(config.getModel());
     const [lmStudioModel, setLmStudioModel] = useState(null);
     const lastLmStudioModelFetchRef = useRef(0);
+    // reference used only for LM Studio live model polling; keep to avoid re-fetching more than once/min
+    useEffect(() => {
+        // no-op using lmStudioModel to avoid unused variable build errors in some toolchains
+        // real usage happens below where lmStudioModel is updated when polling succeeds
+        void lmStudioModel;
+    }, [lmStudioModel]);
+    // bump this to force re-render when model-level context limits change
+    const [modelLimitVersion, setModelLimitVersion] = useState(0);
+    // Silence unused variable warning in some builds by referencing it in effect below
+    useEffect(() => {
+        // no-op that references modelLimitVersion to ensure TypeScript doesn't report it as unused
+    }, [modelLimitVersion]);
     // If the user has a saved model in settings, ensure the config and UI
     // reflect it on startup. This will restore the last-used model across
     // restarts.
@@ -219,51 +231,90 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     }, [refreshLmStudioModel]);
     useEffect(() => {
         const activeModel = config.getModel();
-        const providerId = settings.merged.security?.auth?.providerId;
-        const contentGeneratorConfig = config.getContentGeneratorConfig();
-        const baseUrl = contentGeneratorConfig?.baseUrl || '';
-        const isLmStudioProvider = providerId === 'lmstudio' ||
-            baseUrl.includes('127.0.0.1:1234') ||
-            baseUrl.includes('localhost:1234');
         if (!activeModel) {
             return;
         }
-        if (!isLmStudioProvider) {
+        // clear any existing model-specific override immediately; we will set a new one below
+        try {
             config.setModelContextLimit(activeModel, undefined);
-            return;
         }
+        catch (e) {
+            // ignore
+        }
+        // If provider is LM Studio, read configured context lengths from filesystem/mappings.
+        // If provider is OpenRouter, attempt to fetch REST models to get provider-reported context lengths.
         let cancelled = false;
         (async () => {
             try {
-                const configuredModels = await getLMStudioConfiguredModels();
-                let override = configuredModels.find((model) => model.id === activeModel ||
-                    model.label === activeModel ||
-                    model.matchedRestId === activeModel)?.configuredContextLength;
-                if (!override) {
+                const providerId = settings.merged.security?.auth?.providerId;
+                // If user changed provider recently and it's not LMStudio or OpenRouter,
+                // clear overrides and return early.
+                if (!providerId) {
+                    return;
+                }
+                if (providerId === 'lmstudio') {
+                    const configuredModels = await getLMStudioConfiguredModels();
+                    let override = configuredModels.find((model) => model.id === activeModel ||
+                        model.label === activeModel ||
+                        model.matchedRestId === activeModel)?.configuredContextLength;
+                    if (!override) {
+                        try {
+                            const storage = await import('./models/modelMappingStorage.js');
+                            const existingMappings = await storage.loadMappings();
+                            const configuredEntry = Object.entries(existingMappings).find(([_configuredName, mappedId]) => mappedId === activeModel);
+                            if (configuredEntry) {
+                                const [configuredName] = configuredEntry;
+                                const matched = configuredModels.find((model) => model.configuredName === configuredName ||
+                                    model.id === configuredName);
+                                override = matched?.configuredContextLength;
+                            }
+                        }
+                        catch (error) {
+                            if (config.getDebugMode()) {
+                                console.debug('Failed to load LM Studio model mappings:', error);
+                            }
+                        }
+                    }
+                    if (!cancelled) {
+                        config.setModelContextLimit(activeModel, override);
+                    }
+                    return;
+                }
+                // If provider is OpenRouter, try to fetch REST models to obtain context_length
+                if (providerId === 'openrouter') {
                     try {
-                        const storage = await import('./models/modelMappingStorage.js');
-                        const existingMappings = await storage.loadMappings();
-                        const configuredEntry = Object.entries(existingMappings).find(([_configuredName, mappedId]) => mappedId === activeModel);
-                        if (configuredEntry) {
-                            const [configuredName] = configuredEntry;
-                            const matched = configuredModels.find((model) => model.configuredName === configuredName ||
-                                model.id === configuredName);
-                            override = matched?.configuredContextLength;
+                        const contentGeneratorConfig = config.getContentGeneratorConfig();
+                        const baseUrl = contentGeneratorConfig?.baseUrl || process.env['OPENAI_BASE_URL'] || '';
+                        const apiKey = contentGeneratorConfig?.apiKey || process.env['OPENAI_API_KEY'];
+                        if (baseUrl) {
+                            const restModels = await (await import('./models/availableModels.js')).fetchOpenAICompatibleModels(baseUrl, apiKey);
+                            const matched = restModels.find(r => r.id === activeModel || r.label === activeModel);
+                            const override = matched?.contextLength ?? matched?.maxContextLength ?? matched?.contextLength;
+                            if (!cancelled)
+                                config.setModelContextLimit(activeModel, override);
+                        }
+                        else {
+                            // If we don't have baseUrl, clear any override
+                            if (!cancelled)
+                                config.setModelContextLimit(activeModel, undefined);
                         }
                     }
                     catch (error) {
-                        if (config.getDebugMode()) {
-                            console.debug('Failed to load LM Studio model mappings:', error);
-                        }
+                        if (config.getDebugMode())
+                            console.debug('Failed to fetch OpenRouter model context length:', error);
+                        if (!cancelled)
+                            config.setModelContextLimit(activeModel, undefined);
                     }
+                    return;
                 }
+                // For other providers, clear any model-level override
                 if (!cancelled) {
-                    config.setModelContextLimit(activeModel, override);
+                    config.setModelContextLimit(activeModel, undefined);
                 }
             }
             catch (error) {
                 if (config.getDebugMode()) {
-                    console.debug('Failed to resolve LM Studio context length:', error);
+                    console.debug('Failed to resolve provider context length:', error);
                 }
                 if (!cancelled) {
                     config.setModelContextLimit(activeModel, undefined);
@@ -866,6 +917,30 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 catch (err) {
                     console.warn('Failed to persist OpenRouter model to .env:', err);
                 }
+                // Attempt to fetch REST models immediately to pick up provider-reported context_length
+                try {
+                    const contentGeneratorConfig = config.getContentGeneratorConfig();
+                    const baseUrl = contentGeneratorConfig?.baseUrl || process.env['OPENAI_BASE_URL'] || '';
+                    const apiKey = contentGeneratorConfig?.apiKey || process.env['OPENAI_API_KEY'];
+                    if (baseUrl) {
+                        const restModels = await (await import('./models/availableModels.js')).fetchOpenAICompatibleModels(baseUrl, apiKey);
+                        const matched = restModels.find(r => r.id === modelId || r.label === modelId || r.matchedRestId === modelId);
+                        const ctx = matched?.contextLength ?? matched?.maxContextLength ?? undefined;
+                        config.setModelContextLimit(modelId, ctx);
+                        // notify UI to re-read model-level limits (forces re-render)
+                        try {
+                            // bump version so Footer/ContextUsageDisplay can pick up new limit via config.getModelContextLimit
+                            setModelLimitVersion(v => v + 1);
+                        }
+                        catch (e) {
+                            // ignore
+                        }
+                    }
+                }
+                catch (e) {
+                    if (config.getDebugMode())
+                        console.debug('Failed to fetch OpenRouter models for immediate context length update:', e);
+                }
             }
             // Persist selected model to user settings so it is restored on next startup.
             try {
@@ -1298,8 +1373,8 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                             // Ensure the Box takes full width so truncation calculates correctly
                                             _jsx(Box, { paddingLeft: 2, width: "100%", children: _jsx(Text, { dimColor: true, wrap: "truncate", children: preview }) }, index));
                                         }), messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && (_jsx(Box, { paddingLeft: 2, children: _jsxs(Text, { dimColor: true, children: ["... (+", messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES, "more)"] }) }))] })), _jsxs(Box, { marginTop: 1, justifyContent: "space-between", width: "100%", flexDirection: isNarrow ? 'column' : 'row', alignItems: isNarrow ? 'flex-start' : 'center', children: [_jsxs(Box, { children: [process.env['GEMINI_SYSTEM_MD'] && (_jsx(Text, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " })), ctrlCPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." })) : ctrlDPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." })) : showEscapePrompt ? (_jsx(Text, { color: Colors.Gray, children: "Press Esc again to clear." })) : (_jsx(ContextSummaryDisplay, { ideContext: ideContextState, geminiMdFileCount: geminiMdFileCount, contextFileNames: contextFileNames, mcpServers: config.getMcpServers(), blockedMcpServers: config.getBlockedMcpServers(), showToolDescriptions: showToolDescriptions }))] }), _jsxs(Box, { paddingTop: isNarrow ? 1 : 0, children: [showAutoAcceptIndicator !== ApprovalMode.DEFAULT &&
-                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused && !isModelMappingDialogOpen, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === 'error' && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === 'error' && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [' ', "Please check API key and configuration."] })] })) })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: lmStudioModel || currentModel, modelLimit: typeof config.getModelContextLimit === 'function'
-                                ? config.getModelContextLimit(lmStudioModel || currentModel)
+                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused && !isModelMappingDialogOpen, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === 'error' && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === 'error' && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [' ', "Please check API key and configuration."] })] })) })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModel, modelLimit: typeof config.getModelContextLimit === 'function'
+                                ? config.getModelContextLimit(currentModel)
                                 : undefined, targetDir: config.getTargetDir(), debugMode: config.getDebugMode(), branchName: branchName, debugMessage: debugMessage, corgiMode: corgiMode, errorCount: errorCount, showErrorDetails: showErrorDetails, showMemoryUsage: config.getDebugMode() ||
                                 settings.merged.ui?.showMemoryUsage ||
                                 false, promptTokenCount: sessionStats.lastPromptTokenCount, nightly: nightly, vimMode: vimModeEnabled ? vimMode : undefined, isTrustedFolder: isTrustedFolderState }))] })] }) }));

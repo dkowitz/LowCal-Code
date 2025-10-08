@@ -8,4 +8,6 @@ export declare const ContextUsageDisplay: ({ promptTokenCount, model, modelLimit
     model: string;
     /** Optional precomputed model limit (preferred) */
     modelLimit?: number;
+    /** Optional version to force re-render when model-level limits change */
+    modelLimitVersion?: number;
 }) => import("react/jsx-runtime").JSX.Element;

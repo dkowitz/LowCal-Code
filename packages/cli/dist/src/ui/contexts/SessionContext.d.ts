@@ -11,8 +11,8 @@ export interface SessionStatsState {
     sessionStartTime: Date;
     metrics: SessionMetrics;
     lastPromptTokenCount: number;
-    /** Current cumulative token count of the conversation/history */
-    currentContextTokenCount: number;
+    /** Current cumulative token count of the conversation/history (optional) */
+    currentContextTokenCount?: number;
     promptCount: number;
 }
 export interface ComputedSessionStats {

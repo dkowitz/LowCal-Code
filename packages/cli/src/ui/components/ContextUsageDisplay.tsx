@@ -17,6 +17,8 @@ export const ContextUsageDisplay = ({
   model: string;
   /** Optional precomputed model limit (preferred) */
   modelLimit?: number;
+  /** Optional version to force re-render when model-level limits change */
+  modelLimitVersion?: number;
 }) => {
   // Prefer provided modelLimit (from Config.getEffectiveContextLimit) when available
   const limit = typeof modelLimit === 'number' && Number.isFinite(modelLimit) && modelLimit > 0
