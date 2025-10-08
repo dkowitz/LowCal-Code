@@ -105,7 +105,9 @@ export class GeminiClient {
     }
     async initialize(contentGeneratorConfig, extraHistory) {
         this.contentGenerator = await createContentGenerator(contentGeneratorConfig, this.config, this.config.getSessionId());
-        this.tokenBudgetManager = new TokenBudgetManager(this.getContentGenerator(), (model) => this.config.getEffectiveContextLimit(model));
+        this.tokenBudgetManager = new TokenBudgetManager(this.getContentGenerator(), (model) => typeof this.config.getEffectiveContextLimit === 'function'
+            ? this.config.getEffectiveContextLimit(model)
+            : undefined);
         /**
          * Always take the model from contentGeneratorConfig to initialize,
          * despite the `this.config.contentGeneratorConfig` is not updated yet because in

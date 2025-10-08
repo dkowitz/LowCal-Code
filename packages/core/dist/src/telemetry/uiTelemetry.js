@@ -59,10 +59,7 @@ export class UiTelemetryService extends EventEmitter {
                 // We should not emit update for any other event metric.
                 return;
         }
-        this.emit('update', {
-            metrics: this.#metrics,
-            lastPromptTokenCount: this.#lastPromptTokenCount,
-        });
+        this.emitUpdate();
     }
     getMetrics() {
         return this.#metrics;
@@ -72,9 +69,26 @@ export class UiTelemetryService extends EventEmitter {
     }
     resetLastPromptTokenCount() {
         this.#lastPromptTokenCount = 0;
+        this.emitUpdate();
+    }
+    // Emit update with last prompt count and current context token count when available
+    emitUpdate() {
+        // Try to compute a running context token count by summing model token totals
+        // as a heuristic (sum of model.tokens.total across models) — this is not
+        // perfectly accurate for some providers but provides a reasonable estimate.
+        let currentContextTokenCount = 0;
+        try {
+            for (const m of Object.values(this.#metrics.models)) {
+                currentContextTokenCount += m.tokens.total || 0;
+            }
+        }
+        catch (e) {
+            currentContextTokenCount = 0;
+        }
         this.emit('update', {
             metrics: this.#metrics,
             lastPromptTokenCount: this.#lastPromptTokenCount,
+            currentContextTokenCount,
         });
     }
     getOrCreateModelMetrics(modelName) {
@@ -94,12 +108,16 @@ export class UiTelemetryService extends EventEmitter {
         modelMetrics.tokens.thoughts += event.thoughts_token_count;
         modelMetrics.tokens.tool += event.tool_token_count;
         this.#lastPromptTokenCount = event.input_token_count;
+        // Emit an update to consumers with refreshed metrics and computed context token count
+        this.emitUpdate();
     }
     processApiError(event) {
         const modelMetrics = this.getOrCreateModelMetrics(event.model);
         modelMetrics.api.totalRequests++;
         modelMetrics.api.totalErrors++;
         modelMetrics.api.totalLatencyMs += event.duration_ms;
+        // Emit an update to consumers with refreshed metrics and computed context token count
+        this.emitUpdate();
     }
     processToolCall(event) {
         const { tools, files } = this.#metrics;

@@ -5,4 +5,10 @@ export declare class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICom
     constructor(contentGeneratorConfig: ContentGeneratorConfig, cliConfig: Config);
     static isOpenRouterProvider(contentGeneratorConfig: ContentGeneratorConfig): boolean;
     buildHeaders(): Record<string, string | undefined>;
+    /**
+     * After fetching the list of models from OpenRouter, call this helper to
+     * apply dynamic context limits reported by the provider. This ensures the
+     * UI and TokenBudgetManager use the accurate context window sizes.
+     */
+    static applyProviderContextLimits(models: Array<any>): void;
 }

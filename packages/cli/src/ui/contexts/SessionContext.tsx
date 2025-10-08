@@ -26,6 +26,8 @@ export interface SessionStatsState {
   sessionStartTime: Date;
   metrics: SessionMetrics;
   lastPromptTokenCount: number;
+  /** Current cumulative token count of the conversation/history (optional) */
+  currentContextTokenCount?: number;
   promptCount: number;
 }
 
@@ -69,6 +71,7 @@ export const SessionStatsProvider: React.FC<{ children: React.ReactNode }> = ({
     sessionStartTime: new Date(),
     metrics: uiTelemetryService.getMetrics(),
     lastPromptTokenCount: 0,
+    currentContextTokenCount: 0,
     promptCount: 0,
   });
 
@@ -76,14 +79,17 @@ export const SessionStatsProvider: React.FC<{ children: React.ReactNode }> = ({
     const handleUpdate = ({
       metrics,
       lastPromptTokenCount,
+      currentContextTokenCount,
     }: {
       metrics: SessionMetrics;
       lastPromptTokenCount: number;
+      currentContextTokenCount?: number;
     }) => {
       setStats((prevState) => ({
         ...prevState,
         metrics,
         lastPromptTokenCount,
+        currentContextTokenCount: currentContextTokenCount ?? prevState.currentContextTokenCount ?? 0,
       }));
     };
 
@@ -92,6 +98,7 @@ export const SessionStatsProvider: React.FC<{ children: React.ReactNode }> = ({
     handleUpdate({
       metrics: uiTelemetryService.getMetrics(),
       lastPromptTokenCount: uiTelemetryService.getLastPromptTokenCount(),
+      currentContextTokenCount: 0,
     });
 
     return () => {

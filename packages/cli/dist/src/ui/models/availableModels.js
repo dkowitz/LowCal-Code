@@ -68,7 +68,8 @@ export async function fetchOpenAICompatibleModels(baseUrl, apiKey) {
             }))
                 .filter((m) => !!m.id);
         }
-        return models
+        // Map provider model objects into our AvailableModel shape
+        const mapped = models
             .map((m) => ({
             id: m.id || m.name,
             label: m.id || m.name,
@@ -85,6 +86,25 @@ export async function fetchOpenAICompatibleModels(baseUrl, apiKey) {
                     : undefined,
         }))
             .filter((m) => !!m.id);
+        // If provider reported explicit context lengths (e.g., OpenRouter), register them
+        try {
+            const core = await import('@qwen-code/qwen-code-core');
+            const setLimit = core.setModelContextLimit;
+            for (const mm of mapped) {
+                if (typeof mm.contextLength === 'number' && Number.isFinite(mm.contextLength) && mm.contextLength > 0) {
+                    try {
+                        setLimit(mm.id, mm.contextLength);
+                    }
+                    catch (e) {
+                        // ignore per-model set failures
+                    }
+                }
+            }
+        }
+        catch (e) {
+            // ignore dynamic set failures
+        }
+        return mapped;
     }
     catch (e) {
         // swallow errors and return empty list

@@ -10,14 +10,16 @@ export const SessionStatsProvider = ({ children, }) => {
         sessionStartTime: new Date(),
         metrics: uiTelemetryService.getMetrics(),
         lastPromptTokenCount: 0,
+        currentContextTokenCount: 0,
         promptCount: 0,
     });
     useEffect(() => {
-        const handleUpdate = ({ metrics, lastPromptTokenCount, }) => {
+        const handleUpdate = ({ metrics, lastPromptTokenCount, currentContextTokenCount, }) => {
             setStats((prevState) => ({
                 ...prevState,
                 metrics,
                 lastPromptTokenCount,
+                currentContextTokenCount: currentContextTokenCount ?? prevState.currentContextTokenCount ?? 0,
             }));
         };
         uiTelemetryService.on('update', handleUpdate);
@@ -25,6 +27,7 @@ export const SessionStatsProvider = ({ children, }) => {
         handleUpdate({
             metrics: uiTelemetryService.getMetrics(),
             lastPromptTokenCount: uiTelemetryService.getLastPromptTokenCount(),
+            currentContextTokenCount: 0,
         });
         return () => {
             uiTelemetryService.off('update', handleUpdate);

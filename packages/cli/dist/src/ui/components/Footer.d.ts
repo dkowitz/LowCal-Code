@@ -6,6 +6,8 @@
 import type React from 'react';
 interface FooterProps {
     model: string;
+    /** Optional precomputed model context limit in tokens (preferred) */
+    modelLimit?: number;
     targetDir: string;
     branchName?: string;
     debugMode: boolean;

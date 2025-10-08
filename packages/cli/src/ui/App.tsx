@@ -2142,22 +2142,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             </Box>
           )}
           {!settings.merged.ui?.hideFooter && (
-            {/* Compute modelLimit safely — some test mocks may not implement getModelContextLimit */}
-            {(() => {
-              let modelLimitComputed: number | undefined = undefined;
-              try {
-                if (typeof (config as any).getModelContextLimit === 'function') {
-                  modelLimitComputed = (config as any).getModelContextLimit(lmStudioModel || currentModel);
-                }
-              } catch (e) {
-                // ignore
+            <Footer
+              model={lmStudioModel || currentModel}
+              modelLimit={
+                typeof (config as any).getModelContextLimit === 'function'
+                  ? (config as any).getModelContextLimit(lmStudioModel || currentModel)
+                  : undefined
               }
-
-              return (
-                <Footer
-                  model={lmStudioModel || currentModel}
-                  modelLimit={modelLimitComputed}
-                  targetDir={config.getTargetDir()}
+              targetDir={config.getTargetDir()}
               debugMode={config.getDebugMode()}
               branchName={branchName}
               debugMessage={debugMessage}
@@ -2173,9 +2165,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               nightly={nightly}
               vimMode={vimModeEnabled ? vimMode : undefined}
               isTrustedFolder={isTrustedFolderState}
-                />
-              );
-            })()}
+            />
           )}
         </Box>
       </Box>

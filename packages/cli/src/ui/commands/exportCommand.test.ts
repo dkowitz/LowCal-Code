@@ -61,6 +61,7 @@ describe('exportCommand', () => {
       sessionStartTime: new Date(),
       metrics: {} as SessionStatsState['metrics'],
       lastPromptTokenCount: 0,
+      currentContextTokenCount: 0,
       promptCount: 0,
     };
     mockLogging = createMockLoggingController();

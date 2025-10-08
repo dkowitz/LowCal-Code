@@ -1,10 +1,6 @@
 import type { Config } from '../../../config/config.js';
 import type { ContentGeneratorConfig } from '../../contentGenerator.js';
 import { DefaultOpenAICompatibleProvider } from './default.js';
-
-import type { Config } from '../../../config/config.js';
-import type { ContentGeneratorConfig } from '../../contentGenerator.js';
-import { DefaultOpenAICompatibleProvider } from './default.js';
 import { setModelContextLimit } from '../../tokenLimits.js';
 
 export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleProvider {

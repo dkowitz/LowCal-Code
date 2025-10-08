@@ -131,10 +131,11 @@ export const Footer: React.FC<FooterProps> = ({
           {isNarrow ? '' : ' '}
           {model}{' '}
           <ContextUsageDisplay
-            promptTokenCount={promptTokenCount}
+            promptTokenCount={sessionStats.currentContextTokenCount}
             model={model}
             modelLimit={modelLimit}
           />
+          {/* Removed MB display to avoid confusion - tokens are authoritative */}
         </Text>
         {corgiMode && (
           <Text>

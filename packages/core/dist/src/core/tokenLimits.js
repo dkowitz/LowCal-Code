@@ -159,7 +159,52 @@ const OUTPUT_PATTERNS = [
  * @param type - The type of token limit ('input' for context window, 'output' for generation)
  * @returns The maximum number of tokens allowed for this model and type
  */
+// Global map to store dynamic context limits reported by providers (OpenRouter / LM Studio)
+const modelContextLimits = new Map();
+/**
+ * Set a custom (dynamic) context limit for a specific model.
+ * If limit is undefined or invalid, the dynamic entry is removed.
+ */
+export function setModelContextLimit(model, limit) {
+    if (!model)
+        return;
+    if (typeof limit === 'number' && Number.isFinite(limit) && limit > 0) {
+        modelContextLimits.set(model, limit);
+    }
+    else {
+        modelContextLimits.delete(model);
+    }
+}
+/**
+ * Get the custom (dynamic) context limit for a specific model, if any.
+ */
+export function getModelContextLimit(model) {
+    if (!model)
+        return undefined;
+    return modelContextLimits.get(model);
+}
+/**
+ * Return the token limit for a model string based on the specified type.
+ *
+ * This function determines the maximum number of tokens for either input context
+ * or output generation based on the model and token type. It uses the same
+ * normalization logic for consistency across both input and output limits.
+ *
+ * Dynamic provider-reported input context limits (set via setModelContextLimit)
+ * take precedence over the static pattern-based mapping.
+ *
+ * @param model - The model name to get the token limit for
+ * @param type - The type of token limit ('input' for context window, 'output' for generation)
+ * @returns The maximum number of tokens allowed for this model and type
+ */
 export function tokenLimit(model, type = 'input') {
+    // Prefer dynamic provider-supplied limits for input context size when available
+    if (type === 'input') {
+        const dynamic = modelContextLimits.get(model);
+        if (typeof dynamic === 'number' && Number.isFinite(dynamic) && dynamic > 0) {
+            return dynamic;
+        }
+    }
     const norm = normalize(model);
     // Choose the appropriate patterns based on token type
     const patterns = type === 'output' ? OUTPUT_PATTERNS : PATTERNS;

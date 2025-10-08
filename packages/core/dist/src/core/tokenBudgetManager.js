@@ -28,10 +28,16 @@ export class TokenBudgetManager {
      * how it relates to the model's context window.
      */
     async evaluate(model, contents) {
+        // Prefer provider-supplied context limits via getContextLimit (e.g., Config.getEffectiveContextLimit)
         const computedLimit = this.getContextLimit?.(model);
-        const limit = typeof computedLimit === 'number' && Number.isFinite(computedLimit)
-            ? computedLimit
-            : tokenLimit(model, 'input');
+        let limit;
+        if (typeof computedLimit === 'number' && Number.isFinite(computedLimit) && computedLimit > 0) {
+            limit = computedLimit;
+        }
+        else {
+            // Fall back to the tokenLimit helper which may be static
+            limit = tokenLimit(model, 'input');
+        }
         const buffer = this.getSafetyBuffer(limit);
         const effectiveLimit = Math.max(0, Math.min(limit - buffer, Math.floor(limit * 0.95)));
         const warnThreshold = Math.max(limit * DEFAULT_WARN_FRACTION, effectiveLimit);
