@@ -580,14 +580,40 @@ export class Config {
     }
   }
 
+  // Keep local overrides in sync with core token limits module so that
+  // provider-reported dynamic limits (set via tokenLimits.setModelContextLimit)
+  // are visible via Config APIs and vice-versa.
   setModelContextLimit(model: string, limit?: number): void {
+    // Import tokenLimits functions lazily to avoid circular import issues at module load time
+    let coreSet: ((m: string, l?: number) => void) | undefined;
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      coreSet = require('../core/tokenLimits.js').setModelContextLimit;
+    } catch (e) {
+      coreSet = undefined;
+    }
+
     if (!model) {
       return;
     }
     if (typeof limit === 'number' && Number.isFinite(limit) && limit > 0) {
       this.modelContextLimits.set(model, limit);
+      if (coreSet) {
+        try {
+          coreSet(model, limit);
+        } catch (e) {
+          // ignore
+        }
+      }
     } else {
       this.modelContextLimits.delete(model);
+      if (coreSet) {
+        try {
+          coreSet(model, undefined);
+        } catch (e) {
+          // ignore
+        }
+      }
     }
   }
 
@@ -596,11 +622,45 @@ export class Config {
     if (!key) {
       return undefined;
     }
-    return this.modelContextLimits.get(key);
+
+    // Prefer local override if present
+    const local = this.modelContextLimits.get(key);
+    if (typeof local === 'number') return local;
+
+    // Fall back to core token limits dynamic map if available
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const coreGet = require('../core/tokenLimits.js').getModelContextLimit as (
+        m: string,
+      ) => number | undefined;
+      if (typeof coreGet === 'function') {
+        const v = coreGet(key);
+        if (typeof v === 'number' && Number.isFinite(v) && v > 0) return v;
+      }
+    } catch (e) {
+      // ignore
+    }
+
+    return undefined;
   }
 
   getEffectiveContextLimit(model?: string): number {
     const key = model ?? this.getModel();
+
+    // Check for dynamic/provider-supplied limit via core token limits map first
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-var-requires
+      const coreGet = require('../core/tokenLimits.js').getModelContextLimit as (
+        m: string,
+      ) => number | undefined;
+      if (typeof coreGet === 'function') {
+        const v = coreGet(key ?? '');
+        if (typeof v === 'number' && Number.isFinite(v) && v > 0) return v;
+      }
+    } catch (e) {
+      // ignore
+    }
+
     const override = key ? this.modelContextLimits.get(key) : undefined;
     if (override && override > 0) {
       return override;

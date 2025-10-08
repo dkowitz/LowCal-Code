@@ -11,15 +11,24 @@ import { tokenLimit } from '@qwen-code/qwen-code-core';
 export const ContextUsageDisplay = ({
   promptTokenCount,
   model,
+  modelLimit,
 }: {
   promptTokenCount: number;
   model: string;
+  /** Optional precomputed model limit (preferred) */
+  modelLimit?: number;
 }) => {
-  const percentage = promptTokenCount / tokenLimit(model);
+  // Prefer provided modelLimit (from Config.getEffectiveContextLimit) when available
+  const limit = typeof modelLimit === 'number' && Number.isFinite(modelLimit) && modelLimit > 0
+    ? modelLimit
+    : tokenLimit(model);
+
+  const percentage = promptTokenCount / limit;
 
   return (
     <Text color={Colors.Gray}>
-      ({((1 - percentage) * 100).toFixed(0)}% context left)
+      ({promptTokenCount.toLocaleString()}/{limit.toLocaleString()} tokens available) ({((1 - percentage) * 100).toFixed(0)}% context left)
     </Text>
   );
 };
+

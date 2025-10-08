@@ -21,6 +21,8 @@ import { isNarrowWidth } from '../utils/isNarrowWidth.js';
 
 interface FooterProps {
   model: string;
+  /** Optional precomputed model context limit in tokens (preferred) */
+  modelLimit?: number;
   targetDir: string;
   branchName?: string;
   debugMode: boolean;
@@ -37,6 +39,7 @@ interface FooterProps {
 
 export const Footer: React.FC<FooterProps> = ({
   model,
+  modelLimit,
   targetDir,
   branchName,
   debugMode,
@@ -130,6 +133,7 @@ export const Footer: React.FC<FooterProps> = ({
           <ContextUsageDisplay
             promptTokenCount={promptTokenCount}
             model={model}
+            modelLimit={modelLimit}
           />
         </Text>
         {corgiMode && (
