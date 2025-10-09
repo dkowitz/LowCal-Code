@@ -258,7 +258,9 @@ describe("exportCommand", () => {
 
     await action(mockContext, "report my-report.md");
 
-    expect(mockMkdirSync).toHaveBeenCalledWith("/mock/path/reports", { recursive: true });
+    expect(mockMkdirSync).toHaveBeenCalledWith("/mock/path/reports", {
+      recursive: true,
+    });
     expect(mockAddItem).toHaveBeenCalledWith(
       expect.objectContaining({
         type: "info",

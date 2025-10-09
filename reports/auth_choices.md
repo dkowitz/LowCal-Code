@@ -234,7 +234,8 @@ atmandk@uby:~/LowCal-dev$ npm run build
 src/ui/commands/modelCommand.ts:21:15 - error TS2305: Module '"../../config/auth.js"' has no exported member 'ProviderId'.
 
 21 import { type ProviderId } from '../../config/auth.js';
-~~~~~~~~~~
+
+```
 
 src/ui/commands/modelCommand.ts:35:41 - error TS2304: Cannot find name 'config'.
 
@@ -342,12 +343,13 @@ atmandk@uby:~/LowCal-dev$ npm run build
 src/ui/commands/modelCommand.ts:21:15 - error TS2305: Module '"../../config/auth.js"' has no exported member 'ProviderId'.
 
 21 import { type ProviderId } from '../../config/auth.js';
-~~~~~~~~~~
+```
 
 src/ui/commands/modelCommand.ts:35:41 - error TS2304: Cannot find name 'config'.
 
 35 const { providerId, providers } = config!.getContentGeneratorConfig()!.auth!;
-~~~~~~
+
+```
 
 Found 2 errors.
 
@@ -487,7 +489,7 @@ atmandk@uby:~/LowCal-dev$ npm run build
 src/ui/commands/modelCommand.ts:35:41 - error TS2304: Cannot find name 'config'.
 
 35 const { providerId, providers } = config!.getContentGeneratorConfig()!.auth!;
-~~~~~~
+```
 
 Found 1 error.
 
@@ -625,7 +627,8 @@ atmandk@uby:~/LowCal-dev$ npm run build
 src/ui/commands/modelCommand.ts:35:41 - error TS2304: Cannot find name 'services'.
 
 35 const { providerId, providers } = services.config!.getContentGeneratorConfig()!.auth!;
-~~~~~~~~
+
+```
 
 Found 1 error.
 
@@ -1498,7 +1501,7 @@ atmandk@uby:~/LowCal-dev$ npm run build
 src/ui/commands/modelCommand.ts:29:95 - error TS2339: Property 'security' does not exist on type 'ContentGeneratorConfig'.
 
 29 const { providerId, providers } = context.services.config!.getContentGeneratorConfig()!.security!.auth!;
-~~~~~~~~
+```
 
 Found 1 error.
 
@@ -1775,7 +1778,8 @@ atmandk@uby:~/LowCal-dev$ npm run build
 src/ui/commands/modelCommand.ts:29:95 - error TS2339: Property 'security' does not exist on type 'ContentGeneratorConfig'.
 
 29 const { providerId, providers } = context.services.config!.getContentGeneratorConfig()!.security!.auth!;
-~~~~~~~~
+
+```
 
 Found 1 error.
 
@@ -1882,3 +1886,4 @@ Node.js v24.8.0
 **Tool:** WriteFile
 
 ---
+```

@@ -169,7 +169,10 @@ export const exportCommand: SlashCommand = {
             // Single-tool shape
             toolsArray.push({
               name: (item as any).name,
-              resultDisplay: (item as any).resultDisplay || (item as any).result || undefined,
+              resultDisplay:
+                (item as any).resultDisplay ||
+                (item as any).result ||
+                undefined,
             });
           }
 

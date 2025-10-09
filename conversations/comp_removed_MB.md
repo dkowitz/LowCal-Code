@@ -6,7 +6,7 @@
 
 ## User Message
 
-When we made the changes to the context status indicator in @context_indicator.md we were supposed to have removed the 'xxx MB' part of the footer, but it's still there.  Here is what it looks like:
+When we made the changes to the context status indicator in @context_indicator.md we were supposed to have removed the 'xxx MB' part of the footer, but it's still there. Here is what it looks like:
 
 openai/gpt-5-mini (400,000/400,000 tokens available) (100% context left)| 418.4 MB
 
@@ -29,6 +29,7 @@ Done — I removed the MemoryUsageDisplay (the "xxx MB" footer value) from the F
 ## Assistant Response
 
 What I changed
+
 - packages/cli/src/ui/components/Footer.tsx
   - Removed the MemoryUsageDisplay import and the JSX that rendered it.
 
@@ -37,6 +38,7 @@ What I changed
 ## Assistant Response
 
 Next steps (optional)
+
 - If you want the memory display available elsewhere (e.g., a debug command or separate status pane), I can add a toggleable component or move MemoryUsageDisplay to a different place.
 - Run the test suite to update any snapshot tests that expected the MB text (Footer tests may need updates).
 
@@ -53,4 +55,3 @@ Would you like me to run tests now and fix any failing tests/snapshots?
 /export removed_MB.md
 
 ---
-
