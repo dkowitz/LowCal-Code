@@ -1,9 +1,9 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="8" failures="3" errors="0" time="0.01888882">
-    <testsuite name="src/ui/commands/exportCommand.test.ts" timestamp="2025-10-09T16:36:35.630Z" hostname="uby" tests="8" failures="3" errors="0" skipped="0" time="0.01888882">
-        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should have correct name and description" time="0.001146308">
+<testsuites name="vitest tests" tests="8" failures="3" errors="0" time="0.019308157">
+    <testsuite name="src/ui/commands/exportCommand.test.ts" timestamp="2025-10-09T16:39:10.407Z" hostname="uby" tests="8" failures="3" errors="0" skipped="0" time="0.019308157">
+        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should have correct name and description" time="0.001164243">
         </testcase>
-        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should export full conversation with default filename to conversations dir" time="0.013481359">
+        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should export full conversation with default filename to conversations dir" time="0.014029569">
             <failure message="expected &quot;spy&quot; to be called with arguments: [ &apos;/mock/path/conversations&apos;, …(1) ][90m
 
 Received: 
@@ -41,20 +41,20 @@ Number of calls: 1
  ❯ src/ui/commands/exportCommand.test.ts:141:27
             </failure>
         </testcase>
-        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should handle compact option" time="0.000526894">
+        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should handle compact option" time="0.000515527">
         </testcase>
-        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should handle report option" time="0.00042786">
+        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should handle report option" time="0.000391003">
         </testcase>
-        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should handle invalid option" time="0.000816218">
+        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should handle invalid option" time="0.000785783">
             <failure message="Cannot read properties of undefined (reading &apos;length&apos;)" type="TypeError">
 TypeError: Cannot read properties of undefined (reading &apos;length&apos;)
  ❯ action src/ui/commands/exportCommand.ts:20:17
  ❯ src/ui/commands/exportCommand.test.ts:217:11
             </failure>
         </testcase>
-        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should handle no history" time="0.000735969">
+        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should handle no history" time="0.000726372">
         </testcase>
-        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should handle custom filename with option" time="0.000573289">
+        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should handle custom filename with option" time="0.00053858">
             <failure message="expected &quot;spy&quot; to be called with arguments: [ &apos;/mock/path/reports&apos;, …(1) ][90m
 
 Received: 
@@ -92,7 +92,7 @@ Number of calls: 1
  ❯ src/ui/commands/exportCommand.test.ts:261:27
             </failure>
         </testcase>
-        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should handle export error" time="0.000483413">
+        <testcase classname="src/ui/commands/exportCommand.test.ts" name="exportCommand &gt; should handle export error" time="0.000468408">
         </testcase>
     </testsuite>
 </testsuites>
