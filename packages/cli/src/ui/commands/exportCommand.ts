@@ -99,27 +99,30 @@ export const exportCommand: SlashCommand = {
           item.text,
       );
     } else if (option === "report") {
-      // First user message
-      const firstUser = history.find(
-        (item) => item.type === "user" && item.text,
-      );
-      if (firstUser) {
-        filteredHistory.push(firstUser);
+      // All user messages up to the first non-user message
+      for (let i = 0; i < history.length; i++) {
+        if (history[i].type !== "user") {
+          break;
+        }
+        if (history[i].type === "user" && history[i].text) {
+          filteredHistory.push(history[i]);
+        }
       }
 
-      // Find last non-assistant message index
-      const lastNonAssistantIndex = history
-        .slice(1)
-        .reduce((lastIndex, item, index) => {
-          if (item.type !== "gemini" && item.type !== "gemini_content") {
-            return index + 1; // +1 because slice(1) starts from index 1
-          }
-          return lastIndex;
-        }, 0);
+      // Find the last non-assistant message index
+      let lastNonAssistantIndex = -1;
+      for (let i = history.length - 1; i >= 0; i--) {
+        if (history[i].type !== "gemini" && history[i].type !== "gemini_content") {
+          lastNonAssistantIndex = i;
+          break;
+        }
+      }
 
-      // Add assistant messages after last non-assistant
+      // If no non-assistant message found, start from beginning
+      // Otherwise, add all assistant messages after the last non-assistant message
+      const startIndex = lastNonAssistantIndex === -1 ? 0 : lastNonAssistantIndex + 1;
       const finalAssistants = history
-        .slice(lastNonAssistantIndex)
+        .slice(startIndex)
         .filter(
           (item) =>
             (item.type === "gemini" || item.type === "gemini_content") &&

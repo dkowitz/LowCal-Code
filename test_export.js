@@ -1,35 +1,63 @@
-#!/usr/bin/env node
+import fs from 'fs';
+import path from 'path';
 
-// Simple test to understand export command behavior
-import fs from "node:fs";
-import path from "node:path";
+// Create a mock history for testing
+const mockHistory = [
+  { type: "user", text: "First user message" },
+  { type: "user", text: "Second user message" },
+  { type: "user", text: "Third user message" },
+  { type: "info", text: "Some info message" },
+  { type: "gemini", text: "First assistant response" },
+  { type: "gemini_content", text: "Second assistant response" },
+  { type: "user", text: "Fourth user message" },
+  { type: "gemini", text: "Third assistant response" },
+  { type: "gemini_content", text: "Fourth assistant response" }
+];
 
-console.log("Testing export command file path resolution...");
+// Create a mock context
+const mockContext = {
+  ui: {
+    getHistory: () => mockHistory,
+    addItem: (item, timestamp) => {
+      console.log(`[${item.type}] ${item.text}`);
+    }
+  },
+  services: {
+    config: {
+      getSessionId: () => "test-session-id"
+    }
+  }
+};
 
-// Test the path resolution logic from the export command
-const exportDir = path.join(process.cwd(), "reports");
-console.log("Export directory:", exportDir);
-
-const fileName = "token_tool.md";
-const fullPath = path.join(exportDir, fileName);
-console.log("Full path:", fullPath);
-
-// Check if directory exists
-console.log("Reports directory exists:", fs.existsSync(exportDir));
-
-// Try to create directory and write file
-try {
-  fs.mkdirSync(exportDir, { recursive: true });
-  console.log("Directory created or already exists");
-
-  const testContent = "# Test Content\n\nThis is a test file.";
-  fs.writeFileSync(fullPath, testContent, "utf8");
-  console.log("File written successfully to:", fullPath);
-  console.log("File exists:", fs.existsSync(fullPath));
-
-  // Clean up
-  fs.unlinkSync(fullPath);
-  console.log("Test file deleted");
-} catch (error) {
-  console.error("Error:", error.message);
+// Create reports directory if it doesn't exist
+const reportsDir = path.join(process.cwd(), "reports");
+if (!fs.existsSync(reportsDir)) {
+  fs.mkdirSync(reportsDir, { recursive: true });
 }
+
+// Import and test the export command
+async function testExportCommand() {
+  try {
+    // Dynamically import the export command
+    const { exportCommand } = await import('./packages/cli/dist/src/ui/commands/exportCommand.js');
+    
+    // Test the report option
+    console.log("Testing export command with 'report' option...");
+    await exportCommand.action(mockContext, "report test_report.md");
+    
+    // Check if the file was created
+    const reportPath = path.join(reportsDir, "test_report.md");
+    if (fs.existsSync(reportPath)) {
+      console.log("✅ Report file created successfully!");
+      const content = fs.readFileSync(reportPath, 'utf8');
+      console.log("Report content:");
+      console.log(content);
+    } else {
+      console.log("❌ Report file was not created.");
+    }
+  } catch (error) {
+    console.error("Error testing export command:", error);
+  }
+}
+
+testExportCommand();
