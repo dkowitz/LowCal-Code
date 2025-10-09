@@ -33,6 +33,7 @@ import { statsCommand } from "../ui/commands/statsCommand.js";
 import { summaryCommand } from "../ui/commands/summaryCommand.js";
 import { terminalSetupCommand } from "../ui/commands/terminalSetupCommand.js";
 import { themeCommand } from "../ui/commands/themeCommand.js";
+import { tokensCommand } from "../ui/commands/tokensCommand.js";
 import { toolsCommand } from "../ui/commands/toolsCommand.js";
 import { vimCommand } from "../ui/commands/vimCommand.js";
 import { setupGithubCommand } from "../ui/commands/setupGithubCommand.js";
@@ -80,14 +81,15 @@ export class BuiltinCommandLoader {
             quitCommand,
             quitConfirmCommand,
             restoreCommand(this.config),
+            settingsCommand,
             statsCommand,
             summaryCommand,
+            terminalSetupCommand,
             themeCommand,
+            tokensCommand,
             toolsCommand,
-            settingsCommand,
             vimCommand,
             setupGithubCommand,
-            terminalSetupCommand,
         ];
         return allDefinitions.filter((cmd) => cmd !== null);
     }
