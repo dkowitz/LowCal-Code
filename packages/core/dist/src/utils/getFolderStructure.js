@@ -3,13 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
-import { getErrorMessage, isNodeError } from './errors.js';
-import { DEFAULT_FILE_FILTERING_OPTIONS } from '../config/config.js';
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
+import { getErrorMessage, isNodeError } from "./errors.js";
+import { DEFAULT_FILE_FILTERING_OPTIONS } from "../config/config.js";
 const MAX_ITEMS = 20;
-const TRUNCATION_INDICATOR = '...';
-const DEFAULT_IGNORED_FOLDERS = new Set(['node_modules', '.git', 'dist']);
+const TRUNCATION_INDICATOR = "...";
+const DEFAULT_IGNORED_FOLDERS = new Set(["node_modules", ".git", "dist"]);
 // --- Interfaces ---
 // --- Helper Functions ---
 async function readFullStructure(rootPath, options) {
@@ -48,9 +48,9 @@ async function readFullStructure(rootPath, options) {
         }
         catch (error) {
             if (isNodeError(error) &&
-                (error.code === 'EACCES' || error.code === 'ENOENT')) {
+                (error.code === "EACCES" || error.code === "ENOENT")) {
                 console.warn(`Warning: Could not read directory ${currentPath}: ${error.message}`);
-                if (currentPath === rootPath && error.code === 'ENOENT') {
+                if (currentPath === rootPath && error.code === "ENOENT") {
                     return null; // Root directory itself not found
                 }
                 // For other EACCES/ENOENT on subdirectories, just skip them.
@@ -152,32 +152,32 @@ async function readFullStructure(rootPath, options) {
  * @param builder Array to build the string lines.
  */
 function formatStructure(node, currentIndent, isLastChildOfParent, isProcessingRootNode, builder) {
-    const connector = isLastChildOfParent ? '└───' : '├───';
+    const connector = isLastChildOfParent ? "└───" : "├───";
     // The root node of the structure (the one passed initially to getFolderStructure)
     // is not printed with a connector line itself, only its name as a header.
     // Its children are printed relative to that conceptual root.
     // Ignored root nodes ARE printed with a connector.
     if (!isProcessingRootNode || node.isIgnored) {
-        builder.push(`${currentIndent}${connector}${node.name}${path.sep}${node.isIgnored ? TRUNCATION_INDICATOR : ''}`);
+        builder.push(`${currentIndent}${connector}${node.name}${path.sep}${node.isIgnored ? TRUNCATION_INDICATOR : ""}`);
     }
     // Determine the indent for the children of *this* node.
     // If *this* node was the root of the whole structure, its children start with no indent before their connectors.
     // Otherwise, children's indent extends from the current node's indent.
     const indentForChildren = isProcessingRootNode
-        ? ''
-        : currentIndent + (isLastChildOfParent ? '    ' : '│   ');
+        ? ""
+        : currentIndent + (isLastChildOfParent ? "    " : "│   ");
     // Render files of the current node
     const fileCount = node.files.length;
     for (let i = 0; i < fileCount; i++) {
         const isLastFileAmongSiblings = i === fileCount - 1 &&
             node.subFolders.length === 0 &&
             !node.hasMoreSubfolders;
-        const fileConnector = isLastFileAmongSiblings ? '└───' : '├───';
+        const fileConnector = isLastFileAmongSiblings ? "└───" : "├───";
         builder.push(`${indentForChildren}${fileConnector}${node.files[i]}`);
     }
     if (node.hasMoreFiles) {
         const isLastIndicatorAmongSiblings = node.subFolders.length === 0 && !node.hasMoreSubfolders;
-        const fileConnector = isLastIndicatorAmongSiblings ? '└───' : '├───';
+        const fileConnector = isLastIndicatorAmongSiblings ? "└───" : "├───";
         builder.push(`${indentForChildren}${fileConnector}${TRUNCATION_INDICATOR}`);
     }
     // Render subfolders of the current node
@@ -194,7 +194,7 @@ function formatStructure(node, currentIndent, isLastChildOfParent, isProcessingR
 function collectTruncatedPaths(node, rootPath, acc) {
     if (node.path !== rootPath) {
         if (node.isIgnored || node.hasMoreFiles || node.hasMoreSubfolders) {
-            const relative = path.relative(rootPath, node.path) || '.';
+            const relative = path.relative(rootPath, node.path) || ".";
             acc.add(relative);
         }
     }
@@ -230,7 +230,7 @@ export async function getFolderStructure(directory, options) {
         // 2. Format the structure into a string
         const structureLines = [];
         // Pass true for isRoot for the initial call
-        formatStructure(structureRoot, '', true, true, structureLines);
+        formatStructure(structureRoot, "", true, true, structureLines);
         // 3. Build the final output string
         function isTruncated(node) {
             if (node.hasMoreFiles || node.hasMoreSubfolders || node.isIgnored) {
@@ -252,10 +252,10 @@ export async function getFolderStructure(directory, options) {
                 const truncatedPaths = Array.from(truncatedPathSet).sort();
                 const displayPaths = truncatedPaths.slice(0, 5);
                 const formattedPaths = displayPaths
-                    .map((relativePath) => relativePath === '' || relativePath === '.'
-                    ? '.'
-                    : relativePath.replaceAll(path.sep, '/'))
-                    .join(', ');
+                    .map((relativePath) => relativePath === "" || relativePath === "."
+                    ? "."
+                    : relativePath.replaceAll(path.sep, "/"))
+                    .join(", ");
                 const remainingCount = truncatedPaths.length - displayPaths.length;
                 summary += ` Truncated directories to inspect further: ${formattedPaths}`;
                 if (remainingCount > 0) {
@@ -264,7 +264,7 @@ export async function getFolderStructure(directory, options) {
                 summary += `. Consider running /list_directory <path> or /glob for deeper listings.`;
             }
         }
-        return `${summary}\n\n${resolvedPath}${path.sep}\n${structureLines.join('\n')}`;
+        return `${summary}\n\n${resolvedPath}${path.sep}\n${structureLines.join("\n")}`;
     }
     catch (error) {
         console.error(`Error getting folder structure for ${resolvedPath}:`, error);

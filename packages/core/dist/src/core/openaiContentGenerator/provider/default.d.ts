@@ -1,7 +1,7 @@
-import OpenAI from 'openai';
-import type { Config } from '../../../config/config.js';
-import type { ContentGeneratorConfig } from '../../contentGenerator.js';
-import type { OpenAICompatibleProvider } from './types.js';
+import OpenAI from "openai";
+import type { Config } from "../../../config/config.js";
+import type { ContentGeneratorConfig } from "../../contentGenerator.js";
+import type { OpenAICompatibleProvider } from "./types.js";
 /**
  * Default provider for standard OpenAI-compatible APIs
  */

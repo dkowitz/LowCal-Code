@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { McpClient, MCPDiscoveryState, populateMcpServerCommand, } from './mcp-client.js';
-import { getErrorMessage } from '../utils/errors.js';
+import { McpClient, MCPDiscoveryState, populateMcpServerCommand, } from "./mcp-client.js";
+import { getErrorMessage } from "../utils/errors.js";
 /**
  * Manages the lifecycle of multiple MCP clients, including local child processes.
  * This class is responsible for starting, stopping, and discovering tools from

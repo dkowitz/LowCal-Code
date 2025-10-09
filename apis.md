@@ -207,6 +207,7 @@ Based on my research, here's a comprehensive report about the OpenRouter API:
 ## Assistant Response
 
 To use the OpenRouter API:
+
 1. Create an API key through your account dashboard
 2. Use Bearer token authentication in requests with the Authorization header: `Authorization: Bearer <YOUR_API_KEY>`
 3. Include additional headers for better tracking (optional):
@@ -236,6 +237,7 @@ To use the OpenRouter API:
 ## Assistant Response
 
 **Parameters**:
+
 - `category` (string, optional): Filter models by category (e.g., "programming", "roleplay", "marketing")
 - `use_rss` (boolean, optional): Return RSS XML feed instead of JSON (BETA)
 - `use_rss_chat_links` (boolean, optional): Use chat URLs instead of model page URLs for RSS items (only applies when use_rss=true) (BETA)
@@ -255,7 +257,7 @@ To use the OpenRouter API:
   "data": [
     {
       "id": "string",
-      "name": "string", 
+      "name": "string",
       "created": 1741818122,
       "description": "string",
       "architecture": {
@@ -329,6 +331,7 @@ print(response.json())
 ## Assistant Response
 
 **Required Parameters**:
+
 - `model`: The model ID to use
 - `messages`: Array of message objects with "role" and "content"
 
@@ -337,6 +340,7 @@ print(response.json())
 ## Assistant Response
 
 **Optional Parameters**:
+
 - `models`: Alternate list of models for routing overrides
 - `provider`: Preferences for provider routing
 - `reasoning`: Configuration for model reasoning/thinking tokens
@@ -437,6 +441,7 @@ curl -X POST https://openrouter.ai/api/v1/chat/completions \
 ## Assistant Response
 
 **Required Parameters**:
+
 - `model`: The model ID to use
 - `prompt`: The text prompt to complete
 
@@ -446,6 +451,7 @@ curl -X POST https://openrouter.ai/api/v1/chat/completions \
 
 **Optional Parameters**:
 Same as chat completion with the following differences:
+
 - No messages parameter (uses prompt instead)
 - Response format is simpler, without role information
 
@@ -460,6 +466,7 @@ Same as chat completion with the following differences:
 ## Assistant Response
 
 The API provides comprehensive model information including:
+
 1. Model IDs and names
 2. Architecture details (input/output modalities, tokenizer type)
 3. Context length limits
@@ -499,6 +506,7 @@ You can filter models by category using the `category` query parameter when list
 ## Assistant Response
 
 API keys on OpenRouter are more powerful than model-specific keys because they:
+
 - Allow setting credit limits for apps
 - Can be used in OAuth flows
 - Provide better control over usage and billing
@@ -513,7 +521,7 @@ This comprehensive API allows developers to access a wide variety of language mo
 
 ## User Message
 
-Ok, I need more detailed information about the Model Information and Filtering section - how exactly do you use the api to gather the information listed?  All of these are important parameters that I want to know how to access with the api, especially context length and pricing information.
+Ok, I need more detailed information about the Model Information and Filtering section - how exactly do you use the api to gather the information listed? All of these are important parameters that I want to know how to access with the api, especially context length and pricing information.
 
 ---
 
@@ -528,6 +536,7 @@ Based on my research, here's a more detailed explanation of how to use the OpenR
 To access all the detailed model information including context length and pricing, you need to call the `GET /api/v1/models` endpoint.
 
 ### Example Request:
+
 ```bash
 curl -X GET "https://openrouter.ai/api/v1/models" \
      -H "Authorization: Bearer YOUR_API_KEY"
@@ -538,6 +547,7 @@ curl -X GET "https://openrouter.ai/api/v1/models" \
 When you make this request, each model in the response contains these key fields for context length and pricing information:
 
 **Context Length Information:**
+
 ```json
 {
   "id": "openai/gpt-4o",
@@ -552,6 +562,7 @@ When you make this request, each model in the response contains these key fields
 ```
 
 **Pricing Information:**
+
 ```json
 {
   "id": "openai/gpt-4o",
@@ -575,6 +586,7 @@ When you make this request, each model in the response contains these key fields
 To filter models by specific categories (like programming, roleplay, marketing), use the `category` parameter:
 
 ### Example Request:
+
 ```bash
 curl -X GET "https://openrouter.ai/api/v1/models?category=programming" \
      -H "Authorization: Bearer YOUR_API_KEY"
@@ -591,28 +603,28 @@ import json
 def get_models(api_key, category=None):
     """
     Get all available models or filter by category
-    
+
     Args:
         api_key (str): Your OpenRouter API key
         category (str, optional): Filter models by category
-        
+
     Returns:
         list: List of model dictionaries with detailed information
     """
     url = "https://openrouter.ai/api/v1/models"
-    
+
     # Add query parameters if category is specified
     params = {}
     if category:
         params['category'] = category
-    
+
     headers = {
         'Authorization': f'Bearer {api_key}',
         'Content-Type': 'application/json'
     }
-    
+
     response = requests.get(url, headers=headers, params=params)
-    
+
     if response.status_code == 200:
         return response.json()
     else:
@@ -622,30 +634,30 @@ def get_models(api_key, category=None):
 def extract_model_details(models_data):
     """
     Extract specific information like context length and pricing from models data
-    
+
     Args:
         models_data (dict): Response from get_models function
-        
+
     Returns:
         list: List of dictionaries with key model details
     """
     if not models_data or 'data' not in models_data:
         return []
-    
+
     detailed_info = []
-    
+
     for model in models_data['data']:
         info = {
             'id': model.get('id'),
             'name': model.get('name'),
-            'context_length': model.get('context_length') or 
+            'context_length': model.get('context_length') or
                              (model.get('top_provider', {}).get('context_length') if model.get('top_provider') else None),
             'pricing': model.get('pricing', {}),
             'description': model.get('description')
         }
-        
+
         detailed_info.append(info)
-    
+
     return detailed_info
 
 # Usage example
@@ -653,7 +665,7 @@ api_key = "YOUR_API_KEY_HERE"
 models_data = get_models(api_key, category="programming")
 if models_data:
     model_details = extract_model_details(models_data)
-    
+
     # Print specific information for each model
     for model in model_details:
         print(f"Model: {model['name']} ({model['id']})")
@@ -668,6 +680,7 @@ if models_data:
 If you want to get information about a specific model, you can also make individual requests for that model:
 
 ### Example Request for Specific Model:
+
 ```bash
 curl -X GET "https://openrouter.ai/api/v1/models/openai/gpt-4o" \
      -H "Authorization: Bearer YOUR_API_KEY"
@@ -687,6 +700,7 @@ This information is crucial when choosing which models to use for different task
 ## Filtering by Multiple Criteria
 
 You can also combine filtering options:
+
 ```bash
 curl -X GET "https://openrouter.ai/api/v1/models?category=programming&use_rss=true" \
      -H "Authorization: Bearer YOUR_API_KEY"
@@ -702,7 +716,7 @@ This approach gives you access to all the detailed model information needed for 
 
 ## User Message
 
-Great!  Now I want you to do the same thing for the LM Studio lms api - find the same information, but for LM Studio rather than OpenRouter.
+Great! Now I want you to do the same thing for the LM Studio lms api - find the same information, but for LM Studio rather than OpenRouter.
 
 ---
 
@@ -806,7 +820,7 @@ Let me try a different approach and look for information about how LM Studio exp
 
 ## User Message
 
-Apologies, I've changed the permissions so you can perform the web searches.  Please try again.
+Apologies, I've changed the permissions so you can perform the web searches. Please try again.
 
 ---
 
@@ -855,6 +869,7 @@ LM Studio provides an OpenAI-compatible API that allows you to interact with loc
 **Endpoint**: `GET http://localhost:1234/v1/models`
 
 **Response Format**:
+
 ```json
 {
   "object": "list",
@@ -870,6 +885,7 @@ LM Studio provides an OpenAI-compatible API that allows you to interact with loc
 ```
 
 **Example Usage (Python)**:
+
 ```python
 from openai import OpenAI
 
@@ -889,11 +905,13 @@ print(models)
 **Endpoint**: `POST http://localhost:1234/v1/chat/completions`
 
 **Request Parameters**:
+
 - `model`: The model ID to use
 - `messages`: Array of message objects with "role" and "content"
 - Additional parameters like temperature, max_tokens, etc. (same as OpenAI)
 
 **Example Usage (Python)**:
+
 ```python
 completion = client.chat.completions.create(
     model="model-identifier",
@@ -908,6 +926,7 @@ completion = client.chat.completions.create(
 **Endpoint**: `POST http://localhost:1234/v1/completions`
 
 **Request Parameters**:
+
 - `model`: The model ID to use
 - `prompt`: The text prompt to complete
 
@@ -922,12 +941,15 @@ completion = client.chat.completions.create(
 While LM Studio provides OpenAI-compatible API endpoints, there are important limitations regarding detailed model information:
 
 ### Context Length and Pricing Information
+
 The LM Studio API does not expose context length or pricing details through its standard API endpoints. This information is typically:
+
 - Available in the model files themselves
 - Found in LM Studio's UI when viewing individual models
 - Accessible through LM Studio's internal model management system
 
 ### Model Metadata Through API
+
 The `/v1/models` endpoint only returns basic model identifiers and ownership information, not detailed specifications like context window size or pricing.
 
 ## Usage with OpenAI Libraries
@@ -954,6 +976,7 @@ completion = client.chat.completions.create(
 ## Key Differences from OpenRouter
 
 Unlike OpenRouter, LM Studio's API:
+
 1. Does not provide detailed pricing information through its endpoints
 2. Does not expose context length limits via the API
 3. Is designed for local model hosting rather than a marketplace of models
@@ -962,11 +985,9 @@ Unlike OpenRouter, LM Studio's API:
 ## Accessing Detailed Model Information
 
 To get complete model details like context length and specifications:
+
 1. Check LM Studio's UI directly where you can view detailed information about each loaded model
 2. Examine the model files themselves for technical specifications
 3. Refer to documentation provided with specific models or LM Studio's general documentation
 
 This approach means that while you can interact with models through the API, getting comprehensive details like context length and pricing requires looking at LM Studio's interface rather than its API endpoints.
-
-
-

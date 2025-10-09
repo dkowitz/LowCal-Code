@@ -3,18 +3,18 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { loadUserExtensions, toOutputString } from '../../config/extension.js';
-import { getErrorMessage } from '../../utils/errors.js';
+import { loadUserExtensions, toOutputString } from "../../config/extension.js";
+import { getErrorMessage } from "../../utils/errors.js";
 export async function handleList() {
     try {
         const extensions = loadUserExtensions();
         if (extensions.length === 0) {
-            console.log('No extensions installed.');
+            console.log("No extensions installed.");
             return;
         }
         console.log(extensions
             .map((extension, _) => toOutputString(extension))
-            .join('\n\n'));
+            .join("\n\n"));
     }
     catch (error) {
         console.error(getErrorMessage(error));
@@ -22,8 +22,8 @@ export async function handleList() {
     }
 }
 export const listCommand = {
-    command: 'list',
-    describe: 'Lists installed extensions.',
+    command: "list",
+    describe: "Lists installed extensions.",
     builder: (yargs) => yargs,
     handler: async () => {
         await handleList();

@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import stripAnsi from 'strip-ansi';
-import { stripVTControlCharacters } from 'node:util';
+import stripAnsi from "strip-ansi";
+import { stripVTControlCharacters } from "node:util";
 
 /**
  * Calculates the maximum width of a multi-line ASCII art string.
@@ -17,7 +17,7 @@ export const getAsciiArtWidth = (asciiArt: string): number => {
     return 0;
   }
   // Split into lines and ignore empty leading/trailing lines which can affect width calculation.
-  const lines = asciiArt.split('\n').filter((line) => line.length > 0);
+  const lines = asciiArt.split("\n").filter((line) => line.length > 0);
   return Math.max(...lines.map((line) => line.length));
 };
 
@@ -40,7 +40,7 @@ export function cpLen(str: string): number {
 export function cpSlice(str: string, start: number, end?: number): string {
   // Slice by code‑point indices and re‑join.
   const arr = toCodePoints(str).slice(start, end);
-  return arr.join('');
+  return arr.join("");
 }
 
 /**
@@ -85,5 +85,5 @@ export function stripUnsafeCharacters(str: string): string {
       // Preserve all other characters including Unicode/emojis
       return true;
     })
-    .join('');
+    .join("");
 }

@@ -3,21 +3,21 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as child_process from 'node:child_process';
-import * as process from 'node:process';
-import * as path from 'node:path';
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import { DetectedIde, getIdeInfo } from './detect-ide.js';
-import { QWEN_CODE_COMPANION_EXTENSION_NAME } from './constants.js';
+import * as child_process from "node:child_process";
+import * as process from "node:process";
+import * as path from "node:path";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import { DetectedIde, getIdeInfo } from "./detect-ide.js";
+import { QWEN_CODE_COMPANION_EXTENSION_NAME } from "./constants.js";
 function getVsCodeCommand(platform = process.platform) {
-    return platform === 'win32' ? 'code.cmd' : 'code';
+    return platform === "win32" ? "code.cmd" : "code";
 }
 async function findVsCodeCommand(platform = process.platform) {
     // 1. Check PATH first.
     const vscodeCommand = getVsCodeCommand(platform);
     try {
-        if (platform === 'win32') {
+        if (platform === "win32") {
             const result = child_process
                 .execSync(`where.exe ${vscodeCommand}`)
                 .toString()
@@ -30,7 +30,7 @@ async function findVsCodeCommand(platform = process.platform) {
         }
         else {
             child_process.execSync(`command -v ${vscodeCommand}`, {
-                stdio: 'ignore',
+                stdio: "ignore",
             });
             return vscodeCommand;
         }
@@ -41,17 +41,17 @@ async function findVsCodeCommand(platform = process.platform) {
     // 2. Check common installation locations.
     const locations = [];
     const homeDir = os.homedir();
-    if (platform === 'darwin') {
+    if (platform === "darwin") {
         // macOS
-        locations.push('/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code', path.join(homeDir, 'Library/Application Support/Code/bin/code'));
+        locations.push("/Applications/Visual Studio Code.app/Contents/Resources/app/bin/code", path.join(homeDir, "Library/Application Support/Code/bin/code"));
     }
-    else if (platform === 'linux') {
+    else if (platform === "linux") {
         // Linux
-        locations.push('/usr/share/code/bin/code', '/snap/bin/code', path.join(homeDir, '.local/share/code/bin/code'));
+        locations.push("/usr/share/code/bin/code", "/snap/bin/code", path.join(homeDir, ".local/share/code/bin/code"));
     }
-    else if (platform === 'win32') {
+    else if (platform === "win32") {
         // Windows
-        locations.push(path.join(process.env['ProgramFiles'] || 'C:\\Program Files', 'Microsoft VS Code', 'bin', 'code.cmd'), path.join(homeDir, 'AppData', 'Local', 'Programs', 'Microsoft VS Code', 'bin', 'code.cmd'));
+        locations.push(path.join(process.env["ProgramFiles"] || "C:\\Program Files", "Microsoft VS Code", "bin", "code.cmd"), path.join(homeDir, "AppData", "Local", "Programs", "Microsoft VS Code", "bin", "code.cmd"));
     }
     for (const location of locations) {
         if (fs.existsSync(location)) {
@@ -81,7 +81,7 @@ class VsCodeInstaller {
         }
         const command = `"${commandPath}" --install-extension qwenlm.qwen-code-vscode-ide-companion --force`;
         try {
-            child_process.execSync(command, { stdio: 'pipe' });
+            child_process.execSync(command, { stdio: "pipe" });
             return {
                 success: true,
                 message: `${this.ideInfo.displayName} companion extension was installed successfully.`,

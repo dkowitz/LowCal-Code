@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Box, Text } from 'ink';
-import Gradient from 'ink-gradient';
-import { Colors } from '../colors.js';
-import { shortAsciiLogo, longAsciiLogo, tinyAsciiLogo } from './AsciiArt.js';
-import { getAsciiArtWidth } from '../utils/textUtils.js';
-import { useTerminalSize } from '../hooks/useTerminalSize.js';
+import type React from "react";
+import { Box, Text } from "ink";
+import Gradient from "ink-gradient";
+import { Colors } from "../colors.js";
+import { shortAsciiLogo, longAsciiLogo, tinyAsciiLogo } from "./AsciiArt.js";
+import { getAsciiArtWidth } from "../utils/textUtils.js";
+import { useTerminalSize } from "../hooks/useTerminalSize.js";
 
 interface HeaderProps {
   customAsciiArt?: string; // For user-defined ASCII art

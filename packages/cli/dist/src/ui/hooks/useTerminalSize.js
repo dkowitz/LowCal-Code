@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useEffect, useState } from 'react';
+import { useEffect, useState } from "react";
 const TERMINAL_PADDING_X = 8;
 export function useTerminalSize() {
     const [size, setSize] = useState({
@@ -17,9 +17,9 @@ export function useTerminalSize() {
                 rows: process.stdout.rows || 20,
             });
         }
-        process.stdout.on('resize', updateSize);
+        process.stdout.on("resize", updateSize);
         return () => {
-            process.stdout.off('resize', updateSize);
+            process.stdout.off("resize", updateSize);
         };
     }, []);
     return size;

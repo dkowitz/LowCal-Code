@@ -4,36 +4,36 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { BaseDeclarativeTool, BaseToolInvocation, Kind } from './tools.js';
-import { ToolNames } from './tool-names.js';
+import { BaseDeclarativeTool, BaseToolInvocation, Kind } from "./tools.js";
+import { ToolNames } from "./tool-names.js";
 import type {
   ToolResult,
   ToolResultDisplay,
   TaskResultDisplay,
-} from './tools.js';
-import { ToolConfirmationOutcome } from './tools.js';
+} from "./tools.js";
+import { ToolConfirmationOutcome } from "./tools.js";
 import type {
   ToolCallConfirmationDetails,
   ToolConfirmationPayload,
-} from './tools.js';
-import type { Config } from '../config/config.js';
-import type { SubagentManager } from '../subagents/subagent-manager.js';
+} from "./tools.js";
+import type { Config } from "../config/config.js";
+import type { SubagentManager } from "../subagents/subagent-manager.js";
 import {
   type SubagentConfig,
   SubagentTerminateMode,
-} from '../subagents/types.js';
-import { ContextState } from '../subagents/subagent.js';
+} from "../subagents/types.js";
+import { ContextState } from "../subagents/subagent.js";
 import {
   SubAgentEventEmitter,
   SubAgentEventType,
-} from '../subagents/subagent-events.js';
+} from "../subagents/subagent-events.js";
 import type {
   SubAgentToolCallEvent,
   SubAgentToolResultEvent,
   SubAgentFinishEvent,
   SubAgentErrorEvent,
   SubAgentApprovalRequestEvent,
-} from '../subagents/subagent-events.js';
+} from "../subagents/subagent-events.js";
 
 export interface TaskParams {
   description: string;
@@ -55,30 +55,30 @@ export class TaskTool extends BaseDeclarativeTool<TaskParams, ToolResult> {
   constructor(private readonly config: Config) {
     // Initialize with a basic schema first
     const initialSchema = {
-      type: 'object',
+      type: "object",
       properties: {
         description: {
-          type: 'string',
-          description: 'A short (3-5 word) description of the task',
+          type: "string",
+          description: "A short (3-5 word) description of the task",
         },
         prompt: {
-          type: 'string',
-          description: 'The task for the agent to perform',
+          type: "string",
+          description: "The task for the agent to perform",
         },
         subagent_type: {
-          type: 'string',
-          description: 'The type of specialized agent to use for this task',
+          type: "string",
+          description: "The type of specialized agent to use for this task",
         },
       },
-      required: ['description', 'prompt', 'subagent_type'],
+      required: ["description", "prompt", "subagent_type"],
       additionalProperties: false,
-      $schema: 'http://json-schema.org/draft-07/schema#',
+      $schema: "http://json-schema.org/draft-07/schema#",
     };
 
     super(
       TaskTool.Name,
-      'Task',
-      'Delegate tasks to specialized subagents. Loading available subagents...', // Initial description
+      "Task",
+      "Delegate tasks to specialized subagents. Loading available subagents...", // Initial description
       Kind.Other,
       initialSchema,
       true, // isOutputMarkdown
@@ -100,7 +100,7 @@ export class TaskTool extends BaseDeclarativeTool<TaskParams, ToolResult> {
       this.availableSubagents = await this.subagentManager.listSubagents();
       this.updateDescriptionAndSchema();
     } catch (error) {
-      console.warn('Failed to load subagents for Task tool:', error);
+      console.warn("Failed to load subagents for Task tool:", error);
       this.availableSubagents = [];
       this.updateDescriptionAndSchema();
     }
@@ -110,14 +110,14 @@ export class TaskTool extends BaseDeclarativeTool<TaskParams, ToolResult> {
    * Updates the tool's description and schema based on available subagents.
    */
   private updateDescriptionAndSchema(): void {
-    let subagentDescriptions = '';
+    let subagentDescriptions = "";
     if (this.availableSubagents.length === 0) {
       subagentDescriptions =
-        'No subagents are currently configured. You can create subagents using the /agents command.';
+        "No subagents are currently configured. You can create subagents using the /agents command.";
     } else {
       subagentDescriptions = this.availableSubagents
         .map((subagent) => `- **${subagent.name}**: ${subagent.description}`)
-        .join('\n');
+        .join("\n");
     }
 
     const baseDescription = `Launch a new agent to handle complex, multi-step tasks autonomously. 
@@ -213,24 +213,24 @@ assistant: "I'm going to use the Task tool to launch the with the greeting-respo
     // Validate required fields
     if (
       !params.description ||
-      typeof params.description !== 'string' ||
-      params.description.trim() === ''
+      typeof params.description !== "string" ||
+      params.description.trim() === ""
     ) {
       return 'Parameter "description" must be a non-empty string.';
     }
 
     if (
       !params.prompt ||
-      typeof params.prompt !== 'string' ||
-      params.prompt.trim() === ''
+      typeof params.prompt !== "string" ||
+      params.prompt.trim() === ""
     ) {
       return 'Parameter "prompt" must be a non-empty string.';
     }
 
     if (
       !params.subagent_type ||
-      typeof params.subagent_type !== 'string' ||
-      params.subagent_type.trim() === ''
+      typeof params.subagent_type !== "string" ||
+      params.subagent_type.trim() === ""
     ) {
       return 'Parameter "subagent_type" must be a non-empty string.';
     }
@@ -242,7 +242,7 @@ assistant: "I'm going to use the Task tool to launch the with the greeting-respo
 
     if (!subagentExists) {
       const availableNames = this.availableSubagents.map((s) => s.name);
-      return `Subagent "${params.subagent_type}" not found. Available subagents: ${availableNames.join(', ')}`;
+      return `Subagent "${params.subagent_type}" not found. Available subagents: ${availableNames.join(", ")}`;
     }
 
     return null;
@@ -256,7 +256,7 @@ assistant: "I'm going to use the Task tool to launch the with the greeting-respo
 class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
   private readonly _eventEmitter: SubAgentEventEmitter;
   private currentDisplay: TaskResultDisplay | null = null;
-  private currentToolCalls: TaskResultDisplay['toolCalls'] = [];
+  private currentToolCalls: TaskResultDisplay["toolCalls"] = [];
 
   constructor(
     private readonly config: Config,
@@ -297,7 +297,7 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
     updateOutput?: (output: ToolResultDisplay) => void,
   ): void {
     this.eventEmitter.on(SubAgentEventType.START, () => {
-      this.updateDisplay({ status: 'running' }, updateOutput);
+      this.updateDisplay({ status: "running" }, updateOutput);
     });
 
     this.eventEmitter.on(SubAgentEventType.TOOL_CALL, (...args: unknown[]) => {
@@ -305,7 +305,7 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
       const newToolCall = {
         callId: event.callId,
         name: event.name,
-        status: 'executing' as const,
+        status: "executing" as const,
         args: event.args,
         description: event.description,
       };
@@ -329,7 +329,7 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
         if (toolCallIndex >= 0) {
           this.currentToolCalls![toolCallIndex] = {
             ...this.currentToolCalls![toolCallIndex],
-            status: event.success ? 'success' : 'failed',
+            status: event.success ? "success" : "failed",
             error: event.error,
             resultDisplay: event.resultDisplay,
           };
@@ -348,7 +348,7 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
       const event = args[0] as SubAgentFinishEvent;
       this.updateDisplay(
         {
-          status: event.terminateReason === 'GOAL' ? 'completed' : 'failed',
+          status: event.terminateReason === "GOAL" ? "completed" : "failed",
           terminateReason: event.terminateReason,
         },
         updateOutput,
@@ -359,7 +359,7 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
       const event = args[0] as SubAgentErrorEvent;
       this.updateDisplay(
         {
-          status: 'failed',
+          status: "failed",
           terminateReason: event.error,
         },
         updateOutput,
@@ -377,13 +377,13 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
         if (idx >= 0) {
           this.currentToolCalls![idx] = {
             ...this.currentToolCalls![idx],
-            status: 'awaiting_approval',
+            status: "awaiting_approval",
           };
         } else {
           this.currentToolCalls!.push({
             callId: event.callId,
             name: event.name,
-            status: 'awaiting_approval',
+            status: "awaiting_approval",
             description: event.description,
           });
         }
@@ -392,7 +392,7 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
         const details: ToolCallConfirmationDetails = {
           ...(event.confirmationDetails as Omit<
             ToolCallConfirmationDetails,
-            'onConfirm'
+            "onConfirm"
           >),
           onConfirm: async (
             outcome: ToolConfirmationOutcome,
@@ -414,7 +414,7 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
               if (idx2 >= 0) {
                 this.currentToolCalls![idx2] = {
                   ...this.currentToolCalls![idx2],
-                  status: 'executing',
+                  status: "executing",
                 };
               }
               this.updateDisplay(
@@ -467,11 +467,11 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
 
       if (!subagentConfig) {
         const errorDisplay = {
-          type: 'task_execution' as const,
+          type: "task_execution" as const,
           subagentName: this.params.subagent_type,
           taskDescription: this.params.description,
           taskPrompt: this.params.prompt,
-          status: 'failed' as const,
+          status: "failed" as const,
           terminateReason: `Subagent "${this.params.subagent_type}" not found`,
         };
 
@@ -483,11 +483,11 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
 
       // Initialize the current display state
       this.currentDisplay = {
-        type: 'task_execution' as const,
+        type: "task_execution" as const,
         subagentName: subagentConfig.name,
         taskDescription: this.params.description,
         taskPrompt: this.params.prompt,
-        status: 'running' as const,
+        status: "running" as const,
         subagentColor: subagentConfig.color,
       };
 
@@ -506,7 +506,7 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
 
       // Create context state with the task prompt
       const contextState = new ContextState();
-      contextState.set('task_prompt', this.params.prompt);
+      contextState.set("task_prompt", this.params.prompt);
 
       // Execute the subagent (blocking)
       await subagentScope.runNonInteractive(contextState, signal);
@@ -520,8 +520,8 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
       if (signal?.aborted) {
         this.updateDisplay(
           {
-            status: 'cancelled',
-            terminateReason: 'Task was cancelled by user',
+            status: "cancelled",
+            terminateReason: "Task was cancelled by user",
             executionSummary,
           },
           updateOutput,
@@ -529,7 +529,7 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
       } else {
         this.updateDisplay(
           {
-            status: success ? 'completed' : 'failed',
+            status: success ? "completed" : "failed",
             terminateReason: terminateMode,
             result: finalText,
             executionSummary,
@@ -549,7 +549,7 @@ class TaskToolInvocation extends BaseToolInvocation<TaskParams, ToolResult> {
 
       const errorDisplay: TaskResultDisplay = {
         ...this.currentDisplay!,
-        status: 'failed',
+        status: "failed",
         terminateReason: `Failed to run subagent: ${errorMessage}`,
       };
 

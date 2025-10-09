@@ -4,141 +4,141 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { type ColorsTheme, Theme } from './theme.js';
+import { type ColorsTheme, Theme } from "./theme.js";
 
 const atomOneDarkColors: ColorsTheme = {
-  type: 'dark',
-  Background: '#282c34',
-  Foreground: '#abb2bf',
-  LightBlue: '#61aeee',
-  AccentBlue: '#61aeee',
-  AccentPurple: '#c678dd',
-  AccentCyan: '#56b6c2',
-  AccentGreen: '#98c379',
-  AccentYellow: '#e6c07b',
-  AccentRed: '#e06c75',
-  DiffAdded: '#39544E',
-  DiffRemoved: '#562B2F',
-  Comment: '#5c6370',
-  Gray: '#5c6370',
-  GradientColors: ['#61aeee', '#98c379'],
+  type: "dark",
+  Background: "#282c34",
+  Foreground: "#abb2bf",
+  LightBlue: "#61aeee",
+  AccentBlue: "#61aeee",
+  AccentPurple: "#c678dd",
+  AccentCyan: "#56b6c2",
+  AccentGreen: "#98c379",
+  AccentYellow: "#e6c07b",
+  AccentRed: "#e06c75",
+  DiffAdded: "#39544E",
+  DiffRemoved: "#562B2F",
+  Comment: "#5c6370",
+  Gray: "#5c6370",
+  GradientColors: ["#61aeee", "#98c379"],
 };
 
 export const AtomOneDark: Theme = new Theme(
-  'Atom One',
-  'dark',
+  "Atom One",
+  "dark",
   {
     hljs: {
-      display: 'block',
-      overflowX: 'auto',
-      padding: '0.5em',
+      display: "block",
+      overflowX: "auto",
+      padding: "0.5em",
       color: atomOneDarkColors.Foreground,
       background: atomOneDarkColors.Background,
     },
-    'hljs-comment': {
+    "hljs-comment": {
       color: atomOneDarkColors.Comment,
-      fontStyle: 'italic',
+      fontStyle: "italic",
     },
-    'hljs-quote': {
+    "hljs-quote": {
       color: atomOneDarkColors.Comment,
-      fontStyle: 'italic',
+      fontStyle: "italic",
     },
-    'hljs-doctag': {
+    "hljs-doctag": {
       color: atomOneDarkColors.AccentPurple,
     },
-    'hljs-keyword': {
+    "hljs-keyword": {
       color: atomOneDarkColors.AccentPurple,
     },
-    'hljs-formula': {
+    "hljs-formula": {
       color: atomOneDarkColors.AccentPurple,
     },
-    'hljs-section': {
+    "hljs-section": {
       color: atomOneDarkColors.AccentRed,
     },
-    'hljs-name': {
+    "hljs-name": {
       color: atomOneDarkColors.AccentRed,
     },
-    'hljs-selector-tag': {
+    "hljs-selector-tag": {
       color: atomOneDarkColors.AccentRed,
     },
-    'hljs-deletion': {
+    "hljs-deletion": {
       color: atomOneDarkColors.AccentRed,
     },
-    'hljs-subst': {
+    "hljs-subst": {
       color: atomOneDarkColors.AccentRed,
     },
-    'hljs-literal': {
+    "hljs-literal": {
       color: atomOneDarkColors.AccentCyan,
     },
-    'hljs-string': {
+    "hljs-string": {
       color: atomOneDarkColors.AccentGreen,
     },
-    'hljs-regexp': {
+    "hljs-regexp": {
       color: atomOneDarkColors.AccentGreen,
     },
-    'hljs-addition': {
+    "hljs-addition": {
       color: atomOneDarkColors.AccentGreen,
     },
-    'hljs-attribute': {
+    "hljs-attribute": {
       color: atomOneDarkColors.AccentGreen,
     },
-    'hljs-meta-string': {
+    "hljs-meta-string": {
       color: atomOneDarkColors.AccentGreen,
     },
-    'hljs-built_in': {
+    "hljs-built_in": {
       color: atomOneDarkColors.AccentYellow,
     },
-    'hljs-class .hljs-title': {
+    "hljs-class .hljs-title": {
       color: atomOneDarkColors.AccentYellow,
     },
-    'hljs-attr': {
+    "hljs-attr": {
       color: atomOneDarkColors.AccentYellow,
     },
-    'hljs-variable': {
+    "hljs-variable": {
       color: atomOneDarkColors.AccentYellow,
     },
-    'hljs-template-variable': {
+    "hljs-template-variable": {
       color: atomOneDarkColors.AccentYellow,
     },
-    'hljs-type': {
+    "hljs-type": {
       color: atomOneDarkColors.AccentYellow,
     },
-    'hljs-selector-class': {
+    "hljs-selector-class": {
       color: atomOneDarkColors.AccentYellow,
     },
-    'hljs-selector-attr': {
+    "hljs-selector-attr": {
       color: atomOneDarkColors.AccentYellow,
     },
-    'hljs-selector-pseudo': {
+    "hljs-selector-pseudo": {
       color: atomOneDarkColors.AccentYellow,
     },
-    'hljs-number': {
+    "hljs-number": {
       color: atomOneDarkColors.AccentYellow,
     },
-    'hljs-symbol': {
+    "hljs-symbol": {
       color: atomOneDarkColors.AccentBlue,
     },
-    'hljs-bullet': {
+    "hljs-bullet": {
       color: atomOneDarkColors.AccentBlue,
     },
-    'hljs-link': {
+    "hljs-link": {
       color: atomOneDarkColors.AccentBlue,
-      textDecoration: 'underline',
+      textDecoration: "underline",
     },
-    'hljs-meta': {
-      color: atomOneDarkColors.AccentBlue,
-    },
-    'hljs-selector-id': {
+    "hljs-meta": {
       color: atomOneDarkColors.AccentBlue,
     },
-    'hljs-title': {
+    "hljs-selector-id": {
       color: atomOneDarkColors.AccentBlue,
     },
-    'hljs-emphasis': {
-      fontStyle: 'italic',
+    "hljs-title": {
+      color: atomOneDarkColors.AccentBlue,
     },
-    'hljs-strong': {
-      fontWeight: 'bold',
+    "hljs-emphasis": {
+      fontStyle: "italic",
+    },
+    "hljs-strong": {
+      fontWeight: "bold",
     },
   },
   atomOneDarkColors,

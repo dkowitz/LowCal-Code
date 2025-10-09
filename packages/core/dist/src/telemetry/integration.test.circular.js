@@ -6,9 +6,9 @@
 /**
  * Integration test to verify circular reference handling with proxy agents
  */
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { QwenLogger } from './qwen-logger/qwen-logger.js';
-describe('Circular Reference Integration Test', () => {
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { QwenLogger } from "./qwen-logger/qwen-logger.js";
+describe("Circular Reference Integration Test", () => {
     beforeEach(() => {
         // Clear singleton instance before each test
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -18,22 +18,22 @@ describe('Circular Reference Integration Test', () => {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         QwenLogger.instance = undefined;
     });
-    it('should handle HttpsProxyAgent-like circular references in qwen logging', () => {
+    it("should handle HttpsProxyAgent-like circular references in qwen logging", () => {
         // Create a mock config with proxy
         const mockConfig = {
             getTelemetryEnabled: () => true,
             getUsageStatisticsEnabled: () => true,
-            getSessionId: () => 'test-session',
-            getModel: () => 'test-model',
-            getEmbeddingModel: () => 'test-embedding',
+            getSessionId: () => "test-session",
+            getModel: () => "test-model",
+            getEmbeddingModel: () => "test-embedding",
             getDebugMode: () => false,
-            getProxy: () => 'http://proxy.example.com:8080',
+            getProxy: () => "http://proxy.example.com:8080",
         };
         // Simulate the structure that causes the circular reference error
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const proxyAgentLike = {
             sockets: {},
-            options: { proxy: 'http://proxy.example.com:8080' },
+            options: { proxy: "http://proxy.example.com:8080" },
         };
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const socketLike = {
@@ -43,16 +43,16 @@ describe('Circular Reference Integration Test', () => {
             },
         };
         socketLike._httpMessage.socket = socketLike; // Create circular reference
-        proxyAgentLike.sockets['cloudcode-pa.googleapis.com:443'] = [socketLike];
+        proxyAgentLike.sockets["cloudcode-pa.googleapis.com:443"] = [socketLike];
         // Create an event that would contain this circular structure
         const problematicEvent = {
             timestamp: Date.now(),
-            event_type: 'exception',
-            type: 'error',
-            name: 'api_error',
-            error: new Error('Network error'),
+            event_type: "exception",
+            type: "error",
+            name: "api_error",
+            error: new Error("Network error"),
             function_args: {
-                filePath: '/test/file.txt',
+                filePath: "/test/file.txt",
                 httpAgent: proxyAgentLike, // This would cause the circular reference
             },
         };
@@ -63,11 +63,11 @@ describe('Circular Reference Integration Test', () => {
             logger?.enqueueLogEvent(problematicEvent);
         }).not.toThrow();
     });
-    it('should handle event overflow without memory leaks', () => {
+    it("should handle event overflow without memory leaks", () => {
         const mockConfig = {
             getTelemetryEnabled: () => true,
             getUsageStatisticsEnabled: () => true,
-            getSessionId: () => 'test-session',
+            getSessionId: () => "test-session",
             getDebugMode: () => true,
         };
         const logger = QwenLogger.getInstance(mockConfig);
@@ -75,8 +75,8 @@ describe('Circular Reference Integration Test', () => {
         for (let i = 0; i < 1100; i++) {
             logger?.enqueueLogEvent({
                 timestamp: Date.now(),
-                event_type: 'action',
-                type: 'test',
+                event_type: "action",
+                type: "test",
                 name: `overflow-test-${i}`,
             });
         }
@@ -85,9 +85,9 @@ describe('Circular Reference Integration Test', () => {
         expect(() => {
             logger?.enqueueLogEvent({
                 timestamp: Date.now(),
-                event_type: 'action',
-                type: 'test',
-                name: 'final-test',
+                event_type: "action",
+                type: "test",
+                name: "final-test",
             });
         }).not.toThrow();
     });

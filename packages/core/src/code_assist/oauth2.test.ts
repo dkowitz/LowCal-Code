@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Compute, OAuth2Client } from 'google-auth-library';
-import crypto from 'node:crypto';
-import * as fs from 'node:fs';
-import http from 'node:http';
-import * as os from 'node:os';
-import * as path from 'node:path';
-import readline from 'node:readline';
-import open from 'open';
+import { Compute, OAuth2Client } from "google-auth-library";
+import crypto from "node:crypto";
+import * as fs from "node:fs";
+import http from "node:http";
+import * as os from "node:os";
+import * as path from "node:path";
+import readline from "node:readline";
+import open from "open";
 import {
   afterEach,
   beforeEach,
@@ -20,50 +20,50 @@ import {
   it,
   type Mock,
   vi,
-} from 'vitest';
-import type { Config } from '../config/config.js';
-import { AuthType } from '../core/contentGenerator.js';
-import { QWEN_DIR } from '../utils/paths.js';
-import { UserAccountManager } from '../utils/userAccountManager.js';
+} from "vitest";
+import type { Config } from "../config/config.js";
+import { AuthType } from "../core/contentGenerator.js";
+import { QWEN_DIR } from "../utils/paths.js";
+import { UserAccountManager } from "../utils/userAccountManager.js";
 import {
   clearCachedCredentialFile,
   clearOauthClientCache,
   getOauthClient,
   resetOauthClientForTesting,
-} from './oauth2.js';
+} from "./oauth2.js";
 
-vi.mock('os', async (importOriginal) => {
-  const os = await importOriginal<typeof import('os')>();
+vi.mock("os", async (importOriginal) => {
+  const os = await importOriginal<typeof import("os")>();
   return {
     ...os,
     homedir: vi.fn(),
   };
 });
 
-vi.mock('google-auth-library');
-vi.mock('http');
-vi.mock('open');
-vi.mock('crypto');
-vi.mock('node:readline');
-vi.mock('../utils/browser.js', () => ({
+vi.mock("google-auth-library");
+vi.mock("http");
+vi.mock("open");
+vi.mock("crypto");
+vi.mock("node:readline");
+vi.mock("../utils/browser.js", () => ({
   shouldAttemptBrowserLaunch: () => true,
 }));
 
 const mockConfig = {
   getNoBrowser: () => false,
-  getProxy: () => 'http://test.proxy.com:8080',
+  getProxy: () => "http://test.proxy.com:8080",
   isBrowserLaunchSuppressed: () => false,
 } as unknown as Config;
 
 // Mock fetch globally
 global.fetch = vi.fn();
 
-describe('oauth2', () => {
+describe("oauth2", () => {
   let tempHomeDir: string;
 
   beforeEach(() => {
     tempHomeDir = fs.mkdtempSync(
-      path.join(os.tmpdir(), 'qwen-code-test-home-'),
+      path.join(os.tmpdir(), "qwen-code-test-home-"),
     );
     (os.homedir as Mock).mockReturnValue(tempHomeDir);
   });
@@ -74,13 +74,13 @@ describe('oauth2', () => {
     vi.unstubAllEnvs();
   });
 
-  it('should perform a web login', async () => {
-    const mockAuthUrl = 'https://example.com/auth';
-    const mockCode = 'test-code';
-    const mockState = 'test-state';
+  it("should perform a web login", async () => {
+    const mockAuthUrl = "https://example.com/auth";
+    const mockCode = "test-code";
+    const mockState = "test-state";
     const mockTokens = {
-      access_token: 'test-access-token',
-      refresh_token: 'test-refresh-token',
+      access_token: "test-access-token",
+      refresh_token: "test-refresh-token",
     };
 
     const mockGenerateAuthUrl = vi.fn().mockReturnValue(mockAuthUrl);
@@ -88,7 +88,7 @@ describe('oauth2', () => {
     const mockSetCredentials = vi.fn();
     const mockGetAccessToken = vi
       .fn()
-      .mockResolvedValue({ token: 'mock-access-token' });
+      .mockResolvedValue({ token: "mock-access-token" });
     const mockOAuth2Client = {
       generateAuthUrl: mockGenerateAuthUrl,
       getToken: mockGetToken,
@@ -101,7 +101,7 @@ describe('oauth2', () => {
       () => mockOAuth2Client,
     );
 
-    vi.spyOn(crypto, 'randomBytes').mockReturnValue(mockState as never);
+    vi.spyOn(crypto, "randomBytes").mockReturnValue(mockState as never);
     (open as Mock).mockImplementation(async () => ({ on: vi.fn() }) as never);
 
     // Mock the UserInfo API response
@@ -109,7 +109,7 @@ describe('oauth2', () => {
       ok: true,
       json: vi
         .fn()
-        .mockResolvedValue({ email: 'test-google-account@gmail.com' }),
+        .mockResolvedValue({ email: "test-google-account@gmail.com" }),
     } as unknown as Response);
 
     let requestCallback!: http.RequestListener<
@@ -179,38 +179,38 @@ describe('oauth2', () => {
     const googleAccountPath = path.join(
       tempHomeDir,
       QWEN_DIR,
-      'google_accounts.json',
+      "google_accounts.json",
     );
     expect(fs.existsSync(googleAccountPath)).toBe(true);
-    const cachedGoogleAccount = fs.readFileSync(googleAccountPath, 'utf-8');
+    const cachedGoogleAccount = fs.readFileSync(googleAccountPath, "utf-8");
     expect(JSON.parse(cachedGoogleAccount)).toEqual({
-      active: 'test-google-account@gmail.com',
+      active: "test-google-account@gmail.com",
       old: [],
     });
 
     // Verify the getCachedGoogleAccount function works
     const userAccountManager = new UserAccountManager();
     expect(userAccountManager.getCachedGoogleAccount()).toBe(
-      'test-google-account@gmail.com',
+      "test-google-account@gmail.com",
     );
   });
 
-  it('should perform login with user code', async () => {
+  it("should perform login with user code", async () => {
     const mockConfigWithNoBrowser = {
       getNoBrowser: () => true,
-      getProxy: () => 'http://test.proxy.com:8080',
+      getProxy: () => "http://test.proxy.com:8080",
       isBrowserLaunchSuppressed: () => true,
     } as unknown as Config;
 
     const mockCodeVerifier = {
-      codeChallenge: 'test-challenge',
-      codeVerifier: 'test-verifier',
+      codeChallenge: "test-challenge",
+      codeVerifier: "test-verifier",
     };
-    const mockAuthUrl = 'https://example.com/auth-user-code';
-    const mockCode = 'test-user-code';
+    const mockAuthUrl = "https://example.com/auth-user-code";
+    const mockCode = "test-user-code";
     const mockTokens = {
-      access_token: 'test-access-token-user-code',
-      refresh_token: 'test-refresh-token-user-code',
+      access_token: "test-access-token-user-code",
+      refresh_token: "test-refresh-token-user-code",
     };
 
     const mockGenerateAuthUrl = vi.fn().mockReturnValue(mockAuthUrl);
@@ -237,7 +237,7 @@ describe('oauth2', () => {
     };
     (readline.createInterface as Mock).mockReturnValue(mockReadline);
 
-    const consoleLogSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    const consoleLogSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     const client = await getOauthClient(
       AuthType.LOGIN_WITH_GOOGLE,
@@ -253,42 +253,42 @@ describe('oauth2', () => {
       expect.stringContaining(mockAuthUrl),
     );
     expect(mockReadline.question).toHaveBeenCalledWith(
-      'Enter the authorization code: ',
+      "Enter the authorization code: ",
       expect.any(Function),
     );
     expect(mockGetToken).toHaveBeenCalledWith({
       code: mockCode,
       codeVerifier: mockCodeVerifier.codeVerifier,
-      redirect_uri: 'https://codeassist.google.com/authcode',
+      redirect_uri: "https://codeassist.google.com/authcode",
     });
     expect(mockSetCredentials).toHaveBeenCalledWith(mockTokens);
 
     consoleLogSpy.mockRestore();
   });
 
-  describe('in Cloud Shell', () => {
+  describe("in Cloud Shell", () => {
     const mockGetAccessToken = vi.fn();
     let mockComputeClient: Compute;
 
     beforeEach(() => {
-      mockGetAccessToken.mockResolvedValue({ token: 'test-access-token' });
+      mockGetAccessToken.mockResolvedValue({ token: "test-access-token" });
       mockComputeClient = {
-        credentials: { refresh_token: 'test-refresh-token' },
+        credentials: { refresh_token: "test-refresh-token" },
         getAccessToken: mockGetAccessToken,
       } as unknown as Compute;
 
       (Compute as unknown as Mock).mockImplementation(() => mockComputeClient);
     });
 
-    it('should attempt to load cached credentials first', async () => {
-      const cachedCreds = { refresh_token: 'cached-token' };
-      const credsPath = path.join(tempHomeDir, QWEN_DIR, 'oauth_creds.json');
+    it("should attempt to load cached credentials first", async () => {
+      const cachedCreds = { refresh_token: "cached-token" };
+      const credsPath = path.join(tempHomeDir, QWEN_DIR, "oauth_creds.json");
       await fs.promises.mkdir(path.dirname(credsPath), { recursive: true });
       await fs.promises.writeFile(credsPath, JSON.stringify(cachedCreds));
 
       const mockClient = {
         setCredentials: vi.fn(),
-        getAccessToken: vi.fn().mockResolvedValue({ token: 'test-token' }),
+        getAccessToken: vi.fn().mockResolvedValue({ token: "test-token" }),
         getTokenInfo: vi.fn().mockResolvedValue({}),
         on: vi.fn(),
       };
@@ -306,49 +306,49 @@ describe('oauth2', () => {
       expect(Compute).not.toHaveBeenCalled(); // Should not fetch new client if cache is valid
     });
 
-    it('should use Compute to get a client if no cached credentials exist', async () => {
+    it("should use Compute to get a client if no cached credentials exist", async () => {
       await getOauthClient(AuthType.CLOUD_SHELL, mockConfig);
 
       expect(Compute).toHaveBeenCalledWith({});
       expect(mockGetAccessToken).toHaveBeenCalled();
     });
 
-    it('should not cache the credentials after fetching them via ADC', async () => {
-      const newCredentials = { refresh_token: 'new-adc-token' };
+    it("should not cache the credentials after fetching them via ADC", async () => {
+      const newCredentials = { refresh_token: "new-adc-token" };
       mockComputeClient.credentials = newCredentials;
-      mockGetAccessToken.mockResolvedValue({ token: 'new-adc-token' });
+      mockGetAccessToken.mockResolvedValue({ token: "new-adc-token" });
 
       await getOauthClient(AuthType.CLOUD_SHELL, mockConfig);
 
-      const credsPath = path.join(tempHomeDir, QWEN_DIR, 'oauth_creds.json');
+      const credsPath = path.join(tempHomeDir, QWEN_DIR, "oauth_creds.json");
       expect(fs.existsSync(credsPath)).toBe(false);
     });
 
-    it('should return the Compute client on successful ADC authentication', async () => {
+    it("should return the Compute client on successful ADC authentication", async () => {
       const client = await getOauthClient(AuthType.CLOUD_SHELL, mockConfig);
       expect(client).toBe(mockComputeClient);
     });
 
-    it('should throw an error if ADC fails', async () => {
-      const testError = new Error('ADC Failed');
+    it("should throw an error if ADC fails", async () => {
+      const testError = new Error("ADC Failed");
       mockGetAccessToken.mockRejectedValue(testError);
 
       await expect(
         getOauthClient(AuthType.CLOUD_SHELL, mockConfig),
       ).rejects.toThrow(
-        'Could not authenticate using Cloud Shell credentials. Please select a different authentication method or ensure you are in a properly configured environment. Error: ADC Failed',
+        "Could not authenticate using Cloud Shell credentials. Please select a different authentication method or ensure you are in a properly configured environment. Error: ADC Failed",
       );
     });
   });
 
-  describe('credential loading order', () => {
-    it('should prioritize default cached credentials over GOOGLE_APPLICATION_CREDENTIALS', async () => {
+  describe("credential loading order", () => {
+    it("should prioritize default cached credentials over GOOGLE_APPLICATION_CREDENTIALS", async () => {
       // Setup default cached credentials
-      const defaultCreds = { refresh_token: 'default-cached-token' };
+      const defaultCreds = { refresh_token: "default-cached-token" };
       const defaultCredsPath = path.join(
         tempHomeDir,
         QWEN_DIR,
-        'oauth_creds.json',
+        "oauth_creds.json",
       );
       await fs.promises.mkdir(path.dirname(defaultCredsPath), {
         recursive: true,
@@ -359,14 +359,14 @@ describe('oauth2', () => {
       );
 
       // Setup credentials via environment variable
-      const envCreds = { refresh_token: 'env-var-token' };
-      const envCredsPath = path.join(tempHomeDir, 'env_creds.json');
+      const envCreds = { refresh_token: "env-var-token" };
+      const envCredsPath = path.join(tempHomeDir, "env_creds.json");
       await fs.promises.writeFile(envCredsPath, JSON.stringify(envCreds));
-      vi.stubEnv('GOOGLE_APPLICATION_CREDENTIALS', envCredsPath);
+      vi.stubEnv("GOOGLE_APPLICATION_CREDENTIALS", envCredsPath);
 
       const mockClient = {
         setCredentials: vi.fn(),
-        getAccessToken: vi.fn().mockResolvedValue({ token: 'test-token' }),
+        getAccessToken: vi.fn().mockResolvedValue({ token: "test-token" }),
         getTokenInfo: vi.fn().mockResolvedValue({}),
         on: vi.fn(),
       };
@@ -381,16 +381,16 @@ describe('oauth2', () => {
       expect(mockClient.setCredentials).not.toHaveBeenCalledWith(envCreds);
     });
 
-    it('should fall back to GOOGLE_APPLICATION_CREDENTIALS if default cache is missing', async () => {
+    it("should fall back to GOOGLE_APPLICATION_CREDENTIALS if default cache is missing", async () => {
       // Setup credentials via environment variable
-      const envCreds = { refresh_token: 'env-var-token' };
-      const envCredsPath = path.join(tempHomeDir, 'env_creds.json');
+      const envCreds = { refresh_token: "env-var-token" };
+      const envCredsPath = path.join(tempHomeDir, "env_creds.json");
       await fs.promises.writeFile(envCredsPath, JSON.stringify(envCreds));
-      vi.stubEnv('GOOGLE_APPLICATION_CREDENTIALS', envCredsPath);
+      vi.stubEnv("GOOGLE_APPLICATION_CREDENTIALS", envCredsPath);
 
       const mockClient = {
         setCredentials: vi.fn(),
-        getAccessToken: vi.fn().mockResolvedValue({ token: 'test-token' }),
+        getAccessToken: vi.fn().mockResolvedValue({ token: "test-token" }),
         getTokenInfo: vi.fn().mockResolvedValue({}),
         on: vi.fn(),
       };
@@ -405,15 +405,15 @@ describe('oauth2', () => {
     });
   });
 
-  describe('with GCP environment variables', () => {
-    it('should use GOOGLE_CLOUD_ACCESS_TOKEN when GOOGLE_GENAI_USE_GCA is true', async () => {
-      vi.stubEnv('GOOGLE_GENAI_USE_GCA', 'true');
-      vi.stubEnv('GOOGLE_CLOUD_ACCESS_TOKEN', 'gcp-access-token');
+  describe("with GCP environment variables", () => {
+    it("should use GOOGLE_CLOUD_ACCESS_TOKEN when GOOGLE_GENAI_USE_GCA is true", async () => {
+      vi.stubEnv("GOOGLE_GENAI_USE_GCA", "true");
+      vi.stubEnv("GOOGLE_CLOUD_ACCESS_TOKEN", "gcp-access-token");
 
       const mockSetCredentials = vi.fn();
       const mockGetAccessToken = vi
         .fn()
-        .mockResolvedValue({ token: 'gcp-access-token' });
+        .mockResolvedValue({ token: "gcp-access-token" });
       const mockOAuth2Client = {
         setCredentials: mockSetCredentials,
         getAccessToken: mockGetAccessToken,
@@ -428,7 +428,7 @@ describe('oauth2', () => {
         ok: true,
         json: vi
           .fn()
-          .mockResolvedValue({ email: 'test-gcp-account@gmail.com' }),
+          .mockResolvedValue({ email: "test-gcp-account@gmail.com" }),
       } as unknown as Response);
 
       const client = await getOauthClient(
@@ -438,16 +438,16 @@ describe('oauth2', () => {
 
       expect(client).toBe(mockOAuth2Client);
       expect(mockSetCredentials).toHaveBeenCalledWith({
-        access_token: 'gcp-access-token',
+        access_token: "gcp-access-token",
       });
 
       // Verify fetchAndCacheUserInfo was effectively called
       expect(mockGetAccessToken).toHaveBeenCalled();
       expect(global.fetch).toHaveBeenCalledWith(
-        'https://www.googleapis.com/oauth2/v2/userinfo',
+        "https://www.googleapis.com/oauth2/v2/userinfo",
         {
           headers: {
-            Authorization: 'Bearer gcp-access-token',
+            Authorization: "Bearer gcp-access-token",
           },
         },
       );
@@ -456,22 +456,22 @@ describe('oauth2', () => {
       const googleAccountPath = path.join(
         tempHomeDir,
         QWEN_DIR,
-        'google_accounts.json',
+        "google_accounts.json",
       );
-      const cachedContent = fs.readFileSync(googleAccountPath, 'utf-8');
+      const cachedContent = fs.readFileSync(googleAccountPath, "utf-8");
       expect(JSON.parse(cachedContent)).toEqual({
-        active: 'test-gcp-account@gmail.com',
+        active: "test-gcp-account@gmail.com",
         old: [],
       });
     });
 
-    it('should not use GCP token if GOOGLE_CLOUD_ACCESS_TOKEN is not set', async () => {
-      vi.stubEnv('GOOGLE_GENAI_USE_GCA', 'true');
+    it("should not use GCP token if GOOGLE_CLOUD_ACCESS_TOKEN is not set", async () => {
+      vi.stubEnv("GOOGLE_GENAI_USE_GCA", "true");
 
       const mockSetCredentials = vi.fn();
       const mockGetAccessToken = vi
         .fn()
-        .mockResolvedValue({ token: 'cached-access-token' });
+        .mockResolvedValue({ token: "cached-access-token" });
       const mockGetTokenInfo = vi.fn().mockResolvedValue({});
       const mockOAuth2Client = {
         setCredentials: mockSetCredentials,
@@ -484,8 +484,8 @@ describe('oauth2', () => {
       );
 
       // Make it fall through to cached credentials path
-      const cachedCreds = { refresh_token: 'cached-token' };
-      const credsPath = path.join(tempHomeDir, QWEN_DIR, 'oauth_creds.json');
+      const cachedCreds = { refresh_token: "cached-token" };
+      const credsPath = path.join(tempHomeDir, QWEN_DIR, "oauth_creds.json");
       await fs.promises.mkdir(path.dirname(credsPath), { recursive: true });
       await fs.promises.writeFile(credsPath, JSON.stringify(cachedCreds));
 
@@ -496,13 +496,13 @@ describe('oauth2', () => {
       expect(mockSetCredentials).toHaveBeenCalledWith(cachedCreds);
     });
 
-    it('should not use GCP token if GOOGLE_GENAI_USE_GCA is not set', async () => {
-      vi.stubEnv('GOOGLE_CLOUD_ACCESS_TOKEN', 'gcp-access-token');
+    it("should not use GCP token if GOOGLE_GENAI_USE_GCA is not set", async () => {
+      vi.stubEnv("GOOGLE_CLOUD_ACCESS_TOKEN", "gcp-access-token");
 
       const mockSetCredentials = vi.fn();
       const mockGetAccessToken = vi
         .fn()
-        .mockResolvedValue({ token: 'cached-access-token' });
+        .mockResolvedValue({ token: "cached-access-token" });
       const mockGetTokenInfo = vi.fn().mockResolvedValue({});
       const mockOAuth2Client = {
         setCredentials: mockSetCredentials,
@@ -515,8 +515,8 @@ describe('oauth2', () => {
       );
 
       // Make it fall through to cached credentials path
-      const cachedCreds = { refresh_token: 'cached-token' };
-      const credsPath = path.join(tempHomeDir, QWEN_DIR, 'oauth_creds.json');
+      const cachedCreds = { refresh_token: "cached-token" };
+      const credsPath = path.join(tempHomeDir, QWEN_DIR, "oauth_creds.json");
       await fs.promises.mkdir(path.dirname(credsPath), { recursive: true });
       await fs.promises.writeFile(credsPath, JSON.stringify(cachedCreds));
 
@@ -528,19 +528,19 @@ describe('oauth2', () => {
     });
   });
 
-  describe('clearCachedCredentialFile', () => {
-    it('should clear cached credentials and Google account', async () => {
-      const cachedCreds = { refresh_token: 'test-token' };
-      const credsPath = path.join(tempHomeDir, QWEN_DIR, 'oauth_creds.json');
+  describe("clearCachedCredentialFile", () => {
+    it("should clear cached credentials and Google account", async () => {
+      const cachedCreds = { refresh_token: "test-token" };
+      const credsPath = path.join(tempHomeDir, QWEN_DIR, "oauth_creds.json");
       await fs.promises.mkdir(path.dirname(credsPath), { recursive: true });
       await fs.promises.writeFile(credsPath, JSON.stringify(cachedCreds));
 
       const googleAccountPath = path.join(
         tempHomeDir,
         QWEN_DIR,
-        'google_accounts.json',
+        "google_accounts.json",
       );
-      const accountData = { active: 'test@example.com', old: [] };
+      const accountData = { active: "test@example.com", old: [] };
       await fs.promises.writeFile(
         googleAccountPath,
         JSON.stringify(accountData),
@@ -550,20 +550,20 @@ describe('oauth2', () => {
       expect(fs.existsSync(credsPath)).toBe(true);
       expect(fs.existsSync(googleAccountPath)).toBe(true);
       expect(userAccountManager.getCachedGoogleAccount()).toBe(
-        'test@example.com',
+        "test@example.com",
       );
 
       await clearCachedCredentialFile();
       expect(fs.existsSync(credsPath)).toBe(false);
       expect(userAccountManager.getCachedGoogleAccount()).toBeNull();
       const updatedAccountData = JSON.parse(
-        fs.readFileSync(googleAccountPath, 'utf-8'),
+        fs.readFileSync(googleAccountPath, "utf-8"),
       );
       expect(updatedAccountData.active).toBeNull();
-      expect(updatedAccountData.old).toContain('test@example.com');
+      expect(updatedAccountData.old).toContain("test@example.com");
     });
 
-    it('should handle Qwen module clearing gracefully', async () => {
+    it("should handle Qwen module clearing gracefully", async () => {
       // This test verifies that clearCachedCredentialFile doesn't throw
       // when Qwen modules are available and can be cleared
 
@@ -574,11 +574,11 @@ describe('oauth2', () => {
       // The actual Qwen clearing logic is tested separately in the Qwen module tests
     });
 
-    it('should clear the in-memory OAuth client cache', async () => {
+    it("should clear the in-memory OAuth client cache", async () => {
       const mockSetCredentials = vi.fn();
       const mockGetAccessToken = vi
         .fn()
-        .mockResolvedValue({ token: 'test-token' });
+        .mockResolvedValue({ token: "test-token" });
       const mockGetTokenInfo = vi.fn().mockResolvedValue({});
       const mockOAuth2Client = {
         setCredentials: mockSetCredentials,
@@ -591,11 +591,11 @@ describe('oauth2', () => {
       );
 
       // Pre-populate credentials to make getOauthClient resolve quickly
-      const credsPath = path.join(tempHomeDir, QWEN_DIR, 'oauth_creds.json');
+      const credsPath = path.join(tempHomeDir, QWEN_DIR, "oauth_creds.json");
       await fs.promises.mkdir(path.dirname(credsPath), { recursive: true });
       await fs.promises.writeFile(
         credsPath,
-        JSON.stringify({ refresh_token: 'token' }),
+        JSON.stringify({ refresh_token: "token" }),
       );
 
       // First call, should create a client

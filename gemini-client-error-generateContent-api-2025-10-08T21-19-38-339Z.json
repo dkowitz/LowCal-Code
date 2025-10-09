@@ -1,0 +1,22 @@
+{
+  "error": {
+    "message": "401 User not found.",
+    "stack": "Error: 401 User not found.\n    at APIError.generate (file:///home/atmandk/LowCal-dev/node_modules/openai/core/error.mjs:44:20)\n    at OpenAI.makeStatusError (file:///home/atmandk/LowCal-dev/node_modules/openai/client.mjs:156:32)\n    at OpenAI.makeRequest (file:///home/atmandk/LowCal-dev/node_modules/openai/client.mjs:301:30)\n    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)\n    at async file:///home/atmandk/LowCal-dev/packages/core/dist/src/core/openaiContentGenerator/pipeline.js:24:37\n    at async ContentGenerationPipeline.executeWithErrorHandling (file:///home/atmandk/LowCal-dev/packages/core/dist/src/core/openaiContentGenerator/pipeline.js:214:28)\n    at async retryWithBackoff (file:///home/atmandk/LowCal-dev/packages/core/dist/src/utils/retry.js:121:20)\n    at async GeminiClient.generateContent (file:///home/atmandk/LowCal-dev/packages/core/dist/src/core/client.js:829:28)"
+  },
+  "context": {
+    "requestContents": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Say hello."
+          }
+        ]
+      }
+    ],
+    "requestConfig": {
+      "temperature": 0,
+      "topP": 1
+    }
+  }
+}

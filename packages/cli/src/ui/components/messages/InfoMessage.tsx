@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Text, Box } from 'ink';
-import { Colors } from '../../colors.js';
-import { RenderInline } from '../../utils/InlineMarkdownRenderer.js';
+import type React from "react";
+import { Text, Box } from "ink";
+import { Colors } from "../../colors.js";
+import { RenderInline } from "../../utils/InlineMarkdownRenderer.js";
 
 interface InfoMessageProps {
   text: string;
@@ -15,11 +15,11 @@ interface InfoMessageProps {
 
 export const InfoMessage: React.FC<InfoMessageProps> = ({ text }) => {
   // Don't render anything if text is empty
-  if (!text || text.trim() === '') {
+  if (!text || text.trim() === "") {
     return null;
   }
 
-  const prefix = 'ℹ ';
+  const prefix = "ℹ ";
   const prefixWidth = prefix.length;
 
   return (

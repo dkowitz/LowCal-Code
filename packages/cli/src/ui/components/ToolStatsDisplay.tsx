@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
-import { formatDuration } from '../utils/formatters.js';
+import type React from "react";
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
+import { formatDuration } from "../utils/formatters.js";
 import {
   getStatusColor,
   TOOL_SUCCESS_RATE_HIGH,
   TOOL_SUCCESS_RATE_MEDIUM,
   USER_AGREEMENT_RATE_HIGH,
   USER_AGREEMENT_RATE_MEDIUM,
-} from '../utils/displayUtils.js';
-import { useSessionStats } from '../contexts/SessionContext.js';
-import type { ToolCallStats } from '@qwen-code/qwen-code-core';
+} from "../utils/displayUtils.js";
+import { useSessionStats } from "../contexts/SessionContext.js";
+import type { ToolCallStats } from "@qwen-code/qwen-code-core";
 
 const TOOL_NAME_COL_WIDTH = 25;
 const CALLS_COL_WIDTH = 8;
@@ -199,7 +199,7 @@ export const ToolStatsDisplay: React.FC = () => {
         </Box>
         <Box width={AVG_DURATION_COL_WIDTH} justifyContent="flex-end">
           <Text bold color={totalReviewed > 0 ? agreementColor : undefined}>
-            {totalReviewed > 0 ? `${agreementRate.toFixed(1)}%` : '--'}
+            {totalReviewed > 0 ? `${agreementRate.toFixed(1)}%` : "--"}
           </Text>
         </Box>
       </Box>

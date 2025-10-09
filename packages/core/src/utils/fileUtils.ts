@@ -4,20 +4,20 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import type { PartUnion } from '@google/genai';
-import mime from 'mime-types';
-import type { FileSystemService } from '../services/fileSystemService.js';
-import { ToolErrorType } from '../tools/tool-error.js';
-import { BINARY_EXTENSIONS } from './ignorePatterns.js';
+import fs from "node:fs";
+import path from "node:path";
+import type { PartUnion } from "@google/genai";
+import mime from "mime-types";
+import type { FileSystemService } from "../services/fileSystemService.js";
+import { ToolErrorType } from "../tools/tool-error.js";
+import { BINARY_EXTENSIONS } from "./ignorePatterns.js";
 
 // Constants for text file processing
 export const DEFAULT_MAX_LINES_TEXT_FILE = 2000;
 const MAX_LINE_LENGTH_TEXT_FILE = 2000;
 
 // Default values for encoding and separator format
-export const DEFAULT_ENCODING: BufferEncoding = 'utf-8';
+export const DEFAULT_ENCODING: BufferEncoding = "utf-8";
 
 /**
  * Looks up the specific MIME type for a file path.
@@ -26,7 +26,7 @@ export const DEFAULT_ENCODING: BufferEncoding = 'utf-8';
  */
 export function getSpecificMimeType(filePath: string): string | undefined {
   const lookedUpMime = mime.lookup(filePath);
-  return typeof lookedUpMime === 'string' ? lookedUpMime : undefined;
+  return typeof lookedUpMime === "string" ? lookedUpMime : undefined;
 }
 
 /**
@@ -64,7 +64,7 @@ export function isWithinRoot(
 export async function isBinaryFile(filePath: string): Promise<boolean> {
   let fileHandle: fs.promises.FileHandle | undefined;
   try {
-    fileHandle = await fs.promises.open(filePath, 'r');
+    fileHandle = await fs.promises.open(filePath, "r");
 
     // Read up to 4KB or file size, whichever is smaller
     const stats = await fileHandle.stat();
@@ -122,49 +122,49 @@ export async function isBinaryFile(filePath: string): Promise<boolean> {
  */
 export async function detectFileType(
   filePath: string,
-): Promise<'text' | 'image' | 'pdf' | 'audio' | 'video' | 'binary' | 'svg'> {
+): Promise<"text" | "image" | "pdf" | "audio" | "video" | "binary" | "svg"> {
   const ext = path.extname(filePath).toLowerCase();
 
   // The mimetype for various TypeScript extensions (ts, mts, cts, tsx) can be
   // MPEG transport stream (a video format), but we want to assume these are
   // TypeScript files instead.
-  if (['.ts', '.mts', '.cts'].includes(ext)) {
-    return 'text';
+  if ([".ts", ".mts", ".cts"].includes(ext)) {
+    return "text";
   }
 
-  if (ext === '.svg') {
-    return 'svg';
+  if (ext === ".svg") {
+    return "svg";
   }
 
   const lookedUpMimeType = mime.lookup(filePath); // Returns false if not found, or the mime type string
   if (lookedUpMimeType) {
-    if (lookedUpMimeType.startsWith('image/')) {
-      return 'image';
+    if (lookedUpMimeType.startsWith("image/")) {
+      return "image";
     }
-    if (lookedUpMimeType.startsWith('audio/')) {
-      return 'audio';
+    if (lookedUpMimeType.startsWith("audio/")) {
+      return "audio";
     }
-    if (lookedUpMimeType.startsWith('video/')) {
-      return 'video';
+    if (lookedUpMimeType.startsWith("video/")) {
+      return "video";
     }
-    if (lookedUpMimeType === 'application/pdf') {
-      return 'pdf';
+    if (lookedUpMimeType === "application/pdf") {
+      return "pdf";
     }
   }
 
   // Stricter binary check for common non-text extensions before content check
   // These are often not well-covered by mime-types or might be misidentified.
   if (BINARY_EXTENSIONS.includes(ext)) {
-    return 'binary';
+    return "binary";
   }
 
   // Fall back to content-based check if mime type wasn't conclusive for image/pdf
   // and it's not a known binary extension.
   if (await isBinaryFile(filePath)) {
-    return 'binary';
+    return "binary";
   }
 
-  return 'text';
+  return "text";
 }
 
 export interface ProcessedFileReadResult {
@@ -197,8 +197,8 @@ export async function processSingleFileContent(
       // Sync check is acceptable before async read
       return {
         llmContent:
-          'Could not read file because no file was found at the specified path.',
-        returnDisplay: 'File not found.',
+          "Could not read file because no file was found at the specified path.",
+        returnDisplay: "File not found.",
         error: `File not found: ${filePath}`,
         errorType: ToolErrorType.FILE_NOT_FOUND,
       };
@@ -207,8 +207,8 @@ export async function processSingleFileContent(
     if (stats.isDirectory()) {
       return {
         llmContent:
-          'Could not read file because the provided path is a directory, not a file.',
-        returnDisplay: 'Path is a directory.',
+          "Could not read file because the provided path is a directory, not a file.",
+        returnDisplay: "Path is a directory.",
         error: `Path is a directory, not a file: ${filePath}`,
         errorType: ToolErrorType.TARGET_IS_DIRECTORY,
       };
@@ -217,8 +217,8 @@ export async function processSingleFileContent(
     const fileSizeInMB = stats.size / (1024 * 1024);
     if (fileSizeInMB > 20) {
       return {
-        llmContent: 'File size exceeds the 20MB limit.',
-        returnDisplay: 'File size exceeds the 20MB limit.',
+        llmContent: "File size exceeds the 20MB limit.",
+        returnDisplay: "File size exceeds the 20MB limit.",
         error: `File size exceeds the 20MB limit: ${filePath} (${fileSizeInMB.toFixed(2)}MB)`,
         errorType: ToolErrorType.FILE_TOO_LARGE,
       };
@@ -227,16 +227,16 @@ export async function processSingleFileContent(
     const fileType = await detectFileType(filePath);
     const relativePathForDisplay = path
       .relative(rootDirectory, filePath)
-      .replace(/\\/g, '/');
+      .replace(/\\/g, "/");
 
     switch (fileType) {
-      case 'binary': {
+      case "binary": {
         return {
           llmContent: `Cannot display content of binary file: ${relativePathForDisplay}`,
           returnDisplay: `Skipped binary file: ${relativePathForDisplay}`,
         };
       }
-      case 'svg': {
+      case "svg": {
         const SVG_MAX_SIZE_BYTES = 1 * 1024 * 1024;
         if (stats.size > SVG_MAX_SIZE_BYTES) {
           return {
@@ -250,9 +250,9 @@ export async function processSingleFileContent(
           returnDisplay: `Read SVG as text: ${relativePathForDisplay}`,
         };
       }
-      case 'text': {
+      case "text": {
         const content = await fileSystemService.readTextFile(filePath);
-        const lines = content.split('\n');
+        const lines = content.split("\n");
         const originalLineCount = lines.length;
 
         const startLine = offset || 0;
@@ -269,7 +269,7 @@ export async function processSingleFileContent(
           if (line.length > MAX_LINE_LENGTH_TEXT_FILE) {
             linesWereTruncatedInLength = true;
             return (
-              line.substring(0, MAX_LINE_LENGTH_TEXT_FILE) + '... [truncated]'
+              line.substring(0, MAX_LINE_LENGTH_TEXT_FILE) + "... [truncated]"
             );
           }
           return line;
@@ -278,16 +278,16 @@ export async function processSingleFileContent(
         const contentRangeTruncated =
           startLine > 0 || endLine < originalLineCount;
         const isTruncated = contentRangeTruncated || linesWereTruncatedInLength;
-        const llmContent = formattedLines.join('\n');
+        const llmContent = formattedLines.join("\n");
 
         // By default, return nothing to streamline the common case of a successful read_file.
-        let returnDisplay = '';
+        let returnDisplay = "";
         if (contentRangeTruncated) {
           returnDisplay = `Read lines ${
             actualStartLine + 1
           }-${endLine} of ${originalLineCount} from ${relativePathForDisplay}`;
           if (linesWereTruncatedInLength) {
-            returnDisplay += ' (some lines were shortened)';
+            returnDisplay += " (some lines were shortened)";
           }
         } else if (linesWereTruncatedInLength) {
           returnDisplay = `Read all ${originalLineCount} lines from ${relativePathForDisplay} (some lines were shortened)`;
@@ -301,17 +301,17 @@ export async function processSingleFileContent(
           linesShown: [actualStartLine + 1, endLine],
         };
       }
-      case 'image':
-      case 'pdf':
-      case 'audio':
-      case 'video': {
+      case "image":
+      case "pdf":
+      case "audio":
+      case "video": {
         const contentBuffer = await fs.promises.readFile(filePath);
-        const base64Data = contentBuffer.toString('base64');
+        const base64Data = contentBuffer.toString("base64");
         return {
           llmContent: {
             inlineData: {
               data: base64Data,
-              mimeType: mime.lookup(filePath) || 'application/octet-stream',
+              mimeType: mime.lookup(filePath) || "application/octet-stream",
             },
           },
           returnDisplay: `Read ${fileType} file: ${relativePathForDisplay}`,
@@ -331,7 +331,7 @@ export async function processSingleFileContent(
     const errorMessage = error instanceof Error ? error.message : String(error);
     const displayPath = path
       .relative(rootDirectory, filePath)
-      .replace(/\\/g, '/');
+      .replace(/\\/g, "/");
     return {
       llmContent: `Error reading file ${displayPath}: ${errorMessage}`,
       returnDisplay: `Error reading file ${displayPath}: ${errorMessage}`,

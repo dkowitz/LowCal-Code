@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { CountTokensParameters } from '@google/genai';
+import type { CountTokensParameters } from "@google/genai";
 
 /**
  * Token calculation result for different content types

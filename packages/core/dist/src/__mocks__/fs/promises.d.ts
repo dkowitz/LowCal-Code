@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as actualFsPromises from 'node:fs/promises';
+import * as actualFsPromises from "node:fs/promises";
 export declare const mockControl: {
     mockReadFile: import("vitest").Mock<(...args: any[]) => any>;
 };

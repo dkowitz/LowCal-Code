@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { vi } from 'vitest';
-import type { WorkspaceContext } from '../utils/workspaceContext.js';
+import { vi } from "vitest";
+import type { WorkspaceContext } from "../utils/workspaceContext.js";
 
 /**
  * Creates a mock WorkspaceContext for testing

@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { vi } from 'vitest';
-import { BaseDeclarativeTool, BaseToolInvocation, Kind, } from '../tools/tools.js';
+import { vi } from "vitest";
+import { BaseDeclarativeTool, BaseToolInvocation, Kind, } from "../tools/tools.js";
 class MockToolInvocation extends BaseToolInvocation {
     tool;
     constructor(tool, params) {
@@ -21,7 +21,7 @@ class MockToolInvocation extends BaseToolInvocation {
     async shouldConfirmExecute(_abortSignal) {
         if (this.tool.shouldConfirm) {
             return {
-                type: 'exec',
+                type: "exec",
                 title: `Confirm ${this.tool.displayName}`,
                 command: this.tool.name,
                 rootCommand: this.tool.name,
@@ -40,9 +40,9 @@ class MockToolInvocation extends BaseToolInvocation {
 export class MockTool extends BaseDeclarativeTool {
     executeFn = vi.fn();
     shouldConfirm = false;
-    constructor(name = 'mock-tool', displayName, description = 'A mock tool for testing.', params = {
-        type: 'object',
-        properties: { param: { type: 'string' } },
+    constructor(name = "mock-tool", displayName, description = "A mock tool for testing.", params = {
+        type: "object",
+        properties: { param: { type: "string" } },
     }) {
         super(name, displayName ?? name, description, Kind.Other, params);
     }
@@ -66,13 +66,13 @@ export class MockModifiableToolInvocation extends BaseToolInvocation {
     async shouldConfirmExecute(_abortSignal) {
         if (this.tool.shouldConfirm) {
             return {
-                type: 'edit',
-                title: 'Confirm Mock Tool',
-                fileName: 'test.txt',
-                filePath: 'test.txt',
-                fileDiff: 'diff',
-                originalContent: 'originalContent',
-                newContent: 'newContent',
+                type: "edit",
+                title: "Confirm Mock Tool",
+                fileName: "test.txt",
+                filePath: "test.txt",
+                fileDiff: "diff",
+                originalContent: "originalContent",
+                newContent: "newContent",
                 onConfirm: async () => { },
             };
         }
@@ -86,15 +86,15 @@ export class MockModifiableToolInvocation extends BaseToolInvocation {
  * Configurable mock modifiable tool for testing.
  */
 export class MockModifiableTool extends MockTool {
-    constructor(name = 'mockModifiableTool') {
+    constructor(name = "mockModifiableTool") {
         super(name);
         this.shouldConfirm = true;
     }
     getModifyContext(_abortSignal) {
         return {
-            getFilePath: () => 'test.txt',
-            getCurrentContent: async () => 'old content',
-            getProposedContent: async () => 'new content',
+            getFilePath: () => "test.txt",
+            getCurrentContent: async () => "old content",
+            getProposedContent: async () => "new content",
             createUpdatedParams: (_oldContent, modifiedProposedContent, _originalParams) => ({ newContent: modifiedProposedContent }),
         };
     }

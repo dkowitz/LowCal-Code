@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useEffect } from 'react';
-import { getWorkspaceExtensions, } from '../../config/extension.js';
-import { SettingScope } from '../../config/settings.js';
-import process from 'node:process';
+import { useState, useEffect } from "react";
+import { getWorkspaceExtensions, } from "../../config/extension.js";
+import { SettingScope } from "../../config/settings.js";
+import process from "node:process";
 export function useWorkspaceMigration(settings) {
     const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] = useState(false);
     const [workspaceExtensions, setWorkspaceExtensions] = useState([]);
@@ -38,7 +38,7 @@ export function useWorkspaceMigration(settings) {
         }
         extensionSettings.workspacesWithMigrationNudge =
             workspacesWithMigrationNudge;
-        settings.setValue(SettingScope.User, 'extensions', extensionSettings);
+        settings.setValue(SettingScope.User, "extensions", extensionSettings);
     };
     const onWorkspaceMigrationDialogClose = () => {
         setShowWorkspaceMigrationDialog(false);

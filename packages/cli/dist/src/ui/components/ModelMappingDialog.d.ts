@@ -1,5 +1,5 @@
-import React from 'react';
-import type { AvailableModel } from '../models/availableModels.js';
+import React from "react";
+import type { AvailableModel } from "../models/availableModels.js";
 export interface ModelMappingDialogProps {
     unmatched: AvailableModel[];
     restModels: AvailableModel[];

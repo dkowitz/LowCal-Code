@@ -3,39 +3,39 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { exec, execSync, spawn } from 'node:child_process';
-import os from 'node:os';
-import path from 'node:path';
-import fs from 'node:fs';
-import { readFile } from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { quote, parse } from 'shell-quote';
-import { USER_SETTINGS_DIR, SETTINGS_DIRECTORY_NAME, } from '../config/settings.js';
-import { promisify } from 'node:util';
-import { FatalSandboxError } from '@qwen-code/qwen-code-core';
-import { ConsolePatcher } from '../ui/utils/ConsolePatcher.js';
+import { exec, execSync, spawn } from "node:child_process";
+import os from "node:os";
+import path from "node:path";
+import fs from "node:fs";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { quote, parse } from "shell-quote";
+import { USER_SETTINGS_DIR, SETTINGS_DIRECTORY_NAME, } from "../config/settings.js";
+import { promisify } from "node:util";
+import { FatalSandboxError } from "@qwen-code/qwen-code-core";
+import { ConsolePatcher } from "../ui/utils/ConsolePatcher.js";
 const execAsync = promisify(exec);
 function getContainerPath(hostPath) {
-    if (os.platform() !== 'win32') {
+    if (os.platform() !== "win32") {
         return hostPath;
     }
-    const withForwardSlashes = hostPath.replace(/\\/g, '/');
+    const withForwardSlashes = hostPath.replace(/\\/g, "/");
     const match = withForwardSlashes.match(/^([A-Z]):\/(.*)/i);
     if (match) {
         return `/${match[1].toLowerCase()}/${match[2]}`;
     }
     return hostPath;
 }
-const LOCAL_DEV_SANDBOX_IMAGE_NAME = 'qwen-code-sandbox';
-const SANDBOX_NETWORK_NAME = 'qwen-code-sandbox';
-const SANDBOX_PROXY_NAME = 'qwen-code-sandbox-proxy';
+const LOCAL_DEV_SANDBOX_IMAGE_NAME = "qwen-code-sandbox";
+const SANDBOX_NETWORK_NAME = "qwen-code-sandbox";
+const SANDBOX_PROXY_NAME = "qwen-code-sandbox-proxy";
 const BUILTIN_SEATBELT_PROFILES = [
-    'permissive-open',
-    'permissive-closed',
-    'permissive-proxied',
-    'restrictive-open',
-    'restrictive-closed',
-    'restrictive-proxied',
+    "permissive-open",
+    "permissive-closed",
+    "permissive-proxied",
+    "restrictive-open",
+    "restrictive-closed",
+    "restrictive-proxied",
 ];
 /**
  * Determines whether the sandbox container should be run with the current user's UID and GID.
@@ -56,31 +56,31 @@ const BUILTIN_SEATBELT_PROFILES = [
  * @returns {Promise<boolean>} A promise that resolves to true if the current user's UID/GID should be used, false otherwise.
  */
 async function shouldUseCurrentUserInSandbox() {
-    const envVar = process.env['SANDBOX_SET_UID_GID']?.toLowerCase().trim();
-    if (envVar === '1' || envVar === 'true') {
+    const envVar = process.env["SANDBOX_SET_UID_GID"]?.toLowerCase().trim();
+    if (envVar === "1" || envVar === "true") {
         return true;
     }
-    if (envVar === '0' || envVar === 'false') {
+    if (envVar === "0" || envVar === "false") {
         return false;
     }
     // If environment variable is not explicitly set, check for Debian/Ubuntu Linux
-    if (os.platform() === 'linux') {
+    if (os.platform() === "linux") {
         try {
-            const osReleaseContent = await readFile('/etc/os-release', 'utf8');
-            if (osReleaseContent.includes('ID=debian') ||
-                osReleaseContent.includes('ID=ubuntu') ||
+            const osReleaseContent = await readFile("/etc/os-release", "utf8");
+            if (osReleaseContent.includes("ID=debian") ||
+                osReleaseContent.includes("ID=ubuntu") ||
                 osReleaseContent.match(/^ID_LIKE=.*debian.*/m) || // Covers derivatives
                 osReleaseContent.match(/^ID_LIKE=.*ubuntu.*/m) // Covers derivatives
             ) {
                 // note here and below we use console.error for informational messages on stderr
-                console.error('INFO: Defaulting to use current user UID/GID for Debian/Ubuntu-based Linux.');
+                console.error("INFO: Defaulting to use current user UID/GID for Debian/Ubuntu-based Linux.");
                 return true;
             }
         }
         catch (_err) {
             // Silently ignore if /etc/os-release is not found or unreadable.
             // The default (false) will be applied in this case.
-            console.warn('Warning: Could not read /etc/os-release to auto-detect Debian/Ubuntu for UID/GID default.');
+            console.warn("Warning: Could not read /etc/os-release to auto-detect Debian/Ubuntu for UID/GID default.");
         }
     }
     return false; // Default to false if no other condition is met
@@ -88,24 +88,24 @@ async function shouldUseCurrentUserInSandbox() {
 // docker does not allow container names to contain ':' or '/', so we
 // parse those out to shorten the name
 function parseImageName(image) {
-    const [fullName, tag] = image.split(':');
-    const name = fullName.split('/').at(-1) ?? 'unknown-image';
+    const [fullName, tag] = image.split(":");
+    const name = fullName.split("/").at(-1) ?? "unknown-image";
     return tag ? `${name}-${tag}` : name;
 }
 function ports() {
-    return (process.env['SANDBOX_PORTS'] ?? '')
-        .split(',')
+    return (process.env["SANDBOX_PORTS"] ?? "")
+        .split(",")
         .filter((p) => p.trim())
         .map((p) => p.trim());
 }
 function entrypoint(workdir, cliArgs) {
-    const isWindows = os.platform() === 'win32';
+    const isWindows = os.platform() === "win32";
     const containerWorkdir = getContainerPath(workdir);
     const shellCmds = [];
-    const pathSeparator = isWindows ? ';' : ':';
-    let pathSuffix = '';
-    if (process.env['PATH']) {
-        const paths = process.env['PATH'].split(pathSeparator);
+    const pathSeparator = isWindows ? ";" : ":";
+    let pathSuffix = "";
+    if (process.env["PATH"]) {
+        const paths = process.env["PATH"].split(pathSeparator);
         for (const p of paths) {
             const containerPath = getContainerPath(p);
             if (containerPath.toLowerCase().startsWith(containerWorkdir.toLowerCase())) {
@@ -116,9 +116,9 @@ function entrypoint(workdir, cliArgs) {
     if (pathSuffix) {
         shellCmds.push(`export PATH="$PATH${pathSuffix}";`);
     }
-    let pythonPathSuffix = '';
-    if (process.env['PYTHONPATH']) {
-        const paths = process.env['PYTHONPATH'].split(pathSeparator);
+    let pythonPathSuffix = "";
+    if (process.env["PYTHONPATH"]) {
+        const paths = process.env["PYTHONPATH"].split(pathSeparator);
         for (const p of paths) {
             const containerPath = getContainerPath(p);
             if (containerPath.toLowerCase().startsWith(containerWorkdir.toLowerCase())) {
@@ -129,35 +129,35 @@ function entrypoint(workdir, cliArgs) {
     if (pythonPathSuffix) {
         shellCmds.push(`export PYTHONPATH="$PYTHONPATH${pythonPathSuffix}";`);
     }
-    const projectSandboxBashrc = path.join(SETTINGS_DIRECTORY_NAME, 'sandbox.bashrc');
+    const projectSandboxBashrc = path.join(SETTINGS_DIRECTORY_NAME, "sandbox.bashrc");
     if (fs.existsSync(projectSandboxBashrc)) {
         shellCmds.push(`source ${getContainerPath(projectSandboxBashrc)};`);
     }
     ports().forEach((p) => shellCmds.push(`socat TCP4-LISTEN:${p},bind=$(hostname -i),fork,reuseaddr TCP4:127.0.0.1:${p} 2> /dev/null &`));
     const quotedCliArgs = cliArgs.slice(2).map((arg) => quote([arg]));
-    const cliCmd = process.env['NODE_ENV'] === 'development'
-        ? process.env['DEBUG']
-            ? 'npm run debug --'
-            : 'npm rebuild && npm run start --'
-        : process.env['DEBUG']
-            ? `node --inspect-brk=0.0.0.0:${process.env['DEBUG_PORT'] || '9229'} $(which qwen)`
-            : 'qwen';
+    const cliCmd = process.env["NODE_ENV"] === "development"
+        ? process.env["DEBUG"]
+            ? "npm run debug --"
+            : "npm rebuild && npm run start --"
+        : process.env["DEBUG"]
+            ? `node --inspect-brk=0.0.0.0:${process.env["DEBUG_PORT"] || "9229"} $(which qwen)`
+            : "qwen";
     const args = [...shellCmds, cliCmd, ...quotedCliArgs];
-    return ['bash', '-c', args.join(' ')];
+    return ["bash", "-c", args.join(" ")];
 }
 export async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     const patcher = new ConsolePatcher({
-        debugMode: cliConfig?.getDebugMode() || !!process.env['DEBUG'],
+        debugMode: cliConfig?.getDebugMode() || !!process.env["DEBUG"],
         stderr: true,
     });
     patcher.patch();
     try {
-        if (config.command === 'sandbox-exec') {
+        if (config.command === "sandbox-exec") {
             // disallow BUILD_SANDBOX
-            if (process.env['BUILD_SANDBOX']) {
-                throw new FatalSandboxError('Cannot BUILD_SANDBOX when using macOS Seatbelt');
+            if (process.env["BUILD_SANDBOX"]) {
+                throw new FatalSandboxError("Cannot BUILD_SANDBOX when using macOS Seatbelt");
             }
-            const profile = (process.env['SEATBELT_PROFILE'] ??= 'permissive-open');
+            const profile = (process.env["SEATBELT_PROFILE"] ??= "permissive-open");
             let profileFile = fileURLToPath(new URL(`sandbox-macos-${profile}.sb`, import.meta.url));
             // if profile name is not recognized, then look for file under project settings directory
             if (!BUILTIN_SEATBELT_PROFILES.includes(profile)) {
@@ -170,23 +170,23 @@ export async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = 
             console.error(`using macos seatbelt (profile: ${profile}) ...`);
             // if DEBUG is set, convert to --inspect-brk in NODE_OPTIONS
             const nodeOptions = [
-                ...(process.env['DEBUG'] ? ['--inspect-brk'] : []),
+                ...(process.env["DEBUG"] ? ["--inspect-brk"] : []),
                 ...nodeArgs,
-            ].join(' ');
+            ].join(" ");
             const args = [
-                '-D',
+                "-D",
                 `TARGET_DIR=${fs.realpathSync(process.cwd())}`,
-                '-D',
+                "-D",
                 `TMP_DIR=${fs.realpathSync(os.tmpdir())}`,
-                '-D',
+                "-D",
                 `HOME_DIR=${fs.realpathSync(os.homedir())}`,
-                '-D',
+                "-D",
                 `CACHE_DIR=${fs.realpathSync(execSync(`getconf DARWIN_USER_CACHE_DIR`).toString().trim())}`,
             ];
             // Add included directories from the workspace context
             // Always add 5 INCLUDE_DIR parameters to ensure .sb files can reference them
             const MAX_INCLUDE_DIRS = 5;
-            const targetDir = fs.realpathSync(cliConfig?.getTargetDir() || '');
+            const targetDir = fs.realpathSync(cliConfig?.getTargetDir() || "");
             const includedDirs = [];
             if (cliConfig) {
                 const workspaceContext = cliConfig.getWorkspaceContext();
@@ -200,80 +200,80 @@ export async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = 
                 }
             }
             for (let i = 0; i < MAX_INCLUDE_DIRS; i++) {
-                let dirPath = '/dev/null'; // Default to a safe path that won't cause issues
+                let dirPath = "/dev/null"; // Default to a safe path that won't cause issues
                 if (i < includedDirs.length) {
                     dirPath = includedDirs[i];
                 }
-                args.push('-D', `INCLUDE_DIR_${i}=${dirPath}`);
+                args.push("-D", `INCLUDE_DIR_${i}=${dirPath}`);
             }
             const finalArgv = cliArgs;
-            args.push('-f', profileFile, 'sh', '-c', [
+            args.push("-f", profileFile, "sh", "-c", [
                 `SANDBOX=sandbox-exec`,
                 `NODE_OPTIONS="${nodeOptions}"`,
                 ...finalArgv.map((arg) => quote([arg])),
-            ].join(' '));
+            ].join(" "));
             // start and set up proxy if GEMINI_SANDBOX_PROXY_COMMAND is set
-            const proxyCommand = process.env['GEMINI_SANDBOX_PROXY_COMMAND'];
+            const proxyCommand = process.env["GEMINI_SANDBOX_PROXY_COMMAND"];
             let proxyProcess = undefined;
             let sandboxProcess = undefined;
             const sandboxEnv = { ...process.env };
             if (proxyCommand) {
-                const proxy = process.env['HTTPS_PROXY'] ||
-                    process.env['https_proxy'] ||
-                    process.env['HTTP_PROXY'] ||
-                    process.env['http_proxy'] ||
-                    'http://localhost:8877';
-                sandboxEnv['HTTPS_PROXY'] = proxy;
-                sandboxEnv['https_proxy'] = proxy; // lower-case can be required, e.g. for curl
-                sandboxEnv['HTTP_PROXY'] = proxy;
-                sandboxEnv['http_proxy'] = proxy;
-                const noProxy = process.env['NO_PROXY'] || process.env['no_proxy'];
+                const proxy = process.env["HTTPS_PROXY"] ||
+                    process.env["https_proxy"] ||
+                    process.env["HTTP_PROXY"] ||
+                    process.env["http_proxy"] ||
+                    "http://localhost:8877";
+                sandboxEnv["HTTPS_PROXY"] = proxy;
+                sandboxEnv["https_proxy"] = proxy; // lower-case can be required, e.g. for curl
+                sandboxEnv["HTTP_PROXY"] = proxy;
+                sandboxEnv["http_proxy"] = proxy;
+                const noProxy = process.env["NO_PROXY"] || process.env["no_proxy"];
                 if (noProxy) {
-                    sandboxEnv['NO_PROXY'] = noProxy;
-                    sandboxEnv['no_proxy'] = noProxy;
+                    sandboxEnv["NO_PROXY"] = noProxy;
+                    sandboxEnv["no_proxy"] = noProxy;
                 }
                 proxyProcess = spawn(proxyCommand, {
-                    stdio: ['ignore', 'pipe', 'pipe'],
+                    stdio: ["ignore", "pipe", "pipe"],
                     shell: true,
                     detached: true,
                 });
                 // install handlers to stop proxy on exit/signal
                 const stopProxy = () => {
-                    console.log('stopping proxy ...');
+                    console.log("stopping proxy ...");
                     if (proxyProcess?.pid) {
-                        process.kill(-proxyProcess.pid, 'SIGTERM');
+                        process.kill(-proxyProcess.pid, "SIGTERM");
                     }
                 };
-                process.on('exit', stopProxy);
-                process.on('SIGINT', stopProxy);
-                process.on('SIGTERM', stopProxy);
+                process.on("exit", stopProxy);
+                process.on("SIGINT", stopProxy);
+                process.on("SIGTERM", stopProxy);
                 // commented out as it disrupts ink rendering
                 // proxyProcess.stdout?.on('data', (data) => {
                 //   console.info(data.toString());
                 // });
-                proxyProcess.stderr?.on('data', (data) => {
+                proxyProcess.stderr?.on("data", (data) => {
                     console.error(data.toString());
                 });
-                proxyProcess.on('close', (code, signal) => {
+                proxyProcess.on("close", (code, signal) => {
                     if (sandboxProcess?.pid) {
-                        process.kill(-sandboxProcess.pid, 'SIGTERM');
+                        process.kill(-sandboxProcess.pid, "SIGTERM");
                     }
                     throw new FatalSandboxError(`Proxy command '${proxyCommand}' exited with code ${code}, signal ${signal}`);
                 });
-                console.log('waiting for proxy to start ...');
+                console.log("waiting for proxy to start ...");
                 await execAsync(`until timeout 0.25 curl -s http://localhost:8877; do sleep 0.25; done`);
             }
             // spawn child and let it inherit stdio
             sandboxProcess = spawn(config.command, args, {
-                stdio: 'inherit',
+                stdio: "inherit",
             });
-            await new Promise((resolve) => sandboxProcess?.on('close', resolve));
+            await new Promise((resolve) => sandboxProcess?.on("close", resolve));
             return;
         }
         console.error(`hopping into sandbox (command: ${config.command}) ...`);
         // determine full path for gemini-cli to distinguish linked vs installed setting
         const gcPath = fs.realpathSync(process.argv[1]);
-        const projectSandboxDockerfile = path.join(SETTINGS_DIRECTORY_NAME, 'sandbox.Dockerfile');
+        const projectSandboxDockerfile = path.join(SETTINGS_DIRECTORY_NAME, "sandbox.Dockerfile");
         const isCustomProjectSandbox = fs.existsSync(projectSandboxDockerfile);
         const image = config.image;
         const workdir = path.resolve(process.cwd());
@@ -281,23 +281,23 @@ export async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = 
         // if BUILD_SANDBOX is set, then call scripts/build_sandbox.js under gemini-cli repo
         //
         // note this can only be done with binary linked from gemini-cli repo
-        if (process.env['BUILD_SANDBOX']) {
-            if (!gcPath.includes('gemini-cli/packages/')) {
-                throw new FatalSandboxError('Cannot build sandbox using installed gemini binary; ' +
-                    'run `npm link ./packages/cli` under gemini-cli repo to switch to linked binary.');
+        if (process.env["BUILD_SANDBOX"]) {
+            if (!gcPath.includes("gemini-cli/packages/")) {
+                throw new FatalSandboxError("Cannot build sandbox using installed gemini binary; " +
+                    "run `npm link ./packages/cli` under gemini-cli repo to switch to linked binary.");
             }
             else {
-                console.error('building sandbox ...');
-                const gcRoot = gcPath.split('/packages/')[0];
+                console.error("building sandbox ...");
+                const gcRoot = gcPath.split("/packages/")[0];
                 // if project folder has sandbox.Dockerfile under project settings folder, use that
-                let buildArgs = '';
-                const projectSandboxDockerfile = path.join(SETTINGS_DIRECTORY_NAME, 'sandbox.Dockerfile');
+                let buildArgs = "";
+                const projectSandboxDockerfile = path.join(SETTINGS_DIRECTORY_NAME, "sandbox.Dockerfile");
                 if (isCustomProjectSandbox) {
                     console.error(`using ${projectSandboxDockerfile} for sandbox`);
                     buildArgs += `-f ${path.resolve(projectSandboxDockerfile)} -i ${image}`;
                 }
                 execSync(`cd ${gcRoot} && node scripts/build_sandbox.js -s ${buildArgs}`, {
-                    stdio: 'inherit',
+                    stdio: "inherit",
                     env: {
                         ...process.env,
                         GEMINI_SANDBOX: config.command, // in case sandbox is enabled via flags (see config.ts under cli package)
@@ -308,24 +308,24 @@ export async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = 
         // stop if image is missing
         if (!(await ensureSandboxImageIsPresent(config.command, image))) {
             const remedy = image === LOCAL_DEV_SANDBOX_IMAGE_NAME
-                ? 'Try running `npm run build:all` or `npm run build:sandbox` under the gemini-cli repo to build it locally, or check the image name and your network connection.'
-                : 'Please check the image name, your network connection, or notify gemini-cli-dev@google.com if the issue persists.';
+                ? "Try running `npm run build:all` or `npm run build:sandbox` under the gemini-cli repo to build it locally, or check the image name and your network connection."
+                : "Please check the image name, your network connection, or notify gemini-cli-dev@google.com if the issue persists.";
             throw new FatalSandboxError(`Sandbox image '${image}' is missing or could not be pulled. ${remedy}`);
         }
         // use interactive mode and auto-remove container on exit
         // run init binary inside container to forward signals & reap zombies
-        const args = ['run', '-i', '--rm', '--init', '--workdir', containerWorkdir];
+        const args = ["run", "-i", "--rm", "--init", "--workdir", containerWorkdir];
         // add custom flags from SANDBOX_FLAGS
-        if (process.env['SANDBOX_FLAGS']) {
-            const flags = parse(process.env['SANDBOX_FLAGS'], process.env).filter((f) => typeof f === 'string');
+        if (process.env["SANDBOX_FLAGS"]) {
+            const flags = parse(process.env["SANDBOX_FLAGS"], process.env).filter((f) => typeof f === "string");
             args.push(...flags);
         }
         // add TTY only if stdin is TTY as well, i.e. for piped input don't init TTY in container
         if (process.stdin.isTTY) {
-            args.push('-t');
+            args.push("-t");
         }
         // mount current directory as working directory in sandbox (set via --workdir)
-        args.push('--volume', `${workdir}:${containerWorkdir}`);
+        args.push("--volume", `${workdir}:${containerWorkdir}`);
         // mount user settings directory inside container, after creating if missing
         // note user/home changes inside sandbox and we mount at BOTH paths for consistency
         const userSettingsDirOnHost = USER_SETTINGS_DIR;
@@ -333,33 +333,33 @@ export async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = 
         if (!fs.existsSync(userSettingsDirOnHost)) {
             fs.mkdirSync(userSettingsDirOnHost);
         }
-        args.push('--volume', `${userSettingsDirOnHost}:${userSettingsDirInSandbox}`);
+        args.push("--volume", `${userSettingsDirOnHost}:${userSettingsDirInSandbox}`);
         if (userSettingsDirInSandbox !== userSettingsDirOnHost) {
-            args.push('--volume', `${userSettingsDirOnHost}:${getContainerPath(userSettingsDirOnHost)}`);
+            args.push("--volume", `${userSettingsDirOnHost}:${getContainerPath(userSettingsDirOnHost)}`);
         }
         // mount os.tmpdir() as os.tmpdir() inside container
-        args.push('--volume', `${os.tmpdir()}:${getContainerPath(os.tmpdir())}`);
+        args.push("--volume", `${os.tmpdir()}:${getContainerPath(os.tmpdir())}`);
         // mount gcloud config directory if it exists
-        const gcloudConfigDir = path.join(os.homedir(), '.config', 'gcloud');
+        const gcloudConfigDir = path.join(os.homedir(), ".config", "gcloud");
         if (fs.existsSync(gcloudConfigDir)) {
-            args.push('--volume', `${gcloudConfigDir}:${getContainerPath(gcloudConfigDir)}:ro`);
+            args.push("--volume", `${gcloudConfigDir}:${getContainerPath(gcloudConfigDir)}:ro`);
         }
         // mount ADC file if GOOGLE_APPLICATION_CREDENTIALS is set
-        if (process.env['GOOGLE_APPLICATION_CREDENTIALS']) {
-            const adcFile = process.env['GOOGLE_APPLICATION_CREDENTIALS'];
+        if (process.env["GOOGLE_APPLICATION_CREDENTIALS"]) {
+            const adcFile = process.env["GOOGLE_APPLICATION_CREDENTIALS"];
             if (fs.existsSync(adcFile)) {
-                args.push('--volume', `${adcFile}:${getContainerPath(adcFile)}:ro`);
-                args.push('--env', `GOOGLE_APPLICATION_CREDENTIALS=${getContainerPath(adcFile)}`);
+                args.push("--volume", `${adcFile}:${getContainerPath(adcFile)}:ro`);
+                args.push("--env", `GOOGLE_APPLICATION_CREDENTIALS=${getContainerPath(adcFile)}`);
             }
         }
         // mount paths listed in SANDBOX_MOUNTS
-        if (process.env['SANDBOX_MOUNTS']) {
-            for (let mount of process.env['SANDBOX_MOUNTS'].split(',')) {
+        if (process.env["SANDBOX_MOUNTS"]) {
+            for (let mount of process.env["SANDBOX_MOUNTS"].split(",")) {
                 if (mount.trim()) {
                     // parse mount as from:to:opts
-                    let [from, to, opts] = mount.trim().split(':');
+                    let [from, to, opts] = mount.trim().split(":");
                     to = to || from; // default to mount at same path inside container
-                    opts = opts || 'ro'; // default to read-only
+                    opts = opts || "ro"; // default to read-only
                     mount = `${from}:${to}:${opts}`;
                     // check that from path is absolute
                     if (!path.isAbsolute(from)) {
@@ -370,43 +370,43 @@ export async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = 
                         throw new FatalSandboxError(`Missing mount path '${from}' listed in SANDBOX_MOUNTS`);
                     }
                     console.error(`SANDBOX_MOUNTS: ${from} -> ${to} (${opts})`);
-                    args.push('--volume', mount);
+                    args.push("--volume", mount);
                 }
             }
         }
         // expose env-specified ports on the sandbox
-        ports().forEach((p) => args.push('--publish', `${p}:${p}`));
+        ports().forEach((p) => args.push("--publish", `${p}:${p}`));
         // if DEBUG is set, expose debugging port
-        if (process.env['DEBUG']) {
-            const debugPort = process.env['DEBUG_PORT'] || '9229';
+        if (process.env["DEBUG"]) {
+            const debugPort = process.env["DEBUG_PORT"] || "9229";
             args.push(`--publish`, `${debugPort}:${debugPort}`);
         }
         // copy proxy environment variables, replacing localhost with SANDBOX_PROXY_NAME
         // copy as both upper-case and lower-case as is required by some utilities
         // GEMINI_SANDBOX_PROXY_COMMAND implies HTTPS_PROXY unless HTTP_PROXY is set
-        const proxyCommand = process.env['GEMINI_SANDBOX_PROXY_COMMAND'];
+        const proxyCommand = process.env["GEMINI_SANDBOX_PROXY_COMMAND"];
         if (proxyCommand) {
-            let proxy = process.env['HTTPS_PROXY'] ||
-                process.env['https_proxy'] ||
-                process.env['HTTP_PROXY'] ||
-                process.env['http_proxy'] ||
-                'http://localhost:8877';
-            proxy = proxy.replace('localhost', SANDBOX_PROXY_NAME);
+            let proxy = process.env["HTTPS_PROXY"] ||
+                process.env["https_proxy"] ||
+                process.env["HTTP_PROXY"] ||
+                process.env["http_proxy"] ||
+                "http://localhost:8877";
+            proxy = proxy.replace("localhost", SANDBOX_PROXY_NAME);
             if (proxy) {
-                args.push('--env', `HTTPS_PROXY=${proxy}`);
-                args.push('--env', `https_proxy=${proxy}`); // lower-case can be required, e.g. for curl
-                args.push('--env', `HTTP_PROXY=${proxy}`);
-                args.push('--env', `http_proxy=${proxy}`);
+                args.push("--env", `HTTPS_PROXY=${proxy}`);
+                args.push("--env", `https_proxy=${proxy}`); // lower-case can be required, e.g. for curl
+                args.push("--env", `HTTP_PROXY=${proxy}`);
+                args.push("--env", `http_proxy=${proxy}`);
             }
-            const noProxy = process.env['NO_PROXY'] || process.env['no_proxy'];
+            const noProxy = process.env["NO_PROXY"] || process.env["no_proxy"];
             if (noProxy) {
-                args.push('--env', `NO_PROXY=${noProxy}`);
-                args.push('--env', `no_proxy=${noProxy}`);
+                args.push("--env", `NO_PROXY=${noProxy}`);
+                args.push("--env", `no_proxy=${noProxy}`);
             }
             // if using proxy, switch to internal networking through proxy
             if (proxy) {
                 execSync(`${config.command} network inspect ${SANDBOX_NETWORK_NAME} || ${config.command} network create --internal ${SANDBOX_NETWORK_NAME}`);
-                args.push('--network', SANDBOX_NETWORK_NAME);
+                args.push("--network", SANDBOX_NETWORK_NAME);
                 // if proxy command is set, create a separate network w/ host access (i.e. non-internal)
                 // we will run proxy in its own container connected to both host network and internal network
                 // this allows proxy to work even on rootless podman on macos with host<->vm<->container isolation
@@ -425,137 +425,137 @@ export async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = 
             index++;
         }
         const containerName = `${imageName}-${index}`;
-        args.push('--name', containerName, '--hostname', containerName);
+        args.push("--name", containerName, "--hostname", containerName);
         // copy GEMINI_API_KEY(s)
-        if (process.env['GEMINI_API_KEY']) {
-            args.push('--env', `GEMINI_API_KEY=${process.env['GEMINI_API_KEY']}`);
+        if (process.env["GEMINI_API_KEY"]) {
+            args.push("--env", `GEMINI_API_KEY=${process.env["GEMINI_API_KEY"]}`);
         }
-        if (process.env['GOOGLE_API_KEY']) {
-            args.push('--env', `GOOGLE_API_KEY=${process.env['GOOGLE_API_KEY']}`);
+        if (process.env["GOOGLE_API_KEY"]) {
+            args.push("--env", `GOOGLE_API_KEY=${process.env["GOOGLE_API_KEY"]}`);
         }
         // copy OPENAI_API_KEY and related env vars for Qwen
-        if (process.env['OPENAI_API_KEY']) {
-            args.push('--env', `OPENAI_API_KEY=${process.env['OPENAI_API_KEY']}`);
+        if (process.env["OPENAI_API_KEY"]) {
+            args.push("--env", `OPENAI_API_KEY=${process.env["OPENAI_API_KEY"]}`);
         }
         // copy TAVILY_API_KEY for web search tool
-        if (process.env['TAVILY_API_KEY']) {
-            args.push('--env', `TAVILY_API_KEY=${process.env['TAVILY_API_KEY']}`);
+        if (process.env["TAVILY_API_KEY"]) {
+            args.push("--env", `TAVILY_API_KEY=${process.env["TAVILY_API_KEY"]}`);
         }
-        if (process.env['OPENAI_BASE_URL']) {
-            args.push('--env', `OPENAI_BASE_URL=${process.env['OPENAI_BASE_URL']}`);
+        if (process.env["OPENAI_BASE_URL"]) {
+            args.push("--env", `OPENAI_BASE_URL=${process.env["OPENAI_BASE_URL"]}`);
         }
-        if (process.env['OPENAI_MODEL']) {
-            args.push('--env', `OPENAI_MODEL=${process.env['OPENAI_MODEL']}`);
+        if (process.env["OPENAI_MODEL"]) {
+            args.push("--env", `OPENAI_MODEL=${process.env["OPENAI_MODEL"]}`);
         }
         // copy GOOGLE_GENAI_USE_VERTEXAI
-        if (process.env['GOOGLE_GENAI_USE_VERTEXAI']) {
-            args.push('--env', `GOOGLE_GENAI_USE_VERTEXAI=${process.env['GOOGLE_GENAI_USE_VERTEXAI']}`);
+        if (process.env["GOOGLE_GENAI_USE_VERTEXAI"]) {
+            args.push("--env", `GOOGLE_GENAI_USE_VERTEXAI=${process.env["GOOGLE_GENAI_USE_VERTEXAI"]}`);
         }
         // copy GOOGLE_GENAI_USE_GCA
-        if (process.env['GOOGLE_GENAI_USE_GCA']) {
-            args.push('--env', `GOOGLE_GENAI_USE_GCA=${process.env['GOOGLE_GENAI_USE_GCA']}`);
+        if (process.env["GOOGLE_GENAI_USE_GCA"]) {
+            args.push("--env", `GOOGLE_GENAI_USE_GCA=${process.env["GOOGLE_GENAI_USE_GCA"]}`);
         }
         // copy GOOGLE_CLOUD_PROJECT
-        if (process.env['GOOGLE_CLOUD_PROJECT']) {
-            args.push('--env', `GOOGLE_CLOUD_PROJECT=${process.env['GOOGLE_CLOUD_PROJECT']}`);
+        if (process.env["GOOGLE_CLOUD_PROJECT"]) {
+            args.push("--env", `GOOGLE_CLOUD_PROJECT=${process.env["GOOGLE_CLOUD_PROJECT"]}`);
         }
         // copy GOOGLE_CLOUD_LOCATION
-        if (process.env['GOOGLE_CLOUD_LOCATION']) {
-            args.push('--env', `GOOGLE_CLOUD_LOCATION=${process.env['GOOGLE_CLOUD_LOCATION']}`);
+        if (process.env["GOOGLE_CLOUD_LOCATION"]) {
+            args.push("--env", `GOOGLE_CLOUD_LOCATION=${process.env["GOOGLE_CLOUD_LOCATION"]}`);
         }
         // copy GEMINI_MODEL
-        if (process.env['GEMINI_MODEL']) {
-            args.push('--env', `GEMINI_MODEL=${process.env['GEMINI_MODEL']}`);
+        if (process.env["GEMINI_MODEL"]) {
+            args.push("--env", `GEMINI_MODEL=${process.env["GEMINI_MODEL"]}`);
         }
         // copy TERM and COLORTERM to try to maintain terminal setup
-        if (process.env['TERM']) {
-            args.push('--env', `TERM=${process.env['TERM']}`);
+        if (process.env["TERM"]) {
+            args.push("--env", `TERM=${process.env["TERM"]}`);
         }
-        if (process.env['COLORTERM']) {
-            args.push('--env', `COLORTERM=${process.env['COLORTERM']}`);
+        if (process.env["COLORTERM"]) {
+            args.push("--env", `COLORTERM=${process.env["COLORTERM"]}`);
         }
         // Pass through IDE mode environment variables
         for (const envVar of [
-            'QWEN_CODE_IDE_SERVER_PORT',
-            'QWEN_CODE_IDE_WORKSPACE_PATH',
-            'TERM_PROGRAM',
+            "QWEN_CODE_IDE_SERVER_PORT",
+            "QWEN_CODE_IDE_WORKSPACE_PATH",
+            "TERM_PROGRAM",
         ]) {
             if (process.env[envVar]) {
-                args.push('--env', `${envVar}=${process.env[envVar]}`);
+                args.push("--env", `${envVar}=${process.env[envVar]}`);
             }
         }
         // copy VIRTUAL_ENV if under working directory
         // also mount-replace VIRTUAL_ENV directory with <project_settings>/sandbox.venv
         // sandbox can then set up this new VIRTUAL_ENV directory using sandbox.bashrc (see below)
         // directory will be empty if not set up, which is still preferable to having host binaries
-        if (process.env['VIRTUAL_ENV']
+        if (process.env["VIRTUAL_ENV"]
             ?.toLowerCase()
             .startsWith(workdir.toLowerCase())) {
-            const sandboxVenvPath = path.resolve(SETTINGS_DIRECTORY_NAME, 'sandbox.venv');
+            const sandboxVenvPath = path.resolve(SETTINGS_DIRECTORY_NAME, "sandbox.venv");
             if (!fs.existsSync(sandboxVenvPath)) {
                 fs.mkdirSync(sandboxVenvPath, { recursive: true });
             }
-            args.push('--volume', `${sandboxVenvPath}:${getContainerPath(process.env['VIRTUAL_ENV'])}`);
-            args.push('--env', `VIRTUAL_ENV=${getContainerPath(process.env['VIRTUAL_ENV'])}`);
+            args.push("--volume", `${sandboxVenvPath}:${getContainerPath(process.env["VIRTUAL_ENV"])}`);
+            args.push("--env", `VIRTUAL_ENV=${getContainerPath(process.env["VIRTUAL_ENV"])}`);
         }
         // copy additional environment variables from SANDBOX_ENV
-        if (process.env['SANDBOX_ENV']) {
-            for (let env of process.env['SANDBOX_ENV'].split(',')) {
+        if (process.env["SANDBOX_ENV"]) {
+            for (let env of process.env["SANDBOX_ENV"].split(",")) {
                 if ((env = env.trim())) {
-                    if (env.includes('=')) {
+                    if (env.includes("=")) {
                         console.error(`SANDBOX_ENV: ${env}`);
-                        args.push('--env', env);
+                        args.push("--env", env);
                     }
                     else {
-                        throw new FatalSandboxError('SANDBOX_ENV must be a comma-separated list of key=value pairs');
+                        throw new FatalSandboxError("SANDBOX_ENV must be a comma-separated list of key=value pairs");
                     }
                 }
             }
         }
         // copy NODE_OPTIONS
-        const existingNodeOptions = process.env['NODE_OPTIONS'] || '';
+        const existingNodeOptions = process.env["NODE_OPTIONS"] || "";
         const allNodeOptions = [
             ...(existingNodeOptions ? [existingNodeOptions] : []),
             ...nodeArgs,
-        ].join(' ');
+        ].join(" ");
         if (allNodeOptions.length > 0) {
-            args.push('--env', `NODE_OPTIONS="${allNodeOptions}"`);
+            args.push("--env", `NODE_OPTIONS="${allNodeOptions}"`);
         }
         // set SANDBOX as container name
-        args.push('--env', `SANDBOX=${containerName}`);
+        args.push("--env", `SANDBOX=${containerName}`);
         // for podman only, use empty --authfile to skip unnecessary auth refresh overhead
-        if (config.command === 'podman') {
-            const emptyAuthFilePath = path.join(os.tmpdir(), 'empty_auth.json');
-            fs.writeFileSync(emptyAuthFilePath, '{}', 'utf-8');
-            args.push('--authfile', emptyAuthFilePath);
+        if (config.command === "podman") {
+            const emptyAuthFilePath = path.join(os.tmpdir(), "empty_auth.json");
+            fs.writeFileSync(emptyAuthFilePath, "{}", "utf-8");
+            args.push("--authfile", emptyAuthFilePath);
         }
         // Determine if the current user's UID/GID should be passed to the sandbox.
         // See shouldUseCurrentUserInSandbox for more details.
-        let userFlag = '';
+        let userFlag = "";
         const finalEntrypoint = entrypoint(workdir, cliArgs);
-        if (process.env['GEMINI_CLI_INTEGRATION_TEST'] === 'true') {
-            args.push('--user', 'root');
-            userFlag = '--user root';
+        if (process.env["GEMINI_CLI_INTEGRATION_TEST"] === "true") {
+            args.push("--user", "root");
+            userFlag = "--user root";
         }
         else if (await shouldUseCurrentUserInSandbox()) {
             // For the user-creation logic to work, the container must start as root.
             // The entrypoint script then handles dropping privileges to the correct user.
-            args.push('--user', 'root');
-            const uid = execSync('id -u').toString().trim();
-            const gid = execSync('id -g').toString().trim();
+            args.push("--user", "root");
+            const uid = execSync("id -u").toString().trim();
+            const gid = execSync("id -g").toString().trim();
             // Instead of passing --user to the main sandbox container, we let it
             // start as root, then create a user with the host's UID/GID, and
             // finally switch to that user to run the gemini process. This is
             // necessary on Linux to ensure the user exists within the
             // container's /etc/passwd file, which is required by os.userInfo().
-            const username = 'gemini';
+            const username = "gemini";
             const homeDir = getContainerPath(os.homedir());
             const setupUserCommands = [
                 // Use -f with groupadd to avoid errors if the group already exists.
                 `groupadd -f -g ${gid} ${username}`,
                 // Create user only if it doesn't exist. Use -o for non-unique UID.
                 `id -u ${username} &>/dev/null || useradd -o -u ${uid} -g ${gid} -d ${homeDir} -s /bin/bash ${username}`,
-            ].join(' && ');
+            ].join(" && ");
             const originalCommand = finalEntrypoint[2];
             const escapedOriginalCommand = originalCommand.replace(/'/g, "'\\''");
             // Use `su -p` to preserve the environment.
@@ -565,7 +565,7 @@ export async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = 
             // We still need userFlag for the simpler proxy container, which does not have this issue.
             userFlag = `--user ${uid}:${gid}`;
             // When forcing a UID in the sandbox, $HOME can be reset to '/', so we copy $HOME as well.
-            args.push('--env', `HOME=${os.homedir()}`);
+            args.push("--env", `HOME=${os.homedir()}`);
         }
         // push container image name
         args.push(image);
@@ -578,32 +578,32 @@ export async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = 
             // run proxyCommand in its own container
             const proxyContainerCommand = `${config.command} run --rm --init ${userFlag} --name ${SANDBOX_PROXY_NAME} --network ${SANDBOX_PROXY_NAME} -p 8877:8877 -v ${process.cwd()}:${workdir} --workdir ${workdir} ${image} ${proxyCommand}`;
             proxyProcess = spawn(proxyContainerCommand, {
-                stdio: ['ignore', 'pipe', 'pipe'],
+                stdio: ["ignore", "pipe", "pipe"],
                 shell: true,
                 detached: true,
             });
             // install handlers to stop proxy on exit/signal
             const stopProxy = () => {
-                console.log('stopping proxy container ...');
+                console.log("stopping proxy container ...");
                 execSync(`${config.command} rm -f ${SANDBOX_PROXY_NAME}`);
             };
-            process.on('exit', stopProxy);
-            process.on('SIGINT', stopProxy);
-            process.on('SIGTERM', stopProxy);
+            process.on("exit", stopProxy);
+            process.on("SIGINT", stopProxy);
+            process.on("SIGTERM", stopProxy);
             // commented out as it disrupts ink rendering
             // proxyProcess.stdout?.on('data', (data) => {
             //   console.info(data.toString());
             // });
-            proxyProcess.stderr?.on('data', (data) => {
+            proxyProcess.stderr?.on("data", (data) => {
                 console.error(data.toString().trim());
             });
-            proxyProcess.on('close', (code, signal) => {
+            proxyProcess.on("close", (code, signal) => {
                 if (sandboxProcess?.pid) {
-                    process.kill(-sandboxProcess.pid, 'SIGTERM');
+                    process.kill(-sandboxProcess.pid, "SIGTERM");
                 }
                 throw new FatalSandboxError(`Proxy container command '${proxyContainerCommand}' exited with code ${code}, signal ${signal}`);
             });
-            console.log('waiting for proxy to start ...');
+            console.log("waiting for proxy to start ...");
             await execAsync(`until timeout 0.25 curl -s http://localhost:8877; do sleep 0.25; done`);
             // connect proxy container to sandbox network
             // (workaround for older versions of docker that don't support multiple --network args)
@@ -611,13 +611,13 @@ export async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = 
         }
         // spawn child and let it inherit stdio
         sandboxProcess = spawn(config.command, args, {
-            stdio: 'inherit',
+            stdio: "inherit",
         });
-        sandboxProcess.on('error', (err) => {
-            console.error('Sandbox process error:', err);
+        sandboxProcess.on("error", (err) => {
+            console.error("Sandbox process error:", err);
         });
         await new Promise((resolve) => {
-            sandboxProcess?.on('close', (code, signal) => {
+            sandboxProcess?.on("close", (code, signal) => {
                 if (code !== 0) {
                     console.log(`Sandbox process exited with code: ${code}, signal: ${signal}`);
                 }
@@ -632,34 +632,34 @@ export async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = 
 // Helper functions to ensure sandbox image is present
 async function imageExists(sandbox, image) {
     return new Promise((resolve) => {
-        const args = ['images', '-q', image];
+        const args = ["images", "-q", image];
         const checkProcess = spawn(sandbox, args);
-        let stdoutData = '';
+        let stdoutData = "";
         if (checkProcess.stdout) {
-            checkProcess.stdout.on('data', (data) => {
+            checkProcess.stdout.on("data", (data) => {
                 stdoutData += data.toString();
             });
         }
-        checkProcess.on('error', (err) => {
+        checkProcess.on("error", (err) => {
             console.warn(`Failed to start '${sandbox}' command for image check: ${err.message}`);
             resolve(false);
         });
-        checkProcess.on('close', (code) => {
+        checkProcess.on("close", (code) => {
             // Non-zero code might indicate docker daemon not running, etc.
             // The primary success indicator is non-empty stdoutData.
             if (code !== 0) {
                 // console.warn(`'${sandbox} images -q ${image}' exited with code ${code}.`);
             }
-            resolve(stdoutData.trim() !== '');
+            resolve(stdoutData.trim() !== "");
         });
     });
 }
 async function pullImage(sandbox, image) {
     console.info(`Attempting to pull image ${image} using ${sandbox}...`);
     return new Promise((resolve) => {
-        const args = ['pull', image];
-        const pullProcess = spawn(sandbox, args, { stdio: 'pipe' });
-        let stderrData = '';
+        const args = ["pull", image];
+        const pullProcess = spawn(sandbox, args, { stdio: "pipe" });
+        let stderrData = "";
         const onStdoutData = (data) => {
             console.info(data.toString().trim()); // Show pull progress
         };
@@ -689,25 +689,25 @@ async function pullImage(sandbox, image) {
         };
         const cleanup = () => {
             if (pullProcess.stdout) {
-                pullProcess.stdout.removeListener('data', onStdoutData);
+                pullProcess.stdout.removeListener("data", onStdoutData);
             }
             if (pullProcess.stderr) {
-                pullProcess.stderr.removeListener('data', onStderrData);
+                pullProcess.stderr.removeListener("data", onStderrData);
             }
-            pullProcess.removeListener('error', onError);
-            pullProcess.removeListener('close', onClose);
+            pullProcess.removeListener("error", onError);
+            pullProcess.removeListener("close", onClose);
             if (pullProcess.connected) {
                 pullProcess.disconnect();
             }
         };
         if (pullProcess.stdout) {
-            pullProcess.stdout.on('data', onStdoutData);
+            pullProcess.stdout.on("data", onStdoutData);
         }
         if (pullProcess.stderr) {
-            pullProcess.stderr.on('data', onStderrData);
+            pullProcess.stderr.on("data", onStderrData);
         }
-        pullProcess.on('error', onError);
-        pullProcess.on('close', onClose);
+        pullProcess.on("error", onError);
+        pullProcess.on("close", onClose);
     });
 }
 async function ensureSandboxImageIsPresent(sandbox, image) {

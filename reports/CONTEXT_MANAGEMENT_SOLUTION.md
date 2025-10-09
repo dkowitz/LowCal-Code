@@ -15,17 +15,20 @@ We implemented a **multi-layered defense system** that prevents context overflow
 **Purpose:** Prevent massive tool results from overwhelming the context window while preserving useful information.
 
 **Key Features:**
+
 - **Tool-specific strategies:** Different truncation approaches for different tools
 - **Intelligent summarization:** Keeps first N and last N results, summarizes the middle
 - **Informative metadata:** Tells the model what was omitted and how to get more details
 
 **Strategies:**
+
 - `search_file_content`: Keeps first 30 and last 30 file sections (max 20,000 chars)
 - `read_many_files`: Keeps first 10 and last 10 files (max 30,000 chars)
 - `glob`: Generic truncation (max 10,000 chars)
 - `run_shell_command`: Generic truncation (max 15,000 chars)
 
 **Example Output:**
+
 ```
 Found 2553 matches for pattern "debug" in packages/**/*.*
 
@@ -53,6 +56,7 @@ Omitted 2493 files with 2400 matches:
 **Purpose:** Provide progressive compression strategies when standard compression fails.
 
 **6 Progressive Strategies:**
+
 1. **Compress tool results only** - Summarize large tool outputs
 2. **+ Drop intermediate messages** - Remove redundant assistant messages
 3. **+ Keep 80% of history** - Sliding window with 80% retention
@@ -61,6 +65,7 @@ Omitted 2493 files with 2400 matches:
 6. **+ Keep 20% of history** - Most aggressive (last resort)
 
 **Key Functions:**
+
 - `compressToolResults()`: Summarizes function responses
 - `dropIntermediateAssistantMessages()`: Removes redundant model messages
 - `applySlidingWindow()`: Keeps recent history, drops old
@@ -71,6 +76,7 @@ Omitted 2493 files with 2400 matches:
 **Purpose:** Automatically recover from context overflow without user intervention.
 
 **Implementation:**
+
 - Added `tryAdaptiveRecovery()` method that:
   1. Detects when standard compression fails
   2. Tries each of the 6 compression strategies progressively
@@ -78,11 +84,13 @@ Omitted 2493 files with 2400 matches:
   4. Returns success/failure status
 
 **Integration:**
+
 - Modified `ensureRequestWithinBudget()` to call recovery before throwing
 - Recovery attempts are logged with `[Context Recovery]` prefix
 - Only throws error if all 6 strategies fail
 
 **Example Console Output:**
+
 ```
 [Context Management] Standard compression failed, attempting self-healing recovery...
 [Context Recovery] Trying strategy 1/6...
@@ -98,9 +106,10 @@ Omitted 2493 files with 2400 matches:
 **Purpose:** Warn about potentially problematic tool calls BEFORE execution.
 
 **Validation Rules:**
+
 - **search_file_content:**
   - Warns if pattern is too vague (e.g., "debug", "test") without file filter
-  - Warns if pattern matches everything (e.g., ".*")
+  - Warns if pattern matches everything (e.g., ".\*")
   - Suggests adding `include` filters or more specific patterns
 
 - **read_many_files:**
@@ -109,17 +118,19 @@ Omitted 2493 files with 2400 matches:
   - Suggests breaking into smaller operations
 
 - **glob:**
-  - Warns if pattern will match everything (e.g., "**/*")
+  - Warns if pattern will match everything (e.g., "\*_/_")
   - Suggests more specific patterns
 
 **Example Warning:**
+
 ```
 ⚠️  Pattern "debug" may return thousands of results without a file filter.
-   💡 Consider adding an 'include' filter (e.g., '**/*.ts', 'src/**/*.js') 
+   💡 Consider adding an 'include' filter (e.g., '**/*.ts', 'src/**/*.js')
       or using a more specific regex pattern.
 ```
 
 **Integration:**
+
 - Added to `coreToolScheduler.ts` in `buildInvocation()` flow
 - Warnings logged to console with `[Tool Validation]` prefix
 - Does not block execution, just warns
@@ -127,6 +138,7 @@ Omitted 2493 files with 2400 matches:
 ### 5. Integration Points
 
 **Modified Files:**
+
 1. `packages/core/src/tools/ripGrep.ts`
    - Added truncation to search results
    - Displays truncation summary in returnDisplay
@@ -146,21 +158,25 @@ Omitted 2493 files with 2400 matches:
 ## Benefits
 
 ### 1. **Autonomous Operation**
+
 - No more workflow-stopping errors
 - Self-healing recovery happens automatically
 - User intervention only needed if all strategies fail
 
 ### 2. **Maintained Effectiveness**
+
 - Tools still return useful information
 - Truncation is intelligent, not blunt
 - Model gets clear guidance on what was omitted
 
 ### 3. **Better User Experience**
+
 - Proactive warnings help users write better queries
 - Clear console logging for debugging
 - Informative error messages when recovery fails
 
 ### 4. **Scalability**
+
 - Can handle massive search results (tested with 11,841 matches)
 - Progressive strategies adapt to severity
 - Configurable thresholds for different tools
@@ -168,20 +184,23 @@ Omitted 2493 files with 2400 matches:
 ## Testing
 
 **Build Status:** ✅ Successful
+
 ```bash
 npm run build
 # All packages built successfully
 ```
 
 **Test Status:** ✅ Mostly passing (6 failures unrelated to changes)
+
 ```bash
 npm run test
 # 2615 passed | 6 failed (unrelated to context management)
 ```
 
 **Scenario Testing:**
+
 - Tested with the exact failing scenario from error log
-- Pattern "debug" in packages/**/*.* (2553 matches)
+- Pattern "debug" in packages/\*_/_.\* (2553 matches)
 - Pattern with EventEmitter (11,841 matches)
 - Both now handled gracefully with truncation
 
@@ -190,6 +209,7 @@ npm run test
 All thresholds are configurable in the respective files:
 
 **result-truncation.ts:**
+
 ```typescript
 export const TRUNCATION_STRATEGIES: Record<string, TruncationStrategy> = {
   search_file_content: { maxChars: 20000, ... },
@@ -199,6 +219,7 @@ export const TRUNCATION_STRATEGIES: Record<string, TruncationStrategy> = {
 ```
 
 **context-recovery.ts:**
+
 ```typescript
 export const COMPRESSION_STRATEGIES: CompressionOptions[] = [
   { preserveFraction: 1.0, compressToolResults: true, ... },
@@ -219,6 +240,7 @@ Potential improvements for even better context management:
 ## Conclusion
 
 This solution provides a robust, multi-layered approach to context management that:
+
 - ✅ Prevents context overflow errors
 - ✅ Maintains tool effectiveness
 - ✅ Enables autonomous recovery

@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import * as vscode from 'vscode';
-import { OpenFilesManager, MAX_FILES } from './open-files-manager.js';
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import * as vscode from "vscode";
+import { OpenFilesManager, MAX_FILES } from "./open-files-manager.js";
 
-vi.mock('vscode', () => ({
+vi.mock("vscode", () => ({
   EventEmitter: vi.fn(() => {
     const listeners: Array<(e: void) => unknown> = [];
     return {
@@ -34,7 +34,7 @@ vi.mock('vscode', () => ({
   Uri: {
     file: (path: string) => ({
       fsPath: path,
-      scheme: 'file',
+      scheme: "file",
     }),
   },
   TextEditorSelectionChangeKind: {
@@ -42,7 +42,7 @@ vi.mock('vscode', () => ({
   },
 }));
 
-describe('OpenFilesManager', () => {
+describe("OpenFilesManager", () => {
   let context: vscode.ExtensionContext;
   let onDidChangeActiveTextEditorListener: (
     editor: vscode.TextEditor | undefined,
@@ -105,7 +105,7 @@ describe('OpenFilesManager', () => {
     onDidChangeActiveTextEditorListener({
       document: {
         uri,
-        getText: () => '',
+        getText: () => "",
       },
       selection: {
         active: { line: 0, character: 0 },
@@ -113,32 +113,32 @@ describe('OpenFilesManager', () => {
     } as unknown as vscode.TextEditor);
   };
 
-  it('adds a file to the list', async () => {
+  it("adds a file to the list", async () => {
     const manager = new OpenFilesManager(context);
-    const uri = getUri('/test/file1.txt');
+    const uri = getUri("/test/file1.txt");
     addFile(uri);
     await vi.advanceTimersByTimeAsync(100);
     expect(manager.state.workspaceState!.openFiles).toHaveLength(1);
     expect(manager.state.workspaceState!.openFiles![0].path).toBe(
-      '/test/file1.txt',
+      "/test/file1.txt",
     );
   });
 
-  it('moves an existing file to the top', async () => {
+  it("moves an existing file to the top", async () => {
     const manager = new OpenFilesManager(context);
-    const uri1 = getUri('/test/file1.txt');
-    const uri2 = getUri('/test/file2.txt');
+    const uri1 = getUri("/test/file1.txt");
+    const uri2 = getUri("/test/file2.txt");
     addFile(uri1);
     addFile(uri2);
     addFile(uri1);
     await vi.advanceTimersByTimeAsync(100);
     expect(manager.state.workspaceState!.openFiles).toHaveLength(2);
     expect(manager.state.workspaceState!.openFiles![0].path).toBe(
-      '/test/file1.txt',
+      "/test/file1.txt",
     );
   });
 
-  it('does not exceed the max number of files', async () => {
+  it("does not exceed the max number of files", async () => {
     const manager = new OpenFilesManager(context);
     for (let i = 0; i < MAX_FILES + 5; i++) {
       const uri = getUri(`/test/file${i}.txt`);
@@ -154,21 +154,21 @@ describe('OpenFilesManager', () => {
     );
   });
 
-  it('fires onDidChange when a file is added', async () => {
+  it("fires onDidChange when a file is added", async () => {
     const manager = new OpenFilesManager(context);
     const onDidChangeSpy = vi.fn();
     manager.onDidChange(onDidChangeSpy);
 
-    const uri = getUri('/test/file1.txt');
+    const uri = getUri("/test/file1.txt");
     addFile(uri);
 
     await vi.advanceTimersByTimeAsync(100);
     expect(onDidChangeSpy).toHaveBeenCalled();
   });
 
-  it('removes a file when it is closed', async () => {
+  it("removes a file when it is closed", async () => {
     const manager = new OpenFilesManager(context);
-    const uri = getUri('/test/file1.txt');
+    const uri = getUri("/test/file1.txt");
     addFile(uri);
     await vi.advanceTimersByTimeAsync(100);
     expect(manager.state.workspaceState!.openFiles).toHaveLength(1);
@@ -179,9 +179,9 @@ describe('OpenFilesManager', () => {
     expect(manager.state.workspaceState!.openFiles).toHaveLength(0);
   });
 
-  it('fires onDidChange when a file is removed', async () => {
+  it("fires onDidChange when a file is removed", async () => {
     const manager = new OpenFilesManager(context);
-    const uri = getUri('/test/file1.txt');
+    const uri = getUri("/test/file1.txt");
     addFile(uri);
     await vi.advanceTimersByTimeAsync(100);
 
@@ -194,10 +194,10 @@ describe('OpenFilesManager', () => {
     expect(onDidChangeSpy).toHaveBeenCalled();
   });
 
-  it('removes a file when it is deleted', async () => {
+  it("removes a file when it is deleted", async () => {
     const manager = new OpenFilesManager(context);
-    const uri1 = getUri('/test/file1.txt');
-    const uri2 = getUri('/test/file2.txt');
+    const uri1 = getUri("/test/file1.txt");
+    const uri2 = getUri("/test/file2.txt");
     addFile(uri1);
     addFile(uri2);
     await vi.advanceTimersByTimeAsync(100);
@@ -208,13 +208,13 @@ describe('OpenFilesManager', () => {
 
     expect(manager.state.workspaceState!.openFiles).toHaveLength(1);
     expect(manager.state.workspaceState!.openFiles![0].path).toBe(
-      '/test/file2.txt',
+      "/test/file2.txt",
     );
   });
 
-  it('fires onDidChange when a file is deleted', async () => {
+  it("fires onDidChange when a file is deleted", async () => {
     const manager = new OpenFilesManager(context);
-    const uri = getUri('/test/file1.txt');
+    const uri = getUri("/test/file1.txt");
     addFile(uri);
     await vi.advanceTimersByTimeAsync(100);
 
@@ -227,11 +227,11 @@ describe('OpenFilesManager', () => {
     expect(onDidChangeSpy).toHaveBeenCalled();
   });
 
-  it('removes multiple files when they are deleted', async () => {
+  it("removes multiple files when they are deleted", async () => {
     const manager = new OpenFilesManager(context);
-    const uri1 = getUri('/test/file1.txt');
-    const uri2 = getUri('/test/file2.txt');
-    const uri3 = getUri('/test/file3.txt');
+    const uri1 = getUri("/test/file1.txt");
+    const uri2 = getUri("/test/file2.txt");
+    const uri3 = getUri("/test/file3.txt");
     addFile(uri1);
     addFile(uri2);
     addFile(uri3);
@@ -243,13 +243,13 @@ describe('OpenFilesManager', () => {
 
     expect(manager.state.workspaceState!.openFiles).toHaveLength(1);
     expect(manager.state.workspaceState!.openFiles![0].path).toBe(
-      '/test/file2.txt',
+      "/test/file2.txt",
     );
   });
 
-  it('fires onDidChange only once when adding an existing file', async () => {
+  it("fires onDidChange only once when adding an existing file", async () => {
     const manager = new OpenFilesManager(context);
-    const uri = getUri('/test/file1.txt');
+    const uri = getUri("/test/file1.txt");
     addFile(uri);
     await vi.advanceTimersByTimeAsync(100);
 
@@ -261,15 +261,15 @@ describe('OpenFilesManager', () => {
     expect(onDidChangeSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('updates the file when it is renamed', async () => {
+  it("updates the file when it is renamed", async () => {
     const manager = new OpenFilesManager(context);
-    const oldUri = getUri('/test/file1.txt');
-    const newUri = getUri('/test/file2.txt');
+    const oldUri = getUri("/test/file1.txt");
+    const newUri = getUri("/test/file2.txt");
     addFile(oldUri);
     await vi.advanceTimersByTimeAsync(100);
     expect(manager.state.workspaceState!.openFiles).toHaveLength(1);
     expect(manager.state.workspaceState!.openFiles![0].path).toBe(
-      '/test/file1.txt',
+      "/test/file1.txt",
     );
 
     onDidRenameFilesListener({ files: [{ oldUri, newUri }] });
@@ -277,26 +277,26 @@ describe('OpenFilesManager', () => {
 
     expect(manager.state.workspaceState!.openFiles).toHaveLength(1);
     expect(manager.state.workspaceState!.openFiles![0].path).toBe(
-      '/test/file2.txt',
+      "/test/file2.txt",
     );
   });
 
-  it('adds a file when the active editor changes', async () => {
+  it("adds a file when the active editor changes", async () => {
     const manager = new OpenFilesManager(context);
-    const uri = getUri('/test/file1.txt');
+    const uri = getUri("/test/file1.txt");
 
     addFile(uri);
     await vi.advanceTimersByTimeAsync(100);
 
     expect(manager.state.workspaceState!.openFiles).toHaveLength(1);
     expect(manager.state.workspaceState!.openFiles![0].path).toBe(
-      '/test/file1.txt',
+      "/test/file1.txt",
     );
   });
 
-  it('updates the cursor position on selection change', async () => {
+  it("updates the cursor position on selection change", async () => {
     const manager = new OpenFilesManager(context);
-    const uri = getUri('/test/file1.txt');
+    const uri = getUri("/test/file1.txt");
     addFile(uri);
     await vi.advanceTimersByTimeAsync(100);
 
@@ -306,7 +306,7 @@ describe('OpenFilesManager', () => {
 
     onDidChangeTextEditorSelectionListener({
       textEditor: {
-        document: { uri, getText: () => '' },
+        document: { uri, getText: () => "" },
         selection,
       } as vscode.TextEditor,
       selections: [selection],
@@ -319,9 +319,9 @@ describe('OpenFilesManager', () => {
     expect(file.cursor).toEqual({ line: 11, character: 20 });
   });
 
-  it('updates the selected text on selection change', async () => {
+  it("updates the selected text on selection change", async () => {
     const manager = new OpenFilesManager(context);
-    const uri = getUri('/test/file1.txt');
+    const uri = getUri("/test/file1.txt");
     const selection = {
       active: { line: 10, character: 20 },
     } as vscode.Selection;
@@ -330,7 +330,7 @@ describe('OpenFilesManager', () => {
     const textEditor = {
       document: {
         uri,
-        getText: vi.fn().mockReturnValue('selected text'),
+        getText: vi.fn().mockReturnValue("selected text"),
       },
       selection,
     } as unknown as vscode.TextEditor;
@@ -347,15 +347,15 @@ describe('OpenFilesManager', () => {
     await vi.advanceTimersByTimeAsync(100);
 
     const file = manager.state.workspaceState!.openFiles![0];
-    expect(file.selectedText).toBe('selected text');
+    expect(file.selectedText).toBe("selected text");
     expect(textEditor.document.getText).toHaveBeenCalledWith(selection);
   });
 
-  it('truncates long selected text', async () => {
+  it("truncates long selected text", async () => {
     const manager = new OpenFilesManager(context);
-    const uri = getUri('/test/file1.txt');
-    const longText = 'a'.repeat(20000);
-    const truncatedText = longText.substring(0, 16384) + '... [TRUNCATED]';
+    const uri = getUri("/test/file1.txt");
+    const longText = "a".repeat(20000);
+    const truncatedText = longText.substring(0, 16384) + "... [TRUNCATED]";
 
     const selection = {
       active: { line: 10, character: 20 },
@@ -384,10 +384,10 @@ describe('OpenFilesManager', () => {
     expect(file.selectedText).toBe(truncatedText);
   });
 
-  it('deactivates the previously active file', async () => {
+  it("deactivates the previously active file", async () => {
     const manager = new OpenFilesManager(context);
-    const uri1 = getUri('/test/file1.txt');
-    const uri2 = getUri('/test/file2.txt');
+    const uri1 = getUri("/test/file1.txt");
+    const uri2 = getUri("/test/file2.txt");
 
     addFile(uri1);
     await vi.advanceTimersByTimeAsync(100);
@@ -398,7 +398,7 @@ describe('OpenFilesManager', () => {
 
     onDidChangeTextEditorSelectionListener({
       textEditor: {
-        document: { uri: uri1, getText: () => '' },
+        document: { uri: uri1, getText: () => "" },
         selection,
       } as vscode.TextEditor,
       selections: [selection],
@@ -414,22 +414,22 @@ describe('OpenFilesManager', () => {
     await vi.advanceTimersByTimeAsync(100);
 
     file1 = manager.state.workspaceState!.openFiles!.find(
-      (f) => f.path === '/test/file1.txt',
+      (f) => f.path === "/test/file1.txt",
     )!;
     const file2 = manager.state.workspaceState!.openFiles![0];
 
     expect(file1.isActive).toBe(false);
     expect(file1.cursor).toBeUndefined();
     expect(file1.selectedText).toBeUndefined();
-    expect(file2.path).toBe('/test/file2.txt');
+    expect(file2.path).toBe("/test/file2.txt");
     expect(file2.isActive).toBe(true);
   });
 
-  it('ignores non-file URIs', async () => {
+  it("ignores non-file URIs", async () => {
     const manager = new OpenFilesManager(context);
     const uri = {
-      fsPath: '/test/file1.txt',
-      scheme: 'untitled',
+      fsPath: "/test/file1.txt",
+      scheme: "untitled",
     } as vscode.Uri;
 
     addFile(uri);

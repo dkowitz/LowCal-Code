@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { execSync } from 'node:child_process';
-import path from 'node:path';
-import fs from 'node:fs';
+import { execSync } from "node:child_process";
+import path from "node:path";
+import fs from "node:fs";
 
 function getPackageVersion() {
-  const packageJsonPath = path.resolve(process.cwd(), 'package.json');
-  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, 'utf8'));
+  const packageJsonPath = path.resolve(process.cwd(), "package.json");
+  const packageJson = JSON.parse(fs.readFileSync(packageJsonPath, "utf8"));
   return packageJson.version;
 }
 
@@ -18,21 +18,21 @@ function getLatestStableTag() {
   // Fetches all tags, then filters for the latest stable (non-prerelease) tag.
   const tags = execSync('git tag --list "v*.*.*" --sort=-v:refname')
     .toString()
-    .split('\n');
+    .split("\n");
   const latestStableTag = tags.find((tag) =>
     tag.match(/^v[0-9]+\.[0-9]+\.[0-9]+$/),
   );
   if (!latestStableTag) {
-    throw new Error('Could not find a stable tag.');
+    throw new Error("Could not find a stable tag.");
   }
   return latestStableTag;
 }
 
 function incrementPatchVersion(version) {
-  const parts = version.split('.');
+  const parts = version.split(".");
   const major = parseInt(parts[0]);
   const minor = parseInt(parts[1]);
-  const patch = parseInt(parts[2].split('-')[0]); // Handle pre-release versions
+  const patch = parseInt(parts[2].split("-")[0]); // Handle pre-release versions
   return `${major}.${minor}.${patch + 1}`;
 }
 
@@ -47,7 +47,7 @@ function getLatestNightlyCount() {
 
     if (!tags) return 0;
 
-    const nightlyTags = tags.split('\n').filter(Boolean);
+    const nightlyTags = tags.split("\n").filter(Boolean);
     const counts = nightlyTags.map((tag) => {
       const match = tag.match(/nightly\.(\d+)$/);
       return match ? parseInt(match[1]) : 0;
@@ -61,7 +61,7 @@ function getLatestNightlyCount() {
 }
 
 function getNextVersionString(stableVersion, minorIncrement) {
-  const [major, minor] = stableVersion.substring(1).split('.');
+  const [major, minor] = stableVersion.substring(1).split(".");
   const nextMinorVersion = parseInt(minor, 10) + minorIncrement;
   return `${major}.${nextMinorVersion}.0`;
 }
@@ -81,14 +81,14 @@ export function getPreviewTagName(stableVersion) {
 
 function getPreviousReleaseTag(isNightly) {
   if (isNightly) {
-    console.error('Finding latest nightly release...');
+    console.error("Finding latest nightly release...");
     return execSync(
       `gh release list --limit 100 --json tagName | jq -r '[.[] | select(.tagName | contains("nightly"))] | .[0].tagName'`,
     )
       .toString()
       .trim();
   } else {
-    console.error('Finding latest STABLE release (excluding pre-releases)...');
+    console.error("Finding latest STABLE release (excluding pre-releases)...");
     return execSync(
       `gh release list --limit 100 --json tagName | jq -r '[.[] | select(.tagName | (contains("nightly") or contains("preview")) | not)] | .[0].tagName'`,
     )
@@ -98,18 +98,18 @@ function getPreviousReleaseTag(isNightly) {
 }
 
 export function getReleaseVersion() {
-  const isNightly = process.env.IS_NIGHTLY === 'true';
-  const isPreview = process.env.IS_PREVIEW === 'true';
+  const isNightly = process.env.IS_NIGHTLY === "true";
+  const isPreview = process.env.IS_PREVIEW === "true";
   const manualVersion = process.env.MANUAL_VERSION;
 
   let releaseTag;
 
   if (isNightly) {
-    console.error('Calculating next nightly version...');
+    console.error("Calculating next nightly version...");
     const stableVersion = getLatestStableTag();
     releaseTag = getNightlyTagName(stableVersion);
   } else if (isPreview) {
-    console.error('Calculating next preview version...');
+    console.error("Calculating next preview version...");
     const stableVersion = getLatestStableTag();
     releaseTag = getPreviewTagName(stableVersion);
   } else if (manualVersion) {
@@ -117,40 +117,40 @@ export function getReleaseVersion() {
     releaseTag = manualVersion;
   } else {
     throw new Error(
-      'Error: No version specified and this is not a nightly or preview release.',
+      "Error: No version specified and this is not a nightly or preview release.",
     );
   }
 
   if (!releaseTag) {
-    throw new Error('Error: Version could not be determined.');
+    throw new Error("Error: Version could not be determined.");
   }
 
-  if (!releaseTag.startsWith('v')) {
+  if (!releaseTag.startsWith("v")) {
     console.error("Version is missing 'v' prefix. Prepending it.");
     releaseTag = `v${releaseTag}`;
   }
 
-  if (releaseTag.includes('+')) {
+  if (releaseTag.includes("+")) {
     throw new Error(
-      'Error: Versions with build metadata (+) are not supported for releases. Please use a pre-release version (e.g., v1.2.3-alpha.4) instead.',
+      "Error: Versions with build metadata (+) are not supported for releases. Please use a pre-release version (e.g., v1.2.3-alpha.4) instead.",
     );
   }
 
   if (!releaseTag.match(/^v[0-9]+\.[0-9]+\.[0-9]+(-[a-zA-Z0-9.-]+)?$/)) {
     throw new Error(
-      'Error: Version must be in the format vX.Y.Z or vX.Y.Z-prerelease',
+      "Error: Version must be in the format vX.Y.Z or vX.Y.Z-prerelease",
     );
   }
 
   const releaseVersion = releaseTag.substring(1);
-  let npmTag = 'latest';
-  if (releaseVersion.includes('-')) {
-    const prereleasePart = releaseVersion.split('-')[1];
-    npmTag = prereleasePart.split('.')[0];
+  let npmTag = "latest";
+  if (releaseVersion.includes("-")) {
+    const prereleasePart = releaseVersion.split("-")[1];
+    npmTag = prereleasePart.split(".")[0];
 
     // Ensure nightly releases use 'nightly' tag, not 'latest'
-    if (npmTag === 'nightly') {
-      npmTag = 'nightly';
+    if (npmTag === "nightly") {
+      npmTag = "nightly";
     }
   }
 

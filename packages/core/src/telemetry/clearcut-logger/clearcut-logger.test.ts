@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import 'vitest';
+import "vitest";
 import {
   vi,
   describe,
@@ -13,27 +13,27 @@ import {
   afterEach,
   beforeAll,
   afterAll,
-} from 'vitest';
-import type { LogEvent, LogEventEntry } from './clearcut-logger.js';
-import { ClearcutLogger, EventNames, TEST_ONLY } from './clearcut-logger.js';
-import type { ContentGeneratorConfig } from '../../core/contentGenerator.js';
-import { AuthType } from '../../core/contentGenerator.js';
-import type { ConfigParameters } from '../../config/config.js';
-import { EventMetadataKey } from './event-metadata-key.js';
-import { makeFakeConfig } from '../../test-utils/config.js';
-import { http, HttpResponse } from 'msw';
-import { server } from '../../mocks/msw.js';
-import { UserPromptEvent, makeChatCompressionEvent } from '../types.js';
-import { GIT_COMMIT_INFO, CLI_VERSION } from '../../generated/git-commit.js';
-import { UserAccountManager } from '../../utils/userAccountManager.js';
-import { InstallationManager } from '../../utils/installationManager.js';
+} from "vitest";
+import type { LogEvent, LogEventEntry } from "./clearcut-logger.js";
+import { ClearcutLogger, EventNames, TEST_ONLY } from "./clearcut-logger.js";
+import type { ContentGeneratorConfig } from "../../core/contentGenerator.js";
+import { AuthType } from "../../core/contentGenerator.js";
+import type { ConfigParameters } from "../../config/config.js";
+import { EventMetadataKey } from "./event-metadata-key.js";
+import { makeFakeConfig } from "../../test-utils/config.js";
+import { http, HttpResponse } from "msw";
+import { server } from "../../mocks/msw.js";
+import { UserPromptEvent, makeChatCompressionEvent } from "../types.js";
+import { GIT_COMMIT_INFO, CLI_VERSION } from "../../generated/git-commit.js";
+import { UserAccountManager } from "../../utils/userAccountManager.js";
+import { InstallationManager } from "../../utils/installationManager.js";
 
 interface CustomMatchers<R = unknown> {
   toHaveMetadataValue: ([key, value]: [EventMetadataKey, string]) => R;
   toHaveEventName: (name: EventNames) => R;
 }
 
-declare module 'vitest' {
+declare module "vitest" {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any, @typescript-eslint/no-empty-object-type
   interface Matchers<T = any> extends CustomMatchers<T> {}
 }
@@ -46,7 +46,7 @@ expect.extend({
     return {
       pass,
       message: () =>
-        `event name ${event.event_name} does${isNot ? ' not ' : ''} match ${name}}`,
+        `event name ${event.event_name} does${isNot ? " not " : ""} match ${name}}`,
     };
   },
 
@@ -56,7 +56,7 @@ expect.extend({
   ) {
     const { isNot } = this;
     const event = JSON.parse(received[0].source_extension_json) as LogEvent;
-    const metadata = event['event_metadata'][0];
+    const metadata = event["event_metadata"][0];
     const data = metadata.find((m) => m.gemini_cli_key === key)?.value;
 
     const pass = data !== undefined && data === value;
@@ -64,13 +64,13 @@ expect.extend({
     return {
       pass,
       message: () =>
-        `event ${received} does${isNot ? ' not' : ''} have ${value}}`,
+        `event ${received} does${isNot ? " not" : ""} have ${value}}`,
     };
   },
 });
 
-vi.mock('../../utils/userAccountManager.js');
-vi.mock('../../utils/installationManager.js');
+vi.mock("../../utils/userAccountManager.js");
+vi.mock("../../utils/installationManager.js");
 
 const mockUserAccount = vi.mocked(UserAccountManager.prototype);
 const mockInstallMgr = vi.mocked(InstallationManager.prototype);
@@ -88,20 +88,20 @@ afterAll(() => {
   server.close();
 });
 
-describe('ClearcutLogger', () => {
+describe("ClearcutLogger", () => {
   const NEXT_WAIT_MS = 1234;
-  const CLEARCUT_URL = 'https://play.googleapis.com/log';
-  const MOCK_DATE = new Date('2025-01-02T00:00:00.000Z');
+  const CLEARCUT_URL = "https://play.googleapis.com/log";
+  const MOCK_DATE = new Date("2025-01-02T00:00:00.000Z");
   const EXAMPLE_RESPONSE = `["${NEXT_WAIT_MS}",null,[[["ANDROID_BACKUP",0],["BATTERY_STATS",0],["SMART_SETUP",0],["TRON",0]],-3334737594024971225],[]]`;
 
   // A helper to get the internal events array for testing
   const getEvents = (l: ClearcutLogger): LogEventEntry[][] =>
-    l['events'].toArray() as LogEventEntry[][];
+    l["events"].toArray() as LogEventEntry[][];
 
-  const getEventsSize = (l: ClearcutLogger): number => l['events'].size;
+  const getEventsSize = (l: ClearcutLogger): number => l["events"].size;
 
   const requeueFailedEvents = (l: ClearcutLogger, events: LogEventEntry[][]) =>
-    l['requeueFailedEvents'](events);
+    l["requeueFailedEvents"](events);
 
   afterEach(() => {
     vi.unstubAllEnvs();
@@ -110,7 +110,7 @@ describe('ClearcutLogger', () => {
   function setup({
     config = {} as Partial<ConfigParameters>,
     lifetimeGoogleAccounts = 1,
-    cachedGoogleAccount = 'test@google.com',
+    cachedGoogleAccount = "test@google.com",
   } = {}) {
     server.resetHandlers(
       http.post(CLEARCUT_URL, () => HttpResponse.text(EXAMPLE_RESPONSE)),
@@ -130,7 +130,7 @@ describe('ClearcutLogger', () => {
     );
     mockInstallMgr.getInstallationId = vi
       .fn()
-      .mockReturnValue('test-installation-id');
+      .mockReturnValue("test-installation-id");
 
     const logger = ClearcutLogger.getInstance(loggerConfig);
 
@@ -143,7 +143,7 @@ describe('ClearcutLogger', () => {
     vi.restoreAllMocks();
   });
 
-  describe('getInstance', () => {
+  describe("getInstance", () => {
     it.each([
       { usageStatisticsEnabled: false, expectedValue: undefined },
       {
@@ -151,7 +151,7 @@ describe('ClearcutLogger', () => {
         expectedValue: expect.any(ClearcutLogger),
       },
     ])(
-      'returns an instance if usage statistics are enabled',
+      "returns an instance if usage statistics are enabled",
       ({ usageStatisticsEnabled, expectedValue }) => {
         ClearcutLogger.clearInstance();
         const { logger } = setup({
@@ -163,7 +163,7 @@ describe('ClearcutLogger', () => {
       },
     );
 
-    it('is a singleton', () => {
+    it("is a singleton", () => {
       ClearcutLogger.clearInstance();
       const { loggerConfig } = setup();
       const logger1 = ClearcutLogger.getInstance(loggerConfig);
@@ -172,8 +172,8 @@ describe('ClearcutLogger', () => {
     });
   });
 
-  describe('createLogEvent', () => {
-    it('logs the total number of google accounts', () => {
+  describe("createLogEvent", () => {
+    it("logs the total number of google accounts", () => {
       const { logger } = setup({
         lifetimeGoogleAccounts: 9001,
       });
@@ -182,43 +182,43 @@ describe('ClearcutLogger', () => {
 
       expect(event?.event_metadata[0]).toContainEqual({
         gemini_cli_key: EventMetadataKey.GEMINI_CLI_GOOGLE_ACCOUNTS_COUNT,
-        value: '9001',
+        value: "9001",
       });
     });
 
-    it('logs the current surface from a github action', () => {
+    it("logs the current surface from a github action", () => {
       const { logger } = setup({});
 
-      vi.stubEnv('GITHUB_SHA', '8675309');
+      vi.stubEnv("GITHUB_SHA", "8675309");
 
       const event = logger?.createLogEvent(EventNames.CHAT_COMPRESSION, []);
 
       expect(event?.event_metadata[0]).toContainEqual({
         gemini_cli_key: EventMetadataKey.GEMINI_CLI_SURFACE,
-        value: 'GitHub',
+        value: "GitHub",
       });
     });
 
-    it('logs default metadata', () => {
+    it("logs default metadata", () => {
       // Define expected values
-      const session_id = 'my-session-id';
+      const session_id = "my-session-id";
       const auth_type = AuthType.USE_GEMINI;
       const google_accounts = 123;
-      const surface = 'ide-1234';
+      const surface = "ide-1234";
       const cli_version = CLI_VERSION;
       const git_commit_hash = GIT_COMMIT_INFO;
-      const prompt_id = 'my-prompt-123';
+      const prompt_id = "my-prompt-123";
 
       // Setup logger with expected values
       const { logger, loggerConfig } = setup({
         lifetimeGoogleAccounts: google_accounts,
         config: { sessionId: session_id },
       });
-      vi.spyOn(loggerConfig, 'getContentGeneratorConfig').mockReturnValue({
+      vi.spyOn(loggerConfig, "getContentGeneratorConfig").mockReturnValue({
         authType: auth_type,
       } as ContentGeneratorConfig);
       logger?.logNewPromptEvent(new UserPromptEvent(1, prompt_id)); // prompt_id == session_id before this
-      vi.stubEnv('SURFACE', surface);
+      vi.stubEnv("SURFACE", surface);
 
       // Create log event
       const event = logger?.createLogEvent(EventNames.API_ERROR, []);
@@ -262,78 +262,78 @@ describe('ClearcutLogger', () => {
       );
     });
 
-    it('logs the current surface', () => {
+    it("logs the current surface", () => {
       const { logger } = setup({});
 
-      vi.stubEnv('TERM_PROGRAM', 'vscode');
-      vi.stubEnv('SURFACE', 'ide-1234');
+      vi.stubEnv("TERM_PROGRAM", "vscode");
+      vi.stubEnv("SURFACE", "ide-1234");
 
       const event = logger?.createLogEvent(EventNames.API_ERROR, []);
 
       expect(event?.event_metadata[0]).toContainEqual({
         gemini_cli_key: EventMetadataKey.GEMINI_CLI_SURFACE,
-        value: 'ide-1234',
+        value: "ide-1234",
       });
     });
 
     it.each([
       {
         env: {
-          CURSOR_TRACE_ID: 'abc123',
+          CURSOR_TRACE_ID: "abc123",
           GITHUB_SHA: undefined,
-          TERM_PROGRAM: 'vscode',
+          TERM_PROGRAM: "vscode",
         },
-        expectedValue: 'cursor',
+        expectedValue: "cursor",
       },
       {
         env: {
-          TERM_PROGRAM: 'vscode',
+          TERM_PROGRAM: "vscode",
           GITHUB_SHA: undefined,
-          MONOSPACE_ENV: '',
+          MONOSPACE_ENV: "",
         },
-        expectedValue: 'vscode',
+        expectedValue: "vscode",
       },
       {
         env: {
-          MONOSPACE_ENV: 'true',
+          MONOSPACE_ENV: "true",
           GITHUB_SHA: undefined,
-          TERM_PROGRAM: 'vscode',
+          TERM_PROGRAM: "vscode",
         },
-        expectedValue: 'firebasestudio',
+        expectedValue: "firebasestudio",
       },
       {
         env: {
-          __COG_BASHRC_SOURCED: 'true',
+          __COG_BASHRC_SOURCED: "true",
           GITHUB_SHA: undefined,
-          TERM_PROGRAM: 'vscode',
+          TERM_PROGRAM: "vscode",
         },
-        expectedValue: 'devin',
+        expectedValue: "devin",
       },
       {
         env: {
-          CLOUD_SHELL: 'true',
+          CLOUD_SHELL: "true",
           GITHUB_SHA: undefined,
-          TERM_PROGRAM: 'vscode',
+          TERM_PROGRAM: "vscode",
         },
-        expectedValue: 'cloudshell',
+        expectedValue: "cloudshell",
       },
     ])(
-      'logs the current surface as $expectedValue, preempting vscode detection',
+      "logs the current surface as $expectedValue, preempting vscode detection",
       ({ env, expectedValue }) => {
         const { logger } = setup({});
 
         // Clear all environment variables that could interfere with surface detection
-        vi.stubEnv('SURFACE', undefined);
-        vi.stubEnv('GITHUB_SHA', undefined);
-        vi.stubEnv('CURSOR_TRACE_ID', undefined);
-        vi.stubEnv('__COG_BASHRC_SOURCED', undefined);
-        vi.stubEnv('REPLIT_USER', undefined);
-        vi.stubEnv('CODESPACES', undefined);
-        vi.stubEnv('EDITOR_IN_CLOUD_SHELL', undefined);
-        vi.stubEnv('CLOUD_SHELL', undefined);
-        vi.stubEnv('TERM_PRODUCT', undefined);
-        vi.stubEnv('FIREBASE_DEPLOY_AGENT', undefined);
-        vi.stubEnv('MONOSPACE_ENV', undefined);
+        vi.stubEnv("SURFACE", undefined);
+        vi.stubEnv("GITHUB_SHA", undefined);
+        vi.stubEnv("CURSOR_TRACE_ID", undefined);
+        vi.stubEnv("__COG_BASHRC_SOURCED", undefined);
+        vi.stubEnv("REPLIT_USER", undefined);
+        vi.stubEnv("CODESPACES", undefined);
+        vi.stubEnv("EDITOR_IN_CLOUD_SHELL", undefined);
+        vi.stubEnv("CLOUD_SHELL", undefined);
+        vi.stubEnv("TERM_PRODUCT", undefined);
+        vi.stubEnv("FIREBASE_DEPLOY_AGENT", undefined);
+        vi.stubEnv("MONOSPACE_ENV", undefined);
 
         // Set the specific environment variables for this test case
         for (const [key, value] of Object.entries(env)) {
@@ -348,8 +348,8 @@ describe('ClearcutLogger', () => {
     );
   });
 
-  describe('logChatCompressionEvent', () => {
-    it('logs an event with proper fields', () => {
+  describe("logChatCompressionEvent", () => {
+    it("logs an event with proper fields", () => {
       const { logger } = setup();
       logger?.logChatCompressionEvent(
         makeChatCompressionEvent({
@@ -363,23 +363,23 @@ describe('ClearcutLogger', () => {
       expect(events[0]).toHaveEventName(EventNames.CHAT_COMPRESSION);
       expect(events[0]).toHaveMetadataValue([
         EventMetadataKey.GEMINI_CLI_COMPRESSION_TOKENS_BEFORE,
-        '9001',
+        "9001",
       ]);
       expect(events[0]).toHaveMetadataValue([
         EventMetadataKey.GEMINI_CLI_COMPRESSION_TOKENS_AFTER,
-        '8000',
+        "8000",
       ]);
     });
   });
 
-  describe('enqueueLogEvent', () => {
-    it('should add events to the queue', () => {
+  describe("enqueueLogEvent", () => {
+    it("should add events to the queue", () => {
       const { logger } = setup();
       logger!.enqueueLogEvent(logger!.createLogEvent(EventNames.API_ERROR));
       expect(getEventsSize(logger!)).toBe(1);
     });
 
-    it('should evict the oldest event when the queue is full', () => {
+    it("should evict the oldest event when the queue is full", () => {
       const { logger } = setup();
 
       for (let i = 0; i < TEST_ONLY.MAX_EVENTS; i++) {
@@ -397,7 +397,7 @@ describe('ClearcutLogger', () => {
       expect(events.length).toBe(TEST_ONLY.MAX_EVENTS);
       expect(events[0]).toHaveMetadataValue([
         EventMetadataKey.GEMINI_CLI_AI_ADDED_LINES,
-        '0',
+        "0",
       ]);
 
       // This should push out the first event
@@ -413,7 +413,7 @@ describe('ClearcutLogger', () => {
       expect(events.length).toBe(TEST_ONLY.MAX_EVENTS);
       expect(events[0]).toHaveMetadataValue([
         EventMetadataKey.GEMINI_CLI_AI_ADDED_LINES,
-        '1',
+        "1",
       ]);
 
       expect(events.at(TEST_ONLY.MAX_EVENTS - 1)).toHaveMetadataValue([
@@ -423,11 +423,11 @@ describe('ClearcutLogger', () => {
     });
   });
 
-  describe('flushToClearcut', () => {
-    it('allows for usage with a configured proxy agent', async () => {
+  describe("flushToClearcut", () => {
+    it("allows for usage with a configured proxy agent", async () => {
       const { logger } = setup({
         config: {
-          proxy: 'http://mycoolproxy.whatever.com:3128',
+          proxy: "http://mycoolproxy.whatever.com:3128",
         },
       });
 
@@ -438,7 +438,7 @@ describe('ClearcutLogger', () => {
       expect(response.nextRequestWaitMs).toBe(NEXT_WAIT_MS);
     });
 
-    it('should clear events on successful flush', async () => {
+    it("should clear events on successful flush", async () => {
       const { logger } = setup();
 
       logger!.enqueueLogEvent(logger!.createLogEvent(EventNames.API_ERROR));
@@ -448,7 +448,7 @@ describe('ClearcutLogger', () => {
       expect(response.nextRequestWaitMs).toBe(NEXT_WAIT_MS);
     });
 
-    it('should handle a network error and requeue events', async () => {
+    it("should handle a network error and requeue events", async () => {
       const { logger } = setup();
 
       server.resetHandlers(http.post(CLEARCUT_URL, () => HttpResponse.error()));
@@ -466,7 +466,7 @@ describe('ClearcutLogger', () => {
       expect(events[0]).toHaveEventName(EventNames.API_REQUEST);
     });
 
-    it('should handle an HTTP error and requeue events', async () => {
+    it("should handle an HTTP error and requeue events", async () => {
       const { logger } = setup();
 
       server.resetHandlers(
@@ -474,7 +474,7 @@ describe('ClearcutLogger', () => {
           CLEARCUT_URL,
           () =>
             new HttpResponse(
-              { 'the system is down': true },
+              { "the system is down": true },
               {
                 status: 500,
               },
@@ -494,8 +494,8 @@ describe('ClearcutLogger', () => {
     });
   });
 
-  describe('requeueFailedEvents logic', () => {
-    it('should limit the number of requeued events to max_retry_events', () => {
+  describe("requeueFailedEvents logic", () => {
+    it("should limit the number of requeued events to max_retry_events", () => {
       const { logger } = setup();
       const eventsToLogCount = TEST_ONLY.MAX_RETRY_EVENTS + 5;
       const eventsToSend: LogEventEntry[][] = [];
@@ -520,7 +520,7 @@ describe('ClearcutLogger', () => {
       );
     });
 
-    it('should not requeue more events than available space in the queue', () => {
+    it("should not requeue more events than available space in the queue", () => {
       const { logger } = setup();
       const maxEvents = TEST_ONLY.MAX_EVENTS;
       const spaceToLeave = 5;
@@ -554,7 +554,7 @@ describe('ClearcutLogger', () => {
       const firstRequeuedEvent = JSON.parse(
         getEvents(logger!)[0][0].source_extension_json,
       ) as { event_id: string };
-      expect(firstRequeuedEvent.event_id).toBe('failed_5');
+      expect(firstRequeuedEvent.event_id).toBe("failed_5");
     });
   });
 });

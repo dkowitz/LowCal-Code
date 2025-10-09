@@ -3,13 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { ToolResult } from './tools.js';
-import { BaseDeclarativeTool, BaseToolInvocation } from './tools.js';
-import type { Config } from '../config/config.js';
+import type { ToolResult } from "./tools.js";
+import { BaseDeclarativeTool, BaseToolInvocation } from "./tools.js";
+import type { Config } from "../config/config.js";
 export interface TodoItem {
     id: string;
     content: string;
-    status: 'pending' | 'in_progress' | 'completed';
+    status: "pending" | "in_progress" | "completed";
 }
 export interface TodoWriteParams {
     todos: TodoItem[];
@@ -19,7 +19,7 @@ export interface TodoWriteParams {
 declare class TodoWriteToolInvocation extends BaseToolInvocation<TodoWriteParams, ToolResult> {
     private readonly config;
     private operationType;
-    constructor(config: Config, params: TodoWriteParams, operationType?: 'create' | 'update');
+    constructor(config: Config, params: TodoWriteParams, operationType?: "create" | "update");
     getDescription(): string;
     shouldConfirmExecute(_abortSignal: AbortSignal): Promise<false>;
     execute(_signal: AbortSignal): Promise<ToolResult>;

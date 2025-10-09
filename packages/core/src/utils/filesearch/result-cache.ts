@@ -42,7 +42,7 @@ export class ResultCache {
     // from the results of the "foo" search.
     // This finds the most specific, already-cached query that is a prefix
     // of the current query.
-    let bestBaseQuery = '';
+    let bestBaseQuery = "";
     for (const key of this.cache?.keys?.() ?? []) {
       if (query.startsWith(key) && key.length > bestBaseQuery.length) {
         bestBaseQuery = key;

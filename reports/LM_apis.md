@@ -5,7 +5,7 @@
 
 ## User Message
 
-Use the web search tool to perform a deep research into the LM Studio api.  We need to know how to obtain the ctx size of loaded models.  Currently we do this for our OpenRouter models, and we display the context windows size in the available models list in the /models command.  Now we need to do that for the LM Studio models.  We currently use the v1/models endpoint to fetch the available models from LM Studio, but this doesn't provide extra details like ctx length.  I think there is a way to do it with the REST api, perhaps with a /v0/ endpoint.  Please do extensive web research and report your results.
+Use the web search tool to perform a deep research into the LM Studio api. We need to know how to obtain the ctx size of loaded models. Currently we do this for our OpenRouter models, and we display the context windows size in the available models list in the /models command. Now we need to do that for the LM Studio models. We currently use the v1/models endpoint to fetch the available models from LM Studio, but this doesn't provide extra details like ctx length. I think there is a way to do it with the REST api, perhaps with a /v0/ endpoint. Please do extensive web research and report your results.
 
 ---
 
@@ -122,6 +122,7 @@ Based on my research, I've found how to obtain the context window size (ctx leng
 ## Implementation Approach:
 
 For your codebase where you currently fetch models from LM Studio using the v1/models endpoint (which doesn't provide context window information), you'll need to modify your implementation to use one of these new endpoints:
+
 - Either call `GET /api/v0/models` to get all models with their context lengths
 - Or for each model, make a separate call to `GET /api/v0/models/{model}`
 
@@ -134,4 +135,3 @@ This will allow you to display the context window size in your `/models` command
 The API is already designed to provide this information through these endpoints, so no additional configuration or setup should be needed beyond making the appropriate HTTP requests.
 
 ---
-

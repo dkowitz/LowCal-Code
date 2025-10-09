@@ -112,15 +112,15 @@ export class SubagentStatistics {
         : 0;
     const lines = [
       `📋 Task Completed: ${taskDesc}`,
-      `🔧 Tool Usage: ${stats.totalToolCalls} calls${stats.totalToolCalls ? `, ${sr.toFixed(1)}% success` : ''}`,
+      `🔧 Tool Usage: ${stats.totalToolCalls} calls${stats.totalToolCalls ? `, ${sr.toFixed(1)}% success` : ""}`,
       `⏱️ Duration: ${this.fmtDuration(stats.totalDurationMs)} | 🔁 Rounds: ${stats.rounds}`,
     ];
-    if (typeof stats.totalTokens === 'number') {
+    if (typeof stats.totalTokens === "number") {
       lines.push(
-        `🔢 Tokens: ${stats.totalTokens.toLocaleString()}${stats.inputTokens || stats.outputTokens ? ` (in ${stats.inputTokens ?? 0}, out ${stats.outputTokens ?? 0})` : ''}`,
+        `🔢 Tokens: ${stats.totalTokens.toLocaleString()}${stats.inputTokens || stats.outputTokens ? ` (in ${stats.inputTokens ?? 0}, out ${stats.outputTokens ?? 0})` : ""}`,
       );
     }
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   formatDetailed(taskDesc: string, now = Date.now()): string {
@@ -136,22 +136,22 @@ export class SubagentStatistics {
       `⏱️ Duration: ${this.fmtDuration(stats.totalDurationMs)} | 🔁 Rounds: ${stats.rounds}`,
     );
     // Quality indicator
-    let quality = 'Poor execution';
-    if (sr >= 95) quality = 'Excellent execution';
-    else if (sr >= 85) quality = 'Good execution';
-    else if (sr >= 70) quality = 'Fair execution';
+    let quality = "Poor execution";
+    if (sr >= 95) quality = "Excellent execution";
+    else if (sr >= 85) quality = "Good execution";
+    else if (sr >= 70) quality = "Fair execution";
     lines.push(`✅ Quality: ${quality} (${sr.toFixed(1)}% tool success)`);
     // Speed category
     const d = stats.totalDurationMs;
-    let speed = 'Long execution - consider breaking down tasks';
-    if (d < 10_000) speed = 'Fast completion - under 10 seconds';
-    else if (d < 60_000) speed = 'Good speed - under a minute';
-    else if (d < 300_000) speed = 'Moderate duration - a few minutes';
+    let speed = "Long execution - consider breaking down tasks";
+    if (d < 10_000) speed = "Fast completion - under 10 seconds";
+    else if (d < 60_000) speed = "Good speed - under a minute";
+    else if (d < 300_000) speed = "Moderate duration - a few minutes";
     lines.push(`🚀 Speed: ${speed}`);
     lines.push(
       `🔧 Tools: ${stats.totalToolCalls} calls, ${sr.toFixed(1)}% success (${stats.successfulToolCalls} ok, ${stats.failedToolCalls} failed)`,
     );
-    if (typeof stats.totalTokens === 'number') {
+    if (typeof stats.totalTokens === "number") {
       lines.push(
         `🔢 Tokens: ${stats.totalTokens.toLocaleString()} (in ${stats.inputTokens ?? 0}, out ${stats.outputTokens ?? 0})`,
       );
@@ -160,23 +160,23 @@ export class SubagentStatistics {
       const sorted = [...stats.toolUsage]
         .sort((a, b) => b.count - a.count)
         .slice(0, 5);
-      lines.push('\nTop tools:');
+      lines.push("\nTop tools:");
       for (const t of sorted) {
         const avg =
-          typeof t.averageDurationMs === 'number'
+          typeof t.averageDurationMs === "number"
             ? `, avg ${this.fmtDuration(Math.round(t.averageDurationMs))}`
-            : '';
+            : "";
         lines.push(
-          ` - ${t.name}: ${t.count} calls (${t.success} ok, ${t.failure} fail${avg}${t.lastError ? `, last error: ${t.lastError}` : ''})`,
+          ` - ${t.name}: ${t.count} calls (${t.success} ok, ${t.failure} fail${avg}${t.lastError ? `, last error: ${t.lastError}` : ""})`,
         );
       }
     }
     const tips = this.generatePerformanceTips(stats);
     if (tips.length) {
-      lines.push('\n💡 Performance Insights:');
+      lines.push("\n💡 Performance Insights:");
       for (const tip of tips.slice(0, 3)) lines.push(` - ${tip}`);
     }
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
   private fmtDuration(ms: number): string {
@@ -203,19 +203,19 @@ export class SubagentStatistics {
 
     // High failure rate
     if (sr < 80)
-      tips.push('Low tool success rate - review inputs and error messages');
+      tips.push("Low tool success rate - review inputs and error messages");
 
     // Long duration
     if (stats.totalDurationMs > 60_000)
-      tips.push('Long execution time - consider breaking down complex tasks');
+      tips.push("Long execution time - consider breaking down complex tasks");
 
     // Token usage
-    if (typeof stats.totalTokens === 'number' && stats.totalTokens > 100_000) {
+    if (typeof stats.totalTokens === "number" && stats.totalTokens > 100_000) {
       tips.push(
-        'High token usage - consider optimizing prompts or narrowing scope',
+        "High token usage - consider optimizing prompts or narrowing scope",
       );
     }
-    if (typeof stats.totalTokens === 'number' && totalCalls > 0) {
+    if (typeof stats.totalTokens === "number" && totalCalls > 0) {
       const avgTokPerCall = stats.totalTokens / totalCalls;
       if (avgTokPerCall > 5_000)
         tips.push(
@@ -233,7 +233,7 @@ export class SubagentStatistics {
     );
     if (hadNetworkFailure)
       tips.push(
-        'Network operations had failures - consider increasing timeout or checking connectivity',
+        "Network operations had failures - consider increasing timeout or checking connectivity",
       );
 
     // Slow tools

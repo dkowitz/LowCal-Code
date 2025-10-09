@@ -17,21 +17,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { execSync } from 'node:child_process';
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
+import { execSync } from "node:child_process";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 
-if (!process.cwd().includes('packages')) {
-  console.error('must be invoked from a package directory');
+if (!process.cwd().includes("packages")) {
+  console.error("must be invoked from a package directory");
   process.exit(1);
 }
 
 // build typescript files
-execSync('tsc --build', { stdio: 'inherit' });
+execSync("tsc --build", { stdio: "inherit" });
 
 // copy .{md,json} files
-execSync('node ../../scripts/copy_files.js', { stdio: 'inherit' });
+execSync("node ../../scripts/copy_files.js", { stdio: "inherit" });
 
 // touch dist/.last_build
-writeFileSync(join(process.cwd(), 'dist', '.last_build'), '');
+writeFileSync(join(process.cwd(), "dist", ".last_build"), "");
 process.exit(0);

@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { type Config } from '../config/config.js';
-import { type Status } from '../core/coreToolScheduler.js';
-import { type ThoughtSummary } from '../core/turn.js';
-import { getProjectHash } from '../utils/paths.js';
-import path from 'node:path';
-import fs from 'node:fs';
-import { randomUUID } from 'node:crypto';
-import type { PartListUnion } from '@google/genai';
+import { type Config } from "../config/config.js";
+import { type Status } from "../core/coreToolScheduler.js";
+import { type ThoughtSummary } from "../core/turn.js";
+import { getProjectHash } from "../utils/paths.js";
+import path from "node:path";
+import fs from "node:fs";
+import { randomUUID } from "node:crypto";
+import type { PartListUnion } from "@google/genai";
 
 /**
  * Token usage summary for a message or conversation.
@@ -56,10 +56,10 @@ export interface ToolCallRecord {
  */
 export type ConversationRecordExtra =
   | {
-      type: 'user';
+      type: "user";
     }
   | {
-      type: 'gemini';
+      type: "gemini";
       toolCalls?: ToolCallRecord[];
       thoughts?: Array<ThoughtSummary & { timestamp: string }>;
       tokens?: TokensSummary | null;
@@ -138,14 +138,14 @@ export class ChatRecordingService {
         // Create new session
         const chatsDir = path.join(
           this.config.storage.getProjectTempDir(),
-          'chats',
+          "chats",
         );
         fs.mkdirSync(chatsDir, { recursive: true });
 
         const timestamp = new Date()
           .toISOString()
           .slice(0, 16)
-          .replace(/:/g, '-');
+          .replace(/:/g, "-");
         const filename = `session-${timestamp}-${this.sessionId.slice(
           0,
           8,
@@ -165,7 +165,7 @@ export class ChatRecordingService {
       this.queuedThoughts = [];
       this.queuedTokens = null;
     } catch (error) {
-      console.error('Error initializing chat recording service:', error);
+      console.error("Error initializing chat recording service:", error);
       throw error;
     }
   }
@@ -177,7 +177,7 @@ export class ChatRecordingService {
   }
 
   private newMessage(
-    type: ConversationRecordExtra['type'],
+    type: ConversationRecordExtra["type"],
     content: string,
   ): MessageRecord {
     return {
@@ -192,7 +192,7 @@ export class ChatRecordingService {
    * Records a message in the conversation.
    */
   recordMessage(message: {
-    type: ConversationRecordExtra['type'];
+    type: ConversationRecordExtra["type"];
     content: string;
     append?: boolean;
   }): void {
@@ -210,7 +210,7 @@ export class ChatRecordingService {
         // We're not appending, or we are appending but the last message's type is not the same as
         // the specified type, so just create a new message.
         const msg = this.newMessage(message.type, message.content);
-        if (msg.type === 'gemini') {
+        if (msg.type === "gemini") {
           // If it's a new Gemini message then incorporate any queued thoughts.
           conversation.messages.push({
             ...msg,
@@ -226,7 +226,7 @@ export class ChatRecordingService {
         }
       });
     } catch (error) {
-      console.error('Error saving message:', error);
+      console.error("Error saving message:", error);
       throw error;
     }
   }
@@ -244,7 +244,7 @@ export class ChatRecordingService {
       });
     } catch (error) {
       if (this.config.getDebugMode()) {
-        console.error('Error saving thought:', error);
+        console.error("Error saving thought:", error);
         throw error;
       }
     }
@@ -268,7 +268,7 @@ export class ChatRecordingService {
         const lastMsg = this.getLastMessage(conversation);
         // If the last message already has token info, it's because this new token info is for a
         // new message that hasn't been recorded yet.
-        if (lastMsg && lastMsg.type === 'gemini' && !lastMsg.tokens) {
+        if (lastMsg && lastMsg.type === "gemini" && !lastMsg.tokens) {
           lastMsg.tokens = tokens;
           this.queuedTokens = null;
         } else {
@@ -276,7 +276,7 @@ export class ChatRecordingService {
         }
       });
     } catch (error) {
-      console.error('Error updating message tokens:', error);
+      console.error("Error updating message tokens:", error);
       throw error;
     }
   }
@@ -299,16 +299,16 @@ export class ChatRecordingService {
         // message from tool calls, when we dequeued the thoughts.
         if (
           !lastMsg ||
-          lastMsg.type !== 'gemini' ||
+          lastMsg.type !== "gemini" ||
           this.queuedThoughts.length > 0
         ) {
           const newMsg: MessageRecord = {
-            ...this.newMessage('gemini' as const, ''),
+            ...this.newMessage("gemini" as const, ""),
             // This isn't strictly necessary, but TypeScript apparently can't
             // tell that the first parameter to newMessage() becomes the
             // resulting message's type, and so it thinks that toolCalls may
             // not be present.  Confirming the type here satisfies it.
-            type: 'gemini' as const,
+            type: "gemini" as const,
             toolCalls,
             thoughts: this.queuedThoughts,
             model: this.config.getModel(),
@@ -357,7 +357,7 @@ export class ChatRecordingService {
         }
       });
     } catch (error) {
-      console.error('Error adding tool call to message:', error);
+      console.error("Error adding tool call to message:", error);
       throw error;
     }
   }
@@ -367,11 +367,11 @@ export class ChatRecordingService {
    */
   private readConversation(): ConversationRecord {
     try {
-      this.cachedLastConvData = fs.readFileSync(this.conversationFile!, 'utf8');
+      this.cachedLastConvData = fs.readFileSync(this.conversationFile!, "utf8");
       return JSON.parse(this.cachedLastConvData);
     } catch (error) {
-      if ((error as NodeJS.ErrnoException).code !== 'ENOENT') {
-        console.error('Error reading conversation file:', error);
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        console.error("Error reading conversation file:", error);
         throw error;
       }
 
@@ -403,7 +403,7 @@ export class ChatRecordingService {
         fs.writeFileSync(this.conversationFile, newContent);
       }
     } catch (error) {
-      console.error('Error writing conversation file:', error);
+      console.error("Error writing conversation file:", error);
       throw error;
     }
   }
@@ -427,12 +427,12 @@ export class ChatRecordingService {
     try {
       const chatsDir = path.join(
         this.config.storage.getProjectTempDir(),
-        'chats',
+        "chats",
       );
       const sessionPath = path.join(chatsDir, `${sessionId}.json`);
       fs.unlinkSync(sessionPath);
     } catch (error) {
-      console.error('Error deleting session:', error);
+      console.error("Error deleting session:", error);
       throw error;
     }
   }

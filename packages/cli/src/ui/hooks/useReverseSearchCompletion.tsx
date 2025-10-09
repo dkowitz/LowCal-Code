@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useEffect, useCallback } from 'react';
-import { useCompletion } from './useCompletion.js';
-import type { TextBuffer } from '../components/shared/text-buffer.js';
-import type { Suggestion } from '../components/SuggestionsDisplay.js';
+import { useEffect, useCallback } from "react";
+import { useCompletion } from "./useCompletion.js";
+import type { TextBuffer } from "../components/shared/text-buffer.js";
+import type { Suggestion } from "../components/SuggestionsDisplay.js";
 
 export interface UseReverseSearchCompletionReturn {
   suggestions: Suggestion[];

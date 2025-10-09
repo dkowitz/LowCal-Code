@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type React from 'react';
-import type { SpinnerName } from 'cli-spinners';
+import type React from "react";
+import type { SpinnerName } from "cli-spinners";
 interface GeminiRespondingSpinnerProps {
     /**
      * Optional string to display when not in Responding state.

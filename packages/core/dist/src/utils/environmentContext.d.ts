@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Part } from '@google/genai';
-import type { Config } from '../config/config.js';
+import type { Part } from "@google/genai";
+import type { Config } from "../config/config.js";
 /**
  * Generates a string describing the current workspace directories and their structures.
  * @param {Config} config - The runtime configuration and services.

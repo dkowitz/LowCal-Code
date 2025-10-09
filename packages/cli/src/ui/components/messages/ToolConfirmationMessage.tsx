@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Box, Text } from 'ink';
-import { DiffRenderer } from './DiffRenderer.js';
-import { Colors } from '../../colors.js';
-import { RenderInline } from '../../utils/InlineMarkdownRenderer.js';
-import { MarkdownDisplay } from '../../utils/MarkdownDisplay.js';
+import type React from "react";
+import { Box, Text } from "ink";
+import { DiffRenderer } from "./DiffRenderer.js";
+import { Colors } from "../../colors.js";
+import { RenderInline } from "../../utils/InlineMarkdownRenderer.js";
+import { MarkdownDisplay } from "../../utils/MarkdownDisplay.js";
 import type {
   ToolCallConfirmationDetails,
   ToolExecuteConfirmationDetails,
   ToolMcpConfirmationDetails,
   Config,
-} from '@qwen-code/qwen-code-core';
-import { ToolConfirmationOutcome } from '@qwen-code/qwen-code-core';
-import type { RadioSelectItem } from '../shared/RadioButtonSelect.js';
-import { RadioButtonSelect } from '../shared/RadioButtonSelect.js';
-import { MaxSizedBox } from '../shared/MaxSizedBox.js';
-import { useKeypress } from '../../hooks/useKeypress.js';
+} from "@qwen-code/qwen-code-core";
+import { ToolConfirmationOutcome } from "@qwen-code/qwen-code-core";
+import type { RadioSelectItem } from "../shared/RadioButtonSelect.js";
+import { RadioButtonSelect } from "../shared/RadioButtonSelect.js";
+import { MaxSizedBox } from "../shared/MaxSizedBox.js";
+import { useKeypress } from "../../hooks/useKeypress.js";
 
 export interface ToolConfirmationMessageProps {
   confirmationDetails: ToolCallConfirmationDetails;
@@ -45,11 +45,11 @@ export const ToolConfirmationMessage: React.FC<
   const childWidth = terminalWidth - 2; // 2 for padding
 
   const handleConfirm = async (outcome: ToolConfirmationOutcome) => {
-    if (confirmationDetails.type === 'edit') {
+    if (confirmationDetails.type === "edit") {
       const ideClient = config.getIdeClient();
       if (config.getIdeMode()) {
         const cliOutcome =
-          outcome === ToolConfirmationOutcome.Cancel ? 'rejected' : 'accepted';
+          outcome === ToolConfirmationOutcome.Cancel ? "rejected" : "accepted";
         await ideClient?.resolveDiffFromCli(
           confirmationDetails.filePath,
           cliOutcome,
@@ -64,7 +64,7 @@ export const ToolConfirmationMessage: React.FC<
   useKeypress(
     (key) => {
       if (!isFocused) return;
-      if (key.name === 'escape' || (key.ctrl && key.name === 'c')) {
+      if (key.name === "escape" || (key.ctrl && key.name === "c")) {
         handleConfirm(ToolConfirmationOutcome.Cancel);
       }
     },
@@ -77,15 +77,15 @@ export const ToolConfirmationMessage: React.FC<
   if (compactMode) {
     const compactOptions: Array<RadioSelectItem<ToolConfirmationOutcome>> = [
       {
-        label: 'Yes, allow once',
+        label: "Yes, allow once",
         value: ToolConfirmationOutcome.ProceedOnce,
       },
       {
-        label: 'Allow always',
+        label: "Allow always",
         value: ToolConfirmationOutcome.ProceedAlways,
       },
       {
-        label: 'No',
+        label: "No",
         value: ToolConfirmationOutcome.Cancel,
       },
     ];
@@ -120,7 +120,7 @@ export const ToolConfirmationMessage: React.FC<
   function availableBodyContentHeight() {
     if (options.length === 0) {
       // This should not happen in practice as options are always added before this is called.
-      throw new Error('Options not provided for confirmation message');
+      throw new Error("Options not provided for confirmation message");
     }
 
     if (availableTerminalHeight === undefined) {
@@ -144,7 +144,7 @@ export const ToolConfirmationMessage: React.FC<
     return Math.max(availableTerminalHeight - surroundingElementsHeight, 1);
   }
 
-  if (confirmationDetails.type === 'edit') {
+  if (confirmationDetails.type === "edit") {
     if (confirmationDetails.isModifying) {
       return (
         <Box
@@ -165,27 +165,27 @@ export const ToolConfirmationMessage: React.FC<
 
     question = `Apply this change?`;
     options.push({
-      label: 'Yes, allow once',
+      label: "Yes, allow once",
       value: ToolConfirmationOutcome.ProceedOnce,
     });
     if (isTrustedFolder) {
       options.push({
-        label: 'Yes, allow always',
+        label: "Yes, allow always",
         value: ToolConfirmationOutcome.ProceedAlways,
       });
     }
     if (config.getIdeMode()) {
       options.push({
-        label: 'No (esc)',
+        label: "No (esc)",
         value: ToolConfirmationOutcome.Cancel,
       });
     } else {
       options.push({
-        label: 'Modify with external editor',
+        label: "Modify with external editor",
         value: ToolConfirmationOutcome.ModifyWithEditor,
       });
       options.push({
-        label: 'No, suggest changes (esc)',
+        label: "No, suggest changes (esc)",
         value: ToolConfirmationOutcome.Cancel,
       });
     }
@@ -198,13 +198,13 @@ export const ToolConfirmationMessage: React.FC<
         terminalWidth={childWidth}
       />
     );
-  } else if (confirmationDetails.type === 'exec') {
+  } else if (confirmationDetails.type === "exec") {
     const executionProps =
       confirmationDetails as ToolExecuteConfirmationDetails;
 
     question = `Allow execution of: '${executionProps.rootCommand}'?`;
     options.push({
-      label: 'Yes, allow once',
+      label: "Yes, allow once",
       value: ToolConfirmationOutcome.ProceedOnce,
     });
     if (isTrustedFolder) {
@@ -214,7 +214,7 @@ export const ToolConfirmationMessage: React.FC<
       });
     }
     options.push({
-      label: 'No, suggest changes (esc)',
+      label: "No, suggest changes (esc)",
       value: ToolConfirmationOutcome.Cancel,
     });
 
@@ -236,20 +236,20 @@ export const ToolConfirmationMessage: React.FC<
         </Box>
       </Box>
     );
-  } else if (confirmationDetails.type === 'plan') {
+  } else if (confirmationDetails.type === "plan") {
     const planProps = confirmationDetails;
 
     question = planProps.title;
     options.push({
-      label: 'Yes, and auto-accept edits',
+      label: "Yes, and auto-accept edits",
       value: ToolConfirmationOutcome.ProceedAlways,
     });
     options.push({
-      label: 'Yes, and manually approve edits',
+      label: "Yes, and manually approve edits",
       value: ToolConfirmationOutcome.ProceedOnce,
     });
     options.push({
-      label: 'No, keep planning (esc)',
+      label: "No, keep planning (esc)",
       value: ToolConfirmationOutcome.Cancel,
     });
 
@@ -263,7 +263,7 @@ export const ToolConfirmationMessage: React.FC<
         />
       </Box>
     );
-  } else if (confirmationDetails.type === 'info') {
+  } else if (confirmationDetails.type === "info") {
     const infoProps = confirmationDetails;
     const displayUrls =
       infoProps.urls &&
@@ -271,17 +271,17 @@ export const ToolConfirmationMessage: React.FC<
 
     question = `Do you want to proceed?`;
     options.push({
-      label: 'Yes, allow once',
+      label: "Yes, allow once",
       value: ToolConfirmationOutcome.ProceedOnce,
     });
     if (isTrustedFolder) {
       options.push({
-        label: 'Yes, allow always',
+        label: "Yes, allow always",
         value: ToolConfirmationOutcome.ProceedAlways,
       });
     }
     options.push({
-      label: 'No, suggest changes (esc)',
+      label: "No, suggest changes (esc)",
       value: ToolConfirmationOutcome.Cancel,
     });
 
@@ -295,7 +295,7 @@ export const ToolConfirmationMessage: React.FC<
             <Text>URLs to fetch:</Text>
             {infoProps.urls.map((url) => (
               <Text key={url}>
-                {' '}
+                {" "}
                 - <RenderInline text={url} />
               </Text>
             ))}
@@ -316,7 +316,7 @@ export const ToolConfirmationMessage: React.FC<
 
     question = `Allow execution of MCP tool "${mcpProps.toolName}" from server "${mcpProps.serverName}"?`;
     options.push({
-      label: 'Yes, allow once',
+      label: "Yes, allow once",
       value: ToolConfirmationOutcome.ProceedOnce,
     });
     if (isTrustedFolder) {
@@ -330,7 +330,7 @@ export const ToolConfirmationMessage: React.FC<
       });
     }
     options.push({
-      label: 'No, suggest changes (esc)',
+      label: "No, suggest changes (esc)",
       value: ToolConfirmationOutcome.Cancel,
     });
   }

@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { FileFilteringOptions } from '@qwen-code/qwen-code-core';
-import { Config, FileDiscoveryService } from '@qwen-code/qwen-code-core';
-import type { Settings } from './settings.js';
-import type { Extension } from './extension.js';
+import type { FileFilteringOptions } from "@qwen-code/qwen-code-core";
+import { Config, FileDiscoveryService } from "@qwen-code/qwen-code-core";
+import type { Settings } from "./settings.js";
+import type { Extension } from "./extension.js";
 export interface CliArgs {
     model: string | undefined;
     sandbox: boolean | string | undefined;
@@ -40,7 +40,7 @@ export interface CliArgs {
     vlmSwitchMode: string | undefined;
 }
 export declare function parseArguments(settings: Settings): Promise<CliArgs>;
-export declare function loadHierarchicalGeminiMemory(currentWorkingDirectory: string, includeDirectoriesToReadGemini: readonly string[] | undefined, debugMode: boolean, fileService: FileDiscoveryService, settings: Settings, extensionContextFilePaths?: string[], memoryImportFormat?: 'flat' | 'tree', fileFilteringOptions?: FileFilteringOptions): Promise<{
+export declare function loadHierarchicalGeminiMemory(currentWorkingDirectory: string, includeDirectoriesToReadGemini: readonly string[] | undefined, debugMode: boolean, fileService: FileDiscoveryService, settings: Settings, extensionContextFilePaths?: string[], memoryImportFormat?: "flat" | "tree", fileFilteringOptions?: FileFilteringOptions): Promise<{
     memoryContent: string;
     fileCount: number;
 }>;

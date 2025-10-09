@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { LoadedSettings } from '../config/settings.js';
-import { SettingScope } from '../config/settings.js';
-import { settingExistsInScope } from './settingsUtils.js';
+import type { LoadedSettings } from "../config/settings.js";
+import { SettingScope } from "../config/settings.js";
+import { settingExistsInScope } from "./settingsUtils.js";
 
 /**
  * Shared scope labels for dialog components that need to display setting scopes
  */
 export const SCOPE_LABELS = {
-  [SettingScope.User]: 'User Settings',
-  [SettingScope.Workspace]: 'Workspace Settings',
-  [SettingScope.System]: 'System Settings',
+  [SettingScope.User]: "User Settings",
+  [SettingScope.Workspace]: "Workspace Settings",
+  [SettingScope.System]: "System Settings",
 } as const;
 
 /**
@@ -49,10 +49,10 @@ export function getScopeMessageForSetting(
   });
 
   if (modifiedInOtherScopes.length === 0) {
-    return '';
+    return "";
   }
 
-  const modifiedScopesStr = modifiedInOtherScopes.join(', ');
+  const modifiedScopesStr = modifiedInOtherScopes.join(", ");
   const currentScopeSettings = settings.forScope(selectedScope).settings;
   const existsInCurrentScope = settingExistsInScope(
     settingKey,

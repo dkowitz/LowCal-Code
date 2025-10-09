@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from "vitest";
 import {
   createIdeContextStore,
   FileSchema,
   IdeContextSchema,
-} from './ideContext.js';
+} from "./ideContext.js";
 
-describe('ideContext', () => {
-  describe('createIdeContextStore', () => {
+describe("ideContext", () => {
+  describe("createIdeContextStore", () => {
     let ideContext: ReturnType<typeof createIdeContextStore>;
 
     beforeEach(() => {
@@ -20,18 +20,18 @@ describe('ideContext', () => {
       ideContext = createIdeContextStore();
     });
 
-    it('should return undefined initially for ide context', () => {
+    it("should return undefined initially for ide context", () => {
       expect(ideContext.getIdeContext()).toBeUndefined();
     });
 
-    it('should set and retrieve the ide context', () => {
+    it("should set and retrieve the ide context", () => {
       const testFile = {
         workspaceState: {
           openFiles: [
             {
-              path: '/path/to/test/file.ts',
+              path: "/path/to/test/file.ts",
               isActive: true,
-              selectedText: '1234',
+              selectedText: "1234",
               timestamp: 0,
             },
           ],
@@ -44,14 +44,14 @@ describe('ideContext', () => {
       expect(activeFile).toEqual(testFile);
     });
 
-    it('should update the ide context when called multiple times', () => {
+    it("should update the ide context when called multiple times", () => {
       const firstFile = {
         workspaceState: {
           openFiles: [
             {
-              path: '/path/to/first.js',
+              path: "/path/to/first.js",
               isActive: true,
-              selectedText: '1234',
+              selectedText: "1234",
               timestamp: 0,
             },
           ],
@@ -63,7 +63,7 @@ describe('ideContext', () => {
         workspaceState: {
           openFiles: [
             {
-              path: '/path/to/second.py',
+              path: "/path/to/second.py",
               isActive: true,
               cursor: { line: 20, character: 30 },
               timestamp: 0,
@@ -77,14 +77,14 @@ describe('ideContext', () => {
       expect(activeFile).toEqual(secondFile);
     });
 
-    it('should handle empty string for file path', () => {
+    it("should handle empty string for file path", () => {
       const testFile = {
         workspaceState: {
           openFiles: [
             {
-              path: '',
+              path: "",
               isActive: true,
-              selectedText: '1234',
+              selectedText: "1234",
               timestamp: 0,
             },
           ],
@@ -94,7 +94,7 @@ describe('ideContext', () => {
       expect(ideContext.getIdeContext()).toEqual(testFile);
     });
 
-    it('should notify subscribers when ide context changes', () => {
+    it("should notify subscribers when ide context changes", () => {
       const subscriber1 = vi.fn();
       const subscriber2 = vi.fn();
 
@@ -105,7 +105,7 @@ describe('ideContext', () => {
         workspaceState: {
           openFiles: [
             {
-              path: '/path/to/subscribed.ts',
+              path: "/path/to/subscribed.ts",
               isActive: true,
               cursor: { line: 15, character: 25 },
               timestamp: 0,
@@ -125,9 +125,9 @@ describe('ideContext', () => {
         workspaceState: {
           openFiles: [
             {
-              path: '/path/to/new.js',
+              path: "/path/to/new.js",
               isActive: true,
-              selectedText: '1234',
+              selectedText: "1234",
               timestamp: 0,
             },
           ],
@@ -141,7 +141,7 @@ describe('ideContext', () => {
       expect(subscriber2).toHaveBeenCalledWith(newFile);
     });
 
-    it('should stop notifying a subscriber after unsubscribe', () => {
+    it("should stop notifying a subscriber after unsubscribe", () => {
       const subscriber1 = vi.fn();
       const subscriber2 = vi.fn();
 
@@ -152,9 +152,9 @@ describe('ideContext', () => {
         workspaceState: {
           openFiles: [
             {
-              path: '/path/to/file1.txt',
+              path: "/path/to/file1.txt",
               isActive: true,
-              selectedText: '1234',
+              selectedText: "1234",
               timestamp: 0,
             },
           ],
@@ -169,9 +169,9 @@ describe('ideContext', () => {
         workspaceState: {
           openFiles: [
             {
-              path: '/path/to/file2.txt',
+              path: "/path/to/file2.txt",
               isActive: true,
-              selectedText: '1234',
+              selectedText: "1234",
               timestamp: 0,
             },
           ],
@@ -181,14 +181,14 @@ describe('ideContext', () => {
       expect(subscriber2).toHaveBeenCalledTimes(2);
     });
 
-    it('should clear the ide context', () => {
+    it("should clear the ide context", () => {
       const testFile = {
         workspaceState: {
           openFiles: [
             {
-              path: '/path/to/test/file.ts',
+              path: "/path/to/test/file.ts",
               isActive: true,
-              selectedText: '1234',
+              selectedText: "1234",
               timestamp: 0,
             },
           ],
@@ -205,22 +205,22 @@ describe('ideContext', () => {
     });
   });
 
-  describe('FileSchema', () => {
-    it('should validate a file with only required fields', () => {
+  describe("FileSchema", () => {
+    it("should validate a file with only required fields", () => {
       const file = {
-        path: '/path/to/file.ts',
+        path: "/path/to/file.ts",
         timestamp: 12345,
       };
       const result = FileSchema.safeParse(file);
       expect(result.success).toBe(true);
     });
 
-    it('should validate a file with all fields', () => {
+    it("should validate a file with all fields", () => {
       const file = {
-        path: '/path/to/file.ts',
+        path: "/path/to/file.ts",
         timestamp: 12345,
         isActive: true,
-        selectedText: 'const x = 1;',
+        selectedText: "const x = 1;",
         cursor: {
           line: 10,
           character: 20,
@@ -230,7 +230,7 @@ describe('ideContext', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should fail validation if path is missing', () => {
+    it("should fail validation if path is missing", () => {
       const file = {
         timestamp: 12345,
       };
@@ -238,23 +238,23 @@ describe('ideContext', () => {
       expect(result.success).toBe(false);
     });
 
-    it('should fail validation if timestamp is missing', () => {
+    it("should fail validation if timestamp is missing", () => {
       const file = {
-        path: '/path/to/file.ts',
+        path: "/path/to/file.ts",
       };
       const result = FileSchema.safeParse(file);
       expect(result.success).toBe(false);
     });
   });
 
-  describe('IdeContextSchema', () => {
-    it('should validate an empty context', () => {
+  describe("IdeContextSchema", () => {
+    it("should validate an empty context", () => {
       const context = {};
       const result = IdeContextSchema.safeParse(context);
       expect(result.success).toBe(true);
     });
 
-    it('should validate a context with an empty workspaceState', () => {
+    it("should validate a context with an empty workspaceState", () => {
       const context = {
         workspaceState: {},
       };
@@ -262,7 +262,7 @@ describe('ideContext', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate a context with an empty openFiles array', () => {
+    it("should validate a context with an empty openFiles array", () => {
       const context = {
         workspaceState: {
           openFiles: [],
@@ -272,12 +272,12 @@ describe('ideContext', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should validate a context with a valid file', () => {
+    it("should validate a context with a valid file", () => {
       const context = {
         workspaceState: {
           openFiles: [
             {
-              path: '/path/to/file.ts',
+              path: "/path/to/file.ts",
               timestamp: 12345,
             },
           ],
@@ -287,7 +287,7 @@ describe('ideContext', () => {
       expect(result.success).toBe(true);
     });
 
-    it('should fail validation with an invalid file', () => {
+    it("should fail validation with an invalid file", () => {
       const context = {
         workspaceState: {
           openFiles: [

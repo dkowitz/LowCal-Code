@@ -14,34 +14,34 @@ import type {
   SendMessageParameters,
   Part,
   Tool,
-} from '@google/genai';
-import { createUserContent } from '@google/genai';
-import { retryWithBackoff, type RetryClassification } from '../utils/retry.js';
-import type { ContentGenerator } from './contentGenerator.js';
-import { AuthType } from './contentGenerator.js';
-import type { Config } from '../config/config.js';
-import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
-import { hasCycleInSchema } from '../tools/tools.js';
-import type { StructuredError } from './turn.js';
+} from "@google/genai";
+import { createUserContent } from "@google/genai";
+import { retryWithBackoff, type RetryClassification } from "../utils/retry.js";
+import type { ContentGenerator } from "./contentGenerator.js";
+import { AuthType } from "./contentGenerator.js";
+import type { Config } from "../config/config.js";
+import { DEFAULT_GEMINI_FLASH_MODEL } from "../config/models.js";
+import { hasCycleInSchema } from "../tools/tools.js";
+import type { StructuredError } from "./turn.js";
 import {
   logContentRetry,
   logContentRetryFailure,
   logInvalidChunk,
-} from '../telemetry/loggers.js';
+} from "../telemetry/loggers.js";
 import {
   ContentRetryEvent,
   ContentRetryFailureEvent,
   InvalidChunkEvent,
-} from '../telemetry/types.js';
-import { getProviderTelemetryTag } from '../utils/providerTelemetry.js';
-import { IdleStreamTimeoutError } from '../utils/networkErrors.js';
+} from "../telemetry/types.js";
+import { getProviderTelemetryTag } from "../utils/providerTelemetry.js";
+import { IdleStreamTimeoutError } from "../utils/networkErrors.js";
 
 export enum StreamEventType {
   /** A regular content chunk from the API. */
-  CHUNK = 'chunk',
+  CHUNK = "chunk",
   /** A signal that a retry is about to happen. The UI should discard any partial
    * content from the attempt that just failed. */
-  RETRY = 'retry',
+  RETRY = "retry",
 }
 
 export type StreamEvent =
@@ -68,14 +68,14 @@ const LM_STUDIO_STREAM_IDLE_TIMEOUT_MS = 0;
 
 function resolveStreamIdleTimeout(config: Config): number {
   const providerTag = getProviderTelemetryTag(config);
-  if (providerTag === 'lmstudio') {
+  if (providerTag === "lmstudio") {
     return LM_STUDIO_STREAM_IDLE_TIMEOUT_MS;
   }
   const generatorConfig = config.getContentGeneratorConfig();
-  const baseUrl = generatorConfig?.baseUrl ?? '';
+  const baseUrl = generatorConfig?.baseUrl ?? "";
   if (
-    baseUrl.includes('127.0.0.1:1234') ||
-    baseUrl.includes('localhost:1234')
+    baseUrl.includes("127.0.0.1:1234") ||
+    baseUrl.includes("localhost:1234")
   ) {
     return LM_STUDIO_STREAM_IDLE_TIMEOUT_MS;
   }
@@ -117,7 +117,7 @@ function isValidContent(content: Content): boolean {
     if (
       !part.thought &&
       part.text !== undefined &&
-      part.text === '' &&
+      part.text === "" &&
       part.functionCall === undefined
     ) {
       return false;
@@ -134,7 +134,7 @@ function isValidContent(content: Content): boolean {
  */
 function validateHistory(history: Content[]) {
   for (const content of history) {
-    if (content.role !== 'user' && content.role !== 'model') {
+    if (content.role !== "user" && content.role !== "model") {
       throw new Error(`Role must be user or model, but got ${content.role}.`);
     }
   }
@@ -156,13 +156,13 @@ function extractCuratedHistory(comprehensiveHistory: Content[]): Content[] {
   const length = comprehensiveHistory.length;
   let i = 0;
   while (i < length) {
-    if (comprehensiveHistory[i].role === 'user') {
+    if (comprehensiveHistory[i].role === "user") {
       curatedHistory.push(comprehensiveHistory[i]);
       i++;
     } else {
       const modelOutput: Content[] = [];
       let isValid = true;
-      while (i < length && comprehensiveHistory[i].role === 'model') {
+      while (i < length && comprehensiveHistory[i].role === "model") {
         modelOutput.push(comprehensiveHistory[i]);
         if (isValid && !isValidContent(comprehensiveHistory[i])) {
           isValid = false;
@@ -184,7 +184,7 @@ function extractCuratedHistory(comprehensiveHistory: Content[]): Content[] {
 export class EmptyStreamError extends Error {
   constructor(message: string) {
     super(message);
-    this.name = 'EmptyStreamError';
+    this.name = "EmptyStreamError";
   }
 }
 
@@ -241,7 +241,7 @@ export class GeminiChat {
 
     // Check if config has a fallback handler (set by CLI package)
     const fallbackHandler = this.config.flashFallbackHandler;
-    if (typeof fallbackHandler === 'function') {
+    if (typeof fallbackHandler === "function") {
       try {
         const accepted = await fallbackHandler(
           currentModel,
@@ -258,7 +258,7 @@ export class GeminiChat {
           return null; // Model was switched but don't continue with current prompt
         }
       } catch (error) {
-        console.warn('Flash fallback handler failed:', error);
+        console.warn("Flash fallback handler failed:", error);
       }
     }
 
@@ -316,7 +316,7 @@ export class GeminiChat {
           modelToUse === DEFAULT_GEMINI_FLASH_MODEL
         ) {
           throw new Error(
-            'Please submit a new query to continue with the Flash model.',
+            "Please submit a new query to continue with the Flash model.",
           );
         }
 
@@ -335,7 +335,7 @@ export class GeminiChat {
           // Check for known error messages and codes.
           if (error instanceof Error && error.message) {
             if (isSchemaDepthError(error.message)) return false;
-            if (error.message.includes('429')) return true;
+            if (error.message.includes("429")) return true;
             if (error.message.match(/5\d{2}/)) return true;
           }
           return false; // Don't retry other errors by default
@@ -353,7 +353,7 @@ export class GeminiChat {
             this.config,
             new ContentRetryEvent(
               context.attempt,
-              error.name ?? 'Error',
+              error.name ?? "Error",
               Math.round(context.delayMs),
               {
                 classification: context.classification,
@@ -402,7 +402,7 @@ export class GeminiChat {
           this.config,
           new ContentRetryFailureEvent(
             lastRetryMetadata.attempt,
-            error instanceof Error ? error.name : 'UnknownError',
+            error instanceof Error ? error.name : "UnknownError",
             undefined,
             {
               final_classification: lastRetryMetadata.classification,
@@ -465,7 +465,7 @@ export class GeminiChat {
     const self = this;
     return (async function* () {
       try {
-        let lastError: unknown = new Error('Request failed after all retries.');
+        let lastError: unknown = new Error("Request failed after all retries.");
 
         for (
           let attempt = 0;
@@ -504,13 +504,11 @@ export class GeminiChat {
                   new ContentRetryEvent(
                     attempt,
                     isIdleStreamError
-                      ? 'IdleStreamTimeoutError'
-                      : 'EmptyStreamError',
+                      ? "IdleStreamTimeoutError"
+                      : "EmptyStreamError",
                     INVALID_CONTENT_RETRY_OPTIONS.initialDelayMs,
                     {
-                      classification: isIdleStreamError
-                        ? 'network'
-                        : 'unknown',
+                      classification: isIdleStreamError ? "network" : "unknown",
                       provider: providerTag,
                       error_message:
                         error instanceof Error ? error.message : String(error),
@@ -541,14 +539,14 @@ export class GeminiChat {
               new ContentRetryFailureEvent(
                 INVALID_CONTENT_RETRY_OPTIONS.maxAttempts,
                 lastError instanceof IdleStreamTimeoutError
-                  ? 'IdleStreamTimeoutError'
-                  : 'EmptyStreamError',
+                  ? "IdleStreamTimeoutError"
+                  : "EmptyStreamError",
                 undefined,
                 {
                   final_classification:
                     lastError instanceof IdleStreamTimeoutError
-                      ? 'network'
-                      : 'unknown',
+                      ? "network"
+                      : "unknown",
                   provider: providerTag,
                   error_message:
                     lastError instanceof Error
@@ -592,7 +590,7 @@ export class GeminiChat {
         modelToUse === DEFAULT_GEMINI_FLASH_MODEL
       ) {
         throw new Error(
-          'Please submit a new query to continue with the Flash model.',
+          "Please submit a new query to continue with the Flash model.",
         );
       }
 
@@ -611,7 +609,7 @@ export class GeminiChat {
         shouldRetry: (error: unknown) => {
           if (error instanceof Error && error.message) {
             if (isSchemaDepthError(error.message)) return false;
-            if (error.message.includes('429')) return true;
+            if (error.message.includes("429")) return true;
             if (error.message.match(/^5\d{2}/)) return true;
           }
           return false;
@@ -629,7 +627,7 @@ export class GeminiChat {
             this.config,
             new ContentRetryEvent(
               context.attempt,
-              error.name ?? 'Error',
+              error.name ?? "Error",
               Math.round(context.delayMs),
               {
                 classification: context.classification,
@@ -655,7 +653,7 @@ export class GeminiChat {
           this.config,
           new ContentRetryFailureEvent(
             lastRetryMetadata.attempt,
-            error instanceof Error ? error.name : 'UnknownError',
+            error instanceof Error ? error.name : "UnknownError",
             undefined,
             {
               final_classification: lastRetryMetadata.classification,
@@ -795,7 +793,7 @@ export class GeminiChat {
       } else {
         logInvalidChunk(
           this.config,
-          new InvalidChunkEvent('Invalid chunk received from stream.'),
+          new InvalidChunkEvent("Invalid chunk received from stream."),
         );
         lastChunkIsInvalid = true;
       }
@@ -803,7 +801,7 @@ export class GeminiChat {
     }
 
     if (!hasReceivedAnyChunk) {
-      throw new EmptyStreamError('Model stream completed without any chunks.');
+      throw new EmptyStreamError("Model stream completed without any chunks.");
     }
 
     const hasFinishReason = lastChunk?.candidates?.some(
@@ -822,14 +820,14 @@ export class GeminiChat {
       (!hasFinishReason || (lastChunkIsInvalid && !hasReceivedValidChunk))
     ) {
       throw new EmptyStreamError(
-        'Model stream ended with an invalid chunk or missing finish reason.',
+        "Model stream ended with an invalid chunk or missing finish reason.",
       );
     }
 
     // Bundle all streamed parts into a single Content object
     const modelOutput: Content[] =
       modelResponseParts.length > 0
-        ? [{ role: 'model', parts: modelResponseParts }]
+        ? [{ role: "model", parts: modelResponseParts }]
         : [];
 
     // Pass the raw, bundled data to the new, robust recordHistory
@@ -848,7 +846,9 @@ export class GeminiChat {
     let timeoutHandle: NodeJS.Timeout | undefined;
 
     try {
-      const result = await Promise.race<IteratorResult<GenerateContentResponse>>([
+      const result = await Promise.race<
+        IteratorResult<GenerateContentResponse>
+      >([
         stream.next(),
         new Promise<IteratorResult<GenerateContentResponse>>((_, reject) => {
           timeoutHandle = setTimeout(() => {
@@ -886,9 +886,9 @@ export class GeminiChat {
         // The only time we don't push is if it's the *exact same* object,
         // which happens in streaming where we add it preemptively.
         if (lastTurn !== userInput) {
-          if (lastTurn?.role === 'user') {
+          if (lastTurn?.role === "user") {
             // This is an invalid sequence.
-            throw new Error('Cannot add a user turn after another user turn.');
+            throw new Error("Cannot add a user turn after another user turn.");
           }
           this.history.push(userInput);
         }
@@ -913,8 +913,8 @@ export class GeminiChat {
       // Consolidate this new turn with the PREVIOUS turn if they are adjacent model turns.
       if (
         lastTurnInFinal &&
-        lastTurnInFinal.role === 'model' &&
-        newTurn.role === 'model' &&
+        lastTurnInFinal.role === "model" &&
+        newTurn.role === "model" &&
         lastTurnInFinal.parts && // SAFETY CHECK: Ensure the destination has a parts array.
         newTurn.parts
       ) {
@@ -935,14 +935,14 @@ export class GeminiChat {
             if (
               lastPart &&
               // Ensure lastPart is a pure text part
-              typeof lastPart.text === 'string' &&
+              typeof lastPart.text === "string" &&
               !lastPart.functionCall &&
               !lastPart.functionResponse &&
               !lastPart.inlineData &&
               !lastPart.fileData &&
               !lastPart.thought &&
               // Ensure current part is a pure text part
-              typeof part.text === 'string' &&
+              typeof part.text === "string" &&
               !part.functionCall &&
               !part.functionResponse &&
               !part.inlineData &&
@@ -960,7 +960,7 @@ export class GeminiChat {
       this.history.push(...finalModelTurns);
     } else {
       // If, after all processing, there's NO model output, add the placeholder.
-      this.history.push({ role: 'model', parts: [] });
+      this.history.push({ role: "model", parts: [] });
     }
   }
 
@@ -984,32 +984,32 @@ export class GeminiChat {
     const isAuthError =
       errorCode === 401 ||
       errorCode === 403 ||
-      errorMessage.includes('unauthorized') ||
-      errorMessage.includes('forbidden') ||
-      errorMessage.includes('invalid api key') ||
-      errorMessage.includes('authentication') ||
-      errorMessage.includes('access denied') ||
-      (errorMessage.includes('token') && errorMessage.includes('expired'));
+      errorMessage.includes("unauthorized") ||
+      errorMessage.includes("forbidden") ||
+      errorMessage.includes("invalid api key") ||
+      errorMessage.includes("authentication") ||
+      errorMessage.includes("access denied") ||
+      (errorMessage.includes("token") && errorMessage.includes("expired"));
 
     // Check if this is a rate limiting error
     const isRateLimitError =
       errorCode === 429 ||
-      errorMessage.includes('429') ||
-      errorMessage.includes('rate limit') ||
-      errorMessage.includes('too many requests');
+      errorMessage.includes("429") ||
+      errorMessage.includes("rate limit") ||
+      errorMessage.includes("too many requests");
 
     if (isAuthError) {
-      console.warn('Qwen OAuth authentication error detected:', errorMessage);
+      console.warn("Qwen OAuth authentication error detected:", errorMessage);
       // The QwenContentGenerator should automatically handle token refresh
       // If it still fails, it likely means the refresh token is also expired
       console.log(
-        'Note: If this persists, you may need to re-authenticate with Qwen OAuth',
+        "Note: If this persists, you may need to re-authenticate with Qwen OAuth",
       );
       return null;
     }
 
     if (isRateLimitError) {
-      console.warn('Qwen API rate limit encountered:', errorMessage);
+      console.warn("Qwen API rate limit encountered:", errorMessage);
       // For rate limiting, we don't need to do anything special
       // The retry mechanism will handle the backoff
       return null;
@@ -1021,9 +1021,9 @@ export class GeminiChat {
 }
 /** Visible for Testing */
 export function isSchemaDepthError(errorMessage: string): boolean {
-  return errorMessage.includes('maximum schema depth exceeded');
+  return errorMessage.includes("maximum schema depth exceeded");
 }
 
 export function isInvalidArgumentError(errorMessage: string): boolean {
-  return errorMessage.includes('Request contains an invalid argument');
+  return errorMessage.includes("Request contains an invalid argument");
 }

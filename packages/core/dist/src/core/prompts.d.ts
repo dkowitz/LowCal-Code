@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { GenerateContentConfig } from '@google/genai';
+import type { GenerateContentConfig } from "@google/genai";
 export interface ModelTemplateMapping {
     baseUrls?: string[];
     modelNames?: string[];
@@ -20,7 +20,7 @@ export interface SystemPromptConfig {
  * @param userMemory - User memory to append
  * @returns Processed custom system instruction with user memory appended
  */
-export declare function getCustomSystemPrompt(customInstruction: GenerateContentConfig['systemInstruction'], userMemory?: string): string;
+export declare function getCustomSystemPrompt(customInstruction: GenerateContentConfig["systemInstruction"], userMemory?: string): string;
 export declare function getCoreSystemPrompt(userMemory?: string, config?: SystemPromptConfig, model?: string): string;
 /**
  * Provides the system prompt for the history compression process.

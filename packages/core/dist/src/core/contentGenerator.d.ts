@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { CountTokensParameters, CountTokensResponse, EmbedContentParameters, EmbedContentResponse, GenerateContentParameters, GenerateContentResponse } from '@google/genai';
-import type { Config } from '../config/config.js';
-import type { UserTierId } from '../code_assist/types.js';
+import type { CountTokensParameters, CountTokensResponse, EmbedContentParameters, EmbedContentResponse, GenerateContentParameters, GenerateContentResponse } from "@google/genai";
+import type { Config } from "../config/config.js";
+import type { UserTierId } from "../code_assist/types.js";
 /**
  * Interface abstracting the core functionalities for generating content and counting tokens.
  */

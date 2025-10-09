@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Content } from '@google/genai';
-import type { ContentGenerator } from './contentGenerator.js';
-import { tokenLimit } from './tokenLimits.js';
+import type { Content } from "@google/genai";
+import type { ContentGenerator } from "./contentGenerator.js";
+import { tokenLimit } from "./tokenLimits.js";
 
 const DEFAULT_WARN_FRACTION = 0.85;
 const DEFAULT_BUFFER_FRACTION = 0.05;
@@ -23,9 +23,12 @@ export interface TokenBudgetSnapshot {
 }
 
 export class TokenBudgetExceededError extends Error {
-  constructor(message: string, public readonly snapshot: TokenBudgetSnapshot) {
+  constructor(
+    message: string,
+    public readonly snapshot: TokenBudgetSnapshot,
+  ) {
     super(message);
-    this.name = 'TokenBudgetExceededError';
+    this.name = "TokenBudgetExceededError";
   }
 }
 
@@ -39,23 +42,33 @@ export class TokenBudgetManager {
    * Evaluate the total token requirement for a prospective request and compute
    * how it relates to the model's context window.
    */
-  async evaluate(model: string, contents: Content[]): Promise<TokenBudgetSnapshot> {
+  async evaluate(
+    model: string,
+    contents: Content[],
+  ): Promise<TokenBudgetSnapshot> {
     // Prefer provider-supplied context limits via getContextLimit (e.g., Config.getEffectiveContextLimit)
     const computedLimit = this.getContextLimit?.(model);
     let limit: number;
 
-    if (typeof computedLimit === 'number' && Number.isFinite(computedLimit) && computedLimit > 0) {
+    if (
+      typeof computedLimit === "number" &&
+      Number.isFinite(computedLimit) &&
+      computedLimit > 0
+    ) {
       limit = computedLimit;
     } else {
       // Fall back to the tokenLimit helper which may be static
-      limit = tokenLimit(model, 'input');
+      limit = tokenLimit(model, "input");
     }
     const buffer = this.getSafetyBuffer(limit);
     const effectiveLimit = Math.max(
       0,
       Math.min(limit - buffer, Math.floor(limit * 0.95)),
     );
-    const warnThreshold = Math.max(limit * DEFAULT_WARN_FRACTION, effectiveLimit);
+    const warnThreshold = Math.max(
+      limit * DEFAULT_WARN_FRACTION,
+      effectiveLimit,
+    );
 
     const { totalTokens = 0 } = await this.contentGenerator.countTokens({
       model,

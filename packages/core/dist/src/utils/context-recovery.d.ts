@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Content } from '@google/genai';
+import type { Content } from "@google/genai";
 /**
  * Strategies for recovering from context overflow errors
  */

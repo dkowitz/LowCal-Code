@@ -4,30 +4,30 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ToolInvocation, ToolResult } from './tools.js';
-import { BaseDeclarativeTool, BaseToolInvocation, Kind } from './tools.js';
-import { ToolNames } from './tool-names.js';
-import { getErrorMessage } from '../utils/errors.js';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { glob, escape } from 'glob';
-import type { ProcessedFileReadResult } from '../utils/fileUtils.js';
+import type { ToolInvocation, ToolResult } from "./tools.js";
+import { BaseDeclarativeTool, BaseToolInvocation, Kind } from "./tools.js";
+import { ToolNames } from "./tool-names.js";
+import { getErrorMessage } from "../utils/errors.js";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { glob, escape } from "glob";
+import type { ProcessedFileReadResult } from "../utils/fileUtils.js";
 import {
   detectFileType,
   processSingleFileContent,
   DEFAULT_ENCODING,
   getSpecificMimeType,
   DEFAULT_MAX_LINES_TEXT_FILE,
-} from '../utils/fileUtils.js';
-import type { PartListUnion } from '@google/genai';
-import type { Config } from '../config/config.js';
-import { DEFAULT_FILE_FILTERING_OPTIONS } from '../config/config.js';
-import { FileOperation } from '../telemetry/metrics.js';
-import { getProgrammingLanguage } from '../telemetry/telemetry-utils.js';
-import { logFileOperation } from '../telemetry/loggers.js';
-import { FileOperationEvent } from '../telemetry/types.js';
-import { ToolErrorType } from './tool-error.js';
-import { applySmartTruncation } from '../utils/result-truncation.js';
+} from "../utils/fileUtils.js";
+import type { PartListUnion } from "@google/genai";
+import type { Config } from "../config/config.js";
+import { DEFAULT_FILE_FILTERING_OPTIONS } from "../config/config.js";
+import { FileOperation } from "../telemetry/metrics.js";
+import { getProgrammingLanguage } from "../telemetry/telemetry-utils.js";
+import { logFileOperation } from "../telemetry/loggers.js";
+import { FileOperationEvent } from "../telemetry/types.js";
+import { ToolErrorType } from "./tool-error.js";
+import { applySmartTruncation } from "../utils/result-truncation.js";
 
 /**
  * Parameters for the ReadManyFilesTool.
@@ -104,8 +104,8 @@ function getDefaultExcludes(config?: Config): string[] {
   return config?.getFileExclusions().getReadManyFilesExcludes() ?? [];
 }
 
-const DEFAULT_OUTPUT_SEPARATOR_FORMAT = '--- {filePath} ---';
-const DEFAULT_OUTPUT_TERMINATOR = '\n--- End of content ---';
+const DEFAULT_OUTPUT_SEPARATOR_FORMAT = "--- {filePath} ---";
+const DEFAULT_OUTPUT_TERMINATOR = "\n--- End of content ---";
 
 class ReadManyFilesToolInvocation extends BaseToolInvocation<
   ReadManyFilesParams,
@@ -121,7 +121,7 @@ class ReadManyFilesToolInvocation extends BaseToolInvocation<
   getDescription(): string {
     const allPatterns = [...this.params.paths, ...(this.params.include || [])];
     const pathDesc = `using patterns: 
-${allPatterns.join('`, `')}
+${allPatterns.join("`, `")}
  (within target directory: 
 ${this.config.getTargetDir()}
 ) `;
@@ -147,9 +147,9 @@ ${this.config.getTargetDir()}
 ${finalExclusionPatternsForDescription
   .slice(0, 2)
   .join(
-    '`, `',
-  )}${finalExclusionPatternsForDescription.length > 2 ? '...`' : '`'}`
-        : 'none specified'
+    "`, `",
+  )}${finalExclusionPatternsForDescription.length > 2 ? "...`" : "`"}`
+        : "none specified"
     }`;
 
     // Add a note if .qwenignore patterns contributed to the final list of exclusions
@@ -163,8 +163,8 @@ ${finalExclusionPatternsForDescription
     }
 
     return `Will attempt to read and concatenate files ${pathDesc}. ${excludeDesc}. File encoding: ${DEFAULT_ENCODING}. Separator: "${DEFAULT_OUTPUT_SEPARATOR_FORMAT.replace(
-      '{filePath}',
-      'path/to/file.ext',
+      "{filePath}",
+      "path/to/file.ext",
     )}".`;
   }
 
@@ -207,7 +207,7 @@ ${finalExclusionPatternsForDescription
       for (const dir of workspaceDirs) {
         const processedPatterns = [];
         for (const p of searchPatterns) {
-          const normalizedP = p.replace(/\\/g, '/');
+          const normalizedP = p.replace(/\\/g, "/");
           const fullPath = path.join(dir, normalizedP);
           if (fs.existsSync(fullPath)) {
             processedPatterns.push(escape(normalizedP));
@@ -301,7 +301,7 @@ ${finalExclusionPatternsForDescription
       if (gitIgnoredCount > 0) {
         skippedFiles.push({
           path: `${gitIgnoredCount} file(s)`,
-          reason: 'git ignored',
+          reason: "git ignored",
         });
       }
 
@@ -309,7 +309,7 @@ ${finalExclusionPatternsForDescription
       if (geminiIgnoredCount > 0) {
         skippedFiles.push({
           path: `${geminiIgnoredCount} file(s)`,
-          reason: 'gemini ignored',
+          reason: "gemini ignored",
         });
       }
     } catch (error) {
@@ -333,11 +333,11 @@ ${finalExclusionPatternsForDescription
         try {
           const relativePathForDisplay = path
             .relative(this.config.getTargetDir(), filePath)
-            .replace(/\\/g, '/');
+            .replace(/\\/g, "/");
 
           const fileType = await detectFileType(filePath);
 
-          if (fileType === 'image' || fileType === 'pdf') {
+          if (fileType === "image" || fileType === "pdf") {
             const fileExtension = path.extname(filePath).toLowerCase();
             const fileNameWithoutExtension = path.basename(
               filePath,
@@ -355,7 +355,7 @@ ${finalExclusionPatternsForDescription
                 filePath,
                 relativePathForDisplay,
                 reason:
-                  'asset file (image/pdf) was not explicitly requested by name or extension',
+                  "asset file (image/pdf) was not explicitly requested by name or extension",
               };
             }
           }
@@ -387,7 +387,7 @@ ${finalExclusionPatternsForDescription
         } catch (error) {
           const relativePathForDisplay = path
             .relative(this.config.getTargetDir(), filePath)
-            .replace(/\\/g, '/');
+            .replace(/\\/g, "/");
 
           return {
             success: false,
@@ -402,7 +402,7 @@ ${finalExclusionPatternsForDescription
     const results = await Promise.allSettled(fileProcessingPromises);
 
     for (const result of results) {
-      if (result.status === 'fulfilled') {
+      if (result.status === "fulfilled") {
         const fileResult = result.value;
 
         if (!fileResult.success) {
@@ -416,12 +416,12 @@ ${finalExclusionPatternsForDescription
           const { filePath, relativePathForDisplay, fileReadResult } =
             fileResult;
 
-          if (typeof fileReadResult.llmContent === 'string') {
+          if (typeof fileReadResult.llmContent === "string") {
             const separator = DEFAULT_OUTPUT_SEPARATOR_FORMAT.replace(
-              '{filePath}',
+              "{filePath}",
               filePath,
             );
-            let fileContentForLlm = '';
+            let fileContentForLlm = "";
             if (fileReadResult.isTruncated) {
               fileContentForLlm += `[WARNING: This file was truncated. To view the full content, use the 'read_file' tool on this specific file.]\n\n`;
             }
@@ -435,8 +435,8 @@ ${finalExclusionPatternsForDescription
           processedFilesRelativePaths.push(relativePathForDisplay);
 
           const lines =
-            typeof fileReadResult.llmContent === 'string'
-              ? fileReadResult.llmContent.split('\n').length
+            typeof fileReadResult.llmContent === "string"
+              ? fileReadResult.llmContent.split("\n").length
               : undefined;
           const mimetype = getSpecificMimeType(filePath);
           const programming_language = getProgrammingLanguage({
@@ -458,7 +458,7 @@ ${finalExclusionPatternsForDescription
       } else {
         // Handle Promise rejection (unexpected errors)
         skippedFiles.push({
-          path: 'unknown',
+          path: "unknown",
           reason: `Unexpected error: ${result.reason}`,
         });
       }
@@ -509,18 +509,18 @@ ${finalExclusionPatternsForDescription
       contentParts.push(DEFAULT_OUTPUT_TERMINATOR);
     } else {
       contentParts.push(
-        'No files matching the criteria were found or all were skipped.',
+        "No files matching the criteria were found or all were skipped.",
       );
     }
 
     // Apply smart truncation if content is too large
     // Convert parts to string for truncation check
     const contentString = contentParts
-      .map((part) => (typeof part === 'string' ? part : '[non-text content]'))
-      .join('');
-    
+      .map((part) => (typeof part === "string" ? part : "[non-text content]"))
+      .join("");
+
     const truncationResult = applySmartTruncation(
-      'read_many_files',
+      "read_many_files",
       contentString,
     );
 
@@ -556,12 +556,12 @@ export class ReadManyFilesTool extends BaseDeclarativeTool<
 
   constructor(private config: Config) {
     const parameterSchema = {
-      type: 'object',
+      type: "object",
       properties: {
         paths: {
-          type: 'array',
+          type: "array",
           items: {
-            type: 'string',
+            type: "string",
             minLength: 1,
           },
           minItems: 1,
@@ -569,9 +569,9 @@ export class ReadManyFilesTool extends BaseDeclarativeTool<
             "Required. An array of glob patterns or paths relative to the tool's target directory. Examples: ['src/**/*.ts'], ['README.md', 'docs/']",
         },
         include: {
-          type: 'array',
+          type: "array",
           items: {
-            type: 'string',
+            type: "string",
             minLength: 1,
           },
           description:
@@ -579,9 +579,9 @@ export class ReadManyFilesTool extends BaseDeclarativeTool<
           default: [],
         },
         exclude: {
-          type: 'array',
+          type: "array",
           items: {
-            type: 'string',
+            type: "string",
             minLength: 1,
           },
           description:
@@ -589,41 +589,41 @@ export class ReadManyFilesTool extends BaseDeclarativeTool<
           default: [],
         },
         recursive: {
-          type: 'boolean',
+          type: "boolean",
           description:
-            'Optional. Whether to search recursively (primarily controlled by `**` in glob patterns). Defaults to true.',
+            "Optional. Whether to search recursively (primarily controlled by `**` in glob patterns). Defaults to true.",
           default: true,
         },
         useDefaultExcludes: {
-          type: 'boolean',
+          type: "boolean",
           description:
-            'Optional. Whether to apply a list of default exclusion patterns (e.g., node_modules, .git, binary files). Defaults to true.',
+            "Optional. Whether to apply a list of default exclusion patterns (e.g., node_modules, .git, binary files). Defaults to true.",
           default: true,
         },
         file_filtering_options: {
           description:
-            'Whether to respect ignore patterns from .gitignore or .qwenignore',
-          type: 'object',
+            "Whether to respect ignore patterns from .gitignore or .qwenignore",
+          type: "object",
           properties: {
             respect_git_ignore: {
               description:
-                'Optional: Whether to respect .gitignore patterns when listing files. Only available in git repositories. Defaults to true.',
-              type: 'boolean',
+                "Optional: Whether to respect .gitignore patterns when listing files. Only available in git repositories. Defaults to true.",
+              type: "boolean",
             },
             respect_gemini_ignore: {
               description:
-                'Optional: Whether to respect .qwenignore patterns when listing files. Defaults to true.',
-              type: 'boolean',
+                "Optional: Whether to respect .qwenignore patterns when listing files. Defaults to true.",
+              type: "boolean",
             },
           },
         },
       },
-      required: ['paths'],
+      required: ["paths"],
     };
 
     super(
       ReadManyFilesTool.Name,
-      'ReadManyFiles',
+      "ReadManyFiles",
       `Reads content from multiple files specified by paths or glob patterns within a configured target directory. For text files, it concatenates their content into a single string. It is primarily designed for text-based files. However, it can also process image (e.g., .png, .jpg) and PDF (.pdf) files if their file names or extensions are explicitly included in the 'paths' argument. For these explicitly requested non-text files, their data is read and included in a format suitable for model consumption (e.g., base64 encoded).
 
 This tool is useful when you need to understand or analyze a collection of files, such as:

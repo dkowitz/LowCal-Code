@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { vi } from 'vitest';
+import { vi } from "vitest";
 import type {
   ModifiableDeclarativeTool,
   ModifyContext,
-} from '../tools/modifiable-tool.js';
+} from "../tools/modifiable-tool.js";
 import type {
   ToolCallConfirmationDetails,
   ToolInvocation,
   ToolResult,
-} from '../tools/tools.js';
+} from "../tools/tools.js";
 import {
   BaseDeclarativeTool,
   BaseToolInvocation,
   Kind,
-} from '../tools/tools.js';
+} from "../tools/tools.js";
 
 class MockToolInvocation extends BaseToolInvocation<
   { [key: string]: unknown },
@@ -46,7 +46,7 @@ class MockToolInvocation extends BaseToolInvocation<
   ): Promise<ToolCallConfirmationDetails | false> {
     if (this.tool.shouldConfirm) {
       return {
-        type: 'exec' as const,
+        type: "exec" as const,
         title: `Confirm ${this.tool.displayName}`,
         command: this.tool.name,
         rootCommand: this.tool.name,
@@ -72,12 +72,12 @@ export class MockTool extends BaseDeclarativeTool<
   shouldConfirm = false;
 
   constructor(
-    name = 'mock-tool',
+    name = "mock-tool",
     displayName?: string,
-    description = 'A mock tool for testing.',
+    description = "A mock tool for testing.",
     params = {
-      type: 'object',
-      properties: { param: { type: 'string' } },
+      type: "object",
+      properties: { param: { type: "string" } },
     },
   ) {
     super(name, displayName ?? name, description, Kind.Other, params);
@@ -116,13 +116,13 @@ export class MockModifiableToolInvocation extends BaseToolInvocation<
   ): Promise<ToolCallConfirmationDetails | false> {
     if (this.tool.shouldConfirm) {
       return {
-        type: 'edit',
-        title: 'Confirm Mock Tool',
-        fileName: 'test.txt',
-        filePath: 'test.txt',
-        fileDiff: 'diff',
-        originalContent: 'originalContent',
-        newContent: 'newContent',
+        type: "edit",
+        title: "Confirm Mock Tool",
+        fileName: "test.txt",
+        filePath: "test.txt",
+        fileDiff: "diff",
+        originalContent: "originalContent",
+        newContent: "newContent",
         onConfirm: async () => {},
       };
     }
@@ -141,7 +141,7 @@ export class MockModifiableTool
   extends MockTool
   implements ModifiableDeclarativeTool<Record<string, unknown>>
 {
-  constructor(name = 'mockModifiableTool') {
+  constructor(name = "mockModifiableTool") {
     super(name);
     this.shouldConfirm = true;
   }
@@ -150,9 +150,9 @@ export class MockModifiableTool
     _abortSignal: AbortSignal,
   ): ModifyContext<Record<string, unknown>> {
     return {
-      getFilePath: () => 'test.txt',
-      getCurrentContent: async () => 'old content',
-      getProposedContent: async () => 'new content',
+      getFilePath: () => "test.txt",
+      getCurrentContent: async () => "old content",
+      getProposedContent: async () => "new content",
       createUpdatedParams: (
         _oldContent: string,
         modifiedProposedContent: string,

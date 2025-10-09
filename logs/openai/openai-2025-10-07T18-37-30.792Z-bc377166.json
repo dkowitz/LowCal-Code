@@ -95,16 +95,10 @@
               "subagent_type": {
                 "type": "string",
                 "description": "The type of specialized agent to use for this task",
-                "enum": [
-                  "general-purpose"
-                ]
+                "enum": ["general-purpose"]
               }
             },
-            "required": [
-              "description",
-              "prompt",
-              "subagent_type"
-            ],
+            "required": ["description", "prompt", "subagent_type"],
             "additionalProperties": false,
             "$schema": "http://json-schema.org/draft-07/schema#"
           }
@@ -143,9 +137,7 @@
                 }
               }
             },
-            "required": [
-              "path"
-            ],
+            "required": ["path"],
             "type": "object"
           }
         }
@@ -170,9 +162,7 @@
                 "type": "number"
               }
             },
-            "required": [
-              "absolute_path"
-            ],
+            "required": ["absolute_path"],
             "type": "object"
           }
         }
@@ -197,9 +187,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "pattern"
-            ],
+            "required": ["pattern"],
             "type": "object"
           }
         }
@@ -228,9 +216,7 @@
                 "type": "boolean"
               }
             },
-            "required": [
-              "pattern"
-            ],
+            "required": ["pattern"],
             "type": "object"
           }
         }
@@ -260,11 +246,7 @@
                 "minimum": 1
               }
             },
-            "required": [
-              "file_path",
-              "old_string",
-              "new_string"
-            ],
+            "required": ["file_path", "old_string", "new_string"],
             "type": "object"
           }
         }
@@ -285,10 +267,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "file_path",
-              "content"
-            ],
+            "required": ["file_path", "content"],
             "type": "object"
           }
         }
@@ -353,9 +332,7 @@
                 }
               }
             },
-            "required": [
-              "paths"
-            ]
+            "required": ["paths"]
           }
         }
       },
@@ -384,10 +361,7 @@
                 "description": "(OPTIONAL) Directory to run the command in, if not the project root directory. Must be relative to the project root directory and must already exist."
               }
             },
-            "required": [
-              "command",
-              "is_background"
-            ]
+            "required": ["command", "is_background"]
           }
         }
       },
@@ -406,15 +380,10 @@
               "scope": {
                 "type": "string",
                 "description": "Where to save the memory: \"global\" saves to user-level ~/.qwen/QWEN.md (shared across all projects), \"project\" saves to current project's QWEN.md (project-specific). If not specified, will prompt user to choose.",
-                "enum": [
-                  "global",
-                  "project"
-                ]
+                "enum": ["global", "project"]
               }
             },
-            "required": [
-              "fact"
-            ]
+            "required": ["fact"]
           }
         }
       },
@@ -437,29 +406,19 @@
                     },
                     "status": {
                       "type": "string",
-                      "enum": [
-                        "pending",
-                        "in_progress",
-                        "completed"
-                      ]
+                      "enum": ["pending", "in_progress", "completed"]
                     },
                     "id": {
                       "type": "string"
                     }
                   },
-                  "required": [
-                    "content",
-                    "status",
-                    "id"
-                  ],
+                  "required": ["content", "status", "id"],
                   "additionalProperties": false
                 },
                 "description": "The updated todo list"
               }
             },
-            "required": [
-              "todos"
-            ],
+            "required": ["todos"],
             "$schema": "http://json-schema.org/draft-07/schema#"
           }
         }
@@ -477,9 +436,7 @@
                 "description": "The plan you came up with, that you want to run by the user for approval. Supports markdown. The plan should be pretty concise."
               }
             },
-            "required": [
-              "plan"
-            ],
+            "required": ["plan"],
             "additionalProperties": false,
             "$schema": "http://json-schema.org/draft-07/schema#"
           }
@@ -501,10 +458,7 @@
                 "type": "string"
               }
             },
-            "required": [
-              "url",
-              "prompt"
-            ],
+            "required": ["url", "prompt"],
             "type": "object"
           }
         }
@@ -522,9 +476,7 @@
                 "description": "The search query to find information on the web."
               }
             },
-            "required": [
-              "query"
-            ]
+            "required": ["query"]
           }
         }
       }

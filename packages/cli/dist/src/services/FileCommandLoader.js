@@ -3,17 +3,17 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
-import toml from '@iarna/toml';
-import { glob } from 'glob';
-import { z } from 'zod';
-import { Storage } from '@qwen-code/qwen-code-core';
-import { CommandKind } from '../ui/commands/types.js';
-import { DefaultArgumentProcessor } from './prompt-processors/argumentProcessor.js';
-import { SHORTHAND_ARGS_PLACEHOLDER, SHELL_INJECTION_TRIGGER, AT_FILE_INJECTION_TRIGGER, } from './prompt-processors/types.js';
-import { ConfirmationRequiredError, ShellProcessor, } from './prompt-processors/shellProcessor.js';
-import { AtFileProcessor } from './prompt-processors/atFileProcessor.js';
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import toml from "@iarna/toml";
+import { glob } from "glob";
+import { z } from "zod";
+import { Storage } from "@qwen-code/qwen-code-core";
+import { CommandKind } from "../ui/commands/types.js";
+import { DefaultArgumentProcessor } from "./prompt-processors/argumentProcessor.js";
+import { SHORTHAND_ARGS_PLACEHOLDER, SHELL_INJECTION_TRIGGER, AT_FILE_INJECTION_TRIGGER, } from "./prompt-processors/types.js";
+import { ConfirmationRequiredError, ShellProcessor, } from "./prompt-processors/shellProcessor.js";
+import { AtFileProcessor } from "./prompt-processors/atFileProcessor.js";
 /**
  * Defines the Zod schema for a command definition file. This serves as the
  * single source of truth for both validation and type inference.
@@ -65,7 +65,7 @@ export class FileCommandLoader {
         const commandDirs = this.getCommandDirectories();
         for (const dirInfo of commandDirs) {
             try {
-                const files = await glob('**/*.toml', {
+                const files = await glob("**/*.toml", {
                     ...globOptions,
                     cwd: dirInfo.path,
                 });
@@ -75,7 +75,7 @@ export class FileCommandLoader {
                 allCommands.push(...commands);
             }
             catch (error) {
-                if (error.code !== 'ENOENT') {
+                if (error.code !== "ENOENT") {
                     console.error(`[FileCommandLoader] Error loading commands from ${dirInfo.path}:`, error);
                 }
             }
@@ -101,7 +101,7 @@ export class FileCommandLoader {
                 .filter((ext) => ext.isActive)
                 .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically for deterministic loading
             const extensionCommandDirs = activeExtensions.map((ext) => ({
-                path: path.join(ext.path, 'commands'),
+                path: path.join(ext.path, "commands"),
                 extensionName: ext.name,
             }));
             dirs.push(...extensionCommandDirs);
@@ -118,7 +118,7 @@ export class FileCommandLoader {
     async parseAndAdaptFile(filePath, baseDir, extensionName) {
         let fileContent;
         try {
-            fileContent = await fs.readFile(filePath, 'utf-8');
+            fileContent = await fs.readFile(filePath, "utf-8");
         }
         catch (error) {
             console.error(`[FileCommandLoader] Failed to read file ${filePath}:`, error instanceof Error ? error.message : String(error));
@@ -145,8 +145,8 @@ export class FileCommandLoader {
             // Sanitize each path segment to prevent ambiguity. Since ':' is our
             // namespace separator, we replace any literal colons in filenames
             // with underscores to avoid naming conflicts.
-            .map((segment) => segment.replaceAll(':', '_'))
-            .join(':');
+            .map((segment) => segment.replaceAll(":", "_"))
+            .join(":");
         // Add extension name tag for extension commands
         const defaultDescription = `Custom command from ${path.basename(filePath)}`;
         let description = validDef.description || defaultDescription;
@@ -182,7 +182,7 @@ export class FileCommandLoader {
                 if (!context.invocation) {
                     console.error(`[FileCommandLoader] Critical error: Command '${baseCommandName}' was executed without invocation context.`);
                     return {
-                        type: 'submit_prompt',
+                        type: "submit_prompt",
                         content: [{ text: validDef.prompt }], // Fallback to unprocessed prompt
                     };
                 }
@@ -194,7 +194,7 @@ export class FileCommandLoader {
                         processedContent = await processor.process(processedContent, context);
                     }
                     return {
-                        type: 'submit_prompt',
+                        type: "submit_prompt",
                         content: processedContent,
                     };
                 }
@@ -203,7 +203,7 @@ export class FileCommandLoader {
                     if (e instanceof ConfirmationRequiredError) {
                         // Halt and request confirmation from the UI layer.
                         return {
-                            type: 'confirm_shell_commands',
+                            type: "confirm_shell_commands",
                             commandsToConfirm: e.commandsToConfirm,
                             originalInvocation: {
                                 raw: context.invocation.raw,

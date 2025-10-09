@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { MCPServerConfig, GeminiCLIExtension } from '@qwen-code/qwen-code-core';
-import { SettingScope } from '../config/settings.js';
+import type { MCPServerConfig, GeminiCLIExtension } from "@qwen-code/qwen-code-core";
+import { SettingScope } from "../config/settings.js";
 export declare const EXTENSIONS_DIRECTORY_NAME: string;
 export declare const EXTENSIONS_CONFIG_FILENAME = "qwen-extension.json";
 export declare const EXTENSIONS_CONFIG_FILENAME_OLD = "gemini-extension.json";
@@ -24,7 +24,7 @@ export interface ExtensionConfig {
 }
 export interface ExtensionInstallMetadata {
     source: string;
-    type: 'git' | 'local';
+    type: "git" | "local";
 }
 export interface ExtensionUpdateInfo {
     originalVersion: string;

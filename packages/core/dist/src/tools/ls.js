@@ -3,12 +3,12 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import fs from 'node:fs';
-import path from 'node:path';
-import { BaseDeclarativeTool, BaseToolInvocation, Kind } from './tools.js';
-import { makeRelative, shortenPath } from '../utils/paths.js';
-import { DEFAULT_FILE_FILTERING_OPTIONS } from '../config/config.js';
-import { ToolErrorType } from './tool-error.js';
+import fs from "node:fs";
+import path from "node:path";
+import { BaseDeclarativeTool, BaseToolInvocation, Kind } from "./tools.js";
+import { makeRelative, shortenPath } from "../utils/paths.js";
+import { DEFAULT_FILE_FILTERING_OPTIONS } from "../config/config.js";
+import { ToolErrorType } from "./tool-error.js";
 class LSToolInvocation extends BaseToolInvocation {
     config;
     constructor(config, params) {
@@ -28,9 +28,9 @@ class LSToolInvocation extends BaseToolInvocation {
         for (const pattern of patterns) {
             // Convert glob pattern to RegExp
             const regexPattern = pattern
-                .replace(/[.+^${}()|[\]\\]/g, '\\$&')
-                .replace(/\*/g, '.*')
-                .replace(/\?/g, '.');
+                .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+                .replace(/\*/g, ".*")
+                .replace(/\?/g, ".");
             const regex = new RegExp(`^${regexPattern}$`);
             if (regex.test(filename)) {
                 return true;
@@ -136,8 +136,8 @@ class LSToolInvocation extends BaseToolInvocation {
             });
             // Create formatted content for LLM
             const directoryContent = entries
-                .map((entry) => `${entry.isDirectory ? '[DIR] ' : ''}${entry.name}`)
-                .join('\n');
+                .map((entry) => `${entry.isDirectory ? "[DIR] " : ""}${entry.name}`)
+                .join("\n");
             let resultMessage = `Directory listing for ${this.params.path}:\n${directoryContent}`;
             const ignoredMessages = [];
             if (gitIgnoredCount > 0) {
@@ -147,11 +147,11 @@ class LSToolInvocation extends BaseToolInvocation {
                 ignoredMessages.push(`${geminiIgnoredCount} gemini-ignored`);
             }
             if (ignoredMessages.length > 0) {
-                resultMessage += `\n\n(${ignoredMessages.join(', ')})`;
+                resultMessage += `\n\n(${ignoredMessages.join(", ")})`;
             }
             let displayMessage = `Listed ${entries.length} item(s).`;
             if (ignoredMessages.length > 0) {
-                displayMessage += ` (${ignoredMessages.join(', ')})`;
+                displayMessage += ` (${ignoredMessages.join(", ")})`;
             }
             return {
                 llmContent: resultMessage,
@@ -160,7 +160,7 @@ class LSToolInvocation extends BaseToolInvocation {
         }
         catch (error) {
             const errorMsg = `Error listing directory: ${error instanceof Error ? error.message : String(error)}`;
-            return this.errorResult(errorMsg, 'Failed to list directory.', ToolErrorType.LS_EXECUTION_ERROR);
+            return this.errorResult(errorMsg, "Failed to list directory.", ToolErrorType.LS_EXECUTION_ERROR);
         }
     }
 }
@@ -169,38 +169,38 @@ class LSToolInvocation extends BaseToolInvocation {
  */
 export class LSTool extends BaseDeclarativeTool {
     config;
-    static Name = 'list_directory';
+    static Name = "list_directory";
     constructor(config) {
-        super(LSTool.Name, 'ReadFolder', 'Lists the names of files and subdirectories directly within a specified directory path. Can optionally ignore entries matching provided glob patterns.', Kind.Search, {
+        super(LSTool.Name, "ReadFolder", "Lists the names of files and subdirectories directly within a specified directory path. Can optionally ignore entries matching provided glob patterns.", Kind.Search, {
             properties: {
                 path: {
-                    description: 'The absolute path to the directory to list (must be absolute, not relative)',
-                    type: 'string',
+                    description: "The absolute path to the directory to list (must be absolute, not relative)",
+                    type: "string",
                 },
                 ignore: {
-                    description: 'List of glob patterns to ignore',
+                    description: "List of glob patterns to ignore",
                     items: {
-                        type: 'string',
+                        type: "string",
                     },
-                    type: 'array',
+                    type: "array",
                 },
                 file_filtering_options: {
-                    description: 'Optional: Whether to respect ignore patterns from .gitignore or .qwenignore',
-                    type: 'object',
+                    description: "Optional: Whether to respect ignore patterns from .gitignore or .qwenignore",
+                    type: "object",
                     properties: {
                         respect_git_ignore: {
-                            description: 'Optional: Whether to respect .gitignore patterns when listing files. Only available in git repositories. Defaults to true.',
-                            type: 'boolean',
+                            description: "Optional: Whether to respect .gitignore patterns when listing files. Only available in git repositories. Defaults to true.",
+                            type: "boolean",
                         },
                         respect_gemini_ignore: {
-                            description: 'Optional: Whether to respect .qwenignore patterns when listing files. Defaults to true.',
-                            type: 'boolean',
+                            description: "Optional: Whether to respect .qwenignore patterns when listing files. Defaults to true.",
+                            type: "boolean",
                         },
                     },
                 },
             },
-            required: ['path'],
-            type: 'object',
+            required: ["path"],
+            type: "object",
         });
         this.config = config;
     }
@@ -216,7 +216,7 @@ export class LSTool extends BaseDeclarativeTool {
         const workspaceContext = this.config.getWorkspaceContext();
         if (!workspaceContext.isPathWithinWorkspace(params.path)) {
             const directories = workspaceContext.getDirectories();
-            return `Path must be within one of the workspace directories: ${directories.join(', ')}`;
+            return `Path must be within one of the workspace directories: ${directories.join(", ")}`;
         }
         return null;
     }

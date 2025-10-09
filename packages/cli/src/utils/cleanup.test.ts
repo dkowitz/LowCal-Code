@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { vi } from 'vitest';
-import { registerCleanup, runExitCleanup } from './cleanup';
+import { vi } from "vitest";
+import { registerCleanup, runExitCleanup } from "./cleanup";
 
-describe('cleanup', () => {
-  const originalCleanupFunctions = global['cleanupFunctions'];
+describe("cleanup", () => {
+  const originalCleanupFunctions = global["cleanupFunctions"];
 
   beforeEach(() => {
     // Isolate cleanup functions for each test
-    global['cleanupFunctions'] = [];
+    global["cleanupFunctions"] = [];
   });
 
   afterAll(() => {
     // Restore original cleanup functions
-    global['cleanupFunctions'] = originalCleanupFunctions;
+    global["cleanupFunctions"] = originalCleanupFunctions;
   });
 
-  it('should run a registered synchronous function', async () => {
+  it("should run a registered synchronous function", async () => {
     const cleanupFn = vi.fn();
     registerCleanup(cleanupFn);
 
@@ -29,7 +29,7 @@ describe('cleanup', () => {
     expect(cleanupFn).toHaveBeenCalledTimes(1);
   });
 
-  it('should run a registered asynchronous function', async () => {
+  it("should run a registered asynchronous function", async () => {
     const cleanupFn = vi.fn().mockResolvedValue(undefined);
     registerCleanup(cleanupFn);
 
@@ -38,7 +38,7 @@ describe('cleanup', () => {
     expect(cleanupFn).toHaveBeenCalledTimes(1);
   });
 
-  it('should run multiple registered functions', async () => {
+  it("should run multiple registered functions", async () => {
     const syncFn = vi.fn();
     const asyncFn = vi.fn().mockResolvedValue(undefined);
 
@@ -51,9 +51,9 @@ describe('cleanup', () => {
     expect(asyncFn).toHaveBeenCalledTimes(1);
   });
 
-  it('should continue running cleanup functions even if one throws an error', async () => {
+  it("should continue running cleanup functions even if one throws an error", async () => {
     const errorFn = vi.fn(() => {
-      throw new Error('Test Error');
+      throw new Error("Test Error");
     });
     const successFn = vi.fn();
 

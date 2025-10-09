@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { render } from 'ink-testing-library';
-import { describe, it, expect, vi, beforeAll, afterAll } from 'vitest';
-import { ModelStatsDisplay } from './ModelStatsDisplay.js';
-import * as SessionContext from '../contexts/SessionContext.js';
-import type { SessionMetrics } from '../contexts/SessionContext.js';
+import { render } from "ink-testing-library";
+import { describe, it, expect, vi, beforeAll, afterAll } from "vitest";
+import { ModelStatsDisplay } from "./ModelStatsDisplay.js";
+import * as SessionContext from "../contexts/SessionContext.js";
+import type { SessionMetrics } from "../contexts/SessionContext.js";
 
 // Mock the context to provide controlled data for testing
-vi.mock('../contexts/SessionContext.js', async (importOriginal) => {
+vi.mock("../contexts/SessionContext.js", async (importOriginal) => {
   const actual = await importOriginal<typeof SessionContext>();
   return {
     ...actual,
@@ -37,13 +37,13 @@ const renderWithMockedStats = (metrics: SessionMetrics) => {
   return render(<ModelStatsDisplay />);
 };
 
-describe('<ModelStatsDisplay />', () => {
+describe("<ModelStatsDisplay />", () => {
   beforeAll(() => {
-    vi.spyOn(Number.prototype, 'toLocaleString').mockImplementation(function (
+    vi.spyOn(Number.prototype, "toLocaleString").mockImplementation(function (
       this: number,
     ) {
       // Use a stable 'en-US' format for test consistency.
-      return new Intl.NumberFormat('en-US').format(this);
+      return new Intl.NumberFormat("en-US").format(this);
     });
   });
 
@@ -65,15 +65,15 @@ describe('<ModelStatsDisplay />', () => {
     });
 
     expect(lastFrame()).toContain(
-      'No API calls have been made in this session.',
+      "No API calls have been made in this session.",
     );
     expect(lastFrame()).toMatchSnapshot();
   });
 
-  it('should not display conditional rows if no model has data for them', () => {
+  it("should not display conditional rows if no model has data for them", () => {
     const { lastFrame } = renderWithMockedStats({
       models: {
-        'gemini-2.5-pro': {
+        "gemini-2.5-pro": {
           api: { totalRequests: 1, totalErrors: 0, totalLatencyMs: 100 },
           tokens: {
             prompt: 10,
@@ -96,16 +96,16 @@ describe('<ModelStatsDisplay />', () => {
     });
 
     const output = lastFrame();
-    expect(output).not.toContain('Cached');
-    expect(output).not.toContain('Thoughts');
-    expect(output).not.toContain('Tool');
+    expect(output).not.toContain("Cached");
+    expect(output).not.toContain("Thoughts");
+    expect(output).not.toContain("Tool");
     expect(output).toMatchSnapshot();
   });
 
-  it('should display conditional rows if at least one model has data', () => {
+  it("should display conditional rows if at least one model has data", () => {
     const { lastFrame } = renderWithMockedStats({
       models: {
-        'gemini-2.5-pro': {
+        "gemini-2.5-pro": {
           api: { totalRequests: 1, totalErrors: 0, totalLatencyMs: 100 },
           tokens: {
             prompt: 10,
@@ -116,7 +116,7 @@ describe('<ModelStatsDisplay />', () => {
             tool: 0,
           },
         },
-        'gemini-2.5-flash': {
+        "gemini-2.5-flash": {
           api: { totalRequests: 1, totalErrors: 0, totalLatencyMs: 50 },
           tokens: {
             prompt: 5,
@@ -139,16 +139,16 @@ describe('<ModelStatsDisplay />', () => {
     });
 
     const output = lastFrame();
-    expect(output).toContain('Cached');
-    expect(output).toContain('Thoughts');
-    expect(output).toContain('Tool');
+    expect(output).toContain("Cached");
+    expect(output).toContain("Thoughts");
+    expect(output).toContain("Tool");
     expect(output).toMatchSnapshot();
   });
 
-  it('should display stats for multiple models correctly', () => {
+  it("should display stats for multiple models correctly", () => {
     const { lastFrame } = renderWithMockedStats({
       models: {
-        'gemini-2.5-pro': {
+        "gemini-2.5-pro": {
           api: { totalRequests: 10, totalErrors: 1, totalLatencyMs: 1000 },
           tokens: {
             prompt: 100,
@@ -159,7 +159,7 @@ describe('<ModelStatsDisplay />', () => {
             tool: 5,
           },
         },
-        'gemini-2.5-flash': {
+        "gemini-2.5-flash": {
           api: { totalRequests: 20, totalErrors: 2, totalLatencyMs: 500 },
           tokens: {
             prompt: 200,
@@ -182,15 +182,15 @@ describe('<ModelStatsDisplay />', () => {
     });
 
     const output = lastFrame();
-    expect(output).toContain('gemini-2.5-pro');
-    expect(output).toContain('gemini-2.5-flash');
+    expect(output).toContain("gemini-2.5-pro");
+    expect(output).toContain("gemini-2.5-flash");
     expect(output).toMatchSnapshot();
   });
 
-  it('should handle large values without wrapping or overlapping', () => {
+  it("should handle large values without wrapping or overlapping", () => {
     const { lastFrame } = renderWithMockedStats({
       models: {
-        'gemini-2.5-pro': {
+        "gemini-2.5-pro": {
           api: {
             totalRequests: 999999999,
             totalErrors: 123456789,
@@ -219,10 +219,10 @@ describe('<ModelStatsDisplay />', () => {
     expect(lastFrame()).toMatchSnapshot();
   });
 
-  it('should display a single model correctly', () => {
+  it("should display a single model correctly", () => {
     const { lastFrame } = renderWithMockedStats({
       models: {
-        'gemini-2.5-pro': {
+        "gemini-2.5-pro": {
           api: { totalRequests: 1, totalErrors: 0, totalLatencyMs: 100 },
           tokens: {
             prompt: 10,
@@ -245,8 +245,8 @@ describe('<ModelStatsDisplay />', () => {
     });
 
     const output = lastFrame();
-    expect(output).toContain('gemini-2.5-pro');
-    expect(output).not.toContain('gemini-2.5-flash');
+    expect(output).toContain("gemini-2.5-pro");
+    expect(output).not.toContain("gemini-2.5-flash");
     expect(output).toMatchSnapshot();
   });
 });

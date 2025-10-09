@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getResponseText } from '../utils/partUtils.js';
-import { reportError } from '../utils/errorReporting.js';
-import { getErrorMessage, UnauthorizedError, toFriendlyError, } from '../utils/errors.js';
+import { getResponseText } from "../utils/partUtils.js";
+import { reportError } from "../utils/errorReporting.js";
+import { getErrorMessage, UnauthorizedError, toFriendlyError, } from "../utils/errors.js";
 export var GeminiEventType;
 (function (GeminiEventType) {
     GeminiEventType["Content"] = "content";
@@ -68,7 +68,7 @@ export class Turn {
                     return;
                 }
                 // Handle the new RETRY event
-                if (streamEvent.type === 'retry') {
+                if (streamEvent.type === "retry") {
                     yield { type: GeminiEventType.Retry };
                     continue; // Skip to the next event in the stream
                 }
@@ -81,12 +81,12 @@ export class Turn {
                 if (thoughtPart?.thought) {
                     // Thought always has a bold "subject" part enclosed in double asterisks
                     // (e.g., **Subject**). The rest of the string is considered the description.
-                    const rawText = thoughtPart.text ?? '';
+                    const rawText = thoughtPart.text ?? "";
                     const subjectStringMatches = rawText.match(/\*\*(.*?)\*\*/s);
                     const subject = subjectStringMatches
                         ? subjectStringMatches[1].trim()
-                        : '';
-                    const description = rawText.replace(/\*\*(.*?)\*\*/s, '').trim();
+                        : "";
+                    const description = rawText.replace(/\*\*(.*?)\*\*/s, "").trim();
                     const thought = {
                         subject,
                         description,
@@ -132,11 +132,11 @@ export class Turn {
                 throw error;
             }
             const contextForReport = [...this.chat.getHistory(/*curated*/ true), req];
-            await reportError(error, 'Error when talking to API', contextForReport, 'Turn.run-sendMessageStream');
-            const status = typeof error === 'object' &&
+            await reportError(error, "Error when talking to API", contextForReport, "Turn.run-sendMessageStream");
+            const status = typeof error === "object" &&
                 error !== null &&
-                'status' in error &&
-                typeof error.status === 'number'
+                "status" in error &&
+                typeof error.status === "number"
                 ? error.status
                 : undefined;
             const structuredError = {
@@ -151,7 +151,7 @@ export class Turn {
     handlePendingFunctionCall(fnCall) {
         const callId = fnCall.id ??
             `${fnCall.name}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
-        const name = fnCall.name || 'undefined_tool_name';
+        const name = fnCall.name || "undefined_tool_name";
         const args = (fnCall.args || {});
         const toolCallRequest = {
             callId,

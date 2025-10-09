@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getInstallationInfo } from './installationInfo.js';
-import { updateEventEmitter } from './updateEventEmitter.js';
-import { MessageType } from '../ui/types.js';
-import { spawnWrapper } from './spawnWrapper.js';
+import { getInstallationInfo } from "./installationInfo.js";
+import { updateEventEmitter } from "./updateEventEmitter.js";
+import { MessageType } from "../ui/types.js";
+import { spawnWrapper } from "./spawnWrapper.js";
 export function handleAutoUpdate(info, settings, projectRoot, spawnFn = spawnWrapper) {
     if (!info) {
         return;
@@ -19,34 +19,34 @@ export function handleAutoUpdate(info, settings, projectRoot, spawnFn = spawnWra
     if (installationInfo.updateMessage) {
         combinedMessage += `\n${installationInfo.updateMessage}`;
     }
-    updateEventEmitter.emit('update-received', {
+    updateEventEmitter.emit("update-received", {
         message: combinedMessage,
     });
     if (!installationInfo.updateCommand ||
         settings.merged.general?.disableAutoUpdate) {
         return;
     }
-    const isNightly = info.update.latest.includes('nightly');
-    const updateCommand = installationInfo.updateCommand.replace('@latest', isNightly ? '@nightly' : `@${info.update.latest}`);
-    const updateProcess = spawnFn(updateCommand, { stdio: 'pipe', shell: true });
-    let errorOutput = '';
-    updateProcess.stderr.on('data', (data) => {
+    const isNightly = info.update.latest.includes("nightly");
+    const updateCommand = installationInfo.updateCommand.replace("@latest", isNightly ? "@nightly" : `@${info.update.latest}`);
+    const updateProcess = spawnFn(updateCommand, { stdio: "pipe", shell: true });
+    let errorOutput = "";
+    updateProcess.stderr.on("data", (data) => {
         errorOutput += data.toString();
     });
-    updateProcess.on('close', (code) => {
+    updateProcess.on("close", (code) => {
         if (code === 0) {
-            updateEventEmitter.emit('update-success', {
-                message: 'Update successful! The new version will be used on your next run.',
+            updateEventEmitter.emit("update-success", {
+                message: "Update successful! The new version will be used on your next run.",
             });
         }
         else {
-            updateEventEmitter.emit('update-failed', {
+            updateEventEmitter.emit("update-failed", {
                 message: `Automatic update failed. Please try updating manually. (command: ${updateCommand}, stderr: ${errorOutput.trim()})`,
             });
         }
     });
-    updateProcess.on('error', (err) => {
-        updateEventEmitter.emit('update-failed', {
+    updateProcess.on("error", (err) => {
+        updateEventEmitter.emit("update-failed", {
             message: `Automatic update failed. Please try updating manually. (error: ${err.message})`,
         });
     });
@@ -88,15 +88,15 @@ export function setUpdateHandler(addItem, setUpdateInfo) {
             text: data.message,
         }, Date.now());
     };
-    updateEventEmitter.on('update-received', handleUpdateRecieved);
-    updateEventEmitter.on('update-failed', handleUpdateFailed);
-    updateEventEmitter.on('update-success', handleUpdateSuccess);
-    updateEventEmitter.on('update-info', handleUpdateInfo);
+    updateEventEmitter.on("update-received", handleUpdateRecieved);
+    updateEventEmitter.on("update-failed", handleUpdateFailed);
+    updateEventEmitter.on("update-success", handleUpdateSuccess);
+    updateEventEmitter.on("update-info", handleUpdateInfo);
     return () => {
-        updateEventEmitter.off('update-received', handleUpdateRecieved);
-        updateEventEmitter.off('update-failed', handleUpdateFailed);
-        updateEventEmitter.off('update-success', handleUpdateSuccess);
-        updateEventEmitter.off('update-info', handleUpdateInfo);
+        updateEventEmitter.off("update-received", handleUpdateRecieved);
+        updateEventEmitter.off("update-failed", handleUpdateFailed);
+        updateEventEmitter.off("update-success", handleUpdateSuccess);
+        updateEventEmitter.off("update-info", handleUpdateInfo);
     };
 }
 //# sourceMappingURL=handleAutoUpdate.js.map

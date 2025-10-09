@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type React from 'react';
-import type { IndividualToolCallDisplay } from '../../types.js';
-import type { Config } from '@qwen-code/qwen-code-core';
+import type React from "react";
+import type { IndividualToolCallDisplay } from "../../types.js";
+import type { Config } from "@qwen-code/qwen-code-core";
 interface ToolGroupMessageProps {
     groupId: number;
     toolCalls: IndividualToolCallDisplay[];

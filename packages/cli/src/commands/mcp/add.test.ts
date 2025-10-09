@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import yargs from 'yargs';
-import { addCommand } from './add.js';
-import { loadSettings, SettingScope } from '../../config/settings.js';
+import yargs from "yargs";
+import { addCommand } from "./add.js";
+import { loadSettings, SettingScope } from "../../config/settings.js";
 
-vi.mock('fs/promises', () => ({
+vi.mock("fs/promises", () => ({
   readFile: vi.fn(),
   writeFile: vi.fn(),
 }));
 
-vi.mock('../../config/settings.js', async () => {
-  const actual = await vi.importActual('../../config/settings.js');
+vi.mock("../../config/settings.js", async () => {
+  const actual = await vi.importActual("../../config/settings.js");
   return {
     ...actual,
     loadSettings: vi.fn(),
@@ -23,7 +23,7 @@ vi.mock('../../config/settings.js', async () => {
 
 const mockedLoadSettings = loadSettings as vi.Mock;
 
-describe('mcp add command', () => {
+describe("mcp add command", () => {
   let parser: yargs.Argv;
   let mockSetValue: vi.Mock;
 
@@ -38,83 +38,83 @@ describe('mcp add command', () => {
     });
   });
 
-  it('should add a stdio server to project settings', async () => {
+  it("should add a stdio server to project settings", async () => {
     await parser.parseAsync(
-      'add my-server /path/to/server arg1 arg2 -e FOO=bar',
+      "add my-server /path/to/server arg1 arg2 -e FOO=bar",
     );
 
     expect(mockSetValue).toHaveBeenCalledWith(
       SettingScope.Workspace,
-      'mcpServers',
+      "mcpServers",
       {
-        'my-server': {
-          command: '/path/to/server',
-          args: ['arg1', 'arg2'],
-          env: { FOO: 'bar' },
+        "my-server": {
+          command: "/path/to/server",
+          args: ["arg1", "arg2"],
+          env: { FOO: "bar" },
         },
       },
     );
   });
 
-  it('should add an sse server to user settings', async () => {
+  it("should add an sse server to user settings", async () => {
     await parser.parseAsync(
       'add --transport sse sse-server https://example.com/sse-endpoint --scope user -H "X-API-Key: your-key"',
     );
 
-    expect(mockSetValue).toHaveBeenCalledWith(SettingScope.User, 'mcpServers', {
-      'sse-server': {
-        url: 'https://example.com/sse-endpoint',
-        headers: { 'X-API-Key': 'your-key' },
+    expect(mockSetValue).toHaveBeenCalledWith(SettingScope.User, "mcpServers", {
+      "sse-server": {
+        url: "https://example.com/sse-endpoint",
+        headers: { "X-API-Key": "your-key" },
       },
     });
   });
 
-  it('should add an http server to project settings', async () => {
+  it("should add an http server to project settings", async () => {
     await parser.parseAsync(
       'add --transport http http-server https://example.com/mcp -H "Authorization: Bearer your-token"',
     );
 
     expect(mockSetValue).toHaveBeenCalledWith(
       SettingScope.Workspace,
-      'mcpServers',
+      "mcpServers",
       {
-        'http-server': {
-          httpUrl: 'https://example.com/mcp',
-          headers: { Authorization: 'Bearer your-token' },
+        "http-server": {
+          httpUrl: "https://example.com/mcp",
+          headers: { Authorization: "Bearer your-token" },
         },
       },
     );
   });
 
-  it('should handle MCP server args with -- separator', async () => {
+  it("should handle MCP server args with -- separator", async () => {
     await parser.parseAsync(
-      'add my-server npx -- -y http://example.com/some-package',
+      "add my-server npx -- -y http://example.com/some-package",
     );
 
     expect(mockSetValue).toHaveBeenCalledWith(
       SettingScope.Workspace,
-      'mcpServers',
+      "mcpServers",
       {
-        'my-server': {
-          command: 'npx',
-          args: ['-y', 'http://example.com/some-package'],
+        "my-server": {
+          command: "npx",
+          args: ["-y", "http://example.com/some-package"],
         },
       },
     );
   });
 
-  it('should handle unknown options as MCP server args', async () => {
+  it("should handle unknown options as MCP server args", async () => {
     await parser.parseAsync(
-      'add test-server npx -y http://example.com/some-package',
+      "add test-server npx -y http://example.com/some-package",
     );
 
     expect(mockSetValue).toHaveBeenCalledWith(
       SettingScope.Workspace,
-      'mcpServers',
+      "mcpServers",
       {
-        'test-server': {
-          command: 'npx',
-          args: ['-y', 'http://example.com/some-package'],
+        "test-server": {
+          command: "npx",
+          args: ["-y", "http://example.com/some-package"],
         },
       },
     );

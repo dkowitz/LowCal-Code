@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
-import { type ProjectSummaryInfo } from '@qwen-code/qwen-code-core';
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
+import { type ProjectSummaryInfo } from "@qwen-code/qwen-code-core";
 import {
   RadioButtonSelect,
   type RadioSelectItem,
-} from './shared/RadioButtonSelect.js';
-import { useKeypress } from '../hooks/useKeypress.js';
+} from "./shared/RadioButtonSelect.js";
+import { useKeypress } from "../hooks/useKeypress.js";
 
 interface WelcomeBackDialogProps {
   welcomeBackInfo: ProjectSummaryInfo;
-  onSelect: (choice: 'restart' | 'continue') => void;
+  onSelect: (choice: "restart" | "continue") => void;
   onClose: () => void;
 }
 
@@ -26,21 +26,21 @@ export function WelcomeBackDialog({
 }: WelcomeBackDialogProps) {
   useKeypress(
     (key) => {
-      if (key.name === 'escape') {
+      if (key.name === "escape") {
         onClose();
       }
     },
     { isActive: true },
   );
 
-  const options: Array<RadioSelectItem<'restart' | 'continue'>> = [
+  const options: Array<RadioSelectItem<"restart" | "continue">> = [
     {
-      label: 'Start new chat session',
-      value: 'restart',
+      label: "Start new chat session",
+      value: "restart",
     },
     {
-      label: 'Continue previous conversation',
-      value: 'continue',
+      label: "Continue previous conversation",
+      value: "continue",
     },
   ];
 

@@ -5,9 +5,9 @@
  */
 
 // File for 'gemini mcp add' command
-import type { CommandModule } from 'yargs';
-import { loadSettings, SettingScope } from '../../config/settings.js';
-import type { MCPServerConfig } from '@qwen-code/qwen-code-core';
+import type { CommandModule } from "yargs";
+import { loadSettings, SettingScope } from "../../config/settings.js";
+import type { MCPServerConfig } from "@qwen-code/qwen-code-core";
 
 async function addMcpServer(
   name: string,
@@ -37,15 +37,15 @@ async function addMcpServer(
     excludeTools,
   } = options;
   const settingsScope =
-    scope === 'user' ? SettingScope.User : SettingScope.Workspace;
+    scope === "user" ? SettingScope.User : SettingScope.Workspace;
   const settings = loadSettings(process.cwd());
 
   let newServer: Partial<MCPServerConfig> = {};
 
   const headers = header?.reduce(
     (acc, curr) => {
-      const [key, ...valueParts] = curr.split(':');
-      const value = valueParts.join(':').trim();
+      const [key, ...valueParts] = curr.split(":");
+      const value = valueParts.join(":").trim();
       if (key.trim() && value) {
         acc[key.trim()] = value;
       }
@@ -55,7 +55,7 @@ async function addMcpServer(
   );
 
   switch (transport) {
-    case 'sse':
+    case "sse":
       newServer = {
         url: commandOrUrl,
         headers,
@@ -66,7 +66,7 @@ async function addMcpServer(
         excludeTools,
       };
       break;
-    case 'http':
+    case "http":
       newServer = {
         httpUrl: commandOrUrl,
         headers,
@@ -77,14 +77,14 @@ async function addMcpServer(
         excludeTools,
       };
       break;
-    case 'stdio':
+    case "stdio":
     default:
       newServer = {
         command: commandOrUrl,
         args: args?.map(String),
         env: env?.reduce(
           (acc, curr) => {
-            const [key, value] = curr.split('=');
+            const [key, value] = curr.split("=");
             if (key && value) {
               acc[key] = value;
             }
@@ -113,7 +113,7 @@ async function addMcpServer(
 
   mcpServers[name] = newServer as MCPServerConfig;
 
-  settings.setValue(settingsScope, 'mcpServers', mcpServers);
+  settings.setValue(settingsScope, "mcpServers", mcpServers);
 
   if (isExistingServer) {
     console.log(`MCP server "${name}" updated in ${scope} settings.`);
@@ -125,97 +125,97 @@ async function addMcpServer(
 }
 
 export const addCommand: CommandModule = {
-  command: 'add <name> <commandOrUrl> [args...]',
-  describe: 'Add a server',
+  command: "add <name> <commandOrUrl> [args...]",
+  describe: "Add a server",
   builder: (yargs) =>
     yargs
-      .usage('Usage: gemini mcp add [options] <name> <commandOrUrl> [args...]')
+      .usage("Usage: gemini mcp add [options] <name> <commandOrUrl> [args...]")
       .parserConfiguration({
-        'unknown-options-as-args': true, // Pass unknown options as server args
-        'populate--': true, // Populate server args after -- separator
+        "unknown-options-as-args": true, // Pass unknown options as server args
+        "populate--": true, // Populate server args after -- separator
       })
-      .positional('name', {
-        describe: 'Name of the server',
-        type: 'string',
+      .positional("name", {
+        describe: "Name of the server",
+        type: "string",
         demandOption: true,
       })
-      .positional('commandOrUrl', {
-        describe: 'Command (stdio) or URL (sse, http)',
-        type: 'string',
+      .positional("commandOrUrl", {
+        describe: "Command (stdio) or URL (sse, http)",
+        type: "string",
         demandOption: true,
       })
-      .option('scope', {
-        alias: 's',
-        describe: 'Configuration scope (user or project)',
-        type: 'string',
-        default: 'project',
-        choices: ['user', 'project'],
+      .option("scope", {
+        alias: "s",
+        describe: "Configuration scope (user or project)",
+        type: "string",
+        default: "project",
+        choices: ["user", "project"],
       })
-      .option('transport', {
-        alias: 't',
-        describe: 'Transport type (stdio, sse, http)',
-        type: 'string',
-        default: 'stdio',
-        choices: ['stdio', 'sse', 'http'],
+      .option("transport", {
+        alias: "t",
+        describe: "Transport type (stdio, sse, http)",
+        type: "string",
+        default: "stdio",
+        choices: ["stdio", "sse", "http"],
       })
-      .option('env', {
-        alias: 'e',
-        describe: 'Set environment variables (e.g. -e KEY=value)',
-        type: 'array',
+      .option("env", {
+        alias: "e",
+        describe: "Set environment variables (e.g. -e KEY=value)",
+        type: "array",
         string: true,
       })
-      .option('header', {
-        alias: 'H',
+      .option("header", {
+        alias: "H",
         describe:
           'Set HTTP headers for SSE and HTTP transports (e.g. -H "X-Api-Key: abc123" -H "Authorization: Bearer abc123")',
-        type: 'array',
+        type: "array",
         string: true,
       })
-      .option('timeout', {
-        describe: 'Set connection timeout in milliseconds',
-        type: 'number',
+      .option("timeout", {
+        describe: "Set connection timeout in milliseconds",
+        type: "number",
       })
-      .option('trust', {
+      .option("trust", {
         describe:
-          'Trust the server (bypass all tool call confirmation prompts)',
-        type: 'boolean',
+          "Trust the server (bypass all tool call confirmation prompts)",
+        type: "boolean",
       })
-      .option('description', {
-        describe: 'Set the description for the server',
-        type: 'string',
+      .option("description", {
+        describe: "Set the description for the server",
+        type: "string",
       })
-      .option('include-tools', {
-        describe: 'A comma-separated list of tools to include',
-        type: 'array',
+      .option("include-tools", {
+        describe: "A comma-separated list of tools to include",
+        type: "array",
         string: true,
       })
-      .option('exclude-tools', {
-        describe: 'A comma-separated list of tools to exclude',
-        type: 'array',
+      .option("exclude-tools", {
+        describe: "A comma-separated list of tools to exclude",
+        type: "array",
         string: true,
       })
       .middleware((argv) => {
         // Handle -- separator args as server args if present
-        if (argv['--']) {
-          const existingArgs = (argv['args'] as Array<string | number>) || [];
-          argv['args'] = [...existingArgs, ...(argv['--'] as string[])];
+        if (argv["--"]) {
+          const existingArgs = (argv["args"] as Array<string | number>) || [];
+          argv["args"] = [...existingArgs, ...(argv["--"] as string[])];
         }
       }),
   handler: async (argv) => {
     await addMcpServer(
-      argv['name'] as string,
-      argv['commandOrUrl'] as string,
-      argv['args'] as Array<string | number>,
+      argv["name"] as string,
+      argv["commandOrUrl"] as string,
+      argv["args"] as Array<string | number>,
       {
-        scope: argv['scope'] as string,
-        transport: argv['transport'] as string,
-        env: argv['env'] as string[],
-        header: argv['header'] as string[],
-        timeout: argv['timeout'] as number | undefined,
-        trust: argv['trust'] as boolean | undefined,
-        description: argv['description'] as string | undefined,
-        includeTools: argv['includeTools'] as string[] | undefined,
-        excludeTools: argv['excludeTools'] as string[] | undefined,
+        scope: argv["scope"] as string,
+        transport: argv["transport"] as string,
+        env: argv["env"] as string[],
+        header: argv["header"] as string[],
+        timeout: argv["timeout"] as number | undefined,
+        trust: argv["trust"] as boolean | undefined,
+        description: argv["description"] as string | undefined,
+        includeTools: argv["includeTools"] as string[] | undefined,
+        excludeTools: argv["excludeTools"] as string[] | undefined,
       },
     );
   },

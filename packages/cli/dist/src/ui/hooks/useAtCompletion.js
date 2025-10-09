@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useEffect, useReducer, useRef } from 'react';
-import { FileSearchFactory, escapePath } from '@qwen-code/qwen-code-core';
-import { MAX_SUGGESTIONS_TO_SHOW } from '../components/SuggestionsDisplay.js';
+import { useEffect, useReducer, useRef } from "react";
+import { FileSearchFactory, escapePath } from "@qwen-code/qwen-code-core";
+import { MAX_SUGGESTIONS_TO_SHOW } from "../components/SuggestionsDisplay.js";
 export var AtCompletionStatus;
 (function (AtCompletionStatus) {
     AtCompletionStatus["IDLE"] = "idle";
@@ -22,42 +22,42 @@ const initialState = {
 };
 function atCompletionReducer(state, action) {
     switch (action.type) {
-        case 'INITIALIZE':
+        case "INITIALIZE":
             return {
                 ...state,
                 status: AtCompletionStatus.INITIALIZING,
                 isLoading: true,
             };
-        case 'INITIALIZE_SUCCESS':
+        case "INITIALIZE_SUCCESS":
             return { ...state, status: AtCompletionStatus.READY, isLoading: false };
-        case 'SEARCH':
+        case "SEARCH":
             // Keep old suggestions, don't set loading immediately
             return {
                 ...state,
                 status: AtCompletionStatus.SEARCHING,
                 pattern: action.payload,
             };
-        case 'SEARCH_SUCCESS':
+        case "SEARCH_SUCCESS":
             return {
                 ...state,
                 status: AtCompletionStatus.READY,
                 suggestions: action.payload,
                 isLoading: false,
             };
-        case 'SET_LOADING':
+        case "SET_LOADING":
             // Only show loading if we are still in a searching state
             if (state.status === AtCompletionStatus.SEARCHING) {
                 return { ...state, isLoading: action.payload, suggestions: [] };
             }
             return state;
-        case 'ERROR':
+        case "ERROR":
             return {
                 ...state,
                 status: AtCompletionStatus.ERROR,
                 isLoading: false,
                 suggestions: [],
             };
-        case 'RESET':
+        case "RESET":
             return initialState;
         default:
             return state;
@@ -76,7 +76,7 @@ export function useAtCompletion(props) {
         setIsLoadingSuggestions(state.isLoading);
     }, [state.isLoading, setIsLoadingSuggestions]);
     useEffect(() => {
-        dispatch({ type: 'RESET' });
+        dispatch({ type: "RESET" });
     }, [cwd, config]);
     // Reacts to user input (`pattern`) ONLY.
     useEffect(() => {
@@ -84,22 +84,22 @@ export function useAtCompletion(props) {
             // reset when first getting out of completion suggestions
             if (state.status === AtCompletionStatus.READY ||
                 state.status === AtCompletionStatus.ERROR) {
-                dispatch({ type: 'RESET' });
+                dispatch({ type: "RESET" });
             }
             return;
         }
         if (pattern === null) {
-            dispatch({ type: 'RESET' });
+            dispatch({ type: "RESET" });
             return;
         }
         if (state.status === AtCompletionStatus.IDLE) {
-            dispatch({ type: 'INITIALIZE' });
+            dispatch({ type: "INITIALIZE" });
         }
         else if ((state.status === AtCompletionStatus.READY ||
             state.status === AtCompletionStatus.SEARCHING) &&
             pattern !== state.pattern // Only search if the pattern has changed
         ) {
-            dispatch({ type: 'SEARCH', payload: pattern });
+            dispatch({ type: "SEARCH", payload: pattern });
         }
     }, [enabled, pattern, state.status, state.pattern]);
     // The "Worker" that performs async operations based on status.
@@ -118,13 +118,13 @@ export function useAtCompletion(props) {
                 });
                 await searcher.initialize();
                 fileSearch.current = searcher;
-                dispatch({ type: 'INITIALIZE_SUCCESS' });
+                dispatch({ type: "INITIALIZE_SUCCESS" });
                 if (state.pattern !== null) {
-                    dispatch({ type: 'SEARCH', payload: state.pattern });
+                    dispatch({ type: "SEARCH", payload: state.pattern });
                 }
             }
             catch (_) {
-                dispatch({ type: 'ERROR' });
+                dispatch({ type: "ERROR" });
             }
         };
         const search = async () => {
@@ -137,7 +137,7 @@ export function useAtCompletion(props) {
             const controller = new AbortController();
             searchAbortController.current = controller;
             slowSearchTimer.current = setTimeout(() => {
-                dispatch({ type: 'SET_LOADING', payload: true });
+                dispatch({ type: "SET_LOADING", payload: true });
             }, 200);
             try {
                 const results = await fileSearch.current.search(state.pattern, {
@@ -154,11 +154,11 @@ export function useAtCompletion(props) {
                     label: p,
                     value: escapePath(p),
                 }));
-                dispatch({ type: 'SEARCH_SUCCESS', payload: suggestions });
+                dispatch({ type: "SEARCH_SUCCESS", payload: suggestions });
             }
             catch (error) {
-                if (!(error instanceof Error && error.name === 'AbortError')) {
-                    dispatch({ type: 'ERROR' });
+                if (!(error instanceof Error && error.name === "AbortError")) {
+                    dispatch({ type: "ERROR" });
                 }
             }
         };

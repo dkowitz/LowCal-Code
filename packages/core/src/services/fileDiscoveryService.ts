@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { GitIgnoreFilter } from '../utils/gitIgnoreParser.js';
-import { GitIgnoreParser } from '../utils/gitIgnoreParser.js';
-import { isGitRepository } from '../utils/gitUtils.js';
-import * as path from 'node:path';
+import type { GitIgnoreFilter } from "../utils/gitIgnoreParser.js";
+import { GitIgnoreParser } from "../utils/gitIgnoreParser.js";
+import { isGitRepository } from "../utils/gitUtils.js";
+import * as path from "node:path";
 
-const GEMINI_IGNORE_FILE_NAME = '.qwenignore';
+const GEMINI_IGNORE_FILE_NAME = ".qwenignore";
 
 export interface FilterFilesOptions {
   respectGitIgnore?: boolean;

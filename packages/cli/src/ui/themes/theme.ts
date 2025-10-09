@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { CSSProperties } from 'react';
-import type { SemanticColors } from './semantic-tokens.js';
-import { resolveColor } from './color-utils.js';
+import type { CSSProperties } from "react";
+import type { SemanticColors } from "./semantic-tokens.js";
+import { resolveColor } from "./color-utils.js";
 
-export type ThemeType = 'light' | 'dark' | 'ansi' | 'custom';
+export type ThemeType = "light" | "dark" | "ansi" | "custom";
 
 export interface ColorsTheme {
   type: ThemeType;
@@ -29,7 +29,7 @@ export interface ColorsTheme {
 }
 
 export interface CustomTheme {
-  type: 'custom';
+  type: "custom";
   name: string;
 
   text?: {
@@ -78,56 +78,56 @@ export interface CustomTheme {
 }
 
 export const lightTheme: ColorsTheme = {
-  type: 'light',
-  Background: '#FAFAFA',
-  Foreground: '#3C3C43',
-  LightBlue: '#89BDCD',
-  AccentBlue: '#3B82F6',
-  AccentPurple: '#8B5CF6',
-  AccentCyan: '#06B6D4',
-  AccentGreen: '#3CA84B',
-  AccentYellow: '#D5A40A',
-  AccentRed: '#DD4C4C',
-  DiffAdded: '#C6EAD8',
-  DiffRemoved: '#FFCCCC',
-  Comment: '#008000',
-  Gray: '#97a0b0',
-  GradientColors: ['#4796E4', '#847ACE', '#C3677F'],
+  type: "light",
+  Background: "#FAFAFA",
+  Foreground: "#3C3C43",
+  LightBlue: "#89BDCD",
+  AccentBlue: "#3B82F6",
+  AccentPurple: "#8B5CF6",
+  AccentCyan: "#06B6D4",
+  AccentGreen: "#3CA84B",
+  AccentYellow: "#D5A40A",
+  AccentRed: "#DD4C4C",
+  DiffAdded: "#C6EAD8",
+  DiffRemoved: "#FFCCCC",
+  Comment: "#008000",
+  Gray: "#97a0b0",
+  GradientColors: ["#4796E4", "#847ACE", "#C3677F"],
 };
 
 export const darkTheme: ColorsTheme = {
-  type: 'dark',
-  Background: '#1E1E2E',
-  Foreground: '#CDD6F4',
-  LightBlue: '#ADD8E6',
-  AccentBlue: '#89B4FA',
-  AccentPurple: '#CBA6F7',
-  AccentCyan: '#89DCEB',
-  AccentGreen: '#A6E3A1',
-  AccentYellow: '#F9E2AF',
-  AccentRed: '#F38BA8',
-  DiffAdded: '#28350B',
-  DiffRemoved: '#430000',
-  Comment: '#6C7086',
-  Gray: '#6C7086',
-  GradientColors: ['#4796E4', '#847ACE', '#C3677F'],
+  type: "dark",
+  Background: "#1E1E2E",
+  Foreground: "#CDD6F4",
+  LightBlue: "#ADD8E6",
+  AccentBlue: "#89B4FA",
+  AccentPurple: "#CBA6F7",
+  AccentCyan: "#89DCEB",
+  AccentGreen: "#A6E3A1",
+  AccentYellow: "#F9E2AF",
+  AccentRed: "#F38BA8",
+  DiffAdded: "#28350B",
+  DiffRemoved: "#430000",
+  Comment: "#6C7086",
+  Gray: "#6C7086",
+  GradientColors: ["#4796E4", "#847ACE", "#C3677F"],
 };
 
 export const ansiTheme: ColorsTheme = {
-  type: 'ansi',
-  Background: 'black',
-  Foreground: 'white',
-  LightBlue: 'blue',
-  AccentBlue: 'blue',
-  AccentPurple: 'magenta',
-  AccentCyan: 'cyan',
-  AccentGreen: 'green',
-  AccentYellow: 'yellow',
-  AccentRed: 'red',
-  DiffAdded: 'green',
-  DiffRemoved: 'red',
-  Comment: 'gray',
-  Gray: 'gray',
+  type: "ansi",
+  Background: "black",
+  Foreground: "white",
+  LightBlue: "blue",
+  AccentBlue: "blue",
+  AccentPurple: "magenta",
+  AccentCyan: "cyan",
+  AccentGreen: "green",
+  AccentYellow: "yellow",
+  AccentRed: "red",
+  DiffAdded: "green",
+  DiffRemoved: "red",
+  Comment: "gray",
+  Gray: "gray",
 };
 
 export class Theme {
@@ -187,10 +187,10 @@ export class Theme {
     this._colorMap = Object.freeze(this._buildColorMap(rawMappings)); // Build and freeze the map
 
     // Determine the default foreground color
-    const rawDefaultColor = rawMappings['hljs']?.color;
+    const rawDefaultColor = rawMappings["hljs"]?.color;
     this.defaultColor =
       (rawDefaultColor ? Theme._resolveColor(rawDefaultColor) : undefined) ??
-      ''; // Default to empty string if not found or resolvable
+      ""; // Default to empty string if not found or resolvable
   }
 
   /**
@@ -223,7 +223,7 @@ export class Theme {
     const inkTheme: Record<string, string> = {};
     for (const key in hljsTheme) {
       // Ensure the key starts with 'hljs-' or is 'hljs' for the base style
-      if (!key.startsWith('hljs-') && key !== 'hljs') {
+      if (!key.startsWith("hljs-") && key !== "hljs") {
         continue; // Skip keys not related to highlighting classes
       }
 
@@ -251,160 +251,160 @@ export class Theme {
  */
 export function createCustomTheme(customTheme: CustomTheme): Theme {
   const colors: ColorsTheme = {
-    type: 'custom',
-    Background: customTheme.background?.primary ?? customTheme.Background ?? '',
-    Foreground: customTheme.text?.primary ?? customTheme.Foreground ?? '',
-    LightBlue: customTheme.text?.link ?? customTheme.LightBlue ?? '',
-    AccentBlue: customTheme.text?.link ?? customTheme.AccentBlue ?? '',
-    AccentPurple: customTheme.text?.accent ?? customTheme.AccentPurple ?? '',
-    AccentCyan: customTheme.text?.link ?? customTheme.AccentCyan ?? '',
-    AccentGreen: customTheme.status?.success ?? customTheme.AccentGreen ?? '',
-    AccentYellow: customTheme.status?.warning ?? customTheme.AccentYellow ?? '',
-    AccentRed: customTheme.status?.error ?? customTheme.AccentRed ?? '',
+    type: "custom",
+    Background: customTheme.background?.primary ?? customTheme.Background ?? "",
+    Foreground: customTheme.text?.primary ?? customTheme.Foreground ?? "",
+    LightBlue: customTheme.text?.link ?? customTheme.LightBlue ?? "",
+    AccentBlue: customTheme.text?.link ?? customTheme.AccentBlue ?? "",
+    AccentPurple: customTheme.text?.accent ?? customTheme.AccentPurple ?? "",
+    AccentCyan: customTheme.text?.link ?? customTheme.AccentCyan ?? "",
+    AccentGreen: customTheme.status?.success ?? customTheme.AccentGreen ?? "",
+    AccentYellow: customTheme.status?.warning ?? customTheme.AccentYellow ?? "",
+    AccentRed: customTheme.status?.error ?? customTheme.AccentRed ?? "",
     DiffAdded:
-      customTheme.background?.diff?.added ?? customTheme.DiffAdded ?? '',
+      customTheme.background?.diff?.added ?? customTheme.DiffAdded ?? "",
     DiffRemoved:
-      customTheme.background?.diff?.removed ?? customTheme.DiffRemoved ?? '',
-    Comment: customTheme.ui?.comment ?? customTheme.Comment ?? '',
-    Gray: customTheme.text?.secondary ?? customTheme.Gray ?? '',
+      customTheme.background?.diff?.removed ?? customTheme.DiffRemoved ?? "",
+    Comment: customTheme.ui?.comment ?? customTheme.Comment ?? "",
+    Gray: customTheme.text?.secondary ?? customTheme.Gray ?? "",
     GradientColors: customTheme.ui?.gradient ?? customTheme.GradientColors,
   };
 
   // Generate CSS properties mappings based on the custom theme colors
   const rawMappings: Record<string, CSSProperties> = {
     hljs: {
-      display: 'block',
-      overflowX: 'auto',
-      padding: '0.5em',
+      display: "block",
+      overflowX: "auto",
+      padding: "0.5em",
       background: colors.Background,
       color: colors.Foreground,
     },
-    'hljs-keyword': {
+    "hljs-keyword": {
       color: colors.AccentBlue,
     },
-    'hljs-literal': {
+    "hljs-literal": {
       color: colors.AccentBlue,
     },
-    'hljs-symbol': {
+    "hljs-symbol": {
       color: colors.AccentBlue,
     },
-    'hljs-name': {
+    "hljs-name": {
       color: colors.AccentBlue,
     },
-    'hljs-link': {
+    "hljs-link": {
       color: colors.AccentBlue,
-      textDecoration: 'underline',
+      textDecoration: "underline",
     },
-    'hljs-built_in': {
+    "hljs-built_in": {
       color: colors.AccentCyan,
     },
-    'hljs-type': {
+    "hljs-type": {
       color: colors.AccentCyan,
     },
-    'hljs-number': {
+    "hljs-number": {
       color: colors.AccentGreen,
     },
-    'hljs-class': {
+    "hljs-class": {
       color: colors.AccentGreen,
     },
-    'hljs-string': {
+    "hljs-string": {
       color: colors.AccentYellow,
     },
-    'hljs-meta-string': {
+    "hljs-meta-string": {
       color: colors.AccentYellow,
     },
-    'hljs-regexp': {
+    "hljs-regexp": {
       color: colors.AccentRed,
     },
-    'hljs-template-tag': {
+    "hljs-template-tag": {
       color: colors.AccentRed,
     },
-    'hljs-subst': {
+    "hljs-subst": {
       color: colors.Foreground,
     },
-    'hljs-function': {
+    "hljs-function": {
       color: colors.Foreground,
     },
-    'hljs-title': {
+    "hljs-title": {
       color: colors.Foreground,
     },
-    'hljs-params': {
+    "hljs-params": {
       color: colors.Foreground,
     },
-    'hljs-formula': {
+    "hljs-formula": {
       color: colors.Foreground,
     },
-    'hljs-comment': {
+    "hljs-comment": {
       color: colors.Comment,
-      fontStyle: 'italic',
+      fontStyle: "italic",
     },
-    'hljs-quote': {
+    "hljs-quote": {
       color: colors.Comment,
-      fontStyle: 'italic',
+      fontStyle: "italic",
     },
-    'hljs-doctag': {
+    "hljs-doctag": {
       color: colors.Comment,
     },
-    'hljs-meta': {
+    "hljs-meta": {
       color: colors.Gray,
     },
-    'hljs-meta-keyword': {
+    "hljs-meta-keyword": {
       color: colors.Gray,
     },
-    'hljs-tag': {
+    "hljs-tag": {
       color: colors.Gray,
     },
-    'hljs-variable': {
+    "hljs-variable": {
       color: colors.AccentPurple,
     },
-    'hljs-template-variable': {
+    "hljs-template-variable": {
       color: colors.AccentPurple,
     },
-    'hljs-attr': {
+    "hljs-attr": {
       color: colors.LightBlue,
     },
-    'hljs-attribute': {
+    "hljs-attribute": {
       color: colors.LightBlue,
     },
-    'hljs-builtin-name': {
+    "hljs-builtin-name": {
       color: colors.LightBlue,
     },
-    'hljs-section': {
+    "hljs-section": {
       color: colors.AccentYellow,
     },
-    'hljs-emphasis': {
-      fontStyle: 'italic',
+    "hljs-emphasis": {
+      fontStyle: "italic",
     },
-    'hljs-strong': {
-      fontWeight: 'bold',
+    "hljs-strong": {
+      fontWeight: "bold",
     },
-    'hljs-bullet': {
+    "hljs-bullet": {
       color: colors.AccentYellow,
     },
-    'hljs-selector-tag': {
+    "hljs-selector-tag": {
       color: colors.AccentYellow,
     },
-    'hljs-selector-id': {
+    "hljs-selector-id": {
       color: colors.AccentYellow,
     },
-    'hljs-selector-class': {
+    "hljs-selector-class": {
       color: colors.AccentYellow,
     },
-    'hljs-selector-attr': {
+    "hljs-selector-attr": {
       color: colors.AccentYellow,
     },
-    'hljs-selector-pseudo': {
+    "hljs-selector-pseudo": {
       color: colors.AccentYellow,
     },
-    'hljs-addition': {
+    "hljs-addition": {
       backgroundColor: colors.AccentGreen,
-      display: 'inline-block',
-      width: '100%',
+      display: "inline-block",
+      width: "100%",
     },
-    'hljs-deletion': {
+    "hljs-deletion": {
       backgroundColor: colors.AccentRed,
-      display: 'inline-block',
-      width: '100%',
+      display: "inline-block",
+      width: "100%",
     },
   };
 
@@ -440,7 +440,7 @@ export function createCustomTheme(customTheme: CustomTheme): Theme {
 
   return new Theme(
     customTheme.name,
-    'custom',
+    "custom",
     rawMappings,
     colors,
     semanticColors,

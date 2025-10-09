@@ -4,21 +4,21 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useMemo } from 'react';
-import { Box, Text } from 'ink';
-import { Colors } from '../../../colors.js';
+import React, { useMemo } from "react";
+import { Box, Text } from "ink";
+import { Colors } from "../../../colors.js";
 import type {
   TaskResultDisplay,
   SubagentStatsSummary,
   Config,
-} from '@qwen-code/qwen-code-core';
-import { theme } from '../../../semantic-colors.js';
-import { useKeypress } from '../../../hooks/useKeypress.js';
-import { COLOR_OPTIONS } from '../constants.js';
-import { fmtDuration } from '../utils.js';
-import { ToolConfirmationMessage } from '../../messages/ToolConfirmationMessage.js';
+} from "@qwen-code/qwen-code-core";
+import { theme } from "../../../semantic-colors.js";
+import { useKeypress } from "../../../hooks/useKeypress.js";
+import { COLOR_OPTIONS } from "../constants.js";
+import { fmtDuration } from "../utils.js";
+import { ToolConfirmationMessage } from "../../messages/ToolConfirmationMessage.js";
 
-export type DisplayMode = 'compact' | 'default' | 'verbose';
+export type DisplayMode = "compact" | "default" | "verbose";
 
 export interface AgentExecutionDisplayProps {
   data: TaskResultDisplay;
@@ -29,40 +29,40 @@ export interface AgentExecutionDisplayProps {
 
 const getStatusColor = (
   status:
-    | TaskResultDisplay['status']
-    | 'executing'
-    | 'success'
-    | 'awaiting_approval',
+    | TaskResultDisplay["status"]
+    | "executing"
+    | "success"
+    | "awaiting_approval",
 ) => {
   switch (status) {
-    case 'running':
-    case 'executing':
-    case 'awaiting_approval':
+    case "running":
+    case "executing":
+    case "awaiting_approval":
       return theme.status.warning;
-    case 'completed':
-    case 'success':
+    case "completed":
+    case "success":
       return theme.status.success;
-    case 'cancelled':
+    case "cancelled":
       return theme.status.warning;
-    case 'failed':
+    case "failed":
       return theme.status.error;
     default:
       return Colors.Gray;
   }
 };
 
-const getStatusText = (status: TaskResultDisplay['status']) => {
+const getStatusText = (status: TaskResultDisplay["status"]) => {
   switch (status) {
-    case 'running':
-      return 'Running';
-    case 'completed':
-      return 'Completed';
-    case 'cancelled':
-      return 'User Cancelled';
-    case 'failed':
-      return 'Failed';
+    case "running":
+      return "Running";
+    case "completed":
+      return "Completed";
+    case "cancelled":
+      return "User Cancelled";
+    case "failed":
+      return "Failed";
     default:
-      return 'Unknown';
+      return "Unknown";
   }
 };
 
@@ -80,7 +80,7 @@ export const AgentExecutionDisplay: React.FC<AgentExecutionDisplayProps> = ({
   childWidth,
   config,
 }) => {
-  const [displayMode, setDisplayMode] = React.useState<DisplayMode>('compact');
+  const [displayMode, setDisplayMode] = React.useState<DisplayMode>("compact");
 
   const agentColor = useMemo(() => {
     const colorOption = COLOR_OPTIONS.find(
@@ -91,46 +91,46 @@ export const AgentExecutionDisplay: React.FC<AgentExecutionDisplayProps> = ({
 
   const footerText = React.useMemo(() => {
     // This component only listens to keyboard shortcut events when the subagent is running
-    if (data.status !== 'running') return '';
+    if (data.status !== "running") return "";
 
-    if (displayMode === 'default') {
+    if (displayMode === "default") {
       const hasMoreLines =
-        data.taskPrompt.split('\n').length > MAX_TASK_PROMPT_LINES;
+        data.taskPrompt.split("\n").length > MAX_TASK_PROMPT_LINES;
       const hasMoreToolCalls =
         data.toolCalls && data.toolCalls.length > MAX_TOOL_CALLS;
 
       if (hasMoreToolCalls || hasMoreLines) {
-        return 'Press ctrl+r to show less, ctrl+e to show more.';
+        return "Press ctrl+r to show less, ctrl+e to show more.";
       }
-      return 'Press ctrl+r to show less.';
+      return "Press ctrl+r to show less.";
     }
 
-    if (displayMode === 'verbose') {
-      return 'Press ctrl+e to show less.';
+    if (displayMode === "verbose") {
+      return "Press ctrl+e to show less.";
     }
 
-    return '';
+    return "";
   }, [displayMode, data]);
 
   // Handle keyboard shortcuts to control display mode
   useKeypress(
     (key) => {
-      if (key.ctrl && key.name === 'r') {
+      if (key.ctrl && key.name === "r") {
         // ctrl+r toggles between compact and default
         setDisplayMode((current) =>
-          current === 'compact' ? 'default' : 'compact',
+          current === "compact" ? "default" : "compact",
         );
-      } else if (key.ctrl && key.name === 'e') {
+      } else if (key.ctrl && key.name === "e") {
         // ctrl+e toggles between default and verbose
         setDisplayMode((current) =>
-          current === 'default' ? 'verbose' : 'default',
+          current === "default" ? "verbose" : "default",
         );
       }
     },
     { isActive: true },
   );
 
-  if (displayMode === 'compact') {
+  if (displayMode === "compact") {
     return (
       <Box flexDirection="column">
         {/* Header: Agent name and status */}
@@ -145,7 +145,7 @@ export const AgentExecutionDisplay: React.FC<AgentExecutionDisplayProps> = ({
         )}
 
         {/* Running state: Show current tool call and progress */}
-        {data.status === 'running' && (
+        {data.status === "running" && (
           <>
             {/* Current tool call */}
             {data.toolCalls && data.toolCalls.length > 0 && (
@@ -183,7 +183,7 @@ export const AgentExecutionDisplay: React.FC<AgentExecutionDisplayProps> = ({
         )}
 
         {/* Completed state: Show summary line */}
-        {data.status === 'completed' && data.executionSummary && (
+        {data.status === "completed" && data.executionSummary && (
           <Box flexDirection="row" marginTop={1}>
             <Text color={theme.text.secondary}>
               Execution Summary: {data.executionSummary.totalToolCalls} tool
@@ -194,7 +194,7 @@ export const AgentExecutionDisplay: React.FC<AgentExecutionDisplayProps> = ({
         )}
 
         {/* Failed/Cancelled state: Show error reason */}
-        {data.status === 'failed' && (
+        {data.status === "failed" && (
           <Box flexDirection="row" marginTop={1}>
             <Text color={theme.status.error}>
               Failed: {data.terminateReason}
@@ -224,7 +224,7 @@ export const AgentExecutionDisplay: React.FC<AgentExecutionDisplayProps> = ({
       />
 
       {/* Progress section for running tasks */}
-      {data.status === 'running' &&
+      {data.status === "running" &&
         data.toolCalls &&
         data.toolCalls.length > 0 && (
           <Box flexDirection="column">
@@ -250,9 +250,9 @@ export const AgentExecutionDisplay: React.FC<AgentExecutionDisplayProps> = ({
       )}
 
       {/* Results section for completed/failed tasks */}
-      {(data.status === 'completed' ||
-        data.status === 'failed' ||
-        data.status === 'cancelled') && (
+      {(data.status === "completed" ||
+        data.status === "failed" ||
+        data.status === "cancelled") && (
         <ResultsSection data={data} displayMode={displayMode} />
       )}
 
@@ -273,25 +273,25 @@ const TaskPromptSection: React.FC<{
   taskPrompt: string;
   displayMode: DisplayMode;
 }> = ({ taskPrompt, displayMode }) => {
-  const lines = taskPrompt.split('\n');
+  const lines = taskPrompt.split("\n");
   const shouldTruncate = lines.length > 10;
-  const showFull = displayMode === 'verbose';
+  const showFull = displayMode === "verbose";
   const displayLines = showFull ? lines : lines.slice(0, MAX_TASK_PROMPT_LINES);
 
   return (
     <Box flexDirection="column" gap={1}>
       <Box flexDirection="row">
         <Text color={theme.text.primary}>Task Detail: </Text>
-        {shouldTruncate && displayMode === 'default' && (
+        {shouldTruncate && displayMode === "default" && (
           <Text color={Colors.Gray}>
-            {' '}
+            {" "}
             Showing the first {MAX_TASK_PROMPT_LINES} lines.
           </Text>
         )}
       </Box>
       <Box paddingLeft={1}>
         <Text wrap="wrap">
-          {displayLines.join('\n') + (shouldTruncate && !showFull ? '...' : '')}
+          {displayLines.join("\n") + (shouldTruncate && !showFull ? "..." : "")}
         </Text>
       </Box>
     </Box>
@@ -302,7 +302,7 @@ const TaskPromptSection: React.FC<{
  * Status dot component with similar height as text
  */
 const StatusDot: React.FC<{
-  status: TaskResultDisplay['status'];
+  status: TaskResultDisplay["status"];
 }> = ({ status }) => (
   <Box marginLeft={1} marginRight={1}>
     <Text color={getStatusColor(status)}>●</Text>
@@ -313,7 +313,7 @@ const StatusDot: React.FC<{
  * Status indicator component
  */
 const StatusIndicator: React.FC<{
-  status: TaskResultDisplay['status'];
+  status: TaskResultDisplay["status"];
 }> = ({ status }) => {
   const color = getStatusColor(status);
   const text = getStatusText(status);
@@ -324,12 +324,12 @@ const StatusIndicator: React.FC<{
  * Tool calls list - format consistent with ToolInfo in ToolMessage.tsx
  */
 const ToolCallsList: React.FC<{
-  toolCalls: TaskResultDisplay['toolCalls'];
+  toolCalls: TaskResultDisplay["toolCalls"];
   displayMode: DisplayMode;
 }> = ({ toolCalls, displayMode }) => {
   const calls = toolCalls || [];
   const shouldTruncate = calls.length > MAX_TOOL_CALLS;
-  const showAll = displayMode === 'verbose';
+  const showAll = displayMode === "verbose";
   const displayCalls = showAll ? calls : calls.slice(-MAX_TOOL_CALLS); // Show last 5
 
   // Reverse the order to show most recent first
@@ -339,9 +339,9 @@ const ToolCallsList: React.FC<{
     <Box flexDirection="column">
       <Box flexDirection="row" marginBottom={1}>
         <Text color={theme.text.primary}>Tools:</Text>
-        {shouldTruncate && displayMode === 'default' && (
+        {shouldTruncate && displayMode === "default" && (
           <Text color={Colors.Gray}>
-            {' '}
+            {" "}
             Showing the last {MAX_TOOL_CALLS} of {calls.length} tools.
           </Text>
         )}
@@ -359,7 +359,7 @@ const ToolCallsList: React.FC<{
 const ToolCallItem: React.FC<{
   toolCall: {
     name: string;
-    status: 'executing' | 'awaiting_approval' | 'success' | 'failed';
+    status: "executing" | "awaiting_approval" | "success" | "failed";
     error?: string;
     args?: Record<string, unknown>;
     result?: string;
@@ -374,13 +374,13 @@ const ToolCallItem: React.FC<{
   const statusIcon = React.useMemo(() => {
     const color = getStatusColor(toolCall.status);
     switch (toolCall.status) {
-      case 'executing':
+      case "executing":
         return <Text color={color}>⊷</Text>; // Using same as ToolMessage
-      case 'awaiting_approval':
+      case "awaiting_approval":
         return <Text color={theme.status.warning}>?</Text>;
-      case 'success':
+      case "success":
         return <Text color={color}>✓</Text>;
-      case 'failed':
+      case "failed":
         return (
           <Text color={color} bold>
             x
@@ -392,19 +392,19 @@ const ToolCallItem: React.FC<{
   }, [toolCall.status]);
 
   const description = React.useMemo(() => {
-    if (!toolCall.description) return '';
-    const firstLine = toolCall.description.split('\n')[0];
+    if (!toolCall.description) return "";
+    const firstLine = toolCall.description.split("\n")[0];
     return firstLine.length > 80
-      ? firstLine.substring(0, 80) + '...'
+      ? firstLine.substring(0, 80) + "..."
       : firstLine;
   }, [toolCall.description]);
 
   // Get first line of resultDisplay for truncated output
   const truncatedOutput = React.useMemo(() => {
-    if (!toolCall.resultDisplay) return '';
-    const firstLine = toolCall.resultDisplay.split('\n')[0];
+    if (!toolCall.resultDisplay) return "";
+    const firstLine = toolCall.resultDisplay.split("\n")[0];
     return firstLine.length > 80
-      ? firstLine.substring(0, 80) + '...'
+      ? firstLine.substring(0, 80) + "..."
       : firstLine;
   }, [toolCall.resultDisplay]);
 
@@ -414,7 +414,7 @@ const ToolCallItem: React.FC<{
       <Box flexDirection="row">
         <Box minWidth={STATUS_INDICATOR_WIDTH}>{statusIcon}</Box>
         <Text wrap="truncate-end">
-          <Text>{toolCall.name}</Text>{' '}
+          <Text>{toolCall.name}</Text>{" "}
           <Text color={Colors.Gray}>{description}</Text>
           {toolCall.error && (
             <Text color={theme.status.error}> - {toolCall.error}</Text>
@@ -484,15 +484,15 @@ const ToolUsageStats: React.FC<{
         • <Text>Total Calls:</Text> {executionSummary.totalToolCalls}
       </Text>
       <Text>
-        • <Text>Success Rate:</Text>{' '}
+        • <Text>Success Rate:</Text>{" "}
         <Text color={Colors.AccentGreen}>
           {executionSummary.successRate.toFixed(1)}%
-        </Text>{' '}
+        </Text>{" "}
         (
         <Text color={Colors.AccentGreen}>
           {executionSummary.successfulToolCalls} success
         </Text>
-        ,{' '}
+        ,{" "}
         <Text color={Colors.AccentRed}>
           {executionSummary.failedToolCalls} failed
         </Text>
@@ -516,7 +516,7 @@ const ResultsSection: React.FC<{
     )}
 
     {/* Execution Summary section - hide when cancelled */}
-    {data.status === 'completed' && (
+    {data.status === "completed" && (
       <Box flexDirection="column">
         <Box flexDirection="row" marginBottom={1}>
           <Text color={theme.text.primary}>Execution Summary:</Text>
@@ -526,7 +526,7 @@ const ResultsSection: React.FC<{
     )}
 
     {/* Tool Usage section - hide when cancelled */}
-    {data.status === 'completed' && data.executionSummary && (
+    {data.status === "completed" && data.executionSummary && (
       <Box flexDirection="column">
         <Box flexDirection="row" marginBottom={1}>
           <Text color={theme.text.primary}>Tool Usage:</Text>
@@ -536,12 +536,12 @@ const ResultsSection: React.FC<{
     )}
 
     {/* Error reason for failed tasks */}
-    {data.status === 'cancelled' && (
+    {data.status === "cancelled" && (
       <Box flexDirection="row">
         <Text color={theme.status.warning}>⏹ User Cancelled</Text>
       </Box>
     )}
-    {data.status === 'failed' && (
+    {data.status === "failed" && (
       <Box flexDirection="row">
         <Text color={theme.status.error}>Task Failed: </Text>
         <Text color={theme.status.error}>{data.terminateReason}</Text>

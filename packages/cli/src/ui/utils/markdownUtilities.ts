@@ -48,7 +48,7 @@ const isIndexInsideCodeBlock = (
   let fenceCount = 0;
   let searchPos = 0;
   while (searchPos < content.length) {
-    const nextFence = content.indexOf('```', searchPos);
+    const nextFence = content.indexOf("```", searchPos);
     if (nextFence === -1 || nextFence >= indexToTest) {
       break;
     }
@@ -74,11 +74,11 @@ const findEnclosingCodeBlockStart = (
   }
   let currentSearchPos = 0;
   while (currentSearchPos < index) {
-    const blockStartIndex = content.indexOf('```', currentSearchPos);
+    const blockStartIndex = content.indexOf("```", currentSearchPos);
     if (blockStartIndex === -1 || blockStartIndex >= index) {
       break;
     }
-    const blockEndIndex = content.indexOf('```', blockStartIndex + 3);
+    const blockEndIndex = content.indexOf("```", blockStartIndex + 3);
     if (blockStartIndex < index) {
       if (blockEndIndex === -1 || index < blockEndIndex + 3) {
         return blockStartIndex;
@@ -103,7 +103,7 @@ export const findLastSafeSplitPoint = (content: string) => {
   // Search for the last double newline (\n\n) not in a code block.
   let searchStartIndex = content.length;
   while (searchStartIndex >= 0) {
-    const dnlIndex = content.lastIndexOf('\n\n', searchStartIndex);
+    const dnlIndex = content.lastIndexOf("\n\n", searchStartIndex);
     if (dnlIndex === -1) {
       // No more double newlines found.
       break;

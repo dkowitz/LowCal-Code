@@ -3,10 +3,11 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useState, useCallback, useEffect } from 'react';
-import { AuthType } from '@qwen-code/qwen-code-core';
-import { clearCachedCredentialFile, getErrorMessage, } from '@qwen-code/qwen-code-core';
-import { runExitCleanup } from '../../utils/cleanup.js';
+import { useState, useCallback, useEffect } from "react";
+import { AuthType } from "@qwen-code/qwen-code-core";
+import { clearCachedCredentialFile, getErrorMessage, } from "@qwen-code/qwen-code-core";
+import { runExitCleanup } from "../../utils/cleanup.js";
+import { normalizeAuthType } from "../../config/auth.js";
 export const useAuthCommand = (settings, setAuthError, config) => {
     const [isAuthDialogOpen, setIsAuthDialogOpen] = useState(settings.merged.security?.auth?.selectedType === undefined);
     const openAuthDialog = useCallback(() => {
@@ -15,7 +16,7 @@ export const useAuthCommand = (settings, setAuthError, config) => {
     const [isAuthenticating, setIsAuthenticating] = useState(false);
     useEffect(() => {
         const authFlow = async () => {
-            const authType = settings.merged.security?.auth?.selectedType;
+            const authType = normalizeAuthType(settings.merged.security?.auth?.selectedType);
             if (isAuthDialogOpen || !authType) {
                 return;
             }
@@ -37,7 +38,7 @@ export const useAuthCommand = (settings, setAuthError, config) => {
     const handleAuthSelect = useCallback(async (authType, scope) => {
         if (authType) {
             await clearCachedCredentialFile();
-            settings.setValue(scope, 'security.auth.selectedType', authType);
+            settings.setValue(scope, "security.auth.selectedType", authType);
             if (authType === AuthType.LOGIN_WITH_GOOGLE &&
                 config.isBrowserLaunchSuppressed()) {
                 runExitCleanup();

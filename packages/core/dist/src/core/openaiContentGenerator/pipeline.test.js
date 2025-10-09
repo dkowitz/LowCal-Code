@@ -3,14 +3,14 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { GenerateContentResponse, Type, FinishReason } from '@google/genai';
-import { ContentGenerationPipeline } from './pipeline.js';
-import { OpenAIContentConverter } from './converter.js';
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import { GenerateContentResponse, Type, FinishReason } from "@google/genai";
+import { ContentGenerationPipeline } from "./pipeline.js";
+import { OpenAIContentConverter } from "./converter.js";
 // Mock dependencies
-vi.mock('./converter.js');
-vi.mock('openai');
-describe('ContentGenerationPipeline', () => {
+vi.mock("./converter.js");
+vi.mock("openai");
+describe("ContentGenerationPipeline", () => {
     let pipeline;
     let mockConfig;
     let mockProvider;
@@ -61,8 +61,8 @@ describe('ContentGenerationPipeline', () => {
         // Mock configs
         mockCliConfig = {};
         mockContentGeneratorConfig = {
-            model: 'test-model',
-            authType: 'openai',
+            model: "test-model",
+            authType: "openai",
             samplingParams: {
                 temperature: 0.7,
                 top_p: 0.9,
@@ -80,30 +80,30 @@ describe('ContentGenerationPipeline', () => {
         };
         pipeline = new ContentGenerationPipeline(mockConfig);
     });
-    describe('constructor', () => {
-        it('should initialize with correct configuration', () => {
+    describe("constructor", () => {
+        it("should initialize with correct configuration", () => {
             expect(mockProvider.buildClient).toHaveBeenCalled();
-            expect(OpenAIContentConverter).toHaveBeenCalledWith('test-model');
+            expect(OpenAIContentConverter).toHaveBeenCalledWith("test-model");
         });
     });
-    describe('execute', () => {
-        it('should successfully execute non-streaming request', async () => {
+    describe("execute", () => {
+        it("should successfully execute non-streaming request", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             const mockMessages = [
-                { role: 'user', content: 'Hello' },
+                { role: "user", content: "Hello" },
             ];
             const mockOpenAIResponse = {
-                id: 'response-id',
+                id: "response-id",
                 choices: [
-                    { message: { content: 'Hello response' }, finish_reason: 'stop' },
+                    { message: { content: "Hello response" }, finish_reason: "stop" },
                 ],
                 created: Date.now(),
-                model: 'test-model',
+                model: "test-model",
                 usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
             };
             const mockGeminiResponse = new GenerateContentResponse();
@@ -116,7 +116,7 @@ describe('ContentGenerationPipeline', () => {
             expect(result).toBe(mockGeminiResponse);
             expect(mockConverter.convertGeminiRequestToOpenAI).toHaveBeenCalledWith(request);
             expect(mockClient.chat.completions.create).toHaveBeenCalledWith(expect.objectContaining({
-                model: 'test-model',
+                model: "test-model",
                 messages: mockMessages,
                 temperature: 0.7,
                 top_p: 0.9,
@@ -125,23 +125,23 @@ describe('ContentGenerationPipeline', () => {
             expect(mockConverter.convertOpenAIResponseToGemini).toHaveBeenCalledWith(mockOpenAIResponse);
             expect(mockTelemetryService.logSuccess).toHaveBeenCalledWith(expect.objectContaining({
                 userPromptId,
-                model: 'test-model',
-                authType: 'openai',
+                model: "test-model",
+                authType: "openai",
                 isStreaming: false,
             }), mockGeminiResponse, expect.any(Object), mockOpenAIResponse);
         });
-        it('should handle tools in request', async () => {
+        it("should handle tools in request", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
                 config: {
                     tools: [
                         {
                             functionDeclarations: [
                                 {
-                                    name: 'test-function',
-                                    description: 'Test function',
+                                    name: "test-function",
+                                    description: "Test function",
                                     parameters: { type: Type.OBJECT, properties: {} },
                                 },
                             ],
@@ -149,17 +149,17 @@ describe('ContentGenerationPipeline', () => {
                     ],
                 },
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             const mockMessages = [
-                { role: 'user', content: 'Hello' },
+                { role: "user", content: "Hello" },
             ];
             const mockTools = [
-                { type: 'function', function: { name: 'test-function' } },
+                { type: "function", function: { name: "test-function" } },
             ];
             const mockOpenAIResponse = {
-                id: 'response-id',
+                id: "response-id",
                 choices: [
-                    { message: { content: 'Hello response' }, finish_reason: 'stop' },
+                    { message: { content: "Hello response" }, finish_reason: "stop" },
                 ],
             };
             const mockGeminiResponse = new GenerateContentResponse();
@@ -176,42 +176,42 @@ describe('ContentGenerationPipeline', () => {
                 tools: mockTools,
             }));
         });
-        it('should handle errors and log them', async () => {
+        it("should handle errors and log them", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
-            const testError = new Error('API Error');
+            const userPromptId = "test-prompt-id";
+            const testError = new Error("API Error");
             mockConverter.convertGeminiRequestToOpenAI.mockReturnValue([]);
             mockClient.chat.completions.create.mockRejectedValue(testError);
             // Act & Assert
-            await expect(pipeline.execute(request, userPromptId)).rejects.toThrow('API Error');
+            await expect(pipeline.execute(request, userPromptId)).rejects.toThrow("API Error");
             expect(mockTelemetryService.logError).toHaveBeenCalledWith(expect.objectContaining({
                 userPromptId,
-                model: 'test-model',
-                authType: 'openai',
+                model: "test-model",
+                authType: "openai",
                 isStreaming: false,
             }), testError, expect.any(Object));
             expect(mockErrorHandler.handle).toHaveBeenCalledWith(testError, expect.any(Object), request);
         });
     });
-    describe('executeStream', () => {
-        it('should successfully execute streaming request', async () => {
+    describe("executeStream", () => {
+        it("should successfully execute streaming request", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             const mockChunk1 = {
-                id: 'chunk-1',
-                choices: [{ delta: { content: 'Hello' }, finish_reason: null }],
+                id: "chunk-1",
+                choices: [{ delta: { content: "Hello" }, finish_reason: null }],
             };
             const mockChunk2 = {
-                id: 'chunk-2',
-                choices: [{ delta: { content: ' response' }, finish_reason: 'stop' }],
+                id: "chunk-2",
+                choices: [{ delta: { content: " response" }, finish_reason: "stop" }],
             };
             const mockStream = {
                 async *[Symbol.asyncIterator]() {
@@ -222,10 +222,10 @@ describe('ContentGenerationPipeline', () => {
             const mockGeminiResponse1 = new GenerateContentResponse();
             const mockGeminiResponse2 = new GenerateContentResponse();
             mockGeminiResponse1.candidates = [
-                { content: { parts: [{ text: 'Hello' }], role: 'model' } },
+                { content: { parts: [{ text: "Hello" }], role: "model" } },
             ];
             mockGeminiResponse2.candidates = [
-                { content: { parts: [{ text: ' response' }], role: 'model' } },
+                { content: { parts: [{ text: " response" }], role: "model" } },
             ];
             mockConverter.convertGeminiRequestToOpenAI.mockReturnValue([]);
             mockConverter.convertOpenAIChunkToGemini
@@ -249,26 +249,26 @@ describe('ContentGenerationPipeline', () => {
             }));
             expect(mockTelemetryService.logStreamingSuccess).toHaveBeenCalledWith(expect.objectContaining({
                 userPromptId,
-                model: 'test-model',
-                authType: 'openai',
+                model: "test-model",
+                authType: "openai",
                 isStreaming: true,
             }), [mockGeminiResponse1, mockGeminiResponse2], expect.any(Object), [mockChunk1, mockChunk2]);
         });
-        it('should filter empty responses', async () => {
+        it("should filter empty responses", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             const mockChunk1 = {
-                id: 'chunk-1',
-                choices: [{ delta: { content: '' }, finish_reason: null }],
+                id: "chunk-1",
+                choices: [{ delta: { content: "" }, finish_reason: null }],
             };
             const mockChunk2 = {
-                id: 'chunk-2',
+                id: "chunk-2",
                 choices: [
-                    { delta: { content: 'Hello response' }, finish_reason: 'stop' },
+                    { delta: { content: "Hello response" }, finish_reason: "stop" },
                 ],
             };
             const mockStream = {
@@ -279,11 +279,11 @@ describe('ContentGenerationPipeline', () => {
             };
             const mockEmptyResponse = new GenerateContentResponse();
             mockEmptyResponse.candidates = [
-                { content: { parts: [], role: 'model' } },
+                { content: { parts: [], role: "model" } },
             ];
             const mockValidResponse = new GenerateContentResponse();
             mockValidResponse.candidates = [
-                { content: { parts: [{ text: 'Hello response' }], role: 'model' } },
+                { content: { parts: [{ text: "Hello response" }], role: "model" } },
             ];
             mockConverter.convertGeminiRequestToOpenAI.mockReturnValue([]);
             mockConverter.convertOpenAIChunkToGemini
@@ -300,14 +300,14 @@ describe('ContentGenerationPipeline', () => {
             expect(results).toHaveLength(1); // Empty response should be filtered out
             expect(results[0]).toBe(mockValidResponse);
         });
-        it('should handle streaming errors and reset tool calls', async () => {
+        it("should handle streaming errors and reset tool calls", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
-            const testError = new Error('Stream Error');
+            const userPromptId = "test-prompt-id";
+            const testError = new Error("Stream Error");
             const mockStream = {
                 /* eslint-disable-next-line */
                 async *[Symbol.asyncIterator]() {
@@ -335,37 +335,37 @@ describe('ContentGenerationPipeline', () => {
             expect(mockConverter.resetStreamingToolCalls).toHaveBeenCalledTimes(2); // Once at start, once on error
             expect(mockTelemetryService.logError).toHaveBeenCalledWith(expect.objectContaining({
                 userPromptId,
-                model: 'test-model',
-                authType: 'openai',
+                model: "test-model",
+                authType: "openai",
                 isStreaming: true,
             }), testError, expect.any(Object));
             expect(mockErrorHandler.handle).toHaveBeenCalledWith(testError, expect.any(Object), request);
         });
-        it('should merge finishReason and usageMetadata from separate chunks', async () => {
+        it("should merge finishReason and usageMetadata from separate chunks", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             // Content chunk
             const mockChunk1 = {
-                id: 'chunk-1',
+                id: "chunk-1",
                 choices: [
-                    { delta: { content: 'Hello response' }, finish_reason: null },
+                    { delta: { content: "Hello response" }, finish_reason: null },
                 ],
             };
             // Finish reason chunk (empty content, has finish_reason)
             const mockChunk2 = {
-                id: 'chunk-2',
-                choices: [{ delta: { content: '' }, finish_reason: 'stop' }],
+                id: "chunk-2",
+                choices: [{ delta: { content: "" }, finish_reason: "stop" }],
             };
             // Usage metadata chunk (empty candidates, has usage)
             const mockChunk3 = {
-                id: 'chunk-3',
-                object: 'chat.completion.chunk',
+                id: "chunk-3",
+                object: "chat.completion.chunk",
                 created: Date.now(),
-                model: 'test-model',
+                model: "test-model",
                 choices: [],
                 usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
             };
@@ -379,12 +379,12 @@ describe('ContentGenerationPipeline', () => {
             // Mock converter responses
             const mockContentResponse = new GenerateContentResponse();
             mockContentResponse.candidates = [
-                { content: { parts: [{ text: 'Hello response' }], role: 'model' } },
+                { content: { parts: [{ text: "Hello response" }], role: "model" } },
             ];
             const mockFinishResponse = new GenerateContentResponse();
             mockFinishResponse.candidates = [
                 {
-                    content: { parts: [], role: 'model' },
+                    content: { parts: [], role: "model" },
                     finishReason: FinishReason.STOP,
                 },
             ];
@@ -399,7 +399,7 @@ describe('ContentGenerationPipeline', () => {
             const mockMergedResponse = new GenerateContentResponse();
             mockMergedResponse.candidates = [
                 {
-                    content: { parts: [], role: 'model' },
+                    content: { parts: [], role: "model" },
                     finishReason: FinishReason.STOP,
                 },
             ];
@@ -433,29 +433,29 @@ describe('ContentGenerationPipeline', () => {
             });
             expect(mockTelemetryService.logStreamingSuccess).toHaveBeenCalledWith(expect.objectContaining({
                 userPromptId,
-                model: 'test-model',
-                authType: 'openai',
+                model: "test-model",
+                authType: "openai",
                 isStreaming: true,
             }), results, expect.any(Object), [mockChunk1, mockChunk2, mockChunk3]);
         });
-        it('should handle ideal case where last chunk has both finishReason and usageMetadata', async () => {
+        it("should handle ideal case where last chunk has both finishReason and usageMetadata", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             // Content chunk
             const mockChunk1 = {
-                id: 'chunk-1',
+                id: "chunk-1",
                 choices: [
-                    { delta: { content: 'Hello response' }, finish_reason: null },
+                    { delta: { content: "Hello response" }, finish_reason: null },
                 ],
             };
             // Final chunk with both finish_reason and usage (ideal case)
             const mockChunk2 = {
-                id: 'chunk-2',
-                choices: [{ delta: { content: '' }, finish_reason: 'stop' }],
+                id: "chunk-2",
+                choices: [{ delta: { content: "" }, finish_reason: "stop" }],
                 usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
             };
             const mockStream = {
@@ -467,12 +467,12 @@ describe('ContentGenerationPipeline', () => {
             // Mock converter responses
             const mockContentResponse = new GenerateContentResponse();
             mockContentResponse.candidates = [
-                { content: { parts: [{ text: 'Hello response' }], role: 'model' } },
+                { content: { parts: [{ text: "Hello response" }], role: "model" } },
             ];
             const mockFinalResponse = new GenerateContentResponse();
             mockFinalResponse.candidates = [
                 {
-                    content: { parts: [], role: 'model' },
+                    content: { parts: [], role: "model" },
                     finishReason: FinishReason.STOP,
                 },
             ];
@@ -505,33 +505,33 @@ describe('ContentGenerationPipeline', () => {
                 totalTokenCount: 30,
             });
         });
-        it('should handle providers that send zero usage in finish chunk (like modelscope)', async () => {
+        it("should handle providers that send zero usage in finish chunk (like modelscope)", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             // Content chunk with zero usage (typical for modelscope)
             const mockChunk1 = {
-                id: 'chunk-1',
+                id: "chunk-1",
                 choices: [
-                    { delta: { content: 'Hello response' }, finish_reason: null },
+                    { delta: { content: "Hello response" }, finish_reason: null },
                 ],
                 usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
             };
             // Finish chunk with zero usage (has finishReason but usage is all zeros)
             const mockChunk2 = {
-                id: 'chunk-2',
-                choices: [{ delta: { content: '' }, finish_reason: 'stop' }],
+                id: "chunk-2",
+                choices: [{ delta: { content: "" }, finish_reason: "stop" }],
                 usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
             };
             // Final usage chunk with actual usage data
             const mockChunk3 = {
-                id: 'chunk-3',
-                object: 'chat.completion.chunk',
+                id: "chunk-3",
+                object: "chat.completion.chunk",
                 created: Date.now(),
-                model: 'test-model',
+                model: "test-model",
                 choices: [],
                 usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
             };
@@ -545,7 +545,7 @@ describe('ContentGenerationPipeline', () => {
             // Mock converter responses
             const mockContentResponse = new GenerateContentResponse();
             mockContentResponse.candidates = [
-                { content: { parts: [{ text: 'Hello response' }], role: 'model' } },
+                { content: { parts: [{ text: "Hello response" }], role: "model" } },
             ];
             // Content chunk has zero usage metadata (should be filtered or ignored)
             mockContentResponse.usageMetadata = {
@@ -556,7 +556,7 @@ describe('ContentGenerationPipeline', () => {
             const mockFinishResponseWithZeroUsage = new GenerateContentResponse();
             mockFinishResponseWithZeroUsage.candidates = [
                 {
-                    content: { parts: [], role: 'model' },
+                    content: { parts: [], role: "model" },
                     finishReason: FinishReason.STOP,
                 },
             ];
@@ -598,30 +598,30 @@ describe('ContentGenerationPipeline', () => {
             });
             expect(mockTelemetryService.logStreamingSuccess).toHaveBeenCalledWith(expect.objectContaining({
                 userPromptId,
-                model: 'test-model',
-                authType: 'openai',
+                model: "test-model",
+                authType: "openai",
                 isStreaming: true,
             }), results, expect.any(Object), [mockChunk1, mockChunk2, mockChunk3]);
         });
-        it('should handle providers that send finishReason and valid usage in same chunk', async () => {
+        it("should handle providers that send finishReason and valid usage in same chunk", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             // Content chunk with zero usage
             const mockChunk1 = {
-                id: 'chunk-1',
+                id: "chunk-1",
                 choices: [
-                    { delta: { content: 'Hello response' }, finish_reason: null },
+                    { delta: { content: "Hello response" }, finish_reason: null },
                 ],
                 usage: { prompt_tokens: 0, completion_tokens: 0, total_tokens: 0 },
             };
             // Finish chunk with both finishReason and valid usage in same chunk
             const mockChunk2 = {
-                id: 'chunk-2',
-                choices: [{ delta: { content: '' }, finish_reason: 'stop' }],
+                id: "chunk-2",
+                choices: [{ delta: { content: "" }, finish_reason: "stop" }],
                 usage: { prompt_tokens: 10, completion_tokens: 20, total_tokens: 30 },
             };
             const mockStream = {
@@ -633,7 +633,7 @@ describe('ContentGenerationPipeline', () => {
             // Mock converter responses
             const mockContentResponse = new GenerateContentResponse();
             mockContentResponse.candidates = [
-                { content: { parts: [{ text: 'Hello response' }], role: 'model' } },
+                { content: { parts: [{ text: "Hello response" }], role: "model" } },
             ];
             mockContentResponse.usageMetadata = {
                 promptTokenCount: 0,
@@ -643,7 +643,7 @@ describe('ContentGenerationPipeline', () => {
             const mockFinalResponse = new GenerateContentResponse();
             mockFinalResponse.candidates = [
                 {
-                    content: { parts: [], role: 'model' },
+                    content: { parts: [], role: "model" },
                     finishReason: FinishReason.STOP,
                 },
             ];
@@ -677,56 +677,56 @@ describe('ContentGenerationPipeline', () => {
             });
         });
     });
-    describe('buildRequest', () => {
-        it('should build request with sampling parameters', async () => {
+    describe("buildRequest", () => {
+        it("should build request with sampling parameters", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
                 config: {
                     temperature: 0.8,
                     topP: 0.7,
                     maxOutputTokens: 500,
                 },
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             const mockMessages = [
-                { role: 'user', content: 'Hello' },
+                { role: "user", content: "Hello" },
             ];
             const mockOpenAIResponse = new GenerateContentResponse();
             mockConverter.convertGeminiRequestToOpenAI.mockReturnValue(mockMessages);
             mockConverter.convertOpenAIResponseToGemini.mockReturnValue(mockOpenAIResponse);
             mockClient.chat.completions.create.mockResolvedValue({
-                id: 'test',
-                choices: [{ message: { content: 'response' } }],
+                id: "test",
+                choices: [{ message: { content: "response" } }],
             });
             // Act
             await pipeline.execute(request, userPromptId);
             // Assert
             expect(mockClient.chat.completions.create).toHaveBeenCalledWith(expect.objectContaining({
-                model: 'test-model',
+                model: "test-model",
                 messages: mockMessages,
                 temperature: 0.7, // Config parameter used since request overrides are not being applied in current implementation
                 top_p: 0.9, // Config parameter used since request overrides are not being applied in current implementation
                 max_tokens: 1000, // Config parameter used since request overrides are not being applied in current implementation
             }));
         });
-        it('should use config sampling parameters when request parameters are not provided', async () => {
+        it("should use config sampling parameters when request parameters are not provided", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             const mockMessages = [
-                { role: 'user', content: 'Hello' },
+                { role: "user", content: "Hello" },
             ];
             const mockOpenAIResponse = new GenerateContentResponse();
             mockConverter.convertGeminiRequestToOpenAI.mockReturnValue(mockMessages);
             mockConverter.convertOpenAIResponseToGemini.mockReturnValue(mockOpenAIResponse);
             mockClient.chat.completions.create.mockResolvedValue({
-                id: 'test',
-                choices: [{ message: { content: 'response' } }],
+                id: "test",
+                choices: [{ message: { content: "response" } }],
             });
             // Act
             await pipeline.execute(request, userPromptId);
@@ -737,15 +737,15 @@ describe('ContentGenerationPipeline', () => {
                 max_tokens: 1000, // From config
             }));
         });
-        it('should allow provider to enhance request', async () => {
+        it("should allow provider to enhance request", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             const mockMessages = [
-                { role: 'user', content: 'Hello' },
+                { role: "user", content: "Hello" },
             ];
             const mockOpenAIResponse = new GenerateContentResponse();
             // Mock provider enhancement
@@ -756,14 +756,14 @@ describe('ContentGenerationPipeline', () => {
             mockConverter.convertGeminiRequestToOpenAI.mockReturnValue(mockMessages);
             mockConverter.convertOpenAIResponseToGemini.mockReturnValue(mockOpenAIResponse);
             mockClient.chat.completions.create.mockResolvedValue({
-                id: 'test',
-                choices: [{ message: { content: 'response' } }],
+                id: "test",
+                choices: [{ message: { content: "response" } }],
             });
             // Act
             await pipeline.execute(request, userPromptId);
             // Assert
             expect(mockProvider.buildRequest).toHaveBeenCalledWith(expect.objectContaining({
-                model: 'test-model',
+                model: "test-model",
                 messages: mockMessages,
             }), userPromptId);
             expect(mockClient.chat.completions.create).toHaveBeenCalledWith(expect.objectContaining({
@@ -771,51 +771,51 @@ describe('ContentGenerationPipeline', () => {
             }));
         });
     });
-    describe('createRequestContext', () => {
-        it('should create context with correct properties for non-streaming request', async () => {
+    describe("createRequestContext", () => {
+        it("should create context with correct properties for non-streaming request", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             const mockOpenAIResponse = new GenerateContentResponse();
             mockConverter.convertGeminiRequestToOpenAI.mockReturnValue([]);
             mockConverter.convertOpenAIResponseToGemini.mockReturnValue(mockOpenAIResponse);
             mockClient.chat.completions.create.mockResolvedValue({
-                id: 'test',
-                choices: [{ message: { content: 'response' } }],
+                id: "test",
+                choices: [{ message: { content: "response" } }],
             });
             // Act
             await pipeline.execute(request, userPromptId);
             // Assert
             expect(mockTelemetryService.logSuccess).toHaveBeenCalledWith(expect.objectContaining({
                 userPromptId,
-                model: 'test-model',
-                authType: 'openai',
+                model: "test-model",
+                authType: "openai",
                 isStreaming: false,
                 startTime: expect.any(Number),
                 duration: expect.any(Number),
             }), expect.any(Object), expect.any(Object), expect.any(Object));
         });
-        it('should create context with correct properties for streaming request', async () => {
+        it("should create context with correct properties for streaming request", async () => {
             // Arrange
             const request = {
-                model: 'test-model',
-                contents: [{ parts: [{ text: 'Hello' }], role: 'user' }],
+                model: "test-model",
+                contents: [{ parts: [{ text: "Hello" }], role: "user" }],
             };
-            const userPromptId = 'test-prompt-id';
+            const userPromptId = "test-prompt-id";
             const mockStream = {
                 async *[Symbol.asyncIterator]() {
                     yield {
-                        id: 'chunk-1',
-                        choices: [{ delta: { content: 'Hello' }, finish_reason: 'stop' }],
+                        id: "chunk-1",
+                        choices: [{ delta: { content: "Hello" }, finish_reason: "stop" }],
                     };
                 },
             };
             const mockGeminiResponse = new GenerateContentResponse();
             mockGeminiResponse.candidates = [
-                { content: { parts: [{ text: 'Hello' }], role: 'model' } },
+                { content: { parts: [{ text: "Hello" }], role: "model" } },
             ];
             mockConverter.convertGeminiRequestToOpenAI.mockReturnValue([]);
             mockConverter.convertOpenAIChunkToGemini.mockReturnValue(mockGeminiResponse);
@@ -828,20 +828,20 @@ describe('ContentGenerationPipeline', () => {
             // Assert
             expect(mockTelemetryService.logStreamingSuccess).toHaveBeenCalledWith(expect.objectContaining({
                 userPromptId,
-                model: 'test-model',
-                authType: 'openai',
+                model: "test-model",
+                authType: "openai",
                 isStreaming: true,
                 startTime: expect.any(Number),
                 duration: expect.any(Number),
             }), expect.any(Array), expect.any(Object), expect.any(Array));
         });
-        it('should collect all OpenAI chunks for logging even when Gemini responses are filtered', async () => {
+        it("should collect all OpenAI chunks for logging even when Gemini responses are filtered", async () => {
             // Create chunks that would produce empty Gemini responses (partial tool calls)
             const partialToolCallChunk1 = {
-                id: 'chunk-1',
-                object: 'chat.completion.chunk',
+                id: "chunk-1",
+                object: "chat.completion.chunk",
                 created: Date.now(),
-                model: 'test-model',
+                model: "test-model",
                 choices: [
                     {
                         index: 0,
@@ -849,9 +849,9 @@ describe('ContentGenerationPipeline', () => {
                             tool_calls: [
                                 {
                                     index: 0,
-                                    id: 'call_123',
-                                    type: 'function',
-                                    function: { name: 'test_function', arguments: '{"par' },
+                                    id: "call_123",
+                                    type: "function",
+                                    function: { name: "test_function", arguments: '{"par' },
                                 },
                             ],
                         },
@@ -860,10 +860,10 @@ describe('ContentGenerationPipeline', () => {
                 ],
             };
             const partialToolCallChunk2 = {
-                id: 'chunk-2',
-                object: 'chat.completion.chunk',
+                id: "chunk-2",
+                object: "chat.completion.chunk",
                 created: Date.now(),
-                model: 'test-model',
+                model: "test-model",
                 choices: [
                     {
                         index: 0,
@@ -880,15 +880,15 @@ describe('ContentGenerationPipeline', () => {
                 ],
             };
             const finishChunk = {
-                id: 'chunk-3',
-                object: 'chat.completion.chunk',
+                id: "chunk-3",
+                object: "chat.completion.chunk",
                 created: Date.now(),
-                model: 'test-model',
+                model: "test-model",
                 choices: [
                     {
                         index: 0,
                         delta: {},
-                        finish_reason: 'tool_calls',
+                        finish_reason: "tool_calls",
                     },
                 ],
             };
@@ -896,7 +896,7 @@ describe('ContentGenerationPipeline', () => {
             const emptyGeminiResponse1 = new GenerateContentResponse();
             emptyGeminiResponse1.candidates = [
                 {
-                    content: { parts: [], role: 'model' },
+                    content: { parts: [], role: "model" },
                     index: 0,
                     safetyRatings: [],
                 },
@@ -904,7 +904,7 @@ describe('ContentGenerationPipeline', () => {
             const emptyGeminiResponse2 = new GenerateContentResponse();
             emptyGeminiResponse2.candidates = [
                 {
-                    content: { parts: [], role: 'model' },
+                    content: { parts: [], role: "model" },
                     index: 0,
                     safetyRatings: [],
                 },
@@ -917,13 +917,13 @@ describe('ContentGenerationPipeline', () => {
                         parts: [
                             {
                                 functionCall: {
-                                    id: 'call_123',
-                                    name: 'test_function',
-                                    args: { param: 'value' },
+                                    id: "call_123",
+                                    name: "test_function",
+                                    args: { param: "value" },
                                 },
                             },
                         ],
-                        role: 'model',
+                        role: "model",
                     },
                     finishReason: FinishReason.STOP,
                     index: 0,
@@ -932,7 +932,7 @@ describe('ContentGenerationPipeline', () => {
             ];
             // Setup converter mocks
             mockConverter.convertGeminiRequestToOpenAI.mockReturnValue([
-                { role: 'user', content: 'test' },
+                { role: "user", content: "test" },
             ]);
             mockConverter.convertOpenAIChunkToGemini
                 .mockReturnValueOnce(emptyGeminiResponse1) // First partial chunk -> empty response
@@ -948,12 +948,12 @@ describe('ContentGenerationPipeline', () => {
             };
             mockClient.chat.completions.create.mockResolvedValue(mockStream);
             const request = {
-                model: 'test-model',
-                contents: [{ role: 'user', parts: [{ text: 'test' }] }],
+                model: "test-model",
+                contents: [{ role: "user", parts: [{ text: "test" }] }],
             };
             // Collect responses
             const responses = [];
-            const resultGenerator = await pipeline.executeStream(request, 'test-prompt-id');
+            const resultGenerator = await pipeline.executeStream(request, "test-prompt-id");
             for await (const response of resultGenerator) {
                 responses.push(response);
             }
@@ -962,14 +962,14 @@ describe('ContentGenerationPipeline', () => {
             expect(responses[0]).toBe(finalGeminiResponse);
             // Verify telemetry was called with ALL OpenAI chunks, including the filtered ones
             expect(mockTelemetryService.logStreamingSuccess).toHaveBeenCalledWith(expect.objectContaining({
-                model: 'test-model',
+                model: "test-model",
                 duration: expect.any(Number),
-                userPromptId: 'test-prompt-id',
-                authType: 'openai',
+                userPromptId: "test-prompt-id",
+                authType: "openai",
             }), [finalGeminiResponse], // Only the non-empty Gemini response
             expect.objectContaining({
-                model: 'test-model',
-                messages: [{ role: 'user', content: 'test' }],
+                model: "test-model",
+                messages: [{ role: "user", content: "test" }],
             }), [partialToolCallChunk1, partialToolCallChunk2, finishChunk]);
         });
     });

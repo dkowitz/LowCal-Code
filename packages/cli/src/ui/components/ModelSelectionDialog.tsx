@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { useState } from 'react';
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
+import type React from "react";
+import { useState } from "react";
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
 import {
   RadioButtonSelect,
   type RadioSelectItem,
-} from './shared/RadioButtonSelect.js';
-import { useKeypress } from '../hooks/useKeypress.js';
-import type { AvailableModel } from '../models/availableModels.js';
-import { TextInput } from './shared/TextInput.js';
+} from "./shared/RadioButtonSelect.js";
+import { useKeypress } from "../hooks/useKeypress.js";
+import type { AvailableModel } from "../models/availableModels.js";
+import { TextInput } from "./shared/TextInput.js";
 
 export interface ModelSelectionDialogProps {
   availableModels: AvailableModel[];
@@ -29,11 +29,11 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
   onSelect,
   onCancel,
 }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState("");
 
   useKeypress(
     (key) => {
-      if (key.name === 'escape') {
+      if (key.name === "escape") {
         onCancel();
       }
     },
@@ -48,36 +48,37 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
 
   const options: Array<RadioSelectItem<string>> = filteredModels.map(
     (model) => {
-      const visionIndicator = model.isVision ? ' [Vision]' : '';
-      
+      const visionIndicator = model.isVision ? " [Vision]" : "";
+
       // Format pricing: convert from per-token to per-million-tokens
-      let priceInfo = '';
+      let priceInfo = "";
       if (model.inputPrice || model.outputPrice) {
         const formatPrice = (priceStr: string | undefined): string => {
-          if (!priceStr) return '?';
+          if (!priceStr) return "?";
           const pricePerToken = parseFloat(priceStr);
           const pricePerMillion = pricePerToken * 1_000_000;
           return pricePerMillion.toFixed(2);
         };
-        
+
         const inputFormatted = formatPrice(model.inputPrice);
         const outputFormatted = formatPrice(model.outputPrice);
         priceInfo = ` ${inputFormatted}/${outputFormatted} per 1M tokens`;
       }
-      
+
       // Format context length with comma separators and show configured / max when available
       const configured = model.configuredContextLength;
       const max = model.maxContextLength ?? model.contextLength;
-      const ctxInfo = configured && max
-        ? ` (${configured.toLocaleString()} / ${max.toLocaleString()} ctx)`
-        : configured
-        ? ` (${configured.toLocaleString()} ctx)`
-        : max
-        ? ` (${max.toLocaleString()} ctx)`
-        : '';
-      
-      const currentIndicator = model.id === currentModel ? ' (current)' : '';
-      const unmatchedIndicator = model.unmatched ? ' [unmatched]' : '';
+      const ctxInfo =
+        configured && max
+          ? ` (${configured.toLocaleString()} / ${max.toLocaleString()} ctx)`
+          : configured
+            ? ` (${configured.toLocaleString()} ctx)`
+            : max
+              ? ` (${max.toLocaleString()} ctx)`
+              : "";
+
+      const currentIndicator = model.id === currentModel ? " (current)" : "";
+      const unmatchedIndicator = model.unmatched ? " [unmatched]" : "";
       return {
         label: `${model.label}${visionIndicator}${priceInfo}${ctxInfo}${unmatchedIndicator}${currentIndicator}`,
         value: model.id,

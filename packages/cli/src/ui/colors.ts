@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { themeManager } from './themes/theme-manager.js';
-import type { ColorsTheme } from './themes/theme.js';
+import { themeManager } from "./themes/theme-manager.js";
+import type { ColorsTheme } from "./themes/theme.js";
 
 export const Colors: ColorsTheme = {
   get type() {

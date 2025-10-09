@@ -4,37 +4,37 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
-import * as net from 'node:net';
-import * as child_process from 'node:child_process';
-import { IdeClient } from '../packages/core/src/ide/ide-client.js';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+import * as net from "node:net";
+import * as child_process from "node:child_process";
+import { IdeClient } from "../packages/core/src/ide/ide-client.js";
 
-import { TestMcpServer } from './test-mcp-server.js';
+import { TestMcpServer } from "./test-mcp-server.js";
 
-describe.skip('IdeClient', () => {
-  it('reads port from file and connects', async () => {
+describe.skip("IdeClient", () => {
+  it("reads port from file and connects", async () => {
     const server = new TestMcpServer();
     const port = await server.start();
     const pid = process.pid;
     const portFile = path.join(os.tmpdir(), `qwen-code-ide-server-${pid}.json`);
     fs.writeFileSync(portFile, JSON.stringify({ port }));
-    process.env['QWEN_CODE_IDE_WORKSPACE_PATH'] = process.cwd();
-    process.env['TERM_PROGRAM'] = 'vscode';
+    process.env["QWEN_CODE_IDE_WORKSPACE_PATH"] = process.cwd();
+    process.env["TERM_PROGRAM"] = "vscode";
 
     const ideClient = await IdeClient.getInstance();
     await ideClient.connect();
 
     expect(ideClient.getConnectionStatus()).toEqual({
-      status: 'connected',
+      status: "connected",
       details: undefined,
     });
 
     fs.unlinkSync(portFile);
     await server.stop();
-    delete process.env['QWEN_CODE_IDE_WORKSPACE_PATH'];
+    delete process.env["QWEN_CODE_IDE_WORKSPACE_PATH"];
   });
 });
 
@@ -42,7 +42,7 @@ const getFreePort = (): Promise<number> => {
   return new Promise((resolve, reject) => {
     const server = net.createServer();
     server.unref();
-    server.on('error', reject);
+    server.on("error", reject);
     server.listen(0, () => {
       const port = (server.address() as net.AddressInfo).port;
       server.close(() => {
@@ -52,7 +52,7 @@ const getFreePort = (): Promise<number> => {
   });
 };
 
-describe('IdeClient fallback connection logic', () => {
+describe("IdeClient fallback connection logic", () => {
   let server: TestMcpServer;
   let envPort: number;
   let pid: number;
@@ -63,9 +63,9 @@ describe('IdeClient fallback connection logic', () => {
     portFile = path.join(os.tmpdir(), `qwen-code-ide-server-${pid}.json`);
     server = new TestMcpServer();
     envPort = await server.start();
-    process.env['QWEN_CODE_IDE_SERVER_PORT'] = String(envPort);
-    process.env['TERM_PROGRAM'] = 'vscode';
-    process.env['QWEN_CODE_IDE_WORKSPACE_PATH'] = process.cwd();
+    process.env["QWEN_CODE_IDE_SERVER_PORT"] = String(envPort);
+    process.env["TERM_PROGRAM"] = "vscode";
+    process.env["QWEN_CODE_IDE_WORKSPACE_PATH"] = process.cwd();
     // Reset instance
     (IdeClient as unknown as { instance: IdeClient | undefined }).instance =
       undefined;
@@ -73,14 +73,14 @@ describe('IdeClient fallback connection logic', () => {
 
   afterEach(async () => {
     await server.stop();
-    delete process.env['QWEN_CODE_IDE_SERVER_PORT'];
-    delete process.env['QWEN_CODE_IDE_WORKSPACE_PATH'];
+    delete process.env["QWEN_CODE_IDE_SERVER_PORT"];
+    delete process.env["QWEN_CODE_IDE_WORKSPACE_PATH"];
     if (fs.existsSync(portFile)) {
       fs.unlinkSync(portFile);
     }
   });
 
-  it('connects using env var when port file does not exist', async () => {
+  it("connects using env var when port file does not exist", async () => {
     // Ensure port file doesn't exist
     if (fs.existsSync(portFile)) {
       fs.unlinkSync(portFile);
@@ -90,12 +90,12 @@ describe('IdeClient fallback connection logic', () => {
     await ideClient.connect();
 
     expect(ideClient.getConnectionStatus()).toEqual({
-      status: 'connected',
+      status: "connected",
       details: undefined,
     });
   });
 
-  it('falls back to env var when connection with port from file fails', async () => {
+  it("falls back to env var when connection with port from file fails", async () => {
     const filePort = await getFreePort();
     // Write port file with a port that is not listening
     fs.writeFileSync(portFile, JSON.stringify({ port: filePort }));
@@ -104,13 +104,13 @@ describe('IdeClient fallback connection logic', () => {
     await ideClient.connect();
 
     expect(ideClient.getConnectionStatus()).toEqual({
-      status: 'connected',
+      status: "connected",
       details: undefined,
     });
   });
 });
 
-describe.skip('getIdeProcessId', () => {
+describe.skip("getIdeProcessId", () => {
   let child: child_process.ChildProcess;
 
   afterEach(() => {
@@ -119,31 +119,31 @@ describe.skip('getIdeProcessId', () => {
     }
   });
 
-  it('should return the pid of the parent process', async () => {
+  it("should return the pid of the parent process", async () => {
     // We need to spawn a child process that will run the test
     // so that we can check that getIdeProcessId returns the pid of the parent
     const parentPid = process.pid;
     const output = await new Promise<string>((resolve, reject) => {
       child = child_process.spawn(
-        'node',
+        "node",
         [
-          '-e',
+          "-e",
           `
         const { getIdeProcessId } = require('../packages/core/src/ide/process-utils.js');
         getIdeProcessId().then(pid => console.log(pid));
       `,
         ],
         {
-          stdio: ['pipe', 'pipe', 'pipe'],
+          stdio: ["pipe", "pipe", "pipe"],
         },
       );
 
-      let out = '';
-      child.stdout?.on('data', (data) => {
+      let out = "";
+      child.stdout?.on("data", (data) => {
         out += data.toString();
       });
 
-      child.on('close', (code) => {
+      child.on("close", (code) => {
         if (code === 0) {
           resolve(out.trim());
         } else {
@@ -156,7 +156,7 @@ describe.skip('getIdeProcessId', () => {
   }, 10000);
 });
 
-describe('IdeClient with proxy', () => {
+describe("IdeClient with proxy", () => {
   let mcpServer: TestMcpServer;
   let proxyServer: net.Server;
   let mcpServerPort: number;
@@ -169,9 +169,9 @@ describe('IdeClient with proxy', () => {
     proxyServer = net.createServer().listen();
     proxyServerPort = (proxyServer.address() as net.AddressInfo).port;
 
-    vi.stubEnv('QWEN_CODE_IDE_SERVER_PORT', String(mcpServerPort));
-    vi.stubEnv('TERM_PROGRAM', 'vscode');
-    vi.stubEnv('QWEN_CODE_IDE_WORKSPACE_PATH', process.cwd());
+    vi.stubEnv("QWEN_CODE_IDE_SERVER_PORT", String(mcpServerPort));
+    vi.stubEnv("TERM_PROGRAM", "vscode");
+    vi.stubEnv("QWEN_CODE_IDE_WORKSPACE_PATH", process.cwd());
 
     // Reset instance
     (IdeClient as unknown as { instance: IdeClient | undefined }).instance =
@@ -185,16 +185,16 @@ describe('IdeClient with proxy', () => {
     vi.unstubAllEnvs();
   });
 
-  it('should connect to IDE server when HTTP_PROXY, HTTPS_PROXY and NO_PROXY are set', async () => {
-    vi.stubEnv('HTTP_PROXY', `http://localhost:${proxyServerPort}`);
-    vi.stubEnv('HTTPS_PROXY', `http://localhost:${proxyServerPort}`);
-    vi.stubEnv('NO_PROXY', 'example.com,127.0.0.1,::1');
+  it("should connect to IDE server when HTTP_PROXY, HTTPS_PROXY and NO_PROXY are set", async () => {
+    vi.stubEnv("HTTP_PROXY", `http://localhost:${proxyServerPort}`);
+    vi.stubEnv("HTTPS_PROXY", `http://localhost:${proxyServerPort}`);
+    vi.stubEnv("NO_PROXY", "example.com,127.0.0.1,::1");
 
     const ideClient = await IdeClient.getInstance();
     await ideClient.connect();
 
     expect(ideClient.getConnectionStatus()).toEqual({
-      status: 'connected',
+      status: "connected",
       details: undefined,
     });
   });

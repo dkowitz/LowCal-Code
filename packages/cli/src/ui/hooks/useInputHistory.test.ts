@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { act, renderHook } from '@testing-library/react';
-import { useInputHistory } from './useInputHistory.js';
+import { act, renderHook } from "@testing-library/react";
+import { useInputHistory } from "./useInputHistory.js";
 
-describe('useInputHistory', () => {
+describe("useInputHistory", () => {
   const mockOnSubmit = vi.fn();
   const mockOnChange = vi.fn();
 
@@ -15,15 +15,15 @@ describe('useInputHistory', () => {
     vi.clearAllMocks();
   });
 
-  const userMessages = ['message 1', 'message 2', 'message 3'];
+  const userMessages = ["message 1", "message 2", "message 3"];
 
-  it('should initialize with historyIndex -1 and empty originalQueryBeforeNav', () => {
+  it("should initialize with historyIndex -1 and empty originalQueryBeforeNav", () => {
     const { result } = renderHook(() =>
       useInputHistory({
         userMessages: [],
         onSubmit: mockOnSubmit,
         isActive: true,
-        currentQuery: '',
+        currentQuery: "",
         onChange: mockOnChange,
       }),
     );
@@ -36,23 +36,23 @@ describe('useInputHistory', () => {
     expect(mockOnChange).not.toHaveBeenCalled();
   });
 
-  describe('handleSubmit', () => {
-    it('should call onSubmit with trimmed value and reset history', () => {
+  describe("handleSubmit", () => {
+    it("should call onSubmit with trimmed value and reset history", () => {
       const { result } = renderHook(() =>
         useInputHistory({
           userMessages,
           onSubmit: mockOnSubmit,
           isActive: true,
-          currentQuery: '  test query  ',
+          currentQuery: "  test query  ",
           onChange: mockOnChange,
         }),
       );
 
       act(() => {
-        result.current.handleSubmit('  submit value  ');
+        result.current.handleSubmit("  submit value  ");
       });
 
-      expect(mockOnSubmit).toHaveBeenCalledWith('submit value');
+      expect(mockOnSubmit).toHaveBeenCalledWith("submit value");
       // Check if history is reset (e.g., by trying to navigate down)
       act(() => {
         result.current.navigateDown();
@@ -60,33 +60,33 @@ describe('useInputHistory', () => {
       expect(mockOnChange).not.toHaveBeenCalled();
     });
 
-    it('should not call onSubmit if value is empty after trimming', () => {
+    it("should not call onSubmit if value is empty after trimming", () => {
       const { result } = renderHook(() =>
         useInputHistory({
           userMessages,
           onSubmit: mockOnSubmit,
           isActive: true,
-          currentQuery: '',
+          currentQuery: "",
           onChange: mockOnChange,
         }),
       );
 
       act(() => {
-        result.current.handleSubmit('   ');
+        result.current.handleSubmit("   ");
       });
 
       expect(mockOnSubmit).not.toHaveBeenCalled();
     });
   });
 
-  describe('navigateUp', () => {
-    it('should not navigate if isActive is false', () => {
+  describe("navigateUp", () => {
+    it("should not navigate if isActive is false", () => {
       const { result } = renderHook(() =>
         useInputHistory({
           userMessages,
           onSubmit: mockOnSubmit,
           isActive: false,
-          currentQuery: 'current',
+          currentQuery: "current",
           onChange: mockOnChange,
         }),
       );
@@ -97,13 +97,13 @@ describe('useInputHistory', () => {
       expect(mockOnChange).not.toHaveBeenCalled();
     });
 
-    it('should not navigate if userMessages is empty', () => {
+    it("should not navigate if userMessages is empty", () => {
       const { result } = renderHook(() =>
         useInputHistory({
           userMessages: [],
           onSubmit: mockOnSubmit,
           isActive: true,
-          currentQuery: 'current',
+          currentQuery: "current",
           onChange: mockOnChange,
         }),
       );
@@ -114,8 +114,8 @@ describe('useInputHistory', () => {
       expect(mockOnChange).not.toHaveBeenCalled();
     });
 
-    it('should call onChange with the last message when navigating up from initial state', () => {
-      const currentQuery = 'current query';
+    it("should call onChange with the last message when navigating up from initial state", () => {
+      const currentQuery = "current query";
       const { result } = renderHook(() =>
         useInputHistory({
           userMessages,
@@ -133,8 +133,8 @@ describe('useInputHistory', () => {
       expect(mockOnChange).toHaveBeenCalledWith(userMessages[2]); // Last message
     });
 
-    it('should store currentQuery as originalQueryBeforeNav on first navigateUp', () => {
-      const currentQuery = 'original user input';
+    it("should store currentQuery as originalQueryBeforeNav on first navigateUp", () => {
+      const currentQuery = "original user input";
       const { result } = renderHook(() =>
         useInputHistory({
           userMessages,
@@ -157,13 +157,13 @@ describe('useInputHistory', () => {
       expect(mockOnChange).toHaveBeenCalledWith(currentQuery);
     });
 
-    it('should navigate through history messages on subsequent navigateUp calls', () => {
+    it("should navigate through history messages on subsequent navigateUp calls", () => {
       const { result } = renderHook(() =>
         useInputHistory({
           userMessages,
           onSubmit: mockOnSubmit,
           isActive: true,
-          currentQuery: '',
+          currentQuery: "",
           onChange: mockOnChange,
         }),
       );
@@ -185,13 +185,13 @@ describe('useInputHistory', () => {
     });
   });
 
-  describe('navigateDown', () => {
-    it('should not navigate if isActive is false', () => {
+  describe("navigateDown", () => {
+    it("should not navigate if isActive is false", () => {
       const initialProps = {
         userMessages,
         onSubmit: mockOnSubmit,
         isActive: true, // Start active to allow setup navigation
-        currentQuery: 'current',
+        currentQuery: "current",
         onChange: mockOnChange,
       };
       const { result, rerender } = renderHook(
@@ -217,13 +217,13 @@ describe('useInputHistory', () => {
       expect(mockOnChange).not.toHaveBeenCalled();
     });
 
-    it('should not navigate if historyIndex is -1 (not in history navigation)', () => {
+    it("should not navigate if historyIndex is -1 (not in history navigation)", () => {
       const { result } = renderHook(() =>
         useInputHistory({
           userMessages,
           onSubmit: mockOnSubmit,
           isActive: true,
-          currentQuery: 'current',
+          currentQuery: "current",
           onChange: mockOnChange,
         }),
       );
@@ -234,8 +234,8 @@ describe('useInputHistory', () => {
       expect(mockOnChange).not.toHaveBeenCalled();
     });
 
-    it('should restore originalQueryBeforeNav when navigating down to initial state', () => {
-      const originalQuery = 'my original input';
+    it("should restore originalQueryBeforeNav when navigating down to initial state", () => {
+      const originalQuery = "my original input";
       const { result } = renderHook(() =>
         useInputHistory({
           userMessages,

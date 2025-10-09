@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React from 'react';
-import { Text, Box } from 'ink';
-import { common, createLowlight } from 'lowlight';
+import React from "react";
+import { Text, Box } from "ink";
+import { common, createLowlight } from "lowlight";
 import type {
   Root,
   Element,
   Text as HastText,
   ElementContent,
   RootContent,
-} from 'hast';
-import { themeManager } from '../themes/theme-manager.js';
-import type { Theme } from '../themes/theme.js';
+} from "hast";
+import { themeManager } from "../themes/theme-manager.js";
+import type { Theme } from "../themes/theme.js";
 import {
   MaxSizedBox,
   MINIMUM_MAX_HEIGHT,
-} from '../components/shared/MaxSizedBox.js';
-import type { LoadedSettings } from '../../config/settings.js';
+} from "../components/shared/MaxSizedBox.js";
+import type { LoadedSettings } from "../../config/settings.js";
 
 // Configure theming and parsing utilities.
 const lowlight = createLowlight(common);
@@ -30,15 +30,15 @@ function renderHastNode(
   theme: Theme,
   inheritedColor: string | undefined,
 ): React.ReactNode {
-  if (node.type === 'text') {
+  if (node.type === "text") {
     // Use the color passed down from parent element, if any
     return <Text color={inheritedColor}>{node.value}</Text>;
   }
 
   // Handle Element Nodes: Determine color and pass it down, don't wrap
-  if (node.type === 'element') {
+  if (node.type === "element") {
     const nodeClasses: string[] =
-      (node.properties?.['className'] as string[]) || [];
+      (node.properties?.["className"] as string[]) || [];
     let elementColor: string | undefined = undefined;
 
     // Find color defined specifically for this element's class
@@ -70,7 +70,7 @@ function renderHastNode(
   }
 
   // Handle Root Node: Start recursion with initially inherited color
-  if (node.type === 'root') {
+  if (node.type === "root") {
     // Check if children array is empty - this happens when lowlight can't detect language – fall back to plain text
     if (!node.children || node.children.length === 0) {
       return null;
@@ -132,14 +132,14 @@ export function colorizeCode(
   theme?: Theme,
   settings?: LoadedSettings,
 ): React.ReactNode {
-  const codeToHighlight = code.replace(/\n$/, '');
+  const codeToHighlight = code.replace(/\n$/, "");
   const activeTheme = theme || themeManager.getActiveTheme();
   const showLineNumbers = settings?.merged.ui?.showLineNumbers ?? true;
 
   try {
     // Render the HAST tree using the adapted theme
     // Apply the theme's default foreground color to the top-level Text element
-    let lines = codeToHighlight.split('\n');
+    let lines = codeToHighlight.split("\n");
     const padWidth = String(lines.length).length; // Calculate padding width based on number of lines
 
     let hiddenLinesCount = 0;
@@ -174,7 +174,7 @@ export function colorizeCode(
                 <Text color={activeTheme.colors.Gray}>
                   {`${String(index + 1 + hiddenLinesCount).padStart(
                     padWidth,
-                    ' ',
+                    " ",
                   )} `}
                 </Text>
               )}
@@ -193,7 +193,7 @@ export function colorizeCode(
     );
     // Fall back to plain text with default color on error
     // Also display line numbers in fallback
-    const lines = codeToHighlight.split('\n');
+    const lines = codeToHighlight.split("\n");
     const padWidth = String(lines.length).length; // Calculate padding width based on number of lines
     return (
       <MaxSizedBox
@@ -205,7 +205,7 @@ export function colorizeCode(
           <Box key={index}>
             {showLineNumbers && (
               <Text color={activeTheme.defaultColor}>
-                {`${String(index + 1).padStart(padWidth, ' ')} `}
+                {`${String(index + 1).padStart(padWidth, " ")} `}
               </Text>
             )}
             <Text color={activeTheme.colors.Gray}>{line}</Text>

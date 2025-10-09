@@ -1,22 +1,28 @@
-import { DefaultOpenAICompatibleProvider } from './default.js';
-import { setModelContextLimit } from '../../tokenLimits.js';
+import { DefaultOpenAICompatibleProvider } from "./default.js";
+import { setModelContextLimit } from "../../tokenLimits.js";
 export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleProvider {
     constructor(contentGeneratorConfig, cliConfig) {
         super(contentGeneratorConfig, cliConfig);
     }
     static isOpenRouterProvider(contentGeneratorConfig) {
-        const baseURL = contentGeneratorConfig.baseUrl || '';
-        return baseURL.includes('openrouter.ai');
+        const baseURL = contentGeneratorConfig.baseUrl || "";
+        return baseURL.includes("openrouter.ai");
     }
     buildHeaders() {
         // Get base headers from parent class
         const baseHeaders = super.buildHeaders();
-        // Add OpenRouter-specific headers
-        return {
+        const headers = {
             ...baseHeaders,
-            'HTTP-Referer': 'https://github.com/QwenLM/qwen-code.git',
-            'X-Title': 'Qwen Code',
+            "X-Title": "Qwen Code",
         };
+        const referer = process.env["OPENROUTER_HTTP_REFERER"];
+        if (referer && referer.trim().length > 0) {
+            headers["HTTP-Referer"] = referer.trim();
+        }
+        else {
+            delete headers["HTTP-Referer"];
+        }
+        return headers;
     }
     /**
      * After fetching the list of models from OpenRouter, call this helper to
@@ -29,12 +35,12 @@ export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleP
         for (const m of models) {
             try {
                 const id = m.id || m.name;
-                const ctx = typeof m.context_length === 'number'
+                const ctx = typeof m.context_length === "number"
                     ? m.context_length
-                    : typeof m.top_provider?.context_length === 'number'
+                    : typeof m.top_provider?.context_length === "number"
                         ? m.top_provider.context_length
                         : undefined;
-                if (id && typeof ctx === 'number' && Number.isFinite(ctx) && ctx > 0) {
+                if (id && typeof ctx === "number" && Number.isFinite(ctx) && ctx > 0) {
                     // Persist dynamic limit in core tokenLimits map
                     setModelContextLimit(id, ctx);
                 }

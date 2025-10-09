@@ -4,16 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ThoughtSummary } from '@qwen-code/qwen-code-core';
-import type React from 'react';
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
-import { useStreamingContext } from '../contexts/StreamingContext.js';
-import { StreamingState } from '../types.js';
-import { GeminiRespondingSpinner } from './GeminiRespondingSpinner.js';
-import { formatDuration } from '../utils/formatters.js';
-import { useTerminalSize } from '../hooks/useTerminalSize.js';
-import { isNarrowWidth } from '../utils/isNarrowWidth.js';
+import type { ThoughtSummary } from "@qwen-code/qwen-code-core";
+import type React from "react";
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
+import { useStreamingContext } from "../contexts/StreamingContext.js";
+import { StreamingState } from "../types.js";
+import { GeminiRespondingSpinner } from "./GeminiRespondingSpinner.js";
+import { formatDuration } from "../utils/formatters.js";
+import { useTerminalSize } from "../hooks/useTerminalSize.js";
+import { isNarrowWidth } from "../utils/isNarrowWidth.js";
 
 interface LoadingIndicatorProps {
   currentLoadingPhrase?: string;
@@ -48,16 +48,16 @@ export const LoadingIndicator: React.FC<LoadingIndicatorProps> = ({
       {/* Main loading line */}
       <Box
         width="100%"
-        flexDirection={isNarrow ? 'column' : 'row'}
-        alignItems={isNarrow ? 'flex-start' : 'center'}
+        flexDirection={isNarrow ? "column" : "row"}
+        alignItems={isNarrow ? "flex-start" : "center"}
       >
         <Box>
           <Box marginRight={1}>
             <GeminiRespondingSpinner
               nonRespondingDisplay={
                 streamingState === StreamingState.WaitingForConfirmation
-                  ? '⠏'
-                  : ''
+                  ? "⠏"
+                  : ""
               }
             />
           </Box>

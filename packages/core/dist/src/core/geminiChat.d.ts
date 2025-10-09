@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { GenerateContentResponse, Content, GenerateContentConfig, SendMessageParameters, Tool } from '@google/genai';
-import type { ContentGenerator } from './contentGenerator.js';
-import type { Config } from '../config/config.js';
-import type { StructuredError } from './turn.js';
+import type { GenerateContentResponse, Content, GenerateContentConfig, SendMessageParameters, Tool } from "@google/genai";
+import type { ContentGenerator } from "./contentGenerator.js";
+import type { Config } from "../config/config.js";
+import type { StructuredError } from "./turn.js";
 export declare enum StreamEventType {
     /** A regular content chunk from the API. */
     CHUNK = "chunk",

@@ -50,21 +50,21 @@ export function truncateSearchResults(
     };
   }
 
-  const lines = content.split('\n');
-  
+  const lines = content.split("\n");
+
   // Extract header (first line with "Found X matches")
-  const headerLine = lines[0] || '';
+  const headerLine = lines[0] || "";
   const matchCountMatch = headerLine.match(/Found (\d+) match/);
   const totalMatches = matchCountMatch ? parseInt(matchCountMatch[1], 10) : 0;
 
   // Find file sections (lines starting with "File:")
   const fileSections: Array<{ start: number; end: number; file: string }> = [];
   let currentFileStart = -1;
-  let currentFile = '';
+  let currentFile = "";
 
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (line.startsWith('File: ')) {
+    if (line.startsWith("File: ")) {
       if (currentFileStart !== -1) {
         fileSections.push({
           start: currentFileStart,
@@ -76,7 +76,7 @@ export function truncateSearchResults(
       currentFile = line.substring(6);
     }
   }
-  
+
   // Add last section
   if (currentFileStart !== -1) {
     fileSections.push({
@@ -94,12 +94,12 @@ export function truncateSearchResults(
     // Not too many files, just truncate long lines within each file
     const truncatedLines = lines.map((line) => {
       if (line.length > 500) {
-        return line.substring(0, 500) + '... [line truncated]';
+        return line.substring(0, 500) + "... [line truncated]";
       }
       return line;
     });
-    const truncatedContent = truncatedLines.join('\n');
-    
+    const truncatedContent = truncatedLines.join("\n");
+
     return {
       content: truncatedContent,
       wasTruncated: true,
@@ -114,7 +114,10 @@ export function truncateSearchResults(
   const tailSections = fileSections.slice(-keepLast);
   const omittedSections = fileSections.slice(keepFirst, -keepLast);
 
-  const headLines = lines.slice(0, headSections[headSections.length - 1].end + 1);
+  const headLines = lines.slice(
+    0,
+    headSections[headSections.length - 1].end + 1,
+  );
   const tailLines = lines.slice(tailSections[0].start);
 
   const omittedFiles = omittedSections.map((s) => s.file);
@@ -125,23 +128,27 @@ export function truncateSearchResults(
   }, 0);
 
   const summarySection = [
-    '',
-    '... [TRUNCATED FOR CONTEXT MANAGEMENT] ...',
-    '',
+    "",
+    "... [TRUNCATED FOR CONTEXT MANAGEMENT] ...",
+    "",
     `Omitted ${omittedSections.length} files with ${omittedMatchCount} matches:`,
     ...omittedFiles.slice(0, 10).map((f) => `  - ${f}`),
-    ...(omittedFiles.length > 10 ? [`  ... and ${omittedFiles.length - 10} more files`] : []),
-    '',
+    ...(omittedFiles.length > 10
+      ? [`  ... and ${omittedFiles.length - 10} more files`]
+      : []),
+    "",
     `[Total: ${totalMatches} matches across ${fileSections.length} files]`,
     `[Original size: ${originalSize} chars (~${estimateTokens(originalSize)} tokens)]`,
     `[Showing first ${keepFirst} and last ${keepLast} files for context]`,
     `[Use more specific patterns or read_file for omitted files]`,
-    '',
-    '... [CONTINUING WITH LAST MATCHES] ...',
-    '',
+    "",
+    "... [CONTINUING WITH LAST MATCHES] ...",
+    "",
   ];
 
-  const truncatedContent = [...headLines, ...summarySection, ...tailLines].join('\n');
+  const truncatedContent = [...headLines, ...summarySection, ...tailLines].join(
+    "\n",
+  );
 
   return {
     content: truncatedContent,
@@ -173,9 +180,9 @@ export function truncateReadManyFiles(
   // Split by file separators (--- filepath ---)
   const fileSeparatorRegex = /^--- (.+?) ---$/gm;
   const parts: Array<{ file: string; content: string; start: number }> = [];
-  
+
   let match;
-  
+
   while ((match = fileSeparatorRegex.exec(content)) !== null) {
     if (parts.length > 0) {
       parts[parts.length - 1].content = content.substring(
@@ -185,13 +192,15 @@ export function truncateReadManyFiles(
     }
     parts.push({
       file: match[1],
-      content: '',
+      content: "",
       start: match.index + match[0].length,
     });
   }
-  
+
   if (parts.length > 0) {
-    parts[parts.length - 1].content = content.substring(parts[parts.length - 1].start);
+    parts[parts.length - 1].content = content.substring(
+      parts[parts.length - 1].start,
+    );
   }
 
   // Keep first 10 and last 10 files, summarize middle
@@ -202,14 +211,14 @@ export function truncateReadManyFiles(
     // Truncate each file's content instead
     const truncatedParts = parts.map((part) => {
       if (part.content.length > 2000) {
-        const lines = part.content.split('\n');
-        const kept = lines.slice(0, 50).join('\n');
+        const lines = part.content.split("\n");
+        const kept = lines.slice(0, 50).join("\n");
         return `--- ${part.file} ---\n${kept}\n... [${lines.length - 50} lines omitted] ...\n`;
       }
       return `--- ${part.file} ---\n${part.content}`;
     });
-    
-    const truncatedContent = truncatedParts.join('\n');
+
+    const truncatedContent = truncatedParts.join("\n");
     return {
       content: truncatedContent,
       wasTruncated: true,
@@ -223,23 +232,30 @@ export function truncateReadManyFiles(
   const tailParts = parts.slice(-keepLast);
   const omittedParts = parts.slice(keepFirst, -keepLast);
 
-  const headContent = headParts.map((p) => `--- ${p.file} ---\n${p.content}`).join('\n');
-  const tailContent = tailParts.map((p) => `--- ${p.file} ---\n${p.content}`).join('\n');
+  const headContent = headParts
+    .map((p) => `--- ${p.file} ---\n${p.content}`)
+    .join("\n");
+  const tailContent = tailParts
+    .map((p) => `--- ${p.file} ---\n${p.content}`)
+    .join("\n");
 
   const summarySection = [
-    '',
-    '... [TRUNCATED FOR CONTEXT MANAGEMENT] ...',
-    '',
+    "",
+    "... [TRUNCATED FOR CONTEXT MANAGEMENT] ...",
+    "",
     `Omitted ${omittedParts.length} files:`,
     ...omittedParts.slice(0, 20).map((p) => `  - ${p.file}`),
-    ...(omittedParts.length > 20 ? [`  ... and ${omittedParts.length - 20} more`] : []),
-    '',
+    ...(omittedParts.length > 20
+      ? [`  ... and ${omittedParts.length - 20} more`]
+      : []),
+    "",
     `[Total: ${parts.length} files, ${originalSize} chars (~${estimateTokens(originalSize)} tokens)]`,
     `[Use read_file to access omitted files individually]`,
-    '',
-  ].join('\n');
+    "",
+  ].join("\n");
 
-  const truncatedContent = headContent + '\n' + summarySection + '\n' + tailContent;
+  const truncatedContent =
+    headContent + "\n" + summarySection + "\n" + tailContent;
 
   return {
     content: truncatedContent,
@@ -276,13 +292,13 @@ export function truncateGeneric(
   const tail = content.substring(content.length - tailChars);
 
   const summary = [
-    '',
-    '... [TRUNCATED FOR CONTEXT MANAGEMENT] ...',
-    '',
+    "",
+    "... [TRUNCATED FOR CONTEXT MANAGEMENT] ...",
+    "",
     `[Omitted ${originalSize - keepChars} characters]`,
     `[Original: ${originalSize} chars (~${estimateTokens(originalSize)} tokens)]`,
-    '',
-  ].join('\n');
+    "",
+  ].join("\n");
 
   const truncatedContent = head + summary + tail;
 
@@ -325,7 +341,7 @@ export function applySmartTruncation(
   content: string,
 ): TruncationResult {
   const strategy = TRUNCATION_STRATEGIES[toolName];
-  
+
   if (!strategy) {
     // No specific strategy, use generic with high threshold
     return truncateGeneric(content, 50000);

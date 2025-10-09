@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import path from 'node:path';
-import { promises as fsp, readFileSync } from 'node:fs';
-import { Storage } from '../config/storage.js';
+import path from "node:path";
+import { promises as fsp, readFileSync } from "node:fs";
+import { Storage } from "../config/storage.js";
 export class UserAccountManager {
     getGoogleAccountsCachePath() {
         return Storage.getGoogleAccountsPath();
@@ -22,16 +22,16 @@ export class UserAccountManager {
         }
         const parsed = JSON.parse(content);
         // Inlined validation logic
-        if (typeof parsed !== 'object' || parsed === null) {
-            console.log('Invalid accounts file schema, starting fresh.');
+        if (typeof parsed !== "object" || parsed === null) {
+            console.log("Invalid accounts file schema, starting fresh.");
             return defaultState;
         }
         const { active, old } = parsed;
-        const isValid = (active === undefined || active === null || typeof active === 'string') &&
+        const isValid = (active === undefined || active === null || typeof active === "string") &&
             (old === undefined ||
-                (Array.isArray(old) && old.every((i) => typeof i === 'string')));
+                (Array.isArray(old) && old.every((i) => typeof i === "string")));
         if (!isValid) {
-            console.log('Invalid accounts file schema, starting fresh.');
+            console.log("Invalid accounts file schema, starting fresh.");
             return defaultState;
         }
         return {
@@ -42,32 +42,32 @@ export class UserAccountManager {
     readAccountsSync(filePath) {
         const defaultState = { active: null, old: [] };
         try {
-            const content = readFileSync(filePath, 'utf-8');
+            const content = readFileSync(filePath, "utf-8");
             return this.parseAndValidateAccounts(content);
         }
         catch (error) {
             if (error instanceof Error &&
-                'code' in error &&
-                error.code === 'ENOENT') {
+                "code" in error &&
+                error.code === "ENOENT") {
                 return defaultState;
             }
-            console.log('Error during sync read of accounts, starting fresh.', error);
+            console.log("Error during sync read of accounts, starting fresh.", error);
             return defaultState;
         }
     }
     async readAccounts(filePath) {
         const defaultState = { active: null, old: [] };
         try {
-            const content = await fsp.readFile(filePath, 'utf-8');
+            const content = await fsp.readFile(filePath, "utf-8");
             return this.parseAndValidateAccounts(content);
         }
         catch (error) {
             if (error instanceof Error &&
-                'code' in error &&
-                error.code === 'ENOENT') {
+                "code" in error &&
+                error.code === "ENOENT") {
                 return defaultState;
             }
-            console.log('Could not parse accounts file, starting fresh.', error);
+            console.log("Could not parse accounts file, starting fresh.", error);
             return defaultState;
         }
     }
@@ -83,7 +83,7 @@ export class UserAccountManager {
         // If the new email was in the old list, remove it
         accounts.old = accounts.old.filter((oldEmail) => oldEmail !== email);
         accounts.active = email;
-        await fsp.writeFile(filePath, JSON.stringify(accounts, null, 2), 'utf-8');
+        await fsp.writeFile(filePath, JSON.stringify(accounts, null, 2), "utf-8");
     }
     getCachedGoogleAccount() {
         const filePath = this.getGoogleAccountsCachePath();
@@ -108,7 +108,7 @@ export class UserAccountManager {
             }
             accounts.active = null;
         }
-        await fsp.writeFile(filePath, JSON.stringify(accounts, null, 2), 'utf-8');
+        await fsp.writeFile(filePath, JSON.stringify(accounts, null, 2), "utf-8");
     }
 }
 //# sourceMappingURL=userAccountManager.js.map

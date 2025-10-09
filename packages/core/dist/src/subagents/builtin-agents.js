@@ -10,8 +10,8 @@
 export class BuiltinAgentRegistry {
     static BUILTIN_AGENTS = [
         {
-            name: 'general-purpose',
-            description: 'General-purpose agent for researching complex questions, searching for code, and executing multi-step tasks. When you are searching for a keyword or file and are not confident that you will find the right match in the first few tries use this agent to perform the search for you.',
+            name: "general-purpose",
+            description: "General-purpose agent for researching complex questions, searching for code, and executing multi-step tasks. When you are searching for a keyword or file and are not confident that you will find the right match in the first few tries use this agent to perform the search for you.",
             systemPrompt: `You are a general-purpose research and code analysis agent. Given the user's message, you should use the tools available to complete the task. Do what has been asked; nothing more, nothing less. When you complete the task simply respond with a detailed writeup.
 
 Your strengths:
@@ -44,7 +44,7 @@ Notes:
     static getBuiltinAgents() {
         return this.BUILTIN_AGENTS.map((agent) => ({
             ...agent,
-            level: 'builtin',
+            level: "builtin",
             filePath: `<builtin:${agent.name}>`,
             isBuiltin: true,
         }));
@@ -61,7 +61,7 @@ Notes:
         }
         return {
             ...agent,
-            level: 'builtin',
+            level: "builtin",
             filePath: `<builtin:${name}>`,
             isBuiltin: true,
         };

@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Config } from '@qwen-code/qwen-code-core';
-import type { ICommandLoader } from './types.js';
-import type { SlashCommand } from '../ui/commands/types.js';
+import type { Config } from "@qwen-code/qwen-code-core";
+import type { ICommandLoader } from "./types.js";
+import type { SlashCommand } from "../ui/commands/types.js";
 /**
  * Discovers and loads custom slash commands from .toml files in both the
  * user's global config directory and the current project's directory.

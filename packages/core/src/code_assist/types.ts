@@ -16,25 +16,25 @@ export interface ClientMetadata {
 }
 
 export type ClientMetadataIdeType =
-  | 'IDE_UNSPECIFIED'
-  | 'VSCODE'
-  | 'INTELLIJ'
-  | 'VSCODE_CLOUD_WORKSTATION'
-  | 'INTELLIJ_CLOUD_WORKSTATION'
-  | 'CLOUD_SHELL';
+  | "IDE_UNSPECIFIED"
+  | "VSCODE"
+  | "INTELLIJ"
+  | "VSCODE_CLOUD_WORKSTATION"
+  | "INTELLIJ_CLOUD_WORKSTATION"
+  | "CLOUD_SHELL";
 export type ClientMetadataPlatform =
-  | 'PLATFORM_UNSPECIFIED'
-  | 'DARWIN_AMD64'
-  | 'DARWIN_ARM64'
-  | 'LINUX_AMD64'
-  | 'LINUX_ARM64'
-  | 'WINDOWS_AMD64';
+  | "PLATFORM_UNSPECIFIED"
+  | "DARWIN_AMD64"
+  | "DARWIN_ARM64"
+  | "LINUX_AMD64"
+  | "LINUX_ARM64"
+  | "WINDOWS_AMD64";
 export type ClientMetadataPluginType =
-  | 'PLUGIN_UNSPECIFIED'
-  | 'CLOUD_CODE'
-  | 'GEMINI'
-  | 'AIPLUGIN_INTELLIJ'
-  | 'AIPLUGIN_STUDIO';
+  | "PLUGIN_UNSPECIFIED"
+  | "CLOUD_CODE"
+  | "GEMINI"
+  | "AIPLUGIN_INTELLIJ"
+  | "AIPLUGIN_STUDIO";
 
 export interface LoadCodeAssistRequest {
   cloudaicompanionProject?: string;
@@ -87,14 +87,14 @@ export interface IneligibleTier {
  */
 export enum IneligibleTierReasonCode {
   // go/keep-sorted start
-  DASHER_USER = 'DASHER_USER',
-  INELIGIBLE_ACCOUNT = 'INELIGIBLE_ACCOUNT',
-  NON_USER_ACCOUNT = 'NON_USER_ACCOUNT',
-  RESTRICTED_AGE = 'RESTRICTED_AGE',
-  RESTRICTED_NETWORK = 'RESTRICTED_NETWORK',
-  UNKNOWN = 'UNKNOWN',
-  UNKNOWN_LOCATION = 'UNKNOWN_LOCATION',
-  UNSUPPORTED_LOCATION = 'UNSUPPORTED_LOCATION',
+  DASHER_USER = "DASHER_USER",
+  INELIGIBLE_ACCOUNT = "INELIGIBLE_ACCOUNT",
+  NON_USER_ACCOUNT = "NON_USER_ACCOUNT",
+  RESTRICTED_AGE = "RESTRICTED_AGE",
+  RESTRICTED_NETWORK = "RESTRICTED_NETWORK",
+  UNKNOWN = "UNKNOWN",
+  UNKNOWN_LOCATION = "UNKNOWN_LOCATION",
+  UNSUPPORTED_LOCATION = "UNSUPPORTED_LOCATION",
   // go/keep-sorted end
 }
 /**
@@ -103,9 +103,9 @@ export enum IneligibleTierReasonCode {
  * //depot/google3/cloud/developer_experience/cloudcode/pa/service/usertier.go;l=16
  */
 export enum UserTierId {
-  FREE = 'free-tier',
-  LEGACY = 'legacy-tier',
-  STANDARD = 'standard-tier',
+  FREE = "free-tier",
+  LEGACY = "legacy-tier",
+  STANDARD = "standard-tier",
 }
 
 /**
@@ -154,10 +154,10 @@ export interface OnboardUserResponse {
  * Error value is an additional value assigned to error responses from OnboardUser
  */
 export enum OnboardUserStatusCode {
-  Default = 'DEFAULT',
-  Notice = 'NOTICE',
-  Warning = 'WARNING',
-  Error = 'ERROR',
+  Default = "DEFAULT",
+  Notice = "NOTICE",
+  Warning = "WARNING",
+  Error = "ERROR",
 }
 
 /**

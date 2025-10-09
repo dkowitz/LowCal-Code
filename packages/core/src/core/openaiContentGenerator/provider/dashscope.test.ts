@@ -11,16 +11,16 @@ import {
   vi,
   beforeEach,
   type MockedFunction,
-} from 'vitest';
-import OpenAI from 'openai';
-import { DashScopeOpenAICompatibleProvider } from './dashscope.js';
-import type { Config } from '../../../config/config.js';
-import type { ContentGeneratorConfig } from '../../contentGenerator.js';
-import { AuthType } from '../../contentGenerator.js';
-import { DEFAULT_TIMEOUT, DEFAULT_MAX_RETRIES } from '../constants.js';
+} from "vitest";
+import OpenAI from "openai";
+import { DashScopeOpenAICompatibleProvider } from "./dashscope.js";
+import type { Config } from "../../../config/config.js";
+import type { ContentGeneratorConfig } from "../../contentGenerator.js";
+import { AuthType } from "../../contentGenerator.js";
+import { DEFAULT_TIMEOUT, DEFAULT_MAX_RETRIES } from "../constants.js";
 
 // Mock OpenAI
-vi.mock('openai', () => ({
+vi.mock("openai", () => ({
   default: vi.fn().mockImplementation((config) => ({
     config,
     chat: {
@@ -31,7 +31,7 @@ vi.mock('openai', () => ({
   })),
 }));
 
-describe('DashScopeOpenAICompatibleProvider', () => {
+describe("DashScopeOpenAICompatibleProvider", () => {
   let provider: DashScopeOpenAICompatibleProvider;
   let mockContentGeneratorConfig: ContentGeneratorConfig;
   let mockCliConfig: Config;
@@ -41,18 +41,18 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
     // Mock ContentGeneratorConfig
     mockContentGeneratorConfig = {
-      apiKey: 'test-api-key',
-      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      apiKey: "test-api-key",
+      baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
       timeout: 60000,
       maxRetries: 2,
-      model: 'qwen-max',
+      model: "qwen-max",
       authType: AuthType.QWEN_OAUTH,
     } as ContentGeneratorConfig;
 
     // Mock Config
     mockCliConfig = {
-      getCliVersion: vi.fn().mockReturnValue('1.0.0'),
-      getSessionId: vi.fn().mockReturnValue('test-session-id'),
+      getCliVersion: vi.fn().mockReturnValue("1.0.0"),
+      getSessionId: vi.fn().mockReturnValue("test-session-id"),
       getContentGeneratorConfig: vi.fn().mockReturnValue({
         disableCacheControl: false,
       }),
@@ -64,17 +64,17 @@ describe('DashScopeOpenAICompatibleProvider', () => {
     );
   });
 
-  describe('constructor', () => {
-    it('should initialize with provided configs', () => {
+  describe("constructor", () => {
+    it("should initialize with provided configs", () => {
       expect(provider).toBeInstanceOf(DashScopeOpenAICompatibleProvider);
     });
   });
 
-  describe('isDashScopeProvider', () => {
-    it('should return true for QWEN_OAUTH auth type', () => {
+  describe("isDashScopeProvider", () => {
+    it("should return true for QWEN_OAUTH auth type", () => {
       const config = {
         authType: AuthType.QWEN_OAUTH,
-        baseUrl: 'https://api.openai.com/v1',
+        baseUrl: "https://api.openai.com/v1",
       } as ContentGeneratorConfig;
 
       const result =
@@ -82,10 +82,10 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       expect(result).toBe(true);
     });
 
-    it('should return true for DashScope domestic URL', () => {
+    it("should return true for DashScope domestic URL", () => {
       const config = {
         authType: AuthType.USE_OPENAI,
-        baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
       } as ContentGeneratorConfig;
 
       const result =
@@ -93,10 +93,10 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       expect(result).toBe(true);
     });
 
-    it('should return true for DashScope international URL', () => {
+    it("should return true for DashScope international URL", () => {
       const config = {
         authType: AuthType.USE_OPENAI,
-        baseUrl: 'https://dashscope-intl.aliyuncs.com/compatible-mode/v1',
+        baseUrl: "https://dashscope-intl.aliyuncs.com/compatible-mode/v1",
       } as ContentGeneratorConfig;
 
       const result =
@@ -104,19 +104,19 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       expect(result).toBe(true);
     });
 
-    it('should return false for non-DashScope configurations', () => {
+    it("should return false for non-DashScope configurations", () => {
       const configs = [
         {
           authType: AuthType.USE_OPENAI,
-          baseUrl: 'https://api.openai.com/v1',
+          baseUrl: "https://api.openai.com/v1",
         },
         {
           authType: AuthType.USE_OPENAI,
-          baseUrl: 'https://api.anthropic.com/v1',
+          baseUrl: "https://api.anthropic.com/v1",
         },
         {
           authType: AuthType.USE_OPENAI,
-          baseUrl: 'https://openrouter.ai/api/v1',
+          baseUrl: "https://openrouter.ai/api/v1",
         },
       ];
 
@@ -129,19 +129,19 @@ describe('DashScopeOpenAICompatibleProvider', () => {
     });
   });
 
-  describe('buildHeaders', () => {
-    it('should build DashScope-specific headers', () => {
+  describe("buildHeaders", () => {
+    it("should build DashScope-specific headers", () => {
       const headers = provider.buildHeaders();
 
       expect(headers).toEqual({
-        'User-Agent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
-        'X-DashScope-CacheControl': 'enable',
-        'X-DashScope-UserAgent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
-        'X-DashScope-AuthType': AuthType.QWEN_OAUTH,
+        "User-Agent": `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
+        "X-DashScope-CacheControl": "enable",
+        "X-DashScope-UserAgent": `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
+        "X-DashScope-AuthType": AuthType.QWEN_OAUTH,
       });
     });
 
-    it('should handle unknown CLI version', () => {
+    it("should handle unknown CLI version", () => {
       (
         mockCliConfig.getCliVersion as MockedFunction<
           typeof mockCliConfig.getCliVersion
@@ -150,44 +150,44 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
       const headers = provider.buildHeaders();
 
-      expect(headers['User-Agent']).toBe(
+      expect(headers["User-Agent"]).toBe(
         `QwenCode/unknown (${process.platform}; ${process.arch})`,
       );
-      expect(headers['X-DashScope-UserAgent']).toBe(
+      expect(headers["X-DashScope-UserAgent"]).toBe(
         `QwenCode/unknown (${process.platform}; ${process.arch})`,
       );
     });
   });
 
-  describe('buildClient', () => {
-    it('should create OpenAI client with DashScope configuration', () => {
+  describe("buildClient", () => {
+    it("should create OpenAI client with DashScope configuration", () => {
       const client = provider.buildClient();
 
       expect(OpenAI).toHaveBeenCalledWith({
-        apiKey: 'test-api-key',
-        baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        apiKey: "test-api-key",
+        baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
         timeout: 60000,
         maxRetries: 2,
         defaultHeaders: {
-          'User-Agent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
-          'X-DashScope-CacheControl': 'enable',
-          'X-DashScope-UserAgent': `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
-          'X-DashScope-AuthType': AuthType.QWEN_OAUTH,
+          "User-Agent": `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
+          "X-DashScope-CacheControl": "enable",
+          "X-DashScope-UserAgent": `QwenCode/1.0.0 (${process.platform}; ${process.arch})`,
+          "X-DashScope-AuthType": AuthType.QWEN_OAUTH,
         },
       });
 
       expect(client).toBeDefined();
     });
 
-    it('should use default timeout and maxRetries when not provided', () => {
+    it("should use default timeout and maxRetries when not provided", () => {
       mockContentGeneratorConfig.timeout = undefined;
       mockContentGeneratorConfig.maxRetries = undefined;
 
       provider.buildClient();
 
       expect(OpenAI).toHaveBeenCalledWith({
-        apiKey: 'test-api-key',
-        baseURL: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        apiKey: "test-api-key",
+        baseURL: "https://dashscope.aliyuncs.com/compatible-mode/v1",
         timeout: DEFAULT_TIMEOUT,
         maxRetries: DEFAULT_MAX_RETRIES,
         defaultHeaders: expect.any(Object),
@@ -195,73 +195,73 @@ describe('DashScopeOpenAICompatibleProvider', () => {
     });
   });
 
-  describe('buildMetadata', () => {
-    it('should build metadata with session and prompt IDs', () => {
-      const userPromptId = 'test-prompt-id';
+  describe("buildMetadata", () => {
+    it("should build metadata with session and prompt IDs", () => {
+      const userPromptId = "test-prompt-id";
       const metadata = provider.buildMetadata(userPromptId);
 
       expect(metadata).toEqual({
         metadata: {
-          sessionId: 'test-session-id',
-          promptId: 'test-prompt-id',
+          sessionId: "test-session-id",
+          promptId: "test-prompt-id",
         },
       });
     });
 
-    it('should handle missing session ID', () => {
+    it("should handle missing session ID", () => {
       // Mock the method to not exist (simulate optional chaining returning undefined)
       delete (mockCliConfig as unknown as Record<string, unknown>)[
-        'getSessionId'
+        "getSessionId"
       ];
 
-      const userPromptId = 'test-prompt-id';
+      const userPromptId = "test-prompt-id";
       const metadata = provider.buildMetadata(userPromptId);
 
       expect(metadata).toEqual({
         metadata: {
           sessionId: undefined,
-          promptId: 'test-prompt-id',
+          promptId: "test-prompt-id",
         },
       });
     });
   });
 
-  describe('buildRequest', () => {
+  describe("buildRequest", () => {
     const baseRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-      model: 'qwen-max',
+      model: "qwen-max",
       messages: [
-        { role: 'system', content: 'You are a helpful assistant.' },
-        { role: 'user', content: 'Hello!' },
+        { role: "system", content: "You are a helpful assistant." },
+        { role: "user", content: "Hello!" },
       ],
       temperature: 0.7,
     };
 
-    it('should add cache control to system message only for non-streaming requests', () => {
+    it("should add cache control to system message only for non-streaming requests", () => {
       const request = { ...baseRequest, stream: false };
-      const result = provider.buildRequest(request, 'test-prompt-id');
+      const result = provider.buildRequest(request, "test-prompt-id");
 
       expect(result.messages).toHaveLength(2);
 
       // System message should have cache control
       const systemMessage = result.messages[0];
-      expect(systemMessage.role).toBe('system');
+      expect(systemMessage.role).toBe("system");
       expect(systemMessage.content).toEqual([
         {
-          type: 'text',
-          text: 'You are a helpful assistant.',
-          cache_control: { type: 'ephemeral' },
+          type: "text",
+          text: "You are a helpful assistant.",
+          cache_control: { type: "ephemeral" },
         },
       ]);
 
       // Last message should NOT have cache control for non-streaming
       const lastMessage = result.messages[1];
-      expect(lastMessage.role).toBe('user');
-      expect(lastMessage.content).toBe('Hello!');
+      expect(lastMessage.role).toBe("user");
+      expect(lastMessage.content).toBe("Hello!");
     });
 
-    it('should add cache control to both system and last messages for streaming requests', () => {
+    it("should add cache control to both system and last messages for streaming requests", () => {
       const request = { ...baseRequest, stream: true };
-      const result = provider.buildRequest(request, 'test-prompt-id');
+      const result = provider.buildRequest(request, "test-prompt-id");
 
       expect(result.messages).toHaveLength(2);
 
@@ -269,9 +269,9 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       const systemMessage = result.messages[0];
       expect(systemMessage.content).toEqual([
         {
-          type: 'text',
-          text: 'You are a helpful assistant.',
-          cache_control: { type: 'ephemeral' },
+          type: "text",
+          text: "You are a helpful assistant.",
+          cache_control: { type: "ephemeral" },
         },
       ]);
 
@@ -279,23 +279,23 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       const lastMessage = result.messages[1];
       expect(lastMessage.content).toEqual([
         {
-          type: 'text',
-          text: 'Hello!',
-          cache_control: { type: 'ephemeral' },
+          type: "text",
+          text: "Hello!",
+          cache_control: { type: "ephemeral" },
         },
       ]);
     });
 
-    it('should include metadata in the request', () => {
-      const result = provider.buildRequest(baseRequest, 'test-prompt-id');
+    it("should include metadata in the request", () => {
+      const result = provider.buildRequest(baseRequest, "test-prompt-id");
 
       expect(result.metadata).toEqual({
-        sessionId: 'test-session-id',
-        promptId: 'test-prompt-id',
+        sessionId: "test-session-id",
+        promptId: "test-prompt-id",
       });
     });
 
-    it('should preserve all original request parameters', () => {
+    it("should preserve all original request parameters", () => {
       const complexRequest: OpenAI.Chat.ChatCompletionCreateParams = {
         ...baseRequest,
         temperature: 0.8,
@@ -303,49 +303,49 @@ describe('DashScopeOpenAICompatibleProvider', () => {
         top_p: 0.9,
         frequency_penalty: 0.1,
         presence_penalty: 0.2,
-        stop: ['END'],
-        user: 'test-user',
+        stop: ["END"],
+        user: "test-user",
       };
 
-      const result = provider.buildRequest(complexRequest, 'test-prompt-id');
+      const result = provider.buildRequest(complexRequest, "test-prompt-id");
 
-      expect(result.model).toBe('qwen-max');
+      expect(result.model).toBe("qwen-max");
       expect(result.temperature).toBe(0.8);
       expect(result.max_tokens).toBe(1000);
       expect(result.top_p).toBe(0.9);
       expect(result.frequency_penalty).toBe(0.1);
       expect(result.presence_penalty).toBe(0.2);
-      expect(result.stop).toEqual(['END']);
-      expect(result.user).toBe('test-user');
+      expect(result.stop).toEqual(["END"]);
+      expect(result.user).toBe("test-user");
     });
 
-    it('should skip cache control when disabled', () => {
+    it("should skip cache control when disabled", () => {
       (
         mockCliConfig.getContentGeneratorConfig as MockedFunction<
           typeof mockCliConfig.getContentGeneratorConfig
         >
       ).mockReturnValue({
-        model: 'qwen-max',
+        model: "qwen-max",
         disableCacheControl: true,
       });
 
-      const result = provider.buildRequest(baseRequest, 'test-prompt-id');
+      const result = provider.buildRequest(baseRequest, "test-prompt-id");
 
       // Messages should remain as strings (not converted to array format)
-      expect(result.messages[0].content).toBe('You are a helpful assistant.');
-      expect(result.messages[1].content).toBe('Hello!');
+      expect(result.messages[0].content).toBe("You are a helpful assistant.");
+      expect(result.messages[1].content).toBe("Hello!");
     });
 
-    it('should handle messages with array content for streaming requests', () => {
+    it("should handle messages with array content for streaming requests", () => {
       const requestWithArrayContent: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: "qwen-max",
         stream: true, // This will trigger cache control on last message
         messages: [
           {
-            role: 'user',
+            role: "user",
             content: [
-              { type: 'text', text: 'Hello' },
-              { type: 'text', text: 'World' },
+              { type: "text", text: "Hello" },
+              { type: "text", text: "World" },
             ],
           },
         ],
@@ -353,7 +353,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
       const result = provider.buildRequest(
         requestWithArrayContent,
-        'test-prompt-id',
+        "test-prompt-id",
       );
 
       const message = result.messages[0];
@@ -362,37 +362,37 @@ describe('DashScopeOpenAICompatibleProvider', () => {
         message.content as OpenAI.Chat.ChatCompletionContentPart[];
       expect(content).toHaveLength(2);
       expect(content[1]).toEqual({
-        type: 'text',
-        text: 'World',
-        cache_control: { type: 'ephemeral' },
+        type: "text",
+        text: "World",
+        cache_control: { type: "ephemeral" },
       });
     });
 
-    it('should handle empty messages array', () => {
+    it("should handle empty messages array", () => {
       const emptyRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: "qwen-max",
         messages: [],
       };
 
-      const result = provider.buildRequest(emptyRequest, 'test-prompt-id');
+      const result = provider.buildRequest(emptyRequest, "test-prompt-id");
 
       expect(result.messages).toEqual([]);
       expect(result.metadata).toBeDefined();
     });
 
-    it('should handle messages without content for streaming requests', () => {
+    it("should handle messages without content for streaming requests", () => {
       const requestWithoutContent: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: "qwen-max",
         stream: true, // This will trigger cache control on last message
         messages: [
-          { role: 'assistant', content: null },
-          { role: 'user', content: 'Hello' },
+          { role: "assistant", content: null },
+          { role: "user", content: "Hello" },
         ],
       };
 
       const result = provider.buildRequest(
         requestWithoutContent,
-        'test-prompt-id',
+        "test-prompt-id",
       );
 
       // First message should remain unchanged
@@ -401,27 +401,27 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       // Second message should have cache control (it's the last message in streaming)
       expect(result.messages[1].content).toEqual([
         {
-          type: 'text',
-          text: 'Hello',
-          cache_control: { type: 'ephemeral' },
+          type: "text",
+          text: "Hello",
+          cache_control: { type: "ephemeral" },
         },
       ]);
     });
 
-    it('should add cache control to last text item in mixed content for streaming requests', () => {
+    it("should add cache control to last text item in mixed content for streaming requests", () => {
       const requestWithMixedContent: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: "qwen-max",
         stream: true, // This will trigger cache control on last message
         messages: [
           {
-            role: 'user',
+            role: "user",
             content: [
-              { type: 'text', text: 'Look at this image:' },
+              { type: "text", text: "Look at this image:" },
               {
-                type: 'image_url',
-                image_url: { url: 'https://example.com/image.jpg' },
+                type: "image_url",
+                image_url: { url: "https://example.com/image.jpg" },
               },
-              { type: 'text', text: 'What do you see?' },
+              { type: "text", text: "What do you see?" },
             ],
           },
         ],
@@ -429,7 +429,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
       const result = provider.buildRequest(
         requestWithMixedContent,
-        'test-prompt-id',
+        "test-prompt-id",
       );
 
       const content = result.messages[0]
@@ -438,30 +438,30 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
       // Last text item should have cache control
       expect(content[2]).toEqual({
-        type: 'text',
-        text: 'What do you see?',
-        cache_control: { type: 'ephemeral' },
+        type: "text",
+        text: "What do you see?",
+        cache_control: { type: "ephemeral" },
       });
 
       // Image item should remain unchanged
       expect(content[1]).toEqual({
-        type: 'image_url',
-        image_url: { url: 'https://example.com/image.jpg' },
+        type: "image_url",
+        image_url: { url: "https://example.com/image.jpg" },
       });
     });
 
-    it('should add empty text item with cache control if last item is not text for streaming requests', () => {
+    it("should add empty text item with cache control if last item is not text for streaming requests", () => {
       const requestWithNonTextLast: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: "qwen-max",
         stream: true, // This will trigger cache control on last message
         messages: [
           {
-            role: 'user',
+            role: "user",
             content: [
-              { type: 'text', text: 'Look at this:' },
+              { type: "text", text: "Look at this:" },
               {
-                type: 'image_url',
-                image_url: { url: 'https://example.com/image.jpg' },
+                type: "image_url",
+                image_url: { url: "https://example.com/image.jpg" },
               },
             ],
           },
@@ -470,7 +470,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
       const result = provider.buildRequest(
         requestWithNonTextLast,
-        'test-prompt-id',
+        "test-prompt-id",
       );
 
       const content = result.messages[0]
@@ -479,66 +479,66 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
       // Should add empty text item with cache control
       expect(content[2]).toEqual({
-        type: 'text',
-        text: '',
-        cache_control: { type: 'ephemeral' },
+        type: "text",
+        text: "",
+        cache_control: { type: "ephemeral" },
       });
     });
   });
 
-  describe('cache control edge cases', () => {
-    it('should handle request with only system message', () => {
+  describe("cache control edge cases", () => {
+    it("should handle request with only system message", () => {
       const systemOnlyRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
-        messages: [{ role: 'system', content: 'System prompt' }],
+        model: "qwen-max",
+        messages: [{ role: "system", content: "System prompt" }],
       };
 
-      const result = provider.buildRequest(systemOnlyRequest, 'test-prompt-id');
+      const result = provider.buildRequest(systemOnlyRequest, "test-prompt-id");
 
       expect(result.messages).toHaveLength(1);
       expect(result.messages[0].content).toEqual([
         {
-          type: 'text',
-          text: 'System prompt',
-          cache_control: { type: 'ephemeral' },
+          type: "text",
+          text: "System prompt",
+          cache_control: { type: "ephemeral" },
         },
       ]);
     });
 
-    it('should handle request without system message for streaming requests', () => {
+    it("should handle request without system message for streaming requests", () => {
       const noSystemRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: "qwen-max",
         stream: true, // This will trigger cache control on last message
         messages: [
-          { role: 'user', content: 'First message' },
-          { role: 'assistant', content: 'Response' },
-          { role: 'user', content: 'Second message' },
+          { role: "user", content: "First message" },
+          { role: "assistant", content: "Response" },
+          { role: "user", content: "Second message" },
         ],
       };
 
-      const result = provider.buildRequest(noSystemRequest, 'test-prompt-id');
+      const result = provider.buildRequest(noSystemRequest, "test-prompt-id");
 
       expect(result.messages).toHaveLength(3);
 
       // Only last message should have cache control (no system message to modify)
-      expect(result.messages[0].content).toBe('First message');
-      expect(result.messages[1].content).toBe('Response');
+      expect(result.messages[0].content).toBe("First message");
+      expect(result.messages[1].content).toBe("Response");
       expect(result.messages[2].content).toEqual([
         {
-          type: 'text',
-          text: 'Second message',
-          cache_control: { type: 'ephemeral' },
+          type: "text",
+          text: "Second message",
+          cache_control: { type: "ephemeral" },
         },
       ]);
     });
 
-    it('should handle empty content array for streaming requests', () => {
+    it("should handle empty content array for streaming requests", () => {
       const emptyContentRequest: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-max',
+        model: "qwen-max",
         stream: true, // This will trigger cache control on last message
         messages: [
           {
-            role: 'user',
+            role: "user",
             content: [],
           },
         ],
@@ -546,108 +546,108 @@ describe('DashScopeOpenAICompatibleProvider', () => {
 
       const result = provider.buildRequest(
         emptyContentRequest,
-        'test-prompt-id',
+        "test-prompt-id",
       );
 
       const content = result.messages[0]
         .content as OpenAI.Chat.ChatCompletionContentPart[];
       expect(content).toEqual([
         {
-          type: 'text',
-          text: '',
-          cache_control: { type: 'ephemeral' },
+          type: "text",
+          text: "",
+          cache_control: { type: "ephemeral" },
         },
       ]);
     });
   });
 
-  describe('output token limits', () => {
-    it('should limit max_tokens when it exceeds model limit for qwen3-coder-plus', () => {
+  describe("output token limits", () => {
+    it("should limit max_tokens when it exceeds model limit for qwen3-coder-plus", () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-coder-plus',
-        messages: [{ role: 'user', content: 'Hello' }],
+        model: "qwen3-coder-plus",
+        messages: [{ role: "user", content: "Hello" }],
         max_tokens: 100000, // Exceeds the 65536 limit
       };
 
-      const result = provider.buildRequest(request, 'test-prompt-id');
+      const result = provider.buildRequest(request, "test-prompt-id");
 
       expect(result.max_tokens).toBe(65536); // Should be limited to model's output limit
     });
 
-    it('should limit max_tokens when it exceeds model limit for qwen-vl-max-latest', () => {
+    it("should limit max_tokens when it exceeds model limit for qwen-vl-max-latest", () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-vl-max-latest',
-        messages: [{ role: 'user', content: 'Hello' }],
+        model: "qwen-vl-max-latest",
+        messages: [{ role: "user", content: "Hello" }],
         max_tokens: 20000, // Exceeds the 8192 limit
       };
 
-      const result = provider.buildRequest(request, 'test-prompt-id');
+      const result = provider.buildRequest(request, "test-prompt-id");
 
       expect(result.max_tokens).toBe(8192); // Should be limited to model's output limit
     });
 
-    it('should not modify max_tokens when it is within model limit', () => {
+    it("should not modify max_tokens when it is within model limit", () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-coder-plus',
-        messages: [{ role: 'user', content: 'Hello' }],
+        model: "qwen3-coder-plus",
+        messages: [{ role: "user", content: "Hello" }],
         max_tokens: 1000, // Within the 65536 limit
       };
 
-      const result = provider.buildRequest(request, 'test-prompt-id');
+      const result = provider.buildRequest(request, "test-prompt-id");
 
       expect(result.max_tokens).toBe(1000); // Should remain unchanged
     });
 
-    it('should not add max_tokens when not present in request', () => {
+    it("should not add max_tokens when not present in request", () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-coder-plus',
-        messages: [{ role: 'user', content: 'Hello' }],
+        model: "qwen3-coder-plus",
+        messages: [{ role: "user", content: "Hello" }],
         // No max_tokens parameter
       };
 
-      const result = provider.buildRequest(request, 'test-prompt-id');
+      const result = provider.buildRequest(request, "test-prompt-id");
 
       expect(result.max_tokens).toBeUndefined(); // Should remain undefined
     });
 
-    it('should handle null max_tokens parameter', () => {
+    it("should handle null max_tokens parameter", () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-coder-plus',
-        messages: [{ role: 'user', content: 'Hello' }],
+        model: "qwen3-coder-plus",
+        messages: [{ role: "user", content: "Hello" }],
         max_tokens: null,
       };
 
-      const result = provider.buildRequest(request, 'test-prompt-id');
+      const result = provider.buildRequest(request, "test-prompt-id");
 
       expect(result.max_tokens).toBeNull(); // Should remain null
     });
 
-    it('should use default output limit for unknown models', () => {
+    it("should use default output limit for unknown models", () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'unknown-model',
-        messages: [{ role: 'user', content: 'Hello' }],
+        model: "unknown-model",
+        messages: [{ role: "user", content: "Hello" }],
         max_tokens: 10000, // Exceeds the default 4096 limit
       };
 
-      const result = provider.buildRequest(request, 'test-prompt-id');
+      const result = provider.buildRequest(request, "test-prompt-id");
 
       expect(result.max_tokens).toBe(4096); // Should be limited to default output limit
     });
 
-    it('should preserve other request parameters when limiting max_tokens', () => {
+    it("should preserve other request parameters when limiting max_tokens", () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-coder-plus',
-        messages: [{ role: 'user', content: 'Hello' }],
+        model: "qwen3-coder-plus",
+        messages: [{ role: "user", content: "Hello" }],
         max_tokens: 100000, // Will be limited
         temperature: 0.8,
         top_p: 0.9,
         frequency_penalty: 0.1,
         presence_penalty: 0.2,
-        stop: ['END'],
-        user: 'test-user',
+        stop: ["END"],
+        user: "test-user",
       };
 
-      const result = provider.buildRequest(request, 'test-prompt-id');
+      const result = provider.buildRequest(request, "test-prompt-id");
 
       // max_tokens should be limited
       expect(result.max_tokens).toBe(65536);
@@ -657,21 +657,21 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       expect(result.top_p).toBe(0.9);
       expect(result.frequency_penalty).toBe(0.1);
       expect(result.presence_penalty).toBe(0.2);
-      expect(result.stop).toEqual(['END']);
-      expect(result.user).toBe('test-user');
+      expect(result.stop).toEqual(["END"]);
+      expect(result.user).toBe("test-user");
     });
 
-    it('should work with vision models and output token limits', () => {
+    it("should work with vision models and output token limits", () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen-vl-max-latest',
+        model: "qwen-vl-max-latest",
         messages: [
           {
-            role: 'user',
+            role: "user",
             content: [
-              { type: 'text', text: 'Look at this image:' },
+              { type: "text", text: "Look at this image:" },
               {
-                type: 'image_url',
-                image_url: { url: 'https://example.com/image.jpg' },
+                type: "image_url",
+                image_url: { url: "https://example.com/image.jpg" },
               },
             ],
           },
@@ -679,7 +679,7 @@ describe('DashScopeOpenAICompatibleProvider', () => {
         max_tokens: 20000, // Exceeds the 8192 limit
       };
 
-      const result = provider.buildRequest(request, 'test-prompt-id');
+      const result = provider.buildRequest(request, "test-prompt-id");
 
       expect(result.max_tokens).toBe(8192); // Should be limited
       expect(
@@ -688,15 +688,15 @@ describe('DashScopeOpenAICompatibleProvider', () => {
       ).toBe(true); // Vision-specific parameter should be preserved
     });
 
-    it('should handle streaming requests with output token limits', () => {
+    it("should handle streaming requests with output token limits", () => {
       const request: OpenAI.Chat.ChatCompletionCreateParams = {
-        model: 'qwen3-coder-plus',
-        messages: [{ role: 'user', content: 'Hello' }],
+        model: "qwen3-coder-plus",
+        messages: [{ role: "user", content: "Hello" }],
         max_tokens: 100000, // Exceeds the 65536 limit
         stream: true,
       };
 
-      const result = provider.buildRequest(request, 'test-prompt-id');
+      const result = provider.buildRequest(request, "test-prompt-id");
 
       expect(result.max_tokens).toBe(65536); // Should be limited
       expect(result.stream).toBe(true); // Streaming should be preserved

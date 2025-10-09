@@ -3,13 +3,13 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import fs from 'node:fs';
-import path from 'node:path';
-import { glob, escape } from 'glob';
-import { BaseDeclarativeTool, BaseToolInvocation, Kind } from './tools.js';
-import { ToolNames } from './tool-names.js';
-import { shortenPath, makeRelative } from '../utils/paths.js';
-import { ToolErrorType } from './tool-error.js';
+import fs from "node:fs";
+import path from "node:path";
+import { glob, escape } from "glob";
+import { BaseDeclarativeTool, BaseToolInvocation, Kind } from "./tools.js";
+import { ToolNames } from "./tool-names.js";
+import { shortenPath, makeRelative } from "../utils/paths.js";
+import { ToolErrorType } from "./tool-error.js";
 /**
  * Sorts file entries based on recency and then alphabetically.
  * Recent files (modified within recencyThresholdMs) are listed first, newest to oldest.
@@ -46,7 +46,7 @@ class GlobToolInvocation extends BaseToolInvocation {
     getDescription() {
         let description = `'${this.params.pattern}'`;
         if (this.params.path) {
-            const searchDir = path.resolve(this.config.getTargetDir(), this.params.path || '.');
+            const searchDir = path.resolve(this.config.getTargetDir(), this.params.path || ".");
             const relativePath = makeRelative(searchDir, this.config.getTargetDir());
             description += ` within ${shortenPath(relativePath)}`;
         }
@@ -137,7 +137,7 @@ class GlobToolInvocation extends BaseToolInvocation {
             // Sort the filtered entries using the new helper function
             const sortedEntries = sortFileEntries(filteredEntries, nowTimestamp, oneDayInMs);
             const sortedAbsolutePaths = sortedEntries.map((entry) => entry.fullpath());
-            const fileListDescription = sortedAbsolutePaths.join('\n');
+            const fileListDescription = sortedAbsolutePaths.join("\n");
             const fileCount = sortedAbsolutePaths.length;
             let resultMessage = `Found ${fileCount} file(s) matching "${this.params.pattern}"`;
             if (searchDirectories.length === 1) {
@@ -177,27 +177,27 @@ export class GlobTool extends BaseDeclarativeTool {
     config;
     static Name = ToolNames.GLOB;
     constructor(config) {
-        super(GlobTool.Name, 'FindFiles', 'Efficiently finds files matching specific glob patterns (e.g., `src/**/*.ts`, `**/*.md`), returning absolute paths sorted by modification time (newest first). Ideal for quickly locating files based on their name or path structure, especially in large codebases.', Kind.Search, {
+        super(GlobTool.Name, "FindFiles", "Efficiently finds files matching specific glob patterns (e.g., `src/**/*.ts`, `**/*.md`), returning absolute paths sorted by modification time (newest first). Ideal for quickly locating files based on their name or path structure, especially in large codebases.", Kind.Search, {
             properties: {
                 pattern: {
                     description: "The glob pattern to match against (e.g., '**/*.py', 'docs/*.md').",
-                    type: 'string',
+                    type: "string",
                 },
                 path: {
-                    description: 'Optional: The absolute path to the directory to search within. If omitted, searches the root directory.',
-                    type: 'string',
+                    description: "Optional: The absolute path to the directory to search within. If omitted, searches the root directory.",
+                    type: "string",
                 },
                 case_sensitive: {
-                    description: 'Optional: Whether the search should be case-sensitive. Defaults to false.',
-                    type: 'boolean',
+                    description: "Optional: Whether the search should be case-sensitive. Defaults to false.",
+                    type: "boolean",
                 },
                 respect_git_ignore: {
-                    description: 'Optional: Whether to respect .gitignore patterns when finding files. Only available in git repositories. Defaults to true.',
-                    type: 'boolean',
+                    description: "Optional: Whether to respect .gitignore patterns when finding files. Only available in git repositories. Defaults to true.",
+                    type: "boolean",
                 },
             },
-            required: ['pattern'],
-            type: 'object',
+            required: ["pattern"],
+            type: "object",
         });
         this.config = config;
     }
@@ -205,11 +205,11 @@ export class GlobTool extends BaseDeclarativeTool {
      * Validates the parameters for the tool.
      */
     validateToolParamValues(params) {
-        const searchDirAbsolute = path.resolve(this.config.getTargetDir(), params.path || '.');
+        const searchDirAbsolute = path.resolve(this.config.getTargetDir(), params.path || ".");
         const workspaceContext = this.config.getWorkspaceContext();
         if (!workspaceContext.isPathWithinWorkspace(searchDirAbsolute)) {
             const directories = workspaceContext.getDirectories();
-            return `Search path ("${searchDirAbsolute}") resolves outside the allowed workspace directories: ${directories.join(', ')}`;
+            return `Search path ("${searchDirAbsolute}") resolves outside the allowed workspace directories: ${directories.join(", ")}`;
         }
         const targetDir = searchDirAbsolute || this.config.getTargetDir();
         try {
@@ -224,8 +224,8 @@ export class GlobTool extends BaseDeclarativeTool {
             return `Error accessing search path: ${e}`;
         }
         if (!params.pattern ||
-            typeof params.pattern !== 'string' ||
-            params.pattern.trim() === '') {
+            typeof params.pattern !== "string" ||
+            params.pattern.trim() === "") {
             return "The 'pattern' parameter cannot be empty.";
         }
         return null;

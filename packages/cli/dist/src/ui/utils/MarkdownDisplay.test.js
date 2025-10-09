@@ -4,31 +4,31 @@ import { jsx as _jsx } from "react/jsx-runtime";
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { render } from 'ink-testing-library';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { MarkdownDisplay } from './MarkdownDisplay.js';
-import { LoadedSettings } from '../../config/settings.js';
-import { SettingsContext } from '../contexts/SettingsContext.js';
-describe('<MarkdownDisplay />', () => {
+import { render } from "ink-testing-library";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { MarkdownDisplay } from "./MarkdownDisplay.js";
+import { LoadedSettings } from "../../config/settings.js";
+import { SettingsContext } from "../contexts/SettingsContext.js";
+describe("<MarkdownDisplay />", () => {
     const baseProps = {
         isPending: false,
         terminalWidth: 80,
         availableTerminalHeight: 40,
     };
-    const mockSettings = new LoadedSettings({ path: '', settings: {} }, { path: '', settings: {} }, { path: '', settings: {} }, { path: '', settings: {} }, [], true, new Set());
+    const mockSettings = new LoadedSettings({ path: "", settings: {} }, { path: "", settings: {} }, { path: "", settings: {} }, { path: "", settings: {} }, [], true, new Set());
     beforeEach(() => {
         vi.clearAllMocks();
     });
-    it('renders nothing for empty text', () => {
+    it("renders nothing for empty text", () => {
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: "" }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('renders a simple paragraph', () => {
-        const text = 'Hello, world.';
+    it("renders a simple paragraph", () => {
+        const text = "Hello, world.";
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('renders headers with correct levels', () => {
+    it("renders headers with correct levels", () => {
         const text = `
 # Header 1
 ## Header 2
@@ -38,22 +38,22 @@ describe('<MarkdownDisplay />', () => {
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('renders a fenced code block with a language', () => {
-        const text = '```javascript\nconst x = 1;\nconsole.log(x);\n```';
+    it("renders a fenced code block with a language", () => {
+        const text = "```javascript\nconst x = 1;\nconsole.log(x);\n```";
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('renders a fenced code block without a language', () => {
-        const text = '```\nplain text\n```';
+    it("renders a fenced code block without a language", () => {
+        const text = "```\nplain text\n```";
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('handles unclosed (pending) code blocks', () => {
-        const text = '```typescript\nlet y = 2;';
+    it("handles unclosed (pending) code blocks", () => {
+        const text = "```typescript\nlet y = 2;";
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text, isPending: true }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('renders unordered lists with different markers', () => {
+    it("renders unordered lists with different markers", () => {
         const text = `
 - item A
 * item B
@@ -62,7 +62,7 @@ describe('<MarkdownDisplay />', () => {
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('renders nested unordered lists', () => {
+    it("renders nested unordered lists", () => {
         const text = `
 * Level 1
   * Level 2
@@ -71,7 +71,7 @@ describe('<MarkdownDisplay />', () => {
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('renders ordered lists', () => {
+    it("renders ordered lists", () => {
         const text = `
 1. First item
 2. Second item
@@ -79,7 +79,7 @@ describe('<MarkdownDisplay />', () => {
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('renders horizontal rules', () => {
+    it("renders horizontal rules", () => {
         const text = `
 Hello
 ---
@@ -90,7 +90,7 @@ Test
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('renders tables correctly', () => {
+    it("renders tables correctly", () => {
         const text = `
 | Header 1 | Header 2 |
 |----------|:--------:|
@@ -100,7 +100,7 @@ Test
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('handles a table at the end of the input', () => {
+    it("handles a table at the end of the input", () => {
         const text = `
 Some text before.
 | A | B |
@@ -109,14 +109,14 @@ Some text before.
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('inserts a single space between paragraphs', () => {
+    it("inserts a single space between paragraphs", () => {
         const text = `Paragraph 1.
 
 Paragraph 2.`;
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('correctly parses a mix of markdown elements', () => {
+    it("correctly parses a mix of markdown elements", () => {
         const text = `
 # Main Title
 
@@ -134,27 +134,27 @@ Another paragraph.
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
     });
-    it('hides line numbers in code blocks when showLineNumbers is false', () => {
-        const text = '```javascript\nconst x = 1;\n```';
-        const settings = new LoadedSettings({ path: '', settings: {} }, { path: '', settings: {} }, { path: '', settings: { ui: { showLineNumbers: false } } }, { path: '', settings: {} }, [], true, new Set());
+    it("hides line numbers in code blocks when showLineNumbers is false", () => {
+        const text = "```javascript\nconst x = 1;\n```";
+        const settings = new LoadedSettings({ path: "", settings: {} }, { path: "", settings: {} }, { path: "", settings: { ui: { showLineNumbers: false } } }, { path: "", settings: {} }, [], true, new Set());
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: settings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
-        expect(lastFrame()).not.toContain(' 1 ');
+        expect(lastFrame()).not.toContain(" 1 ");
     });
-    it('shows line numbers in code blocks by default', () => {
-        const text = '```javascript\nconst x = 1;\n```';
+    it("shows line numbers in code blocks by default", () => {
+        const text = "```javascript\nconst x = 1;\n```";
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: text }) }));
         expect(lastFrame()).toMatchSnapshot();
-        expect(lastFrame()).toContain(' 1 ');
+        expect(lastFrame()).toContain(" 1 ");
     });
-    it('correctly splits lines using \\n regardless of platform EOL', () => {
+    it("correctly splits lines using \\n regardless of platform EOL", () => {
         // Test that the component uses \n for splitting, not EOL
-        const textWithUnixLineEndings = 'Line 1\nLine 2\nLine 3';
+        const textWithUnixLineEndings = "Line 1\nLine 2\nLine 3";
         const { lastFrame } = render(_jsx(SettingsContext.Provider, { value: mockSettings, children: _jsx(MarkdownDisplay, { ...baseProps, text: textWithUnixLineEndings }) }));
         const output = lastFrame();
-        expect(output).toContain('Line 1');
-        expect(output).toContain('Line 2');
-        expect(output).toContain('Line 3');
+        expect(output).toContain("Line 1");
+        expect(output).toContain("Line 2");
+        expect(output).toContain("Line 3");
         expect(output).toMatchSnapshot();
     });
 });

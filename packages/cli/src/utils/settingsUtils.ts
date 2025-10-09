@@ -8,12 +8,12 @@ import type {
   Settings,
   SettingScope,
   LoadedSettings,
-} from '../config/settings.js';
+} from "../config/settings.js";
 import type {
   SettingDefinition,
   SettingsSchema,
-} from '../config/settingsSchema.js';
-import { SETTINGS_SCHEMA } from '../config/settingsSchema.js';
+} from "../config/settingsSchema.js";
+import { SETTINGS_SCHEMA } from "../config/settingsSchema.js";
 
 // The schema is now nested, but many parts of the UI and logic work better
 // with a flattened structure and dot-notation keys. This section flattens the
@@ -21,7 +21,7 @@ import { SETTINGS_SCHEMA } from '../config/settingsSchema.js';
 
 function flattenSchema(
   schema: SettingsSchema,
-  prefix = '',
+  prefix = "",
 ): Record<string, SettingDefinition & { key: string }> {
   let result: Record<string, SettingDefinition & { key: string }> = {};
   for (const key in schema) {
@@ -79,7 +79,7 @@ export function requiresRestart(key: string): boolean {
 /**
  * Get the default value for a setting
  */
-export function getDefaultValue(key: string): SettingDefinition['default'] {
+export function getDefaultValue(key: string): SettingDefinition["default"] {
   return FLATTENED_SCHEMA[key]?.default;
 }
 
@@ -107,7 +107,7 @@ export function getNestedValue(
   if (rest.length === 0) {
     return value;
   }
-  if (value && typeof value === 'object' && value !== null) {
+  if (value && typeof value === "object" && value !== null) {
     return getNestedValue(value as Record<string, unknown>, rest);
   }
   return undefined;
@@ -121,24 +121,24 @@ export function getEffectiveValue(
   key: string,
   settings: Settings,
   mergedSettings: Settings,
-): SettingDefinition['default'] {
+): SettingDefinition["default"] {
   const definition = getSettingDefinition(key);
   if (!definition) {
     return undefined;
   }
 
-  const path = key.split('.');
+  const path = key.split(".");
 
   // Check the current scope's settings first
   let value = getNestedValue(settings as Record<string, unknown>, path);
   if (value !== undefined) {
-    return value as SettingDefinition['default'];
+    return value as SettingDefinition["default"];
   }
 
   // Check the merged settings for an inherited value
   value = getNestedValue(mergedSettings as Record<string, unknown>, path);
   if (value !== undefined) {
-    return value as SettingDefinition['default'];
+    return value as SettingDefinition["default"];
   }
 
   // Return default value if no value is set anywhere
@@ -156,7 +156,7 @@ export function getAllSettingKeys(): string[] {
  * Get settings by type
  */
 export function getSettingsByType(
-  type: SettingDefinition['type'],
+  type: SettingDefinition["type"],
 ): Array<SettingDefinition & { key: string }> {
   return Object.values(FLATTENED_SCHEMA).filter(
     (definition) => definition.type === type,
@@ -226,7 +226,7 @@ export function getDialogSettingsByCategory(): Record<
  * Get settings by type that should be shown in the dialog
  */
 export function getDialogSettingsByType(
-  type: SettingDefinition['type'],
+  type: SettingDefinition["type"],
 ): Array<SettingDefinition & { key: string }> {
   return Object.values(FLATTENED_SCHEMA).filter(
     (definition) =>
@@ -263,12 +263,12 @@ export function getSettingValue(
 
   const value = getEffectiveValue(key, settings, mergedSettings);
   // Ensure we return a boolean value, converting from the more general type
-  if (typeof value === 'boolean') {
+  if (typeof value === "boolean") {
     return value;
   }
   // Fall back to default value, ensuring it's a boolean
   const defaultValue = definition.default;
-  if (typeof defaultValue === 'boolean') {
+  if (typeof defaultValue === "boolean") {
     return defaultValue;
   }
   return false; // Final fallback
@@ -280,7 +280,7 @@ export function getSettingValue(
 export function isSettingModified(key: string, value: boolean): boolean {
   const defaultValue = getDefaultValue(key);
   // Handle type comparison properly
-  if (typeof defaultValue === 'boolean') {
+  if (typeof defaultValue === "boolean") {
     return value !== defaultValue;
   }
   // If default is not a boolean, consider it modified if value is true
@@ -294,7 +294,7 @@ export function settingExistsInScope(
   key: string,
   scopeSettings: Settings,
 ): boolean {
-  const path = key.split('.');
+  const path = key.split(".");
   const value = getNestedValue(scopeSettings as Record<string, unknown>, path);
   return value !== undefined;
 }
@@ -317,7 +317,7 @@ function setNestedValue(
     return obj;
   }
 
-  if (!obj[first] || typeof obj[first] !== 'object') {
+  if (!obj[first] || typeof obj[first] !== "object") {
     obj[first] = {};
   }
 
@@ -333,7 +333,7 @@ export function setPendingSettingValue(
   value: boolean,
   pendingSettings: Settings,
 ): Settings {
-  const path = key.split('.');
+  const path = key.split(".");
   const newSettings = JSON.parse(JSON.stringify(pendingSettings));
   setNestedValue(newSettings, path, value);
   return newSettings;
@@ -347,7 +347,7 @@ export function setPendingSettingValueAny(
   value: unknown,
   pendingSettings: Settings,
 ): Settings {
-  const path = key.split('.');
+  const path = key.split(".");
   const newSettings = structuredClone(pendingSettings);
   setNestedValue(newSettings, path, value);
   return newSettings;
@@ -381,7 +381,7 @@ export function saveModifiedSettings(
   scope: SettingScope,
 ): void {
   modifiedSettings.forEach((settingKey) => {
-    const path = settingKey.split('.');
+    const path = settingKey.split(".");
     const value = getNestedValue(
       pendingSettings as Record<string, unknown>,
       path,
@@ -425,7 +425,7 @@ export function getDisplayValue(
   } else {
     // Fall back to the schema default when the key is unset in this scope
     const defaultValue = getDefaultValue(key);
-    value = typeof defaultValue === 'boolean' ? defaultValue : false;
+    value = typeof defaultValue === "boolean" ? defaultValue : false;
   }
 
   const valueString = String(value);
@@ -433,7 +433,7 @@ export function getDisplayValue(
   // Check if value is different from default OR if it's in modified settings OR if there are pending changes
   const defaultValue = getDefaultValue(key);
   const isChangedFromDefault =
-    typeof defaultValue === 'boolean' ? value !== defaultValue : value === true;
+    typeof defaultValue === "boolean" ? value !== defaultValue : value === true;
   const isInModifiedSettings = modifiedSettings.has(key);
 
   // Mark as modified if setting exists in current scope OR is in modified settings

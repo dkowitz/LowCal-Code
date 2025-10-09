@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { ToolEditConfirmationDetails, ToolResult } from './tools.js';
-import { BaseDeclarativeTool, BaseToolInvocation } from './tools.js';
-import type { ModifiableDeclarativeTool, ModifyContext } from './modifiable-tool.js';
+import type { ToolEditConfirmationDetails, ToolResult } from "./tools.js";
+import { BaseDeclarativeTool, BaseToolInvocation } from "./tools.js";
+import type { ModifiableDeclarativeTool, ModifyContext } from "./modifiable-tool.js";
 export declare const GEMINI_CONFIG_DIR = ".qwen";
 export declare const DEFAULT_CONTEXT_FILENAME = "QWEN.md";
 export declare const MEMORY_SECTION_HEADER = "## Qwen Added Memories";
@@ -16,7 +16,7 @@ interface SaveMemoryParams {
     fact: string;
     modified_by_user?: boolean;
     modified_content?: string;
-    scope?: 'global' | 'project';
+    scope?: "global" | "project";
 }
 declare class MemoryToolInvocation extends BaseToolInvocation<SaveMemoryParams, ToolResult> {
     private static readonly allowlist;
@@ -30,8 +30,8 @@ export declare class MemoryTool extends BaseDeclarativeTool<SaveMemoryParams, To
     protected validateToolParamValues(params: SaveMemoryParams): string | null;
     protected createInvocation(params: SaveMemoryParams): MemoryToolInvocation;
     static performAddMemoryEntry(text: string, memoryFilePath: string, fsAdapter: {
-        readFile: (path: string, encoding: 'utf-8') => Promise<string>;
-        writeFile: (path: string, data: string, encoding: 'utf-8') => Promise<void>;
+        readFile: (path: string, encoding: "utf-8") => Promise<string>;
+        writeFile: (path: string, data: string, encoding: "utf-8") => Promise<void>;
         mkdir: (path: string, options: {
             recursive: boolean;
         }) => Promise<string | undefined>;

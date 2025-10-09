@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { themeManager } from './themes/theme-manager.js';
-import type { SemanticColors } from './themes/semantic-tokens.js';
+import { themeManager } from "./themes/theme-manager.js";
+import type { SemanticColors } from "./themes/semantic-tokens.js";
 
 export const theme: SemanticColors = {
   get text() {

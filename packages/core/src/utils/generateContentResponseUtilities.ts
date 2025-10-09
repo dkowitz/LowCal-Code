@@ -8,8 +8,8 @@ import type {
   GenerateContentResponse,
   Part,
   FunctionCall,
-} from '@google/genai';
-import { getResponseText } from './partUtils.js';
+} from "@google/genai";
+import { getResponseText } from "./partUtils.js";
 
 export function getResponseTextFromParts(parts: Part[]): string | undefined {
   if (!parts) {
@@ -17,12 +17,12 @@ export function getResponseTextFromParts(parts: Part[]): string | undefined {
   }
   const textSegments = parts
     .map((part) => part.text)
-    .filter((text): text is string => typeof text === 'string');
+    .filter((text): text is string => typeof text === "string");
 
   if (textSegments.length === 0) {
     return undefined;
   }
-  return textSegments.join('');
+  return textSegments.join("");
 }
 
 export function getFunctionCalls(

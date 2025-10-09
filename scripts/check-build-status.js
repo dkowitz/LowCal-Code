@@ -4,27 +4,27 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import os from 'node:os'; // Import os module
+import fs from "node:fs";
+import path from "node:path";
+import os from "node:os"; // Import os module
 
 // --- Configuration ---
-const cliPackageDir = path.resolve('packages', 'cli'); // Base directory for the CLI package
-const buildTimestampPath = path.join(cliPackageDir, 'dist', '.last_build'); // Path to the timestamp file within the CLI package
-const sourceDirs = [path.join(cliPackageDir, 'src')]; // Source directory within the CLI package
+const cliPackageDir = path.resolve("packages", "cli"); // Base directory for the CLI package
+const buildTimestampPath = path.join(cliPackageDir, "dist", ".last_build"); // Path to the timestamp file within the CLI package
+const sourceDirs = [path.join(cliPackageDir, "src")]; // Source directory within the CLI package
 const filesToWatch = [
-  path.join(cliPackageDir, 'package.json'),
-  path.join(cliPackageDir, 'tsconfig.json'),
+  path.join(cliPackageDir, "package.json"),
+  path.join(cliPackageDir, "tsconfig.json"),
 ]; // Specific files within the CLI package
-const buildDir = path.join(cliPackageDir, 'dist'); // Build output directory within the CLI package
-const warningsFilePath = path.join(os.tmpdir(), 'qwen-code-warnings.txt'); // Temp file for warnings
+const buildDir = path.join(cliPackageDir, "dist"); // Build output directory within the CLI package
+const warningsFilePath = path.join(os.tmpdir(), "qwen-code-warnings.txt"); // Temp file for warnings
 // ---------------------
 
 function getMtime(filePath) {
   try {
     return fs.statSync(filePath).mtimeMs; // Use mtimeMs for higher precision
   } catch (err) {
-    if (err.code === 'ENOENT') {
+    if (err.code === "ENOENT") {
       return null; // File doesn't exist
     }
     console.error(`Error getting stats for ${filePath}:`, err);
@@ -39,7 +39,7 @@ function findSourceFiles(dir, allFiles = []) {
     // Simple check to avoid recursing into node_modules or build dir itself
     if (
       entry.isDirectory() &&
-      entry.name !== 'node_modules' &&
+      entry.name !== "node_modules" &&
       fullPath !== buildDir
     ) {
       findSourceFiles(fullPath, allFiles);
@@ -50,7 +50,7 @@ function findSourceFiles(dir, allFiles = []) {
   return allFiles;
 }
 
-console.log('Checking build status...');
+console.log("Checking build status...");
 
 // Clean up old warnings file before check
 try {
@@ -125,14 +125,14 @@ if (newerSourceFileFound) {
 
   // Write warnings to the temp file
   try {
-    fs.writeFileSync(warningsFilePath, warningMessages.join('\n'));
+    fs.writeFileSync(warningsFilePath, warningMessages.join("\n"));
     // Removed debug log
   } catch (err) {
     console.error(`[Check Script] Error writing warnings file: ${err.message}`);
     // Proceed without writing, app won't show warnings
   }
 } else {
-  console.log('Build is up-to-date.');
+  console.log("Build is up-to-date.");
   // Ensure no stale warning file exists if build is ok
   try {
     if (fs.existsSync(warningsFilePath)) {

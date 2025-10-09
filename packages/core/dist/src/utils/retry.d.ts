@@ -20,7 +20,7 @@ export interface RetryOptions {
         delayMs: number;
     }) => void;
 }
-export type RetryClassification = 'network' | 'status' | 'unknown';
+export type RetryClassification = "network" | "status" | "unknown";
 /**
  * Retries a function with exponential backoff and jitter.
  * @param fn The asynchronous function to retry.

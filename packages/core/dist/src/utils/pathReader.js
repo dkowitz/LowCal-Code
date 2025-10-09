@@ -3,10 +3,10 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { promises as fs } from 'node:fs';
-import path from 'node:path';
-import { glob } from 'glob';
-import { processSingleFileContent } from './fileUtils.js';
+import { promises as fs } from "node:fs";
+import path from "node:path";
+import { glob } from "glob";
+import { processSingleFileContent } from "./fileUtils.js";
 /**
  * Reads the content of a file or recursively expands a directory from
  * within the workspace, returning content suitable for LLM input.
@@ -51,7 +51,7 @@ export async function readPathFromWorkspace(pathStr, config) {
             text: `--- Start of content for directory: ${pathStr} ---\n`,
         });
         // Use glob to recursively find all files within the directory.
-        const files = await glob('**/*', {
+        const files = await glob("**/*", {
             cwd: absolutePath,
             nodir: true, // We only want files
             dot: true, // Include dotfiles
@@ -68,7 +68,7 @@ export async function readPathFromWorkspace(pathStr, config) {
             allParts.push({ text: `--- ${relativePathForDisplay} ---\n` });
             const result = await processSingleFileContent(filePath, config.getTargetDir(), config.getFileSystemService());
             allParts.push(result.llmContent);
-            allParts.push({ text: '\n' }); // Add a newline for separation
+            allParts.push({ text: "\n" }); // Add a newline for separation
         }
         allParts.push({ text: `--- End of content for directory: ${pathStr} ---` });
         return allParts;

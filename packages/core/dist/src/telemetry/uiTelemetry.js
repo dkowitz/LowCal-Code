@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { EventEmitter } from 'node:events';
-import { EVENT_API_ERROR, EVENT_API_RESPONSE, EVENT_TOOL_CALL, } from './constants.js';
-import { ToolCallDecision } from './tool-call-decision.js';
+import { EventEmitter } from "node:events";
+import { EVENT_API_ERROR, EVENT_API_RESPONSE, EVENT_TOOL_CALL, } from "./constants.js";
+import { ToolCallDecision } from "./tool-call-decision.js";
 const createInitialModelMetrics = () => ({
     api: {
         totalRequests: 0,
@@ -45,7 +45,7 @@ export class UiTelemetryService extends EventEmitter {
     #metrics = createInitialMetrics();
     #lastPromptTokenCount = 0;
     addEvent(event) {
-        switch (event['event.name']) {
+        switch (event["event.name"]) {
             case EVENT_API_RESPONSE:
                 this.processApiResponse(event);
                 break;
@@ -85,7 +85,7 @@ export class UiTelemetryService extends EventEmitter {
         catch (e) {
             currentContextTokenCount = 0;
         }
-        this.emit('update', {
+        this.emit("update", {
             metrics: this.#metrics,
             lastPromptTokenCount: this.#lastPromptTokenCount,
             currentContextTokenCount,
@@ -158,11 +158,11 @@ export class UiTelemetryService extends EventEmitter {
         }
         // Aggregate line count data from metadata
         if (event.metadata) {
-            if (event.metadata['ai_added_lines'] !== undefined) {
-                files.totalLinesAdded += event.metadata['ai_added_lines'];
+            if (event.metadata["ai_added_lines"] !== undefined) {
+                files.totalLinesAdded += event.metadata["ai_added_lines"];
             }
-            if (event.metadata['ai_removed_lines'] !== undefined) {
-                files.totalLinesRemoved += event.metadata['ai_removed_lines'];
+            if (event.metadata["ai_removed_lines"] !== undefined) {
+                files.totalLinesRemoved += event.metadata["ai_removed_lines"];
             }
         }
     }

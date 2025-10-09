@@ -12,23 +12,23 @@ import {
   beforeEach,
   afterEach,
   type Mocked,
-} from 'vitest';
-import { IdeClient, IDEConnectionStatus } from './ide-client.js';
-import * as fs from 'node:fs';
-import { getIdeProcessInfo } from './process-utils.js';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
+} from "vitest";
+import { IdeClient, IDEConnectionStatus } from "./ide-client.js";
+import * as fs from "node:fs";
+import { getIdeProcessInfo } from "./process-utils.js";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { StreamableHTTPClientTransport } from "@modelcontextprotocol/sdk/client/streamableHttp.js";
+import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import {
   detectIde,
   DetectedIde,
   getIdeInfo,
   type IdeInfo,
-} from './detect-ide.js';
-import * as os from 'node:os';
-import * as path from 'node:path';
+} from "./detect-ide.js";
+import * as os from "node:os";
+import * as path from "node:path";
 
-vi.mock('node:fs', async (importOriginal) => {
+vi.mock("node:fs", async (importOriginal) => {
   const actual = await importOriginal();
   return {
     ...(actual as object),
@@ -39,14 +39,14 @@ vi.mock('node:fs', async (importOriginal) => {
     existsSync: () => false,
   };
 });
-vi.mock('./process-utils.js');
-vi.mock('@modelcontextprotocol/sdk/client/index.js');
-vi.mock('@modelcontextprotocol/sdk/client/streamableHttp.js');
-vi.mock('@modelcontextprotocol/sdk/client/stdio.js');
-vi.mock('./detect-ide.js');
-vi.mock('node:os');
+vi.mock("./process-utils.js");
+vi.mock("@modelcontextprotocol/sdk/client/index.js");
+vi.mock("@modelcontextprotocol/sdk/client/streamableHttp.js");
+vi.mock("@modelcontextprotocol/sdk/client/stdio.js");
+vi.mock("./detect-ide.js");
+vi.mock("node:os");
 
-describe('IdeClient', () => {
+describe("IdeClient", () => {
   let mockClient: Mocked<Client>;
   let mockHttpTransport: Mocked<StreamableHTTPClientTransport>;
   let mockStdioTransport: Mocked<StdioClientTransport>;
@@ -57,22 +57,22 @@ describe('IdeClient', () => {
       undefined;
 
     // Mock environment variables
-    process.env['QWEN_CODE_IDE_WORKSPACE_PATH'] = '/test/workspace';
-    delete process.env['QWEN_CODE_IDE_SERVER_PORT'];
-    delete process.env['QWEN_CODE_IDE_SERVER_STDIO_COMMAND'];
-    delete process.env['QWEN_CODE_IDE_SERVER_STDIO_ARGS'];
+    process.env["QWEN_CODE_IDE_WORKSPACE_PATH"] = "/test/workspace";
+    delete process.env["QWEN_CODE_IDE_SERVER_PORT"];
+    delete process.env["QWEN_CODE_IDE_SERVER_STDIO_COMMAND"];
+    delete process.env["QWEN_CODE_IDE_SERVER_STDIO_ARGS"];
 
     // Mock dependencies
-    vi.spyOn(process, 'cwd').mockReturnValue('/test/workspace/sub-dir');
+    vi.spyOn(process, "cwd").mockReturnValue("/test/workspace/sub-dir");
     vi.mocked(detectIde).mockReturnValue(DetectedIde.VSCode);
     vi.mocked(getIdeInfo).mockReturnValue({
-      displayName: 'VS Code',
+      displayName: "VS Code",
     } as IdeInfo);
     vi.mocked(getIdeProcessInfo).mockResolvedValue({
       pid: 12345,
-      command: 'test-ide',
+      command: "test-ide",
     });
-    vi.mocked(os.tmpdir).mockReturnValue('/tmp');
+    vi.mocked(os.tmpdir).mockReturnValue("/tmp");
 
     // Mock MCP client and transports
     mockClient = {
@@ -99,40 +99,40 @@ describe('IdeClient', () => {
     vi.restoreAllMocks();
   });
 
-  describe('connect', () => {
-    it('should return invalid if QWEN_CODE_IDE_WORKSPACE_PATH is undefined', () => {
+  describe("connect", () => {
+    it("should return invalid if QWEN_CODE_IDE_WORKSPACE_PATH is undefined", () => {
       const result = IdeClient.validateWorkspacePath(
         undefined,
-        'VS Code',
-        '/Users/person/gemini-cli/sub-dir',
+        "VS Code",
+        "/Users/person/gemini-cli/sub-dir",
       );
       expect(result.isValid).toBe(false);
-      expect(result.error).toContain('Failed to connect');
+      expect(result.error).toContain("Failed to connect");
     });
 
-    it('should return invalid if QWEN_CODE_IDE_WORKSPACE_PATH is empty', () => {
+    it("should return invalid if QWEN_CODE_IDE_WORKSPACE_PATH is empty", () => {
       const result = IdeClient.validateWorkspacePath(
-        '',
-        'VS Code',
-        '/Users/person/gemini-cli/sub-dir',
+        "",
+        "VS Code",
+        "/Users/person/gemini-cli/sub-dir",
       );
       expect(result.isValid).toBe(false);
-      expect(result.error).toContain('please open a workspace folder');
+      expect(result.error).toContain("please open a workspace folder");
     });
 
-    it('should connect using HTTP when port is provided in config file', async () => {
-      const config = { port: '8080' };
+    it("should connect using HTTP when port is provided in config file", async () => {
+      const config = { port: "8080" };
       vi.mocked(fs.promises.readFile).mockResolvedValue(JSON.stringify(config));
 
       const ideClient = await IdeClient.getInstance();
       await ideClient.connect();
 
       expect(fs.promises.readFile).toHaveBeenCalledWith(
-        path.join('/tmp', 'qwen-code-ide-server-12345.json'),
-        'utf8',
+        path.join("/tmp", "qwen-code-ide-server-12345.json"),
+        "utf8",
       );
       expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
-        new URL('http://localhost:8080/mcp'),
+        new URL("http://localhost:8080/mcp"),
         expect.any(Object),
       );
       expect(mockClient.connect).toHaveBeenCalledWith(mockHttpTransport);
@@ -141,16 +141,16 @@ describe('IdeClient', () => {
       );
     });
 
-    it('should connect using stdio when stdio config is provided in file', async () => {
-      const config = { stdio: { command: 'test-cmd', args: ['--foo'] } };
+    it("should connect using stdio when stdio config is provided in file", async () => {
+      const config = { stdio: { command: "test-cmd", args: ["--foo"] } };
       vi.mocked(fs.promises.readFile).mockResolvedValue(JSON.stringify(config));
 
       const ideClient = await IdeClient.getInstance();
       await ideClient.connect();
 
       expect(StdioClientTransport).toHaveBeenCalledWith({
-        command: 'test-cmd',
-        args: ['--foo'],
+        command: "test-cmd",
+        args: ["--foo"],
       });
       expect(mockClient.connect).toHaveBeenCalledWith(mockStdioTransport);
       expect(ideClient.getConnectionStatus().status).toBe(
@@ -158,10 +158,10 @@ describe('IdeClient', () => {
       );
     });
 
-    it('should prioritize port over stdio when both are in config file', async () => {
+    it("should prioritize port over stdio when both are in config file", async () => {
       const config = {
-        port: '8080',
-        stdio: { command: 'test-cmd', args: ['--foo'] },
+        port: "8080",
+        stdio: { command: "test-cmd", args: ["--foo"] },
       };
       vi.mocked(fs.promises.readFile).mockResolvedValue(JSON.stringify(config));
 
@@ -175,17 +175,17 @@ describe('IdeClient', () => {
       );
     });
 
-    it('should connect using HTTP when port is provided in environment variables', async () => {
+    it("should connect using HTTP when port is provided in environment variables", async () => {
       vi.mocked(fs.promises.readFile).mockRejectedValue(
-        new Error('File not found'),
+        new Error("File not found"),
       );
-      process.env['QWEN_CODE_IDE_SERVER_PORT'] = '9090';
+      process.env["QWEN_CODE_IDE_SERVER_PORT"] = "9090";
 
       const ideClient = await IdeClient.getInstance();
       await ideClient.connect();
 
       expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
-        new URL('http://localhost:9090/mcp'),
+        new URL("http://localhost:9090/mcp"),
         expect.any(Object),
       );
       expect(mockClient.connect).toHaveBeenCalledWith(mockHttpTransport);
@@ -194,19 +194,19 @@ describe('IdeClient', () => {
       );
     });
 
-    it('should connect using stdio when stdio config is in environment variables', async () => {
+    it("should connect using stdio when stdio config is in environment variables", async () => {
       vi.mocked(fs.promises.readFile).mockRejectedValue(
-        new Error('File not found'),
+        new Error("File not found"),
       );
-      process.env['QWEN_CODE_IDE_SERVER_STDIO_COMMAND'] = 'env-cmd';
-      process.env['QWEN_CODE_IDE_SERVER_STDIO_ARGS'] = '["--bar"]';
+      process.env["QWEN_CODE_IDE_SERVER_STDIO_COMMAND"] = "env-cmd";
+      process.env["QWEN_CODE_IDE_SERVER_STDIO_ARGS"] = '["--bar"]';
 
       const ideClient = await IdeClient.getInstance();
       await ideClient.connect();
 
       expect(StdioClientTransport).toHaveBeenCalledWith({
-        command: 'env-cmd',
-        args: ['--bar'],
+        command: "env-cmd",
+        args: ["--bar"],
       });
       expect(mockClient.connect).toHaveBeenCalledWith(mockStdioTransport);
       expect(ideClient.getConnectionStatus().status).toBe(
@@ -214,16 +214,16 @@ describe('IdeClient', () => {
       );
     });
 
-    it('should prioritize file config over environment variables', async () => {
-      const config = { port: '8080' };
+    it("should prioritize file config over environment variables", async () => {
+      const config = { port: "8080" };
       vi.mocked(fs.promises.readFile).mockResolvedValue(JSON.stringify(config));
-      process.env['QWEN_CODE_IDE_SERVER_PORT'] = '9090';
+      process.env["QWEN_CODE_IDE_SERVER_PORT"] = "9090";
 
       const ideClient = await IdeClient.getInstance();
       await ideClient.connect();
 
       expect(StreamableHTTPClientTransport).toHaveBeenCalledWith(
-        new URL('http://localhost:8080/mcp'),
+        new URL("http://localhost:8080/mcp"),
         expect.any(Object),
       );
       expect(ideClient.getConnectionStatus().status).toBe(
@@ -231,9 +231,9 @@ describe('IdeClient', () => {
       );
     });
 
-    it('should be disconnected if no config is found', async () => {
+    it("should be disconnected if no config is found", async () => {
       vi.mocked(fs.promises.readFile).mockRejectedValue(
-        new Error('File not found'),
+        new Error("File not found"),
       );
 
       const ideClient = await IdeClient.getInstance();
@@ -245,7 +245,7 @@ describe('IdeClient', () => {
         IDEConnectionStatus.Disconnected,
       );
       expect(ideClient.getConnectionStatus().details).toContain(
-        'Failed to connect',
+        "Failed to connect",
       );
     });
   });

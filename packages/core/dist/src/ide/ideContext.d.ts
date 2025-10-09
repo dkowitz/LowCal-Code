@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { z } from 'zod';
+import { z } from "zod";
 /**
  * Zod schema for validating a file context from the IDE.
  */
@@ -342,10 +342,10 @@ export declare const CloseDiffResponseSchema: z.ZodEffects<z.ZodObject<{
     }[];
 }>;
 export type DiffUpdateResult = {
-    status: 'accepted';
+    status: "accepted";
     content?: string;
 } | {
-    status: 'rejected';
+    status: "rejected";
     content: undefined;
 };
 type IdeContextSubscriber = (ideContext: IdeContext | undefined) => void;

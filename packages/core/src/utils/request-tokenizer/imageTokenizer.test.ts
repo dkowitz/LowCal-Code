@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from 'vitest';
-import { ImageTokenizer } from './imageTokenizer.js';
+import { describe, it, expect } from "vitest";
+import { ImageTokenizer } from "./imageTokenizer.js";
 
-describe('ImageTokenizer', () => {
+describe("ImageTokenizer", () => {
   const tokenizer = new ImageTokenizer();
 
-  describe('token calculation', () => {
-    it('should calculate tokens based on image dimensions with reference logic', () => {
+  describe("token calculation", () => {
+    it("should calculate tokens based on image dimensions with reference logic", () => {
       const metadata = {
         width: 28,
         height: 28,
-        mimeType: 'image/png',
+        mimeType: "image/png",
         dataSize: 1000,
       };
 
@@ -26,11 +26,11 @@ describe('ImageTokenizer', () => {
       expect(tokens).toBeGreaterThanOrEqual(6); // Minimum after scaling + special tokens
     });
 
-    it('should calculate tokens for larger images', () => {
+    it("should calculate tokens for larger images", () => {
       const metadata = {
         width: 512,
         height: 512,
-        mimeType: 'image/png',
+        mimeType: "image/png",
         dataSize: 10000,
       };
 
@@ -41,11 +41,11 @@ describe('ImageTokenizer', () => {
       expect(tokens).toBeLessThan(400); // Should be reasonable for 512x512
     });
 
-    it('should enforce minimum tokens per image with scaling', () => {
+    it("should enforce minimum tokens per image with scaling", () => {
       const metadata = {
         width: 1,
         height: 1,
-        mimeType: 'image/png',
+        mimeType: "image/png",
         dataSize: 100,
       };
 
@@ -55,11 +55,11 @@ describe('ImageTokenizer', () => {
       expect(tokens).toBeGreaterThanOrEqual(6); // 4 image tokens + 2 special tokens
     });
 
-    it('should handle very large images with scaling', () => {
+    it("should handle very large images with scaling", () => {
       const metadata = {
         width: 8192,
         height: 8192,
-        mimeType: 'image/png',
+        mimeType: "image/png",
         dataSize: 100000,
       };
 
@@ -71,46 +71,46 @@ describe('ImageTokenizer', () => {
     });
   });
 
-  describe('PNG dimension extraction', () => {
-    it('should extract dimensions from valid PNG', async () => {
+  describe("PNG dimension extraction", () => {
+    it("should extract dimensions from valid PNG", async () => {
       // 1x1 PNG image in base64
       const pngBase64 =
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==';
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
 
       const metadata = await tokenizer.extractImageMetadata(
         pngBase64,
-        'image/png',
+        "image/png",
       );
 
       expect(metadata.width).toBe(1);
       expect(metadata.height).toBe(1);
-      expect(metadata.mimeType).toBe('image/png');
+      expect(metadata.mimeType).toBe("image/png");
     });
 
-    it('should handle invalid PNG gracefully', async () => {
-      const invalidBase64 = 'invalid-png-data';
+    it("should handle invalid PNG gracefully", async () => {
+      const invalidBase64 = "invalid-png-data";
 
       const metadata = await tokenizer.extractImageMetadata(
         invalidBase64,
-        'image/png',
+        "image/png",
       );
 
       // Should return default dimensions
       expect(metadata.width).toBe(512);
       expect(metadata.height).toBe(512);
-      expect(metadata.mimeType).toBe('image/png');
+      expect(metadata.mimeType).toBe("image/png");
     });
   });
 
-  describe('batch processing', () => {
-    it('should process multiple images serially', async () => {
+  describe("batch processing", () => {
+    it("should process multiple images serially", async () => {
       const pngBase64 =
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==';
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
 
       const images = [
-        { data: pngBase64, mimeType: 'image/png' },
-        { data: pngBase64, mimeType: 'image/png' },
-        { data: pngBase64, mimeType: 'image/png' },
+        { data: pngBase64, mimeType: "image/png" },
+        { data: pngBase64, mimeType: "image/png" },
+        { data: pngBase64, mimeType: "image/png" },
       ];
 
       const tokens = await tokenizer.calculateTokensBatch(images);
@@ -119,14 +119,14 @@ describe('ImageTokenizer', () => {
       expect(tokens.every((t) => t >= 4)).toBe(true); // All should have at least 4 tokens
     });
 
-    it('should handle mixed valid and invalid images', async () => {
+    it("should handle mixed valid and invalid images", async () => {
       const validPng =
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==';
-      const invalidPng = 'invalid-data';
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
+      const invalidPng = "invalid-data";
 
       const images = [
-        { data: validPng, mimeType: 'image/png' },
-        { data: invalidPng, mimeType: 'image/png' },
+        { data: validPng, mimeType: "image/png" },
+        { data: invalidPng, mimeType: "image/png" },
       ];
 
       const tokens = await tokenizer.calculateTokensBatch(images);
@@ -136,12 +136,12 @@ describe('ImageTokenizer', () => {
     });
   });
 
-  describe('different image formats', () => {
-    it('should handle different MIME types', async () => {
+  describe("different image formats", () => {
+    it("should handle different MIME types", async () => {
       const pngBase64 =
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==';
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNkYPhfDwAChAI9jU77yQAAAABJRU5ErkJggg==";
 
-      const formats = ['image/png', 'image/jpeg', 'image/webp', 'image/gif'];
+      const formats = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 
       for (const mimeType of formats) {
         const metadata = await tokenizer.extractImageMetadata(

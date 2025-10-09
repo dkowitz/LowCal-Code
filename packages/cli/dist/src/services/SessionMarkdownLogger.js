@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import path from 'node:path';
-import { promises as fs } from 'node:fs';
+import path from "node:path";
+import { promises as fs } from "node:fs";
 export class SessionMarkdownLogger {
     cwd;
     enabled = false;
@@ -31,23 +31,23 @@ export class SessionMarkdownLogger {
         if (this.enabled && this.logFilePath) {
             return this.getStatus();
         }
-        const logDir = path.join(this.cwd, 'logs');
+        const logDir = path.join(this.cwd, "logs");
         await fs.mkdir(logDir, { recursive: true });
         const timestamp = new Date().toISOString();
-        const safeTimestamp = timestamp.replace(/[:]/g, '-');
+        const safeTimestamp = timestamp.replace(/[:]/g, "-");
         const filePath = path.join(logDir, `session-log-${safeTimestamp}.md`);
         const header = this.buildHeader(metadata, timestamp);
-        await fs.writeFile(filePath, header, 'utf8');
+        await fs.writeFile(filePath, header, "utf8");
         this.enabled = true;
         this.logFilePath = filePath;
         this.loggingStartedAt = timestamp;
         this.lastError = undefined;
         this.loggedHistoryIds.clear();
-        await this.logEvent('Logging enabled', timestamp, {
-            message: 'Session logging activated. Subsequent events will appear below.',
+        await this.logEvent("Logging enabled", timestamp, {
+            message: "Session logging activated. Subsequent events will appear below.",
             logFilePath: filePath,
         });
-        await this.logHistorySnapshot(initialHistory, 'Initial conversation snapshot');
+        await this.logHistorySnapshot(initialHistory, "Initial conversation snapshot");
         return this.getStatus();
     }
     async disable(reason) {
@@ -55,15 +55,15 @@ export class SessionMarkdownLogger {
             return this.getStatus();
         }
         const timestamp = new Date().toISOString();
-        await this.logEvent('Logging disabled', timestamp, {
-            message: reason ?? 'Session logging deactivated.',
+        await this.logEvent("Logging disabled", timestamp, {
+            message: reason ?? "Session logging deactivated.",
         });
         this.enabled = false;
         this.loggingStartedAt = undefined;
         this.loggedHistoryIds.clear();
         return this.getStatus();
     }
-    async logHistorySnapshot(history, label = 'Conversation snapshot') {
+    async logHistorySnapshot(history, label = "Conversation snapshot") {
         if (!this.enabled)
             return;
         const timestamp = new Date().toISOString();
@@ -75,7 +75,7 @@ export class SessionMarkdownLogger {
             contentLines.push(this.formatHistoryItem(item, index + 1));
             this.loggedHistoryIds.add(item.id);
         }
-        await this.enqueueWrite(contentLines.join('\n'));
+        await this.enqueueWrite(contentLines.join("\n"));
     }
     async logHistoryItem(item) {
         if (!this.enabled)
@@ -94,7 +94,7 @@ export class SessionMarkdownLogger {
             canonicalPath: payload.canonicalPath,
             args: payload.args,
         };
-        await this.logEvent(`Command invoked: ${payload.canonicalPath.join(' ') || payload.rawCommand}`, payload.timestamp, meta);
+        await this.logEvent(`Command invoked: ${payload.canonicalPath.join(" ") || payload.rawCommand}`, payload.timestamp, meta);
     }
     async logCommandResult(payload) {
         if (!this.enabled)
@@ -105,17 +105,17 @@ export class SessionMarkdownLogger {
             outcome: payload.outcome,
         };
         if (payload.durationMs !== undefined) {
-            meta['durationMs'] = payload.durationMs;
+            meta["durationMs"] = payload.durationMs;
         }
         if (payload.details) {
-            meta['details'] = payload.details;
+            meta["details"] = payload.details;
         }
-        await this.logEvent(`Command completed: ${payload.canonicalPath.join(' ') || payload.rawCommand}`, payload.timestamp, meta);
+        await this.logEvent(`Command completed: ${payload.canonicalPath.join(" ") || payload.rawCommand}`, payload.timestamp, meta);
     }
     async logAppError(payload) {
         if (!this.enabled)
             return;
-        await this.logEvent('Application error', payload.timestamp, {
+        await this.logEvent("Application error", payload.timestamp, {
             message: payload.message,
         });
     }
@@ -128,9 +128,9 @@ export class SessionMarkdownLogger {
             writeSucceeded: payload.writeSucceeded,
         };
         if (payload.reportPath) {
-            meta['reportPath'] = payload.reportPath;
+            meta["reportPath"] = payload.reportPath;
         }
-        await this.logEvent('Error report generated', payload.timestamp, meta, {
+        await this.logEvent("Error report generated", payload.timestamp, meta, {
             json: payload.report,
         });
     }
@@ -143,25 +143,25 @@ export class SessionMarkdownLogger {
         const added = current.filter((item) => !previousIds.has(item.id));
         if (removed.length > 0 && current.length === 0) {
             this.loggedHistoryIds.clear();
-            void this.logEvent('History cleared', new Date().toISOString(), {
+            void this.logEvent("History cleared", new Date().toISOString(), {
                 removedCount: removed.length,
             });
             return;
         }
         if (removed.length > 0 && added.length > 0) {
             this.loggedHistoryIds.clear();
-            void this.logEvent('History replaced', new Date().toISOString(), {
+            void this.logEvent("History replaced", new Date().toISOString(), {
                 removedCount: removed.length,
                 newCount: current.length,
             });
-            void this.logHistorySnapshot(current, 'Conversation snapshot after replacement');
+            void this.logHistorySnapshot(current, "Conversation snapshot after replacement");
             return;
         }
         if (removed.length > 0) {
             for (const item of removed) {
                 this.loggedHistoryIds.delete(item.id);
             }
-            void this.logEvent('History entries removed', new Date().toISOString(), {
+            void this.logEvent("History entries removed", new Date().toISOString(), {
                 removedCount: removed.length,
                 removedIds: removed.map((item) => item.id),
             });
@@ -174,7 +174,7 @@ export class SessionMarkdownLogger {
     }
     buildHeader(metadata, timestamp) {
         const lines = [];
-        lines.push('# Session Log', '');
+        lines.push("# Session Log", "");
         lines.push(`- Generated at: ${timestamp}`);
         lines.push(`- Working directory: ${metadata.cwd}`);
         if (metadata.sessionId) {
@@ -190,62 +190,63 @@ export class SessionMarkdownLogger {
             lines.push(`- Approval mode: ${metadata.approvalMode}`);
         }
         if (metadata.debugMode !== undefined) {
-            lines.push(`- Debug mode: ${metadata.debugMode ? 'on' : 'off'}`);
+            lines.push(`- Debug mode: ${metadata.debugMode ? "on" : "off"}`);
         }
-        if (metadata.additionalContext && Object.keys(metadata.additionalContext).length > 0) {
-            lines.push('', '```json');
+        if (metadata.additionalContext &&
+            Object.keys(metadata.additionalContext).length > 0) {
+            lines.push("", "```json");
             lines.push(JSON.stringify(metadata.additionalContext, null, 2));
-            lines.push('```');
+            lines.push("```");
         }
-        lines.push('', '## Timeline', '');
-        return lines.join('\n');
+        lines.push("", "## Timeline", "");
+        return lines.join("\n");
     }
     formatHistoryItem(item, position) {
         const timestamp = new Date(item.id).toISOString();
         const headerLabel = position
             ? `${timestamp} — Message #${position} (${item.type})`
             : `${timestamp} — ${item.type}`;
-        const lines = [`### ${headerLabel}`, ''];
-        if ('text' in item && item.text) {
-            lines.push('**Text:**', '```text', item.text, '```', '');
+        const lines = [`### ${headerLabel}`, ""];
+        if ("text" in item && item.text) {
+            lines.push("**Text:**", "```text", item.text, "```", "");
         }
-        if (item.type === 'tool_group' && item.tools) {
-            lines.push('**Tools:**');
+        if (item.type === "tool_group" && item.tools) {
+            lines.push("**Tools:**");
             for (const tool of item.tools) {
-                lines.push(`- ${tool.name} (${tool.status})${tool.renderOutputAsMarkdown ? ' [markdown]' : ''}`);
+                lines.push(`- ${tool.name} (${tool.status})${tool.renderOutputAsMarkdown ? " [markdown]" : ""}`);
                 if (tool.resultDisplay !== undefined) {
-                    lines.push('  ```json');
+                    lines.push("  ```json");
                     lines.push(JSON.stringify(tool.resultDisplay, null, 2));
-                    lines.push('  ```');
+                    lines.push("  ```");
                 }
             }
-            lines.push('');
+            lines.push("");
         }
-        lines.push('**Raw item:**', '```json', JSON.stringify(item, null, 2), '```', '');
-        return lines.join('\n');
+        lines.push("**Raw item:**", "```json", JSON.stringify(item, null, 2), "```", "");
+        return lines.join("\n");
     }
     async logEvent(title, timestamp, metadata, extra) {
         if (!this.enabled)
             return;
-        const lines = [`### ${timestamp} — ${title}`, ''];
+        const lines = [`### ${timestamp} — ${title}`, ""];
         if (metadata) {
-            lines.push('```json');
+            lines.push("```json");
             lines.push(JSON.stringify(metadata, null, 2));
-            lines.push('```', '');
+            lines.push("```", "");
         }
         if (extra?.json !== undefined) {
-            lines.push('```json');
+            lines.push("```json");
             lines.push(JSON.stringify(extra.json, null, 2));
-            lines.push('```', '');
+            lines.push("```", "");
         }
-        await this.enqueueWrite(lines.join('\n'));
+        await this.enqueueWrite(lines.join("\n"));
     }
     async enqueueWrite(content) {
         if (!this.enabled || !this.logFilePath) {
             return;
         }
         this.writeQueue = this.writeQueue
-            .then(() => fs.appendFile(this.logFilePath, `${content}\n`, 'utf8'))
+            .then(() => fs.appendFile(this.logFilePath, `${content}\n`, "utf8"))
             .catch((error) => {
             this.lastError = error instanceof Error ? error.message : String(error);
         });

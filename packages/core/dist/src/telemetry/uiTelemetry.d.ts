@@ -3,16 +3,16 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { EventEmitter } from 'node:events';
-import { EVENT_API_ERROR, EVENT_API_RESPONSE, EVENT_TOOL_CALL } from './constants.js';
-import { ToolCallDecision } from './tool-call-decision.js';
-import type { ApiErrorEvent, ApiResponseEvent, ToolCallEvent } from './types.js';
+import { EventEmitter } from "node:events";
+import { EVENT_API_ERROR, EVENT_API_RESPONSE, EVENT_TOOL_CALL } from "./constants.js";
+import { ToolCallDecision } from "./tool-call-decision.js";
+import type { ApiErrorEvent, ApiResponseEvent, ToolCallEvent } from "./types.js";
 export type UiEvent = (ApiResponseEvent & {
-    'event.name': typeof EVENT_API_RESPONSE;
+    "event.name": typeof EVENT_API_RESPONSE;
 }) | (ApiErrorEvent & {
-    'event.name': typeof EVENT_API_ERROR;
+    "event.name": typeof EVENT_API_ERROR;
 }) | (ToolCallEvent & {
-    'event.name': typeof EVENT_TOOL_CALL;
+    "event.name": typeof EVENT_TOOL_CALL;
 });
 export interface ToolCallStats {
     count: number;

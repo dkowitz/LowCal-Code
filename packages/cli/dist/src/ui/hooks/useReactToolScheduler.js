@@ -3,14 +3,14 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { CoreToolScheduler } from '@qwen-code/qwen-code-core';
-import { useCallback, useState, useMemo } from 'react';
-import { ToolCallStatus } from '../types.js';
+import { CoreToolScheduler } from "@qwen-code/qwen-code-core";
+import { useCallback, useState, useMemo } from "react";
+import { ToolCallStatus } from "../types.js";
 export function useReactToolScheduler(onComplete, config, setPendingHistoryItem, getPreferredEditor, onEditorClose) {
     const [toolCallsForDisplay, setToolCallsForDisplay] = useState([]);
     const outputUpdateHandler = useCallback((toolCallId, outputChunk) => {
         setPendingHistoryItem((prevItem) => {
-            if (prevItem?.type === 'tool_group') {
+            if (prevItem?.type === "tool_group") {
                 return {
                     ...prevItem,
                     tools: prevItem.tools.map((toolDisplay) => toolDisplay.callId === toolCallId &&
@@ -22,7 +22,7 @@ export function useReactToolScheduler(onComplete, config, setPendingHistoryItem,
             return prevItem;
         });
         setToolCallsForDisplay((prevCalls) => prevCalls.map((tc) => {
-            if (tc.request.callId === toolCallId && tc.status === 'executing') {
+            if (tc.request.callId === toolCallId && tc.status === "executing") {
                 const executingTc = tc;
                 return { ...executingTc, liveOutput: outputChunk };
             }
@@ -72,19 +72,19 @@ export function useReactToolScheduler(onComplete, config, setPendingHistoryItem,
  */
 function mapCoreStatusToDisplayStatus(coreStatus) {
     switch (coreStatus) {
-        case 'validating':
+        case "validating":
             return ToolCallStatus.Executing;
-        case 'awaiting_approval':
+        case "awaiting_approval":
             return ToolCallStatus.Confirming;
-        case 'executing':
+        case "executing":
             return ToolCallStatus.Executing;
-        case 'success':
+        case "success":
             return ToolCallStatus.Success;
-        case 'cancelled':
+        case "cancelled":
             return ToolCallStatus.Canceled;
-        case 'error':
+        case "error":
             return ToolCallStatus.Error;
-        case 'scheduled':
+        case "scheduled":
             return ToolCallStatus.Pending;
         default: {
             const exhaustiveCheck = coreStatus;
@@ -102,7 +102,7 @@ export function mapToDisplay(toolOrTools) {
         let displayName;
         let description;
         let renderOutputAsMarkdown = false;
-        if (trackedCall.status === 'error') {
+        if (trackedCall.status === "error") {
             displayName =
                 trackedCall.tool === undefined
                     ? trackedCall.request.name
@@ -121,43 +121,43 @@ export function mapToDisplay(toolOrTools) {
             renderOutputAsMarkdown,
         };
         switch (trackedCall.status) {
-            case 'success':
+            case "success":
                 return {
                     ...baseDisplayProperties,
                     status: mapCoreStatusToDisplayStatus(trackedCall.status),
                     resultDisplay: trackedCall.response.resultDisplay,
                     confirmationDetails: undefined,
                 };
-            case 'error':
+            case "error":
                 return {
                     ...baseDisplayProperties,
                     status: mapCoreStatusToDisplayStatus(trackedCall.status),
                     resultDisplay: trackedCall.response.resultDisplay,
                     confirmationDetails: undefined,
                 };
-            case 'cancelled':
+            case "cancelled":
                 return {
                     ...baseDisplayProperties,
                     status: mapCoreStatusToDisplayStatus(trackedCall.status),
                     resultDisplay: trackedCall.response.resultDisplay,
                     confirmationDetails: undefined,
                 };
-            case 'awaiting_approval':
+            case "awaiting_approval":
                 return {
                     ...baseDisplayProperties,
                     status: mapCoreStatusToDisplayStatus(trackedCall.status),
                     resultDisplay: undefined,
                     confirmationDetails: trackedCall.confirmationDetails,
                 };
-            case 'executing':
+            case "executing":
                 return {
                     ...baseDisplayProperties,
                     status: mapCoreStatusToDisplayStatus(trackedCall.status),
                     resultDisplay: trackedCall.liveOutput ?? undefined,
                     confirmationDetails: undefined,
                 };
-            case 'validating': // Fallthrough
-            case 'scheduled':
+            case "validating": // Fallthrough
+            case "scheduled":
                 return {
                     ...baseDisplayProperties,
                     status: mapCoreStatusToDisplayStatus(trackedCall.status),
@@ -168,10 +168,10 @@ export function mapToDisplay(toolOrTools) {
                 const exhaustiveCheck = trackedCall;
                 return {
                     callId: exhaustiveCheck.request.callId,
-                    name: 'Unknown Tool',
-                    description: 'Encountered an unknown tool call state.',
+                    name: "Unknown Tool",
+                    description: "Encountered an unknown tool call state.",
                     status: ToolCallStatus.Error,
-                    resultDisplay: 'Unknown tool call state',
+                    resultDisplay: "Unknown tool call state",
                     confirmationDetails: undefined,
                     renderOutputAsMarkdown: false,
                 };
@@ -179,7 +179,7 @@ export function mapToDisplay(toolOrTools) {
         }
     });
     return {
-        type: 'tool_group',
+        type: "tool_group",
         tools: toolDisplays,
     };
 }

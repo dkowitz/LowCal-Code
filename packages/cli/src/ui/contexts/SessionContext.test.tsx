@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { type MutableRefObject } from 'react';
-import { render } from 'ink-testing-library';
-import { renderHook } from '@testing-library/react';
-import { act } from 'react-dom/test-utils';
-import type { SessionMetrics } from './SessionContext.js';
-import { SessionStatsProvider, useSessionStats } from './SessionContext.js';
-import { describe, it, expect, vi } from 'vitest';
-import { uiTelemetryService } from '@qwen-code/qwen-code-core';
+import { type MutableRefObject } from "react";
+import { render } from "ink-testing-library";
+import { renderHook } from "@testing-library/react";
+import { act } from "react-dom/test-utils";
+import type { SessionMetrics } from "./SessionContext.js";
+import { SessionStatsProvider, useSessionStats } from "./SessionContext.js";
+import { describe, it, expect, vi } from "vitest";
+import { uiTelemetryService } from "@qwen-code/qwen-code-core";
 
 /**
  * A test harness component that uses the hook and exposes the context value
@@ -27,8 +27,8 @@ const TestHarness = ({
   return null;
 };
 
-describe('SessionStatsContext', () => {
-  it('should provide the correct initial state', () => {
+describe("SessionStatsContext", () => {
+  it("should provide the correct initial state", () => {
     const contextRef: MutableRefObject<
       ReturnType<typeof useSessionStats> | undefined
     > = { current: undefined };
@@ -46,7 +46,7 @@ describe('SessionStatsContext', () => {
     expect(stats?.metrics.models).toEqual({});
   });
 
-  it('should update metrics when the uiTelemetryService emits an update', () => {
+  it("should update metrics when the uiTelemetryService emits an update", () => {
     const contextRef: MutableRefObject<
       ReturnType<typeof useSessionStats> | undefined
     > = { current: undefined };
@@ -59,7 +59,7 @@ describe('SessionStatsContext', () => {
 
     const newMetrics: SessionMetrics = {
       models: {
-        'gemini-pro': {
+        "gemini-pro": {
           api: {
             totalRequests: 1,
             totalErrors: 0,
@@ -86,7 +86,7 @@ describe('SessionStatsContext', () => {
           modify: 0,
         },
         byName: {
-          'test-tool': {
+          "test-tool": {
             count: 1,
             success: 1,
             fail: 0,
@@ -102,7 +102,7 @@ describe('SessionStatsContext', () => {
     };
 
     act(() => {
-      uiTelemetryService.emit('update', {
+      uiTelemetryService.emit("update", {
         metrics: newMetrics,
         lastPromptTokenCount: 100,
       });
@@ -113,15 +113,15 @@ describe('SessionStatsContext', () => {
     expect(stats?.lastPromptTokenCount).toBe(100);
   });
 
-  it('should throw an error when useSessionStats is used outside of a provider', () => {
+  it("should throw an error when useSessionStats is used outside of a provider", () => {
     // Suppress console.error for this test since we expect an error
-    const consoleSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
 
     try {
       // Expect renderHook itself to throw when the hook is used outside a provider
       expect(() => {
         renderHook(() => useSessionStats());
-      }).toThrow('useSessionStats must be used within a SessionStatsProvider');
+      }).toThrow("useSessionStats must be used within a SessionStatsProvider");
     } finally {
       consoleSpy.mockRestore();
     }

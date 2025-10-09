@@ -4,17 +4,17 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
+import { describe, it, expect, vi, beforeEach, type Mock } from "vitest";
 import type {
   Counter,
   Meter,
   Attributes,
   Context,
   Histogram,
-} from '@opentelemetry/api';
-import type { Config } from '../config/config.js';
-import { FileOperation } from './metrics.js';
-import { makeFakeConfig } from '../test-utils/config.js';
+} from "@opentelemetry/api";
+import type { Config } from "../config/config.js";
+import { FileOperation } from "./metrics.js";
+import { makeFakeConfig } from "../test-utils/config.js";
 
 const mockCounterAddFn: Mock<
   (value: number, attributes?: Attributes, context?: Context) => void
@@ -56,30 +56,30 @@ function originalOtelMockFactory() {
   };
 }
 
-vi.mock('@opentelemetry/api');
+vi.mock("@opentelemetry/api");
 
-describe('Telemetry Metrics', () => {
-  let initializeMetricsModule: typeof import('./metrics.js').initializeMetrics;
-  let recordTokenUsageMetricsModule: typeof import('./metrics.js').recordTokenUsageMetrics;
-  let recordFileOperationMetricModule: typeof import('./metrics.js').recordFileOperationMetric;
-  let recordChatCompressionMetricsModule: typeof import('./metrics.js').recordChatCompressionMetrics;
+describe("Telemetry Metrics", () => {
+  let initializeMetricsModule: typeof import("./metrics.js").initializeMetrics;
+  let recordTokenUsageMetricsModule: typeof import("./metrics.js").recordTokenUsageMetrics;
+  let recordFileOperationMetricModule: typeof import("./metrics.js").recordFileOperationMetric;
+  let recordChatCompressionMetricsModule: typeof import("./metrics.js").recordChatCompressionMetrics;
 
   beforeEach(async () => {
     vi.resetModules();
-    vi.doMock('@opentelemetry/api', () => {
+    vi.doMock("@opentelemetry/api", () => {
       const actualApi = originalOtelMockFactory();
       (actualApi.metrics.getMeter as Mock).mockReturnValue(mockMeterInstance);
       return actualApi;
     });
 
-    const metricsJsModule = await import('./metrics.js');
+    const metricsJsModule = await import("./metrics.js");
     initializeMetricsModule = metricsJsModule.initializeMetrics;
     recordTokenUsageMetricsModule = metricsJsModule.recordTokenUsageMetrics;
     recordFileOperationMetricModule = metricsJsModule.recordFileOperationMetric;
     recordChatCompressionMetricsModule =
       metricsJsModule.recordChatCompressionMetrics;
 
-    const otelApiModule = await import('@opentelemetry/api');
+    const otelApiModule = await import("@opentelemetry/api");
 
     mockCounterAddFn.mockClear();
     mockCreateCounterFn.mockClear();
@@ -92,8 +92,8 @@ describe('Telemetry Metrics', () => {
     mockCreateHistogramFn.mockReturnValue(mockHistogramInstance);
   });
 
-  describe('recordChatCompressionMetrics', () => {
-    it('does not record metrics if not initialized', () => {
+  describe("recordChatCompressionMetrics", () => {
+    it("does not record metrics if not initialized", () => {
       const lol = makeFakeConfig({});
 
       recordChatCompressionMetricsModule(lol, {
@@ -104,7 +104,7 @@ describe('Telemetry Metrics', () => {
       expect(mockCounterAddFn).not.toHaveBeenCalled();
     });
 
-    it('records token compression with the correct attributes', () => {
+    it("records token compression with the correct attributes", () => {
       const config = makeFakeConfig({});
       initializeMetricsModule(config);
 
@@ -114,134 +114,134 @@ describe('Telemetry Metrics', () => {
       });
 
       expect(mockCounterAddFn).toHaveBeenCalledWith(1, {
-        'session.id': 'test-session-id',
+        "session.id": "test-session-id",
         tokens_after: 100,
         tokens_before: 200,
       });
     });
   });
 
-  describe('recordTokenUsageMetrics', () => {
+  describe("recordTokenUsageMetrics", () => {
     const mockConfig = {
-      getSessionId: () => 'test-session-id',
+      getSessionId: () => "test-session-id",
     } as unknown as Config;
 
-    it('should not record metrics if not initialized', () => {
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-pro', 100, 'input');
+    it("should not record metrics if not initialized", () => {
+      recordTokenUsageMetricsModule(mockConfig, "gemini-pro", 100, "input");
       expect(mockCounterAddFn).not.toHaveBeenCalled();
     });
 
-    it('should record token usage with the correct attributes', () => {
+    it("should record token usage with the correct attributes", () => {
       initializeMetricsModule(mockConfig);
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-pro', 100, 'input');
+      recordTokenUsageMetricsModule(mockConfig, "gemini-pro", 100, "input");
       expect(mockCounterAddFn).toHaveBeenCalledTimes(2);
       expect(mockCounterAddFn).toHaveBeenNthCalledWith(1, 1, {
-        'session.id': 'test-session-id',
+        "session.id": "test-session-id",
       });
       expect(mockCounterAddFn).toHaveBeenNthCalledWith(2, 100, {
-        'session.id': 'test-session-id',
-        model: 'gemini-pro',
-        type: 'input',
+        "session.id": "test-session-id",
+        model: "gemini-pro",
+        type: "input",
       });
     });
 
-    it('should record token usage for different types', () => {
+    it("should record token usage for different types", () => {
       initializeMetricsModule(mockConfig);
       mockCounterAddFn.mockClear();
 
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-pro', 50, 'output');
+      recordTokenUsageMetricsModule(mockConfig, "gemini-pro", 50, "output");
       expect(mockCounterAddFn).toHaveBeenCalledWith(50, {
-        'session.id': 'test-session-id',
-        model: 'gemini-pro',
-        type: 'output',
+        "session.id": "test-session-id",
+        model: "gemini-pro",
+        type: "output",
       });
 
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-pro', 25, 'thought');
+      recordTokenUsageMetricsModule(mockConfig, "gemini-pro", 25, "thought");
       expect(mockCounterAddFn).toHaveBeenCalledWith(25, {
-        'session.id': 'test-session-id',
-        model: 'gemini-pro',
-        type: 'thought',
+        "session.id": "test-session-id",
+        model: "gemini-pro",
+        type: "thought",
       });
 
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-pro', 75, 'cache');
+      recordTokenUsageMetricsModule(mockConfig, "gemini-pro", 75, "cache");
       expect(mockCounterAddFn).toHaveBeenCalledWith(75, {
-        'session.id': 'test-session-id',
-        model: 'gemini-pro',
-        type: 'cache',
+        "session.id": "test-session-id",
+        model: "gemini-pro",
+        type: "cache",
       });
 
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-pro', 125, 'tool');
+      recordTokenUsageMetricsModule(mockConfig, "gemini-pro", 125, "tool");
       expect(mockCounterAddFn).toHaveBeenCalledWith(125, {
-        'session.id': 'test-session-id',
-        model: 'gemini-pro',
-        type: 'tool',
+        "session.id": "test-session-id",
+        model: "gemini-pro",
+        type: "tool",
       });
     });
 
-    it('should handle different models', () => {
+    it("should handle different models", () => {
       initializeMetricsModule(mockConfig);
       mockCounterAddFn.mockClear();
 
-      recordTokenUsageMetricsModule(mockConfig, 'gemini-ultra', 200, 'input');
+      recordTokenUsageMetricsModule(mockConfig, "gemini-ultra", 200, "input");
       expect(mockCounterAddFn).toHaveBeenCalledWith(200, {
-        'session.id': 'test-session-id',
-        model: 'gemini-ultra',
-        type: 'input',
+        "session.id": "test-session-id",
+        model: "gemini-ultra",
+        type: "input",
       });
     });
   });
 
-  describe('recordFileOperationMetric', () => {
+  describe("recordFileOperationMetric", () => {
     const mockConfig = {
-      getSessionId: () => 'test-session-id',
+      getSessionId: () => "test-session-id",
     } as unknown as Config;
 
-    it('should not record metrics if not initialized', () => {
+    it("should not record metrics if not initialized", () => {
       recordFileOperationMetricModule(
         mockConfig,
         FileOperation.CREATE,
         10,
-        'text/plain',
-        'txt',
+        "text/plain",
+        "txt",
       );
       expect(mockCounterAddFn).not.toHaveBeenCalled();
     });
 
-    it('should record file creation with all attributes', () => {
+    it("should record file creation with all attributes", () => {
       initializeMetricsModule(mockConfig);
       recordFileOperationMetricModule(
         mockConfig,
         FileOperation.CREATE,
         10,
-        'text/plain',
-        'txt',
+        "text/plain",
+        "txt",
       );
 
       expect(mockCounterAddFn).toHaveBeenCalledTimes(2);
       expect(mockCounterAddFn).toHaveBeenNthCalledWith(1, 1, {
-        'session.id': 'test-session-id',
+        "session.id": "test-session-id",
       });
       expect(mockCounterAddFn).toHaveBeenNthCalledWith(2, 1, {
-        'session.id': 'test-session-id',
+        "session.id": "test-session-id",
         operation: FileOperation.CREATE,
         lines: 10,
-        mimetype: 'text/plain',
-        extension: 'txt',
+        mimetype: "text/plain",
+        extension: "txt",
       });
     });
 
-    it('should record file read with minimal attributes', () => {
+    it("should record file read with minimal attributes", () => {
       initializeMetricsModule(mockConfig);
       mockCounterAddFn.mockClear();
 
       recordFileOperationMetricModule(mockConfig, FileOperation.READ);
       expect(mockCounterAddFn).toHaveBeenCalledWith(1, {
-        'session.id': 'test-session-id',
+        "session.id": "test-session-id",
         operation: FileOperation.READ,
       });
     });
 
-    it('should record file update with some attributes', () => {
+    it("should record file update with some attributes", () => {
       initializeMetricsModule(mockConfig);
       mockCounterAddFn.mockClear();
 
@@ -249,16 +249,16 @@ describe('Telemetry Metrics', () => {
         mockConfig,
         FileOperation.UPDATE,
         undefined,
-        'application/javascript',
+        "application/javascript",
       );
       expect(mockCounterAddFn).toHaveBeenCalledWith(1, {
-        'session.id': 'test-session-id',
+        "session.id": "test-session-id",
         operation: FileOperation.UPDATE,
-        mimetype: 'application/javascript',
+        mimetype: "application/javascript",
       });
     });
 
-    it('should include diffStat when provided', () => {
+    it("should include diffStat when provided", () => {
       initializeMetricsModule(mockConfig);
       mockCounterAddFn.mockClear();
 
@@ -279,7 +279,7 @@ describe('Telemetry Metrics', () => {
       );
 
       expect(mockCounterAddFn).toHaveBeenCalledWith(1, {
-        'session.id': 'test-session-id',
+        "session.id": "test-session-id",
         operation: FileOperation.UPDATE,
         ai_added_lines: 5,
         ai_removed_lines: 2,
@@ -288,7 +288,7 @@ describe('Telemetry Metrics', () => {
       });
     });
 
-    it('should not include diffStat attributes when diffStat is not provided', () => {
+    it("should not include diffStat attributes when diffStat is not provided", () => {
       initializeMetricsModule(mockConfig);
       mockCounterAddFn.mockClear();
 
@@ -296,21 +296,21 @@ describe('Telemetry Metrics', () => {
         mockConfig,
         FileOperation.UPDATE,
         10,
-        'text/plain',
-        'txt',
+        "text/plain",
+        "txt",
         undefined,
       );
 
       expect(mockCounterAddFn).toHaveBeenCalledWith(1, {
-        'session.id': 'test-session-id',
+        "session.id": "test-session-id",
         operation: FileOperation.UPDATE,
         lines: 10,
-        mimetype: 'text/plain',
-        extension: 'txt',
+        mimetype: "text/plain",
+        extension: "txt",
       });
     });
 
-    it('should handle diffStat with all zero values', () => {
+    it("should handle diffStat with all zero values", () => {
       initializeMetricsModule(mockConfig);
       mockCounterAddFn.mockClear();
 
@@ -331,7 +331,7 @@ describe('Telemetry Metrics', () => {
       );
 
       expect(mockCounterAddFn).toHaveBeenCalledWith(1, {
-        'session.id': 'test-session-id',
+        "session.id": "test-session-id",
         operation: FileOperation.UPDATE,
         ai_added_lines: 0,
         ai_removed_lines: 0,

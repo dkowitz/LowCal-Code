@@ -4,95 +4,95 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useCallback, useEffect, useMemo, useState, useRef } from 'react';
-import { Box, measureElement, Static, Text, useStdin, useStdout, } from 'ink';
-import { StreamingState, MessageType, ToolCallStatus, } from './types.js';
-import { useTerminalSize } from './hooks/useTerminalSize.js';
-import { useGeminiStream } from './hooks/useGeminiStream.js';
-import { useLoadingIndicator } from './hooks/useLoadingIndicator.js';
-import { useThemeCommand } from './hooks/useThemeCommand.js';
-import { useAuthCommand } from './hooks/useAuthCommand.js';
-import { useQwenAuth } from './hooks/useQwenAuth.js';
-import { useFolderTrust } from './hooks/useFolderTrust.js';
-import { useEditorSettings } from './hooks/useEditorSettings.js';
-import { useQuitConfirmation } from './hooks/useQuitConfirmation.js';
-import { useWelcomeBack } from './hooks/useWelcomeBack.js';
-import { useDialogClose } from './hooks/useDialogClose.js';
-import { useSlashCommandProcessor } from './hooks/slashCommandProcessor.js';
-import { useSessionLoggingController } from './hooks/useSessionLoggingController.js';
-import { useSubagentCreateDialog } from './hooks/useSubagentCreateDialog.js';
-import { useAgentsManagerDialog } from './hooks/useAgentsManagerDialog.js';
-import { useAutoAcceptIndicator } from './hooks/useAutoAcceptIndicator.js';
-import { useMessageQueue } from './hooks/useMessageQueue.js';
-import { useConsoleMessages } from './hooks/useConsoleMessages.js';
-import { Header } from './components/Header.js';
-import { LoadingIndicator } from './components/LoadingIndicator.js';
-import { AutoAcceptIndicator } from './components/AutoAcceptIndicator.js';
-import { ShellModeIndicator } from './components/ShellModeIndicator.js';
-import { InputPrompt } from './components/InputPrompt.js';
-import { Footer } from './components/Footer.js';
-import { ThemeDialog } from './components/ThemeDialog.js';
-import { AuthDialog } from './components/AuthDialog.js';
-import { AuthInProgress } from './components/AuthInProgress.js';
-import { QwenOAuthProgress } from './components/QwenOAuthProgress.js';
-import { EditorSettingsDialog } from './components/EditorSettingsDialog.js';
-import { FolderTrustDialog } from './components/FolderTrustDialog.js';
-import { ShellConfirmationDialog } from './components/ShellConfirmationDialog.js';
-import { QuitConfirmationDialog } from './components/QuitConfirmationDialog.js';
-import { RadioButtonSelect } from './components/shared/RadioButtonSelect.js';
-import { ModelSelectionDialog } from './components/ModelSelectionDialog.js';
-import { ModelMappingDialog } from './components/ModelMappingDialog.js';
-import { ModelSwitchDialog, } from './components/ModelSwitchDialog.js';
-import { getOpenAIAvailableModelFromEnv, getFilteredQwenModels, fetchOpenAICompatibleModels, getLMStudioConfiguredModels, getLMStudioLoadedModel, } from './models/availableModels.js';
-import { processVisionSwitchOutcome } from './hooks/useVisionAutoSwitch.js';
-import { AgentCreationWizard, AgentsManagerDialog, } from './components/subagents/index.js';
-import { Colors } from './colors.js';
-import { loadHierarchicalGeminiMemory } from '../config/config.js';
-import { setOpenAIModel } from '../config/auth.js';
-import { SettingScope } from '../config/settings.js';
-import { Tips } from './components/Tips.js';
-import { ConsolePatcher } from './utils/ConsolePatcher.js';
-import { registerCleanup } from '../utils/cleanup.js';
-import { DetailedMessagesDisplay } from './components/DetailedMessagesDisplay.js';
-import { HistoryItemDisplay } from './components/HistoryItemDisplay.js';
-import { ContextSummaryDisplay } from './components/ContextSummaryDisplay.js';
-import { useHistory } from './hooks/useHistoryManager.js';
-import process from 'node:process';
-import { ApprovalMode, getAllGeminiMdFilenames, isEditorAvailable, getErrorMessage, AuthType, logFlashFallback, FlashFallbackEvent, ideContext, isProQuotaExceededError, isGenericQuotaExceededError, UserTierId, } from '@qwen-code/qwen-code-core';
-import { IdeIntegrationNudge } from './IdeIntegrationNudge.js';
-import { validateAuthMethod } from '../config/auth.js';
-import { useLogger } from './hooks/useLogger.js';
-import { StreamingContext } from './contexts/StreamingContext.js';
-import { SessionStatsProvider, useSessionStats, } from './contexts/SessionContext.js';
-import { useGitBranchName } from './hooks/useGitBranchName.js';
-import { useFocus } from './hooks/useFocus.js';
-import { useBracketedPaste } from './hooks/useBracketedPaste.js';
-import { useTextBuffer } from './components/shared/text-buffer.js';
-import { useVimMode, VimModeProvider } from './contexts/VimModeContext.js';
-import { useVim } from './hooks/vim.js';
-import { useKeypress } from './hooks/useKeypress.js';
-import { KeypressProvider } from './contexts/KeypressContext.js';
-import { useKittyKeyboardProtocol } from './hooks/useKittyKeyboardProtocol.js';
-import { keyMatchers, Command } from './keyMatchers.js';
-import * as fs from 'node:fs';
-import { UpdateNotification } from './components/UpdateNotification.js';
-import ansiEscapes from 'ansi-escapes';
-import { OverflowProvider } from './contexts/OverflowContext.js';
-import { ShowMoreLines } from './components/ShowMoreLines.js';
-import { PrivacyNotice } from './privacy/PrivacyNotice.js';
-import { useSettingsCommand } from './hooks/useSettingsCommand.js';
-import { SettingsDialog } from './components/SettingsDialog.js';
-import { setUpdateHandler } from '../utils/handleAutoUpdate.js';
-import { appEvents, AppEvent } from '../utils/events.js';
-import { isNarrowWidth } from './utils/isNarrowWidth.js';
-import { useWorkspaceMigration } from './hooks/useWorkspaceMigration.js';
-import { WorkspaceMigrationDialog } from './components/WorkspaceMigrationDialog.js';
-import { WelcomeBackDialog } from './components/WelcomeBackDialog.js';
+import { useCallback, useEffect, useMemo, useState, useRef } from "react";
+import { Box, measureElement, Static, Text, useStdin, useStdout, } from "ink";
+import { StreamingState, MessageType, ToolCallStatus, } from "./types.js";
+import { useTerminalSize } from "./hooks/useTerminalSize.js";
+import { useGeminiStream } from "./hooks/useGeminiStream.js";
+import { useLoadingIndicator } from "./hooks/useLoadingIndicator.js";
+import { useThemeCommand } from "./hooks/useThemeCommand.js";
+import { useAuthCommand } from "./hooks/useAuthCommand.js";
+import { useQwenAuth } from "./hooks/useQwenAuth.js";
+import { useFolderTrust } from "./hooks/useFolderTrust.js";
+import { useEditorSettings } from "./hooks/useEditorSettings.js";
+import { useQuitConfirmation } from "./hooks/useQuitConfirmation.js";
+import { useWelcomeBack } from "./hooks/useWelcomeBack.js";
+import { useDialogClose } from "./hooks/useDialogClose.js";
+import { useSlashCommandProcessor } from "./hooks/slashCommandProcessor.js";
+import { useSessionLoggingController } from "./hooks/useSessionLoggingController.js";
+import { useSubagentCreateDialog } from "./hooks/useSubagentCreateDialog.js";
+import { useAgentsManagerDialog } from "./hooks/useAgentsManagerDialog.js";
+import { useAutoAcceptIndicator } from "./hooks/useAutoAcceptIndicator.js";
+import { useMessageQueue } from "./hooks/useMessageQueue.js";
+import { useConsoleMessages } from "./hooks/useConsoleMessages.js";
+import { Header } from "./components/Header.js";
+import { LoadingIndicator } from "./components/LoadingIndicator.js";
+import { AutoAcceptIndicator } from "./components/AutoAcceptIndicator.js";
+import { ShellModeIndicator } from "./components/ShellModeIndicator.js";
+import { InputPrompt } from "./components/InputPrompt.js";
+import { Footer } from "./components/Footer.js";
+import { ThemeDialog } from "./components/ThemeDialog.js";
+import { AuthDialog } from "./components/AuthDialog.js";
+import { AuthInProgress } from "./components/AuthInProgress.js";
+import { QwenOAuthProgress } from "./components/QwenOAuthProgress.js";
+import { EditorSettingsDialog } from "./components/EditorSettingsDialog.js";
+import { FolderTrustDialog } from "./components/FolderTrustDialog.js";
+import { ShellConfirmationDialog } from "./components/ShellConfirmationDialog.js";
+import { QuitConfirmationDialog } from "./components/QuitConfirmationDialog.js";
+import { RadioButtonSelect } from "./components/shared/RadioButtonSelect.js";
+import { ModelSelectionDialog } from "./components/ModelSelectionDialog.js";
+import { ModelMappingDialog } from "./components/ModelMappingDialog.js";
+import { ModelSwitchDialog, } from "./components/ModelSwitchDialog.js";
+import { getOpenAIAvailableModelFromEnv, getFilteredQwenModels, fetchOpenAICompatibleModels, getLMStudioConfiguredModels, getLMStudioLoadedModel, } from "./models/availableModels.js";
+import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
+import { AgentCreationWizard, AgentsManagerDialog, } from "./components/subagents/index.js";
+import { Colors } from "./colors.js";
+import { loadHierarchicalGeminiMemory } from "../config/config.js";
+import { setOpenAIModel } from "../config/auth.js";
+import { SettingScope } from "../config/settings.js";
+import { Tips } from "./components/Tips.js";
+import { ConsolePatcher } from "./utils/ConsolePatcher.js";
+import { registerCleanup } from "../utils/cleanup.js";
+import { DetailedMessagesDisplay } from "./components/DetailedMessagesDisplay.js";
+import { HistoryItemDisplay } from "./components/HistoryItemDisplay.js";
+import { ContextSummaryDisplay } from "./components/ContextSummaryDisplay.js";
+import { useHistory } from "./hooks/useHistoryManager.js";
+import process from "node:process";
+import { ApprovalMode, getAllGeminiMdFilenames, isEditorAvailable, getErrorMessage, AuthType, logFlashFallback, FlashFallbackEvent, ideContext, isProQuotaExceededError, isGenericQuotaExceededError, UserTierId, } from "@qwen-code/qwen-code-core";
+import { IdeIntegrationNudge } from "./IdeIntegrationNudge.js";
+import { validateAuthMethod } from "../config/auth.js";
+import { useLogger } from "./hooks/useLogger.js";
+import { StreamingContext } from "./contexts/StreamingContext.js";
+import { SessionStatsProvider, useSessionStats, } from "./contexts/SessionContext.js";
+import { useGitBranchName } from "./hooks/useGitBranchName.js";
+import { useFocus } from "./hooks/useFocus.js";
+import { useBracketedPaste } from "./hooks/useBracketedPaste.js";
+import { useTextBuffer } from "./components/shared/text-buffer.js";
+import { useVimMode, VimModeProvider } from "./contexts/VimModeContext.js";
+import { useVim } from "./hooks/vim.js";
+import { useKeypress } from "./hooks/useKeypress.js";
+import { KeypressProvider } from "./contexts/KeypressContext.js";
+import { useKittyKeyboardProtocol } from "./hooks/useKittyKeyboardProtocol.js";
+import { keyMatchers, Command } from "./keyMatchers.js";
+import * as fs from "node:fs";
+import { UpdateNotification } from "./components/UpdateNotification.js";
+import ansiEscapes from "ansi-escapes";
+import { OverflowProvider } from "./contexts/OverflowContext.js";
+import { ShowMoreLines } from "./components/ShowMoreLines.js";
+import { PrivacyNotice } from "./privacy/PrivacyNotice.js";
+import { useSettingsCommand } from "./hooks/useSettingsCommand.js";
+import { SettingsDialog } from "./components/SettingsDialog.js";
+import { setUpdateHandler } from "../utils/handleAutoUpdate.js";
+import { appEvents, AppEvent } from "../utils/events.js";
+import { isNarrowWidth } from "./utils/isNarrowWidth.js";
+import { useWorkspaceMigration } from "./hooks/useWorkspaceMigration.js";
+import { WorkspaceMigrationDialog } from "./components/WorkspaceMigrationDialog.js";
+import { WelcomeBackDialog } from "./components/WelcomeBackDialog.js";
 // Maximum number of queued messages to display in UI to prevent performance issues
 const MAX_DISPLAYED_QUEUED_MESSAGES = 3;
 function isToolExecuting(pendingHistoryItems) {
     return pendingHistoryItems.some((item) => {
-        if (item && item.type === 'tool_group') {
+        if (item && item.type === "tool_group") {
             return item.tools.some((tool) => ToolCallStatus.Executing === tool.status);
         }
         return false;
@@ -100,15 +100,15 @@ function isToolExecuting(pendingHistoryItems) {
 }
 export const AppWrapper = (props) => {
     const kittyProtocolStatus = useKittyKeyboardProtocol();
-    const nodeMajorVersion = parseInt(process.versions.node.split('.')[0], 10);
-    return (_jsx(KeypressProvider, { kittyProtocolEnabled: kittyProtocolStatus.enabled, pasteWorkaround: process.platform === 'win32' || nodeMajorVersion < 20, config: props.config, debugKeystrokeLogging: props.settings.merged.general?.debugKeystrokeLogging, children: _jsx(SessionStatsProvider, { children: _jsx(VimModeProvider, { settings: props.settings, children: _jsx(App, { ...props }) }) }) }));
+    const nodeMajorVersion = parseInt(process.versions.node.split(".")[0], 10);
+    return (_jsx(KeypressProvider, { kittyProtocolEnabled: kittyProtocolStatus.enabled, pasteWorkaround: process.platform === "win32" || nodeMajorVersion < 20, config: props.config, debugKeystrokeLogging: props.settings.merged.general?.debugKeystrokeLogging, children: _jsx(SessionStatsProvider, { children: _jsx(VimModeProvider, { settings: props.settings, children: _jsx(App, { ...props }) }) }) }));
 };
 const App = ({ config, settings, startupWarnings = [], version }) => {
     const isFocused = useFocus();
     useBracketedPaste();
     const [updateInfo, setUpdateInfo] = useState(null);
     const { stdout } = useStdout();
-    const nightly = version.includes('nightly');
+    const nightly = version.includes("nightly");
     const { history, addItem, clearItems, loadHistory } = useHistory();
     const [idePromptAnswered, setIdePromptAnswered] = useState(false);
     const currentIDE = config.getIdeClient().getCurrentIde();
@@ -145,7 +145,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         setStaticKey((prev) => prev + 1);
     }, [setStaticKey, stdout]);
     const [geminiMdFileCount, setGeminiMdFileCount] = useState(0);
-    const [debugMessage, setDebugMessage] = useState('');
+    const [debugMessage, setDebugMessage] = useState("");
     const [themeError, setThemeError] = useState(null);
     const [authError, setAuthError] = useState(null);
     const [editorError, setEditorError] = useState(null);
@@ -177,17 +177,17 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 try {
                     await config.setModel(savedModel);
                     setCurrentModel(savedModel);
-                    if (settings.merged.security?.auth?.providerId === 'openrouter') {
+                    if (settings.merged.security?.auth?.providerId === "openrouter") {
                         try {
                             setOpenAIModel(savedModel);
                         }
                         catch (err) {
-                            console.warn('Failed to persist OpenRouter model to .env:', err);
+                            console.warn("Failed to persist OpenRouter model to .env:", err);
                         }
                     }
                 }
                 catch (e) {
-                    console.warn('Failed to restore saved model from settings:', e);
+                    console.warn("Failed to restore saved model from settings:", e);
                 }
             })();
         }
@@ -201,11 +201,11 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         if (!contentGeneratorConfig) {
             return;
         }
-        const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
+        const baseUrl = contentGeneratorConfig.baseUrl || process.env["OPENAI_BASE_URL"] || "";
         const providerId = settings.merged.security?.auth?.providerId;
-        const isLmStudioProvider = providerId === 'lmstudio' ||
-            baseUrl.includes('127.0.0.1:1234') ||
-            baseUrl.includes('localhost:1234');
+        const isLmStudioProvider = providerId === "lmstudio" ||
+            baseUrl.includes("127.0.0.1:1234") ||
+            baseUrl.includes("localhost:1234");
         if (!isLmStudioProvider || !baseUrl) {
             setLmStudioModel(null);
             lastLmStudioModelFetchRef.current = 0;
@@ -222,7 +222,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         }
         catch (error) {
             if (config.getDebugMode()) {
-                console.debug('[LMStudio] Failed to fetch loaded model:', error);
+                console.debug("[LMStudio] Failed to fetch loaded model:", error);
             }
         }
     }, [config, settings.merged.security?.auth?.providerId]);
@@ -252,14 +252,14 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 if (!providerId) {
                     return;
                 }
-                if (providerId === 'lmstudio') {
+                if (providerId === "lmstudio") {
                     const configuredModels = await getLMStudioConfiguredModels();
                     let override = configuredModels.find((model) => model.id === activeModel ||
                         model.label === activeModel ||
                         model.matchedRestId === activeModel)?.configuredContextLength;
                     if (!override) {
                         try {
-                            const storage = await import('./models/modelMappingStorage.js');
+                            const storage = await import("./models/modelMappingStorage.js");
                             const existingMappings = await storage.loadMappings();
                             const configuredEntry = Object.entries(existingMappings).find(([_configuredName, mappedId]) => mappedId === activeModel);
                             if (configuredEntry) {
@@ -271,7 +271,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                         }
                         catch (error) {
                             if (config.getDebugMode()) {
-                                console.debug('Failed to load LM Studio model mappings:', error);
+                                console.debug("Failed to load LM Studio model mappings:", error);
                             }
                         }
                     }
@@ -281,15 +281,19 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                     return;
                 }
                 // If provider is OpenRouter, try to fetch REST models to obtain context_length
-                if (providerId === 'openrouter') {
+                if (providerId === "openrouter") {
                     try {
                         const contentGeneratorConfig = config.getContentGeneratorConfig();
-                        const baseUrl = contentGeneratorConfig?.baseUrl || process.env['OPENAI_BASE_URL'] || '';
-                        const apiKey = contentGeneratorConfig?.apiKey || process.env['OPENAI_API_KEY'];
+                        const baseUrl = contentGeneratorConfig?.baseUrl ||
+                            process.env["OPENAI_BASE_URL"] ||
+                            "";
+                        const apiKey = contentGeneratorConfig?.apiKey || process.env["OPENAI_API_KEY"];
                         if (baseUrl) {
-                            const restModels = await (await import('./models/availableModels.js')).fetchOpenAICompatibleModels(baseUrl, apiKey);
-                            const matched = restModels.find(r => r.id === activeModel || r.label === activeModel);
-                            const override = matched?.contextLength ?? matched?.maxContextLength ?? matched?.contextLength;
+                            const restModels = await (await import("./models/availableModels.js")).fetchOpenAICompatibleModels(baseUrl, apiKey);
+                            const matched = restModels.find((r) => r.id === activeModel || r.label === activeModel);
+                            const override = matched?.contextLength ??
+                                matched?.maxContextLength ??
+                                matched?.contextLength;
                             if (!cancelled)
                                 config.setModelContextLimit(activeModel, override);
                         }
@@ -301,7 +305,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                     }
                     catch (error) {
                         if (config.getDebugMode())
-                            console.debug('Failed to fetch OpenRouter model context length:', error);
+                            console.debug("Failed to fetch OpenRouter model context length:", error);
                         if (!cancelled)
                             config.setModelContextLimit(activeModel, undefined);
                     }
@@ -314,7 +318,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             }
             catch (error) {
                 if (config.getDebugMode()) {
-                    console.debug('Failed to resolve provider context length:', error);
+                    console.debug("Failed to resolve provider context length:", error);
                 }
                 if (!cancelled) {
                     config.setModelContextLimit(activeModel, undefined);
@@ -327,7 +331,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     }, [config, currentModel, settings.merged.security?.auth?.providerId]);
     useEffect(() => {
         const providerId = settings.merged.security?.auth?.providerId;
-        if (providerId !== 'lmstudio') {
+        if (providerId !== "lmstudio") {
             setLmStudioModel(null);
         }
     }, [settings.merged.security?.auth?.providerId]);
@@ -357,15 +361,22 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [pendingModelMappings, setPendingModelMappings] = useState(null);
     // Helper to open mapping dialog with pre-filtered rest models
     const openModelMappingDialog = useCallback((unmatched, restModels) => {
-        const taken = allAvailableModels.filter(m => m.matchedRestId).map(m => m.matchedRestId).filter(Boolean);
-        const filteredRest = restModels.filter(r => !taken.includes(r.id));
-        setPendingModelMappings({ unmatched, restModels: filteredRest, takenRestIds: taken });
+        const taken = allAvailableModels
+            .filter((m) => m.matchedRestId)
+            .map((m) => m.matchedRestId)
+            .filter(Boolean);
+        const filteredRest = restModels.filter((r) => !taken.includes(r.id));
+        setPendingModelMappings({
+            unmatched,
+            restModels: filteredRest,
+            takenRestIds: taken,
+        });
         setIsModelMappingDialogOpen(true);
     }, [allAvailableModels]);
     // Ensure function is used to avoid unused var lint during build (no-op)
     useEffect(() => {
         // no-op: referenced to silence unused variable detection during build
-        if (typeof openModelMappingDialog === 'function')
+        if (typeof openModelMappingDialog === "function")
             return;
     }, [openModelMappingDialog]);
     // Render mapping dialog when open
@@ -376,7 +387,10 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             unmatched: pendingModelMappings.unmatched,
             restModels: pendingModelMappings.restModels,
             onApply: applyModelMappings,
-            onCancel: () => { setIsModelMappingDialogOpen(false); setPendingModelMappings(null); },
+            onCancel: () => {
+                setIsModelMappingDialogOpen(false);
+                setPendingModelMappings(null);
+            },
         };
         // Use imported symbol rather than require() so bundlers and ESM environments work.
         return _jsx(ModelMappingDialog, { ...mappingProps });
@@ -413,7 +427,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         appEvents.on(AppEvent.OpenDebugConsole, openDebugConsole);
         const logErrorHandler = (errorMessage) => {
             handleNewMessage({
-                type: 'error',
+                type: "error",
                 content: String(errorMessage),
                 count: 1,
             });
@@ -443,7 +457,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     }, []);
     const initialPromptSubmitted = useRef(false);
     const errorCount = useMemo(() => consoleMessages
-        .filter((msg) => msg.type === 'error')
+        .filter((msg) => msg.type === "error")
         .reduce((total, msg) => total + msg.count, 0), [consoleMessages]);
     const { isThemeDialogOpen, openThemeDialog, handleThemeSelect, handleThemeHighlight, } = useThemeCommand(settings, setThemeError, addItem);
     const { isSettingsDialogOpen, openSettingsDialog, closeSettingsDialog } = useSettingsCommand();
@@ -477,9 +491,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     }, [config, isAuthenticating]);
     // Handle Qwen OAuth timeout
     useEffect(() => {
-        if (isQwenAuth && authStatus === 'timeout') {
+        if (isQwenAuth && authStatus === "timeout") {
             setAuthError(authMessage ||
-                'Qwen OAuth authentication timed out. Please try again or select a different authentication method.');
+                "Qwen OAuth authentication timed out. Please try again or select a different authentication method.");
             cancelQwenAuth();
             cancelAuthentication();
             openAuthDialog();
@@ -521,19 +535,19 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const performMemoryRefresh = useCallback(async () => {
         addItem({
             type: MessageType.INFO,
-            text: 'Refreshing hierarchical memory (QWEN.md or other context files)...',
+            text: "Refreshing hierarchical memory (QWEN.md or other context files)...",
         }, Date.now());
         try {
             const { memoryContent, fileCount } = await loadHierarchicalGeminiMemory(process.cwd(), settings.merged.context?.loadMemoryFromIncludeDirectories
                 ? config.getWorkspaceContext().getDirectories()
-                : [], config.getDebugMode(), config.getFileService(), settings.merged, config.getExtensionContextFilePaths(), settings.merged.context?.importFormat || 'tree', // Use setting or default to 'tree'
+                : [], config.getDebugMode(), config.getFileService(), settings.merged, config.getExtensionContextFilePaths(), settings.merged.context?.importFormat || "tree", // Use setting or default to 'tree'
             config.getFileFilteringOptions());
             config.setUserMemory(memoryContent);
             config.setGeminiMdFileCount(fileCount);
             setGeminiMdFileCount(fileCount);
             addItem({
                 type: MessageType.INFO,
-                text: `Memory refreshed successfully. ${memoryContent.length > 0 ? `Loaded ${memoryContent.length} characters from ${fileCount} file(s).` : 'No memory content found.'}`,
+                text: `Memory refreshed successfully. ${memoryContent.length > 0 ? `Loaded ${memoryContent.length} characters from ${fileCount} file(s).` : "No memory content found."}`,
             }, Date.now());
             if (config.getDebugMode()) {
                 console.log(`[DEBUG] Refreshed memory content in config: ${memoryContent.substring(0, 200)}...`);
@@ -545,7 +559,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 type: MessageType.ERROR,
                 text: `Error refreshing memory: ${errorMessage}`,
             }, Date.now());
-            console.error('Error refreshing memory:', error);
+            console.error("Error refreshing memory:", error);
         }
     }, [config, addItem, settings.merged]);
     // Watch for model changes (e.g., from Flash fallback)
@@ -626,7 +640,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             }
             // Switch model for future use but return false to stop current retry
             config.setModel(fallbackModel).catch((error) => {
-                console.error('Failed to switch to fallback model:', error);
+                console.error("Failed to switch to fallback model:", error);
             });
             config.setFallbackMode(true);
             logFlashFallback(config, new FlashFallbackEvent(config.getContentGeneratorConfig().authType));
@@ -661,7 +675,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         return editorType;
     }, [settings, openEditorDialog]);
     const onAuthError = useCallback(() => {
-        setAuthError('reauth required');
+        setAuthError("reauth required");
         openAuthDialog();
     }, [openAuthDialog, setAuthError]);
     // Vision switch handler for auto-switch functionality
@@ -700,20 +714,22 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
                     const providerId = settings.merged.security?.auth?.providerId;
                     // If provider is LM Studio, prefer filesystem-configured models and enable mapping UX.
-                    if (providerId === 'lmstudio') {
+                    if (providerId === "lmstudio") {
                         const configured = await getLMStudioConfiguredModels();
                         if (configured.length > 0) {
                             models = configured;
                         }
                         else {
-                            const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
-                            const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
+                            const baseUrl = contentGeneratorConfig.baseUrl ||
+                                process.env["OPENAI_BASE_URL"] ||
+                                "";
+                            const apiKey = contentGeneratorConfig.apiKey || process.env["OPENAI_API_KEY"];
                             if (baseUrl) {
                                 models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
                             }
                             const openAIModel = getOpenAIAvailableModelFromEnv();
                             if (openAIModel) {
-                                if (!models.find(m => m.id === openAIModel.id)) {
+                                if (!models.find((m) => m.id === openAIModel.id)) {
                                     models.push(openAIModel);
                                 }
                             }
@@ -721,14 +737,16 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                     }
                     else {
                         // For non-LMStudio OpenAI-compatible providers (e.g. OpenRouter), just fetch REST models and do not show LM Studio mapping UX.
-                        const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
-                        const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
+                        const baseUrl = contentGeneratorConfig.baseUrl ||
+                            process.env["OPENAI_BASE_URL"] ||
+                            "";
+                        const apiKey = contentGeneratorConfig.apiKey || process.env["OPENAI_API_KEY"];
                         if (baseUrl) {
                             models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
                         }
                         const openAIModel = getOpenAIAvailableModelFromEnv();
                         if (openAIModel) {
-                            if (!models.find(m => m.id === openAIModel.id)) {
+                            if (!models.find((m) => m.id === openAIModel.id)) {
                                 models.push(openAIModel);
                             }
                         }
@@ -739,7 +757,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 }
                 // Deduplicate models by id to avoid duplicate labels / React key collisions
                 const seenIds = new Set();
-                models = models.filter(m => {
+                models = models.filter((m) => {
                     if (!m || !m.id)
                         return false;
                     if (seenIds.has(m.id))
@@ -750,23 +768,25 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 // Merge configured context lengths and max context lengths if we have both sources
                 if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
                     // Fetch REST models again to obtain provider model ids and max ctx if we didn't already
-                    const baseUrl = contentGeneratorConfig.baseUrl || process.env['OPENAI_BASE_URL'] || '';
-                    const apiKey = contentGeneratorConfig.apiKey || process.env['OPENAI_API_KEY'];
+                    const baseUrl = contentGeneratorConfig.baseUrl ||
+                        process.env["OPENAI_BASE_URL"] ||
+                        "";
+                    const apiKey = contentGeneratorConfig.apiKey || process.env["OPENAI_API_KEY"];
                     if (baseUrl) {
                         try {
                             const restModels = await fetchOpenAICompatibleModels(baseUrl, apiKey);
                             // Create a map from rest id to model data for quick lookup
-                            const restById = new Map(restModels.map(m => [m.id, m]));
+                            const restById = new Map(restModels.map((m) => [m.id, m]));
                             // Debug: print REST model ids (short list) to the debug console
-                            console.debug('[LMStudio] REST models:', restModels.map(r => r.id).slice(0, 50));
+                            console.debug("[LMStudio] REST models:", restModels.map((r) => r.id).slice(0, 50));
                             // If there are persisted mappings, apply them to restModels for convenience
                             try {
-                                const storage = await import('./models/modelMappingStorage.js');
+                                const storage = await import("./models/modelMappingStorage.js");
                                 const existing = await storage.loadMappings();
                                 // promote mappings to restModels list if present
                                 for (const v of Object.values(existing)) {
                                     // if restModels contains v, ensure there is an entry in models that maps to it
-                                    const idx = restModels.findIndex(r => r.id === v);
+                                    const idx = restModels.findIndex((r) => r.id === v);
                                     if (idx !== -1) {
                                         // nothing to do here for restModels; mapping applied earlier when reading configured models
                                     }
@@ -776,25 +796,36 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                 // ignore mapping load errors
                             }
                             // For each model in `models` (which may be configured-only), try to match to REST entry
-                            models = models.map(m => {
+                            models = models.map((m) => {
                                 // direct match
                                 const rest = restById.get(m.id);
                                 if (rest) {
                                     console.debug(`[LMStudio] Matched configured '${m.id}' -> REST '${rest.id}' (exact)`);
-                                    return { ...m, maxContextLength: rest.maxContextLength ?? rest.contextLength };
+                                    return {
+                                        ...m,
+                                        maxContextLength: rest.maxContextLength ?? rest.contextLength,
+                                    };
                                 }
                                 // token-based normalization + overlap score
-                                const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, ' ');
+                                const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, " ");
                                 const tokens = Array.from(new Set(normalize(m.id).split(/\s+/).filter(Boolean)));
                                 let best = { score: 0 };
                                 for (const [rid] of restById) {
                                     const rtokens = Array.from(new Set(normalize(rid).split(/\s+/).filter(Boolean)));
-                                    const intersection = tokens.filter(t => rtokens.includes(t)).length;
+                                    const intersection = tokens.filter((t) => rtokens.includes(t)).length;
                                     const union = new Set([...tokens, ...rtokens]).size;
                                     const jaccard = union === 0 ? 0 : intersection / union;
                                     // also compute simple prefix/suffix boost
-                                    const prefix = rid.toLowerCase().startsWith(m.id.toLowerCase()) ? 0.2 : 0;
-                                    const contains = rid.toLowerCase().includes(m.id.toLowerCase()) ? 0.1 : 0;
+                                    const prefix = rid
+                                        .toLowerCase()
+                                        .startsWith(m.id.toLowerCase())
+                                        ? 0.2
+                                        : 0;
+                                    const contains = rid
+                                        .toLowerCase()
+                                        .includes(m.id.toLowerCase())
+                                        ? 0.1
+                                        : 0;
                                     const score = jaccard + prefix + contains;
                                     if (score > best.score)
                                         best = { rid, score };
@@ -804,25 +835,38 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                     const matchRid = best.rid;
                                     const rmodel = restById.get(matchRid);
                                     console.debug(`[LMStudio] Matched configured '${m.id}' -> REST '${matchRid}' (score=${best.score.toFixed(2)})`);
-                                    return { ...m, id: matchRid, label: rmodel.label ?? matchRid, maxContextLength: rmodel.maxContextLength ?? rmodel.contextLength, matchedRestId: matchRid };
+                                    return {
+                                        ...m,
+                                        id: matchRid,
+                                        label: rmodel.label ?? matchRid,
+                                        maxContextLength: rmodel.maxContextLength ?? rmodel.contextLength,
+                                        matchedRestId: matchRid,
+                                    };
                                 }
                                 console.debug(`[LMStudio] No REST match for configured '${m.id}' (bestScore=${best.score.toFixed(2)})`);
                                 return { ...m, unmatched: true };
                             });
                             // If there are unmatched models, present an interactive mapping dialog to the user
-                            const unmatched = models.filter(m => m.unmatched);
+                            const unmatched = models.filter((m) => m.unmatched);
                             if (unmatched.length > 0) {
                                 try {
                                     // Show the interactive mapping dialog and wait for selection
                                     // load dialog module (side-effect import not used directly)
-                                    await import('./components/ModelMappingDialog.js');
+                                    await import("./components/ModelMappingDialog.js");
                                     setAllAvailableModels(models);
                                     setAvailableModelsForDialog(models);
                                     // Store unmatched/restModels in ref/state for dialog rendering
                                     // Pre-filter restModels to exclude any REST ids already matched algorithmically
-                                    const taken = models.filter(m => m.matchedRestId).map(m => m.matchedRestId).filter(Boolean);
-                                    const filteredRest = restModels.filter(r => !taken.includes(r.id));
-                                    setPendingModelMappings({ unmatched, restModels: filteredRest, takenRestIds: taken });
+                                    const taken = models
+                                        .filter((m) => m.matchedRestId)
+                                        .map((m) => m.matchedRestId)
+                                        .filter(Boolean);
+                                    const filteredRest = restModels.filter((r) => !taken.includes(r.id));
+                                    setPendingModelMappings({
+                                        unmatched,
+                                        restModels: filteredRest,
+                                        takenRestIds: taken,
+                                    });
                                     setIsModelMappingDialogOpen(true);
                                     // Wait for mapping result via state (mapping handler will persist and update models)
                                     // For now we return early so the UI shows the mapping dialog
@@ -830,7 +874,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                     return;
                                 }
                                 catch (e) {
-                                    console.debug('[LMStudio] Failed to open mapping dialog', e);
+                                    console.debug("[LMStudio] Failed to open mapping dialog", e);
                                 }
                             }
                         }
@@ -847,21 +891,32 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 setIsFetchingModels(false);
             }
         })();
-    }, [allAvailableModels, config, settings.merged.experimental?.visionModelPreview, isFetchingModels]);
+    }, [
+        allAvailableModels,
+        config,
+        settings.merged.experimental?.visionModelPreview,
+        isFetchingModels,
+    ]);
     // Handler to apply mappings from ModelMappingDialog
     const applyModelMappings = useCallback(async (mappings) => {
         try {
-            console.debug('[LMStudio] Applying mappings from dialog:', mappings);
-            const storage = await import('./models/modelMappingStorage.js');
+            console.debug("[LMStudio] Applying mappings from dialog:", mappings);
+            const storage = await import("./models/modelMappingStorage.js");
             const existing = await storage.loadMappings();
-            console.debug('[LMStudio] Existing mappings:', existing);
+            console.debug("[LMStudio] Existing mappings:", existing);
             const merged = { ...existing, ...mappings };
             await storage.saveMappings(merged);
-            console.debug('[LMStudio] Persisted merged mappings:', merged);
+            console.debug("[LMStudio] Persisted merged mappings:", merged);
             // Update current models with applied mappings
-            const updated = allAvailableModels.map(m => {
+            const updated = allAvailableModels.map((m) => {
                 if (m.configuredName && mappings[m.configuredName]) {
-                    return { ...m, id: mappings[m.configuredName], label: mappings[m.configuredName], matchedRestId: mappings[m.configuredName], unmatched: false };
+                    return {
+                        ...m,
+                        id: mappings[m.configuredName],
+                        label: mappings[m.configuredName],
+                        matchedRestId: mappings[m.configuredName],
+                        unmatched: false,
+                    };
                 }
                 return m;
             });
@@ -869,7 +924,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             setAvailableModelsForDialog(updated);
         }
         catch (e) {
-            console.error('Failed to persist model mappings:', e);
+            console.error("Failed to persist model mappings:", e);
         }
         finally {
             setIsModelMappingDialogOpen(false);
@@ -891,9 +946,12 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                     m.configuredName &&
                     m.matchedRestId === modelId);
                 if (mappedEntry?.configuredName) {
-                    const storage = await import('./models/modelMappingStorage.js');
+                    const storage = await import("./models/modelMappingStorage.js");
                     const existing = await storage.loadMappings();
-                    const merged = { ...existing, [mappedEntry.configuredName]: modelId };
+                    const merged = {
+                        ...existing,
+                        [mappedEntry.configuredName]: modelId,
+                    };
                     await storage.saveMappings(merged);
                 }
             }
@@ -902,35 +960,41 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             }
             config.setModelContextLimit(modelId, configuredContextLength);
             const contentGeneratorConfig = config.getContentGeneratorConfig();
-            const baseUrl = contentGeneratorConfig?.baseUrl || '';
+            const baseUrl = contentGeneratorConfig?.baseUrl || "";
             const providerId = settings.merged.security?.auth?.providerId;
-            const isLmStudioProvider = providerId === 'lmstudio' ||
-                baseUrl.includes('127.0.0.1:1234') ||
-                baseUrl.includes('localhost:1234');
+            const isLmStudioProvider = providerId === "lmstudio" ||
+                baseUrl.includes("127.0.0.1:1234") ||
+                baseUrl.includes("localhost:1234");
             // Unload previous model by setting new model (config.setModel will reinitialize client)
             await config.setModel(modelId);
             setCurrentModel(modelId);
-            if (settings.merged.security?.auth?.providerId === 'openrouter') {
+            if (settings.merged.security?.auth?.providerId === "openrouter") {
                 try {
                     setOpenAIModel(modelId);
                 }
                 catch (err) {
-                    console.warn('Failed to persist OpenRouter model to .env:', err);
+                    console.warn("Failed to persist OpenRouter model to .env:", err);
                 }
                 // Attempt to fetch REST models immediately to pick up provider-reported context_length
                 try {
                     const contentGeneratorConfig = config.getContentGeneratorConfig();
-                    const baseUrl = contentGeneratorConfig?.baseUrl || process.env['OPENAI_BASE_URL'] || '';
-                    const apiKey = contentGeneratorConfig?.apiKey || process.env['OPENAI_API_KEY'];
+                    const baseUrl = contentGeneratorConfig?.baseUrl ||
+                        process.env["OPENAI_BASE_URL"] ||
+                        "";
+                    const apiKey = contentGeneratorConfig?.apiKey || process.env["OPENAI_API_KEY"];
                     if (baseUrl) {
-                        const restModels = await (await import('./models/availableModels.js')).fetchOpenAICompatibleModels(baseUrl, apiKey);
-                        const matched = restModels.find(r => r.id === modelId || r.label === modelId || r.matchedRestId === modelId);
-                        const ctx = matched?.contextLength ?? matched?.maxContextLength ?? undefined;
+                        const restModels = await (await import("./models/availableModels.js")).fetchOpenAICompatibleModels(baseUrl, apiKey);
+                        const matched = restModels.find((r) => r.id === modelId ||
+                            r.label === modelId ||
+                            r.matchedRestId === modelId);
+                        const ctx = matched?.contextLength ??
+                            matched?.maxContextLength ??
+                            undefined;
                         config.setModelContextLimit(modelId, ctx);
                         // notify UI to re-read model-level limits (forces re-render)
                         try {
                             // bump version so Footer/ContextUsageDisplay can pick up new limit via config.getModelContextLimit
-                            setModelLimitVersion(v => v + 1);
+                            setModelLimitVersion((v) => v + 1);
                         }
                         catch (e) {
                             // ignore
@@ -939,15 +1003,15 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 }
                 catch (e) {
                     if (config.getDebugMode())
-                        console.debug('Failed to fetch OpenRouter models for immediate context length update:', e);
+                        console.debug("Failed to fetch OpenRouter models for immediate context length update:", e);
                 }
             }
             // Persist selected model to user settings so it is restored on next startup.
             try {
-                settings.setValue(SettingScope.User, 'model.name', modelId);
+                settings.setValue(SettingScope.User, "model.name", modelId);
             }
             catch (e) {
-                console.warn('Failed to persist selected model to settings:', e);
+                console.warn("Failed to persist selected model to settings:", e);
             }
             setIsModelSelectionDialogOpen(false);
             addItem({
@@ -960,7 +1024,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                     const gemini = config.getGeminiClient();
                     if (gemini) {
                         void gemini
-                            .generateContent([{ role: 'user', parts: [{ text: 'Say hello.' }] }], {}, new AbortController().signal, modelId)
+                            .generateContent([{ role: "user", parts: [{ text: "Say hello." }] }], {}, new AbortController().signal, modelId)
                             .catch(() => { });
                     }
                 }
@@ -973,7 +1037,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             }
         }
         catch (error) {
-            console.error('Failed to switch model:', error);
+            console.error("Failed to switch model:", error);
             addItem({
                 type: MessageType.ERROR,
                 text: `Failed to switch to model \`${modelId}\`. Please try again.`,
@@ -992,7 +1056,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const { vimEnabled: vimModeEnabled, vimMode, toggleVimEnabled, } = useVimMode();
     const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController);
     const buffer = useTextBuffer({
-        initialText: '',
+        initialText: "",
         viewport: { height: 10, width: inputWidth },
         stdin,
         setRawMode,
@@ -1035,11 +1099,11 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     // Update the cancel handler with message queue support
     cancelHandlerRef.current = useCallback(() => {
         if (isToolExecuting(pendingHistoryItems)) {
-            buffer.setText(''); // Just clear the prompt
+            buffer.setText(""); // Just clear the prompt
             return;
         }
         const lastUserMessage = userMessages.at(-1);
-        let textToSet = lastUserMessage || '';
+        let textToSet = lastUserMessage || "";
         // Append queued messages if any exist
         const queuedText = getQueuedMessagesText();
         if (queuedText) {
@@ -1061,17 +1125,17 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         addMessage(submittedValue);
     }, [addMessage]);
     const handleIdePromptComplete = useCallback((result) => {
-        if (result.userSelection === 'yes') {
+        if (result.userSelection === "yes") {
             if (result.isExtensionPreInstalled) {
-                handleSlashCommand('/ide enable');
+                handleSlashCommand("/ide enable");
             }
             else {
-                handleSlashCommand('/ide install');
+                handleSlashCommand("/ide install");
             }
-            settings.setValue(SettingScope.User, 'hasSeenIdeIntegrationNudge', true);
+            settings.setValue(SettingScope.User, "hasSeenIdeIntegrationNudge", true);
         }
-        else if (result.userSelection === 'dismiss') {
-            settings.setValue(SettingScope.User, 'hasSeenIdeIntegrationNudge', true);
+        else if (result.userSelection === "dismiss") {
+            settings.setValue(SettingScope.User, "hasSeenIdeIntegrationNudge", true);
         }
         setIdePromptAnswered(true);
     }, [handleSlashCommand, settings]);
@@ -1085,13 +1149,13 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 clearTimeout(timerRef.current);
             }
             // Exit directly without showing confirmation dialog
-            handleSlashCommand('/quit');
+            handleSlashCommand("/quit");
             return;
         }
         // First press: Prioritize cleanup tasks
         // Special case: If quit-confirm dialog is open, Ctrl+C means "quit immediately"
         if (quitConfirmationRequest) {
-            handleSlashCommand('/quit');
+            handleSlashCommand("/quit");
             return;
         }
         // 1. Close other dialogs (highest priority)
@@ -1105,11 +1169,11 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         }
         // 3. Clear input buffer (if has content)
         if (buffer.text.length > 0) {
-            buffer.setText('');
+            buffer.setText("");
             return; // Input cleared, end processing
         }
         // All cleanup tasks completed, show quit confirmation dialog
-        handleSlashCommand('/quit-confirm');
+        handleSlashCommand("/quit-confirm");
     }, [
         handleSlashCommand,
         quitConfirmationRequest,
@@ -1121,7 +1185,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const handleGlobalKeypress = useCallback((key) => {
         // Debug log keystrokes if enabled
         if (settings.merged.general?.debugKeystrokeLogging) {
-            console.log('[DEBUG] Keystroke:', JSON.stringify(key));
+            console.log("[DEBUG] Keystroke:", JSON.stringify(key));
         }
         let enteringConstrainHeightMode = false;
         if (!constrainHeight) {
@@ -1136,14 +1200,14 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             setShowToolDescriptions(newValue);
             const mcpServers = config.getMcpServers();
             if (Object.keys(mcpServers || {}).length > 0) {
-                handleSlashCommand(newValue ? '/mcp desc' : '/mcp nodesc');
+                handleSlashCommand(newValue ? "/mcp desc" : "/mcp nodesc");
             }
         }
         else if (keyMatchers[Command.TOGGLE_IDE_CONTEXT_DETAIL](key) &&
             config.getIdeMode() &&
             ideContextState) {
             // Show IDE status when in IDE mode and context is available.
-            handleSlashCommand('/ide status');
+            handleSlashCommand("/ide status");
         }
         else if (keyMatchers[Command.TOGGLE_YOLO_MODE](key)) {
             toggleYoloMode();
@@ -1198,9 +1262,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         const fetchUserMessages = async () => {
             const pastMessagesRaw = (await logger?.getPreviousUserMessages()) || []; // Newest first
             const currentSessionUserMessages = history
-                .filter((item) => item.type === 'user' &&
-                typeof item.text === 'string' &&
-                item.text.trim() !== '')
+                .filter((item) => item.type === "user" &&
+                typeof item.text === "string" &&
+                item.text.trim() !== "")
                 .map((item) => item.text)
                 .reverse(); // Newest first, to match pastMessagesRaw sorting
             // Combine, with current session messages being more recent
@@ -1269,7 +1333,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         if (config.getDebugMode()) {
             return consoleMessages;
         }
-        return consoleMessages.filter((msg) => msg.type !== 'debug');
+        return consoleMessages.filter((msg) => msg.type !== "debug");
     }, [consoleMessages, config]);
     const branchName = useGitBranchName(config.getTargetDir());
     const contextFileNames = useMemo(() => {
@@ -1293,7 +1357,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             !isSubagentCreateDialogOpen &&
             !showPrivacyNotice &&
             !showWelcomeBackDialog &&
-            welcomeBackChoice !== 'restart' &&
+            welcomeBackChoice !== "restart" &&
             geminiClient?.isInitialized?.()) {
             submitQuery(initialPrompt);
             initialPromptSubmitted.current = true;
@@ -1323,7 +1387,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const staticAreaMaxItemHeight = Math.max(terminalHeight * 4, 100);
     const placeholder = vimModeEnabled
         ? "  Press 'i' for INSERT mode and 'Esc' for NORMAL mode."
-        : '  Type your message or @path/to/file';
+        : "  Type your message or @path/to/file";
     return (_jsx(StreamingContext.Provider, { value: streamingState, children: _jsxs(Box, { flexDirection: "column", width: "90%", children: [_jsx(Static, { items: [
                         _jsxs(Box, { flexDirection: "column", children: [!(settings.merged.ui?.hideBanner || config.getScreenReader()) && _jsx(Header, { version: version, nightly: nightly }), !(settings.merged.ui?.hideTips || config.getScreenReader()) && (_jsx(Tips, { config: config }))] }, "header"),
                         ...history.map((h) => (_jsx(HistoryItemDisplay, { terminalWidth: mainAreaWidth, availableTerminalHeight: staticAreaMaxItemHeight, item: h, isPending: false, config: config, commands: slashCommands }, h.id))),
@@ -1336,24 +1400,24 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                     quitConfirmationRequest.onConfirm(false);
                                 }
                             } })) : shellConfirmationRequest ? (_jsx(ShellConfirmationDialog, { request: shellConfirmationRequest })) : confirmationRequest ? (_jsxs(Box, { flexDirection: "column", children: [confirmationRequest.prompt, _jsx(Box, { paddingY: 1, children: _jsx(RadioButtonSelect, { isFocused: !!confirmationRequest, items: [
-                                            { label: 'Yes', value: true },
-                                            { label: 'No', value: false },
+                                            { label: "Yes", value: true },
+                                            { label: "No", value: false },
                                         ], onSelect: (value) => {
                                             confirmationRequest.onConfirm(value);
                                         } }) })] })) : isThemeDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [themeError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: themeError }) })), _jsx(ThemeDialog, { onSelect: handleThemeSelect, onHighlight: handleThemeHighlight, settings: settings, availableTerminalHeight: constrainHeight
                                         ? terminalHeight - staticExtraHeight
                                         : undefined, terminalWidth: mainAreaWidth })] })) : isSettingsDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(SettingsDialog, { settings: settings, onSelect: () => closeSettingsDialog(), onRestartRequest: () => process.exit(0) }) })) : isSubagentCreateDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AgentCreationWizard, { onClose: closeSubagentCreateDialog, config: config }) })) : isAgentsManagerDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AgentsManagerDialog, { onClose: closeAgentsManagerDialog, config: config }) })) : isAuthenticating ? (_jsxs(_Fragment, { children: [isQwenAuth && isQwenAuthenticating ? (_jsx(QwenOAuthProgress, { deviceAuth: deviceAuth || undefined, authStatus: authStatus, authMessage: authMessage, onTimeout: () => {
-                                        setAuthError('Qwen OAuth authentication timed out. Please try again.');
+                                        setAuthError("Qwen OAuth authentication timed out. Please try again.");
                                         cancelQwenAuth();
                                         cancelAuthentication();
                                         openAuthDialog();
                                     }, onCancel: () => {
-                                        setAuthError('Qwen OAuth authentication cancelled.');
+                                        setAuthError("Qwen OAuth authentication cancelled.");
                                         cancelQwenAuth();
                                         cancelAuthentication();
                                         openAuthDialog();
                                     } })) : (_jsx(AuthInProgress, { onTimeout: () => {
-                                        setAuthError('Authentication timed out. Please try again.');
+                                        setAuthError("Authentication timed out. Please try again.");
                                         cancelAuthentication();
                                         openAuthDialog();
                                     } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: availableModelsForDialog, currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : showPrivacyNotice ? (_jsx(PrivacyNotice, { onExit: () => setShowPrivacyNotice(false), config: config })) : (_jsxs(_Fragment, { children: [_jsx(LoadingIndicator, { thought: streamingState === StreamingState.WaitingForConfirmation ||
@@ -1368,12 +1432,12 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                             .map((message, index) => {
                                             // Ensure multi-line messages are collapsed for the preview.
                                             // Replace all whitespace (including newlines) with a single space.
-                                            const preview = message.replace(/\s+/g, ' ');
+                                            const preview = message.replace(/\s+/g, " ");
                                             return (
                                             // Ensure the Box takes full width so truncation calculates correctly
                                             _jsx(Box, { paddingLeft: 2, width: "100%", children: _jsx(Text, { dimColor: true, wrap: "truncate", children: preview }) }, index));
-                                        }), messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && (_jsx(Box, { paddingLeft: 2, children: _jsxs(Text, { dimColor: true, children: ["... (+", messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES, "more)"] }) }))] })), _jsxs(Box, { marginTop: 1, justifyContent: "space-between", width: "100%", flexDirection: isNarrow ? 'column' : 'row', alignItems: isNarrow ? 'flex-start' : 'center', children: [_jsxs(Box, { children: [process.env['GEMINI_SYSTEM_MD'] && (_jsx(Text, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " })), ctrlCPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." })) : ctrlDPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." })) : showEscapePrompt ? (_jsx(Text, { color: Colors.Gray, children: "Press Esc again to clear." })) : (_jsx(ContextSummaryDisplay, { ideContext: ideContextState, geminiMdFileCount: geminiMdFileCount, contextFileNames: contextFileNames, mcpServers: config.getMcpServers(), blockedMcpServers: config.getBlockedMcpServers(), showToolDescriptions: showToolDescriptions }))] }), _jsxs(Box, { paddingTop: isNarrow ? 1 : 0, children: [showAutoAcceptIndicator !== ApprovalMode.DEFAULT &&
-                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused && !isModelMappingDialogOpen, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === 'error' && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === 'error' && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [' ', "Please check API key and configuration."] })] })) })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModel, modelLimit: typeof config.getModelContextLimit === 'function'
+                                        }), messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && (_jsx(Box, { paddingLeft: 2, children: _jsxs(Text, { dimColor: true, children: ["... (+", messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES, "more)"] }) }))] })), _jsxs(Box, { marginTop: 1, justifyContent: "space-between", width: "100%", flexDirection: isNarrow ? "column" : "row", alignItems: isNarrow ? "flex-start" : "center", children: [_jsxs(Box, { children: [process.env["GEMINI_SYSTEM_MD"] && (_jsx(Text, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " })), ctrlCPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." })) : ctrlDPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." })) : showEscapePrompt ? (_jsx(Text, { color: Colors.Gray, children: "Press Esc again to clear." })) : (_jsx(ContextSummaryDisplay, { ideContext: ideContextState, geminiMdFileCount: geminiMdFileCount, contextFileNames: contextFileNames, mcpServers: config.getMcpServers(), blockedMcpServers: config.getBlockedMcpServers(), showToolDescriptions: showToolDescriptions }))] }), _jsxs(Box, { paddingTop: isNarrow ? 1 : 0, children: [showAutoAcceptIndicator !== ApprovalMode.DEFAULT &&
+                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused && !isModelMappingDialogOpen, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [" ", "Please check API key and configuration."] })] })) })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModel, modelLimit: typeof config.getModelContextLimit === "function"
                                 ? config.getModelContextLimit(currentModel)
                                 : undefined, targetDir: config.getTargetDir(), debugMode: config.getDebugMode(), branchName: branchName, debugMessage: debugMessage, corgiMode: corgiMode, errorCount: errorCount, showErrorDetails: showErrorDetails, showMemoryUsage: config.getDebugMode() ||
                                 settings.merged.ui?.showMemoryUsage ||

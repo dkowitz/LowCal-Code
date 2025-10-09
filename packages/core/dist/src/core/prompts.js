@@ -3,18 +3,18 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import path from 'node:path';
-import fs from 'node:fs';
-import os from 'node:os';
-import { ToolNames } from '../tools/tool-names.js';
-import process from 'node:process';
-import { isGitRepository } from '../utils/gitUtils.js';
-import { GEMINI_CONFIG_DIR } from '../tools/memoryTool.js';
+import path from "node:path";
+import fs from "node:fs";
+import os from "node:os";
+import { ToolNames } from "../tools/tool-names.js";
+import process from "node:process";
+import { isGitRepository } from "../utils/gitUtils.js";
+import { GEMINI_CONFIG_DIR } from "../tools/memoryTool.js";
 /**
  * Normalizes a URL by removing trailing slash for consistent comparison
  */
 function normalizeUrl(url) {
-    return url.endsWith('/') ? url.slice(0, -1) : url;
+    return url.endsWith("/") ? url.slice(0, -1) : url;
 }
 /**
  * Checks if a URL matches any URL in the array, ignoring trailing slashes
@@ -33,49 +33,49 @@ function urlMatches(urlArray, targetUrl) {
  */
 export function getCustomSystemPrompt(customInstruction, userMemory) {
     // Extract text from custom instruction
-    let instructionText = '';
-    if (typeof customInstruction === 'string') {
+    let instructionText = "";
+    if (typeof customInstruction === "string") {
         instructionText = customInstruction;
     }
     else if (Array.isArray(customInstruction)) {
         // PartUnion[]
         instructionText = customInstruction
-            .map((part) => (typeof part === 'string' ? part : part.text || ''))
-            .join('');
+            .map((part) => (typeof part === "string" ? part : part.text || ""))
+            .join("");
     }
-    else if (customInstruction && 'parts' in customInstruction) {
+    else if (customInstruction && "parts" in customInstruction) {
         // Content
         instructionText =
             customInstruction.parts
-                ?.map((part) => (typeof part === 'string' ? part : part.text || ''))
-                .join('') || '';
+                ?.map((part) => (typeof part === "string" ? part : part.text || ""))
+                .join("") || "";
     }
-    else if (customInstruction && 'text' in customInstruction) {
+    else if (customInstruction && "text" in customInstruction) {
         // PartUnion (single part)
-        instructionText = customInstruction.text || '';
+        instructionText = customInstruction.text || "";
     }
     // Append user memory using the same pattern as getCoreSystemPrompt
     const memorySuffix = userMemory && userMemory.trim().length > 0
         ? `\n\n---\n\n${userMemory.trim()}`
-        : '';
+        : "";
     return `${instructionText}${memorySuffix}`;
 }
 export function getCoreSystemPrompt(userMemory, config, model) {
     // if GEMINI_SYSTEM_MD is set (and not 0|false), override system prompt from file
     // default path is .gemini/system.md but can be modified via custom path in GEMINI_SYSTEM_MD
     let systemMdEnabled = false;
-    let systemMdPath = path.resolve(path.join(GEMINI_CONFIG_DIR, 'system.md'));
-    const systemMdVar = process.env['GEMINI_SYSTEM_MD'];
+    let systemMdPath = path.resolve(path.join(GEMINI_CONFIG_DIR, "system.md"));
+    const systemMdVar = process.env["GEMINI_SYSTEM_MD"];
     if (systemMdVar) {
         const systemMdVarLower = systemMdVar.toLowerCase();
-        if (!['0', 'false'].includes(systemMdVarLower)) {
+        if (!["0", "false"].includes(systemMdVarLower)) {
             systemMdEnabled = true; // enable system prompt override
-            if (!['1', 'true'].includes(systemMdVarLower)) {
+            if (!["1", "true"].includes(systemMdVarLower)) {
                 let customPath = systemMdVar;
-                if (customPath.startsWith('~/')) {
+                if (customPath.startsWith("~/")) {
                     customPath = path.join(os.homedir(), customPath.slice(2));
                 }
-                else if (customPath === '~') {
+                else if (customPath === "~") {
                     customPath = os.homedir();
                 }
                 systemMdPath = path.resolve(customPath); // use custom path from GEMINI_SYSTEM_MD
@@ -88,8 +88,8 @@ export function getCoreSystemPrompt(userMemory, config, model) {
     }
     // Check for system prompt mappings from global config
     if (config?.systemPromptMappings) {
-        const currentModel = process.env['OPENAI_MODEL'] || '';
-        const currentBaseUrl = process.env['OPENAI_BASE_URL'] || '';
+        const currentModel = process.env["OPENAI_MODEL"] || "";
+        const currentBaseUrl = process.env["OPENAI_BASE_URL"] || "";
         const matchedMapping = config.systemPromptMappings.find((mapping) => {
             const { baseUrls, modelNames } = mapping;
             // Check if baseUrl matches (when specified)
@@ -111,13 +111,13 @@ export function getCoreSystemPrompt(userMemory, config, model) {
             const isGitRepo = isGitRepository(process.cwd());
             // Replace placeholders in template
             let template = matchedMapping.template;
-            template = template.replace('{RUNTIME_VARS_IS_GIT_REPO}', String(isGitRepo));
-            template = template.replace('{RUNTIME_VARS_SANDBOX}', process.env['SANDBOX'] || '');
+            template = template.replace("{RUNTIME_VARS_IS_GIT_REPO}", String(isGitRepo));
+            template = template.replace("{RUNTIME_VARS_SANDBOX}", process.env["SANDBOX"] || "");
             return template;
         }
     }
     const basePrompt = systemMdEnabled
-        ? fs.readFileSync(systemMdPath, 'utf8')
+        ? fs.readFileSync(systemMdPath, "utf8")
         : `
 You are Qwen Code, an interactive CLI agent developed by Alibaba Group, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
 
@@ -249,8 +249,8 @@ IMPORTANT: Always use the ${ToolNames.TODO_WRITE} tool to plan and track tasks t
 
 ${(function () {
             // Determine sandbox status based on environment variables
-            const isSandboxExec = process.env['SANDBOX'] === 'sandbox-exec';
-            const isGenericSandbox = !!process.env['SANDBOX']; // Check if SANDBOX is set to any non-empty value
+            const isSandboxExec = process.env["SANDBOX"] === "sandbox-exec";
+            const isGenericSandbox = !!process.env["SANDBOX"]; // Check if SANDBOX is set to any non-empty value
             if (isSandboxExec) {
                 return `
 # macOS Seatbelt
@@ -290,29 +290,29 @@ ${(function () {
 - Never push changes to a remote repository without being asked explicitly by the user.
 `;
             }
-            return '';
+            return "";
         })()}
 
-${getToolCallExamples(model || '')}
+${getToolCallExamples(model || "")}
 
 # Final Reminder
 Your core function is efficient and safe assistance. Balance extreme conciseness with the crucial need for clarity, especially regarding safety and potential system modifications. Always prioritize user control and project conventions. Never make assumptions about the contents of files; instead use '${ToolNames.READ_FILE}' or '${ToolNames.READ_MANY_FILES}' to ensure you aren't making broad assumptions. Finally, you are an agent - please keep going until the user's query is completely resolved.
 `.trim();
     // if GEMINI_WRITE_SYSTEM_MD is set (and not 0|false), write base system prompt to file
-    const writeSystemMdVar = process.env['GEMINI_WRITE_SYSTEM_MD'];
+    const writeSystemMdVar = process.env["GEMINI_WRITE_SYSTEM_MD"];
     if (writeSystemMdVar) {
         const writeSystemMdVarLower = writeSystemMdVar.toLowerCase();
-        if (!['0', 'false'].includes(writeSystemMdVarLower)) {
-            if (['1', 'true'].includes(writeSystemMdVarLower)) {
+        if (!["0", "false"].includes(writeSystemMdVarLower)) {
+            if (["1", "true"].includes(writeSystemMdVarLower)) {
                 fs.mkdirSync(path.dirname(systemMdPath), { recursive: true });
                 fs.writeFileSync(systemMdPath, basePrompt); // write to default path, can be modified via GEMINI_SYSTEM_MD
             }
             else {
                 let customPath = writeSystemMdVar;
-                if (customPath.startsWith('~/')) {
+                if (customPath.startsWith("~/")) {
                     customPath = path.join(os.homedir(), customPath.slice(2));
                 }
-                else if (customPath === '~') {
+                else if (customPath === "~") {
                     customPath = os.homedir();
                 }
                 const resolvedPath = path.resolve(customPath);
@@ -323,7 +323,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
     }
     const memorySuffix = userMemory && userMemory.trim().length > 0
         ? `\n\n---\n\n${userMemory.trim()}`
-        : '';
+        : "";
     return `${basePrompt}${memorySuffix}`;
 }
 /**
@@ -748,14 +748,14 @@ To help you check their settings, I can read their contents. Which one would you
 `.trim();
 function getToolCallExamples(model) {
     // Check for environment variable override first
-    const toolCallStyle = process.env['QWEN_CODE_TOOL_CALL_STYLE'];
+    const toolCallStyle = process.env["QWEN_CODE_TOOL_CALL_STYLE"];
     if (toolCallStyle) {
         switch (toolCallStyle.toLowerCase()) {
-            case 'qwen-coder':
+            case "qwen-coder":
                 return qwenCoderToolCallExamples;
-            case 'qwen-vl':
+            case "qwen-vl":
                 return qwenVlToolCallExamples;
-            case 'general':
+            case "general":
                 return generalToolCallExamples;
             default:
                 console.warn(`Unknown QWEN_CODE_TOOL_CALL_STYLE value: ${toolCallStyle}. Using model-based detection.`);
@@ -800,7 +800,7 @@ function getToolCallExamples(model) {
  * ```
  */
 export function getSubagentSystemReminder(agentTypes) {
-    return `<system-reminder>You have powerful specialized agents at your disposal, available agent types are: ${agentTypes.join(', ')}. PROACTIVELY use the ${ToolNames.TASK} tool to delegate user's task to appropriate agent when user's task matches agent capabilities. Ignore this message if user's task is not relevant to any agent. This message is for internal use only. Do not mention this to user in your response.</system-reminder>`;
+    return `<system-reminder>You have powerful specialized agents at your disposal, available agent types are: ${agentTypes.join(", ")}. PROACTIVELY use the ${ToolNames.TASK} tool to delegate user's task to appropriate agent when user's task matches agent capabilities. Ignore this message if user's task is not relevant to any agent. This message is for internal use only. Do not mention this to user in your response.</system-reminder>`;
 }
 /**
  * Generates a system reminder message for plan mode operation.

@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import path from 'node:path';
-import { promises as fs } from 'node:fs';
-const LOG_FILE_NAME = 'logs.json';
+import path from "node:path";
+import { promises as fs } from "node:fs";
+const LOG_FILE_NAME = "logs.json";
 export var MessageSenderType;
 (function (MessageSenderType) {
     MessageSenderType["USER"] = "user";
@@ -57,30 +57,30 @@ export class Logger {
     }
     async _readLogFile() {
         if (!this.logFilePath) {
-            throw new Error('Log file path not set during read attempt.');
+            throw new Error("Log file path not set during read attempt.");
         }
         try {
-            const fileContent = await fs.readFile(this.logFilePath, 'utf-8');
+            const fileContent = await fs.readFile(this.logFilePath, "utf-8");
             const parsedLogs = JSON.parse(fileContent);
             if (!Array.isArray(parsedLogs)) {
                 console.debug(`Log file at ${this.logFilePath} is not a valid JSON array. Starting with empty logs.`);
-                await this._backupCorruptedLogFile('malformed_array');
+                await this._backupCorruptedLogFile("malformed_array");
                 return [];
             }
-            return parsedLogs.filter((entry) => typeof entry.sessionId === 'string' &&
-                typeof entry.messageId === 'number' &&
-                typeof entry.timestamp === 'string' &&
-                typeof entry.type === 'string' &&
-                typeof entry.message === 'string');
+            return parsedLogs.filter((entry) => typeof entry.sessionId === "string" &&
+                typeof entry.messageId === "number" &&
+                typeof entry.timestamp === "string" &&
+                typeof entry.type === "string" &&
+                typeof entry.message === "string");
         }
         catch (error) {
             const nodeError = error;
-            if (nodeError.code === 'ENOENT') {
+            if (nodeError.code === "ENOENT") {
                 return [];
             }
             if (error instanceof SyntaxError) {
                 console.debug(`Invalid JSON in log file ${this.logFilePath}. Backing up and starting fresh.`, error);
-                await this._backupCorruptedLogFile('invalid_json');
+                await this._backupCorruptedLogFile("invalid_json");
                 return [];
             }
             console.debug(`Failed to read or parse log file ${this.logFilePath}:`, error);
@@ -116,7 +116,7 @@ export class Logger {
             }
             this.logs = await this._readLogFile();
             if (!fileExisted && this.logs.length === 0) {
-                await fs.writeFile(this.logFilePath, '[]', 'utf-8');
+                await fs.writeFile(this.logFilePath, "[]", "utf-8");
             }
             const sessionLogs = this.logs.filter((entry) => entry.sessionId === this.sessionId);
             this.messageId =
@@ -126,21 +126,21 @@ export class Logger {
             this.initialized = true;
         }
         catch (err) {
-            console.error('Failed to initialize logger:', err);
+            console.error("Failed to initialize logger:", err);
             this.initialized = false;
         }
     }
     async _updateLogFile(entryToAppend) {
         if (!this.logFilePath) {
-            console.debug('Log file path not set. Cannot persist log entry.');
-            throw new Error('Log file path not set during update attempt.');
+            console.debug("Log file path not set. Cannot persist log entry.");
+            throw new Error("Log file path not set during update attempt.");
         }
         let currentLogsOnDisk;
         try {
             currentLogsOnDisk = await this._readLogFile();
         }
         catch (readError) {
-            console.debug('Critical error reading log file before append:', readError);
+            console.debug("Critical error reading log file before append:", readError);
             throw readError;
         }
         // Determine the correct messageId for the new entry based on current disk state for its session
@@ -164,12 +164,12 @@ export class Logger {
         }
         currentLogsOnDisk.push(entryToAppend);
         try {
-            await fs.writeFile(this.logFilePath, JSON.stringify(currentLogsOnDisk, null, 2), 'utf-8');
+            await fs.writeFile(this.logFilePath, JSON.stringify(currentLogsOnDisk, null, 2), "utf-8");
             this.logs = currentLogsOnDisk;
             return entryToAppend; // Return the successfully appended entry
         }
         catch (error) {
-            console.debug('Error writing to log file:', error);
+            console.debug("Error writing to log file:", error);
             throw error;
         }
     }
@@ -187,7 +187,7 @@ export class Logger {
     }
     async logMessage(type, message) {
         if (!this.initialized || this.sessionId === undefined) {
-            console.debug('Logger not initialized or session ID missing. Cannot log message.');
+            console.debug("Logger not initialized or session ID missing. Cannot log message.");
             return;
         }
         // The messageId used here is the instance's idea of the next ID.
@@ -222,10 +222,10 @@ export class Logger {
     }
     _checkpointPath(tag) {
         if (!tag.length) {
-            throw new Error('No checkpoint tag specified.');
+            throw new Error("No checkpoint tag specified.");
         }
         if (!this.qwenDir) {
-            throw new Error('Checkpoint file path not set.');
+            throw new Error("Checkpoint file path not set.");
         }
         // Encode the tag to handle all special characters safely.
         const encodedTag = encodeTagName(tag);
@@ -240,7 +240,7 @@ export class Logger {
         }
         catch (error) {
             const nodeError = error;
-            if (nodeError.code !== 'ENOENT') {
+            if (nodeError.code !== "ENOENT") {
                 throw error; // A real error occurred, rethrow it.
             }
             // It was not found, so we'll check the old path next.
@@ -253,7 +253,7 @@ export class Logger {
         }
         catch (error) {
             const nodeError = error;
-            if (nodeError.code !== 'ENOENT') {
+            if (nodeError.code !== "ENOENT") {
                 throw error; // A real error occurred, rethrow it.
             }
         }
@@ -262,26 +262,26 @@ export class Logger {
     }
     async saveCheckpoint(conversation, tag) {
         if (!this.initialized) {
-            console.error('Logger not initialized or checkpoint file path not set. Cannot save a checkpoint.');
+            console.error("Logger not initialized or checkpoint file path not set. Cannot save a checkpoint.");
             return;
         }
         // Always save with the new encoded path.
         const path = this._checkpointPath(tag);
         try {
-            await fs.writeFile(path, JSON.stringify(conversation, null, 2), 'utf-8');
+            await fs.writeFile(path, JSON.stringify(conversation, null, 2), "utf-8");
         }
         catch (error) {
-            console.error('Error writing to checkpoint file:', error);
+            console.error("Error writing to checkpoint file:", error);
         }
     }
     async loadCheckpoint(tag) {
         if (!this.initialized) {
-            console.error('Logger not initialized or checkpoint file path not set. Cannot load checkpoint.');
+            console.error("Logger not initialized or checkpoint file path not set. Cannot load checkpoint.");
             return [];
         }
         const path = await this._getCheckpointPath(tag);
         try {
-            const fileContent = await fs.readFile(path, 'utf-8');
+            const fileContent = await fs.readFile(path, "utf-8");
             const parsedContent = JSON.parse(fileContent);
             if (!Array.isArray(parsedContent)) {
                 console.warn(`Checkpoint file at ${path} is not a valid JSON array. Returning empty checkpoint.`);
@@ -291,7 +291,7 @@ export class Logger {
         }
         catch (error) {
             const nodeError = error;
-            if (nodeError.code === 'ENOENT') {
+            if (nodeError.code === "ENOENT") {
                 // This is okay, it just means the checkpoint doesn't exist in either format.
                 return [];
             }
@@ -301,7 +301,7 @@ export class Logger {
     }
     async deleteCheckpoint(tag) {
         if (!this.initialized || !this.qwenDir) {
-            console.error('Logger not initialized or checkpoint file path not set. Cannot delete checkpoint.');
+            console.error("Logger not initialized or checkpoint file path not set. Cannot delete checkpoint.");
             return false;
         }
         let deletedSomething = false;
@@ -313,7 +313,7 @@ export class Logger {
         }
         catch (error) {
             const nodeError = error;
-            if (nodeError.code !== 'ENOENT') {
+            if (nodeError.code !== "ENOENT") {
                 console.error(`Failed to delete checkpoint file ${newPath}:`, error);
                 throw error; // Rethrow unexpected errors
             }
@@ -328,7 +328,7 @@ export class Logger {
             }
             catch (error) {
                 const nodeError = error;
-                if (nodeError.code !== 'ENOENT') {
+                if (nodeError.code !== "ENOENT") {
                     console.error(`Failed to delete checkpoint file ${oldPath}:`, error);
                     throw error; // Rethrow unexpected errors
                 }
@@ -339,7 +339,7 @@ export class Logger {
     }
     async checkpointExists(tag) {
         if (!this.initialized) {
-            throw new Error('Logger not initialized. Cannot check for checkpoint existence.');
+            throw new Error("Logger not initialized. Cannot check for checkpoint existence.");
         }
         let filePath;
         try {
@@ -351,7 +351,7 @@ export class Logger {
         }
         catch (error) {
             const nodeError = error;
-            if (nodeError.code === 'ENOENT') {
+            if (nodeError.code === "ENOENT") {
                 return false; // It truly doesn't exist in either format.
             }
             // A different error occurred.

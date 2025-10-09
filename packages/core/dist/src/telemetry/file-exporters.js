@@ -3,16 +3,16 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as fs from 'node:fs';
-import { ExportResultCode } from '@opentelemetry/core';
-import { AggregationTemporality } from '@opentelemetry/sdk-metrics';
+import * as fs from "node:fs";
+import { ExportResultCode } from "@opentelemetry/core";
+import { AggregationTemporality } from "@opentelemetry/sdk-metrics";
 class FileExporter {
     writeStream;
     constructor(filePath) {
-        this.writeStream = fs.createWriteStream(filePath, { flags: 'a' });
+        this.writeStream = fs.createWriteStream(filePath, { flags: "a" });
     }
     serialize(data) {
-        return JSON.stringify(data, null, 2) + '\n';
+        return JSON.stringify(data, null, 2) + "\n";
     }
     shutdown() {
         return new Promise((resolve) => {
@@ -22,7 +22,7 @@ class FileExporter {
 }
 export class FileSpanExporter extends FileExporter {
     export(spans, resultCallback) {
-        const data = spans.map((span) => this.serialize(span)).join('');
+        const data = spans.map((span) => this.serialize(span)).join("");
         this.writeStream.write(data, (err) => {
             resultCallback({
                 code: err ? ExportResultCode.FAILED : ExportResultCode.SUCCESS,
@@ -33,7 +33,7 @@ export class FileSpanExporter extends FileExporter {
 }
 export class FileLogExporter extends FileExporter {
     export(logs, resultCallback) {
-        const data = logs.map((log) => this.serialize(log)).join('');
+        const data = logs.map((log) => this.serialize(log)).join("");
         this.writeStream.write(data, (err) => {
             resultCallback({
                 code: err ? ExportResultCode.FAILED : ExportResultCode.SUCCESS,

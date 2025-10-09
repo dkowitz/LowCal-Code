@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import AjvPkg from 'ajv';
-import * as addFormats from 'ajv-formats';
+import AjvPkg from "ajv";
+import * as addFormats from "ajv-formats";
 // Ajv's ESM/CJS interop: use 'any' for compatibility as recommended by Ajv docs
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const AjvClass = AjvPkg.default || AjvPkg;
@@ -24,8 +24,8 @@ export class SchemaValidator {
         if (!schema) {
             return null;
         }
-        if (typeof data !== 'object' || data === null) {
-            return 'Value of params must be an object';
+        if (typeof data !== "object" || data === null) {
+            return "Value of params must be an object";
         }
         const validate = ajValidator.compile(schema);
         const valid = validate(data);
@@ -35,7 +35,7 @@ export class SchemaValidator {
             const validate = ajValidator.compile(schema);
             const valid = validate(data);
             if (!valid && validate.errors) {
-                return ajValidator.errorsText(validate.errors, { dataVar: 'params' });
+                return ajValidator.errorsText(validate.errors, { dataVar: "params" });
             }
         }
         return null;
@@ -45,13 +45,13 @@ function fixBooleanCasing(data) {
     for (const key of Object.keys(data)) {
         if (!(key in data))
             continue;
-        if (typeof data[key] === 'object') {
+        if (typeof data[key] === "object") {
             fixBooleanCasing(data[key]);
         }
-        else if (data[key] === 'True')
-            data[key] = 'true';
-        else if (data[key] === 'False')
-            data[key] = 'false';
+        else if (data[key] === "True")
+            data[key] = "true";
+        else if (data[key] === "False")
+            data[key] = "false";
     }
 }
 //# sourceMappingURL=schemaValidator.js.map

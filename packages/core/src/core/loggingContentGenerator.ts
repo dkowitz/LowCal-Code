@@ -13,21 +13,21 @@ import type {
   GenerateContentParameters,
   GenerateContentResponseUsageMetadata,
   GenerateContentResponse,
-} from '@google/genai';
+} from "@google/genai";
 import {
   ApiRequestEvent,
   ApiResponseEvent,
   ApiErrorEvent,
-} from '../telemetry/types.js';
-import type { Config } from '../config/config.js';
+} from "../telemetry/types.js";
+import type { Config } from "../config/config.js";
 import {
   logApiError,
   logApiRequest,
   logApiResponse,
-} from '../telemetry/loggers.js';
-import type { ContentGenerator } from './contentGenerator.js';
-import { toContents } from '../code_assist/converter.js';
-import { isStructuredError } from '../utils/quotaErrorDetection.js';
+} from "../telemetry/loggers.js";
+import type { ContentGenerator } from "./contentGenerator.js";
+import { toContents } from "../code_assist/converter.js";
+import { isStructuredError } from "../utils/quotaErrorDetection.js";
 
 interface StructuredError {
   status: number;
@@ -86,7 +86,7 @@ export class LoggingContentGenerator implements ContentGenerator {
     prompt_id: string,
   ): void {
     const errorMessage = error instanceof Error ? error.message : String(error);
-    const errorType = error instanceof Error ? error.name : 'unknown';
+    const errorType = error instanceof Error ? error.name : "unknown";
 
     logApiError(
       this.config,
@@ -115,7 +115,7 @@ export class LoggingContentGenerator implements ContentGenerator {
       const response = await this.wrapped.generateContent(req, userPromptId);
       const durationMs = Date.now() - startTime;
       this._logApiResponse(
-        response.responseId ?? '',
+        response.responseId ?? "",
         durationMs,
         userPromptId,
         response.usageMetadata,
@@ -174,7 +174,7 @@ export class LoggingContentGenerator implements ContentGenerator {
     const durationMs = Date.now() - startTime;
     if (lastResponse) {
       this._logApiResponse(
-        lastResponse.responseId ?? '',
+        lastResponse.responseId ?? "",
         durationMs,
         userPromptId,
         lastUsageMetadata,

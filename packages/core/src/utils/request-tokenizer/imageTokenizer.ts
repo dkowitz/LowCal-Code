@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { ImageMetadata } from './types.js';
-import { isSupportedImageMimeType } from './supportedImageFormats.js';
+import type { ImageMetadata } from "./types.js";
+import { isSupportedImageMimeType } from "./supportedImageFormats.js";
 
 /**
  * Image tokenizer for calculating image tokens based on dimensions
@@ -54,8 +54,8 @@ export class ImageTokenizer {
         };
       }
 
-      const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, '');
-      const buffer = Buffer.from(cleanBase64, 'base64');
+      const cleanBase64 = base64Data.replace(/^data:[^;]+;base64,/, "");
+      const buffer = Buffer.from(cleanBase64, "base64");
       const dimensions = await this.extractDimensions(buffer, mimeType);
 
       return {
@@ -65,7 +65,7 @@ export class ImageTokenizer {
         dataSize: buffer.length,
       };
     } catch (error) {
-      console.warn('Failed to extract image metadata:', error);
+      console.warn("Failed to extract image metadata:", error);
       // Return default metadata for fallback
       return {
         width: 512,
@@ -87,31 +87,31 @@ export class ImageTokenizer {
     buffer: Buffer,
     mimeType: string,
   ): Promise<{ width: number; height: number }> {
-    if (mimeType.includes('png')) {
+    if (mimeType.includes("png")) {
       return this.extractPngDimensions(buffer);
     }
 
-    if (mimeType.includes('jpeg') || mimeType.includes('jpg')) {
+    if (mimeType.includes("jpeg") || mimeType.includes("jpg")) {
       return this.extractJpegDimensions(buffer);
     }
 
-    if (mimeType.includes('webp')) {
+    if (mimeType.includes("webp")) {
       return this.extractWebpDimensions(buffer);
     }
 
-    if (mimeType.includes('gif')) {
+    if (mimeType.includes("gif")) {
       return this.extractGifDimensions(buffer);
     }
 
-    if (mimeType.includes('bmp')) {
+    if (mimeType.includes("bmp")) {
       return this.extractBmpDimensions(buffer);
     }
 
-    if (mimeType.includes('tiff')) {
+    if (mimeType.includes("tiff")) {
       return this.extractTiffDimensions(buffer);
     }
 
-    if (mimeType.includes('heic')) {
+    if (mimeType.includes("heic")) {
       return this.extractHeicDimensions(buffer);
     }
 
@@ -128,7 +128,7 @@ export class ImageTokenizer {
     height: number;
   } {
     if (buffer.length < 24) {
-      throw new Error('Invalid PNG: buffer too short');
+      throw new Error("Invalid PNG: buffer too short");
     }
 
     // Verify PNG signature
@@ -137,7 +137,7 @@ export class ImageTokenizer {
       0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a,
     ]);
     if (!signature.equals(expectedSignature)) {
-      throw new Error('Invalid PNG signature');
+      throw new Error("Invalid PNG signature");
     }
 
     const width = buffer.readUInt32BE(16);
@@ -156,7 +156,7 @@ export class ImageTokenizer {
     height: number;
   } {
     if (buffer.length < 4 || buffer[0] !== 0xff || buffer[1] !== 0xd8) {
-      throw new Error('Invalid JPEG signature');
+      throw new Error("Invalid JPEG signature");
     }
 
     let offset = 2;
@@ -185,7 +185,7 @@ export class ImageTokenizer {
       offset += 2 + segmentLength;
     }
 
-    throw new Error('Could not find JPEG dimensions');
+    throw new Error("Could not find JPEG dimensions");
   }
 
   /**
@@ -197,34 +197,34 @@ export class ImageTokenizer {
     height: number;
   } {
     if (buffer.length < 30) {
-      throw new Error('Invalid WebP: too short');
+      throw new Error("Invalid WebP: too short");
     }
 
-    const riffSignature = buffer.subarray(0, 4).toString('ascii');
-    const webpSignature = buffer.subarray(8, 12).toString('ascii');
+    const riffSignature = buffer.subarray(0, 4).toString("ascii");
+    const webpSignature = buffer.subarray(8, 12).toString("ascii");
 
-    if (riffSignature !== 'RIFF' || webpSignature !== 'WEBP') {
-      throw new Error('Invalid WebP signature');
+    if (riffSignature !== "RIFF" || webpSignature !== "WEBP") {
+      throw new Error("Invalid WebP signature");
     }
 
-    const format = buffer.subarray(12, 16).toString('ascii');
+    const format = buffer.subarray(12, 16).toString("ascii");
 
-    if (format === 'VP8 ') {
+    if (format === "VP8 ") {
       const width = buffer.readUInt16LE(26) & 0x3fff;
       const height = buffer.readUInt16LE(28) & 0x3fff;
       return { width, height };
-    } else if (format === 'VP8L') {
+    } else if (format === "VP8L") {
       const bits = buffer.readUInt32LE(21);
       const width = (bits & 0x3fff) + 1;
       const height = ((bits >> 14) & 0x3fff) + 1;
       return { width, height };
-    } else if (format === 'VP8X') {
+    } else if (format === "VP8X") {
       const width = (buffer.readUInt32LE(24) & 0xffffff) + 1;
       const height = (buffer.readUInt32LE(26) & 0xffffff) + 1;
       return { width, height };
     }
 
-    throw new Error('Unsupported WebP format');
+    throw new Error("Unsupported WebP format");
   }
 
   /**
@@ -236,12 +236,12 @@ export class ImageTokenizer {
     height: number;
   } {
     if (buffer.length < 10) {
-      throw new Error('Invalid GIF: too short');
+      throw new Error("Invalid GIF: too short");
     }
 
-    const signature = buffer.subarray(0, 6).toString('ascii');
-    if (signature !== 'GIF87a' && signature !== 'GIF89a') {
-      throw new Error('Invalid GIF signature');
+    const signature = buffer.subarray(0, 6).toString("ascii");
+    if (signature !== "GIF87a" && signature !== "GIF89a") {
+      throw new Error("Invalid GIF signature");
     }
 
     const width = buffer.readUInt16LE(6);
@@ -320,7 +320,7 @@ export class ImageTokenizer {
         const metadata = await this.extractImageMetadata(data, mimeType);
         results.push(this.calculateTokens(metadata));
       } catch (error) {
-        console.warn('Error calculating tokens for image:', error);
+        console.warn("Error calculating tokens for image:", error);
         // Return minimum tokens as fallback
         results.push(
           ImageTokenizer.MIN_TOKENS_PER_IMAGE +
@@ -342,12 +342,12 @@ export class ImageTokenizer {
     height: number;
   } {
     if (buffer.length < 26) {
-      throw new Error('Invalid BMP: buffer too short');
+      throw new Error("Invalid BMP: buffer too short");
     }
 
     // Verify BMP signature
     if (buffer[0] !== 0x42 || buffer[1] !== 0x4d) {
-      throw new Error('Invalid BMP signature');
+      throw new Error("Invalid BMP signature");
     }
 
     const width = buffer.readUInt32LE(18);
@@ -366,16 +366,16 @@ export class ImageTokenizer {
     height: number;
   } {
     if (buffer.length < 8) {
-      throw new Error('Invalid TIFF: buffer too short');
+      throw new Error("Invalid TIFF: buffer too short");
     }
 
     // Check byte order
-    const byteOrder = buffer.subarray(0, 2).toString('ascii');
-    const isLittleEndian = byteOrder === 'II';
-    const isBigEndian = byteOrder === 'MM';
+    const byteOrder = buffer.subarray(0, 2).toString("ascii");
+    const isLittleEndian = byteOrder === "II";
+    const isBigEndian = byteOrder === "MM";
 
     if (!isLittleEndian && !isBigEndian) {
-      throw new Error('Invalid TIFF byte order');
+      throw new Error("Invalid TIFF byte order");
     }
 
     // Read magic number (should be 42)
@@ -383,7 +383,7 @@ export class ImageTokenizer {
       ? buffer.readUInt16LE(2)
       : buffer.readUInt16BE(2);
     if (magic !== 42) {
-      throw new Error('Invalid TIFF magic number');
+      throw new Error("Invalid TIFF magic number");
     }
 
     // Read IFD offset
@@ -392,7 +392,7 @@ export class ImageTokenizer {
       : buffer.readUInt32BE(4);
 
     if (ifdOffset >= buffer.length) {
-      throw new Error('Invalid TIFF IFD offset');
+      throw new Error("Invalid TIFF IFD offset");
     }
 
     // Read number of directory entries
@@ -433,7 +433,7 @@ export class ImageTokenizer {
     }
 
     if (width === 0 || height === 0) {
-      throw new Error('Could not find TIFF dimensions');
+      throw new Error("Could not find TIFF dimensions");
     }
 
     return { width, height };
@@ -449,27 +449,27 @@ export class ImageTokenizer {
     height: number;
   } {
     if (buffer.length < 12) {
-      throw new Error('Invalid HEIC: buffer too short');
+      throw new Error("Invalid HEIC: buffer too short");
     }
 
     // Check for ftyp box with HEIC brand
-    const ftypBox = buffer.subarray(4, 8).toString('ascii');
-    if (ftypBox !== 'ftyp') {
-      throw new Error('Invalid HEIC: missing ftyp box');
+    const ftypBox = buffer.subarray(4, 8).toString("ascii");
+    if (ftypBox !== "ftyp") {
+      throw new Error("Invalid HEIC: missing ftyp box");
     }
 
-    const brand = buffer.subarray(8, 12).toString('ascii');
-    if (!['heic', 'heix', 'hevc', 'hevx'].includes(brand)) {
-      throw new Error('Invalid HEIC brand');
+    const brand = buffer.subarray(8, 12).toString("ascii");
+    if (!["heic", "heix", "hevc", "hevx"].includes(brand)) {
+      throw new Error("Invalid HEIC brand");
     }
 
     // Look for meta box and then ispe box
     let offset = 0;
     while (offset < buffer.length - 8) {
       const boxSize = buffer.readUInt32BE(offset);
-      const boxType = buffer.subarray(offset + 4, offset + 8).toString('ascii');
+      const boxType = buffer.subarray(offset + 4, offset + 8).toString("ascii");
 
-      if (boxType === 'meta') {
+      if (boxType === "meta") {
         // Look for ispe box inside meta box
         const metaOffset = offset + 8;
         let innerOffset = metaOffset + 4; // Skip version and flags
@@ -478,9 +478,9 @@ export class ImageTokenizer {
           const innerBoxSize = buffer.readUInt32BE(innerOffset);
           const innerBoxType = buffer
             .subarray(innerOffset + 4, innerOffset + 8)
-            .toString('ascii');
+            .toString("ascii");
 
-          if (innerBoxType === 'ispe') {
+          if (innerBoxType === "ispe") {
             // Found Image Spatial Extents box
             if (innerOffset + 20 <= buffer.length) {
               const width = buffer.readUInt32BE(innerOffset + 12);
@@ -499,7 +499,7 @@ export class ImageTokenizer {
     }
 
     // Fallback: return default dimensions if we can't parse the structure
-    console.warn('Could not extract HEIC dimensions, using default');
+    console.warn("Could not extract HEIC dimensions, using default");
     return { width: 512, height: 512 };
   }
 }

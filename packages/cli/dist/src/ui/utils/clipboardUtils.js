@@ -3,23 +3,23 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { exec } from 'node:child_process';
-import { promisify } from 'node:util';
-import * as fs from 'node:fs/promises';
-import * as path from 'node:path';
+import { exec } from "node:child_process";
+import { promisify } from "node:util";
+import * as fs from "node:fs/promises";
+import * as path from "node:path";
 const execAsync = promisify(exec);
 /**
  * Checks if the system clipboard contains an image (macOS only for now)
  * @returns true if clipboard contains an image
  */
 export async function clipboardHasImage() {
-    if (process.platform !== 'darwin') {
+    if (process.platform !== "darwin") {
         return false;
     }
     try {
         // Use osascript to check clipboard type
-        const { stdout } = await execAsync(`osascript -e 'clipboard info' 2>/dev/null | grep -qE "«class PNGf»|TIFF picture|JPEG picture|GIF picture|«class JPEG»|«class TIFF»" && echo "true" || echo "false"`, { shell: '/bin/bash' });
-        return stdout.trim() === 'true';
+        const { stdout } = await execAsync(`osascript -e 'clipboard info' 2>/dev/null | grep -qE "«class PNGf»|TIFF picture|JPEG picture|GIF picture|«class JPEG»|«class TIFF»" && echo "true" || echo "false"`, { shell: "/bin/bash" });
+        return stdout.trim() === "true";
     }
     catch {
         return false;
@@ -31,23 +31,23 @@ export async function clipboardHasImage() {
  * @returns The path to the saved image file, or null if no image or error
  */
 export async function saveClipboardImage(targetDir) {
-    if (process.platform !== 'darwin') {
+    if (process.platform !== "darwin") {
         return null;
     }
     try {
         // Create a temporary directory for clipboard images within the target directory
         // This avoids security restrictions on paths outside the target directory
         const baseDir = targetDir || process.cwd();
-        const tempDir = path.join(baseDir, '.gemini-clipboard');
+        const tempDir = path.join(baseDir, ".gemini-clipboard");
         await fs.mkdir(tempDir, { recursive: true });
         // Generate a unique filename with timestamp
         const timestamp = new Date().getTime();
         // Try different image formats in order of preference
         const formats = [
-            { class: 'PNGf', extension: 'png' },
-            { class: 'JPEG', extension: 'jpg' },
-            { class: 'TIFF', extension: 'tiff' },
-            { class: 'GIFf', extension: 'gif' },
+            { class: "PNGf", extension: "png" },
+            { class: "JPEG", extension: "jpg" },
+            { class: "TIFF", extension: "tiff" },
+            { class: "GIFf", extension: "gif" },
         ];
         for (const format of formats) {
             const tempFilePath = path.join(tempDir, `clipboard-${timestamp}.${format.extension}`);
@@ -67,7 +67,7 @@ export async function saveClipboardImage(targetDir) {
         end try
       `;
             const { stdout } = await execAsync(`osascript -e '${script}'`);
-            if (stdout.trim() === 'success') {
+            if (stdout.trim() === "success") {
                 // Verify the file was created and has content
                 try {
                     const stats = await fs.stat(tempFilePath);
@@ -91,7 +91,7 @@ export async function saveClipboardImage(targetDir) {
         return null;
     }
     catch (error) {
-        console.error('Error saving clipboard image:', error);
+        console.error("Error saving clipboard image:", error);
         return null;
     }
 }
@@ -103,15 +103,15 @@ export async function saveClipboardImage(targetDir) {
 export async function cleanupOldClipboardImages(targetDir) {
     try {
         const baseDir = targetDir || process.cwd();
-        const tempDir = path.join(baseDir, '.gemini-clipboard');
+        const tempDir = path.join(baseDir, ".gemini-clipboard");
         const files = await fs.readdir(tempDir);
         const oneHourAgo = Date.now() - 60 * 60 * 1000;
         for (const file of files) {
-            if (file.startsWith('clipboard-') &&
-                (file.endsWith('.png') ||
-                    file.endsWith('.jpg') ||
-                    file.endsWith('.tiff') ||
-                    file.endsWith('.gif'))) {
+            if (file.startsWith("clipboard-") &&
+                (file.endsWith(".png") ||
+                    file.endsWith(".jpg") ||
+                    file.endsWith(".tiff") ||
+                    file.endsWith(".gif"))) {
                 const filePath = path.join(tempDir, file);
                 const stats = await fs.stat(filePath);
                 if (stats.mtimeMs < oneHourAgo) {

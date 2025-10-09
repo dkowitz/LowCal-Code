@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect, useCallback } from 'react';
-import type { Config } from '@qwen-code/qwen-code-core';
+import { useState, useEffect, useCallback } from "react";
+import type { Config } from "@qwen-code/qwen-code-core";
 import {
   CodeAssistServer,
   UserTierId,
   LoggingContentGenerator,
-} from '@qwen-code/qwen-code-core';
+} from "@qwen-code/qwen-code-core";
 
 export interface PrivacyState {
   isLoading: boolean;
@@ -94,9 +94,9 @@ function getCodeAssistServer(config: Config): CodeAssistServer {
 
   // Neither of these cases should ever happen.
   if (!(server instanceof CodeAssistServer)) {
-    throw new Error('Oauth not being used');
+    throw new Error("Oauth not being used");
   } else if (!server.projectId) {
-    throw new Error('Oauth not being used');
+    throw new Error("Oauth not being used");
   }
   return server;
 }
@@ -105,14 +105,14 @@ async function getTier(server: CodeAssistServer): Promise<UserTierId> {
   const loadRes = await server.loadCodeAssist({
     cloudaicompanionProject: server.projectId,
     metadata: {
-      ideType: 'IDE_UNSPECIFIED',
-      platform: 'PLATFORM_UNSPECIFIED',
-      pluginType: 'GEMINI',
+      ideType: "IDE_UNSPECIFIED",
+      platform: "PLATFORM_UNSPECIFIED",
+      pluginType: "GEMINI",
       duetProject: server.projectId,
     },
   });
   if (!loadRes.currentTier) {
-    throw new Error('User does not have a current tier');
+    throw new Error("User does not have a current tier");
   }
   return loadRes.currentTier.id;
 }
@@ -124,7 +124,7 @@ async function getRemoteDataCollectionOptIn(
     const resp = await server.getCodeAssistGlobalUserSetting();
     return resp.freeTierDataCollectionOptin;
   } catch (error: unknown) {
-    if (error && typeof error === 'object' && 'response' in error) {
+    if (error && typeof error === "object" && "response" in error) {
       const gaxiosError = error as {
         response?: {
           status?: unknown;

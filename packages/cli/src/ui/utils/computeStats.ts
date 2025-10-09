@@ -8,7 +8,7 @@ import type {
   SessionMetrics,
   ComputedSessionStats,
   ModelMetrics,
-} from '../contexts/SessionContext.js';
+} from "../contexts/SessionContext.js";
 
 export function calculateErrorRate(metrics: ModelMetrics): number {
   if (metrics.api.totalRequests === 0) {

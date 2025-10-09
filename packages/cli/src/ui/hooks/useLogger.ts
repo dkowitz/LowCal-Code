@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
-import type { Storage } from '@qwen-code/qwen-code-core';
-import { sessionId, Logger } from '@qwen-code/qwen-code-core';
+import { useState, useEffect } from "react";
+import type { Storage } from "@qwen-code/qwen-code-core";
+import { sessionId, Logger } from "@qwen-code/qwen-code-core";
 
 /**
  * Hook to manage the logger instance.

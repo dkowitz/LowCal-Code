@@ -8,8 +8,8 @@ import type {
   ToolCallRequestInfo,
   ToolCallResponseInfo,
   Config,
-} from '../index.js';
-import { CoreToolScheduler } from './coreToolScheduler.js';
+} from "../index.js";
+import { CoreToolScheduler } from "./coreToolScheduler.js";
 
 /**
  * Executes a single tool call non-interactively by leveraging the CoreToolScheduler.

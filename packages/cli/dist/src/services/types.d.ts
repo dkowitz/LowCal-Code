@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { SlashCommand } from '../ui/commands/types.js';
+import type { SlashCommand } from "../ui/commands/types.js";
 /**
  * Defines the contract for any class that can load and provide slash commands.
  * This allows the CommandService to be extended with new command sources

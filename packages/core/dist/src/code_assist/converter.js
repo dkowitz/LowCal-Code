@@ -3,11 +3,11 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { GenerateContentResponse } from '@google/genai';
+import { GenerateContentResponse } from "@google/genai";
 export function toCountTokenRequest(req) {
     return {
         request: {
-            model: 'models/' + req.model,
+            model: "models/" + req.model,
             contents: toContents(req.contents),
         },
     };
@@ -65,18 +65,18 @@ function toContent(content) {
     if (Array.isArray(content)) {
         // it's a PartsUnion[]
         return {
-            role: 'user',
+            role: "user",
             parts: toParts(content),
         };
     }
-    if (typeof content === 'string') {
+    if (typeof content === "string") {
         // it's a string
         return {
-            role: 'user',
+            role: "user",
             parts: [{ text: content }],
         };
     }
-    if ('parts' in content) {
+    if ("parts" in content) {
         // it's a Content - process parts to handle thought filtering
         return {
             ...content,
@@ -87,7 +87,7 @@ function toContent(content) {
     }
     // it's a Part
     return {
-        role: 'user',
+        role: "user",
         parts: [toPart(content)],
     };
 }
@@ -95,21 +95,21 @@ function toParts(parts) {
     return parts.map(toPart);
 }
 function toPart(part) {
-    if (typeof part === 'string') {
+    if (typeof part === "string") {
         // it's a string
         return { text: part };
     }
     // Handle thought parts for CountToken API compatibility
     // The CountToken API expects parts to have certain required "oneof" fields initialized,
     // but thought parts don't conform to this schema and cause API failures
-    if ('thought' in part && part.thought) {
+    if ("thought" in part && part.thought) {
         const thoughtText = `[Thought: ${part.thought}]`;
         const newPart = { ...part };
-        delete newPart['thought'];
-        const hasApiContent = 'functionCall' in newPart ||
-            'functionResponse' in newPart ||
-            'inlineData' in newPart ||
-            'fileData' in newPart;
+        delete newPart["thought"];
+        const hasApiContent = "functionCall" in newPart ||
+            "functionResponse" in newPart ||
+            "inlineData" in newPart ||
+            "fileData" in newPart;
         if (hasApiContent) {
             // It's a functionCall or other non-text part. Just strip the thought.
             return newPart;
@@ -117,7 +117,7 @@ function toPart(part) {
         // If no other valid API content, this must be a text part.
         // Combine existing text (if any) with the thought, preserving other properties.
         const text = newPart.text;
-        const existingText = text ? String(text) : '';
+        const existingText = text ? String(text) : "";
         const combinedText = existingText
             ? `${existingText}\n${thoughtText}`
             : thoughtText;

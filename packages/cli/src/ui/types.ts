@@ -8,34 +8,34 @@ import type {
   CompressionStatus,
   ToolCallConfirmationDetails,
   ToolResultDisplay,
-} from '@qwen-code/qwen-code-core';
-import type { PartListUnion } from '@google/genai';
+} from "@qwen-code/qwen-code-core";
+import type { PartListUnion } from "@google/genai";
 
 // Only defining the state enum needed by the UI
 export enum StreamingState {
-  Idle = 'idle',
-  Responding = 'responding',
-  WaitingForConfirmation = 'waiting_for_confirmation',
+  Idle = "idle",
+  Responding = "responding",
+  WaitingForConfirmation = "waiting_for_confirmation",
 }
 
 // Copied from server/src/core/turn.ts for CLI usage
 export enum GeminiEventType {
-  Content = 'content',
-  ToolCallRequest = 'tool_call_request',
+  Content = "content",
+  ToolCallRequest = "tool_call_request",
   // Add other event types if the UI hook needs to handle them
 }
 
 export enum ToolCallStatus {
-  Pending = 'Pending',
-  Canceled = 'Canceled',
-  Confirming = 'Confirming',
-  Executing = 'Executing',
-  Success = 'Success',
-  Error = 'Error',
+  Pending = "Pending",
+  Canceled = "Canceled",
+  Confirming = "Confirming",
+  Executing = "Executing",
+  Success = "Success",
+  Error = "Error",
 }
 
 export interface ToolCallEvent {
-  type: 'tool_call';
+  type: "tool_call";
   status: ToolCallStatus;
   callId: string;
   name: string;
@@ -63,7 +63,7 @@ export interface CompressionProps {
 
 export interface SummaryProps {
   isPending: boolean;
-  stage: 'generating' | 'saving' | 'completed';
+  stage: "generating" | "saving" | "completed";
   filePath?: string; // Path to the saved summary file
 }
 
@@ -72,32 +72,32 @@ export interface HistoryItemBase {
 }
 
 export type HistoryItemUser = HistoryItemBase & {
-  type: 'user';
+  type: "user";
   text: string;
 };
 
 export type HistoryItemGemini = HistoryItemBase & {
-  type: 'gemini';
+  type: "gemini";
   text: string;
 };
 
 export type HistoryItemGeminiContent = HistoryItemBase & {
-  type: 'gemini_content';
+  type: "gemini_content";
   text: string;
 };
 
 export type HistoryItemInfo = HistoryItemBase & {
-  type: 'info';
+  type: "info";
   text: string;
 };
 
 export type HistoryItemError = HistoryItemBase & {
-  type: 'error';
+  type: "error";
   text: string;
 };
 
 export type HistoryItemAbout = HistoryItemBase & {
-  type: 'about';
+  type: "about";
   cliVersion: string;
   osVersion: string;
   sandboxEnv: string;
@@ -108,50 +108,50 @@ export type HistoryItemAbout = HistoryItemBase & {
 };
 
 export type HistoryItemHelp = HistoryItemBase & {
-  type: 'help';
+  type: "help";
   timestamp: Date;
 };
 
 export type HistoryItemStats = HistoryItemBase & {
-  type: 'stats';
+  type: "stats";
   duration: string;
 };
 
 export type HistoryItemModelStats = HistoryItemBase & {
-  type: 'model_stats';
+  type: "model_stats";
 };
 
 export type HistoryItemToolStats = HistoryItemBase & {
-  type: 'tool_stats';
+  type: "tool_stats";
 };
 
 export type HistoryItemQuit = HistoryItemBase & {
-  type: 'quit';
+  type: "quit";
   duration: string;
 };
 
 export type HistoryItemQuitConfirmation = HistoryItemBase & {
-  type: 'quit_confirmation';
+  type: "quit_confirmation";
   duration: string;
 };
 
 export type HistoryItemToolGroup = HistoryItemBase & {
-  type: 'tool_group';
+  type: "tool_group";
   tools: IndividualToolCallDisplay[];
 };
 
 export type HistoryItemUserShell = HistoryItemBase & {
-  type: 'user_shell';
+  type: "user_shell";
   text: string;
 };
 
 export type HistoryItemCompression = HistoryItemBase & {
-  type: 'compression';
+  type: "compression";
   compression: CompressionProps;
 };
 
 export type HistoryItemSummary = HistoryItemBase & {
-  type: 'summary';
+  type: "summary";
   summary: SummaryProps;
 };
 
@@ -181,19 +181,19 @@ export type HistoryItem = HistoryItemWithoutId & { id: number };
 
 // Message types used by internal command feedback (subset of HistoryItem types)
 export enum MessageType {
-  INFO = 'info',
-  ERROR = 'error',
-  USER = 'user',
-  ABOUT = 'about',
-  HELP = 'help',
-  STATS = 'stats',
-  MODEL_STATS = 'model_stats',
-  TOOL_STATS = 'tool_stats',
-  QUIT = 'quit',
-  QUIT_CONFIRMATION = 'quit_confirmation',
-  GEMINI = 'gemini',
-  COMPRESSION = 'compression',
-  SUMMARY = 'summary',
+  INFO = "info",
+  ERROR = "error",
+  USER = "user",
+  ABOUT = "about",
+  HELP = "help",
+  STATS = "stats",
+  MODEL_STATS = "model_stats",
+  TOOL_STATS = "tool_stats",
+  QUIT = "quit",
+  QUIT_CONFIRMATION = "quit_confirmation",
+  GEMINI = "gemini",
+  COMPRESSION = "compression",
+  SUMMARY = "summary",
 }
 
 // Simplified message structure for internal feedback
@@ -260,7 +260,7 @@ export type Message =
     };
 
 export interface ConsoleMessageItem {
-  type: 'log' | 'warn' | 'error' | 'debug' | 'info';
+  type: "log" | "warn" | "error" | "debug" | "info";
   content: string;
   count: number;
 }
@@ -270,7 +270,7 @@ export interface ConsoleMessageItem {
  * being submitted to the Gemini model.
  */
 export interface SubmitPromptResult {
-  type: 'submit_prompt';
+  type: "submit_prompt";
   content: PartListUnion;
 }
 
@@ -279,11 +279,11 @@ export interface SubmitPromptResult {
  */
 export type SlashCommandProcessorResult =
   | {
-      type: 'schedule_tool';
+      type: "schedule_tool";
       toolName: string;
       toolArgs: Record<string, unknown>;
     }
   | {
-      type: 'handled'; // Indicates the command was processed and no further action is needed.
+      type: "handled"; // Indicates the command was processed and no further action is needed.
     }
   | SubmitPromptResult;

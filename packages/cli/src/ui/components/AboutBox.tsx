@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
-import { GIT_COMMIT_INFO } from '../../generated/git-commit.js';
+import type React from "react";
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
+import { GIT_COMMIT_INFO } from "../../generated/git-commit.js";
 
 interface AboutBoxProps {
   cliVersion: string;
@@ -51,7 +51,7 @@ export const AboutBox: React.FC<AboutBoxProps> = ({
         <Text>{cliVersion}</Text>
       </Box>
     </Box>
-    {GIT_COMMIT_INFO && !['N/A'].includes(GIT_COMMIT_INFO) && (
+    {GIT_COMMIT_INFO && !["N/A"].includes(GIT_COMMIT_INFO) && (
       <Box flexDirection="row">
         <Box width="35%">
           <Text bold color={Colors.LightBlue}>
@@ -101,7 +101,7 @@ export const AboutBox: React.FC<AboutBoxProps> = ({
       </Box>
       <Box>
         <Text>
-          {selectedAuthType.startsWith('oauth') ? 'OAuth' : selectedAuthType}
+          {selectedAuthType.startsWith("oauth") ? "OAuth" : selectedAuthType}
         </Text>
       </Box>
     </Box>

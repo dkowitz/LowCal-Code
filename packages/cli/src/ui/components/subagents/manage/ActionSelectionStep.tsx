@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState } from 'react';
-import { Box } from 'ink';
-import { RadioButtonSelect } from '../../shared/RadioButtonSelect.js';
-import { MANAGEMENT_STEPS } from '../types.js';
-import { type SubagentConfig } from '@qwen-code/qwen-code-core';
+import { useState } from "react";
+import { Box } from "ink";
+import { RadioButtonSelect } from "../../shared/RadioButtonSelect.js";
+import { MANAGEMENT_STEPS } from "../types.js";
+import { type SubagentConfig } from "@qwen-code/qwen-code-core";
 
 interface ActionSelectionStepProps {
   selectedAgent: SubagentConfig | null;
@@ -22,25 +22,25 @@ export const ActionSelectionStep = ({
   onNavigateBack,
 }: ActionSelectionStepProps) => {
   const [selectedAction, setSelectedAction] = useState<
-    'view' | 'edit' | 'delete' | null
+    "view" | "edit" | "delete" | null
   >(null);
 
   // Filter actions based on whether the agent is built-in
   const allActions = [
-    { label: 'View Agent', value: 'view' as const },
-    { label: 'Edit Agent', value: 'edit' as const },
-    { label: 'Delete Agent', value: 'delete' as const },
-    { label: 'Back', value: 'back' as const },
+    { label: "View Agent", value: "view" as const },
+    { label: "Edit Agent", value: "edit" as const },
+    { label: "Delete Agent", value: "delete" as const },
+    { label: "Back", value: "back" as const },
   ];
 
   const actions = selectedAgent?.isBuiltin
     ? allActions.filter(
-        (action) => action.value === 'view' || action.value === 'back',
+        (action) => action.value === "view" || action.value === "back",
       )
     : allActions;
 
-  const handleActionSelect = (value: 'view' | 'edit' | 'delete' | 'back') => {
-    if (value === 'back') {
+  const handleActionSelect = (value: "view" | "edit" | "delete" | "back") => {
+    if (value === "back") {
       onNavigateBack();
       return;
     }
@@ -48,11 +48,11 @@ export const ActionSelectionStep = ({
     setSelectedAction(value);
 
     // Navigate to appropriate step based on action
-    if (value === 'view') {
+    if (value === "view") {
       onNavigateToStep(MANAGEMENT_STEPS.AGENT_VIEWER);
-    } else if (value === 'edit') {
+    } else if (value === "edit") {
       onNavigateToStep(MANAGEMENT_STEPS.EDIT_OPTIONS);
-    } else if (value === 'delete') {
+    } else if (value === "delete") {
       onNavigateToStep(MANAGEMENT_STEPS.DELETE_CONFIRMATION);
     }
   };

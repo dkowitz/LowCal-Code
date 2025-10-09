@@ -12,9 +12,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { Assertion } from 'vitest';
-import { expect } from 'vitest';
-import type { TextBuffer } from '../ui/components/shared/text-buffer.js';
+import type { Assertion } from "vitest";
+import { expect } from "vitest";
+import type { TextBuffer } from "../ui/components/shared/text-buffer.js";
 
 // RegExp to detect invalid characters: backspace, and ANSI escape codes
 // eslint-disable-next-line no-control-regex
@@ -28,7 +28,7 @@ function toHaveOnlyValidCharacters(this: Assertion, buffer: TextBuffer) {
 
   for (let i = 0; i < buffer.lines.length; i++) {
     const line = buffer.lines[i];
-    if (line.includes('\n')) {
+    if (line.includes("\n")) {
       pass = false;
       invalidLines.push({ line: i, content: line });
       break; // Fail fast on newlines
@@ -42,11 +42,11 @@ function toHaveOnlyValidCharacters(this: Assertion, buffer: TextBuffer) {
   return {
     pass,
     message: () =>
-      `Expected buffer ${isNot ? 'not ' : ''}to have only valid characters, but found invalid characters in lines:\n${invalidLines
+      `Expected buffer ${isNot ? "not " : ""}to have only valid characters, but found invalid characters in lines:\n${invalidLines
         .map((l) => `  [${l.line}]: "${l.content}"`) /* This line was changed */
-        .join('\n')}`,
+        .join("\n")}`,
     actual: buffer.lines,
-    expected: 'Lines with no line breaks, backspaces, or escape codes.',
+    expected: "Lines with no line breaks, backspaces, or escape codes.",
   };
 }
 
@@ -56,7 +56,7 @@ expect.extend({
 } as any);
 
 // Extend Vitest's `expect` interface with the custom matcher's type definition.
-declare module 'vitest' {
+declare module "vitest" {
   interface Assertion<T> {
     toHaveOnlyValidCharacters(): T;
   }

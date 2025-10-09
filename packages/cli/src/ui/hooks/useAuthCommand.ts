@@ -4,14 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useCallback, useEffect } from 'react';
-import type { LoadedSettings, SettingScope } from '../../config/settings.js';
-import { AuthType, type Config } from '@qwen-code/qwen-code-core';
+import { useState, useCallback, useEffect } from "react";
+import type { LoadedSettings, SettingScope } from "../../config/settings.js";
+import { AuthType, type Config } from "@qwen-code/qwen-code-core";
 import {
   clearCachedCredentialFile,
   getErrorMessage,
-} from '@qwen-code/qwen-code-core';
-import { runExitCleanup } from '../../utils/cleanup.js';
+} from "@qwen-code/qwen-code-core";
+import { runExitCleanup } from "../../utils/cleanup.js";
+import { normalizeAuthType } from "../../config/auth.js";
 
 export const useAuthCommand = (
   settings: LoadedSettings,
@@ -30,7 +31,9 @@ export const useAuthCommand = (
 
   useEffect(() => {
     const authFlow = async () => {
-      const authType = settings.merged.security?.auth?.selectedType;
+      const authType = normalizeAuthType(
+        settings.merged.security?.auth?.selectedType,
+      );
       if (isAuthDialogOpen || !authType) {
         return;
       }
@@ -55,7 +58,7 @@ export const useAuthCommand = (
       if (authType) {
         await clearCachedCredentialFile();
 
-        settings.setValue(scope, 'security.auth.selectedType', authType);
+        settings.setValue(scope, "security.auth.selectedType", authType);
         if (
           authType === AuthType.LOGIN_WITH_GOOGLE &&
           config.isBrowserLaunchSuppressed()

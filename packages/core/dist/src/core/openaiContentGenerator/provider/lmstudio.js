@@ -1,7 +1,7 @@
-import OpenAI from 'openai';
-import { Agent } from 'undici';
-import { DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT } from '../constants.js';
-import { DefaultOpenAICompatibleProvider } from './default.js';
+import OpenAI from "openai";
+import { Agent } from "undici";
+import { DEFAULT_MAX_RETRIES, DEFAULT_TIMEOUT } from "../constants.js";
+import { DefaultOpenAICompatibleProvider } from "./default.js";
 const LM_STUDIO_MIN_TIMEOUT_MS = 15 * 60 * 1000; // 15 minutes; local loads can be slow
 const lmStudioDispatcher = new Agent({
     bodyTimeout: 0, // allow arbitrarily long gaps while the model loads or processes the prompt
@@ -12,15 +12,15 @@ export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
         super(contentGeneratorConfig, cliConfig);
     }
     static isLMStudioProvider(contentGeneratorConfig) {
-        const baseURL = contentGeneratorConfig.baseUrl || '';
-        return baseURL.includes('127.0.0.1:1234') || baseURL.includes('localhost:1234');
+        const baseURL = contentGeneratorConfig.baseUrl || "";
+        return (baseURL.includes("127.0.0.1:1234") || baseURL.includes("localhost:1234"));
     }
     buildHeaders() {
         // Get base headers from parent class
         const baseHeaders = super.buildHeaders();
         // LM Studio might need specific headers or none at all
         // Remove any headers that might cause issues with LM Studio
-        const { 'User-Agent': _userAgent, ...filteredHeaders } = baseHeaders;
+        const { "User-Agent": _userAgent, ...filteredHeaders } = baseHeaders;
         return filteredHeaders;
     }
     buildClient() {
@@ -58,7 +58,7 @@ export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
             // This is not guaranteed to work and is provided as a best-effort approach
             await tempClient.chat.completions.create({
                 model: this.contentGeneratorConfig.model,
-                messages: [{ role: 'user', content: '' }],
+                messages: [{ role: "user", content: "" }],
                 max_tokens: 1,
                 temperature: 0,
             });
@@ -66,7 +66,7 @@ export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
         catch (error) {
             // We're not concerned with the result of this request
             // The purpose is to potentially trigger LM Studio's model management
-            console.debug('LM Studio model unload request sent (result not guaranteed):', error);
+            console.debug("LM Studio model unload request sent (result not guaranteed):", error);
         }
     }
 }

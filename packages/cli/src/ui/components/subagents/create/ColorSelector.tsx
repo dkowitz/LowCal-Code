@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
-import { Box, Text } from 'ink';
-import { RadioButtonSelect } from '../../shared/RadioButtonSelect.js';
-import { type ColorOption } from '../types.js';
-import { Colors } from '../../../colors.js';
-import { COLOR_OPTIONS } from '../constants.js';
+import { useState, useEffect } from "react";
+import { Box, Text } from "ink";
+import { RadioButtonSelect } from "../../shared/RadioButtonSelect.js";
+import { type ColorOption } from "../types.js";
+import { Colors } from "../../../colors.js";
+import { COLOR_OPTIONS } from "../constants.js";
 
 const colorOptions: ColorOption[] = COLOR_OPTIONS;
 
@@ -23,8 +23,8 @@ interface ColorSelectorProps {
  * Color selection with preview.
  */
 export function ColorSelector({
-  color = 'auto',
-  agentName = 'Agent',
+  color = "auto",
+  agentName = "Agent",
   onSelect,
 }: ColorSelectorProps) {
   const [selectedColor, setSelectedColor] = useState<string>(color);

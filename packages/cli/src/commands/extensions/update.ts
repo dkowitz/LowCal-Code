@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { CommandModule } from 'yargs';
-import { updateExtension } from '../../config/extension.js';
-import { getErrorMessage } from '../../utils/errors.js';
+import type { CommandModule } from "yargs";
+import { updateExtension } from "../../config/extension.js";
+import { getErrorMessage } from "../../utils/errors.js";
 
 interface UpdateArgs {
   name: string;
@@ -30,18 +30,18 @@ export async function handleUpdate(args: UpdateArgs) {
 }
 
 export const updateCommand: CommandModule = {
-  command: 'update <name>',
-  describe: 'Updates an extension.',
+  command: "update <name>",
+  describe: "Updates an extension.",
   builder: (yargs) =>
     yargs
-      .positional('name', {
-        describe: 'The name of the extension to update.',
-        type: 'string',
+      .positional("name", {
+        describe: "The name of the extension to update.",
+        type: "string",
       })
       .check((_argv) => true),
   handler: async (argv) => {
     await handleUpdate({
-      name: argv['name'] as string,
+      name: argv["name"] as string,
     });
   },
 };

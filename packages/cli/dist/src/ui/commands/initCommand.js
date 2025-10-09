@@ -3,22 +3,22 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import { getCurrentGeminiMdFilename } from '@qwen-code/qwen-code-core';
-import { CommandKind } from './types.js';
-import { Text } from 'ink';
-import React from 'react';
+import * as fs from "node:fs";
+import * as path from "node:path";
+import { getCurrentGeminiMdFilename } from "@qwen-code/qwen-code-core";
+import { CommandKind } from "./types.js";
+import { Text } from "ink";
+import React from "react";
 export const initCommand = {
-    name: 'init',
-    description: 'Analyzes the project and creates a tailored QWEN.md file.',
+    name: "init",
+    description: "Analyzes the project and creates a tailored QWEN.md file.",
     kind: CommandKind.BUILT_IN,
     action: async (context, _args) => {
         if (!context.services.config) {
             return {
-                type: 'message',
-                messageType: 'error',
-                content: 'Configuration not available.',
+                type: "message",
+                messageType: "error",
+                content: "Configuration not available.",
             };
         }
         const targetDir = context.services.config.getTargetDir();
@@ -28,17 +28,17 @@ export const initCommand = {
             if (fs.existsSync(contextFilePath)) {
                 // If file exists but is empty (or whitespace), continue to initialize
                 try {
-                    const existing = fs.readFileSync(contextFilePath, 'utf8');
+                    const existing = fs.readFileSync(contextFilePath, "utf8");
                     if (existing && existing.trim().length > 0) {
                         // File exists and has content - ask for confirmation to overwrite
                         if (!context.overwriteConfirmed) {
                             return {
-                                type: 'confirm_action',
+                                type: "confirm_action",
                                 // TODO: Move to .tsx file to use JSX syntax instead of React.createElement
                                 // For now, using React.createElement to maintain .ts compatibility for PR review
                                 prompt: React.createElement(Text, null, `A ${contextFileName} file already exists in this directory. Do you want to regenerate it?`),
                                 originalInvocation: {
-                                    raw: context.invocation?.raw || '/init',
+                                    raw: context.invocation?.raw || "/init",
                                 },
                             };
                         }
@@ -51,29 +51,29 @@ export const initCommand = {
             }
             // Ensure an empty context file exists before prompting the model to populate it
             try {
-                fs.writeFileSync(contextFilePath, '', 'utf8');
+                fs.writeFileSync(contextFilePath, "", "utf8");
                 context.ui.addItem({
-                    type: 'info',
+                    type: "info",
                     text: `Empty ${contextFileName} created. Now analyzing the project to populate it.`,
                 }, Date.now());
             }
             catch (err) {
                 return {
-                    type: 'message',
-                    messageType: 'error',
+                    type: "message",
+                    messageType: "error",
                     content: `Failed to create ${contextFileName}: ${err instanceof Error ? err.message : String(err)}`,
                 };
             }
         }
         catch (error) {
             return {
-                type: 'message',
-                messageType: 'error',
+                type: "message",
+                messageType: "error",
                 content: `Unexpected error preparing ${contextFileName}: ${error instanceof Error ? error.message : String(error)}`,
             };
         }
         return {
-            type: 'submit_prompt',
+            type: "submit_prompt",
             content: `
 You are Qwen Code, an interactive CLI agent. Analyze the current directory and generate a comprehensive ${contextFileName} file to be used as instructional context for future interactions.
 

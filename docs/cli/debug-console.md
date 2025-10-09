@@ -7,6 +7,7 @@ The debug console provides real-time visibility into the agent's execution witho
 Press **Ctrl+O** to toggle the debug console on/off.
 
 When enabled, you'll see detailed information about:
+
 - Tool execution (start, completion, duration, errors)
 - Model thinking and response streaming
 - Context management and compression
@@ -18,6 +19,7 @@ When enabled, you'll see detailed information about:
 The debug console displays several types of messages:
 
 ### Tool Execution
+
 ```
 [Tool] Starting: search_file_content (a1b2c3d4...)
 [Tool] Args: {
@@ -29,6 +31,7 @@ The debug console displays several types of messages:
 ```
 
 ### Model Activity
+
 ```
 [Agent] Starting new prompt: e5f6g7h8...
 [Agent] Turn 3 (model: gpt-4)
@@ -38,6 +41,7 @@ The debug console displays several types of messages:
 ```
 
 ### Context Management
+
 ```
 [Context Management] Standard compression failed, attempting self-healing recovery...
 [Context Recovery] Trying strategy 1/6...
@@ -46,6 +50,7 @@ The debug console displays several types of messages:
 ```
 
 ### Tool Validation
+
 ```
 [Tool Validation] ⚠️  Pattern "debug" may return thousands of results without a file filter.
    💡 Consider adding an 'include' filter (e.g., '**/*.ts', 'src/**/*.js')
@@ -58,6 +63,7 @@ The debug console displays several types of messages:
 Debug messages are only shown when debug mode is enabled. You can enable it in your settings:
 
 **Global settings** (`~/.qwen/settings.json`):
+
 ```json
 {
   "general": {
@@ -67,6 +73,7 @@ Debug messages are only shown when debug mode is enabled. You can enable it in y
 ```
 
 **Project settings** (`.qwen/settings.json`):
+
 ```json
 {
   "general": {
@@ -94,12 +101,14 @@ This will log every keystroke to the debug console, useful for debugging input h
 ### 1. Monitoring Long Agentic Runs
 
 When the agent is performing multiple tool calls in sequence, the debug console lets you see:
+
 - Which tools are being executed
 - How long each tool takes
 - Whether any tools are failing
 - What the model is thinking between tool calls
 
 **Example workflow:**
+
 1. Start a complex task (e.g., "Refactor all authentication code")
 2. Press Ctrl+O to open debug console
 3. Watch the agent's progress in real-time
@@ -108,6 +117,7 @@ When the agent is performing multiple tool calls in sequence, the debug console 
 ### 2. Debugging Context Overflow
 
 If you're hitting context limits, the debug console shows:
+
 - When compression is triggered
 - Which compression strategies are being tried
 - Whether recovery was successful
@@ -116,6 +126,7 @@ If you're hitting context limits, the debug console shows:
 ### 3. Performance Analysis
 
 Track tool execution times to identify bottlenecks:
+
 ```
 [Tool] Completed: search_file_content in 2450ms  ← Slow!
 [Tool] Completed: read_file in 15ms              ← Fast
@@ -125,6 +136,7 @@ Track tool execution times to identify bottlenecks:
 ### 4. Error Investigation
 
 When errors occur, the debug console provides detailed context:
+
 ```
 [Tool] Error: search_file_content - Pattern validation failed
 [Agent] Error occurred: Unable to compress history
@@ -168,6 +180,7 @@ When errors occur, the debug console provides detailed context:
 ### Debug console interfering with main chat
 
 The debug console is designed to be non-intrusive:
+
 - Messages only appear when Ctrl+O is active
 - They don't affect the conversation history
 - They're automatically batched to prevent UI lag
@@ -175,6 +188,7 @@ The debug console is designed to be non-intrusive:
 ## Future Enhancements
 
 Planned improvements to the debug console:
+
 - Filtering by message type (tool, agent, context, etc.)
 - Adjustable verbosity levels (minimal, normal, verbose)
 - Export debug logs to file
@@ -185,6 +199,7 @@ Planned improvements to the debug console:
 ---
 
 **See also:**
+
 - [Configuration Guide](../configuration.md)
 - [Troubleshooting](../troubleshooting.md)
 - [Keyboard Shortcuts](./keyboard-shortcuts.md)

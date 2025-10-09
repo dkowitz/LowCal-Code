@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { SubagentLevel, Config } from '@qwen-code/qwen-code-core';
+import type { SubagentLevel, Config } from "@qwen-code/qwen-code-core";
 /**
  * State management for the subagent creation wizard.
  */
@@ -13,7 +13,7 @@ export interface CreationWizardState {
     /** Storage location for the subagent */
     location: SubagentLevel;
     /** Generation method selection */
-    generationMethod: 'qwen' | 'manual';
+    generationMethod: "qwen" | "manual";
     /** User's description input for the subagent */
     userDescription: string;
     /** LLM-generated system prompt */
@@ -53,49 +53,49 @@ export interface ColorOption {
  * Actions that can be dispatched to update wizard state.
  */
 export type WizardAction = {
-    type: 'SET_STEP';
+    type: "SET_STEP";
     step: number;
 } | {
-    type: 'SET_LOCATION';
+    type: "SET_LOCATION";
     location: SubagentLevel;
 } | {
-    type: 'SET_GENERATION_METHOD';
-    method: 'qwen' | 'manual';
+    type: "SET_GENERATION_METHOD";
+    method: "qwen" | "manual";
 } | {
-    type: 'SET_USER_DESCRIPTION';
+    type: "SET_USER_DESCRIPTION";
     description: string;
 } | {
-    type: 'SET_GENERATED_NAME';
+    type: "SET_GENERATED_NAME";
     name: string;
 } | {
-    type: 'SET_GENERATED_SYSTEM_PROMPT';
+    type: "SET_GENERATED_SYSTEM_PROMPT";
     systemPrompt: string;
 } | {
-    type: 'SET_GENERATED_DESCRIPTION';
+    type: "SET_GENERATED_DESCRIPTION";
     description: string;
 } | {
-    type: 'SET_GENERATED_CONTENT';
+    type: "SET_GENERATED_CONTENT";
     name: string;
     description: string;
     systemPrompt: string;
 } | {
-    type: 'SET_TOOLS';
+    type: "SET_TOOLS";
     tools: string[];
 } | {
-    type: 'SET_BACKGROUND_COLOR';
+    type: "SET_BACKGROUND_COLOR";
     color: string;
 } | {
-    type: 'SET_GENERATING';
+    type: "SET_GENERATING";
     isGenerating: boolean;
 } | {
-    type: 'SET_VALIDATION_ERRORS';
+    type: "SET_VALIDATION_ERRORS";
     errors: string[];
 } | {
-    type: 'RESET_WIZARD';
+    type: "RESET_WIZARD";
 } | {
-    type: 'GO_TO_PREVIOUS_STEP';
+    type: "GO_TO_PREVIOUS_STEP";
 } | {
-    type: 'GO_TO_NEXT_STEP';
+    type: "GO_TO_NEXT_STEP";
 };
 /**
  * Props for wizard step components.

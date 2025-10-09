@@ -20,7 +20,7 @@ export interface ShellExecutionResult {
     /** The process ID of the spawned shell. */
     pid: number | undefined;
     /** The method used to execute the shell command. */
-    executionMethod: 'lydell-node-pty' | 'node-pty' | 'child_process' | 'none';
+    executionMethod: "lydell-node-pty" | "node-pty" | "child_process" | "none";
 }
 /** A handle for an ongoing shell execution. */
 export interface ShellExecutionHandle {
@@ -34,15 +34,15 @@ export interface ShellExecutionHandle {
  */
 export type ShellOutputEvent = {
     /** The event contains a chunk of output data. */
-    type: 'data';
+    type: "data";
     /** The decoded string chunk. */
     chunk: string;
 } | {
     /** Signals that the output stream has been identified as binary. */
-    type: 'binary_detected';
+    type: "binary_detected";
 } | {
     /** Provides progress updates for a binary stream. */
-    type: 'binary_progress';
+    type: "binary_progress";
     /** The total number of bytes received so far. */
     bytesReceived: number;
 };

@@ -4,12 +4,12 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
-import { StreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/streamableHttp.js';
-import express from 'express';
-import { type Server as HTTPServer } from 'node:http';
+import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
+import express from "express";
+import { type Server as HTTPServer } from "node:http";
 
-import { randomUUID } from 'node:crypto';
+import { randomUUID } from "node:crypto";
 
 export class TestMcpServer {
   private server: HTTPServer | undefined;
@@ -19,8 +19,8 @@ export class TestMcpServer {
     app.use(express.json());
     const mcpServer = new McpServer(
       {
-        name: 'test-mcp-server',
-        version: '1.0.0',
+        name: "test-mcp-server",
+        version: "1.0.0",
       },
       { capabilities: {} },
     );
@@ -30,20 +30,20 @@ export class TestMcpServer {
     });
     mcpServer.connect(transport);
 
-    app.post('/mcp', async (req, res) => {
+    app.post("/mcp", async (req, res) => {
       await transport.handleRequest(req, res, req.body);
     });
 
     return new Promise((resolve, reject) => {
       this.server = app.listen(0, () => {
         const address = this.server!.address();
-        if (address && typeof address !== 'string') {
+        if (address && typeof address !== "string") {
           resolve(address.port);
         } else {
-          reject(new Error('Could not determine server port.'));
+          reject(new Error("Could not determine server port."));
         }
       });
-      this.server.on('error', reject);
+      this.server.on("error", reject);
     });
   }
 

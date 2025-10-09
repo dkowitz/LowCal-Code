@@ -1,6 +1,6 @@
 import { jsx as _jsx } from "react/jsx-runtime";
-import { createContext, useCallback, useContext, useState, useMemo, useEffect, } from 'react';
-import { uiTelemetryService, sessionId } from '@qwen-code/qwen-code-core';
+import { createContext, useCallback, useContext, useState, useMemo, useEffect, } from "react";
+import { uiTelemetryService, sessionId } from "@qwen-code/qwen-code-core";
 // --- Context Definition ---
 const SessionStatsContext = createContext(undefined);
 // --- Provider Component ---
@@ -22,7 +22,7 @@ export const SessionStatsProvider = ({ children, }) => {
                 currentContextTokenCount: currentContextTokenCount ?? prevState.currentContextTokenCount ?? 0,
             }));
         };
-        uiTelemetryService.on('update', handleUpdate);
+        uiTelemetryService.on("update", handleUpdate);
         // Set initial state
         handleUpdate({
             metrics: uiTelemetryService.getMetrics(),
@@ -30,7 +30,7 @@ export const SessionStatsProvider = ({ children, }) => {
             currentContextTokenCount: 0,
         });
         return () => {
-            uiTelemetryService.off('update', handleUpdate);
+            uiTelemetryService.off("update", handleUpdate);
         };
     }, []);
     const startNewPrompt = useCallback(() => {
@@ -51,7 +51,7 @@ export const SessionStatsProvider = ({ children, }) => {
 export const useSessionStats = () => {
     const context = useContext(SessionStatsContext);
     if (context === undefined) {
-        throw new Error('useSessionStats must be used within a SessionStatsProvider');
+        throw new Error("useSessionStats must be used within a SessionStatsProvider");
     }
     return context;
 };

@@ -3,21 +3,21 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { QWEN_CODE_COMPANION_EXTENSION_NAME, getIdeInstaller, IDEConnectionStatus, ideContext, } from '@qwen-code/qwen-code-core';
-import path from 'node:path';
-import { CommandKind } from './types.js';
-import { SettingScope } from '../../config/settings.js';
+import { QWEN_CODE_COMPANION_EXTENSION_NAME, getIdeInstaller, IDEConnectionStatus, ideContext, } from "@qwen-code/qwen-code-core";
+import path from "node:path";
+import { CommandKind } from "./types.js";
+import { SettingScope } from "../../config/settings.js";
 function getIdeStatusMessage(ideClient) {
     const connection = ideClient.getConnectionStatus();
     switch (connection.status) {
         case IDEConnectionStatus.Connected:
             return {
-                messageType: 'info',
+                messageType: "info",
                 content: `🟢 Connected to ${ideClient.getDetectedIdeDisplayName()}`,
             };
         case IDEConnectionStatus.Connecting:
             return {
-                messageType: 'info',
+                messageType: "info",
                 content: `🟡 Connecting...`,
             };
         default: {
@@ -26,7 +26,7 @@ function getIdeStatusMessage(ideClient) {
                 content += `: ${connection.details}`;
             }
             return {
-                messageType: 'error',
+                messageType: "error",
                 content,
             };
         }
@@ -46,9 +46,9 @@ function formatFileList(openFiles) {
         const displayName = isDuplicate
             ? `${basename} (/${parentDir})`
             : basename;
-        return `  - ${displayName}${file.isActive ? ' (active)' : ''}`;
+        return `  - ${displayName}${file.isActive ? " (active)" : ""}`;
     })
-        .join('\n');
+        .join("\n");
     const infoMessage = `
 (Note: The file list is limited to a number of recently accessed files within your workspace and only includes local files on disk)`;
     return `\n\nOpen files:\n${fileList}\n${infoMessage}`;
@@ -64,13 +64,13 @@ async function getIdeStatusMessageWithFiles(ideClient) {
                 content += formatFileList(openFiles);
             }
             return {
-                messageType: 'info',
+                messageType: "info",
                 content,
             };
         }
         case IDEConnectionStatus.Connecting:
             return {
-                messageType: 'info',
+                messageType: "info",
                 content: `🟡 Connecting...`,
             };
         default: {
@@ -79,7 +79,7 @@ async function getIdeStatusMessageWithFiles(ideClient) {
                 content += `: ${connection.details}`;
             }
             return {
-                messageType: 'error',
+                messageType: "error",
                 content,
             };
         }
@@ -93,59 +93,59 @@ export const ideCommand = (config) => {
     const currentIDE = ideClient.getCurrentIde();
     if (!currentIDE || !ideClient.getDetectedIdeDisplayName()) {
         return {
-            name: 'ide',
-            description: 'manage IDE integration',
+            name: "ide",
+            description: "manage IDE integration",
             kind: CommandKind.BUILT_IN,
             action: () => ({
-                type: 'message',
-                messageType: 'error',
+                type: "message",
+                messageType: "error",
                 content: `IDE integration is not supported in your current environment. To use this feature, run Qwen Code in one of these supported IDEs: VS Code or VS Code forks.`,
             }),
         };
     }
     const ideSlashCommand = {
-        name: 'ide',
-        description: 'manage IDE integration',
+        name: "ide",
+        description: "manage IDE integration",
         kind: CommandKind.BUILT_IN,
         subCommands: [],
     };
     const statusCommand = {
-        name: 'status',
-        description: 'check status of IDE integration',
+        name: "status",
+        description: "check status of IDE integration",
         kind: CommandKind.BUILT_IN,
         action: async () => {
             const { messageType, content } = await getIdeStatusMessageWithFiles(ideClient);
             return {
-                type: 'message',
+                type: "message",
                 messageType,
                 content,
             };
         },
     };
     const installCommand = {
-        name: 'install',
+        name: "install",
         description: `install required IDE companion for ${ideClient.getDetectedIdeDisplayName()}`,
         kind: CommandKind.BUILT_IN,
         action: async (context) => {
             const installer = getIdeInstaller(currentIDE);
             if (!installer) {
                 context.ui.addItem({
-                    type: 'error',
+                    type: "error",
                     text: `No installer is available for ${ideClient.getDetectedIdeDisplayName()}. Please install the '${QWEN_CODE_COMPANION_EXTENSION_NAME}' extension manually from the marketplace.`,
                 }, Date.now());
                 return;
             }
             context.ui.addItem({
-                type: 'info',
+                type: "info",
                 text: `Installing IDE companion...`,
             }, Date.now());
             const result = await installer.install();
             context.ui.addItem({
-                type: result.success ? 'info' : 'error',
+                type: result.success ? "info" : "error",
                 text: result.message,
             }, Date.now());
             if (result.success) {
-                context.services.settings.setValue(SettingScope.User, 'ide.enabled', true);
+                context.services.settings.setValue(SettingScope.User, "ide.enabled", true);
                 // Poll for up to 5 seconds for the extension to activate.
                 for (let i = 0; i < 10; i++) {
                     await config.setIdeModeAndSyncConnection(true);
@@ -156,7 +156,7 @@ export const ideCommand = (config) => {
                     await new Promise((resolve) => setTimeout(resolve, 500));
                 }
                 const { messageType, content } = getIdeStatusMessage(ideClient);
-                if (messageType === 'error') {
+                if (messageType === "error") {
                     context.ui.addItem({
                         type: messageType,
                         text: `Failed to automatically enable IDE integration. To fix this, run the CLI in a new terminal window.`,
@@ -172,11 +172,11 @@ export const ideCommand = (config) => {
         },
     };
     const enableCommand = {
-        name: 'enable',
-        description: 'enable IDE integration',
+        name: "enable",
+        description: "enable IDE integration",
         kind: CommandKind.BUILT_IN,
         action: async (context) => {
-            context.services.settings.setValue(SettingScope.User, 'ide.enabled', true);
+            context.services.settings.setValue(SettingScope.User, "ide.enabled", true);
             await config.setIdeModeAndSyncConnection(true);
             const { messageType, content } = getIdeStatusMessage(ideClient);
             context.ui.addItem({
@@ -186,11 +186,11 @@ export const ideCommand = (config) => {
         },
     };
     const disableCommand = {
-        name: 'disable',
-        description: 'disable IDE integration',
+        name: "disable",
+        description: "disable IDE integration",
         kind: CommandKind.BUILT_IN,
         action: async (context) => {
-            context.services.settings.setValue(SettingScope.User, 'ide.enabled', false);
+            context.services.settings.setValue(SettingScope.User, "ide.enabled", false);
             await config.setIdeModeAndSyncConnection(false);
             const { messageType, content } = getIdeStatusMessage(ideClient);
             context.ui.addItem({

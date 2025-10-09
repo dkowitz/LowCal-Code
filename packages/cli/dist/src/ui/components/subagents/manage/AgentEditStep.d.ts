@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { type SubagentConfig } from '@qwen-code/qwen-code-core';
+import { type SubagentConfig } from "@qwen-code/qwen-code-core";
 interface EditOptionsStepProps {
     selectedAgent: SubagentConfig | null;
     onNavigateToStep: (step: string) => void;

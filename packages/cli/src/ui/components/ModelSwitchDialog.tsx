@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type React from 'react';
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
+import type React from "react";
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
 import {
   RadioButtonSelect,
   type RadioSelectItem,
-} from './shared/RadioButtonSelect.js';
-import { useKeypress } from '../hooks/useKeypress.js';
+} from "./shared/RadioButtonSelect.js";
+import { useKeypress } from "../hooks/useKeypress.js";
 
 export enum VisionSwitchOutcome {
-  SwitchOnce = 'once',
-  SwitchSessionToVL = 'session',
-  ContinueWithCurrentModel = 'persist',
+  SwitchOnce = "once",
+  SwitchSessionToVL = "session",
+  ContinueWithCurrentModel = "persist",
 }
 
 export interface ModelSwitchDialogProps {
@@ -28,7 +28,7 @@ export const ModelSwitchDialog: React.FC<ModelSwitchDialogProps> = ({
 }) => {
   useKeypress(
     (key) => {
-      if (key.name === 'escape') {
+      if (key.name === "escape") {
         onSelect(VisionSwitchOutcome.ContinueWithCurrentModel);
       }
     },
@@ -37,15 +37,15 @@ export const ModelSwitchDialog: React.FC<ModelSwitchDialogProps> = ({
 
   const options: Array<RadioSelectItem<VisionSwitchOutcome>> = [
     {
-      label: 'Switch for this request only',
+      label: "Switch for this request only",
       value: VisionSwitchOutcome.SwitchOnce,
     },
     {
-      label: 'Switch session to vision model',
+      label: "Switch session to vision model",
       value: VisionSwitchOutcome.SwitchSessionToVL,
     },
     {
-      label: 'Continue with current model',
+      label: "Continue with current model",
       value: VisionSwitchOutcome.ContinueWithCurrentModel,
     },
   ];

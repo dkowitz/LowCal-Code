@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-export type Direction = 'left' | 'right' | 'up' | 'down' | 'wordLeft' | 'wordRight' | 'home' | 'end';
+export type Direction = "left" | "right" | "up" | "down" | "wordLeft" | "wordRight" | "home" | "end";
 export declare const isWordCharStrict: (char: string) => boolean;
 export declare const isWhitespace: (char: string) => boolean;
 export declare const isCombiningMark: (char: string) => boolean;
@@ -70,35 +70,35 @@ export interface TextBufferState {
 }
 export declare const pushUndo: (currentState: TextBufferState) => TextBufferState;
 export type TextBufferAction = {
-    type: 'set_text';
+    type: "set_text";
     payload: string;
     pushToUndo?: boolean;
 } | {
-    type: 'insert';
+    type: "insert";
     payload: string;
 } | {
-    type: 'backspace';
+    type: "backspace";
 } | {
-    type: 'move';
+    type: "move";
     payload: {
         dir: Direction;
     };
 } | {
-    type: 'delete';
+    type: "delete";
 } | {
-    type: 'delete_word_left';
+    type: "delete_word_left";
 } | {
-    type: 'delete_word_right';
+    type: "delete_word_right";
 } | {
-    type: 'kill_line_right';
+    type: "kill_line_right";
 } | {
-    type: 'kill_line_left';
+    type: "kill_line_left";
 } | {
-    type: 'undo';
+    type: "undo";
 } | {
-    type: 'redo';
+    type: "redo";
 } | {
-    type: 'replace_range';
+    type: "replace_range";
     payload: {
         startRow: number;
         startCol: number;
@@ -107,134 +107,134 @@ export type TextBufferAction = {
         text: string;
     };
 } | {
-    type: 'move_to_offset';
+    type: "move_to_offset";
     payload: {
         offset: number;
     };
 } | {
-    type: 'create_undo_snapshot';
+    type: "create_undo_snapshot";
 } | {
-    type: 'set_viewport_width';
+    type: "set_viewport_width";
     payload: number;
 } | {
-    type: 'vim_delete_word_forward';
+    type: "vim_delete_word_forward";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_delete_word_backward';
+    type: "vim_delete_word_backward";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_delete_word_end';
+    type: "vim_delete_word_end";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_change_word_forward';
+    type: "vim_change_word_forward";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_change_word_backward';
+    type: "vim_change_word_backward";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_change_word_end';
+    type: "vim_change_word_end";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_delete_line';
+    type: "vim_delete_line";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_change_line';
+    type: "vim_change_line";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_delete_to_end_of_line';
+    type: "vim_delete_to_end_of_line";
 } | {
-    type: 'vim_change_to_end_of_line';
+    type: "vim_change_to_end_of_line";
 } | {
-    type: 'vim_change_movement';
+    type: "vim_change_movement";
     payload: {
-        movement: 'h' | 'j' | 'k' | 'l';
+        movement: "h" | "j" | "k" | "l";
         count: number;
     };
 } | {
-    type: 'vim_move_left';
-    payload: {
-        count: number;
-    };
-} | {
-    type: 'vim_move_right';
+    type: "vim_move_left";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_move_up';
+    type: "vim_move_right";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_move_down';
+    type: "vim_move_up";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_move_word_forward';
+    type: "vim_move_down";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_move_word_backward';
+    type: "vim_move_word_forward";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_move_word_end';
+    type: "vim_move_word_backward";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_delete_char';
+    type: "vim_move_word_end";
     payload: {
         count: number;
     };
 } | {
-    type: 'vim_insert_at_cursor';
+    type: "vim_delete_char";
+    payload: {
+        count: number;
+    };
 } | {
-    type: 'vim_append_at_cursor';
+    type: "vim_insert_at_cursor";
 } | {
-    type: 'vim_open_line_below';
+    type: "vim_append_at_cursor";
 } | {
-    type: 'vim_open_line_above';
+    type: "vim_open_line_below";
 } | {
-    type: 'vim_append_at_line_end';
+    type: "vim_open_line_above";
 } | {
-    type: 'vim_insert_at_line_start';
+    type: "vim_append_at_line_end";
 } | {
-    type: 'vim_move_to_line_start';
+    type: "vim_insert_at_line_start";
 } | {
-    type: 'vim_move_to_line_end';
+    type: "vim_move_to_line_start";
 } | {
-    type: 'vim_move_to_first_nonwhitespace';
+    type: "vim_move_to_line_end";
 } | {
-    type: 'vim_move_to_first_line';
+    type: "vim_move_to_first_nonwhitespace";
 } | {
-    type: 'vim_move_to_last_line';
+    type: "vim_move_to_first_line";
 } | {
-    type: 'vim_move_to_line';
+    type: "vim_move_to_last_line";
+} | {
+    type: "vim_move_to_line";
     payload: {
         lineNumber: number;
     };
 } | {
-    type: 'vim_escape_insert_mode';
+    type: "vim_escape_insert_mode";
 };
 export declare function textBufferReducer(state: TextBufferState, action: TextBufferAction): TextBufferState;
 export declare function useTextBuffer({ initialText, initialCursorOffset, viewport, stdin, setRawMode, onChange, isValidPath, shellModeActive, }: UseTextBufferProps): TextBuffer;
@@ -378,7 +378,7 @@ export interface TextBuffer {
     /**
      * Change movement operations (vim 'ch', 'cj', 'ck', 'cl' commands)
      */
-    vimChangeMovement: (movement: 'h' | 'j' | 'k' | 'l', count: number) => void;
+    vimChangeMovement: (movement: "h" | "j" | "k" | "l", count: number) => void;
     /**
      * Move cursor left N times (vim 'h' command)
      */

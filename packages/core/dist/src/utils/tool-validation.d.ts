@@ -7,7 +7,7 @@
  * Proactive validation and warnings for tool calls that may produce large results
  */
 export interface ToolCallWarning {
-    severity: 'info' | 'warning' | 'error';
+    severity: "info" | "warning" | "error";
     message: string;
     suggestion?: string;
 }

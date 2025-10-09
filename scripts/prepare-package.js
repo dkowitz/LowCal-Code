@@ -4,18 +4,18 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 
 // ES module equivalent of __dirname
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const rootDir = path.resolve(__dirname, '..');
+const rootDir = path.resolve(__dirname, "..");
 
 function copyFiles(packageName, filesToCopy) {
-  const packageDir = path.resolve(rootDir, 'packages', packageName);
+  const packageDir = path.resolve(rootDir, "packages", packageName);
   if (!fs.existsSync(packageDir)) {
     console.error(`Error: Package directory not found at ${packageDir}`);
     process.exit(1);
@@ -36,16 +36,16 @@ function copyFiles(packageName, filesToCopy) {
 }
 
 // Prepare 'core' package
-copyFiles('core', {
-  'README.md': 'README.md',
-  LICENSE: 'LICENSE',
-  '.npmrc': '.npmrc',
+copyFiles("core", {
+  "README.md": "README.md",
+  LICENSE: "LICENSE",
+  ".npmrc": ".npmrc",
 });
 
 // Prepare 'cli' package
-copyFiles('cli', {
-  'README.md': 'README.md',
-  LICENSE: 'LICENSE',
+copyFiles("cli", {
+  "README.md": "README.md",
+  LICENSE: "LICENSE",
 });
 
-console.log('Successfully prepared all packages.');
+console.log("Successfully prepared all packages.");

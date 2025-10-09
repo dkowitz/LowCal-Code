@@ -3,27 +3,27 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { AyuDark } from './ayu.js';
-import { AyuLight } from './ayu-light.js';
-import { AtomOneDark } from './atom-one-dark.js';
-import { Dracula } from './dracula.js';
-import { GitHubDark } from './github-dark.js';
-import { GitHubLight } from './github-light.js';
-import { GoogleCode } from './googlecode.js';
-import { DefaultLight } from './default-light.js';
-import { DefaultDark } from './default.js';
-import { ShadesOfPurple } from './shades-of-purple.js';
-import { XCode } from './xcode.js';
-import { QwenLight } from './qwen-light.js';
-import { QwenDark } from './qwen-dark.js';
-import * as fs from 'node:fs';
-import * as path from 'node:path';
-import * as os from 'node:os';
-import { createCustomTheme, validateCustomTheme } from './theme.js';
-import { ANSI } from './ansi.js';
-import { ANSILight } from './ansi-light.js';
-import { NoColorTheme } from './no-color.js';
-import process from 'node:process';
+import { AyuDark } from "./ayu.js";
+import { AyuLight } from "./ayu-light.js";
+import { AtomOneDark } from "./atom-one-dark.js";
+import { Dracula } from "./dracula.js";
+import { GitHubDark } from "./github-dark.js";
+import { GitHubLight } from "./github-light.js";
+import { GoogleCode } from "./googlecode.js";
+import { DefaultLight } from "./default-light.js";
+import { DefaultDark } from "./default.js";
+import { ShadesOfPurple } from "./shades-of-purple.js";
+import { XCode } from "./xcode.js";
+import { QwenLight } from "./qwen-light.js";
+import { QwenDark } from "./qwen-dark.js";
+import * as fs from "node:fs";
+import * as path from "node:path";
+import * as os from "node:os";
+import { createCustomTheme, validateCustomTheme } from "./theme.js";
+import { ANSI } from "./ansi.js";
+import { ANSILight } from "./ansi-light.js";
+import { NoColorTheme } from "./no-color.js";
+import process from "node:process";
 export const DEFAULT_THEME = QwenDark;
 class ThemeManager {
     availableThemes;
@@ -68,7 +68,7 @@ class ThemeManager {
                     ...DEFAULT_THEME.colors,
                     ...customThemeConfig,
                     name: customThemeConfig.name || name,
-                    type: 'custom',
+                    type: "custom",
                 };
                 try {
                     const theme = createCustomTheme(themeWithDefaults);
@@ -84,7 +84,7 @@ class ThemeManager {
         }
         // If the current active theme is a custom theme, keep it if still valid
         if (this.activeTheme &&
-            this.activeTheme.type === 'custom' &&
+            this.activeTheme.type === "custom" &&
             this.customThemes.has(this.activeTheme.name)) {
             this.activeTheme = this.customThemes.get(this.activeTheme.name);
         }
@@ -107,7 +107,7 @@ class ThemeManager {
      * @returns The active theme.
      */
     getActiveTheme() {
-        if (process.env['NO_COLOR']) {
+        if (process.env["NO_COLOR"]) {
             return NoColorTheme;
         }
         if (this.activeTheme) {
@@ -164,13 +164,13 @@ class ThemeManager {
         const sortedOtherThemes = [...otherBuiltInThemes, ...customThemes].sort((a, b) => {
             const typeOrder = (type) => {
                 switch (type) {
-                    case 'dark':
+                    case "dark":
                         return 1;
-                    case 'light':
+                    case "light":
                         return 2;
-                    case 'ansi':
+                    case "ansi":
                         return 3;
-                    case 'custom':
+                    case "custom":
                         return 4; // Custom themes at the end
                     default:
                         return 5;
@@ -194,8 +194,8 @@ class ThemeManager {
         return this.findThemeByName(themeName);
     }
     isPath(themeName) {
-        return (themeName.endsWith('.json') ||
-            themeName.startsWith('.') ||
+        return (themeName.endsWith(".json") ||
+            themeName.startsWith(".") ||
             path.isAbsolute(themeName));
     }
     loadThemeFromFile(themePath) {
@@ -214,7 +214,7 @@ class ThemeManager {
                 return undefined;
             }
             // 3. Read, parse, and validate the theme file.
-            const themeContent = fs.readFileSync(canonicalPath, 'utf-8');
+            const themeContent = fs.readFileSync(canonicalPath, "utf-8");
             const customThemeConfig = JSON.parse(themeContent);
             const validation = validateCustomTheme(customThemeConfig);
             if (!validation.isValid) {
@@ -229,7 +229,7 @@ class ThemeManager {
                 ...DEFAULT_THEME.colors,
                 ...customThemeConfig,
                 name: customThemeConfig.name || canonicalPath,
-                type: 'custom',
+                type: "custom",
             };
             const theme = createCustomTheme(themeWithDefaults);
             this.customThemes.set(canonicalPath, theme); // Cache by canonical path
@@ -238,7 +238,7 @@ class ThemeManager {
         catch (error) {
             // Any error in the process (file not found, bad JSON, etc.) is caught here.
             // We can return undefined silently for file-not-found, and warn for others.
-            if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) {
+            if (!(error instanceof Error && "code" in error && error.code === "ENOENT")) {
                 console.warn(`Could not load theme from file "${themePath}":`, error);
             }
             return undefined;

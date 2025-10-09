@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { EventEmitter } from 'events';
+import { EventEmitter } from "events";
 export var SubAgentEventType;
 (function (SubAgentEventType) {
     SubAgentEventType["START"] = "start";

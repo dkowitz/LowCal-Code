@@ -1,9 +1,11 @@
 # Project Summary
 
 ## Overall Goal
+
 Finish and stabilize the interactive ModelMapping UX so LM Studio configured models can be manually mapped to provider REST model ids, with reliable keyboard focus handling and correct persistence behavior.
 
 ## Key Knowledge
+
 - Repo / stack
   - LowCal-dev: TypeScript monorepo with npm workspaces (Node ≥ 20). Primary UI lives in packages/cli.
   - Build / run commands relevant here:
@@ -35,6 +37,7 @@ Finish and stabilize the interactive ModelMapping UX so LM Studio configured mod
   - Distinguish provider contexts: LM Studio vs OpenRouter/OpenAI; mapping UX must only show for LM Studio-configured workflows.
 
 ## Recent Actions
+
 - Implemented ModelMappingDialog with:
   - RadioButtonSelect per unmatched model, Tab/Shift+Tab navigation, Enter to save, Esc to cancel.
   - useKeypress hook for Enter/Esc/Tab handling.
@@ -57,14 +60,15 @@ Finish and stabilize the interactive ModelMapping UX so LM Studio configured mod
 - Manual override performed:
   - User asked to directly correct mappings file. I edited / created ~/.qwen/lmstudio-model-mappings.json with:
     {
-      "gpt-oss-120b-MXFP4-00001-of-00002": "gpt-oss-120b",
-      "GLM-4.5-Air-Q4_K_S-00001-of-00002": "unsloth/glm-4.5-air"
+    "gpt-oss-120b-MXFP4-00001-of-00002": "gpt-oss-120b",
+    "GLM-4.5-Air-Q4_K_S-00001-of-00002": "unsloth/glm-4.5-air"
     }
   - Verified load/save via node ESM import of the storage module.
 - New issue surfaced:
   - Mapping dialog is being shown during OpenRouter provider usage (it should be LM Studio–only). Investigated and noted the mapping open logic in App.tsx is triggered during the OpenAI/OpenRouter branch because getLMStudioConfiguredModels() and REST enrichment are mixed into the same flow; this needs provider-specific gating.
 
 ## Current Plan (roadmap / next steps)
+
 1. [DONE] Add configuredName to filesystem-configured AvailableModel entries and use configuredName as mapping key.
 2. [DONE] Implement ModelMappingDialog with keyboard navigation and selection handling (Tab/Shift-Tab/Enter/Esc).
 3. [DONE] Persist mappings to ~/.qwen/lmstudio-model-mappings.json (auto-persist per-selection + final persist).
@@ -79,6 +83,7 @@ Finish and stabilize the interactive ModelMapping UX so LM Studio configured mod
 9. [TODO] Manual verification: run interactive end-to-end flow for both LM Studio and OpenRouter cases to validate correct behavior.
 
 ## Reproduction & verification steps
+
 - Verify mapping persistence after user mapping:
   1. Build CLI: npm run -w packages/cli build
   2. Run CLI: npm run start
@@ -90,17 +95,20 @@ Finish and stabilize the interactive ModelMapping UX so LM Studio configured mod
   2. Run /model — CLI should use fetchOpenAICompatibleModels (OpenRouter/OpenAI endpoint) and present the provider model list without opening the LM Studio mapping dialog.
 
 ## Decisions & rationale
+
 - Persist mappings to the user's home (~/.qwen) instead of in ephemeral storage to make mappings survive sessions and reboots (expected user value).
 - Use configuredName (derived from LM Studio JSON filenames) as the stable key for mappings — filenames are stable and independent of display labels that may change.
 - Auto-persist on selection to protect user action from accidental UI interruptions.
 - Keep mapping UX keyboard-first (Ink) to match CLI expectations and prevent InputPrompt from stealing key events when dialog is active.
 
 ## Outstanding risks / notes for next session
+
 - The current mapping trigger flow can incorrectly present the mapper when provider != LM Studio (OpenRouter/OpenAI flows). This must be fixed by guarding the mapping dialog to LM Studio-specific discovery flows.
 - The mapping persistence code writes to the user's real home file. When adding tests, redirect to a temporary mappings path to avoid polluting the real user config.
 - Confirm there are no lingering places in the model discovery flow where REST models and configured models are merged in a way that causes the mapper to appear outside LM Studio contexts.
 
 ## Quick pointers (where to edit)
+
 - App.tsx — mapping trigger, gating on provider, applyModelMappings behavior, dedupe logic.
 - availableModels.ts — filesystem-configured model parsing (configuredName, configuredContextLength).
 - ModelMappingDialog.tsx — selection key usage; currently uses configuredName where available.
@@ -108,6 +116,7 @@ Finish and stabilize the interactive ModelMapping UX so LM Studio configured mod
 - RadioButtonSelect.tsx — item key usage (use index or stable id) and maxItemsToShow behavior.
 
 If you want, I can:
+
 - Implement the LM Studio vs OpenRouter gating now (small focused change in App.tsx),
 - Run the CLI interactively and verify both LM Studio and OpenRouter flows end-to-end,
 - Add an integration test that verifies mapping persistence using a temp mapping path. Which would you prefer next?
@@ -115,4 +124,5 @@ If you want, I can:
 ---
 
 ## Summary Metadata
-**Update time**: 2025-10-06T23:46:43.784Z 
+
+**Update time**: 2025-10-06T23:46:43.784Z

@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 import {
   type Extension,
   getWorkspaceExtensions,
-} from '../../config/extension.js';
-import { type LoadedSettings, SettingScope } from '../../config/settings.js';
-import process from 'node:process';
+} from "../../config/extension.js";
+import { type LoadedSettings, SettingScope } from "../../config/settings.js";
+import process from "node:process";
 
 export function useWorkspaceMigration(settings: LoadedSettings) {
   const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] =
@@ -53,7 +53,7 @@ export function useWorkspaceMigration(settings: LoadedSettings) {
 
     extensionSettings.workspacesWithMigrationNudge =
       workspacesWithMigrationNudge;
-    settings.setValue(SettingScope.User, 'extensions', extensionSettings);
+    settings.setValue(SettingScope.User, "extensions", extensionSettings);
   };
 
   const onWorkspaceMigrationDialogClose = () => {

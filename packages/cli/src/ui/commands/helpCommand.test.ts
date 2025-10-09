@@ -4,14 +4,14 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { helpCommand } from './helpCommand.js';
-import { type CommandContext } from './types.js';
-import { createMockCommandContext } from '../../test-utils/mockCommandContext.js';
-import { MessageType } from '../types.js';
-import { CommandKind } from './types.js';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { helpCommand } from "./helpCommand.js";
+import { type CommandContext } from "./types.js";
+import { createMockCommandContext } from "../../test-utils/mockCommandContext.js";
+import { MessageType } from "../types.js";
+import { CommandKind } from "./types.js";
 
-describe('helpCommand', () => {
+describe("helpCommand", () => {
   let mockContext: CommandContext;
   const originalEnv = { ...process.env };
 
@@ -28,12 +28,12 @@ describe('helpCommand', () => {
     vi.clearAllMocks();
   });
 
-  it('should add a help message to the UI history', async () => {
+  it("should add a help message to the UI history", async () => {
     if (!helpCommand.action) {
-      throw new Error('Help command has no action');
+      throw new Error("Help command has no action");
     }
 
-    await helpCommand.action(mockContext, '');
+    await helpCommand.action(mockContext, "");
 
     expect(mockContext.ui.addItem).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -44,9 +44,9 @@ describe('helpCommand', () => {
     );
   });
 
-  it('should have the correct command properties', () => {
-    expect(helpCommand.name).toBe('help');
+  it("should have the correct command properties", () => {
+    expect(helpCommand.name).toBe("help");
     expect(helpCommand.kind).toBe(CommandKind.BUILT_IN);
-    expect(helpCommand.description).toBe('for help on Qwen Code');
+    expect(helpCommand.description).toBe("for help on Qwen Code");
   });
 });

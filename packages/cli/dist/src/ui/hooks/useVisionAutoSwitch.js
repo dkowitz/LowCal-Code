@@ -3,30 +3,30 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import {} from '@google/genai';
-import { AuthType, ApprovalMode } from '@qwen-code/qwen-code-core';
-import { useCallback, useRef } from 'react';
-import { VisionSwitchOutcome } from '../components/ModelSwitchDialog.js';
-import { getDefaultVisionModel, isVisionModel, } from '../models/availableModels.js';
-import { MessageType } from '../types.js';
-import { isSupportedImageMimeType, getUnsupportedImageFormatWarning, } from '@qwen-code/qwen-code-core';
+import {} from "@google/genai";
+import { AuthType, ApprovalMode } from "@qwen-code/qwen-code-core";
+import { useCallback, useRef } from "react";
+import { VisionSwitchOutcome } from "../components/ModelSwitchDialog.js";
+import { getDefaultVisionModel, isVisionModel, } from "../models/availableModels.js";
+import { MessageType } from "../types.js";
+import { isSupportedImageMimeType, getUnsupportedImageFormatWarning, } from "@qwen-code/qwen-code-core";
 /**
  * Checks if a PartListUnion contains image parts
  */
 function hasImageParts(parts) {
-    if (typeof parts === 'string') {
+    if (typeof parts === "string") {
         return false;
     }
     if (Array.isArray(parts)) {
         return parts.some((part) => {
             // Skip string parts
-            if (typeof part === 'string')
+            if (typeof part === "string")
                 return false;
             return isImagePart(part);
         });
     }
     // If it's a single Part (not a string), check if it's an image
-    if (typeof parts === 'object') {
+    if (typeof parts === "object") {
         return isImagePart(parts);
     }
     return false;
@@ -36,11 +36,11 @@ function hasImageParts(parts) {
  */
 function isImagePart(part) {
     // Check for inlineData with image mime type
-    if ('inlineData' in part && part.inlineData?.mimeType?.startsWith('image/')) {
+    if ("inlineData" in part && part.inlineData?.mimeType?.startsWith("image/")) {
         return true;
     }
     // Check for fileData with image mime type
-    if ('fileData' in part && part.fileData?.mimeType?.startsWith('image/')) {
+    if ("fileData" in part && part.fileData?.mimeType?.startsWith("image/")) {
         return true;
     }
     return false;
@@ -51,7 +51,7 @@ function isImagePart(part) {
 function checkImageFormatsSupport(parts) {
     const unsupportedMimeTypes = [];
     let hasImages = false;
-    if (typeof parts === 'string') {
+    if (typeof parts === "string") {
         return {
             hasImages: false,
             hasUnsupportedFormats: false,
@@ -60,17 +60,17 @@ function checkImageFormatsSupport(parts) {
     }
     const partsArray = Array.isArray(parts) ? parts : [parts];
     for (const part of partsArray) {
-        if (typeof part === 'string')
+        if (typeof part === "string")
             continue;
         let mimeType;
         // Check inlineData
-        if ('inlineData' in part &&
-            part.inlineData?.mimeType?.startsWith('image/')) {
+        if ("inlineData" in part &&
+            part.inlineData?.mimeType?.startsWith("image/")) {
             hasImages = true;
             mimeType = part.inlineData.mimeType;
         }
         // Check fileData
-        if ('fileData' in part && part.fileData?.mimeType?.startsWith('image/')) {
+        if ("fileData" in part && part.fileData?.mimeType?.startsWith("image/")) {
             hasImages = true;
             mimeType = part.fileData.mimeType;
         }
@@ -164,8 +164,8 @@ export function useVisionAutoSwitch(config, addItem, visionModelPreviewEnabled =
             originalModelRef.current = config.getModel();
             config.setModelContextLimit(vlModelId, undefined);
             await config.setModel(vlModelId, {
-                reason: 'vision_auto_switch',
-                context: 'YOLO mode auto-switch for image content',
+                reason: "vision_auto_switch",
+                context: "YOLO mode auto-switch for image content",
             });
             return {
                 shouldProceed: true,
@@ -178,13 +178,13 @@ export function useVisionAutoSwitch(config, addItem, visionModelPreviewEnabled =
             // Convert string value to VisionSwitchOutcome enum
             let outcome;
             switch (defaultVlmSwitchMode) {
-                case 'once':
+                case "once":
                     outcome = VisionSwitchOutcome.SwitchOnce;
                     break;
-                case 'session':
+                case "session":
                     outcome = VisionSwitchOutcome.SwitchSessionToVL;
                     break;
-                case 'persist':
+                case "persist":
                     outcome = VisionSwitchOutcome.ContinueWithCurrentModel;
                     break;
                 default:
@@ -198,7 +198,7 @@ export function useVisionAutoSwitch(config, addItem, visionModelPreviewEnabled =
                 originalModelRef.current = config.getModel();
                 config.setModelContextLimit(visionSwitchResult.modelOverride, undefined);
                 await config.setModel(visionSwitchResult.modelOverride, {
-                    reason: 'vision_auto_switch',
+                    reason: "vision_auto_switch",
                     context: `Default VLM switch mode: ${defaultVlmSwitchMode} (one-time override)`,
                 });
                 return {
@@ -210,7 +210,7 @@ export function useVisionAutoSwitch(config, addItem, visionModelPreviewEnabled =
                 // Persistent session model change
                 config.setModelContextLimit(visionSwitchResult.persistSessionModel, undefined);
                 await config.setModel(visionSwitchResult.persistSessionModel, {
-                    reason: 'vision_auto_switch',
+                    reason: "vision_auto_switch",
                     context: `Default VLM switch mode: ${defaultVlmSwitchMode} (session persistent)`,
                 });
                 return { shouldProceed: true };
@@ -225,8 +225,8 @@ export function useVisionAutoSwitch(config, addItem, visionModelPreviewEnabled =
                 originalModelRef.current = config.getModel();
                 config.setModelContextLimit(visionSwitchResult.modelOverride, undefined);
                 await config.setModel(visionSwitchResult.modelOverride, {
-                    reason: 'vision_auto_switch',
-                    context: 'User-prompted vision switch (one-time override)',
+                    reason: "vision_auto_switch",
+                    context: "User-prompted vision switch (one-time override)",
                 });
                 return {
                     shouldProceed: true,
@@ -237,8 +237,8 @@ export function useVisionAutoSwitch(config, addItem, visionModelPreviewEnabled =
                 // Persistent session model change
                 config.setModelContextLimit(visionSwitchResult.persistSessionModel, undefined);
                 await config.setModel(visionSwitchResult.persistSessionModel, {
-                    reason: 'vision_auto_switch',
-                    context: 'User-prompted vision switch (session persistent)',
+                    reason: "vision_auto_switch",
+                    context: "User-prompted vision switch (session persistent)",
                 });
                 return { shouldProceed: true };
             }
@@ -253,8 +253,8 @@ export function useVisionAutoSwitch(config, addItem, visionModelPreviewEnabled =
     const restoreOriginalModel = useCallback(async () => {
         if (originalModelRef.current) {
             await config.setModel(originalModelRef.current, {
-                reason: 'vision_auto_switch',
-                context: 'Restoring original model after vision switch',
+                reason: "vision_auto_switch",
+                context: "Restoring original model after vision switch",
             });
             originalModelRef.current = null;
         }

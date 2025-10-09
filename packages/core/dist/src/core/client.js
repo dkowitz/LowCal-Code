@@ -3,34 +3,34 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { createUserContent, FinishReason, } from '@google/genai';
-import { ProxyAgent, setGlobalDispatcher } from 'undici';
-import { ApprovalMode } from '../config/config.js';
-import { DEFAULT_GEMINI_FLASH_MODEL } from '../config/models.js';
-import { ideContext } from '../ide/ideContext.js';
-import { LoopDetectionService } from '../services/loopDetectionService.js';
-import { logChatCompression, logContentRetry, logContentRetryFailure, logNextSpeakerCheck, } from '../telemetry/loggers.js';
-import { makeChatCompressionEvent, NextSpeakerCheckEvent, ContentRetryEvent, ContentRetryFailureEvent, } from '../telemetry/types.js';
-import { TaskTool } from '../tools/task.js';
-import { getDirectoryContextString, getEnvironmentContext, } from '../utils/environmentContext.js';
-import { reportError } from '../utils/errorReporting.js';
-import { getErrorMessage } from '../utils/errors.js';
-import { getFunctionCalls } from '../utils/generateContentResponseUtilities.js';
-import { isFunctionResponse } from '../utils/messageInspectors.js';
-import { checkNextSpeaker } from '../utils/nextSpeakerChecker.js';
-import { retryWithBackoff } from '../utils/retry.js';
-import { flatMapTextParts } from '../utils/partUtils.js';
-import { applyAdaptiveCompression, COMPRESSION_STRATEGIES, estimateCompressionRatio, } from '../utils/context-recovery.js';
-import { AuthType, createContentGenerator } from './contentGenerator.js';
-import { GeminiChat } from './geminiChat.js';
-import { OpenAIContentGenerator } from './openaiContentGenerator/openaiContentGenerator.js';
-import { LMStudioOpenAICompatibleProvider } from './openaiContentGenerator/provider/lmstudio.js';
-import { getCompressionPrompt, getCoreSystemPrompt, getCustomSystemPrompt, getPlanModeSystemReminder, getSubagentSystemReminder, } from './prompts.js';
-import { CompressionStatus, GeminiEventType, Turn } from './turn.js';
-import { TokenBudgetExceededError, TokenBudgetManager, } from './tokenBudgetManager.js';
-import { getProviderTelemetryTag } from '../utils/providerTelemetry.js';
+import { createUserContent, FinishReason, } from "@google/genai";
+import { ProxyAgent, setGlobalDispatcher } from "undici";
+import { ApprovalMode } from "../config/config.js";
+import { DEFAULT_GEMINI_FLASH_MODEL } from "../config/models.js";
+import { ideContext } from "../ide/ideContext.js";
+import { LoopDetectionService } from "../services/loopDetectionService.js";
+import { logChatCompression, logContentRetry, logContentRetryFailure, logNextSpeakerCheck, } from "../telemetry/loggers.js";
+import { makeChatCompressionEvent, NextSpeakerCheckEvent, ContentRetryEvent, ContentRetryFailureEvent, } from "../telemetry/types.js";
+import { TaskTool } from "../tools/task.js";
+import { getDirectoryContextString, getEnvironmentContext, } from "../utils/environmentContext.js";
+import { reportError } from "../utils/errorReporting.js";
+import { getErrorMessage } from "../utils/errors.js";
+import { getFunctionCalls } from "../utils/generateContentResponseUtilities.js";
+import { isFunctionResponse } from "../utils/messageInspectors.js";
+import { checkNextSpeaker } from "../utils/nextSpeakerChecker.js";
+import { retryWithBackoff } from "../utils/retry.js";
+import { flatMapTextParts } from "../utils/partUtils.js";
+import { applyAdaptiveCompression, COMPRESSION_STRATEGIES, estimateCompressionRatio, } from "../utils/context-recovery.js";
+import { AuthType, createContentGenerator } from "./contentGenerator.js";
+import { GeminiChat } from "./geminiChat.js";
+import { OpenAIContentGenerator } from "./openaiContentGenerator/openaiContentGenerator.js";
+import { LMStudioOpenAICompatibleProvider } from "./openaiContentGenerator/provider/lmstudio.js";
+import { getCompressionPrompt, getCoreSystemPrompt, getCustomSystemPrompt, getPlanModeSystemReminder, getSubagentSystemReminder, } from "./prompts.js";
+import { CompressionStatus, GeminiEventType, Turn } from "./turn.js";
+import { TokenBudgetExceededError, TokenBudgetManager, } from "./tokenBudgetManager.js";
+import { getProviderTelemetryTag } from "../utils/providerTelemetry.js";
 function isThinkingSupported(model) {
-    if (model.startsWith('gemini-2.5'))
+    if (model.startsWith("gemini-2.5"))
         return true;
     return false;
 }
@@ -41,7 +41,7 @@ function isThinkingSupported(model) {
  */
 export function findIndexAfterFraction(history, fraction) {
     if (fraction <= 0 || fraction >= 1) {
-        throw new Error('Fraction must be between 0 and 1');
+        throw new Error("Fraction must be between 0 and 1");
     }
     const contentLengths = history.map((content) => JSON.stringify(content).length);
     const totalCharacters = contentLengths.reduce((sum, length) => sum + length, 0);
@@ -70,9 +70,9 @@ function isRecoverableStreamErrorMessage(message) {
     if (!message) {
         return false;
     }
-    return (message.includes('Model stream ended with an invalid chunk or missing finish reason.') ||
-        message.includes('Model stream completed without any chunks.') ||
-        message.includes('Stream idle for'));
+    return (message.includes("Model stream ended with an invalid chunk or missing finish reason.") ||
+        message.includes("Model stream completed without any chunks.") ||
+        message.includes("Stream idle for"));
 }
 export class GeminiClient {
     config;
@@ -105,7 +105,7 @@ export class GeminiClient {
     }
     async initialize(contentGeneratorConfig, extraHistory) {
         this.contentGenerator = await createContentGenerator(contentGeneratorConfig, this.config, this.config.getSessionId());
-        this.tokenBudgetManager = new TokenBudgetManager(this.getContentGenerator(), (model) => typeof this.config.getEffectiveContextLimit === 'function'
+        this.tokenBudgetManager = new TokenBudgetManager(this.getContentGenerator(), (model) => typeof this.config.getEffectiveContextLimit === "function"
             ? this.config.getEffectiveContextLimit(model)
             : undefined);
         /**
@@ -117,13 +117,13 @@ export class GeminiClient {
     }
     getContentGenerator() {
         if (!this.contentGenerator) {
-            throw new Error('Content generator not initialized');
+            throw new Error("Content generator not initialized");
         }
         return this.contentGenerator;
     }
     getTokenBudgetManager() {
         if (!this.tokenBudgetManager) {
-            throw new Error('Token budget manager not initialized');
+            throw new Error("Token budget manager not initialized");
         }
         return this.tokenBudgetManager;
     }
@@ -135,7 +135,7 @@ export class GeminiClient {
     }
     getChat() {
         if (!this.chat) {
-            throw new Error('Chat not initialized');
+            throw new Error("Chat not initialized");
         }
         return this.chat;
     }
@@ -152,8 +152,8 @@ export class GeminiClient {
                 if (newContent.parts) {
                     newContent.parts = newContent.parts.map((part) => {
                         if (part &&
-                            typeof part === 'object' &&
-                            'thoughtSignature' in part) {
+                            typeof part === "object" &&
+                            "thoughtSignature" in part) {
                             const newPart = { ...part };
                             delete newPart
                                 .thoughtSignature;
@@ -195,7 +195,7 @@ export class GeminiClient {
                     await provider.unloadModel();
                 }
                 catch (error) {
-                    console.debug('Failed to unload LM Studio model:', error);
+                    console.debug("Failed to unload LM Studio model:", error);
                 }
             }
         }
@@ -214,7 +214,7 @@ export class GeminiClient {
             return;
         }
         this.getChat().addHistory({
-            role: 'user',
+            role: "user",
             parts: [{ text: await getDirectoryContextString(this.config) }],
         });
     }
@@ -227,12 +227,12 @@ export class GeminiClient {
         const tools = [{ functionDeclarations: toolDeclarations }];
         const history = [
             {
-                role: 'user',
+                role: "user",
                 parts: envParts,
             },
             {
-                role: 'model',
-                parts: [{ text: 'Got it. Thanks for the context!' }],
+                role: "model",
+                parts: [{ text: "Got it. Thanks for the context!" }],
             },
             ...(extraHistory ?? []),
         ];
@@ -263,7 +263,7 @@ export class GeminiClient {
             }, history, { streamIdleTimeoutOverride });
         }
         catch (error) {
-            await reportError(error, 'Error initializing Gemini chat session.', history, 'startChat');
+            await reportError(error, "Error initializing Gemini chat session.", history, "startChat");
             throw new Error(`Failed to initialize chat: ${getErrorMessage(error)}`);
         }
     }
@@ -281,7 +281,7 @@ export class GeminiClient {
                 .map((f) => f.path);
             const contextData = {};
             if (activeFile) {
-                contextData['activeFile'] = {
+                contextData["activeFile"] = {
                     path: activeFile.path,
                     cursor: activeFile.cursor
                         ? {
@@ -293,7 +293,7 @@ export class GeminiClient {
                 };
             }
             if (otherOpenFiles.length > 0) {
-                contextData['otherOpenFiles'] = otherOpenFiles;
+                contextData["otherOpenFiles"] = otherOpenFiles;
             }
             if (Object.keys(contextData).length === 0) {
                 return { contextParts: [], newIdeContext: currentIdeContext };
@@ -301,12 +301,12 @@ export class GeminiClient {
             const jsonString = JSON.stringify(contextData, null, 2);
             const contextParts = [
                 "Here is the user's editor context as a JSON object. This is for your information only.",
-                '```json',
+                "```json",
                 jsonString,
-                '```',
+                "```",
             ];
             if (this.config.getDebugMode()) {
-                console.log(contextParts.join('\n'));
+                console.log(contextParts.join("\n"));
             }
             return {
                 contextParts,
@@ -329,7 +329,7 @@ export class GeminiClient {
                 }
             }
             if (openedFiles.length > 0) {
-                changes['filesOpened'] = openedFiles;
+                changes["filesOpened"] = openedFiles;
             }
             const closedFiles = [];
             for (const [path] of lastFiles.entries()) {
@@ -338,13 +338,13 @@ export class GeminiClient {
                 }
             }
             if (closedFiles.length > 0) {
-                changes['filesClosed'] = closedFiles;
+                changes["filesClosed"] = closedFiles;
             }
             const lastActiveFile = (this.lastSentIdeContext.workspaceState?.openFiles || []).find((f) => f.isActive);
             const currentActiveFile = (currentIdeContext.workspaceState?.openFiles || []).find((f) => f.isActive);
             if (currentActiveFile) {
                 if (!lastActiveFile || lastActiveFile.path !== currentActiveFile.path) {
-                    changes['activeFileChanged'] = {
+                    changes["activeFileChanged"] = {
                         path: currentActiveFile.path,
                         cursor: currentActiveFile.cursor
                             ? {
@@ -362,7 +362,7 @@ export class GeminiClient {
                         (!lastCursor ||
                             lastCursor.line !== currentCursor.line ||
                             lastCursor.character !== currentCursor.character)) {
-                        changes['cursorMoved'] = {
+                        changes["cursorMoved"] = {
                             path: currentActiveFile.path,
                             cursor: {
                                 line: currentCursor.line,
@@ -370,10 +370,10 @@ export class GeminiClient {
                             },
                         };
                     }
-                    const lastSelectedText = lastActiveFile.selectedText || '';
-                    const currentSelectedText = currentActiveFile.selectedText || '';
+                    const lastSelectedText = lastActiveFile.selectedText || "";
+                    const currentSelectedText = currentActiveFile.selectedText || "";
                     if (lastSelectedText !== currentSelectedText) {
-                        changes['selectionChanged'] = {
+                        changes["selectionChanged"] = {
                             path: currentActiveFile.path,
                             selectedText: currentSelectedText,
                         };
@@ -381,7 +381,7 @@ export class GeminiClient {
                 }
             }
             else if (lastActiveFile) {
-                changes['activeFileChanged'] = {
+                changes["activeFileChanged"] = {
                     path: null,
                     previousPath: lastActiveFile.path,
                 };
@@ -389,16 +389,16 @@ export class GeminiClient {
             if (Object.keys(changes).length === 0) {
                 return { contextParts: [], newIdeContext: currentIdeContext };
             }
-            delta['changes'] = changes;
+            delta["changes"] = changes;
             const jsonString = JSON.stringify(delta, null, 2);
             const contextParts = [
                 "Here is a summary of changes in the user's editor context, in JSON format. This is for your information only.",
-                '```json',
+                "```json",
                 jsonString,
-                '```',
+                "```",
             ];
             if (this.config.getDebugMode()) {
-                console.log(contextParts.join('\n'));
+                console.log(contextParts.join("\n"));
             }
             return {
                 contextParts,
@@ -443,7 +443,7 @@ export class GeminiClient {
             // Create a mock request content to count total tokens
             const mockRequestContent = [
                 {
-                    role: 'system',
+                    role: "system",
                     parts: [{ text: systemPrompt }, ...environment],
                 },
                 ...currentHistory,
@@ -461,7 +461,7 @@ export class GeminiClient {
                         currentTokens: totalRequestTokens,
                         limit: sessionTokenLimit,
                         message: `Session token limit exceeded: ${totalRequestTokens} tokens > ${sessionTokenLimit} limit. ` +
-                            'Please start a new session or increase the sessionTokenLimit in your settings.json.',
+                            "Please start a new session or increase the sessionTokenLimit in your settings.json.",
                     },
                 };
                 return new Turn(this.getChat(), prompt_id);
@@ -488,14 +488,14 @@ export class GeminiClient {
         const history = this.getHistory();
         const lastMessage = history.length > 0 ? history[history.length - 1] : undefined;
         const hasPendingToolCall = !!lastMessage &&
-            lastMessage.role === 'model' &&
-            (lastMessage.parts?.some((p) => 'functionCall' in p) || false);
+            lastMessage.role === "model" &&
+            (lastMessage.parts?.some((p) => "functionCall" in p) || false);
         if (this.config.getIdeMode() && !hasPendingToolCall) {
             const { contextParts, newIdeContext } = this.getIdeContextParts(this.forceFullIdeContext || history.length === 0);
             if (contextParts.length > 0) {
                 this.getChat().addHistory({
-                    role: 'user',
-                    parts: [{ text: contextParts.join('\n') }],
+                    role: "user",
+                    parts: [{ text: contextParts.join("\n") }],
                 });
             }
             this.lastSentIdeContext = newIdeContext;
@@ -516,7 +516,7 @@ export class GeminiClient {
             // add subagent system reminder if there are subagents
             const hasTaskTool = this.config.getToolRegistry().getTool(TaskTool.Name);
             const subagents = (await this.config.getSubagentManager().listSubagents())
-                .filter((subagent) => subagent.level !== 'builtin')
+                .filter((subagent) => subagent.level !== "builtin")
                 .map((subagent) => subagent.name);
             if (hasTaskTool && subagents.length > 0) {
                 systemReminders.push(getSubagentSystemReminder(subagents));
@@ -540,8 +540,8 @@ export class GeminiClient {
             }
             if (event.type === GeminiEventType.Error &&
                 isRecoverableStreamErrorMessage(event.value?.error?.message)) {
-                if (providerTag === 'lmstudio') {
-                    console.debug('[Agent] Recoverable stream error encountered; skipping non-streaming fallback for LM Studio.');
+                if (providerTag === "lmstudio") {
+                    console.debug("[Agent] Recoverable stream error encountered; skipping non-streaming fallback for LM Studio.");
                     continue;
                 }
                 console.debug(`[Agent] Recoverable error, using non-streaming fallback`);
@@ -560,7 +560,7 @@ export class GeminiClient {
             }
             yield event;
             if (event.type === GeminiEventType.Error) {
-                console.debug(`[Agent] Error occurred: ${event.value?.error?.message || 'Unknown'}`);
+                console.debug(`[Agent] Error occurred: ${event.value?.error?.message || "Unknown"}`);
                 return turn;
             }
         }
@@ -575,13 +575,13 @@ export class GeminiClient {
                 // Don't continue with recursive call to prevent unwanted Flash execution
                 return turn;
             }
-            if (providerTag === 'lmstudio' || this.config.getSkipNextSpeakerCheck()) {
+            if (providerTag === "lmstudio" || this.config.getSkipNextSpeakerCheck()) {
                 return turn;
             }
             const nextSpeakerCheck = await checkNextSpeaker(this.getChat(), this, signal);
-            logNextSpeakerCheck(this.config, new NextSpeakerCheckEvent(prompt_id, turn.finishReason?.toString() || '', nextSpeakerCheck?.next_speaker || ''));
-            if (nextSpeakerCheck?.next_speaker === 'model') {
-                const nextRequest = [{ text: 'Please continue.' }];
+            logNextSpeakerCheck(this.config, new NextSpeakerCheckEvent(prompt_id, turn.finishReason?.toString() || "", nextSpeakerCheck?.next_speaker || ""));
+            if (nextSpeakerCheck?.next_speaker === "model") {
+                const nextRequest = [{ text: "Please continue." }];
                 // This recursive call's events will be yielded out, but the final
                 // turn object will be from the top-level call.
                 yield* this.sendMessageStream(nextRequest, signal, prompt_id, boundedTurns - 1, initialModel);
@@ -627,13 +627,13 @@ export class GeminiClient {
                 compressionResult.compressionStatus ===
                     CompressionStatus.COMPRESSION_FAILED_INFLATED_TOKEN_COUNT) {
                 // Standard compression failed - try adaptive recovery as last resort
-                console.warn('[Context Management] Standard compression failed, attempting self-healing recovery...');
+                console.warn("[Context Management] Standard compression failed, attempting self-healing recovery...");
                 const recovered = await this.tryAdaptiveRecovery(promptId);
                 if (recovered) {
                     // Recovery successful - retry the budget check
                     const retrySnapshot = await manager.evaluate(model, buildPreview());
                     if (retrySnapshot.fitsWithinEffective) {
-                        console.warn('[Context Management] ✓ Self-healing recovery successful');
+                        console.warn("[Context Management] ✓ Self-healing recovery successful");
                         return retrySnapshot;
                     }
                 }
@@ -649,10 +649,10 @@ export class GeminiClient {
      * This is a last-resort fallback when standard compression fails.
      */
     async tryAdaptiveRecovery(promptId) {
-        console.warn('[Context Recovery] Standard compression failed, attempting adaptive recovery...');
+        console.warn("[Context Recovery] Standard compression failed, attempting adaptive recovery...");
         const currentHistory = this.getChat().getHistory(true);
         if (currentHistory.length === 0) {
-            console.error('[Context Recovery] Cannot recover: history is empty');
+            console.error("[Context Recovery] Cannot recover: history is empty");
             return false;
         }
         // Try each compression strategy progressively
@@ -667,7 +667,7 @@ export class GeminiClient {
             // Check if it fits now
             const model = this.config.getModel();
             if (!model) {
-                console.error('[Context Recovery] No model configured');
+                console.error("[Context Recovery] No model configured");
                 return false;
             }
             const manager = this.getTokenBudgetManager();
@@ -678,14 +678,14 @@ export class GeminiClient {
             }
             console.warn(`[Context Recovery] Strategy ${i + 1} insufficient (${snapshot.tokens} > ${snapshot.effectiveLimit} tokens)`);
         }
-        console.error('[Context Recovery] All recovery strategies exhausted');
+        console.error("[Context Recovery] All recovery strategies exhausted");
         return false;
     }
     async runNonStreamingFallback(promptId, message) {
         const fallbackResponse = await this.getChat().sendMessage({ message }, promptId);
         const events = [];
-        const textParts = fallbackResponse.candidates?.[0]?.content?.parts?.map((part) => 'text' in part && part.text ? part.text : '') ?? [];
-        const text = textParts.filter(Boolean).join('');
+        const textParts = fallbackResponse.candidates?.[0]?.content?.parts?.map((part) => "text" in part && part.text ? part.text : "") ?? [];
+        const text = textParts.filter(Boolean).join("");
         if (text) {
             events.push({
                 type: GeminiEventType.Content,
@@ -697,7 +697,7 @@ export class GeminiClient {
             const toolCall = {
                 callId: call?.id ||
                     `fallback_call_${Date.now().toString(36)}_${index.toString(36)}`,
-                name: call?.name ?? 'unknown_tool',
+                name: call?.name ?? "unknown_tool",
                 args: call?.args ?? {},
                 isClientInitiated: false,
                 prompt_id: promptId,
@@ -737,8 +737,8 @@ export class GeminiClient {
             };
             // Convert schema to function declaration
             const functionDeclaration = {
-                name: 'respond_in_schema',
-                description: 'Provide the response in provided schema',
+                name: "respond_in_schema",
+                description: "Provide the response in provided schema",
                 parameters: schema,
             };
             const tools = [
@@ -763,7 +763,7 @@ export class GeminiClient {
                         classification: context.classification,
                         status: context.status,
                     };
-                    logContentRetry(this.config, new ContentRetryEvent(context.attempt, error.name ?? 'Error', Math.round(context.delayMs), {
+                    logContentRetry(this.config, new ContentRetryEvent(context.attempt, error.name ?? "Error", Math.round(context.delayMs), {
                         classification: context.classification,
                         provider: providerTag,
                         status_code: context.status,
@@ -774,7 +774,7 @@ export class GeminiClient {
             lastRetryMetadata = undefined;
             const functionCalls = getFunctionCalls(result);
             if (functionCalls && functionCalls.length > 0) {
-                const functionCall = functionCalls.find((call) => call.name === 'respond_in_schema');
+                const functionCall = functionCalls.find((call) => call.name === "respond_in_schema");
                 if (functionCall && functionCall.args) {
                     return functionCall.args;
                 }
@@ -786,7 +786,7 @@ export class GeminiClient {
                 throw error;
             }
             if (lastRetryMetadata) {
-                logContentRetryFailure(this.config, new ContentRetryFailureEvent(lastRetryMetadata.attempt, error instanceof Error ? error.name : 'UnknownError', undefined, {
+                logContentRetryFailure(this.config, new ContentRetryFailureEvent(lastRetryMetadata.attempt, error instanceof Error ? error.name : "UnknownError", undefined, {
                     final_classification: lastRetryMetadata.classification,
                     provider: providerTag,
                     status_code: lastRetryMetadata.status,
@@ -796,10 +796,10 @@ export class GeminiClient {
             }
             // Avoid double reporting for the empty response case handled above
             if (error instanceof Error &&
-                error.message === 'API returned an empty response for generateJson.') {
+                error.message === "API returned an empty response for generateJson.") {
                 throw error;
             }
-            await reportError(error, 'Error generating JSON content via API.', contents, 'generateJson-api');
+            await reportError(error, "Error generating JSON content via API.", contents, "generateJson-api");
             throw new Error(`Failed to generate JSON content: ${getErrorMessage(error)}`);
         }
     }
@@ -835,7 +835,7 @@ export class GeminiClient {
                         classification: context.classification,
                         status: context.status,
                     };
-                    logContentRetry(this.config, new ContentRetryEvent(context.attempt, error.name ?? 'Error', Math.round(context.delayMs), {
+                    logContentRetry(this.config, new ContentRetryEvent(context.attempt, error.name ?? "Error", Math.round(context.delayMs), {
                         classification: context.classification,
                         provider: providerTag,
                         status_code: context.status,
@@ -851,7 +851,7 @@ export class GeminiClient {
                 throw error;
             }
             if (lastRetryMetadata) {
-                logContentRetryFailure(this.config, new ContentRetryFailureEvent(lastRetryMetadata.attempt, error instanceof Error ? error.name : 'UnknownError', undefined, {
+                logContentRetryFailure(this.config, new ContentRetryFailureEvent(lastRetryMetadata.attempt, error instanceof Error ? error.name : "UnknownError", undefined, {
                     final_classification: lastRetryMetadata.classification,
                     provider: providerTag,
                     status_code: lastRetryMetadata.status,
@@ -862,7 +862,7 @@ export class GeminiClient {
             await reportError(error, `Error generating content via API with model ${modelToUse}.`, {
                 requestContents: contents,
                 requestConfig: configToUse,
-            }, 'generateContent-api');
+            }, "generateContent-api");
             throw new Error(`Failed to generate content with model ${modelToUse}: ${getErrorMessage(error)}`);
         }
     }
@@ -877,7 +877,7 @@ export class GeminiClient {
         const embedContentResponse = await this.getContentGenerator().embedContent(embedModelParams);
         if (!embedContentResponse.embeddings ||
             embedContentResponse.embeddings.length === 0) {
-            throw new Error('No embeddings found in API response.');
+            throw new Error("No embeddings found in API response.");
         }
         if (embedContentResponse.embeddings.length !== texts.length) {
             throw new Error(`API returned a mismatched number of embeddings. Expected ${texts.length}, got ${embedContentResponse.embeddings.length}.`);
@@ -932,7 +932,7 @@ export class GeminiClient {
         let compressBeforeIndex = findIndexAfterFraction(curatedHistory, 1 - preserveFraction);
         // Find the first user message after the index. This is the start of the next turn.
         while (compressBeforeIndex < curatedHistory.length &&
-            (curatedHistory[compressBeforeIndex]?.role === 'model' ||
+            (curatedHistory[compressBeforeIndex]?.role === "model" ||
                 isFunctionResponse(curatedHistory[compressBeforeIndex]))) {
             compressBeforeIndex++;
         }
@@ -941,7 +941,7 @@ export class GeminiClient {
         this.getChat().setHistory(historyToCompress);
         const { text: summary } = await this.getChat().sendMessage({
             message: {
-                text: 'First, reason in your scratchpad. Then, generate the <state_snapshot>.',
+                text: "First, reason in your scratchpad. Then, generate the <state_snapshot>.",
             },
             config: {
                 systemInstruction: { text: getCompressionPrompt() },
@@ -950,12 +950,12 @@ export class GeminiClient {
         }, prompt_id);
         const chat = await this.startChat([
             {
-                role: 'user',
+                role: "user",
                 parts: [{ text: summary }],
             },
             {
-                role: 'model',
-                parts: [{ text: 'Got it. Thanks for the additional context!' }],
+                role: "model",
+                parts: [{ text: "Got it. Thanks for the additional context!" }],
             },
             ...historyToKeep,
         ]);
@@ -966,7 +966,7 @@ export class GeminiClient {
             contents: chat.getHistory(),
         });
         if (newTokenCount === undefined) {
-            console.warn('Could not determine compressed history token count.');
+            console.warn("Could not determine compressed history token count.");
             this.hasFailedCompressionAttempt = !force && true;
             return {
                 originalTokenCount,
@@ -1021,7 +1021,7 @@ export class GeminiClient {
         }
         // Check if config has a fallback handler (set by CLI package)
         const fallbackHandler = this.config.flashFallbackHandler;
-        if (typeof fallbackHandler === 'function') {
+        if (typeof fallbackHandler === "function") {
             try {
                 const accepted = await fallbackHandler(currentModel, fallbackModel, error);
                 if (accepted !== false && accepted !== null) {
@@ -1035,7 +1035,7 @@ export class GeminiClient {
                 }
             }
             catch (error) {
-                console.warn('Flash fallback handler failed:', error);
+                console.warn("Flash fallback handler failed:", error);
             }
         }
         return null;
@@ -1055,26 +1055,26 @@ export class GeminiClient {
         // Check if this is an authentication/authorization error
         const isAuthError = errorCode === 401 ||
             errorCode === 403 ||
-            errorMessage.includes('unauthorized') ||
-            errorMessage.includes('forbidden') ||
-            errorMessage.includes('invalid api key') ||
-            errorMessage.includes('authentication') ||
-            errorMessage.includes('access denied') ||
-            (errorMessage.includes('token') && errorMessage.includes('expired'));
+            errorMessage.includes("unauthorized") ||
+            errorMessage.includes("forbidden") ||
+            errorMessage.includes("invalid api key") ||
+            errorMessage.includes("authentication") ||
+            errorMessage.includes("access denied") ||
+            (errorMessage.includes("token") && errorMessage.includes("expired"));
         // Check if this is a rate limiting error
         const isRateLimitError = errorCode === 429 ||
-            errorMessage.includes('429') ||
-            errorMessage.includes('rate limit') ||
-            errorMessage.includes('too many requests');
+            errorMessage.includes("429") ||
+            errorMessage.includes("rate limit") ||
+            errorMessage.includes("too many requests");
         if (isAuthError) {
-            console.warn('Qwen OAuth authentication error detected:', errorMessage);
+            console.warn("Qwen OAuth authentication error detected:", errorMessage);
             // The QwenContentGenerator should automatically handle token refresh
             // If it still fails, it likely means the refresh token is also expired
-            console.log('Note: If this persists, you may need to re-authenticate with Qwen OAuth');
+            console.log("Note: If this persists, you may need to re-authenticate with Qwen OAuth");
             return null;
         }
         if (isRateLimitError) {
-            console.warn('Qwen API rate limit encountered:', errorMessage);
+            console.warn("Qwen API rate limit encountered:", errorMessage);
             // For rate limiting, we don't need to do anything special
             // The retry mechanism will handle the backoff
             return null;

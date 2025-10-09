@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { MCPOAuthConfig } from './oauth-provider.js';
+import type { MCPOAuthConfig } from "./oauth-provider.js";
 /**
  * OAuth authorization server metadata as per RFC 8414.
  */

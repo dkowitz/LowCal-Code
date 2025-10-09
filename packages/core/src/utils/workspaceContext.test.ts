@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import * as fs from 'node:fs';
-import * as os from 'node:os';
-import * as path from 'node:path';
-import { WorkspaceContext } from './workspaceContext.js';
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import * as fs from "node:fs";
+import * as os from "node:os";
+import * as path from "node:path";
+import { WorkspaceContext } from "./workspaceContext.js";
 
-describe('WorkspaceContext with real filesystem', () => {
+describe("WorkspaceContext with real filesystem", () => {
   let tempDir: string;
   let cwd: string;
   let otherDir: string;
@@ -19,11 +19,11 @@ describe('WorkspaceContext with real filesystem', () => {
     // os.tmpdir() can return a path using a symlink (this is standard on macOS)
     // Use fs.realpathSync to fully resolve the absolute path.
     tempDir = fs.realpathSync(
-      fs.mkdtempSync(path.join(os.tmpdir(), 'workspace-context-test-')),
+      fs.mkdtempSync(path.join(os.tmpdir(), "workspace-context-test-")),
     );
 
-    cwd = path.join(tempDir, 'project');
-    otherDir = path.join(tempDir, 'other-project');
+    cwd = path.join(tempDir, "project");
+    otherDir = path.join(tempDir, "other-project");
 
     fs.mkdirSync(cwd, { recursive: true });
     fs.mkdirSync(otherDir, { recursive: true });
@@ -33,22 +33,22 @@ describe('WorkspaceContext with real filesystem', () => {
     fs.rmSync(tempDir, { recursive: true, force: true });
   });
 
-  describe('initialization', () => {
-    it('should initialize with a single directory (cwd)', () => {
+  describe("initialization", () => {
+    it("should initialize with a single directory (cwd)", () => {
       const workspaceContext = new WorkspaceContext(cwd);
       const directories = workspaceContext.getDirectories();
 
       expect(directories).toEqual([cwd]);
     });
 
-    it('should validate and resolve directories to absolute paths', () => {
+    it("should validate and resolve directories to absolute paths", () => {
       const workspaceContext = new WorkspaceContext(cwd, [otherDir]);
       const directories = workspaceContext.getDirectories();
 
       expect(directories).toEqual([cwd, otherDir]);
     });
 
-    it('should handle empty initialization', () => {
+    it("should handle empty initialization", () => {
       const workspaceContext = new WorkspaceContext(cwd, []);
       const directories = workspaceContext.getDirectories();
       expect(directories).toHaveLength(1);
@@ -56,8 +56,8 @@ describe('WorkspaceContext with real filesystem', () => {
     });
   });
 
-  describe('adding directories', () => {
-    it('should add valid directories', () => {
+  describe("adding directories", () => {
+    it("should add valid directories", () => {
       const workspaceContext = new WorkspaceContext(cwd);
       workspaceContext.addDirectory(otherDir);
       const directories = workspaceContext.getDirectories();
@@ -65,7 +65,7 @@ describe('WorkspaceContext with real filesystem', () => {
       expect(directories).toEqual([cwd, otherDir]);
     });
 
-    it('should resolve relative paths to absolute', () => {
+    it("should resolve relative paths to absolute", () => {
       const workspaceContext = new WorkspaceContext(cwd);
       const relativePath = path.relative(cwd, otherDir);
       workspaceContext.addDirectory(relativePath, cwd);
@@ -74,7 +74,7 @@ describe('WorkspaceContext with real filesystem', () => {
       expect(directories).toEqual([cwd, otherDir]);
     });
 
-    it('should prevent duplicate directories', () => {
+    it("should prevent duplicate directories", () => {
       const workspaceContext = new WorkspaceContext(cwd);
       workspaceContext.addDirectory(otherDir);
       workspaceContext.addDirectory(otherDir);
@@ -83,11 +83,11 @@ describe('WorkspaceContext with real filesystem', () => {
       expect(directories).toHaveLength(2);
     });
 
-    it('should handle symbolic links correctly', () => {
-      const realDir = path.join(tempDir, 'real');
+    it("should handle symbolic links correctly", () => {
+      const realDir = path.join(tempDir, "real");
       fs.mkdirSync(realDir, { recursive: true });
-      const symlinkDir = path.join(tempDir, 'symlink-to-real');
-      fs.symlinkSync(realDir, symlinkDir, 'dir');
+      const symlinkDir = path.join(tempDir, "symlink-to-real");
+      fs.symlinkSync(realDir, symlinkDir, "dir");
       const workspaceContext = new WorkspaceContext(cwd);
       workspaceContext.addDirectory(symlinkDir);
 
@@ -97,51 +97,51 @@ describe('WorkspaceContext with real filesystem', () => {
     });
   });
 
-  describe('path validation', () => {
-    it('should accept paths within workspace directories', () => {
+  describe("path validation", () => {
+    it("should accept paths within workspace directories", () => {
       const workspaceContext = new WorkspaceContext(cwd, [otherDir]);
-      const validPath1 = path.join(cwd, 'src', 'file.ts');
-      const validPath2 = path.join(otherDir, 'lib', 'module.js');
+      const validPath1 = path.join(cwd, "src", "file.ts");
+      const validPath2 = path.join(otherDir, "lib", "module.js");
 
       fs.mkdirSync(path.dirname(validPath1), { recursive: true });
-      fs.writeFileSync(validPath1, 'content');
+      fs.writeFileSync(validPath1, "content");
       fs.mkdirSync(path.dirname(validPath2), { recursive: true });
-      fs.writeFileSync(validPath2, 'content');
+      fs.writeFileSync(validPath2, "content");
 
       expect(workspaceContext.isPathWithinWorkspace(validPath1)).toBe(true);
       expect(workspaceContext.isPathWithinWorkspace(validPath2)).toBe(true);
     });
 
-    it('should accept non-existent paths within workspace directories', () => {
+    it("should accept non-existent paths within workspace directories", () => {
       const workspaceContext = new WorkspaceContext(cwd, [otherDir]);
-      const validPath1 = path.join(cwd, 'src', 'file.ts');
-      const validPath2 = path.join(otherDir, 'lib', 'module.js');
+      const validPath1 = path.join(cwd, "src", "file.ts");
+      const validPath2 = path.join(otherDir, "lib", "module.js");
 
       expect(workspaceContext.isPathWithinWorkspace(validPath1)).toBe(true);
       expect(workspaceContext.isPathWithinWorkspace(validPath2)).toBe(true);
     });
 
-    it('should reject paths outside workspace', () => {
+    it("should reject paths outside workspace", () => {
       const workspaceContext = new WorkspaceContext(cwd, [otherDir]);
-      const invalidPath = path.join(tempDir, 'outside-workspace', 'file.txt');
+      const invalidPath = path.join(tempDir, "outside-workspace", "file.txt");
 
       expect(workspaceContext.isPathWithinWorkspace(invalidPath)).toBe(false);
     });
 
-    it('should reject non-existent paths outside workspace', () => {
+    it("should reject non-existent paths outside workspace", () => {
       const workspaceContext = new WorkspaceContext(cwd, [otherDir]);
-      const invalidPath = path.join(tempDir, 'outside-workspace', 'file.txt');
+      const invalidPath = path.join(tempDir, "outside-workspace", "file.txt");
 
       expect(workspaceContext.isPathWithinWorkspace(invalidPath)).toBe(false);
     });
 
-    it('should handle nested directories correctly', () => {
+    it("should handle nested directories correctly", () => {
       const workspaceContext = new WorkspaceContext(cwd, [otherDir]);
-      const nestedPath = path.join(cwd, 'deeply', 'nested', 'path', 'file.txt');
+      const nestedPath = path.join(cwd, "deeply", "nested", "path", "file.txt");
       expect(workspaceContext.isPathWithinWorkspace(nestedPath)).toBe(true);
     });
 
-    it('should handle edge cases (root, parent references)', () => {
+    it("should handle edge cases (root, parent references)", () => {
       const workspaceContext = new WorkspaceContext(cwd, [otherDir]);
       const rootPath = path.parse(tempDir).root;
       const parentPath = path.dirname(cwd);
@@ -150,42 +150,42 @@ describe('WorkspaceContext with real filesystem', () => {
       expect(workspaceContext.isPathWithinWorkspace(parentPath)).toBe(false);
     });
 
-    it('should handle non-existent paths correctly', () => {
+    it("should handle non-existent paths correctly", () => {
       const workspaceContext = new WorkspaceContext(cwd, [otherDir]);
-      const nonExistentPath = path.join(cwd, 'does-not-exist.txt');
+      const nonExistentPath = path.join(cwd, "does-not-exist.txt");
       expect(workspaceContext.isPathWithinWorkspace(nonExistentPath)).toBe(
         true,
       );
     });
 
-    describe('with symbolic link', () => {
-      describe('in the workspace', () => {
+    describe("with symbolic link", () => {
+      describe("in the workspace", () => {
         let realDir: string;
         let symlinkDir: string;
         beforeEach(() => {
-          realDir = path.join(cwd, 'real-dir');
+          realDir = path.join(cwd, "real-dir");
           fs.mkdirSync(realDir, { recursive: true });
 
-          symlinkDir = path.join(cwd, 'symlink-file');
-          fs.symlinkSync(realDir, symlinkDir, 'dir');
+          symlinkDir = path.join(cwd, "symlink-file");
+          fs.symlinkSync(realDir, symlinkDir, "dir");
         });
 
-        it('should accept dir paths', () => {
+        it("should accept dir paths", () => {
           const workspaceContext = new WorkspaceContext(cwd);
 
           expect(workspaceContext.isPathWithinWorkspace(symlinkDir)).toBe(true);
         });
 
-        it('should accept non-existent paths', () => {
-          const filePath = path.join(symlinkDir, 'does-not-exist.txt');
+        it("should accept non-existent paths", () => {
+          const filePath = path.join(symlinkDir, "does-not-exist.txt");
 
           const workspaceContext = new WorkspaceContext(cwd);
 
           expect(workspaceContext.isPathWithinWorkspace(filePath)).toBe(true);
         });
 
-        it('should accept non-existent deep paths', () => {
-          const filePath = path.join(symlinkDir, 'deep', 'does-not-exist.txt');
+        it("should accept non-existent deep paths", () => {
+          const filePath = path.join(symlinkDir, "deep", "does-not-exist.txt");
 
           const workspaceContext = new WorkspaceContext(cwd);
 
@@ -193,18 +193,18 @@ describe('WorkspaceContext with real filesystem', () => {
         });
       });
 
-      describe('outside the workspace', () => {
+      describe("outside the workspace", () => {
         let realDir: string;
         let symlinkDir: string;
         beforeEach(() => {
-          realDir = path.join(tempDir, 'real-dir');
+          realDir = path.join(tempDir, "real-dir");
           fs.mkdirSync(realDir, { recursive: true });
 
-          symlinkDir = path.join(cwd, 'symlink-file');
-          fs.symlinkSync(realDir, symlinkDir, 'dir');
+          symlinkDir = path.join(cwd, "symlink-file");
+          fs.symlinkSync(realDir, symlinkDir, "dir");
         });
 
-        it('should reject dir paths', () => {
+        it("should reject dir paths", () => {
           const workspaceContext = new WorkspaceContext(cwd);
 
           expect(workspaceContext.isPathWithinWorkspace(symlinkDir)).toBe(
@@ -212,26 +212,26 @@ describe('WorkspaceContext with real filesystem', () => {
           );
         });
 
-        it('should reject non-existent paths', () => {
-          const filePath = path.join(symlinkDir, 'does-not-exist.txt');
+        it("should reject non-existent paths", () => {
+          const filePath = path.join(symlinkDir, "does-not-exist.txt");
 
           const workspaceContext = new WorkspaceContext(cwd);
 
           expect(workspaceContext.isPathWithinWorkspace(filePath)).toBe(false);
         });
 
-        it('should reject non-existent deep paths', () => {
-          const filePath = path.join(symlinkDir, 'deep', 'does-not-exist.txt');
+        it("should reject non-existent deep paths", () => {
+          const filePath = path.join(symlinkDir, "deep", "does-not-exist.txt");
 
           const workspaceContext = new WorkspaceContext(cwd);
 
           expect(workspaceContext.isPathWithinWorkspace(filePath)).toBe(false);
         });
 
-        it('should reject partially non-existent deep paths', () => {
-          const deepDir = path.join(symlinkDir, 'deep');
+        it("should reject partially non-existent deep paths", () => {
+          const deepDir = path.join(symlinkDir, "deep");
           fs.mkdirSync(deepDir, { recursive: true });
-          const filePath = path.join(deepDir, 'does-not-exist.txt');
+          const filePath = path.join(deepDir, "does-not-exist.txt");
 
           const workspaceContext = new WorkspaceContext(cwd);
 
@@ -239,36 +239,36 @@ describe('WorkspaceContext with real filesystem', () => {
         });
       });
 
-      it('should reject symbolic file links outside the workspace', () => {
-        const realFile = path.join(tempDir, 'real-file.txt');
-        fs.writeFileSync(realFile, 'content');
+      it("should reject symbolic file links outside the workspace", () => {
+        const realFile = path.join(tempDir, "real-file.txt");
+        fs.writeFileSync(realFile, "content");
 
-        const symlinkFile = path.join(cwd, 'symlink-to-real-file');
-        fs.symlinkSync(realFile, symlinkFile, 'file');
-
-        const workspaceContext = new WorkspaceContext(cwd);
-
-        expect(workspaceContext.isPathWithinWorkspace(symlinkFile)).toBe(false);
-      });
-
-      it('should reject non-existent symbolic file links outside the workspace', () => {
-        const realFile = path.join(tempDir, 'real-file.txt');
-
-        const symlinkFile = path.join(cwd, 'symlink-to-real-file');
-        fs.symlinkSync(realFile, symlinkFile, 'file');
+        const symlinkFile = path.join(cwd, "symlink-to-real-file");
+        fs.symlinkSync(realFile, symlinkFile, "file");
 
         const workspaceContext = new WorkspaceContext(cwd);
 
         expect(workspaceContext.isPathWithinWorkspace(symlinkFile)).toBe(false);
       });
 
-      it('should handle circular symlinks gracefully', () => {
+      it("should reject non-existent symbolic file links outside the workspace", () => {
+        const realFile = path.join(tempDir, "real-file.txt");
+
+        const symlinkFile = path.join(cwd, "symlink-to-real-file");
+        fs.symlinkSync(realFile, symlinkFile, "file");
+
         const workspaceContext = new WorkspaceContext(cwd);
-        const linkA = path.join(cwd, 'link-a');
-        const linkB = path.join(cwd, 'link-b');
+
+        expect(workspaceContext.isPathWithinWorkspace(symlinkFile)).toBe(false);
+      });
+
+      it("should handle circular symlinks gracefully", () => {
+        const workspaceContext = new WorkspaceContext(cwd);
+        const linkA = path.join(cwd, "link-a");
+        const linkB = path.join(cwd, "link-b");
         // Create a circular dependency: linkA -> linkB -> linkA
-        fs.symlinkSync(linkB, linkA, 'dir');
-        fs.symlinkSync(linkA, linkB, 'dir');
+        fs.symlinkSync(linkB, linkA, "dir");
+        fs.symlinkSync(linkA, linkB, "dir");
 
         // fs.realpathSync should throw ELOOP, and isPathWithinWorkspace should
         // handle it gracefully and return false.
@@ -278,8 +278,8 @@ describe('WorkspaceContext with real filesystem', () => {
     });
   });
 
-  describe('onDirectoriesChanged', () => {
-    it('should call listener when adding a directory', () => {
+  describe("onDirectoriesChanged", () => {
+    it("should call listener when adding a directory", () => {
       const workspaceContext = new WorkspaceContext(cwd);
       const listener = vi.fn();
       workspaceContext.onDirectoriesChanged(listener);
@@ -289,7 +289,7 @@ describe('WorkspaceContext with real filesystem', () => {
       expect(listener).toHaveBeenCalledOnce();
     });
 
-    it('should not call listener when adding a duplicate directory', () => {
+    it("should not call listener when adding a duplicate directory", () => {
       const workspaceContext = new WorkspaceContext(cwd);
       workspaceContext.addDirectory(otherDir);
       const listener = vi.fn();
@@ -300,7 +300,7 @@ describe('WorkspaceContext with real filesystem', () => {
       expect(listener).not.toHaveBeenCalled();
     });
 
-    it('should call listener when setting different directories', () => {
+    it("should call listener when setting different directories", () => {
       const workspaceContext = new WorkspaceContext(cwd);
       const listener = vi.fn();
       workspaceContext.onDirectoriesChanged(listener);
@@ -310,7 +310,7 @@ describe('WorkspaceContext with real filesystem', () => {
       expect(listener).toHaveBeenCalledOnce();
     });
 
-    it('should not call listener when setting same directories', () => {
+    it("should not call listener when setting same directories", () => {
       const workspaceContext = new WorkspaceContext(cwd);
       const listener = vi.fn();
       workspaceContext.onDirectoriesChanged(listener);
@@ -320,7 +320,7 @@ describe('WorkspaceContext with real filesystem', () => {
       expect(listener).not.toHaveBeenCalled();
     });
 
-    it('should support multiple listeners', () => {
+    it("should support multiple listeners", () => {
       const workspaceContext = new WorkspaceContext(cwd);
       const listener1 = vi.fn();
       const listener2 = vi.fn();
@@ -333,7 +333,7 @@ describe('WorkspaceContext with real filesystem', () => {
       expect(listener2).toHaveBeenCalledOnce();
     });
 
-    it('should allow unsubscribing a listener', () => {
+    it("should allow unsubscribing a listener", () => {
       const workspaceContext = new WorkspaceContext(cwd);
       const listener = vi.fn();
       const unsubscribe = workspaceContext.onDirectoriesChanged(listener);
@@ -344,10 +344,10 @@ describe('WorkspaceContext with real filesystem', () => {
       expect(listener).not.toHaveBeenCalled();
     });
 
-    it('should not fail if a listener throws an error', () => {
+    it("should not fail if a listener throws an error", () => {
       const workspaceContext = new WorkspaceContext(cwd);
       const errorListener = () => {
-        throw new Error('test error');
+        throw new Error("test error");
       };
       const listener = vi.fn();
       workspaceContext.onDirectoriesChanged(errorListener);
@@ -360,8 +360,8 @@ describe('WorkspaceContext with real filesystem', () => {
     });
   });
 
-  describe('getDirectories', () => {
-    it('should return a copy of directories array', () => {
+  describe("getDirectories", () => {
+    it("should return a copy of directories array", () => {
       const workspaceContext = new WorkspaceContext(cwd);
       const dirs1 = workspaceContext.getDirectories();
       const dirs2 = workspaceContext.getDirectories();
@@ -372,7 +372,7 @@ describe('WorkspaceContext with real filesystem', () => {
   });
 });
 
-describe('WorkspaceContext with optional directories', () => {
+describe("WorkspaceContext with optional directories", () => {
   let tempDir: string;
   let cwd: string;
   let existingDir1: string;
@@ -381,18 +381,18 @@ describe('WorkspaceContext with optional directories', () => {
 
   beforeEach(() => {
     tempDir = fs.realpathSync(
-      fs.mkdtempSync(path.join(os.tmpdir(), 'workspace-context-optional-')),
+      fs.mkdtempSync(path.join(os.tmpdir(), "workspace-context-optional-")),
     );
-    cwd = path.join(tempDir, 'project');
-    existingDir1 = path.join(tempDir, 'existing-dir-1');
-    existingDir2 = path.join(tempDir, 'existing-dir-2');
-    nonExistentDir = path.join(tempDir, 'non-existent-dir');
+    cwd = path.join(tempDir, "project");
+    existingDir1 = path.join(tempDir, "existing-dir-1");
+    existingDir2 = path.join(tempDir, "existing-dir-2");
+    nonExistentDir = path.join(tempDir, "non-existent-dir");
 
     fs.mkdirSync(cwd, { recursive: true });
     fs.mkdirSync(existingDir1, { recursive: true });
     fs.mkdirSync(existingDir2, { recursive: true });
 
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    vi.spyOn(console, "warn").mockImplementation(() => {});
   });
 
   afterEach(() => {
@@ -400,7 +400,7 @@ describe('WorkspaceContext with optional directories', () => {
     vi.restoreAllMocks();
   });
 
-  it('should skip a missing optional directory and log a warning', () => {
+  it("should skip a missing optional directory and log a warning", () => {
     const workspaceContext = new WorkspaceContext(cwd, [
       nonExistentDir,
       existingDir1,
@@ -413,7 +413,7 @@ describe('WorkspaceContext with optional directories', () => {
     );
   });
 
-  it('should include an existing optional directory', () => {
+  it("should include an existing optional directory", () => {
     const workspaceContext = new WorkspaceContext(cwd, [existingDir1]);
     const directories = workspaceContext.getDirectories();
     expect(directories).toEqual([cwd, existingDir1]);

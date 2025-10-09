@@ -4,8 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { CommandContext } from '../../ui/commands/types.js';
-import type { PartUnion } from '@google/genai';
+import type { CommandContext } from "../../ui/commands/types.js";
+import type { PartUnion } from "@google/genai";
 
 /**
  * Defines the input/output type for prompt processors.
@@ -41,14 +41,14 @@ export interface IPromptProcessor {
  * When used outside of !{...}, arguments are injected raw.
  * When used inside !{...}, arguments are shell-escaped.
  */
-export const SHORTHAND_ARGS_PLACEHOLDER = '{{args}}';
+export const SHORTHAND_ARGS_PLACEHOLDER = "{{args}}";
 
 /**
  * The trigger string for shell command injection in custom commands.
  */
-export const SHELL_INJECTION_TRIGGER = '!{';
+export const SHELL_INJECTION_TRIGGER = "!{";
 
 /**
  * The trigger string for at file injection in custom commands.
  */
-export const AT_FILE_INJECTION_TRIGGER = '@{';
+export const AT_FILE_INJECTION_TRIGGER = "@{";

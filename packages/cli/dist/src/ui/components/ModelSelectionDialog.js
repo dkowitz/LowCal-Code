@@ -1,27 +1,27 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useState } from 'react';
-import { Box, Text } from 'ink';
-import { Colors } from '../colors.js';
-import { RadioButtonSelect, } from './shared/RadioButtonSelect.js';
-import { useKeypress } from '../hooks/useKeypress.js';
-import { TextInput } from './shared/TextInput.js';
+import { useState } from "react";
+import { Box, Text } from "ink";
+import { Colors } from "../colors.js";
+import { RadioButtonSelect, } from "./shared/RadioButtonSelect.js";
+import { useKeypress } from "../hooks/useKeypress.js";
+import { TextInput } from "./shared/TextInput.js";
 export const ModelSelectionDialog = ({ availableModels, currentModel, onSelect, onCancel, }) => {
-    const [searchQuery, setSearchQuery] = useState('');
+    const [searchQuery, setSearchQuery] = useState("");
     useKeypress((key) => {
-        if (key.name === 'escape') {
+        if (key.name === "escape") {
             onCancel();
         }
     }, { isActive: true });
     const filteredModels = availableModels.filter((model) => model.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
         model.id.toLowerCase().includes(searchQuery.toLowerCase()));
     const options = filteredModels.map((model) => {
-        const visionIndicator = model.isVision ? ' [Vision]' : '';
+        const visionIndicator = model.isVision ? " [Vision]" : "";
         // Format pricing: convert from per-token to per-million-tokens
-        let priceInfo = '';
+        let priceInfo = "";
         if (model.inputPrice || model.outputPrice) {
             const formatPrice = (priceStr) => {
                 if (!priceStr)
-                    return '?';
+                    return "?";
                 const pricePerToken = parseFloat(priceStr);
                 const pricePerMillion = pricePerToken * 1_000_000;
                 return pricePerMillion.toFixed(2);
@@ -39,9 +39,9 @@ export const ModelSelectionDialog = ({ availableModels, currentModel, onSelect, 
                 ? ` (${configured.toLocaleString()} ctx)`
                 : max
                     ? ` (${max.toLocaleString()} ctx)`
-                    : '';
-        const currentIndicator = model.id === currentModel ? ' (current)' : '';
-        const unmatchedIndicator = model.unmatched ? ' [unmatched]' : '';
+                    : "";
+        const currentIndicator = model.id === currentModel ? " (current)" : "";
+        const unmatchedIndicator = model.unmatched ? " [unmatched]" : "";
         return {
             label: `${model.label}${visionIndicator}${priceInfo}${ctxInfo}${unmatchedIndicator}${currentIndicator}`,
             value: model.id,

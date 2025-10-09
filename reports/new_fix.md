@@ -9,7 +9,7 @@
 
 ## User Message
 
-There is an issue when using LM Studio.  The app runs great when using cloud models from OpenRouter - I can have sessions with hundreds of requests with errors happening but being handled by our error-handling routines and allowing for productive sessions.  However, something has gotten buggy when using LM Studio models - the models seem to hang, I think they're getting stuck in loops, but there's no obvious debug messages being emitted to show what's happening. It's so bad that I can't get a single successful response to any request.  I think I can see the looping in the LM Studio application logs, but they're difficult to read because our app polls it frequently for lists of models that clutter the logs.  Take an initial pass at investigating any obvious problems that could be causing this, and if needed we can dig into further debugging and looking at LM Studio's logs.
+There is an issue when using LM Studio. The app runs great when using cloud models from OpenRouter - I can have sessions with hundreds of requests with errors happening but being handled by our error-handling routines and allowing for productive sessions. However, something has gotten buggy when using LM Studio models - the models seem to hang, I think they're getting stuck in loops, but there's no obvious debug messages being emitted to show what's happening. It's so bad that I can't get a single successful response to any request. I think I can see the looping in the LM Studio application logs, but they're difficult to read because our app polls it frequently for lists of models that clutter the logs. Take an initial pass at investigating any obvious problems that could be causing this, and if needed we can dig into further debugging and looking at LM Studio's logs.
 
 ---
 
@@ -72,4 +72,3 @@ export new_fix.md
 ### Info
 
 > Request cancelled.
-

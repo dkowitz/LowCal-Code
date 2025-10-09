@@ -10,15 +10,15 @@
  * with the actual tool class names.
  */
 export const ToolNames = {
-  EDIT: 'edit',
-  WRITE_FILE: 'write_file',
-  READ_FILE: 'read_file',
-  READ_MANY_FILES: 'read_many_files',
-  GREP: 'search_file_content',
-  GLOB: 'glob',
-  SHELL: 'run_shell_command',
-  TODO_WRITE: 'todo_write',
-  MEMORY: 'save_memory',
-  TASK: 'task',
-  EXIT_PLAN_MODE: 'exit_plan_mode',
+  EDIT: "edit",
+  WRITE_FILE: "write_file",
+  READ_FILE: "read_file",
+  READ_MANY_FILES: "read_many_files",
+  GREP: "search_file_content",
+  GLOB: "glob",
+  SHELL: "run_shell_command",
+  TODO_WRITE: "todo_write",
+  MEMORY: "save_memory",
+  TASK: "task",
+  EXIT_PLAN_MODE: "exit_plan_mode",
 } as const;

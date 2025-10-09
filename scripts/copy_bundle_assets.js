@@ -17,14 +17,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-import { copyFileSync, existsSync, mkdirSync } from 'node:fs';
-import { dirname, join, basename } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { glob } from 'glob';
+import { copyFileSync, existsSync, mkdirSync } from "node:fs";
+import { dirname, join, basename } from "node:path";
+import { fileURLToPath } from "node:url";
+import { glob } from "glob";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const root = join(__dirname, '..');
-const bundleDir = join(root, 'bundle');
+const root = join(__dirname, "..");
+const bundleDir = join(root, "bundle");
 
 // Create the bundle directory if it doesn't exist
 if (!existsSync(bundleDir)) {
@@ -32,9 +32,9 @@ if (!existsSync(bundleDir)) {
 }
 
 // Find and copy all .sb files from packages to the root of the bundle directory
-const sbFiles = glob.sync('packages/**/*.sb', { cwd: root });
+const sbFiles = glob.sync("packages/**/*.sb", { cwd: root });
 for (const file of sbFiles) {
   copyFileSync(join(root, file), join(bundleDir, basename(file)));
 }
 
-console.log('Assets copied to bundle/');
+console.log("Assets copied to bundle/");

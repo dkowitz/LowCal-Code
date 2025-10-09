@@ -4,19 +4,19 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { renderWithProviders } from '../../test-utils/render.js';
-import { describe, it, expect, vi } from 'vitest';
-import { ShellConfirmationDialog } from './ShellConfirmationDialog.js';
+import { renderWithProviders } from "../../test-utils/render.js";
+import { describe, it, expect, vi } from "vitest";
+import { ShellConfirmationDialog } from "./ShellConfirmationDialog.js";
 
-describe('ShellConfirmationDialog', () => {
+describe("ShellConfirmationDialog", () => {
   const onConfirm = vi.fn();
 
   const request = {
-    commands: ['ls -la', 'echo "hello"'],
+    commands: ["ls -la", 'echo "hello"'],
     onConfirm,
   };
 
-  it('renders correctly', () => {
+  it("renders correctly", () => {
     const { lastFrame } = renderWithProviders(
       <ShellConfirmationDialog request={request} />,
     );
@@ -30,7 +30,7 @@ describe('ShellConfirmationDialog', () => {
     const select = lastFrame()!.toString();
     // Simulate selecting the first option
     // This is a simplified way to test the selection
-    expect(select).toContain('Yes, allow once');
+    expect(select).toContain("Yes, allow once");
   });
 
   it('calls onConfirm with ProceedAlways when "Yes, allow always for this session" is selected', () => {
@@ -39,7 +39,7 @@ describe('ShellConfirmationDialog', () => {
     );
     const select = lastFrame()!.toString();
     // Simulate selecting the second option
-    expect(select).toContain('Yes, allow always for this session');
+    expect(select).toContain("Yes, allow always for this session");
   });
 
   it('calls onConfirm with Cancel when "No (esc)" is selected', () => {
@@ -48,6 +48,6 @@ describe('ShellConfirmationDialog', () => {
     );
     const select = lastFrame()!.toString();
     // Simulate selecting the third option
-    expect(select).toContain('No (esc)');
+    expect(select).toContain("No (esc)");
   });
 });

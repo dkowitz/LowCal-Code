@@ -4,9 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import type { IQwenOAuth2Client } from './qwenOAuth2.js';
-import { type QwenCredentials, type ErrorData } from './qwenOAuth2.js';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import type { IQwenOAuth2Client } from "./qwenOAuth2.js";
+import { type QwenCredentials, type ErrorData } from "./qwenOAuth2.js";
 import type {
   GenerateContentParameters,
   GenerateContentResponse,
@@ -14,15 +14,15 @@ import type {
   CountTokensResponse,
   EmbedContentParameters,
   EmbedContentResponse,
-} from '@google/genai';
-import { FinishReason } from '@google/genai';
-import { QwenContentGenerator } from './qwenContentGenerator.js';
-import { SharedTokenManager } from './sharedTokenManager.js';
-import type { Config } from '../config/config.js';
-import { AuthType } from '../core/contentGenerator.js';
+} from "@google/genai";
+import { FinishReason } from "@google/genai";
+import { QwenContentGenerator } from "./qwenContentGenerator.js";
+import { SharedTokenManager } from "./sharedTokenManager.js";
+import type { Config } from "../config/config.js";
+import { AuthType } from "../core/contentGenerator.js";
 
 // Mock OpenAI client to avoid real network calls
-vi.mock('openai', () => ({
+vi.mock("openai", () => ({
   default: class MockOpenAI {
     chat = {
       completions: {
@@ -32,8 +32,8 @@ vi.mock('openai', () => ({
     embeddings = {
       create: vi.fn(),
     };
-    apiKey = '';
-    baseURL = '';
+    apiKey = "";
+    baseURL = "";
     constructor(config: { apiKey: string; baseURL: string }) {
       this.apiKey = config.apiKey;
       this.baseURL = config.baseURL;
@@ -42,14 +42,14 @@ vi.mock('openai', () => ({
 }));
 
 // Mock DashScope provider
-vi.mock('../core/openaiContentGenerator/provider/dashscope.js', () => ({
+vi.mock("../core/openaiContentGenerator/provider/dashscope.js", () => ({
   DashScopeOpenAICompatibleProvider: class {
     constructor(_config: unknown, _cliConfig: unknown) {}
   },
 }));
 
 // Mock ContentGenerationPipeline
-vi.mock('../core/openaiContentGenerator/pipeline.js', () => ({
+vi.mock("../core/openaiContentGenerator/pipeline.js", () => ({
   ContentGenerationPipeline: class {
     client: {
       apiKey: string;
@@ -66,8 +66,8 @@ vi.mock('../core/openaiContentGenerator/pipeline.js', () => ({
 
     constructor(_config: unknown) {
       this.client = {
-        apiKey: '',
-        baseURL: '',
+        apiKey: "",
+        baseURL: "",
         chat: {
           completions: {
             create: vi.fn(),
@@ -83,7 +83,7 @@ vi.mock('../core/openaiContentGenerator/pipeline.js', () => ({
       _request: GenerateContentParameters,
       _userPromptId: string,
     ): Promise<GenerateContentResponse> {
-      return createMockResponse('Test response');
+      return createMockResponse("Test response");
     }
 
     async executeStream(
@@ -91,8 +91,8 @@ vi.mock('../core/openaiContentGenerator/pipeline.js', () => ({
       _userPromptId: string,
     ): Promise<AsyncGenerator<GenerateContentResponse>> {
       return (async function* () {
-        yield createMockResponse('Stream chunk 1');
-        yield createMockResponse('Stream chunk 2');
+        yield createMockResponse("Stream chunk 1");
+        yield createMockResponse("Stream chunk 2");
       })();
     }
 
@@ -111,7 +111,7 @@ vi.mock('../core/openaiContentGenerator/pipeline.js', () => ({
 }));
 
 // Mock SharedTokenManager
-vi.mock('./sharedTokenManager.js', () => ({
+vi.mock("./sharedTokenManager.js", () => ({
   SharedTokenManager: class {
     private static instance: unknown = null;
     private mockCredentials: QwenCredentials | null = null;
@@ -153,27 +153,27 @@ vi.mock('./sharedTokenManager.js', () => ({
         const isAuthError =
           errorCode === 401 ||
           errorCode === 403 ||
-          errorMessage.includes('unauthorized') ||
-          errorMessage.includes('forbidden') ||
-          errorMessage.includes('token expired');
+          errorMessage.includes("unauthorized") ||
+          errorMessage.includes("forbidden") ||
+          errorMessage.includes("token expired");
 
         if (isAuthError) {
           // Try to refresh the token through the client
           try {
             const refreshResult = await qwenClient.refreshAccessToken();
-            if (refreshResult && !('error' in refreshResult)) {
+            if (refreshResult && !("error" in refreshResult)) {
               // Refresh succeeded, update client credentials and return them
               const updatedCredentials = qwenClient.getCredentials();
               return updatedCredentials;
             } else {
               // Refresh failed, throw appropriate error
               throw new Error(
-                'Failed to obtain valid Qwen access token. Please re-authenticate.',
+                "Failed to obtain valid Qwen access token. Please re-authenticate.",
               );
             }
           } catch {
             throw new Error(
-              'Failed to obtain valid Qwen access token. Please re-authenticate.',
+              "Failed to obtain valid Qwen access token. Please re-authenticate.",
             );
           }
         } else {
@@ -189,9 +189,9 @@ vi.mock('./sharedTokenManager.js', () => ({
 
       // Default fallback for tests that need credentials
       return {
-        access_token: 'valid-token',
-        refresh_token: 'valid-refresh-token',
-        resource_url: 'https://test-endpoint.com/v1',
+        access_token: "valid-token",
+        refresh_token: "valid-refresh-token",
+        resource_url: "https://test-endpoint.com/v1",
         expiry_date: Date.now() + 3600000,
       };
     }
@@ -218,7 +218,7 @@ vi.mock('./sharedTokenManager.js', () => ({
 }));
 
 // Mock the OpenAIContentGenerator parent class
-vi.mock('../core/openaiContentGenerator/index.js', () => ({
+vi.mock("../core/openaiContentGenerator/index.js", () => ({
   OpenAIContentGenerator: class {
     pipeline: {
       client: {
@@ -230,8 +230,8 @@ vi.mock('../core/openaiContentGenerator/index.js', () => ({
     constructor(_config: Config, _provider: unknown) {
       this.pipeline = {
         client: {
-          apiKey: 'test-key',
-          baseURL: 'https://api.openai.com/v1',
+          apiKey: "test-key",
+          baseURL: "https://api.openai.com/v1",
         },
       };
     }
@@ -239,15 +239,15 @@ vi.mock('../core/openaiContentGenerator/index.js', () => ({
     async generateContent(
       _request: GenerateContentParameters,
     ): Promise<GenerateContentResponse> {
-      return createMockResponse('Generated content');
+      return createMockResponse("Generated content");
     }
 
     async generateContentStream(
       _request: GenerateContentParameters,
     ): Promise<AsyncGenerator<GenerateContentResponse>> {
       return (async function* () {
-        yield createMockResponse('Stream chunk 1');
-        yield createMockResponse('Stream chunk 2');
+        yield createMockResponse("Stream chunk 1");
+        yield createMockResponse("Stream chunk 2");
       })();
     }
 
@@ -276,7 +276,7 @@ const createMockResponse = (text: string): GenerateContentResponse =>
   ({
     candidates: [
       {
-        content: { role: 'model', parts: [{ text }] },
+        content: { role: "model", parts: [{ text }] },
         finishReason: FinishReason.STOP,
         index: 0,
         safetyRatings: [],
@@ -286,19 +286,19 @@ const createMockResponse = (text: string): GenerateContentResponse =>
     text,
     data: undefined,
     functionCalls: [],
-    executableCode: '',
-    codeExecutionResult: '',
+    executableCode: "",
+    codeExecutionResult: "",
   }) as GenerateContentResponse;
 
-describe('QwenContentGenerator', () => {
+describe("QwenContentGenerator", () => {
   let mockQwenClient: IQwenOAuth2Client;
   let qwenContentGenerator: QwenContentGenerator;
   let mockConfig: Config;
 
   const mockCredentials: QwenCredentials = {
-    access_token: 'test-access-token',
-    refresh_token: 'test-refresh-token',
-    resource_url: 'https://test-endpoint.com/v1',
+    access_token: "test-access-token",
+    refresh_token: "test-refresh-token",
+    resource_url: "https://test-endpoint.com/v1",
   };
 
   beforeEach(() => {
@@ -307,10 +307,10 @@ describe('QwenContentGenerator', () => {
     // Mock Config
     mockConfig = {
       getContentGeneratorConfig: vi.fn().mockReturnValue({
-        model: 'qwen-turbo',
-        apiKey: 'test-api-key',
-        authType: 'qwen',
-        baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        model: "qwen-turbo",
+        apiKey: "test-api-key",
+        authType: "qwen",
+        baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
         enableOpenAILogging: false,
         timeout: 120000,
         maxRetries: 3,
@@ -320,8 +320,8 @@ describe('QwenContentGenerator', () => {
           top_p: 0.9,
         },
       }),
-      getCliVersion: vi.fn().mockReturnValue('1.0.0'),
-      getSessionId: vi.fn().mockReturnValue('test-session-id'),
+      getCliVersion: vi.fn().mockReturnValue("1.0.0"),
+      getSessionId: vi.fn().mockReturnValue("test-session-id"),
       getUsageStatisticsEnabled: vi.fn().mockReturnValue(false),
     } as unknown as Config;
 
@@ -337,10 +337,10 @@ describe('QwenContentGenerator', () => {
 
     // Create QwenContentGenerator instance
     const contentGeneratorConfig = {
-      model: 'qwen-turbo',
-      apiKey: 'test-api-key',
+      model: "qwen-turbo",
+      apiKey: "test-api-key",
       authType: AuthType.QWEN_OAUTH,
-      baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
       timeout: 120000,
       maxRetries: 3,
     };
@@ -355,59 +355,59 @@ describe('QwenContentGenerator', () => {
     vi.restoreAllMocks();
   });
 
-  describe('Core Content Generation Methods', () => {
-    it('should generate content with valid token', async () => {
+  describe("Core Content Generation Methods", () => {
+    it("should generate content with valid token", async () => {
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'valid-token',
+        token: "valid-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue(mockCredentials);
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
       const result = await qwenContentGenerator.generateContent(
         request,
-        'test-prompt-id',
+        "test-prompt-id",
       );
 
-      expect(result.text).toBe('Generated content');
+      expect(result.text).toBe("Generated content");
       expect(mockQwenClient.getAccessToken).toHaveBeenCalled();
     });
 
-    it('should generate content stream with valid token', async () => {
+    it("should generate content stream with valid token", async () => {
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'valid-token',
+        token: "valid-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue(mockCredentials);
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello stream' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello stream" }] }],
       };
 
       const stream = await qwenContentGenerator.generateContentStream(
         request,
-        'test-prompt-id',
+        "test-prompt-id",
       );
       const chunks: string[] = [];
 
       for await (const chunk of stream) {
-        chunks.push(chunk.text || '');
+        chunks.push(chunk.text || "");
       }
 
-      expect(chunks).toEqual(['Stream chunk 1', 'Stream chunk 2']);
+      expect(chunks).toEqual(["Stream chunk 1", "Stream chunk 2"]);
       expect(mockQwenClient.getAccessToken).toHaveBeenCalled();
     });
 
-    it('should count tokens without requiring authentication', async () => {
+    it("should count tokens without requiring authentication", async () => {
       // Clear any previous mock calls
       vi.clearAllMocks();
 
       const request: CountTokensParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Count me' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Count me" }] }],
       };
 
       const result = await qwenContentGenerator.countTokens(request);
@@ -417,15 +417,15 @@ describe('QwenContentGenerator', () => {
       expect(mockQwenClient.getAccessToken).not.toHaveBeenCalled();
     });
 
-    it('should embed content with valid token', async () => {
+    it("should embed content with valid token", async () => {
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'valid-token',
+        token: "valid-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue(mockCredentials);
 
       const request: EmbedContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ parts: [{ text: 'Embed me' }] }],
+        model: "qwen-turbo",
+        contents: [{ parts: [{ text: "Embed me" }] }],
       };
 
       const result = await qwenContentGenerator.embedContent(request);
@@ -436,48 +436,48 @@ describe('QwenContentGenerator', () => {
     });
   });
 
-  describe('Token Management and Refresh Logic', () => {
-    it('should refresh token on auth error and retry', async () => {
-      const authError = { status: 401, message: 'Unauthorized' };
+  describe("Token Management and Refresh Logic", () => {
+    it("should refresh token on auth error and retry", async () => {
+      const authError = { status: 401, message: "Unauthorized" };
 
       // First call fails with auth error, second call succeeds
       vi.mocked(mockQwenClient.getAccessToken)
         .mockRejectedValueOnce(authError)
-        .mockResolvedValueOnce({ token: 'refreshed-token' });
+        .mockResolvedValueOnce({ token: "refreshed-token" });
 
       // Refresh succeeds
       vi.mocked(mockQwenClient.refreshAccessToken).mockResolvedValue({
-        access_token: 'refreshed-token',
-        token_type: 'Bearer',
+        access_token: "refreshed-token",
+        token_type: "Bearer",
         expires_in: 3600,
-        resource_url: 'https://refreshed-endpoint.com',
+        resource_url: "https://refreshed-endpoint.com",
       });
 
       // Set credentials for second call
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
-        access_token: 'refreshed-token',
-        token_type: 'Bearer',
-        refresh_token: 'refresh-token',
-        resource_url: 'https://refreshed-endpoint.com',
+        access_token: "refreshed-token",
+        token_type: "Bearer",
+        refresh_token: "refresh-token",
+        resource_url: "https://refreshed-endpoint.com",
         expiry_date: Date.now() + 3600000,
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
       const result = await qwenContentGenerator.generateContent(
         request,
-        'test-prompt-id',
+        "test-prompt-id",
       );
 
-      expect(result.text).toBe('Generated content');
+      expect(result.text).toBe("Generated content");
       expect(mockQwenClient.refreshAccessToken).toHaveBeenCalled();
     });
 
-    it('should refresh token on auth error and retry for content stream', async () => {
-      const authError = { status: 401, message: 'Unauthorized' };
+    it("should refresh token on auth error and retry for content stream", async () => {
+      const authError = { status: 401, message: "Unauthorized" };
 
       // Reset mocks for this test
       vi.clearAllMocks();
@@ -485,100 +485,100 @@ describe('QwenContentGenerator', () => {
       // First call fails with auth error, second call succeeds
       vi.mocked(mockQwenClient.getAccessToken)
         .mockRejectedValueOnce(authError)
-        .mockResolvedValueOnce({ token: 'refreshed-stream-token' });
+        .mockResolvedValueOnce({ token: "refreshed-stream-token" });
 
       // Refresh succeeds
       vi.mocked(mockQwenClient.refreshAccessToken).mockResolvedValue({
-        access_token: 'refreshed-stream-token',
-        token_type: 'Bearer',
+        access_token: "refreshed-stream-token",
+        token_type: "Bearer",
         expires_in: 3600,
-        resource_url: 'https://refreshed-stream-endpoint.com',
+        resource_url: "https://refreshed-stream-endpoint.com",
       });
 
       // Set credentials for second call
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
-        access_token: 'refreshed-stream-token',
-        token_type: 'Bearer',
-        refresh_token: 'refresh-token',
-        resource_url: 'https://refreshed-stream-endpoint.com',
+        access_token: "refreshed-stream-token",
+        token_type: "Bearer",
+        refresh_token: "refresh-token",
+        resource_url: "https://refreshed-stream-endpoint.com",
         expiry_date: Date.now() + 3600000,
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello stream' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello stream" }] }],
       };
 
       const stream = await qwenContentGenerator.generateContentStream(
         request,
-        'test-prompt-id',
+        "test-prompt-id",
       );
       const chunks: string[] = [];
 
       for await (const chunk of stream) {
-        chunks.push(chunk.text || '');
+        chunks.push(chunk.text || "");
       }
 
-      expect(chunks).toEqual(['Stream chunk 1', 'Stream chunk 2']);
+      expect(chunks).toEqual(["Stream chunk 1", "Stream chunk 2"]);
       expect(mockQwenClient.refreshAccessToken).toHaveBeenCalled();
     });
 
-    it('should handle token refresh failure', async () => {
+    it("should handle token refresh failure", async () => {
       // Mock the SharedTokenManager to throw an error
       const mockTokenManager = SharedTokenManager.getInstance() as unknown as {
         setMockError: (error: Error | null) => void;
       };
       mockTokenManager.setMockError(
         new Error(
-          'Failed to obtain valid Qwen access token. Please re-authenticate.',
+          "Failed to obtain valid Qwen access token. Please re-authenticate.",
         ),
       );
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
       await expect(
-        qwenContentGenerator.generateContent(request, 'test-prompt-id'),
+        qwenContentGenerator.generateContent(request, "test-prompt-id"),
       ).rejects.toThrow(
-        'Failed to obtain valid Qwen access token. Please re-authenticate.',
+        "Failed to obtain valid Qwen access token. Please re-authenticate.",
       );
 
       // Clean up
       mockTokenManager.setMockError(null);
     });
 
-    it('should update endpoint when token is refreshed', async () => {
+    it("should update endpoint when token is refreshed", async () => {
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'valid-token',
+        token: "valid-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
         ...mockCredentials,
-        resource_url: 'https://new-endpoint.com',
+        resource_url: "https://new-endpoint.com",
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
-      await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+      await qwenContentGenerator.generateContent(request, "test-prompt-id");
 
       expect(mockQwenClient.getCredentials).toHaveBeenCalled();
     });
   });
 
-  describe('Endpoint URL Normalization', () => {
-    it('should use default endpoint when no custom endpoint provided', async () => {
-      let capturedBaseURL = '';
+  describe("Endpoint URL Normalization", () => {
+    it("should use default endpoint when no custom endpoint provided", async () => {
+      let capturedBaseURL = "";
 
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'valid-token',
+        token: "valid-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
-        access_token: 'test-token',
-        refresh_token: 'test-refresh',
+        access_token: "test-token",
+        refresh_token: "test-refresh",
         // No resource_url provided
       });
 
@@ -593,34 +593,34 @@ describe('QwenContentGenerator', () => {
         capturedBaseURL = (
           this as unknown as { pipeline: { client: { baseURL: string } } }
         ).pipeline.client.baseURL;
-        return createMockResponse('Generated content');
+        return createMockResponse("Generated content");
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
-      await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+      await qwenContentGenerator.generateContent(request, "test-prompt-id");
 
       // Should use default endpoint with /v1 suffix
       expect(capturedBaseURL).toBe(
-        'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        "https://dashscope.aliyuncs.com/compatible-mode/v1",
       );
 
       // Restore original method
       parentPrototype.generateContent = originalGenerateContent;
     });
 
-    it('should normalize hostname-only endpoints by adding https protocol', async () => {
-      let capturedBaseURL = '';
+    it("should normalize hostname-only endpoints by adding https protocol", async () => {
+      let capturedBaseURL = "";
 
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'valid-token',
+        token: "valid-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
         ...mockCredentials,
-        resource_url: 'custom-endpoint.com',
+        resource_url: "custom-endpoint.com",
       });
 
       // Mock the parent's generateContent to capture the baseURL during the call
@@ -634,32 +634,32 @@ describe('QwenContentGenerator', () => {
         capturedBaseURL = (
           this as unknown as { pipeline: { client: { baseURL: string } } }
         ).pipeline.client.baseURL;
-        return createMockResponse('Generated content');
+        return createMockResponse("Generated content");
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
-      await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+      await qwenContentGenerator.generateContent(request, "test-prompt-id");
 
       // Should add https:// and /v1
-      expect(capturedBaseURL).toBe('https://custom-endpoint.com/v1');
+      expect(capturedBaseURL).toBe("https://custom-endpoint.com/v1");
 
       // Restore original method
       parentPrototype.generateContent = originalGenerateContent;
     });
 
-    it('should preserve existing protocol in endpoint URLs', async () => {
-      let capturedBaseURL = '';
+    it("should preserve existing protocol in endpoint URLs", async () => {
+      let capturedBaseURL = "";
 
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'valid-token',
+        token: "valid-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
         ...mockCredentials,
-        resource_url: 'https://custom-endpoint.com',
+        resource_url: "https://custom-endpoint.com",
       });
 
       // Mock the parent's generateContent to capture the baseURL during the call
@@ -673,32 +673,32 @@ describe('QwenContentGenerator', () => {
         capturedBaseURL = (
           this as unknown as { pipeline: { client: { baseURL: string } } }
         ).pipeline.client.baseURL;
-        return createMockResponse('Generated content');
+        return createMockResponse("Generated content");
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
-      await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+      await qwenContentGenerator.generateContent(request, "test-prompt-id");
 
       // Should preserve https:// and add /v1
-      expect(capturedBaseURL).toBe('https://custom-endpoint.com/v1');
+      expect(capturedBaseURL).toBe("https://custom-endpoint.com/v1");
 
       // Restore original method
       parentPrototype.generateContent = originalGenerateContent;
     });
 
-    it('should not duplicate /v1 suffix if already present', async () => {
-      let capturedBaseURL = '';
+    it("should not duplicate /v1 suffix if already present", async () => {
+      let capturedBaseURL = "";
 
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'valid-token',
+        token: "valid-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
         ...mockCredentials,
-        resource_url: 'https://custom-endpoint.com/v1',
+        resource_url: "https://custom-endpoint.com/v1",
       });
 
       // Mock the parent's generateContent to capture the baseURL during the call
@@ -712,26 +712,26 @@ describe('QwenContentGenerator', () => {
         capturedBaseURL = (
           this as unknown as { pipeline: { client: { baseURL: string } } }
         ).pipeline.client.baseURL;
-        return createMockResponse('Generated content');
+        return createMockResponse("Generated content");
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
-      await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+      await qwenContentGenerator.generateContent(request, "test-prompt-id");
 
       // Should not duplicate /v1
-      expect(capturedBaseURL).toBe('https://custom-endpoint.com/v1');
+      expect(capturedBaseURL).toBe("https://custom-endpoint.com/v1");
 
       // Restore original method
       parentPrototype.generateContent = originalGenerateContent;
     });
   });
 
-  describe('Client State Management', () => {
-    it('should set dynamic credentials during operations', async () => {
+  describe("Client State Management", () => {
+    it("should set dynamic credentials during operations", async () => {
       const client = (
         qwenContentGenerator as unknown as {
           pipeline: { client: { apiKey: string; baseURL: string } };
@@ -739,27 +739,27 @@ describe('QwenContentGenerator', () => {
       ).pipeline.client;
 
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'temp-token',
+        token: "temp-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
         ...mockCredentials,
-        access_token: 'temp-token',
-        resource_url: 'https://temp-endpoint.com',
+        access_token: "temp-token",
+        resource_url: "https://temp-endpoint.com",
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
-      await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+      await qwenContentGenerator.generateContent(request, "test-prompt-id");
 
       // Should have dynamic credentials set
-      expect(client.apiKey).toBe('temp-token');
-      expect(client.baseURL).toBe('https://temp-endpoint.com/v1');
+      expect(client.apiKey).toBe("temp-token");
+      expect(client.baseURL).toBe("https://temp-endpoint.com/v1");
     });
 
-    it('should set credentials even when operation throws', async () => {
+    it("should set credentials even when operation throws", async () => {
       const client = (
         qwenContentGenerator as unknown as {
           pipeline: { client: { apiKey: string; baseURL: string } };
@@ -767,15 +767,15 @@ describe('QwenContentGenerator', () => {
       ).pipeline.client;
 
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'temp-token',
+        token: "temp-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
         ...mockCredentials,
-        access_token: 'temp-token',
+        access_token: "temp-token",
       });
 
       // Mock the parent method to throw an error
-      const mockError = new Error('Network error');
+      const mockError = new Error("Network error");
       const parentPrototype = Object.getPrototypeOf(
         Object.getPrototypeOf(qwenContentGenerator),
       );
@@ -783,34 +783,34 @@ describe('QwenContentGenerator', () => {
       parentPrototype.generateContent = vi.fn().mockRejectedValue(mockError);
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
       try {
-        await qwenContentGenerator.generateContent(request, 'test-prompt-id');
+        await qwenContentGenerator.generateContent(request, "test-prompt-id");
       } catch (error) {
         expect(error).toBe(mockError);
       }
 
       // Credentials should still be set before the error occurred
-      expect(client.apiKey).toBe('temp-token');
-      expect(client.baseURL).toBe('https://test-endpoint.com/v1');
+      expect(client.apiKey).toBe("temp-token");
+      expect(client.baseURL).toBe("https://test-endpoint.com/v1");
 
       // Restore original method
       parentPrototype.generateContent = originalGenerateContent;
     });
   });
 
-  describe('Error Handling and Retry Logic', () => {
-    it('should retry once on authentication errors', async () => {
-      const authError = { status: 401, message: 'Unauthorized' };
+  describe("Error Handling and Retry Logic", () => {
+    it("should retry once on authentication errors", async () => {
+      const authError = { status: 401, message: "Unauthorized" };
 
       // Mock first call to fail with auth error
       const mockGenerateContent = vi
         .fn()
         .mockRejectedValueOnce(authError)
-        .mockResolvedValueOnce(createMockResponse('Success after retry'));
+        .mockResolvedValueOnce(createMockResponse("Success after retry"));
 
       // Replace the parent method
       const parentPrototype = Object.getPrototypeOf(
@@ -826,34 +826,34 @@ describe('QwenContentGenerator', () => {
         if (getAccessTokenCallCount <= 2) {
           throw authError; // Fail on first two calls (initial + retry)
         }
-        return { token: 'refreshed-token' }; // Succeed after refresh
+        return { token: "refreshed-token" }; // Succeed after refresh
       });
 
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
-        access_token: 'refreshed-token',
-        token_type: 'Bearer',
-        refresh_token: 'refresh-token',
-        resource_url: 'https://test-endpoint.com',
+        access_token: "refreshed-token",
+        token_type: "Bearer",
+        refresh_token: "refresh-token",
+        resource_url: "https://test-endpoint.com",
         expiry_date: Date.now() + 3600000,
       });
 
       vi.mocked(mockQwenClient.refreshAccessToken).mockResolvedValue({
-        access_token: 'refreshed-token',
-        token_type: 'Bearer',
+        access_token: "refreshed-token",
+        token_type: "Bearer",
         expires_in: 3600,
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
       const result = await qwenContentGenerator.generateContent(
         request,
-        'test-prompt-id',
+        "test-prompt-id",
       );
 
-      expect(result.text).toBe('Success after retry');
+      expect(result.text).toBe("Success after retry");
       expect(mockGenerateContent).toHaveBeenCalledTimes(2);
       expect(mockQwenClient.refreshAccessToken).toHaveBeenCalled();
 
@@ -861,8 +861,8 @@ describe('QwenContentGenerator', () => {
       parentPrototype.generateContent = originalGenerateContent;
     });
 
-    it('should not retry non-authentication errors', async () => {
-      const networkError = new Error('Network timeout');
+    it("should not retry non-authentication errors", async () => {
+      const networkError = new Error("Network timeout");
 
       const mockGenerateContent = vi.fn().mockRejectedValue(networkError);
       const parentPrototype = Object.getPrototypeOf(
@@ -872,18 +872,18 @@ describe('QwenContentGenerator', () => {
       parentPrototype.generateContent = mockGenerateContent;
 
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'valid-token',
+        token: "valid-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue(mockCredentials);
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
       await expect(
-        qwenContentGenerator.generateContent(request, 'test-prompt-id'),
-      ).rejects.toThrow('Network timeout');
+        qwenContentGenerator.generateContent(request, "test-prompt-id"),
+      ).rejects.toThrow("Network timeout");
       expect(mockGenerateContent).toHaveBeenCalledTimes(1);
       expect(mockQwenClient.refreshAccessToken).not.toHaveBeenCalled();
 
@@ -891,58 +891,58 @@ describe('QwenContentGenerator', () => {
       parentPrototype.generateContent = originalGenerateContent;
     });
 
-    it('should handle error response from token refresh', async () => {
+    it("should handle error response from token refresh", async () => {
       vi.mocked(mockQwenClient.getAccessToken).mockRejectedValue(
-        new Error('Token expired'),
+        new Error("Token expired"),
       );
       vi.mocked(mockQwenClient.refreshAccessToken).mockResolvedValue({
-        error: 'invalid_grant',
-        error_description: 'Refresh token expired',
+        error: "invalid_grant",
+        error_description: "Refresh token expired",
       } as ErrorData);
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
       await expect(
-        qwenContentGenerator.generateContent(request, 'test-prompt-id'),
-      ).rejects.toThrow('Failed to obtain valid Qwen access token');
+        qwenContentGenerator.generateContent(request, "test-prompt-id"),
+      ).rejects.toThrow("Failed to obtain valid Qwen access token");
     });
   });
 
-  describe('Token State Management', () => {
-    it('should cache and return current token', () => {
+  describe("Token State Management", () => {
+    it("should cache and return current token", () => {
       expect(qwenContentGenerator.getCurrentToken()).toBeNull();
 
       // Simulate setting a token internally
       (
         qwenContentGenerator as unknown as { currentToken: string }
-      ).currentToken = 'cached-token';
+      ).currentToken = "cached-token";
 
-      expect(qwenContentGenerator.getCurrentToken()).toBe('cached-token');
+      expect(qwenContentGenerator.getCurrentToken()).toBe("cached-token");
     });
 
-    it('should clear token on clearToken()', () => {
+    it("should clear token on clearToken()", () => {
       // Simulate having cached token value
       const qwenInstance = qwenContentGenerator as unknown as {
         currentToken: string;
       };
-      qwenInstance.currentToken = 'cached-token';
+      qwenInstance.currentToken = "cached-token";
 
       qwenContentGenerator.clearToken();
 
       expect(qwenContentGenerator.getCurrentToken()).toBeNull();
     });
 
-    it('should handle concurrent token refresh requests', async () => {
+    it("should handle concurrent token refresh requests", async () => {
       let refreshCallCount = 0;
 
       // Clear any existing cached token first
       qwenContentGenerator.clearToken();
 
       // Mock to simulate auth error on first parent call, which should trigger refresh
-      const authError = { status: 401, message: 'Unauthorized' };
+      const authError = { status: 401, message: "Unauthorized" };
       let parentCallCount = 0;
 
       vi.mocked(mockQwenClient.getAccessToken).mockRejectedValue(authError);
@@ -953,8 +953,8 @@ describe('QwenContentGenerator', () => {
           refreshCallCount++;
           await new Promise((resolve) => setTimeout(resolve, 50)); // Longer delay to ensure concurrency
           return {
-            access_token: 'refreshed-token',
-            token_type: 'Bearer',
+            access_token: "refreshed-token",
+            token_type: "Bearer",
             expires_in: 3600,
           };
         },
@@ -970,26 +970,26 @@ describe('QwenContentGenerator', () => {
         if (parentCallCount === 1) {
           throw authError; // First call triggers auth error
         }
-        return createMockResponse('Generated content');
+        return createMockResponse("Generated content");
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
       // Make multiple concurrent requests - should all use the same refresh promise
       const promises = [
-        qwenContentGenerator.generateContent(request, 'test-prompt-id'),
-        qwenContentGenerator.generateContent(request, 'test-prompt-id'),
-        qwenContentGenerator.generateContent(request, 'test-prompt-id'),
+        qwenContentGenerator.generateContent(request, "test-prompt-id"),
+        qwenContentGenerator.generateContent(request, "test-prompt-id"),
+        qwenContentGenerator.generateContent(request, "test-prompt-id"),
       ];
 
       const results = await Promise.all(promises);
 
       // All should succeed
       results.forEach((result) => {
-        expect(result.text).toBe('Generated content');
+        expect(result.text).toBe("Generated content");
       });
 
       // The main test is that all requests succeed without crashing
@@ -1002,14 +1002,14 @@ describe('QwenContentGenerator', () => {
     });
   });
 
-  describe('Error Logging Suppression', () => {
-    it('should suppress logging for authentication errors', () => {
+  describe("Error Logging Suppression", () => {
+    it("should suppress logging for authentication errors", () => {
       const authErrors = [
         { status: 401 },
         { code: 403 },
-        new Error('Unauthorized access'),
-        new Error('Token expired'),
-        new Error('Invalid API key'),
+        new Error("Unauthorized access"),
+        new Error("Token expired"),
+        new Error("Invalid API key"),
       ];
 
       authErrors.forEach((error) => {
@@ -1025,12 +1025,12 @@ describe('QwenContentGenerator', () => {
       });
     });
 
-    it('should not suppress logging for non-auth errors', () => {
+    it("should not suppress logging for non-auth errors", () => {
       const nonAuthErrors = [
-        new Error('Network timeout'),
-        new Error('Rate limit exceeded'),
+        new Error("Network timeout"),
+        new Error("Rate limit exceeded"),
         { status: 500 },
-        new Error('Internal server error'),
+        new Error("Internal server error"),
       ];
 
       nonAuthErrors.forEach((error) => {
@@ -1047,9 +1047,9 @@ describe('QwenContentGenerator', () => {
     });
   });
 
-  describe('Integration Tests', () => {
-    it('should handle complete workflow: get token, use it, refresh on auth error, retry', async () => {
-      const authError = { status: 401, message: 'Token expired' };
+  describe("Integration Tests", () => {
+    it("should handle complete workflow: get token, use it, refresh on auth error, retry", async () => {
+      const authError = { status: 401, message: "Token expired" };
 
       // Setup complex scenario
       let callCount = 0;
@@ -1058,7 +1058,7 @@ describe('QwenContentGenerator', () => {
         if (callCount === 1) {
           throw authError; // First call fails
         }
-        return createMockResponse('Success after refresh'); // Second call succeeds
+        return createMockResponse("Success after refresh"); // Second call succeeds
       });
 
       const parentPrototype = Object.getPrototypeOf(
@@ -1073,47 +1073,47 @@ describe('QwenContentGenerator', () => {
         if (getAccessTokenCallCount <= 2) {
           throw authError; // Fail on first two calls (initial + retry)
         }
-        return { token: 'new-token' }; // Succeed after refresh
+        return { token: "new-token" }; // Succeed after refresh
       });
 
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
-        access_token: 'new-token',
-        token_type: 'Bearer',
-        refresh_token: 'refresh-token',
-        resource_url: 'https://new-endpoint.com',
+        access_token: "new-token",
+        token_type: "Bearer",
+        refresh_token: "refresh-token",
+        resource_url: "https://new-endpoint.com",
         expiry_date: Date.now() + 7200000,
       });
 
       vi.mocked(mockQwenClient.refreshAccessToken).mockResolvedValue({
-        access_token: 'new-token',
-        token_type: 'Bearer',
+        access_token: "new-token",
+        token_type: "Bearer",
         expires_in: 7200,
-        resource_url: 'https://new-endpoint.com',
+        resource_url: "https://new-endpoint.com",
       });
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Test message' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Test message" }] }],
       };
 
       const result = await qwenContentGenerator.generateContent(
         request,
-        'test-prompt-id',
+        "test-prompt-id",
       );
 
-      expect(result.text).toBe('Success after refresh');
+      expect(result.text).toBe("Success after refresh");
       expect(mockQwenClient.getAccessToken).toHaveBeenCalled();
       expect(mockQwenClient.refreshAccessToken).toHaveBeenCalled();
       expect(callCount).toBe(2); // Initial call + retry
     });
   });
 
-  describe('SharedTokenManager Integration', () => {
-    it('should use SharedTokenManager to get valid credentials', async () => {
+  describe("SharedTokenManager Integration", () => {
+    it("should use SharedTokenManager to get valid credentials", async () => {
       const mockTokenManager = {
         getValidCredentials: vi.fn().mockResolvedValue({
-          access_token: 'manager-token',
-          resource_url: 'https://manager-endpoint.com',
+          access_token: "manager-token",
+          resource_url: "https://manager-endpoint.com",
         }),
         getCurrentCredentials: vi.fn(),
         clearCache: vi.fn(),
@@ -1128,16 +1128,16 @@ describe('QwenContentGenerator', () => {
       // Create new instance to pick up the mock
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: "qwen-turbo", authType: AuthType.QWEN_OAUTH },
         mockConfig,
       );
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
-      await newGenerator.generateContent(request, 'test-prompt-id');
+      await newGenerator.generateContent(request, "test-prompt-id");
 
       expect(mockTokenManager.getValidCredentials).toHaveBeenCalledWith(
         mockQwenClient,
@@ -1147,11 +1147,11 @@ describe('QwenContentGenerator', () => {
       SharedTokenManager.getInstance = originalGetInstance;
     });
 
-    it('should handle SharedTokenManager errors gracefully', async () => {
+    it("should handle SharedTokenManager errors gracefully", async () => {
       const mockTokenManager = {
         getValidCredentials: vi
           .fn()
-          .mockRejectedValue(new Error('Token manager error')),
+          .mockRejectedValue(new Error("Token manager error")),
         getCurrentCredentials: vi.fn(),
         clearCache: vi.fn(),
       };
@@ -1163,27 +1163,27 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: "qwen-turbo", authType: AuthType.QWEN_OAUTH },
         mockConfig,
       );
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
       await expect(
-        newGenerator.generateContent(request, 'test-prompt-id'),
-      ).rejects.toThrow('Failed to obtain valid Qwen access token');
+        newGenerator.generateContent(request, "test-prompt-id"),
+      ).rejects.toThrow("Failed to obtain valid Qwen access token");
 
       SharedTokenManager.getInstance = originalGetInstance;
     });
 
-    it('should handle missing access token from credentials', async () => {
+    it("should handle missing access token from credentials", async () => {
       const mockTokenManager = {
         getValidCredentials: vi.fn().mockResolvedValue({
           access_token: undefined,
-          resource_url: 'https://test-endpoint.com',
+          resource_url: "https://test-endpoint.com",
         }),
         getCurrentCredentials: vi.fn(),
         clearCache: vi.fn(),
@@ -1196,44 +1196,44 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: "qwen-turbo", authType: AuthType.QWEN_OAUTH },
         mockConfig,
       );
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
       await expect(
-        newGenerator.generateContent(request, 'test-prompt-id'),
-      ).rejects.toThrow('Failed to obtain valid Qwen access token');
+        newGenerator.generateContent(request, "test-prompt-id"),
+      ).rejects.toThrow("Failed to obtain valid Qwen access token");
 
       SharedTokenManager.getInstance = originalGetInstance;
     });
   });
 
-  describe('getCurrentEndpoint Method', () => {
-    it('should handle URLs with custom ports', () => {
+  describe("getCurrentEndpoint Method", () => {
+    it("should handle URLs with custom ports", () => {
       const endpoints = [
-        { input: 'localhost:8080', expected: 'https://localhost:8080/v1' },
+        { input: "localhost:8080", expected: "https://localhost:8080/v1" },
         {
-          input: 'http://localhost:8080',
-          expected: 'http://localhost:8080/v1',
+          input: "http://localhost:8080",
+          expected: "http://localhost:8080/v1",
         },
         {
-          input: 'https://api.example.com:443',
-          expected: 'https://api.example.com:443/v1',
+          input: "https://api.example.com:443",
+          expected: "https://api.example.com:443/v1",
         },
         {
-          input: 'api.example.com:9000/api',
-          expected: 'https://api.example.com:9000/api/v1',
+          input: "api.example.com:9000/api",
+          expected: "https://api.example.com:9000/api/v1",
         },
       ];
 
       endpoints.forEach(({ input, expected }) => {
         vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-          token: 'test-token',
+          token: "test-token",
         });
         vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
           ...mockCredentials,
@@ -1248,19 +1248,19 @@ describe('QwenContentGenerator', () => {
       });
     });
 
-    it('should handle URLs with existing paths', () => {
+    it("should handle URLs with existing paths", () => {
       const endpoints = [
         {
-          input: 'https://api.example.com/api',
-          expected: 'https://api.example.com/api/v1',
+          input: "https://api.example.com/api",
+          expected: "https://api.example.com/api/v1",
         },
         {
-          input: 'api.example.com/api/v2',
-          expected: 'https://api.example.com/api/v2/v1',
+          input: "api.example.com/api/v2",
+          expected: "https://api.example.com/api/v2/v1",
         },
         {
-          input: 'https://api.example.com/api/v1',
-          expected: 'https://api.example.com/api/v1',
+          input: "https://api.example.com/api/v1",
+          expected: "https://api.example.com/api/v1",
         },
       ];
 
@@ -1273,35 +1273,35 @@ describe('QwenContentGenerator', () => {
       });
     });
 
-    it('should handle undefined resource URL', () => {
+    it("should handle undefined resource URL", () => {
       const generator = qwenContentGenerator as unknown as {
         getCurrentEndpoint: (resourceUrl?: string) => string;
       };
 
       expect(generator.getCurrentEndpoint(undefined)).toBe(
-        'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        "https://dashscope.aliyuncs.com/compatible-mode/v1",
       );
     });
 
-    it('should handle empty resource URL', () => {
+    it("should handle empty resource URL", () => {
       const generator = qwenContentGenerator as unknown as {
         getCurrentEndpoint: (resourceUrl?: string) => string;
       };
 
       // Empty string should fall back to default endpoint
-      expect(generator.getCurrentEndpoint('')).toBe(
-        'https://dashscope.aliyuncs.com/compatible-mode/v1',
+      expect(generator.getCurrentEndpoint("")).toBe(
+        "https://dashscope.aliyuncs.com/compatible-mode/v1",
       );
     });
   });
 
-  describe('isAuthError Method Enhanced', () => {
-    it('should identify auth errors by numeric status codes', () => {
+  describe("isAuthError Method Enhanced", () => {
+    it("should identify auth errors by numeric status codes", () => {
       const authErrors = [
         { code: 401 },
         { status: 403 },
-        { code: '401' }, // String status codes
-        { status: '403' },
+        { code: "401" }, // String status codes
+        { status: "403" },
       ];
 
       authErrors.forEach((error) => {
@@ -1319,17 +1319,17 @@ describe('QwenContentGenerator', () => {
       expect(generator.isAuthError(nonAuthError)).toBe(false);
     });
 
-    it('should identify auth errors by message content variations', () => {
+    it("should identify auth errors by message content variations", () => {
       const authMessages = [
-        'UNAUTHORIZED access',
-        'Access is FORBIDDEN',
-        'Invalid API Key provided',
-        'Invalid Access Token',
-        'Token has Expired',
-        'Authentication Required',
-        'Access Denied by server',
-        'The token has expired and needs refresh',
-        'Bearer token expired',
+        "UNAUTHORIZED access",
+        "Access is FORBIDDEN",
+        "Invalid API Key provided",
+        "Invalid Access Token",
+        "Token has Expired",
+        "Authentication Required",
+        "Access Denied by server",
+        "The token has expired and needs refresh",
+        "Bearer token expired",
       ];
 
       authMessages.forEach((message) => {
@@ -1341,18 +1341,18 @@ describe('QwenContentGenerator', () => {
       });
     });
 
-    it('should not identify non-auth errors', () => {
+    it("should not identify non-auth errors", () => {
       const nonAuthErrors = [
-        new Error('Network timeout'),
-        new Error('Rate limit exceeded'),
+        new Error("Network timeout"),
+        new Error("Rate limit exceeded"),
         { status: 500 },
         { code: 429 },
-        'Internal server error',
+        "Internal server error",
         null,
         undefined,
-        '',
+        "",
         { status: 200 },
-        new Error('Model not found'),
+        new Error("Model not found"),
       ];
 
       nonAuthErrors.forEach((error) => {
@@ -1363,9 +1363,9 @@ describe('QwenContentGenerator', () => {
       });
     });
 
-    it('should handle complex error objects', () => {
+    it("should handle complex error objects", () => {
       const complexErrors = [
-        { error: { status: 401, message: 'Unauthorized' } },
+        { error: { status: 401, message: "Unauthorized" } },
         { response: { status: 403 } },
         { details: { code: 401 } },
       ];
@@ -1380,8 +1380,8 @@ describe('QwenContentGenerator', () => {
     });
   });
 
-  describe('Stream Error Handling', () => {
-    it('should set credentials when stream generation fails', async () => {
+  describe("Stream Error Handling", () => {
+    it("should set credentials when stream generation fails", async () => {
       const client = (
         qwenContentGenerator as unknown as {
           pipeline: { client: { apiKey: string; baseURL: string } };
@@ -1389,12 +1389,12 @@ describe('QwenContentGenerator', () => {
       ).pipeline.client;
 
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'stream-token',
+        token: "stream-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue({
         ...mockCredentials,
-        access_token: 'stream-token',
-        resource_url: 'https://stream-endpoint.com',
+        access_token: "stream-token",
+        resource_url: "https://stream-endpoint.com",
       });
 
       // Mock parent method to throw error
@@ -1405,31 +1405,31 @@ describe('QwenContentGenerator', () => {
         parentPrototype.generateContentStream;
       parentPrototype.generateContentStream = vi
         .fn()
-        .mockRejectedValue(new Error('Stream error'));
+        .mockRejectedValue(new Error("Stream error"));
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Stream test' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Stream test" }] }],
       };
 
       try {
         await qwenContentGenerator.generateContentStream(
           request,
-          'test-prompt-id',
+          "test-prompt-id",
         );
       } catch (error) {
         expect(error).toBeInstanceOf(Error);
       }
 
       // Credentials should be set before the error occurred
-      expect(client.apiKey).toBe('stream-token');
-      expect(client.baseURL).toBe('https://stream-endpoint.com/v1');
+      expect(client.apiKey).toBe("stream-token");
+      expect(client.baseURL).toBe("https://stream-endpoint.com/v1");
 
       // Restore original method
       parentPrototype.generateContentStream = originalGenerateContentStream;
     });
 
-    it('should set credentials for successful streams', async () => {
+    it("should set credentials for successful streams", async () => {
       const client = (
         qwenContentGenerator as unknown as {
           pipeline: { client: { apiKey: string; baseURL: string } };
@@ -1438,14 +1438,14 @@ describe('QwenContentGenerator', () => {
 
       // Set up the mock to return stream credentials
       const streamCredentials = {
-        access_token: 'stream-token',
-        refresh_token: 'stream-refresh-token',
-        resource_url: 'https://stream-endpoint.com',
+        access_token: "stream-token",
+        refresh_token: "stream-refresh-token",
+        resource_url: "https://stream-endpoint.com",
         expiry_date: Date.now() + 3600000,
       };
 
       vi.mocked(mockQwenClient.getAccessToken).mockResolvedValue({
-        token: 'stream-token',
+        token: "stream-token",
       });
       vi.mocked(mockQwenClient.getCredentials).mockReturnValue(
         streamCredentials,
@@ -1458,18 +1458,18 @@ describe('QwenContentGenerator', () => {
       mockTokenManager.setMockCredentials(streamCredentials);
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Stream test' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Stream test" }] }],
       };
 
       const stream = await qwenContentGenerator.generateContentStream(
         request,
-        'test-prompt-id',
+        "test-prompt-id",
       );
 
       // After successful stream creation, credentials should be set for the stream
-      expect(client.apiKey).toBe('stream-token');
-      expect(client.baseURL).toBe('https://stream-endpoint.com/v1');
+      expect(client.apiKey).toBe("stream-token");
+      expect(client.baseURL).toBe("https://stream-endpoint.com/v1");
 
       // Verify stream is iterable and consume it
       expect(stream).toBeDefined();
@@ -1485,11 +1485,11 @@ describe('QwenContentGenerator', () => {
     });
   });
 
-  describe('Token and Endpoint Management', () => {
-    it('should get current token from SharedTokenManager', () => {
+  describe("Token and Endpoint Management", () => {
+    it("should get current token from SharedTokenManager", () => {
       const mockTokenManager = {
         getCurrentCredentials: vi.fn().mockReturnValue({
-          access_token: 'current-token',
+          access_token: "current-token",
         }),
       };
 
@@ -1500,16 +1500,16 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: "qwen-turbo", authType: AuthType.QWEN_OAUTH },
         mockConfig,
       );
 
-      expect(newGenerator.getCurrentToken()).toBe('current-token');
+      expect(newGenerator.getCurrentToken()).toBe("current-token");
 
       SharedTokenManager.getInstance = originalGetInstance;
     });
 
-    it('should return null when no credentials available', () => {
+    it("should return null when no credentials available", () => {
       const mockTokenManager = {
         getCurrentCredentials: vi.fn().mockReturnValue(null),
       };
@@ -1521,7 +1521,7 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: "qwen-turbo", authType: AuthType.QWEN_OAUTH },
         mockConfig,
       );
 
@@ -1530,7 +1530,7 @@ describe('QwenContentGenerator', () => {
       SharedTokenManager.getInstance = originalGetInstance;
     });
 
-    it('should return null when credentials have no access token', () => {
+    it("should return null when credentials have no access token", () => {
       const mockTokenManager = {
         getCurrentCredentials: vi.fn().mockReturnValue({
           access_token: undefined,
@@ -1544,7 +1544,7 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: "qwen-turbo", authType: AuthType.QWEN_OAUTH },
         mockConfig,
       );
 
@@ -1553,7 +1553,7 @@ describe('QwenContentGenerator', () => {
       SharedTokenManager.getInstance = originalGetInstance;
     });
 
-    it('should clear token through SharedTokenManager', () => {
+    it("should clear token through SharedTokenManager", () => {
       const mockTokenManager = {
         clearCache: vi.fn(),
       };
@@ -1565,7 +1565,7 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: "qwen-turbo", authType: AuthType.QWEN_OAUTH },
         mockConfig,
       );
 
@@ -1577,15 +1577,15 @@ describe('QwenContentGenerator', () => {
     });
   });
 
-  describe('Constructor and Initialization', () => {
-    it('should initialize with configured base URL when provided', () => {
+  describe("Constructor and Initialization", () => {
+    it("should initialize with configured base URL when provided", () => {
       const generator = new QwenContentGenerator(
         mockQwenClient,
         {
-          model: 'qwen-turbo',
+          model: "qwen-turbo",
           authType: AuthType.QWEN_OAUTH,
-          baseUrl: 'https://dashscope.aliyuncs.com/compatible-mode/v1',
-          apiKey: 'test-key',
+          baseUrl: "https://dashscope.aliyuncs.com/compatible-mode/v1",
+          apiKey: "test-key",
         },
         mockConfig,
       );
@@ -1594,14 +1594,14 @@ describe('QwenContentGenerator', () => {
         generator as unknown as { pipeline: { client: { baseURL: string } } }
       ).pipeline.client;
       expect(client.baseURL).toBe(
-        'https://dashscope.aliyuncs.com/compatible-mode/v1',
+        "https://dashscope.aliyuncs.com/compatible-mode/v1",
       );
     });
 
-    it('should get SharedTokenManager instance', () => {
+    it("should get SharedTokenManager instance", () => {
       const generator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: "qwen-turbo", authType: AuthType.QWEN_OAUTH },
         mockConfig,
       );
 
@@ -1612,14 +1612,14 @@ describe('QwenContentGenerator', () => {
     });
   });
 
-  describe('Edge Cases and Error Conditions', () => {
-    it('should handle token retrieval with warning when SharedTokenManager fails', async () => {
-      const consoleSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+  describe("Edge Cases and Error Conditions", () => {
+    it("should handle token retrieval with warning when SharedTokenManager fails", async () => {
+      const consoleSpy = vi.spyOn(console, "warn").mockImplementation(() => {});
 
       const mockTokenManager = {
         getValidCredentials: vi
           .fn()
-          .mockRejectedValue(new Error('Internal token manager error')),
+          .mockRejectedValue(new Error("Internal token manager error")),
       };
 
       const originalGetInstance = SharedTokenManager.getInstance;
@@ -1629,21 +1629,21 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: "qwen-turbo", authType: AuthType.QWEN_OAUTH },
         mockConfig,
       );
 
       const request: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
       await expect(
-        newGenerator.generateContent(request, 'test-prompt-id'),
-      ).rejects.toThrow('Failed to obtain valid Qwen access token');
+        newGenerator.generateContent(request, "test-prompt-id"),
+      ).rejects.toThrow("Failed to obtain valid Qwen access token");
 
       expect(consoleSpy).toHaveBeenCalledWith(
-        'Failed to get token from shared manager:',
+        "Failed to get token from shared manager:",
         expect.any(Error),
       );
 
@@ -1651,11 +1651,11 @@ describe('QwenContentGenerator', () => {
       SharedTokenManager.getInstance = originalGetInstance;
     });
 
-    it('should handle method types with token failure (except countTokens)', async () => {
+    it("should handle method types with token failure (except countTokens)", async () => {
       const mockTokenManager = {
         getValidCredentials: vi
           .fn()
-          .mockRejectedValue(new Error('Token error')),
+          .mockRejectedValue(new Error("Token error")),
       };
 
       const originalGetInstance = SharedTokenManager.getInstance;
@@ -1665,36 +1665,36 @@ describe('QwenContentGenerator', () => {
 
       const newGenerator = new QwenContentGenerator(
         mockQwenClient,
-        { model: 'qwen-turbo', authType: AuthType.QWEN_OAUTH },
+        { model: "qwen-turbo", authType: AuthType.QWEN_OAUTH },
         mockConfig,
       );
 
       const generateRequest: GenerateContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Hello' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Hello" }] }],
       };
 
       const countRequest: CountTokensParameters = {
-        model: 'qwen-turbo',
-        contents: [{ role: 'user', parts: [{ text: 'Count' }] }],
+        model: "qwen-turbo",
+        contents: [{ role: "user", parts: [{ text: "Count" }] }],
       };
 
       const embedRequest: EmbedContentParameters = {
-        model: 'qwen-turbo',
-        contents: [{ parts: [{ text: 'Embed' }] }],
+        model: "qwen-turbo",
+        contents: [{ parts: [{ text: "Embed" }] }],
       };
 
       // Methods requiring authentication should fail
       await expect(
-        newGenerator.generateContent(generateRequest, 'test-id'),
-      ).rejects.toThrow('Failed to obtain valid Qwen access token');
+        newGenerator.generateContent(generateRequest, "test-id"),
+      ).rejects.toThrow("Failed to obtain valid Qwen access token");
 
       await expect(
-        newGenerator.generateContentStream(generateRequest, 'test-id'),
-      ).rejects.toThrow('Failed to obtain valid Qwen access token');
+        newGenerator.generateContentStream(generateRequest, "test-id"),
+      ).rejects.toThrow("Failed to obtain valid Qwen access token");
 
       await expect(newGenerator.embedContent(embedRequest)).rejects.toThrow(
-        'Failed to obtain valid Qwen access token',
+        "Failed to obtain valid Qwen access token",
       );
 
       // countTokens should succeed as it's a local operation

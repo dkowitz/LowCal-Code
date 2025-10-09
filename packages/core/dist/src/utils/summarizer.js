@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { DEFAULT_GEMINI_FLASH_LITE_MODEL } from '../config/models.js';
-import { getResponseText, partToString } from './partUtils.js';
+import { DEFAULT_GEMINI_FLASH_LITE_MODEL } from "../config/models.js";
+import { getResponseText, partToString } from "./partUtils.js";
 /**
  * The default summarizer for tool results.
  *
@@ -34,8 +34,8 @@ export async function summarizeToolOutput(textToSummarize, geminiClient, abortSi
     if (!textToSummarize || textToSummarize.length < maxOutputTokens) {
         return textToSummarize;
     }
-    const prompt = SUMMARIZE_TOOL_OUTPUT_PROMPT.replace('{maxOutputTokens}', String(maxOutputTokens)).replace('{textToSummarize}', textToSummarize);
-    const contents = [{ role: 'user', parts: [{ text: prompt }] }];
+    const prompt = SUMMARIZE_TOOL_OUTPUT_PROMPT.replace("{maxOutputTokens}", String(maxOutputTokens)).replace("{textToSummarize}", textToSummarize);
+    const contents = [{ role: "user", parts: [{ text: prompt }] }];
     const toolOutputSummarizerConfig = {
         maxOutputTokens,
     };
@@ -44,7 +44,7 @@ export async function summarizeToolOutput(textToSummarize, geminiClient, abortSi
         return getResponseText(parsedResponse) || textToSummarize;
     }
     catch (error) {
-        console.error('Failed to summarize tool output.', error);
+        console.error("Failed to summarize tool output.", error);
         return textToSummarize;
     }
 }

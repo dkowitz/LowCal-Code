@@ -3,8 +3,8 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { Content } from '@google/genai';
-import type { ContentGenerator } from './contentGenerator.js';
+import type { Content } from "@google/genai";
+import type { ContentGenerator } from "./contentGenerator.js";
 export interface TokenBudgetSnapshot {
     readonly tokens: number;
     readonly limit: number;

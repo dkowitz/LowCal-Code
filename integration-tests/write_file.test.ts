@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi } from "vitest";
 import {
   TestRig,
   createToolCallErrorMessage,
   printDebugInfo,
   validateModelOutput,
-} from './test-helper.js';
+} from "./test-helper.js";
 
-describe('write_file', () => {
-  it('should be able to write a file', async () => {
+describe("write_file", () => {
+  it("should be able to write a file", async () => {
     const rig = new TestRig();
-    await rig.setup('should be able to write a file');
+    await rig.setup("should be able to write a file");
     const prompt = `show me an example of using the write tool. put a dad joke in dad.txt`;
 
     const result = await rig.run(prompt);
 
-    const foundToolCall = await rig.waitForToolCall('write_file');
+    const foundToolCall = await rig.waitForToolCall("write_file");
 
     // Add debugging information
     if (!foundToolCall) {
@@ -28,26 +28,26 @@ describe('write_file', () => {
     }
 
     const allTools = rig.readToolLogs();
-    expect(foundToolCall, 'Expected to find a write_file tool call').toBeTruthy(
+    expect(foundToolCall, "Expected to find a write_file tool call").toBeTruthy(
       createToolCallErrorMessage(
-        'write_file',
+        "write_file",
         allTools.map((t) => t.toolRequest.name),
         result,
       ),
     );
 
     // Validate model output - will throw if no output, warn if missing expected content
-    validateModelOutput(result, 'dad.txt', 'Write file test');
+    validateModelOutput(result, "dad.txt", "Write file test");
 
-    const newFilePath = 'dad.txt';
+    const newFilePath = "dad.txt";
 
     const newFileContent = rig.readFile(newFilePath);
 
     // Add debugging for file content
-    if (newFileContent === '') {
-      console.error('File was created but is empty');
+    if (newFileContent === "") {
+      console.error("File was created but is empty");
       console.error(
-        'Tool calls:',
+        "Tool calls:",
         rig.readToolLogs().map((t) => ({
           name: t.toolRequest.name,
           args: t.toolRequest.args,
@@ -55,14 +55,14 @@ describe('write_file', () => {
       );
     }
 
-    expect(newFileContent).not.toBe('');
+    expect(newFileContent).not.toBe("");
 
     // Log success info if verbose
-    vi.stubEnv('VERBOSE', 'true');
-    if (process.env['VERBOSE'] === 'true') {
+    vi.stubEnv("VERBOSE", "true");
+    if (process.env["VERBOSE"] === "true") {
       console.log(
-        'File created successfully with content:',
-        newFileContent.substring(0, 100) + '...',
+        "File created successfully with content:",
+        newFileContent.substring(0, 100) + "...",
       );
     }
   });

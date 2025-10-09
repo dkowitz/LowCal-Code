@@ -4,15 +4,15 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useCallback, useRef, useEffect, useMemo } from 'react';
-import type { Config } from '@qwen-code/qwen-code-core';
+import { useState, useCallback, useRef, useEffect, useMemo } from "react";
+import type { Config } from "@qwen-code/qwen-code-core";
 import {
   DEFAULT_GEMINI_FLASH_LITE_MODEL,
   getResponseText,
-} from '@qwen-code/qwen-code-core';
-import type { Content, GenerateContentConfig } from '@google/genai';
-import type { TextBuffer } from '../components/shared/text-buffer.js';
-import { isSlashCommand } from '../utils/commandUtils.js';
+} from "@qwen-code/qwen-code-core";
+import type { Content, GenerateContentConfig } from "@google/genai";
+import type { TextBuffer } from "../components/shared/text-buffer.js";
+import { isSlashCommand } from "../utils/commandUtils.js";
 
 export const PROMPT_COMPLETION_MIN_LENGTH = 5;
 export const PROMPT_COMPLETION_DEBOUNCE_MS = 250;
@@ -37,26 +37,26 @@ export function usePromptCompletion({
   config,
   enabled,
 }: UsePromptCompletionOptions): PromptCompletion {
-  const [ghostText, setGhostText] = useState<string>('');
+  const [ghostText, setGhostText] = useState<string>("");
   const [isLoadingGhostText, setIsLoadingGhostText] = useState<boolean>(false);
   const abortControllerRef = useRef<AbortController | null>(null);
   const [justSelectedSuggestion, setJustSelectedSuggestion] =
     useState<boolean>(false);
-  const lastSelectedTextRef = useRef<string>('');
-  const lastRequestedTextRef = useRef<string>('');
+  const lastSelectedTextRef = useRef<string>("");
+  const lastRequestedTextRef = useRef<string>("");
 
   const isPromptCompletionEnabled =
     enabled && (config?.getEnablePromptCompletion() ?? false);
 
   const clearGhostText = useCallback(() => {
-    setGhostText('');
+    setGhostText("");
     setIsLoadingGhostText(false);
   }, []);
 
   const acceptGhostText = useCallback(() => {
     if (ghostText && ghostText.length > buffer.text.length) {
       buffer.setText(ghostText);
-      setGhostText('');
+      setGhostText("");
       setJustSelectedSuggestion(true);
       lastSelectedTextRef.current = ghostText;
     }
@@ -83,11 +83,11 @@ export function usePromptCompletion({
       trimmedText.length < PROMPT_COMPLETION_MIN_LENGTH ||
       !geminiClient ||
       isSlashCommand(trimmedText) ||
-      trimmedText.includes('@') ||
+      trimmedText.includes("@") ||
       !isPromptCompletionEnabled
     ) {
       clearGhostText();
-      lastRequestedTextRef.current = '';
+      lastRequestedTextRef.current = "";
       return;
     }
 
@@ -100,7 +100,7 @@ export function usePromptCompletion({
     try {
       const contents: Content[] = [
         {
-          role: 'user',
+          role: "user",
           parts: [
             {
               text: `You are a professional prompt engineering assistant. Complete the user's partial prompt with expert precision and clarity. User's input: "${trimmedText}" Continue this prompt by adding specific, actionable details that align with the user's intent. Focus on: clear, precise language; structured requirements; professional terminology; measurable outcomes. Length Guidelines: Keep suggestions concise (ideally 10-20 characters); prioritize brevity while maintaining clarity; use essential keywords only; avoid redundant phrases. Start your response with the exact user text ("${trimmedText}") followed by your completion. Provide practical, implementation-focused suggestions rather than creative interpretations. Format: Plain text only. Single completion. Match the user's language. Emphasize conciseness over elaboration.`,
@@ -148,12 +148,12 @@ export function usePromptCompletion({
       if (
         !(
           signal.aborted ||
-          (error instanceof Error && error.name === 'AbortError')
+          (error instanceof Error && error.name === "AbortError")
         )
       ) {
-        console.error('prompt completion error:', error);
+        console.error("prompt completion error:", error);
         // Clear the last requested text to allow retry only on real errors
-        lastRequestedTextRef.current = '';
+        lastRequestedTextRef.current = "";
       }
       clearGhostText();
     } finally {
@@ -170,7 +170,7 @@ export function usePromptCompletion({
       return false;
     }
 
-    const lastLine = buffer.lines[cursorRow] || '';
+    const lastLine = buffer.lines[cursorRow] || "";
     return cursorCol === lastLine.length;
   }, [buffer.cursor, buffer.lines]);
 
@@ -188,7 +188,7 @@ export function usePromptCompletion({
 
     if (trimmedText !== lastSelectedTextRef.current) {
       setJustSelectedSuggestion(false);
-      lastSelectedTextRef.current = '';
+      lastSelectedTextRef.current = "";
     }
 
     generatePromptSuggestions();
@@ -239,7 +239,7 @@ export function usePromptCompletion({
     return (
       trimmedText.length >= PROMPT_COMPLETION_MIN_LENGTH &&
       !isSlashCommand(trimmedText) &&
-      !trimmedText.includes('@')
+      !trimmedText.includes("@")
     );
   }, [buffer.text, isPromptCompletionEnabled, isCursorAtEnd]);
 

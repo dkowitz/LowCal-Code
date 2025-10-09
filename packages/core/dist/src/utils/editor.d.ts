@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-export type EditorType = 'vscode' | 'vscodium' | 'windsurf' | 'cursor' | 'vim' | 'neovim' | 'zed' | 'emacs';
+export type EditorType = "vscode" | "vscodium" | "windsurf" | "cursor" | "vim" | "neovim" | "zed" | "emacs";
 interface DiffCommand {
     command: string;
     args: string[];

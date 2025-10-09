@@ -7,6 +7,7 @@ Enhanced the existing debug console (Ctrl+O) to provide real-time feedback durin
 ## What Was Already There
 
 The CLI already had:
+
 - **Debug console toggle**: Ctrl+O to show/hide error details
 - **Console message system**: `useConsoleMessages` hook for batching messages
 - **Console patcher**: `ConsolePatcher` class that intercepts console.log/warn/error/debug/info
@@ -29,7 +30,9 @@ console.debug(`[Tool] Success: ${toolName}`);
 
 // On error
 console.debug(`[Tool] Error: ${toolName} - ${error.message}`);
-console.debug(`[Tool] Exception: ${toolName} after ${duration}ms - ${error.message}`);
+console.debug(
+  `[Tool] Exception: ${toolName} after ${duration}ms - ${error.message}`,
+);
 
 // On cancellation
 console.debug(`[Tool] Cancelled: ${toolName}`);
@@ -44,7 +47,9 @@ Added debug logging for model thinking and streaming:
 console.debug(`[Agent] Starting new prompt: ${prompt_id.substring(0, 8)}...`);
 
 // Each turn
-console.debug(`[Agent] Turn ${this.sessionTurnCount} (model: ${this.config.getModel()})`);
+console.debug(
+  `[Agent] Turn ${this.sessionTurnCount} (model: ${this.config.getModel()})`,
+);
 
 // Sending request
 console.debug(`[Agent] Sending request to model...`);
@@ -64,9 +69,15 @@ console.debug(`[Agent] Recoverable error, using non-streaming fallback`);
 The context recovery system we implemented earlier already includes comprehensive logging:
 
 ```typescript
-console.warn('[Context Management] Standard compression failed, attempting self-healing recovery...');
-console.warn(`[Context Recovery] Trying strategy ${i + 1}/${COMPRESSION_STRATEGIES.length}...`);
-console.warn(`[Context Recovery] Compression ratio: ${(ratio * 100).toFixed(1)}%`);
+console.warn(
+  "[Context Management] Standard compression failed, attempting self-healing recovery...",
+);
+console.warn(
+  `[Context Recovery] Trying strategy ${i + 1}/${COMPRESSION_STRATEGIES.length}...`,
+);
+console.warn(
+  `[Context Recovery] Compression ratio: ${(ratio * 100).toFixed(1)}%`,
+);
 console.warn(`[Context Recovery] ✓ Recovery successful with strategy ${i + 1}`);
 ```
 
@@ -81,6 +92,7 @@ console.warn(`[Tool Validation] ${formatToolWarning(warning)}`);
 ### 5. Documentation
 
 Created comprehensive documentation at `docs/cli/debug-console.md` covering:
+
 - How to toggle the debug console (Ctrl+O)
 - Types of debug messages
 - Configuration options
@@ -92,7 +104,7 @@ Created comprehensive documentation at `docs/cli/debug-console.md` covering:
 ### Message Flow
 
 1. **Core emits debug messages**: Using `console.debug()` throughout the execution pipeline
-2. **ConsolePatcher intercepts**: Captures all console.* calls
+2. **ConsolePatcher intercepts**: Captures all console.\* calls
 3. **Messages batched**: `useConsoleMessages` batches rapid-fire messages (16ms window)
 4. **Filtered by debug mode**: Only shown if `debugMode: true` in settings
 5. **Toggled by Ctrl+O**: User controls visibility with keyboard shortcut
@@ -104,9 +116,9 @@ All messages use the existing `ConsoleMessageItem` interface:
 
 ```typescript
 interface ConsoleMessageItem {
-  type: 'log' | 'warn' | 'error' | 'debug' | 'info';
+  type: "log" | "warn" | "error" | "debug" | "info";
   content: string;
-  count: number;  // Auto-incremented for duplicate messages
+  count: number; // Auto-incremented for duplicate messages
 }
 ```
 
@@ -118,7 +130,7 @@ Users can enable debug mode in settings:
 {
   "general": {
     "debugMode": true,
-    "debugKeystrokeLogging": false  // Optional: log every keystroke
+    "debugKeystrokeLogging": false // Optional: log every keystroke
   }
 }
 ```
@@ -126,19 +138,23 @@ Users can enable debug mode in settings:
 ## Benefits
 
 ### 1. **Transparency**
+
 Users can see exactly what the agent is doing:
+
 - Which tools are being called
 - How long operations take
 - What the model is thinking
 - When errors occur
 
 ### 2. **Non-Intrusive**
+
 - Messages only appear when Ctrl+O is pressed
 - Don't clutter the main conversation
 - Automatically batched to prevent UI lag
 - Can be toggled on/off at any time
 
 ### 3. **Debugging Power**
+
 - Identify slow tools
 - Catch errors early
 - Monitor context management
@@ -146,7 +162,9 @@ Users can see exactly what the agent is doing:
 - See validation warnings
 
 ### 4. **Agentic Monitoring**
+
 Perfect for the project's goal of sustained agentic task completion:
+
 - Monitor progress without intervening
 - Verify the agent is making progress
 - Catch infinite loops or stuck states
@@ -192,15 +210,18 @@ When running a complex task with debug console enabled (Ctrl+O):
 ## Testing
 
 ### Build Status
+
 ✅ Successful - all packages built without errors
 
 ### Integration
+
 - Debug logging integrated into existing console message system
 - No changes to UI components required
 - Leverages existing Ctrl+O toggle
 - Works with existing debug mode configuration
 
 ### User Experience
+
 - Messages are concise and informative
 - Prefixed with [Tool], [Agent], [Context Recovery], etc. for easy scanning
 - Include relevant details (duration, error messages, compression ratios)
@@ -209,6 +230,7 @@ When running a complex task with debug console enabled (Ctrl+O):
 ## Future Enhancements
 
 Potential improvements:
+
 1. **Filtering**: Allow users to filter by message type ([Tool], [Agent], etc.)
 2. **Verbosity levels**: Minimal, normal, verbose modes
 3. **Export**: Save debug logs to file

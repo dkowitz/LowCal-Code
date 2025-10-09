@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { SubagentError, SubagentErrorCode } from './types.js';
+import { SubagentError, SubagentErrorCode } from "./types.js";
 /**
  * Validates subagent configurations to ensure they are well-formed
  * and compatible with the runtime system.
@@ -25,10 +25,10 @@ export class SubagentValidator {
         }
         // Validate description
         if (!config.description || config.description.trim().length === 0) {
-            errors.push('Description is required and cannot be empty');
+            errors.push("Description is required and cannot be empty");
         }
         else if (config.description.length > 500) {
-            warnings.push('Description is quite long (>500 chars), consider shortening for better readability');
+            warnings.push("Description is quite long (>500 chars), consider shortening for better readability");
         }
         // Validate system prompt
         const promptValidation = this.validateSystemPrompt(config.systemPrompt);
@@ -77,48 +77,48 @@ export class SubagentValidator {
         const errors = [];
         const warnings = [];
         if (!name || name.trim().length === 0) {
-            errors.push('Name is required and cannot be empty');
+            errors.push("Name is required and cannot be empty");
             return { isValid: false, errors, warnings };
         }
         const trimmedName = name.trim();
         // Check length constraints
         if (trimmedName.length < 2) {
-            errors.push('Name must be at least 2 characters long');
+            errors.push("Name must be at least 2 characters long");
         }
         if (trimmedName.length > 50) {
-            errors.push('Name must be 50 characters or less');
+            errors.push("Name must be 50 characters or less");
         }
         // Check valid characters (alphanumeric, hyphens, underscores)
         const validNameRegex = /^[a-zA-Z0-9_-]+$/;
         if (!validNameRegex.test(trimmedName)) {
-            errors.push('Name can only contain letters, numbers, hyphens, and underscores');
+            errors.push("Name can only contain letters, numbers, hyphens, and underscores");
         }
         // Check that it doesn't start or end with special characters
-        if (trimmedName.startsWith('-') || trimmedName.startsWith('_')) {
-            errors.push('Name cannot start with a hyphen or underscore');
+        if (trimmedName.startsWith("-") || trimmedName.startsWith("_")) {
+            errors.push("Name cannot start with a hyphen or underscore");
         }
-        if (trimmedName.endsWith('-') || trimmedName.endsWith('_')) {
-            errors.push('Name cannot end with a hyphen or underscore');
+        if (trimmedName.endsWith("-") || trimmedName.endsWith("_")) {
+            errors.push("Name cannot end with a hyphen or underscore");
         }
         // Check for reserved names
         const reservedNames = [
-            'self',
-            'system',
-            'user',
-            'model',
-            'tool',
-            'config',
-            'default',
+            "self",
+            "system",
+            "user",
+            "model",
+            "tool",
+            "config",
+            "default",
         ];
         if (reservedNames.includes(trimmedName.toLowerCase())) {
             errors.push(`"${trimmedName}" is a reserved name and cannot be used`);
         }
         // Warnings for naming conventions
         if (trimmedName !== trimmedName.toLowerCase()) {
-            warnings.push('Consider using lowercase names for consistency');
+            warnings.push("Consider using lowercase names for consistency");
         }
-        if (trimmedName.includes('_') && trimmedName.includes('-')) {
-            warnings.push('Consider using either hyphens or underscores consistently, not both');
+        if (trimmedName.includes("_") && trimmedName.includes("-")) {
+            warnings.push("Consider using either hyphens or underscores consistently, not both");
         }
         return {
             isValid: errors.length === 0,
@@ -136,20 +136,20 @@ export class SubagentValidator {
         const errors = [];
         const warnings = [];
         if (!prompt || prompt.trim().length === 0) {
-            errors.push('System prompt is required and cannot be empty');
+            errors.push("System prompt is required and cannot be empty");
             return { isValid: false, errors, warnings };
         }
         const trimmedPrompt = prompt.trim();
         // Check minimum length for meaningful prompts
         if (trimmedPrompt.length < 10) {
-            errors.push('System prompt must be at least 10 characters long');
+            errors.push("System prompt must be at least 10 characters long");
         }
         // Check maximum length to prevent token issues
         if (trimmedPrompt.length > 10000) {
-            errors.push('System prompt is too long (>10,000 characters)');
+            errors.push("System prompt is too long (>10,000 characters)");
         }
         else if (trimmedPrompt.length > 5000) {
-            warnings.push('System prompt is quite long (>5,000 characters), consider shortening');
+            warnings.push("System prompt is quite long (>5,000 characters), consider shortening");
         }
         return {
             isValid: errors.length === 0,
@@ -167,26 +167,26 @@ export class SubagentValidator {
         const errors = [];
         const warnings = [];
         if (!Array.isArray(tools)) {
-            errors.push('Tools must be an array of strings');
+            errors.push("Tools must be an array of strings");
             return { isValid: false, errors, warnings };
         }
         if (tools.length === 0) {
-            warnings.push('Empty tools array - subagent will inherit all available tools');
+            warnings.push("Empty tools array - subagent will inherit all available tools");
             return { isValid: true, errors, warnings };
         }
         // Check for duplicates
         const uniqueTools = new Set(tools);
         if (uniqueTools.size !== tools.length) {
-            warnings.push('Duplicate tool names found in tools array');
+            warnings.push("Duplicate tool names found in tools array");
         }
         // Validate each tool name
         for (const tool of tools) {
-            if (typeof tool !== 'string') {
+            if (typeof tool !== "string") {
                 errors.push(`Tool name must be a string, got: ${typeof tool}`);
                 continue;
             }
             if (tool.trim().length === 0) {
-                errors.push('Tool name cannot be empty');
+                errors.push("Tool name cannot be empty");
                 continue;
             }
         }
@@ -206,28 +206,28 @@ export class SubagentValidator {
         const errors = [];
         const warnings = [];
         if (modelConfig.model !== undefined) {
-            if (typeof modelConfig.model !== 'string' ||
+            if (typeof modelConfig.model !== "string" ||
                 modelConfig.model.trim().length === 0) {
-                errors.push('Model name must be a non-empty string');
+                errors.push("Model name must be a non-empty string");
             }
         }
         if (modelConfig.temp !== undefined) {
-            if (typeof modelConfig.temp !== 'number') {
-                errors.push('Temperature must be a number');
+            if (typeof modelConfig.temp !== "number") {
+                errors.push("Temperature must be a number");
             }
             else if (modelConfig.temp < 0 || modelConfig.temp > 2) {
-                errors.push('Temperature must be between 0 and 2');
+                errors.push("Temperature must be between 0 and 2");
             }
             else if (modelConfig.temp > 1) {
-                warnings.push('High temperature (>1) may produce very creative but unpredictable results');
+                warnings.push("High temperature (>1) may produce very creative but unpredictable results");
             }
         }
         if (modelConfig.top_p !== undefined) {
-            if (typeof modelConfig.top_p !== 'number') {
-                errors.push('top_p must be a number');
+            if (typeof modelConfig.top_p !== "number") {
+                errors.push("top_p must be a number");
             }
             else if (modelConfig.top_p < 0 || modelConfig.top_p > 1) {
-                errors.push('top_p must be between 0 and 1');
+                errors.push("top_p must be between 0 and 1");
             }
         }
         return {
@@ -246,28 +246,28 @@ export class SubagentValidator {
         const errors = [];
         const warnings = [];
         if (runConfig.max_time_minutes !== undefined) {
-            if (typeof runConfig.max_time_minutes !== 'number') {
-                errors.push('max_time_minutes must be a number');
+            if (typeof runConfig.max_time_minutes !== "number") {
+                errors.push("max_time_minutes must be a number");
             }
             else if (runConfig.max_time_minutes <= 0) {
-                errors.push('max_time_minutes must be greater than 0');
+                errors.push("max_time_minutes must be greater than 0");
             }
             else if (runConfig.max_time_minutes > 60) {
-                warnings.push('Very long execution time (>60 minutes) may cause resource issues');
+                warnings.push("Very long execution time (>60 minutes) may cause resource issues");
             }
         }
         if (runConfig.max_turns !== undefined) {
-            if (typeof runConfig.max_turns !== 'number') {
-                errors.push('max_turns must be a number');
+            if (typeof runConfig.max_turns !== "number") {
+                errors.push("max_turns must be a number");
             }
             else if (runConfig.max_turns <= 0) {
-                errors.push('max_turns must be greater than 0');
+                errors.push("max_turns must be greater than 0");
             }
             else if (!Number.isInteger(runConfig.max_turns)) {
-                errors.push('max_turns must be an integer');
+                errors.push("max_turns must be an integer");
             }
             else if (runConfig.max_turns > 100) {
-                warnings.push('Very high turn limit (>100) may cause long execution times');
+                warnings.push("Very high turn limit (>100) may cause long execution times");
             }
         }
         return {
@@ -286,7 +286,7 @@ export class SubagentValidator {
     validateOrThrow(config, subagentName) {
         const result = this.validateConfig(config);
         if (!result.isValid) {
-            throw new SubagentError(`Validation failed: ${result.errors.join(', ')}`, SubagentErrorCode.VALIDATION_ERROR, subagentName || config.name);
+            throw new SubagentError(`Validation failed: ${result.errors.join(", ")}`, SubagentErrorCode.VALIDATION_ERROR, subagentName || config.name);
         }
     }
 }

@@ -4,11 +4,11 @@ import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { useCallback, useState, useEffect } from 'react';
-import { Box, Text, useInput } from 'ink';
-import { theme } from '../../../semantic-colors.js';
-import { shouldShowColor, getColorForDisplay } from '../utils.js';
-import { useLaunchEditor } from '../../../hooks/useLaunchEditor.js';
+import { useCallback, useState, useEffect } from "react";
+import { Box, Text, useInput } from "ink";
+import { theme } from "../../../semantic-colors.js";
+import { shouldShowColor, getColorForDisplay } from "../utils.js";
+import { useLaunchEditor } from "../../../hooks/useLaunchEditor.js";
 /**
  * Step 6: Final confirmation and actions.
  */
@@ -20,7 +20,7 @@ export function CreationSummary({ state, onPrevious: _onPrevious, onCancel, conf
     const truncateText = (text, maxLength) => {
         if (text.length <= maxLength)
             return text;
-        return text.substring(0, maxLength - 3) + '...';
+        return text.substring(0, maxLength - 3) + "...";
     };
     // Check for warnings
     useEffect(() => {
@@ -36,12 +36,12 @@ export function CreationSummary({ state, onPrevious: _onPrevious, onCancel, conf
                 if (!isAvailable) {
                     const existing = await subagentManager.loadSubagent(state.generatedName);
                     if (existing) {
-                        const conflictLevel = existing.level === 'project' ? 'project' : 'user';
+                        const conflictLevel = existing.level === "project" ? "project" : "user";
                         const targetLevel = state.location;
                         if (conflictLevel === targetLevel) {
                             allWarnings.push(`Name "${state.generatedName}" already exists at ${conflictLevel} level - will overwrite existing subagent`);
                         }
-                        else if (targetLevel === 'project') {
+                        else if (targetLevel === "project") {
                             allWarnings.push(`Name "${state.generatedName}" exists at user level - project level will take precedence`);
                         }
                         else {
@@ -52,7 +52,7 @@ export function CreationSummary({ state, onPrevious: _onPrevious, onCancel, conf
             }
             catch (error) {
                 // Silently handle errors in warning checks
-                console.warn('Error checking subagent name availability:', error);
+                console.warn("Error checking subagent name availability:", error);
             }
             // Check length warnings
             if (state.generatedDescription.length > 300) {
@@ -72,12 +72,12 @@ export function CreationSummary({ state, onPrevious: _onPrevious, onCancel, conf
         state.location,
     ]);
     // If no tools explicitly selected, it means "all tools" for this agent
-    const toolsDisplay = state.selectedTools.length === 0 ? '*' : state.selectedTools.join(', ');
+    const toolsDisplay = state.selectedTools.length === 0 ? "*" : state.selectedTools.join(", ");
     // Common method to save subagent configuration
     const saveSubagent = useCallback(async () => {
         // Create SubagentManager instance
         if (!config) {
-            throw new Error('Configuration not available');
+            throw new Error("Configuration not available");
         }
         const subagentManager = config.getSubagentManager();
         // Build subagent configuration
@@ -86,7 +86,7 @@ export function CreationSummary({ state, onPrevious: _onPrevious, onCancel, conf
             description: state.generatedDescription,
             systemPrompt: state.generatedSystemPrompt,
             level: state.location,
-            filePath: '', // Will be set by manager
+            filePath: "", // Will be set by manager
             tools: Array.isArray(state.selectedTools)
                 ? state.selectedTools
                 : undefined,
@@ -114,7 +114,7 @@ export function CreationSummary({ state, onPrevious: _onPrevious, onCancel, conf
             showSuccessAndClose();
         }
         catch (error) {
-            setSaveError(error instanceof Error ? error.message : 'Unknown error occurred');
+            setSaveError(error instanceof Error ? error.message : "Unknown error occurred");
         }
     }, [saveSubagent, showSuccessAndClose]);
     const handleEdit = useCallback(async () => {
@@ -131,7 +131,7 @@ export function CreationSummary({ state, onPrevious: _onPrevious, onCancel, conf
             showSuccessAndClose();
         }
         catch (error) {
-            setSaveError(`Failed to save and edit subagent: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            setSaveError(`Failed to save and edit subagent: ${error instanceof Error ? error.message : "Unknown error"}`);
         }
     }, [
         saveSubagent,
@@ -144,20 +144,20 @@ export function CreationSummary({ state, onPrevious: _onPrevious, onCancel, conf
     useInput((input, key) => {
         if (saveSuccess)
             return;
-        if (key.return || input === 's') {
+        if (key.return || input === "s") {
             handleSave();
             return;
         }
-        if (input === 'e') {
+        if (input === "e") {
             handleEdit();
             return;
         }
     });
     if (saveSuccess) {
-        return (_jsxs(Box, { flexDirection: "column", gap: 1, children: [_jsx(Box, { children: _jsx(Text, { bold: true, color: theme.status.success, children: "\u2705 Subagent Created Successfully!" }) }), _jsx(Box, { children: _jsxs(Text, { children: ["Subagent \"", state.generatedName, "\" has been saved to", ' ', state.location, " level."] }) })] }));
+        return (_jsxs(Box, { flexDirection: "column", gap: 1, children: [_jsx(Box, { children: _jsx(Text, { bold: true, color: theme.status.success, children: "\u2705 Subagent Created Successfully!" }) }), _jsx(Box, { children: _jsxs(Text, { children: ["Subagent \"", state.generatedName, "\" has been saved to", " ", state.location, " level."] }) })] }));
     }
-    return (_jsxs(Box, { flexDirection: "column", gap: 1, children: [_jsxs(Box, { flexDirection: "column", children: [_jsxs(Box, { children: [_jsx(Text, { color: theme.text.primary, children: "Name: " }), _jsx(Text, { color: getColorForDisplay(state.color), children: state.generatedName })] }), _jsxs(Box, { children: [_jsx(Text, { color: theme.text.primary, children: "Location: " }), _jsx(Text, { children: state.location === 'project'
-                                    ? 'Project Level (.qwen/agents/)'
-                                    : 'User Level (~/.qwen/agents/)' })] }), _jsxs(Box, { children: [_jsx(Text, { color: theme.text.primary, children: "Tools: " }), _jsx(Text, { children: toolsDisplay })] }), shouldShowColor(state.color) && (_jsxs(Box, { children: [_jsx(Text, { color: theme.text.primary, children: "Color: " }), _jsx(Text, { color: getColorForDisplay(state.color), children: state.color })] })), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: theme.text.primary, children: "Description:" }) }), _jsx(Box, { padding: 1, paddingBottom: 0, children: _jsx(Text, { wrap: "wrap", children: truncateText(state.generatedDescription, 250) }) }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: theme.text.primary, children: "System Prompt:" }) }), _jsx(Box, { padding: 1, paddingBottom: 0, children: _jsx(Text, { wrap: "wrap", children: truncateText(state.generatedSystemPrompt, 250) }) })] }), saveError && (_jsxs(Box, { flexDirection: "column", children: [_jsx(Text, { bold: true, color: theme.status.error, children: "\u274C Error saving subagent:" }), _jsx(Box, { flexDirection: "column", padding: 1, paddingBottom: 0, children: _jsx(Text, { color: theme.status.error, wrap: "wrap", children: saveError }) })] })), warnings.length > 0 && (_jsxs(Box, { flexDirection: "column", children: [_jsx(Text, { bold: true, color: theme.status.warning, children: "Warnings:" }), _jsx(Box, { flexDirection: "column", padding: 1, paddingBottom: 0, children: warnings.map((warning, index) => (_jsxs(Text, { color: theme.status.warning, wrap: "wrap", children: ["\u2022 ", warning] }, index))) })] }))] }));
+    return (_jsxs(Box, { flexDirection: "column", gap: 1, children: [_jsxs(Box, { flexDirection: "column", children: [_jsxs(Box, { children: [_jsx(Text, { color: theme.text.primary, children: "Name: " }), _jsx(Text, { color: getColorForDisplay(state.color), children: state.generatedName })] }), _jsxs(Box, { children: [_jsx(Text, { color: theme.text.primary, children: "Location: " }), _jsx(Text, { children: state.location === "project"
+                                    ? "Project Level (.qwen/agents/)"
+                                    : "User Level (~/.qwen/agents/)" })] }), _jsxs(Box, { children: [_jsx(Text, { color: theme.text.primary, children: "Tools: " }), _jsx(Text, { children: toolsDisplay })] }), shouldShowColor(state.color) && (_jsxs(Box, { children: [_jsx(Text, { color: theme.text.primary, children: "Color: " }), _jsx(Text, { color: getColorForDisplay(state.color), children: state.color })] })), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: theme.text.primary, children: "Description:" }) }), _jsx(Box, { padding: 1, paddingBottom: 0, children: _jsx(Text, { wrap: "wrap", children: truncateText(state.generatedDescription, 250) }) }), _jsx(Box, { marginTop: 1, children: _jsx(Text, { color: theme.text.primary, children: "System Prompt:" }) }), _jsx(Box, { padding: 1, paddingBottom: 0, children: _jsx(Text, { wrap: "wrap", children: truncateText(state.generatedSystemPrompt, 250) }) })] }), saveError && (_jsxs(Box, { flexDirection: "column", children: [_jsx(Text, { bold: true, color: theme.status.error, children: "\u274C Error saving subagent:" }), _jsx(Box, { flexDirection: "column", padding: 1, paddingBottom: 0, children: _jsx(Text, { color: theme.status.error, wrap: "wrap", children: saveError }) })] })), warnings.length > 0 && (_jsxs(Box, { flexDirection: "column", children: [_jsx(Text, { bold: true, color: theme.status.warning, children: "Warnings:" }), _jsx(Box, { flexDirection: "column", padding: 1, paddingBottom: 0, children: warnings.map((warning, index) => (_jsxs(Text, { color: theme.status.warning, wrap: "wrap", children: ["\u2022 ", warning] }, index))) })] }))] }));
 }
 //# sourceMappingURL=CreationSummary.js.map

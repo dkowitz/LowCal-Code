@@ -4,23 +4,23 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useReducer, useCallback, useMemo } from 'react';
-import { Box, Text } from 'ink';
-import { wizardReducer, initialWizardState } from '../reducers.js';
-import { LocationSelector } from './LocationSelector.js';
-import { GenerationMethodSelector } from './GenerationMethodSelector.js';
-import { DescriptionInput } from './DescriptionInput.js';
-import { ToolSelector } from './ToolSelector.js';
-import { ColorSelector } from './ColorSelector.js';
-import { CreationSummary } from './CreationSummary.js';
-import { type WizardStepProps } from '../types.js';
-import { WIZARD_STEPS } from '../constants.js';
-import { getStepKind } from '../utils.js';
-import type { Config } from '@qwen-code/qwen-code-core';
-import { Colors } from '../../../colors.js';
-import { theme } from '../../../semantic-colors.js';
-import { TextEntryStep } from './TextEntryStep.js';
-import { useKeypress } from '../../../hooks/useKeypress.js';
+import { useReducer, useCallback, useMemo } from "react";
+import { Box, Text } from "ink";
+import { wizardReducer, initialWizardState } from "../reducers.js";
+import { LocationSelector } from "./LocationSelector.js";
+import { GenerationMethodSelector } from "./GenerationMethodSelector.js";
+import { DescriptionInput } from "./DescriptionInput.js";
+import { ToolSelector } from "./ToolSelector.js";
+import { ColorSelector } from "./ColorSelector.js";
+import { CreationSummary } from "./CreationSummary.js";
+import { type WizardStepProps } from "../types.js";
+import { WIZARD_STEPS } from "../constants.js";
+import { getStepKind } from "../utils.js";
+import type { Config } from "@qwen-code/qwen-code-core";
+import { Colors } from "../../../colors.js";
+import { theme } from "../../../semantic-colors.js";
+import { TextEntryStep } from "./TextEntryStep.js";
+import { useKeypress } from "../../../hooks/useKeypress.js";
 
 interface AgentCreationWizardProps {
   onClose: () => void;
@@ -37,28 +37,28 @@ export function AgentCreationWizard({
   const [state, dispatch] = useReducer(wizardReducer, initialWizardState);
 
   const handleNext = useCallback(() => {
-    dispatch({ type: 'GO_TO_NEXT_STEP' });
+    dispatch({ type: "GO_TO_NEXT_STEP" });
   }, []);
 
   const handlePrevious = useCallback(() => {
-    dispatch({ type: 'GO_TO_PREVIOUS_STEP' });
+    dispatch({ type: "GO_TO_PREVIOUS_STEP" });
   }, []);
 
   const handleCancel = useCallback(() => {
-    dispatch({ type: 'RESET_WIZARD' });
+    dispatch({ type: "RESET_WIZARD" });
     onClose();
   }, [onClose]);
 
   // Centralized ESC key handling for the entire wizard
   useKeypress(
     (key) => {
-      if (key.name !== 'escape') {
+      if (key.name !== "escape") {
         return;
       }
 
       // LLM DescriptionInput handles its own ESC logic when generating
       const kind = getStepKind(state.generationMethod, state.currentStep);
-      if (kind === 'LLM_DESC' && state.isGenerating) {
+      if (kind === "LLM_DESC" && state.isGenerating) {
         return; // Let DescriptionInput handle it
       }
 
@@ -90,26 +90,26 @@ export function AgentCreationWizard({
       const kind = getStepKind(state.generationMethod, state.currentStep);
       const n = state.currentStep;
       switch (kind) {
-        case 'LOCATION':
+        case "LOCATION":
           return `Step ${n}: Choose Location`;
-        case 'GEN_METHOD':
+        case "GEN_METHOD":
           return `Step ${n}: Choose Generation Method`;
-        case 'LLM_DESC':
+        case "LLM_DESC":
           return `Step ${n}: Describe Your Subagent`;
-        case 'MANUAL_NAME':
+        case "MANUAL_NAME":
           return `Step ${n}: Enter Subagent Name`;
-        case 'MANUAL_PROMPT':
+        case "MANUAL_PROMPT":
           return `Step ${n}: Enter System Prompt`;
-        case 'MANUAL_DESC':
+        case "MANUAL_DESC":
           return `Step ${n}: Enter Description`;
-        case 'TOOLS':
+        case "TOOLS":
           return `Step ${n}: Select Tools`;
-        case 'COLOR':
+        case "COLOR":
           return `Step ${n}: Choose Background Color`;
-        case 'FINAL':
+        case "FINAL":
           return `Step ${n}: Confirm and Save`;
         default:
-          return 'Unknown Step';
+          return "Unknown Step";
       }
     };
 
@@ -121,7 +121,7 @@ export function AgentCreationWizard({
   }, [state.currentStep, state.generationMethod]);
 
   const renderDebugContent = useCallback(() => {
-    if (process.env['NODE_ENV'] !== 'development') {
+    if (process.env["NODE_ENV"] !== "development") {
       return null;
     }
 
@@ -133,16 +133,16 @@ export function AgentCreationWizard({
           </Text>
           <Text color={Colors.Gray}>Step: {state.currentStep}</Text>
           <Text color={Colors.Gray}>
-            Can Proceed: {state.canProceed ? 'Yes' : 'No'}
+            Can Proceed: {state.canProceed ? "Yes" : "No"}
           </Text>
           <Text color={Colors.Gray}>
-            Generating: {state.isGenerating ? 'Yes' : 'No'}
+            Generating: {state.isGenerating ? "Yes" : "No"}
           </Text>
           <Text color={Colors.Gray}>Location: {state.location}</Text>
           <Text color={Colors.Gray}>Method: {state.generationMethod}</Text>
           {state.validationErrors.length > 0 && (
             <Text color={theme.status.error}>
-              Errors: {state.validationErrors.join(', ')}
+              Errors: {state.validationErrors.join(", ")}
             </Text>
           )}
         </Box>
@@ -161,27 +161,27 @@ export function AgentCreationWizard({
     const getNavigationInstructions = () => {
       // Special case: During generation in description input step, only show cancel option
       const kind = getStepKind(state.generationMethod, state.currentStep);
-      if (kind === 'LLM_DESC' && state.isGenerating) {
-        return 'Esc to cancel';
+      if (kind === "LLM_DESC" && state.isGenerating) {
+        return "Esc to cancel";
       }
 
-      if (getStepKind(state.generationMethod, state.currentStep) === 'FINAL') {
-        return 'Press Enter to save, e to save and edit, Esc to go back';
+      if (getStepKind(state.generationMethod, state.currentStep) === "FINAL") {
+        return "Press Enter to save, e to save and edit, Esc to go back";
       }
 
       // Steps that have ↑↓ navigation (RadioButtonSelect components)
       const kindForNav = getStepKind(state.generationMethod, state.currentStep);
       const hasNavigation =
-        kindForNav === 'LOCATION' ||
-        kindForNav === 'GEN_METHOD' ||
-        kindForNav === 'TOOLS' ||
-        kindForNav === 'COLOR';
-      const navigationPart = hasNavigation ? '↑↓ to navigate, ' : '';
+        kindForNav === "LOCATION" ||
+        kindForNav === "GEN_METHOD" ||
+        kindForNav === "TOOLS" ||
+        kindForNav === "COLOR";
+      const navigationPart = hasNavigation ? "↑↓ to navigate, " : "";
 
       const escAction =
         state.currentStep === WIZARD_STEPS.LOCATION_SELECTION
-          ? 'cancel'
-          : 'go back';
+          ? "cancel"
+          : "go back";
 
       return `Press Enter to continue, ${navigationPart}Esc to ${escAction}`;
     };
@@ -196,13 +196,13 @@ export function AgentCreationWizard({
   const renderStepContent = useCallback(() => {
     const kind = getStepKind(state.generationMethod, state.currentStep);
     switch (kind) {
-      case 'LOCATION':
+      case "LOCATION":
         return <LocationSelector {...stepProps} />;
-      case 'GEN_METHOD':
+      case "GEN_METHOD":
         return <GenerationMethodSelector {...stepProps} />;
-      case 'LLM_DESC':
+      case "LLM_DESC":
         return <DescriptionInput {...stepProps} />;
-      case 'MANUAL_NAME':
+      case "MANUAL_NAME":
         return (
           <TextEntryStep
             key="manual-name"
@@ -215,14 +215,14 @@ export function AgentCreationWizard({
             initialText={state.generatedName}
             onChange={(t) => {
               const value = t; // keep raw, trim later when validating
-              dispatch({ type: 'SET_GENERATED_NAME', name: value });
+              dispatch({ type: "SET_GENERATED_NAME", name: value });
             }}
             validate={(t) =>
-              t.trim().length === 0 ? 'Name cannot be empty.' : null
+              t.trim().length === 0 ? "Name cannot be empty." : null
             }
           />
         );
-      case 'MANUAL_PROMPT':
+      case "MANUAL_PROMPT":
         return (
           <TextEntryStep
             key="manual-prompt"
@@ -235,16 +235,16 @@ export function AgentCreationWizard({
             initialText={state.generatedSystemPrompt}
             onChange={(t) => {
               dispatch({
-                type: 'SET_GENERATED_SYSTEM_PROMPT',
+                type: "SET_GENERATED_SYSTEM_PROMPT",
                 systemPrompt: t,
               });
             }}
             validate={(t) =>
-              t.trim().length === 0 ? 'System prompt cannot be empty.' : null
+              t.trim().length === 0 ? "System prompt cannot be empty." : null
             }
           />
         );
-      case 'MANUAL_DESC':
+      case "MANUAL_DESC":
         return (
           <TextEntryStep
             key="manual-desc"
@@ -256,36 +256,36 @@ export function AgentCreationWizard({
             height={6}
             initialText={state.generatedDescription}
             onChange={(t) => {
-              dispatch({ type: 'SET_GENERATED_DESCRIPTION', description: t });
+              dispatch({ type: "SET_GENERATED_DESCRIPTION", description: t });
             }}
             validate={(t) =>
-              t.trim().length === 0 ? 'Description cannot be empty.' : null
+              t.trim().length === 0 ? "Description cannot be empty." : null
             }
           />
         );
-      case 'TOOLS':
+      case "TOOLS":
         return (
           <ToolSelector
             tools={state.selectedTools}
             onSelect={(tools) => {
-              dispatch({ type: 'SET_TOOLS', tools });
+              dispatch({ type: "SET_TOOLS", tools });
               handleNext();
             }}
             config={config}
           />
         );
-      case 'COLOR':
+      case "COLOR":
         return (
           <ColorSelector
             color={state.color}
             agentName={state.generatedName}
             onSelect={(color) => {
-              dispatch({ type: 'SET_BACKGROUND_COLOR', color });
+              dispatch({ type: "SET_BACKGROUND_COLOR", color });
               handleNext();
             }}
           />
         );
-      case 'FINAL':
+      case "FINAL":
         return <CreationSummary {...stepProps} />;
       default:
         return (

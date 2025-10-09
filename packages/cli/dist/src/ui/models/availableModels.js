@@ -3,11 +3,11 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import fs from 'fs/promises';
-import path from 'path';
-import os from 'os';
-export const MAINLINE_VLM = 'vision-model';
-export const MAINLINE_CODER = 'coder-model';
+import fs from "fs/promises";
+import path from "path";
+import os from "os";
+export const MAINLINE_VLM = "vision-model";
+export const MAINLINE_CODER = "coder-model";
 export const AVAILABLE_MODELS_QWEN = [
     { id: MAINLINE_CODER, label: MAINLINE_CODER },
     { id: MAINLINE_VLM, label: MAINLINE_VLM, isVision: true },
@@ -26,7 +26,7 @@ export function getFilteredQwenModels(visionModelPreviewEnabled) {
  * In the future, after settings.json is updated, we will allow users to configure this themselves.
  */
 export function getOpenAIAvailableModelFromEnv() {
-    const id = process.env['OPENAI_MODEL']?.trim();
+    const id = process.env["OPENAI_MODEL"]?.trim();
     return id ? { id, label: id } : null;
 }
 /**
@@ -35,25 +35,25 @@ export function getOpenAIAvailableModelFromEnv() {
  */
 export async function fetchOpenAICompatibleModels(baseUrl, apiKey) {
     try {
-        const isLMStudio = baseUrl.includes('127.0.0.1:1234') || baseUrl.includes('localhost:1234');
+        const isLMStudio = baseUrl.includes("127.0.0.1:1234") || baseUrl.includes("localhost:1234");
         // Normalize the base URL to avoid double /v1 paths
         // If baseUrl already ends with /v1, don't add another /v1
         let url;
         if (isLMStudio) {
-            url = baseUrl.replace(/\/v1\/?$/, '') + '/api/v0/models';
+            url = baseUrl.replace(/\/v1\/?$/, "") + "/api/v0/models";
         }
-        else if (baseUrl.endsWith('/v1')) {
-            url = baseUrl + '/models';
+        else if (baseUrl.endsWith("/v1")) {
+            url = baseUrl + "/models";
         }
         else {
-            url = baseUrl.replace(/\/*$/, '') + '/v1/models';
+            url = baseUrl.replace(/\/*$/, "") + "/v1/models";
         }
         const headers = {
-            'Content-Type': 'application/json',
+            "Content-Type": "application/json",
         };
         if (apiKey)
-            headers['Authorization'] = `Bearer ${apiKey}`;
-        const resp = await fetch(url, { headers, method: 'GET' });
+            headers["Authorization"] = `Bearer ${apiKey}`;
+        const resp = await fetch(url, { headers, method: "GET" });
         if (!resp.ok)
             return [];
         const data = await resp.json();
@@ -75,23 +75,25 @@ export async function fetchOpenAICompatibleModels(baseUrl, apiKey) {
             label: m.id || m.name,
             // OpenRouter includes pricing and context_length in the model object
             // pricing.prompt is for input tokens, pricing.completion is for output tokens
-            inputPrice: typeof m.pricing?.prompt === 'string' ? m.pricing.prompt : undefined,
-            outputPrice: typeof m.pricing?.completion === 'string'
+            inputPrice: typeof m.pricing?.prompt === "string" ? m.pricing.prompt : undefined,
+            outputPrice: typeof m.pricing?.completion === "string"
                 ? m.pricing.completion
                 : undefined,
-            contextLength: typeof m.context_length === 'number'
+            contextLength: typeof m.context_length === "number"
                 ? m.context_length
-                : typeof m.top_provider?.context_length === 'number'
+                : typeof m.top_provider?.context_length === "number"
                     ? m.top_provider.context_length
                     : undefined,
         }))
             .filter((m) => !!m.id);
         // If provider reported explicit context lengths (e.g., OpenRouter), register them
         try {
-            const core = await import('@qwen-code/qwen-code-core');
+            const core = await import("@qwen-code/qwen-code-core");
             const setLimit = core.setModelContextLimit;
             for (const mm of mapped) {
-                if (typeof mm.contextLength === 'number' && Number.isFinite(mm.contextLength) && mm.contextLength > 0) {
+                if (typeof mm.contextLength === "number" &&
+                    Number.isFinite(mm.contextLength) &&
+                    mm.contextLength > 0) {
                     try {
                         setLimit(mm.id, mm.contextLength);
                     }
@@ -119,7 +121,7 @@ export async function fetchOpenAICompatibleModels(baseUrl, apiKey) {
  * Only models with an explicit configured contextLength are returned.
  */
 export async function getLMStudioConfiguredModels() {
-    const configDir = path.join(os.homedir(), '.lmstudio', '.internal', 'user-concrete-model-default-config');
+    const configDir = path.join(os.homedir(), ".lmstudio", ".internal", "user-concrete-model-default-config");
     try {
         // Check dir exists
         const stat = await fs.stat(configDir).catch(() => null);
@@ -133,7 +135,8 @@ export async function getLMStudioConfiguredModels() {
                 if (entry.isDirectory()) {
                     await walk(full);
                 }
-                else if (entry.isFile() && entry.name.toLowerCase().endsWith('.json')) {
+                else if (entry.isFile() &&
+                    entry.name.toLowerCase().endsWith(".json")) {
                     files.push(full);
                 }
             }
@@ -144,7 +147,7 @@ export async function getLMStudioConfiguredModels() {
         let mappings = {};
         try {
             // dynamic import to avoid circular deps in runtime bundle
-            const storage = await import('./modelMappingStorage.js');
+            const storage = await import("./modelMappingStorage.js");
             mappings = await storage.loadMappings();
         }
         catch (e) {
@@ -152,16 +155,21 @@ export async function getLMStudioConfiguredModels() {
         }
         for (const filePath of files) {
             try {
-                const raw = await fs.readFile(filePath, { encoding: 'utf8' });
+                const raw = await fs.readFile(filePath, { encoding: "utf8" });
                 const obj = JSON.parse(raw);
                 const ctx = extractContextLengthFromConfig(obj);
-                if (typeof ctx === 'number' && Number.isFinite(ctx) && ctx > 0) {
+                if (typeof ctx === "number" && Number.isFinite(ctx) && ctx > 0) {
                     // derive model id/label from filename
-                    const base = path.basename(filePath, '.json');
+                    const base = path.basename(filePath, ".json");
                     // remove trailing .gguf or -GGUF variants if present
-                    const cleaned = base.replace(/(\.gguf|-gguf)$/i, '');
+                    const cleaned = base.replace(/(\.gguf|-gguf)$/i, "");
                     const mapped = mappings[cleaned];
-                    const model = { id: cleaned, label: cleaned, configuredName: cleaned, configuredContextLength: ctx };
+                    const model = {
+                        id: cleaned,
+                        label: cleaned,
+                        configuredName: cleaned,
+                        configuredContextLength: ctx,
+                    };
                     if (mapped) {
                         model.matchedRestId = mapped;
                         model.id = mapped;
@@ -185,9 +193,11 @@ function extractContextLengthFromConfig(obj) {
     // Common LM Studio schema: obj.load.fields is array of {key, value}
     if (obj && obj.load && Array.isArray(obj.load.fields)) {
         for (const f of obj.load.fields) {
-            if (f && (f.key === 'llm.load.contextLength' || f.key === 'llm.load.contextlength')) {
+            if (f &&
+                (f.key === "llm.load.contextLength" ||
+                    f.key === "llm.load.contextlength")) {
                 const v = f.value;
-                if (typeof v === 'number')
+                if (typeof v === "number")
                     return v;
                 const n = Number(v);
                 if (!Number.isNaN(n))
@@ -200,11 +210,11 @@ function extractContextLengthFromConfig(obj) {
     function recurse(o) {
         if (found !== undefined)
             return;
-        if (o && typeof o === 'object') {
+        if (o && typeof o === "object") {
             for (const k of Object.keys(o)) {
-                if (k === 'llm.load.contextLength' || k === 'llm.load.contextlength') {
+                if (k === "llm.load.contextLength" || k === "llm.load.contextlength") {
                     const v = o[k];
-                    if (typeof v === 'number') {
+                    if (typeof v === "number") {
                         found = v;
                         return;
                     }
@@ -215,7 +225,7 @@ function extractContextLengthFromConfig(obj) {
                     }
                 }
                 const val = o[k];
-                if (val && typeof val === 'object')
+                if (val && typeof val === "object")
                     recurse(val);
             }
         }
@@ -226,14 +236,14 @@ function extractContextLengthFromConfig(obj) {
 export async function getLMStudioLoadedModel(baseUrl) {
     try {
         // LM Studio endpoint is /api/v0/models, not /v1
-        const url = baseUrl.replace(/\/v1\/?$/, '') + '/api/v0/models';
-        const resp = await fetch(url, { method: 'GET' });
+        const url = baseUrl.replace(/\/v1\/?$/, "") + "/api/v0/models";
+        const resp = await fetch(url, { method: "GET" });
         if (!resp.ok) {
             return null;
         }
         const data = await resp.json();
         const models = Array.isArray(data?.data) ? data.data : [];
-        const loadedModel = models.find((m) => m.state === 'loaded');
+        const loadedModel = models.find((m) => m.state === "loaded");
         return loadedModel?.id || null;
     }
     catch (e) {

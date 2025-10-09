@@ -4,43 +4,43 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { GoogleAuth } from 'google-auth-library';
-import { GoogleCredentialProvider } from './google-auth-provider.js';
-import type { Mock } from 'vitest';
-import { vi, describe, beforeEach, it, expect } from 'vitest';
-import type { MCPServerConfig } from '../config/config.js';
+import { GoogleAuth } from "google-auth-library";
+import { GoogleCredentialProvider } from "./google-auth-provider.js";
+import type { Mock } from "vitest";
+import { vi, describe, beforeEach, it, expect } from "vitest";
+import type { MCPServerConfig } from "../config/config.js";
 
-vi.mock('google-auth-library');
+vi.mock("google-auth-library");
 
-describe('GoogleCredentialProvider', () => {
+describe("GoogleCredentialProvider", () => {
   const validConfig = {
-    url: 'https://test.googleapis.com',
+    url: "https://test.googleapis.com",
     oauth: {
-      scopes: ['scope1', 'scope2'],
+      scopes: ["scope1", "scope2"],
     },
   } as MCPServerConfig;
 
-  it('should throw an error if no scopes are provided', () => {
+  it("should throw an error if no scopes are provided", () => {
     const config = {
-      url: 'https://test.googleapis.com',
+      url: "https://test.googleapis.com",
     } as MCPServerConfig;
     expect(() => new GoogleCredentialProvider(config)).toThrow(
-      'Scopes must be provided in the oauth config for Google Credentials provider',
+      "Scopes must be provided in the oauth config for Google Credentials provider",
     );
   });
 
-  it('should use scopes from the config if provided', () => {
+  it("should use scopes from the config if provided", () => {
     new GoogleCredentialProvider(validConfig);
     expect(GoogleAuth).toHaveBeenCalledWith({
-      scopes: ['scope1', 'scope2'],
+      scopes: ["scope1", "scope2"],
     });
   });
 
-  it('should throw an error for a non-allowlisted host', () => {
+  it("should throw an error for a non-allowlisted host", () => {
     const config = {
-      url: 'https://example.com',
+      url: "https://example.com",
       oauth: {
-        scopes: ['scope1', 'scope2'],
+        scopes: ["scope1", "scope2"],
       },
     } as MCPServerConfig;
     expect(() => new GoogleCredentialProvider(config)).toThrow(
@@ -48,31 +48,31 @@ describe('GoogleCredentialProvider', () => {
     );
   });
 
-  it('should allow luci.app', () => {
+  it("should allow luci.app", () => {
     const config = {
-      url: 'https://luci.app',
+      url: "https://luci.app",
       oauth: {
-        scopes: ['scope1', 'scope2'],
+        scopes: ["scope1", "scope2"],
       },
     } as MCPServerConfig;
     new GoogleCredentialProvider(config);
   });
 
-  it('should allow sub.luci.app', () => {
+  it("should allow sub.luci.app", () => {
     const config = {
-      url: 'https://sub.luci.app',
+      url: "https://sub.luci.app",
       oauth: {
-        scopes: ['scope1', 'scope2'],
+        scopes: ["scope1", "scope2"],
       },
     } as MCPServerConfig;
     new GoogleCredentialProvider(config);
   });
 
-  it('should not allow googleapis.com without a subdomain', () => {
+  it("should not allow googleapis.com without a subdomain", () => {
     const config = {
-      url: 'https://googleapis.com',
+      url: "https://googleapis.com",
       oauth: {
-        scopes: ['scope1', 'scope2'],
+        scopes: ["scope1", "scope2"],
       },
     } as MCPServerConfig;
     expect(() => new GoogleCredentialProvider(config)).toThrow(
@@ -80,7 +80,7 @@ describe('GoogleCredentialProvider', () => {
     );
   });
 
-  describe('with provider instance', () => {
+  describe("with provider instance", () => {
     let provider: GoogleCredentialProvider;
 
     beforeEach(() => {
@@ -88,18 +88,18 @@ describe('GoogleCredentialProvider', () => {
       vi.clearAllMocks();
     });
 
-    it('should return credentials', async () => {
+    it("should return credentials", async () => {
       const mockClient = {
-        getAccessToken: vi.fn().mockResolvedValue({ token: 'test-token' }),
+        getAccessToken: vi.fn().mockResolvedValue({ token: "test-token" }),
       };
       (GoogleAuth.prototype.getClient as Mock).mockResolvedValue(mockClient);
 
       const credentials = await provider.tokens();
 
-      expect(credentials?.access_token).toBe('test-token');
+      expect(credentials?.access_token).toBe("test-token");
     });
 
-    it('should return undefined if access token is not available', async () => {
+    it("should return undefined if access token is not available", async () => {
       const mockClient = {
         getAccessToken: vi.fn().mockResolvedValue({ token: null }),
       };

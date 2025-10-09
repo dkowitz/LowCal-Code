@@ -4,13 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { ToolConfirmationOutcome } from '../tools/tools.js';
+import { ToolConfirmationOutcome } from "../tools/tools.js";
 
 export enum ToolCallDecision {
-  ACCEPT = 'accept',
-  REJECT = 'reject',
-  MODIFY = 'modify',
-  AUTO_ACCEPT = 'auto_accept',
+  ACCEPT = "accept",
+  REJECT = "reject",
+  MODIFY = "modify",
+  AUTO_ACCEPT = "auto_accept",
 }
 
 export function getDecisionFromOutcome(

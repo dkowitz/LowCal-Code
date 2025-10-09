@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback } from "react";
 
 interface UseInputHistoryProps {
   userMessages: readonly string[];
@@ -29,11 +29,11 @@ export function useInputHistory({
 }: UseInputHistoryProps): UseInputHistoryReturn {
   const [historyIndex, setHistoryIndex] = useState<number>(-1);
   const [originalQueryBeforeNav, setOriginalQueryBeforeNav] =
-    useState<string>('');
+    useState<string>("");
 
   const resetHistoryNav = useCallback(() => {
     setHistoryIndex(-1);
-    setOriginalQueryBeforeNav('');
+    setOriginalQueryBeforeNav("");
   }, []);
 
   const handleSubmit = useCallback(

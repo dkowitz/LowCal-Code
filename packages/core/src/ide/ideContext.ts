@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 /**
  * Zod schema for validating a file context from the IDE.
@@ -36,14 +36,14 @@ export type IdeContext = z.infer<typeof IdeContextSchema>;
  * Zod schema for validating the 'ide/contextUpdate' notification from the IDE.
  */
 export const IdeContextNotificationSchema = z.object({
-  jsonrpc: z.literal('2.0'),
-  method: z.literal('ide/contextUpdate'),
+  jsonrpc: z.literal("2.0"),
+  method: z.literal("ide/contextUpdate"),
   params: IdeContextSchema,
 });
 
 export const IdeDiffAcceptedNotificationSchema = z.object({
-  jsonrpc: z.literal('2.0'),
-  method: z.literal('ide/diffAccepted'),
+  jsonrpc: z.literal("2.0"),
+  method: z.literal("ide/diffAccepted"),
   params: z.object({
     filePath: z.string(),
     content: z.string(),
@@ -51,8 +51,8 @@ export const IdeDiffAcceptedNotificationSchema = z.object({
 });
 
 export const IdeDiffClosedNotificationSchema = z.object({
-  jsonrpc: z.literal('2.0'),
-  method: z.literal('ide/diffClosed'),
+  jsonrpc: z.literal("2.0"),
+  method: z.literal("ide/diffClosed"),
   params: z.object({
     filePath: z.string(),
     content: z.string().optional(),
@@ -65,7 +65,7 @@ export const CloseDiffResponseSchema = z
       .array(
         z.object({
           text: z.string(),
-          type: z.literal('text'),
+          type: z.literal("text"),
         }),
       )
       .min(1),
@@ -83,7 +83,7 @@ export const CloseDiffResponseSchema = z
     } catch (_) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
-        message: 'Invalid JSON in text content',
+        message: "Invalid JSON in text content",
       });
       return z.NEVER;
     }
@@ -91,11 +91,11 @@ export const CloseDiffResponseSchema = z
 
 export type DiffUpdateResult =
   | {
-      status: 'accepted';
+      status: "accepted";
       content?: string;
     }
   | {
-      status: 'rejected';
+      status: "rejected";
       content: undefined;
     };
 

@@ -4,10 +4,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import path from 'node:path';
-import { fdir } from 'fdir';
-import type { Ignore } from './ignore.js';
-import * as cache from './crawlCache.js';
+import path from "node:path";
+import { fdir } from "fdir";
+import type { Ignore } from "./ignore.js";
+import * as cache from "./crawlCache.js";
 
 export interface CrawlOptions {
   // The directory to start the crawl from.
@@ -50,7 +50,7 @@ export async function crawl(options: CrawlOptions): Promise<string[]> {
     const api = new fdir()
       .withRelativePaths()
       .withDirs()
-      .withPathSeparator('/') // Always use unix style paths
+      .withPathSeparator("/") // Always use unix style paths
       .exclude((_, dirPath) => {
         const relativePath = path.posix.relative(posixCrawlDirectory, dirPath);
         return dirFilter(`${relativePath}/`);

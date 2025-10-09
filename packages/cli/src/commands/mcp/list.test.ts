@@ -4,35 +4,35 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { listMcpServers } from './list.js';
-import { loadSettings } from '../../config/settings.js';
-import { loadExtensions } from '../../config/extension.js';
-import { createTransport } from '@qwen-code/qwen-code-core';
-import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { vi, describe, it, expect, beforeEach, afterEach } from "vitest";
+import { listMcpServers } from "./list.js";
+import { loadSettings } from "../../config/settings.js";
+import { loadExtensions } from "../../config/extension.js";
+import { createTransport } from "@qwen-code/qwen-code-core";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 
-vi.mock('../../config/settings.js', () => ({
+vi.mock("../../config/settings.js", () => ({
   loadSettings: vi.fn(),
 }));
-vi.mock('../../config/extension.js', () => ({
+vi.mock("../../config/extension.js", () => ({
   loadExtensions: vi.fn(),
 }));
-vi.mock('@qwen-code/qwen-code-core', () => ({
+vi.mock("@qwen-code/qwen-code-core", () => ({
   createTransport: vi.fn(),
   MCPServerStatus: {
-    CONNECTED: 'CONNECTED',
-    CONNECTING: 'CONNECTING',
-    DISCONNECTED: 'DISCONNECTED',
+    CONNECTED: "CONNECTED",
+    CONNECTING: "CONNECTING",
+    DISCONNECTED: "DISCONNECTED",
   },
   Storage: vi.fn().mockImplementation((_cwd: string) => ({
-    getGlobalSettingsPath: () => '/tmp/qwen/settings.json',
-    getWorkspaceSettingsPath: () => '/tmp/qwen/workspace-settings.json',
-    getProjectTempDir: () => '/test/home/.qwen/tmp/mocked_hash',
+    getGlobalSettingsPath: () => "/tmp/qwen/settings.json",
+    getWorkspaceSettingsPath: () => "/tmp/qwen/workspace-settings.json",
+    getProjectTempDir: () => "/test/home/.qwen/tmp/mocked_hash",
   })),
-  GEMINI_CONFIG_DIR: '.qwen',
+  GEMINI_CONFIG_DIR: ".qwen",
   getErrorMessage: (e: unknown) => (e instanceof Error ? e.message : String(e)),
 }));
-vi.mock('@modelcontextprotocol/sdk/client/index.js');
+vi.mock("@modelcontextprotocol/sdk/client/index.js");
 
 const mockedLoadSettings = loadSettings as vi.Mock;
 const mockedLoadExtensions = loadExtensions as vi.Mock;
@@ -49,7 +49,7 @@ interface MockTransport {
   close: vi.Mock;
 }
 
-describe('mcp list command', () => {
+describe("mcp list command", () => {
   let consoleSpy: vi.SpyInstance;
   let mockClient: MockClient;
   let mockTransport: MockTransport;
@@ -57,7 +57,7 @@ describe('mcp list command', () => {
   beforeEach(() => {
     vi.resetAllMocks();
 
-    consoleSpy = vi.spyOn(console, 'log').mockImplementation(() => {});
+    consoleSpy = vi.spyOn(console, "log").mockImplementation(() => {});
 
     mockTransport = { close: vi.fn() };
     mockClient = {
@@ -75,21 +75,21 @@ describe('mcp list command', () => {
     consoleSpy.mockRestore();
   });
 
-  it('should display message when no servers configured', async () => {
+  it("should display message when no servers configured", async () => {
     mockedLoadSettings.mockReturnValue({ merged: { mcpServers: {} } });
 
     await listMcpServers();
 
-    expect(consoleSpy).toHaveBeenCalledWith('No MCP servers configured.');
+    expect(consoleSpy).toHaveBeenCalledWith("No MCP servers configured.");
   });
 
-  it('should display different server types with connected status', async () => {
+  it("should display different server types with connected status", async () => {
     mockedLoadSettings.mockReturnValue({
       merged: {
         mcpServers: {
-          'stdio-server': { command: '/path/to/server', args: ['arg1'] },
-          'sse-server': { url: 'https://example.com/sse' },
-          'http-server': { httpUrl: 'https://example.com/http' },
+          "stdio-server": { command: "/path/to/server", args: ["arg1"] },
+          "sse-server": { url: "https://example.com/sse" },
+          "http-server": { httpUrl: "https://example.com/http" },
         },
       },
     });
@@ -99,56 +99,56 @@ describe('mcp list command', () => {
 
     await listMcpServers();
 
-    expect(consoleSpy).toHaveBeenCalledWith('Configured MCP servers:\n');
+    expect(consoleSpy).toHaveBeenCalledWith("Configured MCP servers:\n");
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        'stdio-server: /path/to/server arg1 (stdio) - Connected',
+        "stdio-server: /path/to/server arg1 (stdio) - Connected",
       ),
     );
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        'sse-server: https://example.com/sse (sse) - Connected',
+        "sse-server: https://example.com/sse (sse) - Connected",
       ),
     );
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        'http-server: https://example.com/http (http) - Connected',
+        "http-server: https://example.com/http (http) - Connected",
       ),
     );
   });
 
-  it('should display disconnected status when connection fails', async () => {
+  it("should display disconnected status when connection fails", async () => {
     mockedLoadSettings.mockReturnValue({
       merged: {
         mcpServers: {
-          'test-server': { command: '/test/server' },
+          "test-server": { command: "/test/server" },
         },
       },
     });
 
-    mockClient.connect.mockRejectedValue(new Error('Connection failed'));
+    mockClient.connect.mockRejectedValue(new Error("Connection failed"));
 
     await listMcpServers();
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        'test-server: /test/server  (stdio) - Disconnected',
+        "test-server: /test/server  (stdio) - Disconnected",
       ),
     );
   });
 
-  it('should merge extension servers with config servers', async () => {
+  it("should merge extension servers with config servers", async () => {
     mockedLoadSettings.mockReturnValue({
       merged: {
-        mcpServers: { 'config-server': { command: '/config/server' } },
+        mcpServers: { "config-server": { command: "/config/server" } },
       },
     });
 
     mockedLoadExtensions.mockReturnValue([
       {
         config: {
-          name: 'test-extension',
-          mcpServers: { 'extension-server': { command: '/ext/server' } },
+          name: "test-extension",
+          mcpServers: { "extension-server": { command: "/ext/server" } },
         },
       },
     ]);
@@ -160,12 +160,12 @@ describe('mcp list command', () => {
 
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        'config-server: /config/server  (stdio) - Connected',
+        "config-server: /config/server  (stdio) - Connected",
       ),
     );
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining(
-        'extension-server: /ext/server  (stdio) - Connected',
+        "extension-server: /ext/server  (stdio) - Connected",
       ),
     );
   });

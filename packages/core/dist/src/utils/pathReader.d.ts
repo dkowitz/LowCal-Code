@@ -3,8 +3,8 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { PartUnion } from '@google/genai';
-import type { Config } from '../config/config.js';
+import type { PartUnion } from "@google/genai";
+import type { Config } from "../config/config.js";
 /**
  * Reads the content of a file or recursively expands a directory from
  * within the workspace, returning content suitable for LLM input.

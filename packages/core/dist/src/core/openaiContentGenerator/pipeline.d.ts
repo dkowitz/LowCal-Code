@@ -3,13 +3,13 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type OpenAI from 'openai';
-import { type GenerateContentParameters, GenerateContentResponse } from '@google/genai';
-import type { Config } from '../../config/config.js';
-import type { ContentGeneratorConfig } from '../contentGenerator.js';
-import type { OpenAICompatibleProvider } from './provider/index.js';
-import type { TelemetryService } from './telemetryService.js';
-import type { ErrorHandler } from './errorHandler.js';
+import type OpenAI from "openai";
+import { type GenerateContentParameters, GenerateContentResponse } from "@google/genai";
+import type { Config } from "../../config/config.js";
+import type { ContentGeneratorConfig } from "../contentGenerator.js";
+import type { OpenAICompatibleProvider } from "./provider/index.js";
+import type { TelemetryService } from "./telemetryService.js";
+import type { ErrorHandler } from "./errorHandler.js";
 export interface PipelineConfig {
     cliConfig: Config;
     provider: OpenAICompatibleProvider;

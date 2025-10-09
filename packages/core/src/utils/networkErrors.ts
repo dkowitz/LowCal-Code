@@ -10,6 +10,6 @@ export class IdleStreamTimeoutError extends Error {
     message: string = `Stream idle for ${idleMs}ms`,
   ) {
     super(message);
-    this.name = 'IdleStreamTimeoutError';
+    this.name = "IdleStreamTimeoutError";
   }
 }
