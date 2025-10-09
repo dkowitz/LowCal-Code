@@ -7,17 +7,16 @@ vi.mock('@qwen-code/qwen-code-core', () => {
     QWEN_OAUTH: 'QWEN_OAUTH',
     USE_OPENAI: 'USE_OPENAI',
   };
-  const MockConfigClass = class {
+  const MockConfig = class {
+    private model = 'default-model';
     getContentGeneratorConfig() {
-      return {
-        model: 'gpt-3.5-turbo',
-        authType: AuthType.QWEN_OAUTH,
-      };
+      return { model: this.model, baseUrl: 'http://localhost:1234', authType: AuthType.QWEN_OAUTH };
     }
     getModel() {
-      return 'default-model';
+      return this.model;
     }
-    setModel() {
+    setModel(newModel: string, _opts?: { reason?: string; context?: string }): Promise<void> {
+      this.model = newModel;
       return Promise.resolve();
     }
     getSessionId() {
@@ -25,6 +24,23 @@ vi.mock('@qwen-code/qwen-code-core', () => {
     }
     getDebugMode() {
       return false;
+    }
+    getContentGeneratorTimeout() {
+      return undefined;
+    }
+    getContentGeneratorMaxRetries() {
+      return undefined;
+    }
+    getEffectiveContextLimit(model?: string) {
+      return 131072;
+    }
+    getLMStudioConfiguredModels() {
+      return Promise.resolve([
+        { id: 'lm-default-model', label: 'lm-default-model', configuredContextLength: 131072, matchedRestId: 'lm-default-model', configuredName: 'lm-default-model' }
+      ]);
+    }
+    getLMStudioLoadedModel(_baseUrl: string) {
+      return Promise.resolve('lm-default-model');
     }
   };
   return {
@@ -34,6 +50,6 @@ vi.mock('@qwen-code/qwen-code-core', () => {
     },
     sessionId: 'mock-session',
     AuthType,
-    Config: MockConfigClass,
+    Config: MockConfig,
   };
 });
