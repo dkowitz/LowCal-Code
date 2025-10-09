@@ -45,18 +45,12 @@ vi.mock('@qwen-code/qwen-code-core', () => {
   };
   // Smarter path.join mock to simulate filesystem paths for tests
   const pathJoin = (...parts: string[]) => {
-    // If last arg is a filename (.md), join with the directory
     const last = parts[parts.length - 1];
+    // If last part looks like a filename, assume a file path under conversations dir
     if (typeof last === 'string' && last.endsWith('.md')) {
-      const dir = parts[0] && typeof parts[0] === 'string' ? parts[0] : '/mock/path/conversations';
-      // If dir points to 'conversations' folder, return dir + '/' + last
-      if (dir.endsWith('conversations') || dir.endsWith('/conversations')) {
-        return dir + '/' + last;
-      }
-      // otherwise default to conversations dir
       return '/mock/path/conversations/' + last;
     }
-    // If called to build a directory path (process.cwd(), 'conversations') -> return dir
+    // If joining a directory name like 'conversations', return its dir path
     if (parts.length === 2 && parts[1] === 'conversations') {
       return '/mock/path/conversations';
     }
@@ -71,7 +65,6 @@ vi.mock('@qwen-code/qwen-code-core', () => {
     sessionId: 'mock-session',
     AuthType,
     Config: MockConfig,
-    // Provide a shim for path.join used in tests if needed
-    // The tests import path directly via vi.mock on 'node:path' in tests, but this export is harmless.
+    // Note: pathJoin is not exported; tests patch node:path join via require, this is just a stub surface
   };
 });
