@@ -29,10 +29,21 @@ export const exportCommand: SlashCommand = {
     }
 
     // Parse args
-    const argParts = (args || "").trim().split(/\s+/);
-    const option = argParts[0]?.toLowerCase();
-    const providedFileName =
-      argParts.length > 1 ? argParts.slice(1).join(" ") : null;
+    const argParts = (args || "").trim().split(/\s+/).filter(Boolean);
+    let option: string | null = null;
+    let providedFileName: string | null = null;
+
+    if (argParts.length === 0) {
+      option = null;
+    } else if (["compact", "report"].includes(argParts[0].toLowerCase())) {
+      option = argParts[0].toLowerCase();
+      if (argParts.length > 1) {
+        providedFileName = argParts.slice(1).join(" ");
+      }
+    } else {
+      // If the first arg is not a recognized option, treat the entire args string as the filename.
+      providedFileName = argParts.join(" ");
+    }
 
     // Validate option
     if (option && !["compact", "report"].includes(option)) {
@@ -61,8 +72,11 @@ export const exportCommand: SlashCommand = {
       fileName = `${prefix}-${timestamp}.md`;
     }
 
-    // Default directory
-    const exportDir = path.join(process.cwd(), "conversations");
+    // Determine output directory based on option
+    const exportDir =
+      option === "report"
+        ? path.join(process.cwd(), "reports")
+        : path.join(process.cwd(), "conversations");
     fs.mkdirSync(exportDir, { recursive: true });
     const fullPath = path.join(exportDir, fileName);
 
@@ -142,21 +156,36 @@ export const exportCommand: SlashCommand = {
           }
           break;
         case "tool_group":
+        case "tool":
+        case "tool_call":
+        case "tool_call_request":
+        case "tool_stats":
+          // Normalize to an array of tool displays
           markdownContent += `### Tool Execution\n\n`;
-          if (item.tools) {
-            for (const tool of item.tools) {
-              markdownContent += `**Tool:** ${tool.name}\n`;
-              if (tool.resultDisplay) {
-                markdownContent += `**Result:** ${typeof tool.resultDisplay === "string" ? tool.resultDisplay : JSON.stringify(tool.resultDisplay)}\n`;
-              }
-              markdownContent += `\n`;
-            }
+          const toolsArray: any[] = [];
+          if ((item as any).tools && Array.isArray((item as any).tools)) {
+            toolsArray.push(...(item as any).tools);
+          } else if ((item as any).name) {
+            // Single-tool shape
+            toolsArray.push({
+              name: (item as any).name,
+              resultDisplay: (item as any).resultDisplay || (item as any).result || undefined,
+            });
           }
+
+          for (const tool of toolsArray) {
+            markdownContent += `**Tool:** ${tool.name}\n`;
+            if (tool.resultDisplay) {
+              markdownContent += `**Result:** ${typeof tool.resultDisplay === "string" ? tool.resultDisplay : JSON.stringify(tool.resultDisplay)}\n`;
+            }
+            markdownContent += `\n`;
+          }
+
           markdownContent += `---\n\n`;
           break;
         default:
           if (item.text) {
-            markdownContent += `### ${item.type.toUpperCase()}\n\n${item.text.trim()}\n\n---\n\n`;
+            markdownContent += `### ${String(item.type).toUpperCase()}\n\n${item.text.trim()}\n\n---\n\n`;
           }
           break;
       }
