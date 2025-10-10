@@ -7,6 +7,7 @@
 import React from "react";
 import { Box, Text, useInput } from "ink";
 import { MarkdownDisplay } from "../../utils/MarkdownDisplay.js";
+import { useGlobalInputLock } from "../../hooks/useGlobalKeyRouting.js";
 
 // SCROLL_STEP intentionally unused; kept for future adjustments
 
@@ -33,22 +34,48 @@ export const ViewMessage: React.FC<ViewMessageProps> = ({
   onScroll,
   terminalWidth,
 }) => {
+  // Acquire global input lock when active (do in effect to avoid races)
+  const { requestLock, releaseLock } = useGlobalInputLock();
+  const owner = `view-${filePath}-${text.length}`;
+  const [acquired, setAcquired] = React.useState(false);
+
+  React.useEffect(() => {
+    if (!isActive) return;
+    let mounted = true;
+    try {
+      const ok = requestLock(owner);
+      if (mounted && ok) setAcquired(true);
+    } catch (e) {}
+    return () => {
+      mounted = false;
+      try {
+        if (acquired) releaseLock(owner);
+      } catch (e) {}
+    };
+  }, [isActive, requestLock, releaseLock, owner]);
+
   useInput(
     (input, key) => {
-      if (!isActive) {
-        return;
-      }
-
+      if (!acquired) return;
       if (key.upArrow || input === "k") {
         onScroll("up");
       } else if (key.downArrow || input === "j") {
         onScroll("down");
       } else if (input === "q" || key.escape) {
         onExit();
+        try { releaseLock(owner); } catch (e) {}
+        setAcquired(false);
       }
     },
-    { isActive },
+    { isActive: acquired },
   );
+
+  // Release lock on unmount if still held
+  React.useEffect(() => {
+    return () => {
+      try { releaseLock(owner); } catch (e) {}
+    };
+  }, [releaseLock, owner]);
 
   const lines = text.split("\n");
   const visibleLines = lines.slice(scrollOffset, scrollOffset + maxHeight);

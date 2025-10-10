@@ -12,6 +12,7 @@ import { useShellHistory } from "../hooks/useShellHistory.js";
 import { useReverseSearchCompletion } from "../hooks/useReverseSearchCompletion.js";
 import { useCommandCompletion } from "../hooks/useCommandCompletion.js";
 import { useKeypress } from "../hooks/useKeypress.js";
+import { useGlobalInputLock } from "../hooks/useGlobalKeyRouting.js";
 import { keyMatchers, Command } from "../keyMatchers.js";
 import { clipboardHasImage, saveClipboardImage, cleanupOldClipboardImages, } from "../utils/clipboardUtils.js";
 import * as path from "node:path";
@@ -145,6 +146,17 @@ export const InputPrompt = ({ buffer, onSubmit, userMessages, onClearScreen, con
         }
     }, [buffer, config]);
     const handleInput = useCallback((key) => {
+        // If another component has the global input lock, ignore non-paste input.
+        // Use the hook at runtime and check whoHasLock for better diagnostics.
+        try {
+            const lock = useGlobalInputLock();
+            if (lock.isLocked() && !key.paste) {
+                return;
+            }
+        }
+        catch (e) {
+            // If lock hook isn't available, fall back to normal behavior.
+        }
         /// We want to handle paste even when not focused to support drag and drop.
         if (!focus && !key.paste) {
             return;
