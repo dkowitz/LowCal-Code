@@ -25,6 +25,7 @@ import { SessionSummaryDisplay } from "./SessionSummaryDisplay.js";
 import type { Config } from "@qwen-code/qwen-code-core";
 import { Help } from "./Help.js";
 import type { SlashCommand } from "../commands/types.js";
+import { ViewMessage } from "./messages/ViewMessage.js";
 
 interface HistoryItemDisplayProps {
   item: HistoryItem;
@@ -34,6 +35,13 @@ interface HistoryItemDisplayProps {
   config: Config;
   isFocused?: boolean;
   commands?: readonly SlashCommand[];
+  viewControls?: {
+    isActive: boolean;
+    scrollOffset: number;
+    maxHeight: number;
+    onScroll: (direction: "up" | "down") => void;
+    onExit: () => void;
+  };
 }
 
 const HistoryItemDisplayComponent: React.FC<HistoryItemDisplayProps> = ({
@@ -44,6 +52,7 @@ const HistoryItemDisplayComponent: React.FC<HistoryItemDisplayProps> = ({
   config,
   commands,
   isFocused = true,
+  viewControls,
 }) => (
   <Box flexDirection="column" key={item.id}>
     {/* Render standard message types */}
@@ -100,6 +109,19 @@ const HistoryItemDisplayComponent: React.FC<HistoryItemDisplayProps> = ({
       <CompressionMessage compression={item.compression} />
     )}
     {item.type === "summary" && <SummaryMessage summary={item.summary} />}
+    {item.type === "view" && viewControls && (
+      <ViewMessage
+        text={item.text}
+        filePath={item.filePath}
+        tokenCount={item.tokenCount}
+        terminalWidth={terminalWidth}
+        onExit={viewControls.onExit}
+        isActive={viewControls.isActive}
+        scrollOffset={viewControls.scrollOffset}
+        maxHeight={viewControls.maxHeight}
+        onScroll={viewControls.onScroll}
+      />
+    )}
   </Box>
 );
 

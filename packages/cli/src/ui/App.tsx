@@ -14,6 +14,7 @@ import {
   useStdin,
   useStdout,
 } from "ink";
+import { ViewOverlay } from "./components/ViewOverlay.js";
 import {
   StreamingState,
   type HistoryItem,
@@ -1798,7 +1799,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       streamingState === StreamingState.Responding) &&
     !initError &&
     !isProcessing &&
-    !showWelcomeBackDialog;
+    !showWelcomeBackDialog &&
+    true; // activeViewId declaration moved earlier to avoid TDZ
 
   const handleClearScreen = useCallback(() => {
     clearItems();
@@ -1806,6 +1808,28 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     console.clear();
     refreshStatic();
   }, [clearItems, clearConsoleMessagesState, refreshStatic]);
+
+  useEffect(() => {
+    if (history.length === 0) {
+      setActiveViewId(null);
+      setViewScrollOffset(0);
+      return;
+    }
+
+    const latestViewItem = [...history].reverse().find(
+      (item) => item.type === "view",
+    );
+
+    if (latestViewItem) {
+      setActiveViewId(latestViewItem.id);
+      setViewScrollOffset(0);
+      setAvailableViewHeight(Math.max(10, terminalHeight - footerHeight - 6));
+    } else {
+      setActiveViewId(null);
+      setViewScrollOffset(0);
+      setAvailableViewHeight(0);
+    }
+  }, [history, terminalHeight, footerHeight]);
 
   const mainControlsRef = useRef<DOMElement>(null);
   const pendingHistoryItemRef = useRef<DOMElement>(null);
@@ -1823,8 +1847,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     [terminalHeight, footerHeight],
   );
 
+  // Modal view state must be declared before isInputActive which depends on it
+  const [activeViewId, setActiveViewId] = useState<number | null>(null);
+  const [viewScrollOffset, setViewScrollOffset] = useState(0);
+  const [availableViewHeight, setAvailableViewHeight] = useState(0);
+
+  // skip refreshing Static during first mount (moved here so activeViewId is declared first)
   useEffect(() => {
-    // skip refreshing Static during first mount
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
@@ -1840,6 +1869,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       clearTimeout(handler);
     };
   }, [terminalWidth, terminalHeight, refreshStatic]);
+
+
 
   useEffect(() => {
     if (streamingState === StreamingState.Idle && staticNeedsRefresh) {
@@ -1956,17 +1987,19 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 <Tips config={config} />
               )}
             </Box>,
-            ...history.map((h) => (
-              <HistoryItemDisplay
-                terminalWidth={mainAreaWidth}
-                availableTerminalHeight={staticAreaMaxItemHeight}
-                key={h.id}
-                item={h}
-                isPending={false}
-                config={config}
-                commands={slashCommands}
-              />
-            )),
+            ...history
+              .filter((h) => h.type !== "view")
+              .map((h) => (
+                <HistoryItemDisplay
+                  terminalWidth={mainAreaWidth}
+                  availableTerminalHeight={staticAreaMaxItemHeight}
+                  key={h.id}
+                  item={h}
+                  isPending={false}
+                  config={config}
+                  commands={slashCommands}
+                />
+              )),
           ]}
         >
           {(item) => item}
@@ -1986,6 +2019,28 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 isPending={true}
                 config={config}
                 isFocused={!isEditorDialogOpen}
+                viewControls={
+                  item.type === "view"
+                    ? {
+                        isActive: activeViewId === item.id,
+                        scrollOffset: viewScrollOffset,
+                        maxHeight: Math.min(
+                          constrainHeight ? availableTerminalHeight ?? 20 : 20,
+                          20,
+                        ),
+                        onScroll: (direction) => {
+                          setViewScrollOffset((prev) =>
+                            direction === "up"
+                              ? Math.max(0, prev - 1)
+                              : prev + 1,
+                          );
+                        },
+                        onExit: () => {
+                          setActiveViewId(null);
+                        },
+                      }
+                    : undefined
+                }
               />
             ))}
             <ShowMoreLines constrainHeight={constrainHeight} />
@@ -1993,6 +2048,28 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         </OverflowProvider>
 
         <Box flexDirection="column" ref={mainControlsRef}>
+          {/* View overlay rendered above the static history when active */}
+          {activeViewId !== null && (
+            (() => {
+              const viewItem = history.find((h) => h.id === activeViewId && h.type === "view") as
+                | (HistoryItem & { id: number })
+                | undefined;
+              if (!viewItem || viewItem.type !== "view") return null;
+              if (!viewItem) return null;
+              return (
+                <ViewOverlay
+                  item={viewItem}
+                  height={availableViewHeight || Math.max(10, terminalHeight - footerHeight - 6)}
+                  width={Math.floor(terminalWidth * 0.9)}
+                  scrollOffset={viewScrollOffset}
+                  onScroll={(dir) =>
+                    setViewScrollOffset((prev) => (dir === "up" ? Math.max(0, prev - 3) : prev + 3))
+                  }
+                  onExit={() => setActiveViewId(null)}
+                />
+              );
+            })()
+          )}
           {/* Move UpdateNotification to render update notification above input area */}
           {updateInfo && <UpdateNotification message={updateInfo.message} />}
           {startupWarnings.length > 0 && (

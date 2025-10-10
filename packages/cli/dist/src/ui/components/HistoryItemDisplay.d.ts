@@ -15,6 +15,13 @@ interface HistoryItemDisplayProps {
     config: Config;
     isFocused?: boolean;
     commands?: readonly SlashCommand[];
+    viewControls?: {
+        isActive: boolean;
+        scrollOffset: number;
+        maxHeight: number;
+        onScroll: (direction: "up" | "down") => void;
+        onExit: () => void;
+    };
 }
 export declare const HistoryItemDisplay: React.NamedExoticComponent<HistoryItemDisplayProps>;
 export {};

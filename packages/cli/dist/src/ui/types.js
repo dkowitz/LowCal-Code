@@ -42,5 +42,6 @@ export var MessageType;
     MessageType["GEMINI"] = "gemini";
     MessageType["COMPRESSION"] = "compression";
     MessageType["SUMMARY"] = "summary";
+    MessageType["VIEW"] = "view";
 })(MessageType || (MessageType = {}));
 //# sourceMappingURL=types.js.map

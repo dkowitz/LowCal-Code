@@ -122,7 +122,14 @@ export type HistoryItemSummary = HistoryItemBase & {
     type: "summary";
     summary: SummaryProps;
 };
-export type HistoryItemWithoutId = HistoryItemUser | HistoryItemUserShell | HistoryItemGemini | HistoryItemGeminiContent | HistoryItemInfo | HistoryItemError | HistoryItemAbout | HistoryItemHelp | HistoryItemToolGroup | HistoryItemStats | HistoryItemModelStats | HistoryItemToolStats | HistoryItemQuit | HistoryItemQuitConfirmation | HistoryItemCompression | HistoryItemSummary;
+export type HistoryItemView = HistoryItemBase & {
+    type: "view";
+    text: string;
+    filePath: string;
+    tokenCount?: number;
+    totalLines: number;
+};
+export type HistoryItemWithoutId = HistoryItemUser | HistoryItemUserShell | HistoryItemGemini | HistoryItemGeminiContent | HistoryItemInfo | HistoryItemError | HistoryItemAbout | HistoryItemHelp | HistoryItemToolGroup | HistoryItemStats | HistoryItemModelStats | HistoryItemToolStats | HistoryItemQuit | HistoryItemQuitConfirmation | HistoryItemCompression | HistoryItemSummary | HistoryItemView;
 export type HistoryItem = HistoryItemWithoutId & {
     id: number;
 };
@@ -139,7 +146,8 @@ export declare enum MessageType {
     QUIT_CONFIRMATION = "quit_confirmation",
     GEMINI = "gemini",
     COMPRESSION = "compression",
-    SUMMARY = "summary"
+    SUMMARY = "summary",
+    VIEW = "view"
 }
 export type Message = {
     type: MessageType.INFO | MessageType.ERROR | MessageType.USER;

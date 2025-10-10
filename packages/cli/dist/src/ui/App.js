@@ -6,6 +6,7 @@ import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-run
  */
 import { useCallback, useEffect, useMemo, useState, useRef } from "react";
 import { Box, measureElement, Static, Text, useStdin, useStdout, } from "ink";
+import { ViewOverlay } from "./components/ViewOverlay.js";
 import { StreamingState, MessageType, ToolCallStatus, } from "./types.js";
 import { useTerminalSize } from "./hooks/useTerminalSize.js";
 import { useGeminiStream } from "./hooks/useGeminiStream.js";
@@ -1291,13 +1292,32 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         streamingState === StreamingState.Responding) &&
         !initError &&
         !isProcessing &&
-        !showWelcomeBackDialog;
+        !showWelcomeBackDialog &&
+        true; // activeViewId declaration moved earlier to avoid TDZ
     const handleClearScreen = useCallback(() => {
         clearItems();
         clearConsoleMessagesState();
         console.clear();
         refreshStatic();
     }, [clearItems, clearConsoleMessagesState, refreshStatic]);
+    useEffect(() => {
+        if (history.length === 0) {
+            setActiveViewId(null);
+            setViewScrollOffset(0);
+            return;
+        }
+        const latestViewItem = [...history].reverse().find((item) => item.type === "view");
+        if (latestViewItem) {
+            setActiveViewId(latestViewItem.id);
+            setViewScrollOffset(0);
+            setAvailableViewHeight(Math.max(10, terminalHeight - footerHeight - 6));
+        }
+        else {
+            setActiveViewId(null);
+            setViewScrollOffset(0);
+            setAvailableViewHeight(0);
+        }
+    }, [history, terminalHeight, footerHeight]);
     const mainControlsRef = useRef(null);
     const pendingHistoryItemRef = useRef(null);
     useEffect(() => {
@@ -1308,8 +1328,12 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     }, [terminalHeight, consoleMessages, showErrorDetails]);
     const staticExtraHeight = /* margins and padding */ 3;
     const availableTerminalHeight = useMemo(() => terminalHeight - footerHeight - staticExtraHeight, [terminalHeight, footerHeight]);
+    // Modal view state must be declared before isInputActive which depends on it
+    const [activeViewId, setActiveViewId] = useState(null);
+    const [viewScrollOffset, setViewScrollOffset] = useState(0);
+    const [availableViewHeight, setAvailableViewHeight] = useState(0);
+    // skip refreshing Static during first mount (moved here so activeViewId is declared first)
     useEffect(() => {
-        // skip refreshing Static during first mount
         if (isInitialMount.current) {
             isInitialMount.current = false;
             return;
@@ -1390,8 +1414,31 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         : "  Type your message or @path/to/file";
     return (_jsx(StreamingContext.Provider, { value: streamingState, children: _jsxs(Box, { flexDirection: "column", width: "90%", children: [_jsx(Static, { items: [
                         _jsxs(Box, { flexDirection: "column", children: [!(settings.merged.ui?.hideBanner || config.getScreenReader()) && _jsx(Header, { version: version, nightly: nightly }), !(settings.merged.ui?.hideTips || config.getScreenReader()) && (_jsx(Tips, { config: config }))] }, "header"),
-                        ...history.map((h) => (_jsx(HistoryItemDisplay, { terminalWidth: mainAreaWidth, availableTerminalHeight: staticAreaMaxItemHeight, item: h, isPending: false, config: config, commands: slashCommands }, h.id))),
-                    ], children: (item) => item }, staticKey), renderModelMappingDialog(), _jsx(OverflowProvider, { children: _jsxs(Box, { ref: pendingHistoryItemRef, flexDirection: "column", children: [pendingHistoryItems.map((item) => (_jsx(HistoryItemDisplay, { availableTerminalHeight: constrainHeight ? availableTerminalHeight : undefined, terminalWidth: mainAreaWidth, item: item, isPending: true, config: config, isFocused: !isEditorDialogOpen }, item.id))), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }), _jsxs(Box, { flexDirection: "column", ref: mainControlsRef, children: [updateInfo && _jsx(UpdateNotification, { message: updateInfo.message }), startupWarnings.length > 0 && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentYellow, paddingX: 1, marginY: 1, flexDirection: "column", children: startupWarnings.map((warning, index) => (_jsx(Text, { color: Colors.AccentYellow, children: warning }, index))) })), showWelcomeBackDialog && welcomeBackInfo?.hasHistory && (_jsx(WelcomeBackDialog, { welcomeBackInfo: welcomeBackInfo, onSelect: handleWelcomeBackSelection, onClose: handleWelcomeBackClose })), showWorkspaceMigrationDialog ? (_jsx(WorkspaceMigrationDialog, { workspaceExtensions: workspaceExtensions, onOpen: onWorkspaceMigrationDialogOpen, onClose: onWorkspaceMigrationDialogClose })) : shouldShowIdePrompt && currentIDE ? (_jsx(IdeIntegrationNudge, { ide: currentIDE, onComplete: handleIdePromptComplete })) : isFolderTrustDialogOpen ? (_jsx(FolderTrustDialog, { onSelect: handleFolderTrustSelect, isRestarting: isRestarting })) : quitConfirmationRequest ? (_jsx(QuitConfirmationDialog, { onSelect: (choice) => {
+                        ...history
+                            .filter((h) => h.type !== "view")
+                            .map((h) => (_jsx(HistoryItemDisplay, { terminalWidth: mainAreaWidth, availableTerminalHeight: staticAreaMaxItemHeight, item: h, isPending: false, config: config, commands: slashCommands }, h.id))),
+                    ], children: (item) => item }, staticKey), renderModelMappingDialog(), _jsx(OverflowProvider, { children: _jsxs(Box, { ref: pendingHistoryItemRef, flexDirection: "column", children: [pendingHistoryItems.map((item) => (_jsx(HistoryItemDisplay, { availableTerminalHeight: constrainHeight ? availableTerminalHeight : undefined, terminalWidth: mainAreaWidth, item: item, isPending: true, config: config, isFocused: !isEditorDialogOpen, viewControls: item.type === "view"
+                                    ? {
+                                        isActive: activeViewId === item.id,
+                                        scrollOffset: viewScrollOffset,
+                                        maxHeight: Math.min(constrainHeight ? availableTerminalHeight ?? 20 : 20, 20),
+                                        onScroll: (direction) => {
+                                            setViewScrollOffset((prev) => direction === "up"
+                                                ? Math.max(0, prev - 1)
+                                                : prev + 1);
+                                        },
+                                        onExit: () => {
+                                            setActiveViewId(null);
+                                        },
+                                    }
+                                    : undefined }, item.id))), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }), _jsxs(Box, { flexDirection: "column", ref: mainControlsRef, children: [activeViewId !== null && ((() => {
+                            const viewItem = history.find((h) => h.id === activeViewId && h.type === "view");
+                            if (!viewItem || viewItem.type !== "view")
+                                return null;
+                            if (!viewItem)
+                                return null;
+                            return (_jsx(ViewOverlay, { item: viewItem, height: availableViewHeight || Math.max(10, terminalHeight - footerHeight - 6), width: Math.floor(terminalWidth * 0.9), scrollOffset: viewScrollOffset, onScroll: (dir) => setViewScrollOffset((prev) => (dir === "up" ? Math.max(0, prev - 3) : prev + 3)), onExit: () => setActiveViewId(null) }));
+                        })()), updateInfo && _jsx(UpdateNotification, { message: updateInfo.message }), startupWarnings.length > 0 && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentYellow, paddingX: 1, marginY: 1, flexDirection: "column", children: startupWarnings.map((warning, index) => (_jsx(Text, { color: Colors.AccentYellow, children: warning }, index))) })), showWelcomeBackDialog && welcomeBackInfo?.hasHistory && (_jsx(WelcomeBackDialog, { welcomeBackInfo: welcomeBackInfo, onSelect: handleWelcomeBackSelection, onClose: handleWelcomeBackClose })), showWorkspaceMigrationDialog ? (_jsx(WorkspaceMigrationDialog, { workspaceExtensions: workspaceExtensions, onOpen: onWorkspaceMigrationDialogOpen, onClose: onWorkspaceMigrationDialogClose })) : shouldShowIdePrompt && currentIDE ? (_jsx(IdeIntegrationNudge, { ide: currentIDE, onComplete: handleIdePromptComplete })) : isFolderTrustDialogOpen ? (_jsx(FolderTrustDialog, { onSelect: handleFolderTrustSelect, isRestarting: isRestarting })) : quitConfirmationRequest ? (_jsx(QuitConfirmationDialog, { onSelect: (choice) => {
                                 const result = handleQuitConfirmationSelect(choice);
                                 if (result?.shouldQuit) {
                                     quitConfirmationRequest.onConfirm(true, result.action);

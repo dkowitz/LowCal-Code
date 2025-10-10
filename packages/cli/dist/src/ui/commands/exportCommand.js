@@ -80,13 +80,12 @@ export const exportCommand = {
                 item.text);
         }
         else if (option === "report") {
-            // All user messages up to the first Assistant message
+            // All user messages up to the first non-user message
             for (let i = 0; i < history.length; i++) {
-                const type = history[i].type;
-                if (type === "gemini" || type === "gemini_content") {
+                if (history[i].type !== "user") {
                     break;
                 }
-                if (type === "user" && history[i].text) {
+                if (history[i].type === "user" && history[i].text) {
                     filteredHistory.push(history[i]);
                 }
             }

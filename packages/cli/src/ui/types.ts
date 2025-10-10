@@ -155,6 +155,14 @@ export type HistoryItemSummary = HistoryItemBase & {
   summary: SummaryProps;
 };
 
+export type HistoryItemView = HistoryItemBase & {
+  type: "view";
+  text: string;
+  filePath: string;
+  tokenCount?: number;
+  totalLines: number;
+};
+
 // Using Omit<HistoryItem, 'id'> seems to have some issues with typescript's
 // type inference e.g. historyItem.type === 'tool_group' isn't auto-inferring that
 // 'tools' in historyItem.
@@ -175,7 +183,8 @@ export type HistoryItemWithoutId =
   | HistoryItemQuit
   | HistoryItemQuitConfirmation
   | HistoryItemCompression
-  | HistoryItemSummary;
+  | HistoryItemSummary
+  | HistoryItemView;
 
 export type HistoryItem = HistoryItemWithoutId & { id: number };
 
@@ -194,6 +203,7 @@ export enum MessageType {
   GEMINI = "gemini",
   COMPRESSION = "compression",
   SUMMARY = "summary",
+  VIEW = "view",
 }
 
 // Simplified message structure for internal feedback
