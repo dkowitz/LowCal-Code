@@ -1304,11 +1304,16 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         if (history.length === 0) {
             setActiveViewId(null);
             setViewScrollOffset(0);
+            lastSeenViewIdRef.current = null;
             return;
         }
         const latestViewItem = [...history].reverse().find((item) => item.type === "view");
         if (latestViewItem) {
-            setActiveViewId(latestViewItem.id);
+            // Only auto-open the viewer if this is a newly added view item we haven't seen yet.
+            if (lastSeenViewIdRef.current !== latestViewItem.id) {
+                setActiveViewId(latestViewItem.id);
+                lastSeenViewIdRef.current = latestViewItem.id;
+            }
             setViewScrollOffset(0);
             setAvailableViewHeight(Math.max(10, terminalHeight - footerHeight - 6));
         }
@@ -1316,6 +1321,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             setActiveViewId(null);
             setViewScrollOffset(0);
             setAvailableViewHeight(0);
+            lastSeenViewIdRef.current = null;
         }
     }, [history, terminalHeight, footerHeight]);
     const mainControlsRef = useRef(null);
@@ -1332,6 +1338,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [activeViewId, setActiveViewId] = useState(null);
     const [viewScrollOffset, setViewScrollOffset] = useState(0);
     const [availableViewHeight, setAvailableViewHeight] = useState(0);
+    // Track the last-seen view item id so we only auto-open the viewer when a new view is added.
+    // This prevents re-opening a previously-closed viewer when unrelated history updates occur.
+    const lastSeenViewIdRef = useRef(null);
     // skip refreshing Static during first mount (moved here so activeViewId is declared first)
     useEffect(() => {
         if (isInitialMount.current) {
