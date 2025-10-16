@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/55</span>
+                <span class='fraction'>0/58</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/55</span>
+                <span class='fraction'>0/58</span>
             </div>
         
             
@@ -144,7 +144,12 @@
 <a name='L79'></a><a href='#L79'>79</a>
 <a name='L80'></a><a href='#L80'>80</a>
 <a name='L81'></a><a href='#L81'>81</a>
-<a name='L82'></a><a href='#L82'>82</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L82'></a><a href='#L82'>82</a>
+<a name='L83'></a><a href='#L83'>83</a>
+<a name='L84'></a><a href='#L84'>84</a>
+<a name='L85'></a><a href='#L85'>85</a>
+<a name='L86'></a><a href='#L86'>86</a>
+<a name='L87'></a><a href='#L87'>87</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -181,12 +186,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -196,10 +195,10 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -214,6 +213,17 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -262,20 +272,25 @@ import type { SlashCommand } from "./types.js";
 <span class="cstat-no" title="statement not covered" >      context.ui.addItem(infoItem, Date.now());</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 &nbsp;
+<span class="cstat-no" title="statement not covered" >    const rawArgs = args?.trim() ?? "";</span>
+&nbsp;
     // No arguments – just report current mode
-<span class="cstat-no" title="statement not covered" >    if (!args || args.length === 0) {</span>
+<span class="cstat-no" title="statement not covered" >    if (!rawArgs) {</span>
 <span class="cstat-no" title="statement not covered" >      reply(</span>
 <span class="cstat-no" title="statement not covered" >        `Current prompt mode: ${cfg.promptMode} (auto = concise prompt for LM Studio; full = standard prompt; concise = always short)`,</span>
 <span class="cstat-no" title="statement not covered" >      );</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
+<span class="cstat-no" title="statement not covered" >    const tokens = rawArgs.split(/\s+/);</span>
+<span class="cstat-no" title="statement not covered" >    const [verb, value] = tokens;</span>
+&nbsp;
     // Expect "set &lt;mode&gt;"
-<span class="cstat-no" title="statement not covered" >    if (args[0] === "set" &amp;&amp; args[1]) {</span>
-<span class="cstat-no" title="statement not covered" >      const mode = args[1].toLowerCase() as PromptMode;</span>
+<span class="cstat-no" title="statement not covered" >    if (verb === "set" &amp;&amp; value) {</span>
+<span class="cstat-no" title="statement not covered" >      const mode = value.toLowerCase() as PromptMode;</span>
 <span class="cstat-no" title="statement not covered" >      const allowed: PromptMode[] = ["auto", "full", "concise"];</span>
 <span class="cstat-no" title="statement not covered" >      if (!allowed.includes(mode)) {</span>
-<span class="cstat-no" title="statement not covered" >        reply(`Invalid mode "${args[1]}". Use one of: auto, full, concise.`);</span>
+<span class="cstat-no" title="statement not covered" >        reply(`Invalid mode "${value}". Use one of: auto, full, concise.`);</span>
 <span class="cstat-no" title="statement not covered" >        return;</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      cfg.promptMode = mode;</span>
@@ -285,9 +300,11 @@ import type { SlashCommand } from "./types.js";
 <span class="cstat-no" title="statement not covered" >      const geminiConfig = context.services.config;</span>
 <span class="cstat-no" title="statement not covered" >      const geminiClient = geminiConfig?.getGeminiClient();</span>
 <span class="cstat-no" title="statement not covered" >      try {</span>
-<span class="cstat-no" title="statement not covered" >        await geminiClient?.reinitialize?.();</span>
+<span class="cstat-no" title="statement not covered" >        if (geminiClient &amp;&amp; typeof geminiClient.reinitialize === "function") {</span>
+<span class="cstat-no" title="statement not covered" >          await geminiClient.reinitialize();</span>
+<span class="cstat-no" title="statement not covered" >        }</span>
 <span class="cstat-no" title="statement not covered" >      } catch (error) {</span>
-<span class="cstat-no" title="statement not covered" >        context.services.logger.warn(</span>
+<span class="cstat-no" title="statement not covered" >        console.warn(</span>
 <span class="cstat-no" title="statement not covered" >          "[promptmode] Failed to reinitialize chat after mode change",</span>
 <span class="cstat-no" title="statement not covered" >          error,</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
@@ -297,9 +314,7 @@ import type { SlashCommand } from "./types.js";
 <span class="cstat-no" title="statement not covered" >        mode === "auto"</span>
 <span class="cstat-no" title="statement not covered" >          ? "Auto mode selects the concise prompt when LM Studio is detected."</span>
 <span class="cstat-no" title="statement not covered" >          : "";</span>
-<span class="cstat-no" title="statement not covered" >      reply(</span>
-<span class="cstat-no" title="statement not covered" >        `Prompt mode set to "${mode}". ${autoNote}`.trim(),</span>
-<span class="cstat-no" title="statement not covered" >      );</span>
+<span class="cstat-no" title="statement not covered" >      reply(`Prompt mode set to "${mode}". ${autoNote}`.trim());</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
@@ -313,7 +328,7 @@ import type { SlashCommand } from "./types.js";
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-16T08:53:47.564Z
+                at 2025-10-16T16:10:51.865Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

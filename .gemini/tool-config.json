@@ -18,7 +18,8 @@
     "minimal": [
       "read_file",
       "write_file",
-      "run_shell_command"
+      "run_shell_command",
+      "edit"
     ],
     "shell-only": [
       "run_shell_command"

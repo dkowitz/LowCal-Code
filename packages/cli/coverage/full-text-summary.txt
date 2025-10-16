@@ -1,7 +1,7 @@
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |       0 |     1.02 |    1.02 |       0 |                   
+All files          |    0.78 |     10.2 |       5 |    0.78 |                   
  src               |       0 |        0 |       0 |       0 |                   
   gemini.tsx       |       0 |        0 |       0 |       0 | 1-441             
   ...ractiveCli.ts |       0 |        0 |       0 |       0 | 1-138             
@@ -49,12 +49,12 @@ All files          |       0 |     1.02 |    1.02 |       0 |
   ...tionParser.ts |       0 |        0 |       0 |       0 | 1-89              
   ...lProcessor.ts |       0 |        0 |       0 |       0 | 1-207             
   types.ts         |       0 |        0 |       0 |       0 | 1-54              
- src/test-utils    |       0 |        0 |       0 |       0 |                   
-  ...omMatchers.ts |       0 |        0 |       0 |       0 | 1-56              
-  ...andContext.ts |       0 |        0 |       0 |       0 | 1-110             
-  ...Controller.ts |       0 |        0 |       0 |       0 | 1-18              
+ src/test-utils    |   72.51 |       80 |      60 |   72.51 |                   
+  ...omMatchers.ts |   21.21 |      100 |       0 |   21.21 | 23-51             
+  ...andContext.ts |     100 |      100 |     100 |     100 |                   
+  ...Controller.ts |     100 |      100 |     100 |     100 |                   
   render.tsx       |       0 |        0 |       0 |       0 | 1-18              
- src/ui            |       0 |        0 |       0 |       0 |                   
+ src/ui            |    1.32 |    36.36 |       0 |    1.32 |                   
   App.tsx          |       0 |        0 |       0 |       0 | 1-2470            
   ...tionNudge.tsx |       0 |        0 |       0 |       0 | 1-96              
   colors.ts        |       0 |        0 |       0 |       0 | 1-56              
@@ -62,8 +62,8 @@ All files          |       0 |     1.02 |    1.02 |       0 |
   keyMatchers.ts   |       0 |        0 |       0 |       0 | 1-98              
   ...tic-colors.ts |       0 |        0 |       0 |       0 | 1-26              
   textConstants.ts |       0 |        0 |       0 |       0 | 1-13              
-  types.ts         |       0 |        0 |       0 |       0 | 1-206             
- src/ui/commands   |       0 |     2.56 |    2.56 |       0 |                   
+  types.ts         |     100 |      100 |     100 |     100 |                   
+ src/ui/commands   |    4.48 |    29.41 |   21.73 |    4.48 |                   
   aboutCommand.ts  |       0 |        0 |       0 |       0 | 1-50              
   agentsCommand.ts |       0 |        0 |       0 |       0 | 1-37              
   ...odeCommand.ts |       0 |        0 |       0 |       0 | 1-434             
@@ -88,7 +88,7 @@ All files          |       0 |     1.02 |    1.02 |       0 |
   modelCommand.ts  |       0 |        0 |       0 |       0 | 1-116             
   ...acyCommand.ts |       0 |        0 |       0 |       0 | 1-18              
   ...nfoCommand.ts |       0 |      100 |     100 |       0 | 6-73              
-  ...odeCommand.ts |       0 |        0 |       0 |       0 | 1-81              
+  ...odeCommand.ts |       0 |        0 |       0 |       0 | 1-86              
   quitCommand.ts   |       0 |        0 |       0 |       0 | 1-63              
   ...oreCommand.ts |       0 |        0 |       0 |       0 | 1-153             
   ...ngsCommand.ts |       0 |        0 |       0 |       0 | 1-18              
@@ -99,8 +99,8 @@ All files          |       0 |     1.02 |    1.02 |       0 |
   themeCommand.ts  |       0 |        0 |       0 |       0 | 1-18              
   tokensCommand.ts |       0 |        0 |       0 |       0 | 1-97              
   toolsCommand.ts  |       0 |        0 |       0 |       0 | 1-71              
-  ...setCommand.ts |       0 |        0 |       0 |       0 | 1-201             
-  types.ts         |       0 |        0 |       0 |       0 | 1-185             
+  ...setCommand.ts |   53.74 |    48.93 |     100 |   53.74 | ...03-344,346-347 
+  types.ts         |     100 |      100 |     100 |     100 |                   
   viewCommand.ts   |       0 |        0 |       0 |       0 | 1-109             
   vimCommand.ts    |       0 |        0 |       0 |       0 | 1-26              
  ...commands/utils |       0 |        0 |       0 |       0 |                   
@@ -220,7 +220,7 @@ All files          |       0 |     1.02 |    1.02 |       0 |
   ...orSettings.ts |       0 |        0 |       0 |       0 | 1-75              
   useFocus.ts      |       0 |        0 |       0 |       0 | 1-48              
   ...olderTrust.ts |       0 |        0 |       0 |       0 | 1-85              
-  ...miniStream.ts |       0 |        0 |       0 |       0 | 1-1159            
+  ...miniStream.ts |       0 |        0 |       0 |       0 | 1-1272            
   ...BranchName.ts |       0 |        0 |       0 |       0 | 1-79              
   ...KeyRouting.ts |       0 |      100 |     100 |       0 | 6-28              
   ...oryManager.ts |       0 |        0 |       0 |       0 | 1-111             

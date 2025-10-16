@@ -1,3 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="0" failures="0" errors="0" time="0">
+<testsuites name="vitest tests" tests="3" failures="0" errors="0" time="0.005404458">
+    <testsuite name="src/ui/commands/toolsetCommand.test.ts" timestamp="2025-10-16T16:10:51.841Z" hostname="uby" tests="3" failures="0" errors="0" skipped="0" time="0.005404458">
+        <testcase classname="src/ui/commands/toolsetCommand.test.ts" name="toolsetCommand &gt; rejects unknown tool names when adding to a collection" time="0.003690538">
+        </testcase>
+        <testcase classname="src/ui/commands/toolsetCommand.test.ts" name="toolsetCommand &gt; allows adding tools using display names" time="0.000641597">
+        </testcase>
+        <testcase classname="src/ui/commands/toolsetCommand.test.ts" name="toolsetCommand &gt; rejects ambiguous tool names" time="0.00036731">
+        </testcase>
+    </testsuite>
 </testsuites>

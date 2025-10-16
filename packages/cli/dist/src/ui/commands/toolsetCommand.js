@@ -5,7 +5,90 @@
  */
 import { CommandKind } from "./types.js";
 import { MessageType } from "../types.js";
-import { loadCliToolConfig, normalizeToolList, saveCliToolConfig, syncCoreToolConfig, } from "./utils/toolConfig.js";
+import { ToolNames } from "@qwen-code/qwen-code-core";
+import { loadCliToolConfig, saveCliToolConfig, syncCoreToolConfig, } from "./utils/toolConfig.js";
+function normalizeLookupKey(value) {
+    if (!value) {
+        return "";
+    }
+    return value
+        .replace(/([a-z0-9])([A-Z])/g, "$1 $2")
+        .replace(/([A-Z])([A-Z][a-z])/g, "$1 $2")
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim()
+        .replace(/\s+/g, "");
+}
+function registerToolNameVariant(lookup, rawName, canonicalName) {
+    if (!rawName) {
+        return;
+    }
+    const key = normalizeLookupKey(rawName);
+    if (!key) {
+        return;
+    }
+    const existing = lookup.get(key);
+    if (existing) {
+        existing.add(canonicalName);
+    }
+    else {
+        lookup.set(key, new Set([canonicalName]));
+    }
+}
+function buildToolLookup(toolRegistry) {
+    const lookup = new Map();
+    for (const builtinName of Object.values(ToolNames)) {
+        registerToolNameVariant(lookup, builtinName, builtinName);
+    }
+    const tools = toolRegistry?.getAllTools?.() ?? [];
+    for (const tool of tools) {
+        registerToolNameVariant(lookup, tool.name, tool.name);
+        registerToolNameVariant(lookup, tool.displayName, tool.name);
+    }
+    return lookup;
+}
+function resolveToolTokens(tokens, lookup) {
+    const resolved = [];
+    const seen = new Set();
+    const unknown = [];
+    const ambiguous = [];
+    for (const token of tokens) {
+        const trimmed = token?.trim() ?? "";
+        if (!trimmed) {
+            continue;
+        }
+        const key = normalizeLookupKey(trimmed);
+        if (!key) {
+            continue;
+        }
+        const matches = lookup.get(key);
+        if (!matches || matches.size === 0) {
+            unknown.push(trimmed);
+            continue;
+        }
+        if (matches.size > 1) {
+            ambiguous.push(trimmed);
+            continue;
+        }
+        const [canonical] = matches;
+        if (!seen.has(canonical)) {
+            seen.add(canonical);
+            resolved.push(canonical);
+        }
+    }
+    return { resolved, unknown, ambiguous };
+}
+function formatToolResolutionError(unknown, ambiguous) {
+    const parts = [];
+    if (unknown.length > 0) {
+        parts.push(`Unknown tool name${unknown.length === 1 ? "" : "s"}: ${unknown.join(", ")}.`);
+    }
+    if (ambiguous.length > 0) {
+        parts.push(`Ambiguous tool name${ambiguous.length === 1 ? "" : "s"}: ${ambiguous.join(", ")}. Please use the exact identifier shown by /tools desc.`);
+    }
+    parts.push("Use /tools desc to view valid tool identifiers.");
+    return parts.join(" ");
+}
 /**
  * `/toolset` – Manage tool collections used by the concise/full prompt logic.
  *
@@ -40,7 +123,9 @@ export const toolsetCommand = {
         const restTokens = tokens;
         const sub = subRaw.toLowerCase();
         const geminiConfig = context.services.config;
-        const geminiClient = geminiConfig?.getGeminiClient();
+        const geminiClient = geminiConfig?.getGeminiClient?.();
+        const toolRegistry = geminiConfig?.getToolRegistry?.() ?? null;
+        const toolLookup = buildToolLookup(toolRegistry);
         const refreshTools = async () => {
             if (geminiClient && typeof geminiClient.setTools === "function") {
                 try {
@@ -114,7 +199,12 @@ export const toolsetCommand = {
                     reply(`Collection "${name}" already exists.`);
                     break;
                 }
-                const tools = normalizeToolList(toolTokens);
+                const { resolved, unknown, ambiguous } = resolveToolTokens(toolTokens, toolLookup);
+                if (unknown.length > 0 || ambiguous.length > 0) {
+                    reply(formatToolResolutionError(unknown, ambiguous));
+                    break;
+                }
+                const tools = resolved;
                 cfg = {
                     ...cfg,
                     collections: {
@@ -138,7 +228,12 @@ export const toolsetCommand = {
                     reply(`Collection "${collection}" not found.`);
                     break;
                 }
-                const normalizedTools = normalizeToolList(toolTokens);
+                const { resolved, unknown, ambiguous } = resolveToolTokens(toolTokens, toolLookup);
+                if (unknown.length > 0 || ambiguous.length > 0) {
+                    reply(formatToolResolutionError(unknown, ambiguous));
+                    break;
+                }
+                const normalizedTools = resolved;
                 const added = [];
                 for (const tool of normalizedTools) {
                     if (!list.includes(tool)) {
@@ -165,7 +260,12 @@ export const toolsetCommand = {
                     reply(`Collection "${collection}" not found.`);
                     break;
                 }
-                const normalizedTools = normalizeToolList(toolTokens);
+                const { resolved, unknown, ambiguous } = resolveToolTokens(toolTokens, toolLookup);
+                if (unknown.length > 0 || ambiguous.length > 0) {
+                    reply(formatToolResolutionError(unknown, ambiguous));
+                    break;
+                }
+                const normalizedTools = resolved;
                 const removed = [];
                 const missing = [];
                 for (const tool of normalizedTools) {
