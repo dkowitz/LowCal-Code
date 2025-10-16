@@ -23,6 +23,7 @@ import { ApprovalMode } from "../config/config.js";
 import { DEFAULT_GEMINI_FLASH_MODEL } from "../config/models.js";
 import type { File, IdeContext } from "../ide/ideContext.js";
 import { ideContext } from "../ide/ideContext.js";
+import { toolConfig } from "./prompts.js";
 import { LoopDetectionService } from "../services/loopDetectionService.js";
 import {
   logChatCompression,
@@ -274,7 +275,17 @@ export class GeminiClient {
 
   async setTools(): Promise<void> {
     const toolRegistry = this.config.getToolRegistry();
-    const toolDeclarations = toolRegistry.getFunctionDeclarations();
+    // Determine active tool collection from runtime config
+    let toolDeclarations = toolRegistry.getFunctionDeclarations();
+
+    if (toolConfig && toolConfig.collections && toolConfig.activeCollection) {
+      const collectionNames =
+        toolConfig.collections[toolConfig.activeCollection] || [];
+      if (collectionNames.length > 0) {
+        toolDeclarations =
+          toolRegistry.getFunctionDeclarationsFiltered(collectionNames);
+      }
+    }
     const tools: Tool[] = [{ functionDeclarations: toolDeclarations }];
     this.getChat().setTools(tools);
   }

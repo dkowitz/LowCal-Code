@@ -65,6 +65,7 @@ export * from "./services/shellExecutionService.js";
 export * from "./tools/tools.js";
 export * from "./tools/tool-error.js";
 export * from "./tools/tool-registry.js";
+export { ToolNames } from "./tools/tool-names.js";
 // Export subagents (Phase 1)
 export * from "./subagents/index.js";
 // Export prompt logic

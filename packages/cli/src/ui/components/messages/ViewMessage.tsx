@@ -63,7 +63,9 @@ export const ViewMessage: React.FC<ViewMessageProps> = ({
         onScroll("down");
       } else if (input === "q" || key.escape) {
         onExit();
-        try { releaseLock(owner); } catch (e) {}
+        try {
+          releaseLock(owner);
+        } catch (e) {}
         setAcquired(false);
       }
     },
@@ -73,7 +75,9 @@ export const ViewMessage: React.FC<ViewMessageProps> = ({
   // Release lock on unmount if still held
   React.useEffect(() => {
     return () => {
-      try { releaseLock(owner); } catch (e) {}
+      try {
+        releaseLock(owner);
+      } catch (e) {}
     };
   }, [releaseLock, owner]);
 
@@ -88,11 +92,13 @@ export const ViewMessage: React.FC<ViewMessageProps> = ({
       </Text>
       <Box flexDirection="column" height={maxHeight}>
         <MarkdownDisplay
-            text={visibleLines.join("\n")}
-            isPending={false}
-            availableTerminalHeight={maxHeight}
-            terminalWidth={(terminalWidth ?? Math.max(80, filePath.length)) as number}
-          />
+          text={visibleLines.join("\n")}
+          isPending={false}
+          availableTerminalHeight={maxHeight}
+          terminalWidth={
+            (terminalWidth ?? Math.max(80, filePath.length)) as number
+          }
+        />
       </Box>
     </Box>
   );

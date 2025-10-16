@@ -60,7 +60,16 @@ import {
   mapToDisplay as mapTrackedToolCallsToDisplay,
 } from "./useReactToolScheduler.js";
 import { useSessionStats } from "../contexts/SessionContext.js";
+import { formatDuration } from "../utils/formatters.js";
 import { useKeypress } from "./useKeypress.js";
+
+const formatElapsed = (milliseconds: number): string => {
+  if (!Number.isFinite(milliseconds) || milliseconds <= 0) {
+    return "0s";
+  }
+  return formatDuration(milliseconds);
+};
+
 
 enum StreamProcessingStatus {
   Completed,
@@ -106,6 +115,8 @@ export const useGeminiStream = (
   const [pendingHistoryItemRef, setPendingHistoryItem] =
     useStateAndRef<HistoryItemWithoutId | null>(null);
   const processedMemoryToolsRef = useRef<Set<string>>(new Set());
+  const turnStartTimestampRef = useRef<number | null>(null);
+  const turnDurationLoggedRef = useRef<boolean>(false);
   const { startNewPrompt, getPromptCount } = useSessionStats();
   const storage = config.storage;
   const logger = useLogger(storage);
@@ -473,10 +484,31 @@ export const useGeminiStream = (
         { type: MessageType.INFO, text: "User cancelled the request." },
         userMessageTimestamp,
       );
+      if (turnStartTimestampRef.current !== null && !turnDurationLoggedRef.current) {
+        const durationMs = Date.now() - turnStartTimestampRef.current;
+        if (durationMs >= 0) {
+          addItem(
+            {
+              type: MessageType.INFO,
+              text: `⏱ Turn cancelled after ${formatElapsed(durationMs)}`.trim(),
+            },
+            Date.now(),
+          );
+        }
+        turnDurationLoggedRef.current = true;
+        turnStartTimestampRef.current = null;
+      }
       setIsResponding(false);
       setThought(null); // Reset thought when user cancels
     },
-    [addItem, pendingHistoryItemRef, setPendingHistoryItem, setThought],
+    [
+      addItem,
+      pendingHistoryItemRef,
+      setPendingHistoryItem,
+      setThought,
+      turnStartTimestampRef,
+      turnDurationLoggedRef,
+    ],
   );
 
   const handleErrorEvent = useCallback(
@@ -498,9 +530,31 @@ export const useGeminiStream = (
         },
         userMessageTimestamp,
       );
+      if (turnStartTimestampRef.current !== null && !turnDurationLoggedRef.current) {
+        const durationMs = Date.now() - turnStartTimestampRef.current;
+        if (durationMs >= 0) {
+          addItem(
+            {
+              type: MessageType.INFO,
+              text: `⏱ Turn errored after ${formatElapsed(durationMs)}`.trim(),
+            },
+            Date.now(),
+          );
+        }
+        turnDurationLoggedRef.current = true;
+        turnStartTimestampRef.current = null;
+      }
       setThought(null); // Reset thought when there's an error
     },
-    [addItem, pendingHistoryItemRef, setPendingHistoryItem, config, setThought],
+    [
+      addItem,
+      pendingHistoryItemRef,
+      setPendingHistoryItem,
+      config,
+      setThought,
+      turnStartTimestampRef,
+      turnDurationLoggedRef,
+    ],
   );
 
   const handleFinishedEvent = useCallback(
@@ -537,6 +591,17 @@ export const useGeminiStream = (
             text: `⚠️  ${message}`,
           },
           userMessageTimestamp,
+        );
+      }
+
+      const durationMs = Date.now() - userMessageTimestamp;
+      if (durationMs >= 0) {
+        addItem(
+          {
+            type: MessageType.INFO,
+            text: `⏱ Model response time: ${formatElapsed(durationMs)}`,
+          },
+          Date.now(),
         );
       }
     },
@@ -712,6 +777,22 @@ export const useGeminiStream = (
       }
       if (toolCallRequests.length > 0) {
         scheduleToolCalls(toolCallRequests, signal);
+      } else if (
+        turnStartTimestampRef.current !== null &&
+        !turnDurationLoggedRef.current
+      ) {
+        const durationMs = Date.now() - turnStartTimestampRef.current;
+        if (durationMs >= 0) {
+          addItem(
+            {
+              type: MessageType.INFO,
+              text: `⏱ Overall turn time: ${formatElapsed(durationMs)}`.trim(),
+            },
+            Date.now(),
+          );
+        }
+        turnDurationLoggedRef.current = true;
+        turnStartTimestampRef.current = null;
       }
       return StreamProcessingStatus.Completed;
     },
@@ -727,6 +808,9 @@ export const useGeminiStream = (
       handleTokenBudgetWarningEvent,
       handleContextWindowRecoveryEvent,
       handleToolOutputTruncatedEvent,
+      addItem,
+      turnStartTimestampRef,
+      turnDurationLoggedRef,
     ],
   );
 
@@ -753,6 +837,11 @@ export const useGeminiStream = (
       isSubmittingQueryRef.current = true;
 
       const userMessageTimestamp = Date.now();
+
+      if (!options?.isContinuation) {
+        turnStartTimestampRef.current = userMessageTimestamp;
+        turnDurationLoggedRef.current = false;
+      }
 
       // Reset quota error flag when starting a new query (not a continuation)
       if (!options?.isContinuation) {
@@ -951,6 +1040,29 @@ export const useGeminiStream = (
         );
       }
 
+      for (const toolCall of completedAndReadyToSubmitTools) {
+        const durationMs = toolCall.durationMs;
+        if (durationMs === undefined) {
+          continue;
+        }
+        const statusLabel =
+          toolCall.status === "success"
+            ? "completed"
+            : toolCall.status === "error"
+              ? "failed"
+              : "cancelled";
+        const isClient = toolCall.request.isClientInitiated === true;
+        const prefix = isClient ? "🛠️" : "🔧";
+        const label = isClient ? "Client tool" : "Tool";
+        addItem(
+          {
+            type: MessageType.INFO,
+            text: `${prefix} ${label} ${toolCall.request.name} ${statusLabel} in ${formatElapsed(durationMs)}.`,
+          },
+          Date.now(),
+        );
+      }
+
       const geminiTools = completedAndReadyToSubmitTools.filter(
         (t) => !t.request.isClientInitiated,
       );
@@ -1017,6 +1129,7 @@ export const useGeminiStream = (
       geminiClient,
       performMemoryRefresh,
       modelSwitchedFromQuotaError,
+      addItem,
     ],
   );
 

@@ -317,28 +317,28 @@ export declare const CloseDiffResponseSchema: z.ZodEffects<z.ZodObject<{
         text: z.ZodString;
         type: z.ZodLiteral<"text">;
     }, "strip", z.ZodTypeAny, {
-        type: "text";
         text: string;
+        type: "text";
     }, {
-        type: "text";
         text: string;
+        type: "text";
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     content: {
-        type: "text";
         text: string;
+        type: "text";
     }[];
 }, {
     content: {
-        type: "text";
         text: string;
+        type: "text";
     }[];
 }>, {
     content?: string | undefined;
 }, {
     content: {
-        type: "text";
         text: string;
+        type: "text";
     }[];
 }>;
 export type DiffUpdateResult = {

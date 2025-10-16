@@ -1382,11 +1382,19 @@ describe("useGeminiStream", () => {
       // Wait a bit to ensure no message is added
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Check that no info message was added for STOP
+      // Check that only the duration info message was added for STOP
       const infoMessages = mockAddItem.mock.calls.filter(
         (call) => call[0].type === "info",
       );
-      expect(infoMessages).toHaveLength(0);
+      expect(infoMessages).toHaveLength(2);
+      expect(infoMessages[0][0]).toMatchObject({
+        type: "info",
+        text: expect.stringContaining("Model response time"),
+      });
+      expect(infoMessages[1][0]).toMatchObject({
+        type: "info",
+        text: expect.stringContaining("Overall turn time"),
+      });
     });
 
     it("should not add message for FINISH_REASON_UNSPECIFIED", async () => {
@@ -1433,11 +1441,19 @@ describe("useGeminiStream", () => {
       // Wait a bit to ensure no message is added
       await new Promise((resolve) => setTimeout(resolve, 100));
 
-      // Check that no info message was added
+      // Check that only the duration info message was added
       const infoMessages = mockAddItem.mock.calls.filter(
         (call) => call[0].type === "info",
       );
-      expect(infoMessages).toHaveLength(0);
+      expect(infoMessages).toHaveLength(2);
+      expect(infoMessages[0][0]).toMatchObject({
+        type: "info",
+        text: expect.stringContaining("Model response time"),
+      });
+      expect(infoMessages[1][0]).toMatchObject({
+        type: "info",
+        text: expect.stringContaining("Overall turn time"),
+      });
     });
 
     it("should add appropriate messages for other finish reasons", async () => {

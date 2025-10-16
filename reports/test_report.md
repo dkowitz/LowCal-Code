@@ -33,4 +33,3 @@ Third assistant response
 Fourth assistant response
 
 ---
-

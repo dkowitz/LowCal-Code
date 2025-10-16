@@ -52,6 +52,6 @@ export const ViewOverlay = ({ item, height, width, scrollOffset, onScroll, onExi
             setAcquired(false);
         }
     }, { isActive: acquired });
-    return (_jsxs(Box, { flexDirection: "column", borderStyle: "round", borderColor: "cyan", width: width, height: Math.min(height, maxHeight + 3), padding: 1, marginBottom: 1, children: [_jsx(Box, { children: _jsxs(Text, { bold: true, children: ["Viewing file content for ", item.filePath, " - ", item.tokenCount ?? "Unknown", " tokens (scroll with \u2191/\u2193 or q to exit)"] }) }), _jsx(Box, { flexDirection: "column", height: maxHeight, children: _jsx(MarkdownDisplay, { text: visible.join("\n"), isPending: false, availableTerminalHeight: maxHeight, terminalWidth: width }) })] }));
+    return (_jsxs(Box, { flexDirection: "column", borderStyle: "round", borderColor: "cyan", width: width, height: Math.min(height, maxHeight + 3), padding: 1, marginBottom: 1, children: [_jsx(Box, { children: _jsxs(Text, { bold: true, children: ["Viewing file content for ", item.filePath, " -", " ", item.tokenCount ?? "Unknown", " tokens (scroll with \u2191/\u2193 or q to exit)"] }) }), _jsx(Box, { flexDirection: "column", height: maxHeight, children: _jsx(MarkdownDisplay, { text: visible.join("\n"), isPending: false, availableTerminalHeight: maxHeight, terminalWidth: width }) })] }));
 };
 //# sourceMappingURL=ViewOverlay.js.map

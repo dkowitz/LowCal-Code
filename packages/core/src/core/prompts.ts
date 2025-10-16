@@ -7,11 +7,276 @@
 import path from "node:path";
 import fs from "node:fs";
 import os from "node:os";
-import { ToolNames } from "../tools/tool-names.js";
 import process from "node:process";
+import { ToolNames } from "../tools/tool-names.js";
 import { isGitRepository } from "../utils/gitUtils.js";
 import { GEMINI_CONFIG_DIR } from "../tools/memoryTool.js";
 import type { GenerateContentConfig } from "@google/genai";
+
+// Runtime tool configuration loader
+type PromptMode = "auto" | "full" | "concise";
+
+interface ToolConfig {
+  activeCollection: string;
+  promptMode: PromptMode;
+  collections: Record<string, string[]>;
+}
+
+const DEFAULT_COLLECTIONS: Record<string, string[]> = {
+  full: [
+    ToolNames.READ_FILE,
+    ToolNames.WRITE_FILE,
+    ToolNames.READ_MANY_FILES,
+    ToolNames.GLOB,
+    ToolNames.GREP,
+    ToolNames.EDIT,
+    ToolNames.SHELL,
+    ToolNames.TODO_WRITE,
+    ToolNames.MEMORY,
+    ToolNames.TASK,
+    ToolNames.EXIT_PLAN_MODE,
+  ],
+  minimal: [
+    ToolNames.READ_FILE,
+    ToolNames.WRITE_FILE,
+    ToolNames.SHELL,
+  ],
+  "shell-only": [ToolNames.SHELL],
+};
+
+const TOOL_NAME_CANONICAL_MAP: Record<string, string> = Object.values(
+  ToolNames,
+).reduce<Record<string, string>>((acc, value) => {
+  acc[value.toUpperCase()] = value;
+  acc[value] = value;
+  return acc;
+}, {});
+
+const TOOL_SUMMARIES: Record<string, string> = {
+  [ToolNames.READ_FILE]:
+    "Read a file by absolute path; supports pagination for large files.",
+  [ToolNames.WRITE_FILE]:
+    "Replace a file's contents. Provide the full desired content.",
+  [ToolNames.READ_MANY_FILES]:
+    "Batch-read multiple files or glob patterns to gather context.",
+  [ToolNames.GLOB]:
+    "List files matching a glob pattern within the workspace.",
+  [ToolNames.GREP]:
+    "Search file contents using ripgrep syntax; returns matching lines.",
+  [ToolNames.EDIT]:
+    "Apply structured edits to an existing file without rewriting it fully.",
+  [ToolNames.SHELL]:
+    "Run non-interactive shell commands. Explain risky operations first.",
+  [ToolNames.TODO_WRITE]:
+    "Manage the task list: add, update status, and track progress.",
+  [ToolNames.MEMORY]:
+    "Persist user-specific facts that will remain useful across sessions.",
+  [ToolNames.TASK]:
+    "Delegate work to a specialized subagent suited to the request.",
+  [ToolNames.EXIT_PLAN_MODE]:
+    "Exit plan mode after presenting the plan for user confirmation.",
+};
+
+function loadToolConfig(): ToolConfig {
+  const defaultConfig: ToolConfig = {
+    activeCollection: "full",
+    promptMode: "auto",
+    collections: Object.fromEntries(
+      Object.entries(DEFAULT_COLLECTIONS).map(([name, tools]) => [
+        name,
+        [...tools],
+      ]),
+    ),
+  };
+  try {
+    const configPath = path.resolve(
+      path.join(process.cwd(), ".gemini", "tool-config.json"),
+    );
+    if (fs.existsSync(configPath)) {
+      const raw = fs.readFileSync(configPath, "utf8");
+      const parsed = JSON.parse(raw) ?? {};
+      const normalizedCollections = Object.entries(
+        parsed.collections ?? {},
+      ).reduce<Record<string, string[]>>((acc, [name, toolList]) => {
+        if (!Array.isArray(toolList)) {
+          return acc;
+        }
+        const normalizedList = Array.from(
+          new Set(
+            toolList
+              .map((tool) => normalizeToolName(String(tool)))
+              .filter(Boolean),
+          ),
+        );
+        if (normalizedList.length > 0) {
+          acc[name] = normalizedList;
+        }
+        return acc;
+      }, {});
+
+      const mergedCollections = {
+        ...Object.fromEntries(
+          Object.entries(DEFAULT_COLLECTIONS).map(([name, tools]) => [
+            name,
+            [...tools],
+          ]),
+        ),
+        ...normalizedCollections,
+      };
+
+      const promptMode = normalizePromptMode(parsed.promptMode);
+      const activeCollection =
+        typeof parsed.activeCollection === "string" &&
+        mergedCollections[parsed.activeCollection]
+          ? parsed.activeCollection
+          : defaultConfig.activeCollection;
+
+      return {
+        activeCollection,
+        promptMode,
+        collections: mergedCollections,
+      };
+    }
+  } catch (e) {
+    // ignore errors, fallback to defaults
+  }
+  return defaultConfig;
+}
+
+export const toolConfig = loadToolConfig();
+
+function normalizePromptMode(value: unknown): PromptMode {
+  const mode =
+    typeof value === "string"
+      ? (value.toLowerCase() as PromptMode)
+      : undefined;
+  if (mode === "full" || mode === "concise" || mode === "auto") {
+    return mode;
+  }
+  return "auto";
+}
+
+function normalizeToolName(name: string): string {
+  const trimmed = name.trim();
+  if (!trimmed) {
+    return "";
+  }
+  const upper = trimmed.toUpperCase();
+  if (TOOL_NAME_CANONICAL_MAP[upper]) {
+    return TOOL_NAME_CANONICAL_MAP[upper];
+  }
+  return trimmed;
+}
+
+function getActiveToolNames(): string[] {
+  const activeName = toolConfig.activeCollection;
+  const collections = toolConfig.collections ?? {};
+  const configured =
+    (activeName && Array.isArray(collections[activeName])
+      ? collections[activeName]
+      : []) ?? [];
+
+  if (configured.length > 0) {
+    return configured;
+  }
+  return Object.values(ToolNames);
+}
+
+function isLmStudioBaseUrl(url: string): boolean {
+  if (!url) {
+    return false;
+  }
+  const normalized = url.toLowerCase();
+  return (
+    normalized.includes("localhost:1234") ||
+    normalized.includes("127.0.0.1:1234")
+  );
+}
+
+function buildToolUsageSection(
+  toolNames: string[],
+  style: "full" | "concise",
+): string {
+  const availableTools =
+    toolNames.length > 0 ? toolNames : Object.values(ToolNames);
+
+  const hasTool = (tool: string) =>
+    availableTools.includes(tool) ||
+    availableTools.includes(tool.toUpperCase());
+
+  const guidelineEntries: Array<{ include: boolean; text: string }> = [
+    {
+      include:
+        hasTool(ToolNames.READ_FILE) || hasTool(ToolNames.WRITE_FILE) || true,
+      text: "- **File paths:** Tools must use absolute project paths; never assume relative ones work.",
+    },
+    {
+      include: hasTool(ToolNames.SHELL),
+      text: "- **Shell safety:** Explain state-changing shell commands before running them and avoid interactive invocations.",
+    },
+    {
+      include: hasTool(ToolNames.SHELL),
+      text: "- **Background jobs:** Use `&` for long-lived processes (e.g., servers) so the shell stays responsive.",
+    },
+    {
+      include: hasTool(ToolNames.TODO_WRITE),
+      text: "- **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.",
+    },
+    {
+      include: hasTool(ToolNames.TASK),
+      text: "- **Subagents:** Delegate via the task tool when a specialized agent matches the request.",
+    },
+    {
+      include: hasTool(ToolNames.MEMORY),
+      text: "- **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.",
+    },
+    {
+      include: true,
+      text: "- **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.",
+    },
+  ].filter((entry) => entry.include);
+
+  const toolList =
+    availableTools.length > 0
+      ? availableTools.map((name) => {
+          const summary =
+            TOOL_SUMMARIES[name] ??
+            "Project or extension-provided tool; inspect its schema before use.";
+          return `- \`${name}\` — ${summary}`;
+        })
+      : [
+          "- No explicit collection selected; the full tool registry is available.",
+        ];
+
+  const sectionHeader = style === "full" ? "## Tool Usage" : "## Tool Access";
+  const intro =
+    style === "full"
+      ? ""
+      : "Use these tools sparingly to gather context or execute verified steps.";
+  const toolsHeading =
+    style === "full" ? "\n### Available Tools" : "Available tools:";
+
+  return [
+    sectionHeader,
+    intro,
+    guidelineEntries.map((entry) => entry.text).join("\n"),
+    toolsHeading,
+    toolList.join("\n"),
+  ]
+    .filter((block) => block && block.trim().length > 0)
+    .join("\n")
+    .trim();
+}
+
+function getConciseToolCallExamples(): string {
+  return `
+### Tool Call Examples
+- Inspect then modify:
+  1. \`read_file\` to review the target file.
+  2. \`edit\` or \`write_file\` to apply the change.
+- Validate work: \`run_shell_command\` (e.g., \`npm test\`) and report the outcome.
+`.trim();
+}
 
 export interface ModelTemplateMapping {
   baseUrls?: string[];
@@ -85,8 +350,11 @@ export function getCoreSystemPrompt(
   config?: SystemPromptConfig,
   model?: string,
 ): string {
-  // if GEMINI_SYSTEM_MD is set (and not 0|false), override system prompt from file
-  // default path is .gemini/system.md but can be modified via custom path in GEMINI_SYSTEM_MD
+  const currentModelEnv = process.env["OPENAI_MODEL"] || "";
+  const currentBaseUrlEnv = process.env["OPENAI_BASE_URL"] || "";
+  const activeToolNames = getActiveToolNames();
+  const promptMode = toolConfig.promptMode ?? "auto";
+
   let systemMdEnabled = false;
   let systemMdPath = path.resolve(path.join(GEMINI_CONFIG_DIR, "system.md"));
   const systemMdVar = process.env["GEMINI_SYSTEM_MD"];
@@ -110,27 +378,29 @@ export function getCoreSystemPrompt(
     }
   }
 
+  const shouldUseConcise =
+    !systemMdEnabled &&
+    (promptMode === "concise" ||
+      (promptMode === "auto" && isLmStudioBaseUrl(currentBaseUrlEnv)));
+
   // Check for system prompt mappings from global config
   if (config?.systemPromptMappings) {
-    const currentModel = process.env["OPENAI_MODEL"] || "";
-    const currentBaseUrl = process.env["OPENAI_BASE_URL"] || "";
-
     const matchedMapping = config.systemPromptMappings.find((mapping) => {
       const { baseUrls, modelNames } = mapping;
       // Check if baseUrl matches (when specified)
       if (
         baseUrls &&
         modelNames &&
-        urlMatches(baseUrls, currentBaseUrl) &&
-        modelNames.includes(currentModel)
+        urlMatches(baseUrls, currentBaseUrlEnv) &&
+        modelNames.includes(currentModelEnv)
       ) {
         return true;
       }
 
-      if (baseUrls && urlMatches(baseUrls, currentBaseUrl) && !modelNames) {
+      if (baseUrls && urlMatches(baseUrls, currentBaseUrlEnv) && !modelNames) {
         return true;
       }
-      if (modelNames && modelNames.includes(currentModel) && !baseUrls) {
+      if (modelNames && modelNames.includes(currentModelEnv) && !baseUrls) {
         return true;
       }
 
@@ -155,7 +425,17 @@ export function getCoreSystemPrompt(
     }
   }
 
-  const basePrompt = systemMdEnabled
+  const memorySuffix =
+    userMemory && userMemory.trim().length > 0
+      ? `\n\n---\n\n${userMemory.trim()}`
+      : "";
+
+  if (shouldUseConcise) {
+    const concisePrompt = buildConcisePrompt(activeToolNames);
+    return `${concisePrompt}${memorySuffix}`;
+  }
+
+  let basePrompt = systemMdEnabled
     ? fs.readFileSync(systemMdPath, "utf8")
     : `
 You are LowCal Code, an interactive CLI agent derived from the Qwen Code and Gemini Code projects, specializing in software engineering tasks. Your primary goal is to help users safely and efficiently, adhering strictly to the following instructions and utilizing your available tools.
@@ -286,56 +566,22 @@ IMPORTANT: Always use the ${ToolNames.TODO_WRITE} tool to plan and track tasks t
 - **Help Command:** The user can use '/help' to display help information.
 - **Feedback:** To report a bug or provide feedback, please use the /bug command.
 
-${(function () {
-  // Determine sandbox status based on environment variables
-  const isSandboxExec = process.env["SANDBOX"] === "sandbox-exec";
-  const isGenericSandbox = !!process.env["SANDBOX"]; // Check if SANDBOX is set to any non-empty value
+${buildSandboxSection("full")}
 
-  if (isSandboxExec) {
-    return `
-# macOS Seatbelt
-You are running under macos seatbelt with limited access to files outside the project directory or system temp directory, and with limited access to host system resources such as ports. If you encounter failures that could be due to MacOS Seatbelt (e.g. if a command fails with 'Operation not permitted' or similar error), as you report the error to the user, also explain why you think it could be due to MacOS Seatbelt, and how the user may need to adjust their Seatbelt profile.
-`;
-  } else if (isGenericSandbox) {
-    return `
-# Sandbox
-You are running in a sandbox container with limited access to files outside the project directory or system temp directory, and with limited access to host system resources such as ports. If you encounter failures that could be due to sandboxing (e.g. if a command fails with 'Operation not permitted' or similar error), when you report the error to the user, also explain why you think it could be due to sandboxing, and how the user may need to adjust their sandbox configuration.
-`;
-  } else {
-    return `
-# Outside of Sandbox
-You are running outside of a sandbox container, directly on the user's system. For critical commands that are particularly likely to modify the user's system outside of the project directory or system temp directory, as you explain the command to the user (per the Explain Critical Commands rule above), also remind the user to consider enabling sandboxing.
-`;
-  }
-})()}
+${buildGitSection("full")}
 
-${(function () {
-  if (isGitRepository(process.cwd())) {
-    return `
-# Git Repository
-- The current working (project) directory is being managed by a git repository.
-- When asked to commit changes or prepare a commit, always start by gathering information using shell commands:
-  - \`git status\` to ensure that all relevant files are tracked and staged, using \`git add ...\` as needed.
-  - \`git diff HEAD\` to review all changes (including unstaged changes) to tracked files in work tree since last commit.
-    - \`git diff --staged\` to review only staged changes when a partial commit makes sense or was requested by the user.
-  - \`git log -n 3\` to review recent commit messages and match their style (verbosity, formatting, signature line, etc.)
-- Combine shell commands whenever possible to save time/steps, e.g. \`git status && git diff HEAD && git log -n 3\`.
-- Always propose a draft commit message. Never just ask the user to give you the full commit message.
-- Prefer commit messages that are clear, concise, and focused more on "why" and less on "what".
-- Keep the user informed and ask for clarification or confirmation where needed.
-- After each commit, confirm that it was successful by running \`git status\`.
-- If a commit fails, never attempt to work around the issues without being asked to do so.
-- Never push changes to a remote repository without being asked explicitly by the user.
-`;
-  }
-  return "";
-})()}
-
-${getToolCallExamples(model || "")}
+${getToolCallExamples(model ?? currentModelEnv)}
 
 # Final Reminder
 Your core function is efficient and safe assistance. Balance extreme conciseness with the crucial need for clarity, especially regarding safety and potential system modifications. Always prioritize user control and project conventions. Never make assumptions about the contents of files; instead use '${ToolNames.READ_FILE}' or '${ToolNames.READ_MANY_FILES}' to ensure you aren't making broad assumptions. Finally, you are an agent - please keep going until the user's query is completely resolved.
 `.trim();
+
+  if (!systemMdEnabled) {
+    basePrompt = replaceToolUsageBlock(
+      basePrompt,
+      buildToolUsageSection(activeToolNames, "full"),
+    );
+  }
 
   // if GEMINI_WRITE_SYSTEM_MD is set (and not 0|false), write base system prompt to file
   const writeSystemMdVar = process.env["GEMINI_WRITE_SYSTEM_MD"];
@@ -359,12 +605,104 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
     }
   }
 
-  const memorySuffix =
-    userMemory && userMemory.trim().length > 0
-      ? `\n\n---\n\n${userMemory.trim()}`
-      : "";
-
   return `${basePrompt}${memorySuffix}`;
+}
+
+function replaceToolUsageBlock(
+  source: string,
+  replacement: string,
+): string {
+  const pattern = /## Tool Usage[\s\S]*?(?=\n## |\n# |$)/;
+  if (!pattern.test(source)) {
+    return source;
+  }
+  const normalized = replacement.trim();
+  return source.replace(pattern, `${normalized}\n`);
+}
+
+function buildSandboxSection(style: "full" | "concise"): string {
+  const sandboxValue = process.env["SANDBOX"] || "";
+  const isSandboxExec = sandboxValue === "sandbox-exec";
+  const isGenericSandbox = Boolean(sandboxValue);
+
+  if (style === "full") {
+    if (isSandboxExec) {
+      return `
+# macOS Seatbelt
+You are running under macos seatbelt with limited access to files outside the project directory or system temp directory, and with limited access to host system resources such as ports. If you encounter failures that could be due to MacOS Seatbelt (e.g. if a command fails with 'Operation not permitted' or similar error), as you report the error to the user, also explain why you think it could be due to MacOS Seatbelt, and how the user may need to adjust their Seatbelt profile.
+`;
+    }
+    if (isGenericSandbox) {
+      return `
+# Sandbox
+You are running in a sandbox container with limited access to files outside the project directory or system temp directory, and with limited access to host system resources such as ports. If you encounter failures that could be due to sandboxing (e.g. if a command fails with 'Operation not permitted' or similar error), when you report the error to the user, also explain why you think it could be due to sandboxing, and how the user may need to adjust their sandbox configuration.
+`;
+    }
+    return `
+# Outside of Sandbox
+You are running outside of a sandbox container, directly on the user's system. For critical commands that are particularly likely to modify the user's system outside of the project directory or system temp directory, as you explain the command to the user (per the Explain Critical Commands rule above), also remind the user to consider enabling sandboxing.
+`;
+  }
+
+  if (isSandboxExec) {
+    return `### Seatbelt Environment
+Execution happens under macOS seatbelt; call out permission limitations when they block a step.`;
+  }
+  if (isGenericSandbox) {
+    return `### Sandbox Environment
+You operate inside a sandbox; highlight sandbox restrictions when they explain command failures.`;
+  }
+  return `### System Access
+You are running directly on the user's machine; remind them about sandboxing before risky actions.`;
+}
+
+function buildGitSection(style: "full" | "concise"): string {
+  if (!isGitRepository(process.cwd())) {
+    return "";
+  }
+
+  if (style === "full") {
+    return `
+# Git Repository
+- The current working (project) directory is being managed by a git repository.
+- When asked to commit changes or prepare a commit, always start by gathering information using shell commands:
+  - \`git status\` to ensure that all relevant files are tracked and staged, using \`git add ...\` as needed.
+  - \`git diff HEAD\` to review all changes (including unstaged changes) to tracked files in work tree since last commit.
+    - \`git diff --staged\` to review only staged changes when a partial commit makes sense or was requested by the user.
+  - \`git log -n 3\` to review recent commit messages and match their style (verbosity, formatting, signature line, etc.)
+- Combine shell commands whenever possible to save time/steps, e.g. \`git status && git diff HEAD && git log -n 3\`.
+- Always propose a draft commit message. Never just ask the user to give you the full commit message.
+- Prefer commit messages that are clear, concise, and focused more on "why" and less on "what".
+- Keep the user informed and ask for clarification or confirmation where needed.
+- After each commit, confirm that it was successful by running \`git status\`.
+- If a commit fails, never attempt to work around the issues without being asked to do so.
+- Never push changes to a remote repository without being asked explicitly by the user.
+`;
+  }
+
+  return `### Git Workflow
+Review status/diff/log before crafting commits, draft a message, and never push without explicit instruction.`;
+}
+
+function buildConcisePrompt(toolNames: string[]): string {
+  const sections = [
+    "You are LowCal Code, an interactive CLI agent focused on software engineering. Respond crisply while preserving accuracy and safety.",
+    [
+      "## Core Practices",
+      "- Review nearby code and tests before editing so changes match existing patterns.",
+      "- Confirm dependencies and tooling exist before relying on them; ask if uncertain.",
+      "- Draft a short plan and track it with the todo tool for multi-step work, updating statuses promptly.",
+      "- Explain commands that modify state and get confirmation before destructive steps.",
+      "- Read files rather than guessing their contents.",
+    ].join("\n"),
+    buildToolUsageSection(toolNames, "concise"),
+    buildSandboxSection("concise"),
+    buildGitSection("concise"),
+    getConciseToolCallExamples(),
+    "# Final Reminder\nStay goal-focused, keep answers tight, and verify results when feasible.",
+  ].filter((section) => section && section.trim().length > 0);
+
+  return sections.join("\n\n").trim();
 }
 
 /**

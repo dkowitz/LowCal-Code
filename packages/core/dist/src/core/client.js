@@ -8,6 +8,7 @@ import { ProxyAgent, setGlobalDispatcher } from "undici";
 import { ApprovalMode } from "../config/config.js";
 import { DEFAULT_GEMINI_FLASH_MODEL } from "../config/models.js";
 import { ideContext } from "../ide/ideContext.js";
+import { toolConfig } from "./prompts.js";
 import { LoopDetectionService } from "../services/loopDetectionService.js";
 import { logChatCompression, logContentRetry, logContentRetryFailure, logNextSpeakerCheck, } from "../telemetry/loggers.js";
 import { makeChatCompressionEvent, NextSpeakerCheckEvent, ContentRetryEvent, ContentRetryFailureEvent, } from "../telemetry/types.js";
@@ -170,7 +171,15 @@ export class GeminiClient {
     }
     async setTools() {
         const toolRegistry = this.config.getToolRegistry();
-        const toolDeclarations = toolRegistry.getFunctionDeclarations();
+        // Determine active tool collection from runtime config
+        let toolDeclarations = toolRegistry.getFunctionDeclarations();
+        if (toolConfig && toolConfig.collections && toolConfig.activeCollection) {
+            const collectionNames = toolConfig.collections[toolConfig.activeCollection] || [];
+            if (collectionNames.length > 0) {
+                toolDeclarations =
+                    toolRegistry.getFunctionDeclarationsFiltered(collectionNames);
+            }
+        }
         const tools = [{ functionDeclarations: toolDeclarations }];
         this.getChat().setTools(tools);
     }

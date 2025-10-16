@@ -1,0 +1,27 @@
+{
+  "promptMode": "concise",
+  "activeCollection": "minimal",
+  "collections": {
+    "full": [
+      "read_file",
+      "write_file",
+      "read_many_files",
+      "glob",
+      "search_file_content",
+      "edit",
+      "run_shell_command",
+      "todo_write",
+      "save_memory",
+      "task",
+      "exit_plan_mode"
+    ],
+    "minimal": [
+      "read_file",
+      "write_file",
+      "run_shell_command"
+    ],
+    "shell-only": [
+      "run_shell_command"
+    ]
+  }
+}

@@ -1307,7 +1307,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             lastSeenViewIdRef.current = null;
             return;
         }
-        const latestViewItem = [...history].reverse().find((item) => item.type === "view");
+        const latestViewItem = [...history]
+            .reverse()
+            .find((item) => item.type === "view");
         if (latestViewItem) {
             // Only auto-open the viewer if this is a newly added view item we haven't seen yet.
             if (lastSeenViewIdRef.current !== latestViewItem.id) {
@@ -1430,7 +1432,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                     ? {
                                         isActive: activeViewId === item.id,
                                         scrollOffset: viewScrollOffset,
-                                        maxHeight: Math.min(constrainHeight ? availableTerminalHeight ?? 20 : 20, 20),
+                                        maxHeight: Math.min(constrainHeight
+                                            ? (availableTerminalHeight ?? 20)
+                                            : 20, 20),
                                         onScroll: (direction) => {
                                             setViewScrollOffset((prev) => direction === "up"
                                                 ? Math.max(0, prev - 1)
@@ -1440,14 +1444,16 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                             setActiveViewId(null);
                                         },
                                     }
-                                    : undefined }, item.id))), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }), _jsxs(Box, { flexDirection: "column", ref: mainControlsRef, children: [activeViewId !== null && ((() => {
-                            const viewItem = history.find((h) => h.id === activeViewId && h.type === "view");
-                            if (!viewItem || viewItem.type !== "view")
-                                return null;
-                            if (!viewItem)
-                                return null;
-                            return (_jsx(ViewOverlay, { item: viewItem, height: availableViewHeight || Math.max(10, terminalHeight - footerHeight - 6), width: Math.floor(terminalWidth * 0.9), scrollOffset: viewScrollOffset, onScroll: (dir) => setViewScrollOffset((prev) => (dir === "up" ? Math.max(0, prev - 3) : prev + 3)), onExit: () => setActiveViewId(null) }));
-                        })()), updateInfo && _jsx(UpdateNotification, { message: updateInfo.message }), startupWarnings.length > 0 && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentYellow, paddingX: 1, marginY: 1, flexDirection: "column", children: startupWarnings.map((warning, index) => (_jsx(Text, { color: Colors.AccentYellow, children: warning }, index))) })), showWelcomeBackDialog && welcomeBackInfo?.hasHistory && (_jsx(WelcomeBackDialog, { welcomeBackInfo: welcomeBackInfo, onSelect: handleWelcomeBackSelection, onClose: handleWelcomeBackClose })), showWorkspaceMigrationDialog ? (_jsx(WorkspaceMigrationDialog, { workspaceExtensions: workspaceExtensions, onOpen: onWorkspaceMigrationDialogOpen, onClose: onWorkspaceMigrationDialogClose })) : shouldShowIdePrompt && currentIDE ? (_jsx(IdeIntegrationNudge, { ide: currentIDE, onComplete: handleIdePromptComplete })) : isFolderTrustDialogOpen ? (_jsx(FolderTrustDialog, { onSelect: handleFolderTrustSelect, isRestarting: isRestarting })) : quitConfirmationRequest ? (_jsx(QuitConfirmationDialog, { onSelect: (choice) => {
+                                    : undefined }, item.id))), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }), _jsxs(Box, { flexDirection: "column", ref: mainControlsRef, children: [activeViewId !== null &&
+                            (() => {
+                                const viewItem = history.find((h) => h.id === activeViewId && h.type === "view");
+                                if (!viewItem || viewItem.type !== "view")
+                                    return null;
+                                if (!viewItem)
+                                    return null;
+                                return (_jsx(ViewOverlay, { item: viewItem, height: availableViewHeight ||
+                                        Math.max(10, terminalHeight - footerHeight - 6), width: Math.floor(terminalWidth * 0.9), scrollOffset: viewScrollOffset, onScroll: (dir) => setViewScrollOffset((prev) => dir === "up" ? Math.max(0, prev - 3) : prev + 3), onExit: () => setActiveViewId(null) }));
+                            })(), updateInfo && _jsx(UpdateNotification, { message: updateInfo.message }), startupWarnings.length > 0 && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentYellow, paddingX: 1, marginY: 1, flexDirection: "column", children: startupWarnings.map((warning, index) => (_jsx(Text, { color: Colors.AccentYellow, children: warning }, index))) })), showWelcomeBackDialog && welcomeBackInfo?.hasHistory && (_jsx(WelcomeBackDialog, { welcomeBackInfo: welcomeBackInfo, onSelect: handleWelcomeBackSelection, onClose: handleWelcomeBackClose })), showWorkspaceMigrationDialog ? (_jsx(WorkspaceMigrationDialog, { workspaceExtensions: workspaceExtensions, onOpen: onWorkspaceMigrationDialogOpen, onClose: onWorkspaceMigrationDialogClose })) : shouldShowIdePrompt && currentIDE ? (_jsx(IdeIntegrationNudge, { ide: currentIDE, onComplete: handleIdePromptComplete })) : isFolderTrustDialogOpen ? (_jsx(FolderTrustDialog, { onSelect: handleFolderTrustSelect, isRestarting: isRestarting })) : quitConfirmationRequest ? (_jsx(QuitConfirmationDialog, { onSelect: (choice) => {
                                 const result = handleQuitConfirmationSelect(choice);
                                 if (result?.shouldQuit) {
                                     quitConfirmationRequest.onConfirm(true, result.action);

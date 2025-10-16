@@ -92,7 +92,8 @@ export const exportCommand = {
             // Find the last non-assistant message index
             let lastNonAssistantIndex = -1;
             for (let i = history.length - 1; i >= 0; i--) {
-                if (history[i].type !== "gemini" && history[i].type !== "gemini_content") {
+                if (history[i].type !== "gemini" &&
+                    history[i].type !== "gemini_content") {
                     lastNonAssistantIndex = i;
                     break;
                 }

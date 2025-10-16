@@ -49,8 +49,12 @@ export const viewCommand: SlashCommand = {
       const content = await fs.readFile(absolutePath, "utf8");
 
       let tokenCount = Math.ceil(content.length / 4);
-      const maybeGen = (context.services.config as any)?.getContentGenerator?.();
-      const cgConfig = (context.services.config as any)?.getContentGeneratorConfig?.();
+      const maybeGen = (
+        context.services.config as any
+      )?.getContentGenerator?.();
+      const cgConfig = (
+        context.services.config as any
+      )?.getContentGeneratorConfig?.();
       const model = cgConfig?.model ?? "gpt-3.5-turbo";
 
       if (maybeGen && typeof maybeGen.countTokens === "function") {

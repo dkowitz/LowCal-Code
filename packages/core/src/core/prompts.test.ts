@@ -48,7 +48,7 @@ describe("Core System Prompt (prompts.ts)", () => {
     vi.stubEnv("SANDBOX", undefined);
     const prompt = getCoreSystemPrompt();
     expect(prompt).not.toContain("---\n\n"); // Separator should not be present
-    expect(prompt).toContain("You are Qwen Code, an interactive CLI agent"); // Check for core content
+    expect(prompt).toContain("You are LowCal Code, an interactive CLI agent"); // Check for core content
     expect(prompt).toMatchSnapshot(); // Use snapshot for base prompt structure
   });
 
@@ -56,7 +56,7 @@ describe("Core System Prompt (prompts.ts)", () => {
     vi.stubEnv("SANDBOX", undefined);
     const prompt = getCoreSystemPrompt("");
     expect(prompt).not.toContain("---\n\n");
-    expect(prompt).toContain("You are Qwen Code, an interactive CLI agent");
+    expect(prompt).toContain("You are LowCal Code, an interactive CLI agent");
     expect(prompt).toMatchSnapshot();
   });
 
@@ -64,7 +64,7 @@ describe("Core System Prompt (prompts.ts)", () => {
     vi.stubEnv("SANDBOX", undefined);
     const prompt = getCoreSystemPrompt("   \n  \t ");
     expect(prompt).not.toContain("---\n\n");
-    expect(prompt).toContain("You are Qwen Code, an interactive CLI agent");
+    expect(prompt).toContain("You are LowCal Code, an interactive CLI agent");
     expect(prompt).toMatchSnapshot();
   });
 
@@ -75,7 +75,7 @@ describe("Core System Prompt (prompts.ts)", () => {
     const prompt = getCoreSystemPrompt(memory);
 
     expect(prompt.endsWith(expectedSuffix)).toBe(true);
-    expect(prompt).toContain("You are Qwen Code, an interactive CLI agent"); // Ensure base prompt follows
+    expect(prompt).toContain("You are LowCal Code, an interactive CLI agent"); // Ensure base prompt follows
     expect(prompt).toMatchSnapshot(); // Snapshot the combined prompt
   });
 

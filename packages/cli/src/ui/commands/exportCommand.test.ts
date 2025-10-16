@@ -11,6 +11,8 @@ describe("exportCommand", () => {
   it("should have the correct name and a helpful description", () => {
     expect(exportCommand.name).toBe("export");
     expect(typeof exportCommand.description).toBe("string");
-    expect(exportCommand.description).toContain("save the current conversation");
+    expect(exportCommand.description).toContain(
+      "save the current conversation",
+    );
   });
 });

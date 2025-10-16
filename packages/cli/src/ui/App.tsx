@@ -1817,9 +1817,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       return;
     }
 
-    const latestViewItem = [...history].reverse().find(
-      (item) => item.type === "view",
-    );
+    const latestViewItem = [...history]
+      .reverse()
+      .find((item) => item.type === "view");
 
     if (latestViewItem) {
       // Only auto-open the viewer if this is a newly added view item we haven't seen yet.
@@ -1878,8 +1878,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       clearTimeout(handler);
     };
   }, [terminalWidth, terminalHeight, refreshStatic]);
-
-
 
   useEffect(() => {
     if (streamingState === StreamingState.Idle && staticNeedsRefresh) {
@@ -2034,7 +2032,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                         isActive: activeViewId === item.id,
                         scrollOffset: viewScrollOffset,
                         maxHeight: Math.min(
-                          constrainHeight ? availableTerminalHeight ?? 20 : 20,
+                          constrainHeight
+                            ? (availableTerminalHeight ?? 20)
+                            : 20,
                           20,
                         ),
                         onScroll: (direction) => {
@@ -2058,27 +2058,31 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
         <Box flexDirection="column" ref={mainControlsRef}>
           {/* View overlay rendered above the static history when active */}
-          {activeViewId !== null && (
+          {activeViewId !== null &&
             (() => {
-              const viewItem = history.find((h) => h.id === activeViewId && h.type === "view") as
-                | (HistoryItem & { id: number })
-                | undefined;
+              const viewItem = history.find(
+                (h) => h.id === activeViewId && h.type === "view",
+              ) as (HistoryItem & { id: number }) | undefined;
               if (!viewItem || viewItem.type !== "view") return null;
               if (!viewItem) return null;
               return (
                 <ViewOverlay
                   item={viewItem}
-                  height={availableViewHeight || Math.max(10, terminalHeight - footerHeight - 6)}
+                  height={
+                    availableViewHeight ||
+                    Math.max(10, terminalHeight - footerHeight - 6)
+                  }
                   width={Math.floor(terminalWidth * 0.9)}
                   scrollOffset={viewScrollOffset}
                   onScroll={(dir) =>
-                    setViewScrollOffset((prev) => (dir === "up" ? Math.max(0, prev - 3) : prev + 3))
+                    setViewScrollOffset((prev) =>
+                      dir === "up" ? Math.max(0, prev - 3) : prev + 3,
+                    )
                   }
                   onExit={() => setActiveViewId(null)}
                 />
               );
-            })()
-          )}
+            })()}
           {/* Move UpdateNotification to render update notification above input area */}
           {updateInfo && <UpdateNotification message={updateInfo.message} />}
           {startupWarnings.length > 0 && (

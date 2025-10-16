@@ -58,6 +58,7 @@ export * from "./services/shellExecutionService.js";
 export * from "./tools/tools.js";
 export * from "./tools/tool-error.js";
 export * from "./tools/tool-registry.js";
+export { ToolNames } from "./tools/tool-names.js";
 export * from "./subagents/index.js";
 export * from "./prompts/mcp-prompts.js";
 export * from "./tools/read-file.js";

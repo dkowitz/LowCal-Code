@@ -19,6 +19,9 @@ import { editorCommand } from "../ui/commands/editorCommand.js";
 import { exportCommand } from "../ui/commands/exportCommand.js";
 import { extensionsCommand } from "../ui/commands/extensionsCommand.js";
 import { helpCommand } from "../ui/commands/helpCommand.js";
+import { promptInfoCommand } from "../ui/commands/promptInfoCommand.js";
+import { promptModeCommand } from "../ui/commands/promptModeCommand.js";
+import { toolsetCommand } from "../ui/commands/toolsetCommand.js";
 import { ideCommand } from "../ui/commands/ideCommand.js";
 import { initCommand } from "../ui/commands/initCommand.js";
 import { mcpCommand } from "../ui/commands/mcpCommand.js";
@@ -91,7 +94,10 @@ export class BuiltinCommandLoader {
             toolsCommand,
             vimCommand,
             setupGithubCommand,
-            viewCommand, // Add the new /view command
+            viewCommand,
+            promptInfoCommand,
+            promptModeCommand,
+            toolsetCommand,
         ];
         return allDefinitions.filter((cmd) => cmd !== null);
     }

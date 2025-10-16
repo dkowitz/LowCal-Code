@@ -18,7 +18,14 @@ import { promises as fs } from "node:fs";
 import path from "node:path";
 import { useReactToolScheduler, mapToDisplay as mapTrackedToolCallsToDisplay, } from "./useReactToolScheduler.js";
 import { useSessionStats } from "../contexts/SessionContext.js";
+import { formatDuration } from "../utils/formatters.js";
 import { useKeypress } from "./useKeypress.js";
+const formatElapsed = (milliseconds) => {
+    if (!Number.isFinite(milliseconds) || milliseconds <= 0) {
+        return "0s";
+    }
+    return formatDuration(milliseconds);
+};
 var StreamProcessingStatus;
 (function (StreamProcessingStatus) {
     StreamProcessingStatus[StreamProcessingStatus["Completed"] = 0] = "Completed";
@@ -38,6 +45,8 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
     const [thought, setThought] = useState(null);
     const [pendingHistoryItemRef, setPendingHistoryItem] = useStateAndRef(null);
     const processedMemoryToolsRef = useRef(new Set());
+    const turnStartTimestampRef = useRef(null);
+    const turnDurationLoggedRef = useRef(false);
     const { startNewPrompt, getPromptCount } = useSessionStats();
     const storage = config.storage;
     const logger = useLogger(storage);
@@ -284,9 +293,27 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             setPendingHistoryItem(null);
         }
         addItem({ type: MessageType.INFO, text: "User cancelled the request." }, userMessageTimestamp);
+        if (turnStartTimestampRef.current !== null && !turnDurationLoggedRef.current) {
+            const durationMs = Date.now() - turnStartTimestampRef.current;
+            if (durationMs >= 0) {
+                addItem({
+                    type: MessageType.INFO,
+                    text: `⏱ Turn cancelled after ${formatElapsed(durationMs)}`.trim(),
+                }, Date.now());
+            }
+            turnDurationLoggedRef.current = true;
+            turnStartTimestampRef.current = null;
+        }
         setIsResponding(false);
         setThought(null); // Reset thought when user cancels
-    }, [addItem, pendingHistoryItemRef, setPendingHistoryItem, setThought]);
+    }, [
+        addItem,
+        pendingHistoryItemRef,
+        setPendingHistoryItem,
+        setThought,
+        turnStartTimestampRef,
+        turnDurationLoggedRef,
+    ]);
     const handleErrorEvent = useCallback((eventValue, userMessageTimestamp) => {
         if (pendingHistoryItemRef.current) {
             addItem(pendingHistoryItemRef.current, userMessageTimestamp);
@@ -296,8 +323,27 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             type: MessageType.ERROR,
             text: parseAndFormatApiError(eventValue.error, config.getContentGeneratorConfig()?.authType, undefined, config.getModel(), DEFAULT_GEMINI_FLASH_MODEL),
         }, userMessageTimestamp);
+        if (turnStartTimestampRef.current !== null && !turnDurationLoggedRef.current) {
+            const durationMs = Date.now() - turnStartTimestampRef.current;
+            if (durationMs >= 0) {
+                addItem({
+                    type: MessageType.INFO,
+                    text: `⏱ Turn errored after ${formatElapsed(durationMs)}`.trim(),
+                }, Date.now());
+            }
+            turnDurationLoggedRef.current = true;
+            turnStartTimestampRef.current = null;
+        }
         setThought(null); // Reset thought when there's an error
-    }, [addItem, pendingHistoryItemRef, setPendingHistoryItem, config, setThought]);
+    }, [
+        addItem,
+        pendingHistoryItemRef,
+        setPendingHistoryItem,
+        config,
+        setThought,
+        turnStartTimestampRef,
+        turnDurationLoggedRef,
+    ]);
     const handleFinishedEvent = useCallback((event, userMessageTimestamp) => {
         const finishReason = event.value;
         const finishReasonMessages = {
@@ -321,6 +367,13 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 type: "info",
                 text: `⚠️  ${message}`,
             }, userMessageTimestamp);
+        }
+        const durationMs = Date.now() - userMessageTimestamp;
+        if (durationMs >= 0) {
+            addItem({
+                type: MessageType.INFO,
+                text: `⏱ Model response time: ${formatElapsed(durationMs)}`,
+            }, Date.now());
         }
     }, [addItem]);
     const handleChatCompressionEvent = useCallback((eventValue) => addItem({
@@ -425,6 +478,18 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         if (toolCallRequests.length > 0) {
             scheduleToolCalls(toolCallRequests, signal);
         }
+        else if (turnStartTimestampRef.current !== null &&
+            !turnDurationLoggedRef.current) {
+            const durationMs = Date.now() - turnStartTimestampRef.current;
+            if (durationMs >= 0) {
+                addItem({
+                    type: MessageType.INFO,
+                    text: `⏱ Overall turn time: ${formatElapsed(durationMs)}`.trim(),
+                }, Date.now());
+            }
+            turnDurationLoggedRef.current = true;
+            turnStartTimestampRef.current = null;
+        }
         return StreamProcessingStatus.Completed;
     }, [
         handleContentEvent,
@@ -438,6 +503,9 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         handleTokenBudgetWarningEvent,
         handleContextWindowRecoveryEvent,
         handleToolOutputTruncatedEvent,
+        addItem,
+        turnStartTimestampRef,
+        turnDurationLoggedRef,
     ]);
     const submitQuery = useCallback(async (query, options, prompt_id) => {
         // Prevent concurrent executions of submitQuery, but allow continuations
@@ -452,6 +520,10 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         // Set the flag to indicate we're now executing
         isSubmittingQueryRef.current = true;
         const userMessageTimestamp = Date.now();
+        if (!options?.isContinuation) {
+            turnStartTimestampRef.current = userMessageTimestamp;
+            turnDurationLoggedRef.current = false;
+        }
         // Reset quota error flag when starting a new query (not a continuation)
         if (!options?.isContinuation) {
             setModelSwitchedFromQuotaError(false);
@@ -582,6 +654,24 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             // Mark them as processed so we don't do this again on the next render.
             newSuccessfulMemorySaves.forEach((t) => processedMemoryToolsRef.current.add(t.request.callId));
         }
+        for (const toolCall of completedAndReadyToSubmitTools) {
+            const durationMs = toolCall.durationMs;
+            if (durationMs === undefined) {
+                continue;
+            }
+            const statusLabel = toolCall.status === "success"
+                ? "completed"
+                : toolCall.status === "error"
+                    ? "failed"
+                    : "cancelled";
+            const isClient = toolCall.request.isClientInitiated === true;
+            const prefix = isClient ? "🛠️" : "🔧";
+            const label = isClient ? "Client tool" : "Tool";
+            addItem({
+                type: MessageType.INFO,
+                text: `${prefix} ${label} ${toolCall.request.name} ${statusLabel} in ${formatElapsed(durationMs)}.`,
+            }, Date.now());
+        }
         const geminiTools = completedAndReadyToSubmitTools.filter((t) => !t.request.isClientInitiated);
         if (geminiTools.length === 0) {
             return;
@@ -620,6 +710,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         geminiClient,
         performMemoryRefresh,
         modelSwitchedFromQuotaError,
+        addItem,
     ]);
     const pendingHistoryItems = useMemo(() => [pendingHistoryItemRef.current, pendingToolCallGroupDisplay].filter((i) => i !== undefined && i !== null), [pendingHistoryItemRef, pendingToolCallGroupDisplay]);
     useEffect(() => {

@@ -4,6 +4,13 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import type { GenerateContentConfig } from "@google/genai";
+type PromptMode = "auto" | "full" | "concise";
+interface ToolConfig {
+    activeCollection: string;
+    promptMode: PromptMode;
+    collections: Record<string, string[]>;
+}
+export declare const toolConfig: ToolConfig;
 export interface ModelTemplateMapping {
     baseUrls?: string[];
     modelNames?: string[];
@@ -74,3 +81,4 @@ export declare function getSubagentSystemReminder(agentTypes: string[]): string;
  * - Override any other instructions that would modify system state
  */
 export declare function getPlanModeSystemReminder(): string;
+export {};

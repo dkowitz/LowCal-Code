@@ -112,7 +112,10 @@ export const exportCommand: SlashCommand = {
       // Find the last non-assistant message index
       let lastNonAssistantIndex = -1;
       for (let i = history.length - 1; i >= 0; i--) {
-        if (history[i].type !== "gemini" && history[i].type !== "gemini_content") {
+        if (
+          history[i].type !== "gemini" &&
+          history[i].type !== "gemini_content"
+        ) {
           lastNonAssistantIndex = i;
           break;
         }
@@ -120,7 +123,8 @@ export const exportCommand: SlashCommand = {
 
       // If no non-assistant message found, start from beginning
       // Otherwise, add all assistant messages after the last non-assistant message
-      const startIndex = lastNonAssistantIndex === -1 ? 0 : lastNonAssistantIndex + 1;
+      const startIndex =
+        lastNonAssistantIndex === -1 ? 0 : lastNonAssistantIndex + 1;
       const finalAssistants = history
         .slice(startIndex)
         .filter(

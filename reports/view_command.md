@@ -18,7 +18,7 @@
 
 ## User Message
 
-I want to add a new command /view that allows viewing of text files inline in the chat.  I see it as invoked by '/view filename.md', then the file is shown with markdown formatting in a fixed height scrollable box in the chat.  The only controls would be scroll up and down and exit.  On exit, the window would disappear.  Please investigate the command and rendering structure of the chat (react + ink) and provide a plan to implement the new command.
+I want to add a new command /view that allows viewing of text files inline in the chat. I see it as invoked by '/view filename.md', then the file is shown with markdown formatting in a fixed height scrollable box in the chat. The only controls would be scroll up and down and exit. On exit, the window would disappear. Please investigate the command and rendering structure of the chat (react + ink) and provide a plan to implement the new command.
 
 ---
 
@@ -75,6 +75,7 @@ The implementation allows users to run `/view filename.md` in Qwen Code, which w
 ## Assistant Response
 
 To test this feature:
+
 1. Run `npm run build:all`
 2. Start the CLI with `npm run start`
 3. Type `/view README.md` (or any text file) to see it in action
@@ -86,4 +87,3 @@ To test this feature:
 All changes have been made within the project's codebase and follow existing conventions for command implementation, UI components, and type definitions.
 
 ---
-

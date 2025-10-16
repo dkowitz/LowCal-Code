@@ -10,7 +10,6 @@ import type { HistoryItemView } from "../types.js";
 import { MarkdownDisplay } from "../utils/MarkdownDisplay.js";
 import { useGlobalInputLock } from "../hooks/useGlobalKeyRouting.js";
 
-
 interface ViewOverlayProps {
   item: HistoryItemView;
   height: number;
@@ -61,7 +60,9 @@ export const ViewOverlay: React.FC<ViewOverlayProps> = ({
       else if (key.downArrow || input === "j") onScroll("down");
       else if (input === "q" || key.escape) {
         onExit();
-        try { releaseLock(owner); } catch (e) {}
+        try {
+          releaseLock(owner);
+        } catch (e) {}
         setAcquired(false);
       }
     },
@@ -80,8 +81,8 @@ export const ViewOverlay: React.FC<ViewOverlayProps> = ({
     >
       <Box>
         <Text bold>
-          Viewing file content for {item.filePath} - {item.tokenCount ?? "Unknown"} tokens
-          (scroll with ↑/↓ or q to exit)
+          Viewing file content for {item.filePath} -{" "}
+          {item.tokenCount ?? "Unknown"} tokens (scroll with ↑/↓ or q to exit)
         </Text>
       </Box>
       <Box flexDirection="column" height={maxHeight}>

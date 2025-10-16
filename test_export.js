@@ -1,5 +1,5 @@
-import fs from 'fs';
-import path from 'path';
+import fs from "fs";
+import path from "path";
 
 // Create a mock history for testing
 const mockHistory = [
@@ -11,7 +11,7 @@ const mockHistory = [
   { type: "gemini_content", text: "Second assistant response" },
   { type: "user", text: "Fourth user message" },
   { type: "gemini", text: "Third assistant response" },
-  { type: "gemini_content", text: "Fourth assistant response" }
+  { type: "gemini_content", text: "Fourth assistant response" },
 ];
 
 // Create a mock context
@@ -20,13 +20,13 @@ const mockContext = {
     getHistory: () => mockHistory,
     addItem: (item, timestamp) => {
       console.log(`[${item.type}] ${item.text}`);
-    }
+    },
   },
   services: {
     config: {
-      getSessionId: () => "test-session-id"
-    }
-  }
+      getSessionId: () => "test-session-id",
+    },
+  },
 };
 
 // Create reports directory if it doesn't exist
@@ -39,17 +39,19 @@ if (!fs.existsSync(reportsDir)) {
 async function testExportCommand() {
   try {
     // Dynamically import the export command
-    const { exportCommand } = await import('./packages/cli/dist/src/ui/commands/exportCommand.js');
-    
+    const { exportCommand } = await import(
+      "./packages/cli/dist/src/ui/commands/exportCommand.js"
+    );
+
     // Test the report option
     console.log("Testing export command with 'report' option...");
     await exportCommand.action(mockContext, "report test_report.md");
-    
+
     // Check if the file was created
     const reportPath = path.join(reportsDir, "test_report.md");
     if (fs.existsSync(reportPath)) {
       console.log("✅ Report file created successfully!");
-      const content = fs.readFileSync(reportPath, 'utf8');
+      const content = fs.readFileSync(reportPath, "utf8");
       console.log("Report content:");
       console.log(content);
     } else {
