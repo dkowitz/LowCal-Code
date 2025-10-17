@@ -236,8 +236,8 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
             }[] | undefined;
         } | undefined;
     };
-    method: "ide/contextUpdate";
     jsonrpc: "2.0";
+    method: "ide/contextUpdate";
 }, {
     params: {
         workspaceState?: {
@@ -253,8 +253,8 @@ export declare const IdeContextNotificationSchema: z.ZodObject<{
             }[] | undefined;
         } | undefined;
     };
-    method: "ide/contextUpdate";
     jsonrpc: "2.0";
+    method: "ide/contextUpdate";
 }>;
 export declare const IdeDiffAcceptedNotificationSchema: z.ZodObject<{
     jsonrpc: z.ZodLiteral<"2.0">;
@@ -263,26 +263,26 @@ export declare const IdeDiffAcceptedNotificationSchema: z.ZodObject<{
         filePath: z.ZodString;
         content: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        filePath: string;
         content: string;
+        filePath: string;
     }, {
-        filePath: string;
         content: string;
+        filePath: string;
     }>;
 }, "strip", z.ZodTypeAny, {
     params: {
-        filePath: string;
         content: string;
+        filePath: string;
     };
-    method: "ide/diffAccepted";
     jsonrpc: "2.0";
+    method: "ide/diffAccepted";
 }, {
     params: {
-        filePath: string;
         content: string;
+        filePath: string;
     };
-    method: "ide/diffAccepted";
     jsonrpc: "2.0";
+    method: "ide/diffAccepted";
 }>;
 export declare const IdeDiffClosedNotificationSchema: z.ZodObject<{
     jsonrpc: z.ZodLiteral<"2.0">;
@@ -302,43 +302,43 @@ export declare const IdeDiffClosedNotificationSchema: z.ZodObject<{
         filePath: string;
         content?: string | undefined;
     };
-    method: "ide/diffClosed";
     jsonrpc: "2.0";
+    method: "ide/diffClosed";
 }, {
     params: {
         filePath: string;
         content?: string | undefined;
     };
-    method: "ide/diffClosed";
     jsonrpc: "2.0";
+    method: "ide/diffClosed";
 }>;
 export declare const CloseDiffResponseSchema: z.ZodEffects<z.ZodObject<{
     content: z.ZodArray<z.ZodObject<{
         text: z.ZodString;
         type: z.ZodLiteral<"text">;
     }, "strip", z.ZodTypeAny, {
-        text: string;
         type: "text";
+        text: string;
     }, {
-        text: string;
         type: "text";
+        text: string;
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     content: {
-        text: string;
         type: "text";
+        text: string;
     }[];
 }, {
     content: {
-        text: string;
         type: "text";
+        text: string;
     }[];
 }>, {
     content?: string | undefined;
 }, {
     content: {
-        text: string;
         type: "text";
+        text: string;
     }[];
 }>;
 export type DiffUpdateResult = {

@@ -160,12 +160,10 @@ describe("RipGrepTool", () => {
       expect(grepTool.validateToolParams(params)).toContain("nonexistent");
     });
 
-    it("should return error if path is a file, not a directory", async () => {
+    it("should accept file paths as valid targets", async () => {
       const filePath = path.join(tempRootDir, "fileA.txt");
       const params: RipGrepToolParams = { pattern: "hello", path: filePath };
-      expect(grepTool.validateToolParams(params)).toContain(
-        `Path is not a directory: ${filePath}`,
-      );
+      expect(grepTool.validateToolParams(params)).toBeNull();
     });
   });
 
@@ -212,6 +210,27 @@ describe("RipGrepTool", () => {
       expect(result.llmContent).toContain("File: fileC.txt"); // Path relative to 'sub'
       expect(result.llmContent).toContain("L1: another world in sub dir");
       expect(result.returnDisplay).toBe("Found 1 match");
+    });
+
+    it("should find matches when searching a specific file path", async () => {
+      const filePath = path.join(tempRootDir, "fileA.txt");
+      mockSpawn.mockImplementationOnce(
+        createMockSpawn({
+          outputData: `fileA.txt:1:hello world${EOL}fileA.txt:2:second line with world${EOL}`,
+          exitCode: 0,
+        }),
+      );
+
+      const params: RipGrepToolParams = { pattern: "world", path: filePath };
+      const invocation = grepTool.build(params);
+      const result = await invocation.execute(abortSignal);
+      expect(result.llmContent).toContain(
+        `Found 2 matches for pattern "world" in file "${filePath}"`,
+      );
+      expect(result.llmContent).toContain("File: fileA.txt");
+      expect(result.llmContent).toContain("L1: hello world");
+      expect(result.llmContent).toContain("L2: second line with world");
+      expect(result.returnDisplay).toBe("Found 2 matches");
     });
 
     it("should find matches with an include glob", async () => {

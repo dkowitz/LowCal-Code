@@ -46,9 +46,13 @@ class GrepToolInvocation extends BaseToolInvocation {
         // Check existence and type after resolving
         try {
             const stats = fs.statSync(targetPath);
-            if (!stats.isDirectory()) {
-                throw new Error(`Path is not a directory: ${targetPath}`);
+            if (stats.isDirectory()) {
+                return { type: "directory", absolutePath: targetPath };
             }
+            if (stats.isFile()) {
+                return { type: "file", absolutePath: targetPath };
+            }
+            throw new Error(`Path is not a regular file or directory: ${targetPath}`);
         }
         catch (error) {
             if (isNodeError(error) && error.code !== "ENOENT") {
@@ -56,33 +60,31 @@ class GrepToolInvocation extends BaseToolInvocation {
             }
             throw new Error(`Failed to access path stats for ${targetPath}: ${error}`);
         }
-        return targetPath;
     }
     async execute(signal) {
         try {
             const workspaceContext = this.config.getWorkspaceContext();
-            const searchDirAbs = this.resolveAndValidatePath(this.params.path);
+            const resolvedTarget = this.resolveAndValidatePath(this.params.path);
+            const searchTargets = resolvedTarget === null
+                ? workspaceContext
+                    .getDirectories()
+                    .map((dir) => ({
+                    type: "directory",
+                    absolutePath: dir,
+                }))
+                : [resolvedTarget];
             const searchDirDisplay = this.params.path || ".";
-            // Determine which directories to search
-            let searchDirectories;
-            if (searchDirAbs === null) {
-                // No path specified - search all workspace directories
-                searchDirectories = workspaceContext.getDirectories();
-            }
-            else {
-                // Specific path provided - search only that directory
-                searchDirectories = [searchDirAbs];
-            }
             let allMatches = [];
-            for (const searchDir of searchDirectories) {
+            for (const searchTarget of searchTargets) {
                 const searchResult = await this.performRipgrepSearch({
                     pattern: this.params.pattern,
-                    path: searchDir,
+                    path: searchTarget.absolutePath,
+                    targetType: searchTarget.type,
                     include: this.params.include,
                     signal,
                 });
-                if (searchDirectories.length > 1) {
-                    const dirName = path.basename(searchDir);
+                if (resolvedTarget === null && searchTargets.length > 1) {
+                    const dirName = path.basename(searchTarget.absolutePath);
                     searchResult.forEach((match) => {
                         match.filePath = path.join(dirName, match.filePath);
                     });
@@ -90,12 +92,15 @@ class GrepToolInvocation extends BaseToolInvocation {
                 allMatches = allMatches.concat(searchResult);
             }
             let searchLocationDescription;
-            if (searchDirAbs === null) {
+            if (resolvedTarget === null) {
                 const numDirs = workspaceContext.getDirectories().length;
                 searchLocationDescription =
                     numDirs > 1
                         ? `across ${numDirs} workspace directories`
                         : `in the workspace directory`;
+            }
+            else if (resolvedTarget.type === "file") {
+                searchLocationDescription = `in file "${searchDirDisplay}"`;
             }
             else {
                 searchLocationDescription = `in path "${searchDirDisplay}"`;
@@ -176,7 +181,7 @@ class GrepToolInvocation extends BaseToolInvocation {
         return results;
     }
     async performRipgrepSearch(options) {
-        const { pattern, path: absolutePath, include } = options;
+        const { pattern, path: absolutePath, include, targetType } = options;
         const rgArgs = [
             "--line-number",
             "--no-heading",
@@ -238,7 +243,10 @@ class GrepToolInvocation extends BaseToolInvocation {
                     }
                 });
             });
-            return this.parseRipgrepOutput(output, absolutePath);
+            const basePathForOutput = targetType === "file"
+                ? path.dirname(absolutePath)
+                : absolutePath;
+            return this.parseRipgrepOutput(output, basePathForOutput);
         }
         catch (error) {
             console.error(`GrepLogic: ripgrep failed: ${getErrorMessage(error)}`);
@@ -325,9 +333,13 @@ export class RipGrepTool extends BaseDeclarativeTool {
         // Check existence and type after resolving
         try {
             const stats = fs.statSync(targetPath);
-            if (!stats.isDirectory()) {
-                throw new Error(`Path is not a directory: ${targetPath}`);
+            if (stats.isDirectory()) {
+                return { type: "directory", absolutePath: targetPath };
             }
+            if (stats.isFile()) {
+                return { type: "file", absolutePath: targetPath };
+            }
+            throw new Error(`Path is not a regular file or directory: ${targetPath}`);
         }
         catch (error) {
             if (isNodeError(error) && error.code !== "ENOENT") {
@@ -335,7 +347,6 @@ export class RipGrepTool extends BaseDeclarativeTool {
             }
             throw new Error(`Failed to access path stats for ${targetPath}: ${error}`);
         }
-        return targetPath;
     }
     /**
      * Validates the parameters for the tool
