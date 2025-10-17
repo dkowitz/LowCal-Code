@@ -161,4 +161,33 @@ describe("toolsetCommand", () => {
     );
     expect(mockSaveCliToolConfig).not.toHaveBeenCalled();
   });
+
+  it("keeps the full collection aligned with the live tool registry when persisting changes", async () => {
+    currentConfig = {
+      promptMode: "auto",
+      activeCollection: "full",
+      collections: {
+        full: [],
+        minimal: ["run_shell_command"],
+      },
+    };
+    mockLoadCliToolConfig.mockImplementation(() => cloneConfig(currentConfig));
+
+    const extraTools: ToolSummary[] = [
+      ...baseTools,
+      { name: "web_search", displayName: "WebSearch" },
+      { name: "custom_tool", displayName: "CustomTool" },
+    ];
+    const { context, geminiClient } = createContextWithTools(extraTools);
+    if (!toolsetCommand.action) throw new Error("Action not defined");
+
+    await toolsetCommand.action(context, "use minimal");
+
+    expect(mockSaveCliToolConfig).toHaveBeenCalledTimes(1);
+    const savedConfig = mockSaveCliToolConfig.mock.calls[0][0];
+    expect(savedConfig.collections["full"]).toEqual(
+      expect.arrayContaining(["web_search", "custom_tool"]),
+    );
+    expect(geminiClient.setTools).toHaveBeenCalledTimes(1);
+  });
 });

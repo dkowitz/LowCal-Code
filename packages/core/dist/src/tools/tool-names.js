@@ -20,5 +20,7 @@ export const ToolNames = {
     MEMORY: "save_memory",
     TASK: "task",
     EXIT_PLAN_MODE: "exit_plan_mode",
+    WEB_FETCH: "web_fetch",
+    WEB_SEARCH: "web_search",
 };
 //# sourceMappingURL=tool-names.js.map

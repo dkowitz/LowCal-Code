@@ -229,6 +229,8 @@ describe("Gemini Client (client.ts)", () => {
     // entire implementation of Config for these tests.
     const mockToolRegistry = {
       getFunctionDeclarations: vi.fn().mockReturnValue([]),
+      getFunctionDeclarationsFiltered: vi.fn().mockReturnValue([]),
+      getAllToolNames: vi.fn().mockReturnValue([]),
       getTool: vi.fn().mockReturnValue(null),
     };
     const fileService = new FileDiscoveryService("/test/dir");

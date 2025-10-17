@@ -169,17 +169,39 @@ export class GeminiClient {
         this.getChat().setHistory(historyToSet);
         this.forceFullIdeContext = true;
     }
+    getActiveToolDeclarations(toolRegistry) {
+        const allDeclarations = toolRegistry.getFunctionDeclarations();
+        if (!toolConfig || !toolConfig.collections) {
+            return allDeclarations;
+        }
+        const activeCollection = toolConfig.activeCollection;
+        if (!activeCollection) {
+            return allDeclarations;
+        }
+        const configuredNames = toolConfig.collections[activeCollection] ?? [];
+        if (!Array.isArray(configuredNames) ||
+            configuredNames.length === 0) {
+            return allDeclarations;
+        }
+        const normalizedNames = configuredNames.filter((name) => typeof name === "string" && name.trim().length > 0);
+        if (normalizedNames.length === 0) {
+            return allDeclarations;
+        }
+        if (activeCollection === "full") {
+            const registryNames = toolRegistry.getAllToolNames();
+            const merged = new Set([
+                ...normalizedNames,
+                ...registryNames,
+            ]);
+            const filtered = toolRegistry.getFunctionDeclarationsFiltered(Array.from(merged));
+            return filtered.length > 0 ? filtered : allDeclarations;
+        }
+        const filtered = toolRegistry.getFunctionDeclarationsFiltered(normalizedNames);
+        return filtered.length > 0 ? filtered : allDeclarations;
+    }
     async setTools() {
         const toolRegistry = this.config.getToolRegistry();
-        // Determine active tool collection from runtime config
-        let toolDeclarations = toolRegistry.getFunctionDeclarations();
-        if (toolConfig && toolConfig.collections && toolConfig.activeCollection) {
-            const collectionNames = toolConfig.collections[toolConfig.activeCollection] || [];
-            if (collectionNames.length > 0) {
-                toolDeclarations =
-                    toolRegistry.getFunctionDeclarationsFiltered(collectionNames);
-            }
-        }
+        const toolDeclarations = this.getActiveToolDeclarations(toolRegistry);
         const tools = [{ functionDeclarations: toolDeclarations }];
         this.getChat().setTools(tools);
     }
@@ -232,7 +254,7 @@ export class GeminiClient {
         this.hasFailedCompressionAttempt = false;
         const envParts = await getEnvironmentContext(this.config);
         const toolRegistry = this.config.getToolRegistry();
-        const toolDeclarations = toolRegistry.getFunctionDeclarations();
+        const toolDeclarations = this.getActiveToolDeclarations(toolRegistry);
         const tools = [{ functionDeclarations: toolDeclarations }];
         const history = [
             {

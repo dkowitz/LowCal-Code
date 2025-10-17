@@ -53,6 +53,8 @@ describe("runNonInteractive", () => {
     mockToolRegistry = {
       getTool: vi.fn(),
       getFunctionDeclarations: vi.fn().mockReturnValue([]),
+      getFunctionDeclarationsFiltered: vi.fn().mockReturnValue([]),
+      getAllToolNames: vi.fn().mockReturnValue([]),
     } as unknown as ToolRegistry;
 
     mockGeminiClient = {

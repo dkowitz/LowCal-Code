@@ -29,6 +29,8 @@ const DEFAULT_COLLECTIONS: Record<string, string[]> = {
     ToolNames.MEMORY,
     ToolNames.TASK,
     ToolNames.EXIT_PLAN_MODE,
+    ToolNames.WEB_FETCH,
+    ToolNames.WEB_SEARCH,
   ],
   minimal: [
     ToolNames.READ_FILE,

@@ -45,6 +45,7 @@ export declare class GeminiClient {
     setHistory(history: Content[], { stripThoughts }?: {
         stripThoughts?: boolean;
     }): void;
+    private getActiveToolDeclarations;
     setTools(): Promise<void>;
     resetChat(): Promise<void>;
     /**

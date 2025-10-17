@@ -12,6 +12,7 @@ import {
   loadCliToolConfig,
   saveCliToolConfig,
   syncCoreToolConfig,
+  type CliToolConfig,
 } from "./utils/toolConfig.js";
 
 type ToolLookup = Map<string, Set<string>>;
@@ -72,6 +73,32 @@ function buildToolLookup(toolRegistry: ToolRegistryLike): ToolLookup {
   }
 
   return lookup;
+}
+
+function synchronizeFullCollection(
+  cfg: CliToolConfig,
+  toolRegistry: ToolRegistryLike,
+): void {
+  if (!cfg.collections) {
+    cfg.collections = {};
+  }
+  const existing = cfg.collections["full"] ?? [];
+  const names = new Set<string>();
+  for (const name of existing) {
+    if (name) {
+      names.add(name);
+    }
+  }
+  for (const builtin of Object.values(ToolNames)) {
+    names.add(builtin);
+  }
+  const registryTools = toolRegistry?.getAllTools?.() ?? [];
+  for (const tool of registryTools) {
+    if (tool?.name) {
+      names.add(tool.name);
+    }
+  }
+  cfg.collections["full"] = Array.from(names).sort();
 }
 
 function resolveToolTokens(
@@ -170,6 +197,7 @@ export const toolsetCommand: SlashCommand = {
     const geminiConfig = context.services.config;
     const geminiClient = geminiConfig?.getGeminiClient?.();
     const toolRegistry = geminiConfig?.getToolRegistry?.() ?? null;
+    synchronizeFullCollection(cfg, toolRegistry);
     const toolLookup = buildToolLookup(toolRegistry);
     const refreshTools = async () => {
       if (geminiClient && typeof geminiClient.setTools === "function") {
@@ -182,9 +210,11 @@ export const toolsetCommand: SlashCommand = {
     };
 
     const persist = async (message: string) => {
+      synchronizeFullCollection(cfg, toolRegistry);
       saveCliToolConfig(cfg);
       syncCoreToolConfig(cfg);
       cfg = loadCliToolConfig();
+      synchronizeFullCollection(cfg, toolRegistry);
       await refreshTools();
       reply(message);
     };

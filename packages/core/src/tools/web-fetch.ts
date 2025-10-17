@@ -22,6 +22,7 @@ import {
   Kind,
   ToolConfirmationOutcome,
 } from "./tools.js";
+import { ToolNames } from "./tool-names.js";
 
 const URL_FETCH_TIMEOUT_MS = 10000;
 const MAX_CONTENT_LENGTH = 100000;
@@ -188,7 +189,7 @@ export class WebFetchTool extends BaseDeclarativeTool<
   WebFetchToolParams,
   ToolResult
 > {
-  static readonly Name: string = "web_fetch";
+  static readonly Name: string = ToolNames.WEB_FETCH;
 
   constructor(private readonly config: Config) {
     super(

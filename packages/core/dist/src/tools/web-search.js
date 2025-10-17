@@ -6,6 +6,7 @@
 import { BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, } from "./tools.js";
 import { ApprovalMode } from "../config/config.js";
 import { getErrorMessage } from "../utils/errors.js";
+import { ToolNames } from "./tool-names.js";
 class WebSearchToolInvocation extends BaseToolInvocation {
     config;
     constructor(config, params) {
@@ -102,7 +103,7 @@ class WebSearchToolInvocation extends BaseToolInvocation {
  */
 export class WebSearchTool extends BaseDeclarativeTool {
     config;
-    static Name = "web_search";
+    static Name = ToolNames.WEB_SEARCH;
     constructor(config) {
         super(WebSearchTool.Name, "WebSearch", "Performs a web search using the Tavily API and returns a concise answer with sources. Requires the TAVILY_API_KEY environment variable.", Kind.Search, {
             type: "object",

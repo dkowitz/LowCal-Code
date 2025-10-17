@@ -20,4 +20,6 @@ export declare const ToolNames: {
     readonly MEMORY: "save_memory";
     readonly TASK: "task";
     readonly EXIT_PLAN_MODE: "exit_plan_mode";
+    readonly WEB_FETCH: "web_fetch";
+    readonly WEB_SEARCH: "web_search";
 };

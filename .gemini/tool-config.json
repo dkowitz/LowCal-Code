@@ -1,19 +1,22 @@
 {
   "promptMode": "concise",
-  "activeCollection": "minimal",
+  "activeCollection": "full",
   "collections": {
     "full": [
-      "read_file",
-      "write_file",
-      "read_many_files",
-      "glob",
-      "search_file_content",
       "edit",
+      "exit_plan_mode",
+      "glob",
+      "list_directory",
+      "read_file",
+      "read_many_files",
       "run_shell_command",
-      "todo_write",
       "save_memory",
+      "search_file_content",
       "task",
-      "exit_plan_mode"
+      "todo_write",
+      "web_fetch",
+      "web_search",
+      "write_file"
     ],
     "minimal": [
       "read_file",

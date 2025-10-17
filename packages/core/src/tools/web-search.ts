@@ -18,6 +18,7 @@ import {
 import type { Config } from "../config/config.js";
 import { ApprovalMode } from "../config/config.js";
 import { getErrorMessage } from "../utils/errors.js";
+import { ToolNames } from "./tool-names.js";
 
 interface TavilyResultItem {
   title: string;
@@ -176,7 +177,7 @@ export class WebSearchTool extends BaseDeclarativeTool<
   WebSearchToolParams,
   WebSearchToolResult
 > {
-  static readonly Name: string = "web_search";
+  static readonly Name: string = ToolNames.WEB_SEARCH;
 
   constructor(private readonly config: Config) {
     super(

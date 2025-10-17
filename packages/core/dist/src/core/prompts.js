@@ -23,6 +23,8 @@ const DEFAULT_COLLECTIONS = {
         ToolNames.MEMORY,
         ToolNames.TASK,
         ToolNames.EXIT_PLAN_MODE,
+        ToolNames.WEB_FETCH,
+        ToolNames.WEB_SEARCH,
     ],
     minimal: [
         ToolNames.READ_FILE,
@@ -48,6 +50,8 @@ const TOOL_SUMMARIES = {
     [ToolNames.MEMORY]: "Persist user-specific facts that will remain useful across sessions.",
     [ToolNames.TASK]: "Delegate work to a specialized subagent suited to the request.",
     [ToolNames.EXIT_PLAN_MODE]: "Exit plan mode after presenting the plan for user confirmation.",
+    [ToolNames.WEB_FETCH]: "Fetch HTML content, summarize it with a custom prompt, and report relevant findings.",
+    [ToolNames.WEB_SEARCH]: "Search the web via Tavily to gather up-to-date information with cited sources.",
 };
 function loadToolConfig() {
     const defaultConfig = {
