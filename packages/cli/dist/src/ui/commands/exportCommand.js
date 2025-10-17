@@ -80,32 +80,34 @@ export const exportCommand = {
                 item.text);
         }
         else if (option === "report") {
-            // All user messages up to the first non-user message
-            for (let i = 0; i < history.length; i++) {
-                if (history[i].type !== "user") {
-                    break;
-                }
-                if (history[i].type === "user" && history[i].text) {
-                    filteredHistory.push(history[i]);
-                }
+            // Report: first non-slash user message + all assistant messages after the last user message
+            const firstUser = history.find((item) => item.type === "user" &&
+                typeof item.text === "string" &&
+                !item.text.trim().startsWith("/"));
+            if (firstUser && firstUser.text) {
+                filteredHistory.push(firstUser);
             }
-            // Find the last non-assistant message index
-            let lastNonAssistantIndex = -1;
+            // Find the index of the last *non‑slash* user message in the conversation.
+            // Slash commands (messages starting with '/') are not considered when determining
+            // the trailing assistant responses for a report export. This ensures that the
+            // final assistant reply before the command is captured.
+            let lastUserIndex = -1;
             for (let i = history.length - 1; i >= 0; i--) {
-                if (history[i].type !== "gemini" &&
-                    history[i].type !== "gemini_content") {
-                    lastNonAssistantIndex = i;
+                const item = history[i];
+                if (item.type === "user" &&
+                    typeof item.text === "string" &&
+                    !item.text.trim().startsWith("/")) {
+                    lastUserIndex = i;
                     break;
                 }
             }
-            // If no non-assistant message found, start from beginning
-            // Otherwise, add all assistant messages after the last non-assistant message
-            const startIndex = lastNonAssistantIndex === -1 ? 0 : lastNonAssistantIndex + 1;
-            const finalAssistants = history
-                .slice(startIndex)
+            // Add all assistant messages after the last user message
+            const startIdx = lastUserIndex === -1 ? 0 : lastUserIndex + 1;
+            const trailingAssistants = history
+                .slice(startIdx)
                 .filter((item) => (item.type === "gemini" || item.type === "gemini_content") &&
                 item.text);
-            filteredHistory = filteredHistory.concat(finalAssistants);
+            filteredHistory = filteredHistory.concat(trailingAssistants);
         }
         else {
             // Full history
@@ -116,13 +118,15 @@ export const exportCommand = {
             switch (item.type) {
                 case "user":
                     if (item.text) {
-                        markdownContent += `## User Message\n\n${item.text.trim()}\n\n---\n\n`;
+                        // Preserve original formatting of user messages
+                        markdownContent += `## User Message\n\n${item.text}\n\n---\n\n`;
                     }
                     break;
                 case "gemini":
                 case "gemini_content":
                     if (item.text) {
-                        markdownContent += `## Assistant Response\n\n${item.text.trim()}\n\n---\n\n`;
+                        // Preserve original formatting of assistant responses
+                        markdownContent += `## Assistant Response\n\n${item.text}\n\n---\n\n`;
                     }
                     break;
                 case "info":

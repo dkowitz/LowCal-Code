@@ -1,1 +1,1 @@
-{"version":3,"file":"git-commit.js","sourceRoot":"","sources":["../../../src/generated/git-commit.ts"],"names":[],"mappings":"AAAA;;;;GAIG;AAEH,wFAAwF;AACxF,kCAAkC;AAClC,MAAM,CAAC,MAAM,eAAe,GAAG,SAAS,CAAC;AACzC,MAAM,CAAC,MAAM,WAAW,GAAG,QAAQ,CAAC"}
+{"version":3,"file":"git-commit.js","sourceRoot":"","sources":["../../../src/generated/git-commit.ts"],"names":[],"mappings":"AAAA;;;;GAIG;AAEH,wFAAwF;AACxF,kCAAkC;AAClC,MAAM,CAAC,MAAM,eAAe,GAAG,UAAU,CAAC;AAC1C,MAAM,CAAC,MAAM,WAAW,GAAG,QAAQ,CAAC"}
