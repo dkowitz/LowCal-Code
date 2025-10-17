@@ -35,26 +35,6 @@ import { FileOperationEvent } from "../telemetry/types.js";
 import { getProgrammingLanguage } from "../telemetry/telemetry-utils.js";
 import { getSpecificMimeType } from "../utils/fileUtils.js";
 
-export function applyReplacement(
-  currentContent: string | null,
-  oldString: string,
-  newString: string,
-  isNewFile: boolean,
-): string {
-  if (isNewFile) {
-    return newString;
-  }
-  if (currentContent === null) {
-    // Should not happen if not a new file, but defensively return empty or newString if oldString is also empty
-    return oldString === "" ? newString : "";
-  }
-  // If oldString is empty and it's not a new file, do not modify the content.
-  if (oldString === "" && !isNewFile) {
-    return currentContent;
-  }
-  return currentContent.replaceAll(oldString, newString);
-}
-
 /**
  * Parameters for the Edit tool
  */
@@ -91,6 +71,40 @@ export interface EditToolParams {
   ai_proposed_string?: string;
 }
 
+const CONTEXT_PREVIEW_RADIUS = 3;
+
+const normalizeLineEndings = (value: string): string =>
+  value.replace(/\r\n/g, "\n");
+
+const normalizeParams = (params: EditToolParams): EditToolParams => {
+  params.old_string = normalizeLineEndings(params.old_string);
+  params.new_string = normalizeLineEndings(params.new_string);
+  if (params.ai_proposed_string) {
+    params.ai_proposed_string = normalizeLineEndings(params.ai_proposed_string);
+  }
+  return params;
+};
+
+export function applyReplacement(
+  currentContent: string | null,
+  oldString: string,
+  newString: string,
+  isNewFile: boolean,
+): string {
+  if (isNewFile) {
+    return newString;
+  }
+  if (currentContent === null) {
+    // Should not happen if not a new file, but defensively return empty or newString if oldString is also empty
+    return oldString === "" ? newString : "";
+  }
+  // If oldString is empty and it's not a new file, do not modify the content.
+  if (oldString === "" && !isNewFile) {
+    return currentContent;
+  }
+  return currentContent.replaceAll(oldString, newString);
+}
+
 interface CalculatedEdit {
   currentContent: string | null;
   newContent: string;
@@ -103,7 +117,9 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
   constructor(
     private readonly config: Config,
     public params: EditToolParams,
-  ) {}
+  ) {
+    this.params = normalizeParams(params);
+  }
 
   toolLocations(): ToolLocation[] {
     return [{ path: this.params.file_path }];
@@ -162,9 +178,13 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
           type: ToolErrorType.ATTEMPT_TO_CREATE_EXISTING_FILE,
         };
       } else if (occurrences === 0) {
+        const contextHint = this.getApproximateContext(
+          currentContent,
+          finalOldString,
+        );
         error = {
-          display: `Failed to edit, could not find the string to replace.`,
-          raw: `Failed to edit, 0 occurrences found for old_string in ${params.file_path}. No edits made. The exact text in old_string was not found. Ensure you're not escaping content incorrectly and check whitespace, indentation, and context. Use ${ReadFileTool.Name} tool to verify.`,
+          display: `Failed to edit, could not find the string to replace. Re-read the file and copy the exact bytes.`,
+          raw: `Failed to edit, 0 occurrences found for old_string in ${params.file_path}. No edits made. The exact text in old_string was not found. Ensure you're not escaping content incorrectly and check whitespace, indentation, and context. Use ${ReadFileTool.Name} tool to verify.${contextHint ? `\nContext hint (best effort, copy directly from file):\n${contextHint}` : ""}`,
           type: ToolErrorType.EDIT_NO_OCCURRENCE_FOUND,
         };
       } else if (occurrences !== expectedReplacements) {
@@ -236,6 +256,90 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
   }
 
   /**
+   * Provides a best-effort context preview when the exact snippet was not found.
+   * Helps the LLM rediscover the correct bytes via a follow-up read.
+   */
+  private getApproximateContext(
+    content: string,
+    target: string,
+  ): string | null {
+    const trimmedTarget = target.trim();
+    if (!trimmedTarget) {
+      return null;
+    }
+
+    const contentLines = content.split("\n");
+    const targetLines = target
+      .split("\n")
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    if (targetLines.length === 0) {
+      return null;
+    }
+
+    const sampleTerms =
+      targetLines.length <= 3
+        ? targetLines
+        : [
+            targetLines[0],
+            targetLines[Math.floor(targetLines.length / 2)],
+            targetLines[targetLines.length - 1],
+          ];
+
+    const targetTokens = new Set(
+      target
+        .split(/[^A-Za-z0-9_]+/g)
+        .map((token) => token.trim())
+        .filter((token) => token.length > 2),
+    );
+
+    let bestScore = 0;
+    let bestIndex = -1;
+
+    contentLines.forEach((line, index) => {
+      const trimmedLine = line.trim();
+      let score = 0;
+
+      for (const term of sampleTerms) {
+        if (term.length > 0 && trimmedLine.includes(term)) {
+          score += term.length;
+        }
+      }
+
+      if (targetTokens.size > 0) {
+        const lineTokens = new Set(
+          trimmedLine
+            .split(/[^A-Za-z0-9_]+/g)
+            .map((token) => token.trim())
+            .filter((token) => token.length > 2),
+        );
+        lineTokens.forEach((token) => {
+          if (targetTokens.has(token)) {
+            score += token.length;
+          }
+        });
+      }
+
+      if (score > bestScore) {
+        bestScore = score;
+        bestIndex = index;
+      }
+    });
+
+    if (bestScore === 0 || bestIndex === -1) {
+      return null;
+    }
+
+    const start = Math.max(0, bestIndex - CONTEXT_PREVIEW_RADIUS);
+    const end = Math.min(
+      contentLines.length,
+      bestIndex + CONTEXT_PREVIEW_RADIUS + 1,
+    );
+    return contentLines.slice(start, end).join("\n");
+  }
+
+  /**
    * Handles the confirmation prompt for the Edit tool in the CLI.
    * It needs to calculate the diff to show the user.
    */
@@ -294,8 +398,11 @@ class EditToolInvocation implements ToolInvocation<EditToolParams, ToolResult> {
           if (result.status === "accepted" && result.content) {
             // TODO(chrstn): See https://github.com/google-gemini/gemini-cli/pull/5618#discussion_r2255413084
             // for info on a possible race condition where the file is modified on disk while being edited.
-            this.params.old_string = editData.currentContent ?? "";
-            this.params.new_string = result.content;
+            Object.assign(this.params, {
+              old_string: editData.currentContent ?? "",
+              new_string: result.content,
+            });
+            normalizeParams(this.params);
           }
         }
       },
@@ -468,17 +575,22 @@ export class EditTool
     super(
       EditTool.Name,
       "Edit",
-      `Replaces text within a file. By default, replaces a single occurrence, but can replace multiple occurrences when \`expected_replacements\` is specified. This tool requires providing significant context around the change to ensure precise targeting. Always use the ${ReadFileTool.Name} tool to examine the file's current content before attempting a text replacement.
+      `Critical usage rules:
+- Always call the ${ReadFileTool.Name} tool immediately before editing and paste the exact bytes you see. Do not reconstruct the snippet.
+- \`old_string\` must include precise indentation, whitespace, and at least 3 surrounding lines so it uniquely identifies the change.
+- Do not escape or partially quote the text. Copy it verbatim.
 
-      The user has the ability to modify the \`new_string\` content. If modified, this will be stated in the response.
+What the tool does:
+- Replaces text within a file. By default it makes one replacement; set \`expected_replacements\` when intentionally touching multiple matches.
+- Users may tweak \`new_string\` via the IDE; the final response reports if that happened.
 
-Expectation for required parameters:
-1. \`file_path\` MUST be an absolute path; otherwise an error will be thrown.
-2. \`old_string\` MUST be the exact literal text to replace (including all whitespace, indentation, newlines, and surrounding code etc.).
-3. \`new_string\` MUST be the exact literal text to replace \`old_string\` with (also including all whitespace, indentation, newlines, and surrounding code etc.). Ensure the resulting code is correct and idiomatic.
-4. NEVER escape \`old_string\` or \`new_string\`, that would break the exact literal text requirement.
-**Important:** If ANY of the above are not satisfied, the tool will fail. CRITICAL for \`old_string\`: Must uniquely identify the single instance to change. Include at least 3 lines of context BEFORE and AFTER the target text, matching whitespace and indentation precisely. If this string matches multiple locations, or does not match exactly, the tool will fail.
-**Multiple replacements:** Set \`expected_replacements\` to the number of occurrences you want to replace. The tool will replace ALL occurrences that match \`old_string\` exactly. Ensure the number of replacements matches your expectation.`,
+Parameter expectations:
+1. \`file_path\` must be absolute and inside the workspace.
+2. \`old_string\` is the exact literal snippet to remove.
+3. \`new_string\` is the exact literal snippet to insert.
+4. The tool fails fast if the snippet does not match exactly or matches the wrong count.
+
+Tip: If an edit fails, re-run ${ReadFileTool.Name} to copy the current file content, update \`old_string\`, and try again.`,
       Kind.Edit,
       {
         properties: {
@@ -489,12 +601,12 @@ Expectation for required parameters:
           },
           old_string: {
             description:
-              "The exact literal text to replace, preferably unescaped. For single replacements (default), include at least 3 lines of context BEFORE and AFTER the target text, matching whitespace and indentation precisely. For multiple replacements, specify expected_replacements parameter. If this string is not the exact literal text (i.e. you escaped it) or does not match exactly, the tool will fail.",
+              `Copy-paste the exact bytes you want to replace. Include at least 3 lines of surrounding context so the snippet is unique. Do not escape or synthesize the text—always read it from the file immediately before editing. For multiple replacements, specify expected_replacements.`,
             type: "string",
           },
           new_string: {
             description:
-              "The exact literal text to replace `old_string` with, preferably unescaped. Provide the EXACT text. Ensure the resulting code is correct and idiomatic.",
+              "Literal replacement for `old_string`. Ensure it is the exact content you want written to the file (including indentation and newlines).",
             type: "string",
           },
           expected_replacements: {
@@ -576,13 +688,13 @@ Expectation for required parameters:
         originalParams: EditToolParams,
       ): EditToolParams => {
         const content = originalParams.new_string;
-        return {
+        return normalizeParams({
           ...originalParams,
           ai_proposed_string: content,
           old_string: oldContent,
           new_string: modifiedProposedContent,
           modified_by_user: true,
-        };
+        });
       },
     };
   }

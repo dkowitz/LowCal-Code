@@ -459,6 +459,40 @@ describe("EditTool", () => {
             const invocation = tool.build(params);
             const result = await invocation.execute(new AbortController().signal);
             expect(result.error?.type).toBe(ToolErrorType.FILE_WRITE_FAILURE);
+            fs.chmodSync(filePath, "644");
+        });
+        it("should normalize CRLF line endings in parameters", async () => {
+            const initialContent = "const value = 1;\r\nconst other = 2;\r\n";
+            fs.writeFileSync(filePath, initialContent, "utf8");
+            const params = {
+                file_path: filePath,
+                old_string: "const value = 1;\r\nconst other = 2;",
+                new_string: "const value = 1;\r\nconst other = 3;",
+            };
+            const invocation = tool.build(params);
+            const result = await invocation.execute(new AbortController().signal);
+            expect(result.error).toBeUndefined();
+            expect(result.llmContent).toMatch(/Successfully modified file/);
+            expect(fs.readFileSync(filePath, "utf8")).toBe("const value = 1;\nconst other = 3;\n");
+        });
+        it("should include a context hint when the snippet is not found", async () => {
+            const fileContents = [
+                "function example() {",
+                '  const greeting = "hello";',
+                "  return greeting;",
+                "}",
+            ].join("\n");
+            fs.writeFileSync(filePath, fileContents, "utf8");
+            const params = {
+                file_path: filePath,
+                old_string: '  const greeting = "hello there";',
+                new_string: '  const greeting = "hello world!";',
+            };
+            const invocation = tool.build(params);
+            const result = await invocation.execute(new AbortController().signal);
+            expect(result.error?.type).toBe(ToolErrorType.EDIT_NO_OCCURRENCE_FOUND);
+            expect(result.llmContent).toContain("Context hint (best effort");
+            expect(result.llmContent).toContain('const greeting = "hello";');
         });
     });
     describe("getDescription", () => {
