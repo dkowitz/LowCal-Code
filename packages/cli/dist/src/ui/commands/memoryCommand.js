@@ -36,7 +36,7 @@ export const memoryCommand = {
                     kind: CommandKind.BUILT_IN,
                     action: async (context) => {
                         try {
-                            const projectMemoryPath = path.join(process.cwd(), "QWEN.md");
+                            const projectMemoryPath = path.join(process.cwd(), "LOWCAL.md");
                             const memoryContent = await fs.readFile(projectMemoryPath, "utf-8");
                             const messageContent = memoryContent.trim().length > 0
                                 ? `Project memory content from ${projectMemoryPath}:\n\n---\n${memoryContent}\n---`
@@ -60,7 +60,7 @@ export const memoryCommand = {
                     kind: CommandKind.BUILT_IN,
                     action: async (context) => {
                         try {
-                            const globalMemoryPath = path.join(os.homedir(), QWEN_DIR, "QWEN.md");
+                            const globalMemoryPath = path.join(os.homedir(), QWEN_DIR, "LOWCAL.md");
                             const globalMemoryContent = await fs.readFile(globalMemoryPath, "utf-8");
                             const messageContent = globalMemoryContent.trim().length > 0
                                 ? `Global memory content:\n\n---\n${globalMemoryContent}\n---`

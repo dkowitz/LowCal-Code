@@ -49,7 +49,7 @@ export const memoryCommand: SlashCommand = {
           kind: CommandKind.BUILT_IN,
           action: async (context) => {
             try {
-              const projectMemoryPath = path.join(process.cwd(), "QWEN.md");
+              const projectMemoryPath = path.join(process.cwd(), "LOWCAL.md");
               const memoryContent = await fs.readFile(
                 projectMemoryPath,
                 "utf-8",
@@ -87,7 +87,7 @@ export const memoryCommand: SlashCommand = {
               const globalMemoryPath = path.join(
                 os.homedir(),
                 QWEN_DIR,
-                "QWEN.md",
+                "LOWCAL.md",
               );
               const globalMemoryContent = await fs.readFile(
                 globalMemoryPath,

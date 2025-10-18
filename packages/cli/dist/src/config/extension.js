@@ -151,7 +151,7 @@ function loadInstallMetadata(extensionDir) {
 }
 function getContextFileNames(config) {
     if (!config.contextFileName) {
-        return ["QWEN.md"];
+        return ["LOWCAL.md"];
     }
     else if (!Array.isArray(config.contextFileName)) {
         return [config.contextFileName];

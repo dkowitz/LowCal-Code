@@ -106,7 +106,7 @@ async function getGeminiMdFilePathsInternalForEachDir(dir, userHomePath, debugMo
         const resolvedDir = dir ? path.resolve(dir) : resolvedHome;
         const isHomeDirectory = resolvedDir === resolvedHome;
         if (isHomeDirectory) {
-            // For home directory, only check for QWEN.md directly in the home directory
+            // For home directory, only check for LOWCAL.md directly in the home directory
             const homeContextPath = path.join(resolvedHome, geminiMdFilename);
             try {
                 await fs.access(homeContextPath, fsSync.constants.R_OK);
@@ -241,7 +241,7 @@ currentWorkingDirectoryForDisplay) {
         .join("\n\n");
 }
 /**
- * Loads hierarchical QWEN.md files and concatenates their content.
+ * Loads hierarchical LOWCAL.md files and concatenates their content.
  * This function is intended for use by the server.
  */
 export async function loadServerHierarchicalMemory(currentWorkingDirectory, includeDirectoriesToReadGemini, debugMode, fileService, extensionContextFilePaths = [], importFormat = "tree", fileFilteringOptions, maxDirs = 200) {
@@ -253,7 +253,7 @@ export async function loadServerHierarchicalMemory(currentWorkingDirectory, incl
     const filePaths = await getGeminiMdFilePathsInternal(currentWorkingDirectory, includeDirectoriesToReadGemini, userHomePath, debugMode, fileService, extensionContextFilePaths, fileFilteringOptions || DEFAULT_MEMORY_FILE_FILTERING_OPTIONS, maxDirs);
     if (filePaths.length === 0) {
         if (debugMode)
-            logger.debug("No QWEN.md files found in hierarchy.");
+            logger.debug("No LOWCAL.md files found in hierarchy.");
         return { memoryContent: "", fileCount: 0 };
     }
     const contentsWithPaths = await readGeminiMdFiles(filePaths, debugMode, importFormat);

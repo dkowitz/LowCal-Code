@@ -48,8 +48,8 @@ export function createShowMemoryAction(config, settings, addMessage) {
             addMessage({
                 type: MessageType.INFO,
                 content: fileCount > 0
-                    ? "Hierarchical memory (QWEN.md or other context files) is loaded but content is empty."
-                    : "No hierarchical memory (QWEN.md or other context files) is currently loaded.",
+                    ? "Hierarchical memory (LOWCAL.md or other context files) is loaded but content is empty."
+                    : "No hierarchical memory (LOWCAL.md or other context files) is currently loaded.",
                 timestamp: new Date(),
             });
         }

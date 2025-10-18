@@ -134,7 +134,7 @@ function findCodeRegions(content) {
     return regions;
 }
 /**
- * Processes import statements in QWEN.md content
+ * Processes import statements in LOWCAL.md content
  * Supports @path/to/file syntax for importing content from other files
  * @param content - The content to process for imports
  * @param basePath - The directory path where the current file is located

@@ -1011,9 +1011,9 @@ This ensures that you&apos;re testing the behavior the user would see in the bro
         </testcase>
         <testcase classname="src/ui/App.test.tsx" name="App UI &gt; should display active file and other context" time="0.018198853">
         </testcase>
-        <testcase classname="src/ui/App.test.tsx" name="App UI &gt; should display default &quot;QWEN.md&quot; in footer when contextFileName is not set and count is 1" time="0.011448848">
+        <testcase classname="src/ui/App.test.tsx" name="App UI &gt; should display default &quot;LOWCAL.md&quot; in footer when contextFileName is not set and count is 1" time="0.011448848">
         </testcase>
-        <testcase classname="src/ui/App.test.tsx" name="App UI &gt; should display default &quot;QWEN.md&quot; with plural when contextFileName is not set and count is &gt; 1" time="0.010666582">
+        <testcase classname="src/ui/App.test.tsx" name="App UI &gt; should display default &quot;LOWCAL.md&quot; with plural when contextFileName is not set and count is &gt; 1" time="0.010666582">
         </testcase>
         <testcase classname="src/ui/App.test.tsx" name="App UI &gt; should display custom contextFileName in footer when set and count is 1" time="0.010327265">
         </testcase>
@@ -1023,9 +1023,9 @@ This ensures that you&apos;re testing the behavior the user would see in the bro
         </testcase>
         <testcase classname="src/ui/App.test.tsx" name="App UI &gt; should not display context file message if count is 0, even if contextFileName is set" time="0.010763752">
         </testcase>
-        <testcase classname="src/ui/App.test.tsx" name="App UI &gt; should display QWEN.md and MCP server count when both are present" time="0.010863646">
+        <testcase classname="src/ui/App.test.tsx" name="App UI &gt; should display LOWCAL.md and MCP server count when both are present" time="0.010863646">
         </testcase>
-        <testcase classname="src/ui/App.test.tsx" name="App UI &gt; should display only MCP server count when QWEN.md count is 0" time="0.01108751">
+        <testcase classname="src/ui/App.test.tsx" name="App UI &gt; should display only MCP server count when LOWCAL.md count is 0" time="0.01108751">
         </testcase>
         <testcase classname="src/ui/App.test.tsx" name="App UI &gt; should display Tips component by default" time="0.010502689">
         </testcase>
@@ -2312,7 +2312,7 @@ String error
         </testcase>
     </testsuite>
     <testsuite name="src/ui/commands/initCommand.test.ts" timestamp="2025-10-17T11:01:41.461Z" hostname="uby" tests="5" failures="4" errors="0" skipped="0" time="0.022811938">
-        <testcase classname="src/ui/commands/initCommand.test.ts" name="initCommand &gt; should ask for confirmation if QWEN.md already exists and is non-empty" time="0.01188269">
+        <testcase classname="src/ui/commands/initCommand.test.ts" name="initCommand &gt; should ask for confirmation if LOWCAL.md already exists and is non-empty" time="0.01188269">
             <failure message="[vitest] No &quot;getCurrentGeminiMdFilename&quot; export is defined on the &quot;@qwen-code/qwen-code-core&quot; mock. Did you forget to return it from &quot;vi.mock&quot;?
 If you need to partially mock a module, you can use &quot;importOriginal&quot; helper inside:
 " type="Error">
@@ -2331,7 +2331,7 @@ vi.mock(import(&quot;@qwen-code/qwen-code-core&quot;), async (importOriginal) =&
  ❯ src/ui/commands/initCommand.test.ts:62:38
             </failure>
         </testcase>
-        <testcase classname="src/ui/commands/initCommand.test.ts" name="initCommand &gt; should create QWEN.md and submit a prompt if it does not exist" time="0.001889051">
+        <testcase classname="src/ui/commands/initCommand.test.ts" name="initCommand &gt; should create LOWCAL.md and submit a prompt if it does not exist" time="0.001889051">
             <failure message="[vitest] No &quot;getCurrentGeminiMdFilename&quot; export is defined on the &quot;@qwen-code/qwen-code-core&quot; mock. Did you forget to return it from &quot;vi.mock&quot;?
 If you need to partially mock a module, you can use &quot;importOriginal&quot; helper inside:
 " type="Error">
@@ -2350,7 +2350,7 @@ vi.mock(import(&quot;@qwen-code/qwen-code-core&quot;), async (importOriginal) =&
  ❯ src/ui/commands/initCommand.test.ts:81:38
             </failure>
         </testcase>
-        <testcase classname="src/ui/commands/initCommand.test.ts" name="initCommand &gt; should proceed to initialize when QWEN.md exists but is empty" time="0.001389938">
+        <testcase classname="src/ui/commands/initCommand.test.ts" name="initCommand &gt; should proceed to initialize when LOWCAL.md exists but is empty" time="0.001389938">
             <failure message="[vitest] No &quot;getCurrentGeminiMdFilename&quot; export is defined on the &quot;@qwen-code/qwen-code-core&quot; mock. Did you forget to return it from &quot;vi.mock&quot;?
 If you need to partially mock a module, you can use &quot;importOriginal&quot; helper inside:
 " type="Error">
@@ -2369,7 +2369,7 @@ vi.mock(import(&quot;@qwen-code/qwen-code-core&quot;), async (importOriginal) =&
  ❯ src/ui/commands/initCommand.test.ts:110:38
             </failure>
         </testcase>
-        <testcase classname="src/ui/commands/initCommand.test.ts" name="initCommand &gt; should regenerate QWEN.md when overwrite is confirmed" time="0.002874071">
+        <testcase classname="src/ui/commands/initCommand.test.ts" name="initCommand &gt; should regenerate LOWCAL.md when overwrite is confirmed" time="0.002874071">
             <failure message="[vitest] No &quot;getCurrentGeminiMdFilename&quot; export is defined on the &quot;@qwen-code/qwen-code-core&quot; mock. Did you forget to return it from &quot;vi.mock&quot;?
 If you need to partially mock a module, you can use &quot;importOriginal&quot; helper inside:
 " type="Error">

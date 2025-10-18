@@ -80,7 +80,7 @@ vi.mock("@qwen-code/qwen-code-core", () => {
       subscribeToIdeContext: vi.fn(() => vi.fn()),
     },
     isGitRepository: vi.fn().mockResolvedValue(false),
-    getAllGeminiMdFilenames: vi.fn(() => ["QWEN.md"]),
+    getAllGeminiMdFilenames: vi.fn(() => ["LOWCAL.md"]),
     uiTelemetryService: { emitEvent: vi.fn(), log: vi.fn() },
   } as any;
 });

@@ -1365,14 +1365,14 @@ If you need to partially mock a module, you can use "importOriginal" helper insi
 ✓ App UI > should not display any files when not available 18ms
 ✓ App UI > should display active file and other open files 22ms
 ✓ App UI > should display active file and other context 25ms
-✓ App UI > should display default "QWEN.md" in footer when contextFileName is not set and count is 1 21ms
-✓ App UI > should display default "QWEN.md" with plural when contextFileName is not set and count is > 1 23ms
+✓ App UI > should display default "LOWCAL.md" in footer when contextFileName is not set and count is 1 21ms
+✓ App UI > should display default "LOWCAL.md" with plural when contextFileName is not set and count is > 1 23ms
 ✓ App UI > should display custom contextFileName in footer when set and count is 1 26ms
 ✓ App UI > should display a generic message when multiple context files with different names are provided 19ms
 ✓ App UI > should display custom contextFileName with plural when set and count is > 1 23ms
 ✓ App UI > should not display context file message if count is 0, even if contextFileName is set 22ms
-✓ App UI > should display QWEN.md and MCP server count when both are present 24ms
-✓ App UI > should display only MCP server count when QWEN.md count is 0 46ms
+✓ App UI > should display LOWCAL.md and MCP server count when both are present 24ms
+✓ App UI > should display only MCP server count when LOWCAL.md count is 0 46ms
 ✓ App UI > should display Tips component by default 22ms
 ✓ App UI > should not display Tips component when hideTips is true 22ms
 ✓ App UI > should display Header component by default 23ms

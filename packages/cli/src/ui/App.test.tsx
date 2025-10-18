@@ -188,7 +188,7 @@ vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
           getUserTier: vi.fn(),
         })),
         getCheckpointingEnabled: vi.fn(() => opts.checkpointing ?? true),
-        getAllGeminiMdFilenames: vi.fn(() => ["QWEN.md"]),
+        getAllGeminiMdFilenames: vi.fn(() => ["LOWCAL.md"]),
         setFlashFallbackHandler: vi.fn(),
         getSessionId: vi.fn(() => "test-session-id"),
         getUserTier: vi.fn().mockResolvedValue(undefined),
@@ -217,7 +217,7 @@ vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
     ...actualCore,
     Config: ConfigClassMock,
     MCPServerConfig: actualCore.MCPServerConfig,
-    getAllGeminiMdFilenames: vi.fn(() => ["QWEN.md"]),
+    getAllGeminiMdFilenames: vi.fn(() => ["LOWCAL.md"]),
     ideContext: ideContextMock,
     isGitRepository: vi.fn(),
   };
@@ -674,7 +674,7 @@ describe("App UI", () => {
       },
     });
     mockConfig.getGeminiMdFileCount.mockReturnValue(1);
-    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["QWEN.md"]);
+    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["LOWCAL.md"]);
 
     const { lastFrame, unmount } = renderWithProviders(
       <App
@@ -686,13 +686,13 @@ describe("App UI", () => {
     currentUnmount = unmount;
     await Promise.resolve();
     expect(lastFrame()).toContain(
-      "Using: 1 open file (ctrl+g to view) | 1 QWEN.md file",
+      "Using: 1 open file (ctrl+g to view) | 1 LOWCAL.md file",
     );
   });
 
-  it('should display default "QWEN.md" in footer when contextFileName is not set and count is 1', async () => {
+  it('should display default "LOWCAL.md" in footer when contextFileName is not set and count is 1', async () => {
     mockConfig.getGeminiMdFileCount.mockReturnValue(1);
-    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["QWEN.md"]);
+    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["LOWCAL.md"]);
     // For this test, ensure showMemoryUsage is false or debugMode is false if it relies on that
     mockConfig.getDebugMode.mockReturnValue(false);
     mockConfig.getShowMemoryUsage.mockReturnValue(false);
@@ -706,12 +706,12 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve(); // Wait for any async updates
-    expect(lastFrame()).toContain("Using: 1 QWEN.md file");
+    expect(lastFrame()).toContain("Using: 1 LOWCAL.md file");
   });
 
-  it('should display default "QWEN.md" with plural when contextFileName is not set and count is > 1', async () => {
+  it('should display default "LOWCAL.md" with plural when contextFileName is not set and count is > 1', async () => {
     mockConfig.getGeminiMdFileCount.mockReturnValue(2);
-    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["QWEN.md", "QWEN.md"]);
+    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["LOWCAL.md", "LOWCAL.md"]);
     mockConfig.getDebugMode.mockReturnValue(false);
     mockConfig.getShowMemoryUsage.mockReturnValue(false);
 
@@ -724,7 +724,7 @@ describe("App UI", () => {
     );
     currentUnmount = unmount;
     await Promise.resolve();
-    expect(lastFrame()).toContain("Using: 2 QWEN.md files");
+    expect(lastFrame()).toContain("Using: 2 LOWCAL.md files");
   });
 
   it("should display custom contextFileName in footer when set and count is 1", async () => {
@@ -830,9 +830,9 @@ describe("App UI", () => {
     expect(lastFrame()).not.toContain("ANY_FILE.MD");
   });
 
-  it("should display QWEN.md and MCP server count when both are present", async () => {
+  it("should display LOWCAL.md and MCP server count when both are present", async () => {
     mockConfig.getGeminiMdFileCount.mockReturnValue(2);
-    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["QWEN.md", "QWEN.md"]);
+    mockConfig.getAllGeminiMdFilenames.mockReturnValue(["LOWCAL.md", "LOWCAL.md"]);
     mockConfig.getMcpServers.mockReturnValue({
       server1: {} as MCPServerConfig,
     });
@@ -851,7 +851,7 @@ describe("App UI", () => {
     expect(lastFrame()).toContain("1 MCP server");
   });
 
-  it("should display only MCP server count when QWEN.md count is 0", async () => {
+  it("should display only MCP server count when LOWCAL.md count is 0", async () => {
     mockConfig.getGeminiMdFileCount.mockReturnValue(0);
     mockConfig.getAllGeminiMdFilenames.mockReturnValue([]);
     mockConfig.getMcpServers.mockReturnValue({

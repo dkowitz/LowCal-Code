@@ -305,7 +305,7 @@ The error bubbles up to the UI where it is displayed as an *error message* (`Mes
 | Setting | Where defined | Effect |
 |---------|----------------|--------|
 | `model.chatCompression?.contextPercentageThreshold` (default 0.7) | `packages/core/src/config/config.ts` → `ChatCompressionSettings` | Determines the *preserve fraction* for the **standard** compression attempt (`force = false`). |
-| `chatCompression` block in CLI config (`QWEN.md`, `.qwenrc`, etc.) | `packages/cli/src/config/settingsSchema.ts` | Allows users to enable/disable compression or override thresholds. |
+| `chatCompression` block in CLI config (`LOWCAL.md`, `.qwenrc`, etc.) | `packages/cli/src/config/settingsSchema.ts` | Allows users to enable/disable compression or override thresholds. |
 | `force` flag from UI command `compress` | `packages/cli/src/ui/commands/compressCommand.ts` → calls `client.tryCompressChat(promptId, true)` | Bypasses the “already‑pending” guard and forces a compression attempt regardless of current status. |
 
 ---

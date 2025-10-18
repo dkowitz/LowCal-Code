@@ -1025,7 +1025,7 @@ Tips for getting started:
 │    ✕ [API Error: Unable to compress history to fit within the context window (298,637 tokens).]                                                               │
 │                                                                                                                                                               │
 │                                                                                                                                                               │
-│    Using: 1 QWEN.md file                                                                                                                                      │
+│    Using: 1 LOWCAL.md file                                                                                                                                      │
 │                                                                                                                                                               │
 │    ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮        │
 │    │ Debug Console (ctrl+o to close)                                                                                                                 │        │
@@ -1130,7 +1130,7 @@ Tips for getting started:
   input, 115461 in the output). Please reduce the length of either one, or use the "middle-out" transform to compress your prompt automatically.]
 
 
-Using: 1 QWEN.md file                                                                                                         YOLO mode (shift + tab to cycle)
+Using: 1 LOWCAL.md file                                                                                                         YOLO mode (shift + tab to cycle)
 
 ╭─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
 │ Debug Console (ctrl+o to close)                                                                                                                 │

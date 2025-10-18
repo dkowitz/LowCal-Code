@@ -73216,7 +73216,7 @@ var init_memoryTool = __esm({
           },
           scope: {
             type: "string",
-            description: `Where to save the memory: "global" saves to user-level ~/.qwen/QWEN.md (shared across all projects), "project" saves to current project's QWEN.md (project-specific). If not specified, will prompt user to choose.`,
+            description: `Where to save the memory: "global" saves to user-level ~/.qwen/LOWCAL.md (shared across all projects), "project" saves to current project's LOWCAL.md (project-specific). If not specified, will prompt user to choose.`,
             enum: ["global", "project"]
           }
         },
@@ -73241,12 +73241,12 @@ Do NOT use this tool:
 
 - \`fact\` (string, required): The specific fact or piece of information to remember. This should be a clear, self-contained statement. For example, if the user says "My favorite color is blue", the fact would be "My favorite color is blue".
 - \`scope\` (string, optional): Where to save the memory:
-  - "global": Saves to user-level ~/.qwen/QWEN.md (shared across all projects)
-  - "project": Saves to current project's QWEN.md (project-specific)
+  - "global": Saves to user-level ~/.qwen/LOWCAL.md (shared across all projects)
+  - "project": Saves to current project's LOWCAL.md (project-specific)
   - If not specified, the tool will ask the user where they want to save the memory.
 `;
     GEMINI_CONFIG_DIR = ".qwen";
-    DEFAULT_CONTEXT_FILENAME = "QWEN.md";
+    DEFAULT_CONTEXT_FILENAME = "LOWCAL.md";
     MEMORY_SECTION_HEADER = "## Qwen Added Memories";
     currentGeminiMdFilename = DEFAULT_CONTEXT_FILENAME;
     MemoryToolInvocation = class _MemoryToolInvocation extends BaseToolInvocation {
@@ -209746,7 +209746,7 @@ async function loadServerHierarchicalMemory(currentWorkingDirectory, includeDire
   const filePaths = await getGeminiMdFilePathsInternal(currentWorkingDirectory, includeDirectoriesToReadGemini, userHomePath, debugMode, fileService, extensionContextFilePaths, fileFilteringOptions || DEFAULT_MEMORY_FILE_FILTERING_OPTIONS, maxDirs);
   if (filePaths.length === 0) {
     if (debugMode)
-      logger4.debug("No QWEN.md files found in hierarchy.");
+      logger4.debug("No LOWCAL.md files found in hierarchy.");
     return { memoryContent: "", fileCount: 0 };
   }
   const contentsWithPaths = await readGeminiMdFiles(filePaths, debugMode, importFormat);
@@ -212036,11 +212036,11 @@ var init_subagentGenerator = __esm({
     init_models();
     SYSTEM_PROMPT = `You are an elite AI agent architect specializing in crafting high-performance agent configurations. Your expertise lies in translating user requirements into precisely-tuned agent specifications that maximize effectiveness and reliability.
 
-**Important Context**: You may have access to project-specific instructions from QWEN.md files and other context that may include coding standards, project structure, and custom requirements. Consider this context when creating agents to ensure they align with the project's established patterns and practices.
+**Important Context**: You may have access to project-specific instructions from LOWCAL.md files and other context that may include coding standards, project structure, and custom requirements. Consider this context when creating agents to ensure they align with the project's established patterns and practices.
 
 When a user describes what they want an agent to do, you will:
 
-1. **Extract Core Intent**: Identify the fundamental purpose, key responsibilities, and success criteria for the agent. Look for both explicit requirements and implicit needs. Consider any project-specific context from QWEN.md files. For agents that are meant to review code, you should assume that the user is asking to review recently written code and not the whole codebase, unless the user has explicitly instructed you otherwise.
+1. **Extract Core Intent**: Identify the fundamental purpose, key responsibilities, and success criteria for the agent. Look for both explicit requirements and implicit needs. Consider any project-specific context from LOWCAL.md files. For agents that are meant to review code, you should assume that the user is asking to review recently written code and not the whole codebase, unless the user has explicitly instructed you otherwise.
 
 2. **Design Expert Persona**: Create a compelling expert identity that embodies deep domain knowledge relevant to the task. The persona should inspire confidence and guide the agent's decision-making approach.
 
@@ -212050,7 +212050,7 @@ When a user describes what they want an agent to do, you will:
    - Anticipates edge cases and provides guidance for handling them
    - Incorporates any specific requirements or preferences mentioned by the user
    - Defines output format expectations when relevant
-   - Aligns with project-specific coding standards and patterns from QWEN.md
+   - Aligns with project-specific coding standards and patterns from LOWCAL.md
 
 4. **Optimize for Performance**: Include:
    - Decision-making frameworks appropriate to the domain
@@ -290856,7 +290856,7 @@ function loadInstallMetadata(extensionDir) {
 }
 function getContextFileNames(config) {
   if (!config.contextFileName) {
-    return ["QWEN.md"];
+    return ["LOWCAL.md"];
   } else if (!Array.isArray(config.contextFileName)) {
     return [config.contextFileName];
   }
@@ -317194,7 +317194,7 @@ await init_build2();
 var import_react59 = __toESM(require_react(), 1);
 var initCommand = {
   name: "init",
-  description: "Analyzes the project and creates a tailored QWEN.md file.",
+  description: "Analyzes the project and creates a tailored LOWCAL.md file.",
   kind: "built-in" /* BUILT_IN */,
   action: async (context2, _args) => {
     if (!context2.services.config) {
@@ -317744,7 +317744,7 @@ ${memoryContent}
           kind: "built-in" /* BUILT_IN */,
           action: async (context2) => {
             try {
-              const projectMemoryPath = path73.join(process.cwd(), "QWEN.md");
+              const projectMemoryPath = path73.join(process.cwd(), "LOWCAL.md");
               const memoryContent = await fs61.readFile(
                 projectMemoryPath,
                 "utf-8"
@@ -317781,7 +317781,7 @@ ${memoryContent}
               const globalMemoryPath = path73.join(
                 os27.homedir(),
                 QWEN_DIR,
-                "QWEN.md"
+                "LOWCAL.md"
               );
               const globalMemoryContent = await fs61.readFile(
                 globalMemoryPath,
@@ -330156,7 +330156,7 @@ var Tips = ({ config }) => {
     geminiMdFileCount === 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.Foreground, children: [
       "3. Create",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "QWEN.md" }),
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "LOWCAL.md" }),
       " ",
       "files to customize your interactions with Qwen Code."
     ] }),
@@ -334458,7 +334458,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     addItem(
       {
         type: "info" /* INFO */,
-        text: "Refreshing hierarchical memory (QWEN.md or other context files)..."
+        text: "Refreshing hierarchical memory (LOWCAL.md or other context files)..."
       },
       Date.now()
     );

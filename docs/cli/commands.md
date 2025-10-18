@@ -95,14 +95,14 @@ Slash commands provide meta-level control over the CLI itself.
   - **Keyboard Shortcut:** Press **Ctrl+T** at any time to toggle between showing and hiding tool descriptions.
 
 - **`/memory`**
-  - **Description:** Manage the AI's instructional context (hierarchical memory loaded from `QWEN.md` files by default; configurable via `contextFileName`).
+  - **Description:** Manage the AI's instructional context (hierarchical memory loaded from `LOWCAL.md` files by default; configurable via `contextFileName`).
   - **Sub-commands:**
     - **`add`**:
       - **Description:** Adds the following text to the AI's memory. Usage: `/memory add <text to remember>`
     - **`show`**:
-      - **Description:** Display the full, concatenated content of the current hierarchical memory that has been loaded from all context files (e.g., `QWEN.md`). This lets you inspect the instructional context being provided to the model.
+      - **Description:** Display the full, concatenated content of the current hierarchical memory that has been loaded from all context files (e.g., `LOWCAL.md`). This lets you inspect the instructional context being provided to the model.
     - **`refresh`**:
-      - **Description:** Reload the hierarchical instructional memory from all context files (default: `QWEN.md`) found in the configured locations (global, project/ancestors, and sub-directories). This updates the model with the latest context content.
+      - **Description:** Reload the hierarchical instructional memory from all context files (default: `LOWCAL.md`) found in the configured locations (global, project/ancestors, and sub-directories). This updates the model with the latest context content.
     - **Note:** For more details on how context files contribute to hierarchical memory, see the [CLI Configuration documentation](./configuration.md#context-files-hierarchical-instructional-context).
 
 - **`/restore`**
@@ -213,7 +213,7 @@ Slash commands provide meta-level control over the CLI itself.
   - **Status indicator:** When enabled, shows `[NORMAL]` or `[INSERT]` in the footer
 
 - **`/init`**
-  - **Description:** Analyzes the current directory and creates a `QWEN.md` context file by default (or the filename specified by `contextFileName`). If a non-empty file already exists, no changes are made. The command seeds an empty file and prompts the model to populate it with project-specific instructions.
+  - **Description:** Analyzes the current directory and creates a `LOWCAL.md` context file by default (or the filename specified by `contextFileName`). If a non-empty file already exists, no changes are made. The command seeds an empty file and prompts the model to populate it with project-specific instructions.
 
 ### Custom Commands
 

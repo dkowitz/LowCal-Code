@@ -1,4 +1,4 @@
-# QWEN.md – Project Context for LowCal-dev
+# LOWCAL.md – Project Context for LowCal-dev
 
 This file provides instructional context for future interactions with the LowCal-dev repository. It is generated from an analysis of the repository structure, key files, and documentation present in the project. It aims to guide how the AI should approach tasks related to this codebase.
 
@@ -43,14 +43,14 @@ Notes:
 
 ## How to Use This File (Memory & Context)
 
-- QWEN.md is loaded hierarchically as context for the AI. It can be loaded from various locations such as global (~/.qwen/QWEN.md) and project-specific QWEN.md. See memory components in docs.
-- The memory system concatenates content from multiple QWEN.md sources, providing hierarchy-based guidance to the model during tool use.
+- LOWCAL.md is loaded hierarchically as context for the AI. It can be loaded from various locations such as global (~/.qwen/LOWCAL.md) and project-specific LOWCAL.md. See memory components in docs.
+- The memory system concatenates content from multiple LOWCAL.md sources, providing hierarchy-based guidance to the model during tool use.
 
 ## Context File Hierarchy and Loading
 
-- Global QWEN.md: ~/.qwen/QWEN.md
-- Project/Ancestor QWEN.md: located in project roots and ancestor directories that contain context files
-- Sub-directory QWEN.md: within nested directories for component-specific context
+- Global LOWCAL.md: ~/.qwen/LOWCAL.md
+- Project/Ancestor LOWCAL.md: located in project roots and ancestor directories that contain context files
+- Sub-directory LOWCAL.md: within nested directories for component-specific context
 
 Content is merged with separators to indicate origin. The UI displays the loaded context count in the footer.
 
@@ -62,9 +62,9 @@ Content is merged with separators to indicate origin. The UI displays the loaded
 
 ## Development Plan (High-Level)
 
-1. Inspect repository for a plan to generate QWEN.md and ensure alignment with current structure.
-2. Compile a comprehensive QWEN.md that documents: project overview, building/running steps, conventions, and context-loading behavior.
-3. Save the content to QWEN.md and verify formatting.
+1. Inspect repository for a plan to generate LOWCAL.md and ensure alignment with current structure.
+2. Compile a comprehensive LOWCAL.md that documents: project overview, building/running steps, conventions, and context-loading behavior.
+3. Save the content to LOWCAL.md and verify formatting.
 4. Outline follow-up steps for verification (lint/build/test) if requested.
 
 ## Change Log (Provenance)

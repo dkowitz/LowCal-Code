@@ -7,7 +7,7 @@ import type { ToolEditConfirmationDetails, ToolResult } from "./tools.js";
 import { BaseDeclarativeTool, BaseToolInvocation } from "./tools.js";
 import type { ModifiableDeclarativeTool, ModifyContext } from "./modifiable-tool.js";
 export declare const GEMINI_CONFIG_DIR = ".qwen";
-export declare const DEFAULT_CONTEXT_FILENAME = "QWEN.md";
+export declare const DEFAULT_CONTEXT_FILENAME = "LOWCAL.md";
 export declare const MEMORY_SECTION_HEADER = "## Qwen Added Memories";
 export declare function setGeminiMdFilename(newFilename: string | string[]): void;
 export declare function getCurrentGeminiMdFilename(): string;

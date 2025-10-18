@@ -162,7 +162,7 @@ describe("loadServerHierarchicalMemory", () => {
         });
     });
     it("should load extension context file paths", async () => {
-        const extensionFilePath = await createTestFile(path.join(testRootDir, "extensions/ext1/QWEN.md"), "Extension memory content");
+        const extensionFilePath = await createTestFile(path.join(testRootDir, "extensions/ext1/LOWCAL.md"), "Extension memory content");
         const result = await loadServerHierarchicalMemory(cwd, [], false, new FileDiscoveryService(projectRoot), [extensionFilePath]);
         expect(result).toEqual({
             memoryContent: `--- Context from: ${path.relative(cwd, extensionFilePath)} ---\nExtension memory content\n--- End of Context from: ${path.relative(cwd, extensionFilePath)} ---`,

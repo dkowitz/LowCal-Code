@@ -536,7 +536,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const performMemoryRefresh = useCallback(async () => {
         addItem({
             type: MessageType.INFO,
-            text: "Refreshing hierarchical memory (QWEN.md or other context files)...",
+            text: "Refreshing hierarchical memory (LOWCAL.md or other context files)...",
         }, Date.now());
         try {
             const { memoryContent, fileCount } = await loadHierarchicalGeminiMemory(process.cwd(), settings.merged.context?.loadMemoryFromIncludeDirectories

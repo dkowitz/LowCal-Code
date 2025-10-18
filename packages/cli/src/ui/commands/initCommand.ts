@@ -18,7 +18,7 @@ import React from "react";
 
 export const initCommand: SlashCommand = {
   name: "init",
-  description: "Analyzes the project and creates a tailored QWEN.md file.",
+  description: "Analyzes the project and creates a tailored LOWCAL.md file.",
   kind: CommandKind.BUILT_IN,
   action: async (
     context: CommandContext,
