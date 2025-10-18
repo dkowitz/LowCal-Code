@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { describe, expect, it, vi } from "vitest";
-import { ApprovalMode, BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, } from "../index.js";
+import { ApprovalMode, BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, ToolErrorType, toolConfig, } from "../index.js";
 import { MockModifiableTool, MockTool } from "../test-utils/tools.js";
 import { CoreToolScheduler, convertToFunctionResponse, } from "./coreToolScheduler.js";
 import { getPlanModeSystemReminder } from "./prompts.js";
@@ -109,6 +109,9 @@ async function waitForStatus(onToolCallsUpdate, status, timeout = 5000) {
         };
         check();
     });
+}
+function cloneToolCollections(collections) {
+    return Object.fromEntries(Object.entries(collections).map(([name, tools]) => [name, [...tools]]));
 }
 describe("CoreToolScheduler", () => {
     it("should cancel a tool call if the signal is aborted before confirmation", async () => {
@@ -342,6 +345,95 @@ describe("CoreToolScheduler", () => {
                 .flatMap((call) => call[0])
                 .map((tc) => tc.status);
             expect(observedStatuses).not.toContain("awaiting_approval");
+        });
+    });
+    describe("tool collection enforcement", () => {
+        it("rejects tool calls that are not in the active collection", async () => {
+            const originalActiveCollection = toolConfig.activeCollection;
+            const originalCollections = cloneToolCollections(toolConfig.collections);
+            try {
+                const updatedCollections = cloneToolCollections(originalCollections);
+                updatedCollections["shell-only"] = ["run_shell_command"];
+                toolConfig.activeCollection = "shell-only";
+                toolConfig.collections = updatedCollections;
+                const shellTool = new MockTool("run_shell_command");
+                const editTool = new MockTool("edit");
+                const toolMap = new Map([
+                    ["run_shell_command", shellTool],
+                    ["edit", editTool],
+                ]);
+                const mockToolRegistry = {
+                    getTool: (name) => toolMap.get(name),
+                    getToolByName: (name) => toolMap.get(name),
+                    getToolByDisplayName: (name) => toolMap.get(name),
+                    getTools: () => Array.from(toolMap.values()),
+                    getFunctionDeclarations: () => [],
+                    getAllTools: () => Array.from(toolMap.values()),
+                    getAllToolNames: () => Array.from(toolMap.keys()),
+                    getToolsByServer: () => [],
+                    discoverTools: async () => { },
+                    tools: toolMap,
+                    discovery: {},
+                    registerTool: () => { },
+                };
+                const onAllToolCallsComplete = vi.fn();
+                const onToolCallsUpdate = vi.fn();
+                const mockConfig = {
+                    getSessionId: () => "test-session-id",
+                    getUsageStatisticsEnabled: () => true,
+                    getDebugMode: () => false,
+                    getApprovalMode: () => ApprovalMode.DEFAULT,
+                    getAllowedTools: () => [],
+                    getContentGeneratorConfig: () => ({
+                        model: "test-model",
+                        authType: "oauth-personal",
+                    }),
+                    getToolRegistry: () => mockToolRegistry,
+                };
+                const scheduler = new CoreToolScheduler({
+                    config: mockConfig,
+                    onAllToolCallsComplete,
+                    onToolCallsUpdate,
+                    getPreferredEditor: () => "vscode",
+                    onEditorClose: vi.fn(),
+                });
+                const disallowedRequest = {
+                    callId: "1",
+                    name: "edit",
+                    args: {},
+                    isClientInitiated: false,
+                    prompt_id: "prompt-id-1",
+                };
+                await scheduler.schedule(disallowedRequest, new AbortController().signal);
+                expect(onAllToolCallsComplete).toHaveBeenCalled();
+                const completedCalls = onAllToolCallsComplete.mock
+                    .calls[0][0];
+                expect(completedCalls[0].status).toBe("error");
+                const erroredCall = completedCalls[0];
+                expect(erroredCall.response.errorType).toBe(ToolErrorType.TOOL_NOT_PERMITTED);
+                expect(erroredCall.response.resultDisplay).toContain("shell-only");
+                expect(editTool.executeFn).not.toHaveBeenCalled();
+                onAllToolCallsComplete.mockClear();
+                onToolCallsUpdate.mockClear();
+                const allowedRequest = {
+                    callId: "2",
+                    name: "run_shell_command",
+                    args: {},
+                    isClientInitiated: false,
+                    prompt_id: "prompt-id-2",
+                };
+                await scheduler.schedule(allowedRequest, new AbortController().signal);
+                await waitForStatus(onToolCallsUpdate, "success");
+                expect(onAllToolCallsComplete).toHaveBeenCalled();
+                const successCalls = onAllToolCallsComplete.mock
+                    .calls[0][0];
+                expect(successCalls[0].status).toBe("success");
+                expect(shellTool.executeFn).toHaveBeenCalled();
+            }
+            finally {
+                toolConfig.activeCollection = originalActiveCollection;
+                toolConfig.collections = cloneToolCollections(originalCollections);
+            }
         });
     });
     describe("getToolSuggestion", () => {

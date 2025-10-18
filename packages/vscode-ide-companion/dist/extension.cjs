@@ -38781,6 +38781,7 @@ var init_tool_error = __esm({
       ToolErrorType2["UNKNOWN"] = "unknown";
       ToolErrorType2["UNHANDLED_EXCEPTION"] = "unhandled_exception";
       ToolErrorType2["TOOL_NOT_REGISTERED"] = "tool_not_registered";
+      ToolErrorType2["TOOL_NOT_PERMITTED"] = "tool_not_permitted";
       ToolErrorType2["EXECUTION_FAILED"] = "execution_failed";
       ToolErrorType2["FILE_NOT_FOUND"] = "file_not_found";
       ToolErrorType2["FILE_WRITE_FAILURE"] = "file_write_failure";
@@ -110713,19 +110714,19 @@ var TOOL_NAME_CANONICAL_MAP = Object.values(ToolNames).reduce((acc, value) => {
   return acc;
 }, {});
 var TOOL_SUMMARIES = {
-  [ToolNames.READ_FILE]: "Read a file by absolute path; supports pagination for large files.",
-  [ToolNames.WRITE_FILE]: "Replace a file's contents. Provide the full desired content.",
-  [ToolNames.READ_MANY_FILES]: "Batch-read multiple files or glob patterns to gather context.",
-  [ToolNames.GLOB]: "List files matching a glob pattern within the workspace.",
-  [ToolNames.GREP]: "Search file contents using ripgrep syntax; returns matching lines.",
-  [ToolNames.EDIT]: "Apply structured edits to an existing file without rewriting it fully.",
-  [ToolNames.SHELL]: "Run non-interactive shell commands. Explain risky operations first.",
-  [ToolNames.TODO_WRITE]: "Manage the task list: add, update status, and track progress.",
-  [ToolNames.MEMORY]: "Persist user-specific facts that will remain useful across sessions.",
-  [ToolNames.TASK]: "Delegate work to a specialized subagent suited to the request.",
-  [ToolNames.EXIT_PLAN_MODE]: "Exit plan mode after presenting the plan for user confirmation.",
-  [ToolNames.WEB_FETCH]: "Fetch HTML content, summarize it with a custom prompt, and report relevant findings.",
-  [ToolNames.WEB_SEARCH]: "Search the web via Tavily to gather up-to-date information with cited sources."
+  [ToolNames.READ_FILE]: "Read a file by absolute path; supports pagination for large files. Example: `read_file /workspace/src/index.ts`.",
+  [ToolNames.WRITE_FILE]: "Replace a file's contents. Provide the full desired content. Example: `write_file /workspace/src/index.ts`.",
+  [ToolNames.READ_MANY_FILES]: "Batch-read multiple files or glob patterns to gather context. Example: `read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]`.",
+  [ToolNames.GLOB]: "List files matching a glob pattern within the workspace. Example: `glob src/**/*.test.ts`.",
+  [ToolNames.GREP]: 'Search file contents using ripgrep syntax; returns matching lines. Example: `search_file_content --pattern "TODO" --path src/`.',
+  [ToolNames.EDIT]: "Apply structured edits to an existing file without rewriting it fully. Example: `edit /workspace/src/index.ts (old block \u2192 new block)`.",
+  [ToolNames.SHELL]: "Run non-interactive shell commands. Explain risky operations first. Example: `run_shell_command npm test`.",
+  [ToolNames.TODO_WRITE]: 'Manage the task list: add, update status, and track progress. Example: `todo_write add "Refactor auth flow"`.',
+  [ToolNames.MEMORY]: "Persist user-specific facts that will remain useful across sessions. Example: `save_memory preferred_editor=vscode`.",
+  [ToolNames.TASK]: "Delegate work to a specialized subagent suited to the request. Example: `task code_review`.",
+  [ToolNames.EXIT_PLAN_MODE]: "Exit plan mode after presenting the plan for user confirmation. Example: `exit_plan_mode`.",
+  [ToolNames.WEB_FETCH]: "Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: `web_fetch https://example.com/docs`.",
+  [ToolNames.WEB_SEARCH]: "Search the web via Tavily to gather up-to-date information with cited sources. Example: `web_search latest Node.js LTS release`."
 };
 function loadToolConfig() {
   const defaultConfig = {

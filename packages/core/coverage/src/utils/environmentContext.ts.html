@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">2.73% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>2/73</span>
+                <span class='fraction'>0/73</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">2.73% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>2/73</span>
+                <span class='fraction'>0/73</span>
             </div>
         
             
@@ -172,7 +172,7 @@
 <a name='L107'></a><a href='#L107'>107</a>
 <a name='L108'></a><a href='#L108'>108</a>
 <a name='L109'></a><a href='#L109'>109</a>
-<a name='L110'></a><a href='#L110'>110</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L110'></a><a href='#L110'>110</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -180,7 +180,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -191,16 +191,6 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -213,6 +203,16 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -281,7 +281,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
  * @license
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
@@ -289,14 +289,14 @@
 &nbsp;
 import type { Part } from "@google/genai";
 import type { Config } from "../config/config.js";
-import { getFolderStructure } from "./getFolderStructure.js";
+<span class="cstat-no" title="statement not covered" >import { getFolderStructure } from "./getFolderStructure.js";</span>
 &nbsp;
 /**
  * Generates a string describing the current workspace directories and their structures.
  * @param {Config} config - The runtime configuration and services.
  * @returns {Promise&lt;string&gt;} A promise that resolves to the directory context string.
  */
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function getDirectoryContextString(</span></span>
+<span class="cstat-no" title="statement not covered" >export async function getDirectoryContextString(</span>
 <span class="cstat-no" title="statement not covered" >  config: Config,</span>
 <span class="cstat-no" title="statement not covered" >): Promise&lt;string&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  const workspaceContext = config.getWorkspaceContext();</span>
@@ -333,7 +333,7 @@ Here is the folder structure of the current working directories:
  * @param {Config} config - The runtime configuration and services.
  * @returns A promise that resolves to an array of `Part` objects containing environment information.
  */
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function getEnvironmentContext(config: Config): Promise&lt;Part[]&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >export async function getEnvironmentContext(config: Config): Promise&lt;Part[]&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  const today = new Date().toLocaleDateString(undefined, {</span>
 <span class="cstat-no" title="statement not covered" >    weekday: "long",</span>
 <span class="cstat-no" title="statement not covered" >    year: "numeric",</span>
@@ -397,7 +397,7 @@ This is the Qwen Code. We are setting up the context for our chat.
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-17T23:13:56.840Z
+                at 2025-10-18T23:10:53.100Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

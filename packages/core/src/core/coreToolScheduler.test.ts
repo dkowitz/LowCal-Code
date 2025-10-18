@@ -24,6 +24,8 @@ import {
   BaseToolInvocation,
   Kind,
   ToolConfirmationOutcome,
+  ToolErrorType,
+  toolConfig,
 } from "../index.js";
 import { MockModifiableTool, MockTool } from "../test-utils/tools.js";
 import type {
@@ -184,6 +186,14 @@ async function waitForStatus(
     };
     check();
   });
+}
+
+function cloneToolCollections(
+  collections: Record<string, string[]>,
+): Record<string, string[]> {
+  return Object.fromEntries(
+    Object.entries(collections).map(([name, tools]) => [name, [...tools]]),
+  );
 }
 
 describe("CoreToolScheduler", () => {
@@ -487,6 +497,120 @@ describe("CoreToolScheduler", () => {
         .flatMap((call) => call[0] as ToolCall[])
         .map((tc) => tc.status);
       expect(observedStatuses).not.toContain("awaiting_approval");
+    });
+  });
+
+  describe("tool collection enforcement", () => {
+    it("rejects tool calls that are not in the active collection", async () => {
+      const originalActiveCollection = toolConfig.activeCollection;
+      const originalCollections = cloneToolCollections(
+        toolConfig.collections,
+      );
+
+      try {
+        const updatedCollections = cloneToolCollections(originalCollections);
+        updatedCollections["shell-only"] = ["run_shell_command"];
+
+        toolConfig.activeCollection = "shell-only";
+        toolConfig.collections = updatedCollections;
+
+        const shellTool = new MockTool("run_shell_command");
+        const editTool = new MockTool("edit");
+
+        const toolMap = new Map<string, MockTool>([
+          ["run_shell_command", shellTool],
+          ["edit", editTool],
+        ]);
+
+        const mockToolRegistry = {
+          getTool: (name: string) => toolMap.get(name),
+          getToolByName: (name: string) => toolMap.get(name),
+          getToolByDisplayName: (name: string) => toolMap.get(name),
+          getTools: () => Array.from(toolMap.values()),
+          getFunctionDeclarations: () => [],
+          getAllTools: () => Array.from(toolMap.values()),
+          getAllToolNames: () => Array.from(toolMap.keys()),
+          getToolsByServer: () => [],
+          discoverTools: async () => {},
+          tools: toolMap,
+          discovery: {},
+          registerTool: () => {},
+        } as unknown as ToolRegistry;
+
+        const onAllToolCallsComplete = vi.fn();
+        const onToolCallsUpdate = vi.fn();
+
+        const mockConfig = {
+          getSessionId: () => "test-session-id",
+          getUsageStatisticsEnabled: () => true,
+          getDebugMode: () => false,
+          getApprovalMode: () => ApprovalMode.DEFAULT,
+          getAllowedTools: () => [],
+          getContentGeneratorConfig: () => ({
+            model: "test-model",
+            authType: "oauth-personal",
+          }),
+          getToolRegistry: () => mockToolRegistry,
+        } as unknown as Config;
+
+        const scheduler = new CoreToolScheduler({
+          config: mockConfig,
+          onAllToolCallsComplete,
+          onToolCallsUpdate,
+          getPreferredEditor: () => "vscode",
+          onEditorClose: vi.fn(),
+        });
+
+        const disallowedRequest = {
+          callId: "1",
+          name: "edit",
+          args: {},
+          isClientInitiated: false,
+          prompt_id: "prompt-id-1",
+        };
+
+        await scheduler.schedule(
+          disallowedRequest,
+          new AbortController().signal,
+        );
+
+        expect(onAllToolCallsComplete).toHaveBeenCalled();
+        const completedCalls = onAllToolCallsComplete.mock
+          .calls[0][0] as ToolCall[];
+        expect(completedCalls[0].status).toBe("error");
+        const erroredCall = completedCalls[0] as ErroredToolCall;
+        expect(erroredCall.response.errorType).toBe(
+          ToolErrorType.TOOL_NOT_PERMITTED,
+        );
+        expect(erroredCall.response.resultDisplay).toContain("shell-only");
+        expect(editTool.executeFn).not.toHaveBeenCalled();
+
+        onAllToolCallsComplete.mockClear();
+        onToolCallsUpdate.mockClear();
+
+        const allowedRequest = {
+          callId: "2",
+          name: "run_shell_command",
+          args: {},
+          isClientInitiated: false,
+          prompt_id: "prompt-id-2",
+        };
+
+        await scheduler.schedule(
+          allowedRequest,
+          new AbortController().signal,
+        );
+
+        await waitForStatus(onToolCallsUpdate, "success");
+        expect(onAllToolCallsComplete).toHaveBeenCalled();
+        const successCalls = onAllToolCallsComplete.mock
+          .calls[0][0] as ToolCall[];
+        expect(successCalls[0].status).toBe("success");
+        expect(shellTool.executeFn).toHaveBeenCalled();
+      } finally {
+        toolConfig.activeCollection = originalActiveCollection;
+        toolConfig.collections = cloneToolCollections(originalCollections);
+      }
     });
   });
 

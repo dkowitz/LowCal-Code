@@ -39,19 +39,19 @@ const TOOL_NAME_CANONICAL_MAP = Object.values(ToolNames).reduce((acc, value) => 
     return acc;
 }, {});
 const TOOL_SUMMARIES = {
-    [ToolNames.READ_FILE]: "Read a file by absolute path; supports pagination for large files.",
-    [ToolNames.WRITE_FILE]: "Replace a file's contents. Provide the full desired content.",
-    [ToolNames.READ_MANY_FILES]: "Batch-read multiple files or glob patterns to gather context.",
-    [ToolNames.GLOB]: "List files matching a glob pattern within the workspace.",
-    [ToolNames.GREP]: "Search file contents using ripgrep syntax; returns matching lines.",
-    [ToolNames.EDIT]: "Apply structured edits to an existing file without rewriting it fully.",
-    [ToolNames.SHELL]: "Run non-interactive shell commands. Explain risky operations first.",
-    [ToolNames.TODO_WRITE]: "Manage the task list: add, update status, and track progress.",
-    [ToolNames.MEMORY]: "Persist user-specific facts that will remain useful across sessions.",
-    [ToolNames.TASK]: "Delegate work to a specialized subagent suited to the request.",
-    [ToolNames.EXIT_PLAN_MODE]: "Exit plan mode after presenting the plan for user confirmation.",
-    [ToolNames.WEB_FETCH]: "Fetch HTML content, summarize it with a custom prompt, and report relevant findings.",
-    [ToolNames.WEB_SEARCH]: "Search the web via Tavily to gather up-to-date information with cited sources.",
+    [ToolNames.READ_FILE]: "Read a file by absolute path; supports pagination for large files. Example: `read_file /workspace/src/index.ts`.",
+    [ToolNames.WRITE_FILE]: "Replace a file's contents. Provide the full desired content. Example: `write_file /workspace/src/index.ts`.",
+    [ToolNames.READ_MANY_FILES]: "Batch-read multiple files or glob patterns to gather context. Example: `read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]`.",
+    [ToolNames.GLOB]: "List files matching a glob pattern within the workspace. Example: `glob src/**/*.test.ts`.",
+    [ToolNames.GREP]: "Search file contents using ripgrep syntax; returns matching lines. Example: `search_file_content --pattern \"TODO\" --path src/`.",
+    [ToolNames.EDIT]: "Apply structured edits to an existing file without rewriting it fully. Example: `edit /workspace/src/index.ts (old block → new block)`.",
+    [ToolNames.SHELL]: "Run non-interactive shell commands. Explain risky operations first. Example: `run_shell_command npm test`.",
+    [ToolNames.TODO_WRITE]: "Manage the task list: add, update status, and track progress. Example: `todo_write add \"Refactor auth flow\"`.",
+    [ToolNames.MEMORY]: "Persist user-specific facts that will remain useful across sessions. Example: `save_memory preferred_editor=vscode`.",
+    [ToolNames.TASK]: "Delegate work to a specialized subagent suited to the request. Example: `task code_review`.",
+    [ToolNames.EXIT_PLAN_MODE]: "Exit plan mode after presenting the plan for user confirmation. Example: `exit_plan_mode`.",
+    [ToolNames.WEB_FETCH]: "Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: `web_fetch https://example.com/docs`.",
+    [ToolNames.WEB_SEARCH]: "Search the web via Tavily to gather up-to-date information with cited sources. Example: `web_search latest Node.js LTS release`.",
 };
 function loadToolConfig() {
     const defaultConfig = {
@@ -201,15 +201,6 @@ function buildToolUsageSection(toolNames, style) {
         .filter((block) => block && block.trim().length > 0)
         .join("\n")
         .trim();
-}
-function getConciseToolCallExamples() {
-    return `
-### Tool Call Examples
-- Inspect then modify:
-  1. \`read_file\` to review the target file.
-  2. \`edit\` or \`write_file\` to apply the change.
-- Validate work: \`run_shell_command\` (e.g., \`npm test\`) and report the outcome.
-`.trim();
 }
 /**
  * Normalizes a URL by removing trailing slash for consistent comparison
@@ -575,7 +566,6 @@ function buildConcisePrompt(toolNames) {
         buildToolUsageSection(toolNames, "concise"),
         buildSandboxSection("concise"),
         buildGitSection("concise"),
-        getConciseToolCallExamples(),
         "# Final Reminder\nStay goal-focused, keep answers tight, and verify results when feasible.",
     ].filter((section) => section && section.trim().length > 0);
     return sections.join("\n\n").trim();

@@ -13,6 +13,7 @@ export var ToolErrorType;
     ToolErrorType["UNKNOWN"] = "unknown";
     ToolErrorType["UNHANDLED_EXCEPTION"] = "unhandled_exception";
     ToolErrorType["TOOL_NOT_REGISTERED"] = "tool_not_registered";
+    ToolErrorType["TOOL_NOT_PERMITTED"] = "tool_not_permitted";
     ToolErrorType["EXECUTION_FAILED"] = "execution_failed";
     // File System Errors
     ToolErrorType["FILE_NOT_FOUND"] = "file_not_found";

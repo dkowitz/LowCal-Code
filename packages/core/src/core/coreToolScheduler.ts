@@ -34,7 +34,7 @@ import {
 import * as Diff from "diff";
 import { doesToolInvocationMatch } from "../utils/tool-utils.js";
 import levenshtein from "fast-levenshtein";
-import { getPlanModeSystemReminder } from "./prompts.js";
+import { getPlanModeSystemReminder, toolConfig } from "./prompts.js";
 import {
   validateToolCall,
   formatToolWarning,
@@ -247,6 +247,40 @@ const createErrorResponse = (
   resultDisplay: error.message,
   errorType,
 });
+
+type ToolCollectionGate = {
+  activeCollection?: string;
+  allowedToolNames?: Set<string>;
+};
+
+function getActiveToolCollectionGate(): ToolCollectionGate {
+  const activeCollection = toolConfig?.activeCollection;
+  if (!activeCollection) {
+    return {};
+  }
+
+  const collections = toolConfig?.collections ?? {};
+  const configured = collections[activeCollection];
+  if (!Array.isArray(configured) || configured.length === 0) {
+    return { activeCollection };
+  }
+
+  if (activeCollection === "full") {
+    return { activeCollection };
+  }
+
+  const allowedToolNames = new Set(
+    configured
+      .map((name) => (typeof name === "string" ? name.trim() : ""))
+      .filter((name) => name.length > 0),
+  );
+
+  if (allowedToolNames.size === 0) {
+    return { activeCollection };
+  }
+
+  return { activeCollection, allowedToolNames };
+}
 
 interface CoreToolSchedulerOptions {
   config: Config;
@@ -608,13 +642,52 @@ export class CoreToolScheduler {
         );
       }
       const requestsToProcess = Array.isArray(request) ? request : [request];
+      const { activeCollection, allowedToolNames } =
+        getActiveToolCollectionGate();
 
       const newToolCalls: ToolCall[] = requestsToProcess.map(
         (reqInfo): ToolCall => {
-          const toolInstance = this.toolRegistry.getTool(reqInfo.name);
+          const normalizedToolName =
+            typeof reqInfo.name === "string" ? reqInfo.name.trim() : "";
+          const toolNameForDisplay =
+            normalizedToolName.length > 0
+              ? normalizedToolName
+              : reqInfo.name.length > 0
+                ? reqInfo.name
+                : "(unnamed)";
+          const toolNameForLookup =
+            normalizedToolName.length > 0 ? normalizedToolName : reqInfo.name;
+
+          if (
+            allowedToolNames &&
+            normalizedToolName.length > 0 &&
+            !allowedToolNames.has(normalizedToolName)
+          ) {
+            const allowedList = Array.from(allowedToolNames).sort();
+            const allowedDescription = allowedList.length
+              ? allowedList.join(", ")
+              : "(none)";
+            const errorMessage = activeCollection
+              ? `Tool "${toolNameForDisplay}" is not part of the active tool collection "${activeCollection}". Allowed tools: ${allowedDescription}.`
+              : `Tool "${toolNameForDisplay}" is not permitted by the active tool collection.`;
+            return {
+              status: "error",
+              request: reqInfo,
+              response: createErrorResponse(
+                reqInfo,
+                new Error(errorMessage),
+                ToolErrorType.TOOL_NOT_PERMITTED,
+              ),
+              durationMs: 0,
+            };
+          }
+
+          const toolInstance = this.toolRegistry.getTool(toolNameForLookup);
           if (!toolInstance) {
-            const suggestion = this.getToolSuggestion(reqInfo.name);
-            const errorMessage = `Tool "${reqInfo.name}" not found in registry. Tools must use the exact names that are registered.${suggestion}`;
+            const lookupName =
+              toolNameForLookup.length > 0 ? toolNameForLookup : reqInfo.name;
+            const suggestion = this.getToolSuggestion(lookupName);
+            const errorMessage = `Tool "${toolNameForDisplay}" not found in registry. Tools must use the exact names that are registered.${suggestion}`;
             return {
               status: "error",
               request: reqInfo,

@@ -11,6 +11,7 @@ export declare enum ToolErrorType {
     UNKNOWN = "unknown",
     UNHANDLED_EXCEPTION = "unhandled_exception",
     TOOL_NOT_REGISTERED = "tool_not_registered",
+    TOOL_NOT_PERMITTED = "tool_not_permitted",
     EXECUTION_FAILED = "execution_failed",
     FILE_NOT_FOUND = "file_not_found",
     FILE_WRITE_FAILURE = "file_write_failure",

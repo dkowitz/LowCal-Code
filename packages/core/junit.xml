@@ -1,102 +1,85 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="44" failures="0" errors="0" time="0.079299496">
-    <testsuite name="src/tools/edit.test.ts" timestamp="2025-10-17T23:13:56.818Z" hostname="uby" tests="44" failures="0" errors="0" skipped="1" time="0.079299496">
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; applyReplacement &gt; should return newString if isNewFile is true" time="0.001511435">
+<testsuites name="vitest tests" tests="40" failures="0" errors="0" time="0.014475176">
+    <testsuite name="src/core/prompts.test.ts" timestamp="2025-10-18T23:10:53.076Z" hostname="uby" tests="40" failures="0" errors="0" skipped="0" time="0.014475176">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should return the base prompt when no userMemory is provided" time="0.003127974">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; applyReplacement &gt; should return newString if currentContent is null and oldString is empty (defensive)" time="0.000293653">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should return the base prompt when userMemory is empty string" time="0.000523078">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; applyReplacement &gt; should return empty string if currentContent is null and oldString is not empty (defensive)" time="0.000230356">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should return the base prompt when userMemory is whitespace only" time="0.000257957">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; applyReplacement &gt; should replace oldString with newString in currentContent" time="0.000213976">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should append userMemory with separator when provided" time="0.000286029">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; applyReplacement &gt; should return currentContent if oldString is empty and not a new file" time="0.000192075">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should include sandbox-specific instructions when SANDBOX env var is set" time="0.000277403">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; validateToolParams &gt; should return null for valid params" time="0.01549904">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should include seatbelt-specific instructions when SANDBOX env var is &quot;sandbox-exec&quot;" time="0.000274007">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; validateToolParams &gt; should return error for relative path" time="0.001294283">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should include non-sandbox instructions when SANDBOX env var is not set" time="0.000297299">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; validateToolParams &gt; should return error for path outside root" time="0.001274667">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should include git instructions when in a git repo" time="0.000249982">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; shouldConfirmExecute &gt; should throw an error if params are invalid" time="0.001543935">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should not include git instructions when not in a git repo" time="0.000255413">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; shouldConfirmExecute &gt; should request confirmation for valid edit" time="0.005365863">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should use default prompt when GEMINI_SYSTEM_MD is &quot;false&quot;" time="0.000339798">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; shouldConfirmExecute &gt; should return false if old_string is not found" time="0.002163641">
-            <system-out>
-Error: Failed to edit, could not find the string to replace. Re-read the file and copy the exact bytes.
-
-            </system-out>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should use default prompt when GEMINI_SYSTEM_MD is &quot;0&quot;" time="0.000839823">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; shouldConfirmExecute &gt; should return false if multiple occurrences of old_string are found" time="0.001428792">
-            <system-out>
-Error: Failed to edit, expected 1 occurrence but found 2.
-
-            </system-out>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should throw error if GEMINI_SYSTEM_MD points to a non-existent file" time="0.000682602">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; shouldConfirmExecute &gt; should request confirmation for creating a new file (empty old_string)" time="0.001494243">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should read from default path when GEMINI_SYSTEM_MD is &quot;true&quot;" time="0.000799108">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; shouldConfirmExecute &gt; should use corrected params from ensureCorrectEdit for diff generation" time="0">
-            <skipped/>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should read from default path when GEMINI_SYSTEM_MD is &quot;1&quot;" time="0.000191344">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should throw error if file path is not absolute" time="0.001392555">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should read from custom path when GEMINI_SYSTEM_MD provides one, preserving case" time="0.000164194">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should throw error if file path is empty" time="0.001203425">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should expand tilde in custom path when GEMINI_SYSTEM_MD is set" time="0.000225226">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should edit an existing file and return diff with fileName" time="0.005852572">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should not write to file when GEMINI_WRITE_SYSTEM_MD is &quot;false&quot;" time="0.000197906">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should create a new file if old_string is empty and file does not exist, and return created message" time="0.001564203">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should not write to file when GEMINI_WRITE_SYSTEM_MD is &quot;0&quot;" time="0.000147062">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should return error if old_string is not found in file" time="0.001542792">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should write to default path when GEMINI_WRITE_SYSTEM_MD is &quot;true&quot;" time="0.000552371">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should return error if multiple occurrences of old_string are found" time="0.001429974">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should write to default path when GEMINI_WRITE_SYSTEM_MD is &quot;1&quot;" time="0.000273415">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should successfully replace multiple occurrences when expected_replacements specified" time="0.001721774">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should write to custom path when GEMINI_WRITE_SYSTEM_MD provides one" time="0.000202194">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should return error if expected_replacements does not match actual occurrences" time="0.00148743">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should expand tilde in custom path when GEMINI_WRITE_SYSTEM_MD is set" time="0.000287271">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should return error if trying to create a file that already exists (empty old_string)" time="0.001325001">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should expand tilde in custom path when GEMINI_WRITE_SYSTEM_MD is just ~" time="0.000266212">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should include modification message when proposed content is modified" time="0.001676781">
+        <testcase classname="src/core/prompts.test.ts" name="URL matching with trailing slash compatibility &gt; should match URLs with and without trailing slash" time="0.000437228">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should not include modification message when proposed content is not modified" time="0.001484535">
+        <testcase classname="src/core/prompts.test.ts" name="URL matching with trailing slash compatibility &gt; should not match when URLs are different" time="0.000214126">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should not include modification message when modified_by_user is not provided" time="0.001403666">
+        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should use XML format for qwen3-coder model" time="0.000336332">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should return error if old_string and new_string are identical" time="0.00128675">
+        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should use JSON format for qwen-vl model" time="0.000297219">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; execute &gt; should return EDIT_NO_CHANGE error if replacement results in identical content" time="0.001315122">
+        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should use bracket format for generic models" time="0.000284817">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; Error Scenarios &gt; should return FILE_NOT_FOUND error" time="0.0012273">
+        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should use bracket format when no model is specified" time="0.000262555">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; Error Scenarios &gt; should return ATTEMPT_TO_CREATE_EXISTING_FILE error" time="0.001316364">
+        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should preserve model-specific formats with user memory" time="0.000224205">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; Error Scenarios &gt; should return NO_OCCURRENCE_FOUND error" time="0.001359094">
+        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should preserve model-specific formats with sandbox environment" time="0.000214758">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; Error Scenarios &gt; should return EXPECTED_OCCURRENCE_MISMATCH error" time="0.001215247">
+        <testcase classname="src/core/prompts.test.ts" name="getCustomSystemPrompt &gt; should handle string custom instruction without user memory" time="0.000106276">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; Error Scenarios &gt; should return NO_CHANGE error" time="0.001235545">
+        <testcase classname="src/core/prompts.test.ts" name="getCustomSystemPrompt &gt; should handle string custom instruction with user memory" time="0.000049782">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; Error Scenarios &gt; should throw INVALID_PARAMETERS error for relative path" time="0.00115686">
+        <testcase classname="src/core/prompts.test.ts" name="getCustomSystemPrompt &gt; should handle Content object with parts array and user memory" time="0.000055152">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; Error Scenarios &gt; should return FILE_WRITE_FAILURE on write error" time="0.001360276">
+        <testcase classname="src/core/prompts.test.ts" name="getSubagentSystemReminder &gt; should format single agent type correctly" time="0.000109022">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; Error Scenarios &gt; should normalize CRLF line endings in parameters" time="0.001483383">
+        <testcase classname="src/core/prompts.test.ts" name="getSubagentSystemReminder &gt; should join multiple agent types with commas" time="0.000033742">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; Error Scenarios &gt; should include a context hint when the snippet is not found" time="0.001273705">
+        <testcase classname="src/core/prompts.test.ts" name="getSubagentSystemReminder &gt; should handle empty array" time="0.000036317">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; getDescription &gt; should return &quot;No file changes to...&quot; if old_string and new_string are the same" time="0.001252947">
+        <testcase classname="src/core/prompts.test.ts" name="getPlanModeSystemReminder &gt; should return plan mode system reminder with proper structure" time="0.00007061">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; getDescription &gt; should return a snippet of old and new strings if they are different" time="0.001113258">
+        <testcase classname="src/core/prompts.test.ts" name="getPlanModeSystemReminder &gt; should include workflow instructions" time="0.000045585">
         </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; getDescription &gt; should handle very short strings correctly in the description" time="0.001102919">
-        </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; getDescription &gt; should truncate long strings in the description" time="0.001176295">
-        </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; workspace boundary validation &gt; should validate paths are within workspace root" time="0.001190772">
-        </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; workspace boundary validation &gt; should reject paths outside workspace root" time="0.001160866">
-        </testcase>
-        <testcase classname="src/tools/edit.test.ts" name="EditTool &gt; IDE mode &gt; should call ideClient.openDiff and update params on confirmation" time="0.002259929">
+        <testcase classname="src/core/prompts.test.ts" name="getPlanModeSystemReminder &gt; should be deterministic" time="0.000029254">
         </testcase>
     </testsuite>
 </testsuites>

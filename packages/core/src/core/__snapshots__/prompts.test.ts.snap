@@ -124,17 +124,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -354,17 +356,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -594,17 +598,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -819,17 +825,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -1044,17 +1052,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -1269,17 +1279,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -1494,17 +1506,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -1719,17 +1733,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -1944,17 +1960,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -2169,17 +2187,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -2417,17 +2437,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -2725,17 +2747,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -2973,17 +2997,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -3277,17 +3303,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -3502,17 +3530,19 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
-- \`read_file\` — Read a file by absolute path; supports pagination for large files.
-- \`write_file\` — Replace a file's contents. Provide the full desired content.
-- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context.
-- \`glob\` — List files matching a glob pattern within the workspace.
-- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines.
-- \`edit\` — Apply structured edits to an existing file without rewriting it fully.
-- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first.
-- \`todo_write\` — Manage the task list: add, update status, and track progress.
-- \`save_memory\` — Persist user-specific facts that will remain useful across sessions.
-- \`task\` — Delegate work to a specialized subagent suited to the request.
-- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation.
+- \`read_file\` — Read a file by absolute path; supports pagination for large files. Example: \`read_file /workspace/src/index.ts\`.
+- \`write_file\` — Replace a file's contents. Provide the full desired content. Example: \`write_file /workspace/src/index.ts\`.
+- \`read_many_files\` — Batch-read multiple files or glob patterns to gather context. Example: \`read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]\`.
+- \`glob\` — List files matching a glob pattern within the workspace. Example: \`glob src/**/*.test.ts\`.
+- \`search_file_content\` — Search file contents using ripgrep syntax; returns matching lines. Example: \`search_file_content --pattern "TODO" --path src/\`.
+- \`edit\` — Apply structured edits to an existing file without rewriting it fully. Example: \`edit /workspace/src/index.ts (old block → new block)\`.
+- \`run_shell_command\` — Run non-interactive shell commands. Explain risky operations first. Example: \`run_shell_command npm test\`.
+- \`todo_write\` — Manage the task list: add, update status, and track progress. Example: \`todo_write add "Refactor auth flow"\`.
+- \`save_memory\` — Persist user-specific facts that will remain useful across sessions. Example: \`save_memory preferred_editor=vscode\`.
+- \`task\` — Delegate work to a specialized subagent suited to the request. Example: \`task code_review\`.
+- \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
+- \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
+- \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
