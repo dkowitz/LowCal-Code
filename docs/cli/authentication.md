@@ -1,6 +1,6 @@
 # Authentication Setup
 
-Qwen Code supports two main authentication methods to access AI models. Choose the method that best fits your use case:
+LowCal Code supports two main authentication methods to access AI models. Choose the method that best fits your use case:
 
 1.  **Qwen OAuth (Recommended):**
     - Use this option to log in with your qwen.ai account.
@@ -16,7 +16,7 @@ Qwen Code supports two main authentication methods to access AI models. Choose t
     **Getting Started:**
 
     ```bash
-    # Start Qwen Code and follow the OAuth flow
+    # Start LowCal Code and follow the OAuth flow
     qwen
     ```
 
@@ -136,7 +136,7 @@ export OPENAI_API_KEY="your-api-key"
 export OPENAI_BASE_URL="https://api-inference.modelscope.cn/v1"
 export OPENAI_MODEL="Qwen/Qwen3-Coder-480B-A35B-Instruct"
 
-# Run Qwen Code
+# Run LowCal Code
 qwen
 ```
 

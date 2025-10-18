@@ -53,7 +53,7 @@
     "clean": "node scripts/clean.js"
   },
   "bin": {
-    "qwen": "bundle/gemini.js"
+    "LowCal": "bundle/gemini.js"
   },
   "files": [
     "bundle/",

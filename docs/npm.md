@@ -4,7 +4,7 @@ This monorepo contains two main packages: `@qwen-code/qwen-code` and `@qwen-code
 
 ## `@qwen-code/qwen-code`
 
-This is the main package for Qwen Code. It is responsible for the user interface, command parsing, and all other user-facing functionality.
+This is the main package for LowCal Code. It is responsible for the user interface, command parsing, and all other user-facing functionality.
 
 When this package is published, it is bundled into a single executable file. This bundle includes all of the package's dependencies, including `@qwen-code/qwen-code-core`. This means that whether a user installs the package with `npm install -g @qwen-code/qwen-code` or runs it directly with `npx @qwen-code/qwen-code`, they are using this single, self-contained executable.
 

@@ -1,6 +1,6 @@
 # IDE Integration
 
-Qwen Code can integrate with your IDE to provide a more seamless and context-aware experience. This integration allows the CLI to understand your workspace better and enables powerful features like native in-editor diffing.
+LowCal Code can integrate with your IDE to provide a more seamless and context-aware experience. This integration allows the CLI to understand your workspace better and enables powerful features like native in-editor diffing.
 
 Currently, the only supported IDE is [Visual Studio Code](https://code.visualstudio.com/) and other editors that support VS Code extensions.
 
@@ -11,13 +11,13 @@ Currently, the only supported IDE is [Visual Studio Code](https://code.visualstu
   - Your active cursor position.
   - Any text you have selected (up to a 16KB limit; longer selections will be truncated).
 
-- **Native Diffing:** When Qwen suggests code modifications, you can view the changes directly within your IDE's native diff viewer. This allows you to review, edit, and accept or reject the suggested changes seamlessly.
+- **Native Diffing:** When LowCal suggests code modifications, you can view the changes directly within your IDE's native diff viewer. This allows you to review, edit, and accept or reject the suggested changes seamlessly.
 
-- **VS Code Commands:** You can access Qwen Code features directly from the VS Code Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`):
-  - `Qwen Code: Run`: Starts a new Qwen Code session in the integrated terminal.
-  - `Qwen Code: Accept Diff`: Accepts the changes in the active diff editor.
-  - `Qwen Code: Close Diff Editor`: Rejects the changes and closes the active diff editor.
-  - `Qwen Code: View Third-Party Notices`: Displays the third-party notices for the extension.
+- **VS Code Commands:** You can access LowCal Code features directly from the VS Code Command Palette (`Cmd+Shift+P` or `Ctrl+Shift+P`):
+  - `LowCal Code: Run`: Starts a new Qwen Code session in the integrated terminal.
+  - `LowCal Code: Accept Diff`: Accepts the changes in the active diff editor.
+  - `LowCal Code: Close Diff Editor`: Rejects the changes and closes the active diff editor.
+  - `LowCal Code: View Third-Party Notices`: Displays the third-party notices for the extension.
 
 ## Installation and Setup
 
@@ -29,7 +29,7 @@ When you run Qwen Code inside a supported editor, it will automatically detect y
 
 ### 2. Manual Installation from CLI
 
-If you previously dismissed the prompt or want to install the extension manually, you can run the following command inside Qwen Code:
+If you previously dismissed the prompt or want to install the extension manually, you can run the following command inside LowCal Code:
 
 ```
 /ide install
@@ -86,14 +86,14 @@ When you ask Qwen model to modify a file, it can open a diff view directly in yo
 
 - Click the **checkmark icon** in the diff editor's title bar.
 - Save the file (e.g., with `Cmd+S` or `Ctrl+S`).
-- Open the Command Palette and run **Qwen Code: Accept Diff**.
+- Open the Command Palette and run **LowCal Code: Accept Diff**.
 - Respond with `yes` in the CLI when prompted.
 
 **To reject a diff**, you can:
 
 - Click the **'x' icon** in the diff editor's title bar.
 - Close the diff editor tab.
-- Open the Command Palette and run **Qwen Code: Close Diff Editor**.
+- Open the Command Palette and run **LowCal Code: Close Diff Editor**.
 - Respond with `no` in the CLI when prompted.
 
 You can also **modify the suggested changes** directly in the diff view before accepting them.
@@ -114,7 +114,7 @@ If you encounter issues with IDE integration, here are some common error message
 ### Connection Errors
 
 - **Message:** `🔴 Disconnected: Failed to connect to IDE companion extension for [IDE Name]. Please ensure the extension is running and try restarting your terminal. To install the extension, run /ide install.`
-  - **Cause:** Qwen Code could not find the necessary environment variables (`QWEN_CODE_IDE_WORKSPACE_PATH` or `QWEN_CODE_IDE_SERVER_PORT`) to connect to the IDE. This usually means the IDE companion extension is not running or did not initialize correctly.
+  - **Cause:** LowCal Code could not find the necessary environment variables (`QWEN_CODE_IDE_WORKSPACE_PATH` or `QWEN_CODE_IDE_SERVER_PORT`) to connect to the IDE. This usually means the IDE companion extension is not running or did not initialize correctly.
   - **Solution:**
     1.  Make sure you have installed the **Qwen Code Companion** extension in your IDE and that it is enabled.
     2.  Open a new terminal window in your IDE to ensure it picks up the correct environment.

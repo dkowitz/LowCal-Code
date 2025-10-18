@@ -1,10 +1,10 @@
 # Themes
 
-Qwen Code supports a variety of themes to customize its color scheme and appearance. You can change the theme to suit your preferences via the `/theme` command or `"theme":` configuration setting.
+LowCal Code supports a variety of themes to customize its color scheme and appearance. You can change the theme to suit your preferences via the `/theme` command or `"theme":` configuration setting.
 
 ## Available Themes
 
-Qwen Code comes with a selection of pre-defined themes, which you can list using the `/theme` command within the CLI:
+LowCal Code comes with a selection of pre-defined themes, which you can list using the `/theme` command within the CLI:
 
 - **Dark Themes:**
   - `ANSI`
@@ -23,7 +23,7 @@ Qwen Code comes with a selection of pre-defined themes, which you can list using
 
 ### Changing Themes
 
-1.  Enter `/theme` into Qwen Code.
+1.  Enter `/theme` into LowCal Code.
 2.  A dialog or selection prompt appears, listing the available themes.
 3.  Using the arrow keys, select a theme. Some interfaces might offer a live preview or highlight as you select.
 4.  Confirm your selection to apply the theme.

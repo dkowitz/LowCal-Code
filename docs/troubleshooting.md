@@ -16,15 +16,15 @@ This guide provides solutions to common issues and debugging tips, including top
 
 ## Frequently asked questions (FAQs)
 
-- **Q: How do I update Qwen Code to the latest version?**
-  - A: If you installed it globally via `npm`, update it using the command `npm install -g @qwen-code/qwen-code@latest`. If you compiled it from source, pull the latest changes from the repository, and then rebuild using the command `npm run build`.
+- **Q: How do I update LowCal Code to the latest version?**
+  - A: If you installed it globally via `npm`, update it using the command `npm install -g @LowCal-code/qwen-code@latest`. If you compiled it from source, pull the latest changes from the repository, and then rebuild using the command `npm run build`.
 
-- **Q: Where are the Qwen Code configuration or settings files stored?**
-  - A: The Qwen Code configuration is stored in two `settings.json` files:
+- **Q: Where are the LowCal Code configuration or settings files stored?**
+  - A: The LowCal Code configuration is stored in two `settings.json` files:
     1. In your home directory: `~/.qwen/settings.json`.
     2. In your project's root directory: `./.qwen/settings.json`.
 
-    Refer to [Qwen Code Configuration](./cli/configuration.md) for more details.
+    Refer to [LowCal Code Configuration](./cli/configuration.md) for more details.
 
 - **Q: Why don't I see cached token counts in my stats output?**
   - A: Cached token information is only displayed when cached tokens are being used. This feature is available for API key users (Qwen API key or Google Cloud Vertex AI) but not for OAuth users (such as Google Personal/Enterprise accounts like Google Gmail or Google Workspace, respectively). This is because the Qwen Code Assist API does not support cached content creation. You can still view your total token usage using the `/stats` command.

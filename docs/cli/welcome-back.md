@@ -4,7 +4,7 @@ The Welcome Back feature helps you seamlessly resume your work by automatically 
 
 ## Overview
 
-When you start Qwen Code in a project directory that contains a previously generated project summary (`.qwen/PROJECT_SUMMARY.md`), the Welcome Back dialog will automatically appear, giving you the option to either start fresh or continue your previous conversation.
+When you start LowCal Code in a project directory that contains a previously generated project summary (`.qwen/PROJECT_SUMMARY.md`), the Welcome Back dialog will automatically appear, giving you the option to either start fresh or continue your previous conversation.
 
 ## How It Works
 
@@ -49,7 +49,7 @@ You can control the Welcome Back feature through settings:
 
 **Via Settings Dialog:**
 
-1. Run `/settings` in Qwen Code
+1. Run `/settings` in LowCal Code
 2. Find "Enable Welcome Back" in the UI category
 3. Toggle the setting on/off
 

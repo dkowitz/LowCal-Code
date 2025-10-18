@@ -1,6 +1,6 @@
-# Qwen Code CLI
+# LowCal Code CLI
 
-Within Qwen Code, `packages/cli` is the frontend for users to send and receive prompts with Qwen and other AI models and their associated tools. For a general overview of Qwen Code, see the [main documentation page](../index.md).
+Within LowCal Code, `packages/cli` is the frontend for users to send and receive prompts with Qwen and other AI models and their associated tools. For a general overview of Qwen Code, see the [main documentation page](../index.md).
 
 ## Navigating this section
 
@@ -19,7 +19,7 @@ Qwen Code can be run in a non-interactive mode, which is useful for scripting an
 The following example pipes a command to Qwen Code from your terminal:
 
 ```bash
-echo "What is fine tuning?" | qwen
+echo "What is fine tuning?" | lowcal
 ```
 
 Qwen Code executes the command and prints the output to your terminal. Note that you can achieve the same behavior by using the `--prompt` or `-p` flag. For example:

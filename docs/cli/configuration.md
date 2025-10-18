@@ -1,6 +1,6 @@
-# Qwen Code Configuration
+# LowCal Code Configuration
 
-Qwen Code offers several ways to configure its behavior, including environment variables, command-line arguments, and settings files. This document outlines the different configuration methods and available settings.
+LowCal Code offers several ways to configure its behavior, including environment variables, command-line arguments, and settings files. This document outlines the different configuration methods and available settings.
 
 ## Configuration layers
 
@@ -16,27 +16,27 @@ Configuration is applied in the following order of precedence (lower numbers are
 
 ## Settings files
 
-Qwen Code uses JSON settings files for persistent configuration. There are four locations for these files:
+LowCal Code uses JSON settings files for persistent configuration. There are four locations for these files:
 
 - **System defaults file:**
-  - **Location:** `/etc/qwen-code/system-defaults.json` (Linux), `C:\ProgramData\qwen-code\system-defaults.json` (Windows) or `/Library/Application Support/QwenCode/system-defaults.json` (macOS). The path can be overridden using the `QWEN_CODE_SYSTEM_DEFAULTS_PATH` environment variable.
+  - **Location:** `/etc/qwen-code/system-defaults.json` (Linux), `C:\ProgramData\qwen-code\system-defaults.json` (Windows) or `/Library/Application Support/LowCalCode/system-defaults.json` (macOS). The path can be overridden using the `QWEN_CODE_SYSTEM_DEFAULTS_PATH` environment variable.
   - **Scope:** Provides a base layer of system-wide default settings. These settings have the lowest precedence and are intended to be overridden by user, project, or system override settings.
 - **User settings file:**
   - **Location:** `~/.qwen/settings.json` (where `~` is your home directory).
-  - **Scope:** Applies to all Qwen Code sessions for the current user.
+  - **Scope:** Applies to all LowCal Code sessions for the current user.
 - **Project settings file:**
   - **Location:** `.qwen/settings.json` within your project's root directory.
-  - **Scope:** Applies only when running Qwen Code from that specific project. Project settings override user settings.
+  - **Scope:** Applies only when running LowCal Code from that specific project. Project settings override user settings.
 
 - **System settings file:**
-  - **Location:** `/etc/qwen-code/settings.json` (Linux), `C:\ProgramData\qwen-code\settings.json` (Windows) or `/Library/Application Support/QwenCode/settings.json` (macOS). The path can be overridden using the `QWEN_CODE_SYSTEM_SETTINGS_PATH` environment variable.
-  - **Scope:** Applies to all Qwen Code sessions on the system, for all users. System settings override user and project settings. May be useful for system administrators at enterprises to have controls over users' Qwen Code setups.
+  - **Location:** `/etc/qwen-code/settings.json` (Linux), `C:\ProgramData\qwen-code\settings.json` (Windows) or `/Library/Application Support/LowCalCode/settings.json` (macOS). The path can be overridden using the `QWEN_CODE_SYSTEM_SETTINGS_PATH` environment variable.
+  - **Scope:** Applies to all LowCal Code sessions on the system, for all users. System settings override user and project settings. May be useful for system administrators at enterprises to have controls over users' LowCal Code setups.
 
 **Note on environment variables in settings:** String values within your `settings.json` files can reference environment variables using either `$VAR_NAME` or `${VAR_NAME}` syntax. These variables will be automatically resolved when the settings are loaded. For example, if you have an environment variable `MY_API_TOKEN`, you could use it in `settings.json` like this: `"apiKey": "$MY_API_TOKEN"`.
 
 ### The `.qwen` directory in your project
 
-In addition to a project settings file, a project's `.qwen` directory can contain other project-specific files related to Qwen Code's operation, such as:
+In addition to a project settings file, a project's `.qwen` directory can contain other project-specific files related to LowCal Code's operation, such as:
 
 - [Custom sandbox profiles](#sandboxing) (e.g., `.qwen/sandbox-macos-custom.sb`, `.qwen/sandbox.Dockerfile`).
 

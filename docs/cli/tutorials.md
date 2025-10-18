@@ -1,6 +1,6 @@
 # Tutorials
 
-This page contains tutorials for interacting with Qwen Code.
+This page contains tutorials for interacting with LowCal Code.
 
 ## Setting up a Model Context Protocol (MCP) server
 
@@ -58,7 +58,7 @@ Use an environment variable to store your GitHub PAT:
 GITHUB_PERSONAL_ACCESS_TOKEN="pat_YourActualGitHubTokenHere"
 ```
 
-Qwen Code uses this value in the `mcpServers` configuration that you defined in the `settings.json` file.
+LowCal Code uses this value in the `mcpServers` configuration that you defined in the `settings.json` file.
 
 #### Launch Qwen Code and verify the connection
 

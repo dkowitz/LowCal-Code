@@ -1,8 +1,8 @@
-# Qwen Code Observability Guide
+# LowCal Code Observability Guide
 
-Telemetry provides data about Qwen Code's performance, health, and usage. By enabling it, you can monitor operations, debug issues, and optimize tool usage through traces, metrics, and structured logs.
+Telemetry provides data about LowCal Code's performance, health, and usage. By enabling it, you can monitor operations, debug issues, and optimize tool usage through traces, metrics, and structured logs.
 
-Qwen Code's telemetry system is built on the **[OpenTelemetry] (OTEL)** standard, allowing you to send data to any compatible backend.
+LowCal Code's telemetry system is built on the **[OpenTelemetry] (OTEL)** standard, allowing you to send data to any compatible backend.
 
 [OpenTelemetry]: https://opentelemetry.io/
 
@@ -61,7 +61,7 @@ To enable file export, use the `--telemetry-outfile` flag with a path to your de
 # Set your desired output file path
 TELEMETRY_FILE=".qwen/telemetry.log"
 
-# Run Qwen Code with local telemetry
+# Run LowCal Code with local telemetry
 # NOTE: --telemetry-otlp-endpoint="" is required to override the default
 # OTLP exporter and ensure telemetry is written to the local file.
 qwen --telemetry \
