@@ -39,6 +39,7 @@ import {
   validateToolCall,
   formatToolWarning,
 } from "../utils/tool-validation.js";
+import { compactPartListUnion } from "../utils/toolOutputCompactor.js";
 
 export type ValidatingToolCall = {
   status: "validating";
@@ -1041,10 +1042,21 @@ export class CoreToolScheduler {
             }
 
             if (toolResult.error === undefined) {
+              const {
+                value: compactedContent,
+                wasCompacted,
+              } = compactPartListUnion(toolName, toolResult.llmContent, {
+                callId,
+              });
+              if (wasCompacted) {
+                console.warn(
+                  `[Tool] Output truncated to preserve context (tool: ${toolName}, call: ${callId}).`,
+                );
+              }
               const response = convertToFunctionResponse(
                 toolName,
                 callId,
-                toolResult.llmContent,
+                compactedContent,
               );
               const successResponse: ToolCallResponseInfo = {
                 callId,

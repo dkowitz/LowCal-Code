@@ -1,85 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="40" failures="0" errors="0" time="0.014475176">
-    <testsuite name="src/core/prompts.test.ts" timestamp="2025-10-18T23:10:53.076Z" hostname="uby" tests="40" failures="0" errors="0" skipped="0" time="0.014475176">
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should return the base prompt when no userMemory is provided" time="0.003127974">
+<testsuites name="vitest tests" tests="5" failures="0" errors="0" time="0.009203793">
+    <testsuite name="src/utils/toolOutputCompactor.test.ts" timestamp="2025-10-19T13:25:28.290Z" hostname="uby" tests="5" failures="0" errors="0" skipped="0" time="0.009203793">
+        <testcase classname="src/utils/toolOutputCompactor.test.ts" name="toolOutputCompactor &gt; compactToolOutputText &gt; returns original text when under the limit" time="0.000797595">
         </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should return the base prompt when userMemory is empty string" time="0.000523078">
+        <testcase classname="src/utils/toolOutputCompactor.test.ts" name="toolOutputCompactor &gt; compactToolOutputText &gt; truncates text that exceeds the limit" time="0.006989237">
         </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should return the base prompt when userMemory is whitespace only" time="0.000257957">
+        <testcase classname="src/utils/toolOutputCompactor.test.ts" name="toolOutputCompactor &gt; compactToolOutputText &gt; recognizes already-compacted strings" time="0.000093443">
         </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should append userMemory with separator when provided" time="0.000286029">
+        <testcase classname="src/utils/toolOutputCompactor.test.ts" name="toolOutputCompactor &gt; compactPartListUnion &gt; compacts functionResponse outputs that are too large" time="0.000245183">
         </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should include sandbox-specific instructions when SANDBOX env var is set" time="0.000277403">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should include seatbelt-specific instructions when SANDBOX env var is &quot;sandbox-exec&quot;" time="0.000274007">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should include non-sandbox instructions when SANDBOX env var is not set" time="0.000297299">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should include git instructions when in a git repo" time="0.000249982">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should not include git instructions when not in a git repo" time="0.000255413">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should use default prompt when GEMINI_SYSTEM_MD is &quot;false&quot;" time="0.000339798">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should use default prompt when GEMINI_SYSTEM_MD is &quot;0&quot;" time="0.000839823">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should throw error if GEMINI_SYSTEM_MD points to a non-existent file" time="0.000682602">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should read from default path when GEMINI_SYSTEM_MD is &quot;true&quot;" time="0.000799108">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should read from default path when GEMINI_SYSTEM_MD is &quot;1&quot;" time="0.000191344">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should read from custom path when GEMINI_SYSTEM_MD provides one, preserving case" time="0.000164194">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should expand tilde in custom path when GEMINI_SYSTEM_MD is set" time="0.000225226">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should not write to file when GEMINI_WRITE_SYSTEM_MD is &quot;false&quot;" time="0.000197906">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should not write to file when GEMINI_WRITE_SYSTEM_MD is &quot;0&quot;" time="0.000147062">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should write to default path when GEMINI_WRITE_SYSTEM_MD is &quot;true&quot;" time="0.000552371">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should write to default path when GEMINI_WRITE_SYSTEM_MD is &quot;1&quot;" time="0.000273415">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should write to custom path when GEMINI_WRITE_SYSTEM_MD provides one" time="0.000202194">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should expand tilde in custom path when GEMINI_WRITE_SYSTEM_MD is set" time="0.000287271">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should expand tilde in custom path when GEMINI_WRITE_SYSTEM_MD is just ~" time="0.000266212">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="URL matching with trailing slash compatibility &gt; should match URLs with and without trailing slash" time="0.000437228">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="URL matching with trailing slash compatibility &gt; should not match when URLs are different" time="0.000214126">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should use XML format for qwen3-coder model" time="0.000336332">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should use JSON format for qwen-vl model" time="0.000297219">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should use bracket format for generic models" time="0.000284817">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should use bracket format when no model is specified" time="0.000262555">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should preserve model-specific formats with user memory" time="0.000224205">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should preserve model-specific formats with sandbox environment" time="0.000214758">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="getCustomSystemPrompt &gt; should handle string custom instruction without user memory" time="0.000106276">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="getCustomSystemPrompt &gt; should handle string custom instruction with user memory" time="0.000049782">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="getCustomSystemPrompt &gt; should handle Content object with parts array and user memory" time="0.000055152">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="getSubagentSystemReminder &gt; should format single agent type correctly" time="0.000109022">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="getSubagentSystemReminder &gt; should join multiple agent types with commas" time="0.000033742">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="getSubagentSystemReminder &gt; should handle empty array" time="0.000036317">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="getPlanModeSystemReminder &gt; should return plan mode system reminder with proper structure" time="0.00007061">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="getPlanModeSystemReminder &gt; should include workflow instructions" time="0.000045585">
-        </testcase>
-        <testcase classname="src/core/prompts.test.ts" name="getPlanModeSystemReminder &gt; should be deterministic" time="0.000029254">
+        <testcase classname="src/utils/toolOutputCompactor.test.ts" name="toolOutputCompactor &gt; compactHistoryFunctionResponses &gt; compacts oversized tool outputs inside chat history" time="0.000252477">
         </testcase>
     </testsuite>
 </testsuites>

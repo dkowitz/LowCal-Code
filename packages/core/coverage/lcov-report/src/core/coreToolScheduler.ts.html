@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/879</span>
+                <span class='fraction'>0/891</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/879</span>
+                <span class='fraction'>0/891</span>
             </div>
         
             
@@ -1234,7 +1234,19 @@
 <a name='L1169'></a><a href='#L1169'>1169</a>
 <a name='L1170'></a><a href='#L1170'>1170</a>
 <a name='L1171'></a><a href='#L1171'>1171</a>
-<a name='L1172'></a><a href='#L1172'>1172</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L1172'></a><a href='#L1172'>1172</a>
+<a name='L1173'></a><a href='#L1173'>1173</a>
+<a name='L1174'></a><a href='#L1174'>1174</a>
+<a name='L1175'></a><a href='#L1175'>1175</a>
+<a name='L1176'></a><a href='#L1176'>1176</a>
+<a name='L1177'></a><a href='#L1177'>1177</a>
+<a name='L1178'></a><a href='#L1178'>1178</a>
+<a name='L1179'></a><a href='#L1179'>1179</a>
+<a name='L1180'></a><a href='#L1180'>1180</a>
+<a name='L1181'></a><a href='#L1181'>1181</a>
+<a name='L1182'></a><a href='#L1182'>1182</a>
+<a name='L1183'></a><a href='#L1183'>1183</a>
+<a name='L1184'></a><a href='#L1184'>1184</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1275,6 +1287,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2276,6 +2289,17 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2446,6 +2470,7 @@ import type { ModifyContext } from "../tools/modifiable-tool.js";
   validateToolCall,
   formatToolWarning,
 } from "../utils/tool-validation.js";
+<span class="cstat-no" title="statement not covered" >import { compactPartListUnion } from "../utils/toolOutputCompactor.js";</span>
 &nbsp;
 export type ValidatingToolCall = {
   status: "validating";
@@ -3448,10 +3473,21 @@ interface CoreToolSchedulerOptions {
 <span class="cstat-no" title="statement not covered" >            }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >            if (toolResult.error === undefined) {</span>
+<span class="cstat-no" title="statement not covered" >              const {</span>
+<span class="cstat-no" title="statement not covered" >                value: compactedContent,</span>
+<span class="cstat-no" title="statement not covered" >                wasCompacted,</span>
+<span class="cstat-no" title="statement not covered" >              } = compactPartListUnion(toolName, toolResult.llmContent, {</span>
+<span class="cstat-no" title="statement not covered" >                callId,</span>
+<span class="cstat-no" title="statement not covered" >              });</span>
+<span class="cstat-no" title="statement not covered" >              if (wasCompacted) {</span>
+<span class="cstat-no" title="statement not covered" >                console.warn(</span>
+<span class="cstat-no" title="statement not covered" >                  `[Tool] Output truncated to preserve context (tool: ${toolName}, call: ${callId}).`,</span>
+<span class="cstat-no" title="statement not covered" >                );</span>
+<span class="cstat-no" title="statement not covered" >              }</span>
 <span class="cstat-no" title="statement not covered" >              const response = convertToFunctionResponse(</span>
 <span class="cstat-no" title="statement not covered" >                toolName,</span>
 <span class="cstat-no" title="statement not covered" >                callId,</span>
-<span class="cstat-no" title="statement not covered" >                toolResult.llmContent,</span>
+<span class="cstat-no" title="statement not covered" >                compactedContent,</span>
 <span class="cstat-no" title="statement not covered" >              );</span>
 <span class="cstat-no" title="statement not covered" >              const successResponse: ToolCallResponseInfo = {</span>
 <span class="cstat-no" title="statement not covered" >                callId,</span>
@@ -3583,7 +3619,7 @@ interface CoreToolSchedulerOptions {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2025-10-18T23:10:53.172Z
+                at 2025-10-19T13:25:28.393Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

@@ -1,6 +1,6 @@
 {
   "promptMode": "concise",
-  "activeCollection": "shedit",
+  "activeCollection": "minimal",
   "collections": {
     "full": [
       "edit",

@@ -11,6 +11,7 @@ import { doesToolInvocationMatch } from "../utils/tool-utils.js";
 import levenshtein from "fast-levenshtein";
 import { getPlanModeSystemReminder, toolConfig } from "./prompts.js";
 import { validateToolCall, formatToolWarning, } from "../utils/tool-validation.js";
+import { compactPartListUnion } from "../utils/toolOutputCompactor.js";
 /**
  * Formats tool output for a Gemini FunctionResponse.
  */
@@ -611,7 +612,13 @@ export class CoreToolScheduler {
                         return;
                     }
                     if (toolResult.error === undefined) {
-                        const response = convertToFunctionResponse(toolName, callId, toolResult.llmContent);
+                        const { value: compactedContent, wasCompacted, } = compactPartListUnion(toolName, toolResult.llmContent, {
+                            callId,
+                        });
+                        if (wasCompacted) {
+                            console.warn(`[Tool] Output truncated to preserve context (tool: ${toolName}, call: ${callId}).`);
+                        }
+                        const response = convertToFunctionResponse(toolName, callId, compactedContent);
                         const successResponse = {
                             callId,
                             responseParts: response,

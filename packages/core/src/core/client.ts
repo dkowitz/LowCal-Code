@@ -55,6 +55,7 @@ import {
   COMPRESSION_STRATEGIES,
   estimateCompressionRatio,
 } from "../utils/context-recovery.js";
+import { compactHistoryFunctionResponses } from "../utils/toolOutputCompactor.js";
 import type {
   ContentGenerator,
   ContentGeneratorConfig,
@@ -961,6 +962,17 @@ export class GeminiClient {
           }
         }
 
+        const pruned = await this.pruneOversizedToolOutputs();
+        if (pruned) {
+          const retrySnapshot = await manager.evaluate(model, buildPreview());
+          if (retrySnapshot.fitsWithinEffective) {
+            console.warn(
+              "[Context Management] ✓ Compacted oversized tool outputs",
+            );
+            return retrySnapshot;
+          }
+        }
+
         // Recovery failed or still doesn't fit
         throw new TokenBudgetExceededError(
           `Unable to compress history to fit within the context window (${snapshot.tokens.toLocaleString()} tokens). Tried ${COMPRESSION_STRATEGIES.length} recovery strategies.`,
@@ -1030,6 +1042,22 @@ export class GeminiClient {
 
     console.error("[Context Recovery] All recovery strategies exhausted");
     return false;
+  }
+
+  private async pruneOversizedToolOutputs(): Promise<boolean> {
+    const currentHistory = this.getChat().getHistory(true);
+    const { history: compactedHistory, compactionCount } =
+      compactHistoryFunctionResponses(currentHistory);
+
+    if (compactionCount === 0) {
+      return false;
+    }
+
+    console.warn(
+      `[Context Recovery] Compacted ${compactionCount} oversized tool output(s)`,
+    );
+    await this.startChat(compactedHistory);
+    return true;
   }
 
   private async runNonStreamingFallback(

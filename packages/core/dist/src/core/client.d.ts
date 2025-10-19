@@ -64,6 +64,7 @@ export declare class GeminiClient {
      * This is a last-resort fallback when standard compression fails.
      */
     private tryAdaptiveRecovery;
+    private pruneOversizedToolOutputs;
     private runNonStreamingFallback;
     generateJson(contents: Content[], schema: Record<string, unknown>, abortSignal: AbortSignal, model?: string, config?: GenerateContentConfig): Promise<Record<string, unknown>>;
     generateContent(contents: Content[], generationConfig: GenerateContentConfig, abortSignal: AbortSignal, model?: string): Promise<GenerateContentResponse>;

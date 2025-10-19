@@ -22,6 +22,7 @@ import { checkNextSpeaker } from "../utils/nextSpeakerChecker.js";
 import { retryWithBackoff } from "../utils/retry.js";
 import { flatMapTextParts } from "../utils/partUtils.js";
 import { applyAdaptiveCompression, COMPRESSION_STRATEGIES, estimateCompressionRatio, } from "../utils/context-recovery.js";
+import { compactHistoryFunctionResponses } from "../utils/toolOutputCompactor.js";
 import { AuthType, createContentGenerator } from "./contentGenerator.js";
 import { GeminiChat } from "./geminiChat.js";
 import { OpenAIContentGenerator } from "./openaiContentGenerator/openaiContentGenerator.js";
@@ -668,6 +669,14 @@ export class GeminiClient {
                         return retrySnapshot;
                     }
                 }
+                const pruned = await this.pruneOversizedToolOutputs();
+                if (pruned) {
+                    const retrySnapshot = await manager.evaluate(model, buildPreview());
+                    if (retrySnapshot.fitsWithinEffective) {
+                        console.warn("[Context Management] ✓ Compacted oversized tool outputs");
+                        return retrySnapshot;
+                    }
+                }
                 // Recovery failed or still doesn't fit
                 throw new TokenBudgetExceededError(`Unable to compress history to fit within the context window (${snapshot.tokens.toLocaleString()} tokens). Tried ${COMPRESSION_STRATEGIES.length} recovery strategies.`, snapshot);
             }
@@ -711,6 +720,16 @@ export class GeminiClient {
         }
         console.error("[Context Recovery] All recovery strategies exhausted");
         return false;
+    }
+    async pruneOversizedToolOutputs() {
+        const currentHistory = this.getChat().getHistory(true);
+        const { history: compactedHistory, compactionCount } = compactHistoryFunctionResponses(currentHistory);
+        if (compactionCount === 0) {
+            return false;
+        }
+        console.warn(`[Context Recovery] Compacted ${compactionCount} oversized tool output(s)`);
+        await this.startChat(compactedHistory);
+        return true;
     }
     async runNonStreamingFallback(promptId, message) {
         const fallbackResponse = await this.getChat().sendMessage({ message }, promptId);
