@@ -45,6 +45,8 @@ Add "tavilyApiKey": "your-key-here" to your settings.json.
 
 #### Session Commands
 
+Ctrl+Y - YOLO Mode
+
 - **`/compress`** - Compress conversation history to continue within token limits
 - **`/clear`** - Clear all conversation history and start fresh
 - **`/stats`** - Check current token usage and limits
