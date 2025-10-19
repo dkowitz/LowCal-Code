@@ -1,6 +1,6 @@
 {
   "promptMode": "concise",
-  "activeCollection": "full",
+  "activeCollection": "shedit",
   "collections": {
     "full": [
       "edit",
@@ -25,6 +25,10 @@
       "edit"
     ],
     "shell-only": [
+      "run_shell_command"
+    ],
+    "shedit": [
+      "edit",
       "run_shell_command"
     ]
   }
