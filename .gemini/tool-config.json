@@ -30,6 +30,11 @@
     "shedit": [
       "edit",
       "run_shell_command"
+    ],
+    "web-shell": [
+      "web_fetch",
+      "web_search",
+      "run_shell_command"
     ]
   }
 }
