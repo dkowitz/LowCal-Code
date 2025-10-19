@@ -10,6 +10,27 @@
 
 LowCal is a powerful command-line AI workflow tool adapted from Qwen Code, specifically optimized for local use with LM Studio and cloud models with OpenRouter. It enhances your development workflow with advanced code understanding, automated tasks, and intelligent assistance.
 
+#### Installation
+
+Global installation has not been tested.
+
+Instructions:
+
+Node and git required.  Tested on Linux and MacOS, Windows may not be fully compatible.
+
+`git clone https://github.com/dkowitz/LowCal-Code`
+`cd LowCal-Code`
+`npm run build`
+`npm run bundle`
+
+Run from installation directory:
+`npm start`
+
+Run from a workspace directory:
+`cd [workspace directory]`
+`node ~/LowCal-Code/bundle/gemini.ts` (replace ~/LowCal-Code with your installation directory if different)
+
+
 #### Session Commands
 
 - **`/compress`** - Compress conversation history to continue within token limits
@@ -52,15 +73,10 @@ LowCal is a powerful command-line AI workflow tool adapted from Qwen Code, speci
 
 
 
-
-
-
-
 ### 🔍 Explore Codebases
 
 ```bash
-cd your-project/
-LowCal
+/init
 
 # Architecture analysis
 > Describe the main pieces of this system's architecture
