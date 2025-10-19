@@ -6,8 +6,6 @@
 
 **AI-powered command-line workflow tool for developers**
 
-[Installation](#installation) • [Quick Start](#quick-start) • [Features](#key-features) • [Documentation](./docs/) • [Contributing](./CONTRIBUTING.md)
-
 </div>
 
 LowCal is a powerful command-line AI workflow tool adapted from Qwen Code, specifically optimized for local use with LM Studio and cloud models with OpenRouter. It enhances your development workflow with advanced code understanding, automated tasks, and intelligent assistance.
@@ -18,7 +16,45 @@ LowCal is a powerful command-line AI workflow tool adapted from Qwen Code, speci
 - **`/clear`** - Clear all conversation history and start fresh
 - **`/stats`** - Check current token usage and limits
 
-> 📝 **Note**: Session token limit applies to a single conversation, not cumulative API calls.
+- **`/init`** - Run in project directory to generate LOWCAL.md summary file that will automatically be included to guide the model on your project.
+
+- **`/auth`** - Select between either OpenRouter or LM Studio.  OpenRouter requires an api key.
+- **`/model`** - Select a model.  
+    - LM Studio shows only models that have been manually configured through the LM Studio gui.  It finds them in the LM Studio's configuration files located in ~/.lmstudio/.internal/user-concrete-model-default-config/.  The app tries to match the models here with the models returned by LM Studio's api - which often use different names.  If it can't resolve a matching api model for a found configured model, it offers a wizard for the user to match the models.  Matching the models allows the app to list available models, along with their maximum context size and their configured context size.
+    - OpenRouter shows available models, their maximum context size, and their cost along with a search filter (e.g. 'free', 'grok', 'qwen', etc).  OpenRouter offers hundreds of available models, from GPT-5 to free models.
+
+#### Local Model Latency Enhancements (Designed for local model use, can be used with any model)
+
+- **`/promptmode set <full/concise/auto>`**
+    - full:  full, long system prompt with verbose instructions and lots of examples
+    - concise:  short, abbreviated prompt for conserving context space and decreasing latency, particularly for local models.  Dynamically constructed to only include instructions/examples for tools from the currently activated /toolset.
+    - auto:  automatically uses concise prompt when using LM Studio endpoint and full prompt when using OpenRouter endpoint
+
+- **`/toolset (list, show, activate/use, create, add, remove)`** - use custom tool collections to exclude tools from being used and saving context space and decreasing latency, particularly with local models.  Using the shell tool is often more efficient than using file tools.
+    - list: list available preset tool collections
+    - show <toolset collection name>:  shows which tools are in a collection
+    - activate/use: Use a selected tool collection
+    - create: Create a new tool collection`/toolset create <name> [tool1, tool2, ...]` (Use tool names from /tools)
+    - add/remove: add/remove tool to/from a tool collection `/toolset add[remove] <name> tool`
+
+- **`/promptinfo`** - Show the current system prompt in a /view window (↑↓ to scroll, 'q' to quit viewer).
+
+#### Additional New Commands
+    
+- **`/view filename`** - view a markdown or text file in a viewer window in-line in the chat.  Use ↑↓ to scroll, 'q' to quit viewer.
+
+- **`/tokens filename`** - show the token count of a file.
+
+- **`/export [compact, report] [filename]`** - Export the current conversation to a markdown file.  If no filename is provided one will be generated.
+    - no argument: saves full conversation, including tool use and all notification messages to ./conversations/
+    - `compact`: saves only the user and assistant messages, omitting all tool uses and other messages to ./conversations/
+    - `report`: saves the first user message and the trailing assistant messages of the conversation.  Intended use is: user asks for a detailed report on x, assistant uses tools to generate material, and final messages are the actual report - this tries to capture just the request and the report.  Saves to ./reports/
+
+
+
+
+
+
 
 ### 🔍 Explore Codebases
 
