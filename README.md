@@ -36,6 +36,13 @@ cd [workspace directory]
 node ~/LowCal-Code/bundle/gemini.ts (replace ~/LowCal-Code with your installation directory if different)
 ```
 
+For LM Studio:  Make sure LM Studio is running with the server enabled.
+
+For OpenRouter: An OpenRouter api key is required.
+
+For WebSearch: A Tavily api key is required.  Highly recommend a free api key, which gets 1,000 api calls per month.
+Add "tavilyApiKey": "your-key-here" to your settings.json.
+
 #### Session Commands
 
 - **`/compress`** - Compress conversation history to continue within token limits
@@ -76,7 +83,7 @@ node ~/LowCal-Code/bundle/gemini.ts (replace ~/LowCal-Code with your installatio
     - `compact`: saves only the user and assistant messages, omitting all tool uses and other messages to ./conversations/
     - `report`: saves the first user message and the trailing assistant messages of the conversation.  Intended use is: user asks for a detailed report on x, assistant uses tools to generate material, and final messages are the actual report - this tries to capture just the request and the report.  Saves to ./reports/
 
-
+Note: Tavily api key required for WebSearch tool.  A free key is highly recommended, allows up to 1,000 api calls per month.
 
 ### 🔍 Explore Codebases
 
