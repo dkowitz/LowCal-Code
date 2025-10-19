@@ -18,18 +18,23 @@ Instructions:
 
 Node and git required.  Tested on Linux and MacOS, Windows may not be fully compatible.
 
-`git clone https://github.com/dkowitz/LowCal-Code`
-`cd LowCal-Code`
-`npm run build`
-`npm run bundle`
+```bash
+git clone https://github.com/dkowitz/LowCal-Code
+cd LowCal-Code
+npm run build
+npm run bundle
+```
 
 Run from installation directory:
-`npm start`
+```bash
+npm start
+```
 
 Run from a workspace directory:
-`cd [workspace directory]`
-`node ~/LowCal-Code/bundle/gemini.ts` (replace ~/LowCal-Code with your installation directory if different)
-
+```bash
+cd [workspace directory]
+node ~/LowCal-Code/bundle/gemini.ts (replace ~/LowCal-Code with your installation directory if different)
+```
 
 #### Session Commands
 
