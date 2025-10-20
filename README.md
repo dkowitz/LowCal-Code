@@ -12,8 +12,6 @@ LowCal is a powerful command-line AI workflow tool adapted from Qwen Code, speci
 
 #### Installation
 
-Global installation has not been tested.
-
 Instructions:
 
 Node and git required.  Tested on Linux and MacOS, Windows may not be fully compatible.
@@ -21,19 +19,12 @@ Node and git required.  Tested on Linux and MacOS, Windows may not be fully comp
 ```bash
 git clone https://github.com/dkowitz/LowCal-Code
 cd LowCal-Code
-npm run build
-npm run bundle
-```
+npm install
+npm install -g .
 
-Run from installation directory:
-```bash
-npm start
-```
+Run from anywhere with:
 
-Run from a workspace directory:
-```bash
-cd [workspace directory]
-node ~/LowCal-Code/bundle/gemini.ts (replace ~/LowCal-Code with your installation directory if different)
+lowcal
 ```
 
 For LM Studio:  Make sure LM Studio is running with the server enabled.
@@ -41,7 +32,7 @@ For LM Studio:  Make sure LM Studio is running with the server enabled.
 For OpenRouter: An OpenRouter api key is required.
 
 For WebSearch: A Tavily api key is required.  Highly recommend a free api key, which gets 1,000 api calls per month.
-Add "tavilyApiKey": "your-key-here" to your settings.json.
+Add "tavilyApiKey": "your-key-here" to your ~/.qwen/settings.json.
 
 #### Session Commands
 
