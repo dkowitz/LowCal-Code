@@ -5,6 +5,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
+import { homedir } from "node:os";
 import { toolConfig, ToolNames } from "@qwen-code/qwen-code-core";
 const DEFAULT_COLLECTIONS = {
     full: [
@@ -41,8 +42,15 @@ const DEFAULT_CONFIG = {
         ? toolConfig.collections
         : DEFAULT_COLLECTIONS),
 };
-export function resolveToolConfigPath(cwd = process.cwd()) {
-    return path.resolve(cwd, ".gemini", "tool-config.json");
+/**
+ * Get the global tool config path in ~/.qwen/tool-config.json
+ */
+export function resolveToolConfigPath() {
+    const homeDir = homedir();
+    if (!homeDir) {
+        return path.join("/tmp", ".qwen", "tool-config.json");
+    }
+    return path.join(homeDir, ".qwen", "tool-config.json");
 }
 export function loadCliToolConfig() {
     const configPath = resolveToolConfigPath();

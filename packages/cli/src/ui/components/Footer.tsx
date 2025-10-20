@@ -17,6 +17,7 @@ import { DebugProfiler } from "./DebugProfiler.js";
 
 import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import { isNarrowWidth } from "../utils/isNarrowWidth.js";
+import { loadCliToolConfig } from "../commands/utils/toolConfig.js";
 
 interface FooterProps {
   model: string;
@@ -46,7 +47,7 @@ export const Footer: React.FC<FooterProps> = ({
   corgiMode,
   errorCount,
   showErrorDetails,
-  showMemoryUsage,
+  showMemoryUsage, // eslint-disable-line @typescript-eslint/no-unused-vars
   promptTokenCount,
   nightly,
   vimMode,
@@ -61,6 +62,17 @@ export const Footer: React.FC<FooterProps> = ({
   const displayPath = isNarrow
     ? path.basename(tildeifyPath(targetDir))
     : shortenPath(tildeifyPath(targetDir), pathLength);
+
+  // Load tool config for status display
+  let promptMode = "auto";
+  let activeCollection = "full";
+  try {
+    const cfg = loadCliToolConfig();
+    promptMode = cfg.promptMode;
+    activeCollection = cfg.activeCollection;
+  } catch {
+    // Silently ignore errors - status display is not critical
+  }
 
   return (
     <Box
@@ -94,7 +106,7 @@ export const Footer: React.FC<FooterProps> = ({
         )}
       </Box>
 
-      {/* Middle Section: Centered Trust/Sandbox Info */}
+      {/* Middle Section: Centered Trust/Sandbox Info and Status */}
       <Box
         flexGrow={isNarrow ? 0 : 1}
         alignItems="center"
@@ -122,6 +134,16 @@ export const Footer: React.FC<FooterProps> = ({
             no sandbox <Text color={theme.text.secondary}>(see /docs)</Text>
           </Text>
         )}
+        
+        {/* Status Indicator: Prompt Mode and Toolset */}
+        <Text color={theme.ui.symbol}> | </Text>
+        <Text color={theme.text.secondary}>
+          {promptMode}
+        </Text>
+        <Text color={theme.ui.symbol}> / </Text>
+        <Text color={theme.text.secondary}>
+          {activeCollection}
+        </Text>
       </Box>
 
       {/* Right Section: Gemini Label and Console Summary */}

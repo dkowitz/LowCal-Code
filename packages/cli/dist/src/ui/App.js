@@ -18,6 +18,7 @@ import { useFolderTrust } from "./hooks/useFolderTrust.js";
 import { useEditorSettings } from "./hooks/useEditorSettings.js";
 import { useQuitConfirmation } from "./hooks/useQuitConfirmation.js";
 import { useWelcomeBack } from "./hooks/useWelcomeBack.js";
+import { useStartupStatus } from "./hooks/useStartupStatus.js";
 import { useDialogClose } from "./hooks/useDialogClose.js";
 import { useSlashCommandProcessor } from "./hooks/slashCommandProcessor.js";
 import { useSessionLoggingController } from "./hooks/useSessionLoggingController.js";
@@ -1074,6 +1075,8 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     })), [pendingSlashCommandHistoryItems, pendingGeminiHistoryItems]);
     // Welcome back functionality
     const { welcomeBackInfo, showWelcomeBackDialog, welcomeBackChoice, handleWelcomeBackSelection, handleWelcomeBackClose, } = useWelcomeBack(config, submitQuery, buffer, settings.merged);
+    // Startup status display
+    useStartupStatus({ addItem });
     // Dialog close functionality
     const { closeAnyOpenDialog } = useDialogClose({
         isThemeDialogOpen,

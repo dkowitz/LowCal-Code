@@ -9,7 +9,10 @@ export interface CliToolConfig {
     activeCollection: string;
     collections: Record<string, string[]>;
 }
-export declare function resolveToolConfigPath(cwd?: string): string;
+/**
+ * Get the global tool config path in ~/.qwen/tool-config.json
+ */
+export declare function resolveToolConfigPath(): string;
 export declare function loadCliToolConfig(): CliToolConfig;
 export declare function saveCliToolConfig(cfg: CliToolConfig): void;
 export declare function syncCoreToolConfig(cfg: CliToolConfig): void;

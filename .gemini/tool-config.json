@@ -1,6 +1,6 @@
 {
   "promptMode": "concise",
-  "activeCollection": "minimal",
+  "activeCollection": "web-shell",
   "collections": {
     "full": [
       "edit",
@@ -34,7 +34,8 @@
     "web-shell": [
       "web_fetch",
       "web_search",
-      "run_shell_command"
+      "run_shell_command",
+      "todo_write"
     ]
   }
 }
