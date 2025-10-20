@@ -14,7 +14,7 @@ LowCal is a powerful command-line AI workflow tool adapted from Qwen Code, speci
 
 Instructions:
 
-Node and git required.  Tested on Linux and MacOS, Windows may not be fully compatible.
+Node and git required.  Tested on Linux, WSL2, and MacOS, Windows may not be fully compatible.
 
 ```bash
 git clone https://github.com/dkowitz/LowCal-Code
