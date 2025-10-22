@@ -26,6 +26,19 @@ Run from anywhere with:
 
 lowcal
 ```
+Or:
+
+```bash
+git clone https://github.com/dkowitz/LowCal-Code
+cd LowCal-Code
+npm build
+npm bundle
+npm start
+
+To run from a different directory:
+cd /path/to/directory
+node ~/LowCal-Code/bundle/gemini.ts (replace ~/LowCal-Code with installation directory if different)
+```
 
 For LM Studio:  Make sure LM Studio is running with the server enabled.
 
