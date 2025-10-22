@@ -41,6 +41,8 @@ const DEFAULT_CONFIG = {
     collections: cloneCollections(Object.keys(toolConfig.collections).length > 0
         ? toolConfig.collections
         : DEFAULT_COLLECTIONS),
+    customPrompts: {},
+    activeCustomPrompt: null,
 };
 /**
  * Get the global tool config path in ~/.qwen/tool-config.json
@@ -52,10 +54,19 @@ export function resolveToolConfigPath() {
     }
     return path.join(homeDir, ".qwen", "tool-config.json");
 }
+/**
+ * Estimate token count (roughly 1 token per 4 characters)
+ */
+export function estimateTokenCount(text) {
+    return Math.ceil(text.length / 4);
+}
 export function loadCliToolConfig() {
     const configPath = resolveToolConfigPath();
     if (!fs.existsSync(configPath)) {
-        return { ...DEFAULT_CONFIG, collections: cloneCollections(DEFAULT_CONFIG.collections) };
+        return {
+            ...DEFAULT_CONFIG,
+            collections: cloneCollections(DEFAULT_CONFIG.collections),
+        };
     }
     try {
         const raw = fs.readFileSync(configPath, "utf8");
@@ -69,14 +80,21 @@ export function loadCliToolConfig() {
             mergedCollections[parsed.activeCollection]
             ? parsed.activeCollection
             : DEFAULT_CONFIG.activeCollection;
+        const customPrompts = normalizeCustomPrompts(parsed.customPrompts ?? {});
+        const activeCustomPrompt = normalizeActiveCustomPrompt(parsed.activeCustomPrompt, customPrompts);
         return {
             promptMode,
             activeCollection: active,
             collections: mergedCollections,
+            customPrompts,
+            activeCustomPrompt,
         };
     }
     catch {
-        return { ...DEFAULT_CONFIG, collections: cloneCollections(DEFAULT_CONFIG.collections) };
+        return {
+            ...DEFAULT_CONFIG,
+            collections: cloneCollections(DEFAULT_CONFIG.collections),
+        };
     }
 }
 export function saveCliToolConfig(cfg) {
@@ -86,6 +104,8 @@ export function saveCliToolConfig(cfg) {
         promptMode: cfg.promptMode,
         activeCollection: cfg.activeCollection,
         collections: cloneCollections(cfg.collections),
+        customPrompts: cfg.customPrompts ?? {},
+        activeCustomPrompt: cfg.activeCustomPrompt ?? null,
     };
     fs.writeFileSync(configPath, JSON.stringify(payload, null, 2), "utf8");
 }
@@ -131,6 +151,45 @@ function normalizePromptMode(value) {
     return lower === "full" || lower === "concise" || lower === "auto"
         ? lower
         : DEFAULT_CONFIG.promptMode;
+}
+function normalizeCustomPrompts(prompts) {
+    const normalized = {};
+    for (const [name, value] of Object.entries(prompts)) {
+        if (typeof value !== "object" || value === null) {
+            continue;
+        }
+        const obj = value;
+        if (typeof obj["content"] === "string" &&
+            typeof obj["exclusive"] === "boolean" &&
+            typeof obj["createdAt"] === "number" &&
+            typeof obj["tokenCount"] === "number") {
+            normalized[name] = {
+                content: obj["content"],
+                exclusive: obj["exclusive"],
+                createdAt: obj["createdAt"],
+                tokenCount: obj["tokenCount"],
+            };
+        }
+    }
+    return normalized;
+}
+function normalizeActiveCustomPrompt(value, customPrompts) {
+    if (value === null || value === undefined) {
+        return null;
+    }
+    if (typeof value !== "object") {
+        return null;
+    }
+    const obj = value;
+    if (typeof obj["name"] === "string" &&
+        typeof obj["exclusive"] === "boolean" &&
+        customPrompts[obj["name"]]) {
+        return {
+            name: obj["name"],
+            exclusive: obj["exclusive"],
+        };
+    }
+    return null;
 }
 function cloneCollections(collections) {
     return Object.fromEntries(Object.entries(collections).map(([name, tools]) => [name, [...tools]]));

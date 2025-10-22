@@ -188,6 +188,74 @@ Slash commands provide meta-level control over the CLI itself.
 - **`/privacy`**
   - **Description:** Display the Privacy Notice and allow users to select whether they consent to the collection of their data for service improvement purposes.
 
+- **`/prompt`**
+  - **Description:** Create, manage, and use custom system prompts that either supplement or replace the base system prompt (determined by `/promptmode`).
+  - **Sub-commands:**
+    - **`list`**
+      - **Description:** Display all available custom prompts with their metadata (mode, token count, creation date).
+      - **Usage:** `/prompt list`
+      - **Output:** Shows each prompt's name, whether it's active, its mode (EXCLUSIVE or SUPPLEMENTAL), token count, and creation date.
+    - **`show <name>`**
+      - **Description:** Display the full text content of a custom prompt.
+      - **Usage:** `/prompt show <name>`
+      - **Example:** `/prompt show code-reviewer`
+    - **`create <name> <content|file> [--exclusive]`**
+      - **Description:** Create a new custom prompt from an inline string or from a markdown file.
+      - **Usage:** `/prompt create <name> "<prompt text>"` or `/prompt create <name> ./path/to/prompt.md`
+      - **Options:**
+        - `--exclusive` (optional): If specified, the prompt will replace the entire system prompt. If omitted, the prompt is appended as supplemental instructions.
+      - **Examples:**
+        - `/prompt create code-reviewer "You are an expert code reviewer. Focus on security, performance, and maintainability."`
+        - `/prompt create security-auditor ./security-prompt.md --exclusive`
+      - **Details:**
+        - Prompt names must contain only alphanumeric characters, hyphens, and underscores (max 50 characters).
+        - Inline strings can be quoted with single or double quotes.
+        - File paths ending in `.md` or containing `/` or `\` are treated as file paths.
+        - Token count is estimated and displayed; prompts exceeding 2000 tokens trigger a warning.
+        - Prompts are stored persistently in `~/.qwen/tool-config.json`.
+    - **`delete <name>`**
+      - **Description:** Delete an existing custom prompt.
+      - **Usage:** `/prompt delete <name>`
+      - **Example:** `/prompt delete code-reviewer`
+      - **Note:** If the deleted prompt is currently active, it will be automatically disabled.
+    - **`activate <name> [--exclusive]`** (aliases: `use`, `set`)
+      - **Description:** Enable a custom prompt. The prompt will be applied to all subsequent LLM interactions until disabled or changed.
+      - **Usage:** `/prompt activate <name>` or `/prompt use <name>` or `/prompt set <name>`
+      - **Options:**
+        - `--exclusive` (optional): Override the prompt's stored mode and use it in exclusive mode (replaces entire system prompt).
+      - **Examples:**
+        - `/prompt activate code-reviewer` (uses the prompt's stored mode)
+        - `/prompt activate security-auditor --exclusive` (forces exclusive mode)
+      - **Details:**
+        - If the prompt is in supplemental mode, it is inserted into the base prompt (from `/promptmode`) as a new section bounded by `### Additional Instructions` markers.
+        - If the prompt is in exclusive mode, it completely replaces the base system prompt.
+        - The active prompt is displayed in the startup message and footer status indicator.
+        - The LLM client is automatically reinitialized to apply the new prompt.
+    - **`disable`**
+      - **Description:** Disable the currently active custom prompt and return to the base system prompt (from `/promptmode`).
+      - **Usage:** `/prompt disable`
+      - **Details:**
+        - After disabling, the system will use the base prompt determined by `/promptmode` (auto, full, or concise).
+        - The LLM client is automatically reinitialized.
+  - **Status Indicators:**
+    - **Startup Message:** When a custom prompt is active, the startup status message displays: `Custom Prompt: <name> (EXCLUSIVE|SUPPLEMENTAL)`
+    - **Footer:** The footer status bar shows the active custom prompt name with a marker: `✓` for supplemental mode, `✕` for exclusive mode.
+  - **Workflow Example:**
+    ```
+    > /prompt create code-reviewer "You are an expert code reviewer focusing on security and performance."
+    ✓ Prompt "code-reviewer" created (250 tokens, SUPPLEMENTAL)
+    
+    > /prompt list
+    📋 Custom Prompts:
+      • code-reviewer [SUPPLEMENTAL] | 250 tokens | Created: 10/22/2025, 2:30 PM
+    
+    > /prompt activate code-reviewer
+    ✓ Prompt "code-reviewer" activated (SUPPLEMENTAL mode)
+    
+    > /prompt disable
+    ✓ Custom prompt "code-reviewer" disabled. Returning to base prompt.
+    ```
+
 - **`/quit-confirm`**
   - **Description:** Show a confirmation dialog before exiting Qwen Code, allowing you to choose how to handle your current session.
   - **Usage:** `/quit-confirm`

@@ -25,7 +25,10 @@ export function useStartupStatus({ addItem }) {
                 full: "full (comprehensive system prompt)",
                 concise: "concise (always short)",
             };
-            const statusMessage = `📋 Status: Prompt Mode: ${cfg.promptMode} (${modeDescriptions[cfg.promptMode]}) | Active Toolset: ${cfg.activeCollection} (${toolCount} tool${toolCount === 1 ? "" : "s"})\n\n🔧 Tools: ${toolList}`;
+            const customPromptInfo = cfg.activeCustomPrompt
+                ? ` | Custom Prompt: ${cfg.activeCustomPrompt.name} (${cfg.activeCustomPrompt.exclusive ? "EXCLUSIVE" : "SUPPLEMENTAL"})`
+                : "";
+            const statusMessage = `📋 Status: Prompt Mode: ${cfg.promptMode} (${modeDescriptions[cfg.promptMode]})${customPromptInfo} | Active Toolset: ${cfg.activeCollection} (${toolCount} tool${toolCount === 1 ? "" : "s"})\n\n🔧 Tools: ${toolList}`;
             const infoItem = {
                 type: MessageType.INFO,
                 text: statusMessage,

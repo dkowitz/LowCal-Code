@@ -19,6 +19,7 @@ import { editorCommand } from "../ui/commands/editorCommand.js";
 import { exportCommand } from "../ui/commands/exportCommand.js";
 import { extensionsCommand } from "../ui/commands/extensionsCommand.js";
 import { helpCommand } from "../ui/commands/helpCommand.js";
+import { promptCommand } from "../ui/commands/promptCommand.js";
 import { promptInfoCommand } from "../ui/commands/promptInfoCommand.js";
 import { promptModeCommand } from "../ui/commands/promptModeCommand.js";
 import { toolsetCommand } from "../ui/commands/toolsetCommand.js";
@@ -95,6 +96,7 @@ export class BuiltinCommandLoader {
             vimCommand,
             setupGithubCommand,
             viewCommand,
+            promptCommand,
             promptInfoCommand,
             promptModeCommand,
             toolsetCommand,

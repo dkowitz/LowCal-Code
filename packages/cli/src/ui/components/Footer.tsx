@@ -66,10 +66,16 @@ export const Footer: React.FC<FooterProps> = ({
   // Load tool config for status display
   let promptMode = "auto";
   let activeCollection = "full";
+  let customPromptName: string | null = null;
+  let customPromptExclusive = false;
   try {
     const cfg = loadCliToolConfig();
     promptMode = cfg.promptMode;
     activeCollection = cfg.activeCollection;
+    if (cfg.activeCustomPrompt) {
+      customPromptName = cfg.activeCustomPrompt.name;
+      customPromptExclusive = cfg.activeCustomPrompt.exclusive;
+    }
   } catch {
     // Silently ignore errors - status display is not critical
   }
@@ -135,11 +141,20 @@ export const Footer: React.FC<FooterProps> = ({
           </Text>
         )}
         
-        {/* Status Indicator: Prompt Mode and Toolset */}
+        {/* Status Indicator: Prompt Mode, Custom Prompt, and Toolset */}
         <Text color={theme.ui.symbol}> | </Text>
         <Text color={theme.text.secondary}>
           {promptMode}
         </Text>
+        {customPromptName && (
+          <>
+            <Text color={theme.ui.symbol}> / </Text>
+            <Text color={theme.status.warning}>
+              {customPromptName}
+              {customPromptExclusive ? "✕" : "✓"}
+            </Text>
+          </>
+        )}
         <Text color={theme.ui.symbol}> / </Text>
         <Text color={theme.text.secondary}>
           {activeCollection}

@@ -104,6 +104,27 @@ function loadToolConfig() {
     return defaultConfig;
 }
 export const toolConfig = loadToolConfig();
+function loadCustomPromptConfig() {
+    try {
+        const homeDir = os.homedir();
+        if (!homeDir) {
+            return {};
+        }
+        const configPath = path.join(homeDir, ".qwen", "tool-config.json");
+        if (!fs.existsSync(configPath)) {
+            return {};
+        }
+        const raw = fs.readFileSync(configPath, "utf8");
+        const parsed = JSON.parse(raw) ?? {};
+        return {
+            customPrompts: parsed.customPrompts ?? {},
+            activeCustomPrompt: parsed.activeCustomPrompt ?? null,
+        };
+    }
+    catch {
+        return {};
+    }
+}
 function normalizePromptMode(value) {
     const mode = typeof value === "string"
         ? value.toLowerCase()
@@ -314,8 +335,32 @@ export function getCoreSystemPrompt(userMemory, config, model) {
     const memorySuffix = userMemory && userMemory.trim().length > 0
         ? `\n\n---\n\n${userMemory.trim()}`
         : "";
+    // Check for active custom prompt early - it takes precedence
+    const customPromptConfig = loadCustomPromptConfig();
+    if (customPromptConfig.activeCustomPrompt) {
+        const { name, exclusive } = customPromptConfig.activeCustomPrompt;
+        const customPrompts = customPromptConfig.customPrompts ?? {};
+        const customPromptMetadata = customPrompts[name];
+        if (customPromptMetadata) {
+            if (exclusive) {
+                // Replace entire prompt with custom prompt
+                return `${customPromptMetadata.content}${memorySuffix}`;
+            }
+            // For supplemental mode, we'll append it later after building basePrompt
+        }
+    }
     if (shouldUseConcise) {
-        const concisePrompt = buildConcisePrompt(activeToolNames);
+        let concisePrompt = buildConcisePrompt(activeToolNames);
+        // Apply supplemental custom prompt if active
+        if (customPromptConfig.activeCustomPrompt && !customPromptConfig.activeCustomPrompt.exclusive) {
+            const { name } = customPromptConfig.activeCustomPrompt;
+            const customPrompts = customPromptConfig.customPrompts ?? {};
+            const customPromptMetadata = customPrompts[name];
+            if (customPromptMetadata) {
+                const additionalInstructions = `\n\n### Additional Instructions\n\n${customPromptMetadata.content}\n\n### End Additional Instructions`;
+                concisePrompt = `${concisePrompt}${additionalInstructions}`;
+            }
+        }
         return `${concisePrompt}${memorySuffix}`;
     }
     let basePrompt = systemMdEnabled
@@ -482,6 +527,16 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
                 fs.mkdirSync(path.dirname(resolvedPath), { recursive: true });
                 fs.writeFileSync(resolvedPath, basePrompt); // write to custom path from GEMINI_WRITE_SYSTEM_MD
             }
+        }
+    }
+    // Apply supplemental custom prompt if active (exclusive mode was already handled above)
+    if (customPromptConfig.activeCustomPrompt && !customPromptConfig.activeCustomPrompt.exclusive) {
+        const { name } = customPromptConfig.activeCustomPrompt;
+        const customPrompts = customPromptConfig.customPrompts ?? {};
+        const customPromptMetadata = customPrompts[name];
+        if (customPromptMetadata) {
+            const additionalInstructions = `\n\n### Additional Instructions\n\n${customPromptMetadata.content}\n\n### End Additional Instructions`;
+            return `${basePrompt}${additionalInstructions}${memorySuffix}`;
         }
     }
     return `${basePrompt}${memorySuffix}`;

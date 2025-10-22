@@ -11,10 +11,24 @@ import { toolConfig, ToolNames } from "@qwen-code/qwen-code-core";
 
 export type PromptMode = "auto" | "full" | "concise";
 
+export interface CustomPromptMetadata {
+  content: string;
+  exclusive: boolean;
+  createdAt: number;
+  tokenCount: number;
+}
+
+export interface ActiveCustomPrompt {
+  name: string;
+  exclusive: boolean;
+}
+
 export interface CliToolConfig {
   promptMode: PromptMode;
   activeCollection: string;
   collections: Record<string, string[]>;
+  customPrompts?: Record<string, CustomPromptMetadata>;
+  activeCustomPrompt?: ActiveCustomPrompt | null;
 }
 
 const DEFAULT_COLLECTIONS: Record<string, string[]> = {
@@ -57,6 +71,8 @@ const DEFAULT_CONFIG: CliToolConfig = {
       ? toolConfig.collections
       : DEFAULT_COLLECTIONS,
   ),
+  customPrompts: {},
+  activeCustomPrompt: null,
 };
 
 /**
@@ -70,10 +86,20 @@ export function resolveToolConfigPath(): string {
   return path.join(homeDir, ".qwen", "tool-config.json");
 }
 
+/**
+ * Estimate token count (roughly 1 token per 4 characters)
+ */
+export function estimateTokenCount(text: string): number {
+  return Math.ceil(text.length / 4);
+}
+
 export function loadCliToolConfig(): CliToolConfig {
   const configPath = resolveToolConfigPath();
   if (!fs.existsSync(configPath)) {
-    return { ...DEFAULT_CONFIG, collections: cloneCollections(DEFAULT_CONFIG.collections) };
+    return {
+      ...DEFAULT_CONFIG,
+      collections: cloneCollections(DEFAULT_CONFIG.collections),
+    };
   }
 
   try {
@@ -90,13 +116,24 @@ export function loadCliToolConfig(): CliToolConfig {
         ? parsed.activeCollection
         : DEFAULT_CONFIG.activeCollection;
 
+    const customPrompts = normalizeCustomPrompts(parsed.customPrompts ?? {});
+    const activeCustomPrompt = normalizeActiveCustomPrompt(
+      parsed.activeCustomPrompt,
+      customPrompts,
+    );
+
     return {
       promptMode,
       activeCollection: active,
       collections: mergedCollections,
+      customPrompts,
+      activeCustomPrompt,
     };
   } catch {
-    return { ...DEFAULT_CONFIG, collections: cloneCollections(DEFAULT_CONFIG.collections) };
+    return {
+      ...DEFAULT_CONFIG,
+      collections: cloneCollections(DEFAULT_CONFIG.collections),
+    };
   }
 }
 
@@ -107,6 +144,8 @@ export function saveCliToolConfig(cfg: CliToolConfig): void {
     promptMode: cfg.promptMode,
     activeCollection: cfg.activeCollection,
     collections: cloneCollections(cfg.collections),
+    customPrompts: cfg.customPrompts ?? {},
+    activeCustomPrompt: cfg.activeCustomPrompt ?? null,
   };
   fs.writeFileSync(configPath, JSON.stringify(payload, null, 2), "utf8");
 }
@@ -163,6 +202,56 @@ function normalizePromptMode(value: unknown): PromptMode {
   return lower === "full" || lower === "concise" || lower === "auto"
     ? (lower as PromptMode)
     : DEFAULT_CONFIG.promptMode;
+}
+
+function normalizeCustomPrompts(
+  prompts: Record<string, unknown>,
+): Record<string, CustomPromptMetadata> {
+  const normalized: Record<string, CustomPromptMetadata> = {};
+  for (const [name, value] of Object.entries(prompts)) {
+    if (typeof value !== "object" || value === null) {
+      continue;
+    }
+    const obj = value as Record<string, unknown>;
+    if (
+      typeof obj["content"] === "string" &&
+      typeof obj["exclusive"] === "boolean" &&
+      typeof obj["createdAt"] === "number" &&
+      typeof obj["tokenCount"] === "number"
+    ) {
+      normalized[name] = {
+        content: obj["content"],
+        exclusive: obj["exclusive"],
+        createdAt: obj["createdAt"],
+        tokenCount: obj["tokenCount"],
+      };
+    }
+  }
+  return normalized;
+}
+
+function normalizeActiveCustomPrompt(
+  value: unknown,
+  customPrompts: Record<string, CustomPromptMetadata>,
+): ActiveCustomPrompt | null {
+  if (value === null || value === undefined) {
+    return null;
+  }
+  if (typeof value !== "object") {
+    return null;
+  }
+  const obj = value as Record<string, unknown>;
+  if (
+    typeof obj["name"] === "string" &&
+    typeof obj["exclusive"] === "boolean" &&
+    customPrompts[obj["name"]]
+  ) {
+    return {
+      name: obj["name"],
+      exclusive: obj["exclusive"],
+    };
+  }
+  return null;
 }
 
 function cloneCollections(
