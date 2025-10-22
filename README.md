@@ -69,6 +69,15 @@ Ctrl+Y - YOLO Mode
     - concise:  short, abbreviated prompt for conserving context space and decreasing latency, particularly for local models.  Dynamically constructed to only include instructions/examples for tools from the currently activated /toolset.
     - auto:  automatically uses concise prompt when using LM Studio endpoint and full prompt when using OpenRouter endpoint
 
+- **`/prompt <list/show/create/delete/[use/activate/set]/disable> --exclusive`** - Create, manage, and use custom prompts
+    - list: list available prompts
+    - show [name]: show the text of a prompt in a viewer (same as /view or /promptinfo)
+    - create [name] [string or .md file]: create a new prompt with the given string or from the referenced .md file
+    - delete [name]: delete an existing prompt
+    - activate/use/set [name]: the indicated prompt will be used
+    - disable: disables any currently set custom prompts and returns to base prompt from /promptmode
+    - --exclusive: if used, custom prompt will completely replace base prompt, otherwise the custom prompt is appended to the base prompt
+
 - **`/toolset (list, show, activate/use, create, add, remove)`** - use custom tool collections to exclude tools from being used and saving context space and decreasing latency, particularly with local models.  Using the shell tool is often more efficient than using file tools.
     - list: list available preset tool collections
     - show <toolset collection name>:  shows which tools are in a collection
