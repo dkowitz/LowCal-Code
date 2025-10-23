@@ -1,0 +1,13 @@
+version: '3'
+
+services:
+  searxng:
+    image: searxng/searxng:latest
+    container_name: searxng
+    ports:
+      - "8085:8080"
+    restart: unless-stopped
+    # Explicit DNS servers to fix connectivity issues in Docker containers
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
