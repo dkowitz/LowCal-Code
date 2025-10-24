@@ -77,7 +77,7 @@ import {
 } from "./components/subagents/index.js";
 import { Colors } from "./colors.js";
 import { loadHierarchicalGeminiMemory } from "../config/config.js";
-import { setOpenAIModel } from "../config/auth.js";
+import { setOpenAIModel , validateAuthMethod } from "../config/auth.js";
 import type { LoadedSettings } from "../config/settings.js";
 import { SettingScope } from "../config/settings.js";
 import { Tips } from "./components/Tips.js";
@@ -104,7 +104,6 @@ import {
 } from "@qwen-code/qwen-code-core";
 import type { IdeIntegrationNudgeResult } from "./IdeIntegrationNudge.js";
 import { IdeIntegrationNudge } from "./IdeIntegrationNudge.js";
-import { validateAuthMethod } from "../config/auth.js";
 import { useLogger } from "./hooks/useLogger.js";
 import { StreamingContext } from "./contexts/StreamingContext.js";
 import {

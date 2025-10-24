@@ -144,7 +144,7 @@ class GrepToolInvocation extends BaseToolInvocation {
             const matchCount = allMatches.length;
             const matchTerm = matchCount === 1 ? "match" : "matches";
             // Build the header with truncation info if needed
-            let headerText = `Found ${matchCount} ${matchTerm} for pattern "${this.params.pattern}" ${searchLocationDescription}${this.params.include ? ` (filter: "${this.params.include}")` : ""}`;
+            const headerText = `Found ${matchCount} ${matchTerm} for pattern "${this.params.pattern}" ${searchLocationDescription}${this.params.include ? ` (filter: "${this.params.include}")` : ""}`;
             let llmContent = `${headerText}:
 ---
 `;
@@ -157,7 +157,7 @@ class GrepToolInvocation extends BaseToolInvocation {
                 llmContent += "---\n";
             }
             // Add truncation guidance if results were limited
-            let displayText = `Found ${matchCount} ${matchTerm}`;
+            const displayText = `Found ${matchCount} ${matchTerm}`;
             return {
                 llmContent: llmContent.trim(),
                 returnDisplay: displayText,

@@ -125075,7 +125075,7 @@ var GrepToolInvocation = class extends BaseToolInvocation {
       }, {});
       const matchCount = allMatches.length;
       const matchTerm = matchCount === 1 ? "match" : "matches";
-      let headerText = `Found ${matchCount} ${matchTerm} for pattern "${this.params.pattern}" ${searchLocationDescription}${this.params.include ? ` (filter: "${this.params.include}")` : ""}`;
+      const headerText = `Found ${matchCount} ${matchTerm} for pattern "${this.params.pattern}" ${searchLocationDescription}${this.params.include ? ` (filter: "${this.params.include}")` : ""}`;
       let llmContent = `${headerText}:
 ---
 `;
@@ -125089,7 +125089,7 @@ var GrepToolInvocation = class extends BaseToolInvocation {
         });
         llmContent += "---\n";
       }
-      let displayText = `Found ${matchCount} ${matchTerm}`;
+      const displayText = `Found ${matchCount} ${matchTerm}`;
       return {
         llmContent: llmContent.trim(),
         returnDisplay: displayText

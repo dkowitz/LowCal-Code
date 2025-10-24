@@ -5,11 +5,8 @@
  */
 
 import { useCallback, useEffect, useMemo, useRef } from "react";
-import type { Config } from "@qwen-code/qwen-code-core";
-import {
-  setErrorReportListener,
-  type ErrorReportEvent,
-} from "@qwen-code/qwen-code-core";
+import type { Config, ErrorReportEvent } from "@qwen-code/qwen-code-core";
+import { setErrorReportListener } from "@qwen-code/qwen-code-core";
 import {
   SessionMarkdownLogger,
   type SessionLoggingController,
@@ -105,8 +102,7 @@ export function useSessionLoggingController(
 
   const getStatus = useCallback(() => loggerRef.current.getStatus(), []);
 
-  const controller = useMemo<SessionLoggingController>(() => {
-    return {
+  const controller = useMemo<SessionLoggingController>(() => ({
       enableLogging,
       disableLogging,
       getStatus,
@@ -125,8 +121,7 @@ export function useSessionLoggingController(
       logErrorReport: (payload) => {
         void loggerRef.current.logErrorReport(payload);
       },
-    };
-  }, [disableLogging, enableLogging, getStatus]);
+    }), [disableLogging, enableLogging, getStatus]);
 
   return controller;
 }

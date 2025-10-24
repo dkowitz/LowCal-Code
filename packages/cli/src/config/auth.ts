@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { AuthType } from "@qwen-code/qwen-code-core";
+import { AuthType , GEMINI_CONFIG_DIR as GEMINI_DIR } from "@qwen-code/qwen-code-core";
 import { loadEnvironment } from "./settings.js";
 
 export function normalizeAuthType(
@@ -85,7 +85,6 @@ export const validateAuthMethod = (
 import * as fs from "node:fs";
 import * as path from "node:path";
 import { homedir } from "node:os";
-import { GEMINI_CONFIG_DIR as GEMINI_DIR } from "@qwen-code/qwen-code-core";
 
 function getEnvFilePath(): string {
   // Search upward from cwd for a project .env or .qwen/.env, otherwise use home fallback.
@@ -136,14 +135,8 @@ function setEnvVarAndPersist(key: string, value: string): string {
   return envPath;
 }
 
-export const setOpenAIApiKey = (apiKey: string): string => {
-  return setEnvVarAndPersist("OPENAI_API_KEY", apiKey);
-};
+export const setOpenAIApiKey = (apiKey: string): string => setEnvVarAndPersist("OPENAI_API_KEY", apiKey);
 
-export const setOpenAIBaseUrl = (baseUrl: string): string => {
-  return setEnvVarAndPersist("OPENAI_BASE_URL", baseUrl);
-};
+export const setOpenAIBaseUrl = (baseUrl: string): string => setEnvVarAndPersist("OPENAI_BASE_URL", baseUrl);
 
-export const setOpenAIModel = (model: string): string => {
-  return setEnvVarAndPersist("OPENAI_MODEL", model);
-};
+export const setOpenAIModel = (model: string): string => setEnvVarAndPersist("OPENAI_MODEL", model);

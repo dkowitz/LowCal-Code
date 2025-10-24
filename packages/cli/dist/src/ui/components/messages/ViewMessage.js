@@ -51,13 +51,11 @@ export const ViewMessage = ({ text, filePath, tokenCount, onExit, isActive, scro
         }
     }, { isActive: acquired });
     // Release lock on unmount if still held
-    React.useEffect(() => {
-        return () => {
-            try {
-                releaseLock(owner);
-            }
-            catch (e) { }
-        };
+    React.useEffect(() => () => {
+        try {
+            releaseLock(owner);
+        }
+        catch (e) { }
     }, [releaseLock, owner]);
     const lines = text.split("\n");
     const visibleLines = lines.slice(scrollOffset, scrollOffset + maxHeight);

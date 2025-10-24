@@ -1,7 +1,8 @@
 import { CommandKind } from "./types.js";
 import { MessageType } from "../types.js";
-// Import core utilities to construct the prompt.
+// Import core utilities and CLI config sync helpers.
 import { toolConfig, getCoreSystemPrompt } from "@qwen-code/qwen-code-core";
+import { loadCliToolConfig, syncCoreToolConfig } from "./utils/toolConfig.js";
 /**
  * Helper to estimate token count if the genai client is unavailable.
  */
@@ -14,6 +15,9 @@ export const promptInfoCommand = {
     description: "Show the current full system prompt and its token count (core, tools, memory).",
     kind: CommandKind.BUILT_IN,
     action: async (context, args) => {
+        // Ensure core config reflects persisted CLI settings before building prompt.
+        const cfg = loadCliToolConfig();
+        syncCoreToolConfig(cfg);
         // Build the core system prompt using the same logic as the runtime.
         const userMemory = undefined; // Memory is injected elsewhere; not available here.
         const fullPrompt = getCoreSystemPrompt(userMemory, undefined, undefined);

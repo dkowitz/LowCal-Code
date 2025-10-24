@@ -127,7 +127,7 @@ All files          |       0 |      2.8 |     2.8 |       0 |
   read-file.ts     |       0 |        0 |       0 |       0 | 1-209             
   ...many-files.ts |       0 |        0 |       0 |       0 | 1-647             
   ripGrep.ts       |       0 |        0 |       0 |       0 | 1-518             
-  ...xng-search.ts |       0 |        0 |       0 |       0 | 1-309             
+  ...xng-search.ts |       0 |        0 |       0 |       0 | 1-357             
   shell.ts         |       0 |        0 |       0 |       0 | 1-496             
   task.ts          |       0 |        0 |       0 |       0 | 1-562             
   todoWrite.ts     |       0 |        0 |       0 |       0 | 1-454             

@@ -588,7 +588,7 @@ export class Config {
     // Import tokenLimits functions lazily to avoid circular import issues at module load time
     let coreSet: ((m: string, l?: number) => void) | undefined;
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+       
       coreSet = require("../core/tokenLimits.js").setModelContextLimit;
     } catch (e) {
       coreSet = undefined;
@@ -630,7 +630,7 @@ export class Config {
 
     // Fall back to core token limits dynamic map if available
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+       
       const coreGet = require("../core/tokenLimits.js")
         .getModelContextLimit as (m: string) => number | undefined;
       if (typeof coreGet === "function") {
@@ -649,7 +649,7 @@ export class Config {
 
     // Check for dynamic/provider-supplied limit via core token limits map first
     try {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
+       
       const coreGet = require("../core/tokenLimits.js")
         .getModelContextLimit as (m: string) => number | undefined;
       if (typeof coreGet === "function") {
