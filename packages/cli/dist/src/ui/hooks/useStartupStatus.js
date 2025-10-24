@@ -26,7 +26,7 @@ export function useStartupStatus({ addItem }) {
                 concise: "concise (always short)",
             };
             const customPromptInfo = cfg.activeCustomPrompt
-                ? ` | Custom Prompt: ${cfg.activeCustomPrompt.name} (${cfg.activeCustomPrompt.exclusive ? "EXCLUSIVE" : "SUPPLEMENTAL"})`
+                ? ` | Custom Prompt: ${Array.isArray(cfg.activeCustomPrompt.name) ? cfg.activeCustomPrompt.name.join(", ") : cfg.activeCustomPrompt.name} (${cfg.activeCustomPrompt.exclusive ? "EXCLUSIVE" : "SUPPLEMENTAL"})`
                 : "";
             const statusMessage = `📋 Status: Prompt Mode: ${cfg.promptMode} (${modeDescriptions[cfg.promptMode]})${customPromptInfo} | Active Toolset: ${cfg.activeCollection} (${toolCount} tool${toolCount === 1 ? "" : "s"})\n\n🔧 Tools: ${toolList}`;
             const infoItem = {

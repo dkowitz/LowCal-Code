@@ -165,7 +165,10 @@ interface CustomPromptMetadata {
 }
 
 interface ActiveCustomPrompt {
-  name: string;
+  /**
+   * List of active prompt names for stacking.
+   */
+  name: string[];
   exclusive: boolean;
 }
 
@@ -473,32 +476,37 @@ export function getCoreSystemPrompt(
   // Check for active custom prompt early - it takes precedence
   const customPromptConfig = loadCustomPromptConfig();
   if (customPromptConfig.activeCustomPrompt) {
-    const { name, exclusive } = customPromptConfig.activeCustomPrompt;
+    const { name: rawName, exclusive } = customPromptConfig.activeCustomPrompt;
+    const names = Array.isArray(rawName) ? rawName : [rawName];
     const customPrompts = customPromptConfig.customPrompts ?? {};
-    const customPromptMetadata = customPrompts[name];
-
-    if (customPromptMetadata) {
-      if (exclusive) {
-        // Replace entire prompt with custom prompt
-        return `${customPromptMetadata.content}${memorySuffix}`;
+    // If exclusive, replace with the first prompt's content
+    if (exclusive && names.length > 0) {
+      const firstMeta = customPrompts[names[0]];
+      if (firstMeta) {
+        return `${firstMeta.content}${memorySuffix}`;
       }
-      // For supplemental mode, we'll append it later after building basePrompt
     }
+    // For supplemental mode, we'll append later after building basePrompt
   }
 
   if (shouldUseConcise) {
     let concisePrompt = buildConcisePrompt(activeToolNames);
     
-    // Apply supplemental custom prompt if active
+    // Apply supplemental custom prompt if active (non‑exclusive)
     if (customPromptConfig.activeCustomPrompt && !customPromptConfig.activeCustomPrompt.exclusive) {
-      const { name } = customPromptConfig.activeCustomPrompt;
       const customPrompts = customPromptConfig.customPrompts ?? {};
-      const customPromptMetadata = customPrompts[name];
-
-      if (customPromptMetadata) {
-        const additionalInstructions = `\n\n### Additional Instructions\n\n${customPromptMetadata.content}\n\n### End Additional Instructions`;
-        concisePrompt = `${concisePrompt}${additionalInstructions}`;
+      const namesToAppend = Array.isArray(customPromptConfig.activeCustomPrompt?.name)
+        ? customPromptConfig.activeCustomPrompt.name
+        : [customPromptConfig.activeCustomPrompt?.name].filter(Boolean);
+      let updatedPrompt = concisePrompt;
+      for (const n of namesToAppend) {
+        const meta = customPrompts[n];
+        if (meta) {
+          const additionalInstructions = `\n\n### Additional Instructions\n\n${meta.content}\n\n### End Additional Instructions`;
+          updatedPrompt = `${updatedPrompt}${additionalInstructions}`;
+        }
       }
+      concisePrompt = updatedPrompt;
     }
     
     return `${concisePrompt}${memorySuffix}`;
@@ -676,14 +684,19 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
 
   // Apply supplemental custom prompt if active (exclusive mode was already handled above)
   if (customPromptConfig.activeCustomPrompt && !customPromptConfig.activeCustomPrompt.exclusive) {
-    const { name } = customPromptConfig.activeCustomPrompt;
+    const names = Array.isArray(customPromptConfig.activeCustomPrompt.name)
+      ? customPromptConfig.activeCustomPrompt.name
+      : [customPromptConfig.activeCustomPrompt.name].filter(Boolean);
     const customPrompts = customPromptConfig.customPrompts ?? {};
-    const customPromptMetadata = customPrompts[name];
-
-    if (customPromptMetadata) {
-      const additionalInstructions = `\n\n### Additional Instructions\n\n${customPromptMetadata.content}\n\n### End Additional Instructions`;
-      return `${basePrompt}${additionalInstructions}${memorySuffix}`;
+    let updatedBase = basePrompt;
+    for (const n of names) {
+      const meta = customPrompts[n];
+      if (meta) {
+        const additionalInstructions = `\n\n### Additional Instructions\n\n${meta.content}\n\n### End Additional Instructions`;
+        updatedBase = `${updatedBase}${additionalInstructions}`;
+      }
     }
+    return `${updatedBase}${memorySuffix}`;
   }
 
   return `${basePrompt}${memorySuffix}`;

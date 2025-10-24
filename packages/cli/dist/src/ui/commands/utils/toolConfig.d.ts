@@ -11,7 +11,10 @@ export interface CustomPromptMetadata {
     tokenCount: number;
 }
 export interface ActiveCustomPrompt {
-    name: string;
+    /**
+     * List of active prompt names. Allows stacking multiple prompts.
+     */
+    name: string[];
     exclusive: boolean;
 }
 export interface CliToolConfig {

@@ -181,11 +181,25 @@ function normalizeActiveCustomPrompt(value, customPrompts) {
         return null;
     }
     const obj = value;
-    if (typeof obj["name"] === "string" &&
-        typeof obj["exclusive"] === "boolean" &&
-        customPrompts[obj["name"]]) {
+    // Support name as string or array of strings
+    const rawName = obj["name"];
+    let names;
+    if (typeof rawName === "string") {
+        if (customPrompts[rawName]) {
+            names = [rawName];
+        }
+    }
+    else if (Array.isArray(rawName)) {
+        // Filter to existing prompts
+        const filtered = rawName.filter((n) => typeof n === "string" && customPrompts[n]);
+        if (filtered.length > 0) {
+            names = filtered;
+        }
+    }
+    if (names &&
+        typeof obj["exclusive"] === "boolean") {
         return {
-            name: obj["name"],
+            name: names,
             exclusive: obj["exclusive"],
         };
     }

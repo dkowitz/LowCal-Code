@@ -19,7 +19,10 @@ export interface CustomPromptMetadata {
 }
 
 export interface ActiveCustomPrompt {
-  name: string;
+  /**
+   * List of active prompt names. Allows stacking multiple prompts.
+   */
+  name: string[];
   exclusive: boolean;
 }
 
@@ -241,14 +244,27 @@ function normalizeActiveCustomPrompt(
     return null;
   }
   const obj = value as Record<string, unknown>;
+  // Support name as string or array of strings
+  const rawName = obj["name"];
+  let names: string[] | undefined;
+  if (typeof rawName === "string") {
+    if (customPrompts[rawName]) {
+      names = [rawName];
+    }
+  } else if (Array.isArray(rawName)) {
+    // Filter to existing prompts
+    const filtered = rawName.filter((n) => typeof n === "string" && customPrompts[n as string]);
+    if (filtered.length > 0) {
+      names = filtered as string[];
+    }
+  }
   if (
-    typeof obj["name"] === "string" &&
-    typeof obj["exclusive"] === "boolean" &&
-    customPrompts[obj["name"]]
+    names &&
+    typeof obj["exclusive"] === "boolean"
   ) {
     return {
-      name: obj["name"],
-      exclusive: obj["exclusive"],
+      name: names,
+      exclusive: obj["exclusive"] as boolean,
     };
   }
   return null;

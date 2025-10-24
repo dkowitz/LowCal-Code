@@ -123,7 +123,7 @@ Examples:
         return;
       }
 
-      const activePromptName = cfg.activeCustomPrompt?.name ?? null;
+      const activePromptName = cfg.activeCustomPrompt?.name ? (Array.isArray(cfg.activeCustomPrompt.name) ? cfg.activeCustomPrompt.name.join(", ") : cfg.activeCustomPrompt.name) : null;
       const lines = ["📋 Custom Prompts:"];
       for (const name of promptNames) {
         const metadata = prompts[name]!;
@@ -257,8 +257,14 @@ Examples:
       }
 
       // If deleting the active prompt, disable it
-      if (cfg.activeCustomPrompt?.name === name) {
-        cfg.activeCustomPrompt = null;
+      // If the prompt being deleted is active, remove it from the stack
+      if (cfg.activeCustomPrompt && cfg.activeCustomPrompt.name.includes(name)) {
+        const filtered = cfg.activeCustomPrompt.name.filter((n) => n !== name);
+        if (filtered.length === 0) {
+          cfg.activeCustomPrompt = null;
+        } else {
+          cfg.activeCustomPrompt = { ...cfg.activeCustomPrompt, name: filtered };
+        }
       }
 
       delete prompts[name];
@@ -271,29 +277,54 @@ Examples:
 
     // ACTIVATE / USE / SET subcommands
     if (["activate", "use", "set"].includes(verbLower)) {
-      const name = rest[0];
+      // Support single name or list syntax e.g., [prompt1, prompt2]
       const hasExclusiveFlag = rest.includes("--exclusive");
 
-      if (!name) {
-        reply(`Usage: /prompt ${verbLower} <name> [--exclusive]`);
+      // Remove the exclusive flag from arguments for parsing names
+      const argsWithoutFlags = rest.filter((a) => a !== "--exclusive");
+      if (argsWithoutFlags.length === 0) {
+        reply(`Usage: /prompt ${verbLower} <name|[name1,name2,...]> [--exclusive]`);
         return;
       }
 
+      // Reconstruct possible spaced list syntax into a single string
+      let rawNameArg = argsWithoutFlags[0];
+      if (rawNameArg.startsWith("[") && !rawNameArg.endsWith("]")) {
+        // Combine subsequent tokens until we find the closing bracket
+        let combined = rawNameArg;
+        for (let i = 1; i < argsWithoutFlags.length; i++) {
+          combined += " " + argsWithoutFlags[i];
+          if (combined.endsWith("]")) break;
+        }
+        rawNameArg = combined;
+      }
+
+      // Parse names into an array
+      let names: string[];
+      if (rawNameArg.startsWith("[") && rawNameArg.endsWith("]")) {
+        const inner = rawNameArg.slice(1, -1);
+        names = inner.split(",").map((s) => s.trim()).filter(Boolean);
+      } else {
+        names = [rawNameArg];
+      }
+
+      // Validate all prompts exist
       const prompts = cfg.customPrompts ?? {};
-      const metadata = prompts[name];
-      if (!metadata) {
-        reply(`Prompt "${name}" not found.`);
-        return;
+      for (const n of names) {
+        if (!prompts[n]) {
+          reply(`Prompt "${n}" not found.`);
+          return;
+        }
       }
 
-      // Use the --exclusive flag if provided, otherwise use the prompt's stored setting
-      const exclusive = hasExclusiveFlag ? true : metadata.exclusive;
+      // Use the --exclusive flag if provided, otherwise default to first prompt's setting
+      const exclusive = hasExclusiveFlag ? true : prompts[names[0]]?.exclusive ?? false;
 
-      cfg.activeCustomPrompt = { name, exclusive };
+      cfg.activeCustomPrompt = { name: names, exclusive };
       saveCliToolConfig(cfg);
       syncCoreToolConfig(cfg);
 
-      // Reinitialize the Gemini client to pick up the new prompt
+      // Reinitialize the Gemini client to pick up the new prompt(s)
       const geminiConfig = context.services.config;
       const geminiClient = geminiConfig?.getGeminiClient?.();
       try {
@@ -305,7 +336,7 @@ Examples:
       }
 
       reply(
-        `✓ Prompt "${name}" activated (${exclusive ? "EXCLUSIVE" : "SUPPLEMENTAL"} mode)`,
+        `✓ Prompt(s) "${names.join(", ")}" activated (${exclusive ? "EXCLUSIVE" : "SUPPLEMENTAL"} mode)`,
       );
       return;
     }
@@ -317,7 +348,7 @@ Examples:
         return;
       }
 
-      const wasActive = cfg.activeCustomPrompt.name;
+      const wasActive = Array.isArray(cfg.activeCustomPrompt?.name) ? cfg.activeCustomPrompt.name.join(", ") : cfg.activeCustomPrompt?.name;
       cfg.activeCustomPrompt = null;
       saveCliToolConfig(cfg);
       syncCoreToolConfig(cfg);

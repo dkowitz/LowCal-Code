@@ -30,7 +30,10 @@ promptTokenCount, nightly, vimMode, isTrustedFolder, }) => {
         promptMode = cfg.promptMode;
         activeCollection = cfg.activeCollection;
         if (cfg.activeCustomPrompt) {
-            customPromptName = cfg.activeCustomPrompt.name;
+            // Join multiple prompt names for display
+            customPromptName = Array.isArray(cfg.activeCustomPrompt.name)
+                ? cfg.activeCustomPrompt.name.join(", ")
+                : cfg.activeCustomPrompt.name;
             customPromptExclusive = cfg.activeCustomPrompt.exclusive;
         }
     }
