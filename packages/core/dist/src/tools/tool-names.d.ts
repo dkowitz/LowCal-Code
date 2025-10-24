@@ -22,4 +22,5 @@ export declare const ToolNames: {
     readonly EXIT_PLAN_MODE: "exit_plan_mode";
     readonly WEB_FETCH: "web_fetch";
     readonly WEB_SEARCH: "web_search";
+    readonly SEARXNG_SEARCH: "searxng_search";
 };

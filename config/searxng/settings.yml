@@ -1,0 +1,31 @@
+use_default_settings: true
+general:
+  debug: false
+  instance_name: "SearXNG"
+  
+search:
+  formats:
+    - html
+    - json
+    - rss
+
+server:
+  limiter: false
+  bind_address: "0.0.0.0"
+  port: 8080
+  secret_key: "your-secret-key-here-change-this"
+
+botdetection:
+  enabled: false
+
+# Enable some basic engines
+engines:
+  - name: duckduckgo
+    engine: duckduckgo
+    disabled: false
+  - name: bing
+    engine: bing
+    disabled: false
+  - name: google
+    engine: google
+    disabled: true

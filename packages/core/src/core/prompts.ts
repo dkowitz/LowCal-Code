@@ -37,6 +37,7 @@ const DEFAULT_COLLECTIONS: Record<string, string[]> = {
     ToolNames.EXIT_PLAN_MODE,
     ToolNames.WEB_FETCH,
     ToolNames.WEB_SEARCH,
+    ToolNames.SEARXNG_SEARCH,
   ],
   minimal: [
     ToolNames.READ_FILE,
@@ -81,6 +82,8 @@ const TOOL_SUMMARIES: Record<string, string> = {
     "Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: `web_fetch https://example.com/docs`.",
   [ToolNames.WEB_SEARCH]:
     "Search the web via Tavily to gather up-to-date information with cited sources. Example: `web_search latest Node.js LTS release`.",
+  [ToolNames.SEARXNG_SEARCH]:
+    "Search the web using your local SearXNG instance for private, non-API-key search results. Example: `searxng_search privacy-focused alternatives to Google Search`.",
 };
 
 function loadToolConfig(): ToolConfig {

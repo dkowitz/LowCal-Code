@@ -23,4 +23,5 @@ export const ToolNames = {
   EXIT_PLAN_MODE: "exit_plan_mode",
   WEB_FETCH: "web_fetch",
   WEB_SEARCH: "web_search",
+  SEARXNG_SEARCH: "searxng_search",
 } as const;

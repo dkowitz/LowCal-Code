@@ -48,6 +48,7 @@ import { ToolRegistry } from "../tools/tool-registry.js";
 import type { AnyToolInvocation } from "../tools/tools.js";
 import { WebFetchTool } from "../tools/web-fetch.js";
 import { WebSearchTool } from "../tools/web-search.js";
+import { SearXNGSearchTool } from "../tools/searxng-search.js";
 import { WriteFileTool } from "../tools/write-file.js";
 import { shouldAttemptBrowserLaunch } from "../utils/browser.js";
 import { FileExclusions } from "../utils/ignorePatterns.js";
@@ -1152,6 +1153,9 @@ export class Config {
     if (this.getTavilyApiKey()) {
       registerCoreTool(WebSearchTool, this);
     }
+    
+    // Always register SearXNG search tool for local instance usage
+    registerCoreTool(SearXNGSearchTool, this);
 
     await registry.discoverAllTools();
     return registry;

@@ -69898,7 +69898,7 @@ var require_cross_spawn = __commonJS({
     var cp = require("child_process");
     var parse6 = require_parse3();
     var enoent = require_enoent();
-    function spawn4(command, args, options2) {
+    function spawn5(command, args, options2) {
       const parsed = parse6(command, args, options2);
       const spawned = cp.spawn(parsed.command, parsed.args, parsed.options);
       enoent.hookChildProcess(spawned, parsed);
@@ -69910,8 +69910,8 @@ var require_cross_spawn = __commonJS({
       result.error = result.error || enoent.verifyENOENTSync(result.status, parsed);
       return result;
     }
-    module2.exports = spawn4;
-    module2.exports.spawn = spawn4;
+    module2.exports = spawn5;
+    module2.exports.spawn = spawn5;
     module2.exports.sync = spawnSync;
     module2.exports._parse = parse6;
     module2.exports._enoent = enoent;
@@ -109365,7 +109365,8 @@ var ToolNames = {
   TASK: "task",
   EXIT_PLAN_MODE: "exit_plan_mode",
   WEB_FETCH: "web_fetch",
-  WEB_SEARCH: "web_search"
+  WEB_SEARCH: "web_search",
+  SEARXNG_SEARCH: "searxng_search"
 };
 
 // ../core/dist/src/utils/gitUtils.js
@@ -110699,7 +110700,8 @@ var DEFAULT_COLLECTIONS = {
     ToolNames.TASK,
     ToolNames.EXIT_PLAN_MODE,
     ToolNames.WEB_FETCH,
-    ToolNames.WEB_SEARCH
+    ToolNames.WEB_SEARCH,
+    ToolNames.SEARXNG_SEARCH
   ],
   minimal: [
     ToolNames.READ_FILE,
@@ -110726,7 +110728,8 @@ var TOOL_SUMMARIES = {
   [ToolNames.TASK]: "Delegate work to a specialized subagent suited to the request. Example: `task code_review`.",
   [ToolNames.EXIT_PLAN_MODE]: "Exit plan mode after presenting the plan for user confirmation. Example: `exit_plan_mode`.",
   [ToolNames.WEB_FETCH]: "Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: `web_fetch https://example.com/docs`.",
-  [ToolNames.WEB_SEARCH]: "Search the web via Tavily to gather up-to-date information with cited sources. Example: `web_search latest Node.js LTS release`."
+  [ToolNames.WEB_SEARCH]: "Search the web via Tavily to gather up-to-date information with cited sources. Example: `web_search latest Node.js LTS release`.",
+  [ToolNames.SEARXNG_SEARCH]: "Search the web using your local SearXNG instance for private, non-API-key search results. Example: `searxng_search privacy-focused alternatives to Google Search`."
 };
 function loadToolConfig() {
   const defaultConfig = {
@@ -133031,6 +133034,214 @@ var WebSearchTool = class _WebSearchTool extends BaseDeclarativeTool {
   }
   createInvocation(params) {
     return new WebSearchToolInvocation(this.config, params);
+  }
+};
+
+// ../core/dist/src/tools/searxng-search.js
+init_tools();
+init_errors();
+var import_node_child_process5 = require("node:child_process");
+var SearXNGSearchToolInvocation = class extends BaseToolInvocation {
+  config;
+  constructor(config, params) {
+    super(params);
+    this.config = config;
+  }
+  getDescription() {
+    return `Searching the web with SearXNG for: "${this.params.query}"`;
+  }
+  async shouldConfirmExecute(_abortSignal) {
+    if (this.config.getApprovalMode() === ApprovalMode.AUTO_EDIT) {
+      return false;
+    }
+    const confirmationDetails = {
+      type: "info",
+      title: "Confirm SearXNG Search",
+      prompt: `Search the web with SearXNG for: "${this.params.query}"`,
+      onConfirm: async (outcome) => {
+        if (outcome === ToolConfirmationOutcome.ProceedAlways) {
+          this.config.setApprovalMode(ApprovalMode.AUTO_EDIT);
+        }
+      }
+    };
+    return confirmationDetails;
+  }
+  /**
+   * Checks if Docker is installed and available
+   */
+  async isDockerAvailable() {
+    try {
+      (0, import_node_child_process5.execSync)("docker --version", { stdio: "ignore" });
+      return true;
+    } catch (error) {
+      return false;
+    }
+  }
+  /**
+   * Checks if the SearXNG container is running
+   */
+  async isSearXNGRunning() {
+    try {
+      const output = (0, import_node_child_process5.execSync)("docker ps --format '{{.Names}}'", {
+        stdio: "pipe",
+        encoding: "utf8"
+      });
+      return output.includes("searxng");
+    } catch (error) {
+      return false;
+    }
+  }
+  /**
+   * Starts the SearXNG Docker container
+   */
+  async startSearXNG() {
+    try {
+      const dockerAvailable = await this.isDockerAvailable();
+      if (!dockerAvailable) {
+        throw new Error("Docker is not installed or not in PATH. Please install Docker to use SearXNG search.");
+      }
+      (0, import_node_child_process5.spawn)("docker", ["compose", "-f", "docker-compose.searxng.yml", "up", "-d"], {
+        stdio: "ignore",
+        detached: true
+      });
+      console.log("Starting SearXNG container...");
+    } catch (error) {
+      throw new Error(`Failed to start SearXNG container: ${getErrorMessage(error)}`);
+    }
+  }
+  /**
+   * Waits for the SearXNG service to be ready
+   */
+  async waitForSearXNGReady() {
+    const maxRetries = 30;
+    let retries = 0;
+    while (retries < maxRetries) {
+      try {
+        const response = await fetch("http://localhost:8085", {
+          method: "GET"
+        });
+        if (response.ok) {
+          return;
+        }
+      } catch (error) {
+      }
+      retries++;
+      await new Promise((resolve3) => setTimeout(resolve3, 1e3));
+    }
+    throw new Error("SearXNG service did not become available within the expected time");
+  }
+  async execute(signal) {
+    try {
+      const isRunning = await this.isSearXNGRunning();
+      if (!isRunning) {
+        console.log("SearXNG container not found. Starting it now...");
+        await this.startSearXNG();
+        await this.waitForSearXNGReady();
+      }
+      const searchUrl = new URL("http://localhost:8085/search");
+      searchUrl.searchParams.append("q", this.params.query);
+      searchUrl.searchParams.append("format", "json");
+      searchUrl.searchParams.append("engines", "google,bing,duckduckgo");
+      const response = await fetch(searchUrl.toString(), {
+        method: "GET",
+        headers: {
+          "Accept": "application/json",
+          "User-Agent": "LowCal-SearXNG-Client/1.0"
+        },
+        signal
+      });
+      if (!response.ok) {
+        const text = await response.text().catch(() => "");
+        throw new Error(`SearXNG API error: ${response.status} ${response.statusText}${text ? ` - ${text}` : ""}`);
+      }
+      const data = await response.json();
+      const sources = (data.results || []).map((r2) => ({
+        title: r2.title || "Untitled",
+        url: r2.url || ""
+      }));
+      const sourceListFormatted = sources.map((s2, i) => `[${i + 1}] ${s2.title} (${s2.url})`);
+      let content = "";
+      if (data.answers && data.answers.length > 0) {
+        content = data.answers.map((answer) => `${answer.answer} (from ${answer.engine})`).join("\n\n");
+      }
+      if (!content.trim()) {
+        content = sources.slice(0, 3).map((s2, i) => {
+          const result = data.results[i];
+          const snippet = result?.content ? ` - ${result.content.substring(0, 150)}...` : "";
+          return `${i + 1}. ${s2.title}${snippet}`;
+        }).join("\n");
+      }
+      if (data.suggestions && data.suggestions.length > 0) {
+        content += `
+
+Suggestions: ${data.suggestions.join(", ")}`;
+      }
+      if (sourceListFormatted.length > 0) {
+        content += `
+
+Sources:
+${sourceListFormatted.join("\n")}`;
+      }
+      if (!content.trim()) {
+        return {
+          llmContent: `No search results or information found for query: "${this.params.query}"`,
+          returnDisplay: "No information found."
+        };
+      }
+      return {
+        llmContent: `SearXNG search results for "${this.params.query}":
+
+${content}`,
+        returnDisplay: `Search results for "${this.params.query}" returned ${data.number_of_results || 0} results.`,
+        sources
+      };
+    } catch (error) {
+      const errorMessage = `Error during SearXNG web search for query "${this.params.query}": ${getErrorMessage(error)}`;
+      console.error(errorMessage, error);
+      if (error instanceof Error && (error.message.includes("Docker is not installed") || error.message.includes("command not found"))) {
+        return {
+          llmContent: `Error: ${errorMessage}
+
+Please install Docker to use SearXNG search functionality.`,
+          returnDisplay: "SearXNG search requires Docker installation."
+        };
+      }
+      return {
+        llmContent: `Error: ${errorMessage}`,
+        returnDisplay: "Error performing SearXNG web search."
+      };
+    }
+  }
+};
+var SearXNGSearchTool = class _SearXNGSearchTool extends BaseDeclarativeTool {
+  config;
+  static Name = ToolNames.SEARXNG_SEARCH;
+  constructor(config) {
+    super(_SearXNGSearchTool.Name, "SearXNGSearch", "Performs a web search using the local SearXNG instance and returns results with sources. Requires Docker to be installed.", Kind.Search, {
+      type: "object",
+      properties: {
+        query: {
+          type: "string",
+          description: "The search query to find information on the web."
+        }
+      },
+      required: ["query"]
+    });
+    this.config = config;
+  }
+  /**
+   * Validates the parameters for the SearXNGSearchTool.
+   * @param params The parameters to validate
+   * @returns An error message string if validation fails, null if valid
+   */
+  validateToolParamValues(params) {
+    if (!params.query || params.query.trim() === "") {
+      return "The 'query' parameter cannot be empty.";
+    }
+    return null;
+  }
+  createInvocation(params) {
+    return new SearXNGSearchToolInvocation(this.config, params);
   }
 };
 

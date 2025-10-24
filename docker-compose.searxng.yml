@@ -1,12 +1,14 @@
-version: '3'
-
 services:
   searxng:
     image: searxng/searxng:latest
     container_name: searxng
+    volumes:
+      - ./config/searxng/settings.yml:/etc/searxng/settings.yml:ro
     ports:
       - "8085:8080"
     restart: unless-stopped
+    environment:
+      - SEARXNG_SECRET_KEY=your-secret-key-here-change-this
     # Explicit DNS servers to fix connectivity issues in Docker containers
     dns:
       - 8.8.8.8
