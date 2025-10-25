@@ -24,4 +24,5 @@ export const ToolNames = {
   WEB_FETCH: "web_fetch",
   WEB_SEARCH: "web_search",
   SEARXNG_SEARCH: "searxng_search",
+  RESEARCH: "research",
 } as const;

@@ -23,4 +23,5 @@ export declare const ToolNames: {
     readonly WEB_FETCH: "web_fetch";
     readonly WEB_SEARCH: "web_search";
     readonly SEARXNG_SEARCH: "searxng_search";
+    readonly RESEARCH: "research";
 };

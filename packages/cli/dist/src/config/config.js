@@ -12,6 +12,7 @@ import { hideBin } from "yargs/helpers";
 import yargs from "yargs/yargs";
 import { extensionsCommand } from "../commands/extensions.js";
 import { mcpCommand } from "../commands/mcp.js";
+import { researchCommand } from "../commands/research.js";
 import { resolvePath } from "../utils/resolvePath.js";
 import { getCliVersion } from "../utils/version.js";
 import { annotateActiveExtensions } from "./extension.js";
@@ -220,7 +221,8 @@ export async function parseArguments(settings) {
         return true;
     }))
         // Register MCP subcommands
-        .command(mcpCommand);
+        .command(mcpCommand)
+        .command(researchCommand);
     if (settings?.experimental?.extensionManagement ?? false) {
         yargsInstance.command(extensionsCommand);
     }

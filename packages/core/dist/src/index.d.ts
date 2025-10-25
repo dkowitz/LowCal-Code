@@ -75,6 +75,7 @@ export * from "./tools/web-search.js";
 export * from "./tools/read-many-files.js";
 export * from "./tools/mcp-client.js";
 export * from "./tools/mcp-tool.js";
+export * from "./tools/research.js";
 export { MCPOAuthProvider } from "./mcp/oauth-provider.js";
 export type { OAuthToken, OAuthCredentials, } from "./mcp/token-storage/types.js";
 export { MCPOAuthTokenStorage } from "./mcp/oauth-token-storage.js";
