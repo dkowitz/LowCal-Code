@@ -6,6 +6,14 @@
 import { GenerateContentResponse, } from "@google/genai";
 import { OpenAIContentConverter } from "./converter.js";
 import { openaiLogger } from "../../utils/openaiLogger.js";
+function truncateForLog(value, limit = 4000) {
+    const text = typeof value === "string" ? value : String(value ?? "");
+    if (text.length <= limit) {
+        return text;
+    }
+    const half = Math.floor(limit / 2) - 3;
+    return `${text.slice(0, half)}...${text.slice(-half)}`;
+}
 export class ContentGenerationPipeline {
     config;
     client;
@@ -23,6 +31,7 @@ export class ContentGenerationPipeline {
     async execute(request, userPromptId) {
         return this.executeWithErrorHandling(request, userPromptId, false, async (openaiRequest, context) => {
             const openaiResponse = (await this.client.chat.completions.create(openaiRequest));
+            console.warn("[OpenAIContentGenerator] Raw completion response:", truncateForLog(JSON.stringify(openaiResponse)));
             const geminiResponse = this.converter.convertOpenAIResponseToGemini(openaiResponse);
             // Log success
             await this.config.telemetryService.logSuccess(context, geminiResponse, openaiRequest, openaiResponse);

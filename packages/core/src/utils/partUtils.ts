@@ -72,21 +72,52 @@ export function partToString(
 export function getResponseText(
   response: GenerateContentResponse,
 ): string | null {
-  if (response.candidates && response.candidates.length > 0) {
-    const candidate = response.candidates[0];
-
-    if (
-      candidate.content &&
-      candidate.content.parts &&
-      candidate.content.parts.length > 0
-    ) {
-      return candidate.content.parts
-        .filter((part) => part.text)
-        .map((part) => part.text)
-        .join("");
-    }
+  if (!response) {
+    return null;
   }
-  return null;
+
+  const rawCandidates: unknown =
+    (response as { response?: { candidates?: unknown } }).response
+      ?.candidates ?? (response as { candidates?: unknown }).candidates;
+
+  if (!Array.isArray(rawCandidates) || rawCandidates.length === 0) {
+    return null;
+  }
+
+  const candidate = rawCandidates[0] as {
+    content?: {
+      parts?: Array<
+        | string
+        | {
+            text?: unknown;
+          }
+      >;
+    };
+  };
+
+  const parts = candidate?.content?.parts;
+  if (!parts || parts.length === 0) {
+    return null;
+  }
+
+  const textSegments = parts
+    .map((part) => {
+      if (typeof part === "string") {
+        return part;
+      }
+      if (
+        part &&
+        typeof part === "object" &&
+        "text" in part &&
+        typeof part.text === "string"
+      ) {
+        return part.text;
+      }
+      return "";
+    })
+    .filter((segment) => segment.length > 0);
+
+  return textSegments.length > 0 ? textSegments.join("") : null;
 }
 
 /**

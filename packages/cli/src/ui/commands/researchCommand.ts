@@ -131,17 +131,32 @@ export const researchCommand: SlashCommand = {
   ) => {
     const { ui } = context;
     let progressActive = false;
+    const progressLines: string[] = [];
+    const startTime = Date.now();
 
-    const setProgress = (text: string) => {
+    const setProgress = (text: string, persist = true) => {
+      const elapsedSec = Math.floor((Date.now() - startTime) / 1000);
+      const elapsedLabel = `${elapsedSec}s`;
+      const line = `[${elapsedLabel}] ${text}`;
+
+      if (persist) {
+        progressLines.push(line);
+      } else if (progressLines.length > 0) {
+        progressLines[progressLines.length - 1] = line;
+      } else {
+        progressLines.push(line);
+      }
+
       ui.setPendingItem({
         type: "info",
-        text,
+        text: progressLines.join("\n"),
       });
       progressActive = true;
     };
 
     const clearProgress = () => {
       if (progressActive) {
+        progressLines.length = 0;
         ui.setPendingItem(null);
         progressActive = false;
       }

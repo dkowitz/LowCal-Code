@@ -28,6 +28,11 @@ export declare class OpenAIContentConverter {
      */
     resetStreamingToolCalls(): void;
     /**
+     * Extract textual content from OpenAI message content which can be a string
+     * or an array of structured content parts.
+     */
+    private extractTextFromOpenAIContent;
+    /**
      * Convert Gemini tool parameters to OpenAI JSON Schema format
      */
     convertGeminiToolParametersToOpenAI(parameters: Record<string, unknown>): Record<string, unknown> | undefined;

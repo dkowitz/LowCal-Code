@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, } from "./tools.js";
+import * as fs from "node:fs";
+import * as path from "node:path";
 import { ApprovalMode } from "../config/config.js";
 import { getErrorMessage } from "../utils/errors.js";
 import { ToolNames } from "./tool-names.js";
@@ -100,6 +102,115 @@ class ResearchToolInvocation extends BaseToolInvocation {
         }
         return `${trimmed.slice(0, maxLength - 1)}…`;
     }
+    stripJsonFence(text) {
+        return text
+            .replace(/^\s*```(?:json)?/i, "")
+            .replace(/```$/i, "")
+            .trim();
+    }
+    sanitizePlan(plan) {
+        const primaryTopic = plan.primaryTopic?.trim() || this.params.query;
+        const slug = plan.slug?.trim();
+        let subQueries = Array.isArray(plan.subQueries)
+            ? plan.subQueries
+                .map((item) => ({
+                query: (item?.query ?? "").trim(),
+                rationale: item?.rationale?.trim() ?? "",
+            }))
+                .filter((item) => item.query.length > 0)
+            : [];
+        if (subQueries.length === 0) {
+            subQueries = [{ query: this.params.query, rationale: "" }];
+        }
+        const maxByMode = {
+            speed: 4,
+            balanced: 6,
+            quality: 8,
+        };
+        const maxQueries = maxByMode[this.params.mode];
+        subQueries = subQueries.slice(0, maxQueries);
+        return {
+            primaryTopic,
+            slug,
+            subQueries,
+        };
+    }
+    buildPlanFallback() {
+        return {
+            primaryTopic: this.params.query,
+            subQueries: [{ query: this.params.query }],
+        };
+    }
+    async buildQueryPlan(signal) {
+        const geminiClient = this.config.getGeminiClient?.();
+        if (!geminiClient) {
+            return this.buildPlanFallback();
+        }
+        const modeInstructions = {
+            speed: "Generate 2-4 precise search queries that cover the essential aspects of the user's request.",
+            balanced: "Generate 4-6 targeted search queries covering all major facets of the user's request.",
+            quality: "Generate 6-8 in-depth search queries that exhaustively address every dimension of the user's request.",
+        };
+        const plannerPrompt = `
+You are a research planning assistant. Analyze the user's request, assess its complexity, and produce a structured JSON plan that breaks the request into focused search queries.
+
+Mode: ${this.params.mode.toUpperCase()}
+
+Guidelines:
+- Consider whether the request is simple or multi-part; adapt the number of sub-queries accordingly.
+- Merge overlapping intents, but do not miss distinct objectives.
+- Each sub-query must be actionable and targeted.
+- Provide a concise rationale for each sub-query.
+- Suggest a 1-3 word descriptive slug suitable for file naming (lowercase words preferred).
+
+Respond with valid JSON only, matching this schema:
+{
+  "primary_topic": "Concise summary of what the user ultimately wants",
+  "slug": "short slug (1-3 words)",
+  "sub_queries": [
+    {
+      "query": "Actionable search query",
+      "rationale": "Why this query is needed"
+    }
+  ]
+}
+
+${modeInstructions[this.params.mode]}
+
+User request:
+${this.params.query}
+`;
+        try {
+            const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: plannerPrompt }] }], {}, signal);
+            const candidates = (response.response
+                ?.candidates ??
+                response.candidates ??
+                []);
+            const fallbackParts = candidates.length > 0 ? candidates[0]?.content?.parts ?? [] : [];
+            const fallbackText = Array.isArray(fallbackParts)
+                ? fallbackParts
+                    .map((part) => typeof part === "string"
+                    ? part
+                    : part && typeof part === "object" && "text" in part
+                        ? part.text ?? ""
+                        : "")
+                    .join("")
+                : "";
+            const rawPlanText = (await getResponseText(response)) ?? fallbackText;
+            const planText = this.stripJsonFence(rawPlanText || "");
+            const parsed = JSON.parse(planText);
+            const plan = this.sanitizePlan({
+                primaryTopic: parsed?.primary_topic,
+                slug: parsed?.slug,
+                subQueries: parsed?.sub_queries ?? [],
+            });
+            return plan;
+        }
+        catch (error) {
+            console.warn("[ResearchTool] Falling back to simple query plan:", getErrorMessage(error));
+            return this.buildPlanFallback();
+        }
+    }
     buildQueryVariants(baseQuery) {
         switch (this.params.mode) {
             case "speed":
@@ -123,41 +234,86 @@ class ResearchToolInvocation extends BaseToolInvocation {
     formatToolName(toolName) {
         return toolName === ToolNames.WEB_SEARCH ? "Tavily" : "SearXNG";
     }
-    buildFallbackSummary(mode, queries, sources, searchHighlights, documentSnippets) {
+    extractKeyPoints(texts, limit) {
+        const points = [];
+        const seen = new Set();
+        for (const text of texts) {
+            const normalizedText = text.replace(/\s+/g, " ").trim();
+            if (!normalizedText) {
+                continue;
+            }
+            const sentences = normalizedText.split(/(?<=[.!?])\s+/u);
+            for (const sentence of sentences) {
+                const trimmed = sentence.trim();
+                if (trimmed.length < 40) {
+                    continue;
+                }
+                const fingerprint = trimmed.toLowerCase();
+                if (seen.has(fingerprint)) {
+                    continue;
+                }
+                seen.add(fingerprint);
+                points.push(this.truncate(trimmed, 240));
+                if (points.length >= limit) {
+                    return points;
+                }
+            }
+        }
+        return points.slice(0, limit);
+    }
+    buildFallbackReport(mode, queries, sources, searchHighlights, documentSnippets) {
+        const keyFindings = this.extractKeyPoints([...documentSnippets, ...searchHighlights], 6);
+        const dataHighlights = this.extractKeyPoints(searchHighlights.filter((snippet) => /\d/.test(snippet)), 4);
+        const narrativeInsights = this.extractKeyPoints(documentSnippets, 5);
         const sourceLines = sources.length
             ? sources
-                .slice(0, 20)
-                .map((source, index) => `[${index + 1}] ${source.title || source.url} — ${source.url}`)
+                .slice(0, 12)
+                .map((source, index) => `[${index + 1}] ${this.truncate(source.title || source.url, 120)} — ${source.url}`)
                 .join("\n")
             : "No web sources were collected.";
-        const highlightLines = searchHighlights.length
-            ? searchHighlights
-                .slice(0, 5)
-                .map((highlight, index) => `- Search ${index + 1}: ${this.truncate(highlight, 200)}`)
-                .join("\n")
-            : "- No narrative search summaries were available.";
-        const snippetLines = documentSnippets.length
-            ? documentSnippets
-                .slice(0, 5)
-                .map((snippet, index) => `- Source ${index + 1}: ${this.truncate(snippet, 200)}`)
-                .join("\n")
-            : "- Detailed document summaries were not generated.";
         return [
-            "# Research Summary",
-            `- Mode: ${mode}`,
-            `- Query variants: ${queries
+            `# Research Report: ${this.params.query}`,
+            "",
+            `Mode: ${mode} | Query variants: ${queries
                 .map((query) => `"${this.truncate(query, 80)}"`)
                 .join(", ")}`,
             "",
-            "## Search Highlights",
-            highlightLines,
+            "## Key Takeaways",
+            keyFindings.length
+                ? keyFindings.map((point) => `- ${point}`).join("\n")
+                : "- Searches completed, but no detailed findings could be synthesized.",
             "",
-            "## Source List",
+            "## Historical & Narrative Highlights",
+            narrativeInsights.length
+                ? narrativeInsights.map((point) => `- ${point}`).join("\n")
+                : "- No narrative summaries were available from the fetched documents.",
+            "",
+            "## Data & Trend Notes",
+            dataHighlights.length
+                ? dataHighlights.map((point) => `- ${point}`).join("\n")
+                : "- No quantitative data surfaced in the gathered material.",
+            "",
+            "## Source Catalog",
             sourceLines,
-            "",
-            "## Document Insights",
-            snippetLines,
         ].join("\n");
+    }
+    async persistReport(content, plan) {
+        const reportsDir = path.resolve("reports");
+        await fs.promises.mkdir(reportsDir, { recursive: true });
+        const baseSlugSource = plan.slug && plan.slug.trim().length > 0
+            ? plan.slug
+            : plan.primaryTopic || this.params.query;
+        const safeSlug = baseSlugSource
+            .toLowerCase()
+            .replace(/[^a-z0-9]+/g, "-")
+            .replace(/^-+|-+$/g, "")
+            .slice(0, 40) || "research-report";
+        const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
+        const filename = `${safeSlug}-${timestamp}.md`;
+        const filepath = path.join(reportsDir, filename);
+        const header = `# Research Report\n\n- Query: ${this.params.query}\n- Primary topic: ${plan.primaryTopic}\n- Generated: ${new Date().toISOString()}\n\n---\n\n`;
+        await fs.promises.writeFile(filepath, `${header}${content}`, "utf8");
+        return path.relative(process.cwd(), filepath);
     }
     resolveSearchTools() {
         const preferredOrder = this.params.searchTools && this.params.searchTools.length > 0
@@ -192,35 +348,49 @@ class ResearchToolInvocation extends BaseToolInvocation {
         try {
             this.ensureWebFetchAvailable();
             this.emitProgress(updateOutput, `ℹ⚙️ Running ${this.params.mode} research workflow…`);
-            // Step 1: Rephrase the query
-            const rephrasedQuery = await this.rephraseQuery(this.params.query);
-            this.emitProgress(updateOutput, `ℹ📝 Base query prepared: "${this.truncate(rephrasedQuery, 90)}"`);
-            // Step 2: Build search plan
+            const plan = await this.buildQueryPlan(signal);
+            this.emitProgress(updateOutput, `ℹ🧭 Query plan established with ${plan.subQueries.length} focus area(s).\n   Primary topic: ${plan.primaryTopic}`);
+            const normalizedSubQueries = [];
+            for (const sub of plan.subQueries) {
+                const normalized = await this.rephraseQuery(sub.query);
+                normalizedSubQueries.push({ base: normalized, rationale: sub.rationale });
+            }
             const { maxResults } = this.getSearchParameters(this.params.mode);
             const searchTools = this.resolveSearchTools();
             if (searchTools.length === 0) {
                 throw new Error("No web search tools are available. Enable web_search or searxng_search via /toolset.");
             }
-            const queryVariants = this.buildQueryVariants(rephrasedQuery);
-            const searchPlan = queryVariants.map((query, index) => ({
-                query,
-                toolName: searchTools[index % searchTools.length],
-            }));
-            this.emitProgress(updateOutput, `ℹ🔄 Executing ${searchPlan.length} search variant(s) across ${searchTools
+            const searchPlan = [];
+            normalizedSubQueries.forEach((sub, subIndex) => {
+                const variants = this.buildQueryVariants(sub.base);
+                variants.forEach((variant) => {
+                    const toolName = searchTools[searchPlan.length % searchTools.length];
+                    searchPlan.push({
+                        query: variant,
+                        toolName,
+                        subIndex,
+                        rationale: sub.rationale,
+                    });
+                });
+            });
+            this.emitProgress(updateOutput, `ℹ🔄 Executing ${searchPlan.length} targeted search(es) across ${searchTools
                 .map((tool) => this.formatToolName(tool))
                 .join(" + ")}`);
             const searchResults = [];
             const sources = [];
             const seenUrls = new Set();
+            const toolUsageCounts = new Map();
             for (let i = 0; i < searchPlan.length; i++) {
-                const { query, toolName } = searchPlan[i];
+                const { query, toolName, subIndex, rationale } = searchPlan[i];
                 const label = this.formatToolName(toolName);
-                this.emitProgress(updateOutput, `🔎 [${i + 1}/${searchPlan.length}] ${label} search: "${this.truncate(query, 90)}"`);
+                const focusLabel = plan.subQueries[subIndex]?.query ?? query;
+                this.emitProgress(updateOutput, `🔎 [${i + 1}/${searchPlan.length}] ${label} → ${this.truncate(query, 90)} (focus ${subIndex + 1}/${plan.subQueries.length}: ${this.truncate(focusLabel, 70)})${rationale ? `\n   ↳ Rationale: ${this.truncate(rationale, 90)}` : ""}`);
                 const tool = toolName === ToolNames.WEB_SEARCH
                     ? new WebSearchTool(this.config)
                     : new SearXNGSearchTool(this.config);
                 const invocation = tool.build({ query });
                 const result = await invocation.execute(signal);
+                toolUsageCounts.set(toolName, (toolUsageCounts.get(toolName) ?? 0) + 1);
                 const summaryText = partToString(result.llmContent);
                 if (summaryText) {
                     searchResults.push(summaryText.replace(/\s+/g, " "));
@@ -295,41 +465,100 @@ class ResearchToolInvocation extends BaseToolInvocation {
                 ...processedDocuments
             ].join('\n\n---\n\n');
             // Create a prompt that follows Perplexica's structure for generating the final report
+            const planSummary = plan.subQueries
+                .map((sub, index) => `${index + 1}. ${sub.query}${sub.rationale ? ` — ${sub.rationale}` : ""}`)
+                .join("\n");
+            const narrativeGuidance = this.params.mode === "quality"
+                ? "Produce a long-form feature article (8+ robust paragraphs) that reads like a magazine investigation."
+                : this.params.mode === "balanced"
+                    ? "Produce a cohesive narrative article (6-8 paragraphs) that balances depth with readability."
+                    : "Produce a concise narrative briefing (4-6 paragraphs) that still delivers context and insight.";
             const finalPrompt = `
-You are an AI research assistant. You will be given a query and multiple search results from different sources.
-Your task is to create a comprehensive, well-structured research report in Markdown format.
+You are an investigative research writer. Use the supplied plan and evidence to craft a cohesive narrative report.
 
-Query: "${this.params.query}"
+Primary Topic: ${plan.primaryTopic}
 
-Search Results:
+Research Objectives:
+${planSummary}
+
+Synthesized Evidence (search highlights, document summaries, quantitative snippets):
 ${combinedContent}
 
-Instructions:
-1. Create a professional, detailed report with clear headings
-2. Use neutral, journalistic tone
-3. Include inline citations using [number] notation for each fact or detail
-4. Prioritize credibility by linking all statements to their source context
-5. Structure the response like a professional blog post
-6. Provide comprehensive coverage of the topic without superficiality
-
-Format your response with proper Markdown headings and subheadings.
+Writing Guidelines:
+- ${narrativeGuidance}
+- Write primarily in flowing paragraphs; reserve bullet or table structures only for dense data recaps.
+- Open with an engaging overview, develop the story with clear transitions, and close with implications or recommended next steps.
+- Integrate data points, historical context, and qualitative insights, explaining their significance.
+- Cite every meaningful statement using inline citations in [number] format that map back to the source list.
+- Maintain a neutral, evidence-driven tone suitable for analysts and decision makers.
 `;
             this.emitProgress(updateOutput, "ℹ🧠 Synthesizing final report…");
             // Use Gemini client directly to generate final report
             const geminiClient = this.config.getGeminiClient();
             const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: finalPrompt }] }], {}, signal);
-            const resultText = (await getResponseText(result)) || "";
-            const fallbackSummary = this.buildFallbackSummary(this.params.mode, searchPlan.map((run) => run.query), sources, searchResults, documentSnippets);
+            const candidateParts = (result.response?.candidates ??
+                result.candidates ?? [])?.[0]?.content?.parts ?? [];
+            const candidateText = candidateParts
+                .map((part) => {
+                if (typeof part === "string") {
+                    return part;
+                }
+                if (part &&
+                    typeof part === "object" &&
+                    "text" in part &&
+                    typeof part.text === "string") {
+                    return part.text ?? "";
+                }
+                return "";
+            })
+                .join("");
+            const responseText = (await getResponseText(result)) ?? null;
+            const resultText = responseText && responseText.trim().length > 0
+                ? responseText
+                : candidateText;
+            const fallbackSummary = this.buildFallbackReport(this.params.mode, searchPlan.map((run) => run.query), sources, searchResults, documentSnippets);
             const finalContent = resultText && resultText.trim().length > 0
                 ? resultText
                 : fallbackSummary;
             // Extract citations from the response
             // In a real implementation, we'd parse [number] references and map them to sources
             const citations = {};
-            this.emitProgress(updateOutput, `✅ Research complete. Compiled ${sources.length} source(s).`);
+            this.emitProgress(updateOutput, resultText.trim().length > 0
+                ? `✅ Research complete. Compiled ${sources.length} source(s).`
+                : `✅ Research complete. Compiled ${sources.length} source(s) and generated a summary from collected material.`);
+            const sourcesSection = sources.length
+                ? [
+                    "",
+                    "## Sources",
+                    ...sources.map((source, index) => `[${index + 1}] ${source.title || source.url} — ${source.url}`),
+                ].join("\n")
+                : "";
+            const toolUsageSection = toolUsageCounts.size
+                ? [
+                    "",
+                    "## Tool Usage Summary",
+                    ...Array.from(toolUsageCounts.entries()).map(([name, count]) => `- ${this.formatToolName(name)}: ${count} search${count === 1 ? "" : "es"}`),
+                ].join("\n")
+                : "";
+            const reportHeading = this.params.mode === "quality"
+                ? "# Comprehensive Research Report"
+                : this.params.mode === "balanced"
+                    ? "# Research Briefing"
+                    : "# Research Summary";
+            const finalReport = [
+                reportHeading,
+                "",
+                finalContent.trim(),
+                toolUsageSection,
+                sourcesSection,
+            ]
+                .filter(Boolean)
+                .join("\n");
+            const savedReportPath = await this.persistReport(finalReport, plan);
+            const finalOutput = `${finalReport}\n\n_Report archived at: ${savedReportPath}_`;
             return {
-                llmContent: finalContent,
-                returnDisplay: `Research complete for "${this.params.query}"`,
+                llmContent: finalOutput,
+                returnDisplay: `Research complete for "${this.params.query}" (saved to ${savedReportPath})`,
                 sources,
                 citations
             };

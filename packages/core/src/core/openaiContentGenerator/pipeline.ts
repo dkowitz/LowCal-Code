@@ -17,6 +17,15 @@ import type { TelemetryService, RequestContext } from "./telemetryService.js";
 import type { ErrorHandler } from "./errorHandler.js";
 import { openaiLogger } from "../../utils/openaiLogger.js";
 
+function truncateForLog(value: unknown, limit = 4000): string {
+  const text = typeof value === "string" ? value : String(value ?? "");
+  if (text.length <= limit) {
+    return text;
+  }
+  const half = Math.floor(limit / 2) - 3;
+  return `${text.slice(0, half)}...${text.slice(-half)}`;
+}
+
 export interface PipelineConfig {
   cliConfig: Config;
   provider: OpenAICompatibleProvider;
@@ -53,6 +62,11 @@ export class ContentGenerationPipeline {
         const openaiResponse = (await this.client.chat.completions.create(
           openaiRequest,
         )) as OpenAI.Chat.ChatCompletion;
+
+        console.warn(
+          "[OpenAIContentGenerator] Raw completion response:",
+          truncateForLog(JSON.stringify(openaiResponse)),
+        );
 
         const geminiResponse =
           this.converter.convertOpenAIResponseToGemini(openaiResponse);

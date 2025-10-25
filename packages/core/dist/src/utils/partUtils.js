@@ -49,18 +49,34 @@ export function partToString(value, options) {
     return part.text ?? "";
 }
 export function getResponseText(response) {
-    if (response.candidates && response.candidates.length > 0) {
-        const candidate = response.candidates[0];
-        if (candidate.content &&
-            candidate.content.parts &&
-            candidate.content.parts.length > 0) {
-            return candidate.content.parts
-                .filter((part) => part.text)
-                .map((part) => part.text)
-                .join("");
-        }
+    if (!response) {
+        return null;
     }
-    return null;
+    const rawCandidates = response.response
+        ?.candidates ?? response.candidates;
+    if (!Array.isArray(rawCandidates) || rawCandidates.length === 0) {
+        return null;
+    }
+    const candidate = rawCandidates[0];
+    const parts = candidate?.content?.parts;
+    if (!parts || parts.length === 0) {
+        return null;
+    }
+    const textSegments = parts
+        .map((part) => {
+        if (typeof part === "string") {
+            return part;
+        }
+        if (part &&
+            typeof part === "object" &&
+            "text" in part &&
+            typeof part.text === "string") {
+            return part.text;
+        }
+        return "";
+    })
+        .filter((segment) => segment.length > 0);
+    return textSegments.length > 0 ? textSegments.join("") : null;
 }
 /**
  * Asynchronously maps over a PartListUnion, applying a transformation function

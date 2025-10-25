@@ -69,6 +69,59 @@ export class OpenAIContentConverter {
   }
 
   /**
+   * Extract textual content from OpenAI message content which can be a string
+   * or an array of structured content parts.
+   */
+  private extractTextFromOpenAIContent(
+    content:
+      | string
+      | null
+      | undefined
+      | Array<
+          | string
+          | {
+              type?: string;
+              text?: string;
+              [key: string]: unknown;
+            }
+        >,
+  ): string {
+    if (!content) {
+      return "";
+    }
+
+    if (typeof content === "string") {
+      return content;
+    }
+
+    const textSegments: string[] = [];
+    for (const segment of content) {
+      if (!segment) {
+        continue;
+      }
+
+      if (typeof segment === "string") {
+        textSegments.push(segment);
+        continue;
+      }
+
+      const maybeText = (segment as { text?: unknown }).text;
+      if (typeof maybeText === "string" && maybeText.length > 0) {
+        textSegments.push(maybeText);
+        continue;
+      }
+
+      const maybeOutputText = (segment as { output_text?: unknown })
+        .output_text;
+      if (typeof maybeOutputText === "string" && maybeOutputText.length > 0) {
+        textSegments.push(maybeOutputText);
+      }
+    }
+
+    return textSegments.join("");
+  }
+
+  /**
    * Convert Gemini tool parameters to OpenAI JSON Schema format
    */
   convertGeminiToolParametersToOpenAI(
@@ -502,8 +555,19 @@ export class OpenAIContentConverter {
     const parts: Part[] = [];
 
     // Handle text content
-    if (choice.message.content) {
-      parts.push({ text: choice.message.content });
+    let textContent = this.extractTextFromOpenAIContent(
+      choice.message.content,
+    );
+    if (!textContent && choice.message) {
+      const maybeOutputText = (
+        choice.message as unknown as { output_text?: unknown }
+      ).output_text;
+      if (typeof maybeOutputText === "string" && maybeOutputText.length > 0) {
+        textContent = maybeOutputText;
+      }
+    }
+    if (textContent) {
+      parts.push({ text: textContent });
     }
 
     // Handle tool calls
@@ -592,10 +656,22 @@ export class OpenAIContentConverter {
       const parts: Part[] = [];
 
       // Handle text content
-      if (choice.delta?.content) {
-        if (typeof choice.delta.content === "string") {
-          parts.push({ text: choice.delta.content });
+      let deltaText = this.extractTextFromOpenAIContent(
+        choice.delta?.content,
+      );
+      if (!deltaText && choice.delta) {
+        const maybeDeltaOutputText = (
+          choice.delta as unknown as { output_text?: unknown }
+        ).output_text;
+        if (
+          typeof maybeDeltaOutputText === "string" &&
+          maybeDeltaOutputText.length > 0
+        ) {
+          deltaText = maybeDeltaOutputText;
         }
+      }
+      if (deltaText) {
+        parts.push({ text: deltaText });
       }
 
       // Handle tool calls using the streaming parser
