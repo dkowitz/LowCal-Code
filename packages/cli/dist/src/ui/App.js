@@ -168,29 +168,38 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     useEffect(() => {
         // no-op that references modelLimitVersion to ensure TypeScript doesn't report it as unused
     }, [modelLimitVersion]);
+    const hasBeenSetFromSettingsRef = useRef(false);
     // If the user has a saved model in settings, ensure the config and UI
     // reflect it on startup. This will restore the last-used model across
     // restarts.
     useEffect(() => {
         const savedModel = settings.merged.model?.name;
-        if (savedModel && savedModel !== config.getModel()) {
-            void (async () => {
-                try {
-                    await config.setModel(savedModel);
-                    setCurrentModel(savedModel);
-                    if (settings.merged.security?.auth?.providerId === "openrouter") {
-                        try {
-                            setOpenAIModel(savedModel);
-                        }
-                        catch (err) {
-                            console.warn("Failed to persist OpenRouter model to .env:", err);
+        if (savedModel) {
+            // Mark that we're attempting to restore from settings BEFORE the async operation
+            // to prevent the model change watcher from overriding the restored model
+            hasBeenSetFromSettingsRef.current = true;
+            // Only restore model if it's different from current one or if no model is set yet
+            const currentModel = config.getModel();
+            if (currentModel === undefined || savedModel !== currentModel) {
+                void (async () => {
+                    try {
+                        await config.setModel(savedModel);
+                        setCurrentModel(savedModel);
+                        // Only persist to .env for OpenRouter auth
+                        if (settings.merged.security?.auth?.providerId === "openrouter") {
+                            try {
+                                setOpenAIModel(savedModel);
+                            }
+                            catch (err) {
+                                console.warn("Failed to persist OpenRouter model to .env:", err);
+                            }
                         }
                     }
-                }
-                catch (e) {
-                    console.warn("Failed to restore saved model from settings:", e);
-                }
-            })();
+                    catch (e) {
+                        console.warn("Failed to restore saved model from settings:", e);
+                    }
+                })();
+            }
         }
     }, [
         config,
@@ -566,9 +575,12 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     // Watch for model changes (e.g., from Flash fallback)
     useEffect(() => {
         const checkModelChange = () => {
-            const configModel = config.getModel();
-            if (configModel !== currentModel) {
-                setCurrentModel(configModel);
+            // Only update the UI state if we haven't already set it from settings
+            if (!hasBeenSetFromSettingsRef.current) {
+                const configModel = config.getModel();
+                if (configModel !== currentModel) {
+                    setCurrentModel(configModel);
+                }
             }
         };
         // Check immediately and then periodically
