@@ -104,35 +104,78 @@ class ResearchToolInvocation extends BaseToolInvocation<
   /**
    * Rephrases the user query into a search-ready format
    */
-  private async rephraseQuery(query: string): Promise<string> {
-    // For simplicity, we'll use a basic approach similar to Perplexica's
-    // In a real implementation, this would be more sophisticated
-    
-    if (query.trim().length === 0) {
-      return query;
-    }
-    
-    // If the query is already in question format, keep it as-is
+  private async rephraseQuery(
+    query: string,
+    signal: AbortSignal,
+  ): Promise<string> {
     const trimmedQuery = query.trim();
-    if (trimmedQuery.endsWith('?') || 
-        trimmedQuery.toLowerCase().startsWith('what') ||
-        trimmedQuery.toLowerCase().startsWith('how') ||
-        trimmedQuery.toLowerCase().startsWith('why') ||
-        trimmedQuery.toLowerCase().startsWith('when') ||
-        trimmedQuery.toLowerCase().startsWith('where') ||
-        trimmedQuery.toLowerCase().startsWith('who') ||
-        trimmedQuery.toLowerCase().startsWith('which')) {
+    if (!trimmedQuery) {
       return query;
     }
-    
-    // Otherwise, rephrase to a question format
-    if (trimmedQuery.startsWith('Can you tell me what is ') || 
-        trimmedQuery.startsWith('What is ')) {
+
+    const geminiClient = this.config.getGeminiClient?.();
+    if (!geminiClient) {
       return trimmedQuery;
     }
-    
-    // For other cases, convert to question form
-    return `What is ${trimmedQuery}?`;
+
+    const prompt = `
+Rewrite the following research intent as a precise web search query.
+- Preserve the key nouns, entities, and constraints.
+- Avoid conversational phrasing (no "what is", "please", "can you").
+- Keep the query under 16 words.
+- Return only the rewritten query, nothing else.
+
+Original request:
+"""${trimmedQuery}"""
+`;
+
+    try {
+      const response = await geminiClient.generateContent(
+        [{ role: "user", parts: [{ text: prompt }] }],
+        {},
+        signal,
+      );
+
+      const candidates = (
+        (response as unknown as { response?: { candidates?: unknown } }).response
+          ?.candidates ??
+        (response as unknown as { candidates?: unknown }).candidates ??
+        []
+      ) as Array<{ content?: { parts?: unknown[] } }>;
+
+      const fallbackParts =
+        candidates.length > 0 ? candidates[0]?.content?.parts ?? [] : [];
+
+      const fallbackText = Array.isArray(fallbackParts)
+        ? fallbackParts
+            .map((part) =>
+              typeof part === "string"
+                ? part
+                : part && typeof part === "object" && "text" in part
+                  ? (part as { text?: string }).text ?? ""
+                  : "",
+            )
+            .join("")
+        : "";
+
+      const candidateText =
+        (await getResponseText(response)) ?? fallbackText;
+      const rephrased = candidateText
+        .split(/\r?\n/)
+        .map((line) => line.trim().replace(/^[-•\d.]+\s*/, ""))
+        .find((line) => line.length > 0);
+
+      if (rephrased && rephrased.length > 0) {
+        return rephrased;
+      }
+    } catch (error) {
+      console.warn(
+        "[ResearchTool] Query rephrase fallback:",
+        getErrorMessage(error),
+      );
+    }
+
+    return trimmedQuery;
   }
 
   /**
@@ -160,11 +203,13 @@ class ResearchToolInvocation extends BaseToolInvocation<
   private emitProgress(
     updateOutput: ((output: ToolResultDisplay) => void) | undefined,
     message: string,
+    mode: "append" | "replace" = "append",
   ): void {
     if (!updateOutput) {
       return;
     }
-    updateOutput(message);
+    const payload = `__progress__${JSON.stringify({ mode, message })}`;
+    updateOutput(payload);
   }
 
   private truncate(value: string | undefined, maxLength = 140): string {
@@ -503,12 +548,14 @@ ${this.params.query}
       this.emitProgress(
         updateOutput,
         `ℹ⚙️ Running ${this.params.mode} research workflow…`,
+        "append",
       );
 
       const plan = await this.buildQueryPlan(signal);
       this.emitProgress(
         updateOutput,
         `ℹ🧭 Query plan established with ${plan.subQueries.length} focus area(s).\n   Primary topic: ${plan.primaryTopic}`,
+        "append",
       );
 
       const normalizedSubQueries: Array<{
@@ -516,7 +563,7 @@ ${this.params.query}
         rationale?: string;
       }> = [];
       for (const sub of plan.subQueries) {
-        const normalized = await this.rephraseQuery(sub.query);
+        const normalized = await this.rephraseQuery(sub.query, signal);
         normalizedSubQueries.push({ base: normalized, rationale: sub.rationale });
       }
 
@@ -553,6 +600,7 @@ ${this.params.query}
         `ℹ🔄 Executing ${searchPlan.length} targeted search(es) across ${searchTools
           .map((tool) => this.formatToolName(tool))
           .join(" + ")}`,
+        "append",
       );
 
       const searchResults: string[] = [];
@@ -569,7 +617,8 @@ ${this.params.query}
         const focusLabel = plan.subQueries[subIndex]?.query ?? query;
         this.emitProgress(
           updateOutput,
-          `🔎 [${i + 1}/${searchPlan.length}] ${label} → ${this.truncate(query, 90)} (focus ${subIndex + 1}/${plan.subQueries.length}: ${this.truncate(focusLabel, 70)})${rationale ? `\n   ↳ Rationale: ${this.truncate(rationale, 90)}` : ""}`,
+          `🔎 [${i + 1}/${searchPlan.length}] ${label} → ${this.truncate(query, 90)} (focus ${subIndex + 1}/${plan.subQueries.length}: ${this.truncate(focusLabel, 70)})${rationale ? `\n   ↳ ${this.truncate(rationale, 90)}` : ""}`,
+          "replace",
         );
 
         const tool =
@@ -592,6 +641,7 @@ ${this.params.query}
               summaryText.replace(/\s+/g, " "),
               160,
             )}`,
+            "replace",
           );
         }
 
@@ -612,32 +662,24 @@ ${this.params.query}
           newlyAdded.push(normalized);
         }
 
-        if (newlyAdded.length > 0) {
-          const sample = newlyAdded[0];
-          this.emitProgress(
-            updateOutput,
-            `📚 ${label} added ${newlyAdded.length} source(s). Example: ${this.truncate(
-              sample.title || sample.url,
-              120,
-            )} (${sample.url})`,
-          );
-        } else {
-          this.emitProgress(
-            updateOutput,
-            `ℹ ${label} did not yield new unique sources for this query.`,
-          );
-        }
+        const summaryLine =
+          newlyAdded.length > 0
+            ? `✔ ${label} completed – ${newlyAdded.length} new source(s) added.`
+            : `✔ ${label} completed – no new unique sources found.`;
+        this.emitProgress(updateOutput, summaryLine, "append");
       }
 
       if (sources.length === 0) {
         this.emitProgress(
           updateOutput,
           "⚠️ No sources were discovered during web search.",
+          "append",
         );
       } else {
         this.emitProgress(
           updateOutput,
           `ℹ📁 Collected ${sources.length} unique source(s) for deeper review.`,
+          "append",
         );
       }
 
@@ -654,6 +696,7 @@ ${this.params.query}
         this.emitProgress(
           updateOutput,
           `ℹ📰 Summarizing top ${sourcesForProcessing.length} source(s) for detailed insights.`,
+          "append",
         );
       }
 
@@ -665,6 +708,7 @@ ${this.params.query}
             source.title || source.url,
             120,
           )}`,
+          "replace",
         );
 
         try {
@@ -684,6 +728,7 @@ ${this.params.query}
                 source.title || source.url,
                 100,
               )}`,
+              "replace",
             );
           } else {
             this.emitProgress(
@@ -692,6 +737,7 @@ ${this.params.query}
                 source.title || source.url,
                 100,
               )}.`,
+              "replace",
             );
           }
         } catch (error) {
@@ -703,8 +749,15 @@ ${this.params.query}
               source.title || source.url,
               90,
             )}: ${this.truncate(errorMessage, 120)}`,
+            "replace",
           );
         }
+
+        this.emitProgress(
+          updateOutput,
+          `✔ Summarized ${this.truncate(source.title || source.url, 100)}`,
+          "append",
+        );
       }
 
       // Step 4: Combine all information and generate a final report
@@ -753,6 +806,7 @@ Writing Guidelines:
       this.emitProgress(
         updateOutput,
         "ℹ🧠 Synthesizing final report…",
+        "append",
       );
 
       // Use Gemini client directly to generate final report
@@ -791,7 +845,7 @@ Writing Guidelines:
         })
         .join("");
 
-      const responseText = (await getResponseText(result)) ?? null;
+      const responseText = (await getResponseText(result)) ?? candidateText;
       const resultText = responseText && responseText.trim().length > 0
         ? responseText
         : candidateText;
@@ -816,6 +870,7 @@ Writing Guidelines:
         resultText.trim().length > 0
           ? `✅ Research complete. Compiled ${sources.length} source(s).`
           : `✅ Research complete. Compiled ${sources.length} source(s) and generated a summary from collected material.`,
+        "append",
       );
 
       const sourcesSection = sources.length
@@ -840,15 +895,7 @@ Writing Guidelines:
           ].join("\n")
         : "";
 
-      const reportHeading = this.params.mode === "quality"
-        ? "# Comprehensive Research Report"
-        : this.params.mode === "balanced"
-          ? "# Research Briefing"
-          : "# Research Summary";
-
       const finalReport = [
-        reportHeading,
-        "",
         finalContent.trim(),
         toolUsageSection,
         sourcesSection,

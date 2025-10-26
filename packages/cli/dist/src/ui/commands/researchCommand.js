@@ -179,9 +179,29 @@ export const researchCommand = {
                 searchTools: enabledSearchTools,
             });
             const result = await invocation.execute(abortController.signal, (display) => {
-                if (typeof display === "string" && display.trim().length > 0) {
-                    setProgress(display);
+                if (typeof display !== "string") {
+                    return;
                 }
+                const trimmed = display.trim();
+                if (!trimmed) {
+                    return;
+                }
+                const progressPrefix = "__progress__";
+                if (trimmed.startsWith(progressPrefix)) {
+                    try {
+                        const payload = JSON.parse(trimmed.slice(progressPrefix.length));
+                        const message = typeof payload.message === "string"
+                            ? payload.message
+                            : trimmed;
+                        const persist = payload.mode !== "replace";
+                        setProgress(message, persist);
+                        return;
+                    }
+                    catch {
+                        // fall through to default handling
+                    }
+                }
+                setProgress(trimmed);
             });
             clearProgress();
             return {

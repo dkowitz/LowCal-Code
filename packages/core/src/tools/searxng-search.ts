@@ -210,6 +210,12 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
       const searchUrl = new URL("http://localhost:8085/search");
       searchUrl.searchParams.append("q", this.params.query);
       searchUrl.searchParams.append("format", "json");
+      searchUrl.searchParams.append("lang", "en");
+      searchUrl.searchParams.append("language", "en-US");
+      searchUrl.searchParams.append("locale", "en_US");
+      searchUrl.searchParams.append("safesearch", "1");
+      searchUrl.searchParams.append("categories", "general");
+      searchUrl.searchParams.append("max_results", "20");
       searchUrl.searchParams.append("engines", "google,bing,duckduckgo"); // Use common engines
       
       const response = await fetch(searchUrl.toString(), {
@@ -230,7 +236,18 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
 
       const data = (await response.json()) as SearXNGSearchResponse;
 
-      const sources = (data.results || []).map((r) => ({
+      const isLikelyEnglish = (text: string): boolean => {
+        const sample = text.slice(0, 200);
+        if (!sample) return true;
+        const asciiMatches = sample.match(/[A-Za-z0-9\s.,'"-]/g)?.length ?? 0;
+        return asciiMatches / sample.length >= 0.7;
+      };
+
+      const filteredResults = (data.results || [])
+        .filter((r) => isLikelyEnglish(`${r.title ?? ""} ${r.content ?? ""}`))
+        .slice(0, 20);
+
+      const sources = filteredResults.map((r) => ({
         title: r.title || "Untitled",
         url: r.url || "",
       }));
@@ -251,10 +268,11 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
       
       // If no answers, build summary from top results with content snippets
       if (!content.trim()) {
-        content = sources
+        const topSources = sources.slice(0, 8);
+        content = topSources
           .slice(0, 3)
           .map((s, i) => {
-            const result = data.results[i];
+            const result = filteredResults[i];
             const snippet = result?.content ? ` - ${result.content.substring(0, 150)}...` : "";
             return `${i + 1}. ${s.title}${snippet}`;
           })

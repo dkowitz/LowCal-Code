@@ -41,31 +41,54 @@ class ResearchToolInvocation extends BaseToolInvocation {
     /**
      * Rephrases the user query into a search-ready format
      */
-    async rephraseQuery(query) {
-        // For simplicity, we'll use a basic approach similar to Perplexica's
-        // In a real implementation, this would be more sophisticated
-        if (query.trim().length === 0) {
-            return query;
-        }
-        // If the query is already in question format, keep it as-is
+    async rephraseQuery(query, signal) {
         const trimmedQuery = query.trim();
-        if (trimmedQuery.endsWith('?') ||
-            trimmedQuery.toLowerCase().startsWith('what') ||
-            trimmedQuery.toLowerCase().startsWith('how') ||
-            trimmedQuery.toLowerCase().startsWith('why') ||
-            trimmedQuery.toLowerCase().startsWith('when') ||
-            trimmedQuery.toLowerCase().startsWith('where') ||
-            trimmedQuery.toLowerCase().startsWith('who') ||
-            trimmedQuery.toLowerCase().startsWith('which')) {
+        if (!trimmedQuery) {
             return query;
         }
-        // Otherwise, rephrase to a question format
-        if (trimmedQuery.startsWith('Can you tell me what is ') ||
-            trimmedQuery.startsWith('What is ')) {
+        const geminiClient = this.config.getGeminiClient?.();
+        if (!geminiClient) {
             return trimmedQuery;
         }
-        // For other cases, convert to question form
-        return `What is ${trimmedQuery}?`;
+        const prompt = `
+Rewrite the following research intent as a precise web search query.
+- Preserve the key nouns, entities, and constraints.
+- Avoid conversational phrasing (no "what is", "please", "can you").
+- Keep the query under 16 words.
+- Return only the rewritten query, nothing else.
+
+Original request:
+"""${trimmedQuery}"""
+`;
+        try {
+            const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+            const candidates = (response.response
+                ?.candidates ??
+                response.candidates ??
+                []);
+            const fallbackParts = candidates.length > 0 ? candidates[0]?.content?.parts ?? [] : [];
+            const fallbackText = Array.isArray(fallbackParts)
+                ? fallbackParts
+                    .map((part) => typeof part === "string"
+                    ? part
+                    : part && typeof part === "object" && "text" in part
+                        ? part.text ?? ""
+                        : "")
+                    .join("")
+                : "";
+            const candidateText = (await getResponseText(response)) ?? fallbackText;
+            const rephrased = candidateText
+                .split(/\r?\n/)
+                .map((line) => line.trim().replace(/^[-•\d.]+\s*/, ""))
+                .find((line) => line.length > 0);
+            if (rephrased && rephrased.length > 0) {
+                return rephrased;
+            }
+        }
+        catch (error) {
+            console.warn("[ResearchTool] Query rephrase fallback:", getErrorMessage(error));
+        }
+        return trimmedQuery;
     }
     /**
      * Gets the appropriate search parameters based on optimization mode
@@ -86,11 +109,12 @@ class ResearchToolInvocation extends BaseToolInvocation {
                 };
         }
     }
-    emitProgress(updateOutput, message) {
+    emitProgress(updateOutput, message, mode = "append") {
         if (!updateOutput) {
             return;
         }
-        updateOutput(message);
+        const payload = `__progress__${JSON.stringify({ mode, message })}`;
+        updateOutput(payload);
     }
     truncate(value, maxLength = 140) {
         if (!value) {
@@ -347,12 +371,12 @@ ${this.params.query}
     async execute(signal, updateOutput) {
         try {
             this.ensureWebFetchAvailable();
-            this.emitProgress(updateOutput, `ℹ⚙️ Running ${this.params.mode} research workflow…`);
+            this.emitProgress(updateOutput, `ℹ⚙️ Running ${this.params.mode} research workflow…`, "append");
             const plan = await this.buildQueryPlan(signal);
-            this.emitProgress(updateOutput, `ℹ🧭 Query plan established with ${plan.subQueries.length} focus area(s).\n   Primary topic: ${plan.primaryTopic}`);
+            this.emitProgress(updateOutput, `ℹ🧭 Query plan established with ${plan.subQueries.length} focus area(s).\n   Primary topic: ${plan.primaryTopic}`, "append");
             const normalizedSubQueries = [];
             for (const sub of plan.subQueries) {
-                const normalized = await this.rephraseQuery(sub.query);
+                const normalized = await this.rephraseQuery(sub.query, signal);
                 normalizedSubQueries.push({ base: normalized, rationale: sub.rationale });
             }
             const { maxResults } = this.getSearchParameters(this.params.mode);
@@ -375,7 +399,7 @@ ${this.params.query}
             });
             this.emitProgress(updateOutput, `ℹ🔄 Executing ${searchPlan.length} targeted search(es) across ${searchTools
                 .map((tool) => this.formatToolName(tool))
-                .join(" + ")}`);
+                .join(" + ")}`, "append");
             const searchResults = [];
             const sources = [];
             const seenUrls = new Set();
@@ -384,7 +408,7 @@ ${this.params.query}
                 const { query, toolName, subIndex, rationale } = searchPlan[i];
                 const label = this.formatToolName(toolName);
                 const focusLabel = plan.subQueries[subIndex]?.query ?? query;
-                this.emitProgress(updateOutput, `🔎 [${i + 1}/${searchPlan.length}] ${label} → ${this.truncate(query, 90)} (focus ${subIndex + 1}/${plan.subQueries.length}: ${this.truncate(focusLabel, 70)})${rationale ? `\n   ↳ Rationale: ${this.truncate(rationale, 90)}` : ""}`);
+                this.emitProgress(updateOutput, `🔎 [${i + 1}/${searchPlan.length}] ${label} → ${this.truncate(query, 90)} (focus ${subIndex + 1}/${plan.subQueries.length}: ${this.truncate(focusLabel, 70)})${rationale ? `\n   ↳ ${this.truncate(rationale, 90)}` : ""}`, "replace");
                 const tool = toolName === ToolNames.WEB_SEARCH
                     ? new WebSearchTool(this.config)
                     : new SearXNGSearchTool(this.config);
@@ -394,7 +418,7 @@ ${this.params.query}
                 const summaryText = partToString(result.llmContent);
                 if (summaryText) {
                     searchResults.push(summaryText.replace(/\s+/g, " "));
-                    this.emitProgress(updateOutput, `📌 ${label} highlight: ${this.truncate(summaryText.replace(/\s+/g, " "), 160)}`);
+                    this.emitProgress(updateOutput, `📌 ${label} highlight: ${this.truncate(summaryText.replace(/\s+/g, " "), 160)}`, "replace");
                 }
                 const newlyAdded = [];
                 for (const source of result.sources || []) {
@@ -412,19 +436,16 @@ ${this.params.query}
                     sources.push(normalized);
                     newlyAdded.push(normalized);
                 }
-                if (newlyAdded.length > 0) {
-                    const sample = newlyAdded[0];
-                    this.emitProgress(updateOutput, `📚 ${label} added ${newlyAdded.length} source(s). Example: ${this.truncate(sample.title || sample.url, 120)} (${sample.url})`);
-                }
-                else {
-                    this.emitProgress(updateOutput, `ℹ ${label} did not yield new unique sources for this query.`);
-                }
+                const summaryLine = newlyAdded.length > 0
+                    ? `✔ ${label} completed – ${newlyAdded.length} new source(s) added.`
+                    : `✔ ${label} completed – no new unique sources found.`;
+                this.emitProgress(updateOutput, summaryLine, "append");
             }
             if (sources.length === 0) {
-                this.emitProgress(updateOutput, "⚠️ No sources were discovered during web search.");
+                this.emitProgress(updateOutput, "⚠️ No sources were discovered during web search.", "append");
             }
             else {
-                this.emitProgress(updateOutput, `ℹ📁 Collected ${sources.length} unique source(s) for deeper review.`);
+                this.emitProgress(updateOutput, `ℹ📁 Collected ${sources.length} unique source(s) for deeper review.`, "append");
             }
             // Step 3: Process relevant documents from URLs
             const fetchTool = new WebFetchTool(this.config);
@@ -432,11 +453,11 @@ ${this.params.query}
             const documentSnippets = [];
             const sourcesForProcessing = sources.slice(0, Math.min(maxResults, sources.length));
             if (sourcesForProcessing.length > 0) {
-                this.emitProgress(updateOutput, `ℹ📰 Summarizing top ${sourcesForProcessing.length} source(s) for detailed insights.`);
+                this.emitProgress(updateOutput, `ℹ📰 Summarizing top ${sourcesForProcessing.length} source(s) for detailed insights.`, "append");
             }
             for (let i = 0; i < sourcesForProcessing.length; i++) {
                 const source = sourcesForProcessing[i];
-                this.emitProgress(updateOutput, `📰 [${i + 1}/${sourcesForProcessing.length}] Summarizing ${this.truncate(source.title || source.url, 120)}`);
+                this.emitProgress(updateOutput, `📰 [${i + 1}/${sourcesForProcessing.length}] Summarizing ${this.truncate(source.title || source.url, 120)}`, "replace");
                 try {
                     const fetchInvocation = fetchTool.build({
                         url: source.url,
@@ -447,17 +468,18 @@ ${this.params.query}
                     if (fetchText.trim()) {
                         processedDocuments.push(fetchText);
                         documentSnippets.push(fetchText.replace(/\s+/g, " "));
-                        this.emitProgress(updateOutput, `✅ Captured insights from ${this.truncate(source.title || source.url, 100)}`);
+                        this.emitProgress(updateOutput, `✅ Captured insights from ${this.truncate(source.title || source.url, 100)}`, "replace");
                     }
                     else {
-                        this.emitProgress(updateOutput, `ℹ No summarizable content returned from ${this.truncate(source.title || source.url, 100)}.`);
+                        this.emitProgress(updateOutput, `ℹ No summarizable content returned from ${this.truncate(source.title || source.url, 100)}.`, "replace");
                     }
                 }
                 catch (error) {
                     const errorMessage = getErrorMessage(error);
                     console.error(`Error fetching document ${source.url}:`, error);
-                    this.emitProgress(updateOutput, `⚠️ Error fetching ${this.truncate(source.title || source.url, 90)}: ${this.truncate(errorMessage, 120)}`);
+                    this.emitProgress(updateOutput, `⚠️ Error fetching ${this.truncate(source.title || source.url, 90)}: ${this.truncate(errorMessage, 120)}`, "replace");
                 }
+                this.emitProgress(updateOutput, `✔ Summarized ${this.truncate(source.title || source.url, 100)}`, "append");
             }
             // Step 4: Combine all information and generate a final report
             const combinedContent = [
@@ -492,7 +514,7 @@ Writing Guidelines:
 - Cite every meaningful statement using inline citations in [number] format that map back to the source list.
 - Maintain a neutral, evidence-driven tone suitable for analysts and decision makers.
 `;
-            this.emitProgress(updateOutput, "ℹ🧠 Synthesizing final report…");
+            this.emitProgress(updateOutput, "ℹ🧠 Synthesizing final report…", "append");
             // Use Gemini client directly to generate final report
             const geminiClient = this.config.getGeminiClient();
             const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: finalPrompt }] }], {}, signal);
@@ -512,7 +534,7 @@ Writing Guidelines:
                 return "";
             })
                 .join("");
-            const responseText = (await getResponseText(result)) ?? null;
+            const responseText = (await getResponseText(result)) ?? candidateText;
             const resultText = responseText && responseText.trim().length > 0
                 ? responseText
                 : candidateText;
@@ -525,7 +547,7 @@ Writing Guidelines:
             const citations = {};
             this.emitProgress(updateOutput, resultText.trim().length > 0
                 ? `✅ Research complete. Compiled ${sources.length} source(s).`
-                : `✅ Research complete. Compiled ${sources.length} source(s) and generated a summary from collected material.`);
+                : `✅ Research complete. Compiled ${sources.length} source(s) and generated a summary from collected material.`, "append");
             const sourcesSection = sources.length
                 ? [
                     "",
@@ -540,14 +562,7 @@ Writing Guidelines:
                     ...Array.from(toolUsageCounts.entries()).map(([name, count]) => `- ${this.formatToolName(name)}: ${count} search${count === 1 ? "" : "es"}`),
                 ].join("\n")
                 : "";
-            const reportHeading = this.params.mode === "quality"
-                ? "# Comprehensive Research Report"
-                : this.params.mode === "balanced"
-                    ? "# Research Briefing"
-                    : "# Research Summary";
             const finalReport = [
-                reportHeading,
-                "",
                 finalContent.trim(),
                 toolUsageSection,
                 sourcesSection,

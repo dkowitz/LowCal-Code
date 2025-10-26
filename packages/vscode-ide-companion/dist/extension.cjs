@@ -133196,6 +133196,12 @@ var SearXNGSearchToolInvocation = class extends BaseToolInvocation {
       const searchUrl = new URL("http://localhost:8085/search");
       searchUrl.searchParams.append("q", this.params.query);
       searchUrl.searchParams.append("format", "json");
+      searchUrl.searchParams.append("lang", "en");
+      searchUrl.searchParams.append("language", "en-US");
+      searchUrl.searchParams.append("locale", "en_US");
+      searchUrl.searchParams.append("safesearch", "1");
+      searchUrl.searchParams.append("categories", "general");
+      searchUrl.searchParams.append("max_results", "20");
       searchUrl.searchParams.append("engines", "google,bing,duckduckgo");
       const response = await fetch(searchUrl.toString(), {
         method: "GET",
@@ -133210,7 +133216,15 @@ var SearXNGSearchToolInvocation = class extends BaseToolInvocation {
         throw new Error(`SearXNG API error: ${response.status} ${response.statusText}${text ? ` - ${text}` : ""}`);
       }
       const data = await response.json();
-      const sources = (data.results || []).map((r2) => ({
+      const isLikelyEnglish = (text) => {
+        const sample = text.slice(0, 200);
+        if (!sample)
+          return true;
+        const asciiMatches = sample.match(/[A-Za-z0-9\s.,'"-]/g)?.length ?? 0;
+        return asciiMatches / sample.length >= 0.7;
+      };
+      const filteredResults = (data.results || []).filter((r2) => isLikelyEnglish(`${r2.title ?? ""} ${r2.content ?? ""}`)).slice(0, 20);
+      const sources = filteredResults.map((r2) => ({
         title: r2.title || "Untitled",
         url: r2.url || ""
       }));
@@ -133220,8 +133234,9 @@ var SearXNGSearchToolInvocation = class extends BaseToolInvocation {
         content = data.answers.map((answer) => `${answer.answer} (from ${answer.engine})`).join("\n\n");
       }
       if (!content.trim()) {
-        content = sources.slice(0, 3).map((s2, i) => {
-          const result = data.results[i];
+        const topSources = sources.slice(0, 8);
+        content = topSources.slice(0, 3).map((s2, i) => {
+          const result = filteredResults[i];
           const snippet = result?.content ? ` - ${result.content.substring(0, 150)}...` : "";
           return `${i + 1}. ${s2.title}${snippet}`;
         }).join("\n");
@@ -135799,18 +135814,39 @@ var ResearchToolInvocation = class extends BaseToolInvocation {
   /**
    * Rephrases the user query into a search-ready format
    */
-  async rephraseQuery(query) {
-    if (query.trim().length === 0) {
-      return query;
-    }
+  async rephraseQuery(query, signal) {
     const trimmedQuery = query.trim();
-    if (trimmedQuery.endsWith("?") || trimmedQuery.toLowerCase().startsWith("what") || trimmedQuery.toLowerCase().startsWith("how") || trimmedQuery.toLowerCase().startsWith("why") || trimmedQuery.toLowerCase().startsWith("when") || trimmedQuery.toLowerCase().startsWith("where") || trimmedQuery.toLowerCase().startsWith("who") || trimmedQuery.toLowerCase().startsWith("which")) {
+    if (!trimmedQuery) {
       return query;
     }
-    if (trimmedQuery.startsWith("Can you tell me what is ") || trimmedQuery.startsWith("What is ")) {
+    const geminiClient = this.config.getGeminiClient?.();
+    if (!geminiClient) {
       return trimmedQuery;
     }
-    return `What is ${trimmedQuery}?`;
+    const prompt = `
+Rewrite the following research intent as a precise web search query.
+- Preserve the key nouns, entities, and constraints.
+- Avoid conversational phrasing (no "what is", "please", "can you").
+- Keep the query under 16 words.
+- Return only the rewritten query, nothing else.
+
+Original request:
+"""${trimmedQuery}"""
+`;
+    try {
+      const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+      const candidates = response.response?.candidates ?? response.candidates ?? [];
+      const fallbackParts = candidates.length > 0 ? candidates[0]?.content?.parts ?? [] : [];
+      const fallbackText = Array.isArray(fallbackParts) ? fallbackParts.map((part) => typeof part === "string" ? part : part && typeof part === "object" && "text" in part ? part.text ?? "" : "").join("") : "";
+      const candidateText = await getResponseText2(response) ?? fallbackText;
+      const rephrased = candidateText.split(/\r?\n/).map((line) => line.trim().replace(/^[-•\d.]+\s*/, "")).find((line) => line.length > 0);
+      if (rephrased && rephrased.length > 0) {
+        return rephrased;
+      }
+    } catch (error) {
+      console.warn("[ResearchTool] Query rephrase fallback:", getErrorMessage(error));
+    }
+    return trimmedQuery;
   }
   /**
    * Gets the appropriate search parameters based on optimization mode
@@ -135831,11 +135867,12 @@ var ResearchToolInvocation = class extends BaseToolInvocation {
         };
     }
   }
-  emitProgress(updateOutput, message) {
+  emitProgress(updateOutput, message, mode = "append") {
     if (!updateOutput) {
       return;
     }
-    updateOutput(message);
+    const payload = `__progress__${JSON.stringify({ mode, message })}`;
+    updateOutput(payload);
   }
   truncate(value, maxLength = 140) {
     if (!value) {
@@ -136059,13 +136096,13 @@ ${this.params.query}
   async execute(signal, updateOutput) {
     try {
       this.ensureWebFetchAvailable();
-      this.emitProgress(updateOutput, `\u2139\u2699\uFE0F Running ${this.params.mode} research workflow\u2026`);
+      this.emitProgress(updateOutput, `\u2139\u2699\uFE0F Running ${this.params.mode} research workflow\u2026`, "append");
       const plan = await this.buildQueryPlan(signal);
       this.emitProgress(updateOutput, `\u2139\u{1F9ED} Query plan established with ${plan.subQueries.length} focus area(s).
-   Primary topic: ${plan.primaryTopic}`);
+   Primary topic: ${plan.primaryTopic}`, "append");
       const normalizedSubQueries = [];
       for (const sub of plan.subQueries) {
-        const normalized = await this.rephraseQuery(sub.query);
+        const normalized = await this.rephraseQuery(sub.query, signal);
         normalizedSubQueries.push({ base: normalized, rationale: sub.rationale });
       }
       const { maxResults } = this.getSearchParameters(this.params.mode);
@@ -136086,7 +136123,7 @@ ${this.params.query}
           });
         });
       });
-      this.emitProgress(updateOutput, `\u2139\u{1F504} Executing ${searchPlan.length} targeted search(es) across ${searchTools.map((tool) => this.formatToolName(tool)).join(" + ")}`);
+      this.emitProgress(updateOutput, `\u2139\u{1F504} Executing ${searchPlan.length} targeted search(es) across ${searchTools.map((tool) => this.formatToolName(tool)).join(" + ")}`, "append");
       const searchResults = [];
       const sources = [];
       const seenUrls = /* @__PURE__ */ new Set();
@@ -136096,7 +136133,7 @@ ${this.params.query}
         const label = this.formatToolName(toolName);
         const focusLabel = plan.subQueries[subIndex]?.query ?? query;
         this.emitProgress(updateOutput, `\u{1F50E} [${i + 1}/${searchPlan.length}] ${label} \u2192 ${this.truncate(query, 90)} (focus ${subIndex + 1}/${plan.subQueries.length}: ${this.truncate(focusLabel, 70)})${rationale ? `
-   \u21B3 Rationale: ${this.truncate(rationale, 90)}` : ""}`);
+   \u21B3 ${this.truncate(rationale, 90)}` : ""}`, "replace");
         const tool = toolName === ToolNames.WEB_SEARCH ? new WebSearchTool(this.config) : new SearXNGSearchTool(this.config);
         const invocation = tool.build({ query });
         const result2 = await invocation.execute(signal);
@@ -136104,7 +136141,7 @@ ${this.params.query}
         const summaryText = partToString(result2.llmContent);
         if (summaryText) {
           searchResults.push(summaryText.replace(/\s+/g, " "));
-          this.emitProgress(updateOutput, `\u{1F4CC} ${label} highlight: ${this.truncate(summaryText.replace(/\s+/g, " "), 160)}`);
+          this.emitProgress(updateOutput, `\u{1F4CC} ${label} highlight: ${this.truncate(summaryText.replace(/\s+/g, " "), 160)}`, "replace");
         }
         const newlyAdded = [];
         for (const source of result2.sources || []) {
@@ -136122,28 +136159,24 @@ ${this.params.query}
           sources.push(normalized);
           newlyAdded.push(normalized);
         }
-        if (newlyAdded.length > 0) {
-          const sample = newlyAdded[0];
-          this.emitProgress(updateOutput, `\u{1F4DA} ${label} added ${newlyAdded.length} source(s). Example: ${this.truncate(sample.title || sample.url, 120)} (${sample.url})`);
-        } else {
-          this.emitProgress(updateOutput, `\u2139 ${label} did not yield new unique sources for this query.`);
-        }
+        const summaryLine = newlyAdded.length > 0 ? `\u2714 ${label} completed \u2013 ${newlyAdded.length} new source(s) added.` : `\u2714 ${label} completed \u2013 no new unique sources found.`;
+        this.emitProgress(updateOutput, summaryLine, "append");
       }
       if (sources.length === 0) {
-        this.emitProgress(updateOutput, "\u26A0\uFE0F No sources were discovered during web search.");
+        this.emitProgress(updateOutput, "\u26A0\uFE0F No sources were discovered during web search.", "append");
       } else {
-        this.emitProgress(updateOutput, `\u2139\u{1F4C1} Collected ${sources.length} unique source(s) for deeper review.`);
+        this.emitProgress(updateOutput, `\u2139\u{1F4C1} Collected ${sources.length} unique source(s) for deeper review.`, "append");
       }
       const fetchTool = new WebFetchTool(this.config);
       const processedDocuments = [];
       const documentSnippets = [];
       const sourcesForProcessing = sources.slice(0, Math.min(maxResults, sources.length));
       if (sourcesForProcessing.length > 0) {
-        this.emitProgress(updateOutput, `\u2139\u{1F4F0} Summarizing top ${sourcesForProcessing.length} source(s) for detailed insights.`);
+        this.emitProgress(updateOutput, `\u2139\u{1F4F0} Summarizing top ${sourcesForProcessing.length} source(s) for detailed insights.`, "append");
       }
       for (let i = 0; i < sourcesForProcessing.length; i++) {
         const source = sourcesForProcessing[i];
-        this.emitProgress(updateOutput, `\u{1F4F0} [${i + 1}/${sourcesForProcessing.length}] Summarizing ${this.truncate(source.title || source.url, 120)}`);
+        this.emitProgress(updateOutput, `\u{1F4F0} [${i + 1}/${sourcesForProcessing.length}] Summarizing ${this.truncate(source.title || source.url, 120)}`, "replace");
         try {
           const fetchInvocation = fetchTool.build({
             url: source.url,
@@ -136154,15 +136187,16 @@ ${this.params.query}
           if (fetchText.trim()) {
             processedDocuments.push(fetchText);
             documentSnippets.push(fetchText.replace(/\s+/g, " "));
-            this.emitProgress(updateOutput, `\u2705 Captured insights from ${this.truncate(source.title || source.url, 100)}`);
+            this.emitProgress(updateOutput, `\u2705 Captured insights from ${this.truncate(source.title || source.url, 100)}`, "replace");
           } else {
-            this.emitProgress(updateOutput, `\u2139 No summarizable content returned from ${this.truncate(source.title || source.url, 100)}.`);
+            this.emitProgress(updateOutput, `\u2139 No summarizable content returned from ${this.truncate(source.title || source.url, 100)}.`, "replace");
           }
         } catch (error) {
           const errorMessage = getErrorMessage(error);
           console.error(`Error fetching document ${source.url}:`, error);
-          this.emitProgress(updateOutput, `\u26A0\uFE0F Error fetching ${this.truncate(source.title || source.url, 90)}: ${this.truncate(errorMessage, 120)}`);
+          this.emitProgress(updateOutput, `\u26A0\uFE0F Error fetching ${this.truncate(source.title || source.url, 90)}: ${this.truncate(errorMessage, 120)}`, "replace");
         }
+        this.emitProgress(updateOutput, `\u2714 Summarized ${this.truncate(source.title || source.url, 100)}`, "append");
       }
       const combinedContent = [
         ...searchResults,
@@ -136189,7 +136223,7 @@ Writing Guidelines:
 - Cite every meaningful statement using inline citations in [number] format that map back to the source list.
 - Maintain a neutral, evidence-driven tone suitable for analysts and decision makers.
 `;
-      this.emitProgress(updateOutput, "\u2139\u{1F9E0} Synthesizing final report\u2026");
+      this.emitProgress(updateOutput, "\u2139\u{1F9E0} Synthesizing final report\u2026", "append");
       const geminiClient = this.config.getGeminiClient();
       const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: finalPrompt }] }], {}, signal);
       const candidateParts = (result.response?.candidates ?? result.candidates ?? [])?.[0]?.content?.parts ?? [];
@@ -136202,12 +136236,12 @@ Writing Guidelines:
         }
         return "";
       }).join("");
-      const responseText = await getResponseText2(result) ?? null;
+      const responseText = await getResponseText2(result) ?? candidateText;
       const resultText = responseText && responseText.trim().length > 0 ? responseText : candidateText;
       const fallbackSummary = this.buildFallbackReport(this.params.mode, searchPlan.map((run) => run.query), sources, searchResults, documentSnippets);
       const finalContent = resultText && resultText.trim().length > 0 ? resultText : fallbackSummary;
       const citations = {};
-      this.emitProgress(updateOutput, resultText.trim().length > 0 ? `\u2705 Research complete. Compiled ${sources.length} source(s).` : `\u2705 Research complete. Compiled ${sources.length} source(s) and generated a summary from collected material.`);
+      this.emitProgress(updateOutput, resultText.trim().length > 0 ? `\u2705 Research complete. Compiled ${sources.length} source(s).` : `\u2705 Research complete. Compiled ${sources.length} source(s) and generated a summary from collected material.`, "append");
       const sourcesSection = sources.length ? [
         "",
         "## Sources",
@@ -136218,10 +136252,7 @@ Writing Guidelines:
         "## Tool Usage Summary",
         ...Array.from(toolUsageCounts.entries()).map(([name2, count]) => `- ${this.formatToolName(name2)}: ${count} search${count === 1 ? "" : "es"}`)
       ].join("\n") : "";
-      const reportHeading = this.params.mode === "quality" ? "# Comprehensive Research Report" : this.params.mode === "balanced" ? "# Research Briefing" : "# Research Summary";
       const finalReport = [
-        reportHeading,
-        "",
         finalContent.trim(),
         toolUsageSection,
         sourcesSection

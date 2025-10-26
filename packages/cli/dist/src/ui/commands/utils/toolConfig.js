@@ -22,6 +22,7 @@ const DEFAULT_COLLECTIONS = {
         ToolNames.EXIT_PLAN_MODE,
         ToolNames.WEB_FETCH,
         ToolNames.WEB_SEARCH,
+        ToolNames.SEARXNG_SEARCH,
     ],
     minimal: [
         ToolNames.READ_FILE,
