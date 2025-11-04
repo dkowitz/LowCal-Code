@@ -16,20 +16,33 @@ const INLINE_CODE_MARKER_LENGTH = 1; // For "`"
 const UNDERLINE_TAG_START_LENGTH = 3; // For "<u>"
 const UNDERLINE_TAG_END_LENGTH = 4; // For "</u>"
 // Added support for <think>/<thinking> tags – treated as italic without showing the tags
-const THINK_TAG_START_LENGTH = 6; // Length of "<think>" or "<thinking>" (both start with '<think')
-const THINK_TAG_END_LENGTH = 7; // Length of "</think>" or "</thinking>"
+const THINK_START_PLACEHOLDER = "\u0000";
+const THINK_END_PLACEHOLDER = "\u0001";
+function normalizeThinkTags(value) {
+    return value
+        .replace(/<thinking>/g, THINK_START_PLACEHOLDER)
+        .replace(/<\/thinking>/g, THINK_END_PLACEHOLDER)
+        .replace(/<think>/g, THINK_START_PLACEHOLDER)
+        .replace(/<\/think>/g, THINK_END_PLACEHOLDER);
+}
+function stripThinkPlaceholders(value) {
+    return value
+        .replaceAll(THINK_START_PLACEHOLDER, "")
+        .replaceAll(THINK_END_PLACEHOLDER, "");
+}
 const RenderInlineInternal = ({ text }) => {
     // Early return for plain text without markdown or URLs
     if (!/[*_~`<[https?:]/.test(text)) {
         return _jsx(Text, { children: text });
     }
+    const normalizedText = normalizeThinkTags(text);
     const nodes = [];
     let lastIndex = 0;
-    const inlineRegex = /(\*\*.*?\*\*|\*.*?\*|_.*?_|~~.*?~~|\[.*?\]\(.*?\)|`+.+?`+|<u>.*?<\/u>|<think>.*?<\/think>|<thinking>.*?<\/thinking>|https?:\/\/\S+)/g;
+    const inlineRegex = /(\*\*.*?\*\*|\*.*?\*|_.*?_|~~.*?~~|\[.*?\]\(.*?\)|`+.+?`+|<u>.*?<\/u>|[\u0000][\s\S]*?[\u0001]|https?:\/\/\S+)/g;
     let match;
-    while ((match = inlineRegex.exec(text)) !== null) {
+    while ((match = inlineRegex.exec(normalizedText)) !== null) {
         if (match.index > lastIndex) {
-            nodes.push(_jsx(Text, { children: text.slice(lastIndex, match.index) }, `t-${lastIndex}`));
+            nodes.push(_jsx(Text, { children: stripThinkPlaceholders(normalizedText.slice(lastIndex, match.index)) }, `t-${lastIndex}`));
         }
         const fullMatch = match[0];
         let renderedNode = null;
@@ -79,17 +92,11 @@ const RenderInlineInternal = ({ text }) => {
             ) {
                 renderedNode = (_jsx(Text, { underline: true, children: fullMatch.slice(UNDERLINE_TAG_START_LENGTH, -UNDERLINE_TAG_END_LENGTH) }, key));
             }
-            else if (
-            // Handle <think> and <thinking> tags – render inner content italic without showing tags
-            (fullMatch.startsWith("<think>") && fullMatch.endsWith("</think>") &&
-                fullMatch.length > THINK_TAG_START_LENGTH + THINK_TAG_END_LENGTH) ||
-                (fullMatch.startsWith("<thinking>") && fullMatch.endsWith("</thinking>") &&
-                    fullMatch.length > THINK_TAG_START_LENGTH + THINK_TAG_END_LENGTH)) {
-                // Determine inner content start/end based on which tag is used
-                const isThinking = fullMatch.startsWith("<thinking>");
-                const startLen = isThinking ? "<thinking>".length : "<think>".length;
-                const endLen = isThinking ? "</thinking>".length : "</think>".length;
-                renderedNode = (_jsx(Text, { italic: true, children: fullMatch.slice(startLen, -endLen) }, key));
+            else if (fullMatch.startsWith(THINK_START_PLACEHOLDER) &&
+                fullMatch.endsWith(THINK_END_PLACEHOLDER)) {
+                const innerText = stripThinkPlaceholders(fullMatch.slice(THINK_START_PLACEHOLDER.length, -THINK_END_PLACEHOLDER.length));
+                const formattedText = innerText.trim().length > 0 ? innerText : innerText.trimEnd();
+                renderedNode = (_jsxs(Text, { children: [_jsx(Text, { color: Colors.Gray, children: "\uD83D\uDCAD " }), _jsx(Text, { italic: true, color: Colors.Gray, children: formattedText })] }, key));
             }
             else if (fullMatch.match(/^https?:\/\//)) {
                 renderedNode = (_jsx(Text, { color: Colors.AccentBlue, children: fullMatch }, key));
@@ -99,11 +106,11 @@ const RenderInlineInternal = ({ text }) => {
             console.error("Error parsing inline markdown part:", fullMatch, e);
             renderedNode = null;
         }
-        nodes.push(renderedNode ?? _jsx(Text, { children: fullMatch }, key));
+        nodes.push(renderedNode ?? (_jsx(Text, { children: stripThinkPlaceholders(fullMatch) }, key)));
         lastIndex = inlineRegex.lastIndex;
     }
-    if (lastIndex < text.length) {
-        nodes.push(_jsx(Text, { children: text.slice(lastIndex) }, `t-${lastIndex}`));
+    if (lastIndex < normalizedText.length) {
+        nodes.push(_jsx(Text, { children: stripThinkPlaceholders(normalizedText.slice(lastIndex)) }, `t-${lastIndex}`));
     }
     return _jsx(_Fragment, { children: nodes.filter((node) => node !== null) });
 };
@@ -120,6 +127,10 @@ export const getPlainTextLength = (text) => {
         .replace(/~~(.*?)~~/g, "$1")
         .replace(/`(.*?)`/g, "$1")
         .replace(/<u>(.*?)<\/u>/g, "$1")
+        .replace(/<think>([\s\S]*?)<\/think>/g, "$1")
+        .replace(/<thinking>([\s\S]*?)<\/thinking>/g, "$1")
+        .replace(/<\/?think>/g, "")
+        .replace(/<\/?thinking>/g, "")
         .replace(/\[(.*?)\]\(.*?\)/g, "$1");
     return stringWidth(cleanText);
 };

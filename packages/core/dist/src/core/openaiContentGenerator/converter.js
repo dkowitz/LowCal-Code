@@ -12,6 +12,8 @@ import { StreamingToolCallParser } from "./streamingToolCallParser.js";
 export class OpenAIContentConverter {
     model;
     streamingToolCallParser = new StreamingToolCallParser();
+    streamingReasoningBuffers = new Map();
+    streamingThinkingBuffers = new Map();
     constructor(model) {
         this.model = model;
     }
@@ -22,6 +24,125 @@ export class OpenAIContentConverter {
      */
     resetStreamingToolCalls() {
         this.streamingToolCallParser.reset();
+        this.streamingReasoningBuffers.clear();
+        this.streamingThinkingBuffers.clear();
+    }
+    formatThinkingBlock(content) {
+        const lines = content.split(/\r?\n/);
+        const formattedLines = lines
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0);
+        if (formattedLines.length === 0) {
+            return "";
+        }
+        const [firstLine, ...rest] = formattedLines;
+        const resultLines = [`💭 *${firstLine}*`];
+        for (const line of rest) {
+            resultLines.push(`   *${line}*`);
+        }
+        return resultLines.join("\n\n").trimEnd();
+    }
+    formatThinkingSegments(text) {
+        if (!text || typeof text !== "string") {
+            return text;
+        }
+        return text.replace(/<(think|thinking)>([\s\S]*?)<\/\1>/g, (_match, _tag, content) => this.formatThinkingBlock(content));
+    }
+    processStreamingThinkingText(index, chunkText, flush = false) {
+        if (!chunkText && !flush) {
+            return [];
+        }
+        const buffers = this.streamingThinkingBuffers;
+        const current = (buffers.get(index) ?? "") + (chunkText ?? "");
+        const results = [];
+        const regex = /<(think|thinking)>([\s\S]*?)<\/\1>/g;
+        let lastIndex = 0;
+        let match;
+        while ((match = regex.exec(current)) !== null) {
+            if (match.index > lastIndex) {
+                const preceding = current.slice(lastIndex, match.index);
+                if (preceding) {
+                    results.push({ text: preceding, isThinking: false });
+                }
+            }
+            let formatted = this.formatThinkingBlock(match[2]);
+            if (formatted) {
+                if (results.length > 0) {
+                    const prev = results[results.length - 1];
+                    if (!prev.text.endsWith("\n\n")) {
+                        prev.text = `${prev.text}\n\n`;
+                    }
+                }
+                results.push({ text: formatted, isThinking: true });
+            }
+            lastIndex = regex.lastIndex;
+        }
+        const remaining = current.slice(lastIndex);
+        if (flush) {
+            if (remaining) {
+                results.push({ text: remaining, isThinking: false });
+            }
+            buffers.delete(index);
+        }
+        else {
+            const lastOpenTag = Math.max(remaining.lastIndexOf("<think>"), remaining.lastIndexOf("<thinking>"));
+            const lastCloseTag = Math.max(remaining.lastIndexOf("</think>"), remaining.lastIndexOf("</thinking>"));
+            if (lastOpenTag > lastCloseTag) {
+                buffers.set(index, remaining);
+            }
+            else {
+                if (remaining) {
+                    results.push({ text: remaining, isThinking: false });
+                }
+                buffers.delete(index);
+            }
+        }
+        return results.filter((segment) => segment.text.length > 0);
+    }
+    getTextFromPart(part) {
+        if (!part) {
+            return undefined;
+        }
+        if (typeof part === "string") {
+            return part;
+        }
+        if ("text" in part && typeof part.text === "string") {
+            return part.text;
+        }
+        return undefined;
+    }
+    appendTextPart(parts, text, options = {}) {
+        if (!text || text.length === 0) {
+            return;
+        }
+        const { isThinking = false } = options;
+        let textToAppend = text;
+        const lastPart = parts.length > 0 ? parts[parts.length - 1] : undefined;
+        const lastText = this.getTextFromPart(lastPart);
+        const lastIsThinking = lastText?.trimStart().startsWith("💭");
+        if (!isThinking && lastText !== undefined && !lastIsThinking) {
+            const combined = `${lastText}${textToAppend}`;
+            if (typeof lastPart === "string") {
+                parts[parts.length - 1] = { text: combined };
+            }
+            else if (lastPart && typeof lastPart === "object") {
+                lastPart.text = combined;
+            }
+            return;
+        }
+        const needsSpacing = parts.length > 0;
+        if (needsSpacing) {
+            if (textToAppend.startsWith("\n\n")) {
+                // already has spacing
+            }
+            else if (textToAppend.startsWith("\n")) {
+                textToAppend = `\n${textToAppend}`;
+            }
+            else {
+                textToAppend = `\n\n${textToAppend}`;
+            }
+        }
+        parts.push({ text: textToAppend });
     }
     /**
      * Extract textual content from OpenAI message content which can be a string
@@ -435,7 +556,14 @@ export class OpenAIContentConverter {
             }
         }
         if (textContent) {
-            parts.push({ text: textContent });
+            this.appendTextPart(parts, this.formatThinkingSegments(textContent));
+        }
+        const reasoningText = this.extractReasoningText(choice.message.reasoning_details);
+        if (reasoningText) {
+            const formattedThought = this.formatThinkingBlock(reasoningText);
+            if (formattedThought) {
+                this.appendTextPart(parts, formattedThought, { isThinking: true });
+            }
         }
         // Handle tool calls
         if (choice.message.tool_calls) {
@@ -505,6 +633,7 @@ export class OpenAIContentConverter {
         const response = new GenerateContentResponse();
         if (choice) {
             const parts = [];
+            const choiceIndex = choice.index ?? 0;
             // Handle text content
             let deltaText = this.extractTextFromOpenAIContent(choice.delta?.content);
             if (!deltaText && choice.delta) {
@@ -515,7 +644,18 @@ export class OpenAIContentConverter {
                 }
             }
             if (deltaText) {
-                parts.push({ text: deltaText });
+                const segments = this.processStreamingThinkingText(choiceIndex, deltaText);
+                for (const segment of segments) {
+                    this.appendTextPart(parts, segment.text, {
+                        isThinking: segment.isThinking,
+                    });
+                }
+            }
+            // Handle reasoning content in streaming responses
+            const deltaReasoningText = this.extractReasoningText(choice.delta?.reasoning_details);
+            if (deltaReasoningText) {
+                const existing = this.streamingReasoningBuffers.get(choiceIndex) ?? "";
+                this.streamingReasoningBuffers.set(choiceIndex, existing + deltaReasoningText);
             }
             // Handle tool calls using the streaming parser
             if (choice.delta?.tool_calls) {
@@ -534,6 +674,22 @@ export class OpenAIContentConverter {
             }
             // Only emit function calls when streaming is complete (finish_reason is present)
             if (choice.finish_reason) {
+                const remainingSegments = this.processStreamingThinkingText(choiceIndex, "", true);
+                for (const segment of remainingSegments) {
+                    this.appendTextPart(parts, segment.text, {
+                        isThinking: segment.isThinking,
+                    });
+                }
+                const bufferedReasoning = this.streamingReasoningBuffers.get(choiceIndex);
+                if (bufferedReasoning) {
+                    const formattedThought = this.formatThinkingBlock(bufferedReasoning);
+                    if (formattedThought) {
+                        this.appendTextPart(parts, formattedThought, {
+                            isThinking: true,
+                        });
+                    }
+                    this.streamingReasoningBuffers.delete(choiceIndex);
+                }
                 const completedToolCalls = this.streamingToolCallParser.getCompletedToolCalls();
                 for (const toolCall of completedToolCalls) {
                     if (toolCall.name) {
@@ -597,6 +753,42 @@ export class OpenAIContentConverter {
             };
         }
         return response;
+    }
+    /**
+     * Extracts reasoning text from MiniMax reasoning_details payloads.
+     */
+    extractReasoningText(reasoningDetails) {
+        if (!reasoningDetails) {
+            return "";
+        }
+        if (typeof reasoningDetails === "string") {
+            return reasoningDetails;
+        }
+        if (Array.isArray(reasoningDetails)) {
+            return reasoningDetails
+                .map((detail) => {
+                if (!detail)
+                    return "";
+                if (typeof detail === "string")
+                    return detail;
+                if (typeof detail === "object") {
+                    const maybeText = detail.text;
+                    if (typeof maybeText === "string") {
+                        return maybeText;
+                    }
+                }
+                return "";
+            })
+                .filter((text) => text.length > 0)
+                .join("");
+        }
+        if (typeof reasoningDetails === "object") {
+            const maybeText = reasoningDetails.text;
+            if (typeof maybeText === "string") {
+                return maybeText;
+            }
+        }
+        return "";
     }
     /**
      * Convert Gemini response format to OpenAI chat completion format for logging

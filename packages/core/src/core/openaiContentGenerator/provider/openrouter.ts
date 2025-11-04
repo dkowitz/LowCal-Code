@@ -1,7 +1,14 @@
+import type OpenAI from "openai";
 import type { Config } from "../../../config/config.js";
 import type { ContentGeneratorConfig } from "../../contentGenerator.js";
 import { DefaultOpenAICompatibleProvider } from "./default.js";
 import { setModelContextLimit } from "../../tokenLimits.js";
+
+function isMiniMaxModel(modelId: string | undefined): boolean {
+  if (!modelId) return false;
+  const normalized = modelId.toLowerCase();
+  return normalized.includes("minimax");
+}
 
 export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleProvider {
   constructor(
@@ -35,6 +42,37 @@ export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleP
     }
 
     return headers;
+  }
+
+  override buildRequest(
+    request: OpenAI.Chat.ChatCompletionCreateParams,
+    userPromptId: string,
+  ): OpenAI.Chat.ChatCompletionCreateParams {
+    const baseRequest = super.buildRequest(request, userPromptId);
+    const modelId =
+      this.contentGeneratorConfig.model ?? baseRequest.model ?? request.model;
+    if (!isMiniMaxModel(modelId)) {
+      return baseRequest;
+    }
+
+    type ChatCompletionWithExtraBody =
+      OpenAI.Chat.ChatCompletionCreateParams & {
+        extra_body?: Record<string, unknown>;
+      };
+
+    const requestWithExtra = baseRequest as ChatCompletionWithExtraBody;
+    const existingExtraBody = requestWithExtra.extra_body ?? {};
+
+    if (existingExtraBody["reasoning_split"] === undefined) {
+      requestWithExtra.extra_body = {
+        ...existingExtraBody,
+        reasoning_split: true,
+      };
+    } else {
+      requestWithExtra.extra_body = existingExtraBody;
+    }
+
+    return requestWithExtra;
   }
 
   /**

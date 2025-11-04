@@ -17,8 +17,22 @@ const INLINE_CODE_MARKER_LENGTH = 1; // For "`"
 const UNDERLINE_TAG_START_LENGTH = 3; // For "<u>"
 const UNDERLINE_TAG_END_LENGTH = 4; // For "</u>"
 // Added support for <think>/<thinking> tags – treated as italic without showing the tags
-const THINK_TAG_START_LENGTH = 6; // Length of "<think>" or "<thinking>" (both start with '<think')
-const THINK_TAG_END_LENGTH = 7; // Length of "</think>" or "</thinking>"
+const THINK_START_PLACEHOLDER = "\u0000";
+const THINK_END_PLACEHOLDER = "\u0001";
+
+function normalizeThinkTags(value: string): string {
+  return value
+    .replace(/<thinking>/g, THINK_START_PLACEHOLDER)
+    .replace(/<\/thinking>/g, THINK_END_PLACEHOLDER)
+    .replace(/<think>/g, THINK_START_PLACEHOLDER)
+    .replace(/<\/think>/g, THINK_END_PLACEHOLDER);
+}
+
+function stripThinkPlaceholders(value: string): string {
+  return value
+    .replaceAll(THINK_START_PLACEHOLDER, "")
+    .replaceAll(THINK_END_PLACEHOLDER, "");
+}
 
 interface RenderInlineProps {
   text: string;
@@ -30,17 +44,21 @@ const RenderInlineInternal: React.FC<RenderInlineProps> = ({ text }) => {
     return <Text>{text}</Text>;
   }
 
+  const normalizedText = normalizeThinkTags(text);
+
   const nodes: React.ReactNode[] = [];
   let lastIndex = 0;
   const inlineRegex =
-    /(\*\*.*?\*\*|\*.*?\*|_.*?_|~~.*?~~|\[.*?\]\(.*?\)|`+.+?`+|<u>.*?<\/u>|<think>.*?<\/think>|<thinking>.*?<\/thinking>|https?:\/\/\S+)/g;
+    /(\*\*.*?\*\*|\*.*?\*|_.*?_|~~.*?~~|\[.*?\]\(.*?\)|`+.+?`+|<u>.*?<\/u>|[\u0000][\s\S]*?[\u0001]|https?:\/\/\S+)/g;
   let match;
 
-  while ((match = inlineRegex.exec(text)) !== null) {
+  while ((match = inlineRegex.exec(normalizedText)) !== null) {
     if (match.index > lastIndex) {
       nodes.push(
         <Text key={`t-${lastIndex}`}>
-          {text.slice(lastIndex, match.index)}
+          {stripThinkPlaceholders(
+            normalizedText.slice(lastIndex, match.index),
+          )}
         </Text>,
       );
     }
@@ -135,19 +153,24 @@ const RenderInlineInternal: React.FC<RenderInlineProps> = ({ text }) => {
           </Text>
         );
       } else if (
-        // Handle <think> and <thinking> tags – render inner content italic without showing tags
-        (fullMatch.startsWith("<think>") && fullMatch.endsWith("</think>") &&
-        fullMatch.length > THINK_TAG_START_LENGTH + THINK_TAG_END_LENGTH) ||
-        (fullMatch.startsWith("<thinking>") && fullMatch.endsWith("</thinking>") &&
-        fullMatch.length > THINK_TAG_START_LENGTH + THINK_TAG_END_LENGTH)
+        fullMatch.startsWith(THINK_START_PLACEHOLDER) &&
+        fullMatch.endsWith(THINK_END_PLACEHOLDER)
       ) {
-        // Determine inner content start/end based on which tag is used
-        const isThinking = fullMatch.startsWith("<thinking>");
-        const startLen = isThinking ? "<thinking>".length : "<think>".length;
-        const endLen = isThinking ? "</thinking>".length : "</think>".length;
+        const innerText = stripThinkPlaceholders(
+          fullMatch.slice(
+            THINK_START_PLACEHOLDER.length,
+            -THINK_END_PLACEHOLDER.length,
+          ),
+        );
+        const formattedText =
+          innerText.trim().length > 0 ? innerText : innerText.trimEnd();
+
         renderedNode = (
-          <Text key={key} italic>
-            {fullMatch.slice(startLen, -endLen)}
+          <Text key={key}>
+            <Text color={Colors.Gray}>💭 </Text>
+            <Text italic color={Colors.Gray}>
+              {formattedText}
+            </Text>
           </Text>
         );
       } else if (fullMatch.match(/^https?:\/\//)) {
@@ -162,12 +185,20 @@ const RenderInlineInternal: React.FC<RenderInlineProps> = ({ text }) => {
       renderedNode = null;
     }
 
-    nodes.push(renderedNode ?? <Text key={key}>{fullMatch}</Text>);
+    nodes.push(
+      renderedNode ?? (
+        <Text key={key}>{stripThinkPlaceholders(fullMatch)}</Text>
+      ),
+    );
     lastIndex = inlineRegex.lastIndex;
   }
 
-  if (lastIndex < text.length) {
-    nodes.push(<Text key={`t-${lastIndex}`}>{text.slice(lastIndex)}</Text>);
+  if (lastIndex < normalizedText.length) {
+    nodes.push(
+      <Text key={`t-${lastIndex}`}>
+        {stripThinkPlaceholders(normalizedText.slice(lastIndex))}
+      </Text>,
+    );
   }
 
   return <>{nodes.filter((node) => node !== null)}</>;
@@ -187,6 +218,10 @@ export const getPlainTextLength = (text: string): number => {
     .replace(/~~(.*?)~~/g, "$1")
     .replace(/`(.*?)`/g, "$1")
     .replace(/<u>(.*?)<\/u>/g, "$1")
+    .replace(/<think>([\s\S]*?)<\/think>/g, "$1")
+    .replace(/<thinking>([\s\S]*?)<\/thinking>/g, "$1")
+    .replace(/<\/?think>/g, "")
+    .replace(/<\/?thinking>/g, "")
     .replace(/\[(.*?)\]\(.*?\)/g, "$1");
   return stringWidth(cleanText);
 };

@@ -135843,8 +135843,7 @@ Original request:
       if (rephrased && rephrased.length > 0) {
         return rephrased;
       }
-    } catch (error) {
-      console.warn("[ResearchTool] Query rephrase fallback:", getErrorMessage(error));
+    } catch (_error) {
     }
     return trimmedQuery;
   }
@@ -135969,8 +135968,7 @@ ${this.params.query}
         subQueries: parsed?.sub_queries ?? []
       });
       return plan;
-    } catch (error) {
-      console.warn("[ResearchTool] Falling back to simple query plan:", getErrorMessage(error));
+    } catch (_error) {
       return this.buildPlanFallback();
     }
   }
@@ -136023,6 +136021,50 @@ ${this.params.query}
       }
     }
     return points.slice(0, limit2);
+  }
+  buildSourceCatalogForPrompt(sources) {
+    if (sources.length === 0) {
+      return "No external sources were captured during search.";
+    }
+    const maxForPrompt = 40;
+    return sources.slice(0, maxForPrompt).map((source, index) => `[${index + 1}] ${this.truncate(source.title || source.url, 140)} \u2014 ${source.url}`).join("\n");
+  }
+  stripGeneratedSourceSections(content) {
+    let cleaned = content;
+    const headings = [
+      "sources",
+      "references",
+      "bibliography",
+      "source catalog"
+    ];
+    for (const heading2 of headings) {
+      const pattern = new RegExp(`\\n#{1,6}\\s+${heading2}[\\s\\S]*$`, "i");
+      cleaned = cleaned.replace(pattern, "\n");
+    }
+    return cleaned.trim();
+  }
+  buildCitationMap(report, sources) {
+    const citationPattern = /\[(\d+)\]/g;
+    const citations = {};
+    const seen = /* @__PURE__ */ new Set();
+    let match2;
+    while ((match2 = citationPattern.exec(report)) !== null) {
+      const citationNumber = match2[1];
+      if (seen.has(citationNumber)) {
+        continue;
+      }
+      const index = Number.parseInt(citationNumber, 10);
+      if (!Number.isFinite(index) || index < 1 || index > sources.length) {
+        continue;
+      }
+      const source = sources[index - 1];
+      citations[citationNumber] = {
+        content: source.title || source.url,
+        sourceIndex: index - 1
+      };
+      seen.add(citationNumber);
+    }
+    return citations;
   }
   buildFallbackReport(mode, queries, sources, searchHighlights, documentSnippets) {
     const keyFindings = this.extractKeyPoints([...documentSnippets, ...searchHighlights], 6);
@@ -136193,7 +136235,6 @@ ${this.params.query}
           }
         } catch (error) {
           const errorMessage = getErrorMessage(error);
-          console.error(`Error fetching document ${source.url}:`, error);
           this.emitProgress(updateOutput, `\u26A0\uFE0F Error fetching ${this.truncate(source.title || source.url, 90)}: ${this.truncate(errorMessage, 120)}`, "replace");
         }
         this.emitProgress(updateOutput, `\u2714 Summarized ${this.truncate(source.title || source.url, 100)}`, "append");
@@ -136202,6 +136243,7 @@ ${this.params.query}
         ...searchResults,
         ...processedDocuments
       ].join("\n\n---\n\n");
+      const sourceCatalogForPrompt = this.buildSourceCatalogForPrompt(sources);
       const planSummary = plan.subQueries.map((sub, index) => `${index + 1}. ${sub.query}${sub.rationale ? ` \u2014 ${sub.rationale}` : ""}`).join("\n");
       const narrativeGuidance = this.params.mode === "quality" ? "Produce a long-form feature article (8+ robust paragraphs) that reads like a magazine investigation." : this.params.mode === "balanced" ? "Produce a cohesive narrative article (6-8 paragraphs) that balances depth with readability." : "Produce a concise narrative briefing (4-6 paragraphs) that still delivers context and insight.";
       const finalPrompt = `
@@ -136215,13 +136257,18 @@ ${planSummary}
 Synthesized Evidence (search highlights, document summaries, quantitative snippets):
 ${combinedContent}
 
+Available Source Catalog (use these numeric identifiers in citations):
+${sourceCatalogForPrompt}
+
 Writing Guidelines:
 - ${narrativeGuidance}
 - Write primarily in flowing paragraphs; reserve bullet or table structures only for dense data recaps.
 - Open with an engaging overview, develop the story with clear transitions, and close with implications or recommended next steps.
 - Integrate data points, historical context, and qualitative insights, explaining their significance.
-- Cite every meaningful statement using inline citations in [number] format that map back to the source list.
+- Cite every meaningful statement using inline citations in [number] format referencing the Source Catalog above.
+- Do not invent citations or reuse a number for multiple distinct sources.
 - Maintain a neutral, evidence-driven tone suitable for analysts and decision makers.
+- Do not add a Sources/References section; one will be appended automatically.
 `;
       this.emitProgress(updateOutput, "\u2139\u{1F9E0} Synthesizing final report\u2026", "append");
       const geminiClient = this.config.getGeminiClient();
@@ -136240,7 +136287,8 @@ Writing Guidelines:
       const resultText = responseText && responseText.trim().length > 0 ? responseText : candidateText;
       const fallbackSummary = this.buildFallbackReport(this.params.mode, searchPlan.map((run) => run.query), sources, searchResults, documentSnippets);
       const finalContent = resultText && resultText.trim().length > 0 ? resultText : fallbackSummary;
-      const citations = {};
+      const cleanedReport = this.stripGeneratedSourceSections(finalContent.trim());
+      const citations = this.buildCitationMap(cleanedReport, sources);
       this.emitProgress(updateOutput, resultText.trim().length > 0 ? `\u2705 Research complete. Compiled ${sources.length} source(s).` : `\u2705 Research complete. Compiled ${sources.length} source(s) and generated a summary from collected material.`, "append");
       const sourcesSection = sources.length ? [
         "",
@@ -136253,7 +136301,7 @@ Writing Guidelines:
         ...Array.from(toolUsageCounts.entries()).map(([name2, count]) => `- ${this.formatToolName(name2)}: ${count} search${count === 1 ? "" : "es"}`)
       ].join("\n") : "";
       const finalReport = [
-        finalContent.trim(),
+        cleanedReport,
         toolUsageSection,
         sourcesSection
       ].filter(Boolean).join("\n");
@@ -136269,7 +136317,6 @@ _Report archived at: ${savedReportPath}_`;
       };
     } catch (error) {
       const errorMessage = `Error during research for query "${this.params.query}": ${getErrorMessage(error)}`;
-      console.error(errorMessage, error);
       return {
         llmContent: `Error: ${errorMessage}`,
         returnDisplay: "Error performing research."

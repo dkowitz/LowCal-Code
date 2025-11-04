@@ -20,6 +20,8 @@ export interface ToolCallAccumulator {
 export declare class OpenAIContentConverter {
     private model;
     private streamingToolCallParser;
+    private streamingReasoningBuffers;
+    private streamingThinkingBuffers;
     constructor(model: string);
     /**
      * Reset streaming tool calls parser for new stream processing
@@ -27,6 +29,11 @@ export declare class OpenAIContentConverter {
      * data pollution from previous incomplete streams
      */
     resetStreamingToolCalls(): void;
+    private formatThinkingBlock;
+    private formatThinkingSegments;
+    private processStreamingThinkingText;
+    private getTextFromPart;
+    private appendTextPart;
     /**
      * Extract textual content from OpenAI message content which can be a string
      * or an array of structured content parts.
@@ -89,6 +96,10 @@ export declare class OpenAIContentConverter {
      * Convert OpenAI stream chunk to Gemini format
      */
     convertOpenAIChunkToGemini(chunk: OpenAI.Chat.ChatCompletionChunk): GenerateContentResponse;
+    /**
+     * Extracts reasoning text from MiniMax reasoning_details payloads.
+     */
+    private extractReasoningText;
     /**
      * Convert Gemini response format to OpenAI chat completion format for logging
      */

@@ -7,6 +7,7 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import { OpenAIContentConverter } from "./converter.js";
 import type { StreamingToolCallParser } from "./streamingToolCallParser.js";
+import type OpenAI from "openai";
 
 describe("OpenAIContentConverter", () => {
   let converter: OpenAIContentConverter;
@@ -66,6 +67,138 @@ describe("OpenAIContentConverter", () => {
         }
       ).streamingToolCallParser;
       expect(parser.getBuffer(0)).toBe("");
+    });
+
+    it("should clear streaming reasoning buffers", () => {
+      (
+        converter as unknown as {
+          streamingReasoningBuffers: Map<number, string>;
+        }
+      ).streamingReasoningBuffers.set(0, "partial reasoning");
+
+      converter.resetStreamingToolCalls();
+
+      expect(
+        (
+          converter as unknown as {
+            streamingReasoningBuffers: Map<number, string>;
+          }
+        ).streamingReasoningBuffers.size,
+      ).toBe(0);
+    });
+  });
+
+  describe("convertOpenAIResponseToGemini", () => {
+    it("should include thinking content when reasoning details are present", () => {
+      const response = converter.convertOpenAIResponseToGemini({
+        id: "resp-id",
+        object: "chat.completion",
+        created: 123,
+        model: "minimax/minimax-m2",
+        choices: [
+          {
+            index: 0,
+            finish_reason: "stop",
+            message: {
+              role: "assistant",
+              content: "Visible answer",
+              reasoning_details: [{ text: "Internal reasoning" }],
+            },
+          },
+        ],
+      } as unknown as OpenAI.Chat.ChatCompletion);
+
+      const parts = response.candidates?.[0]?.content?.parts ?? [];
+      expect(parts?.length).toBeGreaterThan(0);
+
+      const textParts = parts.map((part) =>
+        typeof part === "string"
+          ? part
+          : "text" in part
+            ? (part as { text?: string }).text ?? ""
+            : "",
+      );
+
+      const visibleIndex = textParts.findIndex((value) =>
+        value?.includes("Visible answer"),
+      );
+      const thinkingIndex = textParts.findIndex((value) =>
+        value?.includes("💭 *Internal reasoning*"),
+      );
+
+      expect(visibleIndex).toBeGreaterThanOrEqual(0);
+      expect(thinkingIndex).toBeGreaterThanOrEqual(0);
+      expect(thinkingIndex).toBeGreaterThan(visibleIndex);
+    });
+  });
+
+  describe("convertOpenAIChunkToGemini", () => {
+    it("should buffer reasoning until finish_reason and emit <think> block", () => {
+      converter.resetStreamingToolCalls();
+
+      const firstChunk = converter.convertOpenAIChunkToGemini({
+        id: "chunk-1",
+        object: "chat.completion.chunk",
+        created: 456,
+        model: "minimax/minimax-m2",
+        choices: [
+          {
+            index: 0,
+            delta: {
+              reasoning_details: [{ text: "Partial" }],
+            },
+          },
+        ],
+      } as unknown as OpenAI.Chat.ChatCompletionChunk);
+
+      const firstParts = firstChunk.candidates?.[0]?.content?.parts ?? [];
+      expect(firstParts.length).toBe(0);
+
+      const secondChunk = converter.convertOpenAIChunkToGemini({
+        id: "chunk-2",
+        object: "chat.completion.chunk",
+        created: 457,
+        model: "minimax/minimax-m2",
+        choices: [
+          {
+            index: 0,
+            delta: {
+              content: "Visible",
+            },
+            finish_reason: "stop",
+          },
+        ],
+      } as unknown as OpenAI.Chat.ChatCompletionChunk);
+
+      const secondParts = secondChunk.candidates?.[0]?.content?.parts ?? [];
+      expect(secondParts.length).toBeGreaterThan(0);
+
+      const secondTextParts = secondParts.map((part) =>
+        typeof part === "string"
+          ? part
+          : "text" in part
+            ? (part as { text?: string }).text ?? ""
+            : "",
+      );
+
+      const visibleIndex = secondTextParts.findIndex((value) =>
+        value?.includes("Visible"),
+      );
+      const thinkingIndex = secondTextParts.findIndex((value) =>
+        value?.includes("💭 *Partial*"),
+      );
+
+      expect(visibleIndex).toBeGreaterThanOrEqual(0);
+      expect(thinkingIndex).toBeGreaterThanOrEqual(0);
+      expect(thinkingIndex).toBeGreaterThan(visibleIndex);
+
+      expect(
+        (
+          converter as unknown as {
+            streamingReasoningBuffers: Map<number, string>;
+          }
+        ).streamingReasoningBuffers.size,
+      ).toBe(0);
     });
   });
 });

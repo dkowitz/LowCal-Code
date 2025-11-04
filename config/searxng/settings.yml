@@ -1,4 +1,5 @@
 use_default_settings: true
+
 general:
   debug: false
   instance_name: "SearXNG"
@@ -10,7 +11,15 @@ search:
     - rss
 
 server:
-  limiter: false
+  limiter: true
+  rate_limit:
+    general: 2000  # requests per minute
+    api:
+      google: 2000
+      bing: 2000
+      duckduckgo: 2000
+      brave: 2000
+      startpage: 2000
   bind_address: "0.0.0.0"
   port: 8080
   secret_key: "your-secret-key-here-change-this"
@@ -18,7 +27,7 @@ server:
 botdetection:
   enabled: false
 
-# Enable some basic engines
+# Enable all search engines including brave and startpage
 engines:
   - name: duckduckgo
     engine: duckduckgo
@@ -28,4 +37,10 @@ engines:
     disabled: false
   - name: google
     engine: google
-    disabled: true
+    disabled: false
+  - name: brave
+    engine: brave
+    disabled: false
+  - name: startpage
+    engine: startpage
+    disabled: false

@@ -47,6 +47,11 @@ interface ParsedParts {
   }>;
 }
 
+type ThinkingSegment = {
+  text: string;
+  isThinking: boolean;
+};
+
 /**
  * Converter class for transforming data between Gemini and OpenAI formats
  */
@@ -54,6 +59,8 @@ export class OpenAIContentConverter {
   private model: string;
   private streamingToolCallParser: StreamingToolCallParser =
     new StreamingToolCallParser();
+  private streamingReasoningBuffers: Map<number, string> = new Map();
+  private streamingThinkingBuffers: Map<number, string> = new Map();
 
   constructor(model: string) {
     this.model = model;
@@ -66,6 +73,162 @@ export class OpenAIContentConverter {
    */
   resetStreamingToolCalls(): void {
     this.streamingToolCallParser.reset();
+    this.streamingReasoningBuffers.clear();
+    this.streamingThinkingBuffers.clear();
+  }
+
+  private formatThinkingBlock(content: string): string {
+    const lines = content.split(/\r?\n/);
+    const formattedLines = lines
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0);
+
+    if (formattedLines.length === 0) {
+      return "";
+    }
+
+    const [firstLine, ...rest] = formattedLines;
+    const resultLines = [`💭 *${firstLine}*`];
+    for (const line of rest) {
+      resultLines.push(`   *${line}*`);
+    }
+
+    return resultLines.join("\n\n").trimEnd();
+  }
+
+  private formatThinkingSegments(text: string): string {
+    if (!text || typeof text !== "string") {
+      return text;
+    }
+
+    return text.replace(
+      /<(think|thinking)>([\s\S]*?)<\/\1>/g,
+      (_match, _tag, content) => this.formatThinkingBlock(content),
+    );
+  }
+
+  private processStreamingThinkingText(
+    index: number,
+    chunkText: string,
+    flush = false,
+  ): ThinkingSegment[] {
+    if (!chunkText && !flush) {
+      return [];
+    }
+
+    const buffers = this.streamingThinkingBuffers;
+    const current = (buffers.get(index) ?? "") + (chunkText ?? "");
+    const results: ThinkingSegment[] = [];
+
+    const regex = /<(think|thinking)>([\s\S]*?)<\/\1>/g;
+    let lastIndex = 0;
+    let match: RegExpExecArray | null;
+
+    while ((match = regex.exec(current)) !== null) {
+      if (match.index > lastIndex) {
+        const preceding = current.slice(lastIndex, match.index);
+        if (preceding) {
+          results.push({ text: preceding, isThinking: false });
+        }
+      }
+
+      let formatted = this.formatThinkingBlock(match[2]);
+      if (formatted) {
+        if (results.length > 0) {
+          const prev = results[results.length - 1];
+          if (!prev.text.endsWith("\n\n")) {
+            prev.text = `${prev.text}\n\n`;
+          }
+        }
+        results.push({ text: formatted, isThinking: true });
+      }
+      lastIndex = regex.lastIndex;
+    }
+
+    const remaining = current.slice(lastIndex);
+
+    if (flush) {
+      if (remaining) {
+        results.push({ text: remaining, isThinking: false });
+      }
+      buffers.delete(index);
+    } else {
+      const lastOpenTag = Math.max(
+        remaining.lastIndexOf("<think>"),
+        remaining.lastIndexOf("<thinking>"),
+      );
+      const lastCloseTag = Math.max(
+        remaining.lastIndexOf("</think>"),
+        remaining.lastIndexOf("</thinking>"),
+      );
+
+      if (lastOpenTag > lastCloseTag) {
+        buffers.set(index, remaining);
+      } else {
+        if (remaining) {
+          results.push({ text: remaining, isThinking: false });
+        }
+        buffers.delete(index);
+      }
+    }
+
+    return results.filter((segment) => segment.text.length > 0);
+  }
+
+  private getTextFromPart(part: Part | undefined): string | undefined {
+    if (!part) {
+      return undefined;
+    }
+
+    if (typeof part === "string") {
+      return part;
+    }
+
+    if ("text" in part && typeof part.text === "string") {
+      return part.text;
+    }
+
+    return undefined;
+  }
+
+  private appendTextPart(
+    parts: Part[],
+    text: string,
+    options: { isThinking?: boolean } = {},
+  ): void {
+    if (!text || text.length === 0) {
+      return;
+    }
+
+    const { isThinking = false } = options;
+    let textToAppend = text;
+
+    const lastPart = parts.length > 0 ? parts[parts.length - 1] : undefined;
+    const lastText = this.getTextFromPart(lastPart);
+    const lastIsThinking = lastText?.trimStart().startsWith("💭");
+
+    if (!isThinking && lastText !== undefined && !lastIsThinking) {
+      const combined = `${lastText}${textToAppend}`;
+      if (typeof lastPart === "string") {
+        parts[parts.length - 1] = { text: combined } as Part;
+      } else if (lastPart && typeof lastPart === "object") {
+        (lastPart as { text?: string }).text = combined;
+      }
+      return;
+    }
+
+    const needsSpacing = parts.length > 0;
+    if (needsSpacing) {
+      if (textToAppend.startsWith("\n\n")) {
+        // already has spacing
+      } else if (textToAppend.startsWith("\n")) {
+        textToAppend = `\n${textToAppend}`;
+      } else {
+        textToAppend = `\n\n${textToAppend}`;
+      }
+    }
+
+    parts.push({ text: textToAppend });
   }
 
   /**
@@ -567,7 +730,19 @@ export class OpenAIContentConverter {
       }
     }
     if (textContent) {
-      parts.push({ text: textContent });
+      this.appendTextPart(parts, this.formatThinkingSegments(textContent));
+    }
+
+    const reasoningText = this.extractReasoningText(
+      (choice.message as unknown as {
+        reasoning_details?: unknown;
+      }).reasoning_details,
+    );
+    if (reasoningText) {
+      const formattedThought = this.formatThinkingBlock(reasoningText);
+      if (formattedThought) {
+        this.appendTextPart(parts, formattedThought, { isThinking: true });
+      }
     }
 
     // Handle tool calls
@@ -654,6 +829,7 @@ export class OpenAIContentConverter {
 
     if (choice) {
       const parts: Part[] = [];
+      const choiceIndex = choice.index ?? 0;
 
       // Handle text content
       let deltaText = this.extractTextFromOpenAIContent(
@@ -671,7 +847,30 @@ export class OpenAIContentConverter {
         }
       }
       if (deltaText) {
-        parts.push({ text: deltaText });
+        const segments = this.processStreamingThinkingText(
+          choiceIndex,
+          deltaText,
+        );
+        for (const segment of segments) {
+          this.appendTextPart(parts, segment.text, {
+            isThinking: segment.isThinking,
+          });
+        }
+      }
+
+      // Handle reasoning content in streaming responses
+      const deltaReasoningText = this.extractReasoningText(
+        (choice.delta as unknown as {
+          reasoning_details?: unknown;
+        })?.reasoning_details,
+      );
+      if (deltaReasoningText) {
+        const existing =
+          this.streamingReasoningBuffers.get(choiceIndex) ?? "";
+        this.streamingReasoningBuffers.set(
+          choiceIndex,
+          existing + deltaReasoningText,
+        );
       }
 
       // Handle tool calls using the streaming parser
@@ -701,6 +900,29 @@ export class OpenAIContentConverter {
 
       // Only emit function calls when streaming is complete (finish_reason is present)
       if (choice.finish_reason) {
+        const remainingSegments = this.processStreamingThinkingText(
+          choiceIndex,
+          "",
+          true,
+        );
+        for (const segment of remainingSegments) {
+          this.appendTextPart(parts, segment.text, {
+            isThinking: segment.isThinking,
+          });
+        }
+
+        const bufferedReasoning =
+          this.streamingReasoningBuffers.get(choiceIndex);
+        if (bufferedReasoning) {
+          const formattedThought = this.formatThinkingBlock(bufferedReasoning);
+          if (formattedThought) {
+            this.appendTextPart(parts, formattedThought, {
+              isThinking: true,
+            });
+          }
+          this.streamingReasoningBuffers.delete(choiceIndex);
+        }
+
         const completedToolCalls =
           this.streamingToolCallParser.getCompletedToolCalls();
 
@@ -778,6 +1000,45 @@ export class OpenAIContentConverter {
     }
 
     return response;
+  }
+
+  /**
+   * Extracts reasoning text from MiniMax reasoning_details payloads.
+   */
+  private extractReasoningText(reasoningDetails: unknown): string {
+    if (!reasoningDetails) {
+      return "";
+    }
+
+    if (typeof reasoningDetails === "string") {
+      return reasoningDetails;
+    }
+
+    if (Array.isArray(reasoningDetails)) {
+      return reasoningDetails
+        .map((detail) => {
+          if (!detail) return "";
+          if (typeof detail === "string") return detail;
+          if (typeof detail === "object") {
+            const maybeText = (detail as { text?: unknown }).text;
+            if (typeof maybeText === "string") {
+              return maybeText;
+            }
+          }
+          return "";
+        })
+        .filter((text) => text.length > 0)
+        .join("");
+    }
+
+    if (typeof reasoningDetails === "object") {
+      const maybeText = (reasoningDetails as { text?: unknown }).text;
+      if (typeof maybeText === "string") {
+        return maybeText;
+      }
+    }
+
+    return "";
   }
 
   /**

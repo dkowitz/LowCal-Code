@@ -168,12 +168,7 @@ Original request:
       if (rephrased && rephrased.length > 0) {
         return rephrased;
       }
-    } catch (error) {
-      console.warn(
-        "[ResearchTool] Query rephrase fallback:",
-        getErrorMessage(error),
-      );
-    }
+    } catch (_error) {}
 
     return trimmedQuery;
   }
@@ -350,11 +345,7 @@ ${this.params.query}
         subQueries: parsed?.sub_queries ?? [],
       });
       return plan;
-    } catch (error) {
-      console.warn(
-        "[ResearchTool] Falling back to simple query plan:",
-        getErrorMessage(error),
-      );
+    } catch (_error) {
       return this.buildPlanFallback();
     }
   }
@@ -417,6 +408,69 @@ ${this.params.query}
     }
 
     return points.slice(0, limit);
+  }
+
+  private buildSourceCatalogForPrompt(
+    sources: Array<{ title: string; url: string }>,
+  ): string {
+    if (sources.length === 0) {
+      return "No external sources were captured during search.";
+    }
+
+    const maxForPrompt = 40;
+    return sources
+      .slice(0, maxForPrompt)
+      .map(
+        (source, index) =>
+          `[${index + 1}] ${this.truncate(source.title || source.url, 140)} — ${source.url}`,
+      )
+      .join("\n");
+  }
+
+  private stripGeneratedSourceSections(content: string): string {
+    let cleaned = content;
+    const headings = [
+      "sources",
+      "references",
+      "bibliography",
+      "source catalog",
+    ];
+
+    for (const heading of headings) {
+      const pattern = new RegExp(`\\n#{1,6}\\s+${heading}[\\s\\S]*$`, "i");
+      cleaned = cleaned.replace(pattern, "\n");
+    }
+    return cleaned.trim();
+  }
+
+  private buildCitationMap(
+    report: string,
+    sources: Array<{ title: string; url: string }>,
+  ): Record<string, { content: string; sourceIndex: number }> {
+    const citationPattern = /\[(\d+)\]/g;
+    const citations: Record<string, { content: string; sourceIndex: number }> =
+      {};
+    const seen = new Set<string>();
+    let match: RegExpExecArray | null;
+
+    while ((match = citationPattern.exec(report)) !== null) {
+      const citationNumber = match[1];
+      if (seen.has(citationNumber)) {
+        continue;
+      }
+      const index = Number.parseInt(citationNumber, 10);
+      if (!Number.isFinite(index) || index < 1 || index > sources.length) {
+        continue;
+      }
+      const source = sources[index - 1];
+      citations[citationNumber] = {
+        content: source.title || source.url,
+        sourceIndex: index - 1,
+      };
+      seen.add(citationNumber);
+    }
+
+    return citations;
   }
 
   private buildFallbackReport(
@@ -742,7 +796,6 @@ ${this.params.query}
           }
         } catch (error) {
           const errorMessage = getErrorMessage(error);
-          console.error(`Error fetching document ${source.url}:`, error);
           this.emitProgress(
             updateOutput,
             `⚠️ Error fetching ${this.truncate(
@@ -763,8 +816,10 @@ ${this.params.query}
       // Step 4: Combine all information and generate a final report
       const combinedContent = [
         ...searchResults,
-        ...processedDocuments
-      ].join('\n\n---\n\n');
+        ...processedDocuments,
+      ].join("\n\n---\n\n");
+
+      const sourceCatalogForPrompt = this.buildSourceCatalogForPrompt(sources);
       
       // Create a prompt that follows Perplexica's structure for generating the final report
       const planSummary = plan.subQueries
@@ -794,13 +849,18 @@ ${planSummary}
 Synthesized Evidence (search highlights, document summaries, quantitative snippets):
 ${combinedContent}
 
+Available Source Catalog (use these numeric identifiers in citations):
+${sourceCatalogForPrompt}
+
 Writing Guidelines:
 - ${narrativeGuidance}
 - Write primarily in flowing paragraphs; reserve bullet or table structures only for dense data recaps.
 - Open with an engaging overview, develop the story with clear transitions, and close with implications or recommended next steps.
 - Integrate data points, historical context, and qualitative insights, explaining their significance.
-- Cite every meaningful statement using inline citations in [number] format that map back to the source list.
+- Cite every meaningful statement using inline citations in [number] format referencing the Source Catalog above.
+- Do not invent citations or reuse a number for multiple distinct sources.
 - Maintain a neutral, evidence-driven tone suitable for analysts and decision makers.
+- Do not add a Sources/References section; one will be appended automatically.
 `;
       
       this.emitProgress(
@@ -861,9 +921,10 @@ Writing Guidelines:
           ? resultText
           : fallbackSummary;
 
-      // Extract citations from the response
-      // In a real implementation, we'd parse [number] references and map them to sources
-      const citations: Record<string, { content: string; sourceIndex: number }> = {};
+      const cleanedReport = this.stripGeneratedSourceSections(
+        finalContent.trim(),
+      );
+      const citations = this.buildCitationMap(cleanedReport, sources);
       
       this.emitProgress(
         updateOutput,
@@ -896,7 +957,7 @@ Writing Guidelines:
         : "";
 
       const finalReport = [
-        finalContent.trim(),
+        cleanedReport,
         toolUsageSection,
         sourcesSection,
       ]
@@ -916,7 +977,6 @@ Writing Guidelines:
       const errorMessage = `Error during research for query "${this.params.query}": ${getErrorMessage(
         error,
       )}`;
-      console.error(errorMessage, error);
       
       return {
         llmContent: `Error: ${errorMessage}`,

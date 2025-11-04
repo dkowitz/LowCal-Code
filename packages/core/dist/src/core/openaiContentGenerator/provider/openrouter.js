@@ -1,5 +1,11 @@
 import { DefaultOpenAICompatibleProvider } from "./default.js";
 import { setModelContextLimit } from "../../tokenLimits.js";
+function isMiniMaxModel(modelId) {
+    if (!modelId)
+        return false;
+    const normalized = modelId.toLowerCase();
+    return normalized.includes("minimax");
+}
 export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleProvider {
     constructor(contentGeneratorConfig, cliConfig) {
         super(contentGeneratorConfig, cliConfig);
@@ -23,6 +29,25 @@ export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleP
             delete headers["HTTP-Referer"];
         }
         return headers;
+    }
+    buildRequest(request, userPromptId) {
+        const baseRequest = super.buildRequest(request, userPromptId);
+        const modelId = this.contentGeneratorConfig.model ?? baseRequest.model ?? request.model;
+        if (!isMiniMaxModel(modelId)) {
+            return baseRequest;
+        }
+        const requestWithExtra = baseRequest;
+        const existingExtraBody = requestWithExtra.extra_body ?? {};
+        if (existingExtraBody["reasoning_split"] === undefined) {
+            requestWithExtra.extra_body = {
+                ...existingExtraBody,
+                reasoning_split: true,
+            };
+        }
+        else {
+            requestWithExtra.extra_body = existingExtraBody;
+        }
+        return requestWithExtra;
     }
     /**
      * After fetching the list of models from OpenRouter, call this helper to
