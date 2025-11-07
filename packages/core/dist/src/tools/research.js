@@ -481,28 +481,20 @@ Be selective - only keep sources that truly add value to research on "${topic}".
         const uniqueOrdered = [];
         const seen = new Set();
         const toolRegistry = this.config.getToolRegistry?.();
-        console.log(`[DEBUG] resolveSearchTools: preferredOrder = [${preferredOrder.join(', ')}]`);
-        console.log(`[DEBUG] resolveSearchTools: toolRegistry available = ${!!toolRegistry}`);
         for (const toolName of preferredOrder) {
-            console.log(`[DEBUG] resolveSearchTools: checking ${toolName}`);
             if (toolName !== ToolNames.WEB_SEARCH &&
                 toolName !== ToolNames.SEARXNG_SEARCH) {
-                console.log(`[DEBUG] resolveSearchTools: ${toolName} is not a valid search tool, skipping`);
                 continue;
             }
             if (seen.has(toolName)) {
-                console.log(`[DEBUG] resolveSearchTools: ${toolName} already seen, skipping`);
                 continue;
             }
             if (toolRegistry && !toolRegistry.getTool(toolName)) {
-                console.log(`[DEBUG] resolveSearchTools: ${toolName} not available in registry, skipping`);
                 continue;
             }
-            console.log(`[DEBUG] resolveSearchTools: ${toolName} is available, adding`);
             seen.add(toolName);
             uniqueOrdered.push(toolName);
         }
-        console.log(`[DEBUG] resolveSearchTools: final result = [${uniqueOrdered.join(', ')}]`);
         return uniqueOrdered;
     }
     ensureWebFetchAvailable() {

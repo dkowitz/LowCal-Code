@@ -18,3 +18,26 @@ server:
 
 botdetection:
   enabled: false
+
+# Enable additional engines that are disabled by default
+engines:
+  - name: yahoo
+    enabled: true
+  
+  - name: mullvadleta
+    enabled: true
+    
+  - name: mullvadleta brave
+    enabled: true
+    
+  - name: bing
+    enabled: true
+    
+  - name: qwant
+    enabled: true
+    
+  - name: mojeek
+    enabled: true
+    
+  - name: presearch
+    enabled: true

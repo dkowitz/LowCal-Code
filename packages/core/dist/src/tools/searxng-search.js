@@ -122,11 +122,11 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation {
             searchUrl.searchParams.append("format", "json");
             searchUrl.searchParams.append("lang", "en");
             searchUrl.searchParams.append("language", "en-US");
-            searchUrl.searchParams.append("locale", "en_US");
+            searchUrl.searchParams.append("locale", "en-US"); // Fixed: use dash instead of underscore
             searchUrl.searchParams.append("safesearch", "1");
             searchUrl.searchParams.append("categories", "general");
             searchUrl.searchParams.append("max_results", "20");
-            searchUrl.searchParams.append("engines", "google,bing,duckduckgo,brave,startpage,yahoo,mullvadleta,mullvadleta brave"); // Use all available engines
+            // Removed engines parameter - using default configuration now
             const response = await fetch(searchUrl.toString(), {
                 method: "GET",
                 headers: {

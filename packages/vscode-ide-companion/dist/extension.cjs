@@ -133198,11 +133198,10 @@ var SearXNGSearchToolInvocation = class extends BaseToolInvocation {
       searchUrl.searchParams.append("format", "json");
       searchUrl.searchParams.append("lang", "en");
       searchUrl.searchParams.append("language", "en-US");
-      searchUrl.searchParams.append("locale", "en_US");
+      searchUrl.searchParams.append("locale", "en-US");
       searchUrl.searchParams.append("safesearch", "1");
       searchUrl.searchParams.append("categories", "general");
       searchUrl.searchParams.append("max_results", "20");
-      searchUrl.searchParams.append("engines", "google,bing,duckduckgo,brave,startpage,yahoo,mullvadleta,mullvadleta brave");
       const response = await fetch(searchUrl.toString(), {
         method: "GET",
         headers: {
@@ -136188,27 +136187,19 @@ Be selective - only keep sources that truly add value to research on "${topic}".
     const uniqueOrdered = [];
     const seen = /* @__PURE__ */ new Set();
     const toolRegistry = this.config.getToolRegistry?.();
-    console.log(`[DEBUG] resolveSearchTools: preferredOrder = [${preferredOrder.join(", ")}]`);
-    console.log(`[DEBUG] resolveSearchTools: toolRegistry available = ${!!toolRegistry}`);
     for (const toolName of preferredOrder) {
-      console.log(`[DEBUG] resolveSearchTools: checking ${toolName}`);
       if (toolName !== ToolNames.WEB_SEARCH && toolName !== ToolNames.SEARXNG_SEARCH) {
-        console.log(`[DEBUG] resolveSearchTools: ${toolName} is not a valid search tool, skipping`);
         continue;
       }
       if (seen.has(toolName)) {
-        console.log(`[DEBUG] resolveSearchTools: ${toolName} already seen, skipping`);
         continue;
       }
       if (toolRegistry && !toolRegistry.getTool(toolName)) {
-        console.log(`[DEBUG] resolveSearchTools: ${toolName} not available in registry, skipping`);
         continue;
       }
-      console.log(`[DEBUG] resolveSearchTools: ${toolName} is available, adding`);
       seen.add(toolName);
       uniqueOrdered.push(toolName);
     }
-    console.log(`[DEBUG] resolveSearchTools: final result = [${uniqueOrdered.join(", ")}]`);
     return uniqueOrdered;
   }
   ensureWebFetchAvailable() {
