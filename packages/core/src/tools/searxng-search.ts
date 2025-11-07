@@ -216,7 +216,7 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
       searchUrl.searchParams.append("safesearch", "1");
       searchUrl.searchParams.append("categories", "general");
       searchUrl.searchParams.append("max_results", "20");
-      searchUrl.searchParams.append("engines", "google,bing,duckduckgo"); // Use common engines
+      searchUrl.searchParams.append("engines", "google,bing,duckduckgo,brave,startpage,yahoo,mullvadleta,mullvadleta brave"); // Use all available engines
       
       const response = await fetch(searchUrl.toString(), {
         method: "GET",

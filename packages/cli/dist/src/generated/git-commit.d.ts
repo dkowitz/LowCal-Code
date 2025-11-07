@@ -3,5 +3,5 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-export declare const GIT_COMMIT_INFO = "5368a98e";
+export declare const GIT_COMMIT_INFO = "0a391211";
 export declare const CLI_VERSION = "0.0.13";

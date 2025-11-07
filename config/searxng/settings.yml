@@ -11,36 +11,10 @@ search:
     - rss
 
 server:
-  limiter: true
-  rate_limit:
-    general: 2000  # requests per minute
-    api:
-      google: 2000
-      bing: 2000
-      duckduckgo: 2000
-      brave: 2000
-      startpage: 2000
+  limiter: false
   bind_address: "0.0.0.0"
   port: 8080
   secret_key: "your-secret-key-here-change-this"
 
 botdetection:
   enabled: false
-
-# Enable all search engines including brave and startpage
-engines:
-  - name: duckduckgo
-    engine: duckduckgo
-    disabled: false
-  - name: bing
-    engine: bing
-    disabled: false
-  - name: google
-    engine: google
-    disabled: false
-  - name: brave
-    engine: brave
-    disabled: false
-  - name: startpage
-    engine: startpage
-    disabled: false

@@ -443,6 +443,124 @@ ${this.params.query}
     return cleaned.trim();
   }
 
+  /**
+   * Uses LLM to assess which sources are relevant to the research topic and which should be filtered out.
+   * @param topic The main research topic
+   * @param sources Array of sources to assess
+   * @param citedIndices Set of indices that are already cited in the report (these are always kept)
+   * @returns Array of source indices that should be included
+   */
+  private async assessSourceRelevance(
+    topic: string,
+    sources: Array<{ title: string; url: string }>,
+    citedIndices: Set<number>,
+    signal: AbortSignal,
+  ): Promise<Set<number>> {
+    // Always include cited sources
+    const approvedIndices = new Set(citedIndices);
+    
+    // If no sources to assess, return early
+    if (sources.length === 0) {
+      return approvedIndices;
+    }
+    
+    // Get sources that need assessment (not already cited)
+    const sourcesToAssess = sources.map((source, index) => ({
+      index,
+      title: source.title,
+      url: source.url,
+      domain: new URL(source.url).hostname,
+    })).filter(item => !citedIndices.has(item.index));
+    
+    if (sourcesToAssess.length === 0) {
+      return approvedIndices;
+    }
+    
+    try {
+      const geminiClient = this.config.getGeminiClient?.();
+      if (!geminiClient) {
+        // If no LLM available, fall back to including all non-cited sources
+        sourcesToAssess.forEach(item => approvedIndices.add(item.index));
+        return approvedIndices;
+      }
+      
+      const prompt = `
+You are a research quality assessor. Analyze the following sources and determine which ones are RELEVANT and SUBSTANTIVE for the research topic "${topic}".
+
+Filter OUT sources that are:
+- Dictionary/thesaurus definitions ("what is X", "meaning of Y")
+- Basic grammar or language learning content
+- Simple Q&A sites with surface-level answers
+- Tutorial/how-to content that's not research-focused
+- Sites that only provide basic explanations without depth
+
+KEEP sources that are:
+- Authoritative publications on the topic
+- In-depth analysis or research
+- News articles with substantive content
+- Academic or professional sources
+- Government or institutional reports
+- Industry analysis or white papers
+
+For each source, respond with either "KEEP" or "FILTER" and a brief reason.
+
+Sources to assess:
+${sourcesToAssess.map((source, i) => `${i + 1}. [${source.domain}] ${source.title}`).join('\n')}
+
+Respond in this format:
+1. KEEP - [reason]
+2. FILTER - [reason]
+etc.
+
+Be selective - only keep sources that truly add value to research on "${topic}".`;
+
+      const response = await geminiClient.generateContent(
+        [{ role: "user", parts: [{ text: prompt }] }],
+        {},
+        signal,
+      );
+      
+      const candidates = (
+        (response as unknown as { response?: { candidates?: unknown } }).response
+          ?.candidates ??
+        (response as unknown as { candidates?: unknown }).candidates ??
+        []
+      ) as Array<{ content?: { parts?: unknown[] } }>;
+      
+      if (candidates.length > 0) {
+        const fallbackParts =
+          candidates.length > 0 ? candidates[0]?.content?.parts ?? [] : [];
+
+        const responseText = Array.isArray(fallbackParts)
+          ? fallbackParts
+              .map((part) =>
+                typeof part === "string"
+                  ? part
+                  : part && typeof part === "object" && "text" in part
+                    ? (part as { text?: string }).text ?? ""
+                    : "",
+              )
+              .join("")
+          : "";
+        
+        const lines = responseText.split('\n').filter(line => line.trim());
+        
+        lines.forEach((line, i) => {
+          const sourceIndex = sourcesToAssess[i]?.index;
+          if (sourceIndex !== undefined && line.toUpperCase().includes('KEEP')) {
+            approvedIndices.add(sourceIndex);
+          }
+        });
+      }
+      
+    } catch (error) {
+      // If assessment fails, include all sources to be safe
+      sourcesToAssess.forEach(item => approvedIndices.add(item.index));
+    }
+    
+    return approvedIndices;
+  }
+
   private buildCitationMap(
     report: string,
     sources: Array<{ title: string; url: string }>,
@@ -564,23 +682,32 @@ ${this.params.query}
     const seen = new Set<string>();
     const toolRegistry = this.config.getToolRegistry?.();
 
+    console.log(`[DEBUG] resolveSearchTools: preferredOrder = [${preferredOrder.join(', ')}]`);
+    console.log(`[DEBUG] resolveSearchTools: toolRegistry available = ${!!toolRegistry}`);
+
     for (const toolName of preferredOrder) {
+      console.log(`[DEBUG] resolveSearchTools: checking ${toolName}`);
       if (
         toolName !== ToolNames.WEB_SEARCH &&
         toolName !== ToolNames.SEARXNG_SEARCH
       ) {
+        console.log(`[DEBUG] resolveSearchTools: ${toolName} is not a valid search tool, skipping`);
         continue;
       }
       if (seen.has(toolName)) {
+        console.log(`[DEBUG] resolveSearchTools: ${toolName} already seen, skipping`);
         continue;
       }
       if (toolRegistry && !toolRegistry.getTool(toolName)) {
+        console.log(`[DEBUG] resolveSearchTools: ${toolName} not available in registry, skipping`);
         continue;
       }
+      console.log(`[DEBUG] resolveSearchTools: ${toolName} is available, adding`);
       seen.add(toolName);
       uniqueOrdered.push(toolName);
     }
 
+    console.log(`[DEBUG] resolveSearchTools: final result = [${uniqueOrdered.join(', ')}]`);
     return uniqueOrdered;
   }
 
@@ -926,19 +1053,45 @@ Writing Guidelines:
       );
       const citations = this.buildCitationMap(cleanedReport, sources);
       
+      // Get indices of sources that are actually cited in the report
+      const citedIndices = new Set(Object.values(citations).map(c => c.sourceIndex));
+      
+      // Use LLM to assess which non-cited sources should be kept
+      this.emitProgress(
+        updateOutput,
+        "ℹ🔍 Assessing source quality and relevance…",
+        "append",
+      );
+      
+      const approvedSourceIndices = await this.assessSourceRelevance(
+        this.params.query,
+        sources,
+        citedIndices,
+        signal,
+      );
+      
+      // Filter sources to only include cited + approved ones
+      const filteredSources = sources.filter((_, index) => approvedSourceIndices.has(index));
+      
+      this.emitProgress(
+        updateOutput,
+        `✅ Filtered to ${filteredSources.length} relevant sources (kept ${citedIndices.size} cited + ${filteredSources.length - citedIndices.size} approved).`,
+        "append",
+      );
+      
       this.emitProgress(
         updateOutput,
         resultText.trim().length > 0
-          ? `✅ Research complete. Compiled ${sources.length} source(s).`
-          : `✅ Research complete. Compiled ${sources.length} source(s) and generated a summary from collected material.`,
+          ? `✅ Research complete. Compiled ${filteredSources.length} relevant source(s).`
+          : `✅ Research complete. Compiled ${filteredSources.length} relevant source(s) and generated a summary from collected material.`,
         "append",
       );
 
-      const sourcesSection = sources.length
+      const sourcesSection = filteredSources.length
         ? [
             "",
             "## Sources",
-            ...sources.map(
+            ...filteredSources.map(
               (source, index) =>
                 `[${index + 1}] ${source.title || source.url} — ${source.url}`,
             ),
@@ -970,7 +1123,7 @@ Writing Guidelines:
       return {
         llmContent: finalOutput,
         returnDisplay: `Research complete for "${this.params.query}" (saved to ${savedReportPath})`,
-        sources,
+        sources: filteredSources,
         citations
       };
     } catch (error: unknown) {
