@@ -501,7 +501,7 @@ export class GeminiClient {
       ];
 
       if (this.config.getDebugMode()) {
-        console.log(contextParts.join("\n"));
+        // console.log(contextParts.join("\n"));
       }
       return {
         contextParts,
@@ -611,7 +611,7 @@ export class GeminiClient {
       ];
 
       if (this.config.getDebugMode()) {
-        console.log(contextParts.join("\n"));
+        // console.log(contextParts.join("\n"));
       }
       return {
         contextParts,

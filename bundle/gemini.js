@@ -90794,30 +90794,22 @@ var init_converter2 = __esm({
       }
       formatThinkingBlock(content) {
         const lines = content.split(/\r?\n/);
-        const formattedLines = lines.map((line) => {
-          const trimmed2 = line.trim();
-          if (!trimmed2) {
-            return "";
-          }
-          return `\u{1F4AD} _${trimmed2}_`;
-        }).filter((line) => line.length > 0);
-        return formattedLines.join("\n").trimEnd();
+        const formattedLines = lines.map((line) => line.trim()).filter((line) => line.length > 0);
+        if (formattedLines.length === 0) {
+          return "";
+        }
+        const [firstLine, ...rest] = formattedLines;
+        const resultLines = [`\u{1F4AD} *${firstLine}*`];
+        for (const line of rest) {
+          resultLines.push(`   *${line}*`);
+        }
+        return resultLines.join("\n\n").trimEnd();
       }
       formatThinkingSegments(text) {
         if (!text || typeof text !== "string") {
           return text;
         }
-        return text.replace(/<(think|thinking)>([\s\S]*?)<\/\1>/g, (_match, _tag2, content, offset, original) => {
-          let formatted = this.formatThinkingBlock(content);
-          if (formatted && offset > 0) {
-            const prevChar = original[offset - 1];
-            if (prevChar !== "\n") {
-              formatted = `
-${formatted}`;
-            }
-          }
-          return formatted;
-        });
+        return text.replace(/<(think|thinking)>([\s\S]*?)<\/\1>/g, (_match, _tag2, content) => this.formatThinkingBlock(content));
       }
       processStreamingThinkingText(index, chunkText, flush = false) {
         if (!chunkText && !flush) {
@@ -90836,8 +90828,16 @@ ${formatted}`;
               results.push({ text: preceding, isThinking: false });
             }
           }
-          const formatted = this.formatThinkingBlock(match2[2]);
+          let formatted = this.formatThinkingBlock(match2[2]);
           if (formatted) {
+            if (results.length > 0) {
+              const prev = results[results.length - 1];
+              if (!prev.text.endsWith("\n\n")) {
+                prev.text = `${prev.text}
+
+`;
+              }
+            }
             results.push({ text: formatted, isThinking: true });
           }
           lastIndex = regex2.lastIndex;
@@ -90880,10 +90880,27 @@ ${formatted}`;
         }
         const { isThinking = false } = options2;
         let textToAppend = text;
-        if (isThinking && parts.length > 0) {
-          const lastText = this.getTextFromPart(parts[parts.length - 1]);
-          if (lastText && !lastText.endsWith("\n")) {
+        const lastPart = parts.length > 0 ? parts[parts.length - 1] : void 0;
+        const lastText = this.getTextFromPart(lastPart);
+        const lastIsThinking = lastText?.trimStart().startsWith("\u{1F4AD}");
+        if (!isThinking && lastText !== void 0 && !lastIsThinking) {
+          const combined = `${lastText}${textToAppend}`;
+          if (typeof lastPart === "string") {
+            parts[parts.length - 1] = { text: combined };
+          } else if (lastPart && typeof lastPart === "object") {
+            lastPart.text = combined;
+          }
+          return;
+        }
+        const needsSpacing = parts.length > 0;
+        if (needsSpacing) {
+          if (textToAppend.startsWith("\n\n")) {
+          } else if (textToAppend.startsWith("\n")) {
             textToAppend = `
+${textToAppend}`;
+          } else {
+            textToAppend = `
+
 ${textToAppend}`;
           }
         }
@@ -148952,7 +148969,6 @@ var init_client2 = __esm({
             "```"
           ];
           if (this.config.getDebugMode()) {
-            console.log(contextParts.join("\n"));
           }
           return {
             contextParts,
@@ -149035,7 +149051,6 @@ var init_client2 = __esm({
             "```"
           ];
           if (this.config.getDebugMode()) {
-            console.log(contextParts.join("\n"));
           }
           return {
             contextParts,
@@ -206222,11 +206237,10 @@ var init_searxng_search = __esm({
           searchUrl.searchParams.append("format", "json");
           searchUrl.searchParams.append("lang", "en");
           searchUrl.searchParams.append("language", "en-US");
-          searchUrl.searchParams.append("locale", "en_US");
+          searchUrl.searchParams.append("locale", "en-US");
           searchUrl.searchParams.append("safesearch", "1");
           searchUrl.searchParams.append("categories", "general");
           searchUrl.searchParams.append("max_results", "20");
-          searchUrl.searchParams.append("engines", "google,bing,duckduckgo");
           const response = await fetch(searchUrl.toString(), {
             method: "GET",
             headers: {
@@ -213658,6 +213672,80 @@ ${this.params.query}
         }
         return cleaned.trim();
       }
+      /**
+       * Uses LLM to assess which sources are relevant to the research topic and which should be filtered out.
+       * @param topic The main research topic
+       * @param sources Array of sources to assess
+       * @param citedIndices Set of indices that are already cited in the report (these are always kept)
+       * @returns Array of source indices that should be included
+       */
+      async assessSourceRelevance(topic, sources, citedIndices, signal) {
+        const approvedIndices = new Set(citedIndices);
+        if (sources.length === 0) {
+          return approvedIndices;
+        }
+        const sourcesToAssess = sources.map((source2, index) => ({
+          index,
+          title: source2.title,
+          url: source2.url,
+          domain: new URL(source2.url).hostname
+        })).filter((item) => !citedIndices.has(item.index));
+        if (sourcesToAssess.length === 0) {
+          return approvedIndices;
+        }
+        try {
+          const geminiClient = this.config.getGeminiClient?.();
+          if (!geminiClient) {
+            sourcesToAssess.forEach((item) => approvedIndices.add(item.index));
+            return approvedIndices;
+          }
+          const prompt = `
+You are a research quality assessor. Analyze the following sources and determine which ones are RELEVANT and SUBSTANTIVE for the research topic "${topic}".
+
+Filter OUT sources that are:
+- Dictionary/thesaurus definitions ("what is X", "meaning of Y")
+- Basic grammar or language learning content
+- Simple Q&A sites with surface-level answers
+- Tutorial/how-to content that's not research-focused
+- Sites that only provide basic explanations without depth
+
+KEEP sources that are:
+- Authoritative publications on the topic
+- In-depth analysis or research
+- News articles with substantive content
+- Academic or professional sources
+- Government or institutional reports
+- Industry analysis or white papers
+
+For each source, respond with either "KEEP" or "FILTER" and a brief reason.
+
+Sources to assess:
+${sourcesToAssess.map((source2, i) => `${i + 1}. [${source2.domain}] ${source2.title}`).join("\n")}
+
+Respond in this format:
+1. KEEP - [reason]
+2. FILTER - [reason]
+etc.
+
+Be selective - only keep sources that truly add value to research on "${topic}".`;
+          const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+          const candidates = response.response?.candidates ?? response.candidates ?? [];
+          if (candidates.length > 0) {
+            const fallbackParts = candidates.length > 0 ? candidates[0]?.content?.parts ?? [] : [];
+            const responseText = Array.isArray(fallbackParts) ? fallbackParts.map((part) => typeof part === "string" ? part : part && typeof part === "object" && "text" in part ? part.text ?? "" : "").join("") : "";
+            const lines = responseText.split("\n").filter((line) => line.trim());
+            lines.forEach((line, i) => {
+              const sourceIndex = sourcesToAssess[i]?.index;
+              if (sourceIndex !== void 0 && line.toUpperCase().includes("KEEP")) {
+                approvedIndices.add(sourceIndex);
+              }
+            });
+          }
+        } catch (error) {
+          sourcesToAssess.forEach((item) => approvedIndices.add(item.index));
+        }
+        return approvedIndices;
+      }
       buildCitationMap(report, sources) {
         const citationPattern = /\[(\d+)\]/g;
         const citations = {};
@@ -213904,11 +213992,16 @@ Writing Guidelines:
           const finalContent = resultText && resultText.trim().length > 0 ? resultText : fallbackSummary;
           const cleanedReport = this.stripGeneratedSourceSections(finalContent.trim());
           const citations = this.buildCitationMap(cleanedReport, sources);
-          this.emitProgress(updateOutput, resultText.trim().length > 0 ? `\u2705 Research complete. Compiled ${sources.length} source(s).` : `\u2705 Research complete. Compiled ${sources.length} source(s) and generated a summary from collected material.`, "append");
-          const sourcesSection = sources.length ? [
+          const citedIndices = new Set(Object.values(citations).map((c3) => c3.sourceIndex));
+          this.emitProgress(updateOutput, "\u2139\u{1F50D} Assessing source quality and relevance\u2026", "append");
+          const approvedSourceIndices = await this.assessSourceRelevance(this.params.query, sources, citedIndices, signal);
+          const filteredSources = sources.filter((_, index) => approvedSourceIndices.has(index));
+          this.emitProgress(updateOutput, `\u2705 Filtered to ${filteredSources.length} relevant sources (kept ${citedIndices.size} cited + ${filteredSources.length - citedIndices.size} approved).`, "append");
+          this.emitProgress(updateOutput, resultText.trim().length > 0 ? `\u2705 Research complete. Compiled ${filteredSources.length} relevant source(s).` : `\u2705 Research complete. Compiled ${filteredSources.length} relevant source(s) and generated a summary from collected material.`, "append");
+          const sourcesSection = filteredSources.length ? [
             "",
             "## Sources",
-            ...sources.map((source2, index) => `[${index + 1}] ${source2.title || source2.url} \u2014 ${source2.url}`)
+            ...filteredSources.map((source2, index) => `[${index + 1}] ${source2.title || source2.url} \u2014 ${source2.url}`)
           ].join("\n") : "";
           const toolUsageSection = toolUsageCounts.size ? [
             "",
@@ -213927,7 +214020,7 @@ _Report archived at: ${savedReportPath}_`;
           return {
             llmContent: finalOutput,
             returnDisplay: `Research complete for "${this.params.query}" (saved to ${savedReportPath})`,
-            sources,
+            sources: filteredSources,
             citations
           };
         } catch (error) {
@@ -317203,7 +317296,7 @@ init_open();
 import process32 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "5368a98e";
+var GIT_COMMIT_INFO = "a96e72a8";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
