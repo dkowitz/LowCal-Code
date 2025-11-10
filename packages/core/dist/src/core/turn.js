@@ -44,12 +44,14 @@ export class Turn {
     pendingToolCalls;
     debugResponses;
     finishReason;
+    emittedThoughtHashes;
     constructor(chat, prompt_id) {
         this.chat = chat;
         this.prompt_id = prompt_id;
         this.pendingToolCalls = [];
         this.debugResponses = [];
         this.finishReason = undefined;
+        this.emittedThoughtHashes = new Set();
     }
     // The run method yields simpler events suitable for server logic
     async *run(req, signal) {
@@ -91,6 +93,9 @@ export class Turn {
                         subject,
                         description,
                     };
+                    if (!this.shouldEmitThought(thought)) {
+                        continue;
+                    }
                     yield {
                         type: GeminiEventType.Thought,
                         value: thought,
@@ -166,6 +171,23 @@ export class Turn {
     }
     getDebugResponses() {
         return this.debugResponses;
+    }
+    shouldEmitThought(thought) {
+        const normalized = this.normalizeThought(thought);
+        if (!normalized) {
+            return false;
+        }
+        if (this.emittedThoughtHashes.has(normalized)) {
+            return false;
+        }
+        this.emittedThoughtHashes.add(normalized);
+        return true;
+    }
+    normalizeThought(thought) {
+        return `${thought.subject}::${thought.description}`
+            .toLowerCase()
+            .replace(/\s+/g, " ")
+            .trim();
     }
 }
 //# sourceMappingURL=turn.js.map

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { Turn, GeminiEventType } from "./turn.js";
+import { Turn, GeminiEventType, } from "./turn.js";
 import { reportError } from "../utils/errorReporting.js";
 import { StreamEventType } from "./geminiChat.js";
 const mockSendMessageStream = vi.fn();
@@ -424,6 +424,35 @@ describe("Turn", () => {
                 { type: GeminiEventType.Retry },
                 { type: GeminiEventType.Content, value: "Success" },
             ]);
+        });
+        it("should suppress duplicate thought events", async () => {
+            const thoughtPart = {
+                thought: "**Plan**Do something",
+                text: "**Plan**Do something",
+            };
+            const mockResponseStream = (async function* () {
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [thoughtPart] } }],
+                    },
+                };
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [thoughtPart] } }],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            const reqParts = [{ text: "Think" }];
+            for await (const event of turn.run(reqParts, new AbortController().signal)) {
+                events.push(event);
+            }
+            const thoughtEvents = events.filter((event) => event.type === GeminiEventType.Thought);
+            expect(thoughtEvents).toHaveLength(1);
+            expect(thoughtEvents[0].value.subject).toBe("Plan");
         });
     });
     describe("getDebugResponses", () => {

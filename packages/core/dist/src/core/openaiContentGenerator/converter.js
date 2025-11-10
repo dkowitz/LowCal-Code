@@ -14,6 +14,11 @@ export class OpenAIContentConverter {
     streamingToolCallParser = new StreamingToolCallParser();
     streamingReasoningBuffers = new Map();
     streamingThinkingBuffers = new Map();
+    streamingLastThinkingBlocks = new Map();
+    streamingRecentThinkingBlocks = new Map();
+    sessionStreamHistory = new Map();
+    streamingXmlToolCallBuffers = new Map();
+    globalThinkingCounts = new Map();
     constructor(model) {
         this.model = model;
     }
@@ -22,10 +27,31 @@ export class OpenAIContentConverter {
      * This should be called at the beginning of each stream to prevent
      * data pollution from previous incomplete streams
      */
-    resetStreamingToolCalls() {
+    resetStreamingToolCalls(promptId) {
         this.streamingToolCallParser.reset();
         this.streamingReasoningBuffers.clear();
         this.streamingThinkingBuffers.clear();
+        const sessionId = this.getSessionIdFromPrompt(promptId);
+        let history = this.sessionStreamHistory.get(sessionId);
+        if (!history) {
+            history = {
+                thinking: {
+                    last: new Map(),
+                    recent: new Map(),
+                    counts: new Map(),
+                },
+                text: {
+                    last: new Map(),
+                    recent: new Map(),
+                    counts: new Map(),
+                },
+            };
+            this.sessionStreamHistory.set(sessionId, history);
+        }
+        this.streamingLastThinkingBlocks = history.thinking.last;
+        this.streamingRecentThinkingBlocks = history.thinking.recent;
+        this.globalThinkingCounts = history.thinking.counts;
+        this.streamingXmlToolCallBuffers.clear();
     }
     formatThinkingBlock(content) {
         const lines = content.split(/\r?\n/);
@@ -67,6 +93,10 @@ export class OpenAIContentConverter {
             }
             let formatted = this.formatThinkingBlock(match[2]);
             if (formatted) {
+                if (!this.shouldEmitThinkingBlock(index, formatted)) {
+                    lastIndex = regex.lastIndex;
+                    continue;
+                }
                 if (results.length > 0) {
                     const prev = results[results.length - 1];
                     if (!prev.text.endsWith("\n\n")) {
@@ -98,6 +128,150 @@ export class OpenAIContentConverter {
             }
         }
         return results.filter((segment) => segment.text.length > 0);
+    }
+    shouldEmitThinkingBlock(index, block) {
+        const normalized = this.normalizeThinkingBlock(block);
+        if (!normalized) {
+            return false;
+        }
+        const globalCount = this.globalThinkingCounts.get(normalized) ?? 0;
+        if (globalCount >= 3) {
+            return false;
+        }
+        const lastBlock = this.streamingLastThinkingBlocks.get(index);
+        if (lastBlock === normalized) {
+            return false;
+        }
+        const recent = this.streamingRecentThinkingBlocks.get(index) ?? [];
+        if (recent.includes(normalized)) {
+            this.streamingLastThinkingBlocks.set(index, normalized);
+            return false;
+        }
+        recent.push(normalized);
+        if (recent.length > 5) {
+            recent.shift();
+        }
+        this.streamingRecentThinkingBlocks.set(index, recent);
+        this.streamingLastThinkingBlocks.set(index, normalized);
+        this.globalThinkingCounts.set(normalized, globalCount + 1);
+        return true;
+    }
+    normalizeThinkingBlock(block) {
+        return block
+            .toLowerCase()
+            .replace(/\s+/g, " ")
+            .replace(/[^a-z0-9 ]/g, "")
+            .trim();
+    }
+    extractXmlToolCalls(index, chunkText) {
+        if (!chunkText) {
+            return { text: chunkText, toolCalls: [] };
+        }
+        const buffer = (this.streamingXmlToolCallBuffers.get(index) ?? "") + chunkText;
+        const toolCalls = [];
+        const invokeRegex = /<invoke\b[^>]*>([\s\S]*?)<\/invoke>/g;
+        let sanitized = "";
+        let lastIndex = 0;
+        let match;
+        while ((match = invokeRegex.exec(buffer)) !== null) {
+            const invokeStart = match.index;
+            sanitized += buffer.slice(lastIndex, invokeStart);
+            const invokeBlock = buffer.slice(invokeStart, invokeRegex.lastIndex);
+            const parsed = this.parseInvokeBlock(invokeBlock);
+            if (parsed) {
+                toolCalls.push(parsed);
+            }
+            lastIndex = invokeRegex.lastIndex;
+        }
+        sanitized += buffer.slice(lastIndex);
+        const lastOpenInvoke = sanitized.lastIndexOf("<invoke");
+        const lastCloseInvoke = sanitized.lastIndexOf("</invoke>");
+        if (lastOpenInvoke > lastCloseInvoke) {
+            this.streamingXmlToolCallBuffers.set(index, sanitized.slice(lastOpenInvoke));
+            sanitized = sanitized.slice(0, lastOpenInvoke);
+        }
+        else {
+            this.streamingXmlToolCallBuffers.delete(index);
+        }
+        sanitized = sanitized
+            .replace(/<\/?tool_call\b[^>]*>/g, "")
+            .replace(/<\/?parameter\b[^>]*>/g, "")
+            .replace(/<\/?invoke\b[^>]*>/g, "");
+        return {
+            text: sanitized,
+            toolCalls,
+        };
+    }
+    parseInvokeBlock(block) {
+        const nameMatch = block.match(/<invoke\b[^>]*name="([^"]+)"[^>]*>/);
+        if (!nameMatch) {
+            return null;
+        }
+        const params = {};
+        const paramRegex = /<parameter\b[^>]*name="([^"]+)"[^>]*>([\s\S]*?)<\/parameter>/g;
+        let paramMatch;
+        while ((paramMatch = paramRegex.exec(block)) !== null) {
+            const paramName = paramMatch[1].trim();
+            const paramValue = this.parseParameterValue(paramMatch[2]);
+            params[paramName] = paramValue;
+        }
+        return {
+            id: this.generateToolCallId(nameMatch[1]),
+            name: nameMatch[1],
+            args: params,
+        };
+    }
+    parseParameterValue(value) {
+        const trimmed = value.trim();
+        if (trimmed.length === 0) {
+            return "";
+        }
+        if (/^(true|false)$/i.test(trimmed)) {
+            return trimmed.toLowerCase() === "true";
+        }
+        if (/^-?\d+(\.\d+)?$/.test(trimmed)) {
+            return Number(trimmed);
+        }
+        if ((trimmed.startsWith("{") && trimmed.endsWith("}")) ||
+            (trimmed.startsWith("[") && trimmed.endsWith("]"))) {
+            try {
+                return JSON.parse(trimmed);
+            }
+            catch {
+                // ignore malformed JSON
+            }
+        }
+        return trimmed;
+    }
+    generateToolCallId(name) {
+        return `${name}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+    }
+    getSessionIdFromPrompt(promptId) {
+        const [sessionId] = promptId.split("########");
+        return sessionId || promptId;
+    }
+    mergeReasoningChunks(existing, incoming) {
+        if (!existing)
+            return incoming;
+        if (!incoming)
+            return existing;
+        if (incoming.startsWith(existing)) {
+            return incoming;
+        }
+        if (existing.startsWith(incoming)) {
+            return existing;
+        }
+        const overlap = this.findOverlap(existing, incoming);
+        return `${existing}${incoming.slice(overlap)}`;
+    }
+    findOverlap(existing, incoming) {
+        const maxOverlap = Math.min(existing.length, incoming.length);
+        for (let length = maxOverlap; length > 0; length--) {
+            if (existing.endsWith(incoming.slice(0, length))) {
+                return length;
+            }
+        }
+        return 0;
     }
     getTextFromPart(part) {
         if (!part) {
@@ -644,6 +818,13 @@ export class OpenAIContentConverter {
                 }
             }
             if (deltaText) {
+                const { text: cleanedText, toolCalls: xmlToolCalls, } = this.extractXmlToolCalls(choiceIndex, deltaText);
+                if (xmlToolCalls.length > 0) {
+                    for (const toolCall of xmlToolCalls) {
+                        parts.push({ functionCall: toolCall });
+                    }
+                }
+                deltaText = cleanedText;
                 const segments = this.processStreamingThinkingText(choiceIndex, deltaText);
                 for (const segment of segments) {
                     this.appendTextPart(parts, segment.text, {
@@ -655,7 +836,7 @@ export class OpenAIContentConverter {
             const deltaReasoningText = this.extractReasoningText(choice.delta?.reasoning_details);
             if (deltaReasoningText) {
                 const existing = this.streamingReasoningBuffers.get(choiceIndex) ?? "";
-                this.streamingReasoningBuffers.set(choiceIndex, existing + deltaReasoningText);
+                this.streamingReasoningBuffers.set(choiceIndex, this.mergeReasoningChunks(existing, deltaReasoningText));
             }
             // Handle tool calls using the streaming parser
             if (choice.delta?.tool_calls) {
@@ -683,7 +864,8 @@ export class OpenAIContentConverter {
                 const bufferedReasoning = this.streamingReasoningBuffers.get(choiceIndex);
                 if (bufferedReasoning) {
                     const formattedThought = this.formatThinkingBlock(bufferedReasoning);
-                    if (formattedThought) {
+                    if (formattedThought &&
+                        this.shouldEmitThinkingBlock(choiceIndex, formattedThought)) {
                         this.appendTextPart(parts, formattedThought, {
                             isThinking: true,
                         });
@@ -693,14 +875,13 @@ export class OpenAIContentConverter {
                 const completedToolCalls = this.streamingToolCallParser.getCompletedToolCalls();
                 for (const toolCall of completedToolCalls) {
                     if (toolCall.name) {
-                        parts.push({
-                            functionCall: {
-                                id: toolCall.id ||
-                                    `call_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-                                name: toolCall.name,
-                                args: toolCall.args,
-                            },
-                        });
+                        const functionCall = {
+                            id: toolCall.id ||
+                                `call_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+                            name: toolCall.name,
+                            args: toolCall.args,
+                        };
+                        parts.push({ functionCall });
                     }
                 }
                 // Clear the parser for the next stream

@@ -160,8 +160,11 @@ export declare class Turn {
     readonly pendingToolCalls: ToolCallRequestInfo[];
     private debugResponses;
     finishReason: FinishReason | undefined;
+    private emittedThoughtHashes;
     constructor(chat: GeminiChat, prompt_id: string);
     run(req: PartListUnion, signal: AbortSignal): AsyncGenerator<ServerGeminiStreamEvent>;
     private handlePendingFunctionCall;
     getDebugResponses(): GenerateContentResponse[];
+    private shouldEmitThought;
+    private normalizeThought;
 }

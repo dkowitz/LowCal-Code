@@ -128,7 +128,7 @@ export class ContentGenerationPipeline {
     const collectedOpenAIChunks: OpenAI.Chat.ChatCompletionChunk[] = [];
 
     // Reset streaming tool calls to prevent data pollution from previous streams
-    this.converter.resetStreamingToolCalls();
+    this.converter.resetStreamingToolCalls(context.userPromptId);
 
     // State for handling chunk merging
     let pendingFinishResponse: GenerateContentResponse | null = null;
@@ -186,7 +186,7 @@ export class ContentGenerationPipeline {
       );
     } catch (error) {
       // Clear streaming tool calls on error to prevent data pollution
-      this.converter.resetStreamingToolCalls();
+      this.converter.resetStreamingToolCalls(context.userPromptId);
 
       // Use shared error handling logic
       await this.handleError(error, context, request);

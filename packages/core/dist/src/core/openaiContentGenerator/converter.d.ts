@@ -22,16 +22,30 @@ export declare class OpenAIContentConverter {
     private streamingToolCallParser;
     private streamingReasoningBuffers;
     private streamingThinkingBuffers;
+    private streamingLastThinkingBlocks;
+    private streamingRecentThinkingBlocks;
+    private sessionStreamHistory;
+    private streamingXmlToolCallBuffers;
+    private globalThinkingCounts;
     constructor(model: string);
     /**
      * Reset streaming tool calls parser for new stream processing
      * This should be called at the beginning of each stream to prevent
      * data pollution from previous incomplete streams
      */
-    resetStreamingToolCalls(): void;
+    resetStreamingToolCalls(promptId: string): void;
     private formatThinkingBlock;
     private formatThinkingSegments;
     private processStreamingThinkingText;
+    private shouldEmitThinkingBlock;
+    private normalizeThinkingBlock;
+    private extractXmlToolCalls;
+    private parseInvokeBlock;
+    private parseParameterValue;
+    private generateToolCallId;
+    private getSessionIdFromPrompt;
+    private mergeReasoningChunks;
+    private findOverlap;
     private getTextFromPart;
     private appendTextPart;
     /**

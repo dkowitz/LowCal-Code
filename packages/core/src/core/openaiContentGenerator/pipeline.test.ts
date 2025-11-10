@@ -332,7 +332,9 @@ describe("ContentGenerationPipeline", () => {
       expect(results).toHaveLength(2);
       expect(results[0]).toBe(mockGeminiResponse1);
       expect(results[1]).toBe(mockGeminiResponse2);
-      expect(mockConverter.resetStreamingToolCalls).toHaveBeenCalled();
+      expect(mockConverter.resetStreamingToolCalls).toHaveBeenCalledWith(
+        userPromptId,
+      );
       expect(mockClient.chat.completions.create).toHaveBeenCalledWith(
         expect.objectContaining({
           stream: true,
@@ -452,7 +454,14 @@ describe("ContentGenerationPipeline", () => {
       }
 
       expect(results).toHaveLength(0); // No results due to error
-      expect(mockConverter.resetStreamingToolCalls).toHaveBeenCalledTimes(2); // Once at start, once on error
+      expect(mockConverter.resetStreamingToolCalls).toHaveBeenNthCalledWith(
+        1,
+        userPromptId,
+      );
+      expect(mockConverter.resetStreamingToolCalls).toHaveBeenNthCalledWith(
+        2,
+        userPromptId,
+      ); // Once at start, once on error
       expect(mockTelemetryService.logError).toHaveBeenCalledWith(
         expect.objectContaining({
           userPromptId,

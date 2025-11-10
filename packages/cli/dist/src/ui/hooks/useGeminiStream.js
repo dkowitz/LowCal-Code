@@ -47,6 +47,9 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
     const processedMemoryToolsRef = useRef(new Set());
     const turnStartTimestampRef = useRef(null);
     const turnDurationLoggedRef = useRef(false);
+    const needsAntiRepeatHintRef = useRef(false);
+    const toolCallSignatureCountsRef = useRef(new Map());
+    const toolCallIdToSignatureRef = useRef(new Map());
     const { startNewPrompt, getPromptCount } = useSessionStats();
     const storage = config.storage;
     const logger = useLogger(storage);
@@ -56,7 +59,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         }
         return new GitService(config.getProjectRoot(), storage);
     }, [config, storage]);
-    const [toolCalls, scheduleToolCalls, markToolsAsSubmitted] = useReactToolScheduler(async (completedToolCallsFromScheduler) => {
+    const [toolCalls, scheduleToolCalls, coreMarkToolsAsSubmitted] = useReactToolScheduler(async (completedToolCallsFromScheduler) => {
         // This onComplete is called when ALL scheduled tools for a given batch are done.
         if (completedToolCallsFromScheduler.length > 0) {
             // Add the final state of these tools to the history for display.
@@ -65,6 +68,25 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             await handleCompletedTools(completedToolCallsFromScheduler);
         }
     }, config, setPendingHistoryItem, getPreferredEditor, onEditorClose);
+    const releaseToolCallSignatures = useCallback((callIds) => {
+        for (const id of callIds) {
+            const signature = toolCallIdToSignatureRef.current.get(id);
+            if (!signature)
+                continue;
+            const currentCount = toolCallSignatureCountsRef.current.get(signature) ?? 0;
+            if (currentCount <= 1) {
+                toolCallSignatureCountsRef.current.delete(signature);
+            }
+            else {
+                toolCallSignatureCountsRef.current.set(signature, currentCount - 1);
+            }
+            toolCallIdToSignatureRef.current.delete(id);
+        }
+    }, []);
+    const markToolsAsSubmitted = useCallback((callIds) => {
+        releaseToolCallSignatures(callIds);
+        coreMarkToolsAsSubmitted(callIds);
+    }, [coreMarkToolsAsSubmitted, releaseToolCallSignatures]);
     const pendingToolCallGroupDisplay = useMemo(() => toolCalls.length ? mapTrackedToolCallsToDisplay(toolCalls) : undefined, [toolCalls]);
     const loopDetectedRef = useRef(false);
     const onExec = useCallback(async (done) => {
@@ -134,6 +156,13 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         }
     }, { isActive: streamingState === StreamingState.Responding });
     const prepareQueryForGemini = useCallback(async (query, userMessageTimestamp, abortSignal, prompt_id) => {
+        const applyAntiRepeatHint = (candidate) => {
+            if (!candidate || !needsAntiRepeatHintRef.current) {
+                return candidate;
+            }
+            needsAntiRepeatHintRef.current = false;
+            return appendAntiRepeatHint(candidate);
+        };
         if (turnCancelledRef.current) {
             return { queryToSend: null, shouldProceed: false };
         }
@@ -165,7 +194,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                         return { queryToSend: null, shouldProceed: false };
                     }
                     case "submit_prompt": {
-                        localQueryToSendToGemini = slashCommandResult.content;
+                        localQueryToSendToGemini = applyAntiRepeatHint(slashCommandResult.content);
                         return {
                             queryToSend: localQueryToSendToGemini,
                             shouldProceed: true,
@@ -214,7 +243,10 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             onDebugMessage("Query processing resulted in null, not sending to Gemini.");
             return { queryToSend: null, shouldProceed: false };
         }
-        return { queryToSend: localQueryToSendToGemini, shouldProceed: true };
+        return {
+            queryToSend: applyAntiRepeatHint(localQueryToSendToGemini),
+            shouldProceed: true,
+        };
     }, [
         config,
         addItem,
@@ -426,9 +458,22 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 case ServerGeminiEventType.Content:
                     geminiMessageBuffer = handleContentEvent(event.value, geminiMessageBuffer, userMessageTimestamp);
                     break;
-                case ServerGeminiEventType.ToolCallRequest:
+                case ServerGeminiEventType.ToolCallRequest: {
+                    const signature = buildToolCallSignature(event.value);
+                    const activeCount = toolCallSignatureCountsRef.current.get(signature) ?? 0;
+                    if (activeCount > 0) {
+                        needsAntiRepeatHintRef.current = true;
+                        addItem({
+                            type: MessageType.INFO,
+                            text: `⚠️ Duplicate tool request '${event.value.name}' ignored while a previous request is still running.`,
+                        }, Date.now());
+                        break;
+                    }
+                    toolCallSignatureCountsRef.current.set(signature, activeCount + 1);
+                    toolCallIdToSignatureRef.current.set(event.value.callId, signature);
                     toolCallRequests.push(event.value);
                     break;
+                }
                 case ServerGeminiEventType.UserCancelled:
                     handleUserCancelledEvent(userMessageTimestamp);
                     break;
@@ -805,4 +850,28 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         cancelOngoingRequest,
     };
 };
+function buildToolCallSignature(request) {
+    return `${request.name}:${stableStringify(request.args ?? {})}`;
+}
+function stableStringify(value) {
+    if (value === null || typeof value !== "object") {
+        return JSON.stringify(value);
+    }
+    if (Array.isArray(value)) {
+        return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+    }
+    const entries = Object.entries(value)
+        .sort(([a], [b]) => a.localeCompare(b))
+        .map(([key, val]) => `${JSON.stringify(key)}:${stableStringify(val)}`);
+    return `{${entries.join(",")}}`;
+}
+function appendAntiRepeatHint(query) {
+    if (typeof query === "string") {
+        return `${query}\n\n${ANTI_REPEAT_HINT}`;
+    }
+    const partsArray = Array.isArray(query) ? [...query] : [query];
+    partsArray.push({ text: ANTI_REPEAT_HINT });
+    return partsArray;
+}
+const ANTI_REPEAT_HINT = "[system reminder] You just repeated the same instruction/tool call multiple times. Do not repeat identical actions unless the situation has changed; continue the task with new progress.";
 //# sourceMappingURL=useGeminiStream.js.map

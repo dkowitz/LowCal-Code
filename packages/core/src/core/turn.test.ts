@@ -9,7 +9,12 @@ import type {
   ServerGeminiToolCallRequestEvent,
   ServerGeminiErrorEvent,
 } from "./turn.js";
-import { Turn, GeminiEventType } from "./turn.js";
+import {
+  Turn,
+  GeminiEventType,
+  type ServerGeminiThoughtEvent,
+  type ServerGeminiStreamEvent,
+} from "./turn.js";
 import type { GenerateContentResponse, Part, Content } from "@google/genai";
 import { reportError } from "../utils/errorReporting.js";
 import type { GeminiChat } from "./geminiChat.js";
@@ -530,6 +535,45 @@ describe("Turn", () => {
         { type: GeminiEventType.Retry },
         { type: GeminiEventType.Content, value: "Success" },
       ]);
+    });
+
+    it("should suppress duplicate thought events", async () => {
+      const thoughtPart = {
+        thought: "**Plan**Do something",
+        text: "**Plan**Do something",
+      };
+      const mockResponseStream = (async function* () {
+        yield {
+          type: StreamEventType.CHUNK,
+          value: {
+            candidates: [{ content: { parts: [thoughtPart] } }],
+          } as unknown as GenerateContentResponse,
+        };
+        yield {
+          type: StreamEventType.CHUNK,
+          value: {
+            candidates: [{ content: { parts: [thoughtPart] } }],
+          } as unknown as GenerateContentResponse,
+        };
+      })();
+      mockSendMessageStream.mockResolvedValue(mockResponseStream);
+
+      const events: ServerGeminiStreamEvent[] = [];
+      const reqParts: Part[] = [{ text: "Think" }];
+      for await (const event of turn.run(
+        reqParts,
+        new AbortController().signal,
+      )) {
+        events.push(event);
+      }
+
+      const thoughtEvents = events.filter(
+        (event) => event.type === GeminiEventType.Thought,
+      );
+      expect(thoughtEvents).toHaveLength(1);
+      expect(
+        (thoughtEvents[0] as ServerGeminiThoughtEvent).value.subject,
+      ).toBe("Plan");
     });
   });
 

@@ -7,6 +7,7 @@ import { describe, it, expect, beforeEach } from "vitest";
 import { OpenAIContentConverter } from "./converter.js";
 describe("OpenAIContentConverter", () => {
     let converter;
+    const TEST_PROMPT_ID = "prompt-123";
     beforeEach(() => {
         converter = new OpenAIContentConverter("test-model");
     });
@@ -21,30 +22,30 @@ describe("OpenAIContentConverter", () => {
             expect(parser.getBuffer(0)).toBe('{"arg": "value"}');
             expect(parser.getBuffer(1)).toBe('{"arg2": "value2"}');
             // Call reset method
-            converter.resetStreamingToolCalls();
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
             // Verify data is cleared
             expect(parser.getBuffer(0)).toBe("");
             expect(parser.getBuffer(1)).toBe("");
         });
         it("should be safe to call multiple times", () => {
             // Call reset multiple times
-            converter.resetStreamingToolCalls();
-            converter.resetStreamingToolCalls();
-            converter.resetStreamingToolCalls();
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
             // Should not throw any errors
             const parser = converter.streamingToolCallParser;
             expect(parser.getBuffer(0)).toBe("");
         });
         it("should be safe to call on empty accumulator", () => {
             // Call reset on empty accumulator
-            converter.resetStreamingToolCalls();
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
             // Should not throw any errors
             const parser = converter.streamingToolCallParser;
             expect(parser.getBuffer(0)).toBe("");
         });
         it("should clear streaming reasoning buffers", () => {
             converter.streamingReasoningBuffers.set(0, "partial reasoning");
-            converter.resetStreamingToolCalls();
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
             expect(converter.streamingReasoningBuffers.size).toBe(0);
         });
     });
@@ -83,7 +84,7 @@ describe("OpenAIContentConverter", () => {
     });
     describe("convertOpenAIChunkToGemini", () => {
         it("should buffer reasoning until finish_reason and emit <think> block", () => {
-            converter.resetStreamingToolCalls();
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
             const firstChunk = converter.convertOpenAIChunkToGemini({
                 id: "chunk-1",
                 object: "chat.completion.chunk",
@@ -128,6 +129,273 @@ describe("OpenAIContentConverter", () => {
             expect(thinkingIndex).toBeGreaterThanOrEqual(0);
             expect(thinkingIndex).toBeGreaterThan(visibleIndex);
             expect(converter.streamingReasoningBuffers.size).toBe(0);
+        });
+        it("deduplicates repeated reasoning_details chunks", () => {
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
+            converter.convertOpenAIChunkToGemini({
+                id: "chunk-1",
+                object: "chat.completion.chunk",
+                created: 1000,
+                model: "minimax/minimax-m2",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            reasoning_details: [{ text: "Step one" }],
+                        },
+                    },
+                ],
+            });
+            const finalChunk = converter.convertOpenAIChunkToGemini({
+                id: "chunk-2",
+                object: "chat.completion.chunk",
+                created: 1001,
+                model: "minimax/minimax-m2",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            reasoning_details: [{ text: "Step one" }],
+                            content: "Visible answer",
+                        },
+                        finish_reason: "stop",
+                    },
+                ],
+            });
+            const finalParts = finalChunk.candidates?.[0]?.content?.parts ?? [];
+            const finalTextParts = finalParts.map((part) => typeof part === "string"
+                ? part
+                : "text" in part
+                    ? part.text ?? ""
+                    : "");
+            const thinkingParts = finalTextParts.filter((value) => value?.includes("💭 *Step one*"));
+            expect(thinkingParts.length).toBe(1);
+        });
+        it("omits duplicate streaming <think> blocks", () => {
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
+            const firstChunk = converter.convertOpenAIChunkToGemini({
+                id: "chunk-3",
+                object: "chat.completion.chunk",
+                created: 2000,
+                model: "minimax/minimax-m2",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            content: "<think>Plan next</think>",
+                        },
+                    },
+                ],
+            });
+            const firstParts = firstChunk.candidates?.[0]?.content?.parts ?? [];
+            const firstTextParts = firstParts.map((part) => typeof part === "string"
+                ? part
+                : "text" in part
+                    ? part.text ?? ""
+                    : "");
+            expect(firstTextParts.some((value) => value?.includes("Plan next"))).toBe(true);
+            const duplicateChunk = converter.convertOpenAIChunkToGemini({
+                id: "chunk-4",
+                object: "chat.completion.chunk",
+                created: 2001,
+                model: "minimax/minimax-m2",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            content: "<think>Plan next</think>",
+                        },
+                    },
+                ],
+            });
+            const duplicateParts = duplicateChunk.candidates?.[0]?.content?.parts ?? [];
+            const duplicateTextParts = duplicateParts.map((part) => typeof part === "string"
+                ? part
+                : "text" in part
+                    ? part.text ?? ""
+                    : "");
+            expect(duplicateTextParts.some((value) => value?.includes("Plan next"))).toBe(false);
+        });
+        it("persists thinking dedupe across continuations within same session", () => {
+            converter.resetStreamingToolCalls("sessionA########1");
+            converter.convertOpenAIChunkToGemini({
+                id: "chunk-5",
+                object: "chat.completion.chunk",
+                created: 3000,
+                model: "minimax/minimax-m2",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            content: "<think>Repeat later</think>",
+                        },
+                    },
+                ],
+            });
+            converter.resetStreamingToolCalls("sessionA########2");
+            const continuationChunk = converter.convertOpenAIChunkToGemini({
+                id: "chunk-6",
+                object: "chat.completion.chunk",
+                created: 3001,
+                model: "minimax/minimax-m2",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            content: "<think>Repeat later</think>",
+                        },
+                    },
+                ],
+            });
+            const continuationParts = continuationChunk.candidates?.[0]?.content?.parts ?? [];
+            const continuationTextParts = continuationParts.map((part) => typeof part === "string"
+                ? part
+                : "text" in part
+                    ? part.text ?? ""
+                    : "");
+            expect(continuationTextParts.some((value) => value?.includes("Repeat later"))).toBe(false);
+        });
+        it("allows identical thinking blocks after prompt id changes", () => {
+            converter.resetStreamingToolCalls("prompt-alpha");
+            const firstChunk = converter.convertOpenAIChunkToGemini({
+                id: "chunk-7",
+                object: "chat.completion.chunk",
+                created: 4000,
+                model: "minimax/minimax-m2",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            content: "<think>Fresh thought</think>",
+                        },
+                    },
+                ],
+            });
+            const firstParts = firstChunk.candidates?.[0]?.content?.parts ?? [];
+            const firstTextParts = firstParts.map((part) => typeof part === "string"
+                ? part
+                : "text" in part
+                    ? part.text ?? ""
+                    : "");
+            expect(firstTextParts.some((value) => value?.includes("Fresh thought"))).toBe(true);
+            converter.resetStreamingToolCalls("prompt-beta");
+            const secondChunk = converter.convertOpenAIChunkToGemini({
+                id: "chunk-8",
+                object: "chat.completion.chunk",
+                created: 4001,
+                model: "minimax/minimax-m2",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            content: "<think>Fresh thought</think>",
+                        },
+                    },
+                ],
+            });
+            const secondParts = secondChunk.candidates?.[0]?.content?.parts ?? [];
+            const secondTextParts = secondParts.map((part) => typeof part === "string"
+                ? part
+                : "text" in part
+                    ? part.text ?? ""
+                    : "");
+            expect(secondTextParts.some((value) => value?.includes("Fresh thought"))).toBe(true);
+        });
+        it("converts XML tool calls embedded in text to function calls", () => {
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
+            const chunk = converter.convertOpenAIChunkToGemini({
+                id: "chunk-xml",
+                object: "chat.completion.chunk",
+                created: 5000,
+                model: "minimax/minimax-m2",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            content: '<tool_call><invoke name="run_shell_command"><parameter name="command">echo "hello"</parameter><parameter name="is_background">false</parameter></invoke></tool_call>Let me continue.',
+                        },
+                        finish_reason: "stop",
+                    },
+                ],
+            });
+            const parts = chunk.candidates?.[0]?.content?.parts ?? [];
+            const functionPart = parts.find((part) => typeof part === "object" && "functionCall" in part);
+            expect(functionPart?.functionCall?.name).toBe("run_shell_command");
+            expect(functionPart?.functionCall?.args).toMatchObject({
+                command: 'echo "hello"',
+                is_background: false,
+            });
+            const textPart = parts.find((part) => typeof part === "object" &&
+                "text" in part &&
+                part.text?.includes("Let me continue."));
+            expect(textPart?.text).toBeDefined();
+            expect(textPart?.text).not.toContain("<invoke");
+            expect(chunk.functionCalls).toBeDefined();
+            expect(chunk.functionCalls?.length).toBe(1);
+            expect(chunk.functionCalls?.[0]?.name).toBe("run_shell_command");
+        });
+        it("buffers partial XML tool calls across chunks", () => {
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
+            const firstChunk = converter.convertOpenAIChunkToGemini({
+                id: "chunk-xml-1",
+                object: "chat.completion.chunk",
+                created: 6000,
+                model: "minimax/minimax-m2",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            content: '<tool_call><invoke name="run_shell_command"><parameter name="command">echo "hi',
+                        },
+                    },
+                ],
+            });
+            expect(firstChunk.functionCalls).toBeUndefined();
+            const secondChunk = converter.convertOpenAIChunkToGemini({
+                id: "chunk-xml-2",
+                object: "chat.completion.chunk",
+                created: 6001,
+                model: "minimax/minimax-m2",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            content: '"</parameter><parameter name="description">Test</parameter></invoke></tool_call>',
+                        },
+                        finish_reason: "stop",
+                    },
+                ],
+            });
+            expect(secondChunk.functionCalls).toBeDefined();
+            expect(secondChunk.functionCalls?.length).toBe(1);
+            expect(secondChunk.functionCalls?.[0]?.args).toMatchObject({
+                command: 'echo "hi"',
+                description: "Test",
+            });
+        });
+        it("strips stray parameter tags after tool calls", () => {
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
+            const chunk = converter.convertOpenAIChunkToGemini({
+                id: "chunk-param-1",
+                object: "chat.completion.chunk",
+                created: 7100,
+                model: "minimax/minimax-m2",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            content: '</parameter></invoke></tool_call>Continuing with task.',
+                        },
+                        finish_reason: "stop",
+                    },
+                ],
+            });
+            const parts = chunk.candidates?.[0]?.content?.parts ?? [];
+            const textPart = parts.find((part) => typeof part === "object" && "text" in part && part.text?.length);
+            expect(textPart?.text).toContain("Continuing with task.");
+            expect(textPart?.text).not.toContain("parameter");
+            expect(textPart?.text).not.toContain("invoke");
+            expect(textPart?.text).not.toContain("tool_call");
         });
     });
 });

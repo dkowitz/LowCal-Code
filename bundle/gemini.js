@@ -74904,12 +74904,14 @@ var init_turn = __esm({
       pendingToolCalls;
       debugResponses;
       finishReason;
+      emittedThoughtHashes;
       constructor(chat, prompt_id) {
         this.chat = chat;
         this.prompt_id = prompt_id;
         this.pendingToolCalls = [];
         this.debugResponses = [];
         this.finishReason = void 0;
+        this.emittedThoughtHashes = /* @__PURE__ */ new Set();
       }
       // The run method yields simpler events suitable for server logic
       async *run(req, signal) {
@@ -74943,6 +74945,9 @@ var init_turn = __esm({
                 subject,
                 description
               };
+              if (!this.shouldEmitThought(thought)) {
+                continue;
+              }
               yield {
                 type: GeminiEventType.Thought,
                 value: thought
@@ -75009,6 +75014,20 @@ var init_turn = __esm({
       }
       getDebugResponses() {
         return this.debugResponses;
+      }
+      shouldEmitThought(thought) {
+        const normalized2 = this.normalizeThought(thought);
+        if (!normalized2) {
+          return false;
+        }
+        if (this.emittedThoughtHashes.has(normalized2)) {
+          return false;
+        }
+        this.emittedThoughtHashes.add(normalized2);
+        return true;
+      }
+      normalizeThought(thought) {
+        return `${thought.subject}::${thought.description}`.toLowerCase().replace(/\s+/g, " ").trim();
       }
     };
   }
@@ -90779,6 +90798,11 @@ var init_converter2 = __esm({
       streamingToolCallParser = new StreamingToolCallParser();
       streamingReasoningBuffers = /* @__PURE__ */ new Map();
       streamingThinkingBuffers = /* @__PURE__ */ new Map();
+      streamingLastThinkingBlocks = /* @__PURE__ */ new Map();
+      streamingRecentThinkingBlocks = /* @__PURE__ */ new Map();
+      sessionStreamHistory = /* @__PURE__ */ new Map();
+      streamingXmlToolCallBuffers = /* @__PURE__ */ new Map();
+      globalThinkingCounts = /* @__PURE__ */ new Map();
       constructor(model) {
         this.model = model;
       }
@@ -90787,10 +90811,31 @@ var init_converter2 = __esm({
        * This should be called at the beginning of each stream to prevent
        * data pollution from previous incomplete streams
        */
-      resetStreamingToolCalls() {
+      resetStreamingToolCalls(promptId) {
         this.streamingToolCallParser.reset();
         this.streamingReasoningBuffers.clear();
         this.streamingThinkingBuffers.clear();
+        const sessionId2 = this.getSessionIdFromPrompt(promptId);
+        let history = this.sessionStreamHistory.get(sessionId2);
+        if (!history) {
+          history = {
+            thinking: {
+              last: /* @__PURE__ */ new Map(),
+              recent: /* @__PURE__ */ new Map(),
+              counts: /* @__PURE__ */ new Map()
+            },
+            text: {
+              last: /* @__PURE__ */ new Map(),
+              recent: /* @__PURE__ */ new Map(),
+              counts: /* @__PURE__ */ new Map()
+            }
+          };
+          this.sessionStreamHistory.set(sessionId2, history);
+        }
+        this.streamingLastThinkingBlocks = history.thinking.last;
+        this.streamingRecentThinkingBlocks = history.thinking.recent;
+        this.globalThinkingCounts = history.thinking.counts;
+        this.streamingXmlToolCallBuffers.clear();
       }
       formatThinkingBlock(content) {
         const lines = content.split(/\r?\n/);
@@ -90830,6 +90875,10 @@ var init_converter2 = __esm({
           }
           let formatted = this.formatThinkingBlock(match2[2]);
           if (formatted) {
+            if (!this.shouldEmitThinkingBlock(index, formatted)) {
+              lastIndex = regex2.lastIndex;
+              continue;
+            }
             if (results.length > 0) {
               const prev = results[results.length - 1];
               if (!prev.text.endsWith("\n\n")) {
@@ -90861,6 +90910,139 @@ var init_converter2 = __esm({
           }
         }
         return results.filter((segment) => segment.text.length > 0);
+      }
+      shouldEmitThinkingBlock(index, block2) {
+        const normalized2 = this.normalizeThinkingBlock(block2);
+        if (!normalized2) {
+          return false;
+        }
+        const globalCount = this.globalThinkingCounts.get(normalized2) ?? 0;
+        if (globalCount >= 3) {
+          return false;
+        }
+        const lastBlock = this.streamingLastThinkingBlocks.get(index);
+        if (lastBlock === normalized2) {
+          return false;
+        }
+        const recent = this.streamingRecentThinkingBlocks.get(index) ?? [];
+        if (recent.includes(normalized2)) {
+          this.streamingLastThinkingBlocks.set(index, normalized2);
+          return false;
+        }
+        recent.push(normalized2);
+        if (recent.length > 5) {
+          recent.shift();
+        }
+        this.streamingRecentThinkingBlocks.set(index, recent);
+        this.streamingLastThinkingBlocks.set(index, normalized2);
+        this.globalThinkingCounts.set(normalized2, globalCount + 1);
+        return true;
+      }
+      normalizeThinkingBlock(block2) {
+        return block2.toLowerCase().replace(/\s+/g, " ").replace(/[^a-z0-9 ]/g, "").trim();
+      }
+      extractXmlToolCalls(index, chunkText) {
+        if (!chunkText) {
+          return { text: chunkText, toolCalls: [] };
+        }
+        const buffer = (this.streamingXmlToolCallBuffers.get(index) ?? "") + chunkText;
+        const toolCalls = [];
+        const invokeRegex = /<invoke\b[^>]*>([\s\S]*?)<\/invoke>/g;
+        let sanitized = "";
+        let lastIndex = 0;
+        let match2;
+        while ((match2 = invokeRegex.exec(buffer)) !== null) {
+          const invokeStart = match2.index;
+          sanitized += buffer.slice(lastIndex, invokeStart);
+          const invokeBlock = buffer.slice(invokeStart, invokeRegex.lastIndex);
+          const parsed = this.parseInvokeBlock(invokeBlock);
+          if (parsed) {
+            toolCalls.push(parsed);
+          }
+          lastIndex = invokeRegex.lastIndex;
+        }
+        sanitized += buffer.slice(lastIndex);
+        const lastOpenInvoke = sanitized.lastIndexOf("<invoke");
+        const lastCloseInvoke = sanitized.lastIndexOf("</invoke>");
+        if (lastOpenInvoke > lastCloseInvoke) {
+          this.streamingXmlToolCallBuffers.set(index, sanitized.slice(lastOpenInvoke));
+          sanitized = sanitized.slice(0, lastOpenInvoke);
+        } else {
+          this.streamingXmlToolCallBuffers.delete(index);
+        }
+        sanitized = sanitized.replace(/<\/?tool_call\b[^>]*>/g, "").replace(/<\/?parameter\b[^>]*>/g, "").replace(/<\/?invoke\b[^>]*>/g, "");
+        return {
+          text: sanitized,
+          toolCalls
+        };
+      }
+      parseInvokeBlock(block2) {
+        const nameMatch = block2.match(/<invoke\b[^>]*name="([^"]+)"[^>]*>/);
+        if (!nameMatch) {
+          return null;
+        }
+        const params = {};
+        const paramRegex = /<parameter\b[^>]*name="([^"]+)"[^>]*>([\s\S]*?)<\/parameter>/g;
+        let paramMatch;
+        while ((paramMatch = paramRegex.exec(block2)) !== null) {
+          const paramName = paramMatch[1].trim();
+          const paramValue = this.parseParameterValue(paramMatch[2]);
+          params[paramName] = paramValue;
+        }
+        return {
+          id: this.generateToolCallId(nameMatch[1]),
+          name: nameMatch[1],
+          args: params
+        };
+      }
+      parseParameterValue(value) {
+        const trimmed2 = value.trim();
+        if (trimmed2.length === 0) {
+          return "";
+        }
+        if (/^(true|false)$/i.test(trimmed2)) {
+          return trimmed2.toLowerCase() === "true";
+        }
+        if (/^-?\d+(\.\d+)?$/.test(trimmed2)) {
+          return Number(trimmed2);
+        }
+        if (trimmed2.startsWith("{") && trimmed2.endsWith("}") || trimmed2.startsWith("[") && trimmed2.endsWith("]")) {
+          try {
+            return JSON.parse(trimmed2);
+          } catch {
+          }
+        }
+        return trimmed2;
+      }
+      generateToolCallId(name2) {
+        return `${name2}-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+      }
+      getSessionIdFromPrompt(promptId) {
+        const [sessionId2] = promptId.split("########");
+        return sessionId2 || promptId;
+      }
+      mergeReasoningChunks(existing, incoming) {
+        if (!existing)
+          return incoming;
+        if (!incoming)
+          return existing;
+        if (incoming.startsWith(existing)) {
+          return incoming;
+        }
+        if (existing.startsWith(incoming)) {
+          return existing;
+        }
+        const overlap = this.findOverlap(existing, incoming);
+        return `${existing}${incoming.slice(overlap)}`;
+      }
+      findOverlap(existing, incoming) {
+        const maxOverlap = Math.min(existing.length, incoming.length);
+        for (let length = maxOverlap; length > 0; length--) {
+          if (existing.endsWith(incoming.slice(0, length))) {
+            return length;
+          }
+        }
+        return 0;
       }
       getTextFromPart(part) {
         if (!part) {
@@ -91331,6 +91513,13 @@ ${textToAppend}`;
             }
           }
           if (deltaText) {
+            const { text: cleanedText, toolCalls: xmlToolCalls } = this.extractXmlToolCalls(choiceIndex, deltaText);
+            if (xmlToolCalls.length > 0) {
+              for (const toolCall of xmlToolCalls) {
+                parts.push({ functionCall: toolCall });
+              }
+            }
+            deltaText = cleanedText;
             const segments = this.processStreamingThinkingText(choiceIndex, deltaText);
             for (const segment of segments) {
               this.appendTextPart(parts, segment.text, {
@@ -91341,7 +91530,7 @@ ${textToAppend}`;
           const deltaReasoningText = this.extractReasoningText(choice2.delta?.reasoning_details);
           if (deltaReasoningText) {
             const existing = this.streamingReasoningBuffers.get(choiceIndex) ?? "";
-            this.streamingReasoningBuffers.set(choiceIndex, existing + deltaReasoningText);
+            this.streamingReasoningBuffers.set(choiceIndex, this.mergeReasoningChunks(existing, deltaReasoningText));
           }
           if (choice2.delta?.tool_calls) {
             for (const toolCall of choice2.delta.tool_calls) {
@@ -91369,7 +91558,7 @@ ${textToAppend}`;
             const bufferedReasoning = this.streamingReasoningBuffers.get(choiceIndex);
             if (bufferedReasoning) {
               const formattedThought = this.formatThinkingBlock(bufferedReasoning);
-              if (formattedThought) {
+              if (formattedThought && this.shouldEmitThinkingBlock(choiceIndex, formattedThought)) {
                 this.appendTextPart(parts, formattedThought, {
                   isThinking: true
                 });
@@ -91379,13 +91568,12 @@ ${textToAppend}`;
             const completedToolCalls = this.streamingToolCallParser.getCompletedToolCalls();
             for (const toolCall of completedToolCalls) {
               if (toolCall.name) {
-                parts.push({
-                  functionCall: {
-                    id: toolCall.id || `call_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
-                    name: toolCall.name,
-                    args: toolCall.args
-                  }
-                });
+                const functionCall = {
+                  id: toolCall.id || `call_${Date.now()}_${Math.random().toString(36).substring(2, 9)}`,
+                  name: toolCall.name,
+                  args: toolCall.args
+                };
+                parts.push({ functionCall });
               }
             }
             this.streamingToolCallParser.reset();
@@ -91835,7 +92023,7 @@ var init_pipeline = __esm({
       async *processStreamWithLogging(stream2, context2, openaiRequest, request4) {
         const collectedGeminiResponses = [];
         const collectedOpenAIChunks = [];
-        this.converter.resetStreamingToolCalls();
+        this.converter.resetStreamingToolCalls(context2.userPromptId);
         let pendingFinishResponse = null;
         try {
           for await (const chunk of stream2) {
@@ -91862,7 +92050,7 @@ var init_pipeline = __esm({
           context2.duration = Date.now() - context2.startTime;
           await this.config.telemetryService.logStreamingSuccess(context2, collectedGeminiResponses, openaiRequest, collectedOpenAIChunks);
         } catch (error) {
-          this.converter.resetStreamingToolCalls();
+          this.converter.resetStreamingToolCalls(context2.userPromptId);
           await this.handleError(error, context2, request4);
         }
       }
@@ -153283,7 +153471,7 @@ var require_compile3 = __commonJS({
     var resolve24 = require_resolve4();
     var util4 = require_util15();
     var errorClasses = require_error_classes();
-    var stableStringify = require_fast_json_stable_stringify();
+    var stableStringify2 = require_fast_json_stable_stringify();
     var validateGenerator = require_validate3();
     var ucs2length = util4.ucs2length;
     var equal = require_fast_deep_equal();
@@ -153462,7 +153650,7 @@ var require_compile3 = __commonJS({
             return util4.toQuotedString(value);
           case "object":
             if (value === null) return "null";
-            var valueStr = stableStringify(value);
+            var valueStr = stableStringify2(value);
             var index = defaultsHash[valueStr];
             if (index === void 0) {
               index = defaultsHash[valueStr] = defaults3.length;
@@ -157032,7 +157220,7 @@ var require_ajv3 = __commonJS({
     var resolve24 = require_resolve4();
     var Cache = require_cache4();
     var SchemaObject = require_schema_obj();
-    var stableStringify = require_fast_json_stable_stringify();
+    var stableStringify2 = require_fast_json_stable_stringify();
     var formats = require_formats2();
     var rules = require_rules3();
     var $dataMetaSchema = require_data3();
@@ -157077,7 +157265,7 @@ var require_ajv3 = __commonJS({
       this._getId = chooseGetId(opts);
       opts.loopRequired = opts.loopRequired || Infinity;
       if (opts.errorDataPath == "property") opts._errorDataPathProperty = true;
-      if (opts.serialize === void 0) opts.serialize = stableStringify;
+      if (opts.serialize === void 0) opts.serialize = stableStringify2;
       this._metaOpts = getMetaSchemaOptions(this);
       if (opts.formats) addInitialFormats(this);
       if (opts.keywords) addInitialKeywords(this);
@@ -313848,6 +314036,9 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
   const processedMemoryToolsRef = (0, import_react45.useRef)(/* @__PURE__ */ new Set());
   const turnStartTimestampRef = (0, import_react45.useRef)(null);
   const turnDurationLoggedRef = (0, import_react45.useRef)(false);
+  const needsAntiRepeatHintRef = (0, import_react45.useRef)(false);
+  const toolCallSignatureCountsRef = (0, import_react45.useRef)(/* @__PURE__ */ new Map());
+  const toolCallIdToSignatureRef = (0, import_react45.useRef)(/* @__PURE__ */ new Map());
   const { startNewPrompt, getPromptCount } = useSessionStats();
   const storage = config.storage;
   const logger6 = useLogger(storage);
@@ -313857,7 +314048,7 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
     }
     return new GitService(config.getProjectRoot(), storage);
   }, [config, storage]);
-  const [toolCalls, scheduleToolCalls, markToolsAsSubmitted] = useReactToolScheduler(
+  const [toolCalls, scheduleToolCalls, coreMarkToolsAsSubmitted] = useReactToolScheduler(
     async (completedToolCallsFromScheduler) => {
       if (completedToolCallsFromScheduler.length > 0) {
         addItem(
@@ -313875,6 +314066,26 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
     setPendingHistoryItem,
     getPreferredEditor,
     onEditorClose
+  );
+  const releaseToolCallSignatures = (0, import_react45.useCallback)((callIds) => {
+    for (const id of callIds) {
+      const signature = toolCallIdToSignatureRef.current.get(id);
+      if (!signature) continue;
+      const currentCount = toolCallSignatureCountsRef.current.get(signature) ?? 0;
+      if (currentCount <= 1) {
+        toolCallSignatureCountsRef.current.delete(signature);
+      } else {
+        toolCallSignatureCountsRef.current.set(signature, currentCount - 1);
+      }
+      toolCallIdToSignatureRef.current.delete(id);
+    }
+  }, []);
+  const markToolsAsSubmitted = (0, import_react45.useCallback)(
+    (callIds) => {
+      releaseToolCallSignatures(callIds);
+      coreMarkToolsAsSubmitted(callIds);
+    },
+    [coreMarkToolsAsSubmitted, releaseToolCallSignatures]
   );
   const pendingToolCallGroupDisplay = (0, import_react45.useMemo)(
     () => toolCalls.length ? mapToDisplay(toolCalls) : void 0,
@@ -313965,6 +314176,13 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
   );
   const prepareQueryForGemini = (0, import_react45.useCallback)(
     async (query, userMessageTimestamp, abortSignal, prompt_id) => {
+      const applyAntiRepeatHint = (candidate) => {
+        if (!candidate || !needsAntiRepeatHintRef.current) {
+          return candidate;
+        }
+        needsAntiRepeatHintRef.current = false;
+        return appendAntiRepeatHint(candidate);
+      };
       if (turnCancelledRef.current) {
         return { queryToSend: null, shouldProceed: false };
       }
@@ -314001,7 +314219,9 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
               return { queryToSend: null, shouldProceed: false };
             }
             case "submit_prompt": {
-              localQueryToSendToGemini = slashCommandResult.content;
+              localQueryToSendToGemini = applyAntiRepeatHint(
+                slashCommandResult.content
+              );
               return {
                 queryToSend: localQueryToSendToGemini,
                 shouldProceed: true
@@ -314054,7 +314274,10 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
         );
         return { queryToSend: null, shouldProceed: false };
       }
-      return { queryToSend: localQueryToSendToGemini, shouldProceed: true };
+      return {
+        queryToSend: applyAntiRepeatHint(localQueryToSendToGemini),
+        shouldProceed: true
+      };
     },
     [
       config,
@@ -314329,9 +314552,28 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
               userMessageTimestamp
             );
             break;
-          case GeminiEventType.ToolCallRequest:
+          case GeminiEventType.ToolCallRequest: {
+            const signature = buildToolCallSignature(event.value);
+            const activeCount = toolCallSignatureCountsRef.current.get(signature) ?? 0;
+            if (activeCount > 0) {
+              needsAntiRepeatHintRef.current = true;
+              addItem(
+                {
+                  type: "info" /* INFO */,
+                  text: `\u26A0\uFE0F Duplicate tool request '${event.value.name}' ignored while a previous request is still running.`
+                },
+                Date.now()
+              );
+              break;
+            }
+            toolCallSignatureCountsRef.current.set(signature, activeCount + 1);
+            toolCallIdToSignatureRef.current.set(
+              event.value.callId,
+              signature
+            );
             toolCallRequests.push(event.value);
             break;
+          }
           case GeminiEventType.UserCancelled:
             handleUserCancelledEvent(userMessageTimestamp);
             break;
@@ -314768,6 +315010,32 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
     cancelOngoingRequest
   };
 };
+function buildToolCallSignature(request4) {
+  return `${request4.name}:${stableStringify(request4.args ?? {})}`;
+}
+function stableStringify(value) {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  }
+  const entries = Object.entries(value).sort(([a], [b]) => a.localeCompare(b)).map(
+    ([key, val]) => `${JSON.stringify(key)}:${stableStringify(val)}`
+  );
+  return `{${entries.join(",")}}`;
+}
+function appendAntiRepeatHint(query) {
+  if (typeof query === "string") {
+    return `${query}
+
+${ANTI_REPEAT_HINT}`;
+  }
+  const partsArray = Array.isArray(query) ? [...query] : [query];
+  partsArray.push({ text: ANTI_REPEAT_HINT });
+  return partsArray;
+}
+var ANTI_REPEAT_HINT = "[system reminder] You just repeated the same instruction/tool call multiple times. Do not repeat identical actions unless the situation has changed; continue the task with new progress.";
 
 // packages/cli/src/ui/hooks/useTimer.ts
 var import_react46 = __toESM(require_react(), 1);
@@ -317296,7 +317564,7 @@ init_open();
 import process32 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "a96e72a8";
+var GIT_COMMIT_INFO = "939f9b5a";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();

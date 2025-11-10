@@ -117,6 +117,9 @@ export const useGeminiStream = (
   const processedMemoryToolsRef = useRef<Set<string>>(new Set());
   const turnStartTimestampRef = useRef<number | null>(null);
   const turnDurationLoggedRef = useRef<boolean>(false);
+  const needsAntiRepeatHintRef = useRef<boolean>(false);
+  const toolCallSignatureCountsRef = useRef<Map<string, number>>(new Map());
+  const toolCallIdToSignatureRef = useRef<Map<string, string>>(new Map());
   const { startNewPrompt, getPromptCount } = useSessionStats();
   const storage = config.storage;
   const logger = useLogger(storage);
@@ -127,7 +130,7 @@ export const useGeminiStream = (
     return new GitService(config.getProjectRoot(), storage);
   }, [config, storage]);
 
-  const [toolCalls, scheduleToolCalls, markToolsAsSubmitted] =
+  const [toolCalls, scheduleToolCalls, coreMarkToolsAsSubmitted] =
     useReactToolScheduler(
       async (completedToolCallsFromScheduler) => {
         // This onComplete is called when ALL scheduled tools for a given batch are done.
@@ -151,6 +154,29 @@ export const useGeminiStream = (
       getPreferredEditor,
       onEditorClose,
     );
+
+  const releaseToolCallSignatures = useCallback((callIds: string[]) => {
+    for (const id of callIds) {
+      const signature = toolCallIdToSignatureRef.current.get(id);
+      if (!signature) continue;
+      const currentCount =
+        toolCallSignatureCountsRef.current.get(signature) ?? 0;
+      if (currentCount <= 1) {
+        toolCallSignatureCountsRef.current.delete(signature);
+      } else {
+        toolCallSignatureCountsRef.current.set(signature, currentCount - 1);
+      }
+      toolCallIdToSignatureRef.current.delete(id);
+    }
+  }, []);
+
+  const markToolsAsSubmitted = useCallback(
+    (callIds: string[]) => {
+      releaseToolCallSignatures(callIds);
+      coreMarkToolsAsSubmitted(callIds);
+    },
+    [coreMarkToolsAsSubmitted, releaseToolCallSignatures],
+  );
 
   const pendingToolCallGroupDisplay = useMemo(
     () =>
@@ -275,6 +301,15 @@ export const useGeminiStream = (
       queryToSend: PartListUnion | null;
       shouldProceed: boolean;
     }> => {
+      const applyAntiRepeatHint = (
+        candidate: PartListUnion | null,
+      ): PartListUnion | null => {
+        if (!candidate || !needsAntiRepeatHintRef.current) {
+          return candidate;
+        }
+        needsAntiRepeatHintRef.current = false;
+        return appendAntiRepeatHint(candidate);
+      };
       if (turnCancelledRef.current) {
         return { queryToSend: null, shouldProceed: false };
       }
@@ -318,7 +353,9 @@ export const useGeminiStream = (
               return { queryToSend: null, shouldProceed: false };
             }
             case "submit_prompt": {
-              localQueryToSendToGemini = slashCommandResult.content;
+              localQueryToSendToGemini = applyAntiRepeatHint(
+                slashCommandResult.content,
+              );
 
               return {
                 queryToSend: localQueryToSendToGemini,
@@ -381,7 +418,10 @@ export const useGeminiStream = (
         );
         return { queryToSend: null, shouldProceed: false };
       }
-      return { queryToSend: localQueryToSendToGemini, shouldProceed: true };
+      return {
+        queryToSend: applyAntiRepeatHint(localQueryToSendToGemini),
+        shouldProceed: true,
+      };
     },
     [
       config,
@@ -723,9 +763,29 @@ export const useGeminiStream = (
               userMessageTimestamp,
             );
             break;
-          case ServerGeminiEventType.ToolCallRequest:
+          case ServerGeminiEventType.ToolCallRequest: {
+            const signature = buildToolCallSignature(event.value);
+            const activeCount =
+              toolCallSignatureCountsRef.current.get(signature) ?? 0;
+            if (activeCount > 0) {
+              needsAntiRepeatHintRef.current = true;
+              addItem(
+                {
+                  type: MessageType.INFO,
+                  text: `⚠️ Duplicate tool request '${event.value.name}' ignored while a previous request is still running.`,
+                },
+                Date.now(),
+              );
+              break;
+            }
+            toolCallSignatureCountsRef.current.set(signature, activeCount + 1);
+            toolCallIdToSignatureRef.current.set(
+              event.value.callId,
+              signature,
+            );
             toolCallRequests.push(event.value);
             break;
+          }
           case ServerGeminiEventType.UserCancelled:
             handleUserCancelledEvent(userMessageTimestamp);
             break;
@@ -1270,3 +1330,39 @@ export const useGeminiStream = (
     cancelOngoingRequest,
   };
 };
+
+function buildToolCallSignature(request: ToolCallRequestInfo): string {
+  return `${request.name}:${stableStringify(request.args ?? {})}`;
+}
+
+function stableStringify(value: unknown): string {
+  if (value === null || typeof value !== "object") {
+    return JSON.stringify(value);
+  }
+
+  if (Array.isArray(value)) {
+    return `[${value.map((item) => stableStringify(item)).join(",")}]`;
+  }
+
+  const entries = Object.entries(value as Record<string, unknown>)
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(
+      ([key, val]) =>
+        `${JSON.stringify(key)}:${stableStringify(val as unknown)}`,
+    );
+
+  return `{${entries.join(",")}}`;
+}
+
+function appendAntiRepeatHint(query: PartListUnion): PartListUnion {
+  if (typeof query === "string") {
+    return `${query}\n\n${ANTI_REPEAT_HINT}`;
+  }
+
+  const partsArray = Array.isArray(query) ? [...query] : [query];
+  partsArray.push({ text: ANTI_REPEAT_HINT });
+  return partsArray;
+}
+
+const ANTI_REPEAT_HINT =
+  "[system reminder] You just repeated the same instruction/tool call multiple times. Do not repeat identical actions unless the situation has changed; continue the task with new progress.";

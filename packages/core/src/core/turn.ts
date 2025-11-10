@@ -238,6 +238,7 @@ export class Turn {
   readonly pendingToolCalls: ToolCallRequestInfo[];
   private debugResponses: GenerateContentResponse[];
   finishReason: FinishReason | undefined;
+  private emittedThoughtHashes: Set<string>;
 
   constructor(
     private readonly chat: GeminiChat,
@@ -246,6 +247,7 @@ export class Turn {
     this.pendingToolCalls = [];
     this.debugResponses = [];
     this.finishReason = undefined;
+    this.emittedThoughtHashes = new Set();
   }
   // The run method yields simpler events suitable for server logic
   async *run(
@@ -297,6 +299,10 @@ export class Turn {
             subject,
             description,
           };
+
+          if (!this.shouldEmitThought(thought)) {
+            continue;
+          }
 
           yield {
             type: GeminiEventType.Thought,
@@ -392,5 +398,24 @@ export class Turn {
 
   getDebugResponses(): GenerateContentResponse[] {
     return this.debugResponses;
+  }
+
+  private shouldEmitThought(thought: ThoughtSummary): boolean {
+    const normalized = this.normalizeThought(thought);
+    if (!normalized) {
+      return false;
+    }
+    if (this.emittedThoughtHashes.has(normalized)) {
+      return false;
+    }
+    this.emittedThoughtHashes.add(normalized);
+    return true;
+  }
+
+  private normalizeThought(thought: ThoughtSummary): string {
+    return `${thought.subject}::${thought.description}`
+      .toLowerCase()
+      .replace(/\s+/g, " ")
+      .trim();
   }
 }
