@@ -74905,6 +74905,8 @@ var init_turn = __esm({
       debugResponses;
       finishReason;
       emittedThoughtHashes;
+      lastCandidateTexts;
+      textDuplicateTrackers;
       constructor(chat, prompt_id) {
         this.chat = chat;
         this.prompt_id = prompt_id;
@@ -74912,6 +74914,8 @@ var init_turn = __esm({
         this.debugResponses = [];
         this.finishReason = void 0;
         this.emittedThoughtHashes = /* @__PURE__ */ new Set();
+        this.lastCandidateTexts = /* @__PURE__ */ new Map();
+        this.textDuplicateTrackers = /* @__PURE__ */ new Map();
       }
       // The run method yields simpler events suitable for server logic
       async *run(req, signal) {
@@ -74928,6 +74932,8 @@ var init_turn = __esm({
               return;
             }
             if (streamEvent.type === "retry") {
+              this.lastCandidateTexts.clear();
+              this.textDuplicateTrackers.clear();
               yield { type: GeminiEventType.Retry };
               continue;
             }
@@ -74956,7 +74962,20 @@ var init_turn = __esm({
             }
             const text = getResponseText(resp);
             if (text) {
-              yield { type: GeminiEventType.Content, value: text };
+              const candidateIndex = resp.candidates?.[0]?.index ?? 0;
+              const previousText = this.lastCandidateTexts.get(candidateIndex) ?? "";
+              let delta;
+              if (text === previousText || text.trim() && text.trim() === previousText.trim() || previousText.includes(text)) {
+                delta = null;
+              } else if (text.startsWith(previousText)) {
+                delta = text.slice(previousText.length);
+              } else {
+                delta = text;
+              }
+              this.lastCandidateTexts.set(candidateIndex, text);
+              if (delta && delta.length > 0 && this.shouldEmitTextDelta(candidateIndex, delta)) {
+                yield { type: GeminiEventType.Content, value: delta };
+              }
             }
             const functionCalls = resp.functionCalls ?? [];
             for (const fnCall of functionCalls) {
@@ -75028,6 +75047,31 @@ var init_turn = __esm({
       }
       normalizeThought(thought) {
         return `${thought.subject}::${thought.description}`.toLowerCase().replace(/\s+/g, " ").trim();
+      }
+      shouldEmitTextDelta(index, delta) {
+        const MIN_LENGTH_FOR_DEDUP = 80;
+        const normalized2 = delta.toLowerCase().replace(/\s+/g, " ").trim();
+        if (!normalized2 || delta.length < MIN_LENGTH_FOR_DEDUP) {
+          return true;
+        }
+        let tracker = this.textDuplicateTrackers.get(index);
+        if (!tracker) {
+          tracker = /* @__PURE__ */ new Map();
+          this.textDuplicateTrackers.set(index, tracker);
+        }
+        const count = tracker.get(normalized2) ?? 0;
+        if (count >= 1) {
+          tracker.set(normalized2, count + 1);
+          return false;
+        }
+        tracker.set(normalized2, count + 1);
+        if (tracker.size > 20) {
+          const iterator = tracker.keys().next();
+          if (!iterator.done && iterator.value !== void 0) {
+            tracker.delete(iterator.value);
+          }
+        }
+        return true;
       }
     };
   }
@@ -317564,7 +317608,7 @@ init_open();
 import process32 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "939f9b5a";
+var GIT_COMMIT_INFO = "ea7d9a0f";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();

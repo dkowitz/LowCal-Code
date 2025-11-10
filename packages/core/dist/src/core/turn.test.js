@@ -85,6 +85,108 @@ describe("Turn", () => {
             ]);
             expect(turn.getDebugResponses().length).toBe(2);
         });
+        it("should only emit incremental content when chunks contain accumulated text", async () => {
+            const mockResponseStream = (async function* () {
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [{ text: "Hello" }] } }],
+                    },
+                };
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [{ text: "Hello world" }] } }],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            for await (const event of turn.run([{ text: "Hi" }], new AbortController().signal)) {
+                events.push(event);
+            }
+            expect(events).toEqual([
+                { type: GeminiEventType.Content, value: "Hello" },
+                { type: GeminiEventType.Content, value: " world" },
+            ]);
+        });
+        it("should ignore duplicate content chunks with no new text", async () => {
+            const mockResponseStream = (async function* () {
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [{ text: "Hello" }] } }],
+                    },
+                };
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [{ text: "Hello" }] } }],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            for await (const event of turn.run([{ text: "Hi" }], new AbortController().signal)) {
+                events.push(event);
+            }
+            expect(events).toEqual([{ type: GeminiEventType.Content, value: "Hello" }]);
+        });
+        it("should ignore chunks that are already contained within previous output", async () => {
+            const mockResponseStream = (async function* () {
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [{ text: "Hello world" }] } }],
+                    },
+                };
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [{ text: "world" }] } }],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            for await (const event of turn.run([{ text: "Hi" }], new AbortController().signal)) {
+                events.push(event);
+            }
+            expect(events).toEqual([
+                { type: GeminiEventType.Content, value: "Hello world" },
+            ]);
+        });
+        it("should suppress repeated large text segments when the provider replays them", async () => {
+            const paragraph = "You're absolutely right! I was using the wrong commands when you're actually using Tailscale with Mullvad exit nodes, so I need to rewrite the VPN manager to shell out to the Tailscale CLI instead of Mullvad's tooling.";
+            const mockResponseStream = (async function* () {
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [{ text: paragraph }] } }],
+                    },
+                };
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [
+                            {
+                                content: {
+                                    parts: [{ text: `${paragraph}\n\n${paragraph}` }],
+                                },
+                            },
+                        ],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            for await (const event of turn.run([{ text: "Hi" }], new AbortController().signal)) {
+                events.push(event);
+            }
+            expect(events).toEqual([
+                { type: GeminiEventType.Content, value: paragraph },
+            ]);
+        });
         it("should yield tool_call_request events for function calls", async () => {
             const mockResponseStream = (async function* () {
                 yield {

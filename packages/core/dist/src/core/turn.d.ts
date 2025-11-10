@@ -161,10 +161,13 @@ export declare class Turn {
     private debugResponses;
     finishReason: FinishReason | undefined;
     private emittedThoughtHashes;
+    private lastCandidateTexts;
+    private textDuplicateTrackers;
     constructor(chat: GeminiChat, prompt_id: string);
     run(req: PartListUnion, signal: AbortSignal): AsyncGenerator<ServerGeminiStreamEvent>;
     private handlePendingFunctionCall;
     getDebugResponses(): GenerateContentResponse[];
     private shouldEmitThought;
     private normalizeThought;
+    private shouldEmitTextDelta;
 }

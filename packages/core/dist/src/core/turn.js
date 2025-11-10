@@ -45,6 +45,8 @@ export class Turn {
     debugResponses;
     finishReason;
     emittedThoughtHashes;
+    lastCandidateTexts;
+    textDuplicateTrackers;
     constructor(chat, prompt_id) {
         this.chat = chat;
         this.prompt_id = prompt_id;
@@ -52,6 +54,8 @@ export class Turn {
         this.debugResponses = [];
         this.finishReason = undefined;
         this.emittedThoughtHashes = new Set();
+        this.lastCandidateTexts = new Map();
+        this.textDuplicateTrackers = new Map();
     }
     // The run method yields simpler events suitable for server logic
     async *run(req, signal) {
@@ -71,6 +75,8 @@ export class Turn {
                 }
                 // Handle the new RETRY event
                 if (streamEvent.type === "retry") {
+                    this.lastCandidateTexts.clear();
+                    this.textDuplicateTrackers.clear();
                     yield { type: GeminiEventType.Retry };
                     continue; // Skip to the next event in the stream
                 }
@@ -104,7 +110,24 @@ export class Turn {
                 }
                 const text = getResponseText(resp);
                 if (text) {
-                    yield { type: GeminiEventType.Content, value: text };
+                    const candidateIndex = resp.candidates?.[0]?.index ?? 0;
+                    const previousText = this.lastCandidateTexts.get(candidateIndex) ?? "";
+                    let delta;
+                    if (text === previousText ||
+                        (text.trim() && text.trim() === previousText.trim()) ||
+                        previousText.includes(text)) {
+                        delta = null;
+                    }
+                    else if (text.startsWith(previousText)) {
+                        delta = text.slice(previousText.length);
+                    }
+                    else {
+                        delta = text;
+                    }
+                    this.lastCandidateTexts.set(candidateIndex, text);
+                    if (delta && delta.length > 0 && this.shouldEmitTextDelta(candidateIndex, delta)) {
+                        yield { type: GeminiEventType.Content, value: delta };
+                    }
                 }
                 // Handle function calls (requesting tool execution)
                 const functionCalls = resp.functionCalls ?? [];
@@ -188,6 +211,31 @@ export class Turn {
             .toLowerCase()
             .replace(/\s+/g, " ")
             .trim();
+    }
+    shouldEmitTextDelta(index, delta) {
+        const MIN_LENGTH_FOR_DEDUP = 80;
+        const normalized = delta.toLowerCase().replace(/\s+/g, " ").trim();
+        if (!normalized || delta.length < MIN_LENGTH_FOR_DEDUP) {
+            return true;
+        }
+        let tracker = this.textDuplicateTrackers.get(index);
+        if (!tracker) {
+            tracker = new Map();
+            this.textDuplicateTrackers.set(index, tracker);
+        }
+        const count = tracker.get(normalized) ?? 0;
+        if (count >= 1) {
+            tracker.set(normalized, count + 1);
+            return false;
+        }
+        tracker.set(normalized, count + 1);
+        if (tracker.size > 20) {
+            const iterator = tracker.keys().next();
+            if (!iterator.done && iterator.value !== undefined) {
+                tracker.delete(iterator.value);
+            }
+        }
+        return true;
     }
 }
 //# sourceMappingURL=turn.js.map
