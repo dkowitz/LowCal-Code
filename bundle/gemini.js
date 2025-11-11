@@ -74907,6 +74907,8 @@ var init_turn = __esm({
       emittedThoughtHashes;
       lastCandidateTexts;
       textDuplicateTrackers;
+      thinkingBlockTrackers;
+      finishedEventEmitted;
       constructor(chat, prompt_id) {
         this.chat = chat;
         this.prompt_id = prompt_id;
@@ -74916,6 +74918,8 @@ var init_turn = __esm({
         this.emittedThoughtHashes = /* @__PURE__ */ new Set();
         this.lastCandidateTexts = /* @__PURE__ */ new Map();
         this.textDuplicateTrackers = /* @__PURE__ */ new Map();
+        this.thinkingBlockTrackers = /* @__PURE__ */ new Map();
+        this.finishedEventEmitted = false;
       }
       // The run method yields simpler events suitable for server logic
       async *run(req, signal) {
@@ -74934,6 +74938,9 @@ var init_turn = __esm({
             if (streamEvent.type === "retry") {
               this.lastCandidateTexts.clear();
               this.textDuplicateTrackers.clear();
+              this.thinkingBlockTrackers.clear();
+              this.emittedThoughtHashes.clear();
+              this.finishedEventEmitted = false;
               yield { type: GeminiEventType.Retry };
               continue;
             }
@@ -74973,8 +74980,11 @@ var init_turn = __esm({
                 delta = text;
               }
               this.lastCandidateTexts.set(candidateIndex, text);
-              if (delta && delta.length > 0 && this.shouldEmitTextDelta(candidateIndex, delta)) {
-                yield { type: GeminiEventType.Content, value: delta };
+              if (delta && delta.length > 0) {
+                const filteredDelta = this.filterThinkingLineDuplicates(candidateIndex, delta);
+                if (filteredDelta.length > 0 && this.shouldEmitTextDelta(candidateIndex, filteredDelta)) {
+                  yield { type: GeminiEventType.Content, value: filteredDelta };
+                }
               }
             }
             const functionCalls = resp.functionCalls ?? [];
@@ -74985,8 +74995,9 @@ var init_turn = __esm({
               }
             }
             const finishReason = resp.candidates?.[0]?.finishReason;
-            if (finishReason) {
+            if (finishReason && !this.finishedEventEmitted) {
               this.finishReason = finishReason;
+              this.finishedEventEmitted = true;
               yield {
                 type: GeminiEventType.Finished,
                 value: finishReason
@@ -75049,7 +75060,8 @@ var init_turn = __esm({
         return `${thought.subject}::${thought.description}`.toLowerCase().replace(/\s+/g, " ").trim();
       }
       shouldEmitTextDelta(index, delta) {
-        const MIN_LENGTH_FOR_DEDUP = 80;
+        const isThinkingBlock = delta.includes("\u{1F4AD}");
+        const MIN_LENGTH_FOR_DEDUP = isThinkingBlock ? 20 : 80;
         const normalized2 = delta.toLowerCase().replace(/\s+/g, " ").trim();
         if (!normalized2 || delta.length < MIN_LENGTH_FOR_DEDUP) {
           return true;
@@ -75072,6 +75084,39 @@ var init_turn = __esm({
           }
         }
         return true;
+      }
+      filterThinkingLineDuplicates(index, delta) {
+        const thinkingRegex = /(\s*💭[^\n]*(?:\n\s{2,}\*[^\n]*)*)/g;
+        let result = "";
+        let lastIndex = 0;
+        let match2;
+        while ((match2 = thinkingRegex.exec(delta)) !== null) {
+          result += delta.slice(lastIndex, match2.index);
+          const block2 = match2[0];
+          if (this.shouldEmitThinkingTextBlock(index, block2)) {
+            result += block2;
+          }
+          lastIndex = thinkingRegex.lastIndex;
+        }
+        result += delta.slice(lastIndex);
+        return result;
+      }
+      shouldEmitThinkingTextBlock(index, block2) {
+        if (!block2.trim()) {
+          return false;
+        }
+        let tracker = this.thinkingBlockTrackers.get(index);
+        if (!tracker) {
+          tracker = /* @__PURE__ */ new Map();
+          this.thinkingBlockTrackers.set(index, tracker);
+        }
+        const normalized2 = block2.replace(/💭/g, "").toLowerCase().replace(/\s+/g, " ").trim();
+        if (!normalized2) {
+          return true;
+        }
+        const count = tracker.get(normalized2) ?? 0;
+        tracker.set(normalized2, count + 1);
+        return count === 0;
       }
     };
   }
@@ -317608,7 +317653,7 @@ init_open();
 import process32 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "ea7d9a0f";
+var GIT_COMMIT_INFO = "d6319b01";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();

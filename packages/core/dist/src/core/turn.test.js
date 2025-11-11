@@ -187,6 +187,58 @@ describe("Turn", () => {
                 { type: GeminiEventType.Content, value: paragraph },
             ]);
         });
+        it("should drop repeated thinking lines that are appended over multiple chunks", async () => {
+            const thinkingLine = "  💭 Now let me run the test again to see if it works with the manually set socksProxy property.";
+            const mockResponseStream = (async function* () {
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [{ text: thinkingLine }] } }],
+                    },
+                };
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [
+                            { content: { parts: [{ text: `${thinkingLine}\n${thinkingLine}` }] } },
+                        ],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            for await (const event of turn.run([{ text: "Hi" }], new AbortController().signal)) {
+                events.push(event);
+            }
+            expect(events).toEqual([
+                { type: GeminiEventType.Content, value: thinkingLine },
+            ]);
+        });
+        it("should drop duplicate thinking lines that arrive within a single chunk", async () => {
+            const thinkingLine = "  💭 Now let me run the test again to see if it works with the manually set socksProxy property.";
+            const mockResponseStream = (async function* () {
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [
+                            {
+                                content: {
+                                    parts: [{ text: `${thinkingLine}\n${thinkingLine}\n${thinkingLine}` }],
+                                },
+                            },
+                        ],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            for await (const event of turn.run([{ text: "Hi" }], new AbortController().signal)) {
+                events.push(event);
+            }
+            expect(events).toEqual([
+                { type: GeminiEventType.Content, value: thinkingLine },
+            ]);
+        });
         it("should yield tool_call_request events for function calls", async () => {
             const mockResponseStream = (async function* () {
                 yield {

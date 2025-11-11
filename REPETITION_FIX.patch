@@ -1,0 +1,113 @@
+diff --git a/packages/core/src/core/turn.ts b/packages/core/src/core/turn.ts
+index dcd48554..00778abb 100644
+--- a/packages/core/src/core/turn.ts
++++ b/packages/core/src/core/turn.ts
+@@ -241,6 +241,7 @@ export class Turn {
+   private emittedThoughtHashes: Set<string>;
+   private lastCandidateTexts: Map<number, string>;
+   private textDuplicateTrackers: Map<number, Map<string, number>>;
++  private thinkingBlockTrackers: Map<number, Map<string, number>>;
+ 
+   constructor(
+     private readonly chat: GeminiChat,
+@@ -252,6 +253,7 @@ export class Turn {
+     this.emittedThoughtHashes = new Set();
+     this.lastCandidateTexts = new Map();
+     this.textDuplicateTrackers = new Map();
++    this.thinkingBlockTrackers = new Map();
+   }
+   // The run method yields simpler events suitable for server logic
+   async *run(
+@@ -281,6 +283,8 @@ export class Turn {
+         if (streamEvent.type === "retry") {
+           this.lastCandidateTexts.clear();
+           this.textDuplicateTrackers.clear();
++          this.thinkingBlockTrackers.clear();
++          this.emittedThoughtHashes.clear(); // CRITICAL: Reset thought deduplication on retry
+           yield { type: GeminiEventType.Retry };
+           continue; // Skip to the next event in the stream
+         }
+@@ -336,8 +340,17 @@ export class Turn {
+           }
+ 
+           this.lastCandidateTexts.set(candidateIndex, text);
+-          if (delta && delta.length > 0 && this.shouldEmitTextDelta(candidateIndex, delta)) {
+-            yield { type: GeminiEventType.Content, value: delta };
++          if (delta && delta.length > 0) {
++            const filteredDelta = this.filterThinkingLineDuplicates(
++              candidateIndex,
++              delta,
++            );
++            if (
++              filteredDelta.length > 0 &&
++              this.shouldEmitTextDelta(candidateIndex, filteredDelta)
++            ) {
++              yield { type: GeminiEventType.Content, value: filteredDelta };
++            }
+           }
+         }
+ 
+@@ -445,7 +458,10 @@ export class Turn {
+   }
+ 
+   private shouldEmitTextDelta(index: number, delta: string): boolean {
+-    const MIN_LENGTH_FOR_DEDUP = 80;
++    // For thinking blocks, use a lower threshold since they tend to be shorter
++    const isThinkingBlock = delta.includes("💭");
++    const MIN_LENGTH_FOR_DEDUP = isThinkingBlock ? 20 : 80;
++    
+     const normalized = delta.toLowerCase().replace(/\s+/g, " ").trim();
+ 
+     if (!normalized || delta.length < MIN_LENGTH_FOR_DEDUP) {
+@@ -473,4 +489,51 @@ export class Turn {
+     }
+     return true;
+   }
++
++  private filterThinkingLineDuplicates(index: number, delta: string): string {
++    const thinkingRegex = /(\\s*💭[^\\n]*(?:\\n\\s{2,}\\*[^\\n]*)*)/g;
++    let result = "";
++    let lastIndex = 0;
++    let match: RegExpExecArray | null;
++
++    while ((match = thinkingRegex.exec(delta)) !== null) {
++      result += delta.slice(lastIndex, match.index);
++      const block = match[0];
++      if (this.shouldEmitThinkingTextBlock(index, block)) {
++        result += block;
++      }
++      lastIndex = thinkingRegex.lastIndex;
++    }
++
++    result += delta.slice(lastIndex);
++    return result;
++  }
++
++  private shouldEmitThinkingTextBlock(index: number, block: string): boolean {
++    if (!block.trim()) {
++      return false;
++    }
++
++    let tracker = this.thinkingBlockTrackers.get(index);
++    if (!tracker) {
++      tracker = new Map();
++      this.thinkingBlockTrackers.set(index, tracker);
++    }
++
++    // Use a more conservative normalization that preserves semantic meaning
++    // Remove only the emoji and extra whitespace, but keep punctuation and structure
++    const normalized = block
++      .replace(/💭/g, "") // Remove the thinking emoji
++      .toLowerCase()
++      .replace(/\\s+/g, " ") // Normalize whitespace
++      .trim();
++
++    if (!normalized) {
++      return true;
++    }
++
++    const count = tracker.get(normalized) ?? 0;
++    tracker.set(normalized, count + 1);
++    return count === 0;
++  }
+ }

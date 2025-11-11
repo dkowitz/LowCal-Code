@@ -47,6 +47,8 @@ export class Turn {
     emittedThoughtHashes;
     lastCandidateTexts;
     textDuplicateTrackers;
+    thinkingBlockTrackers;
+    finishedEventEmitted;
     constructor(chat, prompt_id) {
         this.chat = chat;
         this.prompt_id = prompt_id;
@@ -56,6 +58,8 @@ export class Turn {
         this.emittedThoughtHashes = new Set();
         this.lastCandidateTexts = new Map();
         this.textDuplicateTrackers = new Map();
+        this.thinkingBlockTrackers = new Map();
+        this.finishedEventEmitted = false;
     }
     // The run method yields simpler events suitable for server logic
     async *run(req, signal) {
@@ -77,6 +81,9 @@ export class Turn {
                 if (streamEvent.type === "retry") {
                     this.lastCandidateTexts.clear();
                     this.textDuplicateTrackers.clear();
+                    this.thinkingBlockTrackers.clear();
+                    this.emittedThoughtHashes.clear(); // CRITICAL: Reset thought deduplication on retry
+                    this.finishedEventEmitted = false; // Reset finished flag on retry
                     yield { type: GeminiEventType.Retry };
                     continue; // Skip to the next event in the stream
                 }
@@ -125,8 +132,12 @@ export class Turn {
                         delta = text;
                     }
                     this.lastCandidateTexts.set(candidateIndex, text);
-                    if (delta && delta.length > 0 && this.shouldEmitTextDelta(candidateIndex, delta)) {
-                        yield { type: GeminiEventType.Content, value: delta };
+                    if (delta && delta.length > 0) {
+                        const filteredDelta = this.filterThinkingLineDuplicates(candidateIndex, delta);
+                        if (filteredDelta.length > 0 &&
+                            this.shouldEmitTextDelta(candidateIndex, filteredDelta)) {
+                            yield { type: GeminiEventType.Content, value: filteredDelta };
+                        }
                     }
                 }
                 // Handle function calls (requesting tool execution)
@@ -139,9 +150,11 @@ export class Turn {
                 }
                 // Check if response was truncated or stopped for various reasons
                 const finishReason = resp.candidates?.[0]?.finishReason;
-                // This is the key change: Only yield 'Finished' if there is a finishReason.
-                if (finishReason) {
+                // Only yield 'Finished' once, on the first chunk with a finishReason.
+                // This prevents premature turn termination when multiple chunks have finish reasons.
+                if (finishReason && !this.finishedEventEmitted) {
                     this.finishReason = finishReason;
+                    this.finishedEventEmitted = true;
                     yield {
                         type: GeminiEventType.Finished,
                         value: finishReason,
@@ -213,7 +226,9 @@ export class Turn {
             .trim();
     }
     shouldEmitTextDelta(index, delta) {
-        const MIN_LENGTH_FOR_DEDUP = 80;
+        // For thinking blocks, use a lower threshold since they tend to be shorter
+        const isThinkingBlock = delta.includes("💭");
+        const MIN_LENGTH_FOR_DEDUP = isThinkingBlock ? 20 : 80;
         const normalized = delta.toLowerCase().replace(/\s+/g, " ").trim();
         if (!normalized || delta.length < MIN_LENGTH_FOR_DEDUP) {
             return true;
@@ -236,6 +251,45 @@ export class Turn {
             }
         }
         return true;
+    }
+    filterThinkingLineDuplicates(index, delta) {
+        const thinkingRegex = /(\s*💭[^\n]*(?:\n\s{2,}\*[^\n]*)*)/g;
+        let result = "";
+        let lastIndex = 0;
+        let match;
+        while ((match = thinkingRegex.exec(delta)) !== null) {
+            result += delta.slice(lastIndex, match.index);
+            const block = match[0];
+            if (this.shouldEmitThinkingTextBlock(index, block)) {
+                result += block;
+            }
+            lastIndex = thinkingRegex.lastIndex;
+        }
+        result += delta.slice(lastIndex);
+        return result;
+    }
+    shouldEmitThinkingTextBlock(index, block) {
+        if (!block.trim()) {
+            return false;
+        }
+        let tracker = this.thinkingBlockTrackers.get(index);
+        if (!tracker) {
+            tracker = new Map();
+            this.thinkingBlockTrackers.set(index, tracker);
+        }
+        // Use a more conservative normalization that preserves semantic meaning
+        // Remove only the emoji and extra whitespace, but keep punctuation and structure
+        const normalized = block
+            .replace(/💭/g, "") // Remove the thinking emoji
+            .toLowerCase()
+            .replace(/\s+/g, " ") // Normalize whitespace
+            .trim();
+        if (!normalized) {
+            return true;
+        }
+        const count = tracker.get(normalized) ?? 0;
+        tracker.set(normalized, count + 1);
+        return count === 0;
     }
 }
 //# sourceMappingURL=turn.js.map

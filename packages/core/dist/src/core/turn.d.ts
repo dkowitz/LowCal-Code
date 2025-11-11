@@ -163,6 +163,8 @@ export declare class Turn {
     private emittedThoughtHashes;
     private lastCandidateTexts;
     private textDuplicateTrackers;
+    private thinkingBlockTrackers;
+    private finishedEventEmitted;
     constructor(chat: GeminiChat, prompt_id: string);
     run(req: PartListUnion, signal: AbortSignal): AsyncGenerator<ServerGeminiStreamEvent>;
     private handlePendingFunctionCall;
@@ -170,4 +172,6 @@ export declare class Turn {
     private shouldEmitThought;
     private normalizeThought;
     private shouldEmitTextDelta;
+    private filterThinkingLineDuplicates;
+    private shouldEmitThinkingTextBlock;
 }
