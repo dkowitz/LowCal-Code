@@ -38,6 +38,11 @@ import { CommandService } from "../../services/CommandService.js";
 import { BuiltinCommandLoader } from "../../services/BuiltinCommandLoader.js";
 import { FileCommandLoader } from "../../services/FileCommandLoader.js";
 import { McpPromptLoader } from "../../services/McpPromptLoader.js";
+
+function quoteForShell(value: string): string {
+  const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  return `"${escaped}"`;
+}
 import type { SessionLoggingController } from "../../services/SessionMarkdownLogger.js";
 
 /**
@@ -86,6 +91,12 @@ export const useSlashCommandProcessor = (
   const [confirmationRequest, setConfirmationRequest] = useState<null | {
     prompt: React.ReactNode;
     onConfirm: (confirmed: boolean) => void;
+  }>(null);
+  const [inputRequest, setInputRequest] = useState<null | {
+    prompt: React.ReactNode;
+    placeholder?: string;
+    onSubmit: (value: string) => void;
+    onCancel: () => void;
   }>(null);
   const [quitConfirmationRequest, setQuitConfirmationRequest] =
     useState<null | {
@@ -633,6 +644,58 @@ export const useSlashCommandProcessor = (
                     true,
                   );
                 }
+                case "input_request": {
+                  const { submitted, value } = await new Promise<{
+                    submitted: boolean;
+                    value: string;
+                  }>((resolve) => {
+                    setInputRequest({
+                      prompt: result.prompt,
+                      placeholder: result.placeholder,
+                      onSubmit: (inputValue) => {
+                        setInputRequest(null);
+                        resolve({ submitted: true, value: inputValue });
+                      },
+                      onCancel: () => {
+                        setInputRequest(null);
+                        resolve({ submitted: false, value: "" });
+                      },
+                    });
+                  });
+
+                  if (!submitted) {
+                    addItem(
+                      {
+                        type: MessageType.INFO,
+                        text: "Operation cancelled.",
+                      },
+                      Date.now(),
+                    );
+                    return { type: "handled" };
+                  }
+
+                  const { command } = result;
+                  let query = command.query ?? "";
+                  const trimmedAnswer = value.trim();
+                  if (command.appendAnswerToQuery && trimmedAnswer) {
+                    const preamble =
+                      command.answerPreamble ?? "Clarifying answers";
+                    query = `${query}\n\n${preamble}:\n${trimmedAnswer}`;
+                  }
+
+                  const parts = ["/" + command.name];
+                  if (command.mode) {
+                    parts.push(command.mode);
+                  }
+                  if (query) {
+                    parts.push(quoteForShell(query));
+                  }
+                  if (command.extraArgs?.length) {
+                    parts.push(...command.extraArgs);
+                  }
+                  const raw = parts.join(" ").trim();
+                  return await handleSlashCommand(raw);
+                }
                 default: {
                   const unhandled: never = result;
                   throw new Error(
@@ -711,6 +774,7 @@ export const useSlashCommandProcessor = (
       setSessionShellAllowlist,
       setIsProcessing,
       setConfirmationRequest,
+      setInputRequest,
       openModelSelectionDialog,
       session.stats,
       loggingController,
@@ -724,6 +788,7 @@ export const useSlashCommandProcessor = (
     commandContext,
     shellConfirmationRequest,
     confirmationRequest,
+    inputRequest,
     quitConfirmationRequest,
   };
 };

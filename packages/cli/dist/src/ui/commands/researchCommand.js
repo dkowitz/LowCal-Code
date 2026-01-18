@@ -4,18 +4,40 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { ResearchTool, partToString, toolConfig, ToolNames, } from "@qwen-code/qwen-code-core";
+import React from "react";
+import { Box, Text } from "ink";
 import { parse } from "shell-quote";
 import { CommandKind, } from "../commands/types.js";
+import { Colors } from "../colors.js";
 const ALLOWED_MODES = [
     "speed",
     "balanced",
     "quality",
+    "max",
 ];
+function stripJsonFence(text) {
+    return text.replace(/^\s*```(?:json)?/i, "").replace(/```$/i, "").trim();
+}
+function isComplexQuery(query) {
+    const normalized = query.trim();
+    if (!normalized) {
+        return false;
+    }
+    const wordCount = normalized.split(/\s+/u).length;
+    const sentenceCount = normalized.split(/[.!?]+/u).filter(Boolean).length;
+    const conjunctions = /\b(and|or|versus|compare|vs\.?|along with|as well as)\b/iu;
+    const hasConjunctions = conjunctions.test(normalized);
+    const hasMultiClause = normalized.includes(";") || normalized.includes(":");
+    return (wordCount >= 12 ||
+        sentenceCount >= 2 ||
+        hasConjunctions ||
+        hasMultiClause);
+}
 function parseResearchArgs(args) {
     const trimmed = args.trim();
     if (!trimmed) {
         return {
-            error: "Research command requires a query. Usage: /research <mode> <query>\nAvailable modes: speed, balanced, quality (default is 'balanced')",
+            error: "Research command requires a query. Usage: /research <mode> <query> [--clarify|--no-clarify]\nAvailable modes: speed, balanced, quality, max (default is 'balanced')",
         };
     }
     let rawTokens;
@@ -40,24 +62,42 @@ function parseResearchArgs(args) {
         .filter((token) => token.length > 0);
     if (tokens.length === 0) {
         return {
-            error: "Research command requires a query. Usage: /research <mode> <query>\nAvailable modes: speed, balanced, quality (default is 'balanced')",
+            error: "Research command requires a query. Usage: /research <mode> <query> [--clarify|--no-clarify]\nAvailable modes: speed, balanced, quality, max (default is 'balanced')",
         };
     }
-    const firstToken = tokens[0]?.toLowerCase();
+    let clarifyMode = "auto";
+    const filteredTokens = tokens.filter((token) => {
+        const normalized = token.toLowerCase();
+        if (normalized === "--clarify") {
+            clarifyMode = "force";
+            return false;
+        }
+        if (normalized === "--no-clarify") {
+            clarifyMode = "skip";
+            return false;
+        }
+        return true;
+    });
+    if (filteredTokens.length === 0) {
+        return {
+            error: "Research command requires a query. Usage: /research <mode> <query> [--clarify|--no-clarify]\nAvailable modes: speed, balanced, quality, max (default is 'balanced')",
+        };
+    }
+    const firstToken = filteredTokens[0]?.toLowerCase();
     const isMode = (value) => ALLOWED_MODES.includes(value ?? "");
     let mode = "balanced";
-    let queryTokens = tokens;
+    let queryTokens = filteredTokens;
     if (isMode(firstToken)) {
         mode = firstToken;
-        queryTokens = tokens.slice(1);
+        queryTokens = filteredTokens.slice(1);
     }
     const query = queryTokens.join(" ").trim();
     if (!query) {
         return {
-            error: "Research command requires a query. Usage: /research <mode> <query>\nAvailable modes: speed, balanced, quality (default is 'balanced')",
+            error: "Research command requires a query. Usage: /research <mode> <query> [--clarify|--no-clarify]\nAvailable modes: speed, balanced, quality, max (default is 'balanced')",
         };
     }
-    return { mode, query };
+    return { mode, query, clarifyMode };
 }
 function getActiveCollectionAllowlist() {
     const activeCollection = toolConfig?.activeCollection;
@@ -82,7 +122,7 @@ function getActiveCollectionAllowlist() {
 }
 export const researchCommand = {
     name: "research",
-    description: "Conduct deep internet research with citation support (speed, balanced, quality modes)",
+    description: "Conduct deep internet research with citation support (speed, balanced, quality, max modes)",
     kind: CommandKind.BUILT_IN,
     action: async (context, args) => {
         const { ui } = context;
@@ -123,7 +163,7 @@ export const researchCommand = {
                 content: parsed.error,
             };
         }
-        const { mode, query } = parsed;
+        const { mode, query, clarifyMode } = parsed;
         const config = context.services.config;
         if (!config) {
             return {
@@ -140,7 +180,7 @@ export const researchCommand = {
                 content: "The tool registry is unavailable, so research cannot proceed. Try running /toolset list or restarting LowCal.",
             };
         }
-        const allowlist = getActiveCollectionAllowlist();
+        const allowlist = mode === "max" ? null : getActiveCollectionAllowlist();
         const isAllowed = (toolName) => !allowlist || allowlist.has(toolName);
         if (!isAllowed(ToolNames.WEB_FETCH) || !toolRegistry.getTool(ToolNames.WEB_FETCH)) {
             return {
@@ -167,6 +207,148 @@ export const researchCommand = {
         const toolLabel = enabledSearchTools
             .map((name) => formatToolLabel(name))
             .join(" + ");
+        if (mode === "max" && clarifyMode !== "skip") {
+            const geminiClient = config.getGeminiClient?.();
+            if (geminiClient) {
+                try {
+                    const abortController = new AbortController();
+                    const complexityHigh = isComplexQuery(query);
+                    const forceQuestions = clarifyMode === "force" || complexityHigh;
+                    const clarifyPrompt = forceQuestions
+                        ? `
+You are a research assistant preparing a deep-dive investigation. Generate clarifying questions that would materially improve scope, framing, or depth.
+
+Return valid JSON only with this schema:
+{
+  "reason": "Short reason",
+  "questions": ["Question 1", "Question 2"]
+}
+
+Guidelines:
+- Provide 2-4 questions.
+- Questions should narrow scope, define priorities, or uncover constraints.
+- Avoid generic questions that don't change research direction.
+
+User request:
+${query}
+`
+                        : `
+You are a research assistant. Decide if the user should clarify their request before a deep research run.
+
+Return valid JSON only with this schema:
+{
+  "should_clarify": true,
+  "reason": "Short reason",
+  "questions": ["Question 1", "Question 2"]
+}
+
+Guidelines:
+- Ask clarifying questions when it would materially change scope or outcomes.
+- Keep to 1-4 questions.
+- If no clarification is needed, set should_clarify to false and questions to [].
+
+User request:
+${query}
+`;
+                    const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: clarifyPrompt }] }], {}, abortController.signal);
+                    const candidates = response.response
+                        ?.candidates ??
+                        response.candidates ??
+                        [];
+                    const parts = Array.isArray(candidates)
+                        ? candidates[0]?.content
+                            ?.parts ?? []
+                        : [];
+                    const raw = Array.isArray(parts)
+                        ? parts
+                            .map((part) => typeof part === "string"
+                            ? part
+                            : part && typeof part === "object" && "text" in part
+                                ? String(part.text ?? "")
+                                : "")
+                            .join("")
+                        : "";
+                    const parsedResponse = raw
+                        ? JSON.parse(stripJsonFence(raw))
+                        : null;
+                    const shouldClarify = forceQuestions
+                        ? true
+                        : Boolean(parsedResponse?.should_clarify);
+                    const questions = Array.isArray(parsedResponse?.questions)
+                        ? parsedResponse.questions
+                            .map((item) => String(item).trim())
+                            .filter(Boolean)
+                        : [];
+                    const reason = typeof parsedResponse?.reason === "string"
+                        ? parsedResponse.reason.trim()
+                        : "";
+                    let finalQuestions = questions;
+                    let finalReason = reason;
+                    if (forceQuestions && finalQuestions.length === 0) {
+                        const retryPrompt = `
+Generate 2-3 concrete clarifying questions that would materially improve the research scope.
+Return valid JSON only:
+{
+  "reason": "Short reason",
+  "questions": ["Question 1", "Question 2"]
+}
+
+User request:
+${query}
+`;
+                        const retryResponse = await geminiClient.generateContent([{ role: "user", parts: [{ text: retryPrompt }] }], {}, abortController.signal);
+                        const retryCandidates = retryResponse.response
+                            ?.candidates ??
+                            retryResponse.candidates ??
+                            [];
+                        const retryParts = Array.isArray(retryCandidates)
+                            ? retryCandidates[0]?.content
+                                ?.parts ?? []
+                            : [];
+                        const retryRaw = Array.isArray(retryParts)
+                            ? retryParts
+                                .map((part) => typeof part === "string"
+                                ? part
+                                : part && typeof part === "object" && "text" in part
+                                    ? String(part.text ?? "")
+                                    : "")
+                                .join("")
+                            : "";
+                        const retryParsed = retryRaw ? JSON.parse(stripJsonFence(retryRaw)) : null;
+                        finalQuestions = Array.isArray(retryParsed?.questions)
+                            ? retryParsed.questions
+                                .map((item) => String(item).trim())
+                                .filter(Boolean)
+                            : finalQuestions;
+                        if (typeof retryParsed?.reason === "string" &&
+                            retryParsed.reason.trim().length > 0) {
+                            finalReason = retryParsed.reason.trim();
+                        }
+                    }
+                    if (shouldClarify && finalQuestions.length > 0) {
+                        const prompt = React.createElement(Box, { flexDirection: "column" }, React.createElement(Text, { color: Colors.AccentBlue }, "Clarifying questions for /research max"), finalReason
+                            ? React.createElement(Text, { color: Colors.Gray }, `Reason: ${finalReason}`)
+                            : null, React.createElement(Box, { flexDirection: "column", marginTop: 1 }, ...finalQuestions.map((item, index) => React.createElement(Text, { key: `${index}-${item}` }, `- ${item}`))));
+                        return {
+                            type: "input_request",
+                            prompt,
+                            placeholder: "Answer the questions above...",
+                            command: {
+                                name: "research",
+                                mode,
+                                query,
+                                appendAnswerToQuery: true,
+                                answerPreamble: "Clarifying answers",
+                                extraArgs: ["--no-clarify"],
+                            },
+                        };
+                    }
+                }
+                catch (_error) {
+                    // If clarification fails, proceed with research.
+                }
+            }
+        }
         // Create the research tool with config from context
         const tool = new ResearchTool(config);
         const abortController = new AbortController();

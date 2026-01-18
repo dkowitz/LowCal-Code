@@ -106,6 +106,17 @@ describe("researchCommand", () => {
             content: "Mock research result",
         });
     });
+    it("accepts max mode and forwards it to the research tool", async () => {
+        if (!researchCommand.action) {
+            throw new Error("Action not defined");
+        }
+        await researchCommand.action(mockContext, `max "midwest grid reliability risks"`);
+        expect(buildMock).toHaveBeenCalledWith({
+            mode: "max",
+            query: "midwest grid reliability risks",
+            searchTools: [ToolNames.WEB_SEARCH, ToolNames.SEARXNG_SEARCH],
+        });
+    });
     it("defaults mode to balanced when omitted", async () => {
         if (!researchCommand.action) {
             throw new Error("Action not defined");
@@ -125,7 +136,7 @@ describe("researchCommand", () => {
         expect(result).toEqual({
             type: "message",
             messageType: "error",
-            content: "Research command requires a query. Usage: /research <mode> <query>\nAvailable modes: speed, balanced, quality (default is 'balanced')",
+            content: "Research command requires a query. Usage: /research <mode> <query> [--clarify|--no-clarify]\nAvailable modes: speed, balanced, quality, max (default is 'balanced')",
         });
         expect(buildMock).not.toHaveBeenCalled();
     });

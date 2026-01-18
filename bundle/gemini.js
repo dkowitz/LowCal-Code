@@ -213770,6 +213770,10 @@ Original request:
             return {
               maxResults: 12
             };
+          case "max":
+            return {
+              maxResults: 120
+            };
         }
       }
       emitProgress(updateOutput, message, mode = "append") {
@@ -213805,7 +213809,8 @@ Original request:
         const maxByMode = {
           speed: 4,
           balanced: 6,
-          quality: 8
+          quality: 8,
+          max: 12
         };
         const maxQueries = maxByMode[this.params.mode];
         subQueries = subQueries.slice(0, maxQueries);
@@ -213821,7 +213826,51 @@ Original request:
           subQueries: [{ query: this.params.query }]
         };
       }
-      async buildQueryPlan(signal) {
+      async buildIntentProfile(signal) {
+        const fallback = {
+          intent: this.params.query,
+          constraints: [],
+          assumptions: [],
+          clarifyingQuestions: [],
+          ambiguity: "low"
+        };
+        const geminiClient = this.config.getGeminiClient?.();
+        if (!geminiClient) {
+          return fallback;
+        }
+        const prompt = `
+Analyze the user's research request and summarize intent, constraints, and uncertainties.
+
+Return valid JSON only with this schema:
+{
+  "intent": "Concise statement of what the user ultimately wants",
+  "constraints": ["Any explicit constraints or scope limits"],
+  "assumptions": ["Reasonable assumptions needed to proceed"],
+  "clarifying_questions": ["Questions that would materially change the research scope"],
+  "ambiguity": "low|medium|high"
+}
+
+Keep answers short and specific. If no clarifying questions are needed, return an empty list.
+
+User request:
+${this.params.query}
+`;
+        try {
+          const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+          const raw = await getResponseText2(response) ?? "";
+          const parsed = JSON.parse(this.stripJsonFence(raw || ""));
+          return {
+            intent: (parsed?.intent ?? this.params.query).trim() || this.params.query,
+            constraints: Array.isArray(parsed?.constraints) ? parsed.constraints.map((item) => String(item).trim()).filter(Boolean) : [],
+            assumptions: Array.isArray(parsed?.assumptions) ? parsed.assumptions.map((item) => String(item).trim()).filter(Boolean) : [],
+            clarifyingQuestions: Array.isArray(parsed?.clarifying_questions) ? parsed.clarifying_questions.map((item) => String(item).trim()).filter(Boolean) : [],
+            ambiguity: parsed?.ambiguity === "high" ? "high" : parsed?.ambiguity === "medium" ? "medium" : "low"
+          };
+        } catch (_error) {
+          return fallback;
+        }
+      }
+      async buildQueryPlan(signal, intentProfile) {
         const geminiClient = this.config.getGeminiClient?.();
         if (!geminiClient) {
           return this.buildPlanFallback();
@@ -213829,8 +213878,15 @@ Original request:
         const modeInstructions = {
           speed: "Generate 2-4 precise search queries that cover the essential aspects of the user's request.",
           balanced: "Generate 4-6 targeted search queries covering all major facets of the user's request.",
-          quality: "Generate 6-8 in-depth search queries that exhaustively address every dimension of the user's request."
+          quality: "Generate 6-8 in-depth search queries that exhaustively address every dimension of the user's request.",
+          max: "Generate 10-12 deep, investigative search queries that cover primary, secondary, and emerging dimensions of the user's request."
         };
+        const intentSummary = intentProfile ? [
+          `Intent: ${intentProfile.intent}`,
+          intentProfile.constraints.length ? `Constraints: ${intentProfile.constraints.join("; ")}` : "Constraints: none specified",
+          intentProfile.assumptions.length ? `Assumptions: ${intentProfile.assumptions.join("; ")}` : "Assumptions: none needed",
+          intentProfile.clarifyingQuestions.length ? `Clarifying questions: ${intentProfile.clarifyingQuestions.join("; ")}` : "Clarifying questions: none"
+        ].join("\n") : "";
         const plannerPrompt = `
 You are a research planning assistant. Analyze the user's request, assess its complexity, and produce a structured JSON plan that breaks the request into focused search queries.
 
@@ -213856,6 +213912,10 @@ Respond with valid JSON only, matching this schema:
 }
 
 ${modeInstructions[this.params.mode]}
+
+${intentSummary ? `Intent profile:
+${intentSummary}
+` : ""}
 
 User request:
 ${this.params.query}
@@ -213896,6 +213956,391 @@ ${this.params.query}
               `${baseQuery} expert analysis`,
               `${baseQuery} historical context`
             ];
+          case "max":
+            return [
+              baseQuery,
+              `${baseQuery} recent developments`,
+              `${baseQuery} statistics and data`,
+              `${baseQuery} expert analysis`,
+              `${baseQuery} historical context`,
+              `${baseQuery} risks and opportunities`
+            ];
+        }
+      }
+      buildQueryVariantsForMode(baseQuery, variantLimit) {
+        const variants = this.buildQueryVariants(baseQuery);
+        if (variantLimit && variantLimit > 0) {
+          return variants.slice(0, variantLimit);
+        }
+        return variants;
+      }
+      buildEmergentQueryVariants(baseQuery, variantLimit) {
+        const variants = this.buildQueryVariantsForMode(baseQuery, variantLimit);
+        if (this.params.mode === "max") {
+          return variants.slice(0, 3);
+        }
+        return variants;
+      }
+      buildMaxResearchProfile(plan, intentProfile) {
+        const hasClarifyingAnswers = this.params.query.includes("Clarifying answers:");
+        const wordCount = this.params.query.trim().split(/\s+/u).length;
+        const ambiguity = intentProfile?.ambiguity ?? "medium";
+        const complexityScore = (wordCount >= 24 ? 2 : wordCount >= 14 ? 1 : 0) + (ambiguity === "high" ? 2 : ambiguity === "medium" ? 1 : 0) + (hasClarifyingAnswers ? 1 : 0);
+        const maxSubQueries = complexityScore >= 4 ? 14 : complexityScore >= 2 ? 12 : 10;
+        const maxResults = complexityScore >= 4 ? 80 : complexityScore >= 2 ? 60 : 45;
+        const variantsPerQuery = complexityScore >= 4 ? 5 : complexityScore >= 2 ? 4 : 3;
+        const emergentSlots = complexityScore >= 4 ? 4 : 3;
+        return {
+          maxSubQueries,
+          maxResults,
+          variantsPerQuery,
+          emergentSlots
+        };
+      }
+      buildReportHeader(plan) {
+        return [
+          "# Research Report",
+          "",
+          `- Query: ${this.params.query}`,
+          `- Primary topic: ${plan.primaryTopic}`,
+          `- Generated: ${(/* @__PURE__ */ new Date()).toISOString()}`,
+          "",
+          "---",
+          ""
+        ].join("\n");
+      }
+      extractCandidateText(result) {
+        const candidateParts = (result?.response?.candidates ?? result?.candidates ?? [])?.[0]?.content?.parts ?? [];
+        return candidateParts.map((part) => {
+          if (typeof part === "string") {
+            return part;
+          }
+          if (part && typeof part === "object" && "text" in part && typeof part.text === "string") {
+            return part.text ?? "";
+          }
+          return "";
+        }).join("");
+      }
+      dedupeSubQueries(subQueries) {
+        const seen = /* @__PURE__ */ new Set();
+        const deduped = [];
+        for (const item of subQueries) {
+          const normalized2 = item.query.trim().toLowerCase();
+          if (!normalized2 || seen.has(normalized2)) {
+            continue;
+          }
+          seen.add(normalized2);
+          deduped.push(item);
+        }
+        return deduped;
+      }
+      normalizeReportSpec(raw) {
+        const defaultSpec = {
+          summary: "Comprehensive research report.",
+          targetWordCount: 2e3,
+          sections: [
+            { title: "Executive Summary", focus: "Key findings and context." },
+            { title: "Market Dynamics", focus: "Core mechanisms and structure." },
+            { title: "Emergent Issues", focus: "New risks, opportunities, and shifts." },
+            { title: "Counterpoints and Uncertainties", focus: "Competing views and limitations." },
+            { title: "Open Questions", focus: "Key unknowns and next steps." }
+          ]
+        };
+        if (!raw || typeof raw !== "object") {
+          return defaultSpec;
+        }
+        const candidate = raw;
+        const summary = typeof candidate.summary === "string" && candidate.summary.trim().length > 0 ? candidate.summary.trim() : defaultSpec.summary;
+        const targetWordCount = Number(candidate.target_word_count);
+        const safeTarget = Number.isFinite(targetWordCount) && targetWordCount > 0 ? Math.round(targetWordCount) : defaultSpec.targetWordCount;
+        const sections = Array.isArray(candidate.sections) ? candidate.sections.map((section) => {
+          const typed = section;
+          return {
+            title: typeof typed.title === "string" ? typed.title.trim() : "",
+            focus: typeof typed.focus === "string" ? typed.focus.trim() : ""
+          };
+        }).filter((section) => section.title && section.focus) : [];
+        return {
+          summary,
+          targetWordCount: safeTarget,
+          sections: sections.length > 0 ? sections : defaultSpec.sections
+        };
+      }
+      async buildReportSpec(plan, intentProfile, evidenceHighlights, signal) {
+        const geminiClient = this.config.getGeminiClient?.();
+        if (!geminiClient) {
+          return this.normalizeReportSpec(null);
+        }
+        const intentBlock = intentProfile ? [
+          `Intent: ${intentProfile.intent}`,
+          intentProfile.constraints.length ? `Constraints: ${intentProfile.constraints.join("; ")}` : "Constraints: none specified",
+          intentProfile.assumptions.length ? `Assumptions: ${intentProfile.assumptions.join("; ")}` : "Assumptions: none needed",
+          intentProfile.clarifyingQuestions.length ? `Clarifying questions: ${intentProfile.clarifyingQuestions.join("; ")}` : "Clarifying questions: none"
+        ].join("\n") : "Intent: not available";
+        const prompt = `
+You are an investigative editor. Draft a report blueprint based on the query complexity and evidence breadth.
+
+Return valid JSON only with this schema:
+{
+  "summary": "One-line summary of report focus",
+  "target_word_count": 1800,
+  "sections": [
+    { "title": "Section title", "focus": "What this section should cover" }
+  ]
+}
+
+Guidelines:
+- Choose report length based on complexity and evidence density.
+- Include 5-9 sections max; include Executive Summary and Open Questions.
+- Ensure sections reflect emergent issues, counterpoints, and implications when relevant.
+
+Primary topic: ${plan.primaryTopic}
+Research objectives:
+${plan.subQueries.map((item, index) => `${index + 1}. ${item.query}`).join("\n")}
+
+${intentBlock}
+
+Evidence highlights:
+${evidenceHighlights.slice(0, 30).map((item) => `- ${item}`).join("\n")}
+`;
+        try {
+          const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+          const raw = await getResponseText2(response) ?? this.extractCandidateText(response);
+          const parsed = JSON.parse(this.stripJsonFence(raw || ""));
+          return this.normalizeReportSpec(parsed);
+        } catch (_error) {
+          return this.normalizeReportSpec(null);
+        }
+      }
+      async generateReportSection(section, reportSpec, plan, intentProfile, evidenceHighlights, subtopicBriefs, sourceCatalogForPrompt, signal, avoidPoints) {
+        const geminiClient = this.config.getGeminiClient?.();
+        if (!geminiClient) {
+          return `## ${section.title}
+
+(LLM unavailable for report generation.)`;
+        }
+        const intentBlock = intentProfile ? [
+          `Intent: ${intentProfile.intent}`,
+          intentProfile.constraints.length ? `Constraints: ${intentProfile.constraints.join("; ")}` : "Constraints: none specified",
+          intentProfile.assumptions.length ? `Assumptions: ${intentProfile.assumptions.join("; ")}` : "Assumptions: none needed",
+          intentProfile.clarifyingQuestions.length ? `Clarifying questions: ${intentProfile.clarifyingQuestions.join("; ")}` : "Clarifying questions: none"
+        ].join("\n") : "";
+        const perSectionTarget = Math.max(1, Math.round(reportSpec.targetWordCount / reportSpec.sections.length));
+        const avoidBlock = avoidPoints && avoidPoints.length > 0 ? avoidPoints.map((item) => `- ${item}`).join("\n") : "";
+        const prompt = `
+You are a senior investigative analyst. Write the section below as part of a larger report.
+
+Section title: ${section.title}
+Section focus: ${section.focus}
+Target length: ~${perSectionTarget} words (adjust as needed based on importance).
+
+Primary topic: ${plan.primaryTopic}
+${intentBlock ? `Intent and constraints:
+${intentBlock}
+` : ""}
+
+Subtopic briefs:
+${subtopicBriefs || "No subtopic briefs available."}
+
+Evidence highlights:
+${evidenceHighlights.slice(0, 40).map((item) => `- ${item}`).join("\n")}
+
+${avoidBlock ? `Already covered (avoid repeating):
+${avoidBlock}
+` : ""}
+
+Available Source Catalog (use these numeric identifiers in citations):
+${sourceCatalogForPrompt}
+
+Writing guidelines:
+- Use clear paragraphs with an H2 markdown header (## ${section.title}).
+- Cite every meaningful claim with inline [number] citations.
+- Do not add a Sources/References section.
+- Maintain an analytical, neutral tone.
+- If evidence supports additional depth, exceed the target length rather than truncating.
+- Incorporate a broad spread of sources; avoid over-relying on a single source.
+- Do not return an outline or bullet-only response; write full sentences and paragraphs.
+- Do not restate points listed in the "Already covered" section; focus on new material.
+- Favor a narrative flow that reads like a magazine feature, not a bullet list.
+`;
+        const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+        const responseText = await getResponseText2(result) ?? this.extractCandidateText(result);
+        return responseText.trim();
+      }
+      async polishMaxReport(draft, plan, intentProfile, sourceCatalogForPrompt, signal) {
+        const geminiClient = this.config.getGeminiClient?.();
+        if (!geminiClient) {
+          return draft;
+        }
+        const intentBlock = intentProfile ? [
+          `Intent: ${intentProfile.intent}`,
+          intentProfile.constraints.length ? `Constraints: ${intentProfile.constraints.join("; ")}` : "Constraints: none specified"
+        ].join("\n") : "";
+        const prompt = `
+You are an investigative editor. Rewrite the draft into a cohesive, non-repetitive narrative report with an engaging, reader-forward voice.
+
+Primary topic: ${plan.primaryTopic}
+${intentBlock ? `Intent and constraints:
+${intentBlock}
+` : ""}
+
+Draft report:
+${draft}
+
+Available Source Catalog (use these numeric identifiers in citations):
+${sourceCatalogForPrompt}
+
+Editing rules:
+- Preserve all valid citations; do not drop or invent citations.
+- Remove repetition and consolidate overlapping points.
+- Ensure smooth transitions and a clear narrative arc.
+- Keep section headers, but merge sections that repeat each other.
+- Do not add a Sources/References section.
+- Favor a magazine-feature tone: confident, clear, and subtly conversational without being informal.
+`;
+        const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+        const responseText = await getResponseText2(result) ?? this.extractCandidateText(result);
+        return responseText.trim() || draft;
+      }
+      async dedupeMaxReport(polished, plan, sourceCatalogForPrompt, signal, minRetentionRatio = 0.85) {
+        const geminiClient = this.config.getGeminiClient?.();
+        if (!geminiClient) {
+          return polished;
+        }
+        const wordCount = (text) => text.trim().split(/\s+/u).filter(Boolean).length;
+        const beforeCount = wordCount(polished);
+        const prompt = `
+You are a meticulous editor. Remove near-duplicate sentences or paragraphs while preserving meaning and citations.
+
+Primary topic: ${plan.primaryTopic}
+
+Draft report:
+${polished}
+
+Available Source Catalog (use these numeric identifiers in citations):
+${sourceCatalogForPrompt}
+
+Rules:
+- Preserve citations; do not invent or drop citations.
+- Remove redundant sentences and repeated facts.
+- Keep section headers intact.
+- Do not add a Sources/References section.
+`;
+        const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+        const responseText = await getResponseText2(result) ?? this.extractCandidateText(result);
+        const candidate = responseText.trim();
+        if (!candidate) {
+          return polished;
+        }
+        const afterCount = wordCount(candidate);
+        if (beforeCount > 0 && afterCount / beforeCount < minRetentionRatio) {
+          return polished;
+        }
+        return candidate;
+      }
+      async addSectionBridges(draft, plan, signal) {
+        const geminiClient = this.config.getGeminiClient?.();
+        if (!geminiClient) {
+          return draft;
+        }
+        const sections = draft.split(/\n(?=##\s+)/g);
+        if (sections.length < 3) {
+          return draft;
+        }
+        const intro = sections[0]?.trim() ?? "";
+        const bodySections = sections.slice(1);
+        const bridged = [intro];
+        for (let i = 0; i < bodySections.length; i++) {
+          const current = bodySections[i]?.trim() ?? "";
+          if (!current) {
+            continue;
+          }
+          bridged.push(current);
+          if (i < bodySections.length - 1) {
+            const next = bodySections[i + 1]?.trim() ?? "";
+            if (!next) {
+              continue;
+            }
+            const prompt = `
+Write a 1-2 sentence transition that bridges the end of the current section into the next section.
+Keep it analytical, reader-forward, and avoid repeating facts.
+
+Primary topic: ${plan.primaryTopic}
+
+Current section:
+${current}
+
+Next section:
+${next}
+`;
+            const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+            const responseText = await getResponseText2(result) ?? this.extractCandidateText(result);
+            const bridge = responseText.trim();
+            if (bridge) {
+              bridged.push(bridge);
+            }
+          }
+        }
+        return bridged.filter(Boolean).join("\n\n");
+      }
+      buildMaxFallbackReport(plan, intentProfile, evidenceHighlights, subtopicBriefs) {
+        const intro = intentProfile?.intent ? `This report synthesizes the available evidence to address the intent: ${intentProfile.intent}.` : "This report synthesizes the available evidence to address the research request.";
+        const highlights = evidenceHighlights.slice(0, 18);
+        const highlightParagraphs = highlights.length ? highlights.map((item) => `- ${item}`).join("\n") : "- Evidence summaries were collected but could not be fully synthesized.";
+        return [
+          "## Executive Summary",
+          "",
+          intro,
+          "",
+          "## Evidence Highlights",
+          highlightParagraphs,
+          "",
+          subtopicBriefs ? "## Subtopic Briefs\n\n" + subtopicBriefs : "",
+          "",
+          "## Open Questions",
+          "- Where additional primary sources would materially improve confidence.",
+          "- Which subtopics should be expanded or narrowed based on user priorities."
+        ].filter(Boolean).join("\n");
+      }
+      async discoverEmergentQueries(plan, evidence, signal) {
+        const geminiClient = this.config.getGeminiClient?.();
+        if (!geminiClient) {
+          return [];
+        }
+        const prompt = `
+You are a research strategist. Based on the evidence collected so far, propose additional focused web search queries that would deepen the investigation.
+
+Guidelines:
+- Propose up to 4 new queries.
+- Focus on emergent issues, risks, second-order effects, and missing perspectives.
+- Avoid duplicating existing queries.
+- Provide a short rationale for each.
+
+Primary topic: ${plan.primaryTopic}
+Existing queries:
+${plan.subQueries.map((item, index) => `${index + 1}. ${item.query}`).join("\n")}
+
+Collected evidence (summaries and highlights):
+${evidence}
+
+Respond with valid JSON only:
+{
+  "sub_queries": [
+    { "query": "...", "rationale": "..." }
+  ]
+}
+`;
+        try {
+          const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+          const raw = await getResponseText2(response) ?? "";
+          const parsed = JSON.parse(this.stripJsonFence(raw || ""));
+          const subQueries = Array.isArray(parsed?.sub_queries) ? parsed.sub_queries.map((item) => ({
+            query: (item?.query ?? "").trim(),
+            rationale: (item?.rationale ?? "").trim()
+          })).filter((item) => item.query.length > 0) : [];
+          return this.dedupeSubQueries(subQueries);
+        } catch (_error) {
+          return [];
         }
       }
       formatToolName(toolName) {
@@ -213932,7 +214377,7 @@ ${this.params.query}
         if (sources.length === 0) {
           return "No external sources were captured during search.";
         }
-        const maxForPrompt = 40;
+        const maxForPrompt = this.params.mode === "max" ? 160 : 40;
         return sources.slice(0, maxForPrompt).map((source2, index) => `[${index + 1}] ${this.truncate(source2.title || source2.url, 140)} \u2014 ${source2.url}`).join("\n");
       }
       stripGeneratedSourceSections(content) {
@@ -214077,23 +214522,14 @@ Be selective - only keep sources that truly add value to research on "${topic}".
         const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
         const filename = `${safeSlug}-${timestamp}.md`;
         const filepath = path50.join(reportsDir, filename);
-        const header = `# Research Report
-
-- Query: ${this.params.query}
-- Primary topic: ${plan.primaryTopic}
-- Generated: ${(/* @__PURE__ */ new Date()).toISOString()}
-
----
-
-`;
-        await fs44.promises.writeFile(filepath, `${header}${content}`, "utf8");
+        await fs44.promises.writeFile(filepath, content, "utf8");
         return path50.relative(process.cwd(), filepath);
       }
-      resolveSearchTools() {
+      resolveSearchTools(toolRegistryOverride) {
         const preferredOrder = this.params.searchTools && this.params.searchTools.length > 0 ? this.params.searchTools : [ToolNames.WEB_SEARCH, ToolNames.SEARXNG_SEARCH];
         const uniqueOrdered = [];
         const seen = /* @__PURE__ */ new Set();
-        const toolRegistry = this.config.getToolRegistry?.();
+        const toolRegistry = toolRegistryOverride ?? this.config.getToolRegistry?.();
         for (const toolName of preferredOrder) {
           if (toolName !== ToolNames.WEB_SEARCH && toolName !== ToolNames.SEARXNG_SEARCH) {
             continue;
@@ -214118,8 +214554,19 @@ Be selective - only keep sources that truly add value to research on "${topic}".
       async execute(signal, updateOutput) {
         try {
           this.ensureWebFetchAvailable();
+          const diagnostics = [];
+          const toolRegistry = this.config.getToolRegistry?.();
+          const hasWebSearch = Boolean(toolRegistry?.getTool(ToolNames.WEB_SEARCH));
+          const hasSearxngSearch = Boolean(toolRegistry?.getTool(ToolNames.SEARXNG_SEARCH));
+          const hasWebFetch = Boolean(toolRegistry?.getTool(ToolNames.WEB_FETCH));
+          diagnostics.push(`Tool availability: web_search=${hasWebSearch ? "yes" : "no"}, searxng_search=${hasSearxngSearch ? "yes" : "no"}, web_fetch=${hasWebFetch ? "yes" : "no"}`);
           this.emitProgress(updateOutput, `\u2139\u2699\uFE0F Running ${this.params.mode} research workflow\u2026`, "append");
-          const plan = await this.buildQueryPlan(signal);
+          const intentProfile = this.params.mode === "max" ? await this.buildIntentProfile(signal) : null;
+          const plan = await this.buildQueryPlan(signal, intentProfile ?? void 0);
+          const maxProfile = this.params.mode === "max" ? this.buildMaxResearchProfile(plan, intentProfile) : null;
+          if (maxProfile) {
+            plan.subQueries = plan.subQueries.slice(0, maxProfile.maxSubQueries);
+          }
           this.emitProgress(updateOutput, `\u2139\u{1F9ED} Query plan established with ${plan.subQueries.length} focus area(s).
    Primary topic: ${plan.primaryTopic}`, "append");
           const normalizedSubQueries = [];
@@ -214127,14 +214574,21 @@ Be selective - only keep sources that truly add value to research on "${topic}".
             const normalized2 = await this.rephraseQuery(sub.query, signal);
             normalizedSubQueries.push({ base: normalized2, rationale: sub.rationale });
           }
-          const { maxResults } = this.getSearchParameters(this.params.mode);
-          const searchTools = this.resolveSearchTools();
-          if (searchTools.length === 0) {
+          const { maxResults: defaultMaxResults } = this.getSearchParameters(this.params.mode);
+          const maxResults = maxProfile?.maxResults ?? defaultMaxResults;
+          diagnostics.push(`Search tools requested: ${this.params.searchTools && this.params.searchTools.length > 0 ? this.params.searchTools.join(", ") : "default"}`);
+          if (maxProfile) {
+            diagnostics.push(`Max profile: sub_queries=${maxProfile.maxSubQueries}, max_results=${maxProfile.maxResults}, variants=${maxProfile.variantsPerQuery}, emergent_slots=${maxProfile.emergentSlots}`);
+          }
+          const resolvedSearchTools = this.resolveSearchTools(toolRegistry);
+          if (resolvedSearchTools.length === 0) {
             throw new Error("No web search tools are available. Enable web_search or searxng_search via /toolset.");
           }
+          const searchTools = resolvedSearchTools;
+          diagnostics.push(`Search tool order: ${searchTools.map((tool) => this.formatToolName(tool)).join(" -> ")}`);
           const searchPlan = [];
           normalizedSubQueries.forEach((sub, subIndex) => {
-            const variants = this.buildQueryVariants(sub.base);
+            const variants = this.buildQueryVariantsForMode(sub.base, maxProfile?.variantsPerQuery);
             variants.forEach((variant) => {
               const toolName = searchTools[searchPlan.length % searchTools.length];
               searchPlan.push({
@@ -214145,10 +214599,13 @@ Be selective - only keep sources that truly add value to research on "${topic}".
               });
             });
           });
+          diagnostics.push(`Initial search plan size: ${searchPlan.length}`);
           this.emitProgress(updateOutput, `\u2139\u{1F504} Executing ${searchPlan.length} targeted search(es) across ${searchTools.map((tool) => this.formatToolName(tool)).join(" + ")}`, "append");
           const searchResults = [];
+          const searchResultsBySubIndex = [];
           const sources = [];
           const seenUrls = /* @__PURE__ */ new Set();
+          const sourceSubtopics = /* @__PURE__ */ new Map();
           const toolUsageCounts = /* @__PURE__ */ new Map();
           for (let i = 0; i < searchPlan.length; i++) {
             const { query, toolName, subIndex, rationale } = searchPlan[i];
@@ -214158,18 +214615,26 @@ Be selective - only keep sources that truly add value to research on "${topic}".
    \u21B3 ${this.truncate(rationale, 90)}` : ""}`, "replace");
             const tool = toolName === ToolNames.WEB_SEARCH ? new WebSearchTool(this.config) : new SearXNGSearchTool(this.config);
             const invocation = tool.build({ query });
-            const result2 = await invocation.execute(signal);
+            const result = await invocation.execute(signal);
             toolUsageCounts.set(toolName, (toolUsageCounts.get(toolName) ?? 0) + 1);
-            const summaryText = partToString(result2.llmContent);
+            const summaryText = partToString(result.llmContent);
             if (summaryText) {
-              searchResults.push(summaryText.replace(/\s+/g, " "));
-              this.emitProgress(updateOutput, `\u{1F4CC} ${label} highlight: ${this.truncate(summaryText.replace(/\s+/g, " "), 160)}`, "replace");
+              const normalizedSummary = summaryText.replace(/\s+/g, " ");
+              searchResults.push(normalizedSummary);
+              if (!searchResultsBySubIndex[subIndex]) {
+                searchResultsBySubIndex[subIndex] = [];
+              }
+              searchResultsBySubIndex[subIndex].push(normalizedSummary);
+              this.emitProgress(updateOutput, `\u{1F4CC} ${label} highlight: ${this.truncate(normalizedSummary, 160)}`, "replace");
             }
             const newlyAdded = [];
-            for (const source2 of result2.sources || []) {
+            for (const source2 of result.sources || []) {
               if (!source2.url) {
                 continue;
               }
+              const bucket = sourceSubtopics.get(source2.url) ?? /* @__PURE__ */ new Set();
+              bucket.add(subIndex);
+              sourceSubtopics.set(source2.url, bucket);
               if (seenUrls.has(source2.url)) {
                 continue;
               }
@@ -214184,6 +214649,102 @@ Be selective - only keep sources that truly add value to research on "${topic}".
             const summaryLine = newlyAdded.length > 0 ? `\u2714 ${label} completed \u2013 ${newlyAdded.length} new source(s) added.` : `\u2714 ${label} completed \u2013 no new unique sources found.`;
             this.emitProgress(updateOutput, summaryLine, "append");
           }
+          let emergentSearchCount = 0;
+          if (this.params.mode === "max") {
+            const maxTotalSubQueries = maxProfile?.maxSubQueries ?? 16;
+            const emergentSlots = maxProfile?.emergentSlots ?? 4;
+            const remainingSlots = Math.max(0, Math.min(emergentSlots, maxTotalSubQueries - plan.subQueries.length));
+            const evidenceForEmergent = searchResults.slice(0, 30).map((item) => this.truncate(item, 240)).join("\n");
+            if (remainingSlots > 0 && evidenceForEmergent.trim().length > 0) {
+              this.emitProgress(updateOutput, "\u2139\u{1F9E9} Scanning for emergent subtopics to deepen the investigation\u2026", "append");
+              const emergentCandidates = await this.discoverEmergentQueries(plan, evidenceForEmergent, signal);
+              diagnostics.push(`Emergent queries suggested: ${emergentCandidates.length}`);
+              const emergentSubQueries = emergentCandidates.slice(0, remainingSlots);
+              if (emergentSubQueries.length > 0) {
+                const merged = this.dedupeSubQueries([
+                  ...plan.subQueries,
+                  ...emergentSubQueries
+                ]).slice(0, maxTotalSubQueries);
+                const initialCount = plan.subQueries.length;
+                plan.subQueries = merged;
+                const subQueryIndexByQuery = /* @__PURE__ */ new Map();
+                plan.subQueries.forEach((sub, index) => {
+                  subQueryIndexByQuery.set(sub.query.trim().toLowerCase(), index);
+                });
+                this.emitProgress(updateOutput, `\u2139\u{1F50D} Added ${plan.subQueries.length - initialCount} emergent focus area(s) for deeper coverage.`, "append");
+                const normalizedEmergent = [];
+                for (const sub of emergentSubQueries) {
+                  const normalized2 = await this.rephraseQuery(sub.query, signal);
+                  normalizedEmergent.push({
+                    base: normalized2,
+                    rationale: sub.rationale,
+                    originalQuery: sub.query
+                  });
+                }
+                const emergentSearchPlan = [];
+                normalizedEmergent.forEach((sub, subIndex) => {
+                  const variants = this.buildEmergentQueryVariants(sub.base, maxProfile?.variantsPerQuery);
+                  const planIndex = subQueryIndexByQuery.get(sub.originalQuery.trim().toLowerCase()) ?? initialCount + subIndex;
+                  variants.forEach((variant) => {
+                    const toolName = searchTools[emergentSearchPlan.length % searchTools.length];
+                    emergentSearchPlan.push({
+                      query: variant,
+                      toolName,
+                      subIndex: planIndex,
+                      rationale: sub.rationale
+                    });
+                  });
+                });
+                if (emergentSearchPlan.length > 0) {
+                  this.emitProgress(updateOutput, `\u2139\u{1F504} Executing ${emergentSearchPlan.length} emergent search(es) to fill coverage gaps.`, "append");
+                  emergentSearchCount = emergentSearchPlan.length;
+                }
+                for (let i = 0; i < emergentSearchPlan.length; i++) {
+                  const { query, toolName, subIndex, rationale } = emergentSearchPlan[i];
+                  const label = this.formatToolName(toolName);
+                  const focusLabel = plan.subQueries[subIndex]?.query ?? query;
+                  this.emitProgress(updateOutput, `\u{1F50E} [${i + 1}/${emergentSearchPlan.length}] ${label} \u2192 ${this.truncate(query, 90)} (emergent focus ${subIndex + 1}/${plan.subQueries.length}: ${this.truncate(focusLabel, 70)})${rationale ? `
+   \u21B3 ${this.truncate(rationale, 90)}` : ""}`, "replace");
+                  const tool = toolName === ToolNames.WEB_SEARCH ? new WebSearchTool(this.config) : new SearXNGSearchTool(this.config);
+                  const invocation = tool.build({ query });
+                  const result = await invocation.execute(signal);
+                  toolUsageCounts.set(toolName, (toolUsageCounts.get(toolName) ?? 0) + 1);
+                  const summaryText = partToString(result.llmContent);
+                  if (summaryText) {
+                    const normalizedSummary = summaryText.replace(/\s+/g, " ");
+                    searchResults.push(normalizedSummary);
+                    if (!searchResultsBySubIndex[subIndex]) {
+                      searchResultsBySubIndex[subIndex] = [];
+                    }
+                    searchResultsBySubIndex[subIndex].push(normalizedSummary);
+                    this.emitProgress(updateOutput, `\u{1F4CC} ${label} highlight: ${this.truncate(normalizedSummary, 160)}`, "replace");
+                  }
+                  const newlyAdded = [];
+                  for (const source2 of result.sources || []) {
+                    if (!source2.url) {
+                      continue;
+                    }
+                    const bucket = sourceSubtopics.get(source2.url) ?? /* @__PURE__ */ new Set();
+                    bucket.add(subIndex);
+                    sourceSubtopics.set(source2.url, bucket);
+                    if (seenUrls.has(source2.url)) {
+                      continue;
+                    }
+                    seenUrls.add(source2.url);
+                    const normalized2 = {
+                      title: source2.title ?? "",
+                      url: source2.url
+                    };
+                    sources.push(normalized2);
+                    newlyAdded.push(normalized2);
+                  }
+                  const summaryLine = newlyAdded.length > 0 ? `\u2714 ${label} completed \u2013 ${newlyAdded.length} new source(s) added.` : `\u2714 ${label} completed \u2013 no new unique sources found.`;
+                  this.emitProgress(updateOutput, summaryLine, "append");
+                }
+              }
+            }
+          }
+          diagnostics.push(`Emergent searches executed: ${emergentSearchCount}`);
           if (sources.length === 0) {
             this.emitProgress(updateOutput, "\u26A0\uFE0F No sources were discovered during web search.", "append");
           } else {
@@ -214192,7 +214753,9 @@ Be selective - only keep sources that truly add value to research on "${topic}".
           const fetchTool = new WebFetchTool(this.config);
           const processedDocuments = [];
           const documentSnippets = [];
+          const documentSnippetsBySubIndex = [];
           const sourcesForProcessing = sources.slice(0, Math.min(maxResults, sources.length));
+          diagnostics.push(`Sources collected: ${sources.length} | Sources summarized: ${sourcesForProcessing.length}`);
           if (sourcesForProcessing.length > 0) {
             this.emitProgress(updateOutput, `\u2139\u{1F4F0} Summarizing top ${sourcesForProcessing.length} source(s) for detailed insights.`, "append");
           }
@@ -214208,7 +214771,17 @@ Be selective - only keep sources that truly add value to research on "${topic}".
               const fetchText = partToString(fetchResult.llmContent || "");
               if (fetchText.trim()) {
                 processedDocuments.push(fetchText);
-                documentSnippets.push(fetchText.replace(/\s+/g, " "));
+                const normalizedText = fetchText.replace(/\s+/g, " ");
+                documentSnippets.push(normalizedText);
+                const subtopicIndices = sourceSubtopics.get(source2.url);
+                if (subtopicIndices) {
+                  for (const index of subtopicIndices) {
+                    if (!documentSnippetsBySubIndex[index]) {
+                      documentSnippetsBySubIndex[index] = [];
+                    }
+                    documentSnippetsBySubIndex[index].push(normalizedText);
+                  }
+                }
                 this.emitProgress(updateOutput, `\u2705 Captured insights from ${this.truncate(source2.title || source2.url, 100)}`, "replace");
               } else {
                 this.emitProgress(updateOutput, `\u2139 No summarizable content returned from ${this.truncate(source2.title || source2.url, 100)}.`, "replace");
@@ -214219,13 +214792,32 @@ Be selective - only keep sources that truly add value to research on "${topic}".
             }
             this.emitProgress(updateOutput, `\u2714 Summarized ${this.truncate(source2.title || source2.url, 100)}`, "append");
           }
-          const combinedContent = [
-            ...searchResults,
-            ...processedDocuments
-          ].join("\n\n---\n\n");
+          const combinedContent = this.params.mode === "max" ? "" : [...searchResults, ...processedDocuments].join("\n\n---\n\n");
+          const subtopicBriefs = this.params.mode === "max" ? plan.subQueries.map((sub, index) => {
+            const highlights = [
+              ...searchResultsBySubIndex[index] ?? [],
+              ...documentSnippetsBySubIndex[index] ?? []
+            ];
+            const keyPoints = this.extractKeyPoints(highlights, this.params.mode === "max" ? 6 : 4);
+            if (keyPoints.length === 0) {
+              return "";
+            }
+            return [
+              `### ${sub.query}`,
+              ...keyPoints.map((point) => `- ${point}`)
+            ].join("\n");
+          }).filter(Boolean).join("\n\n") : "";
+          const evidenceHighlights = this.extractKeyPoints([...searchResults, ...documentSnippets], this.params.mode === "max" ? 90 : 24);
+          diagnostics.push(`Evidence highlights: ${evidenceHighlights.length}`);
           const sourceCatalogForPrompt = this.buildSourceCatalogForPrompt(sources);
           const planSummary = plan.subQueries.map((sub, index) => `${index + 1}. ${sub.query}${sub.rationale ? ` \u2014 ${sub.rationale}` : ""}`).join("\n");
-          const narrativeGuidance = this.params.mode === "quality" ? "Produce a long-form feature article (8+ robust paragraphs) that reads like a magazine investigation." : this.params.mode === "balanced" ? "Produce a cohesive narrative article (6-8 paragraphs) that balances depth with readability." : "Produce a concise narrative briefing (4-6 paragraphs) that still delivers context and insight.";
+          const intentBlock = intentProfile ? [
+            `Intent: ${intentProfile.intent}`,
+            intentProfile.constraints.length ? `Constraints: ${intentProfile.constraints.join("; ")}` : "Constraints: none specified",
+            intentProfile.assumptions.length ? `Assumptions: ${intentProfile.assumptions.join("; ")}` : "Assumptions: none needed",
+            intentProfile.clarifyingQuestions.length ? `Clarifying questions (for the user): ${intentProfile.clarifyingQuestions.join("; ")}` : "Clarifying questions: none"
+          ].join("\n") : "";
+          const narrativeGuidance = this.params.mode === "quality" ? "Produce a long-form feature article (8-10 robust paragraphs) that reads like a magazine investigation." : this.params.mode === "balanced" ? "Produce a cohesive narrative article (6-8 paragraphs) that balances depth with readability." : "Produce a concise narrative briefing (4-6 paragraphs) that still delivers context and insight.";
           const finalPrompt = `
 You are an investigative research writer. Use the supplied plan and evidence to craft a cohesive narrative report.
 
@@ -214233,6 +214825,14 @@ Primary Topic: ${plan.primaryTopic}
 
 Research Objectives:
 ${planSummary}
+
+${intentBlock ? `Intent & constraints:
+${intentBlock}
+` : ""}
+
+${subtopicBriefs ? `Subtopic evidence briefs (for depth and coverage):
+${subtopicBriefs}
+` : ""}
 
 Synthesized Evidence (search highlights, document summaries, quantitative snippets):
 ${combinedContent}
@@ -214242,6 +214842,7 @@ ${sourceCatalogForPrompt}
 
 Writing Guidelines:
 - ${narrativeGuidance}
+- Use section headers only when they improve clarity.
 - Write primarily in flowing paragraphs; reserve bullet or table structures only for dense data recaps.
 - Open with an engaging overview, develop the story with clear transitions, and close with implications or recommended next steps.
 - Integrate data points, historical context, and qualitative insights, explaining their significance.
@@ -214251,22 +214852,79 @@ Writing Guidelines:
 - Do not add a Sources/References section; one will be appended automatically.
 `;
           this.emitProgress(updateOutput, "\u2139\u{1F9E0} Synthesizing final report\u2026", "append");
-          const geminiClient = this.config.getGeminiClient();
-          const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: finalPrompt }] }], {}, signal);
-          const candidateParts = (result.response?.candidates ?? result.candidates ?? [])?.[0]?.content?.parts ?? [];
-          const candidateText = candidateParts.map((part) => {
-            if (typeof part === "string") {
-              return part;
+          let resultText = "";
+          let fallbackReason = "";
+          if (this.params.mode === "max") {
+            this.emitProgress(updateOutput, "\u2139\u{1F4D0} Building a dynamic report blueprint\u2026", "append");
+            const reportSpec = await this.buildReportSpec(plan, intentProfile ?? null, evidenceHighlights, signal);
+            diagnostics.push(`Report spec: target_words=${reportSpec.targetWordCount}, sections=${reportSpec.sections.length}`);
+            if (maxProfile) {
+              diagnostics.push(`Report pipeline: multi-section synthesis with redundancy suppression`);
             }
-            if (part && typeof part === "object" && "text" in part && typeof part.text === "string") {
-              return part.text ?? "";
+            const sectionOutputs = [];
+            const coveredPoints = [];
+            for (const section of reportSpec.sections) {
+              this.emitProgress(updateOutput, `\u270D\uFE0F Drafting section: ${section.title}`, "replace");
+              const sectionText = await this.generateReportSection(section, reportSpec, plan, intentProfile ?? null, evidenceHighlights, subtopicBriefs, sourceCatalogForPrompt, signal, coveredPoints.slice(0, 16));
+              if (sectionText.trim()) {
+                sectionOutputs.push(sectionText.trim());
+                const newPoints = this.extractKeyPoints([sectionText], 6);
+                newPoints.forEach((point) => {
+                  if (!coveredPoints.includes(point)) {
+                    coveredPoints.push(point);
+                  }
+                });
+              }
             }
-            return "";
-          }).join("");
-          const responseText = await getResponseText2(result) ?? candidateText;
-          const resultText = responseText && responseText.trim().length > 0 ? responseText : candidateText;
-          const fallbackSummary = this.buildFallbackReport(this.params.mode, searchPlan.map((run) => run.query), sources, searchResults, documentSnippets);
+            const draftReport = sectionOutputs.join("\n\n");
+            if (draftReport.trim()) {
+              this.emitProgress(updateOutput, "\u{1F9E9} Polishing narrative flow and removing repetition\u2026", "append");
+              resultText = await this.polishMaxReport(draftReport, plan, intentProfile ?? null, sourceCatalogForPrompt, signal);
+              diagnostics.push("Report polish: applied (narrative)");
+              if (resultText.trim()) {
+                this.emitProgress(updateOutput, "\u{1F50E} Removing residual repetition\u2026", "append");
+                resultText = await this.dedupeMaxReport(resultText, plan, sourceCatalogForPrompt, signal);
+                diagnostics.push("Report polish: applied (dedupe)");
+                if (resultText.trim()) {
+                  this.emitProgress(updateOutput, "\u{1F9ED} Smoothing transitions between sections\u2026", "append");
+                  resultText = await this.addSectionBridges(resultText, plan, signal);
+                  diagnostics.push("Report polish: applied (bridges)");
+                }
+              }
+            } else {
+              resultText = draftReport;
+              diagnostics.push("Report polish: skipped (empty draft)");
+            }
+            if (!resultText.trim()) {
+              fallbackReason = "Section generation returned empty output.";
+            }
+          } else {
+            const geminiClient = this.config.getGeminiClient();
+            const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: finalPrompt }] }], {}, signal);
+            const candidateParts = (result.response?.candidates ?? result.candidates ?? [])?.[0]?.content?.parts ?? [];
+            const candidateText = candidateParts.map((part) => {
+              if (typeof part === "string") {
+                return part;
+              }
+              if (part && typeof part === "object" && "text" in part && typeof part.text === "string") {
+                return part.text ?? "";
+              }
+              return "";
+            }).join("");
+            const responseText = await getResponseText2(result) ?? candidateText;
+            resultText = responseText && responseText.trim().length > 0 ? responseText : candidateText;
+            if (!resultText.trim()) {
+              fallbackReason = "LLM returned empty response.";
+            }
+          }
+          const fallbackSummary = this.params.mode === "max" ? this.buildMaxFallbackReport(plan, intentProfile ?? null, evidenceHighlights, subtopicBriefs) : this.buildFallbackReport(this.params.mode, searchPlan.map((run) => run.query), sources, searchResults, documentSnippets);
           const finalContent = resultText && resultText.trim().length > 0 ? resultText : fallbackSummary;
+          if (!resultText.trim()) {
+            diagnostics.push("Report generation: fallback");
+            diagnostics.push(`Fallback reason: ${fallbackReason || "Unknown"}`);
+          } else {
+            diagnostics.push("Report generation: full");
+          }
           const cleanedReport = this.stripGeneratedSourceSections(finalContent.trim());
           const citations = this.buildCitationMap(cleanedReport, sources);
           const citedIndices = new Set(Object.values(citations).map((c3) => c3.sourceIndex));
@@ -214275,6 +214933,7 @@ Writing Guidelines:
           const filteredSources = sources.filter((_, index) => approvedSourceIndices.has(index));
           this.emitProgress(updateOutput, `\u2705 Filtered to ${filteredSources.length} relevant sources (kept ${citedIndices.size} cited + ${filteredSources.length - citedIndices.size} approved).`, "append");
           this.emitProgress(updateOutput, resultText.trim().length > 0 ? `\u2705 Research complete. Compiled ${filteredSources.length} relevant source(s).` : `\u2705 Research complete. Compiled ${filteredSources.length} relevant source(s) and generated a summary from collected material.`, "append");
+          const reportHeader = this.buildReportHeader(plan);
           const sourcesSection = filteredSources.length ? [
             "",
             "## Sources",
@@ -214285,9 +214944,12 @@ Writing Guidelines:
             "## Tool Usage Summary",
             ...Array.from(toolUsageCounts.entries()).map(([name2, count]) => `- ${this.formatToolName(name2)}: ${count} search${count === 1 ? "" : "es"}`)
           ].join("\n") : "";
+          const diagnosticsSection = diagnostics.length ? ["", "## Diagnostics", ...diagnostics.map((line) => `- ${line}`)].join("\n") : "";
           const finalReport = [
+            reportHeader,
             cleanedReport,
             toolUsageSection,
+            diagnosticsSection,
             sourcesSection
           ].filter(Boolean).join("\n");
           const savedReportPath = await this.persistReport(finalReport, plan);
@@ -214313,7 +214975,7 @@ _Report archived at: ${savedReportPath}_`;
       config;
       static Name = ToolNames.RESEARCH;
       constructor(config) {
-        super(_ResearchTool.Name, "Research", "Conducts deep internet research using multiple sources with citation support. Supports speed, balanced, and quality modes.", Kind.Search, {
+        super(_ResearchTool.Name, "Research", "Conducts deep internet research using multiple sources with citation support. Supports speed, balanced, quality, and max modes.", Kind.Search, {
           type: "object",
           properties: {
             query: {
@@ -214322,8 +214984,8 @@ _Report archived at: ${savedReportPath}_`;
             },
             mode: {
               type: "string",
-              enum: ["speed", "balanced", "quality"],
-              description: "Optimization mode - speed, balanced, or quality."
+              enum: ["speed", "balanced", "quality", "max"],
+              description: "Optimization mode - speed, balanced, quality, or max."
             },
             searchTools: {
               type: "array",
@@ -214347,8 +215009,8 @@ _Report archived at: ${savedReportPath}_`;
         if (!params.query || params.query.trim() === "") {
           return "The 'query' parameter cannot be empty.";
         }
-        if (params.mode !== "speed" && params.mode !== "balanced" && params.mode !== "quality") {
-          return "The 'mode' parameter must be one of: speed, balanced, quality";
+        if (params.mode !== "speed" && params.mode !== "balanced" && params.mode !== "quality" && params.mode !== "max") {
+          return "The 'mode' parameter must be one of: speed, balanced, quality, max";
         }
         if (params.searchTools) {
           if (!Array.isArray(params.searchTools) || params.searchTools.length === 0) {
@@ -226579,14 +227241,14 @@ var require_react_reconciler_production = __commonJS({
       }
       var exports3 = {};
       "use strict";
-      var React30 = require_react(), Scheduler2 = require_scheduler(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_PROVIDER_TYPE = Symbol.for("react.provider"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
+      var React32 = require_react(), Scheduler2 = require_scheduler(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_PROVIDER_TYPE = Symbol.for("react.provider"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
       Symbol.for("react.scope");
       var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
       Symbol.for("react.legacy_hidden");
       Symbol.for("react.tracing_marker");
       var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
       Symbol.for("react.view_transition");
-      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React30.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, rendererVersion = $$$config.rendererVersion, rendererPackageName = $$$config.rendererPackageName, extraDevToolsConfig = $$$config.extraDevToolsConfig, getPublicInstance = $$$config.getPublicInstance, getRootHostContext = $$$config.getRootHostContext, getChildHostContext = $$$config.getChildHostContext, prepareForCommit = $$$config.prepareForCommit, resetAfterCommit = $$$config.resetAfterCommit, createInstance2 = $$$config.createInstance;
+      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React32.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, rendererVersion = $$$config.rendererVersion, rendererPackageName = $$$config.rendererPackageName, extraDevToolsConfig = $$$config.extraDevToolsConfig, getPublicInstance = $$$config.getPublicInstance, getRootHostContext = $$$config.getRootHostContext, getChildHostContext = $$$config.getChildHostContext, prepareForCommit = $$$config.prepareForCommit, resetAfterCommit = $$$config.resetAfterCommit, createInstance2 = $$$config.createInstance;
       $$$config.cloneMutableInstance;
       var appendInitialChild = $$$config.appendInitialChild, finalizeInitialChildren = $$$config.finalizeInitialChildren, shouldSetTextContent = $$$config.shouldSetTextContent, createTextInstance = $$$config.createTextInstance;
       $$$config.cloneMutableTextInstance;
@@ -237329,14 +237991,14 @@ var require_react_reconciler_development = __commonJS({
       }
       var exports3 = {};
       "use strict";
-      var React30 = require_react(), Scheduler2 = require_scheduler(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_PROVIDER_TYPE = Symbol.for("react.provider"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
+      var React32 = require_react(), Scheduler2 = require_scheduler(), assign = Object.assign, REACT_LEGACY_ELEMENT_TYPE = Symbol.for("react.element"), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler"), REACT_PROVIDER_TYPE = Symbol.for("react.provider"), REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy");
       Symbol.for("react.scope");
       var REACT_ACTIVITY_TYPE = Symbol.for("react.activity");
       Symbol.for("react.legacy_hidden");
       Symbol.for("react.tracing_marker");
       var REACT_MEMO_CACHE_SENTINEL = Symbol.for("react.memo_cache_sentinel");
       Symbol.for("react.view_transition");
-      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React30.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, rendererVersion = $$$config.rendererVersion, rendererPackageName = $$$config.rendererPackageName, extraDevToolsConfig = $$$config.extraDevToolsConfig, getPublicInstance = $$$config.getPublicInstance, getRootHostContext = $$$config.getRootHostContext, getChildHostContext = $$$config.getChildHostContext, prepareForCommit = $$$config.prepareForCommit, resetAfterCommit = $$$config.resetAfterCommit, createInstance2 = $$$config.createInstance;
+      var MAYBE_ITERATOR_SYMBOL = Symbol.iterator, REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), isArrayImpl = Array.isArray, ReactSharedInternals = React32.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, rendererVersion = $$$config.rendererVersion, rendererPackageName = $$$config.rendererPackageName, extraDevToolsConfig = $$$config.extraDevToolsConfig, getPublicInstance = $$$config.getPublicInstance, getRootHostContext = $$$config.getRootHostContext, getChildHostContext = $$$config.getChildHostContext, prepareForCommit = $$$config.prepareForCommit, resetAfterCommit = $$$config.resetAfterCommit, createInstance2 = $$$config.createInstance;
       $$$config.cloneMutableInstance;
       var appendInitialChild = $$$config.appendInitialChild, finalizeInitialChildren = $$$config.finalizeInitialChildren, shouldSetTextContent = $$$config.shouldSetTextContent, createTextInstance = $$$config.createTextInstance;
       $$$config.cloneMutableTextInstance;
@@ -240292,7 +240954,7 @@ var require_backend = __commonJS({
                     return function() {
                     };
                   },
-                  useCallback: function useCallback46(a) {
+                  useCallback: function useCallback47(a) {
                     var b = C();
                     x.push({
                       primitive: "Callback",
@@ -240386,7 +241048,7 @@ var require_backend = __commonJS({
                     });
                     return a;
                   },
-                  useState: function useState59(a) {
+                  useState: function useState60(a) {
                     var b = C();
                     a = null !== b ? b.memoizedState : "function" === typeof a ? a() : a;
                     x.push({
@@ -272570,20 +273232,20 @@ var require_react_jsx_runtime_development = __commonJS({
       function validateChildKeys(node) {
         "object" === typeof node && null !== node && node.$$typeof === REACT_ELEMENT_TYPE && node._store && (node._store.validated = 1);
       }
-      var React30 = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler");
+      var React32 = require_react(), REACT_ELEMENT_TYPE = Symbol.for("react.transitional.element"), REACT_PORTAL_TYPE = Symbol.for("react.portal"), REACT_FRAGMENT_TYPE = Symbol.for("react.fragment"), REACT_STRICT_MODE_TYPE = Symbol.for("react.strict_mode"), REACT_PROFILER_TYPE = Symbol.for("react.profiler");
       Symbol.for("react.provider");
-      var REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React30.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty11 = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
+      var REACT_CONSUMER_TYPE = Symbol.for("react.consumer"), REACT_CONTEXT_TYPE = Symbol.for("react.context"), REACT_FORWARD_REF_TYPE = Symbol.for("react.forward_ref"), REACT_SUSPENSE_TYPE = Symbol.for("react.suspense"), REACT_SUSPENSE_LIST_TYPE = Symbol.for("react.suspense_list"), REACT_MEMO_TYPE = Symbol.for("react.memo"), REACT_LAZY_TYPE = Symbol.for("react.lazy"), REACT_ACTIVITY_TYPE = Symbol.for("react.activity"), REACT_CLIENT_REFERENCE = Symbol.for("react.client.reference"), ReactSharedInternals = React32.__CLIENT_INTERNALS_DO_NOT_USE_OR_WARN_USERS_THEY_CANNOT_UPGRADE, hasOwnProperty11 = Object.prototype.hasOwnProperty, isArrayImpl = Array.isArray, createTask = console.createTask ? console.createTask : function() {
         return null;
       };
-      React30 = {
+      React32 = {
         "react-stack-bottom-frame": function(callStackForError) {
           return callStackForError();
         }
       };
       var specialPropKeyWarningShown;
       var didWarnAboutElementRef = {};
-      var unknownOwnerDebugStack = React30["react-stack-bottom-frame"].bind(
-        React30,
+      var unknownOwnerDebugStack = React32["react-stack-bottom-frame"].bind(
+        React32,
         UnknownOwner
       )();
       var unknownOwnerDebugTask = createTask(getTaskName(UnknownOwner));
@@ -281151,25 +281813,25 @@ var ModelMappingDialog_exports = {};
 __export(ModelMappingDialog_exports, {
   ModelMappingDialog: () => ModelMappingDialog
 });
-var import_react92, import_jsx_runtime37, ModelMappingDialog;
+var import_react94, import_jsx_runtime38, ModelMappingDialog;
 var init_ModelMappingDialog = __esm({
   async "packages/cli/src/ui/components/ModelMappingDialog.tsx"() {
     "use strict";
-    import_react92 = __toESM(require_react(), 1);
+    import_react94 = __toESM(require_react(), 1);
     await init_build2();
     await init_RadioButtonSelect();
     await init_useKeypress();
-    import_jsx_runtime37 = __toESM(require_jsx_runtime(), 1);
+    import_jsx_runtime38 = __toESM(require_jsx_runtime(), 1);
     ModelMappingDialog = ({
       unmatched,
       restModels,
       onApply,
       onCancel
     }) => {
-      const [selections, setSelections] = import_react92.default.useState(
+      const [selections, setSelections] = import_react94.default.useState(
         () => ({})
       );
-      const [activeIndex, setActiveIndex] = import_react92.default.useState(0);
+      const [activeIndex, setActiveIndex] = import_react94.default.useState(0);
       const handleSelectFor = (configuredKey, restId) => {
         setSelections((s2) => ({ ...s2, [configuredKey]: restId }));
         if (restId) {
@@ -281245,22 +281907,22 @@ var init_ModelMappingDialog = __esm({
         },
         { isActive: true }
       );
-      import_react92.default.useEffect(() => {
+      import_react94.default.useEffect(() => {
       }, [selections]);
-      return /* @__PURE__ */ (0, import_jsx_runtime37.jsxs)(Box_default, { flexDirection: "column", borderStyle: "round", padding: 1, width: "100%", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime37.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(Text3, { bold: true, children: "Map configured models to provider models" }),
-          /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(Text3, { children: "Some configured models didn't match any provider model. Choose the best match or leave blank to skip." })
+      return /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "column", borderStyle: "round", padding: 1, width: "100%", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { bold: true, children: "Map configured models to provider models" }),
+          /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { children: "Some configured models didn't match any provider model. Choose the best match or leave blank to skip." })
         ] }),
-        unmatched.map((u, idx) => /* @__PURE__ */ (0, import_jsx_runtime37.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime37.jsxs)(Text3, { children: [
+        unmatched.map((u, idx) => /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Text3, { children: [
             u.label,
             " (configured:",
             " ",
             u.configuredContextLength?.toLocaleString() ?? "?",
             " ctx)"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
             RadioButtonSelect,
             {
               items: [
@@ -281276,7 +281938,7 @@ var init_ModelMappingDialog = __esm({
             }
           ) })
         ] }, u.label)),
-        /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(Text3, { children: "Press Enter to save mappings, Esc to cancel. Use Tab to move between entries." }) })
+        /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { children: "Press Enter to save mappings, Esc to cancel. Use Tab to move between entries." }) })
       ] });
     };
   }
@@ -288797,7 +289459,7 @@ var require_semver6 = __commonJS({
 // packages/cli/src/gemini.tsx
 init_dist3();
 await init_build2();
-var import_react121 = __toESM(require_react(), 1);
+var import_react123 = __toESM(require_react(), 1);
 import { spawn as spawn12 } from "node:child_process";
 import dns from "node:dns";
 import os38 from "node:os";
@@ -296606,9 +297268,9 @@ var researchCommand = {
   command: "research [mode] <query>",
   describe: "Conduct deep internet research with citation support",
   builder: (yargs) => yargs.positional("mode", {
-    describe: "Optimization mode - speed, balanced, or quality",
+    describe: "Optimization mode - speed, balanced, quality, or max",
     type: "string",
-    choices: ["speed", "balanced", "quality"],
+    choices: ["speed", "balanced", "quality", "max"],
     default: "balanced"
   }).positional("query", {
     describe: "Research query to search for on the web",
@@ -297896,7 +298558,7 @@ async function runNonInteractive(config, input, prompt_id) {
 }
 
 // packages/cli/src/ui/App.tsx
-var import_react120 = __toESM(require_react(), 1);
+var import_react122 = __toESM(require_react(), 1);
 await init_build2();
 
 // packages/cli/src/ui/components/ViewOverlay.tsx
@@ -317164,7 +317826,7 @@ function useDialogClose(options2) {
 }
 
 // packages/cli/src/ui/hooks/slashCommandProcessor.ts
-var import_react61 = __toESM(require_react(), 1);
+var import_react62 = __toESM(require_react(), 1);
 init_dist3();
 import process34 from "node:process";
 
@@ -317653,7 +318315,7 @@ init_open();
 import process32 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "d6319b01";
+var GIT_COMMIT_INFO = "751ff798";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -321598,17 +322260,36 @@ var viewCommand = {
 
 // packages/cli/src/ui/commands/researchCommand.ts
 init_dist3();
+var import_react61 = __toESM(require_react(), 1);
+await init_build2();
 var import_shell_quote5 = __toESM(require_shell_quote(), 1);
+init_colors();
 var ALLOWED_MODES = [
   "speed",
   "balanced",
-  "quality"
+  "quality",
+  "max"
 ];
+function stripJsonFence(text) {
+  return text.replace(/^\s*```(?:json)?/i, "").replace(/```$/i, "").trim();
+}
+function isComplexQuery(query) {
+  const normalized2 = query.trim();
+  if (!normalized2) {
+    return false;
+  }
+  const wordCount = normalized2.split(/\s+/u).length;
+  const sentenceCount = normalized2.split(/[.!?]+/u).filter(Boolean).length;
+  const conjunctions = /\b(and|or|versus|compare|vs\.?|along with|as well as)\b/iu;
+  const hasConjunctions = conjunctions.test(normalized2);
+  const hasMultiClause = normalized2.includes(";") || normalized2.includes(":");
+  return wordCount >= 12 || sentenceCount >= 2 || hasConjunctions || hasMultiClause;
+}
 function parseResearchArgs(args) {
   const trimmed2 = args.trim();
   if (!trimmed2) {
     return {
-      error: "Research command requires a query. Usage: /research <mode> <query>\nAvailable modes: speed, balanced, quality (default is 'balanced')"
+      error: "Research command requires a query. Usage: /research <mode> <query> [--clarify|--no-clarify]\nAvailable modes: speed, balanced, quality, max (default is 'balanced')"
     };
   }
   let rawTokens;
@@ -321630,24 +322311,42 @@ function parseResearchArgs(args) {
   }).filter((token2) => token2.length > 0);
   if (tokens.length === 0) {
     return {
-      error: "Research command requires a query. Usage: /research <mode> <query>\nAvailable modes: speed, balanced, quality (default is 'balanced')"
+      error: "Research command requires a query. Usage: /research <mode> <query> [--clarify|--no-clarify]\nAvailable modes: speed, balanced, quality, max (default is 'balanced')"
     };
   }
-  const firstToken = tokens[0]?.toLowerCase();
+  let clarifyMode = "auto";
+  const filteredTokens = tokens.filter((token2) => {
+    const normalized2 = token2.toLowerCase();
+    if (normalized2 === "--clarify") {
+      clarifyMode = "force";
+      return false;
+    }
+    if (normalized2 === "--no-clarify") {
+      clarifyMode = "skip";
+      return false;
+    }
+    return true;
+  });
+  if (filteredTokens.length === 0) {
+    return {
+      error: "Research command requires a query. Usage: /research <mode> <query> [--clarify|--no-clarify]\nAvailable modes: speed, balanced, quality, max (default is 'balanced')"
+    };
+  }
+  const firstToken = filteredTokens[0]?.toLowerCase();
   const isMode = (value) => ALLOWED_MODES.includes(value ?? "");
   let mode = "balanced";
-  let queryTokens = tokens;
+  let queryTokens = filteredTokens;
   if (isMode(firstToken)) {
     mode = firstToken;
-    queryTokens = tokens.slice(1);
+    queryTokens = filteredTokens.slice(1);
   }
   const query = queryTokens.join(" ").trim();
   if (!query) {
     return {
-      error: "Research command requires a query. Usage: /research <mode> <query>\nAvailable modes: speed, balanced, quality (default is 'balanced')"
+      error: "Research command requires a query. Usage: /research <mode> <query> [--clarify|--no-clarify]\nAvailable modes: speed, balanced, quality, max (default is 'balanced')"
     };
   }
-  return { mode, query };
+  return { mode, query, clarifyMode };
 }
 function getActiveCollectionAllowlist() {
   const activeCollection = toolConfig?.activeCollection;
@@ -321670,7 +322369,7 @@ function getActiveCollectionAllowlist() {
 }
 var researchCommand2 = {
   name: "research",
-  description: "Conduct deep internet research with citation support (speed, balanced, quality modes)",
+  description: "Conduct deep internet research with citation support (speed, balanced, quality, max modes)",
   kind: "built-in" /* BUILT_IN */,
   action: async (context2, args) => {
     const { ui: ui2 } = context2;
@@ -321709,7 +322408,7 @@ var researchCommand2 = {
         content: parsed.error
       };
     }
-    const { mode, query } = parsed;
+    const { mode, query, clarifyMode } = parsed;
     const config = context2.services.config;
     if (!config) {
       return {
@@ -321726,7 +322425,7 @@ var researchCommand2 = {
         content: "The tool registry is unavailable, so research cannot proceed. Try running /toolset list or restarting LowCal."
       };
     }
-    const allowlist = getActiveCollectionAllowlist();
+    const allowlist = mode === "max" ? null : getActiveCollectionAllowlist();
     const isAllowed = (toolName) => !allowlist || allowlist.has(toolName);
     if (!isAllowed(ToolNames.WEB_FETCH) || !toolRegistry.getTool(ToolNames.WEB_FETCH)) {
       return {
@@ -321751,6 +322450,135 @@ var researchCommand2 = {
     }
     const formatToolLabel = (toolName) => toolName === ToolNames.WEB_SEARCH ? "Tavily" : "SearXNG";
     const toolLabel = enabledSearchTools.map((name2) => formatToolLabel(name2)).join(" + ");
+    if (mode === "max" && clarifyMode !== "skip") {
+      const geminiClient = config.getGeminiClient?.();
+      if (geminiClient) {
+        try {
+          const abortController2 = new AbortController();
+          const complexityHigh = isComplexQuery(query);
+          const forceQuestions = clarifyMode === "force" || complexityHigh;
+          const clarifyPrompt = forceQuestions ? `
+You are a research assistant preparing a deep-dive investigation. Generate clarifying questions that would materially improve scope, framing, or depth.
+
+Return valid JSON only with this schema:
+{
+  "reason": "Short reason",
+  "questions": ["Question 1", "Question 2"]
+}
+
+Guidelines:
+- Provide 2-4 questions.
+- Questions should narrow scope, define priorities, or uncover constraints.
+- Avoid generic questions that don't change research direction.
+
+User request:
+${query}
+` : `
+You are a research assistant. Decide if the user should clarify their request before a deep research run.
+
+Return valid JSON only with this schema:
+{
+  "should_clarify": true,
+  "reason": "Short reason",
+  "questions": ["Question 1", "Question 2"]
+}
+
+Guidelines:
+- Ask clarifying questions when it would materially change scope or outcomes.
+- Keep to 1-4 questions.
+- If no clarification is needed, set should_clarify to false and questions to [].
+
+User request:
+${query}
+`;
+          const response = await geminiClient.generateContent(
+            [{ role: "user", parts: [{ text: clarifyPrompt }] }],
+            {},
+            abortController2.signal
+          );
+          const candidates = response.response?.candidates ?? response.candidates ?? [];
+          const parts = Array.isArray(candidates) ? candidates[0]?.content?.parts ?? [] : [];
+          const raw = Array.isArray(parts) ? parts.map(
+            (part) => typeof part === "string" ? part : part && typeof part === "object" && "text" in part ? String(part.text ?? "") : ""
+          ).join("") : "";
+          const parsedResponse = raw ? JSON.parse(stripJsonFence(raw)) : null;
+          const shouldClarify = forceQuestions ? true : Boolean(parsedResponse?.should_clarify);
+          const questions = Array.isArray(parsedResponse?.questions) ? parsedResponse.questions.map((item) => String(item).trim()).filter(Boolean) : [];
+          const reason = typeof parsedResponse?.reason === "string" ? parsedResponse.reason.trim() : "";
+          let finalQuestions = questions;
+          let finalReason = reason;
+          if (forceQuestions && finalQuestions.length === 0) {
+            const retryPrompt = `
+Generate 2-3 concrete clarifying questions that would materially improve the research scope.
+Return valid JSON only:
+{
+  "reason": "Short reason",
+  "questions": ["Question 1", "Question 2"]
+}
+
+User request:
+${query}
+`;
+            const retryResponse = await geminiClient.generateContent(
+              [{ role: "user", parts: [{ text: retryPrompt }] }],
+              {},
+              abortController2.signal
+            );
+            const retryCandidates = retryResponse.response?.candidates ?? retryResponse.candidates ?? [];
+            const retryParts = Array.isArray(retryCandidates) ? retryCandidates[0]?.content?.parts ?? [] : [];
+            const retryRaw = Array.isArray(retryParts) ? retryParts.map(
+              (part) => typeof part === "string" ? part : part && typeof part === "object" && "text" in part ? String(part.text ?? "") : ""
+            ).join("") : "";
+            const retryParsed = retryRaw ? JSON.parse(stripJsonFence(retryRaw)) : null;
+            finalQuestions = Array.isArray(retryParsed?.questions) ? retryParsed.questions.map((item) => String(item).trim()).filter(Boolean) : finalQuestions;
+            if (typeof retryParsed?.reason === "string" && retryParsed.reason.trim().length > 0) {
+              finalReason = retryParsed.reason.trim();
+            }
+          }
+          if (shouldClarify && finalQuestions.length > 0) {
+            const prompt = import_react61.default.createElement(
+              Box_default,
+              { flexDirection: "column" },
+              import_react61.default.createElement(
+                Text3,
+                { color: Colors.AccentBlue },
+                "Clarifying questions for /research max"
+              ),
+              finalReason ? import_react61.default.createElement(
+                Text3,
+                { color: Colors.Gray },
+                `Reason: ${finalReason}`
+              ) : null,
+              import_react61.default.createElement(
+                Box_default,
+                { flexDirection: "column", marginTop: 1 },
+                ...finalQuestions.map(
+                  (item, index) => import_react61.default.createElement(
+                    Text3,
+                    { key: `${index}-${item}` },
+                    `- ${item}`
+                  )
+                )
+              )
+            );
+            return {
+              type: "input_request",
+              prompt,
+              placeholder: "Answer the questions above...",
+              command: {
+                name: "research",
+                mode,
+                query,
+                appendAnswerToQuery: true,
+                answerPreamble: "Clarifying answers",
+                extraArgs: ["--no-clarify"]
+              }
+            };
+          }
+        } catch (_error) {
+        }
+      }
+    }
     const tool = new ResearchTool(config);
     const abortController = new AbortController();
     try {
@@ -322536,41 +323364,46 @@ var McpPromptLoader = class {
 };
 
 // packages/cli/src/ui/hooks/slashCommandProcessor.ts
+function quoteForShell(value) {
+  const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+  return `"${escaped}"`;
+}
 var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController) => {
   const session = useSessionStats();
-  const [commands, setCommands] = (0, import_react61.useState)([]);
-  const [reloadTrigger, setReloadTrigger] = (0, import_react61.useState)(0);
-  const reloadCommands = (0, import_react61.useCallback)(() => {
+  const [commands, setCommands] = (0, import_react62.useState)([]);
+  const [reloadTrigger, setReloadTrigger] = (0, import_react62.useState)(0);
+  const reloadCommands = (0, import_react62.useCallback)(() => {
     setReloadTrigger((v) => v + 1);
   }, []);
-  const [shellConfirmationRequest, setShellConfirmationRequest] = (0, import_react61.useState)(null);
-  const [confirmationRequest, setConfirmationRequest] = (0, import_react61.useState)(null);
-  const [quitConfirmationRequest, setQuitConfirmationRequest] = (0, import_react61.useState)(null);
-  const [sessionShellAllowlist, setSessionShellAllowlist] = (0, import_react61.useState)(
+  const [shellConfirmationRequest, setShellConfirmationRequest] = (0, import_react62.useState)(null);
+  const [confirmationRequest, setConfirmationRequest] = (0, import_react62.useState)(null);
+  const [inputRequest, setInputRequest] = (0, import_react62.useState)(null);
+  const [quitConfirmationRequest, setQuitConfirmationRequest] = (0, import_react62.useState)(null);
+  const [sessionShellAllowlist, setSessionShellAllowlist] = (0, import_react62.useState)(
     /* @__PURE__ */ new Set()
   );
-  const gitService = (0, import_react61.useMemo)(() => {
+  const gitService = (0, import_react62.useMemo)(() => {
     if (!config?.getProjectRoot()) {
       return;
     }
     return new GitService(config.getProjectRoot(), config.storage);
   }, [config]);
-  const logger6 = (0, import_react61.useMemo)(() => {
+  const logger6 = (0, import_react62.useMemo)(() => {
     const l2 = new Logger(
       config?.getSessionId() || "",
       config?.storage ?? new Storage(process34.cwd())
     );
     return l2;
   }, [config]);
-  const [pendingCompressionItem, setPendingCompressionItem] = (0, import_react61.useState)(null);
-  const pendingHistoryItems = (0, import_react61.useMemo)(() => {
+  const [pendingCompressionItem, setPendingCompressionItem] = (0, import_react62.useState)(null);
+  const pendingHistoryItems = (0, import_react62.useMemo)(() => {
     const items = [];
     if (pendingCompressionItem != null) {
       items.push(pendingCompressionItem);
     }
     return items;
   }, [pendingCompressionItem]);
-  const addMessage = (0, import_react61.useCallback)(
+  const addMessage = (0, import_react62.useCallback)(
     (message) => {
       let historyItemContent;
       if (message.type === "about" /* ABOUT */) {
@@ -322632,7 +323465,7 @@ var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHisto
     },
     [addItem]
   );
-  const commandContext = (0, import_react61.useMemo)(
+  const commandContext = (0, import_react62.useMemo)(
     () => ({
       services: {
         config,
@@ -322685,7 +323518,7 @@ var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHisto
       history
     ]
   );
-  (0, import_react61.useEffect)(() => {
+  (0, import_react62.useEffect)(() => {
     if (!config) {
       return;
     }
@@ -322698,7 +323531,7 @@ var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHisto
       ideClient.removeStatusChangeListener(listener);
     };
   }, [config, reloadCommands]);
-  (0, import_react61.useEffect)(() => {
+  (0, import_react62.useEffect)(() => {
     const controller = new AbortController();
     const load = async () => {
       const loaders = [
@@ -322717,7 +323550,7 @@ var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHisto
       controller.abort();
     };
   }, [config, reloadTrigger]);
-  const handleSlashCommand = (0, import_react61.useCallback)(
+  const handleSlashCommand = (0, import_react62.useCallback)(
     async (rawQuery, oneTimeShellAllowlist, overwriteConfirmed) => {
       if (typeof rawQuery !== "string") {
         return false;
@@ -323001,6 +323834,54 @@ var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHisto
                     true
                   );
                 }
+                case "input_request": {
+                  const { submitted, value } = await new Promise((resolve24) => {
+                    setInputRequest({
+                      prompt: result.prompt,
+                      placeholder: result.placeholder,
+                      onSubmit: (inputValue) => {
+                        setInputRequest(null);
+                        resolve24({ submitted: true, value: inputValue });
+                      },
+                      onCancel: () => {
+                        setInputRequest(null);
+                        resolve24({ submitted: false, value: "" });
+                      }
+                    });
+                  });
+                  if (!submitted) {
+                    addItem(
+                      {
+                        type: "info" /* INFO */,
+                        text: "Operation cancelled."
+                      },
+                      Date.now()
+                    );
+                    return { type: "handled" };
+                  }
+                  const { command: command2 } = result;
+                  let query = command2.query ?? "";
+                  const trimmedAnswer = value.trim();
+                  if (command2.appendAnswerToQuery && trimmedAnswer) {
+                    const preamble = command2.answerPreamble ?? "Clarifying answers";
+                    query = `${query}
+
+${preamble}:
+${trimmedAnswer}`;
+                  }
+                  const parts2 = ["/" + command2.name];
+                  if (command2.mode) {
+                    parts2.push(command2.mode);
+                  }
+                  if (query) {
+                    parts2.push(quoteForShell(query));
+                  }
+                  if (command2.extraArgs?.length) {
+                    parts2.push(...command2.extraArgs);
+                  }
+                  const raw = parts2.join(" ").trim();
+                  return await handleSlashCommand(raw);
+                }
                 default: {
                   const unhandled = result;
                   throw new Error(
@@ -323075,6 +323956,7 @@ ${commandToExecute.subCommands.map((sc) => `  - ${sc.name}: ${sc.description || 
       setSessionShellAllowlist,
       setIsProcessing,
       setConfirmationRequest,
+      setInputRequest,
       openModelSelectionDialog,
       session.stats,
       loggingController
@@ -323087,12 +323969,13 @@ ${commandToExecute.subCommands.map((sc) => `  - ${sc.name}: ${sc.description || 
     commandContext,
     shellConfirmationRequest,
     confirmationRequest,
+    inputRequest,
     quitConfirmationRequest
   };
 };
 
 // packages/cli/src/ui/hooks/useSessionLoggingController.ts
-var import_react62 = __toESM(require_react(), 1);
+var import_react63 = __toESM(require_react(), 1);
 init_dist3();
 
 // packages/cli/src/services/SessionMarkdownLogger.ts
@@ -323362,13 +324245,13 @@ var SessionMarkdownLogger = class {
 // packages/cli/src/ui/hooks/useSessionLoggingController.ts
 function useSessionLoggingController(options2) {
   const { history, config, sessionStats } = options2;
-  const loggerRef = (0, import_react62.useRef)(new SessionMarkdownLogger());
-  const historyRef = (0, import_react62.useRef)(history);
-  const previousHistoryRef = (0, import_react62.useRef)(history);
-  (0, import_react62.useEffect)(() => {
+  const loggerRef = (0, import_react63.useRef)(new SessionMarkdownLogger());
+  const historyRef = (0, import_react63.useRef)(history);
+  const previousHistoryRef = (0, import_react63.useRef)(history);
+  (0, import_react63.useEffect)(() => {
     historyRef.current = history;
   }, [history]);
-  (0, import_react62.useEffect)(() => {
+  (0, import_react63.useEffect)(() => {
     if (!loggerRef.current.isEnabled()) {
       previousHistoryRef.current = history;
       return;
@@ -323376,7 +324259,7 @@ function useSessionLoggingController(options2) {
     loggerRef.current.syncHistory(previousHistoryRef.current, history);
     previousHistoryRef.current = history;
   }, [history]);
-  (0, import_react62.useEffect)(() => {
+  (0, import_react63.useEffect)(() => {
     const handleAppError = (message) => {
       const text = typeof message === "string" ? message : String(message);
       void loggerRef.current.logAppError({
@@ -323389,7 +324272,7 @@ function useSessionLoggingController(options2) {
       appEvents.off("log-error" /* LogError */, handleAppError);
     };
   }, []);
-  (0, import_react62.useEffect)(() => {
+  (0, import_react63.useEffect)(() => {
     const listener = (event) => {
       void loggerRef.current.logErrorReport({
         timestamp: event.timestamp,
@@ -323405,7 +324288,7 @@ function useSessionLoggingController(options2) {
       setErrorReportListener();
     };
   }, []);
-  const enableLogging = (0, import_react62.useCallback)(async () => {
+  const enableLogging = (0, import_react63.useCallback)(async () => {
     const additionalContext = {};
     const projectRoot = config.getProjectRoot();
     if (projectRoot) {
@@ -323425,12 +324308,12 @@ function useSessionLoggingController(options2) {
     );
     return statusResult;
   }, [config, sessionStats.sessionStartTime]);
-  const disableLogging = (0, import_react62.useCallback)(async () => {
+  const disableLogging = (0, import_react63.useCallback)(async () => {
     const statusResult = await loggerRef.current.disable();
     return statusResult;
   }, []);
-  const getStatus = (0, import_react62.useCallback)(() => loggerRef.current.getStatus(), []);
-  const controller = (0, import_react62.useMemo)(() => ({
+  const getStatus = (0, import_react63.useCallback)(() => loggerRef.current.getStatus(), []);
+  const controller = (0, import_react63.useMemo)(() => ({
     enableLogging,
     disableLogging,
     getStatus,
@@ -323454,13 +324337,13 @@ function useSessionLoggingController(options2) {
 }
 
 // packages/cli/src/ui/hooks/useSubagentCreateDialog.ts
-var import_react63 = __toESM(require_react(), 1);
+var import_react64 = __toESM(require_react(), 1);
 function useSubagentCreateDialog() {
-  const [isSubagentCreateDialogOpen, setIsSubagentCreateDialogOpen] = (0, import_react63.useState)(false);
-  const openSubagentCreateDialog = (0, import_react63.useCallback)(() => {
+  const [isSubagentCreateDialogOpen, setIsSubagentCreateDialogOpen] = (0, import_react64.useState)(false);
+  const openSubagentCreateDialog = (0, import_react64.useCallback)(() => {
     setIsSubagentCreateDialogOpen(true);
   }, []);
-  const closeSubagentCreateDialog = (0, import_react63.useCallback)(() => {
+  const closeSubagentCreateDialog = (0, import_react64.useCallback)(() => {
     setIsSubagentCreateDialogOpen(false);
   }, []);
   return {
@@ -323471,13 +324354,13 @@ function useSubagentCreateDialog() {
 }
 
 // packages/cli/src/ui/hooks/useAgentsManagerDialog.ts
-var import_react64 = __toESM(require_react(), 1);
+var import_react65 = __toESM(require_react(), 1);
 var useAgentsManagerDialog = () => {
-  const [isAgentsManagerDialogOpen, setIsAgentsManagerDialogOpen] = (0, import_react64.useState)(false);
-  const openAgentsManagerDialog = (0, import_react64.useCallback)(() => {
+  const [isAgentsManagerDialogOpen, setIsAgentsManagerDialogOpen] = (0, import_react65.useState)(false);
+  const openAgentsManagerDialog = (0, import_react65.useCallback)(() => {
     setIsAgentsManagerDialogOpen(true);
   }, []);
-  const closeAgentsManagerDialog = (0, import_react64.useCallback)(() => {
+  const closeAgentsManagerDialog = (0, import_react65.useCallback)(() => {
     setIsAgentsManagerDialogOpen(false);
   }, []);
   return {
@@ -323489,15 +324372,15 @@ var useAgentsManagerDialog = () => {
 
 // packages/cli/src/ui/hooks/useAutoAcceptIndicator.ts
 init_dist3();
-var import_react65 = __toESM(require_react(), 1);
+var import_react66 = __toESM(require_react(), 1);
 await init_useKeypress();
 function useAutoAcceptIndicator({
   config,
   addItem
 }) {
   const currentConfigValue = config.getApprovalMode();
-  const [showAutoAcceptIndicator, setShowAutoAcceptIndicator] = (0, import_react65.useState)(currentConfigValue);
-  (0, import_react65.useEffect)(() => {
+  const [showAutoAcceptIndicator, setShowAutoAcceptIndicator] = (0, import_react66.useState)(currentConfigValue);
+  (0, import_react66.useEffect)(() => {
     setShowAutoAcceptIndicator(currentConfigValue);
   }, [currentConfigValue]);
   useKeypress(
@@ -323528,26 +324411,26 @@ function useAutoAcceptIndicator({
 }
 
 // packages/cli/src/ui/hooks/useMessageQueue.ts
-var import_react66 = __toESM(require_react(), 1);
+var import_react67 = __toESM(require_react(), 1);
 function useMessageQueue({
   streamingState,
   submitQuery
 }) {
-  const [messageQueue, setMessageQueue] = (0, import_react66.useState)([]);
-  const addMessage = (0, import_react66.useCallback)((message) => {
+  const [messageQueue, setMessageQueue] = (0, import_react67.useState)([]);
+  const addMessage = (0, import_react67.useCallback)((message) => {
     const trimmedMessage = message.trim();
     if (trimmedMessage.length > 0) {
       setMessageQueue((prev) => [...prev, trimmedMessage]);
     }
   }, []);
-  const clearQueue = (0, import_react66.useCallback)(() => {
+  const clearQueue = (0, import_react67.useCallback)(() => {
     setMessageQueue([]);
   }, []);
-  const getQueuedMessagesText = (0, import_react66.useCallback)(() => {
+  const getQueuedMessagesText = (0, import_react67.useCallback)(() => {
     if (messageQueue.length === 0) return "";
     return messageQueue.join("\n\n");
   }, [messageQueue]);
-  (0, import_react66.useEffect)(() => {
+  (0, import_react67.useEffect)(() => {
     if (streamingState === "idle" /* Idle */ && messageQueue.length > 0) {
       const combinedMessage = messageQueue.join("\n\n");
       setMessageQueue([]);
@@ -323563,7 +324446,7 @@ function useMessageQueue({
 }
 
 // packages/cli/src/ui/hooks/useConsoleMessages.ts
-var import_react67 = __toESM(require_react(), 1);
+var import_react68 = __toESM(require_react(), 1);
 function consoleMessagesReducer(state, action) {
   switch (action.type) {
     case "ADD_MESSAGES": {
@@ -323588,11 +324471,11 @@ function consoleMessagesReducer(state, action) {
   }
 }
 function useConsoleMessages() {
-  const [consoleMessages, dispatch] = (0, import_react67.useReducer)(consoleMessagesReducer, []);
-  const messageQueueRef = (0, import_react67.useRef)([]);
-  const timeoutRef = (0, import_react67.useRef)(null);
-  const [, startTransition] = (0, import_react67.useTransition)();
-  const processQueue = (0, import_react67.useCallback)(() => {
+  const [consoleMessages, dispatch] = (0, import_react68.useReducer)(consoleMessagesReducer, []);
+  const messageQueueRef = (0, import_react68.useRef)([]);
+  const timeoutRef = (0, import_react68.useRef)(null);
+  const [, startTransition] = (0, import_react68.useTransition)();
+  const processQueue = (0, import_react68.useCallback)(() => {
     if (messageQueueRef.current.length > 0) {
       const messagesToProcess = messageQueueRef.current;
       messageQueueRef.current = [];
@@ -323602,7 +324485,7 @@ function useConsoleMessages() {
     }
     timeoutRef.current = null;
   }, []);
-  const handleNewMessage = (0, import_react67.useCallback)(
+  const handleNewMessage = (0, import_react68.useCallback)(
     (message) => {
       messageQueueRef.current.push(message);
       if (!timeoutRef.current) {
@@ -323611,7 +324494,7 @@ function useConsoleMessages() {
     },
     [processQueue]
   );
-  const clearConsoleMessages = (0, import_react67.useCallback)(() => {
+  const clearConsoleMessages = (0, import_react68.useCallback)(() => {
     if (timeoutRef.current) {
       clearTimeout(timeoutRef.current);
       timeoutRef.current = null;
@@ -323621,7 +324504,7 @@ function useConsoleMessages() {
       dispatch({ type: "CLEAR" });
     });
   }, []);
-  (0, import_react67.useEffect)(
+  (0, import_react68.useEffect)(
     () => () => {
       if (timeoutRef.current) {
         clearTimeout(timeoutRef.current);
@@ -323636,7 +324519,7 @@ function useConsoleMessages() {
 await init_build2();
 
 // node_modules/ink-gradient/dist/index.js
-var import_react68 = __toESM(require_react(), 1);
+var import_react69 = __toESM(require_react(), 1);
 await init_build2();
 var import_prop_types = __toESM(require_prop_types(), 1);
 var import_gradient_string = __toESM(require_gradient_string(), 1);
@@ -323654,7 +324537,7 @@ var Gradient = (props) => {
     throw new Error("Either `name` or `colors` prop must be provided");
   }
   const applyGradient = (text) => gradient.multiline(stripAnsi(text));
-  return import_react68.default.createElement(Transform, { transform: applyGradient }, props.children);
+  return import_react69.default.createElement(Transform, { transform: applyGradient }, props.children);
 };
 Gradient.propTypes = {
   children: import_prop_types.default.oneOfType([
@@ -323768,12 +324651,12 @@ await init_build2();
 init_colors();
 
 // packages/cli/src/ui/contexts/StreamingContext.tsx
-var import_react69 = __toESM(require_react(), 1);
-var StreamingContext = (0, import_react69.createContext)(
+var import_react70 = __toESM(require_react(), 1);
+var StreamingContext = (0, import_react70.createContext)(
   void 0
 );
 var useStreamingContext = () => {
-  const context2 = import_react69.default.useContext(StreamingContext);
+  const context2 = import_react70.default.useContext(StreamingContext);
   if (context2 === void 0) {
     throw new Error(
       "useStreamingContext must be used within a StreamingContextProvider"
@@ -323786,13 +324669,13 @@ var useStreamingContext = () => {
 await init_build2();
 
 // node_modules/ink-spinner/build/index.js
-var import_react70 = __toESM(require_react(), 1);
+var import_react71 = __toESM(require_react(), 1);
 await init_build2();
 var import_cli_spinners = __toESM(require_cli_spinners(), 1);
 function Spinner({ type = "dots" }) {
-  const [frame, setFrame] = (0, import_react70.useState)(0);
+  const [frame, setFrame] = (0, import_react71.useState)(0);
   const spinner = import_cli_spinners.default[type];
-  (0, import_react70.useEffect)(() => {
+  (0, import_react71.useEffect)(() => {
     const timer = setInterval(() => {
       setFrame((previousFrame) => {
         const isLastFrame = previousFrame === spinner.frames.length - 1;
@@ -323803,7 +324686,7 @@ function Spinner({ type = "dots" }) {
       clearInterval(timer);
     };
   }, [spinner]);
-  return import_react70.default.createElement(Text3, null, spinner.frames[frame]);
+  return import_react71.default.createElement(Text3, null, spinner.frames[frame]);
 }
 var build_default = Spinner;
 
@@ -323925,7 +324808,7 @@ var ShellModeIndicator = () => /* @__PURE__ */ (0, import_jsx_runtime18.jsx)(Box
 ] }) });
 
 // packages/cli/src/ui/components/InputPrompt.tsx
-var import_react80 = __toESM(require_react(), 1);
+var import_react81 = __toESM(require_react(), 1);
 await init_build2();
 
 // packages/cli/src/ui/semantic-colors.ts
@@ -324044,7 +324927,7 @@ function SuggestionsDisplay({
 }
 
 // packages/cli/src/ui/hooks/useInputHistory.ts
-var import_react71 = __toESM(require_react(), 1);
+var import_react72 = __toESM(require_react(), 1);
 function useInputHistory({
   userMessages,
   onSubmit,
@@ -324052,13 +324935,13 @@ function useInputHistory({
   currentQuery,
   onChange
 }) {
-  const [historyIndex, setHistoryIndex] = (0, import_react71.useState)(-1);
-  const [originalQueryBeforeNav, setOriginalQueryBeforeNav] = (0, import_react71.useState)("");
-  const resetHistoryNav = (0, import_react71.useCallback)(() => {
+  const [historyIndex, setHistoryIndex] = (0, import_react72.useState)(-1);
+  const [originalQueryBeforeNav, setOriginalQueryBeforeNav] = (0, import_react72.useState)("");
+  const resetHistoryNav = (0, import_react72.useCallback)(() => {
     setHistoryIndex(-1);
     setOriginalQueryBeforeNav("");
   }, []);
-  const handleSubmit = (0, import_react71.useCallback)(
+  const handleSubmit = (0, import_react72.useCallback)(
     (value) => {
       const trimmedValue = value.trim();
       if (trimmedValue) {
@@ -324068,7 +324951,7 @@ function useInputHistory({
     },
     [onSubmit, resetHistoryNav]
   );
-  const navigateUp = (0, import_react71.useCallback)(() => {
+  const navigateUp = (0, import_react72.useCallback)(() => {
     if (!isActive) return false;
     if (userMessages.length === 0) return false;
     let nextIndex = historyIndex;
@@ -324097,7 +324980,7 @@ function useInputHistory({
     // Use currentQuery from props
     setOriginalQueryBeforeNav
   ]);
-  const navigateDown = (0, import_react71.useCallback)(() => {
+  const navigateDown = (0, import_react72.useCallback)(() => {
     if (!isActive) return false;
     if (historyIndex === -1) return false;
     const nextIndex = historyIndex - 1;
@@ -324125,7 +325008,7 @@ function useInputHistory({
 }
 
 // packages/cli/src/ui/components/shared/text-buffer.ts
-var import_react72 = __toESM(require_react(), 1);
+var import_react73 = __toESM(require_react(), 1);
 import { spawnSync } from "node:child_process";
 import fs70 from "node:fs";
 import os29 from "node:os";
@@ -325685,7 +326568,7 @@ function useTextBuffer({
   isValidPath,
   shellModeActive = false
 }) {
-  const initialState2 = (0, import_react72.useMemo)(() => {
+  const initialState2 = (0, import_react73.useMemo)(() => {
     const lines2 = initialText.split("\n");
     const [initialCursorRow, initialCursorCol] = calculateInitialCursorPosition(
       lines2.length === 0 ? [""] : lines2,
@@ -325703,24 +326586,24 @@ function useTextBuffer({
       viewportWidth: viewport.width
     };
   }, [initialText, initialCursorOffset, viewport.width]);
-  const [state, dispatch] = (0, import_react72.useReducer)(textBufferReducer, initialState2);
+  const [state, dispatch] = (0, import_react73.useReducer)(textBufferReducer, initialState2);
   const { lines, cursorRow, cursorCol, preferredCol, selectionAnchor } = state;
-  const text = (0, import_react72.useMemo)(() => lines.join("\n"), [lines]);
-  const visualLayout = (0, import_react72.useMemo)(
+  const text = (0, import_react73.useMemo)(() => lines.join("\n"), [lines]);
+  const visualLayout = (0, import_react73.useMemo)(
     () => calculateVisualLayout(lines, [cursorRow, cursorCol], state.viewportWidth),
     [lines, cursorRow, cursorCol, state.viewportWidth]
   );
   const { visualLines, visualCursor } = visualLayout;
-  const [visualScrollRow, setVisualScrollRow] = (0, import_react72.useState)(0);
-  (0, import_react72.useEffect)(() => {
+  const [visualScrollRow, setVisualScrollRow] = (0, import_react73.useState)(0);
+  (0, import_react73.useEffect)(() => {
     if (onChange) {
       onChange(text);
     }
   }, [text, onChange]);
-  (0, import_react72.useEffect)(() => {
+  (0, import_react73.useEffect)(() => {
     dispatch({ type: "set_viewport_width", payload: viewport.width });
   }, [viewport.width]);
-  (0, import_react72.useEffect)(() => {
+  (0, import_react73.useEffect)(() => {
     const { height } = viewport;
     let newVisualScrollRow = visualScrollRow;
     if (visualCursor[0] < visualScrollRow) {
@@ -325732,7 +326615,7 @@ function useTextBuffer({
       setVisualScrollRow(newVisualScrollRow);
     }
   }, [visualCursor, visualScrollRow, viewport]);
-  const insert = (0, import_react72.useCallback)(
+  const insert = (0, import_react73.useCallback)(
     (ch, { paste = false } = {}) => {
       if (/[\n\r]/.test(ch)) {
         dispatch({ type: "insert", payload: ch });
@@ -325768,139 +326651,139 @@ function useTextBuffer({
     },
     [isValidPath, shellModeActive]
   );
-  const newline2 = (0, import_react72.useCallback)(() => {
+  const newline2 = (0, import_react73.useCallback)(() => {
     dispatch({ type: "insert", payload: "\n" });
   }, []);
-  const backspace = (0, import_react72.useCallback)(() => {
+  const backspace = (0, import_react73.useCallback)(() => {
     dispatch({ type: "backspace" });
   }, []);
-  const del = (0, import_react72.useCallback)(() => {
+  const del = (0, import_react73.useCallback)(() => {
     dispatch({ type: "delete" });
   }, []);
-  const move = (0, import_react72.useCallback)((dir) => {
+  const move = (0, import_react73.useCallback)((dir) => {
     dispatch({ type: "move", payload: { dir } });
   }, []);
-  const undo = (0, import_react72.useCallback)(() => {
+  const undo = (0, import_react73.useCallback)(() => {
     dispatch({ type: "undo" });
   }, []);
-  const redo = (0, import_react72.useCallback)(() => {
+  const redo = (0, import_react73.useCallback)(() => {
     dispatch({ type: "redo" });
   }, []);
-  const setText = (0, import_react72.useCallback)((newText) => {
+  const setText = (0, import_react73.useCallback)((newText) => {
     dispatch({ type: "set_text", payload: newText });
   }, []);
-  const deleteWordLeft = (0, import_react72.useCallback)(() => {
+  const deleteWordLeft = (0, import_react73.useCallback)(() => {
     dispatch({ type: "delete_word_left" });
   }, []);
-  const deleteWordRight = (0, import_react72.useCallback)(() => {
+  const deleteWordRight = (0, import_react73.useCallback)(() => {
     dispatch({ type: "delete_word_right" });
   }, []);
-  const killLineRight = (0, import_react72.useCallback)(() => {
+  const killLineRight = (0, import_react73.useCallback)(() => {
     dispatch({ type: "kill_line_right" });
   }, []);
-  const killLineLeft = (0, import_react72.useCallback)(() => {
+  const killLineLeft = (0, import_react73.useCallback)(() => {
     dispatch({ type: "kill_line_left" });
   }, []);
-  const vimDeleteWordForward = (0, import_react72.useCallback)((count) => {
+  const vimDeleteWordForward = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_delete_word_forward", payload: { count } });
   }, []);
-  const vimDeleteWordBackward = (0, import_react72.useCallback)((count) => {
+  const vimDeleteWordBackward = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_delete_word_backward", payload: { count } });
   }, []);
-  const vimDeleteWordEnd = (0, import_react72.useCallback)((count) => {
+  const vimDeleteWordEnd = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_delete_word_end", payload: { count } });
   }, []);
-  const vimChangeWordForward = (0, import_react72.useCallback)((count) => {
+  const vimChangeWordForward = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_change_word_forward", payload: { count } });
   }, []);
-  const vimChangeWordBackward = (0, import_react72.useCallback)((count) => {
+  const vimChangeWordBackward = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_change_word_backward", payload: { count } });
   }, []);
-  const vimChangeWordEnd = (0, import_react72.useCallback)((count) => {
+  const vimChangeWordEnd = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_change_word_end", payload: { count } });
   }, []);
-  const vimDeleteLine = (0, import_react72.useCallback)((count) => {
+  const vimDeleteLine = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_delete_line", payload: { count } });
   }, []);
-  const vimChangeLine = (0, import_react72.useCallback)((count) => {
+  const vimChangeLine = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_change_line", payload: { count } });
   }, []);
-  const vimDeleteToEndOfLine = (0, import_react72.useCallback)(() => {
+  const vimDeleteToEndOfLine = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_delete_to_end_of_line" });
   }, []);
-  const vimChangeToEndOfLine = (0, import_react72.useCallback)(() => {
+  const vimChangeToEndOfLine = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_change_to_end_of_line" });
   }, []);
-  const vimChangeMovement = (0, import_react72.useCallback)(
+  const vimChangeMovement = (0, import_react73.useCallback)(
     (movement, count) => {
       dispatch({ type: "vim_change_movement", payload: { movement, count } });
     },
     []
   );
-  const vimMoveLeft = (0, import_react72.useCallback)((count) => {
+  const vimMoveLeft = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_move_left", payload: { count } });
   }, []);
-  const vimMoveRight = (0, import_react72.useCallback)((count) => {
+  const vimMoveRight = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_move_right", payload: { count } });
   }, []);
-  const vimMoveUp = (0, import_react72.useCallback)((count) => {
+  const vimMoveUp = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_move_up", payload: { count } });
   }, []);
-  const vimMoveDown = (0, import_react72.useCallback)((count) => {
+  const vimMoveDown = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_move_down", payload: { count } });
   }, []);
-  const vimMoveWordForward = (0, import_react72.useCallback)((count) => {
+  const vimMoveWordForward = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_move_word_forward", payload: { count } });
   }, []);
-  const vimMoveWordBackward = (0, import_react72.useCallback)((count) => {
+  const vimMoveWordBackward = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_move_word_backward", payload: { count } });
   }, []);
-  const vimMoveWordEnd = (0, import_react72.useCallback)((count) => {
+  const vimMoveWordEnd = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_move_word_end", payload: { count } });
   }, []);
-  const vimDeleteChar = (0, import_react72.useCallback)((count) => {
+  const vimDeleteChar = (0, import_react73.useCallback)((count) => {
     dispatch({ type: "vim_delete_char", payload: { count } });
   }, []);
-  const vimInsertAtCursor = (0, import_react72.useCallback)(() => {
+  const vimInsertAtCursor = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_insert_at_cursor" });
   }, []);
-  const vimAppendAtCursor = (0, import_react72.useCallback)(() => {
+  const vimAppendAtCursor = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_append_at_cursor" });
   }, []);
-  const vimOpenLineBelow = (0, import_react72.useCallback)(() => {
+  const vimOpenLineBelow = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_open_line_below" });
   }, []);
-  const vimOpenLineAbove = (0, import_react72.useCallback)(() => {
+  const vimOpenLineAbove = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_open_line_above" });
   }, []);
-  const vimAppendAtLineEnd = (0, import_react72.useCallback)(() => {
+  const vimAppendAtLineEnd = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_append_at_line_end" });
   }, []);
-  const vimInsertAtLineStart = (0, import_react72.useCallback)(() => {
+  const vimInsertAtLineStart = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_insert_at_line_start" });
   }, []);
-  const vimMoveToLineStart = (0, import_react72.useCallback)(() => {
+  const vimMoveToLineStart = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_move_to_line_start" });
   }, []);
-  const vimMoveToLineEnd = (0, import_react72.useCallback)(() => {
+  const vimMoveToLineEnd = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_move_to_line_end" });
   }, []);
-  const vimMoveToFirstNonWhitespace = (0, import_react72.useCallback)(() => {
+  const vimMoveToFirstNonWhitespace = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_move_to_first_nonwhitespace" });
   }, []);
-  const vimMoveToFirstLine = (0, import_react72.useCallback)(() => {
+  const vimMoveToFirstLine = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_move_to_first_line" });
   }, []);
-  const vimMoveToLastLine = (0, import_react72.useCallback)(() => {
+  const vimMoveToLastLine = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_move_to_last_line" });
   }, []);
-  const vimMoveToLine = (0, import_react72.useCallback)((lineNumber) => {
+  const vimMoveToLine = (0, import_react73.useCallback)((lineNumber) => {
     dispatch({ type: "vim_move_to_line", payload: { lineNumber } });
   }, []);
-  const vimEscapeInsertMode = (0, import_react72.useCallback)(() => {
+  const vimEscapeInsertMode = (0, import_react73.useCallback)(() => {
     dispatch({ type: "vim_escape_insert_mode" });
   }, []);
-  const openInExternalEditor = (0, import_react72.useCallback)(
+  const openInExternalEditor = (0, import_react73.useCallback)(
     async (opts = {}) => {
       const editor = opts.editor ?? process.env["VISUAL"] ?? process.env["EDITOR"] ?? (process.platform === "win32" ? "notepad" : "vi");
       const tmpDir = fs70.mkdtempSync(pathMod.join(os29.tmpdir(), "gemini-edit-"));
@@ -325935,7 +326818,7 @@ function useTextBuffer({
     },
     [text, stdin, setRawMode]
   );
-  const handleInput = (0, import_react72.useCallback)(
+  const handleInput = (0, import_react73.useCallback)(
     (key) => {
       const { sequence: input } = key;
       if (key.paste) {
@@ -325973,11 +326856,11 @@ function useTextBuffer({
     },
     [newline2, move, deleteWordLeft, deleteWordRight, backspace, del, insert]
   );
-  const renderedVisualLines = (0, import_react72.useMemo)(
+  const renderedVisualLines = (0, import_react73.useMemo)(
     () => visualLines.slice(visualScrollRow, visualScrollRow + viewport.height),
     [visualLines, visualScrollRow, viewport.height]
   );
-  const replaceRange = (0, import_react72.useCallback)(
+  const replaceRange = (0, import_react73.useCallback)(
     (startRow, startCol, endRow, endCol, text2) => {
       dispatch({
         type: "replace_range",
@@ -325986,7 +326869,7 @@ function useTextBuffer({
     },
     []
   );
-  const replaceRangeByOffset = (0, import_react72.useCallback)(
+  const replaceRangeByOffset = (0, import_react73.useCallback)(
     (startOffset, endOffset, replacementText) => {
       const [startRow, startCol] = offsetToLogicalPos(text, startOffset);
       const [endRow, endCol] = offsetToLogicalPos(text, endOffset);
@@ -325994,7 +326877,7 @@ function useTextBuffer({
     },
     [text, replaceRange]
   );
-  const moveToOffset = (0, import_react72.useCallback)((offset) => {
+  const moveToOffset = (0, import_react73.useCallback)((offset) => {
     dispatch({ type: "move_to_offset", payload: { offset } });
   }, []);
   const returnValue = {
@@ -326065,7 +326948,7 @@ function useTextBuffer({
 var import_chalk4 = __toESM(require_source(), 1);
 
 // packages/cli/src/ui/hooks/useShellHistory.ts
-var import_react73 = __toESM(require_react(), 1);
+var import_react74 = __toESM(require_react(), 1);
 init_dist3();
 import * as fs71 from "node:fs/promises";
 import * as path82 from "node:path";
@@ -326107,10 +326990,10 @@ async function writeHistoryFile(filePath, history) {
   }
 }
 function useShellHistory(projectRoot, storage) {
-  const [history, setHistory] = (0, import_react73.useState)([]);
-  const [historyIndex, setHistoryIndex] = (0, import_react73.useState)(-1);
-  const [historyFilePath, setHistoryFilePath] = (0, import_react73.useState)(null);
-  (0, import_react73.useEffect)(() => {
+  const [history, setHistory] = (0, import_react74.useState)([]);
+  const [historyIndex, setHistoryIndex] = (0, import_react74.useState)(-1);
+  const [historyFilePath, setHistoryFilePath] = (0, import_react74.useState)(null);
+  (0, import_react74.useEffect)(() => {
     async function loadHistory() {
       const filePath = await getHistoryFilePath(projectRoot, storage);
       setHistoryFilePath(filePath);
@@ -326119,7 +327002,7 @@ function useShellHistory(projectRoot, storage) {
     }
     loadHistory();
   }, [projectRoot, storage]);
-  const addCommandToHistory = (0, import_react73.useCallback)(
+  const addCommandToHistory = (0, import_react74.useCallback)(
     (command2) => {
       if (!command2.trim() || !historyFilePath) {
         return;
@@ -326131,7 +327014,7 @@ function useShellHistory(projectRoot, storage) {
     },
     [history, historyFilePath]
   );
-  const getPreviousCommand = (0, import_react73.useCallback)(() => {
+  const getPreviousCommand = (0, import_react74.useCallback)(() => {
     if (history.length === 0) {
       return null;
     }
@@ -326139,7 +327022,7 @@ function useShellHistory(projectRoot, storage) {
     setHistoryIndex(newIndex);
     return history[newIndex] ?? null;
   }, [history, historyIndex]);
-  const getNextCommand = (0, import_react73.useCallback)(() => {
+  const getNextCommand = (0, import_react74.useCallback)(() => {
     if (historyIndex < 0) {
       return null;
     }
@@ -326150,7 +327033,7 @@ function useShellHistory(projectRoot, storage) {
     }
     return history[newIndex] ?? null;
   }, [history, historyIndex]);
-  const resetHistoryPosition = (0, import_react73.useCallback)(() => {
+  const resetHistoryPosition = (0, import_react74.useCallback)(() => {
     setHistoryIndex(-1);
   }, []);
   return {
@@ -326163,18 +327046,18 @@ function useShellHistory(projectRoot, storage) {
 }
 
 // packages/cli/src/ui/hooks/useReverseSearchCompletion.tsx
-var import_react75 = __toESM(require_react(), 1);
+var import_react76 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/hooks/useCompletion.ts
-var import_react74 = __toESM(require_react(), 1);
+var import_react75 = __toESM(require_react(), 1);
 function useCompletion() {
-  const [suggestions, setSuggestions] = (0, import_react74.useState)([]);
-  const [activeSuggestionIndex, setActiveSuggestionIndex] = (0, import_react74.useState)(-1);
-  const [visibleStartIndex, setVisibleStartIndex] = (0, import_react74.useState)(0);
-  const [showSuggestions, setShowSuggestions] = (0, import_react74.useState)(false);
-  const [isLoadingSuggestions, setIsLoadingSuggestions] = (0, import_react74.useState)(false);
-  const [isPerfectMatch, setIsPerfectMatch] = (0, import_react74.useState)(false);
-  const resetCompletionState = (0, import_react74.useCallback)(() => {
+  const [suggestions, setSuggestions] = (0, import_react75.useState)([]);
+  const [activeSuggestionIndex, setActiveSuggestionIndex] = (0, import_react75.useState)(-1);
+  const [visibleStartIndex, setVisibleStartIndex] = (0, import_react75.useState)(0);
+  const [showSuggestions, setShowSuggestions] = (0, import_react75.useState)(false);
+  const [isLoadingSuggestions, setIsLoadingSuggestions] = (0, import_react75.useState)(false);
+  const [isPerfectMatch, setIsPerfectMatch] = (0, import_react75.useState)(false);
+  const resetCompletionState = (0, import_react75.useCallback)(() => {
     setSuggestions([]);
     setActiveSuggestionIndex(-1);
     setVisibleStartIndex(0);
@@ -326182,7 +327065,7 @@ function useCompletion() {
     setIsLoadingSuggestions(false);
     setIsPerfectMatch(false);
   }, []);
-  const navigateUp = (0, import_react74.useCallback)(() => {
+  const navigateUp = (0, import_react75.useCallback)(() => {
     if (suggestions.length === 0) return;
     setActiveSuggestionIndex((prevActiveIndex) => {
       const newActiveIndex = prevActiveIndex <= 0 ? suggestions.length - 1 : prevActiveIndex - 1;
@@ -326198,7 +327081,7 @@ function useCompletion() {
       return newActiveIndex;
     });
   }, [suggestions.length]);
-  const navigateDown = (0, import_react74.useCallback)(() => {
+  const navigateDown = (0, import_react75.useCallback)(() => {
     if (suggestions.length === 0) return;
     setActiveSuggestionIndex((prevActiveIndex) => {
       const newActiveIndex = prevActiveIndex >= suggestions.length - 1 ? 0 : prevActiveIndex + 1;
@@ -326249,12 +327132,12 @@ function useReverseSearchCompletion(buffer, shellHistory, reverseSearchActive) {
     navigateUp,
     navigateDown
   } = useCompletion();
-  (0, import_react75.useEffect)(() => {
+  (0, import_react76.useEffect)(() => {
     if (!reverseSearchActive) {
       resetCompletionState();
     }
   }, [reverseSearchActive, resetCompletionState]);
-  (0, import_react75.useEffect)(() => {
+  (0, import_react76.useEffect)(() => {
     if (!reverseSearchActive) {
       return;
     }
@@ -326277,7 +327160,7 @@ function useReverseSearchCompletion(buffer, shellHistory, reverseSearchActive) {
     setShowSuggestions,
     setSuggestions
   ]);
-  const handleAutocomplete = (0, import_react75.useCallback)(
+  const handleAutocomplete = (0, import_react76.useCallback)(
     (i) => {
       if (i < 0 || i >= suggestions.length) return;
       buffer.setText(suggestions[i].value);
@@ -326299,10 +327182,10 @@ function useReverseSearchCompletion(buffer, shellHistory, reverseSearchActive) {
 }
 
 // packages/cli/src/ui/hooks/useCommandCompletion.tsx
-var import_react79 = __toESM(require_react(), 1);
+var import_react80 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/hooks/useAtCompletion.ts
-var import_react76 = __toESM(require_react(), 1);
+var import_react77 = __toESM(require_react(), 1);
 init_dist3();
 var initialState = {
   status: "idle" /* IDLE */,
@@ -326360,20 +327243,20 @@ function useAtCompletion(props) {
     setSuggestions,
     setIsLoadingSuggestions
   } = props;
-  const [state, dispatch] = (0, import_react76.useReducer)(atCompletionReducer, initialState);
-  const fileSearch = (0, import_react76.useRef)(null);
-  const searchAbortController = (0, import_react76.useRef)(null);
-  const slowSearchTimer = (0, import_react76.useRef)(null);
-  (0, import_react76.useEffect)(() => {
+  const [state, dispatch] = (0, import_react77.useReducer)(atCompletionReducer, initialState);
+  const fileSearch = (0, import_react77.useRef)(null);
+  const searchAbortController = (0, import_react77.useRef)(null);
+  const slowSearchTimer = (0, import_react77.useRef)(null);
+  (0, import_react77.useEffect)(() => {
     setSuggestions(state.suggestions);
   }, [state.suggestions, setSuggestions]);
-  (0, import_react76.useEffect)(() => {
+  (0, import_react77.useEffect)(() => {
     setIsLoadingSuggestions(state.isLoading);
   }, [state.isLoading, setIsLoadingSuggestions]);
-  (0, import_react76.useEffect)(() => {
+  (0, import_react77.useEffect)(() => {
     dispatch({ type: "RESET" });
   }, [cwd5, config]);
-  (0, import_react76.useEffect)(() => {
+  (0, import_react77.useEffect)(() => {
     if (!enabled) {
       if (state.status === "ready" /* READY */ || state.status === "error" /* ERROR */) {
         dispatch({ type: "RESET" });
@@ -326390,7 +327273,7 @@ function useAtCompletion(props) {
       dispatch({ type: "SEARCH", payload: pattern });
     }
   }, [enabled, pattern, state.status, state.pattern]);
-  (0, import_react76.useEffect)(() => {
+  (0, import_react77.useEffect)(() => {
     const initialize = async () => {
       try {
         const searcher = FileSearchFactory.create({
@@ -326463,7 +327346,7 @@ function useAtCompletion(props) {
 }
 
 // packages/cli/src/ui/hooks/useSlashCompletion.ts
-var import_react77 = __toESM(require_react(), 1);
+var import_react78 = __toESM(require_react(), 1);
 function useSlashCompletion(props) {
   const {
     enabled,
@@ -326474,9 +327357,9 @@ function useSlashCompletion(props) {
     setIsLoadingSuggestions,
     setIsPerfectMatch
   } = props;
-  const [completionStart, setCompletionStart] = (0, import_react77.useState)(-1);
-  const [completionEnd, setCompletionEnd] = (0, import_react77.useState)(-1);
-  (0, import_react77.useEffect)(() => {
+  const [completionStart, setCompletionStart] = (0, import_react78.useState)(-1);
+  const [completionEnd, setCompletionEnd] = (0, import_react78.useState)(-1);
+  (0, import_react78.useEffect)(() => {
     if (!enabled || query === null) {
       return;
     }
@@ -326601,7 +327484,7 @@ function useSlashCompletion(props) {
 }
 
 // packages/cli/src/ui/hooks/usePromptCompletion.ts
-var import_react78 = __toESM(require_react(), 1);
+var import_react79 = __toESM(require_react(), 1);
 init_dist3();
 var PROMPT_COMPLETION_MIN_LENGTH = 5;
 var PROMPT_COMPLETION_DEBOUNCE_MS = 250;
@@ -326610,18 +327493,18 @@ function usePromptCompletion({
   config,
   enabled
 }) {
-  const [ghostText, setGhostText] = (0, import_react78.useState)("");
-  const [isLoadingGhostText, setIsLoadingGhostText] = (0, import_react78.useState)(false);
-  const abortControllerRef = (0, import_react78.useRef)(null);
-  const [justSelectedSuggestion, setJustSelectedSuggestion] = (0, import_react78.useState)(false);
-  const lastSelectedTextRef = (0, import_react78.useRef)("");
-  const lastRequestedTextRef = (0, import_react78.useRef)("");
+  const [ghostText, setGhostText] = (0, import_react79.useState)("");
+  const [isLoadingGhostText, setIsLoadingGhostText] = (0, import_react79.useState)(false);
+  const abortControllerRef = (0, import_react79.useRef)(null);
+  const [justSelectedSuggestion, setJustSelectedSuggestion] = (0, import_react79.useState)(false);
+  const lastSelectedTextRef = (0, import_react79.useRef)("");
+  const lastRequestedTextRef = (0, import_react79.useRef)("");
   const isPromptCompletionEnabled = enabled && (config?.getEnablePromptCompletion() ?? false);
-  const clearGhostText = (0, import_react78.useCallback)(() => {
+  const clearGhostText = (0, import_react79.useCallback)(() => {
     setGhostText("");
     setIsLoadingGhostText(false);
   }, []);
-  const acceptGhostText = (0, import_react78.useCallback)(() => {
+  const acceptGhostText = (0, import_react79.useCallback)(() => {
     if (ghostText && ghostText.length > buffer.text.length) {
       buffer.setText(ghostText);
       setGhostText("");
@@ -326629,11 +327512,11 @@ function usePromptCompletion({
       lastSelectedTextRef.current = ghostText;
     }
   }, [ghostText, buffer]);
-  const markSuggestionSelected = (0, import_react78.useCallback)((selectedText) => {
+  const markSuggestionSelected = (0, import_react79.useCallback)((selectedText) => {
     setJustSelectedSuggestion(true);
     lastSelectedTextRef.current = selectedText;
   }, []);
-  const generatePromptSuggestions = (0, import_react78.useCallback)(async () => {
+  const generatePromptSuggestions = (0, import_react79.useCallback)(async () => {
     const trimmedText = buffer.text.trim();
     const geminiClient = config?.getGeminiClient();
     if (trimmedText === lastRequestedTextRef.current) {
@@ -326701,7 +327584,7 @@ function usePromptCompletion({
       }
     }
   }, [buffer.text, config, clearGhostText, isPromptCompletionEnabled]);
-  const isCursorAtEnd = (0, import_react78.useCallback)(() => {
+  const isCursorAtEnd = (0, import_react79.useCallback)(() => {
     const [cursorRow, cursorCol] = buffer.cursor;
     const totalLines = buffer.lines.length;
     if (cursorRow !== totalLines - 1) {
@@ -326710,7 +327593,7 @@ function usePromptCompletion({
     const lastLine = buffer.lines[cursorRow] || "";
     return cursorCol === lastLine.length;
   }, [buffer.cursor, buffer.lines]);
-  const handlePromptCompletion = (0, import_react78.useCallback)(() => {
+  const handlePromptCompletion = (0, import_react79.useCallback)(() => {
     if (!isCursorAtEnd()) {
       clearGhostText();
       return;
@@ -326731,14 +327614,14 @@ function usePromptCompletion({
     isCursorAtEnd,
     clearGhostText
   ]);
-  (0, import_react78.useEffect)(() => {
+  (0, import_react79.useEffect)(() => {
     const timeoutId = setTimeout(
       handlePromptCompletion,
       PROMPT_COMPLETION_DEBOUNCE_MS
     );
     return () => clearTimeout(timeoutId);
   }, [buffer.text, buffer.cursor, handlePromptCompletion]);
-  (0, import_react78.useEffect)(() => {
+  (0, import_react79.useEffect)(() => {
     const currentText = buffer.text.trim();
     if (ghostText && !isCursorAtEnd()) {
       clearGhostText();
@@ -326748,8 +327631,8 @@ function usePromptCompletion({
       clearGhostText();
     }
   }, [buffer.text, buffer.cursor, ghostText, clearGhostText, isCursorAtEnd]);
-  (0, import_react78.useEffect)(() => () => abortControllerRef.current?.abort(), []);
-  const isActive = (0, import_react78.useMemo)(() => {
+  (0, import_react79.useEffect)(() => () => abortControllerRef.current?.abort(), []);
+  const isActive = (0, import_react79.useMemo)(() => {
     if (!isPromptCompletionEnabled) return false;
     if (!isCursorAtEnd()) return false;
     const trimmedText = buffer.text.trim();
@@ -326786,7 +327669,7 @@ function useCommandCompletion(buffer, dirs, cwd5, slashCommands, commandContext,
   } = useCompletion();
   const cursorRow = buffer.cursor[0];
   const cursorCol = buffer.cursor[1];
-  const { completionMode, query, completionStart, completionEnd } = (0, import_react79.useMemo)(() => {
+  const { completionMode, query, completionStart, completionEnd } = (0, import_react80.useMemo)(() => {
     const currentLine = buffer.lines[cursorRow] || "";
     if (cursorRow === 0 && isSlashCommand(currentLine.trim())) {
       return {
@@ -326870,11 +327753,11 @@ function useCommandCompletion(buffer, dirs, cwd5, slashCommands, commandContext,
     config,
     enabled: completionMode === "PROMPT" /* PROMPT */
   });
-  (0, import_react79.useEffect)(() => {
+  (0, import_react80.useEffect)(() => {
     setActiveSuggestionIndex(suggestions.length > 0 ? 0 : -1);
     setVisibleStartIndex(0);
   }, [suggestions, setActiveSuggestionIndex, setVisibleStartIndex]);
-  (0, import_react79.useEffect)(() => {
+  (0, import_react80.useEffect)(() => {
     if (completionMode === "IDLE" /* IDLE */ || reverseSearchActive) {
       resetCompletionState();
       return;
@@ -326888,7 +327771,7 @@ function useCommandCompletion(buffer, dirs, cwd5, slashCommands, commandContext,
     resetCompletionState,
     setShowSuggestions
   ]);
-  const handleAutocomplete = (0, import_react79.useCallback)(
+  const handleAutocomplete = (0, import_react80.useCallback)(
     (indexToUse) => {
       if (indexToUse < 0 || indexToUse >= suggestions.length) {
         return;
@@ -327227,22 +328110,22 @@ var InputPrompt = ({
   onEscapePromptChange,
   vimHandleInput
 }) => {
-  const [justNavigatedHistory, setJustNavigatedHistory] = (0, import_react80.useState)(false);
-  const [escPressCount, setEscPressCount] = (0, import_react80.useState)(0);
-  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react80.useState)(false);
-  const escapeTimerRef = (0, import_react80.useRef)(null);
-  const [dirs, setDirs] = (0, import_react80.useState)(
+  const [justNavigatedHistory, setJustNavigatedHistory] = (0, import_react81.useState)(false);
+  const [escPressCount, setEscPressCount] = (0, import_react81.useState)(0);
+  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react81.useState)(false);
+  const escapeTimerRef = (0, import_react81.useRef)(null);
+  const [dirs, setDirs] = (0, import_react81.useState)(
     config.getWorkspaceContext().getDirectories()
   );
   const dirsChanged = config.getWorkspaceContext().getDirectories();
-  (0, import_react80.useEffect)(() => {
+  (0, import_react81.useEffect)(() => {
     if (dirs.length !== dirsChanged.length) {
       setDirs(dirsChanged);
     }
   }, [dirs.length, dirsChanged]);
-  const [reverseSearchActive, setReverseSearchActive] = (0, import_react80.useState)(false);
-  const [textBeforeReverseSearch, setTextBeforeReverseSearch] = (0, import_react80.useState)("");
-  const [cursorPosition, setCursorPosition] = (0, import_react80.useState)([
+  const [reverseSearchActive, setReverseSearchActive] = (0, import_react81.useState)(false);
+  const [textBeforeReverseSearch, setTextBeforeReverseSearch] = (0, import_react81.useState)("");
+  const [cursorPosition, setCursorPosition] = (0, import_react81.useState)([
     0,
     0
   ]);
@@ -327264,7 +328147,7 @@ var InputPrompt = ({
   );
   const resetCompletionState = completion3.resetCompletionState;
   const resetReverseSearchCompletionState = reverseSearchCompletion.resetCompletionState;
-  const resetEscapeState = (0, import_react80.useCallback)(() => {
+  const resetEscapeState = (0, import_react81.useCallback)(() => {
     if (escapeTimerRef.current) {
       clearTimeout(escapeTimerRef.current);
       escapeTimerRef.current = null;
@@ -327272,12 +328155,12 @@ var InputPrompt = ({
     setEscPressCount(0);
     setShowEscapePrompt(false);
   }, []);
-  (0, import_react80.useEffect)(() => {
+  (0, import_react81.useEffect)(() => {
     if (onEscapePromptChange) {
       onEscapePromptChange(showEscapePrompt);
     }
   }, [showEscapePrompt, onEscapePromptChange]);
-  (0, import_react80.useEffect)(
+  (0, import_react81.useEffect)(
     () => () => {
       if (escapeTimerRef.current) {
         clearTimeout(escapeTimerRef.current);
@@ -327285,7 +328168,7 @@ var InputPrompt = ({
     },
     []
   );
-  const handleSubmitAndClear = (0, import_react80.useCallback)(
+  const handleSubmitAndClear = (0, import_react81.useCallback)(
     (submittedValue) => {
       if (shellModeActive) {
         shellHistory.addCommandToHistory(submittedValue);
@@ -327304,7 +328187,7 @@ var InputPrompt = ({
       resetReverseSearchCompletionState
     ]
   );
-  const customSetTextAndResetCompletionSignal = (0, import_react80.useCallback)(
+  const customSetTextAndResetCompletionSignal = (0, import_react81.useCallback)(
     (newText) => {
       buffer.setText(newText);
       setJustNavigatedHistory(true);
@@ -327318,7 +328201,7 @@ var InputPrompt = ({
     currentQuery: buffer.text,
     onChange: customSetTextAndResetCompletionSignal
   });
-  (0, import_react80.useEffect)(() => {
+  (0, import_react81.useEffect)(() => {
     if (justNavigatedHistory) {
       resetCompletionState();
       resetReverseSearchCompletionState();
@@ -327331,7 +328214,7 @@ var InputPrompt = ({
     setJustNavigatedHistory,
     resetReverseSearchCompletionState
   ]);
-  const handleClipboardImage = (0, import_react80.useCallback)(async () => {
+  const handleClipboardImage = (0, import_react81.useCallback)(async () => {
     try {
       if (await clipboardHasImage()) {
         const imagePath = await saveClipboardImage(config.getTargetDir());
@@ -327363,7 +328246,7 @@ var InputPrompt = ({
       console.error("Error handling clipboard image:", error);
     }
   }, [buffer, config]);
-  const handleInput = (0, import_react80.useCallback)(
+  const handleInput = (0, import_react81.useCallback)(
     (key) => {
       try {
         const lock = useGlobalInputLock();
@@ -327619,7 +328502,7 @@ var InputPrompt = ({
   const linesToRender = buffer.viewportVisualLines;
   const [cursorVisualRowAbsolute, cursorVisualColAbsolute] = buffer.visualCursor;
   const scrollVisualRow = buffer.visualScrollRow;
-  const getGhostTextLines = (0, import_react80.useCallback)(() => {
+  const getGhostTextLines = (0, import_react81.useCallback)(() => {
     if (!completion3.promptCompletion.text || !buffer.text || !completion3.promptCompletion.text.startsWith(buffer.text)) {
       return { inlineGhost: "", additionalLines: [] };
     }
@@ -327828,6 +328711,180 @@ var InputPrompt = ({
   ] });
 };
 
+// packages/cli/src/ui/components/InputRequestDialog.tsx
+var import_react83 = __toESM(require_react(), 1);
+await init_build2();
+
+// packages/cli/src/ui/components/shared/TextInput.tsx
+await init_build2();
+var import_chalk5 = __toESM(require_source(), 1);
+await init_useKeypress();
+init_colors();
+var import_react82 = __toESM(require_react(), 1);
+var import_jsx_runtime22 = __toESM(require_jsx_runtime(), 1);
+function TextInput({
+  value,
+  onChange,
+  onSubmit,
+  placeholder,
+  height = 1,
+  isActive = true,
+  validationErrors = [],
+  inputWidth = 80
+}) {
+  const allowMultiline = height > 1;
+  const onChangeRef = (0, import_react82.useRef)(onChange);
+  (0, import_react82.useEffect)(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+  const stableOnChange = (0, import_react82.useCallback)((text) => {
+    onChangeRef.current?.(text);
+  }, []);
+  const buffer = useTextBuffer({
+    initialText: value || "",
+    viewport: { height, width: inputWidth },
+    isValidPath: () => false,
+    onChange: stableOnChange
+  });
+  const handleSubmit = () => {
+    if (!onSubmit) return;
+    onSubmit();
+  };
+  useKeypress(
+    (key) => {
+      if (!buffer || !isActive) return;
+      if (keyMatchers["submit" /* SUBMIT */](key) || key.name === "return") {
+        if (allowMultiline) {
+          const [row, col] = buffer.cursor;
+          const line = buffer.lines[row];
+          const charBefore = col > 0 ? cpSlice(line, col - 1, col) : "";
+          if (charBefore === "\\") {
+            buffer.backspace();
+            buffer.newline();
+          } else {
+            handleSubmit();
+          }
+        } else {
+          handleSubmit();
+        }
+        return;
+      }
+      if (allowMultiline && keyMatchers["newline" /* NEWLINE */](key)) {
+        buffer.newline();
+        return;
+      }
+      if (keyMatchers["home" /* HOME */](key)) {
+        buffer.move("home");
+        return;
+      }
+      if (keyMatchers["end" /* END */](key)) {
+        buffer.move("end");
+        buffer.moveToOffset(cpLen(buffer.text));
+        return;
+      }
+      if (keyMatchers["clearInput" /* CLEAR_INPUT */](key)) {
+        if (buffer.text.length > 0) buffer.setText("");
+        return;
+      }
+      if (keyMatchers["killLineRight" /* KILL_LINE_RIGHT */](key)) {
+        buffer.killLineRight();
+        return;
+      }
+      if (keyMatchers["killLineLeft" /* KILL_LINE_LEFT */](key)) {
+        buffer.killLineLeft();
+        return;
+      }
+      if (keyMatchers["openExternalEditor" /* OPEN_EXTERNAL_EDITOR */](key)) {
+        buffer.openInExternalEditor();
+        return;
+      }
+      buffer.handleInput(key);
+    },
+    { isActive }
+  );
+  if (!buffer) return null;
+  const linesToRender = buffer.viewportVisualLines;
+  const [cursorVisualRowAbsolute, cursorVisualColAbsolute] = buffer.visualCursor;
+  const scrollVisualRow = buffer.visualScrollRow;
+  return /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(Text3, { color: theme.text.accent, children: "> " }),
+      /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(Box_default, { flexGrow: 1, flexDirection: "column", children: buffer.text.length === 0 && placeholder ? /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)(Text3, { children: [
+        import_chalk5.default.inverse(placeholder.slice(0, 1)),
+        /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(Text3, { color: Colors.Gray, children: placeholder.slice(1) })
+      ] }) : linesToRender.map((lineText, visualIdxInRenderedSet) => {
+        const cursorVisualRow = cursorVisualRowAbsolute - scrollVisualRow;
+        let display = cpSlice(lineText, 0, inputWidth);
+        const currentVisualWidth = stringWidth3(display);
+        if (currentVisualWidth < inputWidth) {
+          display = display + " ".repeat(inputWidth - currentVisualWidth);
+        }
+        if (visualIdxInRenderedSet === cursorVisualRow) {
+          const relativeVisualColForHighlight = cursorVisualColAbsolute;
+          if (relativeVisualColForHighlight >= 0) {
+            if (relativeVisualColForHighlight < cpLen(display)) {
+              const charToHighlight = cpSlice(
+                display,
+                relativeVisualColForHighlight,
+                relativeVisualColForHighlight + 1
+              ) || " ";
+              const highlighted = import_chalk5.default.inverse(charToHighlight);
+              display = cpSlice(display, 0, relativeVisualColForHighlight) + highlighted + cpSlice(display, relativeVisualColForHighlight + 1);
+            } else if (relativeVisualColForHighlight === cpLen(display) && cpLen(display) === inputWidth) {
+              display = display + import_chalk5.default.inverse(" ");
+            }
+          }
+        }
+        return /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(Text3, { children: display }, `line-${visualIdxInRenderedSet}`);
+      }) })
+    ] }),
+    validationErrors.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(Box_default, { flexDirection: "column", children: validationErrors.map((error, index) => /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)(Text3, { color: theme.status.error, children: [
+      "\u26A0 ",
+      error
+    ] }, index)) })
+  ] });
+}
+
+// packages/cli/src/ui/components/InputRequestDialog.tsx
+init_colors();
+await init_useKeypress();
+var import_jsx_runtime23 = __toESM(require_jsx_runtime(), 1);
+function InputRequestDialog({
+  prompt,
+  placeholder,
+  onSubmit,
+  onCancel,
+  inputWidth = 80
+}) {
+  const [value, setValue] = (0, import_react83.useState)("");
+  const handleCancel = (0, import_react83.useCallback)(() => {
+    onCancel();
+  }, [onCancel]);
+  useKeypress(
+    (key) => {
+      if (keyMatchers["escape" /* ESCAPE */](key)) {
+        handleCancel();
+      }
+    },
+    { isActive: true }
+  );
+  return /* @__PURE__ */ (0, import_jsx_runtime23.jsxs)(Box_default, { flexDirection: "column", children: [
+    prompt,
+    /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(
+      TextInput,
+      {
+        value,
+        onChange: setValue,
+        onSubmit: () => onSubmit(value),
+        placeholder,
+        height: 6,
+        inputWidth
+      }
+    ) }),
+    /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime23.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to continue, Esc to cancel." }) })
+  ] });
+}
+
 // packages/cli/src/ui/components/Footer.tsx
 await init_build2();
 init_dist3();
@@ -327835,7 +328892,7 @@ init_dist3();
 // packages/cli/src/ui/components/ConsoleSummaryDisplay.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime22 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime24 = __toESM(require_jsx_runtime(), 1);
 var ConsoleSummaryDisplay = ({
   errorCount
 }) => {
@@ -327843,14 +328900,14 @@ var ConsoleSummaryDisplay = ({
     return null;
   }
   const errorIcon = "\u2716";
-  return /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(Box_default, { children: errorCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime22.jsxs)(Text3, { color: Colors.AccentRed, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime24.jsx)(Box_default, { children: errorCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime24.jsxs)(Text3, { color: Colors.AccentRed, children: [
     errorIcon,
     " ",
     errorCount,
     " error",
     errorCount > 1 ? "s" : "",
     " ",
-    /* @__PURE__ */ (0, import_jsx_runtime22.jsx)(Text3, { color: Colors.Gray, children: "(ctrl+o for details)" })
+    /* @__PURE__ */ (0, import_jsx_runtime24.jsx)(Text3, { color: Colors.Gray, children: "(ctrl+o for details)" })
   ] }) });
 };
 
@@ -327862,7 +328919,7 @@ import path85 from "node:path";
 await init_build2();
 init_colors();
 init_dist3();
-var import_jsx_runtime23 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime25 = __toESM(require_jsx_runtime(), 1);
 var ContextUsageDisplay = ({
   promptTokenCount,
   model,
@@ -327871,7 +328928,7 @@ var ContextUsageDisplay = ({
   const limit2 = typeof modelLimit === "number" && Number.isFinite(modelLimit) && modelLimit > 0 ? modelLimit : tokenLimit(model);
   const remaining = Math.max(0, limit2 - promptTokenCount);
   const percentage = remaining / limit2;
-  return /* @__PURE__ */ (0, import_jsx_runtime23.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Text3, { color: Colors.Gray, children: [
     "(",
     remaining.toLocaleString(),
     "/",
@@ -327884,14 +328941,14 @@ var ContextUsageDisplay = ({
 
 // packages/cli/src/ui/components/DebugProfiler.tsx
 await init_build2();
-var import_react81 = __toESM(require_react(), 1);
+var import_react84 = __toESM(require_react(), 1);
 init_colors();
 await init_useKeypress();
-var import_jsx_runtime24 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime26 = __toESM(require_jsx_runtime(), 1);
 var DebugProfiler = () => {
-  const numRenders = (0, import_react81.useRef)(0);
-  const [showNumRenders, setShowNumRenders] = (0, import_react81.useState)(false);
-  (0, import_react81.useEffect)(() => {
+  const numRenders = (0, import_react84.useRef)(0);
+  const [showNumRenders, setShowNumRenders] = (0, import_react84.useState)(false);
+  (0, import_react84.useEffect)(() => {
     numRenders.current++;
   });
   useKeypress(
@@ -327905,7 +328962,7 @@ var DebugProfiler = () => {
   if (!showNumRenders) {
     return null;
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime24.jsxs)(Text3, { color: Colors.AccentYellow, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)(Text3, { color: Colors.AccentYellow, children: [
     "Renders: ",
     numRenders.current,
     " "
@@ -327913,7 +328970,7 @@ var DebugProfiler = () => {
 };
 
 // packages/cli/src/ui/components/Footer.tsx
-var import_jsx_runtime25 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime27 = __toESM(require_jsx_runtime(), 1);
 var Footer = ({
   model,
   modelLimit,
@@ -327949,7 +329006,7 @@ var Footer = ({
     }
   } catch {
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(
     Box_default,
     {
       justifyContent: "space-between",
@@ -327957,31 +329014,31 @@ var Footer = ({
       flexDirection: isNarrow ? "column" : "row",
       alignItems: isNarrow ? "flex-start" : "center",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Box_default, { children: [
-          debugMode && /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(DebugProfiler, {}),
-          vimMode && /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Text3, { color: theme.text.secondary, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Box_default, { children: [
+          debugMode && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(DebugProfiler, {}),
+          vimMode && /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { color: theme.text.secondary, children: [
             "[",
             vimMode,
             "] "
           ] }),
-          nightly ? /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(dist_default4, { colors: theme.ui.gradient, children: /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Text3, { children: [
+          nightly ? /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(dist_default4, { colors: theme.ui.gradient, children: /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { children: [
             displayPath,
-            branchName && /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Text3, { children: [
+            branchName && /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { children: [
               " (",
               branchName,
               "*)"
             ] })
-          ] }) }) : /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Text3, { color: theme.text.link, children: [
+          ] }) }) : /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { color: theme.text.link, children: [
             displayPath,
-            branchName && /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Text3, { color: theme.text.secondary, children: [
+            branchName && /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { color: theme.text.secondary, children: [
               " (",
               branchName,
               "*)"
             ] })
           ] }),
-          debugMode && /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.status.error, children: " " + (debugMessage || "--debug") })
+          debugMode && /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.status.error, children: " " + (debugMessage || "--debug") })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(
           Box_default,
           {
             flexGrow: isNarrow ? 0 : 1,
@@ -327991,38 +329048,38 @@ var Footer = ({
             paddingX: isNarrow ? 0 : 1,
             paddingTop: isNarrow ? 1 : 0,
             children: [
-              isTrustedFolder === false ? /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.status.warning, children: "untrusted" }) : process35.env["SANDBOX"] && process35.env["SANDBOX"] !== "sandbox-exec" ? /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: "green", children: process35.env["SANDBOX"].replace(/^gemini-(?:cli-)?/, "") }) : process35.env["SANDBOX"] === "sandbox-exec" ? /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Text3, { color: theme.status.warning, children: [
+              isTrustedFolder === false ? /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.status.warning, children: "untrusted" }) : process35.env["SANDBOX"] && process35.env["SANDBOX"] !== "sandbox-exec" ? /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: "green", children: process35.env["SANDBOX"].replace(/^gemini-(?:cli-)?/, "") }) : process35.env["SANDBOX"] === "sandbox-exec" ? /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { color: theme.status.warning, children: [
                 "macOS Seatbelt",
                 " ",
-                /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Text3, { color: theme.text.secondary, children: [
+                /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { color: theme.text.secondary, children: [
                   "(",
                   process35.env["SEATBELT_PROFILE"],
                   ")"
                 ] })
-              ] }) : /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Text3, { color: theme.status.error, children: [
+              ] }) : /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { color: theme.status.error, children: [
                 "no sandbox ",
-                /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.text.secondary, children: "(see /docs)" })
+                /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.text.secondary, children: "(see /docs)" })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.ui.symbol, children: " | " }),
-              /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.text.secondary, children: promptMode }),
-              customPromptName && /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(import_jsx_runtime25.Fragment, { children: [
-                /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.ui.symbol, children: " / " }),
-                /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Text3, { color: theme.status.warning, children: [
+              /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.ui.symbol, children: " | " }),
+              /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.text.secondary, children: promptMode }),
+              customPromptName && /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(import_jsx_runtime27.Fragment, { children: [
+                /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.ui.symbol, children: " / " }),
+                /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { color: theme.status.warning, children: [
                   customPromptName,
                   customPromptExclusive ? "\u2715" : "\u2713"
                 ] })
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.ui.symbol, children: " / " }),
-              /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.text.secondary, children: activeCollection })
+              /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.ui.symbol, children: " / " }),
+              /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.text.secondary, children: activeCollection })
             ]
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Box_default, { alignItems: "center", paddingTop: isNarrow ? 1 : 0, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Text3, { color: theme.text.accent, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Box_default, { alignItems: "center", paddingTop: isNarrow ? 1 : 0, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { color: theme.text.accent, children: [
             isNarrow ? "" : " ",
             model,
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
               ContextUsageDisplay,
               {
                 promptTokenCount,
@@ -328031,17 +329088,17 @@ var Footer = ({
               }
             )
           ] }),
-          corgiMode && /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Text3, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.ui.symbol, children: "| " }),
-            /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.status.error, children: "\u25BC" }),
-            /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.text.primary, children: "(\xB4" }),
-            /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.status.error, children: "\u1D25" }),
-            /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.text.primary, children: "`)" }),
-            /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.status.error, children: "\u25BC " })
+          corgiMode && /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.ui.symbol, children: "| " }),
+            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.status.error, children: "\u25BC" }),
+            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.text.primary, children: "(\xB4" }),
+            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.status.error, children: "\u1D25" }),
+            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.text.primary, children: "`)" }),
+            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.status.error, children: "\u25BC " })
           ] }),
-          !showErrorDetails && errorCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime25.jsxs)(Box_default, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(Text3, { color: theme.ui.symbol, children: "| " }),
-            /* @__PURE__ */ (0, import_jsx_runtime25.jsx)(ConsoleSummaryDisplay, { errorCount })
+          !showErrorDetails && errorCount > 0 && /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Box_default, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: theme.ui.symbol, children: "| " }),
+            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(ConsoleSummaryDisplay, { errorCount })
           ] })
         ] })
       ]
@@ -328050,7 +329107,7 @@ var Footer = ({
 };
 
 // packages/cli/src/ui/components/ThemeDialog.tsx
-var import_react82 = __toESM(require_react(), 1);
+var import_react85 = __toESM(require_react(), 1);
 await init_build2();
 init_colors();
 init_theme_manager();
@@ -328060,7 +329117,7 @@ await init_RadioButtonSelect();
 await init_build2();
 init_colors();
 import crypto15 from "node:crypto";
-var import_jsx_runtime26 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime28 = __toESM(require_jsx_runtime(), 1);
 function parseDiffWithLineNumbers(diffContent) {
   const lines = diffContent.split("\n");
   const result = [];
@@ -328124,14 +329181,14 @@ var DiffRenderer = ({
 }) => {
   const screenReaderEnabled = use_is_screen_reader_enabled_default();
   if (!diffContent || typeof diffContent !== "string") {
-    return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Text3, { color: Colors.AccentYellow, children: "No diff content." });
+    return /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Text3, { color: Colors.AccentYellow, children: "No diff content." });
   }
   const parsedLines = parseDiffWithLineNumbers(diffContent);
   if (parsedLines.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Box_default, { borderStyle: "round", borderColor: Colors.Gray, padding: 1, children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Text3, { dimColor: true, children: "No changes detected." }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Box_default, { borderStyle: "round", borderColor: Colors.Gray, padding: 1, children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Text3, { dimColor: true, children: "No changes detected." }) });
   }
   if (screenReaderEnabled) {
-    return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Box_default, { flexDirection: "column", children: parsedLines.map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)(Text3, { children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Box_default, { flexDirection: "column", children: parsedLines.map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(Text3, { children: [
       line.type,
       ": ",
       line.content
@@ -328172,7 +329229,7 @@ var renderDiffContent = (parsedLines, filename, tabWidth = DEFAULT_TAB_WIDTH, av
     (l2) => l2.type !== "hunk" && l2.type !== "other"
   );
   if (displayableLines.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Box_default, { borderStyle: "round", borderColor: Colors.Gray, padding: 1, children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Text3, { dimColor: true, children: "No changes detected." }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Box_default, { borderStyle: "round", borderColor: Colors.Gray, padding: 1, children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Text3, { dimColor: true, children: "No changes detected." }) });
   }
   const maxLineNumber = Math.max(
     0,
@@ -328195,7 +329252,7 @@ var renderDiffContent = (parsedLines, filename, tabWidth = DEFAULT_TAB_WIDTH, av
   const key = filename ? `diff-box-${filename}` : `diff-box-${crypto15.createHash("sha1").update(JSON.stringify(parsedLines)).digest("hex")}`;
   let lastLineNumber = null;
   const MAX_CONTEXT_LINES_WITHOUT_GAP = 5;
-  return /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
     MaxSizedBox,
     {
       maxHeight: availableTerminalHeight,
@@ -328209,7 +329266,7 @@ var renderDiffContent = (parsedLines, filename, tabWidth = DEFAULT_TAB_WIDTH, av
         }
         if (lastLineNumber !== null && relevantLineNumberForGapCalc !== null && relevantLineNumberForGapCalc > lastLineNumber + MAX_CONTEXT_LINES_WITHOUT_GAP + 1) {
           acc.push(
-            /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Text3, { wrap: "truncate", color: Colors.Gray, children: "\u2550".repeat(terminalWidth) }) }, `gap-${index}`)
+            /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Text3, { wrap: "truncate", color: Colors.Gray, children: "\u2550".repeat(terminalWidth) }) }, `gap-${index}`)
           );
         }
         const lineKey = `diff-line-${index}`;
@@ -328238,8 +329295,8 @@ var renderDiffContent = (parsedLines, filename, tabWidth = DEFAULT_TAB_WIDTH, av
         }
         const displayContent = line.content.substring(baseIndentation);
         acc.push(
-          /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)(Box_default, { flexDirection: "row", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)(
+          /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(Box_default, { flexDirection: "row", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(
               Text3,
               {
                 color: theme.text.secondary,
@@ -328250,19 +329307,19 @@ var renderDiffContent = (parsedLines, filename, tabWidth = DEFAULT_TAB_WIDTH, av
                 ]
               }
             ),
-            line.type === "context" ? /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)(import_jsx_runtime26.Fragment, { children: [
-              /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)(Text3, { children: [
+            line.type === "context" ? /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(import_jsx_runtime28.Fragment, { children: [
+              /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(Text3, { children: [
                 prefixSymbol,
                 " "
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(Text3, { wrap: "wrap", children: colorizeLine(displayContent, language) })
-            ] }) : /* @__PURE__ */ (0, import_jsx_runtime26.jsxs)(
+              /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Text3, { wrap: "wrap", children: colorizeLine(displayContent, language) })
+            ] }) : /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(
               Text3,
               {
                 backgroundColor: line.type === "add" ? theme.background.diff.added : theme.background.diff.removed,
                 wrap: "wrap",
                 children: [
-                  /* @__PURE__ */ (0, import_jsx_runtime26.jsx)(
+                  /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
                     Text3,
                     {
                       color: line.type === "add" ? theme.status.success : theme.status.error,
@@ -328496,7 +329553,7 @@ function getScopeMessageForSetting(settingKey, selectedScope, settings) {
 
 // packages/cli/src/ui/components/ThemeDialog.tsx
 await init_useKeypress();
-var import_jsx_runtime27 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime29 = __toESM(require_jsx_runtime(), 1);
 function ThemeDialog({
   onSelect,
   onHighlight,
@@ -328504,10 +329561,10 @@ function ThemeDialog({
   availableTerminalHeight,
   terminalWidth
 }) {
-  const [selectedScope, setSelectedScope] = (0, import_react82.useState)(
+  const [selectedScope, setSelectedScope] = (0, import_react85.useState)(
     "User" /* User */
   );
-  const [highlightedThemeName, setHighlightedThemeName] = (0, import_react82.useState)(settings.merged.ui?.theme || DEFAULT_THEME.name);
+  const [highlightedThemeName, setHighlightedThemeName] = (0, import_react85.useState)(settings.merged.ui?.theme || DEFAULT_THEME.name);
   const customThemes = selectedScope === "User" /* User */ ? settings.user.settings.ui?.customThemes || {} : settings.merged.ui?.customThemes || {};
   const builtInThemes = themeManager.getAvailableThemes().filter((theme2) => theme2.type !== "custom");
   const customThemeNames = Object.keys(customThemes);
@@ -328526,14 +329583,14 @@ function ThemeDialog({
       themeTypeDisplay: "Custom"
     }))
   ];
-  const [selectInputKey, setSelectInputKey] = (0, import_react82.useState)(Date.now());
+  const [selectInputKey, setSelectInputKey] = (0, import_react85.useState)(Date.now());
   const selectedThemeName = settings.merged.ui?.theme || DEFAULT_THEME.name;
   const initialThemeIndex = themeItems.findIndex(
     (item) => item.value === selectedThemeName
   );
   const safeInitialThemeIndex = initialThemeIndex >= 0 ? initialThemeIndex : 0;
   const scopeItems = getScopeItems();
-  const handleThemeSelect = (0, import_react82.useCallback)(
+  const handleThemeSelect = (0, import_react85.useCallback)(
     (themeName) => {
       onSelect(themeName, selectedScope);
     },
@@ -328543,18 +329600,18 @@ function ThemeDialog({
     setHighlightedThemeName(themeName);
     onHighlight(themeName);
   };
-  const handleScopeHighlight = (0, import_react82.useCallback)((scope) => {
+  const handleScopeHighlight = (0, import_react85.useCallback)((scope) => {
     setSelectedScope(scope);
     setSelectInputKey(Date.now());
   }, []);
-  const handleScopeSelect = (0, import_react82.useCallback)(
+  const handleScopeSelect = (0, import_react85.useCallback)(
     (scope) => {
       handleScopeHighlight(scope);
       setFocusedSection("theme");
     },
     [handleScopeHighlight]
   );
-  const [focusedSection, setFocusedSection] = (0, import_react82.useState)(
+  const [focusedSection, setFocusedSection] = (0, import_react85.useState)(
     "theme"
   );
   useKeypress(
@@ -328614,7 +329671,7 @@ function ThemeDialog({
   );
   const codeBlockHeight = Math.ceil(availableHeightForPanes * 0.6);
   const diffHeight = Math.floor(availableHeightForPanes * 0.4);
-  return /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -328626,15 +329683,15 @@ function ThemeDialog({
       paddingRight: 1,
       width: "100%",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Box_default, { flexDirection: "row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Box_default, { flexDirection: "column", width: "45%", paddingRight: 2, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { bold: currentFocusedSection === "theme", wrap: "truncate", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(Box_default, { flexDirection: "row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(Box_default, { flexDirection: "column", width: "45%", paddingRight: 2, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(Text3, { bold: currentFocusedSection === "theme", wrap: "truncate", children: [
               currentFocusedSection === "theme" ? "> " : "  ",
               "Select Theme",
               " ",
-              /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { color: Colors.Gray, children: otherScopeModifiedMessage })
+              /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Text3, { color: Colors.Gray, children: otherScopeModifiedMessage })
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(
               RadioButtonSelect,
               {
                 items: themeItems,
@@ -328648,12 +329705,12 @@ function ThemeDialog({
               },
               selectInputKey
             ),
-            showScopeSelection && /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { bold: currentFocusedSection === "scope", wrap: "truncate", children: [
+            showScopeSelection && /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(Text3, { bold: currentFocusedSection === "scope", wrap: "truncate", children: [
                 currentFocusedSection === "scope" ? "> " : "  ",
                 "Apply To"
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(
                 RadioButtonSelect,
                 {
                   items: scopeItems,
@@ -328666,13 +329723,13 @@ function ThemeDialog({
               )
             ] })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Box_default, { flexDirection: "column", width: "55%", paddingLeft: 2, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Text3, { bold: true, children: "Preview" }),
+          /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(Box_default, { flexDirection: "column", width: "55%", paddingLeft: 2, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Text3, { bold: true, children: "Preview" }),
             (() => {
               const previewTheme = themeManager.getTheme(
                 highlightedThemeName || DEFAULT_THEME.name
               ) || DEFAULT_THEME;
-              return /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(
+              return /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(
                 Box_default,
                 {
                   borderStyle: "single",
@@ -328694,8 +329751,8 @@ def fibonacci(n):
                       codeBlockHeight,
                       colorizeCodeWidth
                     ),
-                    /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Box_default, { marginTop: 1 }),
-                    /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(
+                    /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Box_default, { marginTop: 1 }),
+                    /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(
                       DiffRenderer,
                       {
                         diffContent: `--- a/util.py
@@ -328715,7 +329772,7 @@ def fibonacci(n):
             })()
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime27.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime27.jsxs)(Text3, { color: Colors.Gray, wrap: "truncate", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(Text3, { color: Colors.Gray, wrap: "truncate", children: [
           "(Use Enter to select",
           showScopeSelection ? ", Tab to change focus" : "",
           ")"
@@ -328726,25 +329783,25 @@ def fibonacci(n):
 }
 
 // packages/cli/src/ui/components/AuthDialog.tsx
-var import_react85 = __toESM(require_react(), 1);
+var import_react88 = __toESM(require_react(), 1);
 init_dist3();
 await init_build2();
 init_colors();
 await init_useKeypress();
 
 // packages/cli/src/ui/components/OpenAIKeyPrompt.tsx
-var import_react83 = __toESM(require_react(), 1);
+var import_react86 = __toESM(require_react(), 1);
 await init_build2();
 init_colors();
-var import_jsx_runtime28 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime30 = __toESM(require_jsx_runtime(), 1);
 function OpenAIKeyPrompt({
   onSubmit,
   onCancel
 }) {
-  const [apiKey, setApiKey] = (0, import_react83.useState)("");
-  const [baseUrl, setBaseUrl] = (0, import_react83.useState)("");
-  const [model, setModel] = (0, import_react83.useState)("");
-  const [currentField, setCurrentField] = (0, import_react83.useState)("apiKey");
+  const [apiKey, setApiKey] = (0, import_react86.useState)("");
+  const [baseUrl, setBaseUrl] = (0, import_react86.useState)("");
+  const [model, setModel] = (0, import_react86.useState)("");
+  const [currentField, setCurrentField] = (0, import_react86.useState)("apiKey");
   use_input_default((input, key) => {
     let cleanInput = (input || "").replace(/\u001b\[[0-9;]*[a-zA-Z]/g, "").replace(/\[200~/g, "").replace(/\[201~/g, "").replace(/^\[|~$/g, "");
     cleanInput = cleanInput.split("").filter((ch) => ch.charCodeAt(0) >= 32).join("");
@@ -328815,7 +329872,7 @@ function OpenAIKeyPrompt({
       return;
     }
   });
-  return /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -328824,62 +329881,62 @@ function OpenAIKeyPrompt({
       padding: 1,
       width: "100%",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "OpenAI Configuration Required" }),
-        /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "OpenAI Configuration Required" }),
+        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Text3, { children: [
           "Please enter your OpenAI configuration. You can get an API key from",
           " ",
-          /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Text3, { color: Colors.AccentBlue, children: "https://bailian.console.aliyun.com/?tab=model#/api-key" })
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { color: Colors.AccentBlue, children: "https://bailian.console.aliyun.com/?tab=model#/api-key" })
         ] }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Box_default, { width: 12, children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { width: 12, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(
             Text3,
             {
               color: currentField === "apiKey" ? Colors.AccentBlue : Colors.Gray,
               children: "API Key:"
             }
           ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Text3, { children: [
             currentField === "apiKey" ? "> " : "  ",
             apiKey || " "
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Box_default, { width: 12, children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { width: 12, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(
             Text3,
             {
               color: currentField === "baseUrl" ? Colors.AccentBlue : Colors.Gray,
               children: "Base URL:"
             }
           ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Text3, { children: [
             currentField === "baseUrl" ? "> " : "  ",
             baseUrl
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Box_default, { width: 12, children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { width: 12, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(
             Text3,
             {
               color: currentField === "model" ? Colors.AccentBlue : Colors.Gray,
               children: "Model:"
             }
           ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime28.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(Text3, { children: [
             currentField === "model" ? "> " : "  ",
             model
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime28.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to continue, Tab/\u2191\u2193 to navigate, Esc to cancel" }) })
+        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to continue, Tab/\u2191\u2193 to navigate, Esc to cancel" }) })
       ]
     }
   );
 }
 
 // packages/cli/src/ui/components/ProviderKeyPrompt.tsx
-var import_react84 = __toESM(require_react(), 1);
+var import_react87 = __toESM(require_react(), 1);
 await init_build2();
 init_colors();
-var import_jsx_runtime29 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime31 = __toESM(require_jsx_runtime(), 1);
 function ProviderKeyPrompt({
   prepopulatedBaseUrl,
   prepopulatedApiKey,
@@ -328887,10 +329944,10 @@ function ProviderKeyPrompt({
   onCancel,
   hideApiKeyInput = false
 }) {
-  const [apiKey, setApiKey] = (0, import_react84.useState)(prepopulatedApiKey || "");
-  const [baseUrl, setBaseUrl] = (0, import_react84.useState)(prepopulatedBaseUrl || "");
+  const [apiKey, setApiKey] = (0, import_react87.useState)(prepopulatedApiKey || "");
+  const [baseUrl, setBaseUrl] = (0, import_react87.useState)(prepopulatedBaseUrl || "");
   const allowApiKeyInput = !hideApiKeyInput;
-  const [currentField, setCurrentField] = (0, import_react84.useState)(
+  const [currentField, setCurrentField] = (0, import_react87.useState)(
     allowApiKeyInput && !prepopulatedApiKey ? "apiKey" : "baseUrl"
   );
   use_input_default((input, key) => {
@@ -328931,7 +329988,7 @@ function ProviderKeyPrompt({
       return;
     }
   });
-  return /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -328940,35 +329997,35 @@ function ProviderKeyPrompt({
       padding: 1,
       width: "100%",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "Provider Configuration" }),
-        /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Text3, { children: "Enter the provider base URL and API key (if required). For LM Studio the API key is managed automatically with a dummy value." }) }),
-        allowApiKeyInput && /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Box_default, { width: 12, children: /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "Provider Configuration" }),
+        /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Text3, { children: "Enter the provider base URL and API key (if required). For LM Studio the API key is managed automatically with a dummy value." }) }),
+        allowApiKeyInput && /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Box_default, { width: 12, children: /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(
             Text3,
             {
               color: currentField === "apiKey" ? Colors.AccentBlue : Colors.Gray,
               children: "API Key:"
             }
           ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)(Text3, { children: [
             currentField === "apiKey" ? "> " : "  ",
             apiKey || " "
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Box_default, { width: 12, children: /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)(Box_default, { marginTop: 1, flexDirection: "row", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Box_default, { width: 12, children: /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(
             Text3,
             {
               color: currentField === "baseUrl" ? Colors.AccentBlue : Colors.Gray,
               children: "Base URL:"
             }
           ) }),
-          /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime29.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)(Text3, { children: [
             currentField === "baseUrl" ? "> " : "  ",
             baseUrl
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime29.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to continue, Tab/\u2191\u2193 to navigate, Esc to cancel" }) })
+        /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to continue, Tab/\u2191\u2193 to navigate, Esc to cancel" }) })
       ]
     }
   );
@@ -328976,7 +330033,7 @@ function ProviderKeyPrompt({
 
 // packages/cli/src/ui/components/AuthDialog.tsx
 await init_RadioButtonSelect();
-var import_jsx_runtime30 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime32 = __toESM(require_jsx_runtime(), 1);
 var OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 var LM_STUDIO_DEFAULT_BASE_URL = "http://127.0.0.1:1234/v1";
 var LM_STUDIO_DUMMY_KEY = "lmstudio-local-key";
@@ -328991,11 +330048,11 @@ function AuthDialog({
   settings,
   initialErrorMessage
 }) {
-  const [errorMessage, setErrorMessage] = (0, import_react85.useState)(
+  const [errorMessage, setErrorMessage] = (0, import_react88.useState)(
     initialErrorMessage || null
   );
-  const [showOpenAIKeyPrompt, setShowOpenAIKeyPrompt] = (0, import_react85.useState)(false);
-  const [showProviderPrompt, setShowProviderPrompt] = (0, import_react85.useState)(null);
+  const [showOpenAIKeyPrompt, setShowOpenAIKeyPrompt] = (0, import_react88.useState)(false);
+  const [showProviderPrompt, setShowProviderPrompt] = (0, import_react88.useState)(null);
   const storedProviderId = settings.merged.security?.auth?.providerId;
   const providerSettings = settings.merged.security?.auth?.providers || {};
   const persistSelectedAuthType = (authType) => {
@@ -329265,7 +330322,7 @@ function AuthDialog({
     { isActive: true }
   );
   if (showOpenAIKeyPrompt) {
-    return /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(
       OpenAIKeyPrompt,
       {
         onSubmit: handleOpenAIKeySubmit,
@@ -329277,7 +330334,7 @@ function AuthDialog({
     const provider = showProviderPrompt.provider;
     const baseUrl = showProviderPrompt.baseUrl || (provider === "openrouter" ? OPENROUTER_DEFAULT_BASE_URL : LM_STUDIO_DEFAULT_BASE_URL);
     const apiKey = provider === "openrouter" ? showProviderPrompt.apiKey : showProviderPrompt.apiKey || LM_STUDIO_DUMMY_KEY;
-    return /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(
       ProviderKeyPrompt,
       {
         prepopulatedBaseUrl: baseUrl,
@@ -329288,7 +330345,7 @@ function AuthDialog({
       }
     );
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime30.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime32.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -329297,9 +330354,9 @@ function AuthDialog({
       padding: 1,
       width: "100%",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { bold: true, children: "Get started" }),
-        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { children: "How would you like to authenticate for this project?" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { bold: true, children: "Get started" }),
+        /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { children: "How would you like to authenticate for this project?" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(
           RadioButtonSelect,
           {
             items,
@@ -329307,25 +330364,25 @@ function AuthDialog({
             onSelect: handleAuthSelect
           }
         ) }),
-        errorMessage && /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { color: Colors.AccentRed, children: errorMessage }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { color: Colors.AccentPurple, children: "(Use Enter to Set Auth)" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { children: "Terms of Services and Privacy Notice for Qwen Code" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime30.jsx)(Text3, { color: Colors.AccentBlue, children: "https://github.com/QwenLM/Qwen3-Coder/blob/main/README.md" }) })
+        errorMessage && /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { color: Colors.AccentRed, children: errorMessage }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { color: Colors.AccentPurple, children: "(Use Enter to Set Auth)" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { children: "Terms of Services and Privacy Notice for Qwen Code" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { color: Colors.AccentBlue, children: "https://github.com/QwenLM/Qwen3-Coder/blob/main/README.md" }) })
       ]
     }
   );
 }
 
 // packages/cli/src/ui/components/AuthInProgress.tsx
-var import_react86 = __toESM(require_react(), 1);
+var import_react89 = __toESM(require_react(), 1);
 await init_build2();
 init_colors();
 await init_useKeypress();
-var import_jsx_runtime31 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime33 = __toESM(require_jsx_runtime(), 1);
 function AuthInProgress({
   onTimeout
 }) {
-  const [timedOut, setTimedOut] = (0, import_react86.useState)(false);
+  const [timedOut, setTimedOut] = (0, import_react89.useState)(false);
   useKeypress(
     (key) => {
       if (key.name === "escape" || key.ctrl && key.name === "c") {
@@ -329334,14 +330391,14 @@ function AuthInProgress({
     },
     { isActive: true }
   );
-  (0, import_react86.useEffect)(() => {
+  (0, import_react89.useEffect)(() => {
     const timer = setTimeout(() => {
       setTimedOut(true);
       onTimeout();
     }, 18e4);
     return () => clearTimeout(timer);
   }, [onTimeout]);
-  return /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime33.jsx)(
     Box_default,
     {
       borderStyle: "round",
@@ -329349,8 +330406,8 @@ function AuthInProgress({
       flexDirection: "column",
       padding: 1,
       width: "100%",
-      children: timedOut ? /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Text3, { color: Colors.AccentRed, children: "Authentication timed out. Please try again." }) : /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime31.jsxs)(Text3, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime31.jsx)(build_default, { type: "dots" }),
+      children: timedOut ? /* @__PURE__ */ (0, import_jsx_runtime33.jsx)(Text3, { color: Colors.AccentRed, children: "Authentication timed out. Please try again." }) : /* @__PURE__ */ (0, import_jsx_runtime33.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime33.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime33.jsx)(build_default, { type: "dots" }),
         " Waiting for auth... (Press ESC or CTRL+C to cancel)"
       ] }) })
     }
@@ -329358,11 +330415,11 @@ function AuthInProgress({
 }
 
 // packages/cli/src/ui/components/QwenOAuthProgress.tsx
-var import_react88 = __toESM(require_react(), 1);
+var import_react91 = __toESM(require_react(), 1);
 await init_build2();
 
 // node_modules/ink-link/dist/index.js
-var import_react87 = __toESM(require_react(), 1);
+var import_react90 = __toESM(require_react(), 1);
 await init_build2();
 var import_prop_types2 = __toESM(require_prop_types(), 1);
 
@@ -329506,10 +330563,10 @@ terminalLink.stderr.isSupported = import_supports_hyperlinks.default.stderr;
 // node_modules/ink-link/dist/index.js
 var Link = ({ children, url: url2, fallback = true }) => (
   // eslint-disable-line react/function-component-definition
-  import_react87.default.createElement(
+  import_react90.default.createElement(
     Transform,
     { transform: (children2) => terminalLink(children2, url2, { fallback }) },
-    import_react87.default.createElement(Text3, null, children)
+    import_react90.default.createElement(Text3, null, children)
   )
 );
 Link.propTypes = {
@@ -329526,7 +330583,7 @@ var dist_default5 = Link;
 // packages/cli/src/ui/components/QwenOAuthProgress.tsx
 var import_qrcode_terminal = __toESM(require_main2(), 1);
 init_colors();
-var import_jsx_runtime32 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime34 = __toESM(require_jsx_runtime(), 1);
 function QrCodeDisplay({
   verificationUrl,
   qrCodeData
@@ -329534,7 +330591,7 @@ function QrCodeDisplay({
   if (!qrCodeData) {
     return null;
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime32.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -329543,11 +330600,11 @@ function QrCodeDisplay({
       padding: 1,
       width: "100%",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "Qwen OAuth Authentication" }),
-        /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { children: "Please visit this URL to authorize:" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(dist_default5, { url: verificationUrl, fallback: false, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { color: Colors.AccentGreen, bold: true, children: verificationUrl }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { children: "Or scan the QR code below:" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { children: qrCodeData }) })
+        /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "Qwen OAuth Authentication" }),
+        /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { children: "Please visit this URL to authorize:" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(dist_default5, { url: verificationUrl, fallback: false, children: /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { color: Colors.AccentGreen, bold: true, children: verificationUrl }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { children: "Or scan the QR code below:" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { children: qrCodeData }) })
       ]
     }
   );
@@ -329561,7 +330618,7 @@ function StatusDisplay({
     const remainingSeconds = seconds % 60;
     return `${minutes}:${remainingSeconds.toString().padStart(2, "0")}`;
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime32.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -329570,17 +330627,17 @@ function StatusDisplay({
       padding: 1,
       width: "100%",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsxs)(Text3, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(build_default, { type: "dots" }),
+        /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(build_default, { type: "dots" }),
           " Waiting for authorization",
           dots
         ] }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime32.jsxs)(Box_default, { marginTop: 1, justifyContent: "space-between", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime32.jsxs)(Text3, { color: Colors.Gray, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(Box_default, { marginTop: 1, justifyContent: "space-between", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(Text3, { color: Colors.Gray, children: [
             "Time remaining: ",
             formatTime(timeRemaining)
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { color: Colors.AccentPurple, children: "(Press ESC to cancel)" })
+          /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { color: Colors.AccentPurple, children: "(Press ESC to cancel)" })
         ] })
       ]
     }
@@ -329594,9 +330651,9 @@ function QwenOAuthProgress({
   authMessage
 }) {
   const defaultTimeout = deviceAuth?.expires_in || 300;
-  const [timeRemaining, setTimeRemaining] = (0, import_react88.useState)(defaultTimeout);
-  const [dots, setDots] = (0, import_react88.useState)("");
-  const [qrCodeData, setQrCodeData] = (0, import_react88.useState)(null);
+  const [timeRemaining, setTimeRemaining] = (0, import_react91.useState)(defaultTimeout);
+  const [dots, setDots] = (0, import_react91.useState)("");
+  const [qrCodeData, setQrCodeData] = (0, import_react91.useState)(null);
   use_input_default((input, key) => {
     if (authStatus === "timeout") {
       onCancel();
@@ -329604,7 +330661,7 @@ function QwenOAuthProgress({
       onCancel();
     }
   });
-  (0, import_react88.useEffect)(() => {
+  (0, import_react91.useEffect)(() => {
     if (!deviceAuth?.verification_uri_complete) {
       return;
     }
@@ -329624,7 +330681,7 @@ function QwenOAuthProgress({
     };
     generateQR();
   }, [deviceAuth?.verification_uri_complete]);
-  (0, import_react88.useEffect)(() => {
+  (0, import_react91.useEffect)(() => {
     const timer = setInterval(() => {
       setTimeRemaining((prev) => {
         if (prev <= 1) {
@@ -329636,7 +330693,7 @@ function QwenOAuthProgress({
     }, 1e3);
     return () => clearInterval(timer);
   }, [onTimeout]);
-  (0, import_react88.useEffect)(() => {
+  (0, import_react91.useEffect)(() => {
     const dotsTimer = setInterval(() => {
       setDots((prev) => {
         if (prev.length >= 3) return "";
@@ -329645,9 +330702,9 @@ function QwenOAuthProgress({
     }, 500);
     return () => clearInterval(dotsTimer);
   }, []);
-  const qrCodeDisplay = (0, import_react88.useMemo)(() => {
+  const qrCodeDisplay = (0, import_react91.useMemo)(() => {
     if (!deviceAuth?.verification_uri_complete) return null;
-    return /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(
       QrCodeDisplay,
       {
         verificationUrl: deviceAuth.verification_uri_complete,
@@ -329656,7 +330713,7 @@ function QwenOAuthProgress({
     );
   }, [deviceAuth?.verification_uri_complete, qrCodeData]);
   if (authStatus === "timeout") {
-    return /* @__PURE__ */ (0, import_jsx_runtime32.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(
       Box_default,
       {
         borderStyle: "round",
@@ -329665,15 +330722,15 @@ function QwenOAuthProgress({
         padding: 1,
         width: "100%",
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { bold: true, color: Colors.AccentRed, children: "Qwen OAuth Authentication Timeout" }),
-          /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { children: authMessage || `OAuth token expired (over ${defaultTimeout} seconds). Please select authentication method again.` }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { color: Colors.Gray, children: "Press any key to return to authentication type selection." }) })
+          /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { bold: true, color: Colors.AccentRed, children: "Qwen OAuth Authentication Timeout" }),
+          /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { children: authMessage || `OAuth token expired (over ${defaultTimeout} seconds). Please select authentication method again.` }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { color: Colors.Gray, children: "Press any key to return to authentication type selection." }) })
         ]
       }
     );
   }
   if (!deviceAuth) {
-    return /* @__PURE__ */ (0, import_jsx_runtime32.jsxs)(
+    return /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(
       Box_default,
       {
         borderStyle: "round",
@@ -329682,31 +330739,31 @@ function QwenOAuthProgress({
         padding: 1,
         width: "100%",
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime32.jsxs)(Text3, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(build_default, { type: "dots" }),
+          /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(Text3, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(build_default, { type: "dots" }),
             " Waiting for Qwen OAuth authentication..."
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime32.jsxs)(Box_default, { marginTop: 1, justifyContent: "space-between", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime32.jsxs)(Text3, { color: Colors.Gray, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(Box_default, { marginTop: 1, justifyContent: "space-between", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(Text3, { color: Colors.Gray, children: [
               "Time remaining: ",
               Math.floor(timeRemaining / 60),
               ":",
               (timeRemaining % 60).toString().padStart(2, "0")
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(Text3, { color: Colors.AccentPurple, children: "(Press ESC to cancel)" })
+            /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { color: Colors.AccentPurple, children: "(Press ESC to cancel)" })
           ] })
         ]
       }
     );
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime32.jsxs)(Box_default, { flexDirection: "column", width: "100%", children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(Box_default, { flexDirection: "column", width: "100%", children: [
     qrCodeDisplay,
-    /* @__PURE__ */ (0, import_jsx_runtime32.jsx)(StatusDisplay, { timeRemaining, dots })
+    /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(StatusDisplay, { timeRemaining, dots })
   ] });
 }
 
 // packages/cli/src/ui/components/EditorSettingsDialog.tsx
-var import_react89 = __toESM(require_react(), 1);
+var import_react92 = __toESM(require_react(), 1);
 await init_build2();
 init_colors();
 
@@ -329757,16 +330814,16 @@ var editorSettingsManager = new EditorSettingsManager();
 await init_RadioButtonSelect();
 init_dist3();
 await init_useKeypress();
-var import_jsx_runtime33 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime35 = __toESM(require_jsx_runtime(), 1);
 function EditorSettingsDialog({
   onSelect,
   settings,
   onExit
 }) {
-  const [selectedScope, setSelectedScope] = (0, import_react89.useState)(
+  const [selectedScope, setSelectedScope] = (0, import_react92.useState)(
     "User" /* User */
   );
-  const [focusedSection, setFocusedSection] = (0, import_react89.useState)(
+  const [focusedSection, setFocusedSection] = (0, import_react92.useState)(
     "editor"
   );
   useKeypress(
@@ -329813,7 +330870,7 @@ function EditorSettingsDialog({
   if (settings.merged.general?.preferredEditor && isEditorAvailable(settings.merged.general?.preferredEditor)) {
     mergedEditorName = EDITOR_DISPLAY_NAMES[settings.merged.general?.preferredEditor];
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime33.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -329822,14 +330879,14 @@ function EditorSettingsDialog({
       padding: 1,
       width: "100%",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime33.jsxs)(Box_default, { flexDirection: "column", width: "45%", paddingRight: 2, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime33.jsxs)(Text3, { bold: focusedSection === "editor", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(Box_default, { flexDirection: "column", width: "45%", paddingRight: 2, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(Text3, { bold: focusedSection === "editor", children: [
             focusedSection === "editor" ? "> " : "  ",
             "Select Editor",
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime33.jsx)(Text3, { color: Colors.Gray, children: otherScopeModifiedMessage })
+            /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(Text3, { color: Colors.Gray, children: otherScopeModifiedMessage })
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime33.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(
             RadioButtonSelect,
             {
               items: editorItems.map((item) => ({
@@ -329843,12 +330900,12 @@ function EditorSettingsDialog({
             },
             selectedScope
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime33.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime33.jsxs)(Text3, { bold: focusedSection === "scope", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(Text3, { bold: focusedSection === "scope", children: [
               focusedSection === "scope" ? "> " : "  ",
               "Apply To"
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime33.jsx)(
+            /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(
               RadioButtonSelect,
               {
                 items: scopeItems,
@@ -329858,16 +330915,16 @@ function EditorSettingsDialog({
               }
             )
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime33.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime33.jsx)(Text3, { color: Colors.Gray, children: "(Use Enter to select, Tab to change focus)" }) })
+          /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(Text3, { color: Colors.Gray, children: "(Use Enter to select, Tab to change focus)" }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime33.jsxs)(Box_default, { flexDirection: "column", width: "55%", paddingLeft: 2, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime33.jsx)(Text3, { bold: true, children: "Editor Preference" }),
-          /* @__PURE__ */ (0, import_jsx_runtime33.jsxs)(Box_default, { flexDirection: "column", gap: 1, marginTop: 1, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime33.jsx)(Text3, { color: Colors.Gray, children: "These editors are currently supported. Please note that some editors cannot be used in sandbox mode." }),
-            /* @__PURE__ */ (0, import_jsx_runtime33.jsxs)(Text3, { color: Colors.Gray, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(Box_default, { flexDirection: "column", width: "55%", paddingLeft: 2, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(Text3, { bold: true, children: "Editor Preference" }),
+          /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(Box_default, { flexDirection: "column", gap: 1, marginTop: 1, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(Text3, { color: Colors.Gray, children: "These editors are currently supported. Please note that some editors cannot be used in sandbox mode." }),
+            /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(Text3, { color: Colors.Gray, children: [
               "Your preferred editor is:",
               " ",
-              /* @__PURE__ */ (0, import_jsx_runtime33.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(
                 Text3,
                 {
                   color: mergedEditorName === "None" ? Colors.AccentRed : Colors.AccentCyan,
@@ -329890,7 +330947,7 @@ await init_build2();
 init_colors();
 await init_RadioButtonSelect();
 await init_useKeypress();
-var import_jsx_runtime34 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime36 = __toESM(require_jsx_runtime(), 1);
 var ShellConfirmationDialog = ({ request: request4 }) => {
   const { commands, onConfirm } = request4;
   useKeypress(
@@ -329922,7 +330979,7 @@ var ShellConfirmationDialog = ({ request: request4 }) => {
       value: ToolConfirmationOutcome.Cancel
     }
   ];
-  return /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime36.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -329932,10 +330989,10 @@ var ShellConfirmationDialog = ({ request: request4 }) => {
       width: "100%",
       marginLeft: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime34.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { bold: true, children: "Shell Command Execution" }),
-          /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { children: "A custom command wants to run the following shell commands:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime36.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(Text3, { bold: true, children: "Shell Command Execution" }),
+          /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(Text3, { children: "A custom command wants to run the following shell commands:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(
             Box_default,
             {
               flexDirection: "column",
@@ -329943,12 +331000,12 @@ var ShellConfirmationDialog = ({ request: request4 }) => {
               borderColor: Colors.Gray,
               paddingX: 1,
               marginTop: 1,
-              children: commands.map((cmd) => /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { color: Colors.AccentCyan, children: /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(RenderInline, { text: cmd }) }, cmd))
+              children: commands.map((cmd) => /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(Text3, { color: Colors.AccentCyan, children: /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(RenderInline, { text: cmd }) }, cmd))
             }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(Text3, { children: "Do you want to proceed?" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime34.jsx)(RadioButtonSelect, { items: options2, onSelect: handleSelect, isFocused: true })
+        /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(Text3, { children: "Do you want to proceed?" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(RadioButtonSelect, { items: options2, onSelect: handleSelect, isFocused: true })
       ]
     }
   );
@@ -329958,151 +331015,19 @@ var ShellConfirmationDialog = ({ request: request4 }) => {
 await init_RadioButtonSelect();
 
 // packages/cli/src/ui/components/ModelSelectionDialog.tsx
-var import_react91 = __toESM(require_react(), 1);
+var import_react93 = __toESM(require_react(), 1);
 await init_build2();
 init_colors();
 await init_RadioButtonSelect();
 await init_useKeypress();
-
-// packages/cli/src/ui/components/shared/TextInput.tsx
-await init_build2();
-var import_chalk5 = __toESM(require_source(), 1);
-await init_useKeypress();
-init_colors();
-var import_react90 = __toESM(require_react(), 1);
-var import_jsx_runtime35 = __toESM(require_jsx_runtime(), 1);
-function TextInput({
-  value,
-  onChange,
-  onSubmit,
-  placeholder,
-  height = 1,
-  isActive = true,
-  validationErrors = [],
-  inputWidth = 80
-}) {
-  const allowMultiline = height > 1;
-  const onChangeRef = (0, import_react90.useRef)(onChange);
-  (0, import_react90.useEffect)(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
-  const stableOnChange = (0, import_react90.useCallback)((text) => {
-    onChangeRef.current?.(text);
-  }, []);
-  const buffer = useTextBuffer({
-    initialText: value || "",
-    viewport: { height, width: inputWidth },
-    isValidPath: () => false,
-    onChange: stableOnChange
-  });
-  const handleSubmit = () => {
-    if (!onSubmit) return;
-    onSubmit();
-  };
-  useKeypress(
-    (key) => {
-      if (!buffer || !isActive) return;
-      if (keyMatchers["submit" /* SUBMIT */](key) || key.name === "return") {
-        if (allowMultiline) {
-          const [row, col] = buffer.cursor;
-          const line = buffer.lines[row];
-          const charBefore = col > 0 ? cpSlice(line, col - 1, col) : "";
-          if (charBefore === "\\") {
-            buffer.backspace();
-            buffer.newline();
-          } else {
-            handleSubmit();
-          }
-        } else {
-          handleSubmit();
-        }
-        return;
-      }
-      if (allowMultiline && keyMatchers["newline" /* NEWLINE */](key)) {
-        buffer.newline();
-        return;
-      }
-      if (keyMatchers["home" /* HOME */](key)) {
-        buffer.move("home");
-        return;
-      }
-      if (keyMatchers["end" /* END */](key)) {
-        buffer.move("end");
-        buffer.moveToOffset(cpLen(buffer.text));
-        return;
-      }
-      if (keyMatchers["clearInput" /* CLEAR_INPUT */](key)) {
-        if (buffer.text.length > 0) buffer.setText("");
-        return;
-      }
-      if (keyMatchers["killLineRight" /* KILL_LINE_RIGHT */](key)) {
-        buffer.killLineRight();
-        return;
-      }
-      if (keyMatchers["killLineLeft" /* KILL_LINE_LEFT */](key)) {
-        buffer.killLineLeft();
-        return;
-      }
-      if (keyMatchers["openExternalEditor" /* OPEN_EXTERNAL_EDITOR */](key)) {
-        buffer.openInExternalEditor();
-        return;
-      }
-      buffer.handleInput(key);
-    },
-    { isActive }
-  );
-  if (!buffer) return null;
-  const linesToRender = buffer.viewportVisualLines;
-  const [cursorVisualRowAbsolute, cursorVisualColAbsolute] = buffer.visualCursor;
-  const scrollVisualRow = buffer.visualScrollRow;
-  return /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(Text3, { color: theme.text.accent, children: "> " }),
-      /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(Box_default, { flexGrow: 1, flexDirection: "column", children: buffer.text.length === 0 && placeholder ? /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(Text3, { children: [
-        import_chalk5.default.inverse(placeholder.slice(0, 1)),
-        /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(Text3, { color: Colors.Gray, children: placeholder.slice(1) })
-      ] }) : linesToRender.map((lineText, visualIdxInRenderedSet) => {
-        const cursorVisualRow = cursorVisualRowAbsolute - scrollVisualRow;
-        let display = cpSlice(lineText, 0, inputWidth);
-        const currentVisualWidth = stringWidth3(display);
-        if (currentVisualWidth < inputWidth) {
-          display = display + " ".repeat(inputWidth - currentVisualWidth);
-        }
-        if (visualIdxInRenderedSet === cursorVisualRow) {
-          const relativeVisualColForHighlight = cursorVisualColAbsolute;
-          if (relativeVisualColForHighlight >= 0) {
-            if (relativeVisualColForHighlight < cpLen(display)) {
-              const charToHighlight = cpSlice(
-                display,
-                relativeVisualColForHighlight,
-                relativeVisualColForHighlight + 1
-              ) || " ";
-              const highlighted = import_chalk5.default.inverse(charToHighlight);
-              display = cpSlice(display, 0, relativeVisualColForHighlight) + highlighted + cpSlice(display, relativeVisualColForHighlight + 1);
-            } else if (relativeVisualColForHighlight === cpLen(display) && cpLen(display) === inputWidth) {
-              display = display + import_chalk5.default.inverse(" ");
-            }
-          }
-        }
-        return /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(Text3, { children: display }, `line-${visualIdxInRenderedSet}`);
-      }) })
-    ] }),
-    validationErrors.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime35.jsx)(Box_default, { flexDirection: "column", children: validationErrors.map((error, index) => /* @__PURE__ */ (0, import_jsx_runtime35.jsxs)(Text3, { color: theme.status.error, children: [
-      "\u26A0 ",
-      error
-    ] }, index)) })
-  ] });
-}
-
-// packages/cli/src/ui/components/ModelSelectionDialog.tsx
-var import_jsx_runtime36 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime37 = __toESM(require_jsx_runtime(), 1);
 var ModelSelectionDialog = ({
   availableModels,
   currentModel,
   onSelect,
   onCancel
 }) => {
-  const [searchQuery, setSearchQuery] = (0, import_react91.useState)("");
+  const [searchQuery, setSearchQuery] = (0, import_react93.useState)("");
   useKeypress(
     (key) => {
       if (key.name === "escape") {
@@ -330147,7 +331072,7 @@ var ModelSelectionDialog = ({
   const handleSelect = (modelId) => {
     onSelect(modelId);
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime36.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime37.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -330157,11 +331082,11 @@ var ModelSelectionDialog = ({
       width: "100%",
       marginLeft: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime36.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(Text3, { bold: true, children: "Select Model" }),
-          /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(Text3, { children: "Choose a model for this session:" })
+        /* @__PURE__ */ (0, import_jsx_runtime37.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(Text3, { bold: true, children: "Select Model" }),
+          /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(Text3, { children: "Choose a model for this session:" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(
           TextInput,
           {
             value: searchQuery,
@@ -330169,7 +331094,7 @@ var ModelSelectionDialog = ({
             placeholder: "Search models..."
           }
         ) }),
-        /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(
           RadioButtonSelect,
           {
             items: options2,
@@ -330178,7 +331103,7 @@ var ModelSelectionDialog = ({
             isFocused: true
           }
         ) }),
-        /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime36.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to select, Esc to cancel" }) })
+        /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime37.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to select, Esc to cancel" }) })
       ]
     }
   );
@@ -330189,7 +331114,7 @@ await init_ModelMappingDialog();
 init_availableModels();
 
 // packages/cli/src/ui/components/subagents/create/AgentCreationWizard.tsx
-var import_react99 = __toESM(require_react(), 1);
+var import_react101 = __toESM(require_react(), 1);
 await init_build2();
 
 // packages/cli/src/ui/components/subagents/types.ts
@@ -330470,7 +331395,7 @@ function validateStep(step, state) {
 // packages/cli/src/ui/components/subagents/create/LocationSelector.tsx
 await init_build2();
 await init_RadioButtonSelect();
-var import_jsx_runtime38 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime39 = __toESM(require_jsx_runtime(), 1);
 var locationOptions = [
   {
     label: "Project Level (.qwen/agents/)",
@@ -330487,7 +331412,7 @@ function LocationSelector({ state, dispatch, onNext }) {
     dispatch({ type: "SET_LOCATION", location });
     onNext();
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(
     RadioButtonSelect,
     {
       items: locationOptions.map((option2) => ({
@@ -330506,7 +331431,7 @@ function LocationSelector({ state, dispatch, onNext }) {
 // packages/cli/src/ui/components/subagents/create/GenerationMethodSelector.tsx
 await init_build2();
 await init_RadioButtonSelect();
-var import_jsx_runtime39 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime40 = __toESM(require_jsx_runtime(), 1);
 var generationOptions = [
   {
     label: "Generate with Qwen Code (Recommended)",
@@ -330528,7 +331453,7 @@ function GenerationMethodSelector({
     dispatch({ type: "SET_GENERATION_METHOD", method });
     onNext();
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(
     RadioButtonSelect,
     {
       items: generationOptions.map((option2) => ({
@@ -330545,20 +331470,20 @@ function GenerationMethodSelector({
 }
 
 // packages/cli/src/ui/components/subagents/create/DescriptionInput.tsx
-var import_react93 = __toESM(require_react(), 1);
+var import_react95 = __toESM(require_react(), 1);
 await init_build2();
 init_dist3();
 await init_useKeypress();
 init_colors();
-var import_jsx_runtime40 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime41 = __toESM(require_jsx_runtime(), 1);
 function DescriptionInput({
   state,
   dispatch,
   onNext,
   config
 }) {
-  const abortControllerRef = (0, import_react93.useRef)(null);
-  const handleTextChange = (0, import_react93.useCallback)(
+  const abortControllerRef = (0, import_react95.useRef)(null);
+  const handleTextChange = (0, import_react95.useCallback)(
     (text) => {
       const sanitized = sanitizeInput(text);
       dispatch({
@@ -330568,7 +331493,7 @@ function DescriptionInput({
     },
     [dispatch]
   );
-  const handleGenerate = (0, import_react93.useCallback)(
+  const handleGenerate = (0, import_react95.useCallback)(
     async (userDescription, dispatch2, config2) => {
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
@@ -330593,7 +331518,7 @@ function DescriptionInput({
     },
     [onNext]
   );
-  const handleSubmit = (0, import_react93.useCallback)(async () => {
+  const handleSubmit = (0, import_react95.useCallback)(async () => {
     if (!state.canProceed || state.isGenerating) {
       return;
     }
@@ -330627,7 +331552,7 @@ function DescriptionInput({
     config,
     handleGenerate
   ]);
-  const handleGenerationKeypress = (0, import_react93.useCallback)(
+  const handleGenerationKeypress = (0, import_react95.useCallback)(
     (key) => {
       if (keyMatchers["escape" /* ESCAPE */](key)) {
         if (abortControllerRef.current) {
@@ -330642,12 +331567,12 @@ function DescriptionInput({
     isActive: state.isGenerating
   });
   const placeholder = "e.g., Expert code reviewer that reviews code based on best practices...";
-  return /* @__PURE__ */ (0, import_jsx_runtime40.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { color: Colors.Gray, children: "Describe what this subagent should do and when it should be used. (Be comprehensive for best results)" }) }),
-    state.isGenerating ? /* @__PURE__ */ (0, import_jsx_runtime40.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Box_default, { marginRight: 1, children: /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(build_default, {}) }),
-      /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { color: theme.text.accent, children: "Generating subagent configuration..." })
-    ] }) : /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime41.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(Text3, { color: Colors.Gray, children: "Describe what this subagent should do and when it should be used. (Be comprehensive for best results)" }) }),
+    state.isGenerating ? /* @__PURE__ */ (0, import_jsx_runtime41.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(Box_default, { marginRight: 1, children: /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(build_default, {}) }),
+      /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(Text3, { color: theme.text.accent, children: "Generating subagent configuration..." })
+    ] }) : /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(
       TextInput,
       {
         value: state.userDescription || "",
@@ -330663,12 +331588,12 @@ function DescriptionInput({
 }
 
 // packages/cli/src/ui/components/subagents/create/ToolSelector.tsx
-var import_react94 = __toESM(require_react(), 1);
+var import_react96 = __toESM(require_react(), 1);
 await init_build2();
 await init_RadioButtonSelect();
 init_dist3();
 init_colors();
-var import_jsx_runtime41 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime42 = __toESM(require_jsx_runtime(), 1);
 function ToolSelector({
   tools = [],
   onSelect,
@@ -330680,7 +331605,7 @@ function ToolSelector({
     editTools,
     executeTools,
     initialCategory
-  } = (0, import_react94.useMemo)(() => {
+  } = (0, import_react96.useMemo)(() => {
     if (!config) {
       return {
         toolCategories: [
@@ -330749,8 +331674,8 @@ function ToolSelector({
       initialCategory: initialCategory2
     };
   }, [config, tools]);
-  const [selectedCategory, setSelectedCategory] = (0, import_react94.useState)(initialCategory);
-  (0, import_react94.useEffect)(() => {
+  const [selectedCategory, setSelectedCategory] = (0, import_react96.useState)(initialCategory);
+  (0, import_react96.useEffect)(() => {
     setSelectedCategory(initialCategory);
   }, [initialCategory]);
   const toolOptions = toolCategories.map((category) => ({
@@ -330774,8 +331699,8 @@ function ToolSelector({
   const currentCategory = toolCategories.find(
     (cat) => cat.id === selectedCategory
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime41.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(
       RadioButtonSelect,
       {
         items: toolOptions.map((option2) => ({
@@ -330790,9 +331715,9 @@ function ToolSelector({
         isFocused: true
       }
     ) }),
-    currentCategory && /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(Box_default, { flexDirection: "column", children: currentCategory.id === "all" ? /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(Text3, { color: Colors.Gray, children: "All tools selected, including MCP tools" }) : currentCategory.tools.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime41.jsxs)(import_jsx_runtime41.Fragment, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(Text3, { color: Colors.Gray, children: "Selected tools:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(Box_default, { flexDirection: "column", marginLeft: 2, children: (() => {
+    currentCategory && /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Box_default, { flexDirection: "column", children: currentCategory.id === "all" ? /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: "All tools selected, including MCP tools" }) : currentCategory.tools.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(import_jsx_runtime42.Fragment, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: "Selected tools:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Box_default, { flexDirection: "column", marginLeft: 2, children: (() => {
         const categoryReadTools = currentCategory.tools.filter(
           (tool) => readTools.includes(tool)
         );
@@ -330802,16 +331727,16 @@ function ToolSelector({
         const categoryExecuteTools = currentCategory.tools.filter(
           (tool) => executeTools.includes(tool)
         );
-        return /* @__PURE__ */ (0, import_jsx_runtime41.jsxs)(import_jsx_runtime41.Fragment, { children: [
-          categoryReadTools.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime41.jsxs)(Text3, { color: Colors.Gray, children: [
+        return /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(import_jsx_runtime42.Fragment, { children: [
+          categoryReadTools.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { color: Colors.Gray, children: [
             "\u2022 Read-only tools: ",
             categoryReadTools.join(", ")
           ] }),
-          categoryEditTools.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime41.jsxs)(Text3, { color: Colors.Gray, children: [
+          categoryEditTools.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { color: Colors.Gray, children: [
             "\u2022 Edit tools: ",
             categoryEditTools.join(", ")
           ] }),
-          categoryExecuteTools.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime41.jsxs)(Text3, { color: Colors.Gray, children: [
+          categoryExecuteTools.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Text3, { color: Colors.Gray, children: [
             "\u2022 Execution tools: ",
             categoryExecuteTools.join(", ")
           ] })
@@ -330822,19 +331747,19 @@ function ToolSelector({
 }
 
 // packages/cli/src/ui/components/subagents/create/ColorSelector.tsx
-var import_react95 = __toESM(require_react(), 1);
+var import_react97 = __toESM(require_react(), 1);
 await init_build2();
 await init_RadioButtonSelect();
 init_colors();
-var import_jsx_runtime42 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime43 = __toESM(require_jsx_runtime(), 1);
 var colorOptions = COLOR_OPTIONS;
 function ColorSelector({
   color = "auto",
   agentName = "Agent",
   onSelect
 }) {
-  const [selectedColor, setSelectedColor] = (0, import_react95.useState)(color);
-  (0, import_react95.useEffect)(() => {
+  const [selectedColor, setSelectedColor] = (0, import_react97.useState)(color);
+  (0, import_react97.useEffect)(() => {
     setSelectedColor(color);
   }, [color]);
   const handleSelect = (selectedValue) => {
@@ -330854,8 +331779,8 @@ function ColorSelector({
     }
   };
   const currentColor = colorOptions.find((option2) => option2.name === selectedColor) || colorOptions[0];
-  return /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(
       RadioButtonSelect,
       {
         items: colorOptions.map((option2) => ({
@@ -330870,19 +331795,19 @@ function ColorSelector({
         isFocused: true
       }
     ) }),
-    /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: "Preview:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Box_default, { marginLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: currentColor.value, children: ` ${agentName} ` }) })
+    /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: Colors.Gray, children: "Preview:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { marginLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: currentColor.value, children: ` ${agentName} ` }) })
     ] })
   ] });
 }
 
 // packages/cli/src/ui/components/subagents/create/CreationSummary.tsx
-var import_react97 = __toESM(require_react(), 1);
+var import_react99 = __toESM(require_react(), 1);
 await init_build2();
 
 // packages/cli/src/ui/hooks/useLaunchEditor.ts
-var import_react96 = __toESM(require_react(), 1);
+var import_react98 = __toESM(require_react(), 1);
 await init_build2();
 import { spawnSync as spawnSync2 } from "child_process";
 function getEditorCommand(preferredEditor) {
@@ -330902,7 +331827,7 @@ function getEditorCommand(preferredEditor) {
 function useLaunchEditor() {
   const settings = useSettings();
   const { stdin, setRawMode } = use_stdin_default();
-  const launchEditor = (0, import_react96.useCallback)(
+  const launchEditor = (0, import_react98.useCallback)(
     async (filePath) => {
       const preferredEditor = settings.merged.general?.preferredEditor;
       const editor = getEditorCommand(preferredEditor);
@@ -330935,22 +331860,22 @@ function useLaunchEditor() {
 }
 
 // packages/cli/src/ui/components/subagents/create/CreationSummary.tsx
-var import_jsx_runtime43 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime44 = __toESM(require_jsx_runtime(), 1);
 function CreationSummary({
   state,
   onPrevious: _onPrevious,
   onCancel,
   config
 }) {
-  const [saveError, setSaveError] = (0, import_react97.useState)(null);
-  const [saveSuccess, setSaveSuccess] = (0, import_react97.useState)(false);
-  const [warnings, setWarnings] = (0, import_react97.useState)([]);
+  const [saveError, setSaveError] = (0, import_react99.useState)(null);
+  const [saveSuccess, setSaveSuccess] = (0, import_react99.useState)(false);
+  const [warnings, setWarnings] = (0, import_react99.useState)([]);
   const launchEditor = useLaunchEditor();
   const truncateText = (text, maxLength) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength - 3) + "...";
   };
-  (0, import_react97.useEffect)(() => {
+  (0, import_react99.useEffect)(() => {
     const checkWarnings = async () => {
       if (!config || !state.generatedName) return;
       const allWarnings = [];
@@ -331005,7 +331930,7 @@ function CreationSummary({
     state.location
   ]);
   const toolsDisplay = state.selectedTools.length === 0 ? "*" : state.selectedTools.join(", ");
-  const saveSubagent = (0, import_react97.useCallback)(async () => {
+  const saveSubagent = (0, import_react99.useCallback)(async () => {
     if (!config) {
       throw new Error("Configuration not available");
     }
@@ -331026,13 +331951,13 @@ function CreationSummary({
     });
     return subagentManager;
   }, [state, config]);
-  const showSuccessAndClose = (0, import_react97.useCallback)(() => {
+  const showSuccessAndClose = (0, import_react99.useCallback)(() => {
     setSaveSuccess(true);
     setTimeout(() => {
       onCancel();
     }, 2e3);
   }, [onCancel]);
-  const handleSave = (0, import_react97.useCallback)(async () => {
+  const handleSave = (0, import_react99.useCallback)(async () => {
     setSaveError(null);
     try {
       await saveSubagent();
@@ -331043,7 +331968,7 @@ function CreationSummary({
       );
     }
   }, [saveSubagent, showSuccessAndClose]);
-  const handleEdit = (0, import_react97.useCallback)(async () => {
+  const handleEdit = (0, import_react99.useCallback)(async () => {
     setSaveError(null);
     try {
       const subagentManager = await saveSubagent();
@@ -331077,9 +332002,9 @@ function CreationSummary({
     }
   });
   if (saveSuccess) {
-    return /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { bold: true, color: theme.status.success, children: "\u2705 Subagent Created Successfully!" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Text3, { children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { bold: true, color: theme.status.success, children: "\u2705 Subagent Created Successfully!" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Text3, { children: [
         'Subagent "',
         state.generatedName,
         '" has been saved to',
@@ -331089,36 +332014,36 @@ function CreationSummary({
       ] }) })
     ] });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: theme.text.primary, children: "Name: " }),
-        /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: getColorForDisplay(state.color), children: state.generatedName })
+  return /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.text.primary, children: "Name: " }),
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: getColorForDisplay(state.color), children: state.generatedName })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: theme.text.primary, children: "Location: " }),
-        /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { children: state.location === "project" ? "Project Level (.qwen/agents/)" : "User Level (~/.qwen/agents/)" })
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.text.primary, children: "Location: " }),
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { children: state.location === "project" ? "Project Level (.qwen/agents/)" : "User Level (~/.qwen/agents/)" })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: theme.text.primary, children: "Tools: " }),
-        /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { children: toolsDisplay })
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.text.primary, children: "Tools: " }),
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { children: toolsDisplay })
       ] }),
-      shouldShowColor(state.color) && /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: theme.text.primary, children: "Color: " }),
-        /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: getColorForDisplay(state.color), children: state.color })
+      shouldShowColor(state.color) && /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.text.primary, children: "Color: " }),
+        /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: getColorForDisplay(state.color), children: state.color })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: theme.text.primary, children: "Description:" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { wrap: "wrap", children: truncateText(state.generatedDescription, 250) }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: theme.text.primary, children: "System Prompt:" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { wrap: "wrap", children: truncateText(state.generatedSystemPrompt, 250) }) })
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.text.primary, children: "Description:" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { wrap: "wrap", children: truncateText(state.generatedDescription, 250) }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.text.primary, children: "System Prompt:" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { wrap: "wrap", children: truncateText(state.generatedSystemPrompt, 250) }) })
     ] }),
-    saveError && /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { bold: true, color: theme.status.error, children: "\u274C Error saving subagent:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { flexDirection: "column", padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: theme.status.error, wrap: "wrap", children: saveError }) })
+    saveError && /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { bold: true, color: theme.status.error, children: "\u274C Error saving subagent:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { flexDirection: "column", padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: theme.status.error, wrap: "wrap", children: saveError }) })
     ] }),
-    warnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { bold: true, color: theme.status.warning, children: "Warnings:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { flexDirection: "column", padding: 1, paddingBottom: 0, children: warnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Text3, { color: theme.status.warning, wrap: "wrap", children: [
+    warnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { bold: true, color: theme.status.warning, children: "Warnings:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { flexDirection: "column", padding: 1, paddingBottom: 0, children: warnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Text3, { color: theme.status.warning, wrap: "wrap", children: [
         "\u2022 ",
         warning
       ] }, index)) })
@@ -331130,10 +332055,10 @@ function CreationSummary({
 init_colors();
 
 // packages/cli/src/ui/components/subagents/create/TextEntryStep.tsx
-var import_react98 = __toESM(require_react(), 1);
+var import_react100 = __toESM(require_react(), 1);
 await init_build2();
 init_colors();
-var import_jsx_runtime44 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime45 = __toESM(require_jsx_runtime(), 1);
 function TextEntryStep({
   state,
   dispatch,
@@ -331145,7 +332070,7 @@ function TextEntryStep({
   onChange,
   validate: validate4
 }) {
-  const submit = (0, import_react98.useCallback)(() => {
+  const submit = (0, import_react100.useCallback)(() => {
     const value = initialText ? initialText.trim() : "";
     const error = validate4 ? validate4(value) : value.length === 0 ? "Please enter a value." : null;
     if (error) {
@@ -331155,9 +332080,9 @@ function TextEntryStep({
     dispatch({ type: "SET_VALIDATION_ERRORS", errors: [] });
     onNext();
   }, [dispatch, onNext, validate4, initialText]);
-  return /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    description && /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: Colors.Gray, children: description }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    description && /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: Colors.Gray, children: description }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(
       TextInput,
       {
         value: initialText,
@@ -331174,19 +332099,19 @@ function TextEntryStep({
 
 // packages/cli/src/ui/components/subagents/create/AgentCreationWizard.tsx
 await init_useKeypress();
-var import_jsx_runtime45 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime46 = __toESM(require_jsx_runtime(), 1);
 function AgentCreationWizard({
   onClose,
   config
 }) {
-  const [state, dispatch] = (0, import_react99.useReducer)(wizardReducer, initialWizardState);
-  const handleNext = (0, import_react99.useCallback)(() => {
+  const [state, dispatch] = (0, import_react101.useReducer)(wizardReducer, initialWizardState);
+  const handleNext = (0, import_react101.useCallback)(() => {
     dispatch({ type: "GO_TO_NEXT_STEP" });
   }, []);
-  const handlePrevious = (0, import_react99.useCallback)(() => {
+  const handlePrevious = (0, import_react101.useCallback)(() => {
     dispatch({ type: "GO_TO_PREVIOUS_STEP" });
   }, []);
-  const handleCancel = (0, import_react99.useCallback)(() => {
+  const handleCancel = (0, import_react101.useCallback)(() => {
     dispatch({ type: "RESET_WIZARD" });
     onClose();
   }, [onClose]);
@@ -331207,7 +332132,7 @@ function AgentCreationWizard({
     },
     { isActive: true }
   );
-  const stepProps = (0, import_react99.useMemo)(
+  const stepProps = (0, import_react101.useMemo)(
     () => ({
       state,
       dispatch,
@@ -331218,7 +332143,7 @@ function AgentCreationWizard({
     }),
     [state, dispatch, handleNext, handlePrevious, handleCancel, config]
   );
-  const renderStepHeader = (0, import_react99.useCallback)(() => {
+  const renderStepHeader = (0, import_react101.useCallback)(() => {
     const getStepHeaderText = () => {
       const kind = getStepKind(state.generationMethod, state.currentStep);
       const n2 = state.currentStep;
@@ -331245,35 +332170,35 @@ function AgentCreationWizard({
           return "Unknown Step";
       }
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { bold: true, children: getStepHeaderText() }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { bold: true, children: getStepHeaderText() }) });
   }, [state.currentStep, state.generationMethod]);
-  const renderDebugContent = (0, import_react99.useCallback)(() => {
+  const renderDebugContent = (0, import_react101.useCallback)(() => {
     if (process.env["NODE_ENV"] !== "development") {
       return null;
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { borderStyle: "single", borderColor: theme.status.warning, padding: 1, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: theme.status.warning, bold: true, children: "Debug Info:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Gray, children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { borderStyle: "single", borderColor: theme.status.warning, padding: 1, children: /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: theme.status.warning, bold: true, children: "Debug Info:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: Colors.Gray, children: [
         "Step: ",
         state.currentStep
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Gray, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: Colors.Gray, children: [
         "Can Proceed: ",
         state.canProceed ? "Yes" : "No"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Gray, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: Colors.Gray, children: [
         "Generating: ",
         state.isGenerating ? "Yes" : "No"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Gray, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: Colors.Gray, children: [
         "Location: ",
         state.location
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: Colors.Gray, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: Colors.Gray, children: [
         "Method: ",
         state.generationMethod
       ] }),
-      state.validationErrors.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: theme.status.error, children: [
+      state.validationErrors.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: theme.status.error, children: [
         "Errors: ",
         state.validationErrors.join(", ")
       ] })
@@ -331286,7 +332211,7 @@ function AgentCreationWizard({
     state.generationMethod,
     state.validationErrors
   ]);
-  const renderStepFooter = (0, import_react99.useCallback)(() => {
+  const renderStepFooter = (0, import_react101.useCallback)(() => {
     const getNavigationInstructions = () => {
       const kind = getStepKind(state.generationMethod, state.currentStep);
       if (kind === "LLM_DESC" && state.isGenerating) {
@@ -331301,19 +332226,19 @@ function AgentCreationWizard({
       const escAction = state.currentStep === WIZARD_STEPS.LOCATION_SELECTION ? "cancel" : "go back";
       return `Press Enter to continue, ${navigationPart}Esc to ${escAction}`;
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: theme.text.secondary, children: getNavigationInstructions() }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: theme.text.secondary, children: getNavigationInstructions() }) });
   }, [state.currentStep, state.isGenerating, state.generationMethod]);
-  const renderStepContent = (0, import_react99.useCallback)(() => {
+  const renderStepContent = (0, import_react101.useCallback)(() => {
     const kind = getStepKind(state.generationMethod, state.currentStep);
     switch (kind) {
       case "LOCATION":
-        return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(LocationSelector, { ...stepProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(LocationSelector, { ...stepProps });
       case "GEN_METHOD":
-        return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(GenerationMethodSelector, { ...stepProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(GenerationMethodSelector, { ...stepProps });
       case "LLM_DESC":
-        return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(DescriptionInput, { ...stepProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(DescriptionInput, { ...stepProps });
       case "MANUAL_NAME":
-        return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(
           TextEntryStep,
           {
             state,
@@ -331332,7 +332257,7 @@ function AgentCreationWizard({
           "manual-name"
         );
       case "MANUAL_PROMPT":
-        return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(
           TextEntryStep,
           {
             state,
@@ -331353,7 +332278,7 @@ function AgentCreationWizard({
           "manual-prompt"
         );
       case "MANUAL_DESC":
-        return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(
           TextEntryStep,
           {
             state,
@@ -331371,7 +332296,7 @@ function AgentCreationWizard({
           "manual-desc"
         );
       case "TOOLS":
-        return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(
           ToolSelector,
           {
             tools: state.selectedTools,
@@ -331383,7 +332308,7 @@ function AgentCreationWizard({
           }
         );
       case "COLOR":
-        return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(
           ColorSelector,
           {
             color: state.color,
@@ -331395,15 +332320,15 @@ function AgentCreationWizard({
           }
         );
       case "FINAL":
-        return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(CreationSummary, { ...stepProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(CreationSummary, { ...stepProps });
       default:
-        return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: theme.status.error, children: [
+        return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: theme.status.error, children: [
           "Invalid step: ",
           state.currentStep
         ] }) });
     }
   }, [stepProps, state, config, handleNext, dispatch]);
-  return /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(
     Box_default,
     {
       borderStyle: "single",
@@ -331423,43 +332348,43 @@ function AgentCreationWizard({
 }
 
 // packages/cli/src/ui/components/subagents/manage/AgentsManagerDialog.tsx
-var import_react103 = __toESM(require_react(), 1);
+var import_react105 = __toESM(require_react(), 1);
 await init_build2();
 
 // packages/cli/src/ui/components/subagents/manage/AgentSelectionStep.tsx
-var import_react100 = __toESM(require_react(), 1);
+var import_react102 = __toESM(require_react(), 1);
 await init_build2();
 init_colors();
 await init_useKeypress();
 init_dist3();
-var import_jsx_runtime46 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime47 = __toESM(require_jsx_runtime(), 1);
 var AgentSelectionStep = ({
   availableAgents,
   onAgentSelect
 }) => {
-  const [navigation, setNavigation] = (0, import_react100.useState)({
+  const [navigation, setNavigation] = (0, import_react102.useState)({
     currentBlock: "project",
     projectIndex: 0,
     userIndex: 0,
     builtinIndex: 0
   });
-  const projectAgents = (0, import_react100.useMemo)(
+  const projectAgents = (0, import_react102.useMemo)(
     () => availableAgents.filter((agent) => agent.level === "project"),
     [availableAgents]
   );
-  const userAgents = (0, import_react100.useMemo)(
+  const userAgents = (0, import_react102.useMemo)(
     () => availableAgents.filter((agent) => agent.level === "user"),
     [availableAgents]
   );
-  const builtinAgents = (0, import_react100.useMemo)(
+  const builtinAgents = (0, import_react102.useMemo)(
     () => availableAgents.filter((agent) => agent.level === "builtin"),
     [availableAgents]
   );
-  const projectNames = (0, import_react100.useMemo)(
+  const projectNames = (0, import_react102.useMemo)(
     () => new Set(projectAgents.map((agent) => agent.name)),
     [projectAgents]
   );
-  (0, import_react100.useEffect)(() => {
+  (0, import_react102.useEffect)(() => {
     if (projectAgents.length > 0) {
       setNavigation((prev) => ({ ...prev, currentBlock: "project" }));
     } else if (userAgents.length > 0) {
@@ -331580,22 +332505,22 @@ var AgentSelectionStep = ({
     { isActive: true }
   );
   if (availableAgents.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: theme.text.secondary, children: "No subagents found." }),
-      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: theme.text.secondary, children: "Use '/agents create' to create your first subagent." })
+    return /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { color: theme.text.secondary, children: "No subagents found." }),
+      /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { color: theme.text.secondary, children: "Use '/agents create' to create your first subagent." })
     ] });
   }
   const renderAgentItem = (agent, index, isSelected) => {
     const textColor = isSelected ? theme.text.accent : theme.text.primary;
-    return /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { alignItems: "center", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: isSelected ? theme.text.accent : theme.text.primary, children: isSelected ? "\u25CF" : " " }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: textColor, wrap: "truncate", children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Box_default, { alignItems: "center", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { color: isSelected ? theme.text.accent : theme.text.primary, children: isSelected ? "\u25CF" : " " }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: textColor, wrap: "truncate", children: [
         agent.name,
-        agent.isBuiltin && /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: isSelected ? theme.text.accent : theme.text.secondary, children: [
+        agent.isBuiltin && /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: isSelected ? theme.text.accent : theme.text.secondary, children: [
           " ",
           "(built-in)"
         ] }),
-        agent.level === "user" && projectNames.has(agent.name) && /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: isSelected ? theme.status.warning : Colors.Gray, children: [
+        agent.level === "user" && projectNames.has(agent.name) && /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: isSelected ? theme.status.warning : Colors.Gray, children: [
           " ",
           "(overridden by project level agent)"
         ] })
@@ -331603,44 +332528,44 @@ var AgentSelectionStep = ({
     ] }, `${agent.name}-${agent.level}`);
   };
   const enabledAgentsCount = projectAgents.length + userAgents.filter((agent) => !projectNames.has(agent.name)).length + builtinAgents.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "column", children: [
-    projectAgents.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: theme.text.primary, bold: true, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Box_default, { flexDirection: "column", children: [
+    projectAgents.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: theme.text.primary, bold: true, children: [
         "Project Level (",
         projectAgents[0].filePath.replace(/\/[^/]+$/, ""),
         ")"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { marginTop: 1, flexDirection: "column", children: projectAgents.map((agent, index) => {
+      /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { marginTop: 1, flexDirection: "column", children: projectAgents.map((agent, index) => {
         const isSelected = navigation.currentBlock === "project" && navigation.projectIndex === index;
         return renderAgentItem(agent, index, isSelected);
       }) })
     ] }),
-    userAgents.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(
+    userAgents.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(
       Box_default,
       {
         flexDirection: "column",
         marginBottom: builtinAgents.length > 0 ? 1 : 0,
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: theme.text.primary, bold: true, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: theme.text.primary, bold: true, children: [
             "User Level (",
             userAgents[0].filePath.replace(/\/[^/]+$/, ""),
             ")"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { marginTop: 1, flexDirection: "column", children: userAgents.map((agent, index) => {
+          /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { marginTop: 1, flexDirection: "column", children: userAgents.map((agent, index) => {
             const isSelected = navigation.currentBlock === "user" && navigation.userIndex === index;
             return renderAgentItem(agent, index, isSelected);
           }) })
         ]
       }
     ),
-    builtinAgents.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: theme.text.primary, bold: true, children: "Built-in Agents" }),
-      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { marginTop: 1, flexDirection: "column", children: builtinAgents.map((agent, index) => {
+    builtinAgents.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { color: theme.text.primary, bold: true, children: "Built-in Agents" }),
+      /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { marginTop: 1, flexDirection: "column", children: builtinAgents.map((agent, index) => {
         const isSelected = navigation.currentBlock === "builtin" && navigation.builtinIndex === index;
         return renderAgentItem(agent, index, isSelected);
       }) })
     ] }),
-    (projectAgents.length > 0 || userAgents.length > 0 || builtinAgents.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: theme.text.secondary, children: [
+    (projectAgents.length > 0 || userAgents.length > 0 || builtinAgents.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: theme.text.secondary, children: [
       "Using: ",
       enabledAgentsCount,
       " agents"
@@ -331649,17 +332574,17 @@ var AgentSelectionStep = ({
 };
 
 // packages/cli/src/ui/components/subagents/manage/ActionSelectionStep.tsx
-var import_react101 = __toESM(require_react(), 1);
+var import_react103 = __toESM(require_react(), 1);
 await init_build2();
 await init_RadioButtonSelect();
 init_dist3();
-var import_jsx_runtime47 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime48 = __toESM(require_jsx_runtime(), 1);
 var ActionSelectionStep = ({
   selectedAgent,
   onNavigateToStep,
   onNavigateBack
 }) => {
-  const [selectedAction, setSelectedAction] = (0, import_react101.useState)(null);
+  const [selectedAction, setSelectedAction] = (0, import_react103.useState)(null);
   const allActions = [
     { label: "View Agent", value: "view" },
     { label: "Edit Agent", value: "edit" },
@@ -331684,7 +332609,7 @@ var ActionSelectionStep = ({
     }
   };
   const selectedIndex = selectedAction ? actions.findIndex((action) => action.value === selectedAction) : 0;
-  return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(
     RadioButtonSelect,
     {
       items: actions,
@@ -331698,39 +332623,39 @@ var ActionSelectionStep = ({
 // packages/cli/src/ui/components/subagents/manage/AgentViewerStep.tsx
 await init_build2();
 init_dist3();
-var import_jsx_runtime48 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime49 = __toESM(require_jsx_runtime(), 1);
 var AgentViewerStep = ({ selectedAgent }) => {
   if (!selectedAgent) {
-    return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: theme.status.error, children: "No agent selected" }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: theme.status.error, children: "No agent selected" }) });
   }
   const agent = selectedAgent;
   const toolsDisplay = agent.tools ? agent.tools.join(", ") : "*";
-  return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: theme.text.primary, children: "File Path: " }),
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { children: agent.filePath })
+  return /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: theme.text.primary, children: "File Path: " }),
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { children: agent.filePath })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: theme.text.primary, children: "Tools: " }),
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { children: toolsDisplay })
+    /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: theme.text.primary, children: "Tools: " }),
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { children: toolsDisplay })
     ] }),
-    shouldShowColor(agent.color) && /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: theme.text.primary, children: "Color: " }),
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: getColorForDisplay(agent.color), children: agent.color })
+    shouldShowColor(agent.color) && /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: theme.text.primary, children: "Color: " }),
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: getColorForDisplay(agent.color), children: agent.color })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: theme.text.primary, children: "Description:" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { wrap: "wrap", children: agent.description }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: theme.text.primary, children: "System Prompt:" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { wrap: "wrap", children: agent.systemPrompt }) })
+    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: theme.text.primary, children: "Description:" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { wrap: "wrap", children: agent.description }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: theme.text.primary, children: "System Prompt:" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { wrap: "wrap", children: agent.systemPrompt }) })
   ] }) });
 };
 
 // packages/cli/src/ui/components/subagents/manage/AgentEditStep.tsx
-var import_react102 = __toESM(require_react(), 1);
+var import_react104 = __toESM(require_react(), 1);
 await init_build2();
 await init_RadioButtonSelect();
 init_dist3();
-var import_jsx_runtime49 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime50 = __toESM(require_jsx_runtime(), 1);
 var editOptions = [
   {
     id: "editor",
@@ -331749,13 +332674,13 @@ function EditOptionsStep({
   selectedAgent,
   onNavigateToStep
 }) {
-  const [selectedOption, setSelectedOption] = (0, import_react102.useState)("editor");
-  const [error, setError] = (0, import_react102.useState)(null);
+  const [selectedOption, setSelectedOption] = (0, import_react104.useState)("editor");
+  const [error, setError] = (0, import_react104.useState)(null);
   const launchEditor = useLaunchEditor();
   const handleHighlight = (selectedValue) => {
     setSelectedOption(selectedValue);
   };
-  const handleSelect = (0, import_react102.useCallback)(
+  const handleSelect = (0, import_react104.useCallback)(
     async (selectedValue) => {
       if (!selectedAgent) return;
       setError(null);
@@ -331775,8 +332700,8 @@ function EditOptionsStep({
     },
     [selectedAgent, onNavigateToStep, launchEditor]
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime50.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(
       RadioButtonSelect,
       {
         items: editOptions.map((option2) => ({
@@ -331791,9 +332716,9 @@ function EditOptionsStep({
         isFocused: true
       }
     ) }),
-    error && /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { bold: true, color: theme.status.error, children: "\u274C Error:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { flexDirection: "column", padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: theme.status.error, wrap: "wrap", children: error }) })
+    error && /* @__PURE__ */ (0, import_jsx_runtime50.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { bold: true, color: theme.status.error, children: "\u274C Error:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { flexDirection: "column", padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color: theme.status.error, wrap: "wrap", children: error }) })
     ] })
   ] });
 }
@@ -331802,7 +332727,7 @@ function EditOptionsStep({
 await init_build2();
 init_dist3();
 await init_useKeypress();
-var import_jsx_runtime50 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime51 = __toESM(require_jsx_runtime(), 1);
 function AgentDeleteStep({
   selectedAgent,
   onDelete,
@@ -331824,9 +332749,9 @@ function AgentDeleteStep({
     { isActive: true }
   );
   if (!selectedAgent) {
-    return /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color: theme.status.error, children: "No agent selected" }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: theme.status.error, children: "No agent selected" }) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsxs)(Text3, { color: theme.status.error, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(Text3, { color: theme.status.error, children: [
     "Are you sure you want to delete agent \u201C",
     selectedAgent.name,
     "\u201D?"
@@ -331836,41 +332761,41 @@ function AgentDeleteStep({
 // packages/cli/src/ui/components/subagents/manage/AgentsManagerDialog.tsx
 init_colors();
 await init_useKeypress();
-var import_jsx_runtime51 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime52 = __toESM(require_jsx_runtime(), 1);
 function AgentsManagerDialog({
   onClose,
   config
 }) {
-  const [availableAgents, setAvailableAgents] = (0, import_react103.useState)([]);
-  const [selectedAgentIndex, setSelectedAgentIndex] = (0, import_react103.useState)(-1);
-  const [navigationStack, setNavigationStack] = (0, import_react103.useState)([
+  const [availableAgents, setAvailableAgents] = (0, import_react105.useState)([]);
+  const [selectedAgentIndex, setSelectedAgentIndex] = (0, import_react105.useState)(-1);
+  const [navigationStack, setNavigationStack] = (0, import_react105.useState)([
     MANAGEMENT_STEPS.AGENT_SELECTION
   ]);
-  const selectedAgent = (0, import_react103.useMemo)(
+  const selectedAgent = (0, import_react105.useMemo)(
     () => selectedAgentIndex >= 0 ? availableAgents[selectedAgentIndex] : null,
     [availableAgents, selectedAgentIndex]
   );
-  const loadAgents = (0, import_react103.useCallback)(async () => {
+  const loadAgents = (0, import_react105.useCallback)(async () => {
     if (!config) return;
     const manager = config.getSubagentManager();
     const allAgents = await manager.listSubagents({ force: true });
     setAvailableAgents(allAgents);
   }, [config]);
-  (0, import_react103.useEffect)(() => {
+  (0, import_react105.useEffect)(() => {
     loadAgents();
   }, [loadAgents]);
-  const getCurrentStep = (0, import_react103.useCallback)(
+  const getCurrentStep = (0, import_react105.useCallback)(
     () => navigationStack[navigationStack.length - 1] || MANAGEMENT_STEPS.AGENT_SELECTION,
     [navigationStack]
   );
-  const handleSelectAgent = (0, import_react103.useCallback)((agentIndex) => {
+  const handleSelectAgent = (0, import_react105.useCallback)((agentIndex) => {
     setSelectedAgentIndex(agentIndex);
     setNavigationStack((prev) => [...prev, MANAGEMENT_STEPS.ACTION_SELECTION]);
   }, []);
-  const handleNavigateToStep = (0, import_react103.useCallback)((step) => {
+  const handleNavigateToStep = (0, import_react105.useCallback)((step) => {
     setNavigationStack((prev) => [...prev, step]);
   }, []);
-  const handleNavigateBack = (0, import_react103.useCallback)(() => {
+  const handleNavigateBack = (0, import_react105.useCallback)(() => {
     setNavigationStack((prev) => {
       if (prev.length <= 1) {
         return prev;
@@ -331878,7 +332803,7 @@ function AgentsManagerDialog({
       return prev.slice(0, -1);
     });
   }, []);
-  const handleDeleteAgent = (0, import_react103.useCallback)(
+  const handleDeleteAgent = (0, import_react105.useCallback)(
     async (agent) => {
       if (!config) return;
       try {
@@ -331908,14 +332833,14 @@ function AgentsManagerDialog({
     },
     { isActive: true }
   );
-  const commonProps = (0, import_react103.useMemo)(
+  const commonProps = (0, import_react105.useMemo)(
     () => ({
       onNavigateToStep: handleNavigateToStep,
       onNavigateBack: handleNavigateBack
     }),
     [handleNavigateToStep, handleNavigateBack]
   );
-  const renderStepHeader = (0, import_react103.useCallback)(() => {
+  const renderStepHeader = (0, import_react105.useCallback)(() => {
     const currentStep = getCurrentStep();
     const getStepHeaderText = () => {
       switch (currentStep) {
@@ -331938,9 +332863,9 @@ function AgentsManagerDialog({
       }
     };
     const headerColor = currentStep === MANAGEMENT_STEPS.AGENT_VIEWER && selectedAgent && shouldShowColor(selectedAgent.color) ? getColorForDisplay(selectedAgent.color) : void 0;
-    return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { bold: true, color: headerColor, children: getStepHeaderText() }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { bold: true, color: headerColor, children: getStepHeaderText() }) });
   }, [getCurrentStep, selectedAgent]);
-  const renderStepFooter = (0, import_react103.useCallback)(() => {
+  const renderStepFooter = (0, import_react105.useCallback)(() => {
     const currentStep = getCurrentStep();
     const getNavigationInstructions = () => {
       if (currentStep === MANAGEMENT_STEPS.AGENT_SELECTION) {
@@ -331957,13 +332882,13 @@ function AgentsManagerDialog({
       }
       return "Enter to select, \u2191\u2193 to navigate, Esc to go back";
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: theme.text.secondary, children: getNavigationInstructions() }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: theme.text.secondary, children: getNavigationInstructions() }) });
   }, [getCurrentStep, availableAgents]);
-  const renderStepContent = (0, import_react103.useCallback)(() => {
+  const renderStepContent = (0, import_react105.useCallback)(() => {
     const currentStep = getCurrentStep();
     switch (currentStep) {
       case MANAGEMENT_STEPS.AGENT_SELECTION:
-        return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
           AgentSelectionStep,
           {
             availableAgents,
@@ -331972,13 +332897,13 @@ function AgentsManagerDialog({
           }
         );
       case MANAGEMENT_STEPS.ACTION_SELECTION:
-        return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(ActionSelectionStep, { selectedAgent, ...commonProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(ActionSelectionStep, { selectedAgent, ...commonProps });
       case MANAGEMENT_STEPS.AGENT_VIEWER:
-        return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(AgentViewerStep, { selectedAgent, ...commonProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(AgentViewerStep, { selectedAgent, ...commonProps });
       case MANAGEMENT_STEPS.EDIT_OPTIONS:
-        return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(EditOptionsStep, { selectedAgent, ...commonProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(EditOptionsStep, { selectedAgent, ...commonProps });
       case MANAGEMENT_STEPS.EDIT_TOOLS:
-        return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
           ToolSelector,
           {
             tools: selectedAgent?.tools || [],
@@ -332002,7 +332927,7 @@ function AgentsManagerDialog({
           }
         ) });
       case MANAGEMENT_STEPS.EDIT_COLOR:
-        return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
           ColorSelector,
           {
             color: selectedAgent?.color || "auto",
@@ -332026,7 +332951,7 @@ function AgentsManagerDialog({
           }
         ) });
       case MANAGEMENT_STEPS.DELETE_CONFIRMATION:
-        return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
           AgentDeleteStep,
           {
             selectedAgent,
@@ -332035,7 +332960,7 @@ function AgentsManagerDialog({
           }
         );
       default:
-        return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(Text3, { color: theme.status.error, children: [
+        return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Text3, { color: theme.status.error, children: [
           "Invalid step: ",
           currentStep
         ] }) });
@@ -332051,7 +332976,7 @@ function AgentsManagerDialog({
     handleSelectAgent,
     handleDeleteAgent
   ]);
-  return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(
     Box_default,
     {
       borderStyle: "single",
@@ -332070,7 +332995,7 @@ function AgentsManagerDialog({
 }
 
 // packages/cli/src/ui/components/subagents/runtime/AgentExecutionDisplay.tsx
-var import_react104 = __toESM(require_react(), 1);
+var import_react106 = __toESM(require_react(), 1);
 await init_build2();
 init_colors();
 await init_useKeypress();
@@ -332081,7 +333006,7 @@ init_colors();
 init_dist3();
 await init_RadioButtonSelect();
 await init_useKeypress();
-var import_jsx_runtime52 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime53 = __toESM(require_jsx_runtime(), 1);
 var ToolConfirmationMessage = ({
   confirmationDetails,
   config,
@@ -332131,9 +333056,9 @@ var ToolConfirmationMessage = ({
         value: ToolConfirmationOutcome.Cancel
       }
     ];
-    return /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { wrap: "truncate", children: "Do you want to proceed?" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { wrap: "truncate", children: "Do you want to proceed?" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
         RadioButtonSelect,
         {
           items: compactOptions,
@@ -332163,7 +333088,7 @@ var ToolConfirmationMessage = ({
   }
   if (confirmationDetails.type === "edit") {
     if (confirmationDetails.isModifying) {
-      return /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(
+      return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(
         Box_default,
         {
           minWidth: "90%",
@@ -332173,8 +333098,8 @@ var ToolConfirmationMessage = ({
           padding: 1,
           overflow: "hidden",
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { children: "Modify in progress: " }),
-            /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: Colors.AccentGreen, children: "Save and close external editor to continue" })
+            /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { children: "Modify in progress: " }),
+            /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.AccentGreen, children: "Save and close external editor to continue" })
           ]
         }
       );
@@ -332205,7 +333130,7 @@ var ToolConfirmationMessage = ({
         value: ToolConfirmationOutcome.Cancel
       });
     }
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
       DiffRenderer,
       {
         diffContent: confirmationDetails.fileDiff,
@@ -332235,12 +333160,12 @@ var ToolConfirmationMessage = ({
     if (bodyContentHeight !== void 0) {
       bodyContentHeight -= 2;
     }
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
       MaxSizedBox,
       {
         maxHeight: bodyContentHeight,
         maxWidth: Math.max(childWidth - 4, 1),
-        children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: Colors.AccentCyan, children: executionProps.command }) })
+        children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.AccentCyan, children: executionProps.command }) })
       }
     ) }) });
   } else if (confirmationDetails.type === "plan") {
@@ -332258,7 +333183,7 @@ var ToolConfirmationMessage = ({
       label: "No, keep planning (esc)",
       value: ToolConfirmationOutcome.Cancel
     });
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
       MarkdownDisplay,
       {
         text: planProps.plan,
@@ -332285,25 +333210,25 @@ var ToolConfirmationMessage = ({
       label: "No, suggest changes (esc)",
       value: ToolConfirmationOutcome.Cancel
     });
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: Colors.AccentCyan, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(RenderInline, { text: infoProps.prompt }) }),
-      displayUrls && infoProps.urls && infoProps.urls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { children: "URLs to fetch:" }),
-        infoProps.urls.map((url2) => /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Text3, { children: [
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.AccentCyan, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(RenderInline, { text: infoProps.prompt }) }),
+      displayUrls && infoProps.urls && infoProps.urls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { children: "URLs to fetch:" }),
+        infoProps.urls.map((url2) => /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
           " ",
           "- ",
-          /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(RenderInline, { text: url2 })
+          /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(RenderInline, { text: url2 })
         ] }, url2))
       ] })
     ] });
   } else {
     const mcpProps = confirmationDetails;
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Text3, { color: Colors.AccentCyan, children: [
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.AccentCyan, children: [
         "MCP Server: ",
         mcpProps.serverName
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Text3, { color: Colors.AccentCyan, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.AccentCyan, children: [
         "Tool: ",
         mcpProps.toolName
       ] })
@@ -332329,10 +333254,10 @@ var ToolConfirmationMessage = ({
       value: ToolConfirmationOutcome.Cancel
     });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "column", padding: 1, width: childWidth, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexGrow: 1, flexShrink: 1, overflow: "hidden", marginBottom: 1, children: bodyContent }),
-    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { marginBottom: 1, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { wrap: "truncate", children: question }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", padding: 1, width: childWidth, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexGrow: 1, flexShrink: 1, overflow: "hidden", marginBottom: 1, children: bodyContent }),
+    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { marginBottom: 1, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { wrap: "truncate", children: question }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
       RadioButtonSelect,
       {
         items: options2,
@@ -332344,7 +333269,7 @@ var ToolConfirmationMessage = ({
 };
 
 // packages/cli/src/ui/components/subagents/runtime/AgentExecutionDisplay.tsx
-var import_jsx_runtime53 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime54 = __toESM(require_jsx_runtime(), 1);
 var getStatusColor = (status) => {
   switch (status) {
     case "running":
@@ -332384,14 +333309,14 @@ var AgentExecutionDisplay = ({
   childWidth,
   config
 }) => {
-  const [displayMode, setDisplayMode] = import_react104.default.useState("compact");
-  const agentColor = (0, import_react104.useMemo)(() => {
+  const [displayMode, setDisplayMode] = import_react106.default.useState("compact");
+  const agentColor = (0, import_react106.useMemo)(() => {
     const colorOption = COLOR_OPTIONS.find(
       (option2) => option2.name === data.subagentColor
     );
     return colorOption?.value || theme.text.accent;
   }, [data.subagentColor]);
-  const footerText = import_react104.default.useMemo(() => {
+  const footerText = import_react106.default.useMemo(() => {
     if (data.status !== "running") return "";
     if (displayMode === "default") {
       const hasMoreLines = data.taskPrompt.split("\n").length > MAX_TASK_PROMPT_LINES;
@@ -332421,28 +333346,28 @@ var AgentExecutionDisplay = ({
     { isActive: true }
   );
   if (displayMode === "compact") {
-    return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
-      !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
-        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(StatusDot, { status: data.status }),
-        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(StatusIndicator, { status: data.status })
+    return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
+      !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
+        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(StatusDot, { status: data.status }),
+        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(StatusIndicator, { status: data.status })
       ] }),
-      data.status === "running" && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(import_jsx_runtime53.Fragment, { children: [
-        data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+      data.status === "running" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(import_jsx_runtime54.Fragment, { children: [
+        data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
             ToolCallItem,
             {
               toolCall: data.toolCalls[data.toolCalls.length - 1],
               compact: true
             }
           ),
-          data.toolCalls.length > 1 && !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", paddingLeft: 4, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.Gray, children: [
+          data.toolCalls.length > 1 && !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", paddingLeft: 4, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.Gray, children: [
             "+",
             data.toolCalls.length - 1,
             " more tool calls (ctrl+r to expand)"
           ] }) })
         ] }),
-        data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+        data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
           ToolConfirmationMessage,
           {
             confirmationDetails: data.pendingConfirmation,
@@ -332454,7 +333379,7 @@ var AgentExecutionDisplay = ({
           }
         ) })
       ] }),
-      data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: theme.text.secondary, children: [
+      data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: theme.text.secondary, children: [
         "Execution Summary: ",
         data.executionSummary.totalToolCalls,
         " tool uses \xB7 ",
@@ -332462,33 +333387,33 @@ var AgentExecutionDisplay = ({
         " tokens \xB7 ",
         fmtDuration(data.executionSummary.totalDurationMs)
       ] }) }),
-      data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: theme.status.error, children: [
+      data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: theme.status.error, children: [
         "Failed: ",
         data.terminateReason
       ] }) })
     ] });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(StatusDot, { status: data.status }),
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(StatusIndicator, { status: data.status })
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(StatusDot, { status: data.status }),
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(StatusIndicator, { status: data.status })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
       TaskPromptSection,
       {
         taskPrompt: data.taskPrompt,
         displayMode
       }
     ),
-    data.status === "running" && data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+    data.status === "running" && data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
       ToolCallsList,
       {
         toolCalls: data.toolCalls,
         displayMode
       }
     ) }),
-    data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+    data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
       ToolConfirmationMessage,
       {
         confirmationDetails: data.pendingConfirmation,
@@ -332499,8 +333424,8 @@ var AgentExecutionDisplay = ({
         compactMode: true
       }
     ) }),
-    (data.status === "completed" || data.status === "failed" || data.status === "cancelled") && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(ResultsSection, { data, displayMode }),
-    footerText && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.Gray, children: footerText }) })
+    (data.status === "completed" || data.status === "failed" || data.status === "cancelled") && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ResultsSection, { data, displayMode }),
+    footerText && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: footerText }) })
   ] });
 };
 var TaskPromptSection = ({ taskPrompt, displayMode }) => {
@@ -332508,24 +333433,24 @@ var TaskPromptSection = ({ taskPrompt, displayMode }) => {
   const shouldTruncate = lines.length > 10;
   const showFull = displayMode === "verbose";
   const displayLines = showFull ? lines : lines.slice(0, MAX_TASK_PROMPT_LINES);
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.text.primary, children: "Task Detail: " }),
-      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.primary, children: "Task Detail: " }),
+      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.Gray, children: [
         " ",
         "Showing the first ",
         MAX_TASK_PROMPT_LINES,
         " lines."
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { wrap: "wrap", children: displayLines.join("\n") + (shouldTruncate && !showFull ? "..." : "") }) })
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { wrap: "wrap", children: displayLines.join("\n") + (shouldTruncate && !showFull ? "..." : "") }) })
   ] });
 };
-var StatusDot = ({ status }) => /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { marginLeft: 1, marginRight: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: getStatusColor(status), children: "\u25CF" }) });
+var StatusDot = ({ status }) => /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { marginLeft: 1, marginRight: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: getStatusColor(status), children: "\u25CF" }) });
 var StatusIndicator = ({ status }) => {
   const color = getStatusColor(status);
   const text = getStatusText(status);
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color, children: text });
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, children: text });
 };
 var ToolCallsList = ({ toolCalls, displayMode }) => {
   const calls = toolCalls || [];
@@ -332533,10 +333458,10 @@ var ToolCallsList = ({ toolCalls, displayMode }) => {
   const showAll = displayMode === "verbose";
   const displayCalls = showAll ? calls : calls.slice(-MAX_TOOL_CALLS);
   const reversedDisplayCalls = [...displayCalls].reverse();
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.text.primary, children: "Tools:" }),
-      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.primary, children: "Tools:" }),
+      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.Gray, children: [
         " ",
         "Showing the last ",
         MAX_TOOL_CALLS,
@@ -332545,76 +333470,76 @@ var ToolCallsList = ({ toolCalls, displayMode }) => {
         " tools."
       ] })
     ] }),
-    reversedDisplayCalls.map((toolCall, index) => /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(ToolCallItem, { toolCall }, `${toolCall.name}-${index}`))
+    reversedDisplayCalls.map((toolCall, index) => /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ToolCallItem, { toolCall }, `${toolCall.name}-${index}`))
   ] });
 };
 var ToolCallItem = ({ toolCall, compact = false }) => {
   const STATUS_INDICATOR_WIDTH2 = 3;
-  const statusIcon = import_react104.default.useMemo(() => {
+  const statusIcon = import_react106.default.useMemo(() => {
     const color = getStatusColor(toolCall.status);
     switch (toolCall.status) {
       case "executing":
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color, children: "\u22B7" });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, children: "\u22B7" });
       // Using same as ToolMessage
       case "awaiting_approval":
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.status.warning, children: "?" });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.status.warning, children: "?" });
       case "success":
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color, children: "\u2713" });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, children: "\u2713" });
       case "failed":
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color, bold: true, children: "x" });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, bold: true, children: "x" });
       default:
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color, children: "o" });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color, children: "o" });
     }
   }, [toolCall.status]);
-  const description = import_react104.default.useMemo(() => {
+  const description = import_react106.default.useMemo(() => {
     if (!toolCall.description) return "";
     const firstLine = toolCall.description.split("\n")[0];
     return firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
   }, [toolCall.description]);
-  const truncatedOutput = import_react104.default.useMemo(() => {
+  const truncatedOutput = import_react106.default.useMemo(() => {
     if (!toolCall.resultDisplay) return "";
     const firstLine = toolCall.resultDisplay.split("\n")[0];
     return firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
   }, [toolCall.resultDisplay]);
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, marginBottom: 0, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH2, children: statusIcon }),
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { wrap: "truncate-end", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { children: toolCall.name }),
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, marginBottom: 0, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH2, children: statusIcon }),
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { wrap: "truncate-end", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: toolCall.name }),
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.Gray, children: description }),
-        toolCall.error && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: theme.status.error, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: description }),
+        toolCall.error && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: theme.status.error, children: [
           " - ",
           toolCall.error
         ] })
       ] })
     ] }),
-    !compact && truncatedOutput && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", paddingLeft: STATUS_INDICATOR_WIDTH2, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.Gray, children: truncatedOutput }) })
+    !compact && truncatedOutput && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", paddingLeft: STATUS_INDICATOR_WIDTH2, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: truncatedOutput }) })
   ] });
 };
 var ExecutionSummaryDetails = ({ data, displayMode: _displayMode }) => {
   const stats = data.executionSummary;
   if (!stats) {
-    return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No summary available" }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No summary available" }) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
         "Duration: ",
         fmtDuration(stats.totalDurationMs)
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
         "Rounds: ",
         stats.rounds
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
         "Tokens: ",
         stats.totalTokens.toLocaleString()
       ] })
@@ -332623,32 +333548,32 @@ var ExecutionSummaryDetails = ({ data, displayMode: _displayMode }) => {
 };
 var ToolUsageStats = ({ executionSummary }) => {
   if (!executionSummary) {
-    return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No tool usage data available" }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No tool usage data available" }) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { children: "Total Calls:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: "Total Calls:" }),
       " ",
       executionSummary.totalToolCalls
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { children: "Success Rate:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: "Success Rate:" }),
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.AccentGreen, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentGreen, children: [
         executionSummary.successRate.toFixed(1),
         "%"
       ] }),
       " ",
       "(",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.AccentGreen, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentGreen, children: [
         executionSummary.successfulToolCalls,
         " success"
       ] }),
       ",",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: Colors.AccentRed, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentRed, children: [
         executionSummary.failedToolCalls,
         " failed"
       ] }),
@@ -332656,20 +333581,20 @@ var ToolUsageStats = ({ executionSummary }) => {
     ] })
   ] });
 };
-var ResultsSection = ({ data, displayMode }) => /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-  data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(ToolCallsList, { toolCalls: data.toolCalls, displayMode }),
-  data.status === "completed" && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.text.primary, children: "Execution Summary:" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(ExecutionSummaryDetails, { data, displayMode })
+var ResultsSection = ({ data, displayMode }) => /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+  data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ToolCallsList, { toolCalls: data.toolCalls, displayMode }),
+  data.status === "completed" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.primary, children: "Execution Summary:" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ExecutionSummaryDetails, { data, displayMode })
   ] }),
-  data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.text.primary, children: "Tool Usage:" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(ToolUsageStats, { executionSummary: data.executionSummary })
+  data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.primary, children: "Tool Usage:" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ToolUsageStats, { executionSummary: data.executionSummary })
   ] }),
-  data.status === "cancelled" && /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.status.warning, children: "\u23F9 User Cancelled" }) }),
-  data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.status.error, children: "Task Failed: " }),
-    /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.status.error, children: data.terminateReason })
+  data.status === "cancelled" && /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.status.warning, children: "\u23F9 User Cancelled" }) }),
+  data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.status.error, children: "Task Failed: " }),
+    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.status.error, children: data.terminateReason })
   ] })
 ] });
 
@@ -332680,24 +333605,24 @@ init_colors();
 await init_build2();
 init_colors();
 init_dist3();
-var import_jsx_runtime54 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime55 = __toESM(require_jsx_runtime(), 1);
 var Tips = ({ config }) => {
   const geminiMdFileCount = config.getGeminiMdFileCount();
-  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Foreground, children: "Tips for getting started:" }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Foreground, children: "1. Ask questions, edit files, or run commands." }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.Foreground, children: "2. Be specific for the best results." }),
-    geminiMdFileCount === 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.Foreground, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Foreground, children: "Tips for getting started:" }),
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Foreground, children: "1. Ask questions, edit files, or run commands." }),
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Foreground, children: "2. Be specific for the best results." }),
+    geminiMdFileCount === 0 && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.Foreground, children: [
       "3. Create",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "LOWCAL.md" }),
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "LOWCAL.md" }),
       " ",
       "files to customize your interactions with Qwen Code."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.Foreground, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.Foreground, children: [
       geminiMdFileCount === 0 ? "4." : "3.",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "/help" }),
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "/help" }),
       " ",
       "for more information."
     ] })
@@ -332707,13 +333632,13 @@ var Tips = ({ config }) => {
 // packages/cli/src/ui/components/DetailedMessagesDisplay.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime55 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime56 = __toESM(require_jsx_runtime(), 1);
 var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
   if (messages.length === 0) {
     return null;
   }
   const borderAndPadding = 4;
-  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -332723,11 +333648,11 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
       paddingX: 1,
       width,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { bold: true, color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { bold: true, color: Colors.Foreground, children: [
           "Debug Console ",
-          /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Gray, children: "(ctrl+o to close)" })
+          /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.Gray, children: "(ctrl+o to close)" })
         ] }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(MaxSizedBox, { maxHeight, maxWidth: width - borderAndPadding, children: messages.map((msg, index) => {
+        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(MaxSizedBox, { maxHeight, maxWidth: width - borderAndPadding, children: messages.map((msg, index) => {
           let textColor = Colors.Foreground;
           let icon = "\u2139";
           switch (msg.type) {
@@ -332747,14 +333672,14 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
             default:
               break;
           }
-          return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: textColor, children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "row", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: textColor, children: [
               icon,
               " "
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: textColor, wrap: "wrap", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: textColor, wrap: "wrap", children: [
               msg.content,
-              msg.count && msg.count > 1 && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.Gray, children: [
+              msg.count && msg.count > 1 && /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: Colors.Gray, children: [
                 " (x",
                 msg.count,
                 ")"
@@ -332768,19 +333693,19 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
 };
 
 // packages/cli/src/ui/components/HistoryItemDisplay.tsx
-var import_react108 = __toESM(require_react(), 1);
+var import_react110 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/messages/UserMessage.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime56 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime57 = __toESM(require_jsx_runtime(), 1);
 var UserMessage = ({ text }) => {
   const prefix = "> ";
   const prefixWidth = prefix.length;
   const isSlashCommand2 = isSlashCommand(text);
   const textColor = isSlashCommand2 ? Colors.AccentPurple : Colors.Gray;
   const borderColor = isSlashCommand2 ? Colors.AccentPurple : Colors.Gray;
-  return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -332791,8 +333716,8 @@ var UserMessage = ({ text }) => {
       marginY: 1,
       alignSelf: "flex-start",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: textColor, "aria-label": SCREEN_READER_USER_PREFIX, children: prefix }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { wrap: "wrap", color: textColor, children: text }) })
+        /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: textColor, "aria-label": SCREEN_READER_USER_PREFIX, children: prefix }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { wrap: "wrap", color: textColor, children: text }) })
       ]
     }
   );
@@ -332801,19 +333726,19 @@ var UserMessage = ({ text }) => {
 // packages/cli/src/ui/components/messages/UserShellMessage.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime57 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime58 = __toESM(require_jsx_runtime(), 1);
 var UserShellMessage = ({ text }) => {
   const commandToDisplay = text.startsWith("!") ? text.substring(1) : text;
-  return /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Box_default, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: Colors.AccentCyan, children: "$ " }),
-    /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { children: commandToDisplay })
+  return /* @__PURE__ */ (0, import_jsx_runtime58.jsxs)(Box_default, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Text3, { color: Colors.AccentCyan, children: "$ " }),
+    /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Text3, { children: commandToDisplay })
   ] });
 };
 
 // packages/cli/src/ui/components/messages/GeminiMessage.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime58 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime59 = __toESM(require_jsx_runtime(), 1);
 var GeminiMessage = ({
   text,
   isPending,
@@ -332822,8 +333747,8 @@ var GeminiMessage = ({
 }) => {
   const prefix = "\u2726 ";
   const prefixWidth = prefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime58.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime59.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(
       Text3,
       {
         color: Colors.AccentPurple,
@@ -332831,7 +333756,7 @@ var GeminiMessage = ({
         children: prefix
       }
     ) }),
-    /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Box_default, { flexGrow: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { flexGrow: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(
       MarkdownDisplay,
       {
         text,
@@ -332846,45 +333771,45 @@ var GeminiMessage = ({
 // packages/cli/src/ui/components/messages/InfoMessage.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime59 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime60 = __toESM(require_jsx_runtime(), 1);
 var InfoMessage = ({ text }) => {
   if (!text || text.trim() === "") {
     return null;
   }
   const prefix = "\u2139 ";
   const prefixWidth = prefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime59.jsxs)(Box_default, { flexDirection: "row", marginTop: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Text3, { color: Colors.AccentYellow, children: prefix }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Text3, { wrap: "wrap", color: Colors.AccentYellow, children: /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(RenderInline, { text }) }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", marginTop: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { color: Colors.AccentYellow, children: prefix }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { wrap: "wrap", color: Colors.AccentYellow, children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(RenderInline, { text }) }) })
   ] });
 };
 
 // packages/cli/src/ui/components/messages/ErrorMessage.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime60 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime61 = __toESM(require_jsx_runtime(), 1);
 var ErrorMessage = ({ text }) => {
   const prefix = "\u2715 ";
   const prefixWidth = prefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { color: Colors.AccentRed, children: prefix }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { wrap: "wrap", color: Colors.AccentRed, children: text }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { color: Colors.AccentRed, children: prefix }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { wrap: "wrap", color: Colors.AccentRed, children: text }) })
   ] });
 };
 
 // packages/cli/src/ui/components/messages/ToolGroupMessage.tsx
-var import_react106 = __toESM(require_react(), 1);
+var import_react108 = __toESM(require_react(), 1);
 await init_build2();
 
 // packages/cli/src/ui/components/messages/ToolMessage.tsx
-var import_react105 = __toESM(require_react(), 1);
+var import_react107 = __toESM(require_react(), 1);
 await init_build2();
 init_colors();
 
 // packages/cli/src/ui/components/TodoDisplay.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime61 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime62 = __toESM(require_jsx_runtime(), 1);
 var STATUS_ICONS = {
   pending: "\u25CB",
   in_progress: "\u25D0",
@@ -332894,32 +333819,32 @@ var TodoDisplay = ({ todos }) => {
   if (!todos || todos.length === 0) {
     return null;
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { flexDirection: "column", children: todos.map((todo) => /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(TodoItemRow, { todo }, todo.id)) });
+  return /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { flexDirection: "column", children: todos.map((todo) => /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(TodoItemRow, { todo }, todo.id)) });
 };
 var TodoItemRow = ({ todo }) => {
   const statusIcon = STATUS_ICONS[todo.status];
   const isCompleted = todo.status === "completed";
   const isInProgress = todo.status === "in_progress";
   const itemColor = isCompleted ? Colors.Foreground : isInProgress ? Colors.AccentGreen : Colors.Foreground;
-  return /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", minHeight: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: 3, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { color: itemColor, children: statusIcon }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { color: itemColor, strikethrough: isCompleted, wrap: "wrap", children: todo.content }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "row", minHeight: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: 3, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: itemColor, children: statusIcon }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: itemColor, strikethrough: isCompleted, wrap: "wrap", children: todo.content }) })
   ] });
 };
 
 // packages/cli/src/ui/components/PlanSummaryDisplay.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime62 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime63 = __toESM(require_jsx_runtime(), 1);
 var PlanSummaryDisplay = ({
   data,
   availableHeight,
   childWidth
 }) => {
   const { message, plan } = data;
-  return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: Colors.AccentGreen, wrap: "wrap", children: message }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.AccentGreen, wrap: "wrap", children: message }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
       MarkdownDisplay,
       {
         text: plan,
@@ -332932,13 +333857,13 @@ var PlanSummaryDisplay = ({
 };
 
 // packages/cli/src/ui/components/messages/ToolMessage.tsx
-var import_jsx_runtime63 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime64 = __toESM(require_jsx_runtime(), 1);
 var STATIC_HEIGHT = 1;
 var RESERVED_LINE_COUNT = 5;
 var STATUS_INDICATOR_WIDTH = 3;
 var MIN_LINES_SHOWN = 2;
 var MAXIMUM_RESULT_DISPLAY_CHARACTERS = 1e6;
-var useResultDisplayRenderer = (resultDisplay) => import_react105.default.useMemo(() => {
+var useResultDisplayRenderer = (resultDisplay) => import_react107.default.useMemo(() => {
   if (!resultDisplay) {
     return { type: "none" };
   }
@@ -332973,8 +333898,8 @@ var useResultDisplayRenderer = (resultDisplay) => import_react105.default.useMem
 }, [resultDisplay]);
 var TodoResultRenderer = ({
   data
-}) => /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(TodoDisplay, { todos: data.todos });
-var PlanResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(TodoDisplay, { todos: data.todos });
+var PlanResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
   PlanSummaryDisplay,
   {
     data,
@@ -332982,7 +333907,7 @@ var PlanResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__
     childWidth
   }
 );
-var SubagentExecutionRenderer = ({ data, availableHeight, childWidth, config }) => /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+var SubagentExecutionRenderer = ({ data, availableHeight, childWidth, config }) => /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
   AgentExecutionDisplay,
   {
     data,
@@ -332997,7 +333922,7 @@ var StringResultRenderer = ({ data, renderAsMarkdown, availableHeight, childWidt
     displayData = "..." + displayData.slice(-MAXIMUM_RESULT_DISPLAY_CHARACTERS);
   }
   if (renderAsMarkdown) {
-    return /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
       MarkdownDisplay,
       {
         text: displayData,
@@ -333007,9 +333932,9 @@ var StringResultRenderer = ({ data, renderAsMarkdown, availableHeight, childWidt
       }
     ) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(MaxSizedBox, { maxHeight: availableHeight, maxWidth: childWidth, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { wrap: "wrap", children: displayData }) }) });
+  return /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(MaxSizedBox, { maxHeight: availableHeight, maxWidth: childWidth, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { wrap: "wrap", children: displayData }) }) });
 };
-var DiffResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+var DiffResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
   DiffRenderer,
   {
     diffContent: data.fileDiff,
@@ -333039,10 +333964,10 @@ var ToolMessage = ({
   }
   const childWidth = terminalWidth - 3;
   const displayRenderer = useResultDisplayRenderer(resultDisplay);
-  return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { paddingX: 1, paddingY: 0, flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { minHeight: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(ToolStatusIndicator, { status }),
-      /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { paddingX: 1, paddingY: 0, flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { minHeight: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(ToolStatusIndicator, { status }),
+      /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
         ToolInfo,
         {
           name: name2,
@@ -333051,11 +333976,11 @@ var ToolMessage = ({
           emphasis
         }
       ),
-      emphasis === "high" && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(TrailingIndicator, {})
+      emphasis === "high" && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(TrailingIndicator, {})
     ] }),
-    displayRenderer.type !== "none" && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { paddingLeft: STATUS_INDICATOR_WIDTH, width: "100%", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { flexDirection: "column", children: [
-      displayRenderer.type === "todo" && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(TodoResultRenderer, { data: displayRenderer.data }),
-      displayRenderer.type === "plan" && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+    displayRenderer.type !== "none" && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { paddingLeft: STATUS_INDICATOR_WIDTH, width: "100%", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { flexDirection: "column", children: [
+      displayRenderer.type === "todo" && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(TodoResultRenderer, { data: displayRenderer.data }),
+      displayRenderer.type === "plan" && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
         PlanResultRenderer,
         {
           data: displayRenderer.data,
@@ -333063,7 +333988,7 @@ var ToolMessage = ({
           childWidth
         }
       ),
-      displayRenderer.type === "task" && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+      displayRenderer.type === "task" && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
         SubagentExecutionRenderer,
         {
           data: displayRenderer.data,
@@ -333072,7 +333997,7 @@ var ToolMessage = ({
           config
         }
       ),
-      displayRenderer.type === "string" && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+      displayRenderer.type === "string" && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
         StringResultRenderer,
         {
           data: displayRenderer.data,
@@ -333081,7 +334006,7 @@ var ToolMessage = ({
           childWidth
         }
       ),
-      displayRenderer.type === "diff" && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+      displayRenderer.type === "diff" && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
         DiffResultRenderer,
         {
           data: displayRenderer.data,
@@ -333094,19 +334019,19 @@ var ToolMessage = ({
 };
 var ToolStatusIndicator = ({
   status
-}) => /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH, children: [
-  status === "Pending" /* Pending */ && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.AccentGreen, children: TOOL_STATUS.PENDING }),
-  status === "Executing" /* Executing */ && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH, children: [
+  status === "Pending" /* Pending */ && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentGreen, children: TOOL_STATUS.PENDING }),
+  status === "Executing" /* Executing */ && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
     GeminiRespondingSpinner,
     {
       spinnerType: "toggle",
       nonRespondingDisplay: TOOL_STATUS.EXECUTING
     }
   ),
-  status === "Success" /* Success */ && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.AccentGreen, "aria-label": "Success:", children: TOOL_STATUS.SUCCESS }),
-  status === "Confirming" /* Confirming */ && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Confirming:", children: TOOL_STATUS.CONFIRMING }),
-  status === "Canceled" /* Canceled */ && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Canceled:", bold: true, children: TOOL_STATUS.CANCELED }),
-  status === "Error" /* Error */ && /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.AccentRed, "aria-label": "Error:", bold: true, children: TOOL_STATUS.ERROR })
+  status === "Success" /* Success */ && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentGreen, "aria-label": "Success:", children: TOOL_STATUS.SUCCESS }),
+  status === "Confirming" /* Confirming */ && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Confirming:", children: TOOL_STATUS.CONFIRMING }),
+  status === "Canceled" /* Canceled */ && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Canceled:", bold: true, children: TOOL_STATUS.CANCELED }),
+  status === "Error" /* Error */ && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentRed, "aria-label": "Error:", bold: true, children: TOOL_STATUS.ERROR })
 ] });
 var ToolInfo = ({
   name: name2,
@@ -333114,7 +334039,7 @@ var ToolInfo = ({
   status,
   emphasis
 }) => {
-  const nameColor = import_react105.default.useMemo(() => {
+  const nameColor = import_react107.default.useMemo(() => {
     switch (emphasis) {
       case "high":
         return Colors.Foreground;
@@ -333128,27 +334053,27 @@ var ToolInfo = ({
       }
     }
   }, [emphasis]);
-  return /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(
     Text3,
     {
       wrap: "truncate-end",
       strikethrough: status === "Canceled" /* Canceled */,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: nameColor, bold: true, children: name2 }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { children: " " }),
-        /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.Gray, children: description })
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: nameColor, bold: true, children: name2 }),
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { children: " " }),
+        /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.Gray, children: description })
       ]
     }
   ) });
 };
-var TrailingIndicator = () => /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Text3, { color: Colors.Foreground, wrap: "truncate", children: [
+var TrailingIndicator = () => /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Text3, { color: Colors.Foreground, wrap: "truncate", children: [
   " ",
   "\u2190"
 ] });
 
 // packages/cli/src/ui/components/messages/ToolGroupMessage.tsx
 init_colors();
-var import_jsx_runtime64 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime65 = __toESM(require_jsx_runtime(), 1);
 var ToolGroupMessage = ({
   toolCalls,
   availableTerminalHeight,
@@ -333167,7 +334092,7 @@ var ToolGroupMessage = ({
     1
   );
   const innerWidth = terminalWidth - 4;
-  const toolAwaitingApproval = (0, import_react106.useMemo)(
+  const toolAwaitingApproval = (0, import_react108.useMemo)(
     () => toolCalls.find((tc) => tc.status === "Confirming" /* Confirming */),
     [toolCalls]
   );
@@ -333184,7 +334109,7 @@ var ToolGroupMessage = ({
     ),
     1
   ) : void 0;
-  return /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
     Box_default,
     {
       flexDirection: "column",
@@ -333196,8 +334121,8 @@ var ToolGroupMessage = ({
       gap: 1,
       children: toolCalls.map((tool) => {
         const isConfirming = toolAwaitingApproval?.callId === tool.callId;
-        return /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { flexDirection: "column", minHeight: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { flexDirection: "row", alignItems: "center", children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { flexDirection: "column", minHeight: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { flexDirection: "row", alignItems: "center", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
             ToolMessage,
             {
               callId: tool.callId,
@@ -333213,7 +334138,7 @@ var ToolGroupMessage = ({
               config
             }
           ) }),
-          tool.status === "Confirming" /* Confirming */ && isConfirming && tool.confirmationDetails && /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
+          tool.status === "Confirming" /* Confirming */ && isConfirming && tool.confirmationDetails && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
             ToolConfirmationMessage,
             {
               confirmationDetails: tool.confirmationDetails,
@@ -333231,7 +334156,7 @@ var ToolGroupMessage = ({
 
 // packages/cli/src/ui/components/messages/GeminiMessageContent.tsx
 await init_build2();
-var import_jsx_runtime65 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime66 = __toESM(require_jsx_runtime(), 1);
 var GeminiMessageContent = ({
   text,
   isPending,
@@ -333240,7 +334165,7 @@ var GeminiMessageContent = ({
 }) => {
   const originalPrefix = "\u2726 ";
   const prefixWidth = originalPrefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { flexDirection: "column", paddingLeft: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { flexDirection: "column", paddingLeft: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
     MarkdownDisplay,
     {
       text,
@@ -333254,14 +334179,14 @@ var GeminiMessageContent = ({
 // packages/cli/src/ui/components/messages/CompressionMessage.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime66 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime67 = __toESM(require_jsx_runtime(), 1);
 var CompressionMessage = ({
   compression
 }) => {
   const text = compression.isPending ? "Compressing chat history" : `Chat history compressed from ${compression.originalTokenCount ?? "unknown"} to ${compression.newTokenCount ?? "unknown"} tokens.`;
-  return /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { marginRight: 1, children: compression.isPending ? /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(build_default, { type: "dots" }) : /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { color: Colors.AccentPurple, children: "\u2726" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Box_default, { marginRight: 1, children: compression.isPending ? /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(build_default, { type: "dots" }) : /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { color: Colors.AccentPurple, children: "\u2726" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
       Text3,
       {
         color: compression.isPending ? Colors.AccentPurple : Colors.AccentGreen,
@@ -333275,7 +334200,7 @@ var CompressionMessage = ({
 // packages/cli/src/ui/components/messages/SummaryMessage.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime67 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime68 = __toESM(require_jsx_runtime(), 1);
 var SummaryMessage = ({ summary }) => {
   const getText3 = () => {
     if (summary.isPending) {
@@ -333296,13 +334221,13 @@ var SummaryMessage = ({ summary }) => {
   };
   const getIcon = () => {
     if (summary.isPending) {
-      return /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(build_default, { type: "dots" });
+      return /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(build_default, { type: "dots" });
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Text3, { color: Colors.AccentGreen, children: "\u2705" });
+    return /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { color: Colors.AccentGreen, children: "\u2705" });
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Box_default, { marginRight: 1, children: getIcon() }),
-    /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { marginRight: 1, children: getIcon() }),
+    /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
       Text3,
       {
         color: summary.isPending ? Colors.AccentPurple : Colors.AccentGreen,
@@ -333318,7 +334243,7 @@ await init_build2();
 // packages/cli/src/ui/components/AboutBox.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime68 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime69 = __toESM(require_jsx_runtime(), 1);
 var AboutBox = ({
   cliVersion,
   osVersion,
@@ -333327,7 +334252,7 @@ var AboutBox = ({
   selectedAuthType,
   gcpProject,
   ideClient
-}) => /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(
   Box_default,
   {
     borderStyle: "round",
@@ -333337,38 +334262,38 @@ var AboutBox = ({
     marginY: 1,
     width: "100%",
     children: [
-      /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "About Qwen Code" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "CLI Version" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { children: cliVersion }) })
+      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "About Qwen Code" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "CLI Version" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: cliVersion }) })
       ] }),
-      GIT_COMMIT_INFO && !["N/A"].includes(GIT_COMMIT_INFO) && /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Git Commit" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { children: GIT_COMMIT_INFO }) })
+      GIT_COMMIT_INFO && !["N/A"].includes(GIT_COMMIT_INFO) && /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Git Commit" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: GIT_COMMIT_INFO }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Model" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { children: modelVersion }) })
+      /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Model" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: modelVersion }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Sandbox" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { children: sandboxEnv }) })
+      /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Sandbox" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: sandboxEnv }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "OS" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { children: osVersion }) })
+      /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "OS" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: osVersion }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Auth Method" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { children: selectedAuthType.startsWith("oauth") ? "OAuth" : selectedAuthType }) })
+      /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Auth Method" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: selectedAuthType.startsWith("oauth") ? "OAuth" : selectedAuthType }) })
       ] }),
-      gcpProject && /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "GCP Project" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { children: gcpProject }) })
+      gcpProject && /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "GCP Project" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: gcpProject }) })
       ] }),
-      ideClient && /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "IDE Client" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { children: ideClient }) })
+      ideClient && /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "IDE Client" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: ideClient }) })
       ] })
     ]
   }
@@ -333452,20 +334377,20 @@ var computeSessionStats = (metrics2) => {
 };
 
 // packages/cli/src/ui/components/StatsDisplay.tsx
-var import_jsx_runtime69 = __toESM(require_jsx_runtime(), 1);
-var StatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { children: [
-  /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: 28, children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { color: theme.text.link, children: title }) }),
-  /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { flexGrow: 1, children })
+var import_jsx_runtime70 = __toESM(require_jsx_runtime(), 1);
+var StatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { children: [
+  /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: 28, children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { color: theme.text.link, children: title }) }),
+  /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { flexGrow: 1, children })
 ] });
-var SubStatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { paddingLeft: 2, children: [
-  /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: 26, children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { children: [
+var SubStatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { paddingLeft: 2, children: [
+  /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: 26, children: /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { children: [
     "\xBB ",
     title
   ] }) }),
-  /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { flexGrow: 1, children })
+  /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { flexGrow: 1, children })
 ] });
-var Section = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "column", width: "100%", marginBottom: 1, children: [
-  /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, children: title }),
+var Section = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "column", width: "100%", marginBottom: 1, children: [
+  /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, children: title }),
   children
 ] });
 var ModelUsageTable = ({ models, totalCachedTokens, cacheEfficiency }) => {
@@ -333473,14 +334398,14 @@ var ModelUsageTable = ({ models, totalCachedTokens, cacheEfficiency }) => {
   const requestsWidth = 8;
   const inputTokensWidth = 15;
   const outputTokensWidth = 15;
-  return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, children: "Model Usage" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, children: "Reqs" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, children: "Input Tokens" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, children: "Output Tokens" }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, children: "Model Usage" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, children: "Reqs" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, children: "Input Tokens" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, children: "Output Tokens" }) })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
       Box_default,
       {
         borderStyle: "round",
@@ -333491,23 +334416,23 @@ var ModelUsageTable = ({ models, totalCachedTokens, cacheEfficiency }) => {
         width: nameWidth + requestsWidth + inputTokensWidth + outputTokensWidth
       }
     ),
-    Object.entries(models).map(([name2, modelMetrics]) => /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: name2.replace("-001", "") }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: modelMetrics.api.totalRequests }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.prompt.toLocaleString() }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.candidates.toLocaleString() }) })
+    Object.entries(models).map(([name2, modelMetrics]) => /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: name2.replace("-001", "") }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: modelMetrics.api.totalRequests }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.prompt.toLocaleString() }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.candidates.toLocaleString() }) })
     ] }, name2)),
-    cacheEfficiency > 0 && /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { color: theme.status.success, children: "Savings Highlight:" }),
+    cacheEfficiency > 0 && /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { color: theme.status.success, children: "Savings Highlight:" }),
         " ",
         totalCachedTokens.toLocaleString(),
         " (",
         cacheEfficiency.toFixed(1),
         "%) of input tokens were served from the cache, reducing costs."
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { color: theme.text.secondary, children: "\xBB Tip: For a full token breakdown, run `/stats model`." })
+      /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { color: theme.text.secondary, children: "\xBB Tip: For a full token breakdown, run `/stats model`." })
     ] })
   ] });
 };
@@ -333534,11 +334459,11 @@ var StatsDisplay = ({
   );
   const renderTitle = () => {
     if (title) {
-      return theme.ui.gradient && theme.ui.gradient.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(dist_default4, { colors: theme.ui.gradient, children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, children: title }) }) : /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, color: theme.text.accent, children: title });
+      return theme.ui.gradient && theme.ui.gradient.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(dist_default4, { colors: theme.ui.gradient, children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, children: title }) }) : /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, color: theme.text.accent, children: title });
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { bold: true, color: theme.text.accent, children: "Session Stats" });
+    return /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, color: theme.text.accent, children: "Session Stats" });
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -333548,73 +334473,73 @@ var StatsDisplay = ({
       paddingX: 2,
       children: [
         renderTitle(),
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Section, { title: "Interaction Summary", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(StatRow, { title: "Session ID:", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: stats.sessionId }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(StatRow, { title: "Tool Calls:", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Section, { title: "Interaction Summary", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(StatRow, { title: "Session ID:", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: stats.sessionId }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(StatRow, { title: "Tool Calls:", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { children: [
             tools.totalCalls,
             " (",
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: theme.status.success, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { color: theme.status.success, children: [
               "\u2713 ",
               tools.totalSuccess
             ] }),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: theme.status.error, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { color: theme.status.error, children: [
               "x ",
               tools.totalFail
             ] }),
             " )"
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(StatRow, { title: "Success Rate:", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: successColor, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(StatRow, { title: "Success Rate:", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { color: successColor, children: [
             computed.successRate.toFixed(1),
             "%"
           ] }) }),
-          computed.totalDecisions > 0 && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(StatRow, { title: "User Agreement:", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: agreementColor, children: [
+          computed.totalDecisions > 0 && /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(StatRow, { title: "User Agreement:", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { color: agreementColor, children: [
             computed.agreementRate.toFixed(1),
             "%",
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: theme.text.secondary, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { color: theme.text.secondary, children: [
               "(",
               computed.totalDecisions,
               " reviewed)"
             ] })
           ] }) }),
-          files && (files.totalLinesAdded > 0 || files.totalLinesRemoved > 0) && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(StatRow, { title: "Code Changes:", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: theme.status.success, children: [
+          files && (files.totalLinesAdded > 0 || files.totalLinesRemoved > 0) && /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(StatRow, { title: "Code Changes:", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { color: theme.status.success, children: [
               "+",
               files.totalLinesAdded
             ] }),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: theme.status.error, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { color: theme.status.error, children: [
               "-",
               files.totalLinesRemoved
             ] })
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Section, { title: "Performance", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(StatRow, { title: "Wall Time:", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: duration }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(StatRow, { title: "Agent Active:", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { children: formatDuration(computed.agentActiveTime) }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(SubStatRow, { title: "API Time:", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Section, { title: "Performance", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(StatRow, { title: "Wall Time:", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: duration }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(StatRow, { title: "Agent Active:", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: formatDuration(computed.agentActiveTime) }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(SubStatRow, { title: "API Time:", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { children: [
             formatDuration(computed.totalApiTime),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: theme.text.secondary, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { color: theme.text.secondary, children: [
               "(",
               computed.apiTimePercent.toFixed(1),
               "%)"
             ] })
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(SubStatRow, { title: "Tool Time:", children: /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(SubStatRow, { title: "Tool Time:", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { children: [
             formatDuration(computed.totalToolTime),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Text3, { color: theme.text.secondary, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { color: theme.text.secondary, children: [
               "(",
               computed.toolTimePercent.toFixed(1),
               "%)"
             ] })
           ] }) })
         ] }),
-        Object.keys(models).length > 0 && /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
+        Object.keys(models).length > 0 && /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
           ModelUsageTable,
           {
             models,
@@ -333630,7 +334555,7 @@ var StatsDisplay = ({
 // packages/cli/src/ui/components/ModelStatsDisplay.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime70 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime71 = __toESM(require_jsx_runtime(), 1);
 var METRIC_COL_WIDTH = 28;
 var MODEL_COL_WIDTH = 22;
 var StatRow2 = ({
@@ -333638,9 +334563,9 @@ var StatRow2 = ({
   values,
   isSubtle = false,
   isSection = false
-}) => /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { children: [
-  /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: isSection, color: isSection ? void 0 : Colors.LightBlue, children: isSubtle ? `  \u21B3 ${title}` : title }) }),
-  values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: value }) }, index))
+}) => /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { children: [
+  /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: isSection, color: isSection ? void 0 : Colors.LightBlue, children: isSubtle ? `  \u21B3 ${title}` : title }) }),
+  values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: value }) }, index))
 ] });
 var ModelStatsDisplay = () => {
   const { stats } = useSessionStats();
@@ -333649,14 +334574,14 @@ var ModelStatsDisplay = () => {
     ([, metrics2]) => metrics2.api.totalRequests > 0
   );
   if (activeModels.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
       Box_default,
       {
         borderStyle: "round",
         borderColor: Colors.Gray,
         paddingY: 1,
         paddingX: 2,
-        children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: "No API calls have been made in this session." })
+        children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: "No API calls have been made in this session." })
       }
     );
   }
@@ -333669,7 +334594,7 @@ var ModelStatsDisplay = () => {
   const hasCached = activeModels.some(
     ([, metrics2]) => metrics2.tokens.cached > 0
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -333678,13 +334603,13 @@ var ModelStatsDisplay = () => {
       paddingY: 1,
       paddingX: 2,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Model Stats For Nerds" }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, children: "Metric" }) }),
-          modelNames.map((name2) => /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, children: name2 }) }, name2))
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Model Stats For Nerds" }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: "Metric" }) }),
+          modelNames.map((name2) => /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: name2 }) }, name2))
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
           Box_default,
           {
             borderStyle: "single",
@@ -333694,21 +334619,21 @@ var ModelStatsDisplay = () => {
             borderRight: false
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(StatRow2, { title: "API", values: [], isSection: true }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(StatRow2, { title: "API", values: [], isSection: true }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
           StatRow2,
           {
             title: "Requests",
             values: getModelValues((m) => m.api.totalRequests.toLocaleString())
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
           StatRow2,
           {
             title: "Errors",
             values: getModelValues((m) => {
               const errorRate = calculateErrorRate(m);
-              return /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(
+              return /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(
                 Text3,
                 {
                   color: m.api.totalErrors > 0 ? Colors.AccentRed : Colors.Foreground,
@@ -333723,7 +334648,7 @@ var ModelStatsDisplay = () => {
             })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
           StatRow2,
           {
             title: "Avg Latency",
@@ -333733,16 +334658,16 @@ var ModelStatsDisplay = () => {
             })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(StatRow2, { title: "Tokens", values: [], isSection: true }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(StatRow2, { title: "Tokens", values: [], isSection: true }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
           StatRow2,
           {
             title: "Total",
-            values: getModelValues((m) => /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { color: Colors.AccentYellow, children: m.tokens.total.toLocaleString() }))
+            values: getModelValues((m) => /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: Colors.AccentYellow, children: m.tokens.total.toLocaleString() }))
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
           StatRow2,
           {
             title: "Prompt",
@@ -333750,14 +334675,14 @@ var ModelStatsDisplay = () => {
             values: getModelValues((m) => m.tokens.prompt.toLocaleString())
           }
         ),
-        hasCached && /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
+        hasCached && /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
           StatRow2,
           {
             title: "Cached",
             isSubtle: true,
             values: getModelValues((m) => {
               const cacheHitRate = calculateCacheHitRate(m);
-              return /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Text3, { color: Colors.AccentGreen, children: [
+              return /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { color: Colors.AccentGreen, children: [
                 m.tokens.cached.toLocaleString(),
                 " (",
                 cacheHitRate.toFixed(1),
@@ -333766,7 +334691,7 @@ var ModelStatsDisplay = () => {
             })
           }
         ),
-        hasThoughts && /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
+        hasThoughts && /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
           StatRow2,
           {
             title: "Thoughts",
@@ -333774,7 +334699,7 @@ var ModelStatsDisplay = () => {
             values: getModelValues((m) => m.tokens.thoughts.toLocaleString())
           }
         ),
-        hasTool && /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
+        hasTool && /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
           StatRow2,
           {
             title: "Tool",
@@ -333782,7 +334707,7 @@ var ModelStatsDisplay = () => {
             values: getModelValues((m) => m.tokens.tool.toLocaleString())
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
           StatRow2,
           {
             title: "Output",
@@ -333798,7 +334723,7 @@ var ModelStatsDisplay = () => {
 // packages/cli/src/ui/components/ToolStatsDisplay.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime71 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime72 = __toESM(require_jsx_runtime(), 1);
 var TOOL_NAME_COL_WIDTH = 25;
 var CALLS_COL_WIDTH = 8;
 var SUCCESS_RATE_COL_WIDTH = 15;
@@ -333810,14 +334735,14 @@ var StatRow3 = ({ name: name2, stats }) => {
     green: TOOL_SUCCESS_RATE_HIGH,
     yellow: TOOL_SUCCESS_RATE_MEDIUM
   });
-  return /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: Colors.LightBlue, children: name2 }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: stats.count }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { color: successColor, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: Colors.LightBlue, children: name2 }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: stats.count }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { color: successColor, children: [
       successRate.toFixed(1),
       "%"
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: formatDuration(avgDuration) }) })
+    /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: formatDuration(avgDuration) }) })
   ] });
 };
 var ToolStatsDisplay = () => {
@@ -333827,14 +334752,14 @@ var ToolStatsDisplay = () => {
     ([, metrics2]) => metrics2.count > 0
   );
   if (activeTools.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
       Box_default,
       {
         borderStyle: "round",
         borderColor: Colors.Gray,
         paddingY: 1,
         paddingX: 2,
-        children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: "No tool calls have been made in this session." })
+        children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: "No tool calls have been made in this session." })
       }
     );
   }
@@ -333853,7 +334778,7 @@ var ToolStatsDisplay = () => {
     green: USER_AGREEMENT_RATE_HIGH,
     yellow: USER_AGREEMENT_RATE_MEDIUM
   });
-  return /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -333863,15 +334788,15 @@ var ToolStatsDisplay = () => {
       paddingX: 2,
       width: 70,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Tool Stats For Nerds" }),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: "Tool Name" }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: "Calls" }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: "Success Rate" }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: "Avg Duration" }) })
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Tool Stats For Nerds" }),
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: "Tool Name" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: "Calls" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: "Success Rate" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: "Avg Duration" }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
           Box_default,
           {
             borderStyle: "single",
@@ -333882,50 +334807,50 @@ var ToolStatsDisplay = () => {
             width: "100%"
           }
         ),
-        activeTools.map(([name2, stats2]) => /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(StatRow3, { name: name2, stats: stats2 }, name2)),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: "User Decision Summary" }),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+        activeTools.map(([name2, stats2]) => /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(StatRow3, { name: name2, stats: stats2 }, name2)),
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: "User Decision Summary" }),
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: Colors.LightBlue, children: "Total Reviewed Suggestions:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: Colors.LightBlue, children: "Total Reviewed Suggestions:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: totalReviewed }) })
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: totalReviewed }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: " \xBB Accepted:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: " \xBB Accepted:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: Colors.AccentGreen, children: totalDecisions.accept }) })
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: Colors.AccentGreen, children: totalDecisions.accept }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: " \xBB Rejected:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: " \xBB Rejected:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: Colors.AccentRed, children: totalDecisions.reject }) })
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: Colors.AccentRed, children: totalDecisions.reject }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: " \xBB Modified:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: " \xBB Modified:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: Colors.AccentYellow, children: totalDecisions.modify }) })
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: Colors.AccentYellow, children: totalDecisions.modify }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
           Box_default,
           {
             borderStyle: "single",
@@ -333936,15 +334861,15 @@ var ToolStatsDisplay = () => {
             width: "100%"
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: " Overall Agreement Rate:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: " Overall Agreement Rate:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: totalReviewed > 0 ? agreementColor : void 0, children: totalReviewed > 0 ? `${agreementRate.toFixed(1)}%` : "--" }) })
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, color: totalReviewed > 0 ? agreementColor : void 0, children: totalReviewed > 0 ? `${agreementRate.toFixed(1)}%` : "--" }) })
         ] })
       ]
     }
@@ -333952,16 +334877,16 @@ var ToolStatsDisplay = () => {
 };
 
 // packages/cli/src/ui/components/SessionSummaryDisplay.tsx
-var import_jsx_runtime72 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime73 = __toESM(require_jsx_runtime(), 1);
 var SessionSummaryDisplay = ({
   duration
-}) => /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(StatsDisplay, { title: "Agent powering down. Goodbye!", duration });
+}) => /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(StatsDisplay, { title: "Agent powering down. Goodbye!", duration });
 
 // packages/cli/src/ui/components/Help.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime73 = __toESM(require_jsx_runtime(), 1);
-var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(
+var import_jsx_runtime74 = __toESM(require_jsx_runtime(), 1);
+var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(
   Box_default,
   {
     flexDirection: "column",
@@ -333970,120 +334895,120 @@ var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(
     borderStyle: "round",
     padding: 1,
     children: [
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Basics:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Add context" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Basics:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Add context" }),
         ": Use",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@" }),
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@" }),
         " ",
         "to specify files for context (e.g.,",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@src/myFile.ts" }),
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@src/myFile.ts" }),
         ") to target specific files or folders."
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shell mode" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shell mode" }),
         ": Execute shell commands via",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!" }),
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!" }),
         " ",
         "(e.g.,",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!npm run start" }),
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!npm run start" }),
         ") or use natural language (e.g.",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "start server" }),
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "start server" }),
         ")."
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Commands:" }),
-      commands.filter((command2) => command2.description).map((command2) => /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Box_default, { flexDirection: "column", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Commands:" }),
+      commands.filter((command2) => command2.description).map((command2) => /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { flexDirection: "column", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
             " ",
             "/",
             command2.name
           ] }),
           command2.description && " - " + command2.description
         ] }),
-        command2.subCommands && command2.subCommands.map((subCommand) => /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
+        command2.subCommands && command2.subCommands.map((subCommand) => /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
             "   ",
             subCommand.name
           ] }),
           subCommand.description && " - " + subCommand.description
         ] }, subCommand.name))
       ] }, command2.name)),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
           " ",
           "!",
           " "
         ] }),
         "- shell command"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Keyboard Shortcuts:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Alt+Left/Right" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Keyboard Shortcuts:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Alt+Left/Right" }),
         " ",
         "- Jump through words in the input"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+C" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+C" }),
         " ",
         "- Close dialogs, cancel requests, or quit application"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "win32" ? "Ctrl+Enter" : "Ctrl+J" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "win32" ? "Ctrl+Enter" : "Ctrl+J" }),
         " ",
         process.platform === "linux" ? "- New line (Alt+Enter works for certain linux distros)" : "- New line"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+L" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+L" }),
         " ",
         "- Clear the screen"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "darwin" ? "Ctrl+X / Meta+Enter" : "Ctrl+X" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "darwin" ? "Ctrl+X / Meta+Enter" : "Ctrl+X" }),
         " ",
         "- Open input in external editor"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Enter" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Enter" }),
         " ",
         "- Send message"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Esc" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Esc" }),
         " ",
         "- Cancel operation / Clear input (double press)"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shift+Tab" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shift+Tab" }),
         " ",
         "- Cycle approval modes"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Up/Down" }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Up/Down" }),
         " ",
         "- Cycle through your prompt history"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.Foreground, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: Colors.Foreground, children: [
         "For a full list of shortcuts, see",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "docs/keyboard-shortcuts.md" })
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "docs/keyboard-shortcuts.md" })
       ] })
     ]
   }
 );
 
 // packages/cli/src/ui/components/messages/ViewMessage.tsx
-var import_react107 = __toESM(require_react(), 1);
+var import_react109 = __toESM(require_react(), 1);
 await init_build2();
-var import_jsx_runtime74 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime75 = __toESM(require_jsx_runtime(), 1);
 var ViewMessage = ({
   text,
   filePath,
@@ -334097,8 +335022,8 @@ var ViewMessage = ({
 }) => {
   const { requestLock, releaseLock } = useGlobalInputLock();
   const owner = `view-${filePath}-${text.length}`;
-  const [acquired, setAcquired] = import_react107.default.useState(false);
-  import_react107.default.useEffect(() => {
+  const [acquired, setAcquired] = import_react109.default.useState(false);
+  import_react109.default.useEffect(() => {
     if (!isActive) return;
     let mounted = true;
     try {
@@ -334132,7 +335057,7 @@ var ViewMessage = ({
     },
     { isActive: acquired }
   );
-  import_react107.default.useEffect(() => () => {
+  import_react109.default.useEffect(() => () => {
     try {
       releaseLock(owner);
     } catch (e2) {
@@ -334140,15 +335065,15 @@ var ViewMessage = ({
   }, [releaseLock, owner]);
   const lines = text.split("\n");
   const visibleLines = lines.slice(scrollOffset, scrollOffset + maxHeight);
-  return /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { flexDirection: "column", borderStyle: "single", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { bold: true, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Box_default, { flexDirection: "column", borderStyle: "single", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { bold: true, children: [
       "Viewing file content for ",
       filePath,
       " - ",
       tokenCount ?? "Unknown",
       " tokens (scroll with \u2191/\u2193 or q to exit)"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { flexDirection: "column", height: maxHeight, children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Box_default, { flexDirection: "column", height: maxHeight, children: /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
       MarkdownDisplay,
       {
         text: visibleLines.join("\n"),
@@ -334161,7 +335086,7 @@ var ViewMessage = ({
 };
 
 // packages/cli/src/ui/components/HistoryItemDisplay.tsx
-var import_jsx_runtime75 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime76 = __toESM(require_jsx_runtime(), 1);
 var HistoryItemDisplayComponent = ({
   item,
   availableTerminalHeight,
@@ -334171,10 +335096,10 @@ var HistoryItemDisplayComponent = ({
   commands,
   isFocused = true,
   viewControls
-}) => /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Box_default, { flexDirection: "column", children: [
-  item.type === "user" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(UserMessage, { text: item.text }),
-  item.type === "user_shell" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(UserShellMessage, { text: item.text }),
-  item.type === "gemini" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Box_default, { flexDirection: "column", children: [
+  item.type === "user" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(UserMessage, { text: item.text }),
+  item.type === "user_shell" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(UserShellMessage, { text: item.text }),
+  item.type === "gemini" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(
     GeminiMessage,
     {
       text: item.text,
@@ -334183,7 +335108,7 @@ var HistoryItemDisplayComponent = ({
       terminalWidth
     }
   ),
-  item.type === "gemini_content" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
+  item.type === "gemini_content" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(
     GeminiMessageContent,
     {
       text: item.text,
@@ -334192,9 +335117,9 @@ var HistoryItemDisplayComponent = ({
       terminalWidth
     }
   ),
-  item.type === "info" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(InfoMessage, { text: item.text }),
-  item.type === "error" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(ErrorMessage, { text: item.text }),
-  item.type === "about" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
+  item.type === "info" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(InfoMessage, { text: item.text }),
+  item.type === "error" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(ErrorMessage, { text: item.text }),
+  item.type === "about" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(
     AboutBox,
     {
       cliVersion: item.cliVersion,
@@ -334206,13 +335131,13 @@ var HistoryItemDisplayComponent = ({
       ideClient: item.ideClient
     }
   ),
-  item.type === "help" && commands && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Help, { commands }),
-  item.type === "stats" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(StatsDisplay, { duration: item.duration }),
-  item.type === "model_stats" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(ModelStatsDisplay, {}),
-  item.type === "tool_stats" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(ToolStatsDisplay, {}),
-  item.type === "quit" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(SessionSummaryDisplay, { duration: item.duration }),
-  item.type === "quit_confirmation" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(SessionSummaryDisplay, { duration: item.duration }),
-  item.type === "tool_group" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
+  item.type === "help" && commands && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Help, { commands }),
+  item.type === "stats" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(StatsDisplay, { duration: item.duration }),
+  item.type === "model_stats" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(ModelStatsDisplay, {}),
+  item.type === "tool_stats" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(ToolStatsDisplay, {}),
+  item.type === "quit" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(SessionSummaryDisplay, { duration: item.duration }),
+  item.type === "quit_confirmation" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(SessionSummaryDisplay, { duration: item.duration }),
+  item.type === "tool_group" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(
     ToolGroupMessage,
     {
       toolCalls: item.tools,
@@ -334223,9 +335148,9 @@ var HistoryItemDisplayComponent = ({
       isFocused
     }
   ),
-  item.type === "compression" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(CompressionMessage, { compression: item.compression }),
-  item.type === "summary" && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(SummaryMessage, { summary: item.summary }),
-  item.type === "view" && viewControls && /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(
+  item.type === "compression" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(CompressionMessage, { compression: item.compression }),
+  item.type === "summary" && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(SummaryMessage, { summary: item.summary }),
+  item.type === "view" && viewControls && /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(
     ViewMessage,
     {
       text: item.text,
@@ -334241,13 +335166,13 @@ var HistoryItemDisplayComponent = ({
   )
 ] }, item.id);
 HistoryItemDisplayComponent.displayName = "HistoryItemDisplay";
-var HistoryItemDisplay = (0, import_react108.memo)(HistoryItemDisplayComponent);
+var HistoryItemDisplay = (0, import_react110.memo)(HistoryItemDisplayComponent);
 
 // packages/cli/src/ui/components/ContextSummaryDisplay.tsx
 await init_build2();
 init_colors();
 init_dist3();
-var import_jsx_runtime76 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime77 = __toESM(require_jsx_runtime(), 1);
 var ContextSummaryDisplay = ({
   geminiMdFileCount,
   contextFileNames,
@@ -334262,7 +335187,7 @@ var ContextSummaryDisplay = ({
   const blockedMcpServerCount = blockedMcpServers?.length || 0;
   const openFileCount = ideContext2?.workspaceState?.openFiles?.length ?? 0;
   if (geminiMdFileCount === 0 && mcpServerCount === 0 && blockedMcpServerCount === 0 && openFileCount === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { children: " " });
+    return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { children: " " });
   }
   const openFilesText = (() => {
     if (openFileCount === 0) {
@@ -334307,34 +335232,34 @@ var ContextSummaryDisplay = ({
   })();
   const summaryParts = [openFilesText, geminiMdText, mcpText].filter(Boolean);
   if (isNarrow) {
-    return /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { color: Colors.Gray, children: "Using:" }),
-      summaryParts.map((part, index) => /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Gray, children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: Colors.Gray, children: "Using:" }),
+      summaryParts.map((part, index) => /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { color: Colors.Gray, children: [
         "  ",
         "- ",
         part
       ] }, index))
     ] });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { color: Colors.Gray, children: [
     "Using: ",
     summaryParts.join(" | ")
   ] }) });
 };
 
 // packages/cli/src/ui/hooks/useHistoryManager.ts
-var import_react109 = __toESM(require_react(), 1);
+var import_react111 = __toESM(require_react(), 1);
 function useHistory() {
-  const [history, setHistory] = (0, import_react109.useState)([]);
-  const messageIdCounterRef = (0, import_react109.useRef)(0);
-  const getNextMessageId = (0, import_react109.useCallback)((baseTimestamp) => {
+  const [history, setHistory] = (0, import_react111.useState)([]);
+  const messageIdCounterRef = (0, import_react111.useRef)(0);
+  const getNextMessageId = (0, import_react111.useCallback)((baseTimestamp) => {
     messageIdCounterRef.current += 1;
     return baseTimestamp + messageIdCounterRef.current;
   }, []);
-  const loadHistory = (0, import_react109.useCallback)((newHistory) => {
+  const loadHistory = (0, import_react111.useCallback)((newHistory) => {
     setHistory(newHistory);
   }, []);
-  const addItem = (0, import_react109.useCallback)(
+  const addItem = (0, import_react111.useCallback)(
     (itemData, baseTimestamp) => {
       const id = getNextMessageId(baseTimestamp);
       const newItem = { ...itemData, id };
@@ -334351,7 +335276,7 @@ function useHistory() {
     },
     [getNextMessageId]
   );
-  const updateItem = (0, import_react109.useCallback)(
+  const updateItem = (0, import_react111.useCallback)(
     (id, updates) => {
       setHistory(
         (prevHistory) => prevHistory.map((item) => {
@@ -334365,7 +335290,7 @@ function useHistory() {
     },
     []
   );
-  const clearItems = (0, import_react109.useCallback)(() => {
+  const clearItems = (0, import_react111.useCallback)(() => {
     setHistory([]);
     messageIdCounterRef.current = 0;
   }, []);
@@ -334387,7 +335312,7 @@ init_dist3();
 await init_build2();
 await init_RadioButtonSelect();
 await init_useKeypress();
-var import_jsx_runtime77 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime78 = __toESM(require_jsx_runtime(), 1);
 function IdeIntegrationNudge({
   ide,
   onComplete
@@ -334429,7 +335354,7 @@ function IdeIntegrationNudge({
     }
   ];
   const installText = isExtensionPreInstalled ? `If you select Yes, the CLI will have access to your open files and display diffs directly in ${ideName ?? "your editor"}.` : `If you select Yes, we'll install an extension that allows the CLI to access your open files and display diffs directly in ${ideName ?? "your editor"}.`;
-  return /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -334439,28 +335364,28 @@ function IdeIntegrationNudge({
       width: "100%",
       marginLeft: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { marginBottom: 1, flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { color: "yellow", children: "> " }),
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { marginBottom: 1, flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: "yellow", children: "> " }),
             `Do you want to connect ${ideName ?? "your editor"} to Qwen Code?`
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Text3, { dimColor: true, children: installText })
+          /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { dimColor: true, children: installText })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(RadioButtonSelect, { items: OPTIONS, onSelect: onComplete })
+        /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(RadioButtonSelect, { items: OPTIONS, onSelect: onComplete })
       ]
     }
   );
 }
 
 // packages/cli/src/ui/hooks/useGitBranchName.ts
-var import_react110 = __toESM(require_react(), 1);
+var import_react112 = __toESM(require_react(), 1);
 import { exec as exec6 } from "node:child_process";
 import fs73 from "node:fs";
 import fsPromises6 from "node:fs/promises";
 import path86 from "node:path";
 function useGitBranchName(cwd5) {
-  const [branchName, setBranchName] = (0, import_react110.useState)(void 0);
-  const fetchBranchName = (0, import_react110.useCallback)(
+  const [branchName, setBranchName] = (0, import_react112.useState)(void 0);
+  const fetchBranchName = (0, import_react112.useCallback)(
     () => exec6(
       "git rev-parse --abbrev-ref HEAD",
       { cwd: cwd5 },
@@ -334489,7 +335414,7 @@ function useGitBranchName(cwd5) {
     ),
     [cwd5, setBranchName]
   );
-  (0, import_react110.useEffect)(() => {
+  (0, import_react112.useEffect)(() => {
     fetchBranchName();
     const gitLogsHeadPath = path86.join(cwd5, ".git", "logs", "HEAD");
     let watcher;
@@ -334516,14 +335441,14 @@ function useGitBranchName(cwd5) {
 await init_useFocus();
 
 // packages/cli/src/ui/hooks/useBracketedPaste.ts
-var import_react111 = __toESM(require_react(), 1);
+var import_react113 = __toESM(require_react(), 1);
 var ENABLE_BRACKETED_PASTE = "\x1B[?2004h";
 var DISABLE_BRACKETED_PASTE = "\x1B[?2004l";
 var useBracketedPaste = () => {
   const cleanup = () => {
     process.stdout.write(DISABLE_BRACKETED_PASTE);
   };
-  (0, import_react111.useEffect)(() => {
+  (0, import_react113.useEffect)(() => {
     process.stdout.write(ENABLE_BRACKETED_PASTE);
     process.on("exit", cleanup);
     process.on("SIGINT", cleanup);
@@ -334538,26 +335463,26 @@ var useBracketedPaste = () => {
 };
 
 // packages/cli/src/ui/contexts/VimModeContext.tsx
-var import_react112 = __toESM(require_react(), 1);
-var import_jsx_runtime78 = __toESM(require_jsx_runtime(), 1);
-var VimModeContext = (0, import_react112.createContext)(void 0);
+var import_react114 = __toESM(require_react(), 1);
+var import_jsx_runtime79 = __toESM(require_jsx_runtime(), 1);
+var VimModeContext = (0, import_react114.createContext)(void 0);
 var VimModeProvider = ({
   children,
   settings
 }) => {
   const initialVimEnabled = settings.merged.general?.vimMode ?? false;
-  const [vimEnabled, setVimEnabled] = (0, import_react112.useState)(initialVimEnabled);
-  const [vimMode, setVimMode] = (0, import_react112.useState)(
+  const [vimEnabled, setVimEnabled] = (0, import_react114.useState)(initialVimEnabled);
+  const [vimMode, setVimMode] = (0, import_react114.useState)(
     initialVimEnabled ? "NORMAL" : "INSERT"
   );
-  (0, import_react112.useEffect)(() => {
+  (0, import_react114.useEffect)(() => {
     const enabled = settings.merged.general?.vimMode ?? false;
     setVimEnabled(enabled);
     if (enabled) {
       setVimMode("NORMAL");
     }
   }, [settings.merged.general?.vimMode]);
-  const toggleVimEnabled = (0, import_react112.useCallback)(async () => {
+  const toggleVimEnabled = (0, import_react114.useCallback)(async () => {
     const newValue = !vimEnabled;
     setVimEnabled(newValue);
     if (newValue) {
@@ -334572,10 +335497,10 @@ var VimModeProvider = ({
     toggleVimEnabled,
     setVimMode
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(VimModeContext.Provider, { value, children });
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(VimModeContext.Provider, { value, children });
 };
 var useVimMode = () => {
-  const context2 = (0, import_react112.useContext)(VimModeContext);
+  const context2 = (0, import_react114.useContext)(VimModeContext);
   if (context2 === void 0) {
     throw new Error("useVimMode must be used within a VimModeProvider");
   }
@@ -334583,7 +335508,7 @@ var useVimMode = () => {
 };
 
 // packages/cli/src/ui/hooks/vim.ts
-var import_react113 = __toESM(require_react(), 1);
+var import_react115 = __toESM(require_react(), 1);
 var DIGIT_MULTIPLIER = 10;
 var DEFAULT_COUNT = 1;
 var DIGIT_1_TO_9 = /^[1-9]$/;
@@ -334646,22 +335571,22 @@ var vimReducer = (state, action) => {
 };
 function useVim(buffer, onSubmit) {
   const { vimEnabled, vimMode, setVimMode } = useVimMode();
-  const [state, dispatch] = (0, import_react113.useReducer)(vimReducer, initialVimState);
-  (0, import_react113.useEffect)(() => {
+  const [state, dispatch] = (0, import_react115.useReducer)(vimReducer, initialVimState);
+  (0, import_react115.useEffect)(() => {
     dispatch({ type: "SET_MODE", mode: vimMode });
   }, [vimMode]);
-  const updateMode = (0, import_react113.useCallback)(
+  const updateMode = (0, import_react115.useCallback)(
     (mode) => {
       setVimMode(mode);
       dispatch({ type: "SET_MODE", mode });
     },
     [setVimMode]
   );
-  const getCurrentCount = (0, import_react113.useCallback)(
+  const getCurrentCount = (0, import_react115.useCallback)(
     () => state.count || DEFAULT_COUNT,
     [state.count]
   );
-  const executeCommand = (0, import_react113.useCallback)(
+  const executeCommand = (0, import_react115.useCallback)(
     (cmdType, count) => {
       switch (cmdType) {
         case CMD_TYPES.DELETE_WORD_FORWARD: {
@@ -334737,7 +335662,7 @@ function useVim(buffer, onSubmit) {
     },
     [buffer, updateMode]
   );
-  const handleInsertModeInput = (0, import_react113.useCallback)(
+  const handleInsertModeInput = (0, import_react115.useCallback)(
     (normalizedKey) => {
       if (normalizedKey.name === "escape") {
         buffer.vimEscapeInsertMode();
@@ -334768,7 +335693,7 @@ function useVim(buffer, onSubmit) {
     },
     [buffer, dispatch, updateMode, onSubmit]
   );
-  const normalizeKey = (0, import_react113.useCallback)(
+  const normalizeKey = (0, import_react115.useCallback)(
     (key) => ({
       name: key.name || "",
       sequence: key.sequence || "",
@@ -334779,7 +335704,7 @@ function useVim(buffer, onSubmit) {
     }),
     []
   );
-  const handleChangeMovement = (0, import_react113.useCallback)(
+  const handleChangeMovement = (0, import_react115.useCallback)(
     (movement) => {
       const count = getCurrentCount();
       dispatch({ type: "CLEAR_COUNT" });
@@ -334800,7 +335725,7 @@ function useVim(buffer, onSubmit) {
     },
     [getCurrentCount, dispatch, buffer, updateMode]
   );
-  const handleOperatorMotion = (0, import_react113.useCallback)(
+  const handleOperatorMotion = (0, import_react115.useCallback)(
     (operator2, motion) => {
       const count = getCurrentCount();
       const commandMap = {
@@ -334827,7 +335752,7 @@ function useVim(buffer, onSubmit) {
     },
     [getCurrentCount, executeCommand, dispatch]
   );
-  const handleInput = (0, import_react113.useCallback)(
+  const handleInput = (0, import_react115.useCallback)(
     (key) => {
       if (!vimEnabled) {
         return false;
@@ -335129,9 +336054,9 @@ await init_useKeypress();
 await init_KeypressContext();
 
 // packages/cli/src/ui/hooks/useKittyKeyboardProtocol.ts
-var import_react114 = __toESM(require_react(), 1);
+var import_react116 = __toESM(require_react(), 1);
 function useKittyKeyboardProtocol() {
-  const [status] = (0, import_react114.useState)({
+  const [status] = (0, import_react116.useState)({
     supported: isKittyProtocolSupported(),
     enabled: isKittyProtocolEnabled(),
     checking: false
@@ -335145,15 +336070,15 @@ import * as fs75 from "node:fs";
 // packages/cli/src/ui/components/UpdateNotification.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime79 = __toESM(require_jsx_runtime(), 1);
-var UpdateNotification = ({ message }) => /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(
+var import_jsx_runtime80 = __toESM(require_jsx_runtime(), 1);
+var UpdateNotification = ({ message }) => /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(
   Box_default,
   {
     borderStyle: "round",
     borderColor: Colors.AccentYellow,
     paddingX: 1,
     marginY: 1,
-    children: /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { color: Colors.AccentYellow, children: message })
+    children: /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: Colors.AccentYellow, children: message })
   }
 );
 
@@ -335163,14 +336088,14 @@ init_ansi_escapes();
 // packages/cli/src/ui/components/ShowMoreLines.tsx
 await init_build2();
 init_colors();
-var import_jsx_runtime80 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime81 = __toESM(require_jsx_runtime(), 1);
 var ShowMoreLines = ({ constrainHeight }) => {
   const overflowState = useOverflowState();
   const streamingState = useStreamingContext();
   if (overflowState === void 0 || overflowState.overflowingIds.size === 0 || !constrainHeight || !(streamingState === "idle" /* Idle */ || streamingState === "waiting_for_confirmation" /* WaitingForConfirmation */)) {
     return null;
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: "Press ctrl-s to show more lines" }) });
+  return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: "Press ctrl-s to show more lines" }) });
 };
 
 // packages/cli/src/ui/privacy/PrivacyNotice.tsx
@@ -335181,7 +336106,7 @@ init_dist3();
 await init_build2();
 init_colors();
 await init_useKeypress();
-var import_jsx_runtime81 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime82 = __toESM(require_jsx_runtime(), 1);
 var GeminiPrivacyNotice = ({ onExit }) => {
   useKeypress(
     (key) => {
@@ -335191,42 +336116,42 @@ var GeminiPrivacyNotice = ({ onExit }) => {
     },
     { isActive: true }
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini API Key Notice" }),
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini API Key Notice" }),
+    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { children: [
       "By using the Gemini API",
-      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       ", Google AI Studio",
-      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
       ', and the other Google developer services that reference these terms (collectively, the "APIs" or "Services"), you are agreeing to Google APIs Terms of Service (the "API Terms")',
-      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
       ', and the Gemini API Additional Terms of Service (the "Additional Terms")',
-      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
       "."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " ",
       "https://ai.google.dev/docs/gemini_api_overview"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
       " https://aistudio.google.com/"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
       " ",
       "https://developers.google.com/terms"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
       " ",
       "https://ai.google.dev/gemini-api/terms"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
+    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
   ] });
 };
 
@@ -335234,7 +336159,7 @@ var GeminiPrivacyNotice = ({ onExit }) => {
 await init_build2();
 init_colors();
 await init_useKeypress();
-var import_jsx_runtime82 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime83 = __toESM(require_jsx_runtime(), 1);
 var CloudPaidPrivacyNotice = ({
   onExit
 }) => {
@@ -335246,29 +336171,29 @@ var CloudPaidPrivacyNotice = ({
     },
     { isActive: true }
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Vertex AI Notice" }),
-    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Vertex AI Notice" }),
+    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { children: [
       "Service Specific Terms",
-      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " are incorporated into the agreement under which Google has agreed to provide Google Cloud Platform",
-      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
       " to Customer (the \u201CAgreement\u201D). If the Agreement authorizes the resale or supply of Google Cloud Platform under a Google Cloud partner or reseller program, then except for in the section entitled \u201CPartner-Specific Terms\u201D, all references to Customer in the Service Specific Terms mean Partner or Reseller (as applicable), and all references to Customer Data in the Service Specific Terms mean Partner Data. Capitalized terms used but not defined in the Service Specific Terms have the meaning given to them in the Agreement."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " ",
       "https://cloud.google.com/terms/service-terms"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime82.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
       " ",
       "https://cloud.google.com/terms/services"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
+    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
   ] });
 };
 
@@ -335277,13 +336202,13 @@ await init_build2();
 await init_RadioButtonSelect();
 
 // packages/cli/src/ui/hooks/usePrivacySettings.ts
-var import_react115 = __toESM(require_react(), 1);
+var import_react117 = __toESM(require_react(), 1);
 init_dist3();
 var usePrivacySettings = (config) => {
-  const [privacyState, setPrivacyState] = (0, import_react115.useState)({
+  const [privacyState, setPrivacyState] = (0, import_react117.useState)({
     isLoading: true
   });
-  (0, import_react115.useEffect)(() => {
+  (0, import_react117.useEffect)(() => {
     const fetchInitialState = async () => {
       setPrivacyState({
         isLoading: true
@@ -335313,7 +336238,7 @@ var usePrivacySettings = (config) => {
     };
     fetchInitialState();
   }, [config]);
-  const updateDataCollectionOptIn = (0, import_react115.useCallback)(
+  const updateDataCollectionOptIn = (0, import_react117.useCallback)(
     async (optIn) => {
       try {
         const server = getCodeAssistServer(config);
@@ -335389,7 +336314,7 @@ async function setRemoteDataCollectionOptIn(server, optIn) {
 // packages/cli/src/ui/privacy/CloudFreePrivacyNotice.tsx
 init_colors();
 await init_useKeypress();
-var import_jsx_runtime83 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime84 = __toESM(require_jsx_runtime(), 1);
 var CloudFreePrivacyNotice = ({
   config,
   onExit
@@ -335404,40 +336329,40 @@ var CloudFreePrivacyNotice = ({
     { isActive: true }
   );
   if (privacyState.isLoading) {
-    return /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.Gray, children: "Loading..." });
+    return /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.Gray, children: "Loading..." });
   }
   if (privacyState.error) {
-    return /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { color: Colors.AccentRed, children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Text3, { color: Colors.AccentRed, children: [
         "Error loading Opt-in settings: ",
         privacyState.error
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
     ] });
   }
   if (privacyState.isFreeTier === false) {
-    return /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(CloudPaidPrivacyNotice, { onExit });
+    return /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(CloudPaidPrivacyNotice, { onExit });
   }
   const items = [
     { label: "Yes", value: true },
     { label: "No", value: false }
   ];
-  return /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini Code Assist for Individuals Privacy Notice" }),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini Code Assist for Individuals Privacy Notice" }),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Text3, { children: [
       "This notice and our Privacy Policy",
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " describe how Gemini Code Assist handles your data. Please read them carefully."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { children: "When you use Gemini Code Assist for individuals with Gemini CLI, Google collects your prompts, related code, generated output, code edits, related feature usage information, and your feedback to provide, improve, and develop Google products and services and machine learning technologies." }),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { children: "To help with quality and improve our products (such as generative machine-learning models), human reviewers may read, annotate, and process the data collected above. We take steps to protect your privacy as part of this process. This includes disconnecting the data from your Google Account before reviewers see or annotate it, and storing those disconnected copies for up to 18 months. Please don't submit confidential information or any data you wouldn't want a reviewer to see or Google to use to improve our products, services and machine-learning technologies." }),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { children: "Allow Google to use this data to develop and improve our products?" }),
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { children: "When you use Gemini Code Assist for individuals with Gemini CLI, Google collects your prompts, related code, generated output, code edits, related feature usage information, and your feedback to provide, improve, and develop Google products and services and machine learning technologies." }),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { children: "To help with quality and improve our products (such as generative machine-learning models), human reviewers may read, annotate, and process the data collected above. We take steps to protect your privacy as part of this process. This includes disconnecting the data from your Google Account before reviewers see or annotate it, and storing those disconnected copies for up to 18 months. Please don't submit confidential information or any data you wouldn't want a reviewer to see or Google to use to improve our products, services and machine-learning technologies." }),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { children: "Allow Google to use this data to develop and improve our products?" }),
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(
         RadioButtonSelect,
         {
           items,
@@ -335451,19 +336376,19 @@ var CloudFreePrivacyNotice = ({
         }
       )
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " ",
       "https://policies.google.com/privacy"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to choose an option and exit." })
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to choose an option and exit." })
   ] });
 };
 
 // packages/cli/src/ui/privacy/PrivacyNotice.tsx
-var import_jsx_runtime84 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime85 = __toESM(require_jsx_runtime(), 1);
 var PrivacyNoticeText = ({
   config,
   onExit
@@ -335471,24 +336396,24 @@ var PrivacyNoticeText = ({
   const authType = config.getContentGeneratorConfig()?.authType;
   switch (authType) {
     case AuthType2.USE_GEMINI:
-      return /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(GeminiPrivacyNotice, { onExit });
+      return /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(GeminiPrivacyNotice, { onExit });
     case AuthType2.USE_VERTEX_AI:
-      return /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(CloudPaidPrivacyNotice, { onExit });
+      return /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(CloudPaidPrivacyNotice, { onExit });
     case AuthType2.LOGIN_WITH_GOOGLE:
     default:
-      return /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(CloudFreePrivacyNotice, { config, onExit });
+      return /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(CloudFreePrivacyNotice, { config, onExit });
   }
 };
-var PrivacyNotice = ({ onExit, config }) => /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Box_default, { borderStyle: "round", padding: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(PrivacyNoticeText, { config, onExit }) });
+var PrivacyNotice = ({ onExit, config }) => /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Box_default, { borderStyle: "round", padding: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(PrivacyNoticeText, { config, onExit }) });
 
 // packages/cli/src/ui/hooks/useSettingsCommand.ts
-var import_react116 = __toESM(require_react(), 1);
+var import_react118 = __toESM(require_react(), 1);
 function useSettingsCommand() {
-  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = (0, import_react116.useState)(false);
-  const openSettingsDialog = (0, import_react116.useCallback)(() => {
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = (0, import_react118.useState)(false);
+  const openSettingsDialog = (0, import_react118.useCallback)(() => {
     setIsSettingsDialogOpen(true);
   }, []);
-  const closeSettingsDialog = (0, import_react116.useCallback)(() => {
+  const closeSettingsDialog = (0, import_react118.useCallback)(() => {
     setIsSettingsDialogOpen(false);
   }, []);
   return {
@@ -335499,13 +336424,13 @@ function useSettingsCommand() {
 }
 
 // packages/cli/src/ui/components/SettingsDialog.tsx
-var import_react117 = __toESM(require_react(), 1);
+var import_react119 = __toESM(require_react(), 1);
 await init_build2();
 init_colors();
 await init_RadioButtonSelect();
 await init_useKeypress();
 var import_chalk6 = __toESM(require_source(), 1);
-var import_jsx_runtime85 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime86 = __toESM(require_jsx_runtime(), 1);
 var maxItemsToShow = 8;
 function SettingsDialog({
   settings,
@@ -335513,27 +336438,27 @@ function SettingsDialog({
   onRestartRequest
 }) {
   const { vimEnabled, toggleVimEnabled } = useVimMode();
-  const [focusSection, setFocusSection] = (0, import_react117.useState)(
+  const [focusSection, setFocusSection] = (0, import_react119.useState)(
     "settings"
   );
-  const [selectedScope, setSelectedScope] = (0, import_react117.useState)(
+  const [selectedScope, setSelectedScope] = (0, import_react119.useState)(
     "User" /* User */
   );
-  const [activeSettingIndex, setActiveSettingIndex] = (0, import_react117.useState)(0);
-  const [scrollOffset, setScrollOffset] = (0, import_react117.useState)(0);
-  const [showRestartPrompt, setShowRestartPrompt] = (0, import_react117.useState)(false);
-  const [pendingSettings, setPendingSettings] = (0, import_react117.useState)(
+  const [activeSettingIndex, setActiveSettingIndex] = (0, import_react119.useState)(0);
+  const [scrollOffset, setScrollOffset] = (0, import_react119.useState)(0);
+  const [showRestartPrompt, setShowRestartPrompt] = (0, import_react119.useState)(false);
+  const [pendingSettings, setPendingSettings] = (0, import_react119.useState)(
     () => (
       // Deep clone to avoid mutation
       structuredClone(settings.forScope(selectedScope).settings)
     )
   );
-  const [modifiedSettings, setModifiedSettings] = (0, import_react117.useState)(
+  const [modifiedSettings, setModifiedSettings] = (0, import_react119.useState)(
     /* @__PURE__ */ new Set()
   );
-  const [globalPendingChanges, setGlobalPendingChanges] = (0, import_react117.useState)(/* @__PURE__ */ new Map());
-  const [_restartRequiredSettings, setRestartRequiredSettings] = (0, import_react117.useState)(/* @__PURE__ */ new Set());
-  (0, import_react117.useEffect)(() => {
+  const [globalPendingChanges, setGlobalPendingChanges] = (0, import_react119.useState)(/* @__PURE__ */ new Map());
+  const [_restartRequiredSettings, setRestartRequiredSettings] = (0, import_react119.useState)(/* @__PURE__ */ new Set());
+  (0, import_react119.useEffect)(() => {
     let updated = structuredClone(settings.forScope(selectedScope).settings);
     const newModified = /* @__PURE__ */ new Set();
     const newRestartRequired = /* @__PURE__ */ new Set();
@@ -335639,11 +336564,11 @@ function SettingsDialog({
     });
   };
   const items = generateSettingsItems();
-  const [editingKey, setEditingKey] = (0, import_react117.useState)(null);
-  const [editBuffer, setEditBuffer] = (0, import_react117.useState)("");
-  const [editCursorPos, setEditCursorPos] = (0, import_react117.useState)(0);
-  const [cursorVisible, setCursorVisible] = (0, import_react117.useState)(true);
-  (0, import_react117.useEffect)(() => {
+  const [editingKey, setEditingKey] = (0, import_react119.useState)(null);
+  const [editBuffer, setEditBuffer] = (0, import_react119.useState)("");
+  const [editCursorPos, setEditCursorPos] = (0, import_react119.useState)(0);
+  const [cursorVisible, setCursorVisible] = (0, import_react119.useState)(true);
+  (0, import_react119.useEffect)(() => {
     if (!editingKey) {
       setCursorVisible(true);
       return;
@@ -335961,7 +336886,7 @@ function SettingsDialog({
     },
     { isActive: true }
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(
     Box_default,
     {
       borderStyle: "round",
@@ -335970,10 +336895,10 @@ function SettingsDialog({
       padding: 1,
       width: "100%",
       height: "100%",
-      children: /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Box_default, { flexDirection: "column", flexGrow: 1, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "Settings" }),
-        /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Box_default, { height: 1 }),
-        showScrollUp && /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.Gray, children: "\u25B2" }),
+      children: /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Box_default, { flexDirection: "column", flexGrow: 1, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "Settings" }),
+        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Box_default, { height: 1 }),
+        showScrollUp && /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { color: Colors.Gray, children: "\u25B2" }),
         visibleItems.map((item, idx) => {
           const isActive = focusSection === "settings" && activeSettingIndex === idx + scrollOffset;
           const scopeSettings = settings.forScope(selectedScope).settings;
@@ -336024,24 +336949,24 @@ function SettingsDialog({
             selectedScope,
             settings
           );
-          return /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(import_react117.default.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Box_default, { flexDirection: "row", alignItems: "center", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: isActive ? Colors.AccentGreen : Colors.Gray, children: isActive ? "\u25CF" : "" }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Box_default, { minWidth: 50, children: /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(
+          return /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(import_react119.default.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Box_default, { flexDirection: "row", alignItems: "center", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { color: isActive ? Colors.AccentGreen : Colors.Gray, children: isActive ? "\u25CF" : "" }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Box_default, { minWidth: 50, children: /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(
                 Text3,
                 {
                   color: isActive ? Colors.AccentGreen : Colors.Foreground,
                   children: [
                     item.label,
-                    scopeMessage && /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Text3, { color: Colors.Gray, children: [
+                    scopeMessage && /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Text3, { color: Colors.Gray, children: [
                       " ",
                       scopeMessage
                     ] })
                   ]
                 }
               ) }),
-              /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Box_default, { minWidth: 3 }),
-              /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Box_default, { minWidth: 3 }),
+              /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(
                 Text3,
                 {
                   color: isActive ? Colors.AccentGreen : shouldBeGreyedOut ? Colors.Gray : Colors.Foreground,
@@ -336049,17 +336974,17 @@ function SettingsDialog({
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Box_default, { height: 1 })
+            /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Box_default, { height: 1 })
           ] }, item.value);
         }),
-        showScrollDown && /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.Gray, children: "\u25BC" }),
-        /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Text3, { bold: focusSection === "scope", wrap: "truncate", children: [
+        showScrollDown && /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { color: Colors.Gray, children: "\u25BC" }),
+        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Text3, { bold: focusSection === "scope", wrap: "truncate", children: [
             focusSection === "scope" ? "> " : "  ",
             "Apply To"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(
             RadioButtonSelect,
             {
               items: scopeItems,
@@ -336071,9 +336996,9 @@ function SettingsDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.Gray, children: "(Use Enter to select, Tab to change focus)" }),
-        showRestartPrompt && /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.AccentYellow, children: "To see changes, Qwen Code must be restarted. Press r to exit and apply changes now." })
+        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { color: Colors.Gray, children: "(Use Enter to select, Tab to change focus)" }),
+        showRestartPrompt && /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { color: Colors.AccentYellow, children: "To see changes, Qwen Code must be restarted. Press r to exit and apply changes now." })
       ] })
     }
   );
@@ -336310,14 +337235,14 @@ function setUpdateHandler(addItem, setUpdateInfo) {
 }
 
 // packages/cli/src/ui/hooks/useWorkspaceMigration.ts
-var import_react118 = __toESM(require_react(), 1);
+var import_react120 = __toESM(require_react(), 1);
 import process36 from "node:process";
 function useWorkspaceMigration(settings) {
-  const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] = (0, import_react118.useState)(false);
-  const [workspaceExtensions, setWorkspaceExtensions] = (0, import_react118.useState)(
+  const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] = (0, import_react120.useState)(false);
+  const [workspaceExtensions, setWorkspaceExtensions] = (0, import_react120.useState)(
     []
   );
-  (0, import_react118.useEffect)(() => {
+  (0, import_react120.useEffect)(() => {
     if (!settings.merged.experimental?.extensionManagement) {
       return;
     }
@@ -336360,12 +337285,12 @@ function useWorkspaceMigration(settings) {
 await init_build2();
 await init_RadioButtonSelect();
 init_colors();
-var import_react119 = __toESM(require_react(), 1);
-var import_jsx_runtime86 = __toESM(require_jsx_runtime(), 1);
+var import_react121 = __toESM(require_react(), 1);
+var import_jsx_runtime87 = __toESM(require_jsx_runtime(), 1);
 function WorkspaceMigrationDialog(props) {
   const { workspaceExtensions, onOpen, onClose } = props;
-  const [migrationComplete, setMigrationComplete] = (0, import_react119.useState)(false);
-  const [failedExtensions, setFailedExtensions] = (0, import_react119.useState)([]);
+  const [migrationComplete, setMigrationComplete] = (0, import_react121.useState)(false);
+  const [failedExtensions, setFailedExtensions] = (0, import_react121.useState)([]);
   onOpen();
   const onMigrate = async () => {
     const failed = await performWorkspaceExtensionMigration(workspaceExtensions);
@@ -336378,24 +337303,24 @@ function WorkspaceMigrationDialog(props) {
     }
   });
   if (migrationComplete) {
-    return /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(
       Box_default,
       {
         flexDirection: "column",
         borderStyle: "round",
         borderColor: Colors.Gray,
         padding: 1,
-        children: failedExtensions.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(import_jsx_runtime86.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Text3, { children: [
+        children: failedExtensions.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(import_jsx_runtime87.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Text3, { children: [
             "The following extensions failed to migrate. Please try installing them manually. To see other changes, Qwen Code must be restarted. Press ",
             "'q'",
             " to quit."
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: failedExtensions.map((failed) => /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: failedExtensions.map((failed) => /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Text3, { children: [
             "- ",
             failed
           ] }, failed)) })
-        ] }) : /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Text3, { children: [
+        ] }) : /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Text3, { children: [
           "Migration complete. To see changes, Qwen Code must be restarted. Press ",
           "'q'",
           " to quit."
@@ -336403,7 +337328,7 @@ function WorkspaceMigrationDialog(props) {
       }
     );
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -336411,18 +337336,18 @@ function WorkspaceMigrationDialog(props) {
       borderColor: Colors.Gray,
       padding: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Text3, { bold: true, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Text3, { bold: true, children: [
           "Workspace-level extensions are deprecated",
           "\n"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { children: "Would you like to install them at the user level?" }),
-        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { children: "The extension definition will remain in your workspace directory." }),
-        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { children: "If you opt to skip, you can install them manually using the extensions install command." }),
-        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: workspaceExtensions.map((extension) => /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { children: "Would you like to install them at the user level?" }),
+        /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { children: "The extension definition will remain in your workspace directory." }),
+        /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { children: "If you opt to skip, you can install them manually using the extensions install command." }),
+        /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: workspaceExtensions.map((extension) => /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Text3, { children: [
           "- ",
           extension.config.name
         ] }, extension.config.name)) }),
-        /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(
           RadioButtonSelect,
           {
             items: [
@@ -336449,7 +337374,7 @@ init_colors();
 init_dist3();
 await init_RadioButtonSelect();
 await init_useKeypress();
-var import_jsx_runtime87 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime88 = __toESM(require_jsx_runtime(), 1);
 function WelcomeBackDialog({
   welcomeBackInfo,
   onSelect,
@@ -336481,7 +337406,7 @@ function WelcomeBackDialog({
     inProgressCount = 0,
     pendingTasks = []
   } = welcomeBackInfo;
-  return /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -336491,18 +337416,18 @@ function WelcomeBackDialog({
       width: "100%",
       marginLeft: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Text3, { color: Colors.AccentBlue, bold: true, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { color: Colors.AccentBlue, bold: true, children: [
           "\u{1F44B} Welcome back! (Last updated: ",
           timeAgo,
           ")"
         ] }) }),
-        goalContent && /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F3AF} Overall Goal:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { color: Colors.Gray, children: goalContent }) })
+        goalContent && /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F3AF} Overall Goal:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.Gray, children: goalContent }) })
         ] }),
-        totalTasks > 0 && /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F4CB} Current Plan:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Text3, { color: Colors.Gray, children: [
+        totalTasks > 0 && /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F4CB} Current Plan:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { color: Colors.Gray, children: [
             "Progress: ",
             doneCount,
             "/",
@@ -336510,26 +337435,26 @@ function WelcomeBackDialog({
             " tasks completed",
             inProgressCount > 0 && `, ${inProgressCount} in progress`
           ] }) }),
-          pendingTasks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 2, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "Pending Tasks:" }),
-            pendingTasks.map((task, index) => /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Text3, { color: Colors.Gray, children: [
+          pendingTasks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 2, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "Pending Tasks:" }),
+            pendingTasks.map((task, index) => /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { color: Colors.Gray, children: [
               "\u2022 ",
               task
             ] }, index))
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { bold: true, children: "What would you like to do?" }),
-          /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { children: "Choose how to proceed with your session:" })
+        /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { bold: true, children: "What would you like to do?" }),
+          /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { children: "Choose how to proceed with your session:" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(RadioButtonSelect, { items: options2, onSelect, isFocused: true }) })
+        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(RadioButtonSelect, { items: options2, onSelect, isFocused: true }) })
       ]
     }
   );
 }
 
 // packages/cli/src/ui/App.tsx
-var import_jsx_runtime88 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime89 = __toESM(require_jsx_runtime(), 1);
 var MAX_DISPLAYED_QUEUED_MESSAGES = 3;
 function isToolExecuting(pendingHistoryItems) {
   return pendingHistoryItems.some((item) => {
@@ -336544,31 +337469,31 @@ function isToolExecuting(pendingHistoryItems) {
 var AppWrapper = (props) => {
   const kittyProtocolStatus = useKittyKeyboardProtocol();
   const nodeMajorVersion = parseInt(process37.versions.node.split(".")[0], 10);
-  return /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
     KeypressProvider,
     {
       kittyProtocolEnabled: kittyProtocolStatus.enabled,
       pasteWorkaround: process37.platform === "win32" || nodeMajorVersion < 20,
       config: props.config,
       debugKeystrokeLogging: props.settings.merged.general?.debugKeystrokeLogging,
-      children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(SessionStatsProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(VimModeProvider, { settings: props.settings, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(App2, { ...props }) }) })
+      children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(SessionStatsProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(VimModeProvider, { settings: props.settings, children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(App2, { ...props }) }) })
     }
   );
 };
 var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
   const isFocused = useFocus();
   useBracketedPaste();
-  const [updateInfo, setUpdateInfo] = (0, import_react120.useState)(null);
+  const [updateInfo, setUpdateInfo] = (0, import_react122.useState)(null);
   const { stdout } = use_stdout_default();
   const nightly = version2.includes("nightly");
   const { history, addItem, clearItems, loadHistory } = useHistory();
-  const [idePromptAnswered, setIdePromptAnswered] = (0, import_react120.useState)(false);
+  const [idePromptAnswered, setIdePromptAnswered] = (0, import_react122.useState)(false);
   const currentIDE = config.getIdeClient().getCurrentIde();
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     registerCleanup(() => config.getIdeClient().disconnect());
   }, [config]);
   const shouldShowIdePrompt = currentIDE && !config.getIdeMode() && !settings.merged.ide?.hasSeenNudge && !idePromptAnswered;
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     const cleanup = setUpdateHandler(addItem, setUpdateInfo);
     return cleanup;
   }, [addItem]);
@@ -336577,7 +337502,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     handleNewMessage,
     clearConsoleMessages: clearConsoleMessagesState
   } = useConsoleMessages();
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     const consolePatcher = new ConsolePatcher({
       onNewMessage: handleNewMessage,
       debugMode: config.getDebugMode()
@@ -336591,33 +337516,33 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     config,
     sessionStats
   });
-  const [staticNeedsRefresh, setStaticNeedsRefresh] = (0, import_react120.useState)(false);
-  const [staticKey, setStaticKey] = (0, import_react120.useState)(0);
-  const refreshStatic = (0, import_react120.useCallback)(() => {
+  const [staticNeedsRefresh, setStaticNeedsRefresh] = (0, import_react122.useState)(false);
+  const [staticKey, setStaticKey] = (0, import_react122.useState)(0);
+  const refreshStatic = (0, import_react122.useCallback)(() => {
     stdout.write(base_exports.clearTerminal);
     setStaticKey((prev) => prev + 1);
   }, [setStaticKey, stdout]);
-  const [geminiMdFileCount, setGeminiMdFileCount] = (0, import_react120.useState)(0);
-  const [debugMessage, setDebugMessage] = (0, import_react120.useState)("");
-  const [themeError, setThemeError] = (0, import_react120.useState)(null);
-  const [authError, setAuthError] = (0, import_react120.useState)(null);
-  const [editorError, setEditorError] = (0, import_react120.useState)(null);
-  const [footerHeight, setFooterHeight] = (0, import_react120.useState)(0);
-  const [corgiMode, setCorgiMode] = (0, import_react120.useState)(false);
-  const [isTrustedFolderState, setIsTrustedFolder] = (0, import_react120.useState)(
+  const [geminiMdFileCount, setGeminiMdFileCount] = (0, import_react122.useState)(0);
+  const [debugMessage, setDebugMessage] = (0, import_react122.useState)("");
+  const [themeError, setThemeError] = (0, import_react122.useState)(null);
+  const [authError, setAuthError] = (0, import_react122.useState)(null);
+  const [editorError, setEditorError] = (0, import_react122.useState)(null);
+  const [footerHeight, setFooterHeight] = (0, import_react122.useState)(0);
+  const [corgiMode, setCorgiMode] = (0, import_react122.useState)(false);
+  const [isTrustedFolderState, setIsTrustedFolder] = (0, import_react122.useState)(
     config.isTrustedFolder()
   );
-  const [currentModel, setCurrentModel] = (0, import_react120.useState)(config.getModel());
-  const [lmStudioModel, setLmStudioModel] = (0, import_react120.useState)(null);
-  const lastLmStudioModelFetchRef = (0, import_react120.useRef)(0);
-  (0, import_react120.useEffect)(() => {
+  const [currentModel, setCurrentModel] = (0, import_react122.useState)(config.getModel());
+  const [lmStudioModel, setLmStudioModel] = (0, import_react122.useState)(null);
+  const lastLmStudioModelFetchRef = (0, import_react122.useRef)(0);
+  (0, import_react122.useEffect)(() => {
     void lmStudioModel;
   }, [lmStudioModel]);
-  const [modelLimitVersion, setModelLimitVersion] = (0, import_react120.useState)(0);
-  (0, import_react120.useEffect)(() => {
+  const [modelLimitVersion, setModelLimitVersion] = (0, import_react122.useState)(0);
+  (0, import_react122.useEffect)(() => {
   }, [modelLimitVersion]);
-  const hasBeenSetFromSettingsRef = (0, import_react120.useRef)(false);
-  (0, import_react120.useEffect)(() => {
+  const hasBeenSetFromSettingsRef = (0, import_react122.useRef)(false);
+  (0, import_react122.useEffect)(() => {
     const savedModel = settings.merged.model?.name;
     if (savedModel) {
       hasBeenSetFromSettingsRef.current = true;
@@ -336645,7 +337570,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     settings.merged.model?.name,
     settings.merged.security?.auth?.providerId
   ]);
-  const refreshLmStudioModel = (0, import_react120.useCallback)(
+  const refreshLmStudioModel = (0, import_react122.useCallback)(
     async (force = false) => {
       const contentGeneratorConfig = config.getContentGeneratorConfig();
       if (!contentGeneratorConfig) {
@@ -336675,10 +337600,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     },
     [config, settings.merged.security?.auth?.providerId]
   );
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     void refreshLmStudioModel(true);
   }, [refreshLmStudioModel]);
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     const activeModel = config.getModel();
     if (!activeModel) {
       return;
@@ -336770,40 +337695,40 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
       cancelled = true;
     };
   }, [config, currentModel, settings.merged.security?.auth?.providerId]);
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     const providerId = settings.merged.security?.auth?.providerId;
     if (providerId !== "lmstudio") {
       setLmStudioModel(null);
     }
   }, [settings.merged.security?.auth?.providerId]);
-  const [shellModeActive, setShellModeActive] = (0, import_react120.useState)(false);
-  const [showErrorDetails, setShowErrorDetails] = (0, import_react120.useState)(false);
-  const [showToolDescriptions, setShowToolDescriptions] = (0, import_react120.useState)(false);
-  const [ctrlCPressedOnce, setCtrlCPressedOnce] = (0, import_react120.useState)(false);
-  const [quittingMessages, setQuittingMessages] = (0, import_react120.useState)(null);
-  const ctrlCTimerRef = (0, import_react120.useRef)(null);
-  const [ctrlDPressedOnce, setCtrlDPressedOnce] = (0, import_react120.useState)(false);
-  const ctrlDTimerRef = (0, import_react120.useRef)(null);
-  const [constrainHeight, setConstrainHeight] = (0, import_react120.useState)(true);
-  const [showPrivacyNotice, setShowPrivacyNotice] = (0, import_react120.useState)(false);
-  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] = (0, import_react120.useState)(false);
-  const [userTier, setUserTier] = (0, import_react120.useState)(void 0);
-  const [ideContextState, setIdeContextState] = (0, import_react120.useState)();
-  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react120.useState)(false);
-  const [isProcessing, setIsProcessing] = (0, import_react120.useState)(false);
+  const [shellModeActive, setShellModeActive] = (0, import_react122.useState)(false);
+  const [showErrorDetails, setShowErrorDetails] = (0, import_react122.useState)(false);
+  const [showToolDescriptions, setShowToolDescriptions] = (0, import_react122.useState)(false);
+  const [ctrlCPressedOnce, setCtrlCPressedOnce] = (0, import_react122.useState)(false);
+  const [quittingMessages, setQuittingMessages] = (0, import_react122.useState)(null);
+  const ctrlCTimerRef = (0, import_react122.useRef)(null);
+  const [ctrlDPressedOnce, setCtrlDPressedOnce] = (0, import_react122.useState)(false);
+  const ctrlDTimerRef = (0, import_react122.useRef)(null);
+  const [constrainHeight, setConstrainHeight] = (0, import_react122.useState)(true);
+  const [showPrivacyNotice, setShowPrivacyNotice] = (0, import_react122.useState)(false);
+  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] = (0, import_react122.useState)(false);
+  const [userTier, setUserTier] = (0, import_react122.useState)(void 0);
+  const [ideContextState, setIdeContextState] = (0, import_react122.useState)();
+  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react122.useState)(false);
+  const [isProcessing, setIsProcessing] = (0, import_react122.useState)(false);
   const {
     showWorkspaceMigrationDialog,
     workspaceExtensions,
     onWorkspaceMigrationDialogOpen,
     onWorkspaceMigrationDialogClose
   } = useWorkspaceMigration(settings);
-  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = (0, import_react120.useState)(false);
-  const [availableModelsForDialog, setAvailableModelsForDialog] = (0, import_react120.useState)([]);
-  const [allAvailableModels, setAllAvailableModels] = (0, import_react120.useState)([]);
-  const [isFetchingModels, setIsFetchingModels] = (0, import_react120.useState)(false);
-  const [isModelMappingDialogOpen, setIsModelMappingDialogOpen] = (0, import_react120.useState)(false);
-  const [pendingModelMappings, setPendingModelMappings] = (0, import_react120.useState)(null);
-  const openModelMappingDialog = (0, import_react120.useCallback)(
+  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = (0, import_react122.useState)(false);
+  const [availableModelsForDialog, setAvailableModelsForDialog] = (0, import_react122.useState)([]);
+  const [allAvailableModels, setAllAvailableModels] = (0, import_react122.useState)([]);
+  const [isFetchingModels, setIsFetchingModels] = (0, import_react122.useState)(false);
+  const [isModelMappingDialogOpen, setIsModelMappingDialogOpen] = (0, import_react122.useState)(false);
+  const [pendingModelMappings, setPendingModelMappings] = (0, import_react122.useState)(null);
+  const openModelMappingDialog = (0, import_react122.useCallback)(
     (unmatched, restModels) => {
       const taken = allAvailableModels.filter((m) => m.matchedRestId).map((m) => m.matchedRestId).filter(Boolean);
       const filteredRest = restModels.filter((r3) => !taken.includes(r3.id));
@@ -336816,7 +337741,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     },
     [allAvailableModels]
   );
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     if (typeof openModelMappingDialog === "function") return;
   }, [openModelMappingDialog]);
   const renderModelMappingDialog = () => {
@@ -336830,9 +337755,9 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
         setPendingModelMappings(null);
       }
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(ModelMappingDialog, { ...mappingProps });
+    return /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(ModelMappingDialog, { ...mappingProps });
   };
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     setAllAvailableModels([]);
     setAvailableModelsForDialog([]);
     setIsModelSelectionDialogOpen(false);
@@ -336840,14 +337765,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     settings.merged.security?.auth?.selectedType,
     settings.merged.security?.auth?.providerId
   ]);
-  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = (0, import_react120.useState)(false);
-  const [visionSwitchResolver, setVisionSwitchResolver] = (0, import_react120.useState)(null);
-  (0, import_react120.useEffect)(() => {
+  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = (0, import_react122.useState)(false);
+  const [visionSwitchResolver, setVisionSwitchResolver] = (0, import_react122.useState)(null);
+  (0, import_react122.useEffect)(() => {
     const unsubscribe = ideContext.subscribeToIdeContext(setIdeContextState);
     setIdeContextState(ideContext.getIdeContext());
     return unsubscribe;
   }, []);
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     const openDebugConsole = () => {
       setShowErrorDetails(true);
       setConstrainHeight(false);
@@ -336875,14 +337800,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
       appEvents.off("show-info" /* ShowInfo */, showInfoHandler);
     };
   }, [handleNewMessage]);
-  const openPrivacyNotice = (0, import_react120.useCallback)(() => {
+  const openPrivacyNotice = (0, import_react122.useCallback)(() => {
     setShowPrivacyNotice(true);
   }, []);
-  const handleEscapePromptChange = (0, import_react120.useCallback)((showPrompt) => {
+  const handleEscapePromptChange = (0, import_react122.useCallback)((showPrompt) => {
     setShowEscapePrompt(showPrompt);
   }, []);
-  const initialPromptSubmitted = (0, import_react120.useRef)(false);
-  const errorCount = (0, import_react120.useMemo)(
+  const initialPromptSubmitted = (0, import_react122.useRef)(false);
+  const errorCount = (0, import_react122.useMemo)(
     () => consoleMessages.filter((msg) => msg.type === "error").reduce((total, msg) => total + msg.count, 0),
     [consoleMessages]
   );
@@ -336920,7 +337845,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     authStatus,
     authMessage
   } = useQwenAuth(settings, isAuthenticating);
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     if (settings.merged.security?.auth?.selectedType && !settings.merged.security?.auth?.useExternal) {
       const error = validateAuthMethod(
         settings.merged.security.auth.selectedType
@@ -336936,12 +337861,12 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     openAuthDialog,
     setAuthError
   ]);
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     if (!isAuthenticating) {
       setUserTier(config.getGeminiClient()?.getUserTier());
     }
   }, [config, isAuthenticating]);
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     if (isQwenAuth && authStatus === "timeout") {
       setAuthError(
         authMessage || "Qwen OAuth authentication timed out. Please try again or select a different authentication method."
@@ -336965,10 +337890,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     handleEditorSelect,
     exitEditorDialog
   } = useEditorSettings(settings, setEditorError, addItem);
-  const toggleCorgiMode = (0, import_react120.useCallback)(() => {
+  const toggleCorgiMode = (0, import_react122.useCallback)(() => {
     setCorgiMode((prev) => !prev);
   }, []);
-  const toggleYoloMode = (0, import_react120.useCallback)(() => {
+  const toggleYoloMode = (0, import_react122.useCallback)(() => {
     if (!config) return;
     const currentMode = config.getApprovalMode();
     const newMode = currentMode === ApprovalMode.YOLO ? ApprovalMode.DEFAULT : ApprovalMode.YOLO;
@@ -336991,7 +337916,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
       );
     }
   }, [config, addItem]);
-  const performMemoryRefresh = (0, import_react120.useCallback)(async () => {
+  const performMemoryRefresh = (0, import_react122.useCallback)(async () => {
     addItem(
       {
         type: "info" /* INFO */,
@@ -337038,7 +337963,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
       console.error("Error refreshing memory:", error);
     }
   }, [config, addItem, settings.merged]);
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     const checkModelChange = () => {
       if (!hasBeenSetFromSettingsRef.current) {
         const configModel = config.getModel();
@@ -337051,7 +337976,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     const interval = setInterval(checkModelChange, 1e3);
     return () => clearInterval(interval);
   }, [config, currentModel]);
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     const flashFallbackHandler = async (currentModel2, fallbackModel, error) => {
       let message;
       if (config.getContentGeneratorConfig().authType === AuthType2.LOGIN_WITH_GOOGLE) {
@@ -337118,21 +338043,21 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
   const { rows: terminalHeight, columns: terminalWidth } = useTerminalSize();
   const isNarrow = isNarrowWidth(terminalWidth);
   const { stdin, setRawMode } = use_stdin_default();
-  const isInitialMount = (0, import_react120.useRef)(true);
+  const isInitialMount = (0, import_react122.useRef)(true);
   const widthFraction = 0.9;
   const inputWidth = Math.max(
     20,
     Math.floor(terminalWidth * widthFraction) - 3
   );
   const suggestionsWidth = Math.max(20, Math.floor(terminalWidth * 0.8));
-  const isValidPath = (0, import_react120.useCallback)((filePath) => {
+  const isValidPath = (0, import_react122.useCallback)((filePath) => {
     try {
       return fs75.existsSync(filePath) && fs75.statSync(filePath).isFile();
     } catch (_e) {
       return false;
     }
   }, []);
-  const getPreferredEditor = (0, import_react120.useCallback)(() => {
+  const getPreferredEditor = (0, import_react122.useCallback)(() => {
     const editorType = settings.merged.general?.preferredEditor;
     const isValidEditor = isEditorAvailable(editorType);
     if (!isValidEditor) {
@@ -337141,18 +338066,18 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     }
     return editorType;
   }, [settings, openEditorDialog]);
-  const onAuthError = (0, import_react120.useCallback)(() => {
+  const onAuthError = (0, import_react122.useCallback)(() => {
     setAuthError("reauth required");
     openAuthDialog();
   }, [openAuthDialog, setAuthError]);
-  const handleVisionSwitchRequired = (0, import_react120.useCallback)(
+  const handleVisionSwitchRequired = (0, import_react122.useCallback)(
     async (_query) => new Promise((resolve24, reject) => {
       setVisionSwitchResolver({ resolve: resolve24, reject });
       setIsVisionSwitchDialogOpen(true);
     }),
     []
   );
-  const handleVisionSwitchSelect = (0, import_react120.useCallback)(
+  const handleVisionSwitchSelect = (0, import_react122.useCallback)(
     (outcome) => {
       setIsVisionSwitchDialogOpen(false);
       if (visionSwitchResolver) {
@@ -337163,7 +338088,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     },
     [visionSwitchResolver]
   );
-  const handleModelSelectionOpen = (0, import_react120.useCallback)(() => {
+  const handleModelSelectionOpen = (0, import_react122.useCallback)(() => {
     (async () => {
       if (allAvailableModels.length > 0) {
         setAvailableModelsForDialog(allAvailableModels);
@@ -337341,7 +338266,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     settings.merged.experimental?.visionModelPreview,
     isFetchingModels
   ]);
-  const applyModelMappings = (0, import_react120.useCallback)(
+  const applyModelMappings = (0, import_react122.useCallback)(
     async (mappings) => {
       try {
         console.debug("[LMStudio] Applying mappings from dialog:", mappings);
@@ -337374,10 +338299,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     },
     [allAvailableModels]
   );
-  const handleModelSelectionClose = (0, import_react120.useCallback)(() => {
+  const handleModelSelectionClose = (0, import_react122.useCallback)(() => {
     setIsModelSelectionDialogOpen(false);
   }, []);
-  const handleModelSelect = (0, import_react120.useCallback)(
+  const handleModelSelect = (0, import_react122.useCallback)(
     async (modelId) => {
       try {
         const selectedModel = allAvailableModels.find(
@@ -337499,6 +338424,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     commandContext,
     shellConfirmationRequest,
     confirmationRequest,
+    inputRequest,
     quitConfirmationRequest
   } = useSlashCommandProcessor(
     config,
@@ -337533,8 +338459,8 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     isValidPath,
     shellModeActive
   });
-  const [userMessages, setUserMessages] = (0, import_react120.useState)([]);
-  const cancelHandlerRef = (0, import_react120.useRef)(() => {
+  const [userMessages, setUserMessages] = (0, import_react122.useState)([]);
+  const cancelHandlerRef = (0, import_react122.useRef)(() => {
   });
   const {
     streamingState,
@@ -337562,7 +338488,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     handleVisionSwitchRequired,
     refreshLmStudioModel
   );
-  const pendingHistoryItems = (0, import_react120.useMemo)(
+  const pendingHistoryItems = (0, import_react122.useMemo)(
     () => [...pendingSlashCommandHistoryItems, ...pendingGeminiHistoryItems].map(
       (item, index) => ({
         ...item,
@@ -337600,7 +338526,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version2 }) => {
     streamingState,
     submitQuery
   });
-  cancelHandlerRef.current = (0, import_react120.useCallback)(() => {
+  cancelHandlerRef.current = (0, import_react122.useCallback)(() => {
     if (isToolExecuting(pendingHistoryItems)) {
       buffer.setText("");
       return;
@@ -337624,13 +338550,13 @@ ${queuedText}` : queuedText;
     clearQueue,
     pendingHistoryItems
   ]);
-  const handleFinalSubmit = (0, import_react120.useCallback)(
+  const handleFinalSubmit = (0, import_react122.useCallback)(
     (submittedValue) => {
       addMessage(submittedValue);
     },
     [addMessage]
   );
-  const handleIdePromptComplete = (0, import_react120.useCallback)(
+  const handleIdePromptComplete = (0, import_react122.useCallback)(
     (result) => {
       if (result.userSelection === "yes") {
         if (result.isExtensionPreInstalled) {
@@ -337657,7 +338583,7 @@ ${queuedText}` : queuedText;
   const { handleInput: vimHandleInput } = useVim(buffer, handleFinalSubmit);
   const { elapsedTime, currentLoadingPhrase } = useLoadingIndicator(streamingState);
   const showAutoAcceptIndicator = useAutoAcceptIndicator({ config, addItem });
-  const handleExit = (0, import_react120.useCallback)(
+  const handleExit = (0, import_react122.useCallback)(
     (pressedOnce, setPressedOnce, timerRef) => {
       if (pressedOnce) {
         if (timerRef.current) {
@@ -337692,7 +338618,7 @@ ${queuedText}` : queuedText;
       buffer
     ]
   );
-  const handleGlobalKeypress = (0, import_react120.useCallback)(
+  const handleGlobalKeypress = (0, import_react122.useCallback)(
     (key) => {
       if (settings.merged.general?.debugKeystrokeLogging) {
         console.log("[DEBUG] Keystroke:", JSON.stringify(key));
@@ -337753,13 +338679,13 @@ ${queuedText}` : queuedText;
   useKeypress(handleGlobalKeypress, {
     isActive: true
   });
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     if (config) {
       setGeminiMdFileCount(config.getGeminiMdFileCount());
     }
   }, [config, config.getGeminiMdFileCount]);
   const logger6 = useLogger(config.storage);
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     const fetchUserMessages = async () => {
       const pastMessagesRaw = await logger6?.getPreviousUserMessages() || [];
       const currentSessionUserMessages = history.filter(
@@ -337782,14 +338708,14 @@ ${queuedText}` : queuedText;
     };
     fetchUserMessages();
   }, [history, logger6]);
-  const isInputActive = (streamingState === "idle" /* Idle */ || streamingState === "responding" /* Responding */) && !initError && !isProcessing && !showWelcomeBackDialog && true;
-  const handleClearScreen = (0, import_react120.useCallback)(() => {
+  const isInputActive = (streamingState === "idle" /* Idle */ || streamingState === "responding" /* Responding */) && !initError && !isProcessing && !inputRequest && !showWelcomeBackDialog && true;
+  const handleClearScreen = (0, import_react122.useCallback)(() => {
     clearItems();
     clearConsoleMessagesState();
     console.clear();
     refreshStatic();
   }, [clearItems, clearConsoleMessagesState, refreshStatic]);
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     if (history.length === 0) {
       setActiveViewId(null);
       setViewScrollOffset(0);
@@ -337811,9 +338737,9 @@ ${queuedText}` : queuedText;
       lastSeenViewIdRef.current = null;
     }
   }, [history, terminalHeight, footerHeight]);
-  const mainControlsRef = (0, import_react120.useRef)(null);
-  const pendingHistoryItemRef = (0, import_react120.useRef)(null);
-  (0, import_react120.useEffect)(() => {
+  const mainControlsRef = (0, import_react122.useRef)(null);
+  const pendingHistoryItemRef = (0, import_react122.useRef)(null);
+  (0, import_react122.useEffect)(() => {
     if (mainControlsRef.current) {
       const fullFooterMeasurement = measure_element_default(mainControlsRef.current);
       setFooterHeight(fullFooterMeasurement.height);
@@ -337823,15 +338749,15 @@ ${queuedText}` : queuedText;
     /* margins and padding */
     3
   );
-  const availableTerminalHeight = (0, import_react120.useMemo)(
+  const availableTerminalHeight = (0, import_react122.useMemo)(
     () => terminalHeight - footerHeight - staticExtraHeight,
     [terminalHeight, footerHeight]
   );
-  const [activeViewId, setActiveViewId] = (0, import_react120.useState)(null);
-  const [viewScrollOffset, setViewScrollOffset] = (0, import_react120.useState)(0);
-  const [availableViewHeight, setAvailableViewHeight] = (0, import_react120.useState)(0);
-  const lastSeenViewIdRef = (0, import_react120.useRef)(null);
-  (0, import_react120.useEffect)(() => {
+  const [activeViewId, setActiveViewId] = (0, import_react122.useState)(null);
+  const [viewScrollOffset, setViewScrollOffset] = (0, import_react122.useState)(0);
+  const [availableViewHeight, setAvailableViewHeight] = (0, import_react122.useState)(0);
+  const lastSeenViewIdRef = (0, import_react122.useRef)(null);
+  (0, import_react122.useEffect)(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
@@ -337844,29 +338770,29 @@ ${queuedText}` : queuedText;
       clearTimeout(handler);
     };
   }, [terminalWidth, terminalHeight, refreshStatic]);
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     if (streamingState === "idle" /* Idle */ && staticNeedsRefresh) {
       setStaticNeedsRefresh(false);
       refreshStatic();
     }
   }, [streamingState, refreshStatic, staticNeedsRefresh]);
-  const filteredConsoleMessages = (0, import_react120.useMemo)(() => {
+  const filteredConsoleMessages = (0, import_react122.useMemo)(() => {
     if (config.getDebugMode()) {
       return consoleMessages;
     }
     return consoleMessages.filter((msg) => msg.type !== "debug");
   }, [consoleMessages, config]);
   const branchName = useGitBranchName(config.getTargetDir());
-  const contextFileNames = (0, import_react120.useMemo)(() => {
+  const contextFileNames = (0, import_react122.useMemo)(() => {
     const fromSettings = settings.merged.context?.fileName;
     if (fromSettings) {
       return Array.isArray(fromSettings) ? fromSettings : [fromSettings];
     }
     return getAllGeminiMdFilenames();
   }, [settings.merged.context?.fileName]);
-  const initialPrompt = (0, import_react120.useMemo)(() => config.getQuestion(), [config]);
+  const initialPrompt = (0, import_react122.useMemo)(() => config.getQuestion(), [config]);
   const geminiClient = config.getGeminiClient();
-  (0, import_react120.useEffect)(() => {
+  (0, import_react122.useEffect)(() => {
     if (initialPrompt && !initialPromptSubmitted.current && !isAuthenticating && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isModelSelectionDialogOpen && !isVisionSwitchDialogOpen && !isSubagentCreateDialogOpen && !showPrivacyNotice && !showWelcomeBackDialog && welcomeBackChoice !== "restart" && geminiClient?.isInitialized?.()) {
       submitQuery(initialPrompt);
       initialPromptSubmitted.current = true;
@@ -337887,7 +338813,7 @@ ${queuedText}` : queuedText;
     isVisionSwitchDialogOpen
   ]);
   if (quittingMessages) {
-    return /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: quittingMessages.map((item) => /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: quittingMessages.map((item) => /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
       HistoryItemDisplay,
       {
         availableTerminalHeight: constrainHeight ? availableTerminalHeight : void 0,
@@ -337903,16 +338829,16 @@ ${queuedText}` : queuedText;
   const debugConsoleMaxHeight = Math.floor(Math.max(terminalHeight * 0.2, 5));
   const staticAreaMaxItemHeight = Math.max(terminalHeight * 4, 100);
   const placeholder = vimModeEnabled ? "  Press 'i' for INSERT mode and 'Esc' for NORMAL mode." : "  Type your message or @path/to/file";
-  return /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(StreamingContext.Provider, { value: streamingState, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", width: "90%", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(StreamingContext.Provider, { value: streamingState, children: /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", width: "90%", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
       Static,
       {
         items: [
-          /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", children: [
-            !(settings.merged.ui?.hideBanner || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Header, { version: version2, nightly }),
-            !(settings.merged.ui?.hideTips || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Tips, { config })
+          /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", children: [
+            !(settings.merged.ui?.hideBanner || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Header, { version: version2, nightly }),
+            !(settings.merged.ui?.hideTips || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Tips, { config })
           ] }, "header"),
-          ...history.filter((h) => h.type !== "view").map((h) => /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+          ...history.filter((h) => h.type !== "view").map((h) => /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
             HistoryItemDisplay,
             {
               terminalWidth: mainAreaWidth,
@@ -337930,8 +338856,8 @@ ${queuedText}` : queuedText;
       staticKey
     ),
     renderModelMappingDialog(),
-    /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { ref: pendingHistoryItemRef, flexDirection: "column", children: [
-      pendingHistoryItems.map((item) => /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { ref: pendingHistoryItemRef, flexDirection: "column", children: [
+      pendingHistoryItems.map((item) => /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         HistoryItemDisplay,
         {
           availableTerminalHeight: constrainHeight ? availableTerminalHeight : void 0,
@@ -337959,16 +338885,16 @@ ${queuedText}` : queuedText;
         },
         item.id
       )),
-      /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(ShowMoreLines, { constrainHeight })
+      /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(ShowMoreLines, { constrainHeight })
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", ref: mainControlsRef, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", ref: mainControlsRef, children: [
       activeViewId !== null && (() => {
         const viewItem = history.find(
           (h) => h.id === activeViewId && h.type === "view"
         );
         if (!viewItem || viewItem.type !== "view") return null;
         if (!viewItem) return null;
-        return /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
           ViewOverlay,
           {
             item: viewItem,
@@ -337982,8 +338908,8 @@ ${queuedText}` : queuedText;
           }
         );
       })(),
-      updateInfo && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(UpdateNotification, { message: updateInfo.message }),
-      startupWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      updateInfo && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(UpdateNotification, { message: updateInfo.message }),
+      startupWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         Box_default,
         {
           borderStyle: "round",
@@ -337991,10 +338917,10 @@ ${queuedText}` : queuedText;
           paddingX: 1,
           marginY: 1,
           flexDirection: "column",
-          children: startupWarnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.AccentYellow, children: warning }, index))
+          children: startupWarnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { color: Colors.AccentYellow, children: warning }, index))
         }
       ),
-      showWelcomeBackDialog && welcomeBackInfo?.hasHistory && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      showWelcomeBackDialog && welcomeBackInfo?.hasHistory && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         WelcomeBackDialog,
         {
           welcomeBackInfo,
@@ -338002,26 +338928,26 @@ ${queuedText}` : queuedText;
           onClose: handleWelcomeBackClose
         }
       ),
-      showWorkspaceMigrationDialog ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      showWorkspaceMigrationDialog ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         WorkspaceMigrationDialog,
         {
           workspaceExtensions,
           onOpen: onWorkspaceMigrationDialogOpen,
           onClose: onWorkspaceMigrationDialogClose
         }
-      ) : shouldShowIdePrompt && currentIDE ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ) : shouldShowIdePrompt && currentIDE ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         IdeIntegrationNudge,
         {
           ide: currentIDE,
           onComplete: handleIdePromptComplete
         }
-      ) : isFolderTrustDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ) : isFolderTrustDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         FolderTrustDialog,
         {
           onSelect: handleFolderTrustSelect,
           isRestarting
         }
-      ) : quitConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ) : quitConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         QuitConfirmationDialog,
         {
           onSelect: (choice2) => {
@@ -338033,9 +338959,18 @@ ${queuedText}` : queuedText;
             }
           }
         }
-      ) : shellConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(ShellConfirmationDialog, { request: shellConfirmationRequest }) : confirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", children: [
+      ) : shellConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(ShellConfirmationDialog, { request: shellConfirmationRequest }) : inputRequest ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
+        InputRequestDialog,
+        {
+          prompt: inputRequest.prompt,
+          placeholder: inputRequest.placeholder,
+          onSubmit: inputRequest.onSubmit,
+          onCancel: inputRequest.onCancel,
+          inputWidth
+        }
+      ) : confirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", children: [
         confirmationRequest.prompt,
-        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { paddingY: 1, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { paddingY: 1, children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
           RadioButtonSelect,
           {
             isFocused: !!confirmationRequest,
@@ -338048,9 +338983,9 @@ ${queuedText}` : queuedText;
             }
           }
         ) })
-      ] }) : isThemeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", children: [
-        themeError && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.AccentRed, children: themeError }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ] }) : isThemeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", children: [
+        themeError && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { color: Colors.AccentRed, children: themeError }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
           ThemeDialog,
           {
             onSelect: handleThemeSelect,
@@ -338060,27 +338995,27 @@ ${queuedText}` : queuedText;
             terminalWidth: mainAreaWidth
           }
         )
-      ] }) : isSettingsDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ] }) : isSettingsDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         SettingsDialog,
         {
           settings,
           onSelect: () => closeSettingsDialog(),
           onRestartRequest: () => process37.exit(0)
         }
-      ) }) : isSubagentCreateDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ) }) : isSubagentCreateDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         AgentCreationWizard,
         {
           onClose: closeSubagentCreateDialog,
           config
         }
-      ) }) : isAgentsManagerDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ) }) : isAgentsManagerDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         AgentsManagerDialog,
         {
           onClose: closeAgentsManagerDialog,
           config
         }
-      ) }) : isAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(import_jsx_runtime88.Fragment, { children: [
-        isQwenAuth && isQwenAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ) }) : isAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(import_jsx_runtime89.Fragment, { children: [
+        isQwenAuth && isQwenAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
           QwenOAuthProgress,
           {
             deviceAuth: deviceAuth || void 0,
@@ -338101,7 +339036,7 @@ ${queuedText}` : queuedText;
               openAuthDialog();
             }
           }
-        ) : /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+        ) : /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
           AuthInProgress,
           {
             onTimeout: () => {
@@ -338111,8 +339046,8 @@ ${queuedText}` : queuedText;
             }
           }
         ),
-        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
             DetailedMessagesDisplay,
             {
               messages: filteredConsoleMessages,
@@ -338120,18 +339055,18 @@ ${queuedText}` : queuedText;
               width: inputWidth
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(ShowMoreLines, { constrainHeight })
+          /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(ShowMoreLines, { constrainHeight })
         ] }) })
-      ] }) : isAuthDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ] }) : isAuthDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         AuthDialog,
         {
           onSelect: handleAuthSelect,
           settings,
           initialErrorMessage: authError
         }
-      ) }) : isEditorDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", children: [
-        editorError && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.AccentRed, children: editorError }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ) }) : isEditorDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", children: [
+        editorError && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { color: Colors.AccentRed, children: editorError }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
           EditorSettingsDialog,
           {
             onSelect: handleEditorSelect,
@@ -338139,7 +339074,7 @@ ${queuedText}` : queuedText;
             onExit: exitEditorDialog
           }
         )
-      ] }) : isModelSelectionDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ] }) : isModelSelectionDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         ModelSelectionDialog,
         {
           availableModels: availableModelsForDialog,
@@ -338147,14 +339082,14 @@ ${queuedText}` : queuedText;
           onSelect: handleModelSelect,
           onCancel: handleModelSelectionClose
         }
-      ) : isVisionSwitchDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect }) : showPrivacyNotice ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ) : isVisionSwitchDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect }) : showPrivacyNotice ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         PrivacyNotice,
         {
           onExit: () => setShowPrivacyNotice(false),
           config
         }
-      ) : /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(import_jsx_runtime88.Fragment, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      ) : /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(import_jsx_runtime89.Fragment, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
           LoadingIndicator,
           {
             thought: streamingState === "waiting_for_confirmation" /* WaitingForConfirmation */ || config.getAccessibility()?.disableLoadingPhrases || config.getScreenReader() ? void 0 : thought,
@@ -338162,21 +339097,21 @@ ${queuedText}` : queuedText;
             elapsedTime
           }
         ),
-        messageQueue.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+        messageQueue.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
           messageQueue.slice(0, MAX_DISPLAYED_QUEUED_MESSAGES).map((message, index) => {
             const preview = message.replace(/\s+/g, " ");
             return (
               // Ensure the Box takes full width so truncation calculates correctly
-              /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { paddingLeft: 2, width: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { dimColor: true, wrap: "truncate", children: preview }) }, index)
+              /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { paddingLeft: 2, width: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { dimColor: true, wrap: "truncate", children: preview }) }, index)
             );
           }),
-          messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { dimColor: true, children: [
+          messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Text3, { dimColor: true, children: [
             "... (+",
             messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES,
             "more)"
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(
           Box_default,
           {
             marginTop: 1,
@@ -338185,9 +339120,9 @@ ${queuedText}` : queuedText;
             flexDirection: isNarrow ? "column" : "row",
             alignItems: isNarrow ? "flex-start" : "center",
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { children: [
-                process37.env["GEMINI_SYSTEM_MD"] && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " }),
-                ctrlCPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." }) : ctrlDPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." }) : showEscapePrompt ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.Gray, children: "Press Esc again to clear." }) : /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { children: [
+                process37.env["GEMINI_SYSTEM_MD"] && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " }),
+                ctrlCPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." }) : ctrlDPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." }) : showEscapePrompt ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { color: Colors.Gray, children: "Press Esc again to clear." }) : /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
                   ContextSummaryDisplay,
                   {
                     ideContext: ideContextState,
@@ -338199,20 +339134,20 @@ ${queuedText}` : queuedText;
                   }
                 )
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { paddingTop: isNarrow ? 1 : 0, children: [
-                showAutoAcceptIndicator !== ApprovalMode.DEFAULT && !shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { paddingTop: isNarrow ? 1 : 0, children: [
+                showAutoAcceptIndicator !== ApprovalMode.DEFAULT && !shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
                   AutoAcceptIndicator,
                   {
                     approvalMode: showAutoAcceptIndicator
                   }
                 ),
-                shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(ShellModeIndicator, {})
+                shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(ShellModeIndicator, {})
               ] })
             ]
           }
         ),
-        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
             DetailedMessagesDisplay,
             {
               messages: filteredConsoleMessages,
@@ -338220,9 +339155,9 @@ ${queuedText}` : queuedText;
               width: inputWidth
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(ShowMoreLines, { constrainHeight })
+          /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(ShowMoreLines, { constrainHeight })
         ] }) }),
-        isInputActive && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+        isInputActive && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
           InputPrompt,
           {
             buffer,
@@ -338243,7 +339178,7 @@ ${queuedText}` : queuedText;
           }
         )
       ] }),
-      initError && streamingState !== "responding" /* Responding */ && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      initError && streamingState !== "responding" /* Responding */ && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         Box_default,
         {
           borderStyle: "round",
@@ -338252,21 +339187,21 @@ ${queuedText}` : queuedText;
           marginBottom: 1,
           children: history.find(
             (item) => item.type === "error" && item.text?.includes(initError)
-          )?.text ? /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.AccentRed, children: history.find(
+          )?.text ? /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { color: Colors.AccentRed, children: history.find(
             (item) => item.type === "error" && item.text?.includes(initError)
-          )?.text }) : /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(import_jsx_runtime88.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { color: Colors.AccentRed, children: [
+          )?.text }) : /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(import_jsx_runtime89.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Text3, { color: Colors.AccentRed, children: [
               "Initialization Error: ",
               initError
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { color: Colors.AccentRed, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Text3, { color: Colors.AccentRed, children: [
               " ",
               "Please check API key and configuration."
             ] })
           ] })
         }
       ),
-      !settings.merged.ui?.hideFooter && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+      !settings.merged.ui?.hideFooter && /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
         Footer,
         {
           model: currentModel,
@@ -343543,7 +344478,7 @@ function toPermissionOptions(confirmation) {
 }
 
 // packages/cli/src/gemini.tsx
-var import_jsx_runtime89 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime90 = __toESM(require_jsx_runtime(), 1);
 function validateDnsResolutionOrder(order) {
   const defaultValue = "ipv4first";
   if (order === void 0) {
@@ -343614,7 +344549,7 @@ async function startInteractiveUI(config, settings, startupWarnings, workspaceRo
   await detectAndEnableKittyProtocol();
   setWindowTitle(basename8(workspaceRoot), settings);
   const instance = render_default(
-    /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(import_react121.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(SettingsContext.Provider, { value: settings, children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(import_react123.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(SettingsContext.Provider, { value: settings, children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
       AppWrapper,
       {
         config,
@@ -343874,6 +344809,11 @@ main().catch((error) => {
 /**
  * @license
  * Copyright 2025 Qwen
+ * SPDX-License-Identifier: Apache-2.0
+ */
+/**
+ * @license
+ * Copyright 2026 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
 /*! Bundled license information:

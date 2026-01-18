@@ -32,6 +32,7 @@ import { LoadingIndicator } from "./components/LoadingIndicator.js";
 import { AutoAcceptIndicator } from "./components/AutoAcceptIndicator.js";
 import { ShellModeIndicator } from "./components/ShellModeIndicator.js";
 import { InputPrompt } from "./components/InputPrompt.js";
+import { InputRequestDialog } from "./components/InputRequestDialog.js";
 import { Footer } from "./components/Footer.js";
 import { ThemeDialog } from "./components/ThemeDialog.js";
 import { AuthDialog } from "./components/AuthDialog.js";
@@ -1067,7 +1068,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     // available models for dialog are populated via handleModelSelectionOpen
     // Core hooks and processors
     const { vimEnabled: vimModeEnabled, vimMode, toggleVimEnabled, } = useVimMode();
-    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController);
+    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, inputRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController);
     const buffer = useTextBuffer({
         initialText: "",
         viewport: { height: 10, width: inputWidth },
@@ -1306,6 +1307,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         streamingState === StreamingState.Responding) &&
         !initError &&
         !isProcessing &&
+        !inputRequest &&
         !showWelcomeBackDialog &&
         true; // activeViewId declaration moved earlier to avoid TDZ
     const handleClearScreen = useCallback(() => {
@@ -1475,7 +1477,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                 else {
                                     quitConfirmationRequest.onConfirm(false);
                                 }
-                            } })) : shellConfirmationRequest ? (_jsx(ShellConfirmationDialog, { request: shellConfirmationRequest })) : confirmationRequest ? (_jsxs(Box, { flexDirection: "column", children: [confirmationRequest.prompt, _jsx(Box, { paddingY: 1, children: _jsx(RadioButtonSelect, { isFocused: !!confirmationRequest, items: [
+                            } })) : shellConfirmationRequest ? (_jsx(ShellConfirmationDialog, { request: shellConfirmationRequest })) : inputRequest ? (_jsx(InputRequestDialog, { prompt: inputRequest.prompt, placeholder: inputRequest.placeholder, onSubmit: inputRequest.onSubmit, onCancel: inputRequest.onCancel, inputWidth: inputWidth })) : confirmationRequest ? (_jsxs(Box, { flexDirection: "column", children: [confirmationRequest.prompt, _jsx(Box, { paddingY: 1, children: _jsx(RadioButtonSelect, { isFocused: !!confirmationRequest, items: [
                                             { label: "Yes", value: true },
                                             { label: "No", value: false },
                                         ], onSelect: (value) => {

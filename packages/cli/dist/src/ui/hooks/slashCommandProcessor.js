@@ -16,6 +16,10 @@ import { CommandService } from "../../services/CommandService.js";
 import { BuiltinCommandLoader } from "../../services/BuiltinCommandLoader.js";
 import { FileCommandLoader } from "../../services/FileCommandLoader.js";
 import { McpPromptLoader } from "../../services/McpPromptLoader.js";
+function quoteForShell(value) {
+    const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
+    return `"${escaped}"`;
+}
 /**
  * Hook to define and process slash commands (e.g., /help, /clear).
  */
@@ -28,6 +32,7 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
     }, []);
     const [shellConfirmationRequest, setShellConfirmationRequest] = useState(null);
     const [confirmationRequest, setConfirmationRequest] = useState(null);
+    const [inputRequest, setInputRequest] = useState(null);
     const [quitConfirmationRequest, setQuitConfirmationRequest] = useState(null);
     const [sessionShellAllowlist, setSessionShellAllowlist] = useState(new Set());
     const gitService = useMemo(() => {
@@ -496,6 +501,48 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
                                 }
                                 return await handleSlashCommand(result.originalInvocation.raw, undefined, true);
                             }
+                            case "input_request": {
+                                const { submitted, value } = await new Promise((resolve) => {
+                                    setInputRequest({
+                                        prompt: result.prompt,
+                                        placeholder: result.placeholder,
+                                        onSubmit: (inputValue) => {
+                                            setInputRequest(null);
+                                            resolve({ submitted: true, value: inputValue });
+                                        },
+                                        onCancel: () => {
+                                            setInputRequest(null);
+                                            resolve({ submitted: false, value: "" });
+                                        },
+                                    });
+                                });
+                                if (!submitted) {
+                                    addItem({
+                                        type: MessageType.INFO,
+                                        text: "Operation cancelled.",
+                                    }, Date.now());
+                                    return { type: "handled" };
+                                }
+                                const { command } = result;
+                                let query = command.query ?? "";
+                                const trimmedAnswer = value.trim();
+                                if (command.appendAnswerToQuery && trimmedAnswer) {
+                                    const preamble = command.answerPreamble ?? "Clarifying answers";
+                                    query = `${query}\n\n${preamble}:\n${trimmedAnswer}`;
+                                }
+                                const parts = ["/" + command.name];
+                                if (command.mode) {
+                                    parts.push(command.mode);
+                                }
+                                if (query) {
+                                    parts.push(quoteForShell(query));
+                                }
+                                if (command.extraArgs?.length) {
+                                    parts.push(...command.extraArgs);
+                                }
+                                const raw = parts.join(" ").trim();
+                                return await handleSlashCommand(raw);
+                            }
                             default: {
                                 const unhandled = result;
                                 throw new Error(`Unhandled slash command result: ${unhandled}`);
@@ -568,6 +615,7 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
         setSessionShellAllowlist,
         setIsProcessing,
         setConfirmationRequest,
+        setInputRequest,
         openModelSelectionDialog,
         session.stats,
         loggingController,
@@ -579,6 +627,7 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
         commandContext,
         shellConfirmationRequest,
         confirmationRequest,
+        inputRequest,
         quitConfirmationRequest,
     };
 };

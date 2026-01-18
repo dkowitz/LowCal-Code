@@ -27,6 +27,12 @@ export declare const useSlashCommandProcessor: (config: Config | null, settings:
         prompt: React.ReactNode;
         onConfirm: (confirmed: boolean) => void;
     } | null;
+    inputRequest: {
+        prompt: React.ReactNode;
+        placeholder?: string;
+        onSubmit: (value: string) => void;
+        onCancel: () => void;
+    } | null;
     quitConfirmationRequest: {
         onConfirm: (shouldQuit: boolean, action?: string) => void;
     } | null;

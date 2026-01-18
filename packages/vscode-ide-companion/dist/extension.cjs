@@ -135863,6 +135863,10 @@ Original request:
         return {
           maxResults: 12
         };
+      case "max":
+        return {
+          maxResults: 120
+        };
     }
   }
   emitProgress(updateOutput, message, mode = "append") {
@@ -135898,7 +135902,8 @@ Original request:
     const maxByMode = {
       speed: 4,
       balanced: 6,
-      quality: 8
+      quality: 8,
+      max: 12
     };
     const maxQueries = maxByMode[this.params.mode];
     subQueries = subQueries.slice(0, maxQueries);
@@ -135914,7 +135919,51 @@ Original request:
       subQueries: [{ query: this.params.query }]
     };
   }
-  async buildQueryPlan(signal) {
+  async buildIntentProfile(signal) {
+    const fallback = {
+      intent: this.params.query,
+      constraints: [],
+      assumptions: [],
+      clarifyingQuestions: [],
+      ambiguity: "low"
+    };
+    const geminiClient = this.config.getGeminiClient?.();
+    if (!geminiClient) {
+      return fallback;
+    }
+    const prompt = `
+Analyze the user's research request and summarize intent, constraints, and uncertainties.
+
+Return valid JSON only with this schema:
+{
+  "intent": "Concise statement of what the user ultimately wants",
+  "constraints": ["Any explicit constraints or scope limits"],
+  "assumptions": ["Reasonable assumptions needed to proceed"],
+  "clarifying_questions": ["Questions that would materially change the research scope"],
+  "ambiguity": "low|medium|high"
+}
+
+Keep answers short and specific. If no clarifying questions are needed, return an empty list.
+
+User request:
+${this.params.query}
+`;
+    try {
+      const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+      const raw = await getResponseText2(response) ?? "";
+      const parsed = JSON.parse(this.stripJsonFence(raw || ""));
+      return {
+        intent: (parsed?.intent ?? this.params.query).trim() || this.params.query,
+        constraints: Array.isArray(parsed?.constraints) ? parsed.constraints.map((item) => String(item).trim()).filter(Boolean) : [],
+        assumptions: Array.isArray(parsed?.assumptions) ? parsed.assumptions.map((item) => String(item).trim()).filter(Boolean) : [],
+        clarifyingQuestions: Array.isArray(parsed?.clarifying_questions) ? parsed.clarifying_questions.map((item) => String(item).trim()).filter(Boolean) : [],
+        ambiguity: parsed?.ambiguity === "high" ? "high" : parsed?.ambiguity === "medium" ? "medium" : "low"
+      };
+    } catch (_error) {
+      return fallback;
+    }
+  }
+  async buildQueryPlan(signal, intentProfile) {
     const geminiClient = this.config.getGeminiClient?.();
     if (!geminiClient) {
       return this.buildPlanFallback();
@@ -135922,8 +135971,15 @@ Original request:
     const modeInstructions = {
       speed: "Generate 2-4 precise search queries that cover the essential aspects of the user's request.",
       balanced: "Generate 4-6 targeted search queries covering all major facets of the user's request.",
-      quality: "Generate 6-8 in-depth search queries that exhaustively address every dimension of the user's request."
+      quality: "Generate 6-8 in-depth search queries that exhaustively address every dimension of the user's request.",
+      max: "Generate 10-12 deep, investigative search queries that cover primary, secondary, and emerging dimensions of the user's request."
     };
+    const intentSummary = intentProfile ? [
+      `Intent: ${intentProfile.intent}`,
+      intentProfile.constraints.length ? `Constraints: ${intentProfile.constraints.join("; ")}` : "Constraints: none specified",
+      intentProfile.assumptions.length ? `Assumptions: ${intentProfile.assumptions.join("; ")}` : "Assumptions: none needed",
+      intentProfile.clarifyingQuestions.length ? `Clarifying questions: ${intentProfile.clarifyingQuestions.join("; ")}` : "Clarifying questions: none"
+    ].join("\n") : "";
     const plannerPrompt = `
 You are a research planning assistant. Analyze the user's request, assess its complexity, and produce a structured JSON plan that breaks the request into focused search queries.
 
@@ -135949,6 +136005,10 @@ Respond with valid JSON only, matching this schema:
 }
 
 ${modeInstructions[this.params.mode]}
+
+${intentSummary ? `Intent profile:
+${intentSummary}
+` : ""}
 
 User request:
 ${this.params.query}
@@ -135989,6 +136049,391 @@ ${this.params.query}
           `${baseQuery} expert analysis`,
           `${baseQuery} historical context`
         ];
+      case "max":
+        return [
+          baseQuery,
+          `${baseQuery} recent developments`,
+          `${baseQuery} statistics and data`,
+          `${baseQuery} expert analysis`,
+          `${baseQuery} historical context`,
+          `${baseQuery} risks and opportunities`
+        ];
+    }
+  }
+  buildQueryVariantsForMode(baseQuery, variantLimit) {
+    const variants = this.buildQueryVariants(baseQuery);
+    if (variantLimit && variantLimit > 0) {
+      return variants.slice(0, variantLimit);
+    }
+    return variants;
+  }
+  buildEmergentQueryVariants(baseQuery, variantLimit) {
+    const variants = this.buildQueryVariantsForMode(baseQuery, variantLimit);
+    if (this.params.mode === "max") {
+      return variants.slice(0, 3);
+    }
+    return variants;
+  }
+  buildMaxResearchProfile(plan, intentProfile) {
+    const hasClarifyingAnswers = this.params.query.includes("Clarifying answers:");
+    const wordCount = this.params.query.trim().split(/\s+/u).length;
+    const ambiguity = intentProfile?.ambiguity ?? "medium";
+    const complexityScore = (wordCount >= 24 ? 2 : wordCount >= 14 ? 1 : 0) + (ambiguity === "high" ? 2 : ambiguity === "medium" ? 1 : 0) + (hasClarifyingAnswers ? 1 : 0);
+    const maxSubQueries = complexityScore >= 4 ? 14 : complexityScore >= 2 ? 12 : 10;
+    const maxResults = complexityScore >= 4 ? 80 : complexityScore >= 2 ? 60 : 45;
+    const variantsPerQuery = complexityScore >= 4 ? 5 : complexityScore >= 2 ? 4 : 3;
+    const emergentSlots = complexityScore >= 4 ? 4 : 3;
+    return {
+      maxSubQueries,
+      maxResults,
+      variantsPerQuery,
+      emergentSlots
+    };
+  }
+  buildReportHeader(plan) {
+    return [
+      "# Research Report",
+      "",
+      `- Query: ${this.params.query}`,
+      `- Primary topic: ${plan.primaryTopic}`,
+      `- Generated: ${(/* @__PURE__ */ new Date()).toISOString()}`,
+      "",
+      "---",
+      ""
+    ].join("\n");
+  }
+  extractCandidateText(result) {
+    const candidateParts = (result?.response?.candidates ?? result?.candidates ?? [])?.[0]?.content?.parts ?? [];
+    return candidateParts.map((part) => {
+      if (typeof part === "string") {
+        return part;
+      }
+      if (part && typeof part === "object" && "text" in part && typeof part.text === "string") {
+        return part.text ?? "";
+      }
+      return "";
+    }).join("");
+  }
+  dedupeSubQueries(subQueries) {
+    const seen = /* @__PURE__ */ new Set();
+    const deduped = [];
+    for (const item of subQueries) {
+      const normalized = item.query.trim().toLowerCase();
+      if (!normalized || seen.has(normalized)) {
+        continue;
+      }
+      seen.add(normalized);
+      deduped.push(item);
+    }
+    return deduped;
+  }
+  normalizeReportSpec(raw) {
+    const defaultSpec = {
+      summary: "Comprehensive research report.",
+      targetWordCount: 2e3,
+      sections: [
+        { title: "Executive Summary", focus: "Key findings and context." },
+        { title: "Market Dynamics", focus: "Core mechanisms and structure." },
+        { title: "Emergent Issues", focus: "New risks, opportunities, and shifts." },
+        { title: "Counterpoints and Uncertainties", focus: "Competing views and limitations." },
+        { title: "Open Questions", focus: "Key unknowns and next steps." }
+      ]
+    };
+    if (!raw || typeof raw !== "object") {
+      return defaultSpec;
+    }
+    const candidate = raw;
+    const summary = typeof candidate.summary === "string" && candidate.summary.trim().length > 0 ? candidate.summary.trim() : defaultSpec.summary;
+    const targetWordCount = Number(candidate.target_word_count);
+    const safeTarget = Number.isFinite(targetWordCount) && targetWordCount > 0 ? Math.round(targetWordCount) : defaultSpec.targetWordCount;
+    const sections = Array.isArray(candidate.sections) ? candidate.sections.map((section) => {
+      const typed = section;
+      return {
+        title: typeof typed.title === "string" ? typed.title.trim() : "",
+        focus: typeof typed.focus === "string" ? typed.focus.trim() : ""
+      };
+    }).filter((section) => section.title && section.focus) : [];
+    return {
+      summary,
+      targetWordCount: safeTarget,
+      sections: sections.length > 0 ? sections : defaultSpec.sections
+    };
+  }
+  async buildReportSpec(plan, intentProfile, evidenceHighlights, signal) {
+    const geminiClient = this.config.getGeminiClient?.();
+    if (!geminiClient) {
+      return this.normalizeReportSpec(null);
+    }
+    const intentBlock = intentProfile ? [
+      `Intent: ${intentProfile.intent}`,
+      intentProfile.constraints.length ? `Constraints: ${intentProfile.constraints.join("; ")}` : "Constraints: none specified",
+      intentProfile.assumptions.length ? `Assumptions: ${intentProfile.assumptions.join("; ")}` : "Assumptions: none needed",
+      intentProfile.clarifyingQuestions.length ? `Clarifying questions: ${intentProfile.clarifyingQuestions.join("; ")}` : "Clarifying questions: none"
+    ].join("\n") : "Intent: not available";
+    const prompt = `
+You are an investigative editor. Draft a report blueprint based on the query complexity and evidence breadth.
+
+Return valid JSON only with this schema:
+{
+  "summary": "One-line summary of report focus",
+  "target_word_count": 1800,
+  "sections": [
+    { "title": "Section title", "focus": "What this section should cover" }
+  ]
+}
+
+Guidelines:
+- Choose report length based on complexity and evidence density.
+- Include 5-9 sections max; include Executive Summary and Open Questions.
+- Ensure sections reflect emergent issues, counterpoints, and implications when relevant.
+
+Primary topic: ${plan.primaryTopic}
+Research objectives:
+${plan.subQueries.map((item, index) => `${index + 1}. ${item.query}`).join("\n")}
+
+${intentBlock}
+
+Evidence highlights:
+${evidenceHighlights.slice(0, 30).map((item) => `- ${item}`).join("\n")}
+`;
+    try {
+      const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+      const raw = await getResponseText2(response) ?? this.extractCandidateText(response);
+      const parsed = JSON.parse(this.stripJsonFence(raw || ""));
+      return this.normalizeReportSpec(parsed);
+    } catch (_error) {
+      return this.normalizeReportSpec(null);
+    }
+  }
+  async generateReportSection(section, reportSpec, plan, intentProfile, evidenceHighlights, subtopicBriefs, sourceCatalogForPrompt, signal, avoidPoints) {
+    const geminiClient = this.config.getGeminiClient?.();
+    if (!geminiClient) {
+      return `## ${section.title}
+
+(LLM unavailable for report generation.)`;
+    }
+    const intentBlock = intentProfile ? [
+      `Intent: ${intentProfile.intent}`,
+      intentProfile.constraints.length ? `Constraints: ${intentProfile.constraints.join("; ")}` : "Constraints: none specified",
+      intentProfile.assumptions.length ? `Assumptions: ${intentProfile.assumptions.join("; ")}` : "Assumptions: none needed",
+      intentProfile.clarifyingQuestions.length ? `Clarifying questions: ${intentProfile.clarifyingQuestions.join("; ")}` : "Clarifying questions: none"
+    ].join("\n") : "";
+    const perSectionTarget = Math.max(1, Math.round(reportSpec.targetWordCount / reportSpec.sections.length));
+    const avoidBlock = avoidPoints && avoidPoints.length > 0 ? avoidPoints.map((item) => `- ${item}`).join("\n") : "";
+    const prompt = `
+You are a senior investigative analyst. Write the section below as part of a larger report.
+
+Section title: ${section.title}
+Section focus: ${section.focus}
+Target length: ~${perSectionTarget} words (adjust as needed based on importance).
+
+Primary topic: ${plan.primaryTopic}
+${intentBlock ? `Intent and constraints:
+${intentBlock}
+` : ""}
+
+Subtopic briefs:
+${subtopicBriefs || "No subtopic briefs available."}
+
+Evidence highlights:
+${evidenceHighlights.slice(0, 40).map((item) => `- ${item}`).join("\n")}
+
+${avoidBlock ? `Already covered (avoid repeating):
+${avoidBlock}
+` : ""}
+
+Available Source Catalog (use these numeric identifiers in citations):
+${sourceCatalogForPrompt}
+
+Writing guidelines:
+- Use clear paragraphs with an H2 markdown header (## ${section.title}).
+- Cite every meaningful claim with inline [number] citations.
+- Do not add a Sources/References section.
+- Maintain an analytical, neutral tone.
+- If evidence supports additional depth, exceed the target length rather than truncating.
+- Incorporate a broad spread of sources; avoid over-relying on a single source.
+- Do not return an outline or bullet-only response; write full sentences and paragraphs.
+- Do not restate points listed in the "Already covered" section; focus on new material.
+- Favor a narrative flow that reads like a magazine feature, not a bullet list.
+`;
+    const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+    const responseText = await getResponseText2(result) ?? this.extractCandidateText(result);
+    return responseText.trim();
+  }
+  async polishMaxReport(draft, plan, intentProfile, sourceCatalogForPrompt, signal) {
+    const geminiClient = this.config.getGeminiClient?.();
+    if (!geminiClient) {
+      return draft;
+    }
+    const intentBlock = intentProfile ? [
+      `Intent: ${intentProfile.intent}`,
+      intentProfile.constraints.length ? `Constraints: ${intentProfile.constraints.join("; ")}` : "Constraints: none specified"
+    ].join("\n") : "";
+    const prompt = `
+You are an investigative editor. Rewrite the draft into a cohesive, non-repetitive narrative report with an engaging, reader-forward voice.
+
+Primary topic: ${plan.primaryTopic}
+${intentBlock ? `Intent and constraints:
+${intentBlock}
+` : ""}
+
+Draft report:
+${draft}
+
+Available Source Catalog (use these numeric identifiers in citations):
+${sourceCatalogForPrompt}
+
+Editing rules:
+- Preserve all valid citations; do not drop or invent citations.
+- Remove repetition and consolidate overlapping points.
+- Ensure smooth transitions and a clear narrative arc.
+- Keep section headers, but merge sections that repeat each other.
+- Do not add a Sources/References section.
+- Favor a magazine-feature tone: confident, clear, and subtly conversational without being informal.
+`;
+    const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+    const responseText = await getResponseText2(result) ?? this.extractCandidateText(result);
+    return responseText.trim() || draft;
+  }
+  async dedupeMaxReport(polished, plan, sourceCatalogForPrompt, signal, minRetentionRatio = 0.85) {
+    const geminiClient = this.config.getGeminiClient?.();
+    if (!geminiClient) {
+      return polished;
+    }
+    const wordCount = (text) => text.trim().split(/\s+/u).filter(Boolean).length;
+    const beforeCount = wordCount(polished);
+    const prompt = `
+You are a meticulous editor. Remove near-duplicate sentences or paragraphs while preserving meaning and citations.
+
+Primary topic: ${plan.primaryTopic}
+
+Draft report:
+${polished}
+
+Available Source Catalog (use these numeric identifiers in citations):
+${sourceCatalogForPrompt}
+
+Rules:
+- Preserve citations; do not invent or drop citations.
+- Remove redundant sentences and repeated facts.
+- Keep section headers intact.
+- Do not add a Sources/References section.
+`;
+    const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+    const responseText = await getResponseText2(result) ?? this.extractCandidateText(result);
+    const candidate = responseText.trim();
+    if (!candidate) {
+      return polished;
+    }
+    const afterCount = wordCount(candidate);
+    if (beforeCount > 0 && afterCount / beforeCount < minRetentionRatio) {
+      return polished;
+    }
+    return candidate;
+  }
+  async addSectionBridges(draft, plan, signal) {
+    const geminiClient = this.config.getGeminiClient?.();
+    if (!geminiClient) {
+      return draft;
+    }
+    const sections = draft.split(/\n(?=##\s+)/g);
+    if (sections.length < 3) {
+      return draft;
+    }
+    const intro = sections[0]?.trim() ?? "";
+    const bodySections = sections.slice(1);
+    const bridged = [intro];
+    for (let i = 0; i < bodySections.length; i++) {
+      const current = bodySections[i]?.trim() ?? "";
+      if (!current) {
+        continue;
+      }
+      bridged.push(current);
+      if (i < bodySections.length - 1) {
+        const next = bodySections[i + 1]?.trim() ?? "";
+        if (!next) {
+          continue;
+        }
+        const prompt = `
+Write a 1-2 sentence transition that bridges the end of the current section into the next section.
+Keep it analytical, reader-forward, and avoid repeating facts.
+
+Primary topic: ${plan.primaryTopic}
+
+Current section:
+${current}
+
+Next section:
+${next}
+`;
+        const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+        const responseText = await getResponseText2(result) ?? this.extractCandidateText(result);
+        const bridge = responseText.trim();
+        if (bridge) {
+          bridged.push(bridge);
+        }
+      }
+    }
+    return bridged.filter(Boolean).join("\n\n");
+  }
+  buildMaxFallbackReport(plan, intentProfile, evidenceHighlights, subtopicBriefs) {
+    const intro = intentProfile?.intent ? `This report synthesizes the available evidence to address the intent: ${intentProfile.intent}.` : "This report synthesizes the available evidence to address the research request.";
+    const highlights = evidenceHighlights.slice(0, 18);
+    const highlightParagraphs = highlights.length ? highlights.map((item) => `- ${item}`).join("\n") : "- Evidence summaries were collected but could not be fully synthesized.";
+    return [
+      "## Executive Summary",
+      "",
+      intro,
+      "",
+      "## Evidence Highlights",
+      highlightParagraphs,
+      "",
+      subtopicBriefs ? "## Subtopic Briefs\n\n" + subtopicBriefs : "",
+      "",
+      "## Open Questions",
+      "- Where additional primary sources would materially improve confidence.",
+      "- Which subtopics should be expanded or narrowed based on user priorities."
+    ].filter(Boolean).join("\n");
+  }
+  async discoverEmergentQueries(plan, evidence, signal) {
+    const geminiClient = this.config.getGeminiClient?.();
+    if (!geminiClient) {
+      return [];
+    }
+    const prompt = `
+You are a research strategist. Based on the evidence collected so far, propose additional focused web search queries that would deepen the investigation.
+
+Guidelines:
+- Propose up to 4 new queries.
+- Focus on emergent issues, risks, second-order effects, and missing perspectives.
+- Avoid duplicating existing queries.
+- Provide a short rationale for each.
+
+Primary topic: ${plan.primaryTopic}
+Existing queries:
+${plan.subQueries.map((item, index) => `${index + 1}. ${item.query}`).join("\n")}
+
+Collected evidence (summaries and highlights):
+${evidence}
+
+Respond with valid JSON only:
+{
+  "sub_queries": [
+    { "query": "...", "rationale": "..." }
+  ]
+}
+`;
+    try {
+      const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
+      const raw = await getResponseText2(response) ?? "";
+      const parsed = JSON.parse(this.stripJsonFence(raw || ""));
+      const subQueries = Array.isArray(parsed?.sub_queries) ? parsed.sub_queries.map((item) => ({
+        query: (item?.query ?? "").trim(),
+        rationale: (item?.rationale ?? "").trim()
+      })).filter((item) => item.query.length > 0) : [];
+      return this.dedupeSubQueries(subQueries);
+    } catch (_error) {
+      return [];
     }
   }
   formatToolName(toolName) {
@@ -136025,7 +136470,7 @@ ${this.params.query}
     if (sources.length === 0) {
       return "No external sources were captured during search.";
     }
-    const maxForPrompt = 40;
+    const maxForPrompt = this.params.mode === "max" ? 160 : 40;
     return sources.slice(0, maxForPrompt).map((source, index) => `[${index + 1}] ${this.truncate(source.title || source.url, 140)} \u2014 ${source.url}`).join("\n");
   }
   stripGeneratedSourceSections(content) {
@@ -136170,23 +136615,14 @@ Be selective - only keep sources that truly add value to research on "${topic}".
     const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
     const filename = `${safeSlug}-${timestamp}.md`;
     const filepath = path22.join(reportsDir, filename);
-    const header = `# Research Report
-
-- Query: ${this.params.query}
-- Primary topic: ${plan.primaryTopic}
-- Generated: ${(/* @__PURE__ */ new Date()).toISOString()}
-
----
-
-`;
-    await fs15.promises.writeFile(filepath, `${header}${content}`, "utf8");
+    await fs15.promises.writeFile(filepath, content, "utf8");
     return path22.relative(process.cwd(), filepath);
   }
-  resolveSearchTools() {
+  resolveSearchTools(toolRegistryOverride) {
     const preferredOrder = this.params.searchTools && this.params.searchTools.length > 0 ? this.params.searchTools : [ToolNames.WEB_SEARCH, ToolNames.SEARXNG_SEARCH];
     const uniqueOrdered = [];
     const seen = /* @__PURE__ */ new Set();
-    const toolRegistry = this.config.getToolRegistry?.();
+    const toolRegistry = toolRegistryOverride ?? this.config.getToolRegistry?.();
     for (const toolName of preferredOrder) {
       if (toolName !== ToolNames.WEB_SEARCH && toolName !== ToolNames.SEARXNG_SEARCH) {
         continue;
@@ -136211,8 +136647,19 @@ Be selective - only keep sources that truly add value to research on "${topic}".
   async execute(signal, updateOutput) {
     try {
       this.ensureWebFetchAvailable();
+      const diagnostics = [];
+      const toolRegistry = this.config.getToolRegistry?.();
+      const hasWebSearch = Boolean(toolRegistry?.getTool(ToolNames.WEB_SEARCH));
+      const hasSearxngSearch = Boolean(toolRegistry?.getTool(ToolNames.SEARXNG_SEARCH));
+      const hasWebFetch = Boolean(toolRegistry?.getTool(ToolNames.WEB_FETCH));
+      diagnostics.push(`Tool availability: web_search=${hasWebSearch ? "yes" : "no"}, searxng_search=${hasSearxngSearch ? "yes" : "no"}, web_fetch=${hasWebFetch ? "yes" : "no"}`);
       this.emitProgress(updateOutput, `\u2139\u2699\uFE0F Running ${this.params.mode} research workflow\u2026`, "append");
-      const plan = await this.buildQueryPlan(signal);
+      const intentProfile = this.params.mode === "max" ? await this.buildIntentProfile(signal) : null;
+      const plan = await this.buildQueryPlan(signal, intentProfile ?? void 0);
+      const maxProfile = this.params.mode === "max" ? this.buildMaxResearchProfile(plan, intentProfile) : null;
+      if (maxProfile) {
+        plan.subQueries = plan.subQueries.slice(0, maxProfile.maxSubQueries);
+      }
       this.emitProgress(updateOutput, `\u2139\u{1F9ED} Query plan established with ${plan.subQueries.length} focus area(s).
    Primary topic: ${plan.primaryTopic}`, "append");
       const normalizedSubQueries = [];
@@ -136220,14 +136667,21 @@ Be selective - only keep sources that truly add value to research on "${topic}".
         const normalized = await this.rephraseQuery(sub.query, signal);
         normalizedSubQueries.push({ base: normalized, rationale: sub.rationale });
       }
-      const { maxResults } = this.getSearchParameters(this.params.mode);
-      const searchTools = this.resolveSearchTools();
-      if (searchTools.length === 0) {
+      const { maxResults: defaultMaxResults } = this.getSearchParameters(this.params.mode);
+      const maxResults = maxProfile?.maxResults ?? defaultMaxResults;
+      diagnostics.push(`Search tools requested: ${this.params.searchTools && this.params.searchTools.length > 0 ? this.params.searchTools.join(", ") : "default"}`);
+      if (maxProfile) {
+        diagnostics.push(`Max profile: sub_queries=${maxProfile.maxSubQueries}, max_results=${maxProfile.maxResults}, variants=${maxProfile.variantsPerQuery}, emergent_slots=${maxProfile.emergentSlots}`);
+      }
+      const resolvedSearchTools = this.resolveSearchTools(toolRegistry);
+      if (resolvedSearchTools.length === 0) {
         throw new Error("No web search tools are available. Enable web_search or searxng_search via /toolset.");
       }
+      const searchTools = resolvedSearchTools;
+      diagnostics.push(`Search tool order: ${searchTools.map((tool) => this.formatToolName(tool)).join(" -> ")}`);
       const searchPlan = [];
       normalizedSubQueries.forEach((sub, subIndex) => {
-        const variants = this.buildQueryVariants(sub.base);
+        const variants = this.buildQueryVariantsForMode(sub.base, maxProfile?.variantsPerQuery);
         variants.forEach((variant) => {
           const toolName = searchTools[searchPlan.length % searchTools.length];
           searchPlan.push({
@@ -136238,10 +136692,13 @@ Be selective - only keep sources that truly add value to research on "${topic}".
           });
         });
       });
+      diagnostics.push(`Initial search plan size: ${searchPlan.length}`);
       this.emitProgress(updateOutput, `\u2139\u{1F504} Executing ${searchPlan.length} targeted search(es) across ${searchTools.map((tool) => this.formatToolName(tool)).join(" + ")}`, "append");
       const searchResults = [];
+      const searchResultsBySubIndex = [];
       const sources = [];
       const seenUrls = /* @__PURE__ */ new Set();
+      const sourceSubtopics = /* @__PURE__ */ new Map();
       const toolUsageCounts = /* @__PURE__ */ new Map();
       for (let i = 0; i < searchPlan.length; i++) {
         const { query, toolName, subIndex, rationale } = searchPlan[i];
@@ -136251,18 +136708,26 @@ Be selective - only keep sources that truly add value to research on "${topic}".
    \u21B3 ${this.truncate(rationale, 90)}` : ""}`, "replace");
         const tool = toolName === ToolNames.WEB_SEARCH ? new WebSearchTool(this.config) : new SearXNGSearchTool(this.config);
         const invocation = tool.build({ query });
-        const result2 = await invocation.execute(signal);
+        const result = await invocation.execute(signal);
         toolUsageCounts.set(toolName, (toolUsageCounts.get(toolName) ?? 0) + 1);
-        const summaryText = partToString(result2.llmContent);
+        const summaryText = partToString(result.llmContent);
         if (summaryText) {
-          searchResults.push(summaryText.replace(/\s+/g, " "));
-          this.emitProgress(updateOutput, `\u{1F4CC} ${label} highlight: ${this.truncate(summaryText.replace(/\s+/g, " "), 160)}`, "replace");
+          const normalizedSummary = summaryText.replace(/\s+/g, " ");
+          searchResults.push(normalizedSummary);
+          if (!searchResultsBySubIndex[subIndex]) {
+            searchResultsBySubIndex[subIndex] = [];
+          }
+          searchResultsBySubIndex[subIndex].push(normalizedSummary);
+          this.emitProgress(updateOutput, `\u{1F4CC} ${label} highlight: ${this.truncate(normalizedSummary, 160)}`, "replace");
         }
         const newlyAdded = [];
-        for (const source of result2.sources || []) {
+        for (const source of result.sources || []) {
           if (!source.url) {
             continue;
           }
+          const bucket = sourceSubtopics.get(source.url) ?? /* @__PURE__ */ new Set();
+          bucket.add(subIndex);
+          sourceSubtopics.set(source.url, bucket);
           if (seenUrls.has(source.url)) {
             continue;
           }
@@ -136277,6 +136742,102 @@ Be selective - only keep sources that truly add value to research on "${topic}".
         const summaryLine = newlyAdded.length > 0 ? `\u2714 ${label} completed \u2013 ${newlyAdded.length} new source(s) added.` : `\u2714 ${label} completed \u2013 no new unique sources found.`;
         this.emitProgress(updateOutput, summaryLine, "append");
       }
+      let emergentSearchCount = 0;
+      if (this.params.mode === "max") {
+        const maxTotalSubQueries = maxProfile?.maxSubQueries ?? 16;
+        const emergentSlots = maxProfile?.emergentSlots ?? 4;
+        const remainingSlots = Math.max(0, Math.min(emergentSlots, maxTotalSubQueries - plan.subQueries.length));
+        const evidenceForEmergent = searchResults.slice(0, 30).map((item) => this.truncate(item, 240)).join("\n");
+        if (remainingSlots > 0 && evidenceForEmergent.trim().length > 0) {
+          this.emitProgress(updateOutput, "\u2139\u{1F9E9} Scanning for emergent subtopics to deepen the investigation\u2026", "append");
+          const emergentCandidates = await this.discoverEmergentQueries(plan, evidenceForEmergent, signal);
+          diagnostics.push(`Emergent queries suggested: ${emergentCandidates.length}`);
+          const emergentSubQueries = emergentCandidates.slice(0, remainingSlots);
+          if (emergentSubQueries.length > 0) {
+            const merged = this.dedupeSubQueries([
+              ...plan.subQueries,
+              ...emergentSubQueries
+            ]).slice(0, maxTotalSubQueries);
+            const initialCount = plan.subQueries.length;
+            plan.subQueries = merged;
+            const subQueryIndexByQuery = /* @__PURE__ */ new Map();
+            plan.subQueries.forEach((sub, index) => {
+              subQueryIndexByQuery.set(sub.query.trim().toLowerCase(), index);
+            });
+            this.emitProgress(updateOutput, `\u2139\u{1F50D} Added ${plan.subQueries.length - initialCount} emergent focus area(s) for deeper coverage.`, "append");
+            const normalizedEmergent = [];
+            for (const sub of emergentSubQueries) {
+              const normalized = await this.rephraseQuery(sub.query, signal);
+              normalizedEmergent.push({
+                base: normalized,
+                rationale: sub.rationale,
+                originalQuery: sub.query
+              });
+            }
+            const emergentSearchPlan = [];
+            normalizedEmergent.forEach((sub, subIndex) => {
+              const variants = this.buildEmergentQueryVariants(sub.base, maxProfile?.variantsPerQuery);
+              const planIndex = subQueryIndexByQuery.get(sub.originalQuery.trim().toLowerCase()) ?? initialCount + subIndex;
+              variants.forEach((variant) => {
+                const toolName = searchTools[emergentSearchPlan.length % searchTools.length];
+                emergentSearchPlan.push({
+                  query: variant,
+                  toolName,
+                  subIndex: planIndex,
+                  rationale: sub.rationale
+                });
+              });
+            });
+            if (emergentSearchPlan.length > 0) {
+              this.emitProgress(updateOutput, `\u2139\u{1F504} Executing ${emergentSearchPlan.length} emergent search(es) to fill coverage gaps.`, "append");
+              emergentSearchCount = emergentSearchPlan.length;
+            }
+            for (let i = 0; i < emergentSearchPlan.length; i++) {
+              const { query, toolName, subIndex, rationale } = emergentSearchPlan[i];
+              const label = this.formatToolName(toolName);
+              const focusLabel = plan.subQueries[subIndex]?.query ?? query;
+              this.emitProgress(updateOutput, `\u{1F50E} [${i + 1}/${emergentSearchPlan.length}] ${label} \u2192 ${this.truncate(query, 90)} (emergent focus ${subIndex + 1}/${plan.subQueries.length}: ${this.truncate(focusLabel, 70)})${rationale ? `
+   \u21B3 ${this.truncate(rationale, 90)}` : ""}`, "replace");
+              const tool = toolName === ToolNames.WEB_SEARCH ? new WebSearchTool(this.config) : new SearXNGSearchTool(this.config);
+              const invocation = tool.build({ query });
+              const result = await invocation.execute(signal);
+              toolUsageCounts.set(toolName, (toolUsageCounts.get(toolName) ?? 0) + 1);
+              const summaryText = partToString(result.llmContent);
+              if (summaryText) {
+                const normalizedSummary = summaryText.replace(/\s+/g, " ");
+                searchResults.push(normalizedSummary);
+                if (!searchResultsBySubIndex[subIndex]) {
+                  searchResultsBySubIndex[subIndex] = [];
+                }
+                searchResultsBySubIndex[subIndex].push(normalizedSummary);
+                this.emitProgress(updateOutput, `\u{1F4CC} ${label} highlight: ${this.truncate(normalizedSummary, 160)}`, "replace");
+              }
+              const newlyAdded = [];
+              for (const source of result.sources || []) {
+                if (!source.url) {
+                  continue;
+                }
+                const bucket = sourceSubtopics.get(source.url) ?? /* @__PURE__ */ new Set();
+                bucket.add(subIndex);
+                sourceSubtopics.set(source.url, bucket);
+                if (seenUrls.has(source.url)) {
+                  continue;
+                }
+                seenUrls.add(source.url);
+                const normalized = {
+                  title: source.title ?? "",
+                  url: source.url
+                };
+                sources.push(normalized);
+                newlyAdded.push(normalized);
+              }
+              const summaryLine = newlyAdded.length > 0 ? `\u2714 ${label} completed \u2013 ${newlyAdded.length} new source(s) added.` : `\u2714 ${label} completed \u2013 no new unique sources found.`;
+              this.emitProgress(updateOutput, summaryLine, "append");
+            }
+          }
+        }
+      }
+      diagnostics.push(`Emergent searches executed: ${emergentSearchCount}`);
       if (sources.length === 0) {
         this.emitProgress(updateOutput, "\u26A0\uFE0F No sources were discovered during web search.", "append");
       } else {
@@ -136285,7 +136846,9 @@ Be selective - only keep sources that truly add value to research on "${topic}".
       const fetchTool = new WebFetchTool(this.config);
       const processedDocuments = [];
       const documentSnippets = [];
+      const documentSnippetsBySubIndex = [];
       const sourcesForProcessing = sources.slice(0, Math.min(maxResults, sources.length));
+      diagnostics.push(`Sources collected: ${sources.length} | Sources summarized: ${sourcesForProcessing.length}`);
       if (sourcesForProcessing.length > 0) {
         this.emitProgress(updateOutput, `\u2139\u{1F4F0} Summarizing top ${sourcesForProcessing.length} source(s) for detailed insights.`, "append");
       }
@@ -136301,7 +136864,17 @@ Be selective - only keep sources that truly add value to research on "${topic}".
           const fetchText = partToString(fetchResult.llmContent || "");
           if (fetchText.trim()) {
             processedDocuments.push(fetchText);
-            documentSnippets.push(fetchText.replace(/\s+/g, " "));
+            const normalizedText = fetchText.replace(/\s+/g, " ");
+            documentSnippets.push(normalizedText);
+            const subtopicIndices = sourceSubtopics.get(source.url);
+            if (subtopicIndices) {
+              for (const index of subtopicIndices) {
+                if (!documentSnippetsBySubIndex[index]) {
+                  documentSnippetsBySubIndex[index] = [];
+                }
+                documentSnippetsBySubIndex[index].push(normalizedText);
+              }
+            }
             this.emitProgress(updateOutput, `\u2705 Captured insights from ${this.truncate(source.title || source.url, 100)}`, "replace");
           } else {
             this.emitProgress(updateOutput, `\u2139 No summarizable content returned from ${this.truncate(source.title || source.url, 100)}.`, "replace");
@@ -136312,13 +136885,32 @@ Be selective - only keep sources that truly add value to research on "${topic}".
         }
         this.emitProgress(updateOutput, `\u2714 Summarized ${this.truncate(source.title || source.url, 100)}`, "append");
       }
-      const combinedContent = [
-        ...searchResults,
-        ...processedDocuments
-      ].join("\n\n---\n\n");
+      const combinedContent = this.params.mode === "max" ? "" : [...searchResults, ...processedDocuments].join("\n\n---\n\n");
+      const subtopicBriefs = this.params.mode === "max" ? plan.subQueries.map((sub, index) => {
+        const highlights = [
+          ...searchResultsBySubIndex[index] ?? [],
+          ...documentSnippetsBySubIndex[index] ?? []
+        ];
+        const keyPoints = this.extractKeyPoints(highlights, this.params.mode === "max" ? 6 : 4);
+        if (keyPoints.length === 0) {
+          return "";
+        }
+        return [
+          `### ${sub.query}`,
+          ...keyPoints.map((point) => `- ${point}`)
+        ].join("\n");
+      }).filter(Boolean).join("\n\n") : "";
+      const evidenceHighlights = this.extractKeyPoints([...searchResults, ...documentSnippets], this.params.mode === "max" ? 90 : 24);
+      diagnostics.push(`Evidence highlights: ${evidenceHighlights.length}`);
       const sourceCatalogForPrompt = this.buildSourceCatalogForPrompt(sources);
       const planSummary = plan.subQueries.map((sub, index) => `${index + 1}. ${sub.query}${sub.rationale ? ` \u2014 ${sub.rationale}` : ""}`).join("\n");
-      const narrativeGuidance = this.params.mode === "quality" ? "Produce a long-form feature article (8+ robust paragraphs) that reads like a magazine investigation." : this.params.mode === "balanced" ? "Produce a cohesive narrative article (6-8 paragraphs) that balances depth with readability." : "Produce a concise narrative briefing (4-6 paragraphs) that still delivers context and insight.";
+      const intentBlock = intentProfile ? [
+        `Intent: ${intentProfile.intent}`,
+        intentProfile.constraints.length ? `Constraints: ${intentProfile.constraints.join("; ")}` : "Constraints: none specified",
+        intentProfile.assumptions.length ? `Assumptions: ${intentProfile.assumptions.join("; ")}` : "Assumptions: none needed",
+        intentProfile.clarifyingQuestions.length ? `Clarifying questions (for the user): ${intentProfile.clarifyingQuestions.join("; ")}` : "Clarifying questions: none"
+      ].join("\n") : "";
+      const narrativeGuidance = this.params.mode === "quality" ? "Produce a long-form feature article (8-10 robust paragraphs) that reads like a magazine investigation." : this.params.mode === "balanced" ? "Produce a cohesive narrative article (6-8 paragraphs) that balances depth with readability." : "Produce a concise narrative briefing (4-6 paragraphs) that still delivers context and insight.";
       const finalPrompt = `
 You are an investigative research writer. Use the supplied plan and evidence to craft a cohesive narrative report.
 
@@ -136326,6 +136918,14 @@ Primary Topic: ${plan.primaryTopic}
 
 Research Objectives:
 ${planSummary}
+
+${intentBlock ? `Intent & constraints:
+${intentBlock}
+` : ""}
+
+${subtopicBriefs ? `Subtopic evidence briefs (for depth and coverage):
+${subtopicBriefs}
+` : ""}
 
 Synthesized Evidence (search highlights, document summaries, quantitative snippets):
 ${combinedContent}
@@ -136335,6 +136935,7 @@ ${sourceCatalogForPrompt}
 
 Writing Guidelines:
 - ${narrativeGuidance}
+- Use section headers only when they improve clarity.
 - Write primarily in flowing paragraphs; reserve bullet or table structures only for dense data recaps.
 - Open with an engaging overview, develop the story with clear transitions, and close with implications or recommended next steps.
 - Integrate data points, historical context, and qualitative insights, explaining their significance.
@@ -136344,22 +136945,79 @@ Writing Guidelines:
 - Do not add a Sources/References section; one will be appended automatically.
 `;
       this.emitProgress(updateOutput, "\u2139\u{1F9E0} Synthesizing final report\u2026", "append");
-      const geminiClient = this.config.getGeminiClient();
-      const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: finalPrompt }] }], {}, signal);
-      const candidateParts = (result.response?.candidates ?? result.candidates ?? [])?.[0]?.content?.parts ?? [];
-      const candidateText = candidateParts.map((part) => {
-        if (typeof part === "string") {
-          return part;
+      let resultText = "";
+      let fallbackReason = "";
+      if (this.params.mode === "max") {
+        this.emitProgress(updateOutput, "\u2139\u{1F4D0} Building a dynamic report blueprint\u2026", "append");
+        const reportSpec = await this.buildReportSpec(plan, intentProfile ?? null, evidenceHighlights, signal);
+        diagnostics.push(`Report spec: target_words=${reportSpec.targetWordCount}, sections=${reportSpec.sections.length}`);
+        if (maxProfile) {
+          diagnostics.push(`Report pipeline: multi-section synthesis with redundancy suppression`);
         }
-        if (part && typeof part === "object" && "text" in part && typeof part.text === "string") {
-          return part.text ?? "";
+        const sectionOutputs = [];
+        const coveredPoints = [];
+        for (const section of reportSpec.sections) {
+          this.emitProgress(updateOutput, `\u270D\uFE0F Drafting section: ${section.title}`, "replace");
+          const sectionText = await this.generateReportSection(section, reportSpec, plan, intentProfile ?? null, evidenceHighlights, subtopicBriefs, sourceCatalogForPrompt, signal, coveredPoints.slice(0, 16));
+          if (sectionText.trim()) {
+            sectionOutputs.push(sectionText.trim());
+            const newPoints = this.extractKeyPoints([sectionText], 6);
+            newPoints.forEach((point) => {
+              if (!coveredPoints.includes(point)) {
+                coveredPoints.push(point);
+              }
+            });
+          }
         }
-        return "";
-      }).join("");
-      const responseText = await getResponseText2(result) ?? candidateText;
-      const resultText = responseText && responseText.trim().length > 0 ? responseText : candidateText;
-      const fallbackSummary = this.buildFallbackReport(this.params.mode, searchPlan.map((run) => run.query), sources, searchResults, documentSnippets);
+        const draftReport = sectionOutputs.join("\n\n");
+        if (draftReport.trim()) {
+          this.emitProgress(updateOutput, "\u{1F9E9} Polishing narrative flow and removing repetition\u2026", "append");
+          resultText = await this.polishMaxReport(draftReport, plan, intentProfile ?? null, sourceCatalogForPrompt, signal);
+          diagnostics.push("Report polish: applied (narrative)");
+          if (resultText.trim()) {
+            this.emitProgress(updateOutput, "\u{1F50E} Removing residual repetition\u2026", "append");
+            resultText = await this.dedupeMaxReport(resultText, plan, sourceCatalogForPrompt, signal);
+            diagnostics.push("Report polish: applied (dedupe)");
+            if (resultText.trim()) {
+              this.emitProgress(updateOutput, "\u{1F9ED} Smoothing transitions between sections\u2026", "append");
+              resultText = await this.addSectionBridges(resultText, plan, signal);
+              diagnostics.push("Report polish: applied (bridges)");
+            }
+          }
+        } else {
+          resultText = draftReport;
+          diagnostics.push("Report polish: skipped (empty draft)");
+        }
+        if (!resultText.trim()) {
+          fallbackReason = "Section generation returned empty output.";
+        }
+      } else {
+        const geminiClient = this.config.getGeminiClient();
+        const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: finalPrompt }] }], {}, signal);
+        const candidateParts = (result.response?.candidates ?? result.candidates ?? [])?.[0]?.content?.parts ?? [];
+        const candidateText = candidateParts.map((part) => {
+          if (typeof part === "string") {
+            return part;
+          }
+          if (part && typeof part === "object" && "text" in part && typeof part.text === "string") {
+            return part.text ?? "";
+          }
+          return "";
+        }).join("");
+        const responseText = await getResponseText2(result) ?? candidateText;
+        resultText = responseText && responseText.trim().length > 0 ? responseText : candidateText;
+        if (!resultText.trim()) {
+          fallbackReason = "LLM returned empty response.";
+        }
+      }
+      const fallbackSummary = this.params.mode === "max" ? this.buildMaxFallbackReport(plan, intentProfile ?? null, evidenceHighlights, subtopicBriefs) : this.buildFallbackReport(this.params.mode, searchPlan.map((run) => run.query), sources, searchResults, documentSnippets);
       const finalContent = resultText && resultText.trim().length > 0 ? resultText : fallbackSummary;
+      if (!resultText.trim()) {
+        diagnostics.push("Report generation: fallback");
+        diagnostics.push(`Fallback reason: ${fallbackReason || "Unknown"}`);
+      } else {
+        diagnostics.push("Report generation: full");
+      }
       const cleanedReport = this.stripGeneratedSourceSections(finalContent.trim());
       const citations = this.buildCitationMap(cleanedReport, sources);
       const citedIndices = new Set(Object.values(citations).map((c2) => c2.sourceIndex));
@@ -136368,6 +137026,7 @@ Writing Guidelines:
       const filteredSources = sources.filter((_, index) => approvedSourceIndices.has(index));
       this.emitProgress(updateOutput, `\u2705 Filtered to ${filteredSources.length} relevant sources (kept ${citedIndices.size} cited + ${filteredSources.length - citedIndices.size} approved).`, "append");
       this.emitProgress(updateOutput, resultText.trim().length > 0 ? `\u2705 Research complete. Compiled ${filteredSources.length} relevant source(s).` : `\u2705 Research complete. Compiled ${filteredSources.length} relevant source(s) and generated a summary from collected material.`, "append");
+      const reportHeader = this.buildReportHeader(plan);
       const sourcesSection = filteredSources.length ? [
         "",
         "## Sources",
@@ -136378,9 +137037,12 @@ Writing Guidelines:
         "## Tool Usage Summary",
         ...Array.from(toolUsageCounts.entries()).map(([name2, count]) => `- ${this.formatToolName(name2)}: ${count} search${count === 1 ? "" : "es"}`)
       ].join("\n") : "";
+      const diagnosticsSection = diagnostics.length ? ["", "## Diagnostics", ...diagnostics.map((line) => `- ${line}`)].join("\n") : "";
       const finalReport = [
+        reportHeader,
         cleanedReport,
         toolUsageSection,
+        diagnosticsSection,
         sourcesSection
       ].filter(Boolean).join("\n");
       const savedReportPath = await this.persistReport(finalReport, plan);
@@ -136406,7 +137068,7 @@ var ResearchTool = class _ResearchTool extends BaseDeclarativeTool {
   config;
   static Name = ToolNames.RESEARCH;
   constructor(config) {
-    super(_ResearchTool.Name, "Research", "Conducts deep internet research using multiple sources with citation support. Supports speed, balanced, and quality modes.", Kind.Search, {
+    super(_ResearchTool.Name, "Research", "Conducts deep internet research using multiple sources with citation support. Supports speed, balanced, quality, and max modes.", Kind.Search, {
       type: "object",
       properties: {
         query: {
@@ -136415,8 +137077,8 @@ var ResearchTool = class _ResearchTool extends BaseDeclarativeTool {
         },
         mode: {
           type: "string",
-          enum: ["speed", "balanced", "quality"],
-          description: "Optimization mode - speed, balanced, or quality."
+          enum: ["speed", "balanced", "quality", "max"],
+          description: "Optimization mode - speed, balanced, quality, or max."
         },
         searchTools: {
           type: "array",
@@ -136440,8 +137102,8 @@ var ResearchTool = class _ResearchTool extends BaseDeclarativeTool {
     if (!params.query || params.query.trim() === "") {
       return "The 'query' parameter cannot be empty.";
     }
-    if (params.mode !== "speed" && params.mode !== "balanced" && params.mode !== "quality") {
-      return "The 'mode' parameter must be one of: speed, balanced, quality";
+    if (params.mode !== "speed" && params.mode !== "balanced" && params.mode !== "quality" && params.mode !== "max") {
+      return "The 'mode' parameter must be one of: speed, balanced, quality, max";
     }
     if (params.searchTools) {
       if (!Array.isArray(params.searchTools) || params.searchTools.length === 0) {

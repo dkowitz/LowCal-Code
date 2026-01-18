@@ -11,9 +11,9 @@ export const researchCommand = {
     describe: "Conduct deep internet research with citation support",
     builder: (yargs) => yargs
         .positional("mode", {
-        describe: "Optimization mode - speed, balanced, or quality",
+        describe: "Optimization mode - speed, balanced, quality, or max",
         type: "string",
-        choices: ["speed", "balanced", "quality"],
+        choices: ["speed", "balanced", "quality", "max"],
         default: "balanced"
     })
         .positional("query", {

@@ -168,6 +168,23 @@ export interface ConfirmActionReturn {
   };
 }
 
+export interface InputRequestActionReturn {
+  type: "input_request";
+  /** The React node to display above the input. */
+  prompt: ReactNode;
+  /** Placeholder text for the input box. */
+  placeholder?: string;
+  /** Configuration for the follow-up command to run with the user's input. */
+  command: {
+    name: string;
+    mode?: string;
+    query?: string;
+    appendAnswerToQuery?: boolean;
+    answerPreamble?: string;
+    extraArgs?: string[];
+  };
+}
+
 export type SlashCommandActionReturn =
   | ToolActionReturn
   | MessageActionReturn
@@ -177,7 +194,8 @@ export type SlashCommandActionReturn =
   | LoadHistoryActionReturn
   | SubmitPromptActionReturn
   | ConfirmShellCommandsActionReturn
-  | ConfirmActionReturn;
+  | ConfirmActionReturn
+  | InputRequestActionReturn;
 
 export enum CommandKind {
   BUILT_IN = "built-in",

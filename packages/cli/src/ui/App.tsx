@@ -46,6 +46,7 @@ import { LoadingIndicator } from "./components/LoadingIndicator.js";
 import { AutoAcceptIndicator } from "./components/AutoAcceptIndicator.js";
 import { ShellModeIndicator } from "./components/ShellModeIndicator.js";
 import { InputPrompt } from "./components/InputPrompt.js";
+import { InputRequestDialog } from "./components/InputRequestDialog.js";
 import { Footer } from "./components/Footer.js";
 import { ThemeDialog } from "./components/ThemeDialog.js";
 import { AuthDialog } from "./components/AuthDialog.js";
@@ -1452,6 +1453,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     commandContext,
     shellConfirmationRequest,
     confirmationRequest,
+    inputRequest,
     quitConfirmationRequest,
   } = useSlashCommandProcessor(
     config,
@@ -1814,6 +1816,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       streamingState === StreamingState.Responding) &&
     !initError &&
     !isProcessing &&
+    !inputRequest &&
     !showWelcomeBackDialog &&
     true; // activeViewId declaration moved earlier to avoid TDZ
 
@@ -2151,6 +2154,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             />
           ) : shellConfirmationRequest ? (
             <ShellConfirmationDialog request={shellConfirmationRequest} />
+          ) : inputRequest ? (
+            <InputRequestDialog
+              prompt={inputRequest.prompt}
+              placeholder={inputRequest.placeholder}
+              onSubmit={inputRequest.onSubmit}
+              onCancel={inputRequest.onCancel}
+              inputWidth={inputWidth}
+            />
           ) : confirmationRequest ? (
             <Box flexDirection="column">
               {confirmationRequest.prompt}

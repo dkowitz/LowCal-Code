@@ -6,6 +6,7 @@
 import { BaseDeclarativeTool, type ToolInvocation, type ToolResult } from "./tools.js";
 import type { Config } from "../config/config.js";
 import { ToolNames } from "./tool-names.js";
+type ResearchMode = "speed" | "balanced" | "quality" | "max";
 /**
  * Parameters for the ResearchTool.
  */
@@ -15,9 +16,9 @@ export interface ResearchToolParams {
      */
     query: string;
     /**
-     * Optimization mode - speed, balanced, or quality
+     * Optimization mode - speed, balanced, quality, or max
      */
-    mode: 'speed' | 'balanced' | 'quality';
+    mode: ResearchMode;
     /**
      * Optional ordered list of search tools to use. Defaults to all available.
      */
@@ -51,3 +52,4 @@ export declare class ResearchTool extends BaseDeclarativeTool<ResearchToolParams
     protected validateToolParamValues(params: ResearchToolParams): string | null;
     protected createInvocation(params: ResearchToolParams): ToolInvocation<ResearchToolParams, ResearchToolResult>;
 }
+export {};
