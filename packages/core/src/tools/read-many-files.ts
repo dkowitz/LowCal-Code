@@ -193,6 +193,7 @@ ${finalExclusionPatternsForDescription
     const filesToConsider = new Set<string>();
     const skippedFiles: Array<{ path: string; reason: string }> = [];
     const processedFilesRelativePaths: string[] = [];
+    const pdfStatusMessages: string[] = [];
     const contentParts: PartListUnion = [];
 
     const effectiveExcludes = useDefaultExcludes
@@ -369,6 +370,10 @@ ${finalExclusionPatternsForDescription
             file_line_limit,
           );
 
+          if (fileType === "pdf" && fileReadResult.returnDisplay) {
+            pdfStatusMessages.push(fileReadResult.returnDisplay);
+          }
+
           if (fileReadResult.error) {
             return {
               success: false,
@@ -503,6 +508,16 @@ ${finalExclusionPatternsForDescription
       skippedFiles.length === 0
     ) {
       displayMessage += `No files were read and concatenated based on the criteria.\n`;
+    }
+
+    if (pdfStatusMessages.length > 0) {
+      displayMessage += `\n**PDF Parsing Results:**\n`;
+      pdfStatusMessages.slice(0, 10).forEach((message) => {
+        displayMessage += `- ${message}\n`;
+      });
+      if (pdfStatusMessages.length > 10) {
+        displayMessage += `- ...and ${pdfStatusMessages.length - 10} more.\n`;
+      }
     }
 
     if (contentParts.length > 0) {

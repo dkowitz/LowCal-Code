@@ -5,7 +5,7 @@
  */
 import { useEffect, useRef } from "react";
 import { MessageType } from "../types.js";
-import { loadCliToolConfig, } from "../commands/utils/toolConfig.js";
+import { loadCliToolConfig, syncCoreToolConfig, } from "../commands/utils/toolConfig.js";
 /**
  * Hook to display startup status message showing active promptMode and toolset
  */
@@ -17,6 +17,7 @@ export function useStartupStatus({ addItem }) {
         }
         try {
             const cfg = loadCliToolConfig();
+            syncCoreToolConfig(cfg);
             const toolset = cfg.collections[cfg.activeCollection];
             const toolCount = toolset?.length ?? 0;
             const toolList = toolset?.join(", ") ?? "(empty)";

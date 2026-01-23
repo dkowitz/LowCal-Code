@@ -8,6 +8,7 @@ import { useEffect, useRef } from "react";
 import { MessageType, type HistoryItemInfo } from "../types.js";
 import {
   loadCliToolConfig,
+  syncCoreToolConfig,
   type PromptMode,
 } from "../commands/utils/toolConfig.js";
 
@@ -28,6 +29,7 @@ export function useStartupStatus({ addItem }: UseStartupStatusProps): void {
 
     try {
       const cfg = loadCliToolConfig();
+      syncCoreToolConfig(cfg);
       const toolset = cfg.collections[cfg.activeCollection];
       const toolCount = toolset?.length ?? 0;
       const toolList = toolset?.join(", ") ?? "(empty)";

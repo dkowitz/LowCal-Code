@@ -9,10 +9,14 @@ import { ApprovalMode } from "../config/config.js";
 import { fetchWithTimeout, isPrivateIp } from "../utils/fetch.js";
 import { getResponseText } from "../utils/partUtils.js";
 import { ToolErrorType } from "./tool-error.js";
+import { parsePdfBuffer } from "../utils/pdfUtils.js";
 import { BaseDeclarativeTool, BaseToolInvocation, Kind, ToolConfirmationOutcome, } from "./tools.js";
 import { ToolNames } from "./tool-names.js";
 const URL_FETCH_TIMEOUT_MS = 10000;
 const MAX_CONTENT_LENGTH = 100000;
+const MAX_PDF_PAGES = 60;
+const MAX_PDF_BYTES = 10 * 1024 * 1024;
+const PDF_PARSE_TIMEOUT_MS = 15000;
 /**
  * Implementation of the WebFetch tool invocation logic
  */
@@ -40,19 +44,90 @@ class WebFetchToolInvocation extends BaseToolInvocation {
                 throw new Error(errorMessage);
             }
             console.debug(`[WebFetchTool] Successfully fetched content from ${url}`);
-            const html = await response.text();
-            const textContent = convert(html, {
-                wordwrap: false,
-                selectors: [
-                    { selector: "a", options: { ignoreHref: true } },
-                    { selector: "img", format: "skip" },
-                ],
-            }).substring(0, MAX_CONTENT_LENGTH);
+            const contentType = response.headers.get("content-type") ?? "";
+            const isPdf = contentType.toLowerCase().includes("application/pdf") ||
+                url.toLowerCase().split("?")[0].endsWith(".pdf");
+            let textContent = "";
+            let returnDisplay = `Content from ${this.params.url} processed successfully.`;
+            if (isPdf) {
+                try {
+                    const contentLength = response.headers.get("content-length");
+                    if (contentLength &&
+                        Number.isFinite(Number(contentLength)) &&
+                        Number(contentLength) > MAX_PDF_BYTES) {
+                        const errorMessage = `PDF exceeds size limit (${MAX_PDF_BYTES} bytes) for ${url}`;
+                        console.error(`[WebFetchTool] ${errorMessage}`);
+                        return {
+                            llmContent: `Error: ${errorMessage}`,
+                            returnDisplay: `Error: ${errorMessage}`,
+                            error: {
+                                message: errorMessage,
+                                type: ToolErrorType.WEB_FETCH_PROCESSING_ERROR,
+                            },
+                        };
+                    }
+                    const buffer = Buffer.from(await response.arrayBuffer());
+                    if (buffer.length > MAX_PDF_BYTES) {
+                        const errorMessage = `PDF exceeds size limit (${MAX_PDF_BYTES} bytes) for ${url}`;
+                        console.error(`[WebFetchTool] ${errorMessage}`);
+                        return {
+                            llmContent: `Error: ${errorMessage}`,
+                            returnDisplay: `Error: ${errorMessage}`,
+                            error: {
+                                message: errorMessage,
+                                type: ToolErrorType.WEB_FETCH_PROCESSING_ERROR,
+                            },
+                        };
+                    }
+                    const parsed = await parsePdfBuffer(buffer, {
+                        maxPages: MAX_PDF_PAGES,
+                        timeoutMs: PDF_PARSE_TIMEOUT_MS,
+                    });
+                    const parsedText = (parsed.text || "").trim();
+                    if (!parsedText) {
+                        const errorMessage = `PDF parsed but no extractable text for ${url}`;
+                        console.error(`[WebFetchTool] ${errorMessage}`);
+                        return {
+                            llmContent: `Error: ${errorMessage}`,
+                            returnDisplay: `Error: ${errorMessage}`,
+                            error: {
+                                message: errorMessage,
+                                type: ToolErrorType.WEB_FETCH_PROCESSING_ERROR,
+                            },
+                        };
+                    }
+                    textContent = parsedText.substring(0, MAX_CONTENT_LENGTH);
+                    returnDisplay = `PDF extracted from ${this.params.url} (${textContent.length} chars).`;
+                }
+                catch (error) {
+                    const errorMessage = `PDF extraction failed for ${url}: ${error instanceof Error ? error.message : String(error)}`;
+                    console.error(`[WebFetchTool] ${errorMessage}`, error);
+                    return {
+                        llmContent: `Error: ${errorMessage}`,
+                        returnDisplay: `Error: ${errorMessage}`,
+                        error: {
+                            message: errorMessage,
+                            type: ToolErrorType.WEB_FETCH_PROCESSING_ERROR,
+                        },
+                    };
+                }
+            }
+            else {
+                const html = await response.text();
+                textContent = convert(html, {
+                    wordwrap: false,
+                    selectors: [
+                        { selector: "a", options: { ignoreHref: true } },
+                        { selector: "img", format: "skip" },
+                    ],
+                }).substring(0, MAX_CONTENT_LENGTH);
+            }
             console.debug(`[WebFetchTool] Converted HTML to text (${textContent.length} characters)`);
             const geminiClient = this.config.getGeminiClient();
+            const contentLabel = isPdf ? "PDF text" : "content";
             const fallbackPrompt = `The user requested the following: "${this.params.prompt}".
 
-I have fetched the content from ${this.params.url}. Please use the following content to answer the user's request.
+I have fetched the ${contentLabel} from ${this.params.url}. Please use the following content to answer the user's request.
 
 ---
 ${textContent}
@@ -63,7 +138,7 @@ ${textContent}
             console.debug(`[WebFetchTool] Successfully processed content from ${this.params.url}`);
             return {
                 llmContent: resultText,
-                returnDisplay: `Content from ${this.params.url} processed successfully.`,
+                returnDisplay,
             };
         }
         catch (e) {

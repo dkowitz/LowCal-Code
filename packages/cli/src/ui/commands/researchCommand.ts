@@ -241,7 +241,7 @@ export const researchCommand: SlashCommand = {
       };
     }
 
-    const allowlist = mode === "max" ? null : getActiveCollectionAllowlist();
+    const allowlist = getActiveCollectionAllowlist();
     const isAllowed = (toolName: string) =>
       !allowlist || allowlist.has(toolName);
 

@@ -8,6 +8,10 @@ import path from "node:path";
 import mime from "mime-types";
 import { ToolErrorType } from "../tools/tool-error.js";
 import { BINARY_EXTENSIONS } from "./ignorePatterns.js";
+import { parsePdfBuffer } from "./pdfUtils.js";
+const MAX_PDF_BYTES = 10 * 1024 * 1024;
+const MAX_PDF_PAGES = 60;
+const PDF_PARSE_TIMEOUT_MS = 5000;
 // Constants for text file processing
 export const DEFAULT_MAX_LINES_TEXT_FILE = 2000;
 const MAX_LINE_LENGTH_TEXT_FILE = 2000;
@@ -241,7 +245,6 @@ export async function processSingleFileContent(filePath, rootDirectory, fileSyst
                 };
             }
             case "image":
-            case "pdf":
             case "audio":
             case "video": {
                 const contentBuffer = await fs.promises.readFile(filePath);
@@ -255,6 +258,64 @@ export async function processSingleFileContent(filePath, rootDirectory, fileSyst
                     },
                     returnDisplay: `Read ${fileType} file: ${relativePathForDisplay}`,
                 };
+            }
+            case "pdf": {
+                const contentBuffer = await fs.promises.readFile(filePath);
+                if (contentBuffer.length > MAX_PDF_BYTES) {
+                    return {
+                        llmContent: `PDF exceeds size limit for text extraction: ${relativePathForDisplay}`,
+                        returnDisplay: `PDF detected but too large to parse: ${relativePathForDisplay}`,
+                    };
+                }
+                try {
+                    const parsed = await parsePdfBuffer(contentBuffer, {
+                        maxPages: MAX_PDF_PAGES,
+                        timeoutMs: PDF_PARSE_TIMEOUT_MS,
+                    });
+                    const parsedText = (parsed.text || "").trim();
+                    if (!parsedText) {
+                        return {
+                            llmContent: {
+                                inlineData: {
+                                    data: contentBuffer.toString("base64"),
+                                    mimeType: "application/pdf",
+                                },
+                            },
+                            returnDisplay: `PDF detected but no extractable text; returning raw PDF: ${relativePathForDisplay}`,
+                        };
+                    }
+                    const lines = parsedText.split("\n");
+                    const originalLineCount = lines.length;
+                    const startLine = offset || 0;
+                    const effectiveLimit = limit === undefined ? DEFAULT_MAX_LINES_TEXT_FILE : limit;
+                    const endLine = Math.min(startLine + effectiveLimit, originalLineCount);
+                    const actualStartLine = Math.min(startLine, originalLineCount);
+                    const selectedLines = lines.slice(actualStartLine, endLine);
+                    const llmContent = selectedLines.join("\n");
+                    const isTruncated = startLine > 0 || endLine < originalLineCount;
+                    const returnDisplay = isTruncated
+                        ? `Parsed PDF text lines ${actualStartLine + 1}-${endLine} of ${originalLineCount}: ${relativePathForDisplay}`
+                        : `Parsed PDF text: ${relativePathForDisplay}`;
+                    return {
+                        llmContent,
+                        returnDisplay,
+                        isTruncated,
+                        originalLineCount,
+                        linesShown: [actualStartLine + 1, endLine],
+                    };
+                }
+                catch (error) {
+                    const errorMessage = error instanceof Error ? error.message : String(error);
+                    return {
+                        llmContent: {
+                            inlineData: {
+                                data: contentBuffer.toString("base64"),
+                                mimeType: "application/pdf",
+                            },
+                        },
+                        returnDisplay: `PDF detected but parse failed (${errorMessage}); returning raw PDF: ${relativePathForDisplay}`,
+                    };
+                }
             }
             default: {
                 // Should not happen with current detectFileType logic

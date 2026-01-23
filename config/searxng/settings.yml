@@ -3,7 +3,7 @@ use_default_settings: true
 general:
   debug: false
   instance_name: "SearXNG"
-  
+
 search:
   formats:
     - html
@@ -19,25 +19,13 @@ server:
 botdetection:
   enabled: false
 
-# Enable additional engines that are disabled by default
+# Engine overrides – disable problematic captchas and enable HTML DuckDuckGo if desired
 engines:
-  - name: yahoo
-    enabled: true
-  
-  - name: mullvadleta
-    enabled: true
-    
-  - name: mullvadleta brave
-    enabled: true
-    
-  - name: bing
-    enabled: true
-    
-  - name: qwant
-    enabled: true
-    
-  - name: mojeek
-    enabled: true
-    
-  - name: presearch
+  - name: brave
+    enabled: false
+  - name: duckduckgo
+    enabled: false
+  - name: startpage
+    enabled: false
+  - name: duckduckgo_html
     enabled: true

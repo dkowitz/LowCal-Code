@@ -180,7 +180,7 @@ export const researchCommand = {
                 content: "The tool registry is unavailable, so research cannot proceed. Try running /toolset list or restarting LowCal.",
             };
         }
-        const allowlist = mode === "max" ? null : getActiveCollectionAllowlist();
+        const allowlist = getActiveCollectionAllowlist();
         const isAllowed = (toolName) => !allowlist || allowlist.has(toolName);
         if (!isAllowed(ToolNames.WEB_FETCH) || !toolRegistry.getTool(ToolNames.WEB_FETCH)) {
             return {

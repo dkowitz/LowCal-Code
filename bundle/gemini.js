@@ -175973,6 +175973,74 @@ var init_ignorePatterns = __esm({
   }
 });
 
+// packages/core/dist/src/utils/pdfUtils.js
+async function loadPdfjs() {
+  try {
+    return await import("pdfjs-dist/legacy/build/pdf.js");
+  } catch (_error) {
+    return null;
+  }
+}
+function withTimeout(promise, timeoutMs) {
+  return new Promise((resolve24, reject) => {
+    const timeoutId = setTimeout(() => {
+      reject(new Error(`PDF parsing timed out after ${timeoutMs}ms`));
+    }, timeoutMs);
+    promise.then((value) => {
+      clearTimeout(timeoutId);
+      resolve24(value);
+    }).catch((error) => {
+      clearTimeout(timeoutId);
+      reject(error);
+    });
+  });
+}
+async function parsePdfBuffer(buffer, options2) {
+  const pdfjs = await loadPdfjs();
+  if (!pdfjs) {
+    throw new Error("PDF parsing module is not available");
+  }
+  const parseTask = async () => {
+    const loadingTask = pdfjs.getDocument({
+      data: buffer,
+      disableWorker: true
+    });
+    const doc = await loadingTask.promise;
+    try {
+      const pageCount = options2.maxPages > 0 ? Math.min(options2.maxPages, doc.numPages) : doc.numPages;
+      const pages = [];
+      for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
+        const page = await doc.getPage(pageNumber);
+        const textContent2 = await page.getTextContent({
+          normalizeWhitespace: false,
+          disableCombineTextItems: false
+        });
+        let lastY;
+        let pageText = "";
+        for (const item of textContent2.items) {
+          if (lastY === void 0 || lastY === item.transform[5]) {
+            pageText += item.str;
+          } else {
+            pageText += `
+${item.str}`;
+          }
+          lastY = item.transform[5];
+        }
+        pages.push(pageText);
+      }
+      return { text: pages.join("\n\n") };
+    } finally {
+      doc.destroy();
+    }
+  };
+  return withTimeout(parseTask(), options2.timeoutMs);
+}
+var init_pdfUtils = __esm({
+  "packages/core/dist/src/utils/pdfUtils.js"() {
+    "use strict";
+  }
+});
+
 // packages/core/dist/src/utils/fileUtils.js
 import fs24 from "node:fs";
 import path24 from "node:path";
@@ -176143,7 +176211,6 @@ async function processSingleFileContent(filePath, rootDirectory, fileSystemServi
         };
       }
       case "image":
-      case "pdf":
       case "audio":
       case "video": {
         const contentBuffer = await fs24.promises.readFile(filePath);
@@ -176157,6 +176224,61 @@ async function processSingleFileContent(filePath, rootDirectory, fileSystemServi
           },
           returnDisplay: `Read ${fileType} file: ${relativePathForDisplay}`
         };
+      }
+      case "pdf": {
+        const contentBuffer = await fs24.promises.readFile(filePath);
+        if (contentBuffer.length > MAX_PDF_BYTES) {
+          return {
+            llmContent: `PDF exceeds size limit for text extraction: ${relativePathForDisplay}`,
+            returnDisplay: `PDF detected but too large to parse: ${relativePathForDisplay}`
+          };
+        }
+        try {
+          const parsed = await parsePdfBuffer(contentBuffer, {
+            maxPages: MAX_PDF_PAGES,
+            timeoutMs: PDF_PARSE_TIMEOUT_MS
+          });
+          const parsedText = (parsed.text || "").trim();
+          if (!parsedText) {
+            return {
+              llmContent: {
+                inlineData: {
+                  data: contentBuffer.toString("base64"),
+                  mimeType: "application/pdf"
+                }
+              },
+              returnDisplay: `PDF detected but no extractable text; returning raw PDF: ${relativePathForDisplay}`
+            };
+          }
+          const lines = parsedText.split("\n");
+          const originalLineCount = lines.length;
+          const startLine = offset || 0;
+          const effectiveLimit = limit2 === void 0 ? DEFAULT_MAX_LINES_TEXT_FILE : limit2;
+          const endLine = Math.min(startLine + effectiveLimit, originalLineCount);
+          const actualStartLine = Math.min(startLine, originalLineCount);
+          const selectedLines = lines.slice(actualStartLine, endLine);
+          const llmContent = selectedLines.join("\n");
+          const isTruncated = startLine > 0 || endLine < originalLineCount;
+          const returnDisplay = isTruncated ? `Parsed PDF text lines ${actualStartLine + 1}-${endLine} of ${originalLineCount}: ${relativePathForDisplay}` : `Parsed PDF text: ${relativePathForDisplay}`;
+          return {
+            llmContent,
+            returnDisplay,
+            isTruncated,
+            originalLineCount,
+            linesShown: [actualStartLine + 1, endLine]
+          };
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          return {
+            llmContent: {
+              inlineData: {
+                data: contentBuffer.toString("base64"),
+                mimeType: "application/pdf"
+              }
+            },
+            returnDisplay: `PDF detected but parse failed (${errorMessage}); returning raw PDF: ${relativePathForDisplay}`
+          };
+        }
       }
       default: {
         const exhaustiveCheck = fileType;
@@ -176178,13 +176300,17 @@ async function processSingleFileContent(filePath, rootDirectory, fileSystemServi
     };
   }
 }
-var import_mime_types, DEFAULT_MAX_LINES_TEXT_FILE, MAX_LINE_LENGTH_TEXT_FILE, DEFAULT_ENCODING;
+var import_mime_types, MAX_PDF_BYTES, MAX_PDF_PAGES, PDF_PARSE_TIMEOUT_MS, DEFAULT_MAX_LINES_TEXT_FILE, MAX_LINE_LENGTH_TEXT_FILE, DEFAULT_ENCODING;
 var init_fileUtils = __esm({
   "packages/core/dist/src/utils/fileUtils.js"() {
     "use strict";
     import_mime_types = __toESM(require_mime_types(), 1);
     init_tool_error();
     init_ignorePatterns();
+    init_pdfUtils();
+    MAX_PDF_BYTES = 10 * 1024 * 1024;
+    MAX_PDF_PAGES = 60;
+    PDF_PARSE_TIMEOUT_MS = 5e3;
     DEFAULT_MAX_LINES_TEXT_FILE = 2e3;
     MAX_LINE_LENGTH_TEXT_FILE = 2e3;
     DEFAULT_ENCODING = "utf-8";
@@ -186495,6 +186621,7 @@ ${finalExclusionPatternsForDescription.slice(0, 2).join("`, `")}${finalExclusion
         const filesToConsider = /* @__PURE__ */ new Set();
         const skippedFiles = [];
         const processedFilesRelativePaths = [];
+        const pdfStatusMessages = [];
         const contentParts = [];
         const effectiveExcludes = useDefaultExcludes ? [...getDefaultExcludes(this.config), ...exclude] : [...exclude];
         const searchPatterns = [...inputPatterns, ...include];
@@ -186602,6 +186729,9 @@ ${getErrorMessage(error)}
               }
             }
             const fileReadResult = await processSingleFileContent(filePath, this.config.getTargetDir(), this.config.getFileSystemService(), 0, file_line_limit);
+            if (fileType === "pdf" && fileReadResult.returnDisplay) {
+              pdfStatusMessages.push(fileReadResult.returnDisplay);
+            }
             if (fileReadResult.error) {
               return {
                 success: false,
@@ -186714,6 +186844,19 @@ ${fileContentForLlm}
         } else if (processedFilesRelativePaths.length === 0 && skippedFiles.length === 0) {
           displayMessage += `No files were read and concatenated based on the criteria.
 `;
+        }
+        if (pdfStatusMessages.length > 0) {
+          displayMessage += `
+**PDF Parsing Results:**
+`;
+          pdfStatusMessages.slice(0, 10).forEach((message) => {
+            displayMessage += `- ${message}
+`;
+          });
+          if (pdfStatusMessages.length > 10) {
+            displayMessage += `- ...and ${pdfStatusMessages.length - 10} more.
+`;
+          }
         }
         if (contentParts.length > 0) {
           contentParts.push(DEFAULT_OUTPUT_TERMINATOR);
@@ -206107,7 +206250,7 @@ var init_fetch2 = __esm({
 });
 
 // packages/core/dist/src/tools/web-fetch.js
-var import_undici4, URL_FETCH_TIMEOUT_MS, MAX_CONTENT_LENGTH, WebFetchToolInvocation, WebFetchTool;
+var import_undici4, URL_FETCH_TIMEOUT_MS, MAX_CONTENT_LENGTH, MAX_PDF_PAGES2, MAX_PDF_BYTES2, PDF_PARSE_TIMEOUT_MS2, WebFetchToolInvocation, WebFetchTool;
 var init_web_fetch = __esm({
   "packages/core/dist/src/tools/web-fetch.js"() {
     "use strict";
@@ -206117,10 +206260,14 @@ var init_web_fetch = __esm({
     init_fetch2();
     init_partUtils();
     init_tool_error();
+    init_pdfUtils();
     init_tools();
     init_tool_names();
     URL_FETCH_TIMEOUT_MS = 1e4;
     MAX_CONTENT_LENGTH = 1e5;
+    MAX_PDF_PAGES2 = 60;
+    MAX_PDF_BYTES2 = 10 * 1024 * 1024;
+    PDF_PARSE_TIMEOUT_MS2 = 15e3;
     WebFetchToolInvocation = class extends BaseToolInvocation {
       config;
       constructor(config, params) {
@@ -206142,19 +206289,85 @@ var init_web_fetch = __esm({
             throw new Error(errorMessage);
           }
           console.debug(`[WebFetchTool] Successfully fetched content from ${url2}`);
-          const html2 = await response.text();
-          const textContent2 = convert(html2, {
-            wordwrap: false,
-            selectors: [
-              { selector: "a", options: { ignoreHref: true } },
-              { selector: "img", format: "skip" }
-            ]
-          }).substring(0, MAX_CONTENT_LENGTH);
+          const contentType = response.headers.get("content-type") ?? "";
+          const isPdf = contentType.toLowerCase().includes("application/pdf") || url2.toLowerCase().split("?")[0].endsWith(".pdf");
+          let textContent2 = "";
+          let returnDisplay = `Content from ${this.params.url} processed successfully.`;
+          if (isPdf) {
+            try {
+              const contentLength = response.headers.get("content-length");
+              if (contentLength && Number.isFinite(Number(contentLength)) && Number(contentLength) > MAX_PDF_BYTES2) {
+                const errorMessage = `PDF exceeds size limit (${MAX_PDF_BYTES2} bytes) for ${url2}`;
+                console.error(`[WebFetchTool] ${errorMessage}`);
+                return {
+                  llmContent: `Error: ${errorMessage}`,
+                  returnDisplay: `Error: ${errorMessage}`,
+                  error: {
+                    message: errorMessage,
+                    type: ToolErrorType.WEB_FETCH_PROCESSING_ERROR
+                  }
+                };
+              }
+              const buffer = Buffer.from(await response.arrayBuffer());
+              if (buffer.length > MAX_PDF_BYTES2) {
+                const errorMessage = `PDF exceeds size limit (${MAX_PDF_BYTES2} bytes) for ${url2}`;
+                console.error(`[WebFetchTool] ${errorMessage}`);
+                return {
+                  llmContent: `Error: ${errorMessage}`,
+                  returnDisplay: `Error: ${errorMessage}`,
+                  error: {
+                    message: errorMessage,
+                    type: ToolErrorType.WEB_FETCH_PROCESSING_ERROR
+                  }
+                };
+              }
+              const parsed = await parsePdfBuffer(buffer, {
+                maxPages: MAX_PDF_PAGES2,
+                timeoutMs: PDF_PARSE_TIMEOUT_MS2
+              });
+              const parsedText = (parsed.text || "").trim();
+              if (!parsedText) {
+                const errorMessage = `PDF parsed but no extractable text for ${url2}`;
+                console.error(`[WebFetchTool] ${errorMessage}`);
+                return {
+                  llmContent: `Error: ${errorMessage}`,
+                  returnDisplay: `Error: ${errorMessage}`,
+                  error: {
+                    message: errorMessage,
+                    type: ToolErrorType.WEB_FETCH_PROCESSING_ERROR
+                  }
+                };
+              }
+              textContent2 = parsedText.substring(0, MAX_CONTENT_LENGTH);
+              returnDisplay = `PDF extracted from ${this.params.url} (${textContent2.length} chars).`;
+            } catch (error) {
+              const errorMessage = `PDF extraction failed for ${url2}: ${error instanceof Error ? error.message : String(error)}`;
+              console.error(`[WebFetchTool] ${errorMessage}`, error);
+              return {
+                llmContent: `Error: ${errorMessage}`,
+                returnDisplay: `Error: ${errorMessage}`,
+                error: {
+                  message: errorMessage,
+                  type: ToolErrorType.WEB_FETCH_PROCESSING_ERROR
+                }
+              };
+            }
+          } else {
+            const html2 = await response.text();
+            textContent2 = convert(html2, {
+              wordwrap: false,
+              selectors: [
+                { selector: "a", options: { ignoreHref: true } },
+                { selector: "img", format: "skip" }
+              ]
+            }).substring(0, MAX_CONTENT_LENGTH);
+          }
           console.debug(`[WebFetchTool] Converted HTML to text (${textContent2.length} characters)`);
           const geminiClient = this.config.getGeminiClient();
+          const contentLabel = isPdf ? "PDF text" : "content";
           const fallbackPrompt = `The user requested the following: "${this.params.prompt}".
 
-I have fetched the content from ${this.params.url}. Please use the following content to answer the user's request.
+I have fetched the ${contentLabel} from ${this.params.url}. Please use the following content to answer the user's request.
 
 ---
 ${textContent2}
@@ -206165,7 +206378,7 @@ ${textContent2}
           console.debug(`[WebFetchTool] Successfully processed content from ${this.params.url}`);
           return {
             llmContent: resultText,
-            returnDisplay: `Content from ${this.params.url} processed successfully.`
+            returnDisplay
           };
         } catch (e2) {
           const error = e2;
@@ -214009,6 +214222,18 @@ ${this.params.query}
           ""
         ].join("\n");
       }
+      isPdfUrl(url2) {
+        const lowered = url2.toLowerCase();
+        if (lowered.includes(".pdf")) {
+          return true;
+        }
+        try {
+          const parsed = new URL(url2);
+          return parsed.pathname.toLowerCase().endsWith(".pdf");
+        } catch {
+          return lowered.split("?")[0].endsWith(".pdf");
+        }
+      }
       extractCandidateText(result) {
         const candidateParts = (result?.response?.candidates ?? result?.candidates ?? [])?.[0]?.content?.parts ?? [];
         return candidateParts.map((part) => {
@@ -214755,12 +214980,21 @@ Be selective - only keep sources that truly add value to research on "${topic}".
           const documentSnippets = [];
           const documentSnippetsBySubIndex = [];
           const sourcesForProcessing = sources.slice(0, Math.min(maxResults, sources.length));
+          let pdfFetchAttempts = 0;
+          let pdfFetchSuccesses = 0;
+          let pdfFetchFailures = 0;
+          const pdfFailureReasons = /* @__PURE__ */ new Map();
+          const pdfFailureSamples = [];
           diagnostics.push(`Sources collected: ${sources.length} | Sources summarized: ${sourcesForProcessing.length}`);
           if (sourcesForProcessing.length > 0) {
             this.emitProgress(updateOutput, `\u2139\u{1F4F0} Summarizing top ${sourcesForProcessing.length} source(s) for detailed insights.`, "append");
           }
           for (let i = 0; i < sourcesForProcessing.length; i++) {
             const source2 = sourcesForProcessing[i];
+            const isPdf = this.isPdfUrl(source2.url);
+            if (isPdf) {
+              pdfFetchAttempts += 1;
+            }
             this.emitProgress(updateOutput, `\u{1F4F0} [${i + 1}/${sourcesForProcessing.length}] Summarizing ${this.truncate(source2.title || source2.url, 120)}`, "replace");
             try {
               const fetchInvocation = fetchTool.build({
@@ -214769,6 +215003,42 @@ Be selective - only keep sources that truly add value to research on "${topic}".
               });
               const fetchResult = await fetchInvocation.execute(signal);
               const fetchText = partToString(fetchResult.llmContent || "");
+              if (isPdf) {
+                const displayText = String(fetchResult.returnDisplay ?? "");
+                const errorMessage = fetchResult.error?.message ?? "";
+                if (/PDF extracted/i.test(displayText)) {
+                  pdfFetchSuccesses += 1;
+                } else if (errorMessage) {
+                  pdfFetchFailures += 1;
+                  const lowered = errorMessage.toLowerCase();
+                  let key = "other";
+                  if (lowered.includes("module is not available")) {
+                    key = "module_missing";
+                  } else if (lowered.includes("exceeds size limit")) {
+                    key = "size_limit";
+                  } else if (lowered.includes("timed out")) {
+                    key = "timeout";
+                  } else if (lowered.includes("extraction failed") || lowered.includes("parsed but no extractable text")) {
+                    key = "parse_error";
+                  }
+                  pdfFailureReasons.set(key, (pdfFailureReasons.get(key) ?? 0) + 1);
+                  if (pdfFailureSamples.length < 5) {
+                    pdfFailureSamples.push({
+                      url: source2.url,
+                      reason: errorMessage
+                    });
+                  }
+                } else if (displayText) {
+                  pdfFetchFailures += 1;
+                  pdfFailureReasons.set("other", (pdfFailureReasons.get("other") ?? 0) + 1);
+                  if (pdfFailureSamples.length < 5) {
+                    pdfFailureSamples.push({
+                      url: source2.url,
+                      reason: displayText
+                    });
+                  }
+                }
+              }
               if (fetchText.trim()) {
                 processedDocuments.push(fetchText);
                 const normalizedText = fetchText.replace(/\s+/g, " ");
@@ -214791,6 +215061,15 @@ Be selective - only keep sources that truly add value to research on "${topic}".
               this.emitProgress(updateOutput, `\u26A0\uFE0F Error fetching ${this.truncate(source2.title || source2.url, 90)}: ${this.truncate(errorMessage, 120)}`, "replace");
             }
             this.emitProgress(updateOutput, `\u2714 Summarized ${this.truncate(source2.title || source2.url, 100)}`, "append");
+          }
+          if (pdfFetchAttempts > 0) {
+            diagnostics.push(`PDF extraction: attempted=${pdfFetchAttempts}, succeeded=${pdfFetchSuccesses}, failed=${pdfFetchFailures}`);
+            if (pdfFailureReasons.size > 0) {
+              diagnostics.push(`PDF extraction failures: ${Array.from(pdfFailureReasons.entries()).map(([reason, count]) => `${reason}=${count}`).join(", ")}`);
+            }
+            if (pdfFailureSamples.length > 0) {
+              diagnostics.push(`PDF failure samples: ${pdfFailureSamples.map((sample) => `${this.truncate(sample.url, 60)} -> ${this.truncate(sample.reason, 80)}`).join(" | ")}`);
+            }
           }
           const combinedContent = this.params.mode === "max" ? "" : [...searchResults, ...processedDocuments].join("\n\n---\n\n");
           const subtopicBriefs = this.params.mode === "max" ? plan.subQueries.map((sub, index) => {
@@ -317762,6 +318041,7 @@ function useStartupStatus({ addItem }) {
     }
     try {
       const cfg = loadCliToolConfig();
+      syncCoreToolConfig(cfg);
       const toolset = cfg.collections[cfg.activeCollection];
       const toolCount = toolset?.length ?? 0;
       const toolList = toolset?.join(", ") ?? "(empty)";
@@ -318315,7 +318595,7 @@ init_open();
 import process32 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "751ff798";
+var GIT_COMMIT_INFO = "6d8dbce1";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -322425,7 +322705,7 @@ var researchCommand2 = {
         content: "The tool registry is unavailable, so research cannot proceed. Try running /toolset list or restarting LowCal."
       };
     }
-    const allowlist = mode === "max" ? null : getActiveCollectionAllowlist();
+    const allowlist = getActiveCollectionAllowlist();
     const isAllowed = (toolName) => !allowlist || allowlist.has(toolName);
     if (!isAllowed(ToolNames.WEB_FETCH) || !toolRegistry.getTool(ToolNames.WEB_FETCH)) {
       return {

@@ -386,6 +386,19 @@ ${this.params.query}
             "",
         ].join("\n");
     }
+    isPdfUrl(url) {
+        const lowered = url.toLowerCase();
+        if (lowered.includes(".pdf")) {
+            return true;
+        }
+        try {
+            const parsed = new URL(url);
+            return parsed.pathname.toLowerCase().endsWith(".pdf");
+        }
+        catch {
+            return lowered.split("?")[0].endsWith(".pdf");
+        }
+    }
     extractCandidateText(result) {
         const candidateParts = (result?.response?.candidates ??
             result?.candidates ??
@@ -1240,12 +1253,21 @@ Be selective - only keep sources that truly add value to research on "${topic}".
             const documentSnippets = [];
             const documentSnippetsBySubIndex = [];
             const sourcesForProcessing = sources.slice(0, Math.min(maxResults, sources.length));
+            let pdfFetchAttempts = 0;
+            let pdfFetchSuccesses = 0;
+            let pdfFetchFailures = 0;
+            const pdfFailureReasons = new Map();
+            const pdfFailureSamples = [];
             diagnostics.push(`Sources collected: ${sources.length} | Sources summarized: ${sourcesForProcessing.length}`);
             if (sourcesForProcessing.length > 0) {
                 this.emitProgress(updateOutput, `ℹ📰 Summarizing top ${sourcesForProcessing.length} source(s) for detailed insights.`, "append");
             }
             for (let i = 0; i < sourcesForProcessing.length; i++) {
                 const source = sourcesForProcessing[i];
+                const isPdf = this.isPdfUrl(source.url);
+                if (isPdf) {
+                    pdfFetchAttempts += 1;
+                }
                 this.emitProgress(updateOutput, `📰 [${i + 1}/${sourcesForProcessing.length}] Summarizing ${this.truncate(source.title || source.url, 120)}`, "replace");
                 try {
                     const fetchInvocation = fetchTool.build({
@@ -1254,6 +1276,48 @@ Be selective - only keep sources that truly add value to research on "${topic}".
                     });
                     const fetchResult = await fetchInvocation.execute(signal);
                     const fetchText = partToString(fetchResult.llmContent || "");
+                    if (isPdf) {
+                        const displayText = String(fetchResult.returnDisplay ?? "");
+                        const errorMessage = fetchResult.error?.message ?? "";
+                        if (/PDF extracted/i.test(displayText)) {
+                            pdfFetchSuccesses += 1;
+                        }
+                        else if (errorMessage) {
+                            pdfFetchFailures += 1;
+                            const lowered = errorMessage.toLowerCase();
+                            let key = "other";
+                            if (lowered.includes("module is not available")) {
+                                key = "module_missing";
+                            }
+                            else if (lowered.includes("exceeds size limit")) {
+                                key = "size_limit";
+                            }
+                            else if (lowered.includes("timed out")) {
+                                key = "timeout";
+                            }
+                            else if (lowered.includes("extraction failed") ||
+                                lowered.includes("parsed but no extractable text")) {
+                                key = "parse_error";
+                            }
+                            pdfFailureReasons.set(key, (pdfFailureReasons.get(key) ?? 0) + 1);
+                            if (pdfFailureSamples.length < 5) {
+                                pdfFailureSamples.push({
+                                    url: source.url,
+                                    reason: errorMessage,
+                                });
+                            }
+                        }
+                        else if (displayText) {
+                            pdfFetchFailures += 1;
+                            pdfFailureReasons.set("other", (pdfFailureReasons.get("other") ?? 0) + 1);
+                            if (pdfFailureSamples.length < 5) {
+                                pdfFailureSamples.push({
+                                    url: source.url,
+                                    reason: displayText,
+                                });
+                            }
+                        }
+                    }
                     if (fetchText.trim()) {
                         processedDocuments.push(fetchText);
                         const normalizedText = fetchText.replace(/\s+/g, " ");
@@ -1278,6 +1342,19 @@ Be selective - only keep sources that truly add value to research on "${topic}".
                     this.emitProgress(updateOutput, `⚠️ Error fetching ${this.truncate(source.title || source.url, 90)}: ${this.truncate(errorMessage, 120)}`, "replace");
                 }
                 this.emitProgress(updateOutput, `✔ Summarized ${this.truncate(source.title || source.url, 100)}`, "append");
+            }
+            if (pdfFetchAttempts > 0) {
+                diagnostics.push(`PDF extraction: attempted=${pdfFetchAttempts}, succeeded=${pdfFetchSuccesses}, failed=${pdfFetchFailures}`);
+                if (pdfFailureReasons.size > 0) {
+                    diagnostics.push(`PDF extraction failures: ${Array.from(pdfFailureReasons.entries())
+                        .map(([reason, count]) => `${reason}=${count}`)
+                        .join(", ")}`);
+                }
+                if (pdfFailureSamples.length > 0) {
+                    diagnostics.push(`PDF failure samples: ${pdfFailureSamples
+                        .map((sample) => `${this.truncate(sample.url, 60)} -> ${this.truncate(sample.reason, 80)}`)
+                        .join(" | ")}`);
+                }
             }
             // Step 4: Combine all information and generate a final report
             const combinedContent = this.params.mode === "max"

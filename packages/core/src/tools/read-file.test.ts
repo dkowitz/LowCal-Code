@@ -302,13 +302,17 @@ describe("ReadFileTool", () => {
       >;
 
       const result = await invocation.execute(abortSignal);
-      expect(result.llmContent).toEqual({
-        inlineData: {
-          data: pdfHeader.toString("base64"),
-          mimeType: "application/pdf",
-        },
-      });
-      expect(result.returnDisplay).toBe("Read pdf file: document.pdf");
+      if (typeof result.llmContent === "string") {
+        expect(result.returnDisplay).toContain("Parsed PDF");
+      } else {
+        expect(result.llmContent).toEqual({
+          inlineData: {
+            data: pdfHeader.toString("base64"),
+            mimeType: "application/pdf",
+          },
+        });
+        expect(result.returnDisplay).toContain("PDF detected");
+      }
     });
 
     it("should handle binary file and skip content", async () => {

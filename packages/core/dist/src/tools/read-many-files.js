@@ -82,6 +82,7 @@ ${finalExclusionPatternsForDescription
         const filesToConsider = new Set();
         const skippedFiles = [];
         const processedFilesRelativePaths = [];
+        const pdfStatusMessages = [];
         const contentParts = [];
         const effectiveExcludes = useDefaultExcludes
             ? [...getDefaultExcludes(this.config), ...exclude]
@@ -211,6 +212,9 @@ ${finalExclusionPatternsForDescription
                 }
                 // Use processSingleFileContent for all file types now
                 const fileReadResult = await processSingleFileContent(filePath, this.config.getTargetDir(), this.config.getFileSystemService(), 0, file_line_limit);
+                if (fileType === "pdf" && fileReadResult.returnDisplay) {
+                    pdfStatusMessages.push(fileReadResult.returnDisplay);
+                }
                 if (fileReadResult.error) {
                     return {
                         success: false,
@@ -319,6 +323,15 @@ ${finalExclusionPatternsForDescription
         else if (processedFilesRelativePaths.length === 0 &&
             skippedFiles.length === 0) {
             displayMessage += `No files were read and concatenated based on the criteria.\n`;
+        }
+        if (pdfStatusMessages.length > 0) {
+            displayMessage += `\n**PDF Parsing Results:**\n`;
+            pdfStatusMessages.slice(0, 10).forEach((message) => {
+                displayMessage += `- ${message}\n`;
+            });
+            if (pdfStatusMessages.length > 10) {
+                displayMessage += `- ...and ${pdfStatusMessages.length - 10} more.\n`;
+            }
         }
         if (contentParts.length > 0) {
             contentParts.push(DEFAULT_OUTPUT_TERMINATOR);
