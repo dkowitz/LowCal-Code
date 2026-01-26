@@ -133,7 +133,13 @@ export function createContentGeneratorConfig(
   if (authType === AuthType.USE_OPENAI && openaiApiKey) {
     contentGeneratorConfig.apiKey = openaiApiKey;
     contentGeneratorConfig.baseUrl = openaiBaseUrl;
-    if (openaiModel && openaiModel.length > 0) {
+    const isLmStudioProvider =
+      openaiApiKey === "lmstudio-local-key" ||
+      (typeof openaiBaseUrl === "string" &&
+        (openaiBaseUrl.includes("127.0.0.1:1234") ||
+          openaiBaseUrl.includes("localhost:1234") ||
+          openaiBaseUrl.toLowerCase().includes("lmstudio")));
+    if (!isLmStudioProvider && openaiModel && openaiModel.length > 0) {
       contentGeneratorConfig.model = openaiModel;
     }
 

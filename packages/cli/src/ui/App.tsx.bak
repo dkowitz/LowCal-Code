@@ -46,6 +46,7 @@ import { LoadingIndicator } from "./components/LoadingIndicator.js";
 import { AutoAcceptIndicator } from "./components/AutoAcceptIndicator.js";
 import { ShellModeIndicator } from "./components/ShellModeIndicator.js";
 import { InputPrompt } from "./components/InputPrompt.js";
+import { InputRequestDialog } from "./components/InputRequestDialog.js";
 import { Footer } from "./components/Footer.js";
 import { ThemeDialog } from "./components/ThemeDialog.js";
 import { AuthDialog } from "./components/AuthDialog.js";
@@ -57,7 +58,6 @@ import { ShellConfirmationDialog } from "./components/ShellConfirmationDialog.js
 import { QuitConfirmationDialog } from "./components/QuitConfirmationDialog.js";
 import { RadioButtonSelect } from "./components/shared/RadioButtonSelect.js";
 import { ModelSelectionDialog } from "./components/ModelSelectionDialog.js";
-import { ModelMappingDialog } from "./components/ModelMappingDialog.js";
 import {
   ModelSwitchDialog,
   type VisionSwitchOutcome,
@@ -66,7 +66,6 @@ import {
   getOpenAIAvailableModelFromEnv,
   getFilteredQwenModels,
   fetchOpenAICompatibleModels,
-  getLMStudioConfiguredModels,
   getLMStudioLoadedModel,
   type AvailableModel,
 } from "./models/availableModels.js";
@@ -265,6 +264,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   useEffect(() => {
     const savedModel = settings.merged.model?.name;
     if (savedModel) {
+      // Mark that we're attempting to restore from settings BEFORE the async operation
+      // to prevent the model change watcher from overriding the restored model
+      hasBeenSetFromSettingsRef.current = true;
       // Only restore model if it's different from current one or if no model is set yet
       const currentModel = config.getModel();
       if (currentModel === undefined || savedModel !== currentModel) {
@@ -272,7 +274,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           try {
             await config.setModel(savedModel);
             setCurrentModel(savedModel);
-            hasBeenSetFromSettingsRef.current = true;
             // Only persist to .env for OpenRouter auth
             if (settings.merged.security?.auth?.providerId === "openrouter") {
               try {
@@ -1450,6 +1451,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     commandContext,
     shellConfirmationRequest,
     confirmationRequest,
+    inputRequest,
     quitConfirmationRequest,
   } = useSlashCommandProcessor(
     config,
@@ -1812,6 +1814,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       streamingState === StreamingState.Responding) &&
     !initError &&
     !isProcessing &&
+    !inputRequest &&
     !showWelcomeBackDialog &&
     true; // activeViewId declaration moved earlier to avoid TDZ
 
@@ -2149,6 +2152,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             />
           ) : shellConfirmationRequest ? (
             <ShellConfirmationDialog request={shellConfirmationRequest} />
+          ) : inputRequest ? (
+            <InputRequestDialog
+              prompt={inputRequest.prompt}
+              placeholder={inputRequest.placeholder}
+              onSubmit={inputRequest.onSubmit}
+              onCancel={inputRequest.onCancel}
+              inputWidth={inputWidth}
+            />
           ) : confirmationRequest ? (
             <Box flexDirection="column">
               {confirmationRequest.prompt}

@@ -65,22 +65,16 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
         priceInfo = ` ${inputFormatted}/${outputFormatted} per 1M tokens`;
       }
 
-      // Format context length with comma separators and show configured / max when available
-      const configured = model.configuredContextLength;
+      // Format context length with comma separators when available
       const max = model.maxContextLength ?? model.contextLength;
       const ctxInfo =
-        configured && max
-          ? ` (${configured.toLocaleString()} / ${max.toLocaleString()} ctx)`
-          : configured
-            ? ` (${configured.toLocaleString()} ctx)`
-            : max
-              ? ` (${max.toLocaleString()} ctx)`
-              : "";
+        max ? ` (${max.toLocaleString()} ctx)` : "";
 
+      const quantInfo = model.quantization ? ` [${model.quantization}]` : "";
+      const typeInfo = model.modelType ? ` {${model.modelType}}` : "";
       const currentIndicator = model.id === currentModel ? " (current)" : "";
-      const unmatchedIndicator = model.unmatched ? " [unmatched]" : "";
       return {
-        label: `${model.label}${visionIndicator}${priceInfo}${ctxInfo}${unmatchedIndicator}${currentIndicator}`,
+        label: `${model.label}${visionIndicator}${typeInfo}${quantInfo}${priceInfo}${ctxInfo}${currentIndicator}`,
         value: model.id,
       };
     },

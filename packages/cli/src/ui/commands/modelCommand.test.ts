@@ -146,7 +146,7 @@ describe("modelCommand", () => {
       type: "message",
       messageType: "error",
       content:
-        "No models available for the current authentication type (openai).",
+        "No models available for the current authentication type (USE_OPENAI).",
     });
   });
 

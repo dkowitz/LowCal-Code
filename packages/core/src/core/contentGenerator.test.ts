@@ -205,6 +205,7 @@ describe("createContentGeneratorConfig", () => {
 
   it("should prefer OPENAI_MODEL when provided", async () => {
     vi.stubEnv("OPENAI_API_KEY", "env-openai-key");
+    vi.stubEnv("OPENAI_BASE_URL", "https://api.openai.com");
     vi.stubEnv("OPENAI_MODEL", "env-model");
     mockConfig.getModel = vi.fn().mockReturnValue("persisted-model");
 
@@ -215,5 +216,20 @@ describe("createContentGeneratorConfig", () => {
 
     expect(config.apiKey).toBe("env-openai-key");
     expect(config.model).toBe("env-model");
+  });
+
+  it("should ignore OPENAI_MODEL for LM Studio base URLs", async () => {
+    vi.stubEnv("OPENAI_API_KEY", "env-openai-key");
+    vi.stubEnv("OPENAI_BASE_URL", "http://localhost:1234");
+    vi.stubEnv("OPENAI_MODEL", "env-model");
+    mockConfig.getModel = vi.fn().mockReturnValue("persisted-model");
+
+    const config = await createContentGeneratorConfig(
+      mockConfig,
+      AuthType.USE_OPENAI,
+    );
+
+    expect(config.apiKey).toBe("env-openai-key");
+    expect(config.model).toBe("persisted-model");
   });
 });

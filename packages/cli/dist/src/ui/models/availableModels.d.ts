@@ -15,24 +15,21 @@ export type AvailableModel = {
      */
     outputPrice?: string;
     /**
-     * Legacy single context length field (kept for compatibility). Prefer using
-     * configuredContextLength and maxContextLength when available.
+     * Legacy single context length field (kept for compatibility).
      */
     contextLength?: number;
-    /**
-     * Context window size configured by the user in LM Studio JSON files.
-     */
-    configuredContextLength?: number;
     /**
      * Max/context length reported by the provider (LM Studio REST API).
      */
     maxContextLength?: number;
-    /** Original configured filename-derived model id (if from filesystem) */
-    configuredName?: string;
-    /** True if we couldn't find a matching REST id for this configured model */
-    unmatched?: boolean;
-    /** If matched, the REST provider id we matched to */
-    matchedRestId?: string;
+    /**
+     * Optional quantization string (primarily for LM Studio models).
+     */
+    quantization?: string;
+    /**
+     * Provider-reported model type (e.g., "llm", "vlm", "embeddings").
+     */
+    modelType?: string;
     isVision?: boolean;
 };
 export declare const MAINLINE_VLM = "vision-model";
@@ -51,7 +48,9 @@ export declare function getOpenAIAvailableModelFromEnv(): AvailableModel | null;
  * Query an OpenAI-compatible server for available models (/v1/models).
  * Returns an array of AvailableModel or empty on error.
  */
-export declare function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: string): Promise<AvailableModel[]>;
+export declare function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: string, options?: {
+    forceLmStudio?: boolean;
+}): Promise<AvailableModel[]>;
 /**
  * Read LM Studio user model configuration files from the user's home directory.
  * We traverse ~/.lmstudio/.internal/user-concrete-model-default-config/ recursively
@@ -59,7 +58,6 @@ export declare function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: st
  * "llm.load.contextLength" (commonly found under load.fields entries).
  * Only models with an explicit configured contextLength are returned.
  */
-export declare function getLMStudioConfiguredModels(): Promise<AvailableModel[]>;
 export declare function getLMStudioLoadedModel(baseUrl: string): Promise<string | null>;
 /**
 /**

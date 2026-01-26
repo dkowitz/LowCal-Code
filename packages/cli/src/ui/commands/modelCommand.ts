@@ -37,7 +37,9 @@ async function getAvailableModelsForAuthType(
         process.env["OPENAI_API_KEY"]?.trim();
 
       if (baseUrl) {
-        return await fetchOpenAICompatibleModels(baseUrl, apiKey);
+        return await fetchOpenAICompatibleModels(baseUrl, apiKey, {
+          forceLmStudio: providerId === "lmstudio",
+        });
       }
 
       return [];
@@ -84,20 +86,10 @@ export const modelCommand: SlashCommand = {
       };
     }
 
-    let availableModels = await getAvailableModelsForAuthType(
+    const availableModels = await getAvailableModelsForAuthType(
       authType,
       context,
     );
-
-    // If using LM Studio provider, prefer filesystem-configured models
-    if (authType === AuthType.USE_OPENAI) {
-      const lmModels = await (
-        await import("../models/availableModels.js")
-      ).getLMStudioConfiguredModels();
-      if (lmModels.length > 0) {
-        availableModels = lmModels;
-      }
-    }
 
     if (availableModels.length === 0) {
       return {

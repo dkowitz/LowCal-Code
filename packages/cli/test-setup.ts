@@ -56,16 +56,8 @@ vi.mock("@qwen-code/qwen-code-core", () => {
     getEffectiveContextLimit(_model?: string) {
       return 131072;
     }
-    async getLMStudioConfiguredModels() {
-      return [
-        {
-          id: "lm-default-model",
-          label: "lm-default-model",
-          configuredContextLength: 131072,
-          matchedRestId: "lm-default-model",
-          configuredName: "lm-default-model",
-        },
-      ];
+    setModelContextLimit(_model: string, _limit?: number) {
+      // Mock implementation - no-op
     }
     async getLMStudioLoadedModel(_baseUrl: string) {
       return "lm-default-model";

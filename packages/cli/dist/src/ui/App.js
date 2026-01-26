@@ -32,7 +32,6 @@ import { LoadingIndicator } from "./components/LoadingIndicator.js";
 import { AutoAcceptIndicator } from "./components/AutoAcceptIndicator.js";
 import { ShellModeIndicator } from "./components/ShellModeIndicator.js";
 import { InputPrompt } from "./components/InputPrompt.js";
-import { InputRequestDialog } from "./components/InputRequestDialog.js";
 import { Footer } from "./components/Footer.js";
 import { ThemeDialog } from "./components/ThemeDialog.js";
 import { AuthDialog } from "./components/AuthDialog.js";
@@ -44,9 +43,8 @@ import { ShellConfirmationDialog } from "./components/ShellConfirmationDialog.js
 import { QuitConfirmationDialog } from "./components/QuitConfirmationDialog.js";
 import { RadioButtonSelect } from "./components/shared/RadioButtonSelect.js";
 import { ModelSelectionDialog } from "./components/ModelSelectionDialog.js";
-import { ModelMappingDialog } from "./components/ModelMappingDialog.js";
 import { ModelSwitchDialog, } from "./components/ModelSwitchDialog.js";
-import { getOpenAIAvailableModelFromEnv, getFilteredQwenModels, fetchOpenAICompatibleModels, getLMStudioConfiguredModels, getLMStudioLoadedModel, } from "./models/availableModels.js";
+import { getOpenAIAvailableModelFromEnv, getFilteredQwenModels, fetchOpenAICompatibleModels, getLMStudioLoadedModel, } from "./models/availableModels.js";
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
 import { AgentCreationWizard, AgentsManagerDialog, } from "./components/subagents/index.js";
 import { Colors } from "./colors.js";
@@ -169,38 +167,29 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     useEffect(() => {
         // no-op that references modelLimitVersion to ensure TypeScript doesn't report it as unused
     }, [modelLimitVersion]);
-    const hasBeenSetFromSettingsRef = useRef(false);
     // If the user has a saved model in settings, ensure the config and UI
     // reflect it on startup. This will restore the last-used model across
     // restarts.
     useEffect(() => {
         const savedModel = settings.merged.model?.name;
-        if (savedModel) {
-            // Mark that we're attempting to restore from settings BEFORE the async operation
-            // to prevent the model change watcher from overriding the restored model
-            hasBeenSetFromSettingsRef.current = true;
-            // Only restore model if it's different from current one or if no model is set yet
-            const currentModel = config.getModel();
-            if (currentModel === undefined || savedModel !== currentModel) {
-                void (async () => {
-                    try {
-                        await config.setModel(savedModel);
-                        setCurrentModel(savedModel);
-                        // Only persist to .env for OpenRouter auth
-                        if (settings.merged.security?.auth?.providerId === "openrouter") {
-                            try {
-                                setOpenAIModel(savedModel);
-                            }
-                            catch (err) {
-                                console.warn("Failed to persist OpenRouter model to .env:", err);
-                            }
+        if (savedModel && savedModel !== config.getModel()) {
+            void (async () => {
+                try {
+                    await config.setModel(savedModel);
+                    setCurrentModel(savedModel);
+                    if (settings.merged.security?.auth?.providerId === "openrouter") {
+                        try {
+                            setOpenAIModel(savedModel);
+                        }
+                        catch (err) {
+                            console.warn("Failed to persist OpenRouter model to .env:", err);
                         }
                     }
-                    catch (e) {
-                        console.warn("Failed to restore saved model from settings:", e);
-                    }
-                })();
-            }
+                }
+                catch (e) {
+                    console.warn("Failed to restore saved model from settings:", e);
+                }
+            })();
         }
     }, [
         config,
@@ -252,8 +241,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         catch (e) {
             // ignore
         }
-        // If provider is LM Studio, read configured context lengths from filesystem/mappings.
-        // If provider is OpenRouter, attempt to fetch REST models to get provider-reported context lengths.
+        // If provider is LM Studio/OpenRouter, attempt to fetch REST models to get provider-reported context lengths.
         let cancelled = false;
         (async () => {
             try {
@@ -263,36 +251,8 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 if (!providerId) {
                     return;
                 }
-                if (providerId === "lmstudio") {
-                    const configuredModels = await getLMStudioConfiguredModels();
-                    let override = configuredModels.find((model) => model.id === activeModel ||
-                        model.label === activeModel ||
-                        model.matchedRestId === activeModel)?.configuredContextLength;
-                    if (!override) {
-                        try {
-                            const storage = await import("./models/modelMappingStorage.js");
-                            const existingMappings = await storage.loadMappings();
-                            const configuredEntry = Object.entries(existingMappings).find(([_configuredName, mappedId]) => mappedId === activeModel);
-                            if (configuredEntry) {
-                                const [configuredName] = configuredEntry;
-                                const matched = configuredModels.find((model) => model.configuredName === configuredName ||
-                                    model.id === configuredName);
-                                override = matched?.configuredContextLength;
-                            }
-                        }
-                        catch (error) {
-                            if (config.getDebugMode()) {
-                                console.debug("Failed to load LM Studio model mappings:", error);
-                            }
-                        }
-                    }
-                    if (!cancelled) {
-                        config.setModelContextLimit(activeModel, override);
-                    }
-                    return;
-                }
-                // If provider is OpenRouter, try to fetch REST models to obtain context_length
-                if (providerId === "openrouter") {
+                // If provider is LM Studio or OpenRouter, try to fetch REST models to obtain context_length
+                if (providerId === "openrouter" || providerId === "lmstudio") {
                     try {
                         const contentGeneratorConfig = config.getContentGeneratorConfig();
                         const baseUrl = contentGeneratorConfig?.baseUrl ||
@@ -300,11 +260,13 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                             "";
                         const apiKey = contentGeneratorConfig?.apiKey || process.env["OPENAI_API_KEY"];
                         if (baseUrl) {
-                            const restModels = await (await import("./models/availableModels.js")).fetchOpenAICompatibleModels(baseUrl, apiKey);
+                            const restModels = await (await import("./models/availableModels.js")).fetchOpenAICompatibleModels(baseUrl, apiKey, {
+                                forceLmStudio: providerId === "lmstudio",
+                            });
                             const matched = restModels.find((r) => r.id === activeModel || r.label === activeModel);
-                            const override = matched?.contextLength ??
-                                matched?.maxContextLength ??
-                                matched?.contextLength;
+                            const override = matched?.maxContextLength ??
+                                matched?.contextLength ??
+                                matched?.maxContextLength;
                             if (!cancelled)
                                 config.setModelContextLimit(activeModel, override);
                         }
@@ -367,45 +329,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [availableModelsForDialog, setAvailableModelsForDialog] = useState([]);
     const [allAvailableModels, setAllAvailableModels] = useState([]);
     const [isFetchingModels, setIsFetchingModels] = useState(false);
-    // Model mapping dialog state
-    const [isModelMappingDialogOpen, setIsModelMappingDialogOpen] = useState(false);
-    const [pendingModelMappings, setPendingModelMappings] = useState(null);
-    // Helper to open mapping dialog with pre-filtered rest models
-    const openModelMappingDialog = useCallback((unmatched, restModels) => {
-        const taken = allAvailableModels
-            .filter((m) => m.matchedRestId)
-            .map((m) => m.matchedRestId)
-            .filter(Boolean);
-        const filteredRest = restModels.filter((r) => !taken.includes(r.id));
-        setPendingModelMappings({
-            unmatched,
-            restModels: filteredRest,
-            takenRestIds: taken,
-        });
-        setIsModelMappingDialogOpen(true);
-    }, [allAvailableModels]);
-    // Ensure function is used to avoid unused var lint during build (no-op)
-    useEffect(() => {
-        // no-op: referenced to silence unused variable detection during build
-        if (typeof openModelMappingDialog === "function")
-            return;
-    }, [openModelMappingDialog]);
-    // Render mapping dialog when open
-    const renderModelMappingDialog = () => {
-        if (!isModelMappingDialogOpen || !pendingModelMappings)
-            return null;
-        const mappingProps = {
-            unmatched: pendingModelMappings.unmatched,
-            restModels: pendingModelMappings.restModels,
-            onApply: applyModelMappings,
-            onCancel: () => {
-                setIsModelMappingDialogOpen(false);
-                setPendingModelMappings(null);
-            },
-        };
-        // Use imported symbol rather than require() so bundlers and ESM environments work.
-        return _jsx(ModelMappingDialog, { ...mappingProps });
-    };
     // Invalidate cached model lists when auth/provider changes so discovery is
     // re-run for the currently selected provider. This ensures that after the
     // user switches authentication/provider, the model selection dialog will show
@@ -576,12 +499,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     // Watch for model changes (e.g., from Flash fallback)
     useEffect(() => {
         const checkModelChange = () => {
-            // Only update the UI state if we haven't already set it from settings
-            if (!hasBeenSetFromSettingsRef.current) {
-                const configModel = config.getModel();
-                if (configModel !== currentModel) {
-                    setCurrentModel(configModel);
-                }
+            const configModel = config.getModel();
+            if (configModel !== currentModel) {
+                setCurrentModel(configModel);
             }
         };
         // Check immediately and then periodically
@@ -726,44 +646,24 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             let models = [];
             try {
                 if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
+                    const baseUrl = contentGeneratorConfig.baseUrl ||
+                        process.env["OPENAI_BASE_URL"] ||
+                        "";
                     const providerId = settings.merged.security?.auth?.providerId;
-                    // If provider is LM Studio, prefer filesystem-configured models and enable mapping UX.
-                    if (providerId === "lmstudio") {
-                        const configured = await getLMStudioConfiguredModels();
-                        if (configured.length > 0) {
-                            models = configured;
-                        }
-                        else {
-                            const baseUrl = contentGeneratorConfig.baseUrl ||
-                                process.env["OPENAI_BASE_URL"] ||
-                                "";
-                            const apiKey = contentGeneratorConfig.apiKey || process.env["OPENAI_API_KEY"];
-                            if (baseUrl) {
-                                models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
-                            }
-                            const openAIModel = getOpenAIAvailableModelFromEnv();
-                            if (openAIModel) {
-                                if (!models.find((m) => m.id === openAIModel.id)) {
-                                    models.push(openAIModel);
-                                }
-                            }
-                        }
+                    const isLmStudioProvider = providerId === "lmstudio" ||
+                        baseUrl.includes("127.0.0.1:1234") ||
+                        baseUrl.includes("localhost:1234");
+                    const apiKey = contentGeneratorConfig.apiKey || process.env["OPENAI_API_KEY"];
+                    if (baseUrl) {
+                        models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
+                            forceLmStudio: isLmStudioProvider,
+                        });
                     }
-                    else {
-                        // For non-LMStudio OpenAI-compatible providers (e.g. OpenRouter), just fetch REST models and do not show LM Studio mapping UX.
-                        const baseUrl = contentGeneratorConfig.baseUrl ||
-                            process.env["OPENAI_BASE_URL"] ||
-                            "";
-                        const apiKey = contentGeneratorConfig.apiKey || process.env["OPENAI_API_KEY"];
-                        if (baseUrl) {
-                            models = await fetchOpenAICompatibleModels(baseUrl, apiKey);
-                        }
-                        const openAIModel = getOpenAIAvailableModelFromEnv();
-                        if (openAIModel) {
-                            if (!models.find((m) => m.id === openAIModel.id)) {
-                                models.push(openAIModel);
-                            }
-                        }
+                    const openAIModel = getOpenAIAvailableModelFromEnv();
+                    if (openAIModel &&
+                        !isLmStudioProvider &&
+                        !models.find((m) => m.id === openAIModel.id)) {
+                        models.push(openAIModel);
                     }
                 }
                 else {
@@ -779,124 +679,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                     seenIds.add(m.id);
                     return true;
                 });
-                // Merge configured context lengths and max context lengths if we have both sources
-                if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
-                    // Fetch REST models again to obtain provider model ids and max ctx if we didn't already
-                    const baseUrl = contentGeneratorConfig.baseUrl ||
-                        process.env["OPENAI_BASE_URL"] ||
-                        "";
-                    const apiKey = contentGeneratorConfig.apiKey || process.env["OPENAI_API_KEY"];
-                    if (baseUrl) {
-                        try {
-                            const restModels = await fetchOpenAICompatibleModels(baseUrl, apiKey);
-                            // Create a map from rest id to model data for quick lookup
-                            const restById = new Map(restModels.map((m) => [m.id, m]));
-                            // Debug: print REST model ids (short list) to the debug console
-                            console.debug("[LMStudio] REST models:", restModels.map((r) => r.id).slice(0, 50));
-                            // If there are persisted mappings, apply them to restModels for convenience
-                            try {
-                                const storage = await import("./models/modelMappingStorage.js");
-                                const existing = await storage.loadMappings();
-                                // promote mappings to restModels list if present
-                                for (const v of Object.values(existing)) {
-                                    // if restModels contains v, ensure there is an entry in models that maps to it
-                                    const idx = restModels.findIndex((r) => r.id === v);
-                                    if (idx !== -1) {
-                                        // nothing to do here for restModels; mapping applied earlier when reading configured models
-                                    }
-                                }
-                            }
-                            catch (e) {
-                                // ignore mapping load errors
-                            }
-                            // For each model in `models` (which may be configured-only), try to match to REST entry
-                            models = models.map((m) => {
-                                // direct match
-                                const rest = restById.get(m.id);
-                                if (rest) {
-                                    console.debug(`[LMStudio] Matched configured '${m.id}' -> REST '${rest.id}' (exact)`);
-                                    return {
-                                        ...m,
-                                        maxContextLength: rest.maxContextLength ?? rest.contextLength,
-                                    };
-                                }
-                                // token-based normalization + overlap score
-                                const normalize = (s) => s.toLowerCase().replace(/[^a-z0-9]/g, " ");
-                                const tokens = Array.from(new Set(normalize(m.id).split(/\s+/).filter(Boolean)));
-                                let best = { score: 0 };
-                                for (const [rid] of restById) {
-                                    const rtokens = Array.from(new Set(normalize(rid).split(/\s+/).filter(Boolean)));
-                                    const intersection = tokens.filter((t) => rtokens.includes(t)).length;
-                                    const union = new Set([...tokens, ...rtokens]).size;
-                                    const jaccard = union === 0 ? 0 : intersection / union;
-                                    // also compute simple prefix/suffix boost
-                                    const prefix = rid
-                                        .toLowerCase()
-                                        .startsWith(m.id.toLowerCase())
-                                        ? 0.2
-                                        : 0;
-                                    const contains = rid
-                                        .toLowerCase()
-                                        .includes(m.id.toLowerCase())
-                                        ? 0.1
-                                        : 0;
-                                    const score = jaccard + prefix + contains;
-                                    if (score > best.score)
-                                        best = { rid, score };
-                                }
-                                // accept candidate if score >= 0.45
-                                if (best.rid && best.score >= 0.45) {
-                                    const matchRid = best.rid;
-                                    const rmodel = restById.get(matchRid);
-                                    console.debug(`[LMStudio] Matched configured '${m.id}' -> REST '${matchRid}' (score=${best.score.toFixed(2)})`);
-                                    return {
-                                        ...m,
-                                        id: matchRid,
-                                        label: rmodel.label ?? matchRid,
-                                        maxContextLength: rmodel.maxContextLength ?? rmodel.contextLength,
-                                        matchedRestId: matchRid,
-                                    };
-                                }
-                                console.debug(`[LMStudio] No REST match for configured '${m.id}' (bestScore=${best.score.toFixed(2)})`);
-                                return { ...m, unmatched: true };
-                            });
-                            // If there are unmatched models, present an interactive mapping dialog to the user
-                            const unmatched = models.filter((m) => m.unmatched);
-                            if (unmatched.length > 0) {
-                                try {
-                                    // Show the interactive mapping dialog and wait for selection
-                                    // load dialog module (side-effect import not used directly)
-                                    await import("./components/ModelMappingDialog.js");
-                                    setAllAvailableModels(models);
-                                    setAvailableModelsForDialog(models);
-                                    // Store unmatched/restModels in ref/state for dialog rendering
-                                    // Pre-filter restModels to exclude any REST ids already matched algorithmically
-                                    const taken = models
-                                        .filter((m) => m.matchedRestId)
-                                        .map((m) => m.matchedRestId)
-                                        .filter(Boolean);
-                                    const filteredRest = restModels.filter((r) => !taken.includes(r.id));
-                                    setPendingModelMappings({
-                                        unmatched,
-                                        restModels: filteredRest,
-                                        takenRestIds: taken,
-                                    });
-                                    setIsModelMappingDialogOpen(true);
-                                    // Wait for mapping result via state (mapping handler will persist and update models)
-                                    // For now we return early so the UI shows the mapping dialog
-                                    setIsFetchingModels(false);
-                                    return;
-                                }
-                                catch (e) {
-                                    console.debug("[LMStudio] Failed to open mapping dialog", e);
-                                }
-                            }
-                        }
-                        catch (e) {
-                            // ignore REST enrich failures; keep models as-is
-                        }
-                    }
-                }
                 setAllAvailableModels(models);
                 setAvailableModelsForDialog(models);
                 setIsModelSelectionDialogOpen(true);
@@ -911,68 +693,14 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         settings.merged.experimental?.visionModelPreview,
         isFetchingModels,
     ]);
-    // Handler to apply mappings from ModelMappingDialog
-    const applyModelMappings = useCallback(async (mappings) => {
-        try {
-            console.debug("[LMStudio] Applying mappings from dialog:", mappings);
-            const storage = await import("./models/modelMappingStorage.js");
-            const existing = await storage.loadMappings();
-            console.debug("[LMStudio] Existing mappings:", existing);
-            const merged = { ...existing, ...mappings };
-            await storage.saveMappings(merged);
-            console.debug("[LMStudio] Persisted merged mappings:", merged);
-            // Update current models with applied mappings
-            const updated = allAvailableModels.map((m) => {
-                if (m.configuredName && mappings[m.configuredName]) {
-                    return {
-                        ...m,
-                        id: mappings[m.configuredName],
-                        label: mappings[m.configuredName],
-                        matchedRestId: mappings[m.configuredName],
-                        unmatched: false,
-                    };
-                }
-                return m;
-            });
-            setAllAvailableModels(updated);
-            setAvailableModelsForDialog(updated);
-        }
-        catch (e) {
-            console.error("Failed to persist model mappings:", e);
-        }
-        finally {
-            setIsModelMappingDialogOpen(false);
-            setPendingModelMappings(null);
-        }
-    }, [allAvailableModels]);
     const handleModelSelectionClose = useCallback(() => {
         setIsModelSelectionDialogOpen(false);
     }, []);
     const handleModelSelect = useCallback(async (modelId) => {
         try {
-            const selectedModel = allAvailableModels.find((model) => model.id === modelId || model.matchedRestId === modelId);
-            const configuredContextLength = selectedModel?.configuredContextLength ??
-                selectedModel?.maxContextLength ??
-                selectedModel?.contextLength;
-            // If this model was a mapped configured model, persist the mapping
-            try {
-                const mappedEntry = allAvailableModels.find((m) => m.id === modelId &&
-                    m.configuredName &&
-                    m.matchedRestId === modelId);
-                if (mappedEntry?.configuredName) {
-                    const storage = await import("./models/modelMappingStorage.js");
-                    const existing = await storage.loadMappings();
-                    const merged = {
-                        ...existing,
-                        [mappedEntry.configuredName]: modelId,
-                    };
-                    await storage.saveMappings(merged);
-                }
-            }
-            catch (e) {
-                // ignore mapping persistence errors
-            }
-            config.setModelContextLimit(modelId, configuredContextLength);
+            const selectedModel = allAvailableModels.find((model) => model.id === modelId);
+            const contextLength = selectedModel?.maxContextLength ?? selectedModel?.contextLength;
+            config.setModelContextLimit(modelId, contextLength);
             const contentGeneratorConfig = config.getContentGeneratorConfig();
             const baseUrl = contentGeneratorConfig?.baseUrl || "";
             const providerId = settings.merged.security?.auth?.providerId;
@@ -997,10 +725,10 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                         "";
                     const apiKey = contentGeneratorConfig?.apiKey || process.env["OPENAI_API_KEY"];
                     if (baseUrl) {
-                        const restModels = await (await import("./models/availableModels.js")).fetchOpenAICompatibleModels(baseUrl, apiKey);
-                        const matched = restModels.find((r) => r.id === modelId ||
-                            r.label === modelId ||
-                            r.matchedRestId === modelId);
+                        const restModels = await (await import("./models/availableModels.js")).fetchOpenAICompatibleModels(baseUrl, apiKey, {
+                            forceLmStudio: providerId === "lmstudio",
+                        });
+                        const matched = restModels.find((r) => r.id === modelId || r.label === modelId);
                         const ctx = matched?.contextLength ??
                             matched?.maxContextLength ??
                             undefined;
@@ -1032,18 +760,50 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 type: MessageType.INFO,
                 text: `Switched model to \`${modelId}\` for this session.`,
             }, Date.now());
-            // Send a small warm-up query to prime remote models (non-blocking)
-            if (!isLmStudioProvider) {
+            // Send a small warm-up query to prime models (LM Studio loads on demand).
+            try {
+                const gemini = config.getGeminiClient();
+                if (gemini) {
+                    void gemini
+                        .generateContent([{ role: "user", parts: [{ text: "Say hello." }] }], {}, new AbortController().signal, modelId)
+                        .catch(() => { });
+                }
+            }
+            catch (e) {
+                // ignore warm-up errors
+            }
+            if (isLmStudioProvider) {
                 try {
-                    const gemini = config.getGeminiClient();
-                    if (gemini) {
-                        void gemini
-                            .generateContent([{ role: "user", parts: [{ text: "Say hello." }] }], {}, new AbortController().signal, modelId)
-                            .catch(() => { });
+                    const contentGeneratorConfig = config.getContentGeneratorConfig();
+                    const baseUrl = contentGeneratorConfig?.baseUrl ||
+                        process.env["OPENAI_BASE_URL"] ||
+                        "";
+                    const apiKey = contentGeneratorConfig?.apiKey || process.env["OPENAI_API_KEY"];
+                    if (baseUrl) {
+                        const warmupUrl = baseUrl.endsWith("/v1")
+                            ? `${baseUrl}/chat/completions`
+                            : `${baseUrl.replace(/\/*$/, "")}/v1/chat/completions`;
+                        const headers = {
+                            "Content-Type": "application/json",
+                        };
+                        if (apiKey) {
+                            headers["Authorization"] = `Bearer ${apiKey}`;
+                        }
+                        void fetch(warmupUrl, {
+                            method: "POST",
+                            headers,
+                            body: JSON.stringify({
+                                model: modelId,
+                                messages: [{ role: "user", content: "Say hello." }],
+                                max_tokens: 1,
+                                temperature: 0,
+                                stream: false,
+                            }),
+                        }).catch(() => { });
                     }
                 }
                 catch (e) {
-                    // ignore warm-up errors
+                    // ignore LM Studio warm-up errors
                 }
             }
             if (isLmStudioProvider) {
@@ -1068,7 +828,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     // available models for dialog are populated via handleModelSelectionOpen
     // Core hooks and processors
     const { vimEnabled: vimModeEnabled, vimMode, toggleVimEnabled, } = useVimMode();
-    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, inputRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController);
+    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController);
     const buffer = useTextBuffer({
         initialText: "",
         viewport: { height: 10, width: inputWidth },
@@ -1307,7 +1067,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         streamingState === StreamingState.Responding) &&
         !initError &&
         !isProcessing &&
-        !inputRequest &&
         !showWelcomeBackDialog &&
         true; // activeViewId declaration moved earlier to avoid TDZ
     const handleClearScreen = useCallback(() => {
@@ -1444,7 +1203,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                         ...history
                             .filter((h) => h.type !== "view")
                             .map((h) => (_jsx(HistoryItemDisplay, { terminalWidth: mainAreaWidth, availableTerminalHeight: staticAreaMaxItemHeight, item: h, isPending: false, config: config, commands: slashCommands }, h.id))),
-                    ], children: (item) => item }, staticKey), renderModelMappingDialog(), _jsx(OverflowProvider, { children: _jsxs(Box, { ref: pendingHistoryItemRef, flexDirection: "column", children: [pendingHistoryItems.map((item) => (_jsx(HistoryItemDisplay, { availableTerminalHeight: constrainHeight ? availableTerminalHeight : undefined, terminalWidth: mainAreaWidth, item: item, isPending: true, config: config, isFocused: !isEditorDialogOpen, viewControls: item.type === "view"
+                    ], children: (item) => item }, staticKey), _jsx(OverflowProvider, { children: _jsxs(Box, { ref: pendingHistoryItemRef, flexDirection: "column", children: [pendingHistoryItems.map((item) => (_jsx(HistoryItemDisplay, { availableTerminalHeight: constrainHeight ? availableTerminalHeight : undefined, terminalWidth: mainAreaWidth, item: item, isPending: true, config: config, isFocused: !isEditorDialogOpen, viewControls: item.type === "view"
                                     ? {
                                         isActive: activeViewId === item.id,
                                         scrollOffset: viewScrollOffset,
@@ -1477,7 +1236,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                 else {
                                     quitConfirmationRequest.onConfirm(false);
                                 }
-                            } })) : shellConfirmationRequest ? (_jsx(ShellConfirmationDialog, { request: shellConfirmationRequest })) : inputRequest ? (_jsx(InputRequestDialog, { prompt: inputRequest.prompt, placeholder: inputRequest.placeholder, onSubmit: inputRequest.onSubmit, onCancel: inputRequest.onCancel, inputWidth: inputWidth })) : confirmationRequest ? (_jsxs(Box, { flexDirection: "column", children: [confirmationRequest.prompt, _jsx(Box, { paddingY: 1, children: _jsx(RadioButtonSelect, { isFocused: !!confirmationRequest, items: [
+                            } })) : shellConfirmationRequest ? (_jsx(ShellConfirmationDialog, { request: shellConfirmationRequest })) : confirmationRequest ? (_jsxs(Box, { flexDirection: "column", children: [confirmationRequest.prompt, _jsx(Box, { paddingY: 1, children: _jsx(RadioButtonSelect, { isFocused: !!confirmationRequest, items: [
                                             { label: "Yes", value: true },
                                             { label: "No", value: false },
                                         ], onSelect: (value) => {
@@ -1515,7 +1274,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                             // Ensure the Box takes full width so truncation calculates correctly
                                             _jsx(Box, { paddingLeft: 2, width: "100%", children: _jsx(Text, { dimColor: true, wrap: "truncate", children: preview }) }, index));
                                         }), messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && (_jsx(Box, { paddingLeft: 2, children: _jsxs(Text, { dimColor: true, children: ["... (+", messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES, "more)"] }) }))] })), _jsxs(Box, { marginTop: 1, justifyContent: "space-between", width: "100%", flexDirection: isNarrow ? "column" : "row", alignItems: isNarrow ? "flex-start" : "center", children: [_jsxs(Box, { children: [process.env["GEMINI_SYSTEM_MD"] && (_jsx(Text, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " })), ctrlCPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." })) : ctrlDPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." })) : showEscapePrompt ? (_jsx(Text, { color: Colors.Gray, children: "Press Esc again to clear." })) : (_jsx(ContextSummaryDisplay, { ideContext: ideContextState, geminiMdFileCount: geminiMdFileCount, contextFileNames: contextFileNames, mcpServers: config.getMcpServers(), blockedMcpServers: config.getBlockedMcpServers(), showToolDescriptions: showToolDescriptions }))] }), _jsxs(Box, { paddingTop: isNarrow ? 1 : 0, children: [showAutoAcceptIndicator !== ApprovalMode.DEFAULT &&
-                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused && !isModelMappingDialogOpen, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [" ", "Please check API key and configuration."] })] })) })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModel, modelLimit: typeof config.getModelContextLimit === "function"
+                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [" ", "Please check API key and configuration."] })] })) })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModel, modelLimit: typeof config.getModelContextLimit === "function"
                                 ? config.getModelContextLimit(currentModel)
                                 : undefined, targetDir: config.getTargetDir(), debugMode: config.getDebugMode(), branchName: branchName, debugMessage: debugMessage, corgiMode: corgiMode, errorCount: errorCount, showErrorDetails: showErrorDetails, showMemoryUsage: config.getDebugMode() ||
                                 settings.merged.ui?.showMemoryUsage ||
