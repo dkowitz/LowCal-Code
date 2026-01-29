@@ -140,3 +140,5 @@ export const setOpenAIApiKey = (apiKey: string): string => setEnvVarAndPersist("
 export const setOpenAIBaseUrl = (baseUrl: string): string => setEnvVarAndPersist("OPENAI_BASE_URL", baseUrl);
 
 export const setOpenAIModel = (model: string): string => setEnvVarAndPersist("OPENAI_MODEL", model);
+
+export const setGeminiApiKey = (apiKey: string): string => setEnvVarAndPersist("GEMINI_API_KEY", apiKey);

@@ -63,8 +63,10 @@ import {
 } from "./components/ModelSwitchDialog.js";
 import {
   getOpenAIAvailableModelFromEnv,
+  getFilteredGeminiModels,
   getFilteredQwenModels,
   fetchOpenAICompatibleModels,
+  fetchGeminiModels,
   getLMStudioLoadedModel,
   type AvailableModel,
 } from "./models/availableModels.js";
@@ -923,22 +925,32 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       let models: AvailableModel[] = [];
       try {
         if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
+          const providerId = settings.merged.security?.auth?.providerId;
+          const providerSettings =
+            settings.merged.security?.auth?.providers || {};
+          const provider =
+            providerSettings[providerId as "openrouter" | "lmstudio" | "openai"];
+          const providerWithKey = provider as
+            | { apiKey?: string; baseUrl?: string }
+            | undefined;
           const baseUrl =
+            providerWithKey?.baseUrl?.trim() ||
             contentGeneratorConfig.baseUrl ||
             process.env["OPENAI_BASE_URL"] ||
             "";
-          const providerId = settings.merged.security?.auth?.providerId;
           const isLmStudioProvider =
             providerId === "lmstudio" ||
             baseUrl.includes("127.0.0.1:1234") ||
             baseUrl.includes("localhost:1234");
           const apiKey =
-            contentGeneratorConfig.apiKey || process.env["OPENAI_API_KEY"];
-            if (baseUrl) {
-              models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
-                forceLmStudio: isLmStudioProvider,
-              });
-            }
+            providerWithKey?.apiKey?.trim() ||
+            contentGeneratorConfig.apiKey ||
+            process.env["OPENAI_API_KEY"];
+          if (baseUrl) {
+            models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
+              forceLmStudio: isLmStudioProvider,
+            });
+          }
           const openAIModel = getOpenAIAvailableModelFromEnv();
           if (
             openAIModel &&
@@ -947,6 +959,16 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           ) {
             models.push(openAIModel);
           }
+        } else if (
+          contentGeneratorConfig.authType === AuthType.USE_GEMINI ||
+          contentGeneratorConfig.authType === AuthType.USE_VERTEX_AI
+        ) {
+          const apiKey = process.env["GEMINI_API_KEY"]?.trim();
+          const fetched = apiKey ? await fetchGeminiModels(apiKey) : [];
+          models =
+            fetched.length > 0
+              ? fetched
+              : getFilteredGeminiModels(currentModel);
         } else {
           models = getFilteredQwenModels(
             settings.merged.experimental?.visionModelPreview ?? true,
@@ -1002,11 +1024,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         // Unload previous model by setting new model (config.setModel will reinitialize client)
         await config.setModel(modelId);
         setCurrentModel(modelId);
-        if (settings.merged.security?.auth?.providerId === "openrouter") {
+        if (
+          settings.merged.security?.auth?.providerId === "openrouter" ||
+          settings.merged.security?.auth?.providerId === "openai"
+        ) {
           try {
             setOpenAIModel(modelId);
           } catch (err) {
-            console.warn("Failed to persist OpenRouter model to .env:", err);
+            console.warn("Failed to persist OpenAI-compatible model to .env:", err);
           }
 
           // Attempt to fetch REST models immediately to pick up provider-reported context_length
@@ -1064,20 +1089,22 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           Date.now(),
         );
         // Send a small warm-up query to prime models (LM Studio loads on demand).
-        try {
-          const gemini = config.getGeminiClient();
-          if (gemini) {
-            void gemini
-              .generateContent(
-                [{ role: "user", parts: [{ text: "Say hello." }] }],
-                {},
-                new AbortController().signal,
-                modelId,
-              )
-              .catch(() => {});
+        if (!isLmStudioProvider) {
+          try {
+            const gemini = config.getGeminiClient();
+            if (gemini) {
+              void gemini
+                .generateContent(
+                  [{ role: "user", parts: [{ text: "Say hello." }] }],
+                  {},
+                  new AbortController().signal,
+                  modelId,
+                )
+                .catch(() => {});
+            }
+          } catch (e) {
+            // ignore warm-up errors
           }
-        } catch (e) {
-          // ignore warm-up errors
         }
 
         if (isLmStudioProvider) {

@@ -114,4 +114,5 @@ function setEnvVarAndPersist(key, value) {
 export const setOpenAIApiKey = (apiKey) => setEnvVarAndPersist("OPENAI_API_KEY", apiKey);
 export const setOpenAIBaseUrl = (baseUrl) => setEnvVarAndPersist("OPENAI_BASE_URL", baseUrl);
 export const setOpenAIModel = (model) => setEnvVarAndPersist("OPENAI_MODEL", model);
+export const setGeminiApiKey = (apiKey) => setEnvVarAndPersist("GEMINI_API_KEY", apiKey);
 //# sourceMappingURL=auth.js.map

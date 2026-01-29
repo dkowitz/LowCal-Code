@@ -706,6 +706,26 @@ export const SETTINGS_SCHEMA = {
                                     },
                                 },
                             },
+                            gemini: {
+                                type: "object",
+                                label: "Gemini Settings",
+                                category: "Security",
+                                requiresRestart: false,
+                                default: {},
+                                description: "Stored configuration for Gemini API key.",
+                                showInDialog: false,
+                                properties: {
+                                    apiKey: {
+                                        type: "string",
+                                        label: "Gemini API Key",
+                                        category: "Security",
+                                        requiresRestart: false,
+                                        default: undefined,
+                                        description: "Stored Gemini API key for reuse.",
+                                        showInDialog: false,
+                                    },
+                                },
+                            },
                         },
                     },
                     useExternal: {

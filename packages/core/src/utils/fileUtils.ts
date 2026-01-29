@@ -6,16 +6,21 @@
 
 import fs from "node:fs";
 import path from "node:path";
-import type { PartUnion } from "@google/genai";
+import os from "node:os";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import type { PartListUnion, PartUnion } from "@google/genai";
 import mime from "mime-types";
 import type { FileSystemService } from "../services/fileSystemService.js";
 import { ToolErrorType } from "../tools/tool-error.js";
 import { BINARY_EXTENSIONS } from "./ignorePatterns.js";
-import { parsePdfBuffer } from "./pdfUtils.js";
+import { parsePdfBuffer, type ParsedPdfPage } from "./pdfUtils.js";
 
 const MAX_PDF_BYTES = 10 * 1024 * 1024;
 const MAX_PDF_PAGES = 60;
 const PDF_PARSE_TIMEOUT_MS = 5000;
+const PDF_OCR_DPI = 150;
+const execFileAsync = promisify(execFile);
 
 // Constants for text file processing
 export const DEFAULT_MAX_LINES_TEXT_FILE = 2000;
@@ -32,6 +37,82 @@ export const DEFAULT_ENCODING: BufferEncoding = "utf-8";
 export function getSpecificMimeType(filePath: string): string | undefined {
   const lookedUpMime = mime.lookup(filePath);
   return typeof lookedUpMime === "string" ? lookedUpMime : undefined;
+}
+
+function getPagesNeedingOcr(
+  pages: ParsedPdfPage[],
+  parsedText: string,
+): number[] {
+  if (!pages || pages.length === 0) {
+    return [];
+  }
+  if (!parsedText) {
+    return pages.map((p) => p.pageNumber);
+  }
+  return pages
+    .filter((p) => p.hasImages || !p.hasText)
+    .map((p) => p.pageNumber);
+}
+
+async function renderPdfPagesToPng(
+  buffer: Buffer,
+  pageNumbers: number[],
+): Promise<Array<{ pageNumber: number; data: string }>> {
+  if (pageNumbers.length === 0) {
+    return [];
+  }
+
+  const tempDir = await fs.promises.mkdtemp(
+    path.join(os.tmpdir(), "lowcal-pdf-ocr-"),
+  );
+  const inputPath = path.join(tempDir, "input.pdf");
+  await fs.promises.writeFile(inputPath, buffer);
+
+  const results: Array<{ pageNumber: number; data: string }> = [];
+  try {
+    for (const pageNumber of pageNumbers) {
+      const outputPrefix = path.join(tempDir, `page-${pageNumber}`);
+      await execFileAsync("pdftoppm", [
+        "-f",
+        String(pageNumber),
+        "-l",
+        String(pageNumber),
+        "-r",
+        String(PDF_OCR_DPI),
+        "-png",
+        "-singlefile",
+        inputPath,
+        outputPrefix,
+      ]);
+      const outputPath = `${outputPrefix}.png`;
+      const imageBuffer = await fs.promises.readFile(outputPath);
+      results.push({
+        pageNumber,
+        data: imageBuffer.toString("base64"),
+      });
+    }
+  } finally {
+    await fs.promises.rm(tempDir, { recursive: true, force: true });
+  }
+
+  return results;
+}
+
+function appendOcrImageParts(
+  parts: PartUnion[],
+  ocrImages: Array<{ pageNumber: number; data: string }>,
+) {
+  for (const image of ocrImages) {
+    parts.push({
+      text: `\n[PDF OCR page ${image.pageNumber}]`,
+    });
+    parts.push({
+      inlineData: {
+        data: image.data,
+        mimeType: "image/png",
+      },
+    });
+  }
 }
 
 /**
@@ -173,7 +254,7 @@ export async function detectFileType(
 }
 
 export interface ProcessedFileReadResult {
-  llmContent: PartUnion; // string for text, Part for image/pdf/unreadable binary
+  llmContent: PartListUnion; // string for text, Part for image/pdf/unreadable binary, or Part[] for mixed
   returnDisplay: string;
   error?: string; // Optional error message for the LLM if file processing failed
   errorType?: ToolErrorType; // Structured error type
@@ -336,7 +417,26 @@ export async function processSingleFileContent(
             timeoutMs: PDF_PARSE_TIMEOUT_MS,
           });
           const parsedText = (parsed.text || "").trim();
-          if (!parsedText) {
+
+          const pagesNeedingOcr = getPagesNeedingOcr(parsed.pages, parsedText);
+          let ocrImages: Array<{ pageNumber: number; data: string }> = [];
+          let ocrError: string | undefined;
+
+          if (pagesNeedingOcr.length > 0) {
+            try {
+              ocrImages = await renderPdfPagesToPng(
+                contentBuffer,
+                pagesNeedingOcr,
+              );
+            } catch (error) {
+              ocrError = error instanceof Error ? error.message : String(error);
+            }
+          }
+
+          if (!parsedText && ocrImages.length === 0) {
+            const displaySuffix = ocrError
+              ? ` (OCR failed: ${ocrError})`
+              : "";
             return {
               llmContent: {
                 inlineData: {
@@ -344,30 +444,67 @@ export async function processSingleFileContent(
                   mimeType: "application/pdf",
                 },
               },
-              returnDisplay: `PDF detected but no extractable text; returning raw PDF: ${relativePathForDisplay}`,
+              returnDisplay: `PDF detected but no extractable text; returning raw PDF: ${relativePathForDisplay}${displaySuffix}`,
             };
           }
 
-          const lines = parsedText.split("\n");
-          const originalLineCount = lines.length;
-          const startLine = offset || 0;
-          const effectiveLimit =
-            limit === undefined ? DEFAULT_MAX_LINES_TEXT_FILE : limit;
-          const endLine = Math.min(startLine + effectiveLimit, originalLineCount);
-          const actualStartLine = Math.min(startLine, originalLineCount);
-          const selectedLines = lines.slice(actualStartLine, endLine);
-          const llmContent = selectedLines.join("\n");
-          const isTruncated = startLine > 0 || endLine < originalLineCount;
-          const returnDisplay = isTruncated
-            ? `Parsed PDF text lines ${actualStartLine + 1}-${endLine} of ${originalLineCount}: ${relativePathForDisplay}`
-            : `Parsed PDF text: ${relativePathForDisplay}`;
+          const parts: PartUnion[] = [];
+          if (parsedText) {
+            const lines = parsedText.split("\n");
+            const originalLineCount = lines.length;
+            const startLine = offset || 0;
+            const effectiveLimit =
+              limit === undefined ? DEFAULT_MAX_LINES_TEXT_FILE : limit;
+            const endLine = Math.min(
+              startLine + effectiveLimit,
+              originalLineCount,
+            );
+            const actualStartLine = Math.min(startLine, originalLineCount);
+            const selectedLines = lines.slice(actualStartLine, endLine);
+            const textPart = selectedLines.join("\n");
+            parts.push({ text: textPart });
 
+            const isTruncated = startLine > 0 || endLine < originalLineCount;
+            let returnDisplay = isTruncated
+              ? `Parsed PDF text lines ${actualStartLine + 1}-${endLine} of ${originalLineCount}: ${relativePathForDisplay}`
+              : `Parsed PDF text: ${relativePathForDisplay}`;
+
+            if (ocrImages.length > 0) {
+              returnDisplay += ` (OCR pages: ${ocrImages
+                .map((p) => p.pageNumber)
+                .join(", ")})`;
+            }
+            if (ocrError) {
+              returnDisplay += ` (OCR failed: ${ocrError})`;
+            }
+
+            const result: ProcessedFileReadResult = {
+              llmContent: ocrImages.length > 0 ? parts : textPart,
+              returnDisplay,
+              isTruncated,
+              originalLineCount,
+              linesShown: [actualStartLine + 1, endLine],
+            };
+
+            if (ocrImages.length > 0) {
+              appendOcrImageParts(parts, ocrImages);
+              result.llmContent = parts;
+            }
+
+            return result;
+          }
+
+          // No extracted text, but OCR images exist.
+          parts.push({
+            text: `PDF had no extractable text; OCR images included for ${relativePathForDisplay}.`,
+          });
+          appendOcrImageParts(parts, ocrImages);
+          const returnDisplay = `PDF OCR images extracted: ${relativePathForDisplay} (pages: ${ocrImages
+            .map((p) => p.pageNumber)
+            .join(", ")})${ocrError ? ` (OCR failed: ${ocrError})` : ""}`;
           return {
-            llmContent,
+            llmContent: parts,
             returnDisplay,
-            isTruncated,
-            originalLineCount,
-            linesShown: [actualStartLine + 1, endLine],
           };
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);

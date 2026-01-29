@@ -9,3 +9,4 @@ export declare const validateAuthMethod: (authMethod: string | AuthType | undefi
 export declare const setOpenAIApiKey: (apiKey: string) => string;
 export declare const setOpenAIBaseUrl: (baseUrl: string) => string;
 export declare const setOpenAIModel: (model: string) => string;
+export declare const setGeminiApiKey: (apiKey: string) => string;

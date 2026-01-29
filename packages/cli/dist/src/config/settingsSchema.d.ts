@@ -727,6 +727,26 @@ export declare const SETTINGS_SCHEMA: {
                                     };
                                 };
                             };
+                            readonly gemini: {
+                                readonly type: "object";
+                                readonly label: "Gemini Settings";
+                                readonly category: "Security";
+                                readonly requiresRestart: false;
+                                readonly default: Record<string, unknown>;
+                                readonly description: "Stored configuration for Gemini API key.";
+                                readonly showInDialog: false;
+                                readonly properties: {
+                                    readonly apiKey: {
+                                        readonly type: "string";
+                                        readonly label: "Gemini API Key";
+                                        readonly category: "Security";
+                                        readonly requiresRestart: false;
+                                        readonly default: string | undefined;
+                                        readonly description: "Stored Gemini API key for reuse.";
+                                        readonly showInDialog: false;
+                                    };
+                                };
+                            };
                         };
                     };
                     readonly useExternal: {

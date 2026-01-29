@@ -44,7 +44,7 @@ import { QuitConfirmationDialog } from "./components/QuitConfirmationDialog.js";
 import { RadioButtonSelect } from "./components/shared/RadioButtonSelect.js";
 import { ModelSelectionDialog } from "./components/ModelSelectionDialog.js";
 import { ModelSwitchDialog, } from "./components/ModelSwitchDialog.js";
-import { getOpenAIAvailableModelFromEnv, getFilteredQwenModels, fetchOpenAICompatibleModels, getLMStudioLoadedModel, } from "./models/availableModels.js";
+import { getOpenAIAvailableModelFromEnv, getFilteredGeminiModels, getFilteredQwenModels, fetchOpenAICompatibleModels, fetchGeminiModels, getLMStudioLoadedModel, } from "./models/availableModels.js";
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
 import { AgentCreationWizard, AgentsManagerDialog, } from "./components/subagents/index.js";
 import { Colors } from "./colors.js";
@@ -646,14 +646,20 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             let models = [];
             try {
                 if (contentGeneratorConfig.authType === AuthType.USE_OPENAI) {
-                    const baseUrl = contentGeneratorConfig.baseUrl ||
+                    const providerId = settings.merged.security?.auth?.providerId;
+                    const providerSettings = settings.merged.security?.auth?.providers || {};
+                    const provider = providerSettings[providerId];
+                    const providerWithKey = provider;
+                    const baseUrl = providerWithKey?.baseUrl?.trim() ||
+                        contentGeneratorConfig.baseUrl ||
                         process.env["OPENAI_BASE_URL"] ||
                         "";
-                    const providerId = settings.merged.security?.auth?.providerId;
                     const isLmStudioProvider = providerId === "lmstudio" ||
                         baseUrl.includes("127.0.0.1:1234") ||
                         baseUrl.includes("localhost:1234");
-                    const apiKey = contentGeneratorConfig.apiKey || process.env["OPENAI_API_KEY"];
+                    const apiKey = providerWithKey?.apiKey?.trim() ||
+                        contentGeneratorConfig.apiKey ||
+                        process.env["OPENAI_API_KEY"];
                     if (baseUrl) {
                         models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
                             forceLmStudio: isLmStudioProvider,
@@ -665,6 +671,15 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                         !models.find((m) => m.id === openAIModel.id)) {
                         models.push(openAIModel);
                     }
+                }
+                else if (contentGeneratorConfig.authType === AuthType.USE_GEMINI ||
+                    contentGeneratorConfig.authType === AuthType.USE_VERTEX_AI) {
+                    const apiKey = process.env["GEMINI_API_KEY"]?.trim();
+                    const fetched = apiKey ? await fetchGeminiModels(apiKey) : [];
+                    models =
+                        fetched.length > 0
+                            ? fetched
+                            : getFilteredGeminiModels(currentModel);
                 }
                 else {
                     models = getFilteredQwenModels(settings.merged.experimental?.visionModelPreview ?? true);
@@ -710,12 +725,13 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             // Unload previous model by setting new model (config.setModel will reinitialize client)
             await config.setModel(modelId);
             setCurrentModel(modelId);
-            if (settings.merged.security?.auth?.providerId === "openrouter") {
+            if (settings.merged.security?.auth?.providerId === "openrouter" ||
+                settings.merged.security?.auth?.providerId === "openai") {
                 try {
                     setOpenAIModel(modelId);
                 }
                 catch (err) {
-                    console.warn("Failed to persist OpenRouter model to .env:", err);
+                    console.warn("Failed to persist OpenAI-compatible model to .env:", err);
                 }
                 // Attempt to fetch REST models immediately to pick up provider-reported context_length
                 try {
@@ -761,16 +777,18 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 text: `Switched model to \`${modelId}\` for this session.`,
             }, Date.now());
             // Send a small warm-up query to prime models (LM Studio loads on demand).
-            try {
-                const gemini = config.getGeminiClient();
-                if (gemini) {
-                    void gemini
-                        .generateContent([{ role: "user", parts: [{ text: "Say hello." }] }], {}, new AbortController().signal, modelId)
-                        .catch(() => { });
+            if (!isLmStudioProvider) {
+                try {
+                    const gemini = config.getGeminiClient();
+                    if (gemini) {
+                        void gemini
+                            .generateContent([{ role: "user", parts: [{ text: "Say hello." }] }], {}, new AbortController().signal, modelId)
+                            .catch(() => { });
+                    }
                 }
-            }
-            catch (e) {
-                // ignore warm-up errors
+                catch (e) {
+                    // ignore warm-up errors
+                }
             }
             if (isLmStudioProvider) {
                 try {

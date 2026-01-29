@@ -31,6 +31,14 @@ export type AvailableModel = {
    * Provider-reported model type (e.g., "llm", "vlm", "embeddings").
    */
   modelType?: string;
+  /**
+   * Provider-reported capabilities (e.g., "tool_use").
+   */
+  capabilities?: string[];
+  /**
+   * Provider-reported model state (e.g., "loaded").
+   */
+  state?: string;
   isVision?: boolean;
 };
 
@@ -41,6 +49,25 @@ export const AVAILABLE_MODELS_QWEN: AvailableModel[] = [
   { id: MAINLINE_CODER, label: MAINLINE_CODER },
   { id: MAINLINE_VLM, label: MAINLINE_VLM, isVision: true },
 ];
+
+export const AVAILABLE_MODELS_GEMINI: AvailableModel[] = [
+  { id: "gemini-2.5-pro", label: "gemini-2.5-pro" },
+  { id: "gemini-2.5-flash", label: "gemini-2.5-flash" },
+  { id: "gemini-2.5-flash-lite", label: "gemini-2.5-flash-lite" },
+  { id: "gemini-2.0-flash", label: "gemini-2.0-flash" },
+  { id: "gemini-1.5-pro", label: "gemini-1.5-pro" },
+  { id: "gemini-1.5-flash", label: "gemini-1.5-flash" },
+];
+
+export function getFilteredGeminiModels(
+  currentModel?: string,
+): AvailableModel[] {
+  const models = [...AVAILABLE_MODELS_GEMINI];
+  if (currentModel && !models.find((m) => m.id === currentModel)) {
+    models.unshift({ id: currentModel, label: currentModel });
+  }
+  return models;
+}
 
 /**
  * Get available Qwen models filtered by vision model preview setting
@@ -114,6 +141,10 @@ export async function fetchOpenAICompatibleModels(
           ),
           quantization: extractQuantization(m),
           modelType: typeof m.type === "string" ? m.type : undefined,
+          capabilities: Array.isArray(m.capabilities)
+            ? m.capabilities.filter((cap: unknown) => typeof cap === "string")
+            : undefined,
+          state: typeof m.state === "string" ? m.state : undefined,
         }))
         .filter((m) => !!m.id);
     }
@@ -167,6 +198,51 @@ export async function fetchOpenAICompatibleModels(
     return mapped;
   } catch (e) {
     // swallow errors and return empty list
+    return [];
+  }
+}
+
+/**
+ * Query the Gemini API for available models.
+ * Returns an array of AvailableModel or empty on error.
+ */
+export async function fetchGeminiModels(
+  apiKey: string,
+  baseUrl = "https://generativelanguage.googleapis.com/v1beta",
+): Promise<AvailableModel[]> {
+  try {
+    if (!apiKey) return [];
+    const url = `${baseUrl.replace(/\/+$/, "")}/models?key=${encodeURIComponent(
+      apiKey,
+    )}`;
+    const resp = await fetch(url, { method: "GET" as const });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    const models: any[] = Array.isArray(data?.models) ? data.models : [];
+    return models
+      .map((m) => {
+        const rawName = typeof m.name === "string" ? m.name : "";
+        const id = rawName.startsWith("models/")
+          ? rawName.slice("models/".length)
+          : rawName;
+        const label =
+          typeof m.displayName === "string" && m.displayName.trim()
+            ? `${m.displayName} (${id})`
+            : id;
+        const methods = Array.isArray(m.supportedGenerationMethods)
+          ? m.supportedGenerationMethods
+          : [];
+        const isVision = methods.some(
+          (method: unknown) =>
+            typeof method === "string" &&
+            method.toLowerCase().includes("image"),
+        );
+        if (!id) return null;
+        const item: AvailableModel = isVision ? { id, label, isVision } : { id, label };
+        return item;
+      })
+      .filter((m): m is AvailableModel => !!m);
+  } catch (e) {
     return [];
   }
 }

@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { PartUnion } from "@google/genai";
+import type { PartListUnion } from "@google/genai";
 import type { FileSystemService } from "../services/fileSystemService.js";
 import { ToolErrorType } from "../tools/tool-error.js";
 export declare const DEFAULT_MAX_LINES_TEXT_FILE = 2000;
@@ -34,7 +34,7 @@ export declare function isBinaryFile(filePath: string): Promise<boolean>;
  */
 export declare function detectFileType(filePath: string): Promise<"text" | "image" | "pdf" | "audio" | "video" | "binary" | "svg">;
 export interface ProcessedFileReadResult {
-    llmContent: PartUnion;
+    llmContent: PartListUnion;
     returnDisplay: string;
     error?: string;
     errorType?: ToolErrorType;

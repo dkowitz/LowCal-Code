@@ -6,11 +6,13 @@
 
 type TextItem = { str: string; transform: number[] };
 type TextContent = { items: TextItem[] };
+type OperatorList = { fnArray: number[] };
 type PdfPage = {
   getTextContent: (options: {
     normalizeWhitespace: boolean;
     disableCombineTextItems: boolean;
   }) => Promise<TextContent>;
+  getOperatorList?: () => Promise<OperatorList>;
 };
 type PdfDocument = {
   numPages: number;
@@ -23,6 +25,7 @@ type PdfjsModule = {
     data: Buffer | Uint8Array;
     disableWorker: boolean;
   }) => PdfLoadingTask;
+  OPS?: Record<string, number>;
 };
 
 async function loadPdfjs(): Promise<PdfjsModule | null> {
@@ -32,12 +35,13 @@ async function loadPdfjs(): Promise<PdfjsModule | null> {
     )) as unknown as {
       default?: PdfjsModule;
       getDocument?: PdfjsModule["getDocument"];
+      OPS?: Record<string, number>;
     };
     if (mod?.getDocument) {
       return mod as PdfjsModule;
     }
     if (mod?.default?.getDocument) {
-      return mod.default;
+      return { ...mod.default, OPS: mod.OPS };
     }
     return null;
   } catch (_error) {
@@ -62,16 +66,27 @@ function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
   });
 }
 
+export type ParsedPdfPage = {
+  pageNumber: number;
+  text: string;
+  hasText: boolean;
+  hasImages: boolean;
+};
+
 export async function parsePdfBuffer(
   buffer: Buffer,
   options: { maxPages: number; timeoutMs: number },
-): Promise<{ text: string }> {
+): Promise<{ text: string; pages: ParsedPdfPage[]; pageCount: number }> {
   const pdfjs = await loadPdfjs();
   if (!pdfjs) {
     throw new Error("PDF parsing module is not available");
   }
 
-  const parseTask = async (): Promise<{ text: string }> => {
+  const parseTask = async (): Promise<{
+    text: string;
+    pages: ParsedPdfPage[];
+    pageCount: number;
+  }> => {
     const loadingTask = pdfjs.getDocument({
       data: new Uint8Array(buffer),
       disableWorker: true,
@@ -82,7 +97,29 @@ export async function parsePdfBuffer(
         options.maxPages > 0
           ? Math.min(options.maxPages, doc.numPages)
           : doc.numPages;
-      const pages: string[] = [];
+      const pages: ParsedPdfPage[] = [];
+      const imageOps = new Set<number>();
+      const ops = pdfjs.OPS || {};
+      const imageOpKeys = [
+        "paintImageXObject",
+        "paintImageMaskXObject",
+        "paintInlineImageXObject",
+        "paintImageXObjectRepeat",
+        "paintImageMaskXObjectRepeat",
+        "paintInlineImageXObjectGroup",
+        "paintImageMaskXObjectGroup",
+        "paintSolidColorImageMask",
+        "beginInlineImage",
+        "beginImageData",
+        "endInlineImage",
+      ];
+      for (const key of imageOpKeys) {
+        const op = ops[key];
+        if (typeof op === "number") {
+          imageOps.add(op);
+        }
+      }
+
       for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
         const page = await doc.getPage(pageNumber);
         const textContent = await page.getTextContent({
@@ -99,9 +136,24 @@ export async function parsePdfBuffer(
           }
           lastY = item.transform[5];
         }
-        pages.push(pageText);
+        const hasText = textContent.items.some((item) => item.str?.trim());
+        let hasImages = false;
+        if (page.getOperatorList && imageOps.size > 0) {
+          try {
+            const operatorList = await page.getOperatorList();
+            hasImages = operatorList.fnArray.some((op) => imageOps.has(op));
+          } catch (_error) {
+            hasImages = false;
+          }
+        }
+        pages.push({
+          pageNumber,
+          text: pageText,
+          hasText,
+          hasImages,
+        });
       }
-      return { text: pages.join("\n\n") };
+      return { text: pages.map((p) => p.text).join("\n\n"), pages, pageCount };
     } finally {
       doc.destroy();
     }

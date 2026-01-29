@@ -9,6 +9,21 @@ export const AVAILABLE_MODELS_QWEN = [
     { id: MAINLINE_CODER, label: MAINLINE_CODER },
     { id: MAINLINE_VLM, label: MAINLINE_VLM, isVision: true },
 ];
+export const AVAILABLE_MODELS_GEMINI = [
+    { id: "gemini-2.5-pro", label: "gemini-2.5-pro" },
+    { id: "gemini-2.5-flash", label: "gemini-2.5-flash" },
+    { id: "gemini-2.5-flash-lite", label: "gemini-2.5-flash-lite" },
+    { id: "gemini-2.0-flash", label: "gemini-2.0-flash" },
+    { id: "gemini-1.5-pro", label: "gemini-1.5-pro" },
+    { id: "gemini-1.5-flash", label: "gemini-1.5-flash" },
+];
+export function getFilteredGeminiModels(currentModel) {
+    const models = [...AVAILABLE_MODELS_GEMINI];
+    if (currentModel && !models.find((m) => m.id === currentModel)) {
+        models.unshift({ id: currentModel, label: currentModel });
+    }
+    return models;
+}
 /**
  * Get available Qwen models filtered by vision model preview setting
  */
@@ -70,6 +85,10 @@ export async function fetchOpenAICompatibleModels(baseUrl, apiKey, options) {
                     m.context_size),
                 quantization: extractQuantization(m),
                 modelType: typeof m.type === "string" ? m.type : undefined,
+                capabilities: Array.isArray(m.capabilities)
+                    ? m.capabilities.filter((cap) => typeof cap === "string")
+                    : undefined,
+                state: typeof m.state === "string" ? m.state : undefined,
             }))
                 .filter((m) => !!m.id);
         }
@@ -115,6 +134,45 @@ export async function fetchOpenAICompatibleModels(baseUrl, apiKey, options) {
     }
     catch (e) {
         // swallow errors and return empty list
+        return [];
+    }
+}
+/**
+ * Query the Gemini API for available models.
+ * Returns an array of AvailableModel or empty on error.
+ */
+export async function fetchGeminiModels(apiKey, baseUrl = "https://generativelanguage.googleapis.com/v1beta") {
+    try {
+        if (!apiKey)
+            return [];
+        const url = `${baseUrl.replace(/\/+$/, "")}/models?key=${encodeURIComponent(apiKey)}`;
+        const resp = await fetch(url, { method: "GET" });
+        if (!resp.ok)
+            return [];
+        const data = await resp.json();
+        const models = Array.isArray(data?.models) ? data.models : [];
+        return models
+            .map((m) => {
+            const rawName = typeof m.name === "string" ? m.name : "";
+            const id = rawName.startsWith("models/")
+                ? rawName.slice("models/".length)
+                : rawName;
+            const label = typeof m.displayName === "string" && m.displayName.trim()
+                ? `${m.displayName} (${id})`
+                : id;
+            const methods = Array.isArray(m.supportedGenerationMethods)
+                ? m.supportedGenerationMethods
+                : [];
+            const isVision = methods.some((method) => typeof method === "string" &&
+                method.toLowerCase().includes("image"));
+            if (!id)
+                return null;
+            const item = isVision ? { id, label, isVision } : { id, label };
+            return item;
+        })
+            .filter((m) => !!m);
+    }
+    catch (e) {
         return [];
     }
 }

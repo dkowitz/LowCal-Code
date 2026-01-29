@@ -1,27 +1,36 @@
 import { AuthType } from "@qwen-code/qwen-code-core";
 import { CommandKind } from "./types.js";
-import { AVAILABLE_MODELS_QWEN, fetchOpenAICompatibleModels, getOpenAIAvailableModelFromEnv, } from "../models/availableModels.js";
+import { AVAILABLE_MODELS_QWEN, fetchGeminiModels, fetchOpenAICompatibleModels, getFilteredGeminiModels, getOpenAIAvailableModelFromEnv, } from "../models/availableModels.js";
 async function getAvailableModelsForAuthType(authType, context) {
     switch (authType) {
         case AuthType.QWEN_OAUTH:
             return AVAILABLE_MODELS_QWEN;
+        case AuthType.USE_GEMINI:
+        case AuthType.USE_VERTEX_AI: {
+            const currentModel = context.services.config?.getModel();
+            const apiKey = process.env["GEMINI_API_KEY"]?.trim();
+            const fetched = apiKey ? await fetchGeminiModels(apiKey) : [];
+            const fallback = getFilteredGeminiModels(currentModel);
+            return fetched.length > 0 ? fetched : fallback;
+        }
         case AuthType.USE_OPENAI: {
-            // If a model is explicitly set via OPENAI_MODEL, return that.
-            const openAIModel = getOpenAIAvailableModelFromEnv();
-            if (openAIModel)
-                return [openAIModel];
             // Use provider-specific settings from config
             const { providerId, providers } = context.services.settings.merged.security?.auth || {};
             const provider = providers?.[providerId];
             const baseUrl = provider?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
             const apiKey = provider?.apiKey?.trim() ||
                 process.env["OPENAI_API_KEY"]?.trim();
+            let models = [];
             if (baseUrl) {
-                return await fetchOpenAICompatibleModels(baseUrl, apiKey, {
+                models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {
                     forceLmStudio: providerId === "lmstudio",
                 });
             }
-            return [];
+            const openAIModel = getOpenAIAvailableModelFromEnv();
+            if (openAIModel && !models.find((m) => m.id === openAIModel.id)) {
+                models.push(openAIModel);
+            }
+            return models;
         }
         default:
             // For other auth types, return empty array for now

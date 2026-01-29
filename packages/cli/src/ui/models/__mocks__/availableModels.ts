@@ -9,5 +9,9 @@ export type AvailableModel = {
   outputPrice?: string;
   contextLength?: number;
   maxContextLength?: number;
+  quantization?: string;
+  modelType?: string;
+  capabilities?: string[];
+  state?: string;
   isVision?: boolean;
 };

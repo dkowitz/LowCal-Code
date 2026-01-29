@@ -30,11 +30,21 @@ export type AvailableModel = {
      * Provider-reported model type (e.g., "llm", "vlm", "embeddings").
      */
     modelType?: string;
+    /**
+     * Provider-reported capabilities (e.g., "tool_use").
+     */
+    capabilities?: string[];
+    /**
+     * Provider-reported model state (e.g., "loaded").
+     */
+    state?: string;
     isVision?: boolean;
 };
 export declare const MAINLINE_VLM = "vision-model";
 export declare const MAINLINE_CODER = "coder-model";
 export declare const AVAILABLE_MODELS_QWEN: AvailableModel[];
+export declare const AVAILABLE_MODELS_GEMINI: AvailableModel[];
+export declare function getFilteredGeminiModels(currentModel?: string): AvailableModel[];
 /**
  * Get available Qwen models filtered by vision model preview setting
  */
@@ -51,6 +61,11 @@ export declare function getOpenAIAvailableModelFromEnv(): AvailableModel | null;
 export declare function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: string, options?: {
     forceLmStudio?: boolean;
 }): Promise<AvailableModel[]>;
+/**
+ * Query the Gemini API for available models.
+ * Returns an array of AvailableModel or empty on error.
+ */
+export declare function fetchGeminiModels(apiKey: string, baseUrl?: string): Promise<AvailableModel[]>;
 /**
  * Read LM Studio user model configuration files from the user's home directory.
  * We traverse ~/.lmstudio/.internal/user-concrete-model-default-config/ recursively

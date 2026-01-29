@@ -5,8 +5,10 @@
  */
 import type React from "react";
 interface OpenAIKeyPromptProps {
-    onSubmit: (apiKey: string, baseUrl: string, model: string) => void;
+    onSubmit: (apiKey: string, baseUrl: string) => void;
     onCancel: () => void;
+    prepopulatedApiKey?: string;
+    prepopulatedBaseUrl?: string;
 }
-export declare function OpenAIKeyPrompt({ onSubmit, onCancel, }: OpenAIKeyPromptProps): React.JSX.Element;
+export declare function OpenAIKeyPrompt({ onSubmit, onCancel, prepopulatedApiKey, prepopulatedBaseUrl, }: OpenAIKeyPromptProps): React.JSX.Element;
 export {};

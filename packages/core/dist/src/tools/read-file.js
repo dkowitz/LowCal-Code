@@ -38,7 +38,7 @@ class ReadFileToolInvocation extends BaseToolInvocation {
             };
         }
         let llmContent;
-        if (result.isTruncated) {
+        if (result.isTruncated && typeof result.llmContent === "string") {
             const [start, end] = result.linesShown;
             const total = result.originalLineCount;
             const nextOffset = this.params.offset

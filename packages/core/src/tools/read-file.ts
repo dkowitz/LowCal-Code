@@ -84,8 +84,8 @@ class ReadFileToolInvocation extends BaseToolInvocation<
       };
     }
 
-    let llmContent: PartUnion;
-    if (result.isTruncated) {
+    let llmContent: PartUnion | PartUnion[];
+    if (result.isTruncated && typeof result.llmContent === "string") {
       const [start, end] = result.linesShown!;
       const total = result.originalLineCount!;
       const nextOffset = this.params.offset

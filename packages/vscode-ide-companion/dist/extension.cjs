@@ -4347,7 +4347,7 @@ var require_has_flag = __commonJS({
 var require_supports_color = __commonJS({
   "../../node_modules/supports-color/index.js"(exports2, module2) {
     "use strict";
-    var os8 = require("os");
+    var os9 = require("os");
     var tty = require("tty");
     var hasFlag = require_has_flag();
     var { env: env2 } = process;
@@ -4404,7 +4404,7 @@ var require_supports_color = __commonJS({
         return min;
       }
       if (process.platform === "win32") {
-        const osRelease = os8.release().split(".");
+        const osRelease = os9.release().split(".");
         if (Number(osRelease[0]) >= 10 && Number(osRelease[2]) >= 10586) {
           return Number(osRelease[2]) >= 14931 ? 3 : 2;
         }
@@ -13135,7 +13135,7 @@ var require_googleauth = __commonJS({
     var child_process_1 = require("child_process");
     var fs17 = require("fs");
     var gcpMetadata = require_src4();
-    var os8 = require("os");
+    var os9 = require("os");
     var path25 = require("path");
     var crypto_1 = require_crypto3();
     var transporters_1 = require_transporters();
@@ -13576,7 +13576,7 @@ var require_googleauth = __commonJS({
        * @api private
        */
       _isWindows() {
-        const sys = os8.platform();
+        const sys = os9.platform();
         if (sys && sys.length >= 3) {
           if (sys.substring(0, 3).toLowerCase() === "win") {
             return true;
@@ -29226,7 +29226,7 @@ var require_mock_interceptor = __commonJS({
 var require_mock_client = __commonJS({
   "../../node_modules/undici/lib/mock/mock-client.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify3 } = require("node:util");
+    var { promisify: promisify4 } = require("node:util");
     var Client2 = require_client();
     var { buildMockDispatch } = require_mock_utils();
     var {
@@ -29271,7 +29271,7 @@ var require_mock_client = __commonJS({
         );
       }
       async [kClose]() {
-        await promisify3(this[kOriginalClose])();
+        await promisify4(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -29484,7 +29484,7 @@ var require_mock_call_history = __commonJS({
 var require_mock_pool = __commonJS({
   "../../node_modules/undici/lib/mock/mock-pool.js"(exports2, module2) {
     "use strict";
-    var { promisify: promisify3 } = require("node:util");
+    var { promisify: promisify4 } = require("node:util");
     var Pool = require_pool();
     var { buildMockDispatch } = require_mock_utils();
     var {
@@ -29529,7 +29529,7 @@ var require_mock_pool = __commonJS({
         );
       }
       async [kClose]() {
-        await promisify3(this[kOriginalClose])();
+        await promisify4(this[kOriginalClose])();
         this[kConnected] = 0;
         this[kMockAgent][Symbols.kClients].delete(this[kOrigin]);
       }
@@ -117348,6 +117348,9 @@ init_tools();
 // ../core/dist/src/utils/fileUtils.js
 var import_node_fs4 = __toESM(require("node:fs"), 1);
 var import_node_path5 = __toESM(require("node:path"), 1);
+var import_node_os2 = __toESM(require("node:os"), 1);
+var import_node_child_process2 = require("node:child_process");
+var import_node_util2 = require("node:util");
 var import_mime_types = __toESM(require_mime_types(), 1);
 init_tool_error();
 
@@ -117451,7 +117454,7 @@ async function loadPdfjs() {
       return mod;
     }
     if (mod?.default?.getDocument) {
-      return mod.default;
+      return { ...mod.default, OPS: mod.OPS };
     }
     return null;
   } catch (_error) {
@@ -117486,6 +117489,27 @@ async function parsePdfBuffer(buffer, options2) {
     try {
       const pageCount = options2.maxPages > 0 ? Math.min(options2.maxPages, doc.numPages) : doc.numPages;
       const pages = [];
+      const imageOps = /* @__PURE__ */ new Set();
+      const ops = pdfjs.OPS || {};
+      const imageOpKeys = [
+        "paintImageXObject",
+        "paintImageMaskXObject",
+        "paintInlineImageXObject",
+        "paintImageXObjectRepeat",
+        "paintImageMaskXObjectRepeat",
+        "paintInlineImageXObjectGroup",
+        "paintImageMaskXObjectGroup",
+        "paintSolidColorImageMask",
+        "beginInlineImage",
+        "beginImageData",
+        "endInlineImage"
+      ];
+      for (const key of imageOpKeys) {
+        const op = ops[key];
+        if (typeof op === "number") {
+          imageOps.add(op);
+        }
+      }
       for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
         const page = await doc.getPage(pageNumber);
         const textContent2 = await page.getTextContent({
@@ -117503,9 +117527,24 @@ ${item.str}`;
           }
           lastY = item.transform[5];
         }
-        pages.push(pageText);
+        const hasText = textContent2.items.some((item) => item.str?.trim());
+        let hasImages = false;
+        if (page.getOperatorList && imageOps.size > 0) {
+          try {
+            const operatorList = await page.getOperatorList();
+            hasImages = operatorList.fnArray.some((op) => imageOps.has(op));
+          } catch (_error) {
+            hasImages = false;
+          }
+        }
+        pages.push({
+          pageNumber,
+          text: pageText,
+          hasText,
+          hasImages
+        });
       }
-      return { text: pages.join("\n\n") };
+      return { text: pages.map((p) => p.text).join("\n\n"), pages, pageCount };
     } finally {
       doc.destroy();
     }
@@ -117517,12 +117556,72 @@ ${item.str}`;
 var MAX_PDF_BYTES = 10 * 1024 * 1024;
 var MAX_PDF_PAGES = 60;
 var PDF_PARSE_TIMEOUT_MS = 5e3;
+var PDF_OCR_DPI = 150;
+var execFileAsync = (0, import_node_util2.promisify)(import_node_child_process2.execFile);
 var DEFAULT_MAX_LINES_TEXT_FILE = 2e3;
 var MAX_LINE_LENGTH_TEXT_FILE = 2e3;
 var DEFAULT_ENCODING = "utf-8";
 function getSpecificMimeType(filePath) {
   const lookedUpMime = import_mime_types.default.lookup(filePath);
   return typeof lookedUpMime === "string" ? lookedUpMime : void 0;
+}
+function getPagesNeedingOcr(pages, parsedText) {
+  if (!pages || pages.length === 0) {
+    return [];
+  }
+  if (!parsedText) {
+    return pages.map((p) => p.pageNumber);
+  }
+  return pages.filter((p) => p.hasImages || !p.hasText).map((p) => p.pageNumber);
+}
+async function renderPdfPagesToPng(buffer, pageNumbers) {
+  if (pageNumbers.length === 0) {
+    return [];
+  }
+  const tempDir = await import_node_fs4.default.promises.mkdtemp(import_node_path5.default.join(import_node_os2.default.tmpdir(), "lowcal-pdf-ocr-"));
+  const inputPath = import_node_path5.default.join(tempDir, "input.pdf");
+  await import_node_fs4.default.promises.writeFile(inputPath, buffer);
+  const results = [];
+  try {
+    for (const pageNumber of pageNumbers) {
+      const outputPrefix = import_node_path5.default.join(tempDir, `page-${pageNumber}`);
+      await execFileAsync("pdftoppm", [
+        "-f",
+        String(pageNumber),
+        "-l",
+        String(pageNumber),
+        "-r",
+        String(PDF_OCR_DPI),
+        "-png",
+        "-singlefile",
+        inputPath,
+        outputPrefix
+      ]);
+      const outputPath = `${outputPrefix}.png`;
+      const imageBuffer = await import_node_fs4.default.promises.readFile(outputPath);
+      results.push({
+        pageNumber,
+        data: imageBuffer.toString("base64")
+      });
+    }
+  } finally {
+    await import_node_fs4.default.promises.rm(tempDir, { recursive: true, force: true });
+  }
+  return results;
+}
+function appendOcrImageParts(parts, ocrImages) {
+  for (const image of ocrImages) {
+    parts.push({
+      text: `
+[PDF OCR page ${image.pageNumber}]`
+    });
+    parts.push({
+      inlineData: {
+        data: image.data,
+        mimeType: "image/png"
+      }
+    });
+  }
 }
 async function isBinaryFile(filePath) {
   let fileHandle;
@@ -117709,7 +117808,18 @@ async function processSingleFileContent(filePath, rootDirectory, fileSystemServi
             timeoutMs: PDF_PARSE_TIMEOUT_MS
           });
           const parsedText = (parsed.text || "").trim();
-          if (!parsedText) {
+          const pagesNeedingOcr = getPagesNeedingOcr(parsed.pages, parsedText);
+          let ocrImages = [];
+          let ocrError;
+          if (pagesNeedingOcr.length > 0) {
+            try {
+              ocrImages = await renderPdfPagesToPng(contentBuffer, pagesNeedingOcr);
+            } catch (error) {
+              ocrError = error instanceof Error ? error.message : String(error);
+            }
+          }
+          if (!parsedText && ocrImages.length === 0) {
+            const displaySuffix = ocrError ? ` (OCR failed: ${ocrError})` : "";
             return {
               llmContent: {
                 inlineData: {
@@ -117717,25 +117827,49 @@ async function processSingleFileContent(filePath, rootDirectory, fileSystemServi
                   mimeType: "application/pdf"
                 }
               },
-              returnDisplay: `PDF detected but no extractable text; returning raw PDF: ${relativePathForDisplay}`
+              returnDisplay: `PDF detected but no extractable text; returning raw PDF: ${relativePathForDisplay}${displaySuffix}`
             };
           }
-          const lines = parsedText.split("\n");
-          const originalLineCount = lines.length;
-          const startLine = offset || 0;
-          const effectiveLimit = limit2 === void 0 ? DEFAULT_MAX_LINES_TEXT_FILE : limit2;
-          const endLine = Math.min(startLine + effectiveLimit, originalLineCount);
-          const actualStartLine = Math.min(startLine, originalLineCount);
-          const selectedLines = lines.slice(actualStartLine, endLine);
-          const llmContent = selectedLines.join("\n");
-          const isTruncated = startLine > 0 || endLine < originalLineCount;
-          const returnDisplay = isTruncated ? `Parsed PDF text lines ${actualStartLine + 1}-${endLine} of ${originalLineCount}: ${relativePathForDisplay}` : `Parsed PDF text: ${relativePathForDisplay}`;
+          const parts = [];
+          if (parsedText) {
+            const lines = parsedText.split("\n");
+            const originalLineCount = lines.length;
+            const startLine = offset || 0;
+            const effectiveLimit = limit2 === void 0 ? DEFAULT_MAX_LINES_TEXT_FILE : limit2;
+            const endLine = Math.min(startLine + effectiveLimit, originalLineCount);
+            const actualStartLine = Math.min(startLine, originalLineCount);
+            const selectedLines = lines.slice(actualStartLine, endLine);
+            const textPart = selectedLines.join("\n");
+            parts.push({ text: textPart });
+            const isTruncated = startLine > 0 || endLine < originalLineCount;
+            let returnDisplay2 = isTruncated ? `Parsed PDF text lines ${actualStartLine + 1}-${endLine} of ${originalLineCount}: ${relativePathForDisplay}` : `Parsed PDF text: ${relativePathForDisplay}`;
+            if (ocrImages.length > 0) {
+              returnDisplay2 += ` (OCR pages: ${ocrImages.map((p) => p.pageNumber).join(", ")})`;
+            }
+            if (ocrError) {
+              returnDisplay2 += ` (OCR failed: ${ocrError})`;
+            }
+            const result = {
+              llmContent: ocrImages.length > 0 ? parts : textPart,
+              returnDisplay: returnDisplay2,
+              isTruncated,
+              originalLineCount,
+              linesShown: [actualStartLine + 1, endLine]
+            };
+            if (ocrImages.length > 0) {
+              appendOcrImageParts(parts, ocrImages);
+              result.llmContent = parts;
+            }
+            return result;
+          }
+          parts.push({
+            text: `PDF had no extractable text; OCR images included for ${relativePathForDisplay}.`
+          });
+          appendOcrImageParts(parts, ocrImages);
+          const returnDisplay = `PDF OCR images extracted: ${relativePathForDisplay} (pages: ${ocrImages.map((p) => p.pageNumber).join(", ")})${ocrError ? ` (OCR failed: ${ocrError})` : ""}`;
           return {
-            llmContent,
-            returnDisplay,
-            isTruncated,
-            originalLineCount,
-            linesShown: [actualStartLine + 1, endLine]
+            llmContent: parts,
+            returnDisplay
           };
         } catch (error) {
           const errorMessage = error instanceof Error ? error.message : String(error);
@@ -117909,7 +118043,7 @@ var ReadFileToolInvocation = class extends BaseToolInvocation {
       };
     }
     let llmContent;
-    if (result.isTruncated) {
+    if (result.isTruncated && typeof result.llmContent === "string") {
       const [start, end] = result.linesShown;
       const total = result.originalLineCount;
       const nextOffset = this.params.offset ? this.params.offset + end - start + 1 : end;
@@ -125147,8 +125281,8 @@ var GlobTool = class _GlobTool extends BaseDeclarativeTool {
 var import_node_fs6 = __toESM(require("node:fs"), 1);
 var import_promises2 = __toESM(require("node:fs/promises"), 1);
 var import_node_path9 = __toESM(require("node:path"), 1);
-var import_node_os2 = require("node:os");
-var import_node_child_process2 = require("node:child_process");
+var import_node_os3 = require("node:os");
+var import_node_child_process3 = require("node:child_process");
 var import_picomatch = __toESM(require_picomatch2(), 1);
 init_tools();
 init_errors();
@@ -125299,7 +125433,7 @@ var GrepToolInvocation = class extends BaseToolInvocation {
       const checkCommand = process.platform === "win32" ? "where" : "command";
       const checkArgs = process.platform === "win32" ? [command] : ["-v", command];
       try {
-        const child = (0, import_node_child_process2.spawn)(checkCommand, checkArgs, {
+        const child = (0, import_node_child_process3.spawn)(checkCommand, checkArgs, {
           stdio: "ignore",
           shell: process.platform === "win32"
         });
@@ -125322,7 +125456,7 @@ var GrepToolInvocation = class extends BaseToolInvocation {
     const results = [];
     if (!output)
       return results;
-    const lines = output.split(import_node_os2.EOL);
+    const lines = output.split(import_node_os3.EOL);
     for (const line of lines) {
       if (!line.trim())
         continue;
@@ -125414,7 +125548,7 @@ var GrepToolInvocation = class extends BaseToolInvocation {
         }
         try {
           const output = await new Promise((resolve4, reject) => {
-            const child = (0, import_node_child_process2.spawn)("git", gitArgs, {
+            const child = (0, import_node_child_process3.spawn)("git", gitArgs, {
               cwd: searchRoot,
               windowsHide: true
             });
@@ -125468,7 +125602,7 @@ var GrepToolInvocation = class extends BaseToolInvocation {
         grepArgs.push(searchPathArg);
         try {
           const output = await new Promise((resolve4, reject) => {
-            const child = (0, import_node_child_process2.spawn)("grep", grepArgs, {
+            const child = (0, import_node_child_process3.spawn)("grep", grepArgs, {
               cwd: searchRoot,
               windowsHide: true
             });
@@ -126106,7 +126240,8 @@ ${getErrorMessage(error)}
           });
         } else {
           const { filePath, relativePathForDisplay, fileReadResult } = fileResult;
-          if (typeof fileReadResult.llmContent === "string") {
+          const llmContent = fileReadResult.llmContent;
+          if (typeof llmContent === "string") {
             const separator = DEFAULT_OUTPUT_SEPARATOR_FORMAT.replace("{filePath}", filePath);
             let fileContentForLlm = "";
             if (fileReadResult.isTruncated) {
@@ -126114,14 +126249,60 @@ ${getErrorMessage(error)}
 
 `;
             }
-            fileContentForLlm += fileReadResult.llmContent;
+            fileContentForLlm += llmContent;
             contentParts.push(`${separator}
 
 ${fileContentForLlm}
 
 `);
+          } else if (Array.isArray(llmContent)) {
+            let separatorAdded = false;
+            for (const part of llmContent) {
+              if (typeof part === "string") {
+                const separator = DEFAULT_OUTPUT_SEPARATOR_FORMAT.replace("{filePath}", filePath);
+                let fileContentForLlm = "";
+                if (!separatorAdded) {
+                  if (fileReadResult.isTruncated) {
+                    fileContentForLlm += `[WARNING: This file was truncated. To view the full content, use the 'read_file' tool on this specific file.]
+
+`;
+                  }
+                  fileContentForLlm += part;
+                  contentParts.push(`${separator}
+
+${fileContentForLlm}
+
+`);
+                  separatorAdded = true;
+                } else {
+                  contentParts.push(part);
+                }
+              } else if (part && typeof part.text === "string") {
+                const textPart = part.text;
+                const separator = DEFAULT_OUTPUT_SEPARATOR_FORMAT.replace("{filePath}", filePath);
+                if (!separatorAdded) {
+                  let fileContentForLlm = "";
+                  if (fileReadResult.isTruncated) {
+                    fileContentForLlm += `[WARNING: This file was truncated. To view the full content, use the 'read_file' tool on this specific file.]
+
+`;
+                  }
+                  fileContentForLlm += textPart;
+                  contentParts.push(`${separator}
+
+${fileContentForLlm}
+
+`);
+                  separatorAdded = true;
+                } else {
+                  contentParts.push(part);
+                }
+              } else {
+                contentParts.push(part);
+              }
+            }
           } else {
-            contentParts.push(fileReadResult.llmContent);
+            contentParts.push(llmContent);
           }
           processedFilesRelativePaths.push(relativePathForDisplay);
           const lines = typeof fileReadResult.llmContent === "string" ? fileReadResult.llmContent.split("\n").length : void 0;
@@ -126306,7 +126487,7 @@ init_errors();
 // ../core/dist/src/tools/shell.js
 var import_node_fs7 = __toESM(require("node:fs"), 1);
 var import_node_path10 = __toESM(require("node:path"), 1);
-var import_node_os4 = __toESM(require("node:os"), 1);
+var import_node_os5 = __toESM(require("node:os"), 1);
 var import_node_crypto2 = __toESM(require("node:crypto"), 1);
 init_tool_error();
 init_tools();
@@ -126390,8 +126571,8 @@ var getPty = async () => {
 };
 
 // ../core/dist/src/utils/systemEncoding.js
-var import_node_child_process3 = require("node:child_process");
-var import_node_os3 = __toESM(require("node:os"), 1);
+var import_node_child_process4 = require("node:child_process");
+var import_node_os4 = __toESM(require("node:os"), 1);
 var import_chardet = __toESM(require_lib3(), 1);
 var cachedSystemEncoding = void 0;
 function getCachedEncodingForBuffer(buffer) {
@@ -126404,9 +126585,9 @@ function getCachedEncodingForBuffer(buffer) {
   return detectEncodingFromBuffer(buffer) || "utf-8";
 }
 function getSystemEncoding() {
-  if (import_node_os3.default.platform() === "win32") {
+  if (import_node_os4.default.platform() === "win32") {
     try {
-      const output = (0, import_node_child_process3.execSync)("chcp", { encoding: "utf8" });
+      const output = (0, import_node_child_process4.execSync)("chcp", { encoding: "utf8" });
       const match3 = output.match(/:\s*(\d+)/);
       if (match3) {
         const codePage = parseInt(match3[1], 10);
@@ -126424,7 +126605,7 @@ function getSystemEncoding() {
   let locale = env2["LC_ALL"] || env2["LC_CTYPE"] || env2["LANG"] || "";
   if (!locale) {
     try {
-      locale = (0, import_node_child_process3.execSync)("locale charmap", { encoding: "utf8" }).toString().trim();
+      locale = (0, import_node_child_process4.execSync)("locale charmap", { encoding: "utf8" }).toString().trim();
     } catch (_e) {
       console.warn("Failed to get locale charmap.");
       return null;
@@ -127317,9 +127498,9 @@ var ShellToolInvocation = class extends BaseToolInvocation {
         returnDisplay: "Command cancelled by user."
       };
     }
-    const isWindows = import_node_os4.default.platform() === "win32";
+    const isWindows = import_node_os5.default.platform() === "win32";
     const tempFileName = `shell_pgrep_${import_node_crypto2.default.randomBytes(6).toString("hex")}.tmp`;
-    const tempFilePath = import_node_path10.default.join(import_node_os4.default.tmpdir(), tempFileName);
+    const tempFilePath = import_node_path10.default.join(import_node_os5.default.tmpdir(), tempFileName);
     try {
       const processedCommand = this.addCoAuthorToGitCommit(strippedCommand);
       const shouldRunInBackground = this.params.is_background;
@@ -127376,9 +127557,9 @@ var ShellToolInvocation = class extends BaseToolInvocation {
       }, signal, this.config.getShouldUseNodePtyShell(), terminalColumns, terminalRows);
       const result = await resultPromise;
       const backgroundPIDs = [];
-      if (import_node_os4.default.platform() !== "win32") {
+      if (import_node_os5.default.platform() !== "win32") {
         if (import_node_fs7.default.existsSync(tempFilePath)) {
-          const pgrepLines = import_node_fs7.default.readFileSync(tempFilePath, "utf8").split(import_node_os4.EOL).filter(Boolean);
+          const pgrepLines = import_node_fs7.default.readFileSync(tempFilePath, "utf8").split(import_node_os5.EOL).filter(Boolean);
           for (const line of pgrepLines) {
             if (!/^\d+$/.test(line)) {
               console.error(`pgrep: ${line}`);
@@ -127515,14 +127696,14 @@ function getShellToolDescription() {
       Signal: Signal number or \`(none)\` if no signal was received.
       Background PIDs: List of background processes started or \`(none)\`.
       Process Group PGID: Process group started or \`(none)\``;
-  if (import_node_os4.default.platform() === "win32") {
+  if (import_node_os5.default.platform() === "win32") {
     return `This tool executes a given shell command as \`cmd.exe /c <command>\`. Command can start background processes using \`start /b\`.${toolDescription}`;
   } else {
     return `This tool executes a given shell command as \`bash -c <command>\`. Command can start background processes using \`&\`. Command is executed as a subprocess that leads its own process group. Command process group can be terminated as \`kill -- -PGID\` or signaled as \`kill -s SIGNAL -- -PGID\`.${toolDescription}`;
   }
 }
 function getCommandDescription() {
-  if (import_node_os4.default.platform() === "win32") {
+  if (import_node_os5.default.platform() === "win32") {
     return "Exact command to execute as `cmd.exe /c <command>`";
   } else {
     return "Exact bash command to execute as `bash -c <command>`";
@@ -127935,9 +128116,9 @@ init_mcp_tool();
 init_node();
 
 // ../core/dist/src/utils/secure-browser-launcher.js
-var import_node_child_process4 = require("node:child_process");
-var import_node_util2 = require("node:util");
-var execFileAsync = (0, import_node_util2.promisify)(import_node_child_process4.execFile);
+var import_node_child_process5 = require("node:child_process");
+var import_node_util3 = require("node:util");
+var execFileAsync2 = (0, import_node_util3.promisify)(import_node_child_process5.execFile);
 
 // ../core/dist/src/mcp/oauth-token-storage.js
 init_storage();
@@ -133308,7 +133489,7 @@ var WebSearchTool = class _WebSearchTool extends BaseDeclarativeTool {
 // ../core/dist/src/tools/searxng-search.js
 init_tools();
 init_errors();
-var import_node_child_process5 = require("node:child_process");
+var import_node_child_process6 = require("node:child_process");
 var SearXNGSearchToolInvocation = class extends BaseToolInvocation {
   config;
   constructor(config, params) {
@@ -133339,7 +133520,7 @@ var SearXNGSearchToolInvocation = class extends BaseToolInvocation {
    */
   async isDockerAvailable() {
     try {
-      (0, import_node_child_process5.execSync)("docker --version", { stdio: "ignore" });
+      (0, import_node_child_process6.execSync)("docker --version", { stdio: "ignore" });
       return true;
     } catch (error) {
       return false;
@@ -133350,7 +133531,7 @@ var SearXNGSearchToolInvocation = class extends BaseToolInvocation {
    */
   async isSearXNGRunning() {
     try {
-      const output = (0, import_node_child_process5.execSync)("docker ps --format '{{.Names}}'", {
+      const output = (0, import_node_child_process6.execSync)("docker ps --format '{{.Names}}'", {
         stdio: "pipe",
         encoding: "utf8"
       });
@@ -133368,7 +133549,7 @@ var SearXNGSearchToolInvocation = class extends BaseToolInvocation {
       if (!dockerAvailable) {
         throw new Error("Docker is not installed or not in PATH. Please install Docker to use SearXNG search.");
       }
-      (0, import_node_child_process5.spawn)("docker", ["compose", "-f", "docker-compose.searxng.yml", "up", "-d"], {
+      (0, import_node_child_process6.spawn)("docker", ["compose", "-f", "docker-compose.searxng.yml", "up", "-d"], {
         stdio: "ignore",
         detached: true
       });
@@ -140049,7 +140230,7 @@ var import_express = __toESM(require_express2(), 1);
 var import_node_crypto5 = require("node:crypto");
 var path23 = __toESM(require("node:path"), 1);
 var fs16 = __toESM(require("node:fs/promises"), 1);
-var os7 = __toESM(require("node:os"), 1);
+var os8 = __toESM(require("node:os"), 1);
 
 // src/open-files-manager.ts
 var vscode = __toESM(require("vscode"), 1);
@@ -140235,7 +140416,7 @@ var IDEServer = class {
     this.log = log2;
     this.diffManager = diffManager;
     this.portFile = path23.join(
-      os7.tmpdir(),
+      os8.tmpdir(),
       `gemini-ide-server-${process.ppid}.json`
     );
   }

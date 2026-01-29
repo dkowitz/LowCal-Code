@@ -10,20 +10,23 @@ import { Box, Text, useInput } from "ink";
 import { Colors } from "../colors.js";
 
 interface OpenAIKeyPromptProps {
-  onSubmit: (apiKey: string, baseUrl: string, model: string) => void;
+  onSubmit: (apiKey: string, baseUrl: string) => void;
   onCancel: () => void;
+  prepopulatedApiKey?: string;
+  prepopulatedBaseUrl?: string;
 }
 
 export function OpenAIKeyPrompt({
   onSubmit,
   onCancel,
+  prepopulatedApiKey,
+  prepopulatedBaseUrl,
 }: OpenAIKeyPromptProps): React.JSX.Element {
-  const [apiKey, setApiKey] = useState("");
-  const [baseUrl, setBaseUrl] = useState("");
-  const [model, setModel] = useState("");
-  const [currentField, setCurrentField] = useState<
-    "apiKey" | "baseUrl" | "model"
-  >("apiKey");
+  const [apiKey, setApiKey] = useState(prepopulatedApiKey || "");
+  const [baseUrl, setBaseUrl] = useState(prepopulatedBaseUrl || "");
+  const [currentField, setCurrentField] = useState<"apiKey" | "baseUrl">(
+    "apiKey",
+  );
 
   useInput((input, key) => {
     // 过滤粘贴相关的控制序列
@@ -48,8 +51,6 @@ export function OpenAIKeyPrompt({
         setApiKey((prev) => prev + cleanInput);
       } else if (currentField === "baseUrl") {
         setBaseUrl((prev) => prev + cleanInput);
-      } else if (currentField === "model") {
-        setModel((prev) => prev + cleanInput);
       }
       return;
     }
@@ -61,12 +62,9 @@ export function OpenAIKeyPrompt({
         setCurrentField("baseUrl");
         return;
       } else if (currentField === "baseUrl") {
-        setCurrentField("model");
-        return;
-      } else if (currentField === "model") {
         // 只有在提交时才检查 API key 是否为空
         if (apiKey.trim()) {
-          onSubmit(apiKey.trim(), baseUrl.trim(), model.trim());
+          onSubmit(apiKey.trim(), baseUrl.trim());
         } else {
           // 如果 API key 为空，回到 API key 字段
           setCurrentField("apiKey");
@@ -85,8 +83,6 @@ export function OpenAIKeyPrompt({
       if (currentField === "apiKey") {
         setCurrentField("baseUrl");
       } else if (currentField === "baseUrl") {
-        setCurrentField("model");
-      } else if (currentField === "model") {
         setCurrentField("apiKey");
       }
       return;
@@ -96,8 +92,6 @@ export function OpenAIKeyPrompt({
     if (key.upArrow) {
       if (currentField === "baseUrl") {
         setCurrentField("apiKey");
-      } else if (currentField === "model") {
-        setCurrentField("baseUrl");
       }
       return;
     }
@@ -105,8 +99,6 @@ export function OpenAIKeyPrompt({
     if (key.downArrow) {
       if (currentField === "apiKey") {
         setCurrentField("baseUrl");
-      } else if (currentField === "baseUrl") {
-        setCurrentField("model");
       }
       return;
     }
@@ -117,8 +109,6 @@ export function OpenAIKeyPrompt({
         setApiKey((prev) => prev.slice(0, -1));
       } else if (currentField === "baseUrl") {
         setBaseUrl((prev) => prev.slice(0, -1));
-      } else if (currentField === "model") {
-        setModel((prev) => prev.slice(0, -1));
       }
       return;
     }
@@ -137,11 +127,11 @@ export function OpenAIKeyPrompt({
       </Text>
       <Box marginTop={1}>
         <Text>
-          Please enter your OpenAI configuration. You can get an API key from{" "}
-          <Text color={Colors.AccentBlue}>
-            https://bailian.console.aliyun.com/?tab=model#/api-key
-          </Text>
+          Please enter your OpenAI configuration.
         </Text>
+      </Box>
+      <Box marginTop={1}>
+        <Text color={Colors.Gray}>Use /model to choose an OpenAI model.</Text>
       </Box>
       <Box marginTop={1} flexDirection="row">
         <Box width={12}>
@@ -170,21 +160,6 @@ export function OpenAIKeyPrompt({
           <Text>
             {currentField === "baseUrl" ? "> " : "  "}
             {baseUrl}
-          </Text>
-        </Box>
-      </Box>
-      <Box marginTop={1} flexDirection="row">
-        <Box width={12}>
-          <Text
-            color={currentField === "model" ? Colors.AccentBlue : Colors.Gray}
-          >
-            Model:
-          </Text>
-        </Box>
-        <Box flexGrow={1}>
-          <Text>
-            {currentField === "model" ? "> " : "  "}
-            {model}
           </Text>
         </Box>
       </Box>

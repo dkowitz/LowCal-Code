@@ -104,9 +104,8 @@ describe("AuthDialog", () => {
         <AuthDialog onSelect={() => {}} settings={settings} />,
       );
 
-      // Since the auth dialog only shows OpenAI option now,
-      // it won't show GEMINI_API_KEY messages
-      expect(lastFrame()).toContain("OpenAI");
+      expect(lastFrame()).toContain("Google Gemini (API key)");
+      expect(lastFrame()).toContain("● 4. Google Gemini (API key)");
     });
 
     it("should not show the GEMINI_API_KEY message if QWEN_DEFAULT_AUTH_TYPE is set to something else", () => {
@@ -146,6 +145,7 @@ describe("AuthDialog", () => {
       expect(lastFrame()).not.toContain(
         "Existing API key detected (GEMINI_API_KEY)",
       );
+      expect(lastFrame()).toContain("OpenRouter (OpenAI-compatible)");
     });
 
     it("should show the GEMINI_API_KEY message if QWEN_DEFAULT_AUTH_TYPE is set to use api key", () => {
@@ -182,9 +182,8 @@ describe("AuthDialog", () => {
         <AuthDialog onSelect={() => {}} settings={settings} />,
       );
 
-      // Since the auth dialog only shows OpenAI option now,
-      // it won't show GEMINI_API_KEY messages
-      expect(lastFrame()).toContain("OpenAI");
+      expect(lastFrame()).toContain("Google Gemini (API key)");
+      expect(lastFrame()).toContain("● 4. Google Gemini (API key)");
     });
   });
 
@@ -223,8 +222,7 @@ describe("AuthDialog", () => {
       );
 
       // This is a bit brittle, but it's the best way to check which item is selected.
-      // Updated expectation: the dialog now shows provider options; default selection is first item (OpenRouter)
-      expect(lastFrame()).toContain("● 1. OpenRouter (OpenAI-compatible)");
+      expect(lastFrame()).toContain("● 3. OpenAI (direct)");
     });
 
     it("should fall back to default if QWEN_DEFAULT_AUTH_TYPE is not set", () => {
@@ -258,8 +256,7 @@ describe("AuthDialog", () => {
         <AuthDialog onSelect={() => {}} settings={settings} />,
       );
 
-      // Default is Qwen OAuth (first option)
-      expect(lastFrame()).toContain("● 1. Qwen OAuth");
+      expect(lastFrame()).toContain("● 1. OpenRouter (OpenAI-compatible)");
     });
 
     it("should show an error and fall back to default if QWEN_DEFAULT_AUTH_TYPE is invalid", () => {
@@ -295,9 +292,7 @@ describe("AuthDialog", () => {
         <AuthDialog onSelect={() => {}} settings={settings} />,
       );
 
-      // Since the auth dialog doesn't show QWEN_DEFAULT_AUTH_TYPE errors anymore,
-      // it will just show the default Qwen OAuth option
-      expect(lastFrame()).toContain("● 1. Qwen OAuth");
+      expect(lastFrame()).toContain("● 1. OpenRouter (OpenAI-compatible)");
     });
   });
 

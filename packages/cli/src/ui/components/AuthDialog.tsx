@@ -9,6 +9,7 @@ import { useState } from "react";
 import { AuthType } from "@qwen-code/qwen-code-core";
 import { Box, Text } from "ink";
 import {
+  setGeminiApiKey,
   setOpenAIApiKey,
   setOpenAIBaseUrl,
   setOpenAIModel,
@@ -21,12 +22,14 @@ import { useKeypress } from "../hooks/useKeypress.js";
 import { OpenAIKeyPrompt } from "./OpenAIKeyPrompt.js";
 import { ProviderKeyPrompt } from "./ProviderKeyPrompt.js";
 import { RadioButtonSelect } from "./shared/RadioButtonSelect.js";
+import { GeminiKeyPrompt } from "./GeminiKeyPrompt.js";
 
 const OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 const LM_STUDIO_DEFAULT_BASE_URL = "http://127.0.0.1:1234/v1";
 const LM_STUDIO_DUMMY_KEY = "lmstudio-local-key";
+const OPENAI_DEFAULT_BASE_URL = "https://api.openai.com/v1";
 
-type ProviderId = "openrouter" | "lmstudio" | "openai";
+type ProviderId = "openrouter" | "lmstudio" | "openai" | "gemini";
 
 interface AuthDialogProps {
   onSelect: (authMethod: AuthType | undefined, scope: SettingScope) => void;
@@ -55,6 +58,7 @@ export function AuthDialog({
     initialErrorMessage || null,
   );
   const [showOpenAIKeyPrompt, setShowOpenAIKeyPrompt] = useState(false);
+  const [showGeminiKeyPrompt, setShowGeminiKeyPrompt] = useState(false);
   const [showProviderPrompt, setShowProviderPrompt] = useState<{
     provider: "openrouter" | "lmstudio";
     baseUrl: string;
@@ -67,6 +71,10 @@ export function AuthDialog({
   const providerSettings =
     (settings.merged.security?.auth?.providers as
       | Record<string, { baseUrl?: string; apiKey?: string }>
+      | undefined) || {};
+  const openaiProviderSettings =
+    (providerSettings["openai"] as
+      | { baseUrl?: string; apiKey?: string }
       | undefined) || {};
 
   const persistSelectedAuthType = (authType: AuthType) => {
@@ -129,6 +137,8 @@ export function AuthDialog({
   const items = [
     { label: "OpenRouter (OpenAI-compatible)", value: "openrouter" },
     { label: "LM Studio (local)", value: "lmstudio" },
+    { label: "OpenAI (direct)", value: AuthType.USE_OPENAI },
+    { label: "Google Gemini (API key)", value: AuthType.USE_GEMINI },
   ];
   // Try to detect OpenAI-compatible provider from environment first so the
   // auth dialog can default to the provider the user last configured.
@@ -242,18 +252,22 @@ export function AuthDialog({
       return;
     }
 
+    if (value === AuthType.USE_OPENAI) {
+      setShowOpenAIKeyPrompt(true);
+      setErrorMessage(null);
+      return;
+    }
+
+    if (value === AuthType.USE_GEMINI) {
+      setShowGeminiKeyPrompt(true);
+      setErrorMessage(null);
+      return;
+    }
+
     const authMethod = value as AuthType;
     const error = validateAuthMethod(authMethod);
     if (error) {
-      if (
-        authMethod === AuthType.USE_OPENAI &&
-        !process.env["OPENAI_API_KEY"]
-      ) {
-        setShowOpenAIKeyPrompt(true);
-        setErrorMessage(null);
-      } else {
-        setErrorMessage(error);
-      }
+      setErrorMessage(error);
     } else {
       setErrorMessage(null);
       persistSelectedAuthType(authMethod);
@@ -280,18 +294,15 @@ export function AuthDialog({
     }
   };
 
-  const handleOpenAIKeySubmit = (
-    apiKey: string,
-    baseUrl: string,
-    model: string,
-  ) => {
+  const handleOpenAIKeySubmit = (apiKey: string, baseUrl: string) => {
     const apiKeyPath = setOpenAIApiKey(apiKey);
-    const baseUrlPath = setOpenAIBaseUrl(baseUrl);
-    const modelPath = setOpenAIModel(model);
+    const normalizedBaseUrl = baseUrl.trim() || OPENAI_DEFAULT_BASE_URL;
+    const baseUrlPath = setOpenAIBaseUrl(normalizedBaseUrl);
+    const modelPath = setOpenAIModel("");
     persistSelectedAuthType(AuthType.USE_OPENAI);
     persistProviderId("openai");
     persistProviderSetting("openai", "apiKey", apiKey);
-    persistProviderSetting("openai", "baseUrl", baseUrl);
+    persistProviderSetting("openai", "baseUrl", normalizedBaseUrl);
     try {
       appEvents.emit(
         AppEvent.ShowInfo,
@@ -307,7 +318,7 @@ export function AuthDialog({
       if (modelPath !== apiKeyPath && modelPath !== baseUrlPath) {
         appEvents.emit(
           AppEvent.ShowInfo,
-          `Saved OPENAI_MODEL to: ${modelPath}`,
+          `Cleared OPENAI_MODEL in: ${modelPath}`,
         );
       }
     } catch (e) {
@@ -315,6 +326,23 @@ export function AuthDialog({
     }
     setShowOpenAIKeyPrompt(false);
     onSelect(AuthType.USE_OPENAI, SettingScope.User);
+  };
+
+  const handleGeminiKeySubmit = (apiKey: string) => {
+    const apiKeyPath = setGeminiApiKey(apiKey);
+    persistSelectedAuthType(AuthType.USE_GEMINI);
+    persistProviderId(undefined);
+    persistProviderSetting("gemini", "apiKey", apiKey);
+    try {
+      appEvents.emit(
+        AppEvent.ShowInfo,
+        `Saved GEMINI_API_KEY to: ${apiKeyPath}`,
+      );
+    } catch (e) {
+      // ignore emissions
+    }
+    setShowGeminiKeyPrompt(false);
+    onSelect(AuthType.USE_GEMINI, SettingScope.User);
   };
 
   const handleProviderSubmit = (apiKey: string, baseUrl: string) => {
@@ -395,6 +423,13 @@ export function AuthDialog({
     setErrorMessage("OpenAI API key is required to use OpenAI authentication.");
   };
 
+  const handleGeminiKeyCancel = () => {
+    setShowGeminiKeyPrompt(false);
+    setErrorMessage(
+      "GEMINI_API_KEY is required to use Google Gemini authentication.",
+    );
+  };
+
   useKeypress(
     (key) => {
       if (showOpenAIKeyPrompt) {
@@ -421,10 +456,34 @@ export function AuthDialog({
   );
 
   if (showOpenAIKeyPrompt) {
+    const storedBaseUrl = openaiProviderSettings.baseUrl || "";
+    const isStoredOpenAI =
+      storedBaseUrl === OPENAI_DEFAULT_BASE_URL ||
+      storedBaseUrl.startsWith("https://api.openai.com");
+    const defaultBaseUrl = isStoredOpenAI
+      ? storedBaseUrl
+      : OPENAI_DEFAULT_BASE_URL;
+    const defaultApiKey = isStoredOpenAI ? openaiProviderSettings.apiKey || "" : "";
     return (
       <OpenAIKeyPrompt
         onSubmit={handleOpenAIKeySubmit}
         onCancel={handleOpenAIKeyCancel}
+        prepopulatedApiKey={defaultApiKey}
+        prepopulatedBaseUrl={defaultBaseUrl}
+      />
+    );
+  }
+
+  if (showGeminiKeyPrompt) {
+    const geminiProviderSettings =
+      (providerSettings["gemini"] as
+        | { apiKey?: string }
+        | undefined) || {};
+    return (
+      <GeminiKeyPrompt
+        onSubmit={handleGeminiKeySubmit}
+        onCancel={handleGeminiKeyCancel}
+        prepopulatedApiKey={geminiProviderSettings.apiKey || ""}
       />
     );
   }

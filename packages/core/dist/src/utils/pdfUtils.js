@@ -10,7 +10,7 @@ async function loadPdfjs() {
             return mod;
         }
         if (mod?.default?.getDocument) {
-            return mod.default;
+            return { ...mod.default, OPS: mod.OPS };
         }
         return null;
     }
@@ -50,6 +50,27 @@ export async function parsePdfBuffer(buffer, options) {
                 ? Math.min(options.maxPages, doc.numPages)
                 : doc.numPages;
             const pages = [];
+            const imageOps = new Set();
+            const ops = pdfjs.OPS || {};
+            const imageOpKeys = [
+                "paintImageXObject",
+                "paintImageMaskXObject",
+                "paintInlineImageXObject",
+                "paintImageXObjectRepeat",
+                "paintImageMaskXObjectRepeat",
+                "paintInlineImageXObjectGroup",
+                "paintImageMaskXObjectGroup",
+                "paintSolidColorImageMask",
+                "beginInlineImage",
+                "beginImageData",
+                "endInlineImage",
+            ];
+            for (const key of imageOpKeys) {
+                const op = ops[key];
+                if (typeof op === "number") {
+                    imageOps.add(op);
+                }
+            }
             for (let pageNumber = 1; pageNumber <= pageCount; pageNumber += 1) {
                 const page = await doc.getPage(pageNumber);
                 const textContent = await page.getTextContent({
@@ -67,9 +88,25 @@ export async function parsePdfBuffer(buffer, options) {
                     }
                     lastY = item.transform[5];
                 }
-                pages.push(pageText);
+                const hasText = textContent.items.some((item) => item.str?.trim());
+                let hasImages = false;
+                if (page.getOperatorList && imageOps.size > 0) {
+                    try {
+                        const operatorList = await page.getOperatorList();
+                        hasImages = operatorList.fnArray.some((op) => imageOps.has(op));
+                    }
+                    catch (_error) {
+                        hasImages = false;
+                    }
+                }
+                pages.push({
+                    pageNumber,
+                    text: pageText,
+                    hasText,
+                    hasImages,
+                });
             }
-            return { text: pages.join("\n\n") };
+            return { text: pages.map((p) => p.text).join("\n\n"), pages, pageCount };
         }
         finally {
             doc.destroy();

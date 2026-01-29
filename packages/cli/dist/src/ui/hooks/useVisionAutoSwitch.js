@@ -7,7 +7,7 @@ import {} from "@google/genai";
 import { AuthType, ApprovalMode } from "@qwen-code/qwen-code-core";
 import { useCallback, useRef } from "react";
 import { VisionSwitchOutcome } from "../components/ModelSwitchDialog.js";
-import { getDefaultVisionModel, isVisionModel, } from "../models/availableModels.js";
+import { getDefaultVisionModel, isVisionModel, fetchOpenAICompatibleModels, } from "../models/availableModels.js";
 import { MessageType } from "../types.js";
 import { isSupportedImageMimeType, getUnsupportedImageFormatWarning, } from "@qwen-code/qwen-code-core";
 /**
@@ -85,6 +85,35 @@ function checkImageFormatsSupport(parts) {
         unsupportedMimeTypes,
     };
 }
+function isLmStudioProvider(baseUrl, apiKey) {
+    if (apiKey === "lmstudio-local-key") {
+        return true;
+    }
+    if (!baseUrl) {
+        return false;
+    }
+    return (baseUrl.includes("127.0.0.1:1234") ||
+        baseUrl.includes("localhost:1234") ||
+        baseUrl.toLowerCase().includes("lmstudio"));
+}
+function isVisionCapableOpenAIModel(model) {
+    if (!model)
+        return false;
+    if (model.isVision)
+        return true;
+    if (typeof model.modelType === "string" &&
+        model.modelType.toLowerCase() === "vlm") {
+        return true;
+    }
+    const caps = model.capabilities?.map((cap) => cap.toLowerCase()) ?? [];
+    return caps.some((cap) => cap.includes("vision") || cap.includes("image") || cap.includes("multimodal"));
+}
+function getLmStudioVisionGuidanceMessage(hasLoadedVlm) {
+    if (hasLoadedVlm) {
+        return "Current LM Studio model is not vision-capable. Use /model to select a VLM (type=vlm) or load one in LM Studio.";
+    }
+    return "No vision-capable model is loaded in LM Studio. Load a VLM (type=vlm) in LM Studio, then use /model to select it.";
+}
 /**
  * Determines if we should offer vision switch for the given parts, auth type, and current model
  */
@@ -134,25 +163,61 @@ export function getVisionSwitchGuidanceMessage() {
  */
 export function useVisionAutoSwitch(config, addItem, visionModelPreviewEnabled = true, onVisionSwitchRequired) {
     const originalModelRef = useRef(null);
+    const lmStudioModelsCacheRef = useRef({ fetchedAt: 0, models: [] });
     const handleVisionSwitch = useCallback(async (query, userMessageTimestamp, isContinuation) => {
         // Skip vision switch handling for continuations or if no handler provided
         if (isContinuation || !onVisionSwitchRequired) {
             return { shouldProceed: true };
         }
         const contentGeneratorConfig = config.getContentGeneratorConfig();
-        // Only handle qwen-oauth auth type
-        if (contentGeneratorConfig?.authType !== AuthType.QWEN_OAUTH) {
-            return { shouldProceed: true };
-        }
-        // Check image format support first
+        // Check image format support first (for any provider)
         const formatCheck = checkImageFormatsSupport(query);
-        // If there are unsupported image formats, show warning
         if (formatCheck.hasUnsupportedFormats) {
             addItem({
                 type: MessageType.INFO,
                 text: getUnsupportedImageFormatWarning(),
             }, userMessageTimestamp);
             // Continue processing but with warning shown
+        }
+        // Handle LM Studio vision checks for OpenAI-compatible auth
+        if (contentGeneratorConfig?.authType === AuthType.USE_OPENAI) {
+            const baseUrl = contentGeneratorConfig.baseUrl || process.env["OPENAI_BASE_URL"];
+            const apiKey = contentGeneratorConfig.apiKey || process.env["OPENAI_API_KEY"];
+            if (isLmStudioProvider(baseUrl, apiKey) && hasImageParts(query)) {
+                const now = Date.now();
+                const cache = lmStudioModelsCacheRef.current;
+                if (cache.models.length === 0 ||
+                    cache.baseUrl !== baseUrl ||
+                    now - cache.fetchedAt > 60000) {
+                    try {
+                        const models = await fetchOpenAICompatibleModels(baseUrl || "", apiKey, { forceLmStudio: true });
+                        lmStudioModelsCacheRef.current = {
+                            fetchedAt: now,
+                            models,
+                            baseUrl,
+                        };
+                    }
+                    catch (e) {
+                        // fall through to allow request; LM Studio will report errors
+                    }
+                }
+                const models = lmStudioModelsCacheRef.current.models;
+                const currentModel = config.getModel();
+                const currentEntry = models.find((m) => m.id === currentModel || m.label === currentModel);
+                const isVisionCapable = isVisionCapableOpenAIModel(currentEntry);
+                if (!isVisionCapable) {
+                    const hasLoadedVlm = models.some((m) => m.state === "loaded" && isVisionCapableOpenAIModel(m));
+                    addItem({
+                        type: MessageType.INFO,
+                        text: getLmStudioVisionGuidanceMessage(hasLoadedVlm),
+                    }, userMessageTimestamp);
+                    return { shouldProceed: false };
+                }
+            }
+        }
+        // Only handle qwen-oauth auth type
+        if (contentGeneratorConfig?.authType !== AuthType.QWEN_OAUTH) {
+            return { shouldProceed: true };
         }
         // Check if vision switch is needed
         if (!shouldOfferVisionSwitch(query, contentGeneratorConfig.authType, config.getModel(), visionModelPreviewEnabled)) {

@@ -35,9 +35,12 @@ export const ModelSelectionDialog = ({ availableModels, currentModel, onSelect, 
         const ctxInfo = max ? ` (${max.toLocaleString()} ctx)` : "";
         const quantInfo = model.quantization ? ` [${model.quantization}]` : "";
         const typeInfo = model.modelType ? ` {${model.modelType}}` : "";
+        const capsInfo = model.capabilities && model.capabilities.length > 0
+            ? ` <${model.capabilities.join(", ")}>`
+            : "";
         const currentIndicator = model.id === currentModel ? " (current)" : "";
         return {
-            label: `${model.label}${visionIndicator}${typeInfo}${quantInfo}${priceInfo}${ctxInfo}${currentIndicator}`,
+            label: `${model.label}${visionIndicator}${typeInfo}${quantInfo}${capsInfo}${priceInfo}${ctxInfo}${currentIndicator}`,
             value: model.id,
         };
     });

@@ -421,7 +421,8 @@ ${finalExclusionPatternsForDescription
           const { filePath, relativePathForDisplay, fileReadResult } =
             fileResult;
 
-          if (typeof fileReadResult.llmContent === "string") {
+          const llmContent = fileReadResult.llmContent;
+          if (typeof llmContent === "string") {
             const separator = DEFAULT_OUTPUT_SEPARATOR_FORMAT.replace(
               "{filePath}",
               filePath,
@@ -430,11 +431,51 @@ ${finalExclusionPatternsForDescription
             if (fileReadResult.isTruncated) {
               fileContentForLlm += `[WARNING: This file was truncated. To view the full content, use the 'read_file' tool on this specific file.]\n\n`;
             }
-            fileContentForLlm += fileReadResult.llmContent;
+            fileContentForLlm += llmContent;
             contentParts.push(`${separator}\n\n${fileContentForLlm}\n\n`);
+          } else if (Array.isArray(llmContent)) {
+            let separatorAdded = false;
+            for (const part of llmContent) {
+              if (typeof part === "string") {
+                const separator = DEFAULT_OUTPUT_SEPARATOR_FORMAT.replace(
+                  "{filePath}",
+                  filePath,
+                );
+                let fileContentForLlm = "";
+                if (!separatorAdded) {
+                  if (fileReadResult.isTruncated) {
+                    fileContentForLlm += `[WARNING: This file was truncated. To view the full content, use the 'read_file' tool on this specific file.]\n\n`;
+                  }
+                  fileContentForLlm += part;
+                  contentParts.push(`${separator}\n\n${fileContentForLlm}\n\n`);
+                  separatorAdded = true;
+                } else {
+                  contentParts.push(part);
+                }
+              } else if (part && typeof (part as { text?: unknown }).text === "string") {
+                const textPart = (part as { text: string }).text;
+                const separator = DEFAULT_OUTPUT_SEPARATOR_FORMAT.replace(
+                  "{filePath}",
+                  filePath,
+                );
+                if (!separatorAdded) {
+                  let fileContentForLlm = "";
+                  if (fileReadResult.isTruncated) {
+                    fileContentForLlm += `[WARNING: This file was truncated. To view the full content, use the 'read_file' tool on this specific file.]\n\n`;
+                  }
+                  fileContentForLlm += textPart;
+                  contentParts.push(`${separator}\n\n${fileContentForLlm}\n\n`);
+                  separatorAdded = true;
+                } else {
+                  contentParts.push(part);
+                }
+              } else {
+                contentParts.push(part);
+              }
+            }
           } else {
             // This is a Part for image/pdf, which we don't add the separator to.
-            contentParts.push(fileReadResult.llmContent);
+            contentParts.push(llmContent);
           }
 
           processedFilesRelativePaths.push(relativePathForDisplay);

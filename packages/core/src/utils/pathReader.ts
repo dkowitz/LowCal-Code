@@ -88,7 +88,12 @@ export async function readPathFromWorkspace(
         config.getTargetDir(),
         config.getFileSystemService(),
       );
-      allParts.push(result.llmContent);
+      const content = result.llmContent;
+      if (Array.isArray(content)) {
+        allParts.push(...content);
+      } else {
+        allParts.push(content);
+      }
       allParts.push({ text: "\n" }); // Add a newline for separation
     }
 
@@ -113,6 +118,7 @@ export async function readPathFromWorkspace(
       config.getTargetDir(),
       config.getFileSystemService(),
     );
-    return [result.llmContent];
+    const content = result.llmContent;
+    return Array.isArray(content) ? content : [content];
   }
 }

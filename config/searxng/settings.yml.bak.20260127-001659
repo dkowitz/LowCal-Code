@@ -14,7 +14,7 @@ server:
   limiter: false
   bind_address: "0.0.0.0"
   port: 8080
-  secret_key: "WHLAKqHEUEJZhe7GXwIXfLUVNBKoJC0D-tsZk7Kt4csXYCq-0kQGpKAx0hB62w28"
+  secret_key: "your-secret-key-here-change-this"
 
 botdetection:
   enabled: false
