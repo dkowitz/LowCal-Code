@@ -91,6 +91,18 @@ describe("tokenLimit", () => {
         it("should return the correct limit for gpt-4", () => {
             expect(tokenLimit("gpt-4")).toBe(131072);
         });
+        it("should return the correct limit for gpt-5", () => {
+            expect(tokenLimit("gpt-5")).toBe(400000);
+            expect(tokenLimit("gpt-5.1")).toBe(400000);
+        });
+        it("should return the correct limit for gpt-5 codex models", () => {
+            expect(tokenLimit("gpt-5-codex")).toBe(400000);
+            expect(tokenLimit("gpt-5.1-codex")).toBe(400000);
+        });
+        it("should return the correct limit for codex models", () => {
+            expect(tokenLimit("codex-mini-latest")).toBe(200000);
+            expect(tokenLimit("codex")).toBe(200000);
+        });
     });
     describe("Anthropic Claude", () => {
         it("should return the correct limit for Claude 3.5 Sonnet", () => {

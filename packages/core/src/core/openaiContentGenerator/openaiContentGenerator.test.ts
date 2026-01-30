@@ -97,8 +97,12 @@ describe("OpenAIContentGenerator (Refactored)", () => {
         embeddings: {
           create: vi.fn(),
         },
+        responses: {
+          create: vi.fn(),
+        },
       } as unknown as OpenAI),
       buildRequest: vi.fn().mockImplementation((req) => req),
+      shouldUseResponses: vi.fn().mockReturnValue(false),
     };
 
     generator = new OpenAIContentGenerator(

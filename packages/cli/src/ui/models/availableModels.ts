@@ -238,7 +238,20 @@ export async function fetchGeminiModels(
             method.toLowerCase().includes("image"),
         );
         if (!id) return null;
-        const item: AvailableModel = isVision ? { id, label, isVision } : { id, label };
+        const maxContextLength = toNumber(
+          m.inputTokenLimit ??
+            m.input_token_limit ??
+            m.contextWindow ??
+            m.context_window ??
+            m.contextLength ??
+            m.context_length,
+        );
+        const item: AvailableModel = {
+          id,
+          label,
+          isVision: isVision || undefined,
+          maxContextLength,
+        };
         return item;
       })
       .filter((m): m is AvailableModel => !!m);

@@ -167,7 +167,18 @@ export async function fetchGeminiModels(apiKey, baseUrl = "https://generativelan
                 method.toLowerCase().includes("image"));
             if (!id)
                 return null;
-            const item = isVision ? { id, label, isVision } : { id, label };
+            const maxContextLength = toNumber(m.inputTokenLimit ??
+                m.input_token_limit ??
+                m.contextWindow ??
+                m.context_window ??
+                m.contextLength ??
+                m.context_length);
+            const item = {
+                id,
+                label,
+                isVision: isVision || undefined,
+                maxContextLength,
+            };
             return item;
         })
             .filter((m) => !!m);

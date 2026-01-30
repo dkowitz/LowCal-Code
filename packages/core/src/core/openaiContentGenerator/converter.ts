@@ -22,6 +22,7 @@ import { GenerateContentResponse, FinishReason } from "@google/genai";
 import type OpenAI from "openai";
 import { safeJsonParse } from "../../utils/safeJsonParse.js";
 import { StreamingToolCallParser } from "./streamingToolCallParser.js";
+import type { Response, ResponseStreamEvent } from "openai/resources/responses/responses.js";
 
 /**
  * Tool call accumulator for streaming responses
@@ -934,8 +935,12 @@ export class OpenAIContentConverter {
    * Convert OpenAI response to Gemini format
    */
   convertOpenAIResponseToGemini(
-    openaiResponse: OpenAI.Chat.ChatCompletion,
+    openaiResponse: OpenAI.Chat.ChatCompletion | Response,
   ): GenerateContentResponse {
+    if (this.isResponsesApiResponse(openaiResponse)) {
+      return this.convertResponsesApiResponseToGemini(openaiResponse);
+    }
+
     const choice = openaiResponse.choices[0];
     const response = new GenerateContentResponse();
 
@@ -1236,6 +1241,183 @@ export class OpenAIContentConverter {
         totalTokenCount: totalTokens,
         cachedContentTokenCount: cachedTokens,
       };
+    }
+
+    return response;
+  }
+
+  convertOpenAIResponseEventToGemini(
+    event: ResponseStreamEvent,
+  ): GenerateContentResponse | null {
+    switch (event.type) {
+      case "response.output_text.delta":
+        return this.convertResponsesTextDeltaToGemini(event);
+      case "response.function_call_arguments.delta":
+        return this.convertResponsesFunctionCallDeltaToGemini(event);
+      case "response.output_item.added":
+        this.convertResponsesOutputItemAddedToGemini(event);
+        return null;
+      case "response.completed":
+        return this.convertResponsesCompletedToGemini(event);
+      default:
+        return null;
+    }
+  }
+
+  private isResponsesApiResponse(
+    response: OpenAI.Chat.ChatCompletion | Response,
+  ): response is Response {
+    return "output_text" in response || "created_at" in response;
+  }
+
+  private convertResponsesApiResponseToGemini(
+    response: Response,
+  ): GenerateContentResponse {
+    const parts: Part[] = [];
+
+    for (const item of response.output ?? []) {
+      if (item.type === "message") {
+        for (const part of item.content ?? []) {
+          if (part.type === "output_text") {
+            this.appendTextPart(parts, this.formatThinkingSegments(part.text));
+          }
+        }
+      } else if (item.type === "function_call") {
+        const args = item.arguments ? safeJsonParse(item.arguments, {}) : {};
+        parts.push({
+          functionCall: {
+            id: item.call_id || item.id,
+            name: item.name,
+            args,
+          },
+        });
+      }
+    }
+
+    const geminiResponse = new GenerateContentResponse();
+    geminiResponse.responseId = response.id;
+    geminiResponse.createTime = response.created_at
+      ? response.created_at.toString()
+      : new Date().getTime().toString();
+    geminiResponse.modelVersion = response.model;
+    geminiResponse.promptFeedback = { safetyRatings: [] };
+
+    const candidate: Candidate = {
+      content: {
+        parts,
+        role: "model" as const,
+      },
+      index: 0,
+      safetyRatings: [],
+    };
+
+    if (response.status === "completed") {
+      candidate.finishReason = FinishReason.STOP;
+    }
+
+    geminiResponse.candidates = [candidate];
+
+    if (response.usage) {
+      const promptTokens = response.usage.input_tokens || 0;
+      const completionTokens = response.usage.output_tokens || 0;
+      const totalTokens = response.usage.total_tokens || 0;
+      const cachedTokens = response.usage.input_tokens_details?.cached_tokens || 0;
+
+      geminiResponse.usageMetadata = {
+        promptTokenCount: promptTokens,
+        candidatesTokenCount: completionTokens,
+        totalTokenCount: totalTokens,
+        cachedContentTokenCount: cachedTokens,
+      };
+    }
+
+    return geminiResponse;
+  }
+
+  private convertResponsesTextDeltaToGemini(
+    event: Extract<ResponseStreamEvent, { type: "response.output_text.delta" }>,
+  ): GenerateContentResponse {
+    const parts: Part[] = [];
+    const segments = this.processStreamingThinkingText(
+      event.output_index,
+      event.delta,
+    );
+    for (const segment of segments) {
+      this.appendTextPart(parts, segment.text, {
+        isThinking: segment.isThinking,
+      });
+    }
+
+    const response = new GenerateContentResponse();
+    response.responseId = event.item_id;
+    response.createTime = new Date().getTime().toString();
+    response.modelVersion = this.model;
+    response.promptFeedback = { safetyRatings: [] };
+    response.candidates = [
+      {
+        content: { parts, role: "model" as const },
+        index: 0,
+        safetyRatings: [],
+      },
+    ];
+
+    return response;
+  }
+
+  private convertResponsesFunctionCallDeltaToGemini(
+    event: Extract<
+      ResponseStreamEvent,
+      { type: "response.function_call_arguments.delta" }
+    >,
+  ): GenerateContentResponse | null {
+    this.streamingToolCallParser.addChunk(
+      event.output_index,
+      event.delta,
+      event.item_id,
+    );
+
+    return null;
+  }
+
+  private convertResponsesOutputItemAddedToGemini(
+    event: Extract<ResponseStreamEvent, { type: "response.output_item.added" }>,
+  ): void {
+    const item = event.item;
+    if (item.type !== "function_call") return;
+    this.streamingToolCallParser.addChunk(
+      event.output_index,
+      "",
+      item.call_id || item.id,
+      item.name,
+    );
+  }
+
+  private convertResponsesCompletedToGemini(
+    event: Extract<ResponseStreamEvent, { type: "response.completed" }>,
+  ): GenerateContentResponse {
+    const parts: Part[] = [];
+    const completedToolCalls = this.streamingToolCallParser.getCompletedToolCalls();
+
+    for (const toolCall of completedToolCalls) {
+      if (toolCall.name) {
+        parts.push({
+          functionCall: {
+            id: toolCall.id || event.response.id,
+            name: toolCall.name,
+            args: toolCall.args,
+          },
+        });
+      }
+    }
+
+    this.streamingToolCallParser.reset();
+
+    const response = this.convertResponsesApiResponseToGemini(event.response);
+    if (parts.length > 0) {
+      const candidate = response.candidates?.[0];
+      if (candidate) {
+        candidate.content?.parts?.push(...parts);
+      }
     }
 
     return response;

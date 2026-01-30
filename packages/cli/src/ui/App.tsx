@@ -355,8 +355,12 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           return;
         }
 
-        // If provider is LM Studio or OpenRouter, try to fetch REST models to obtain context_length
-        if (providerId === "openrouter" || providerId === "lmstudio") {
+        // If provider is LM Studio/OpenRouter/OpenAI, try to fetch REST models to obtain context_length
+        if (
+          providerId === "openrouter" ||
+          providerId === "lmstudio" ||
+          providerId === "openai"
+        ) {
           try {
             const contentGeneratorConfig = config.getContentGeneratorConfig();
             const baseUrl =
@@ -378,20 +382,27 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 matched?.maxContextLength ??
                 matched?.contextLength ??
                 matched?.maxContextLength;
-              if (!cancelled)
+              if (!cancelled) {
                 config.setModelContextLimit(activeModel, override);
+                setModelLimitVersion((v) => v + 1);
+              }
             } else {
               // If we don't have baseUrl, clear any override
-              if (!cancelled)
+              if (!cancelled) {
                 config.setModelContextLimit(activeModel, undefined);
+                setModelLimitVersion((v) => v + 1);
+              }
             }
           } catch (error) {
             if (config.getDebugMode())
               console.debug(
-                "Failed to fetch OpenRouter model context length:",
+                "Failed to fetch OpenAI-compatible model context length:",
                 error,
               );
-            if (!cancelled) config.setModelContextLimit(activeModel, undefined);
+            if (!cancelled) {
+              config.setModelContextLimit(activeModel, undefined);
+              setModelLimitVersion((v) => v + 1);
+            }
           }
 
           return;
@@ -1069,7 +1080,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           } catch (e) {
             if (config.getDebugMode())
               console.debug(
-                "Failed to fetch OpenRouter models for immediate context length update:",
+                "Failed to fetch OpenAI-compatible models for immediate context length update:",
                 e,
               );
           }
@@ -2185,9 +2196,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             <Footer
               model={currentModel}
               modelLimit={
-                typeof (config as any).getModelContextLimit === "function"
-                  ? (config as any).getModelContextLimit(currentModel)
-                  : undefined
+                typeof (config as any).getEffectiveContextLimit === "function"
+                  ? (config as any).getEffectiveContextLimit(currentModel)
+                  : typeof (config as any).getModelContextLimit === "function"
+                    ? (config as any).getModelContextLimit(currentModel)
+                    : undefined
               }
               targetDir={config.getTargetDir()}
               debugMode={config.getDebugMode()}

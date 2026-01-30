@@ -62032,6 +62032,7 @@ var init_tokenLimits = __esm({
       "200k": 2e5,
       // vendor-declared decimal (OpenAI / Anthropic use 200k)
       "256k": 262144,
+      "400k": 4e5,
       "512k": 524288,
       "1m": 1048576,
       "2m": 2097152,
@@ -62061,6 +62062,13 @@ var init_tokenLimits = __esm({
       [/^o4-mini.*$/, LIMITS["200k"]],
       [/^gpt-4\.1-mini.*$/, LIMITS["1m"]],
       [/^gpt-4\.1.*$/, LIMITS["1m"]],
+      // GPT-5 + Codex family (OpenAI Responses models)
+      [/^gpt-5\.1-codex.*$/, LIMITS["400k"]],
+      [/^gpt-5\.1.*$/, LIMITS["400k"]],
+      [/^gpt-5-codex.*$/, LIMITS["400k"]],
+      [/^gpt-5.*$/, LIMITS["400k"]],
+      [/^codex-mini.*$/, LIMITS["200k"]],
+      [/^codex.*$/, LIMITS["200k"]],
       [/^gpt-4o-mini.*$/, LIMITS["128k"]],
       [/^gpt-4o.*$/, LIMITS["128k"]],
       [/^gpt-4.*$/, LIMITS["128k"]],

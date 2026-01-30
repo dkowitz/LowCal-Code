@@ -16,6 +16,11 @@ import { OpenAIContentConverter } from "./converter.js";
 import type { TelemetryService, RequestContext } from "./telemetryService.js";
 import type { ErrorHandler } from "./errorHandler.js";
 import { openaiLogger } from "../../utils/openaiLogger.js";
+import type {
+  Response,
+  ResponseStreamEvent,
+  ResponseCreateParamsBase,
+} from "openai/resources/responses/responses.js";
 
 function truncateForLog(value: unknown, limit = 4000): string {
   const text = typeof value === "string" ? value : String(value ?? "");
@@ -36,13 +41,15 @@ export interface PipelineConfig {
 
 export class ContentGenerationPipeline {
   client: OpenAI;
+  private provider: OpenAICompatibleProvider;
   private converter: OpenAIContentConverter;
   private contentGeneratorConfig: ContentGeneratorConfig;
   private readonly enableOpenAILogging: boolean;
 
   constructor(private config: PipelineConfig) {
+    this.provider = config.provider;
     this.contentGeneratorConfig = config.contentGeneratorConfig;
-    this.client = this.config.provider.buildClient();
+    this.client = this.provider.buildClient();
     this.converter = new OpenAIContentConverter(
       this.contentGeneratorConfig.model,
     );
@@ -59,6 +66,28 @@ export class ContentGenerationPipeline {
       userPromptId,
       false,
       async (openaiRequest, context) => {
+        const useResponses = this.provider.shouldUseResponses?.(
+          this.contentGeneratorConfig.model,
+        );
+
+        if (useResponses) {
+          const response = (await this.client.responses.create(
+            this.buildResponsesRequest(openaiRequest) as ResponseCreateParamsBase,
+          )) as Response;
+
+          const geminiResponse =
+            this.converter.convertOpenAIResponseToGemini(response);
+
+          await this.config.telemetryService.logSuccess(
+            context,
+            geminiResponse,
+            openaiRequest,
+            response,
+          );
+
+          return geminiResponse;
+        }
+
         const openaiResponse = (await this.client.chat.completions.create(
           openaiRequest,
         )) as OpenAI.Chat.ChatCompletion;
@@ -93,6 +122,25 @@ export class ContentGenerationPipeline {
       userPromptId,
       true,
       async (openaiRequest, context) => {
+        const useResponses = this.provider.shouldUseResponses?.(
+          this.contentGeneratorConfig.model,
+        );
+
+        if (useResponses) {
+          const stream = (await this.client.responses.create({
+            ...this.buildResponsesRequest(openaiRequest),
+            stream: true,
+          } as ResponseCreateParamsBase)) as AsyncIterable<ResponseStreamEvent>;
+
+          return this.processResponsesStreamWithLogging(
+            stream,
+            context,
+            openaiRequest,
+            request,
+            userPromptId,
+          );
+        }
+
         // Stage 1: Create OpenAI stream
         const stream = (await this.client.chat.completions.create(
           openaiRequest,
@@ -193,6 +241,76 @@ export class ContentGenerationPipeline {
     }
   }
 
+  private async *processResponsesStreamWithLogging(
+    stream: AsyncIterable<ResponseStreamEvent>,
+    context: RequestContext,
+    openaiRequest: OpenAI.Chat.ChatCompletionCreateParams,
+    request: GenerateContentParameters,
+    userPromptId: string,
+  ): AsyncGenerator<GenerateContentResponse> {
+    const collectedGeminiResponses: GenerateContentResponse[] = [];
+    const collectedResponseEvents: ResponseStreamEvent[] = [];
+
+    // Reset streaming tool calls to prevent data pollution from previous streams
+    this.converter.resetStreamingToolCalls(context.userPromptId);
+
+    // State for handling chunk merging
+    let pendingFinishResponse: GenerateContentResponse | null = null;
+
+    try {
+      for await (const event of stream) {
+        collectedResponseEvents.push(event);
+
+        const response = this.converter.convertOpenAIResponseEventToGemini(event);
+
+        if (!response) {
+          continue;
+        }
+
+        if (
+          response.candidates?.[0]?.content?.parts?.length === 0 &&
+          !response.candidates?.[0]?.finishReason &&
+          !response.usageMetadata
+        ) {
+          continue;
+        }
+
+        const shouldYield = this.handleChunkMerging(
+          response,
+          collectedGeminiResponses,
+          (mergedResponse) => {
+            pendingFinishResponse = mergedResponse;
+          },
+        );
+
+        if (shouldYield) {
+          if (pendingFinishResponse) {
+            yield pendingFinishResponse;
+            pendingFinishResponse = null;
+          } else {
+            yield response;
+          }
+        }
+      }
+
+      if (pendingFinishResponse) {
+        yield pendingFinishResponse;
+      }
+
+      context.duration = Date.now() - context.startTime;
+
+      await this.config.telemetryService.logResponsesStreamingSuccess(
+        context,
+        collectedGeminiResponses,
+        openaiRequest,
+        collectedResponseEvents,
+      );
+    } catch (error) {
+      this.converter.resetStreamingToolCalls(context.userPromptId);
+      await this.handleError(error, context, request, userPromptId, true);
+    }
+  }
+
   /**
    * Handle chunk merging for providers that send finishReason and usageMetadata separately.
    *
@@ -286,6 +404,124 @@ export class ContentGenerationPipeline {
     }
 
     return enhancedRequest;
+  }
+
+  private buildResponsesRequest(
+    chatRequest: OpenAI.Chat.ChatCompletionCreateParams,
+  ): {
+    model: string;
+    input: Array<{
+      role: "user" | "assistant" | "system" | "developer";
+      type: "message";
+      content: Array<{ type: "input_text"; text: string }>;
+    }>;
+    tools?: Array<{
+      type: "function";
+      name: string;
+      description?: string;
+      parameters?: Record<string, unknown>;
+      strict?: boolean | null;
+    }>;
+    tool_choice?: "auto" | "none" | "required" | { type: "function"; name: string };
+    max_output_tokens?: number;
+    temperature?: number;
+    top_p?: number;
+    stream?: boolean;
+  } {
+    const input = (chatRequest.messages ?? [])
+      .filter(
+        (
+          message,
+        ): message is OpenAI.Chat.ChatCompletionMessageParam & {
+          role: "user" | "assistant" | "system" | "developer";
+          content: string | Array<{ type: "text"; text: string }> | null;
+        } =>
+          message.role === "user" ||
+          message.role === "assistant" ||
+          message.role === "system" ||
+          message.role === "developer",
+      )
+      .map((message) => {
+        const text =
+          typeof message.content === "string"
+            ? message.content
+            : Array.isArray(message.content)
+              ? message.content
+                  .map((part) => (part && "text" in part ? part.text : ""))
+                  .filter(Boolean)
+                  .join(" ")
+              : "";
+        return {
+          role: message.role,
+          type: "message" as const,
+          content: [{ type: "input_text" as const, text }],
+        };
+      })
+      .filter((item) => item.content[0]?.text?.length > 0);
+
+    type SimpleFunctionTool = {
+      type: "function";
+      name: string;
+      description?: string | undefined;
+      parameters?: Record<string, unknown>;
+      strict?: boolean | null;
+    };
+
+    const functionTools: SimpleFunctionTool[] | undefined = chatRequest.tools
+      ? chatRequest.tools.reduce<SimpleFunctionTool[]>((acc, tool) => {
+          if (tool.type !== "function") return acc;
+          const entry: SimpleFunctionTool = {
+            type: "function",
+            name: tool.function?.name ?? "",
+            description:
+              tool.function?.description === null
+                ? undefined
+                : tool.function?.description ?? undefined,
+            parameters:
+              tool.function?.parameters &&
+              Object.keys(tool.function.parameters).length > 0
+                ? tool.function.parameters as Record<string, unknown>
+                : undefined,
+            strict: tool.function?.strict ?? null,
+          };
+          if (entry.name) {
+            acc.push(entry);
+          }
+          return acc;
+        }, [])
+      : undefined;
+
+    const toolChoice = chatRequest.tool_choice;
+    const tool_choice =
+      typeof toolChoice === "string"
+        ? toolChoice
+        : toolChoice && typeof toolChoice === "object" && toolChoice.type === "function"
+          ? { type: "function" as const, name: toolChoice.function.name }
+          : undefined;
+
+    const max_output_tokens =
+      typeof chatRequest.max_tokens === "number"
+        ? chatRequest.max_tokens
+        : undefined;
+
+    return {
+      model: chatRequest.model,
+      input,
+      tools: functionTools,
+      tool_choice,
+      max_output_tokens,
+      temperature:
+        typeof chatRequest.temperature === "number"
+          ? chatRequest.temperature
+          : undefined,
+      top_p: typeof chatRequest.top_p === "number" ? chatRequest.top_p : undefined,
+      stream:
+        chatRequest.stream === true
+          ? true
+          : chatRequest.stream === false
+            ? false
+            : undefined,
+    };
   }
 
   private buildSamplingParameters(

@@ -10,6 +10,10 @@ import { ApiErrorEvent, ApiResponseEvent } from "../../telemetry/types.js";
 import { openaiLogger } from "../../utils/openaiLogger.js";
 import type { GenerateContentResponse } from "@google/genai";
 import type OpenAI from "openai";
+import type {
+  Response,
+  ResponseStreamEvent,
+} from "openai/resources/responses/responses.js";
 
 export interface RequestContext {
   userPromptId: string;
@@ -25,7 +29,7 @@ export interface TelemetryService {
     context: RequestContext,
     response: GenerateContentResponse,
     openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams,
-    openaiResponse?: OpenAI.Chat.ChatCompletion,
+    openaiResponse?: OpenAI.Chat.ChatCompletion | Response,
   ): Promise<void>;
 
   logError(
@@ -40,6 +44,13 @@ export interface TelemetryService {
     openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams,
     openaiChunks?: OpenAI.Chat.ChatCompletionChunk[],
   ): Promise<void>;
+
+  logResponsesStreamingSuccess(
+    context: RequestContext,
+    responses: GenerateContentResponse[],
+    openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams,
+    openaiEvents?: ResponseStreamEvent[],
+  ): Promise<void>;
 }
 
 export class DefaultTelemetryService implements TelemetryService {
@@ -52,7 +63,7 @@ export class DefaultTelemetryService implements TelemetryService {
     context: RequestContext,
     response: GenerateContentResponse,
     openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams,
-    openaiResponse?: OpenAI.Chat.ChatCompletion,
+    openaiResponse?: OpenAI.Chat.ChatCompletion | Response,
   ): Promise<void> {
     // Log API response event for UI telemetry
     const responseEvent = new ApiResponseEvent(
@@ -138,6 +149,47 @@ export class DefaultTelemetryService implements TelemetryService {
     ) {
       const combinedResponse = this.combineOpenAIChunksForLogging(openaiChunks);
       await openaiLogger.logInteraction(openaiRequest, combinedResponse);
+    }
+  }
+
+  async logResponsesStreamingSuccess(
+    context: RequestContext,
+    responses: GenerateContentResponse[],
+    openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams,
+    openaiEvents?: ResponseStreamEvent[],
+  ): Promise<void> {
+    const finalUsageMetadata = responses
+      .slice()
+      .reverse()
+      .find((r) => r.usageMetadata)?.usageMetadata;
+
+    const responseEvent = new ApiResponseEvent(
+      responses[responses.length - 1]?.responseId || "unknown",
+      context.model,
+      context.duration,
+      context.userPromptId,
+      context.authType,
+      finalUsageMetadata,
+    );
+
+    logApiResponse(this.config, responseEvent);
+
+    if (
+      this.enableOpenAILogging &&
+      openaiRequest &&
+      openaiEvents &&
+      openaiEvents.length > 0
+    ) {
+      const finalResponseEvent = [...openaiEvents]
+        .reverse()
+        .find(
+          (event): event is Extract<ResponseStreamEvent, { type: "response.completed" }> =>
+            event.type === "response.completed",
+        );
+
+      if (finalResponseEvent) {
+        await openaiLogger.logInteraction(openaiRequest, finalResponseEvent.response);
+      }
     }
   }
 

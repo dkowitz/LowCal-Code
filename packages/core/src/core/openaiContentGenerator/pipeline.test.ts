@@ -44,6 +44,9 @@ describe("ContentGenerationPipeline", () => {
           create: vi.fn(),
         },
       },
+      responses: {
+        create: vi.fn(),
+      },
     } as unknown as OpenAI;
 
     // Mock converter
@@ -51,6 +54,7 @@ describe("ContentGenerationPipeline", () => {
       convertGeminiRequestToOpenAI: vi.fn(),
       convertOpenAIResponseToGemini: vi.fn(),
       convertOpenAIChunkToGemini: vi.fn(),
+      convertOpenAIResponseEventToGemini: vi.fn(),
       convertGeminiToolsToOpenAI: vi.fn(),
       resetStreamingToolCalls: vi.fn(),
     } as unknown as OpenAIContentConverter;
@@ -60,6 +64,7 @@ describe("ContentGenerationPipeline", () => {
       buildClient: vi.fn().mockReturnValue(mockClient),
       buildRequest: vi.fn().mockImplementation((req) => req),
       buildHeaders: vi.fn().mockReturnValue({}),
+      shouldUseResponses: vi.fn().mockReturnValue(false),
     };
 
     // Mock telemetry service
@@ -67,6 +72,7 @@ describe("ContentGenerationPipeline", () => {
       logSuccess: vi.fn().mockResolvedValue(undefined),
       logError: vi.fn().mockResolvedValue(undefined),
       logStreamingSuccess: vi.fn().mockResolvedValue(undefined),
+      logResponsesStreamingSuccess: vi.fn().mockResolvedValue(undefined),
     };
 
     // Mock error handler

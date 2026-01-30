@@ -6,6 +6,7 @@
 import type { GenerateContentParameters, ToolListUnion } from "@google/genai";
 import { GenerateContentResponse } from "@google/genai";
 import type OpenAI from "openai";
+import type { Response, ResponseStreamEvent } from "openai/resources/responses/responses.js";
 /**
  * Tool call accumulator for streaming responses
  */
@@ -105,11 +106,18 @@ export declare class OpenAIContentConverter {
     /**
      * Convert OpenAI response to Gemini format
      */
-    convertOpenAIResponseToGemini(openaiResponse: OpenAI.Chat.ChatCompletion): GenerateContentResponse;
+    convertOpenAIResponseToGemini(openaiResponse: OpenAI.Chat.ChatCompletion | Response): GenerateContentResponse;
     /**
      * Convert OpenAI stream chunk to Gemini format
      */
     convertOpenAIChunkToGemini(chunk: OpenAI.Chat.ChatCompletionChunk): GenerateContentResponse;
+    convertOpenAIResponseEventToGemini(event: ResponseStreamEvent): GenerateContentResponse | null;
+    private isResponsesApiResponse;
+    private convertResponsesApiResponseToGemini;
+    private convertResponsesTextDeltaToGemini;
+    private convertResponsesFunctionCallDeltaToGemini;
+    private convertResponsesOutputItemAddedToGemini;
+    private convertResponsesCompletedToGemini;
     /**
      * Extracts reasoning text from MiniMax reasoning_details payloads.
      */

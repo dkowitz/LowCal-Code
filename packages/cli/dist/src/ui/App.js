@@ -251,8 +251,10 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 if (!providerId) {
                     return;
                 }
-                // If provider is LM Studio or OpenRouter, try to fetch REST models to obtain context_length
-                if (providerId === "openrouter" || providerId === "lmstudio") {
+                // If provider is LM Studio/OpenRouter/OpenAI, try to fetch REST models to obtain context_length
+                if (providerId === "openrouter" ||
+                    providerId === "lmstudio" ||
+                    providerId === "openai") {
                     try {
                         const contentGeneratorConfig = config.getContentGeneratorConfig();
                         const baseUrl = contentGeneratorConfig?.baseUrl ||
@@ -267,20 +269,26 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                             const override = matched?.maxContextLength ??
                                 matched?.contextLength ??
                                 matched?.maxContextLength;
-                            if (!cancelled)
+                            if (!cancelled) {
                                 config.setModelContextLimit(activeModel, override);
+                                setModelLimitVersion((v) => v + 1);
+                            }
                         }
                         else {
                             // If we don't have baseUrl, clear any override
-                            if (!cancelled)
+                            if (!cancelled) {
                                 config.setModelContextLimit(activeModel, undefined);
+                                setModelLimitVersion((v) => v + 1);
+                            }
                         }
                     }
                     catch (error) {
                         if (config.getDebugMode())
-                            console.debug("Failed to fetch OpenRouter model context length:", error);
-                        if (!cancelled)
+                            console.debug("Failed to fetch OpenAI-compatible model context length:", error);
+                        if (!cancelled) {
                             config.setModelContextLimit(activeModel, undefined);
+                            setModelLimitVersion((v) => v + 1);
+                        }
                     }
                     return;
                 }
@@ -761,7 +769,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                 }
                 catch (e) {
                     if (config.getDebugMode())
-                        console.debug("Failed to fetch OpenRouter models for immediate context length update:", e);
+                        console.debug("Failed to fetch OpenAI-compatible models for immediate context length update:", e);
                 }
             }
             // Persist selected model to user settings so it is restored on next startup.
@@ -1292,9 +1300,11 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                             // Ensure the Box takes full width so truncation calculates correctly
                                             _jsx(Box, { paddingLeft: 2, width: "100%", children: _jsx(Text, { dimColor: true, wrap: "truncate", children: preview }) }, index));
                                         }), messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && (_jsx(Box, { paddingLeft: 2, children: _jsxs(Text, { dimColor: true, children: ["... (+", messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES, "more)"] }) }))] })), _jsxs(Box, { marginTop: 1, justifyContent: "space-between", width: "100%", flexDirection: isNarrow ? "column" : "row", alignItems: isNarrow ? "flex-start" : "center", children: [_jsxs(Box, { children: [process.env["GEMINI_SYSTEM_MD"] && (_jsx(Text, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " })), ctrlCPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." })) : ctrlDPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." })) : showEscapePrompt ? (_jsx(Text, { color: Colors.Gray, children: "Press Esc again to clear." })) : (_jsx(ContextSummaryDisplay, { ideContext: ideContextState, geminiMdFileCount: geminiMdFileCount, contextFileNames: contextFileNames, mcpServers: config.getMcpServers(), blockedMcpServers: config.getBlockedMcpServers(), showToolDescriptions: showToolDescriptions }))] }), _jsxs(Box, { paddingTop: isNarrow ? 1 : 0, children: [showAutoAcceptIndicator !== ApprovalMode.DEFAULT &&
-                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [" ", "Please check API key and configuration."] })] })) })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModel, modelLimit: typeof config.getModelContextLimit === "function"
-                                ? config.getModelContextLimit(currentModel)
-                                : undefined, targetDir: config.getTargetDir(), debugMode: config.getDebugMode(), branchName: branchName, debugMessage: debugMessage, corgiMode: corgiMode, errorCount: errorCount, showErrorDetails: showErrorDetails, showMemoryUsage: config.getDebugMode() ||
+                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [" ", "Please check API key and configuration."] })] })) })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModel, modelLimit: typeof config.getEffectiveContextLimit === "function"
+                                ? config.getEffectiveContextLimit(currentModel)
+                                : typeof config.getModelContextLimit === "function"
+                                    ? config.getModelContextLimit(currentModel)
+                                    : undefined, targetDir: config.getTargetDir(), debugMode: config.getDebugMode(), branchName: branchName, debugMessage: debugMessage, corgiMode: corgiMode, errorCount: errorCount, showErrorDetails: showErrorDetails, showMemoryUsage: config.getDebugMode() ||
                                 settings.merged.ui?.showMemoryUsage ||
                                 false, promptTokenCount: sessionStats.lastPromptTokenCount, nightly: nightly, vimMode: vimModeEnabled ? vimMode : undefined, isTrustedFolder: isTrustedFolderState }))] })] }) }));
 };

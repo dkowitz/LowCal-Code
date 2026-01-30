@@ -56,6 +56,25 @@ export class DefaultTelemetryService {
             await openaiLogger.logInteraction(openaiRequest, combinedResponse);
         }
     }
+    async logResponsesStreamingSuccess(context, responses, openaiRequest, openaiEvents) {
+        const finalUsageMetadata = responses
+            .slice()
+            .reverse()
+            .find((r) => r.usageMetadata)?.usageMetadata;
+        const responseEvent = new ApiResponseEvent(responses[responses.length - 1]?.responseId || "unknown", context.model, context.duration, context.userPromptId, context.authType, finalUsageMetadata);
+        logApiResponse(this.config, responseEvent);
+        if (this.enableOpenAILogging &&
+            openaiRequest &&
+            openaiEvents &&
+            openaiEvents.length > 0) {
+            const finalResponseEvent = [...openaiEvents]
+                .reverse()
+                .find((event) => event.type === "response.completed");
+            if (finalResponseEvent) {
+                await openaiLogger.logInteraction(openaiRequest, finalResponseEvent.response);
+            }
+        }
+    }
     /**
      * Combine OpenAI chunks for logging purposes
      * This method consolidates all OpenAI stream chunks into a single ChatCompletion response

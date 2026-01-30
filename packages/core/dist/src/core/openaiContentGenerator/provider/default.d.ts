@@ -12,4 +12,5 @@ export declare class DefaultOpenAICompatibleProvider implements OpenAICompatible
     buildHeaders(): Record<string, string | undefined>;
     buildClient(): OpenAI;
     buildRequest(request: OpenAI.Chat.ChatCompletionCreateParams, _userPromptId: string): OpenAI.Chat.ChatCompletionCreateParams;
+    shouldUseResponses(model: string): boolean;
 }

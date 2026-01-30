@@ -718,6 +718,9 @@ export class OpenAIContentConverter {
      * Convert OpenAI response to Gemini format
      */
     convertOpenAIResponseToGemini(openaiResponse) {
+        if (this.isResponsesApiResponse(openaiResponse)) {
+            return this.convertResponsesApiResponseToGemini(openaiResponse);
+        }
         const choice = openaiResponse.choices[0];
         const response = new GenerateContentResponse();
         const parts = [];
@@ -932,6 +935,134 @@ export class OpenAIContentConverter {
                 totalTokenCount: totalTokens,
                 cachedContentTokenCount: cachedTokens,
             };
+        }
+        return response;
+    }
+    convertOpenAIResponseEventToGemini(event) {
+        switch (event.type) {
+            case "response.output_text.delta":
+                return this.convertResponsesTextDeltaToGemini(event);
+            case "response.function_call_arguments.delta":
+                return this.convertResponsesFunctionCallDeltaToGemini(event);
+            case "response.output_item.added":
+                this.convertResponsesOutputItemAddedToGemini(event);
+                return null;
+            case "response.completed":
+                return this.convertResponsesCompletedToGemini(event);
+            default:
+                return null;
+        }
+    }
+    isResponsesApiResponse(response) {
+        return "output_text" in response || "created_at" in response;
+    }
+    convertResponsesApiResponseToGemini(response) {
+        const parts = [];
+        for (const item of response.output ?? []) {
+            if (item.type === "message") {
+                for (const part of item.content ?? []) {
+                    if (part.type === "output_text") {
+                        this.appendTextPart(parts, this.formatThinkingSegments(part.text));
+                    }
+                }
+            }
+            else if (item.type === "function_call") {
+                const args = item.arguments ? safeJsonParse(item.arguments, {}) : {};
+                parts.push({
+                    functionCall: {
+                        id: item.call_id || item.id,
+                        name: item.name,
+                        args,
+                    },
+                });
+            }
+        }
+        const geminiResponse = new GenerateContentResponse();
+        geminiResponse.responseId = response.id;
+        geminiResponse.createTime = response.created_at
+            ? response.created_at.toString()
+            : new Date().getTime().toString();
+        geminiResponse.modelVersion = response.model;
+        geminiResponse.promptFeedback = { safetyRatings: [] };
+        const candidate = {
+            content: {
+                parts,
+                role: "model",
+            },
+            index: 0,
+            safetyRatings: [],
+        };
+        if (response.status === "completed") {
+            candidate.finishReason = FinishReason.STOP;
+        }
+        geminiResponse.candidates = [candidate];
+        if (response.usage) {
+            const promptTokens = response.usage.input_tokens || 0;
+            const completionTokens = response.usage.output_tokens || 0;
+            const totalTokens = response.usage.total_tokens || 0;
+            const cachedTokens = response.usage.input_tokens_details?.cached_tokens || 0;
+            geminiResponse.usageMetadata = {
+                promptTokenCount: promptTokens,
+                candidatesTokenCount: completionTokens,
+                totalTokenCount: totalTokens,
+                cachedContentTokenCount: cachedTokens,
+            };
+        }
+        return geminiResponse;
+    }
+    convertResponsesTextDeltaToGemini(event) {
+        const parts = [];
+        const segments = this.processStreamingThinkingText(event.output_index, event.delta);
+        for (const segment of segments) {
+            this.appendTextPart(parts, segment.text, {
+                isThinking: segment.isThinking,
+            });
+        }
+        const response = new GenerateContentResponse();
+        response.responseId = event.item_id;
+        response.createTime = new Date().getTime().toString();
+        response.modelVersion = this.model;
+        response.promptFeedback = { safetyRatings: [] };
+        response.candidates = [
+            {
+                content: { parts, role: "model" },
+                index: 0,
+                safetyRatings: [],
+            },
+        ];
+        return response;
+    }
+    convertResponsesFunctionCallDeltaToGemini(event) {
+        this.streamingToolCallParser.addChunk(event.output_index, event.delta, event.item_id);
+        return null;
+    }
+    convertResponsesOutputItemAddedToGemini(event) {
+        const item = event.item;
+        if (item.type !== "function_call")
+            return;
+        this.streamingToolCallParser.addChunk(event.output_index, "", item.call_id || item.id, item.name);
+    }
+    convertResponsesCompletedToGemini(event) {
+        const parts = [];
+        const completedToolCalls = this.streamingToolCallParser.getCompletedToolCalls();
+        for (const toolCall of completedToolCalls) {
+            if (toolCall.name) {
+                parts.push({
+                    functionCall: {
+                        id: toolCall.id || event.response.id,
+                        name: toolCall.name,
+                        args: toolCall.args,
+                    },
+                });
+            }
+        }
+        this.streamingToolCallParser.reset();
+        const response = this.convertResponsesApiResponseToGemini(event.response);
+        if (parts.length > 0) {
+            const candidate = response.candidates?.[0];
+            if (candidate) {
+                candidate.content?.parts?.push(...parts);
+            }
         }
         return response;
     }

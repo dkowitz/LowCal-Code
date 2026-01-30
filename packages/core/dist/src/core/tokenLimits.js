@@ -11,6 +11,7 @@ const LIMITS = {
     "128k": 131_072,
     "200k": 200_000, // vendor-declared decimal (OpenAI / Anthropic use 200k)
     "256k": 262_144,
+    "400k": 400_000,
     "512k": 524_288,
     "1m": 1_048_576,
     "2m": 2_097_152,
@@ -67,6 +68,13 @@ const PATTERNS = [
     [/^o4-mini.*$/, LIMITS["200k"]],
     [/^gpt-4\.1-mini.*$/, LIMITS["1m"]],
     [/^gpt-4\.1.*$/, LIMITS["1m"]],
+    // GPT-5 + Codex family (OpenAI Responses models)
+    [/^gpt-5\.1-codex.*$/, LIMITS["400k"]],
+    [/^gpt-5\.1.*$/, LIMITS["400k"]],
+    [/^gpt-5-codex.*$/, LIMITS["400k"]],
+    [/^gpt-5.*$/, LIMITS["400k"]],
+    [/^codex-mini.*$/, LIMITS["200k"]],
+    [/^codex.*$/, LIMITS["200k"]],
     [/^gpt-4o-mini.*$/, LIMITS["128k"]],
     [/^gpt-4o.*$/, LIMITS["128k"]],
     [/^gpt-4.*$/, LIMITS["128k"]],

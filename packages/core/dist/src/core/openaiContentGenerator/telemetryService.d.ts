@@ -6,6 +6,7 @@
 import type { Config } from "../../config/config.js";
 import type { GenerateContentResponse } from "@google/genai";
 import type OpenAI from "openai";
+import type { Response, ResponseStreamEvent } from "openai/resources/responses/responses.js";
 export interface RequestContext {
     userPromptId: string;
     model: string;
@@ -15,17 +16,19 @@ export interface RequestContext {
     isStreaming: boolean;
 }
 export interface TelemetryService {
-    logSuccess(context: RequestContext, response: GenerateContentResponse, openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams, openaiResponse?: OpenAI.Chat.ChatCompletion): Promise<void>;
+    logSuccess(context: RequestContext, response: GenerateContentResponse, openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams, openaiResponse?: OpenAI.Chat.ChatCompletion | Response): Promise<void>;
     logError(context: RequestContext, error: unknown, openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams): Promise<void>;
     logStreamingSuccess(context: RequestContext, responses: GenerateContentResponse[], openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams, openaiChunks?: OpenAI.Chat.ChatCompletionChunk[]): Promise<void>;
+    logResponsesStreamingSuccess(context: RequestContext, responses: GenerateContentResponse[], openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams, openaiEvents?: ResponseStreamEvent[]): Promise<void>;
 }
 export declare class DefaultTelemetryService implements TelemetryService {
     private config;
     private enableOpenAILogging;
     constructor(config: Config, enableOpenAILogging?: boolean);
-    logSuccess(context: RequestContext, response: GenerateContentResponse, openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams, openaiResponse?: OpenAI.Chat.ChatCompletion): Promise<void>;
+    logSuccess(context: RequestContext, response: GenerateContentResponse, openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams, openaiResponse?: OpenAI.Chat.ChatCompletion | Response): Promise<void>;
     logError(context: RequestContext, error: unknown, openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams): Promise<void>;
     logStreamingSuccess(context: RequestContext, responses: GenerateContentResponse[], openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams, openaiChunks?: OpenAI.Chat.ChatCompletionChunk[]): Promise<void>;
+    logResponsesStreamingSuccess(context: RequestContext, responses: GenerateContentResponse[], openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams, openaiEvents?: ResponseStreamEvent[]): Promise<void>;
     /**
      * Combine OpenAI chunks for logging purposes
      * This method consolidates all OpenAI stream chunks into a single ChatCompletion response

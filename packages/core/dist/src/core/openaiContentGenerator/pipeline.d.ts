@@ -20,6 +20,7 @@ export interface PipelineConfig {
 export declare class ContentGenerationPipeline {
     private config;
     client: OpenAI;
+    private provider;
     private converter;
     private contentGeneratorConfig;
     private readonly enableOpenAILogging;
@@ -36,6 +37,7 @@ export declare class ContentGenerationPipeline {
      * 5. Handle success/error logging
      */
     private processStreamWithLogging;
+    private processResponsesStreamWithLogging;
     /**
      * Handle chunk merging for providers that send finishReason and usageMetadata separately.
      *
@@ -50,6 +52,7 @@ export declare class ContentGenerationPipeline {
      */
     private handleChunkMerging;
     private buildRequest;
+    private buildResponsesRequest;
     private buildSamplingParameters;
     /**
      * Common error handling wrapper for execute methods

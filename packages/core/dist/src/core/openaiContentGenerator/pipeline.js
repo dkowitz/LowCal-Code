@@ -17,19 +17,28 @@ function truncateForLog(value, limit = 4000) {
 export class ContentGenerationPipeline {
     config;
     client;
+    provider;
     converter;
     contentGeneratorConfig;
     enableOpenAILogging;
     constructor(config) {
         this.config = config;
+        this.provider = config.provider;
         this.contentGeneratorConfig = config.contentGeneratorConfig;
-        this.client = this.config.provider.buildClient();
+        this.client = this.provider.buildClient();
         this.converter = new OpenAIContentConverter(this.contentGeneratorConfig.model);
         this.enableOpenAILogging =
             !!this.contentGeneratorConfig.enableOpenAILogging;
     }
     async execute(request, userPromptId) {
         return this.executeWithErrorHandling(request, userPromptId, false, async (openaiRequest, context) => {
+            const useResponses = this.provider.shouldUseResponses?.(this.contentGeneratorConfig.model);
+            if (useResponses) {
+                const response = (await this.client.responses.create(this.buildResponsesRequest(openaiRequest)));
+                const geminiResponse = this.converter.convertOpenAIResponseToGemini(response);
+                await this.config.telemetryService.logSuccess(context, geminiResponse, openaiRequest, response);
+                return geminiResponse;
+            }
             const openaiResponse = (await this.client.chat.completions.create(openaiRequest));
             console.warn("[OpenAIContentGenerator] Raw completion response:", truncateForLog(JSON.stringify(openaiResponse)));
             const geminiResponse = this.converter.convertOpenAIResponseToGemini(openaiResponse);
@@ -40,6 +49,14 @@ export class ContentGenerationPipeline {
     }
     async executeStream(request, userPromptId) {
         return this.executeWithErrorHandling(request, userPromptId, true, async (openaiRequest, context) => {
+            const useResponses = this.provider.shouldUseResponses?.(this.contentGeneratorConfig.model);
+            if (useResponses) {
+                const stream = (await this.client.responses.create({
+                    ...this.buildResponsesRequest(openaiRequest),
+                    stream: true,
+                }));
+                return this.processResponsesStreamWithLogging(stream, context, openaiRequest, request, userPromptId);
+            }
             // Stage 1: Create OpenAI stream
             const stream = (await this.client.chat.completions.create(openaiRequest));
             // Stage 2: Process stream with conversion and logging
@@ -102,6 +119,49 @@ export class ContentGenerationPipeline {
             this.converter.resetStreamingToolCalls(context.userPromptId);
             // Use shared error handling logic
             await this.handleError(error, context, request);
+        }
+    }
+    async *processResponsesStreamWithLogging(stream, context, openaiRequest, request, userPromptId) {
+        const collectedGeminiResponses = [];
+        const collectedResponseEvents = [];
+        // Reset streaming tool calls to prevent data pollution from previous streams
+        this.converter.resetStreamingToolCalls(context.userPromptId);
+        // State for handling chunk merging
+        let pendingFinishResponse = null;
+        try {
+            for await (const event of stream) {
+                collectedResponseEvents.push(event);
+                const response = this.converter.convertOpenAIResponseEventToGemini(event);
+                if (!response) {
+                    continue;
+                }
+                if (response.candidates?.[0]?.content?.parts?.length === 0 &&
+                    !response.candidates?.[0]?.finishReason &&
+                    !response.usageMetadata) {
+                    continue;
+                }
+                const shouldYield = this.handleChunkMerging(response, collectedGeminiResponses, (mergedResponse) => {
+                    pendingFinishResponse = mergedResponse;
+                });
+                if (shouldYield) {
+                    if (pendingFinishResponse) {
+                        yield pendingFinishResponse;
+                        pendingFinishResponse = null;
+                    }
+                    else {
+                        yield response;
+                    }
+                }
+            }
+            if (pendingFinishResponse) {
+                yield pendingFinishResponse;
+            }
+            context.duration = Date.now() - context.startTime;
+            await this.config.telemetryService.logResponsesStreamingSuccess(context, collectedGeminiResponses, openaiRequest, collectedResponseEvents);
+        }
+        catch (error) {
+            this.converter.resetStreamingToolCalls(context.userPromptId);
+            await this.handleError(error, context, request, userPromptId, true);
         }
     }
     /**
@@ -171,6 +231,76 @@ export class ContentGenerationPipeline {
             enhancedRequest.stream_options = { include_usage: true };
         }
         return enhancedRequest;
+    }
+    buildResponsesRequest(chatRequest) {
+        const input = (chatRequest.messages ?? [])
+            .filter((message) => message.role === "user" ||
+            message.role === "assistant" ||
+            message.role === "system" ||
+            message.role === "developer")
+            .map((message) => {
+            const text = typeof message.content === "string"
+                ? message.content
+                : Array.isArray(message.content)
+                    ? message.content
+                        .map((part) => (part && "text" in part ? part.text : ""))
+                        .filter(Boolean)
+                        .join(" ")
+                    : "";
+            return {
+                role: message.role,
+                type: "message",
+                content: [{ type: "input_text", text }],
+            };
+        })
+            .filter((item) => item.content[0]?.text?.length > 0);
+        const functionTools = chatRequest.tools
+            ? chatRequest.tools.reduce((acc, tool) => {
+                if (tool.type !== "function")
+                    return acc;
+                const entry = {
+                    type: "function",
+                    name: tool.function?.name ?? "",
+                    description: tool.function?.description === null
+                        ? undefined
+                        : tool.function?.description ?? undefined,
+                    parameters: tool.function?.parameters &&
+                        Object.keys(tool.function.parameters).length > 0
+                        ? tool.function.parameters
+                        : undefined,
+                    strict: tool.function?.strict ?? null,
+                };
+                if (entry.name) {
+                    acc.push(entry);
+                }
+                return acc;
+            }, [])
+            : undefined;
+        const toolChoice = chatRequest.tool_choice;
+        const tool_choice = typeof toolChoice === "string"
+            ? toolChoice
+            : toolChoice && typeof toolChoice === "object" && toolChoice.type === "function"
+                ? { type: "function", name: toolChoice.function.name }
+                : undefined;
+        const max_output_tokens = typeof chatRequest.max_tokens === "number"
+            ? chatRequest.max_tokens
+            : undefined;
+        return {
+            model: chatRequest.model,
+            input,
+            tools: functionTools,
+            tool_choice,
+            max_output_tokens,
+            temperature: typeof chatRequest.temperature === "number"
+                ? chatRequest.temperature
+                : undefined,
+            top_p: typeof chatRequest.top_p === "number" ? chatRequest.top_p : undefined,
+            stream: chatRequest.stream === true
+                ? true
+                : chatRequest.stream === false
+                    ? false
+                    : undefined,
+        };
     }
     buildSamplingParameters(request) {
         const configSamplingParams = this.contentGeneratorConfig.samplingParams;

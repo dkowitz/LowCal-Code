@@ -34,5 +34,12 @@ export class DefaultOpenAICompatibleProvider {
             ...request, // Preserve all original parameters including sampling params
         };
     }
+    shouldUseResponses(model) {
+        const normalized = (model ?? "").toLowerCase();
+        return (normalized.startsWith("gpt-5") ||
+            normalized.startsWith("codex") ||
+            normalized.includes("gpt-5") ||
+            normalized.includes("codex"));
+    }
 }
 //# sourceMappingURL=default.js.map
