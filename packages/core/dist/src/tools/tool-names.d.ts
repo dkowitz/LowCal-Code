@@ -24,4 +24,5 @@ export declare const ToolNames: {
     readonly WEB_SEARCH: "web_search";
     readonly SEARXNG_SEARCH: "searxng_search";
     readonly RESEARCH: "research";
+    readonly SCHEDULE_TASK: "schedule_task";
 };

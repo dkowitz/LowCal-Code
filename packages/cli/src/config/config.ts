@@ -33,6 +33,7 @@ import yargs from "yargs/yargs";
 import { extensionsCommand } from "../commands/extensions.js";
 import { mcpCommand } from "../commands/mcp.js";
 import { researchCommand } from "../commands/research.js";
+import { schedulerCommand } from "../commands/scheduler.js";
 import type { Settings } from "./settings.js";
 
 import { resolvePath } from "../utils/resolvePath.js";
@@ -309,7 +310,8 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     )
     // Register MCP subcommands
     .command(mcpCommand)
-    .command(researchCommand);
+    .command(researchCommand)
+    .command(schedulerCommand);
 
   if (settings?.experimental?.extensionManagement ?? false) {
     yargsInstance.command(extensionsCommand);
@@ -326,13 +328,13 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
   yargsInstance.wrap(yargsInstance.terminalWidth());
   const result = await yargsInstance.parse();
 
-  // Handle case where MCP subcommands are executed - they should exit the process
+  // Handle case where subcommands are executed - they should exit the process
   // and not return to main CLI logic
   if (
     result._.length > 0 &&
-    (result._[0] === "mcp" || result._[0] === "extensions")
+    (result._[0] === "mcp" || result._[0] === "extensions" || result._[0] === "scheduler")
   ) {
-    // MCP commands handle their own execution and process exit
+    // Subcommands handle their own execution and process exit
     process.exit(0);
   }
 

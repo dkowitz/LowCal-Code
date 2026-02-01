@@ -1,0 +1,440 @@
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+/**
+ * LowCal Scheduler Daemon
+ * 
+ * This daemon runs as a background process and:
+ * 1. Wakes up every minute to check for due jobs
+ * 2. Executes due jobs by spawning headless LowCal instances
+ * 3. Manages job state and logs
+ * 4. Handles cleanup and maintenance
+ */
+
+import * as fs from "fs/promises";
+import * as path from "path";
+import { spawn } from "child_process";
+import * as process from "process";
+import { fileURLToPath } from "url";
+
+// Import from core package
+import {
+  loadStore,
+  getDueJobs,
+  markJobRunning,
+  markJobCompleted,
+  markJobFailed,
+  saveExecutionLog,
+  cleanupOldLogs,
+  type Job,
+  type JobExecutionResult,
+  type DaemonStatus,
+  DEFAULT_SCHEDULER_CONFIG,
+} from "@qwen-code/qwen-code-core";
+
+// PID file for daemon management
+const DAEMON_PID_FILE = path.join(process.cwd(), ".lowcal", "scheduler.pid");
+const DAEMON_STATUS_FILE = path.join(process.cwd(), ".lowcal", "scheduler.status.json");
+
+// Track active executions
+const activeExecutions = new Map<string, ReturnType<typeof spawnJob>>();
+
+/**
+ * Save daemon status to file
+ */
+async function saveDaemonStatus(status: DaemonStatus): Promise<void> {
+  await fs.mkdir(path.dirname(DAEMON_STATUS_FILE), { recursive: true });
+  await fs.writeFile(DAEMON_STATUS_FILE, JSON.stringify(status, null, 2), "utf-8");
+}
+
+/**
+ * Check if the daemon is already running
+ */
+export async function isDaemonRunning(): Promise<boolean> {
+  try {
+    const pid = parseInt(await fs.readFile(DAEMON_PID_FILE, "utf-8"), 10);
+    if (isNaN(pid)) return false;
+    
+    // Check if process exists
+    try {
+      process.kill(pid, 0);
+      return true;
+    } catch {
+      // Process doesn't exist, clean up stale PID file
+      await fs.unlink(DAEMON_PID_FILE).catch(() => {});
+      return false;
+    }
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Get current daemon status
+ */
+export async function getDaemonStatus(): Promise<DaemonStatus> {
+  const running = await isDaemonRunning();
+  const store = await loadStore();
+  
+  // Get upcoming jobs (next 5 minutes)
+  const now = new Date();
+  const upcomingJobs = store.jobs
+    .filter(j => j.enabled && j.next_run && new Date(j.next_run) > now)
+    .sort((a, b) => new Date(a.next_run!).getTime() - new Date(b.next_run!).getTime())
+    .slice(0, 10)
+    .map(j => j.id);
+  
+  const status: DaemonStatus = {
+    running,
+    pid: running ? parseInt(await fs.readFile(DAEMON_PID_FILE, "utf-8"), 10) : undefined,
+    active_executions: activeExecutions.size,
+    total_jobs: store.jobs.length,
+    upcoming_jobs: upcomingJobs,
+  };
+  
+  return status;
+}
+
+/**
+ * Spawn a headless LowCal process to execute a job
+ */
+function spawnJob(job: Job): Promise<JobExecutionResult> {
+  return new Promise((resolve) => {
+    const startedAt = new Date().toISOString();
+    const logPath = path.join(process.cwd(), ".lowcal", "logs", `${job.id}-${Date.now()}.log`);
+    
+    // Ensure logs directory exists
+    fs.mkdir(path.dirname(logPath), { recursive: true }).catch(() => {});
+    
+    // Find the CLI entry point
+    const cliPath = path.join(process.cwd(), "packages", "cli", "dist", "scheduler", "headless.js");
+    
+    const child = spawn("node", [
+      cliPath,
+      "--prompt", job.prompt,
+      "--job-id", job.id,
+      "--output", logPath,
+    ], {
+      detached: true,
+      stdio: ["ignore", "pipe", "pipe"],
+      env: {
+        ...process.env,
+        LOWCAL_HEADLESS: "1",
+        LOWCAL_JOB_ID: job.id,
+      },
+    });
+    
+    let stdout = "";
+    let stderr = "";
+    
+    child.stdout?.on("data", (data) => {
+      stdout += data.toString();
+    });
+    
+    child.stderr?.on("data", (data) => {
+      stderr += data.toString();
+    });
+    
+    // Set up timeout
+    const timeoutMs = (job.timeout_minutes ?? DEFAULT_SCHEDULER_CONFIG.default_timeout_minutes) * 60 * 1000;
+    const timeoutId = setTimeout(() => {
+      child.kill("SIGTERM");
+    }, timeoutMs);
+    
+    child.on("close", async (code, signal) => {
+      clearTimeout(timeoutId);
+      
+      const completedAt = new Date().toISOString();
+      
+      let status: JobExecutionResult["status"];
+      let error: string | null = null;
+      
+      if (signal === "SIGTERM") {
+        status = "timeout";
+        error = `Job timed out after ${job.timeout_minutes ?? DEFAULT_SCHEDULER_CONFIG.default_timeout_minutes} minutes`;
+      } else if (code !== 0) {
+        status = "error";
+        error = stderr || `Process exited with code ${code}`;
+      } else {
+        status = "success";
+      }
+      
+      const result: JobExecutionResult = {
+        job_id: job.id,
+        started_at: startedAt,
+        completed_at: completedAt,
+        status,
+        output: stdout,
+        error,
+        exit_code: code ?? undefined,
+      };
+      
+      // Save execution log
+      await saveExecutionLog(result);
+      
+      resolve(result);
+    });
+    
+    child.on("error", async (err) => {
+      clearTimeout(timeoutId);
+      
+      const completedAt = new Date().toISOString();
+      
+      const result: JobExecutionResult = {
+        job_id: job.id,
+        started_at: startedAt,
+        completed_at: completedAt,
+        status: "error",
+        output: stdout,
+        error: err.message,
+      };
+      
+      await saveExecutionLog(result);
+      resolve(result);
+    });
+  });
+}
+
+/**
+ * Execute a single job
+ */
+async function executeJob(job: Job): Promise<void> {
+  console.log(`[Scheduler] Executing job: ${job.id}`);
+  
+  try {
+    // Mark job as running
+    await markJobRunning(job.id);
+    
+    // Execute the job
+    const executionPromise = spawnJob(job);
+    activeExecutions.set(job.id, executionPromise);
+    
+    const result = await executionPromise;
+    activeExecutions.delete(job.id);
+    
+    // Update job status based on result
+    if (result.status === "success") {
+      await markJobCompleted(job.id, result);
+      console.log(`[Scheduler] Job ${job.id} completed successfully`);
+    } else {
+      await markJobFailed(job.id, result);
+      console.log(`[Scheduler] Job ${job.id} failed: ${result.error}`);
+    }
+  } catch (error) {
+    activeExecutions.delete(job.id);
+    
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error(`[Scheduler] Error executing job ${job.id}: ${errorMessage}`);
+    
+    // Create error result
+    const result: JobExecutionResult = {
+      job_id: job.id,
+      started_at: new Date().toISOString(),
+      completed_at: new Date().toISOString(),
+      status: "error",
+      output: "",
+      error: errorMessage,
+    };
+    
+    await markJobFailed(job.id, result);
+    await saveExecutionLog(result);
+  }
+}
+
+/**
+ * Main tick function - checks for and executes due jobs
+ */
+async function tick(): Promise<void> {
+  const now = new Date();
+  console.log(`[Scheduler] Tick at ${now.toISOString()}`);
+  
+  // Update daemon status
+  const store = await loadStore();
+  const upcomingJobs = store.jobs
+    .filter(j => j.enabled && j.next_run && new Date(j.next_run) > now)
+    .sort((a, b) => new Date(a.next_run!).getTime() - new Date(b.next_run!).getTime())
+    .slice(0, 10)
+    .map(j => j.id);
+  
+  await saveDaemonStatus({
+    running: true,
+    pid: process.pid,
+    started_at: new Date().toISOString(),
+    last_tick: now.toISOString(),
+    active_executions: activeExecutions.size,
+    total_jobs: store.jobs.length,
+    upcoming_jobs: upcomingJobs,
+  });
+  
+  // Get due jobs
+  const dueJobs = await getDueJobs(now);
+  
+  if (dueJobs.length === 0) {
+    console.log("[Scheduler] No jobs due");
+    return;
+  }
+  
+  console.log(`[Scheduler] ${dueJobs.length} job(s) due`);
+  
+  // Check concurrent execution limit
+  const availableSlots = DEFAULT_SCHEDULER_CONFIG.max_concurrent_jobs - activeExecutions.size;
+  const jobsToExecute = dueJobs.slice(0, availableSlots);
+  
+  if (jobsToExecute.length < dueJobs.length) {
+    console.log(`[Scheduler] Concurrent limit reached. Executing ${jobsToExecute.length}/${dueJobs.length} jobs`);
+  }
+  
+  // Execute jobs (don't await - let them run concurrently)
+  for (const job of jobsToExecute) {
+    executeJob(job).catch((err) => {
+      console.error(`[Scheduler] Unhandled error in job ${job.id}:`, err);
+    });
+  }
+}
+
+/**
+ * Main daemon loop
+ */
+async function runDaemon(): Promise<void> {
+  console.log("[Scheduler] Daemon starting...");
+  
+  // Write PID file
+  await fs.mkdir(path.dirname(DAEMON_PID_FILE), { recursive: true });
+  await fs.writeFile(DAEMON_PID_FILE, String(process.pid), "utf-8");
+  
+  // Initial tick
+  await tick();
+  
+  // Schedule regular ticks (every minute, aligned to the top of the minute)
+  const now = new Date();
+  const msUntilNextMinute = (60 - now.getSeconds()) * 1000 - now.getMilliseconds();
+  
+  setTimeout(() => {
+    tick();
+    // Then every minute
+    setInterval(tick, 60 * 1000);
+  }, msUntilNextMinute);
+  
+  // Periodic cleanup (every hour)
+  setInterval(async () => {
+    console.log("[Scheduler] Running cleanup...");
+    const deleted = await cleanupOldLogs();
+    console.log(`[Scheduler] Cleaned up ${deleted} old log files`);
+  }, 60 * 60 * 1000);
+  
+  console.log("[Scheduler] Daemon running. PID:", process.pid);
+  
+  // Keep process alive with a heartbeat interval
+  // This is more reliable than stdin.resume() when stdio is ignored
+  setInterval(() => {
+    // Heartbeat - daemon is still alive
+  }, 10000); // Every 10 seconds
+}
+
+/**
+ * Stop the daemon
+ */
+export async function stopDaemon(): Promise<boolean> {
+  try {
+    const pid = parseInt(await fs.readFile(DAEMON_PID_FILE, "utf-8"), 10);
+    if (isNaN(pid)) return false;
+    
+    try {
+      process.kill(pid, "SIGTERM");
+      
+      // Wait a bit for graceful shutdown
+      await new Promise((resolve) => setTimeout(resolve, 2000));
+      
+      // Check if still running
+      try {
+        process.kill(pid, 0);
+        // Still running, force kill
+        process.kill(pid, "SIGKILL");
+      } catch {
+        // Process is dead, good
+      }
+      
+      // Clean up PID file
+      await fs.unlink(DAEMON_PID_FILE).catch(() => {});
+      
+      return true;
+    } catch {
+      return false;
+    }
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Start the daemon (if not already running)
+ */
+export async function startDaemon(): Promise<boolean> {
+  const running = await isDaemonRunning();
+  if (running) {
+    console.log("[Scheduler] Daemon is already running");
+    return false;
+  }
+  
+  // Spawn the daemon as a detached process
+  const daemonPath = fileURLToPath(import.meta.url);
+  
+  const child = spawn("node", [daemonPath, "--daemon"], {
+    detached: true,
+    stdio: "ignore",
+    env: process.env,
+  });
+  
+  child.unref();
+  
+  // Wait a moment for the daemon to start
+  await new Promise((resolve) => setTimeout(resolve, 1000));
+  
+  return await isDaemonRunning();
+}
+
+// Main entry point
+const isMainModule = import.meta.url === `file://${fileURLToPath(import.meta.url)}` ||
+                     import.meta.url === process.argv[1];
+
+if (isMainModule) {
+  const args = process.argv.slice(2);
+  
+  if (args.includes("--daemon")) {
+    // Run as daemon
+    runDaemon().catch((err) => {
+      console.error("[Scheduler] Daemon error:", err);
+      process.exit(1);
+    });
+  } else if (args.includes("--status")) {
+    // Print status
+    getDaemonStatus().then((status) => {
+      console.log(JSON.stringify(status, null, 2));
+    });
+  } else if (args.includes("--stop")) {
+    // Stop daemon
+    stopDaemon().then((success) => {
+      if (success) {
+        console.log("[Scheduler] Daemon stopped");
+      } else {
+        console.log("[Scheduler] Daemon was not running");
+        process.exit(1);
+      }
+    });
+  } else if (args.includes("--start")) {
+    // Start daemon
+    startDaemon().then((success) => {
+      if (success) {
+        console.log("[Scheduler] Daemon started");
+      } else {
+        console.log("[Scheduler] Failed to start daemon (may already be running)");
+        process.exit(1);
+      }
+    });
+  } else {
+    console.log("Usage: node daemon.ts [--daemon|--start|--stop|--status]");
+  }
+}

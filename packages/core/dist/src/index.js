@@ -86,6 +86,9 @@ export * from "./tools/read-many-files.js";
 export * from "./tools/mcp-client.js";
 export * from "./tools/mcp-tool.js";
 export * from "./tools/research.js";
+export * from "./tools/schedule-task.js";
+// Export scheduler
+export * from "./scheduler/index.js";
 // MCP OAuth
 export { MCPOAuthProvider } from "./mcp/oauth-provider.js";
 export { MCPOAuthTokenStorage } from "./mcp/oauth-token-storage.js";

@@ -13,6 +13,7 @@ import yargs from "yargs/yargs";
 import { extensionsCommand } from "../commands/extensions.js";
 import { mcpCommand } from "../commands/mcp.js";
 import { researchCommand } from "../commands/research.js";
+import { schedulerCommand } from "../commands/scheduler.js";
 import { resolvePath } from "../utils/resolvePath.js";
 import { getCliVersion } from "../utils/version.js";
 import { annotateActiveExtensions } from "./extension.js";
@@ -222,7 +223,8 @@ export async function parseArguments(settings) {
     }))
         // Register MCP subcommands
         .command(mcpCommand)
-        .command(researchCommand);
+        .command(researchCommand)
+        .command(schedulerCommand);
     if (settings?.experimental?.extensionManagement ?? false) {
         yargsInstance.command(extensionsCommand);
     }
@@ -235,11 +237,11 @@ export async function parseArguments(settings) {
         .demandCommand(0, 0); // Allow base command to run with no subcommands
     yargsInstance.wrap(yargsInstance.terminalWidth());
     const result = await yargsInstance.parse();
-    // Handle case where MCP subcommands are executed - they should exit the process
+    // Handle case where subcommands are executed - they should exit the process
     // and not return to main CLI logic
     if (result._.length > 0 &&
-        (result._[0] === "mcp" || result._[0] === "extensions")) {
-        // MCP commands handle their own execution and process exit
+        (result._[0] === "mcp" || result._[0] === "extensions" || result._[0] === "scheduler")) {
+        // Subcommands handle their own execution and process exit
         process.exit(0);
     }
     // The import format is now only controlled by settings.memoryImportFormat

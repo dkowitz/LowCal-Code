@@ -25,4 +25,5 @@ export const ToolNames = {
   WEB_SEARCH: "web_search",
   SEARXNG_SEARCH: "searxng_search",
   RESEARCH: "research",
+  SCHEDULE_TASK: "schedule_task",
 } as const;
