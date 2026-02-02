@@ -281,7 +281,7 @@ function matchesField(
  * Check if a job is due to run
  */
 export function isJobDue(job: Job, now: Date = new Date()): boolean {
-  if (!job.enabled || job.status === "running") return false;
+  if (!job.enabled) return false;
   
   if (!job.next_run) {
     // Calculate next run if not set

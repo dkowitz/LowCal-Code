@@ -5,7 +5,7 @@
  */
 import * as process from "process";
 import { isDaemonRunning, getDaemonStatus, startDaemon, stopDaemon, } from "../scheduler/daemon.js";
-import { listJobs, getJob, getJobLogs, } from "@qwen-code/qwen-code-core";
+import { listJobs, getJob, getJobLogs, deleteJob, } from "@qwen-code/qwen-code-core";
 /**
  * Format a job for display
  */
@@ -174,6 +174,27 @@ const getCommand = {
     },
 };
 /**
+ * Delete command
+ */
+const deleteCommand = {
+    command: "delete <id>",
+    describe: "Delete a scheduled job",
+    builder: (yargs) => yargs.positional("id", {
+        describe: "Job ID",
+        type: "string",
+        demandOption: true,
+    }),
+    handler: async (argv) => {
+        const job = await getJob(argv.id);
+        if (!job) {
+            console.error(`Job "${argv.id}" not found`);
+            process.exit(1);
+        }
+        await deleteJob(argv.id);
+        console.log(`✓ Job "${argv.id}" deleted successfully`);
+    },
+};
+/**
  * Logs command
  */
 const logsCommand = {
@@ -229,6 +250,7 @@ export const schedulerCommand = {
         .command(statusCommand)
         .command(listCommand)
         .command(getCommand)
+        .command(deleteCommand)
         .command(logsCommand)
         .demandCommand(1, "You need at least one command before continuing.")
         .version(false)

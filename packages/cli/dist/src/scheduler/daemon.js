@@ -18,7 +18,7 @@ import { spawn } from "child_process";
 import * as process from "process";
 import { fileURLToPath } from "url";
 // Import from core package
-import { loadStore, getDueJobs, markJobRunning, markJobCompleted, markJobFailed, saveExecutionLog, cleanupOldLogs, DEFAULT_SCHEDULER_CONFIG, } from "@qwen-code/qwen-code-core";
+import { loadStore, getDueJobs, markJobRunning, markJobCompleted, markJobFailed, saveExecutionLog, cleanupOldLogs, updateJob, calculateNextRun, DEFAULT_SCHEDULER_CONFIG, } from "@qwen-code/qwen-code-core";
 // PID file for daemon management
 const DAEMON_PID_FILE = path.join(process.cwd(), ".lowcal", "scheduler.pid");
 const DAEMON_STATUS_FILE = path.join(process.cwd(), ".lowcal", "scheduler.status.json");
@@ -67,9 +67,22 @@ export async function getDaemonStatus() {
         .sort((a, b) => new Date(a.next_run).getTime() - new Date(b.next_run).getTime())
         .slice(0, 10)
         .map(j => j.id);
+    // Read the status file to get last_tick
+    let lastTick;
+    if (running) {
+        try {
+            const statusData = await fs.readFile(DAEMON_STATUS_FILE, "utf-8");
+            const savedStatus = JSON.parse(statusData);
+            lastTick = savedStatus.last_tick;
+        }
+        catch {
+            // Status file doesn't exist or is invalid
+        }
+    }
     const status = {
         running,
         pid: running ? parseInt(await fs.readFile(DAEMON_PID_FILE, "utf-8"), 10) : undefined,
+        last_tick: lastTick,
         active_executions: activeExecutions.size,
         total_jobs: store.jobs.length,
         upcoming_jobs: upcomingJobs,
@@ -86,7 +99,7 @@ function spawnJob(job) {
         // Ensure logs directory exists
         fs.mkdir(path.dirname(logPath), { recursive: true }).catch(() => { });
         // Find the CLI entry point
-        const cliPath = path.join(process.cwd(), "packages", "cli", "dist", "scheduler", "headless.js");
+        const cliPath = path.join(process.cwd(), "packages", "cli", "dist", "src", "scheduler", "headless.js");
         const child = spawn("node", [
             cliPath,
             "--prompt", job.prompt,
@@ -221,6 +234,19 @@ async function tick() {
         total_jobs: store.jobs.length,
         upcoming_jobs: upcomingJobs,
     });
+    // Calculate next_run for jobs that don't have it
+    for (const job of store.jobs) {
+        if (job.enabled && !job.next_run) {
+            const nextRun = calculateNextRun(job.schedule, now);
+            if (nextRun) {
+                console.log(`[Scheduler] Calculating next run for job ${job.id}: ${nextRun.toISOString()}`);
+                await updateJob({
+                    id: job.id,
+                    next_run: nextRun.toISOString(),
+                });
+            }
+        }
+    }
     // Get due jobs
     const dueJobs = await getDueJobs(now);
     if (dueJobs.length === 0) {

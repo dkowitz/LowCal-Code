@@ -115,6 +115,7 @@ export interface UpdateJobParams {
   prompt?: string;
   description?: string;
   enabled?: boolean;
+  next_run?: string;
   timeout_minutes?: number;
   max_failures?: number;
 }

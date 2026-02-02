@@ -22,6 +22,7 @@ import {
   listJobs,
   getJob,
   getJobLogs,
+  deleteJob,
   type Job,
 } from "@qwen-code/qwen-code-core";
 
@@ -222,6 +223,31 @@ const getCommand: CommandModule<{}, { id: string }> = {
 };
 
 /**
+ * Delete command
+ */
+const deleteCommand: CommandModule<{}, { id: string }> = {
+  command: "delete <id>",
+  describe: "Delete a scheduled job",
+  builder: (yargs: Argv) =>
+    yargs.positional("id", {
+      describe: "Job ID",
+      type: "string",
+      demandOption: true,
+    }),
+  handler: async (argv) => {
+    const job = await getJob(argv.id);
+
+    if (!job) {
+      console.error(`Job "${argv.id}" not found`);
+      process.exit(1);
+    }
+
+    await deleteJob(argv.id);
+    console.log(`✓ Job "${argv.id}" deleted successfully`);
+  },
+};
+
+/**
  * Logs command
  */
 const logsCommand: CommandModule<{}, { id: string; tail: number }> = {
@@ -288,6 +314,7 @@ export const schedulerCommand: CommandModule = {
       .command(statusCommand)
       .command(listCommand)
       .command(getCommand)
+      .command(deleteCommand)
       .command(logsCommand)
       .demandCommand(1, "You need at least one command before continuing.")
       .version(false)

@@ -29,6 +29,8 @@ import {
   markJobFailed,
   saveExecutionLog,
   cleanupOldLogs,
+  updateJob,
+  calculateNextRun,
   type Job,
   type JobExecutionResult,
   type DaemonStatus,
@@ -87,9 +89,22 @@ export async function getDaemonStatus(): Promise<DaemonStatus> {
     .slice(0, 10)
     .map(j => j.id);
   
+  // Read the status file to get last_tick
+  let lastTick: string | undefined;
+  if (running) {
+    try {
+      const statusData = await fs.readFile(DAEMON_STATUS_FILE, "utf-8");
+      const savedStatus = JSON.parse(statusData);
+      lastTick = savedStatus.last_tick;
+    } catch {
+      // Status file doesn't exist or is invalid
+    }
+  }
+  
   const status: DaemonStatus = {
     running,
     pid: running ? parseInt(await fs.readFile(DAEMON_PID_FILE, "utf-8"), 10) : undefined,
+    last_tick: lastTick,
     active_executions: activeExecutions.size,
     total_jobs: store.jobs.length,
     upcoming_jobs: upcomingJobs,
@@ -110,7 +125,7 @@ function spawnJob(job: Job): Promise<JobExecutionResult> {
     fs.mkdir(path.dirname(logPath), { recursive: true }).catch(() => {});
     
     // Find the CLI entry point
-    const cliPath = path.join(process.cwd(), "packages", "cli", "dist", "scheduler", "headless.js");
+    const cliPath = path.join(process.cwd(), "packages", "cli", "dist", "src", "scheduler", "headless.js");
     
     const child = spawn("node", [
       cliPath,
@@ -268,6 +283,20 @@ async function tick(): Promise<void> {
     total_jobs: store.jobs.length,
     upcoming_jobs: upcomingJobs,
   });
+  
+  // Calculate next_run for jobs that don't have it
+  for (const job of store.jobs) {
+    if (job.enabled && !job.next_run) {
+      const nextRun = calculateNextRun(job.schedule, now);
+      if (nextRun) {
+        console.log(`[Scheduler] Calculating next run for job ${job.id}: ${nextRun.toISOString()}`);
+        await updateJob({
+          id: job.id,
+          next_run: nextRun.toISOString(),
+        });
+      }
+    }
+  }
   
   // Get due jobs
   const dueJobs = await getDueJobs(now);

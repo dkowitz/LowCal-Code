@@ -14,6 +14,7 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as process from "process";
+import { normalizeAuthType } from "../config/auth.js";
 // Parse command line arguments
 function parseArgs() {
     const args = process.argv.slice(2);
@@ -56,8 +57,8 @@ async function main() {
     console.log(`[Headless] Prompt: ${prompt.substring(0, 100)}${prompt.length > 100 ? "..." : ""}`);
     try {
         // Import required modules
-        const { Config, ApprovalMode, DEFAULT_GEMINI_EMBEDDING_MODEL } = await import("@qwen-code/qwen-code-core");
-        const { loadSettings } = await import("../config/settings.js");
+        const { Config, ApprovalMode, DEFAULT_GEMINI_EMBEDDING_MODEL, AuthType } = await import("@qwen-code/qwen-code-core");
+        const { loadSettings, loadEnvironment } = await import("../config/settings.js");
         const { loadHierarchicalGeminiMemory } = await import("../config/config.js");
         const { FileDiscoveryService } = await import("@qwen-code/qwen-code-core");
         const { runNonInteractive } = await import("../nonInteractiveCli.js");
@@ -67,6 +68,8 @@ async function main() {
         if (settings.errors.length > 0) {
             throw new Error(`Settings errors: ${settings.errors.map(e => e.message).join(", ")}`);
         }
+        // Load environment variables from .env files (API keys, etc.)
+        loadEnvironment(settings.merged);
         // Create file service
         const fileService = new FileDiscoveryService(cwd);
         // Load memory
@@ -75,13 +78,27 @@ async function main() {
         fileService, settings.merged, [], memoryImportFormat);
         // Determine approval mode - use YOLO for scheduled tasks to avoid interactive prompts
         const approvalMode = ApprovalMode.YOLO;
+        // Get auth type from settings, fallback to USE_GEMINI
+        const authTypeFromSettings = normalizeAuthType(settings.merged.security?.auth?.selectedType);
+        const authType = authTypeFromSettings || AuthType.USE_GEMINI;
+        // Get model from settings, fallback to default
+        const modelFromSettings = settings.merged.model?.name;
+        const model = modelFromSettings || "gemini-1.5-flash";
+        // Get base URL for OpenAI-compatible providers
+        const providerId = settings.merged.security?.auth?.providerId;
+        const providers = settings.merged.security?.auth?.providers;
+        const baseUrl = providerId && providers?.[providerId]?.['baseUrl'];
+        // Set base URL environment variable if configured
+        if (baseUrl) {
+            process.env["OPENAI_BASE_URL"] = baseUrl;
+        }
         // Create config
         const config = new Config({
             sessionId: `headless-${jobId}-${Date.now()}`,
             embeddingModel: DEFAULT_GEMINI_EMBEDDING_MODEL,
             targetDir: cwd,
             cwd,
-            model: DEFAULT_GEMINI_EMBEDDING_MODEL,
+            model: model,
             includeDirectories: [],
             loadMemoryFromIncludeDirectories: false,
             debugMode: false,
@@ -101,6 +118,16 @@ async function main() {
         });
         // Initialize config
         await config.initialize();
+        // Initialize auth using the configured auth type
+        await config.refreshAuth(authType);
+        // Inject current timestamp for tasks that need real-time data
+        const now = new Date();
+        process.env["LOWCAL_CURRENT_TIMESTAMP"] = now.toISOString();
+        process.env["LOWCAL_CURRENT_DATE"] = now.toISOString().split('T')[0];
+        process.env["LOWCAL_CURRENT_TIME"] = now.toTimeString().split(' ')[0];
+        // Prepend system context with current timestamp to the user's prompt
+        const systemContext = `\n[System Context - Current timestamp: ${now.toISOString()}]\n`;
+        const fullPrompt = systemContext + prompt;
         // Capture stdout
         const originalWrite = process.stdout.write;
         const originalWriteErr = process.stderr.write;
@@ -116,9 +143,9 @@ async function main() {
             stderr += str;
             return originalWriteErr.apply(process.stderr, [chunk]);
         };
-        // Run the non-interactive mode
+        // Run the non-interactive mode with the full prompt (including system context)
         const prompt_id = `headless-${jobId}-${Date.now()}`;
-        await runNonInteractive(config, prompt, prompt_id);
+        await runNonInteractive(config, fullPrompt, prompt_id);
         // Restore stdout/stderr
         process.stdout.write = originalWrite;
         process.stderr.write = originalWriteErr;
