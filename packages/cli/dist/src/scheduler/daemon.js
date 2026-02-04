@@ -25,6 +25,8 @@ const DAEMON_PID_FILE = path.join(process.cwd(), ".lowcal", "scheduler.pid");
 const DAEMON_STATUS_FILE = path.join(process.cwd(), ".lowcal", "scheduler.status.json");
 // Track active executions
 const activeExecutions = new Map();
+const zellijTabs = new Set();
+const zellijPreparedTabs = new Set();
 const EXECUTION_MODE_FALLBACK = "headless";
 const EXECUTION_MODE_VALUES = new Set([
     "headless",
@@ -38,6 +40,9 @@ function normalizeExecutionMode(value) {
         return value;
     }
     return null;
+}
+function getSchedulerCwd() {
+    return process.env["LOWCAL_SCHEDULER_CWD"] || process.cwd();
 }
 function isRunningInZellij() {
     return Boolean(process.env["ZELLIJ_SESSION_NAME"] ||
@@ -143,11 +148,12 @@ export async function getDaemonStatus() {
 function spawnHeadlessJob(job) {
     return new Promise((resolve) => {
         const startedAt = new Date().toISOString();
-        const logPath = path.join(process.cwd(), ".lowcal", "logs", `${job.id}-${Date.now()}.log`);
+        const schedulerCwd = getSchedulerCwd();
+        const logPath = path.join(schedulerCwd, ".lowcal", "logs", `${job.id}-${Date.now()}.log`);
         // Ensure logs directory exists
         fs.mkdir(path.dirname(logPath), { recursive: true }).catch(() => { });
         // Find the CLI entry point
-        const cliPath = path.join(process.cwd(), "packages", "cli", "dist", "src", "scheduler", "headless.js");
+        const cliPath = path.join(schedulerCwd, "packages", "cli", "dist", "src", "scheduler", "headless.js");
         const child = spawn("node", [
             cliPath,
             "--prompt", job.prompt,
@@ -156,6 +162,7 @@ function spawnHeadlessJob(job) {
         ], {
             detached: true,
             stdio: ["ignore", "pipe", "pipe"],
+            cwd: schedulerCwd,
             env: {
                 ...process.env,
                 LOWCAL_HEADLESS: "1",
@@ -243,6 +250,44 @@ async function runZellijCommand(args) {
         });
     });
 }
+async function ensureZellijTab(tabName, cwd) {
+    if (!zellijTabs.has(tabName)) {
+        try {
+            await runZellijCommand(["action", "new-tab", "--name", tabName, "--cwd", cwd]);
+            zellijTabs.add(tabName);
+        }
+        catch {
+            // If the tab already exists, fall through and try to focus it.
+        }
+    }
+    try {
+        await runZellijCommand(["action", "go-to-tab-name", tabName]);
+        zellijTabs.add(tabName);
+    }
+    catch {
+        // If we can't focus the tab, we'll still attempt to write to the current one.
+    }
+    if (!zellijPreparedTabs.has(tabName)) {
+        try {
+            await runZellijCommand(["action", "go-to-tab-name", tabName]);
+            await runZellijCommand([
+                "action",
+                "write-chars",
+                "export PS1=''; unset PROMPT_COMMAND; stty -echo\n",
+            ]);
+            zellijPreparedTabs.add(tabName);
+        }
+        catch {
+            // Ignore preparation failures; it only affects prompt appearance.
+        }
+    }
+}
+function shellQuoteArg(value) {
+    if (value.length === 0) {
+        return "''";
+    }
+    return `'${value.replace(/'/g, `'\"'\"'`)}'`;
+}
 async function waitForHeadlessLog(logPath, startedAt, timeoutMs, jobId) {
     const startTime = Date.now();
     while (Date.now() - startTime < timeoutMs) {
@@ -286,23 +331,18 @@ async function waitForHeadlessLog(logPath, startedAt, timeoutMs, jobId) {
 }
 async function spawnZellijJob(job) {
     const startedAt = new Date().toISOString();
-    const logPath = path.join(process.cwd(), ".lowcal", "logs", `${job.id}-${Date.now()}.log`);
+    const schedulerCwd = getSchedulerCwd();
+    const logPath = path.join(schedulerCwd, ".lowcal", "logs", `${job.id}-${Date.now()}.log`);
     await fs.mkdir(path.dirname(logPath), { recursive: true });
-    const cliPath = path.join(process.cwd(), "packages", "cli", "dist", "src", "scheduler", "headless.js");
-    const cwd = process.cwd();
+    const cliPath = path.join(schedulerCwd, "packages", "cli", "dist", "src", "scheduler", "headless.js");
+    const cwd = schedulerCwd;
     const tabName = `job:${job.id}`;
-    const paneName = `task:${job.id}`;
-    await runZellijCommand(["action", "new-tab", "--name", tabName, "--cwd", cwd]);
+    await ensureZellijTab(tabName, cwd);
     const commandArgs = [
-        "run",
-        "--name",
-        paneName,
-        "--cwd",
-        cwd,
-        "--",
         "env",
         `LOWCAL_HEADLESS=1`,
         `LOWCAL_JOB_ID=${job.id}`,
+        `LOWCAL_HEADLESS_PRETTY=1`,
         "node",
         cliPath,
         "--prompt",
@@ -312,7 +352,21 @@ async function spawnZellijJob(job) {
         "--output",
         logPath,
     ];
-    await runZellijCommand(commandArgs);
+    const command = `export PS1=''; unset PROMPT_COMMAND; stty -echo; cd ${shellQuoteArg(cwd)} && ${commandArgs
+        .map(shellQuoteArg)
+        .join(" ")}; printf '\\n[scheduler idle]\\n'`;
+    try {
+        await runZellijCommand(["action", "go-to-tab-name", tabName]);
+    }
+    catch {
+        // If focusing the tab fails, continue in the current one.
+    }
+    try {
+        await runZellijCommand(["action", "write-chars", `${command}\n`]);
+    }
+    catch {
+        await runZellijCommand(["action", "write", `${command}\n`]);
+    }
     const timeoutMs = (job.timeout_minutes ?? DEFAULT_SCHEDULER_CONFIG.default_timeout_minutes) *
         60 *
         1000;
@@ -503,7 +557,10 @@ export async function startDaemon() {
     const child = spawn("node", [daemonPath, "--daemon"], {
         detached: true,
         stdio: "ignore",
-        env: process.env,
+        env: {
+            ...process.env,
+            LOWCAL_SCHEDULER_CWD: process.cwd(),
+        },
     });
     child.unref();
     // Wait a moment for the daemon to start

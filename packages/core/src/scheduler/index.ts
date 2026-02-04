@@ -38,6 +38,7 @@ export {
   updateJob,
   deleteJob,
   pauseJob,
+  resetJob,
   resumeJob,
   markJobRunning,
   markJobCompleted,

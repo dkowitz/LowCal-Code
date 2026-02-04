@@ -24,9 +24,20 @@ export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
     contentGeneratorConfig: ContentGeneratorConfig,
   ): boolean {
     const baseURL = contentGeneratorConfig.baseUrl || "";
-    return (
-      baseURL.includes("127.0.0.1:1234") || baseURL.includes("localhost:1234")
-    );
+    if (!baseURL) return false;
+    try {
+      const parsed = new URL(baseURL);
+      if (parsed.port === "1234") return true;
+      return (
+        parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1"
+      );
+    } catch {
+      return (
+        baseURL.includes("127.0.0.1:1234") ||
+        baseURL.includes("localhost:1234") ||
+        baseURL.includes(":1234")
+      );
+    }
   }
 
   override buildHeaders(): Record<string, string | undefined> {
@@ -60,6 +71,11 @@ export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
         dispatcher: lmStudioDispatcher,
       },
     });
+  }
+
+  override shouldUseResponses(_model: string): boolean {
+    // LM Studio does not support the Responses API.
+    return false;
   }
 
   /**

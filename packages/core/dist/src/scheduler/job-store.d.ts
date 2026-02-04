@@ -57,6 +57,10 @@ export declare function deleteJob(id: string): Promise<boolean>;
  */
 export declare function pauseJob(id: string): Promise<Job>;
 /**
+ * Reset a job after failures (re-enable and clear error counters)
+ */
+export declare function resetJob(id: string): Promise<Job>;
+/**
  * Resume a paused job
  */
 export declare function resumeJob(id: string): Promise<Job>;

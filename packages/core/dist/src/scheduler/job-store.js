@@ -386,6 +386,23 @@ export async function pauseJob(id) {
     });
 }
 /**
+ * Reset a job after failures (re-enable and clear error counters)
+ */
+export async function resetJob(id) {
+    return await withStore(async (store) => {
+        const job = store.jobs.find((j) => j.id === id);
+        if (!job) {
+            throw new Error(`Job with ID '${id}' not found`);
+        }
+        job.enabled = true;
+        job.status = "scheduled";
+        job.error_count = 0;
+        const nextRun = calculateNextRun(job.schedule);
+        job.next_run = nextRun?.toISOString() ?? null;
+        return job;
+    });
+}
+/**
  * Resume a paused job
  */
 export async function resumeJob(id) {

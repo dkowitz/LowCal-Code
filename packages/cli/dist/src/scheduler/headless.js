@@ -54,8 +54,33 @@ function parseArgs() {
  */
 async function main() {
     const { prompt, jobId, output } = parseArgs();
-    console.log(`[Headless] Starting job ${jobId}`);
-    console.log(`[Headless] Prompt: ${prompt.substring(0, 100)}${prompt.length > 100 ? "..." : ""}`);
+    const prettyOutput = process.env["LOWCAL_HEADLESS_PRETTY"] === "1";
+    const COLORS = {
+        reset: "\x1b[0m",
+        bold: "\x1b[1m",
+        italic: "\x1b[3m",
+        dim: "\x1b[2m",
+        brightBlue: "\x1b[94m",
+        brightCyan: "\x1b[96m",
+        brightGreen: "\x1b[92m",
+        brightYellow: "\x1b[93m",
+        brightRed: "\x1b[91m",
+        brightMagenta: "\x1b[95m",
+    };
+    const borderLine = (text, color) => `${color}${text}${COLORS.reset}`;
+    const runStart = new Date();
+    if (prettyOutput) {
+        console.log(`${COLORS.bold}${borderLine("╭─ Scheduled Run", COLORS.brightBlue)}`);
+        console.log(`${borderLine("│", COLORS.brightBlue)} ${COLORS.bold}Job${COLORS.reset}: ${jobId}`);
+        console.log(`${borderLine("│", COLORS.brightBlue)} ${COLORS.bold}Start${COLORS.reset}: ${runStart.toLocaleString()}`);
+        console.log(`${borderLine("│", COLORS.brightBlue)} ${COLORS.bold}Prompt${COLORS.reset}: ${prompt.substring(0, 140)}${prompt.length > 140 ? "..." : ""}`);
+        console.log(`${borderLine("│", COLORS.brightBlue)} ${COLORS.bold}CWD${COLORS.reset}: ${process.cwd()}`);
+        console.log(`${COLORS.bold}${borderLine("╰────────────────────", COLORS.brightBlue)}`);
+    }
+    else {
+        console.log(`[Headless] Starting job ${jobId}`);
+        console.log(`[Headless] Prompt: ${prompt.substring(0, 100)}${prompt.length > 100 ? "..." : ""}`);
+    }
     try {
         // Import required modules
         const { Config, ApprovalMode, DEFAULT_GEMINI_EMBEDDING_MODEL, AuthType } = await import("@qwen-code/qwen-code-core");
@@ -136,14 +161,20 @@ async function main() {
         const originalWriteErr = process.stderr.write;
         let stdout = "";
         let stderr = "";
+        const echoStdout = prettyOutput;
+        const echoStderr = !prettyOutput;
         process.stdout.write = function (chunk) {
             const str = chunk.toString();
             stdout += str;
+            if (!echoStdout)
+                return true;
             return originalWrite.apply(process.stdout, [chunk]);
         };
         process.stderr.write = function (chunk) {
             const str = chunk.toString();
             stderr += str;
+            if (!echoStderr)
+                return true;
             return originalWriteErr.apply(process.stderr, [chunk]);
         };
         // Run the non-interactive mode with the full prompt (including system context)
@@ -163,13 +194,36 @@ async function main() {
         };
         await fs.mkdir(path.dirname(output), { recursive: true });
         await fs.writeFile(output, JSON.stringify(outputData, null, 2), "utf-8");
-        console.log("[Headless] Job completed successfully");
-        console.log(`[Headless] Output written to: ${output}`);
+        if (prettyOutput) {
+            const durationMs = Date.now() - runStart.getTime();
+            console.log(`${COLORS.bold}${borderLine("╭─ Run Summary", COLORS.brightGreen)}`);
+            console.log(`${borderLine("│", COLORS.brightGreen)} ${COLORS.bold}Status${COLORS.reset}: ${COLORS.brightGreen}success${COLORS.reset}`);
+            console.log(`${borderLine("│", COLORS.brightGreen)} ${COLORS.bold}Finished${COLORS.reset}: ${new Date().toLocaleString()}`);
+            console.log(`${borderLine("│", COLORS.brightGreen)} ${COLORS.bold}Duration${COLORS.reset}: ${(durationMs / 1000).toFixed(1)}s`);
+            console.log(`${borderLine("│", COLORS.brightGreen)} ${COLORS.bold}Log${COLORS.reset}: ${output}`);
+            console.log(`${COLORS.bold}${borderLine("╰──────────────────", COLORS.brightGreen)}`);
+        }
+        else {
+            console.log("[Headless] Job completed successfully");
+            console.log(`[Headless] Output written to: ${output}`);
+        }
         process.exit(0);
     }
     catch (error) {
         const errorMessage = error instanceof Error ? error.message : String(error);
-        console.error("[Headless] Error:", errorMessage);
+        if (prettyOutput) {
+            const durationMs = Date.now() - runStart.getTime();
+            console.log(`${COLORS.bold}${borderLine("╭─ Run Summary", COLORS.brightRed)}`);
+            console.log(`${borderLine("│", COLORS.brightRed)} ${COLORS.bold}Status${COLORS.reset}: ${COLORS.brightRed}error${COLORS.reset}`);
+            console.log(`${borderLine("│", COLORS.brightRed)} ${COLORS.bold}Finished${COLORS.reset}: ${new Date().toLocaleString()}`);
+            console.log(`${borderLine("│", COLORS.brightRed)} ${COLORS.bold}Duration${COLORS.reset}: ${(durationMs / 1000).toFixed(1)}s`);
+            console.log(`${borderLine("│", COLORS.brightRed)} ${COLORS.bold}Error${COLORS.reset}: ${errorMessage}`);
+            console.log(`${borderLine("│", COLORS.brightRed)} ${COLORS.bold}Log${COLORS.reset}: ${output}`);
+            console.log(`${COLORS.bold}${borderLine("╰──────────────────", COLORS.brightRed)}`);
+        }
+        else {
+            console.error("[Headless] Error:", errorMessage);
+        }
         // Write error to output file
         const errorData = {
             job_id: jobId,

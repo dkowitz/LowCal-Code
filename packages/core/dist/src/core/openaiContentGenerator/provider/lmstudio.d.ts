@@ -7,6 +7,7 @@ export declare class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompa
     static isLMStudioProvider(contentGeneratorConfig: ContentGeneratorConfig): boolean;
     buildHeaders(): Record<string, string | undefined>;
     buildClient(): OpenAI;
+    shouldUseResponses(_model: string): boolean;
     /**
      * Attempt to unload the current model in LM Studio.
      *

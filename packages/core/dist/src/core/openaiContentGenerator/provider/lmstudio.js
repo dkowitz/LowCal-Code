@@ -13,7 +13,19 @@ export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
     }
     static isLMStudioProvider(contentGeneratorConfig) {
         const baseURL = contentGeneratorConfig.baseUrl || "";
-        return (baseURL.includes("127.0.0.1:1234") || baseURL.includes("localhost:1234"));
+        if (!baseURL)
+            return false;
+        try {
+            const parsed = new URL(baseURL);
+            if (parsed.port === "1234")
+                return true;
+            return (parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1");
+        }
+        catch {
+            return (baseURL.includes("127.0.0.1:1234") ||
+                baseURL.includes("localhost:1234") ||
+                baseURL.includes(":1234"));
+        }
     }
     buildHeaders() {
         // Get base headers from parent class
@@ -36,6 +48,10 @@ export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
                 dispatcher: lmStudioDispatcher,
             },
         });
+    }
+    shouldUseResponses(_model) {
+        // LM Studio does not support the Responses API.
+        return false;
     }
     /**
      * Attempt to unload the current model in LM Studio.

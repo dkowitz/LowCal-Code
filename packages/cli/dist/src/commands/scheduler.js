@@ -5,7 +5,7 @@
  */
 import * as process from "process";
 import { isDaemonRunning, getDaemonStatus, startDaemon, stopDaemon, } from "../scheduler/daemon.js";
-import { listJobs, getJob, getJobLogs, deleteJob, updateJob, } from "@qwen-code/qwen-code-core";
+import { listJobs, getJob, getJobLogs, deleteJob, resetJob, updateJob, } from "@qwen-code/qwen-code-core";
 import { loadSettings } from "../config/settings.js";
 const EXECUTION_MODE_VALUES = new Set([
     "headless",
@@ -268,6 +268,27 @@ const deleteCommand = {
     },
 };
 /**
+ * Reset command
+ */
+const resetCommand = {
+    command: "reset <id>",
+    describe: "Reset a job after failures (re-enable and clear error count)",
+    builder: (yargs) => yargs.positional("id", {
+        describe: "Job ID",
+        type: "string",
+        demandOption: true,
+    }),
+    handler: async (argv) => {
+        const job = await getJob(argv.id);
+        if (!job) {
+            console.error(`Job "${argv.id}" not found`);
+            process.exit(1);
+        }
+        await resetJob(argv.id);
+        console.log(`✓ Job "${argv.id}" reset and re-enabled`);
+    },
+};
+/**
  * Logs command
  */
 const logsCommand = {
@@ -324,6 +345,7 @@ export const schedulerCommand = {
         .command(listCommand)
         .command(getCommand)
         .command(deleteCommand)
+        .command(resetCommand)
         .command(modeCommand)
         .command(logsCommand)
         .demandCommand(1, "You need at least one command before continuing.")

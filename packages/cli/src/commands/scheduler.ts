@@ -23,6 +23,7 @@ import {
   getJob,
   getJobLogs,
   deleteJob,
+  resetJob,
   updateJob,
   type Job,
   type JobExecutionMode,
@@ -337,6 +338,31 @@ const deleteCommand: CommandModule<{}, { id: string }> = {
 };
 
 /**
+ * Reset command
+ */
+const resetCommand: CommandModule<{}, { id: string }> = {
+  command: "reset <id>",
+  describe: "Reset a job after failures (re-enable and clear error count)",
+  builder: (yargs: Argv) =>
+    yargs.positional("id", {
+      describe: "Job ID",
+      type: "string",
+      demandOption: true,
+    }),
+  handler: async (argv) => {
+    const job = await getJob(argv.id);
+
+    if (!job) {
+      console.error(`Job "${argv.id}" not found`);
+      process.exit(1);
+    }
+
+    await resetJob(argv.id);
+    console.log(`✓ Job "${argv.id}" reset and re-enabled`);
+  },
+};
+
+/**
  * Logs command
  */
 const logsCommand: CommandModule<{}, { id: string; tail: number }> = {
@@ -404,6 +430,7 @@ export const schedulerCommand: CommandModule = {
       .command(listCommand)
       .command(getCommand)
       .command(deleteCommand)
+      .command(resetCommand)
       .command(modeCommand)
       .command(logsCommand)
       .demandCommand(1, "You need at least one command before continuing.")
