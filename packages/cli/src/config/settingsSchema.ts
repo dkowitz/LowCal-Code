@@ -24,6 +24,7 @@ export interface SettingDefinition {
   childKey?: string;
   key?: string;
   properties?: SettingsSchema;
+  options?: ReadonlyArray<{ label: string; value: string }>;
   showInDialog?: boolean;
 }
 
@@ -561,6 +562,32 @@ export const SETTINGS_SCHEMA = {
         default: false,
         description:
           "Use ripgrep for file content search instead of the fallback implementation. Provides faster search performance.",
+        showInDialog: true,
+      },
+    },
+  },
+
+  scheduler: {
+    type: "object",
+    label: "Scheduler",
+    category: "Scheduler",
+    requiresRestart: false,
+    default: {},
+    description: "Settings for scheduled task execution.",
+    showInDialog: false,
+    properties: {
+      executionMode: {
+        type: "string",
+        label: "Default Execution Mode",
+        category: "Scheduler",
+        requiresRestart: false,
+        default: "headless",
+        description:
+          "Default execution mode for scheduled tasks. Valid values: headless, zellij_tab.",
+        options: [
+          { label: "Headless", value: "headless" },
+          { label: "Zellij Tab", value: "zellij_tab" },
+        ],
         showInDialog: true,
       },
     },

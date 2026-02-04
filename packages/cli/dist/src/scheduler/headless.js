@@ -15,6 +15,7 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import * as process from "process";
 import { normalizeAuthType } from "../config/auth.js";
+import { loadCliToolConfig, syncCoreToolConfig, } from "../ui/commands/utils/toolConfig.js";
 // Parse command line arguments
 function parseArgs() {
     const args = process.argv.slice(2);
@@ -116,6 +117,8 @@ async function main() {
                 respectGeminiIgnore: true,
             },
         });
+        const cliToolConfig = loadCliToolConfig();
+        syncCoreToolConfig(cliToolConfig);
         // Initialize config
         await config.initialize();
         // Initialize auth using the configured auth type

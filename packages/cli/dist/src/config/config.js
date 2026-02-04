@@ -266,6 +266,10 @@ export async function loadHierarchicalGeminiMemory(currentWorkingDirectory, incl
     return loadServerHierarchicalMemory(effectiveCwd, includeDirectoriesToReadGemini, debugMode, fileService, extensionContextFilePaths, memoryImportFormat, fileFilteringOptions, settings.context?.discoveryMaxDirs);
 }
 export async function loadCliConfig(settings, extensions, sessionId, argv, cwd = process.cwd()) {
+    if (settings.scheduler?.executionMode) {
+        process.env["LOWCAL_SCHEDULER_DEFAULT_MODE"] =
+            settings.scheduler.executionMode;
+    }
     const debugMode = argv.debug ||
         [process.env["DEBUG"], process.env["DEBUG_MODE"]].some((v) => v === "true" || v === "1") ||
         false;

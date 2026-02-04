@@ -516,6 +516,30 @@ export const SETTINGS_SCHEMA = {
             },
         },
     },
+    scheduler: {
+        type: "object",
+        label: "Scheduler",
+        category: "Scheduler",
+        requiresRestart: false,
+        default: {},
+        description: "Settings for scheduled task execution.",
+        showInDialog: false,
+        properties: {
+            executionMode: {
+                type: "string",
+                label: "Default Execution Mode",
+                category: "Scheduler",
+                requiresRestart: false,
+                default: "headless",
+                description: "Default execution mode for scheduled tasks. Valid values: headless, zellij_tab.",
+                options: [
+                    { label: "Headless", value: "headless" },
+                    { label: "Zellij Tab", value: "zellij_tab" },
+                ],
+                showInDialog: true,
+            },
+        },
+    },
     mcp: {
         type: "object",
         label: "MCP",

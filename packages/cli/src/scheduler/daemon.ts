@@ -20,6 +20,8 @@ import { spawn } from "child_process";
 import * as process from "process";
 import { fileURLToPath } from "url";
 
+import { loadSettings } from "../config/settings.js";
+
 // Import from core package
 import {
   loadStore,
@@ -33,6 +35,7 @@ import {
   calculateNextRun,
   type Job,
   type JobExecutionResult,
+  type JobExecutionMode,
   type DaemonStatus,
   DEFAULT_SCHEDULER_CONFIG,
 } from "@qwen-code/qwen-code-core";
@@ -43,6 +46,72 @@ const DAEMON_STATUS_FILE = path.join(process.cwd(), ".lowcal", "scheduler.status
 
 // Track active executions
 const activeExecutions = new Map<string, ReturnType<typeof spawnJob>>();
+
+const EXECUTION_MODE_FALLBACK: JobExecutionMode = "headless";
+const EXECUTION_MODE_VALUES = new Set<JobExecutionMode>([
+  "headless",
+  "zellij_tab",
+]);
+
+let cachedDefaultExecutionMode: JobExecutionMode | null = null;
+
+function normalizeExecutionMode(value: unknown): JobExecutionMode | null {
+  if (typeof value !== "string") return null;
+  if (EXECUTION_MODE_VALUES.has(value as JobExecutionMode)) {
+    return value as JobExecutionMode;
+  }
+  return null;
+}
+
+function isRunningInZellij(): boolean {
+  return Boolean(
+    process.env["ZELLIJ_SESSION_NAME"] ||
+      process.env["ZELLIJ_PANE_ID"] ||
+      process.env["ZELLIJ"],
+  );
+}
+
+async function getDefaultExecutionMode(): Promise<JobExecutionMode> {
+  if (cachedDefaultExecutionMode) return cachedDefaultExecutionMode;
+
+  try {
+    const settings = loadSettings(process.cwd());
+    if (settings.errors.length > 0) {
+      console.warn(
+        "[Scheduler] Settings errors:",
+        settings.errors.map((error) => error.message).join(", "),
+      );
+    }
+
+    const modeFromSettings = normalizeExecutionMode(
+      settings.merged.scheduler?.executionMode,
+    );
+    cachedDefaultExecutionMode = modeFromSettings ?? EXECUTION_MODE_FALLBACK;
+    return cachedDefaultExecutionMode;
+  } catch (error) {
+    console.warn(
+      "[Scheduler] Failed to load scheduler settings, falling back to headless mode:",
+      error instanceof Error ? error.message : String(error),
+    );
+    cachedDefaultExecutionMode = EXECUTION_MODE_FALLBACK;
+    return cachedDefaultExecutionMode;
+  }
+}
+
+async function resolveExecutionMode(job: Job): Promise<JobExecutionMode> {
+  const defaultMode = await getDefaultExecutionMode();
+  const requestedMode = normalizeExecutionMode(job.execution_mode);
+  const effectiveMode = requestedMode ?? defaultMode;
+
+  if (effectiveMode === "zellij_tab" && !isRunningInZellij()) {
+    console.warn(
+      `[Scheduler] Job ${job.id} requested zellij_tab, but Zellij is not available. Falling back to headless.`,
+    );
+    return "headless";
+  }
+
+  return effectiveMode;
+}
 
 /**
  * Save daemon status to file
@@ -116,7 +185,7 @@ export async function getDaemonStatus(): Promise<DaemonStatus> {
 /**
  * Spawn a headless LowCal process to execute a job
  */
-function spawnJob(job: Job): Promise<JobExecutionResult> {
+function spawnHeadlessJob(job: Job): Promise<JobExecutionResult> {
   return new Promise((resolve) => {
     const startedAt = new Date().toISOString();
     const logPath = path.join(process.cwd(), ".lowcal", "logs", `${job.id}-${Date.now()}.log`);
@@ -213,6 +282,151 @@ function spawnJob(job: Job): Promise<JobExecutionResult> {
   });
 }
 
+async function runZellijCommand(args: string[]): Promise<void> {
+  await new Promise<void>((resolve, reject) => {
+    const child = spawn("zellij", args, {
+      stdio: ["ignore", "ignore", "pipe"],
+      env: process.env,
+    });
+
+    let stderr = "";
+    child.stderr?.on("data", (data) => {
+      stderr += data.toString();
+    });
+
+    child.on("error", (error) => {
+      reject(error);
+    });
+
+    child.on("close", (code) => {
+      if (code === 0) {
+        resolve();
+      } else {
+        reject(
+          new Error(
+            stderr.trim() || `zellij command failed with exit code ${code}`,
+          ),
+        );
+      }
+    });
+  });
+}
+
+async function waitForHeadlessLog(
+  logPath: string,
+  startedAt: string,
+  timeoutMs: number,
+  jobId: string,
+): Promise<JobExecutionResult> {
+  const startTime = Date.now();
+
+  while (Date.now() - startTime < timeoutMs) {
+    try {
+      const data = await fs.readFile(logPath, "utf-8");
+      const parsed = JSON.parse(data) as {
+        status?: string;
+        result?: string;
+        stderr?: string;
+        error?: string;
+        timestamp?: string;
+      };
+
+      if (parsed.status === "success") {
+        return {
+          job_id: jobId,
+          started_at: startedAt,
+          completed_at: parsed.timestamp ?? new Date().toISOString(),
+          status: "success",
+          output: parsed.result ?? "",
+          error: null,
+        };
+      }
+
+      if (parsed.status === "error") {
+        return {
+          job_id: jobId,
+          started_at: startedAt,
+          completed_at: parsed.timestamp ?? new Date().toISOString(),
+          status: "error",
+          output: parsed.result ?? "",
+          error: parsed.error ?? parsed.stderr ?? "Unknown error",
+        };
+      }
+    } catch (error) {
+      // Likely file not found yet or incomplete write. Keep polling.
+    }
+
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+  }
+
+  return {
+    job_id: jobId,
+    started_at: startedAt,
+    completed_at: new Date().toISOString(),
+    status: "timeout",
+    output: "",
+    error: `Job timed out after ${timeoutMs / 1000 / 60} minutes`,
+  };
+}
+
+async function spawnZellijJob(job: Job): Promise<JobExecutionResult> {
+  const startedAt = new Date().toISOString();
+  const logPath = path.join(process.cwd(), ".lowcal", "logs", `${job.id}-${Date.now()}.log`);
+
+  await fs.mkdir(path.dirname(logPath), { recursive: true });
+
+  const cliPath = path.join(process.cwd(), "packages", "cli", "dist", "src", "scheduler", "headless.js");
+  const cwd = process.cwd();
+  const tabName = `job:${job.id}`;
+  const paneName = `task:${job.id}`;
+
+  await runZellijCommand(["action", "new-tab", "--name", tabName, "--cwd", cwd]);
+
+  const commandArgs = [
+    "run",
+    "--name",
+    paneName,
+    "--cwd",
+    cwd,
+    "--",
+    "env",
+    `LOWCAL_HEADLESS=1`,
+    `LOWCAL_JOB_ID=${job.id}`,
+    "node",
+    cliPath,
+    "--prompt",
+    job.prompt,
+    "--job-id",
+    job.id,
+    "--output",
+    logPath,
+  ];
+
+  await runZellijCommand(commandArgs);
+
+  const timeoutMs =
+    (job.timeout_minutes ?? DEFAULT_SCHEDULER_CONFIG.default_timeout_minutes) *
+    60 *
+    1000;
+
+  return await waitForHeadlessLog(logPath, startedAt, timeoutMs, job.id);
+}
+
+async function spawnJob(job: Job, executionMode: JobExecutionMode): Promise<JobExecutionResult> {
+  if (executionMode === "zellij_tab") {
+    try {
+      return await spawnZellijJob(job);
+    } catch (error) {
+      console.warn(
+        `[Scheduler] Failed to run job ${job.id} in Zellij; falling back to headless. Error:`,
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+  }
+
+  return await spawnHeadlessJob(job);
+}
+
 /**
  * Execute a single job
  */
@@ -224,7 +438,8 @@ async function executeJob(job: Job): Promise<void> {
     await markJobRunning(job.id);
     
     // Execute the job
-    const executionPromise = spawnJob(job);
+    const executionMode = await resolveExecutionMode(job);
+    const executionPromise = spawnJob(job, executionMode);
     activeExecutions.set(job.id, executionPromise);
     
     const result = await executionPromise;

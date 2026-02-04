@@ -5,18 +5,45 @@
  */
 import * as process from "process";
 import { isDaemonRunning, getDaemonStatus, startDaemon, stopDaemon, } from "../scheduler/daemon.js";
-import { listJobs, getJob, getJobLogs, deleteJob, } from "@qwen-code/qwen-code-core";
+import { listJobs, getJob, getJobLogs, deleteJob, updateJob, } from "@qwen-code/qwen-code-core";
+import { loadSettings } from "../config/settings.js";
+const EXECUTION_MODE_VALUES = new Set([
+    "headless",
+    "zellij_tab",
+    "default",
+]);
+function normalizeExecutionMode(value) {
+    if (typeof value !== "string")
+        return null;
+    if (EXECUTION_MODE_VALUES.has(value)) {
+        return value;
+    }
+    return null;
+}
+function getDefaultExecutionMode() {
+    const settings = loadSettings(process.cwd());
+    const modeFromSettings = normalizeExecutionMode(settings.merged.scheduler?.executionMode);
+    if (modeFromSettings === "default" || modeFromSettings === null) {
+        return "headless";
+    }
+    return modeFromSettings;
+}
 /**
  * Format a job for display
  */
-function formatJob(job) {
+function formatJob(job, defaultMode) {
     const statusIcon = job.enabled ? "🟢" : "🔴";
     const statusText = job.status === "running" ? " (running)" : "";
+    const effectiveMode = job.execution_mode ?? defaultMode;
+    const modeLabel = job.execution_mode === undefined
+        ? `${effectiveMode} (default)`
+        : effectiveMode;
     let output = `${statusIcon} ${job.id}${statusText}\n`;
     output += `   Schedule: ${job.schedule}\n`;
     output += `   Next run: ${job.next_run ? new Date(job.next_run).toLocaleString() : "Not scheduled"}\n`;
     output += `   Last run: ${job.last_run ? new Date(job.last_run).toLocaleString() : "Never"}\n`;
     output += `   Runs: ${job.run_count} successful, ${job.error_count} failed\n`;
+    output += `   Execution: ${modeLabel}\n`;
     if (job.description) {
         output += `   ${job.description}\n`;
     }
@@ -92,6 +119,7 @@ const statusCommand = {
     describe: "Show scheduler status and all jobs",
     handler: async () => {
         const status = await getDaemonStatus();
+        const defaultMode = getDefaultExecutionMode();
         console.log("## Scheduler Status\n");
         console.log(`Running: ${status.running ? "🟢 Yes" : "🔴 No"}`);
         if (status.running) {
@@ -115,7 +143,7 @@ const statusCommand = {
         if (jobs.length > 0) {
             console.log(`\n## All Jobs\n`);
             for (const job of jobs) {
-                console.log(formatJob(job));
+                console.log(formatJob(job, defaultMode));
             }
         }
     },
@@ -128,6 +156,7 @@ const listCommand = {
     describe: "List all scheduled jobs",
     handler: async () => {
         const jobs = await listJobs();
+        const defaultMode = getDefaultExecutionMode();
         if (jobs.length === 0) {
             console.log("No scheduled jobs found.");
             console.log("\nUse the schedule_task tool to create jobs:");
@@ -136,7 +165,7 @@ const listCommand = {
         }
         console.log(`## Scheduled Jobs (${jobs.length} total)\n`);
         for (const job of jobs) {
-            console.log(formatJob(job));
+            console.log(formatJob(job, defaultMode));
         }
         console.log("\nUse 'lowcal scheduler logs <job-id>' to see execution history.");
     },
@@ -158,6 +187,11 @@ const getCommand = {
             console.error(`Job "${argv.id}" not found`);
             process.exit(1);
         }
+        const defaultMode = getDefaultExecutionMode();
+        const effectiveMode = job.execution_mode ?? defaultMode;
+        const modeLabel = job.execution_mode === undefined
+            ? `${effectiveMode} (default)`
+            : effectiveMode;
         console.log(`## Job Details: ${job.id}\n`);
         console.log(`Status: ${job.status}${job.enabled ? "" : " (disabled)"}`);
         console.log(`Schedule: ${job.schedule}`);
@@ -167,10 +201,49 @@ const getCommand = {
         console.log(`Executions: ${job.run_count} successful, ${job.error_count} failed`);
         console.log(`Timeout: ${job.timeout_minutes} minutes`);
         console.log(`Max failures: ${job.max_failures}`);
+        console.log(`Execution: ${modeLabel}`);
         if (job.description) {
             console.log(`\nDescription: ${job.description}`);
         }
         console.log(`\nPrompt:\n${job.prompt}\n`);
+    },
+};
+/**
+ * Mode command
+ */
+const modeCommand = {
+    command: "mode <id> <mode>",
+    describe: "Set the execution mode for a job (headless, zellij_tab, or default)",
+    builder: (yargs) => yargs
+        .positional("id", {
+        describe: "Job ID",
+        type: "string",
+        demandOption: true,
+    })
+        .positional("mode", {
+        describe: "Execution mode: headless or zellij_tab",
+        type: "string",
+        demandOption: true,
+    }),
+    handler: async (argv) => {
+        const job = await getJob(argv.id);
+        if (!job) {
+            console.error(`Job "${argv.id}" not found`);
+            process.exit(1);
+        }
+        const mode = normalizeExecutionMode(argv.mode);
+        if (!mode) {
+            console.error(`Invalid mode "${argv.mode}". Use "headless", "zellij_tab", or "default".`);
+            process.exit(1);
+        }
+        if (mode === "default") {
+            await updateJob({ id: argv.id, execution_mode: null });
+            console.log(`✓ Job "${argv.id}" execution mode cleared (default)`);
+        }
+        else {
+            await updateJob({ id: argv.id, execution_mode: mode });
+            console.log(`✓ Job "${argv.id}" execution mode set to ${mode}`);
+        }
     },
 };
 /**
@@ -251,6 +324,7 @@ export const schedulerCommand = {
         .command(listCommand)
         .command(getCommand)
         .command(deleteCommand)
+        .command(modeCommand)
         .command(logsCommand)
         .demandCommand(1, "You need at least one command before continuing.")
         .version(false)

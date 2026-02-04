@@ -32,6 +32,7 @@ A new tool available to the LLM for managing scheduled tasks:
 A background process that:
 - **Ticks every minute**: Checks for due jobs
 - **Executes jobs**: Spawns headless LowCal processes to run scheduled tasks
+- **Zellij mode (optional)**: Can run jobs in a new Zellij tab when available
 - **Manages state**: Updates job status, tracks execution counts
 - **Auto-pause**: Pauses jobs after consecutive failures
 - **PID management**: Tracks daemon process for start/stop operations
@@ -157,6 +158,10 @@ Default configuration (defined in `types.ts`):
 - Max jobs: 100
 - Log retention: 30 days
 - Logs per job: 10
+
+Scheduler execution mode (CLI settings):
+- `scheduler.executionMode`: `headless` (default) or `zellij_tab`
+- Per-job override via the schedule_task parameter `execution_mode`
 
 ## Future Enhancements (Phase 2+)
 1. **Heartbeat/self-monitoring**: Jobs that monitor other jobs and system health

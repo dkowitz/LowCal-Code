@@ -8,6 +8,11 @@
  */
 export type JobStatus = "scheduled" | "running" | "paused" | "error" | "completed";
 /**
+ * Execution mode for a scheduled job
+ */
+export type JobExecutionMode = "headless" | "zellij_tab";
+export type ScheduleTaskExecutionMode = JobExecutionMode | "default";
+/**
  * Represents a single scheduled job
  */
 export interface Job {
@@ -37,6 +42,8 @@ export interface Job {
     timeout_minutes?: number;
     /** Number of consecutive failures before auto-pausing */
     max_failures?: number;
+    /** Optional execution mode override for this job */
+    execution_mode?: JobExecutionMode;
 }
 /**
  * Root structure of the cron.json file
@@ -79,6 +86,7 @@ export interface CreateJobParams {
     enabled?: boolean;
     timeout_minutes?: number;
     max_failures?: number;
+    execution_mode?: JobExecutionMode;
 }
 /**
  * Parameters for updating an existing job
@@ -92,6 +100,7 @@ export interface UpdateJobParams {
     next_run?: string;
     timeout_minutes?: number;
     max_failures?: number;
+    execution_mode?: JobExecutionMode | null;
 }
 /**
  * Valid actions for the schedule_task tool
@@ -109,6 +118,8 @@ export interface ScheduleTaskParams {
     enabled?: boolean;
     timeout_minutes?: number;
     max_failures?: number;
+    execution_mode?: ScheduleTaskExecutionMode;
+    execution_mode_override?: boolean;
 }
 /**
  * Configuration for the scheduler daemon

@@ -66,6 +66,7 @@ const MIGRATION_MAP = {
     dnsResolutionOrder: "advanced.dnsResolutionOrder",
     excludedProjectEnvVars: "advanced.excludedEnvVars",
     bugCommand: "advanced.bugCommand",
+    approvalMode: "approvalMode",
 };
 export function getSystemSettingsPath() {
     if (process.env["QWEN_CODE_SYSTEM_SETTINGS_PATH"]) {
@@ -488,6 +489,9 @@ export class LoadedSettings {
         setNestedProperty(settingsFile.settings, key, value);
         this._merged = this.computeMergedSettings();
         saveSettings(settingsFile);
+        if (key === "scheduler.executionMode" && typeof value === "string") {
+            process.env["LOWCAL_SCHEDULER_DEFAULT_MODE"] = value;
+        }
     }
 }
 function resolveEnvVarsInString(value) {

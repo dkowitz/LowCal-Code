@@ -391,6 +391,10 @@ export async function loadCliConfig(
   argv: CliArgs,
   cwd: string = process.cwd(),
 ): Promise<Config> {
+  if (settings.scheduler?.executionMode) {
+    process.env["LOWCAL_SCHEDULER_DEFAULT_MODE"] =
+      settings.scheduler.executionMode;
+  }
   const debugMode =
     argv.debug ||
     [process.env["DEBUG"], process.env["DEBUG_MODE"]].some(

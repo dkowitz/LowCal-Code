@@ -15,6 +15,7 @@ import { runNonInteractive } from "./nonInteractiveCli.js";
 import { AppWrapper } from "./ui/App.js";
 import { setMaxSizedBoxDebugging } from "./ui/components/shared/MaxSizedBox.js";
 import { SettingsContext } from "./ui/contexts/SettingsContext.js";
+import { loadCliToolConfig, syncCoreToolConfig, } from "./ui/commands/utils/toolConfig.js";
 import { themeManager } from "./ui/themes/theme-manager.js";
 import { ConsolePatcher } from "./ui/utils/ConsolePatcher.js";
 import { detectAndEnableKittyProtocol } from "./ui/utils/kittyProtocolDetector.js";
@@ -182,6 +183,8 @@ export async function main() {
         }
     }
     setMaxSizedBoxDebugging(config.getDebugMode());
+    const cliToolConfig = loadCliToolConfig();
+    syncCoreToolConfig(cliToolConfig);
     await config.initialize();
     if (config.getIdeMode()) {
         await config.getIdeClient().connect();

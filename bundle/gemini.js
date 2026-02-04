@@ -232365,7 +232365,7 @@ function matchesField(expression, value, min, max) {
   return !isNaN(num) && num === value;
 }
 function isJobDue(job, now = /* @__PURE__ */ new Date()) {
-  if (!job.enabled || job.status === "running")
+  if (!job.enabled)
     return false;
   if (!job.next_run) {
     const next = calculateNextRun(job.schedule, now);
@@ -310630,28 +310630,28 @@ var App = class extends import_react12.PureComponent {
     this.handleExit(error);
   }
   handleSetRawMode = (isEnabled2) => {
-    const { stdin: stdin2 } = this.props;
+    const { stdin } = this.props;
     if (!this.isRawModeSupported()) {
-      if (stdin2 === process23.stdin) {
+      if (stdin === process23.stdin) {
         throw new Error("Raw mode is not supported on the current process.stdin, which Ink uses as input stream by default.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported");
       } else {
         throw new Error("Raw mode is not supported on the stdin provided to Ink.\nRead about how to prevent this error on https://github.com/vadimdemedes/ink/#israwmodesupported");
       }
     }
-    stdin2.setEncoding("utf8");
+    stdin.setEncoding("utf8");
     if (isEnabled2) {
       if (this.rawModeEnabledCount === 0) {
-        stdin2.ref();
-        stdin2.setRawMode(true);
-        stdin2.addListener("readable", this.handleReadable);
+        stdin.ref();
+        stdin.setRawMode(true);
+        stdin.addListener("readable", this.handleReadable);
       }
       this.rawModeEnabledCount++;
       return;
     }
     if (--this.rawModeEnabledCount === 0) {
-      stdin2.setRawMode(false);
-      stdin2.removeListener("readable", this.handleReadable);
-      stdin2.unref();
+      stdin.setRawMode(false);
+      stdin.removeListener("readable", this.handleReadable);
+      stdin.unref();
     }
   };
   handleReadable = () => {
@@ -311348,7 +311348,7 @@ var use_stdin_default = useStdin;
 
 // node_modules/ink/build/hooks/use-input.js
 var useInput = (inputHandler, options2 = {}) => {
-  const { stdin: stdin2, setRawMode, internal_exitOnCtrlC, internal_eventEmitter } = use_stdin_default();
+  const { stdin, setRawMode, internal_exitOnCtrlC, internal_eventEmitter } = use_stdin_default();
   (0, import_react19.useEffect)(() => {
     if (options2.isActive === false) {
       return;
@@ -311404,7 +311404,7 @@ var useInput = (inputHandler, options2 = {}) => {
     return () => {
       internal_eventEmitter?.removeListener("input", handleData);
     };
-  }, [options2.isActive, stdin2, internal_exitOnCtrlC, inputHandler]);
+  }, [options2.isActive, stdin, internal_exitOnCtrlC, inputHandler]);
 };
 var use_input_default = useInput;
 
@@ -320074,9 +320074,19 @@ async function getDaemonStatus() {
   const store = await loadStore();
   const now = /* @__PURE__ */ new Date();
   const upcomingJobs = store.jobs.filter((j) => j.enabled && j.next_run && new Date(j.next_run) > now).sort((a, b) => new Date(a.next_run).getTime() - new Date(b.next_run).getTime()).slice(0, 10).map((j) => j.id);
+  let lastTick;
+  if (running) {
+    try {
+      const statusData = await fs52.readFile(DAEMON_STATUS_FILE, "utf-8");
+      const savedStatus = JSON.parse(statusData);
+      lastTick = savedStatus.last_tick;
+    } catch {
+    }
+  }
   const status = {
     running,
     pid: running ? parseInt(await fs52.readFile(DAEMON_PID_FILE, "utf-8"), 10) : void 0,
+    last_tick: lastTick,
     active_executions: activeExecutions.size,
     total_jobs: store.jobs.length,
     upcoming_jobs: upcomingJobs
@@ -320089,7 +320099,7 @@ function spawnJob(job) {
     const logPath = path57.join(process26.cwd(), ".lowcal", "logs", `${job.id}-${Date.now()}.log`);
     fs52.mkdir(path57.dirname(logPath), { recursive: true }).catch(() => {
     });
-    const cliPath = path57.join(process26.cwd(), "packages", "cli", "dist", "scheduler", "headless.js");
+    const cliPath = path57.join(process26.cwd(), "packages", "cli", "dist", "src", "scheduler", "headless.js");
     const child = spawn8("node", [
       cliPath,
       "--prompt",
@@ -320206,6 +320216,18 @@ async function tick() {
     total_jobs: store.jobs.length,
     upcoming_jobs: upcomingJobs
   });
+  for (const job of store.jobs) {
+    if (job.enabled && !job.next_run) {
+      const nextRun = calculateNextRun(job.schedule, now);
+      if (nextRun) {
+        console.log(`[Scheduler] Calculating next run for job ${job.id}: ${nextRun.toISOString()}`);
+        await updateJob({
+          id: job.id,
+          next_run: nextRun.toISOString()
+        });
+      }
+    }
+  }
   const dueJobs = await getDueJobs(now);
   if (dueJobs.length === 0) {
     console.log("[Scheduler] No jobs due");
@@ -320240,7 +320262,8 @@ async function runDaemon() {
     console.log(`[Scheduler] Cleaned up ${deleted} old log files`);
   }, 60 * 60 * 1e3);
   console.log("[Scheduler] Daemon running. PID:", process26.pid);
-  process26.stdin.resume();
+  setInterval(() => {
+  }, 1e4);
 }
 async function stopDaemon() {
   try {
@@ -320280,7 +320303,8 @@ async function startDaemon() {
   await new Promise((resolve24) => setTimeout(resolve24, 1e3));
   return await isDaemonRunning();
 }
-if (import.meta.url === fileURLToPath6(import.meta.url)) {
+var isMainModule = import.meta.url === `file://${fileURLToPath6(import.meta.url)}` || import.meta.url === process26.argv[1];
+if (isMainModule) {
   const args = process26.argv.slice(2);
   if (args.includes("--daemon")) {
     runDaemon().catch((err) => {
@@ -320479,6 +320503,24 @@ ${job.prompt}
 `);
   }
 };
+var deleteCommand = {
+  command: "delete <id>",
+  describe: "Delete a scheduled job",
+  builder: (yargs) => yargs.positional("id", {
+    describe: "Job ID",
+    type: "string",
+    demandOption: true
+  }),
+  handler: async (argv2) => {
+    const job = await getJob(argv2.id);
+    if (!job) {
+      console.error(`Job "${argv2.id}" not found`);
+      process27.exit(1);
+    }
+    await deleteJob(argv2.id);
+    console.log(`\u2713 Job "${argv2.id}" deleted successfully`);
+  }
+};
 var logsCommand = {
   command: "logs <id>",
   describe: "Show execution logs for a job",
@@ -320522,7 +320564,7 @@ var logsCommand = {
 var schedulerCommand = {
   command: "scheduler",
   describe: "Manage scheduled tasks and the scheduler daemon",
-  builder: (yargs) => yargs.command(startCommand).command(stopCommand).command(statusCommand).command(listCommand3).command(getCommand).command(logsCommand).demandCommand(1, "You need at least one command before continuing.").version(false).epilogue(`Cron Format:
+  builder: (yargs) => yargs.command(startCommand).command(stopCommand).command(statusCommand).command(listCommand3).command(getCommand).command(deleteCommand).command(logsCommand).demandCommand(1, "You need at least one command before continuing.").version(false).epilogue(`Cron Format:
   The scheduler uses standard 5-field cron expressions:
   
   minute hour day month day_of_week
@@ -339826,7 +339868,7 @@ var DISABLE_FOCUS_REPORTING = "\x1B[?1004l";
 var FOCUS_IN = "\x1B[I";
 var FOCUS_OUT = "\x1B[O";
 var useFocus = () => {
-  const { stdin: stdin2 } = use_stdin_default();
+  const { stdin } = use_stdin_default();
   const { stdout } = use_stdout_default();
   const [isFocused, setIsFocused] = (0, import_react36.useState)(true);
   (0, import_react36.useEffect)(() => {
@@ -339841,12 +339883,12 @@ var useFocus = () => {
       }
     };
     stdout?.write(ENABLE_FOCUS_REPORTING);
-    stdin2?.on("data", handleData);
+    stdin?.on("data", handleData);
     return () => {
       stdout?.write(DISABLE_FOCUS_REPORTING);
-      stdin2?.removeListener("data", handleData);
+      stdin?.removeListener("data", handleData);
     };
-  }, [stdin2, stdout]);
+  }, [stdin, stdout]);
   return isFocused;
 };
 
@@ -339874,7 +339916,7 @@ function KeypressProvider({
   config,
   debugKeystrokeLogging
 }) {
-  const { stdin: stdin2, setRawMode } = use_stdin_default();
+  const { stdin, setRawMode } = use_stdin_default();
   const subscribers = (0, import_react37.useRef)(/* @__PURE__ */ new Set()).current;
   const subscribe = (0, import_react37.useCallback)(
     (handler) => {
@@ -340174,18 +340216,18 @@ function KeypressProvider({
       });
       readline3.emitKeypressEvents(keypressStream, rl);
       keypressStream.on("keypress", handleKeypress);
-      stdin2.on("data", handleRawKeypress);
+      stdin.on("data", handleRawKeypress);
     } else {
-      rl = readline3.createInterface({ input: stdin2, escapeCodeTimeout: 0 });
-      readline3.emitKeypressEvents(stdin2, rl);
-      stdin2.on("keypress", handleKeypress);
+      rl = readline3.createInterface({ input: stdin, escapeCodeTimeout: 0 });
+      readline3.emitKeypressEvents(stdin, rl);
+      stdin.on("keypress", handleKeypress);
     }
     return () => {
       if (usePassthrough) {
         keypressStream.removeListener("keypress", handleKeypress);
-        stdin2.removeListener("data", handleRawKeypress);
+        stdin.removeListener("data", handleRawKeypress);
       } else {
-        stdin2.removeListener("keypress", handleKeypress);
+        stdin.removeListener("keypress", handleKeypress);
       }
       rl.close();
       setRawMode(false);
@@ -340210,7 +340252,7 @@ function KeypressProvider({
       }
     };
   }, [
-    stdin2,
+    stdin,
     setRawMode,
     kittyProtocolEnabled,
     debugKeystrokeLogging,
@@ -344664,7 +344706,7 @@ init_open();
 import process35 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "a5a5d1de";
+var GIT_COMMIT_INFO = "49728c0b";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -344913,7 +344955,7 @@ var resumeCommand = {
     return chatDetails.map((chat) => chat.name).filter((name2) => name2.startsWith(partialArg));
   }
 };
-var deleteCommand = {
+var deleteCommand2 = {
   name: "delete",
   description: "Delete a conversation checkpoint. Usage: /chat delete <tag>",
   kind: "built-in" /* BUILT_IN */,
@@ -344952,7 +344994,7 @@ var chatCommand = {
   name: "chat",
   description: "Manage conversation history.",
   kind: "built-in" /* BUILT_IN */,
-  subCommands: [listCommand4, saveCommand, resumeCommand, deleteCommand]
+  subCommands: [listCommand4, saveCommand, resumeCommand, deleteCommand2]
 };
 
 // packages/cli/src/ui/commands/clearCommand.ts
@@ -352884,7 +352926,7 @@ function useTextBuffer({
   initialText = "",
   initialCursorOffset = 0,
   viewport,
-  stdin: stdin2,
+  stdin,
   setRawMode,
   onChange,
   isValidPath,
@@ -353112,7 +353154,7 @@ function useTextBuffer({
       const filePath = pathMod.join(tmpDir, "buffer.txt");
       fs70.writeFileSync(filePath, text, "utf8");
       dispatch({ type: "create_undo_snapshot" });
-      const wasRaw = stdin2?.isRaw ?? false;
+      const wasRaw = stdin?.isRaw ?? false;
       try {
         setRawMode?.(false);
         const { status, error } = spawnSync(editor, [filePath], {
@@ -353138,7 +353180,7 @@ function useTextBuffer({
         }
       }
     },
-    [text, stdin2, setRawMode]
+    [text, stdin, setRawMode]
   );
   const handleInput = (0, import_react73.useCallback)(
     (key) => {
@@ -358118,7 +358160,7 @@ function getEditorCommand(preferredEditor) {
 }
 function useLaunchEditor() {
   const settings = useSettings();
-  const { stdin: stdin2, setRawMode } = use_stdin_default();
+  const { stdin, setRawMode } = use_stdin_default();
   const launchEditor = (0, import_react97.useCallback)(
     async (filePath) => {
       const preferredEditor = settings.merged.general?.preferredEditor;
@@ -358132,7 +358174,7 @@ function useLaunchEditor() {
         editorCommand2 = editor;
         editorArgs = [filePath];
       }
-      const wasRaw = stdin2?.isRaw ?? false;
+      const wasRaw = stdin?.isRaw ?? false;
       try {
         setRawMode?.(false);
         const { status, error } = spawnSync2(editorCommand2, editorArgs, {
@@ -358146,7 +358188,7 @@ function useLaunchEditor() {
         if (wasRaw) setRawMode?.(true);
       }
     },
-    [settings.merged.general?.preferredEditor, setRawMode, stdin2]
+    [settings.merged.general?.preferredEditor, setRawMode, stdin]
   );
   return launchEditor;
 }
@@ -364157,7 +364199,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   }, [config, addItem, userTier]);
   const { rows: terminalHeight, columns: terminalWidth } = useTerminalSize();
   const isNarrow = isNarrowWidth(terminalWidth);
-  const { stdin: stdin2, setRawMode } = use_stdin_default();
+  const { stdin, setRawMode } = use_stdin_default();
   const isInitialMount = (0, import_react121.useRef)(true);
   const widthFraction = 0.9;
   const inputWidth = Math.max(
@@ -364439,7 +364481,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const buffer = useTextBuffer({
     initialText: "",
     viewport: { height: 10, width: inputWidth },
-    stdin: stdin2,
+    stdin,
     setRawMode,
     isValidPath,
     shellModeActive
@@ -369683,14 +369725,14 @@ var AcpFileSystemService = class {
 import { randomUUID as randomUUID6 } from "node:crypto";
 async function runZedIntegration(config, settings, extensions, argv2) {
   const stdout = Writable2.toWeb(process.stdout);
-  const stdin2 = Readable3.toWeb(process.stdin);
+  const stdin = Readable3.toWeb(process.stdin);
   console.log = console.error;
   console.info = console.error;
   console.debug = console.error;
   new AgentSideConnection(
     (client) => new GeminiAgent(config, settings, extensions, argv2, client),
     stdout,
-    stdin2
+    stdin
   );
 }
 var GeminiAgent = class {

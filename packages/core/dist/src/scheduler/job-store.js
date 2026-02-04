@@ -285,6 +285,7 @@ export async function createJob(params) {
             status: "scheduled",
             timeout_minutes: params.timeout_minutes ?? DEFAULT_SCHEDULER_CONFIG.default_timeout_minutes,
             max_failures: params.max_failures ?? DEFAULT_SCHEDULER_CONFIG.default_max_failures,
+            execution_mode: params.execution_mode,
         };
         store.jobs.push(job);
         return job;
@@ -343,6 +344,14 @@ export async function updateJob(params) {
         }
         if (params.max_failures !== undefined) {
             job.max_failures = params.max_failures;
+        }
+        if (params.execution_mode !== undefined) {
+            if (params.execution_mode === null) {
+                job.execution_mode = undefined;
+            }
+            else {
+                job.execution_mode = params.execution_mode;
+            }
         }
         return job;
     });

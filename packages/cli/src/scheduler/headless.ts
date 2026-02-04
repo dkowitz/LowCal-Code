@@ -18,6 +18,10 @@ import * as path from "path";
 import * as process from "process";
 
 import { normalizeAuthType } from "../config/auth.js";
+import {
+  loadCliToolConfig,
+  syncCoreToolConfig,
+} from "../ui/commands/utils/toolConfig.js";
 
 // Parse command line arguments
 function parseArgs(): { prompt: string; jobId: string; output: string } {
@@ -148,6 +152,9 @@ async function main(): Promise<void> {
         respectGeminiIgnore: true,
       },
     });
+
+    const cliToolConfig = loadCliToolConfig();
+    syncCoreToolConfig(cliToolConfig);
     
     // Initialize config
     await config.initialize();

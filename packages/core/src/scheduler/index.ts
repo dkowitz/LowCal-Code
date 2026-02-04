@@ -8,6 +8,8 @@
 export type {
   Job,
   JobStatus,
+  JobExecutionMode,
+  ScheduleTaskExecutionMode,
   CronStore,
   JobExecutionResult,
   CreateJobParams,

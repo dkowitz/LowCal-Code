@@ -155,33 +155,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
         setEditBuffer(initialValue);
         setEditCursorPos(cpLen(initialValue)); // Position cursor at end of initial value
     };
-    const commitEdit = (key) => {
-        const definition = getSettingDefinition(key);
-        const type = definition?.type;
-        if (editBuffer.trim() === "" && type === "number") {
-            // Nothing entered for a number; cancel edit
-            setEditingKey(null);
-            setEditBuffer("");
-            setEditCursorPos(0);
-            return;
-        }
-        let parsed;
-        if (type === "number") {
-            const numParsed = Number(editBuffer.trim());
-            if (Number.isNaN(numParsed)) {
-                // Invalid number; cancel edit
-                setEditingKey(null);
-                setEditBuffer("");
-                setEditCursorPos(0);
-                return;
-            }
-            parsed = numParsed;
-        }
-        else {
-            // For strings, use the buffer as is.
-            parsed = editBuffer;
-        }
-        // Update pending
+    const applySettingValue = (key, parsed) => {
         setPendingSettings((prev) => setPendingSettingValueAny(key, parsed, prev));
         if (!requiresRestart(key)) {
             const immediateSettings = new Set([key]);
@@ -225,6 +199,34 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                 return next;
             });
         }
+    };
+    const commitEdit = (key) => {
+        const definition = getSettingDefinition(key);
+        const type = definition?.type;
+        if (editBuffer.trim() === "" && type === "number") {
+            // Nothing entered for a number; cancel edit
+            setEditingKey(null);
+            setEditBuffer("");
+            setEditCursorPos(0);
+            return;
+        }
+        let parsed;
+        if (type === "number") {
+            const numParsed = Number(editBuffer.trim());
+            if (Number.isNaN(numParsed)) {
+                // Invalid number; cancel edit
+                setEditingKey(null);
+                setEditBuffer("");
+                setEditCursorPos(0);
+                return;
+            }
+            parsed = numParsed;
+        }
+        else {
+            // For strings, use the buffer as is.
+            parsed = editBuffer;
+        }
+        applySettingValue(key, parsed);
         setEditingKey(null);
         setEditBuffer("");
         setEditCursorPos(0);
@@ -369,9 +371,30 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
             }
             else if (name === "return" || name === "space") {
                 const currentItem = items[activeSettingIndex];
+                const definition = currentItem
+                    ? getSettingDefinition(currentItem.value)
+                    : undefined;
                 if (currentItem?.type === "number" ||
                     currentItem?.type === "string") {
-                    startEditing(currentItem.value);
+                    if (currentItem?.type === "string" &&
+                        definition?.options &&
+                        definition.options.length > 0) {
+                        const path = currentItem.value.split(".");
+                        const currentValue = getNestedValue(pendingSettings, path);
+                        const defaultValue = getDefaultValue(currentItem.value);
+                        const effectiveValue = currentValue ??
+                            (typeof defaultValue === "string" ? defaultValue : undefined) ??
+                            definition.options[0].value;
+                        const currentIndex = definition.options.findIndex((option) => option.value === effectiveValue);
+                        const nextIndex = currentIndex >= 0
+                            ? (currentIndex + 1) % definition.options.length
+                            : 0;
+                        const nextValue = definition.options[nextIndex].value;
+                        applySettingValue(currentItem.value, nextValue);
+                    }
+                    else {
+                        startEditing(currentItem.value);
+                    }
                 }
                 else {
                     currentItem?.toggle();
@@ -514,6 +537,7 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                         const path = item.value.split(".");
                         const currentValue = getNestedValue(pendingSettings, path);
                         const defaultValue = getDefaultValue(item.value);
+                        const definition = getSettingDefinition(item.value);
                         if (currentValue !== undefined && currentValue !== null) {
                             displayValue = String(currentValue);
                         }
@@ -522,6 +546,14 @@ export function SettingsDialog({ settings, onSelect, onRestartRequest, }) {
                                 defaultValue !== undefined && defaultValue !== null
                                     ? String(defaultValue)
                                     : "";
+                        }
+                        if (item.type === "string" &&
+                            definition?.options &&
+                            definition.options.length > 0) {
+                            const option = definition.options.find((opt) => opt.value === displayValue);
+                            if (option?.label) {
+                                displayValue = option.label;
+                            }
                         }
                         // Add * if value differs from default OR if currently being modified
                         const isModified = modifiedSettings.has(item.value);

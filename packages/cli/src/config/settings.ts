@@ -77,6 +77,7 @@ const MIGRATION_MAP: Record<string, string> = {
   dnsResolutionOrder: "advanced.dnsResolutionOrder",
   excludedProjectEnvVars: "advanced.excludedEnvVars",
   bugCommand: "advanced.bugCommand",
+  approvalMode: "approvalMode",
 };
 
 export function getSystemSettingsPath(): string {
@@ -616,6 +617,10 @@ export class LoadedSettings {
     setNestedProperty(settingsFile.settings, key, value);
     this._merged = this.computeMergedSettings();
     saveSettings(settingsFile);
+
+    if (key === "scheduler.executionMode" && typeof value === "string") {
+      process.env["LOWCAL_SCHEDULER_DEFAULT_MODE"] = value;
+    }
   }
 }
 

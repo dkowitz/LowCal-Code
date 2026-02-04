@@ -45,6 +45,15 @@ const scheduleTaskToolSchemaData = {
                 type: "number",
                 description: "Number of consecutive failures before auto-pausing (default: 3)",
             },
+            execution_mode: {
+                type: "string",
+                enum: ["default", "headless", "zellij_tab"],
+                description: "Optional execution mode override for this job. Use 'default' (or omit) to follow the scheduler setting.",
+            },
+            execution_mode_override: {
+                type: "boolean",
+                description: "Set to true to apply execution_mode. If false/omitted, execution_mode is ignored and defaults are used.",
+            },
         },
         required: ["action"],
         $schema: "http://json-schema.org/draft-07/schema#",
@@ -95,6 +104,7 @@ Common patterns:
 - **pause**: Temporarily disable a job without deleting it (requires: id)
 - **resume**: Re-enable a paused job (requires: id)
 - **run_now**: Trigger a job to run immediately (requires: id)
+- Optional execution mode override: set \`execution_mode\` to \`headless\` or \`zellij_tab\`
 
 ## Examples
 
@@ -142,6 +152,7 @@ pause action:
 - Jobs have a default timeout of 10 minutes and auto-pause after 3 consecutive failures
 - Maximum 100 jobs can be scheduled at once
 - Job execution logs are stored in .lowcal/logs/
+- Execution mode defaults to the scheduler setting unless overridden per job (set execution_mode_override to true)
 `;
 class ScheduleTaskInvocation extends BaseToolInvocation {
     constructor(params) {
@@ -191,7 +202,10 @@ class ScheduleTaskInvocation extends BaseToolInvocation {
         }
     }
     async executeAction() {
-        const { action, id, schedule, description, enabled, timeout_minutes, max_failures } = this.params;
+        const { action, id, schedule, description, enabled, timeout_minutes, max_failures, execution_mode, execution_mode_override, } = this.params;
+        const shouldOverrideExecutionMode = execution_mode_override === true;
+        const resolvedExecutionMode = execution_mode === "default" ? undefined : execution_mode;
+        const sanitizedExecutionMode = resolvedExecutionMode === "headless" ? undefined : resolvedExecutionMode;
         switch (action) {
             case "create": {
                 if (!id || !schedule || !this.params.prompt) {
@@ -208,6 +222,9 @@ class ScheduleTaskInvocation extends BaseToolInvocation {
                     enabled,
                     timeout_minutes,
                     max_failures,
+                    execution_mode: shouldOverrideExecutionMode
+                        ? sanitizedExecutionMode
+                        : undefined,
                 });
                 return this.formatJobCreated(job);
             }
@@ -244,6 +261,9 @@ class ScheduleTaskInvocation extends BaseToolInvocation {
                     enabled,
                     timeout_minutes,
                     max_failures,
+                    execution_mode: shouldOverrideExecutionMode
+                        ? sanitizedExecutionMode ?? null
+                        : undefined,
                 });
                 return this.formatJobUpdated(job);
             }
@@ -292,6 +312,7 @@ class ScheduleTaskInvocation extends BaseToolInvocation {
         output += `Schedule: ${job.schedule}\n`;
         output += `Next run: ${job.next_run ? new Date(job.next_run).toLocaleString() : "Not scheduled"}\n`;
         output += `Status: ${job.enabled ? "Enabled" : "Disabled"}\n`;
+        output += `Execution: ${job.execution_mode ?? "default"}\n`;
         if (job.description) {
             output += `Description: ${job.description}\n`;
         }
@@ -308,6 +329,7 @@ class ScheduleTaskInvocation extends BaseToolInvocation {
             output += `${statusIcon} **${job.id}**${statusText}\n`;
             output += `   Schedule: \`${job.schedule}\`\n`;
             output += `   Next run: ${job.next_run ? new Date(job.next_run).toLocaleString() : "Not scheduled"}\n`;
+            output += `   Execution: ${job.execution_mode ?? "default"}\n`;
             if (job.description) {
                 output += `   ${job.description}\n`;
             }
@@ -326,6 +348,7 @@ class ScheduleTaskInvocation extends BaseToolInvocation {
         output += `**Executions:** ${job.run_count} successful, ${job.error_count} failed\n`;
         output += `**Timeout:** ${job.timeout_minutes} minutes\n`;
         output += `**Max failures:** ${job.max_failures}\n\n`;
+        output += `**Execution:** ${job.execution_mode ?? "default"}\n\n`;
         if (job.description) {
             output += `**Description:** ${job.description}\n\n`;
         }
