@@ -1395,29 +1395,49 @@ export class OpenAIContentConverter {
   private convertResponsesCompletedToGemini(
     event: Extract<ResponseStreamEvent, { type: "response.completed" }>,
   ): GenerateContentResponse {
-    const parts: Part[] = [];
     const completedToolCalls = this.streamingToolCallParser.getCompletedToolCalls();
-
-    for (const toolCall of completedToolCalls) {
-      if (toolCall.name) {
-        parts.push({
-          functionCall: {
-            id: toolCall.id || event.response.id,
-            name: toolCall.name,
-            args: toolCall.args,
-          },
-        });
-      }
-    }
 
     this.streamingToolCallParser.reset();
 
     const response = this.convertResponsesApiResponseToGemini(event.response);
-    if (parts.length > 0) {
-      const candidate = response.candidates?.[0];
-      if (candidate) {
-        candidate.content?.parts?.push(...parts);
+    const candidate = response.candidates?.[0];
+    const existingParts = candidate?.content?.parts ?? [];
+
+    const existingToolCallKeys = new Set<string>();
+    for (const part of existingParts) {
+      if ("functionCall" in part && part.functionCall) {
+        const id = part.functionCall.id ?? "";
+        const name = part.functionCall.name ?? "";
+        const args =
+          part.functionCall.args !== undefined
+            ? JSON.stringify(part.functionCall.args)
+            : "";
+        const key = id ? `id:${id}` : `name:${name}|args:${args}`;
+        existingToolCallKeys.add(key);
       }
+    }
+
+    const missingParts: Part[] = [];
+    for (const toolCall of completedToolCalls) {
+      if (!toolCall.name) continue;
+      const id = toolCall.id || event.response.id;
+      const argsJson =
+        toolCall.args !== undefined ? JSON.stringify(toolCall.args) : "";
+      const key = id ? `id:${id}` : `name:${toolCall.name}|args:${argsJson}`;
+      if (existingToolCallKeys.has(key)) {
+        continue;
+      }
+      missingParts.push({
+        functionCall: {
+          id,
+          name: toolCall.name,
+          args: toolCall.args,
+        },
+      });
+    }
+
+    if (missingParts.length > 0 && candidate) {
+      candidate.content?.parts?.push(...missingParts);
     }
 
     return response;

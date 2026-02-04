@@ -410,11 +410,24 @@ export class ContentGenerationPipeline {
     chatRequest: OpenAI.Chat.ChatCompletionCreateParams,
   ): {
     model: string;
-    input: Array<{
-      role: "user" | "assistant" | "system" | "developer";
-      type: "message";
-      content: Array<{ type: "input_text"; text: string }>;
-    }>;
+    input: Array<
+      | {
+          role: "user" | "assistant" | "system" | "developer";
+          type: "message";
+          content: Array<{ type: "input_text"; text: string }>;
+        }
+      | {
+          type: "function_call";
+          call_id: string;
+          name: string;
+          arguments: string;
+        }
+      | {
+          type: "function_call_output";
+          call_id: string;
+          output: string;
+        }
+    >;
     tools?: Array<{
       type: "function";
       name: string;
@@ -428,20 +441,57 @@ export class ContentGenerationPipeline {
     top_p?: number;
     stream?: boolean;
   } {
-    const input = (chatRequest.messages ?? [])
-      .filter(
-        (
-          message,
-        ): message is OpenAI.Chat.ChatCompletionMessageParam & {
+    const input: Array<
+      | {
           role: "user" | "assistant" | "system" | "developer";
-          content: string | Array<{ type: "text"; text: string }> | null;
-        } =>
-          message.role === "user" ||
-          message.role === "assistant" ||
-          message.role === "system" ||
-          message.role === "developer",
-      )
-      .map((message) => {
+          type: "message";
+          content: Array<{ type: "input_text"; text: string }>;
+        }
+      | {
+          type: "function_call";
+          call_id: string;
+          name: string;
+          arguments: string;
+        }
+      | {
+          type: "function_call_output";
+          call_id: string;
+          output: string;
+        }
+    > = [];
+
+    for (const message of chatRequest.messages ?? []) {
+      if (message.role === "tool") {
+        const callId =
+          "tool_call_id" in message && message.tool_call_id
+            ? message.tool_call_id
+            : "";
+        if (!callId) {
+          continue;
+        }
+        const output =
+          typeof message.content === "string"
+            ? message.content
+            : Array.isArray(message.content)
+              ? message.content
+                  .map((part) => (part && "text" in part ? part.text : ""))
+                  .filter(Boolean)
+                  .join(" ")
+              : "";
+        input.push({
+          type: "function_call_output" as const,
+          call_id: callId,
+          output,
+        });
+        continue;
+      }
+
+      if (
+        message.role === "user" ||
+        message.role === "assistant" ||
+        message.role === "system" ||
+        message.role === "developer"
+      ) {
         const text =
           typeof message.content === "string"
             ? message.content
@@ -451,13 +501,31 @@ export class ContentGenerationPipeline {
                   .filter(Boolean)
                   .join(" ")
               : "";
-        return {
-          role: message.role,
-          type: "message" as const,
-          content: [{ type: "input_text" as const, text }],
-        };
-      })
-      .filter((item) => item.content[0]?.text?.length > 0);
+
+        if (text.length > 0) {
+          input.push({
+            role: message.role,
+            type: "message" as const,
+            content: [{ type: "input_text" as const, text }],
+          });
+        }
+
+        if (message.role === "assistant" && "tool_calls" in message) {
+          for (const toolCall of message.tool_calls ?? []) {
+            const callId = toolCall.id || "";
+            if (!callId) {
+              continue;
+            }
+            input.push({
+              type: "function_call" as const,
+              call_id: callId,
+              name: toolCall.function?.name ?? "",
+              arguments: toolCall.function?.arguments ?? "{}",
+            });
+          }
+        }
+      }
+    }
 
     type SimpleFunctionTool = {
       type: "function";

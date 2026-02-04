@@ -263,23 +263,23 @@ export declare const IdeDiffAcceptedNotificationSchema: z.ZodObject<{
         filePath: z.ZodString;
         content: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        filePath: string;
         content: string;
+        filePath: string;
     }, {
-        filePath: string;
         content: string;
+        filePath: string;
     }>;
 }, "strip", z.ZodTypeAny, {
     params: {
-        filePath: string;
         content: string;
+        filePath: string;
     };
     jsonrpc: "2.0";
     method: "ide/diffAccepted";
 }, {
     params: {
-        filePath: string;
         content: string;
+        filePath: string;
     };
     jsonrpc: "2.0";
     method: "ide/diffAccepted";
@@ -317,28 +317,28 @@ export declare const CloseDiffResponseSchema: z.ZodEffects<z.ZodObject<{
         text: z.ZodString;
         type: z.ZodLiteral<"text">;
     }, "strip", z.ZodTypeAny, {
-        type: "text";
         text: string;
+        type: "text";
     }, {
-        type: "text";
         text: string;
+        type: "text";
     }>, "many">;
 }, "strip", z.ZodTypeAny, {
     content: {
-        type: "text";
         text: string;
+        type: "text";
     }[];
 }, {
     content: {
-        type: "text";
         text: string;
+        type: "text";
     }[];
 }>, {
     content?: string | undefined;
 }, {
     content: {
-        type: "text";
         text: string;
+        type: "text";
     }[];
 }>;
 export type DiffUpdateResult = {
