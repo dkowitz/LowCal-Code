@@ -19,6 +19,10 @@ import * as process from "process";
 
 import { normalizeAuthType } from "../config/auth.js";
 import {
+  startSessionRegistration,
+  stopSessionRegistration,
+} from "../session/sessionManager.js";
+import {
   loadCliToolConfig,
   syncCoreToolConfig,
 } from "../ui/commands/utils/toolConfig.js";
@@ -69,6 +73,15 @@ function parseArgs(): { prompt: string; jobId: string; output: string } {
 async function main(): Promise<void> {
   const { prompt, jobId, output } = parseArgs();
   const prettyOutput = process.env["LOWCAL_HEADLESS_PRETTY"] === "1";
+  const sessionRunId = `headless-${jobId}-${Date.now()}`;
+
+  await startSessionRegistration({
+    id: sessionRunId,
+    mode: "headless",
+    status: "working",
+    details: { job_id: jobId },
+    cwd: process.cwd(),
+  });
   
   const COLORS = {
     reset: "\x1b[0m",
@@ -170,7 +183,7 @@ async function main(): Promise<void> {
 
     // Create config
     const config = new Config({
-      sessionId: `headless-${jobId}-${Date.now()}`,
+      sessionId: sessionRunId,
       embeddingModel: DEFAULT_GEMINI_EMBEDDING_MODEL,
       targetDir: cwd,
       cwd,
@@ -254,6 +267,8 @@ async function main(): Promise<void> {
     
     await fs.mkdir(path.dirname(output), { recursive: true });
     await fs.writeFile(output, JSON.stringify(outputData, null, 2), "utf-8");
+
+    await stopSessionRegistration();
     
     if (prettyOutput) {
       const durationMs = Date.now() - runStart.getTime();
@@ -326,6 +341,8 @@ async function main(): Promise<void> {
     } catch (writeError) {
       console.error("[Headless] Failed to write error log:", writeError);
     }
+
+    await stopSessionRegistration();
     
     process.exit(1);
   }

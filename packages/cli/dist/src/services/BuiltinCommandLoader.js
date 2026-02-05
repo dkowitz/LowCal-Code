@@ -43,6 +43,7 @@ import { vimCommand } from "../ui/commands/vimCommand.js";
 import { setupGithubCommand } from "../ui/commands/setupGithubCommand.js";
 import { viewCommand } from "../ui/commands/viewCommand.js";
 import { researchCommand } from "../ui/commands/researchCommand.js";
+import { sessionsCommand } from "../ui/commands/sessionsCommand.js";
 /**
  * Loads the core, hard-coded slash commands that are an integral part
  * of the Gemini CLI application.
@@ -102,6 +103,7 @@ export class BuiltinCommandLoader {
             promptModeCommand,
             toolsetCommand,
             researchCommand,
+            sessionsCommand,
         ];
         return allDefinitions.filter((cmd) => cmd !== null);
     }

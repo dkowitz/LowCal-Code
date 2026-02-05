@@ -18,6 +18,7 @@ import { spawn } from "child_process";
 import * as process from "process";
 import { fileURLToPath } from "url";
 import { loadSettings } from "../config/settings.js";
+import { startSessionRegistration, setSessionStatus, updateSessionDetails, } from "../session/sessionManager.js";
 // Import from core package
 import { loadStore, getDueJobs, markJobRunning, markJobCompleted, markJobFailed, saveExecutionLog, cleanupOldLogs, updateJob, calculateNextRun, DEFAULT_SCHEDULER_CONFIG, } from "@qwen-code/qwen-code-core";
 // PID file for daemon management
@@ -395,8 +396,10 @@ async function executeJob(job) {
         const executionMode = await resolveExecutionMode(job);
         const executionPromise = spawnJob(job, executionMode);
         activeExecutions.set(job.id, executionPromise);
+        await updateSchedulerSessionState();
         const result = await executionPromise;
         activeExecutions.delete(job.id);
+        await updateSchedulerSessionState();
         // Update job status based on result
         if (result.status === "success") {
             await markJobCompleted(job.id, result);
@@ -409,6 +412,7 @@ async function executeJob(job) {
     }
     catch (error) {
         activeExecutions.delete(job.id);
+        await updateSchedulerSessionState();
         const errorMessage = error instanceof Error ? error.message : String(error);
         console.error(`[Scheduler] Error executing job ${job.id}: ${errorMessage}`);
         // Create error result
@@ -446,6 +450,7 @@ async function tick() {
         total_jobs: store.jobs.length,
         upcoming_jobs: upcomingJobs,
     });
+    await updateSchedulerSessionState();
     // Calculate next_run for jobs that don't have it
     for (const job of store.jobs) {
         if (job.enabled && !job.next_run) {
@@ -479,11 +484,22 @@ async function tick() {
         });
     }
 }
+async function updateSchedulerSessionState() {
+    await updateSessionDetails({ active_executions: activeExecutions.size });
+    await setSessionStatus(activeExecutions.size > 0 ? "working" : "idle");
+}
 /**
  * Main daemon loop
  */
 async function runDaemon() {
     console.log("[Scheduler] Daemon starting...");
+    await startSessionRegistration({
+        id: `scheduler-${process.pid}`,
+        mode: "scheduler",
+        status: "idle",
+        details: { scheduler_cwd: getSchedulerCwd() },
+        cwd: getSchedulerCwd(),
+    });
     // Write PID file
     await fs.mkdir(path.dirname(DAEMON_PID_FILE), { recursive: true });
     await fs.writeFile(DAEMON_PID_FILE, String(process.pid), "utf-8");

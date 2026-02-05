@@ -30,6 +30,7 @@ import { getUserStartupWarnings } from "./utils/userStartupWarnings.js";
 import { getCliVersion } from "./utils/version.js";
 import { validateNonInteractiveAuth } from "./validateNonInterActiveAuth.js";
 import { runZedIntegration } from "./zed-integration/zedIntegration.js";
+import { startSessionRegistration, stopSessionRegistration, } from "./session/sessionManager.js";
 export function validateDnsResolutionOrder(order) {
     const defaultValue = "ipv4first";
     if (order === undefined) {
@@ -108,6 +109,9 @@ export async function startInteractiveUI(config, settings, startupWarnings, work
         }
     });
     registerCleanup(() => instance.unmount());
+    registerCleanup(() => {
+        void stopSessionRegistration();
+    });
 }
 export async function main() {
     setupUnhandledRejectionHandler();
@@ -119,8 +123,18 @@ export async function main() {
         throw new FatalConfigError(`${errorMessages.join("\n")}\nPlease fix the configuration file(s) and try again.`);
     }
     const argv = await parseArguments(settings.merged);
+    const rawArgv = argv;
+    if (rawArgv._?.[0] === "sessions" && rawArgv.watch) {
+        return;
+    }
     const extensions = loadExtensions(workspaceRoot);
     const config = await loadCliConfig(settings.merged, extensions, sessionId, argv);
+    await startSessionRegistration({
+        id: config.getSessionId(),
+        mode: config.isInteractive() ? "tui" : "noninteractive",
+        status: config.isInteractive() ? "idle" : "working",
+        details: { model: config.getModel() },
+    });
     const consolePatcher = new ConsolePatcher({
         stderr: true,
         debugMode: config.getDebugMode(),

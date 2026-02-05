@@ -49,6 +49,10 @@ import { getUserStartupWarnings } from "./utils/userStartupWarnings.js";
 import { getCliVersion } from "./utils/version.js";
 import { validateNonInteractiveAuth } from "./validateNonInterActiveAuth.js";
 import { runZedIntegration } from "./zed-integration/zedIntegration.js";
+import {
+  startSessionRegistration,
+  stopSessionRegistration,
+} from "./session/sessionManager.js";
 
 export function validateDnsResolutionOrder(
   order: string | undefined,
@@ -169,6 +173,9 @@ export async function startInteractiveUI(
     });
 
   registerCleanup(() => instance.unmount());
+  registerCleanup(() => {
+    void stopSessionRegistration();
+  });
 }
 
 export async function main() {
@@ -187,6 +194,10 @@ export async function main() {
   }
 
   const argv = await parseArguments(settings.merged);
+  const rawArgv = argv as unknown as { _: Array<string | number>; watch?: boolean };
+  if (rawArgv._?.[0] === "sessions" && rawArgv.watch) {
+    return;
+  }
   const extensions = loadExtensions(workspaceRoot);
   const config = await loadCliConfig(
     settings.merged,
@@ -194,6 +205,13 @@ export async function main() {
     sessionId,
     argv,
   );
+
+  await startSessionRegistration({
+    id: config.getSessionId(),
+    mode: config.isInteractive() ? "tui" : "noninteractive",
+    status: config.isInteractive() ? "idle" : "working",
+    details: { model: config.getModel() },
+  });
 
   const consolePatcher = new ConsolePatcher({
     stderr: true,

@@ -62,6 +62,7 @@ import {
 import { useSessionStats } from "../contexts/SessionContext.js";
 import { formatDuration } from "../utils/formatters.js";
 import { useKeypress } from "./useKeypress.js";
+import { setSessionStatus } from "../../session/sessionManager.js";
 
 const formatElapsed = (milliseconds: number): string => {
   if (!Number.isFinite(milliseconds) || milliseconds <= 0) {
@@ -229,6 +230,12 @@ export const useGeminiStream = (
     }
     return StreamingState.Idle;
   }, [isResponding, toolCalls]);
+
+  useEffect(() => {
+    const status =
+      streamingState === StreamingState.Idle ? "idle" : "working";
+    void setSessionStatus(status);
+  }, [streamingState]);
 
   useEffect(() => {
     if (

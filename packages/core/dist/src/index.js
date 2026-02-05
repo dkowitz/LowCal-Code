@@ -89,6 +89,8 @@ export * from "./tools/research.js";
 export * from "./tools/schedule-task.js";
 // Export scheduler
 export * from "./scheduler/index.js";
+// Export sessions
+export * from "./sessions/index.js";
 // MCP OAuth
 export { MCPOAuthProvider } from "./mcp/oauth-provider.js";
 export { MCPOAuthTokenStorage } from "./mcp/oauth-token-storage.js";

@@ -21,6 +21,11 @@ import * as process from "process";
 import { fileURLToPath } from "url";
 
 import { loadSettings } from "../config/settings.js";
+import {
+  startSessionRegistration,
+  setSessionStatus,
+  updateSessionDetails,
+} from "../session/sessionManager.js";
 
 // Import from core package
 import {
@@ -497,9 +502,11 @@ async function executeJob(job: Job): Promise<void> {
     const executionMode = await resolveExecutionMode(job);
     const executionPromise = spawnJob(job, executionMode);
     activeExecutions.set(job.id, executionPromise);
+    await updateSchedulerSessionState();
     
     const result = await executionPromise;
     activeExecutions.delete(job.id);
+    await updateSchedulerSessionState();
     
     // Update job status based on result
     if (result.status === "success") {
@@ -511,6 +518,7 @@ async function executeJob(job: Job): Promise<void> {
     }
   } catch (error) {
     activeExecutions.delete(job.id);
+    await updateSchedulerSessionState();
     
     const errorMessage = error instanceof Error ? error.message : String(error);
     console.error(`[Scheduler] Error executing job ${job.id}: ${errorMessage}`);
@@ -554,6 +562,8 @@ async function tick(): Promise<void> {
     total_jobs: store.jobs.length,
     upcoming_jobs: upcomingJobs,
   });
+
+  await updateSchedulerSessionState();
   
   // Calculate next_run for jobs that don't have it
   for (const job of store.jobs) {
@@ -595,11 +605,24 @@ async function tick(): Promise<void> {
   }
 }
 
+async function updateSchedulerSessionState(): Promise<void> {
+  await updateSessionDetails({ active_executions: activeExecutions.size });
+  await setSessionStatus(activeExecutions.size > 0 ? "working" : "idle");
+}
+
 /**
  * Main daemon loop
  */
 async function runDaemon(): Promise<void> {
   console.log("[Scheduler] Daemon starting...");
+
+  await startSessionRegistration({
+    id: `scheduler-${process.pid}`,
+    mode: "scheduler",
+    status: "idle",
+    details: { scheduler_cwd: getSchedulerCwd() },
+    cwd: getSchedulerCwd(),
+  });
   
   // Write PID file
   await fs.mkdir(path.dirname(DAEMON_PID_FILE), { recursive: true });

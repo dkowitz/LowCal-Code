@@ -14,6 +14,7 @@ import { extensionsCommand } from "../commands/extensions.js";
 import { mcpCommand } from "../commands/mcp.js";
 import { researchCommand } from "../commands/research.js";
 import { schedulerCommand } from "../commands/scheduler.js";
+import { sessionsCommand } from "../commands/sessions.js";
 import { resolvePath } from "../utils/resolvePath.js";
 import { getCliVersion } from "../utils/version.js";
 import { annotateActiveExtensions } from "./extension.js";
@@ -224,7 +225,8 @@ export async function parseArguments(settings) {
         // Register MCP subcommands
         .command(mcpCommand)
         .command(researchCommand)
-        .command(schedulerCommand);
+        .command(schedulerCommand)
+        .command(sessionsCommand);
     if (settings?.experimental?.extensionManagement ?? false) {
         yargsInstance.command(extensionsCommand);
     }
@@ -240,7 +242,14 @@ export async function parseArguments(settings) {
     // Handle case where subcommands are executed - they should exit the process
     // and not return to main CLI logic
     if (result._.length > 0 &&
-        (result._[0] === "mcp" || result._[0] === "extensions" || result._[0] === "scheduler")) {
+        (result._[0] === "mcp" ||
+            result._[0] === "extensions" ||
+            result._[0] === "scheduler" ||
+            result._[0] === "sessions")) {
+        const isSessionsWatch = result._[0] === "sessions" && Boolean(result.watch);
+        if (isSessionsWatch) {
+            return result;
+        }
         // Subcommands handle their own execution and process exit
         process.exit(0);
     }

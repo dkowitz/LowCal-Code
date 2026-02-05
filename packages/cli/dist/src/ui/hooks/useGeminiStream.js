@@ -20,6 +20,7 @@ import { useReactToolScheduler, mapToDisplay as mapTrackedToolCallsToDisplay, } 
 import { useSessionStats } from "../contexts/SessionContext.js";
 import { formatDuration } from "../utils/formatters.js";
 import { useKeypress } from "./useKeypress.js";
+import { setSessionStatus } from "../../session/sessionManager.js";
 const formatElapsed = (milliseconds) => {
     if (!Number.isFinite(milliseconds) || milliseconds <= 0) {
         return "0s";
@@ -113,6 +114,10 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         }
         return StreamingState.Idle;
     }, [isResponding, toolCalls]);
+    useEffect(() => {
+        const status = streamingState === StreamingState.Idle ? "idle" : "working";
+        void setSessionStatus(status);
+    }, [streamingState]);
     useEffect(() => {
         if (config.getApprovalMode() === ApprovalMode.YOLO &&
             streamingState === StreamingState.Idle) {
