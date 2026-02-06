@@ -1583,7 +1583,7 @@ export declare const toolCallSchema: z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     status: "completed" | "pending" | "in_progress" | "failed";
     title: string;
-    kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+    kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
     toolCallId: string;
     content?: ({
         type: "content";
@@ -1657,7 +1657,7 @@ export declare const toolCallSchema: z.ZodObject<{
 }, {
     status: "completed" | "pending" | "in_progress" | "failed";
     title: string;
-    kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+    kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
     toolCallId: string;
     content?: ({
         type: "content";
@@ -3488,7 +3488,7 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     status: "completed" | "pending" | "in_progress" | "failed";
     title: string;
-    kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+    kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
     toolCallId: string;
     sessionUpdate: "tool_call";
     content?: ({
@@ -3563,7 +3563,7 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
 }, {
     status: "completed" | "pending" | "in_progress" | "failed";
     title: string;
-    kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+    kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
     toolCallId: string;
     sessionUpdate: "tool_call";
     content?: ({
@@ -4077,7 +4077,7 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
         newText: string;
         oldText: string | null;
     })[] | null | undefined;
-    kind?: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
+    kind?: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
     locations?: {
         path: string;
         line?: number | null | undefined;
@@ -4152,7 +4152,7 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
         newText: string;
         oldText: string | null;
     })[] | null | undefined;
-    kind?: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
+    kind?: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
     locations?: {
         path: string;
         line?: number | null | undefined;
@@ -4666,7 +4666,7 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         content?: ({
             type: "content";
@@ -4740,7 +4740,7 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
     }, {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         content?: ({
             type: "content";
@@ -4822,7 +4822,7 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
     toolCall: {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         content?: ({
             type: "content";
@@ -4904,7 +4904,7 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
     toolCall: {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         content?: ({
             type: "content";
@@ -6416,7 +6416,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         sessionUpdate: "tool_call";
         content?: ({
@@ -6491,7 +6491,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
     }, {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         sessionUpdate: "tool_call";
         content?: ({
@@ -7005,7 +7005,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
             newText: string;
             oldText: string | null;
         })[] | null | undefined;
-        kind?: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
+        kind?: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
         locations?: {
             path: string;
             line?: number | null | undefined;
@@ -7080,7 +7080,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
             newText: string;
             oldText: string | null;
         })[] | null | undefined;
-        kind?: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
+        kind?: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
         locations?: {
             path: string;
             line?: number | null | undefined;
@@ -7295,7 +7295,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
     } | {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         sessionUpdate: "tool_call";
         content?: ({
@@ -7436,7 +7436,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
             newText: string;
             oldText: string | null;
         })[] | null | undefined;
-        kind?: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
+        kind?: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
         locations?: {
             path: string;
             line?: number | null | undefined;
@@ -7629,7 +7629,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
     } | {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         sessionUpdate: "tool_call";
         content?: ({
@@ -7770,7 +7770,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
             newText: string;
             oldText: string | null;
         })[] | null | undefined;
-        kind?: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
+        kind?: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
         locations?: {
             path: string;
             line?: number | null | undefined;
@@ -8202,7 +8202,7 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         content?: ({
             type: "content";
@@ -8276,7 +8276,7 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
     }, {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         content?: ({
             type: "content";
@@ -8358,7 +8358,7 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
     toolCall: {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         content?: ({
             type: "content";
@@ -8440,7 +8440,7 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
     toolCall: {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         content?: ({
             type: "content";
@@ -10411,7 +10411,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         sessionUpdate: "tool_call";
         content?: ({
@@ -10486,7 +10486,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
     }, {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         sessionUpdate: "tool_call";
         content?: ({
@@ -11000,7 +11000,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
             newText: string;
             oldText: string | null;
         })[] | null | undefined;
-        kind?: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
+        kind?: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
         locations?: {
             path: string;
             line?: number | null | undefined;
@@ -11075,7 +11075,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
             newText: string;
             oldText: string | null;
         })[] | null | undefined;
-        kind?: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
+        kind?: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
         locations?: {
             path: string;
             line?: number | null | undefined;
@@ -11290,7 +11290,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
     } | {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         sessionUpdate: "tool_call";
         content?: ({
@@ -11431,7 +11431,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
             newText: string;
             oldText: string | null;
         })[] | null | undefined;
-        kind?: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
+        kind?: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
         locations?: {
             path: string;
             line?: number | null | undefined;
@@ -11624,7 +11624,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
     } | {
         status: "completed" | "pending" | "in_progress" | "failed";
         title: string;
-        kind: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch";
+        kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
         sessionUpdate: "tool_call";
         content?: ({
@@ -11765,7 +11765,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
             newText: string;
             oldText: string | null;
         })[] | null | undefined;
-        kind?: "search" | "edit" | "other" | "delete" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
+        kind?: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch" | null | undefined;
         locations?: {
             path: string;
             line?: number | null | undefined;

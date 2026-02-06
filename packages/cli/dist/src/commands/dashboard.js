@@ -8,22 +8,6 @@ import { DEFAULT_SESSION_TTL_MS } from "../session/sessionManager.js";
 import { isDaemonRunning, getDaemonStatus, startDaemon, stopDaemon, } from "../scheduler/daemon.js";
 import { listJobs, getJob, deleteJob, resetJob, } from "@qwen-code/qwen-code-core";
 import { loadSettings } from "../config/settings.js";
-// Simple readline implementation for dashboard
-async function readLine(prompt = "") {
-    process.stdout.write(prompt);
-    return new Promise((resolve) => {
-        const chunks = [];
-        process.stdin.on("data", (chunk) => {
-            if (chunk.toString() === "\n") {
-                resolve(Buffer.concat(chunks).toString().trim());
-                process.stdin.removeAllListeners("data");
-            }
-            else {
-                chunks.push(chunk);
-            }
-        });
-    });
-}
 function getTtlMs(ttlSeconds) {
     if (!ttlSeconds || !Number.isFinite(ttlSeconds) || ttlSeconds <= 0) {
         return DEFAULT_SESSION_TTL_MS;
@@ -169,17 +153,24 @@ async function renderDashboard(sessions, jobs, ttlMs, intervalMs) {
     }
     console.log("└───────────────────────────────────────────────────────────────────────────────┘");
     console.log();
-    // Jobs Section
+    // Jobs Section with numeric IDs
     const jobsHeader = `┌─ Scheduled Jobs (${jobs.length} total) ─────────────────────────────────────────────────────────┐`;
     console.log(jobsHeader);
     if (jobs.length === 0) {
         console.log("│ No scheduled jobs.                                                            │");
     }
     else {
-        for (const job of jobs) {
+        for (let idx = 0; idx < jobs.length; idx++) {
+            const job = jobs[idx];
+            // Display numeric ID in brackets followed by the actual job ID
+            const jobIdDisplay = `[${idx + 1}] ${job.id}`;
             const formatted = formatJob(job, defaultMode);
-            // Indent each line
-            const indented = formatted.replace(/\n/g, "\n│ ");
+            // Replace the first line with our numbered version
+            const lines = formatted.split("\n");
+            if (lines.length > 0) {
+                lines[0] = lines[0].replace(/^(🟢|🔴) [^\s]+/, `$1 ${jobIdDisplay}`);
+            }
+            const indented = lines.join("\n").replace(/\n/g, "\n│ ");
             console.log(`│ ${indented} │`);
             console.log("├───────────────────────────────────────────────────────────────────────────────┤");
         }
@@ -191,8 +182,11 @@ async function renderDashboard(sessions, jobs, ttlMs, intervalMs) {
     console.log(`LowCal Dashboard (refresh ${intervalSec}s) - press Ctrl+C to exit`);
     console.log();
     console.log("┌─ Keyboard Shortcuts ──────────────────────────────────────────────────────────┐");
-    console.log("│ Sessions: [p]rune stale                                                     │");
-    console.log("│ Scheduler: [s]tart | [S]top | [D]elete job <id> | [R]eset job <id>          │");
+    console.log("│ [p] prune stale sessions                                                    │");
+    console.log("│ [s] start scheduler daemon                                                  │");
+    console.log("│ [t] stop scheduler daemon                                                   │");
+    console.log("│ [d] delete job <id or #num>                                                 │");
+    console.log("│ [r] reset job <id or #num>                                                  │");
     console.log("└───────────────────────────────────────────────────────────────────────────────┘");
 }
 const dashboardCommand = {
@@ -225,16 +219,24 @@ const dashboardCommand = {
         }
         const intervalMs = getIntervalMs(argv.interval);
         let intervalId;
-        // State to track if we're in an interactive mode (waiting for job ID input)
+        // Interactive mode state
         let isInteractiveMode = false;
+        let inputBuffer = "";
+        let pendingAction = null;
+        let interactivePrompt = "";
+        let currentJobs = [];
         const render = async () => {
-            // Only clear screen and re-render if not in interactive mode
-            if (!isInteractiveMode) {
-                const [sessions, jobs] = await Promise.all([
-                    listSessions(),
-                    listJobs(),
-                ]);
-                await renderDashboard(sessions, jobs, ttlMs, intervalMs);
+            // Clear screen and re-render dashboard
+            process.stdout.write("\x1b[2J\x1b[H");
+            const [sessions, jobs] = await Promise.all([
+                listSessions(),
+                listJobs(),
+            ]);
+            currentJobs = jobs;
+            await renderDashboard(sessions, jobs, ttlMs, intervalMs);
+            // If in interactive mode, re-display the prompt and input
+            if (isInteractiveMode && interactivePrompt) {
+                process.stdout.write(interactivePrompt + inputBuffer);
             }
         };
         await render();
@@ -242,15 +244,59 @@ const dashboardCommand = {
         if (process.stdin.isTTY) {
             process.stdin.setRawMode(true);
             process.stdin.resume();
-            process.stdin.on("data", async (data) => {
+            const handleInput = async (data) => {
                 const key = data.toString("utf-8");
                 // Ctrl+C to exit
                 if (key === "\u0003") {
                     clearInterval(intervalId);
                     process.exit(0);
                 }
-                // Skip if in interactive mode (waiting for job ID input)
+                // Handle interactive mode input
                 if (isInteractiveMode) {
+                    if (key === "\r" || key === "\n") {
+                        // Enter pressed - submit input
+                        const jobId = inputBuffer.trim();
+                        inputBuffer = "";
+                        isInteractiveMode = false;
+                        if (jobId && pendingAction) {
+                            // Check if jobId is a numeric ID (starts with #)
+                            let actualJobId = jobId;
+                            if (jobId.startsWith("#")) {
+                                const numId = parseInt(jobId.slice(1), 10);
+                                if (!isNaN(numId) && numId > 0 && numId <= currentJobs.length) {
+                                    // Find the job by numeric index - sort by created_at
+                                    const sortedJobs = [...currentJobs].sort((a, b) => {
+                                        return Date.parse(b.created_at) - Date.parse(a.created_at);
+                                    });
+                                    actualJobId = sortedJobs[numId - 1]?.id || jobId;
+                                }
+                            }
+                            const job = await getJob(actualJobId);
+                            if (!job) {
+                                console.error(`Job "${actualJobId}" not found`);
+                            }
+                            else if (pendingAction === "delete") {
+                                await deleteJob(jobId);
+                                console.log(`✓ Job "${jobId}" deleted successfully`);
+                            }
+                            else if (pendingAction === "reset") {
+                                await resetJob(jobId);
+                                console.log(`✓ Job "${jobId}" reset and re-enabled`);
+                            }
+                        }
+                        pendingAction = null;
+                        console.log("\nPress any key to return...");
+                    }
+                    else if (key === "\u007F" || key === "\b") {
+                        // Backspace
+                        inputBuffer = inputBuffer.slice(0, -1);
+                        process.stdout.write(`\r\x1b[K${interactivePrompt}${inputBuffer}`);
+                    }
+                    else if (!key.match(/[\r\n]/)) {
+                        // Regular character
+                        inputBuffer += key;
+                        process.stdout.write(key);
+                    }
                     return;
                 }
                 // Prune stale sessions
@@ -268,7 +314,7 @@ const dashboardCommand = {
                     }
                     await render();
                 }
-                // Start daemon (lowercase 's')
+                // Start daemon
                 if (key.toLowerCase() === "s") {
                     const running = await isDaemonRunning();
                     if (running) {
@@ -289,8 +335,8 @@ const dashboardCommand = {
                     }
                     await render();
                 }
-                // Stop daemon (uppercase 'S')
-                if (key === "S") {
+                // Stop daemon
+                if (key.toLowerCase() === "t") {
                     const running = await isDaemonRunning();
                     if (!running) {
                         console.log("\nScheduler daemon is not running.");
@@ -307,43 +353,24 @@ const dashboardCommand = {
                     }
                     await render();
                 }
-                // Delete job (uppercase 'D')
-                if (key === "D") {
+                // Delete job
+                if (key.toLowerCase() === "d") {
                     isInteractiveMode = true;
-                    process.stdout.write("\n\x1b[2J\x1b[HEnter Job ID to delete: ");
-                    const jobId = await readLine();
-                    if (jobId) {
-                        const job = await getJob(jobId);
-                        if (!job) {
-                            console.error(`Job "${jobId}" not found`);
-                        }
-                        else {
-                            await deleteJob(jobId);
-                            console.log(`✓ Job "${jobId}" deleted successfully`);
-                        }
-                    }
-                    isInteractiveMode = false;
-                    console.log("\nPress any key to return...");
+                    pendingAction = "delete";
+                    inputBuffer = "";
+                    interactivePrompt = "\nEnter Job ID to delete: ";
+                    process.stdout.write(interactivePrompt);
                 }
-                // Reset job (uppercase 'R')
-                if (key === "R") {
+                // Reset job
+                if (key.toLowerCase() === "r") {
                     isInteractiveMode = true;
-                    process.stdout.write("\n\x1b[2J\x1b[HEnter Job ID to reset: ");
-                    const jobId = await readLine();
-                    if (jobId) {
-                        const job = await getJob(jobId);
-                        if (!job) {
-                            console.error(`Job "${jobId}" not found`);
-                        }
-                        else {
-                            await resetJob(jobId);
-                            console.log(`✓ Job "${jobId}" reset and re-enabled`);
-                        }
-                    }
-                    isInteractiveMode = false;
-                    console.log("\nPress any key to return...");
+                    pendingAction = "reset";
+                    inputBuffer = "";
+                    interactivePrompt = "\nEnter Job ID to reset: ";
+                    process.stdout.write(interactivePrompt);
                 }
-            });
+            };
+            process.stdin.on("data", handleInput);
         }
         // Keep the process alive by keeping stdin open
         process.stdin.on("end", () => {
