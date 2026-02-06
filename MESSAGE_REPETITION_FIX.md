@@ -1,7 +1,9 @@
 # Message Repetition Fix - Implementation Summary
 
 ## Problem Statement
+
 Thinking blocks and content were being repeated thousands of times, causing catastrophic token consumption and conversation failures. Example:
+
 ```
 💭 I've added the '__logging' configuration option. Let me run the test again to see if this fixes the logging error.
 💭 I've added the '__logging' configuration option. Let me run the test again to see if this fixes the logging error.
@@ -11,14 +13,17 @@ Thinking blocks and content were being repeated thousands of times, causing cata
 ## Root Causes Identified & Fixed
 
 ### 1. **Missing Thought Deduplication Reset on Retry** ✅ FIXED
+
 **File:** `packages/core/src/core/turn.ts` (Line 286)
 
 **Problem:**
+
 - When a RETRY event occurred, the code cleared `lastCandidateTexts`, `textDuplicateTrackers`, and `thinkingBlockTrackers`
 - **BUT** `emittedThoughtHashes` was NOT cleared
 - This caused thought deduplication to persist across retries, leading to inconsistent state
 
 **Solution:**
+
 ```typescript
 // Handle the new RETRY event
 if (streamEvent.type === "retry") {
@@ -36,15 +41,17 @@ if (streamEvent.type === "retry") {
 ---
 
 ### 2. **Overly Aggressive Thinking Block Normalization** ✅ FIXED
+
 **File:** `packages/core/src/core/turn.ts` (Lines 524-530)
 
 **Problem:**
+
 - The normalization process was too aggressive:
   ```typescript
   const normalized = block
-    .replace(/💭/g, "")           // Remove emoji
-    .replace(/\*/g, "")            // Remove markdown
-    .replace(/[^\w\s]/g, " ")      // Remove ALL punctuation
+    .replace(/💭/g, "") // Remove emoji
+    .replace(/\*/g, "") // Remove markdown
+    .replace(/[^\w\s]/g, " ") // Remove ALL punctuation
     .toLowerCase()
     .replace(/\s+/g, " ")
     .trim();
@@ -54,13 +61,14 @@ if (streamEvent.type === "retry") {
 - Different thinking blocks were incorrectly deduplicated
 
 **Solution:**
+
 ```typescript
 // Use a more conservative normalization that preserves semantic meaning
 // Remove only the emoji and extra whitespace, but keep punctuation and structure
 const normalized = block
-  .replace(/💭/g, "")      // Remove the thinking emoji
+  .replace(/💭/g, "") // Remove the thinking emoji
   .toLowerCase()
-  .replace(/\s+/g, " ")    // Normalize whitespace
+  .replace(/\s+/g, " ") // Normalize whitespace
   .trim();
 ```
 
@@ -69,14 +77,17 @@ const normalized = block
 ---
 
 ### 3. **Inadequate Text Delta Deduplication for Short Content** ✅ FIXED
+
 **File:** `packages/core/src/core/turn.ts` (Lines 460-462)
 
 **Problem:**
+
 - Only deduplicates text >= 80 characters
 - Thinking blocks are typically 40-70 characters, so they bypassed deduplication
 - Short repetitive content was not being filtered
 
 **Solution:**
+
 ```typescript
 private shouldEmitTextDelta(index: number, delta: string): boolean {
   // For thinking blocks, use a lower threshold since they tend to be shorter
@@ -95,15 +106,18 @@ private shouldEmitTextDelta(index: number, delta: string): boolean {
 ### File: `packages/core/src/core/turn.ts`
 
 #### Change 1: Reset emittedThoughtHashes on Retry (Line 286)
+
 - Added `this.emittedThoughtHashes.clear();` to the RETRY event handler
 - Ensures thought deduplication state is reset along with other trackers
 
 #### Change 2: Improve Thinking Block Normalization (Lines 524-530)
+
 - Removed aggressive punctuation removal (`.replace(/[^\w\s]/g, " ")`)
 - Kept only emoji removal and whitespace normalization
 - Preserves semantic meaning of thinking blocks
 
 #### Change 3: Lower Deduplication Threshold for Thinking Blocks (Lines 460-462)
+
 - Added detection for thinking blocks using `delta.includes("💭")`
 - Set MIN_LENGTH_FOR_DEDUP to 20 for thinking blocks, 80 for regular content
 - Ensures short thinking blocks are properly deduplicated
@@ -113,6 +127,7 @@ private shouldEmitTextDelta(index: number, delta: string): boolean {
 ✅ **All Turn tests pass:** `src/core/turn.test.ts (21 tests) 15ms`
 
 The existing tests verify:
+
 - Duplicate thinking lines appended over multiple chunks are dropped
 - Duplicate thinking lines within a single chunk are dropped
 - Tool call requests are properly handled
@@ -122,6 +137,7 @@ The existing tests verify:
 ## Formatting Preservation
 
 ✅ **All formatting is preserved:**
+
 - 💭 Thinking emoji is preserved in output
 - Markdown formatting (bold, italics, code) is preserved
 - Punctuation and structure are maintained
@@ -130,11 +146,13 @@ The existing tests verify:
 ## Impact on Token Consumption
 
 ### Before Fix
+
 - Repetitions: 1000s of duplicate thinking blocks per turn
 - Token waste: Exponential with conversation length
 - Failure mode: Token limit exceeded errors
 
 ### After Fix
+
 - Repetitions: 0 (all duplicates filtered)
 - Token waste: Eliminated
 - Failure mode: Prevented
@@ -142,6 +160,7 @@ The existing tests verify:
 ## Backward Compatibility
 
 ✅ **Fully backward compatible:**
+
 - No API changes
 - No breaking changes to event types
 - Existing code continues to work
@@ -160,11 +179,13 @@ The existing tests verify:
 To verify the fix works:
 
 1. **Run tests:**
+
    ```bash
    npm test
    ```
 
 2. **Check for regressions:**
+
    ```bash
    npm run lint
    npm run typecheck

@@ -328,7 +328,9 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         const defaultBaseUrl = isStoredOpenAI
             ? storedBaseUrl
             : OPENAI_DEFAULT_BASE_URL;
-        const defaultApiKey = isStoredOpenAI ? openaiProviderSettings.apiKey || "" : "";
+        const defaultApiKey = isStoredOpenAI
+            ? openaiProviderSettings.apiKey || ""
+            : "";
         return (_jsx(OpenAIKeyPrompt, { onSubmit: handleOpenAIKeySubmit, onCancel: handleOpenAIKeyCancel, prepopulatedApiKey: defaultApiKey, prepopulatedBaseUrl: defaultBaseUrl }));
     }
     if (showGeminiKeyPrompt) {

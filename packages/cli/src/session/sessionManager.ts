@@ -4,7 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type { SessionMode, SessionStatus, SessionRecord } from "@qwen-code/qwen-code-core";
+import type {
+  SessionMode,
+  SessionStatus,
+  SessionRecord,
+} from "@qwen-code/qwen-code-core";
 import {
   registerSession,
   updateSession,
@@ -72,8 +76,7 @@ export async function startSessionRegistration(options: {
     clearInterval(heartbeatTimer);
   }
 
-  const interval =
-    options.heartbeatIntervalMs ?? DEFAULT_SESSION_HEARTBEAT_MS;
+  const interval = options.heartbeatIntervalMs ?? DEFAULT_SESSION_HEARTBEAT_MS;
   heartbeatTimer = setInterval(() => {
     if (!registeredSessionId) return;
     void heartbeatSession(registeredSessionId);

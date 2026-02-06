@@ -283,7 +283,8 @@ export async function createJob(params) {
             run_count: 0,
             error_count: 0,
             status: "scheduled",
-            timeout_minutes: params.timeout_minutes ?? DEFAULT_SCHEDULER_CONFIG.default_timeout_minutes,
+            timeout_minutes: params.timeout_minutes ??
+                DEFAULT_SCHEDULER_CONFIG.default_timeout_minutes,
             max_failures: params.max_failures ?? DEFAULT_SCHEDULER_CONFIG.default_max_failures,
             execution_mode: params.execution_mode,
         };
@@ -462,7 +463,8 @@ export async function markJobFailed(id, executionResult) {
         }
         job.error_count++;
         // Auto-pause if max failures reached
-        if (job.error_count >= (job.max_failures ?? DEFAULT_SCHEDULER_CONFIG.default_max_failures)) {
+        if (job.error_count >=
+            (job.max_failures ?? DEFAULT_SCHEDULER_CONFIG.default_max_failures)) {
             job.status = "error";
             job.enabled = false;
         }

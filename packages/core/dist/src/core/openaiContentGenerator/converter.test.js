@@ -73,7 +73,7 @@ describe("OpenAIContentConverter", () => {
             const textParts = parts.map((part) => typeof part === "string"
                 ? part
                 : "text" in part
-                    ? part.text ?? ""
+                    ? (part.text ?? "")
                     : "");
             const visibleIndex = textParts.findIndex((value) => value?.includes("Visible answer"));
             const thinkingIndex = textParts.findIndex((value) => value?.includes("💭 *Internal reasoning*"));
@@ -121,7 +121,7 @@ describe("OpenAIContentConverter", () => {
             const secondTextParts = secondParts.map((part) => typeof part === "string"
                 ? part
                 : "text" in part
-                    ? part.text ?? ""
+                    ? (part.text ?? "")
                     : "");
             const visibleIndex = secondTextParts.findIndex((value) => value?.includes("Visible"));
             const thinkingIndex = secondTextParts.findIndex((value) => value?.includes("💭 *Partial*"));
@@ -166,7 +166,7 @@ describe("OpenAIContentConverter", () => {
             const finalTextParts = finalParts.map((part) => typeof part === "string"
                 ? part
                 : "text" in part
-                    ? part.text ?? ""
+                    ? (part.text ?? "")
                     : "");
             const thinkingParts = finalTextParts.filter((value) => value?.includes("💭 *Step one*"));
             expect(thinkingParts.length).toBe(1);
@@ -191,7 +191,7 @@ describe("OpenAIContentConverter", () => {
             const firstTextParts = firstParts.map((part) => typeof part === "string"
                 ? part
                 : "text" in part
-                    ? part.text ?? ""
+                    ? (part.text ?? "")
                     : "");
             expect(firstTextParts.some((value) => value?.includes("Plan next"))).toBe(true);
             const duplicateChunk = converter.convertOpenAIChunkToGemini({
@@ -212,7 +212,7 @@ describe("OpenAIContentConverter", () => {
             const duplicateTextParts = duplicateParts.map((part) => typeof part === "string"
                 ? part
                 : "text" in part
-                    ? part.text ?? ""
+                    ? (part.text ?? "")
                     : "");
             expect(duplicateTextParts.some((value) => value?.includes("Plan next"))).toBe(false);
         });
@@ -251,7 +251,7 @@ describe("OpenAIContentConverter", () => {
             const continuationTextParts = continuationParts.map((part) => typeof part === "string"
                 ? part
                 : "text" in part
-                    ? part.text ?? ""
+                    ? (part.text ?? "")
                     : "");
             expect(continuationTextParts.some((value) => value?.includes("Repeat later"))).toBe(false);
         });
@@ -275,7 +275,7 @@ describe("OpenAIContentConverter", () => {
             const firstTextParts = firstParts.map((part) => typeof part === "string"
                 ? part
                 : "text" in part
-                    ? part.text ?? ""
+                    ? (part.text ?? "")
                     : "");
             expect(firstTextParts.some((value) => value?.includes("Fresh thought"))).toBe(true);
             converter.resetStreamingToolCalls("prompt-beta");
@@ -297,7 +297,7 @@ describe("OpenAIContentConverter", () => {
             const secondTextParts = secondParts.map((part) => typeof part === "string"
                 ? part
                 : "text" in part
-                    ? part.text ?? ""
+                    ? (part.text ?? "")
                     : "");
             expect(secondTextParts.some((value) => value?.includes("Fresh thought"))).toBe(true);
         });
@@ -384,7 +384,7 @@ describe("OpenAIContentConverter", () => {
                     {
                         index: 0,
                         delta: {
-                            content: '</parameter></invoke></tool_call>Continuing with task.',
+                            content: "</parameter></invoke></tool_call>Continuing with task.",
                         },
                         finish_reason: "stop",
                     },

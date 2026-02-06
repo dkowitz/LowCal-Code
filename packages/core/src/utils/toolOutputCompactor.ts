@@ -4,12 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import type {
-  Content,
-  Part,
-  PartListUnion,
-  PartUnion,
-} from "@google/genai";
+import type { Content, Part, PartListUnion, PartUnion } from "@google/genai";
 
 export const DEFAULT_MAX_TOOL_OUTPUT_CHARS = 12_000;
 export const DEFAULT_TOOL_OUTPUT_PREVIEW_CHARS = 4_000;
@@ -72,7 +67,8 @@ export function compactToolOutputText(
     return { value: text, wasCompacted: false };
   }
 
-  const requestedPreview = options.previewChars ?? DEFAULT_TOOL_OUTPUT_PREVIEW_CHARS;
+  const requestedPreview =
+    options.previewChars ?? DEFAULT_TOOL_OUTPUT_PREVIEW_CHARS;
   const previewChars = Math.min(Math.max(requestedPreview, 500), maxChars);
   const preview = text.slice(0, previewChars);
   const truncated = formatTruncationNotice(
@@ -120,7 +116,10 @@ export function compactPartListUnion(
     }
 
     if (part.functionResponse?.response) {
-      const response = part.functionResponse.response as Record<string, unknown>;
+      const response = part.functionResponse.response as Record<
+        string,
+        unknown
+      >;
       const callId = part.functionResponse.id ?? options.callId;
       const responseToolName = part.functionResponse.name ?? toolName;
       let mutatedResponse: Record<string, unknown> | undefined;

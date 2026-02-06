@@ -463,7 +463,9 @@ export function AuthDialog({
     const defaultBaseUrl = isStoredOpenAI
       ? storedBaseUrl
       : OPENAI_DEFAULT_BASE_URL;
-    const defaultApiKey = isStoredOpenAI ? openaiProviderSettings.apiKey || "" : "";
+    const defaultApiKey = isStoredOpenAI
+      ? openaiProviderSettings.apiKey || ""
+      : "";
     return (
       <OpenAIKeyPrompt
         onSubmit={handleOpenAIKeySubmit}
@@ -476,9 +478,7 @@ export function AuthDialog({
 
   if (showGeminiKeyPrompt) {
     const geminiProviderSettings =
-      (providerSettings["gemini"] as
-        | { apiKey?: string }
-        | undefined) || {};
+      (providerSettings["gemini"] as { apiKey?: string } | undefined) || {};
     return (
       <GeminiKeyPrompt
         onSubmit={handleGeminiKeySubmit}

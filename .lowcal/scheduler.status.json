@@ -1,9 +1,9 @@
 {
   "running": true,
-  "pid": 652592,
-  "started_at": "2026-02-05T13:28:00.024Z",
-  "last_tick": "2026-02-05T13:28:00.024Z",
-  "active_executions": 0,
+  "pid": 1151807,
+  "started_at": "2026-02-06T15:56:00.002Z",
+  "last_tick": "2026-02-06T15:56:00.001Z",
+  "active_executions": 1,
   "total_jobs": 1,
   "upcoming_jobs": []
 }

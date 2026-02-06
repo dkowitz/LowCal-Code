@@ -503,9 +503,7 @@ describe("CoreToolScheduler", () => {
   describe("tool collection enforcement", () => {
     it("rejects tool calls that are not in the active collection", async () => {
       const originalActiveCollection = toolConfig.activeCollection;
-      const originalCollections = cloneToolCollections(
-        toolConfig.collections,
-      );
+      const originalCollections = cloneToolCollections(toolConfig.collections);
 
       try {
         const updatedCollections = cloneToolCollections(originalCollections);
@@ -596,10 +594,7 @@ describe("CoreToolScheduler", () => {
           prompt_id: "prompt-id-2",
         };
 
-        await scheduler.schedule(
-          allowedRequest,
-          new AbortController().signal,
-        );
+        await scheduler.schedule(allowedRequest, new AbortController().signal);
 
         await waitForStatus(onToolCallsUpdate, "success");
         expect(onAllToolCallsComplete).toHaveBeenCalled();

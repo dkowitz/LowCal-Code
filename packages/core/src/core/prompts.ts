@@ -39,11 +39,7 @@ const DEFAULT_COLLECTIONS: Record<string, string[]> = {
     ToolNames.WEB_SEARCH,
     ToolNames.SEARXNG_SEARCH,
   ],
-  minimal: [
-    ToolNames.READ_FILE,
-    ToolNames.WRITE_FILE,
-    ToolNames.SHELL,
-  ],
+  minimal: [ToolNames.READ_FILE, ToolNames.WRITE_FILE, ToolNames.SHELL],
   "shell-only": [ToolNames.SHELL],
 };
 
@@ -65,13 +61,13 @@ const TOOL_SUMMARIES: Record<string, string> = {
   [ToolNames.GLOB]:
     "List files matching a glob pattern within the workspace. Example: `glob src/**/*.test.ts`.",
   [ToolNames.GREP]:
-    "Search file contents using ripgrep syntax; returns matching lines. Example: `search_file_content --pattern \"TODO\" --path src/`.",
+    'Search file contents using ripgrep syntax; returns matching lines. Example: `search_file_content --pattern "TODO" --path src/`.',
   [ToolNames.EDIT]:
     "Apply structured edits to an existing file without rewriting it fully. Example: `edit /workspace/src/index.ts (old block → new block)`.",
   [ToolNames.SHELL]:
     "Run non-interactive shell commands. Explain risky operations first. Example: `run_shell_command npm test`.",
   [ToolNames.TODO_WRITE]:
-    "Manage the task list: add, update status, and track progress. Example: `todo_write add \"Refactor auth flow\"`.",
+    'Manage the task list: add, update status, and track progress. Example: `todo_write add "Refactor auth flow"`.',
   [ToolNames.MEMORY]:
     "Persist user-specific facts that will remain useful across sessions. Example: `save_memory preferred_editor=vscode`.",
   [ToolNames.TASK]:
@@ -200,9 +196,7 @@ function loadCustomPromptConfig(): CustomPromptConfig {
 
 function normalizePromptMode(value: unknown): PromptMode {
   const mode =
-    typeof value === "string"
-      ? (value.toLowerCase() as PromptMode)
-      : undefined;
+    typeof value === "string" ? (value.toLowerCase() as PromptMode) : undefined;
   if (mode === "full" || mode === "concise" || mode === "auto") {
     return mode;
   }
@@ -491,11 +485,16 @@ export function getCoreSystemPrompt(
 
   if (shouldUseConcise) {
     let concisePrompt = buildConcisePrompt(activeToolNames);
-    
+
     // Apply supplemental custom prompt if active (non‑exclusive)
-    if (customPromptConfig.activeCustomPrompt && !customPromptConfig.activeCustomPrompt.exclusive) {
+    if (
+      customPromptConfig.activeCustomPrompt &&
+      !customPromptConfig.activeCustomPrompt.exclusive
+    ) {
       const customPrompts = customPromptConfig.customPrompts ?? {};
-      const namesToAppend = Array.isArray(customPromptConfig.activeCustomPrompt?.name)
+      const namesToAppend = Array.isArray(
+        customPromptConfig.activeCustomPrompt?.name,
+      )
         ? customPromptConfig.activeCustomPrompt.name
         : [customPromptConfig.activeCustomPrompt?.name].filter(Boolean);
       let updatedPrompt = concisePrompt;
@@ -508,7 +507,7 @@ export function getCoreSystemPrompt(
       }
       concisePrompt = updatedPrompt;
     }
-    
+
     return `${concisePrompt}${memorySuffix}`;
   }
 
@@ -683,7 +682,10 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
   }
 
   // Apply supplemental custom prompt if active (exclusive mode was already handled above)
-  if (customPromptConfig.activeCustomPrompt && !customPromptConfig.activeCustomPrompt.exclusive) {
+  if (
+    customPromptConfig.activeCustomPrompt &&
+    !customPromptConfig.activeCustomPrompt.exclusive
+  ) {
     const names = Array.isArray(customPromptConfig.activeCustomPrompt.name)
       ? customPromptConfig.activeCustomPrompt.name
       : [customPromptConfig.activeCustomPrompt.name].filter(Boolean);
@@ -702,10 +704,7 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
   return `${basePrompt}${memorySuffix}`;
 }
 
-function replaceToolUsageBlock(
-  source: string,
-  replacement: string,
-): string {
+function replaceToolUsageBlock(source: string, replacement: string): string {
   const pattern = /## Tool Usage[\s\S]*?(?=\n## |\n# |$)/;
   if (!pattern.test(source)) {
     return source;

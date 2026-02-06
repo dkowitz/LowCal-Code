@@ -269,7 +269,9 @@ function toNumber(value: unknown): number | undefined {
   return undefined;
 }
 
-function extractQuantization(model: Record<string, unknown>): string | undefined {
+function extractQuantization(
+  model: Record<string, unknown>,
+): string | undefined {
   const direct = model["quantization"];
   if (typeof direct === "string" && direct.trim()) return direct.trim();
 

@@ -27,7 +27,7 @@ const LOGS_DIR = path.join(QWEN_DIR, "logs");
  */
 async function acquireLock(timeoutMs: number = 5000): Promise<void> {
   const startTime = Date.now();
-  
+
   while (Date.now() - startTime < timeoutMs) {
     try {
       // Try to create the lock file with exclusive flag
@@ -50,12 +50,12 @@ async function acquireLock(timeoutMs: number = 5000): Promise<void> {
       } catch {
         // Can't read lock file, wait and retry
       }
-      
+
       // Wait 100ms before retrying
       await new Promise((resolve) => setTimeout(resolve, 100));
     }
   }
-  
+
   throw new Error("Timeout acquiring lock on cron store");
 }
 
@@ -94,16 +94,16 @@ function createEmptyStore(): CronStore {
  */
 export async function loadStore(): Promise<CronStore> {
   await ensureDirectories();
-  
+
   try {
     const data = await fs.readFile(CRON_FILE, "utf-8");
     const store = JSON.parse(data) as CronStore;
-    
+
     // Validate basic structure
     if (!store.jobs || !Array.isArray(store.jobs)) {
       return createEmptyStore();
     }
-    
+
     return store;
   } catch (error) {
     // File doesn't exist or is corrupted
@@ -161,7 +161,7 @@ export function validateCronExpression(schedule: string): boolean {
   if (parts.length !== 5) {
     return false;
   }
-  
+
   // Validate each field
   const fieldValidators = [
     // Minute: 0-59 or *
@@ -175,43 +175,46 @@ export function validateCronExpression(schedule: string): boolean {
     // Day of week: 0-6 or *
     /^([0-6]|\*|[0-6]-[0-6]|[0-6]\/[0-9]+|\*\/[0-9]+)$/,
   ];
-  
+
   for (let i = 0; i < 5; i++) {
     if (!fieldValidators[i].test(parts[i])) {
       return false;
     }
   }
-  
+
   return true;
 }
 
 /**
  * Calculate the next run time for a job based on its cron schedule
  */
-export function calculateNextRun(schedule: string, fromDate: Date = new Date()): Date | null {
+export function calculateNextRun(
+  schedule: string,
+  fromDate: Date = new Date(),
+): Date | null {
   const parts = schedule.trim().split(/\s+/);
   if (parts.length !== 5) return null;
-  
+
   const [minuteStr, hourStr, dayStr, monthStr, dayOfWeekStr] = parts;
-  
+
   // Start from the next minute
   const next = new Date(fromDate);
   next.setSeconds(0, 0);
   next.setMinutes(next.getMinutes() + 1);
-  
+
   // Maximum iterations to prevent infinite loops
   const maxIterations = 366 * 24 * 60; // One year in minutes
   let iterations = 0;
-  
+
   while (iterations < maxIterations) {
     iterations++;
-    
+
     const minute = next.getMinutes();
     const hour = next.getHours();
     const day = next.getDate();
     const month = next.getMonth() + 1; // 1-12
     const dayOfWeek = next.getDay(); // 0-6
-    
+
     // Check if current time matches the schedule
     if (
       matchesField(minuteStr, minute, 0, 59) &&
@@ -222,11 +225,11 @@ export function calculateNextRun(schedule: string, fromDate: Date = new Date()):
     ) {
       return next;
     }
-    
+
     // Increment by one minute
     next.setMinutes(next.getMinutes() + 1);
   }
-  
+
   return null; // Could not find next run time within a year
 }
 
@@ -240,16 +243,16 @@ function matchesField(
   max: number,
 ): boolean {
   if (expression === "*") return true;
-  
+
   // Handle step values (e.g., */5 or 0-30/5)
   if (expression.includes("/")) {
     const [range, step] = expression.split("/");
     const stepNum = parseInt(step, 10);
     if (isNaN(stepNum) || stepNum <= 0) return false;
-    
+
     let start = min;
     let end = max;
-    
+
     if (range !== "*") {
       if (range.includes("-")) {
         const [s, e] = range.split("-").map((n) => parseInt(n, 10));
@@ -259,19 +262,19 @@ function matchesField(
         start = parseInt(range, 10);
       }
     }
-    
+
     for (let i = start; i <= end; i += stepNum) {
       if (i === value) return true;
     }
     return false;
   }
-  
+
   // Handle ranges (e.g., 1-5)
   if (expression.includes("-")) {
     const [start, end] = expression.split("-").map((n) => parseInt(n, 10));
     return value >= start && value <= end;
   }
-  
+
   // Handle single value
   const num = parseInt(expression, 10);
   return !isNaN(num) && num === value;
@@ -282,13 +285,13 @@ function matchesField(
  */
 export function isJobDue(job: Job, now: Date = new Date()): boolean {
   if (!job.enabled) return false;
-  
+
   if (!job.next_run) {
     // Calculate next run if not set
     const next = calculateNextRun(job.schedule, now);
     return next !== null && next <= now;
   }
-  
+
   const nextRun = new Date(job.next_run);
   return nextRun <= now;
 }
@@ -301,14 +304,14 @@ export async function createJob(params: CreateJobParams): Promise<Job> {
   if (!validateCronExpression(params.schedule)) {
     throw new Error(`Invalid cron expression: ${params.schedule}`);
   }
-  
+
   // Validate ID format (URL-safe slug)
   if (!/^[a-zA-Z0-9_-]+$/.test(params.id)) {
     throw new Error(
       `Invalid job ID: ${params.id}. Must contain only letters, numbers, underscores, and hyphens.`,
     );
   }
-  
+
   return await withStore(async (store) => {
     // Check max jobs limit
     if (store.jobs.length >= DEFAULT_SCHEDULER_CONFIG.max_jobs) {
@@ -316,15 +319,15 @@ export async function createJob(params: CreateJobParams): Promise<Job> {
         `Maximum number of jobs (${DEFAULT_SCHEDULER_CONFIG.max_jobs}) reached`,
       );
     }
-    
+
     // Check for duplicate ID
     if (store.jobs.some((j) => j.id === params.id)) {
       throw new Error(`Job with ID '${params.id}' already exists`);
     }
-    
+
     const now = new Date().toISOString();
     const nextRun = calculateNextRun(params.schedule);
-    
+
     const job: Job = {
       id: params.id,
       schedule: params.schedule,
@@ -338,11 +341,13 @@ export async function createJob(params: CreateJobParams): Promise<Job> {
       error_count: 0,
       status: "scheduled",
       timeout_minutes:
-        params.timeout_minutes ?? DEFAULT_SCHEDULER_CONFIG.default_timeout_minutes,
-      max_failures: params.max_failures ?? DEFAULT_SCHEDULER_CONFIG.default_max_failures,
+        params.timeout_minutes ??
+        DEFAULT_SCHEDULER_CONFIG.default_timeout_minutes,
+      max_failures:
+        params.max_failures ?? DEFAULT_SCHEDULER_CONFIG.default_max_failures,
       execution_mode: params.execution_mode,
     };
-    
+
     store.jobs.push(job);
     return job;
   });
@@ -375,9 +380,9 @@ export async function updateJob(params: UpdateJobParams): Promise<Job> {
     if (index === -1) {
       throw new Error(`Job with ID '${params.id}' not found`);
     }
-    
+
     const job = store.jobs[index];
-    
+
     // Update fields
     if (params.schedule !== undefined) {
       if (!validateCronExpression(params.schedule)) {
@@ -388,26 +393,26 @@ export async function updateJob(params: UpdateJobParams): Promise<Job> {
       const nextRun = calculateNextRun(job.schedule);
       job.next_run = nextRun?.toISOString() ?? null;
     }
-    
+
     if (params.prompt !== undefined) {
       job.prompt = params.prompt;
     }
-    
+
     if (params.description !== undefined) {
       job.description = params.description;
     }
-    
+
     if (params.enabled !== undefined) {
       job.enabled = params.enabled;
       if (job.enabled && job.status === "paused") {
         job.status = "scheduled";
       }
     }
-    
+
     if (params.timeout_minutes !== undefined) {
       job.timeout_minutes = params.timeout_minutes;
     }
-    
+
     if (params.max_failures !== undefined) {
       job.max_failures = params.max_failures;
     }
@@ -419,7 +424,7 @@ export async function updateJob(params: UpdateJobParams): Promise<Job> {
         job.execution_mode = params.execution_mode;
       }
     }
-    
+
     return job;
   });
 }
@@ -433,7 +438,7 @@ export async function deleteJob(id: string): Promise<boolean> {
     if (index === -1) {
       return false;
     }
-    
+
     store.jobs.splice(index, 1);
     return true;
   });
@@ -448,12 +453,12 @@ export async function pauseJob(id: string): Promise<Job> {
     if (!job) {
       throw new Error(`Job with ID '${id}' not found`);
     }
-    
+
     job.enabled = false;
     if (job.status !== "running") {
       job.status = "paused";
     }
-    
+
     return job;
   });
 }
@@ -488,15 +493,15 @@ export async function resumeJob(id: string): Promise<Job> {
     if (!job) {
       throw new Error(`Job with ID '${id}' not found`);
     }
-    
+
     job.enabled = true;
     job.status = "scheduled";
     job.error_count = 0; // Reset error count on resume
-    
+
     // Recalculate next run
     const nextRun = calculateNextRun(job.schedule);
     job.next_run = nextRun?.toISOString() ?? null;
-    
+
     return job;
   });
 }
@@ -510,10 +515,10 @@ export async function markJobRunning(id: string): Promise<Job> {
     if (!job) {
       throw new Error(`Job with ID '${id}' not found`);
     }
-    
+
     job.status = "running";
     job.last_run = new Date().toISOString();
-    
+
     return job;
   });
 }
@@ -530,14 +535,14 @@ export async function markJobCompleted(
     if (!job) {
       throw new Error(`Job with ID '${id}' not found`);
     }
-    
+
     job.status = "scheduled";
     job.run_count++;
-    
+
     // Recalculate next run
     const nextRun = calculateNextRun(job.schedule);
     job.next_run = nextRun?.toISOString() ?? null;
-    
+
     return job;
   });
 }
@@ -554,11 +559,14 @@ export async function markJobFailed(
     if (!job) {
       throw new Error(`Job with ID '${id}' not found`);
     }
-    
+
     job.error_count++;
-    
+
     // Auto-pause if max failures reached
-    if (job.error_count >= (job.max_failures ?? DEFAULT_SCHEDULER_CONFIG.default_max_failures)) {
+    if (
+      job.error_count >=
+      (job.max_failures ?? DEFAULT_SCHEDULER_CONFIG.default_max_failures)
+    ) {
       job.status = "error";
       job.enabled = false;
     } else {
@@ -567,7 +575,7 @@ export async function markJobFailed(
       const nextRun = calculateNextRun(job.schedule);
       job.next_run = nextRun?.toISOString() ?? null;
     }
-    
+
     return job;
   });
 }
@@ -584,16 +592,24 @@ export async function getDueJobs(now: Date = new Date()): Promise<Job[]> {
 /**
  * Get the path for a job execution log file
  */
-export function getJobLogPath(jobId: string, timestamp: number = Date.now()): string {
+export function getJobLogPath(
+  jobId: string,
+  timestamp: number = Date.now(),
+): string {
   return path.join(LOGS_DIR, `${jobId}-${timestamp}.log`);
 }
 
 /**
  * Save a job execution result to a log file
  */
-export async function saveExecutionLog(result: JobExecutionResult): Promise<string> {
+export async function saveExecutionLog(
+  result: JobExecutionResult,
+): Promise<string> {
   await ensureDirectories();
-  const logPath = getJobLogPath(result.job_id, new Date(result.started_at).getTime());
+  const logPath = getJobLogPath(
+    result.job_id,
+    new Date(result.started_at).getTime(),
+  );
   await fs.writeFile(logPath, JSON.stringify(result, null, 2), "utf-8");
   return logPath;
 }
@@ -601,7 +617,10 @@ export async function saveExecutionLog(result: JobExecutionResult): Promise<stri
 /**
  * Get recent execution logs for a job
  */
-export async function getJobLogs(jobId: string, limit: number = 10): Promise<JobExecutionResult[]> {
+export async function getJobLogs(
+  jobId: string,
+  limit: number = 10,
+): Promise<JobExecutionResult[]> {
   try {
     const files = await fs.readdir(LOGS_DIR);
     const jobFiles = files
@@ -609,7 +628,7 @@ export async function getJobLogs(jobId: string, limit: number = 10): Promise<Job
       .sort()
       .reverse()
       .slice(0, limit);
-    
+
     const logs: JobExecutionResult[] = [];
     for (const file of jobFiles) {
       try {
@@ -619,7 +638,7 @@ export async function getJobLogs(jobId: string, limit: number = 10): Promise<Job
         // Skip corrupted log files
       }
     }
-    
+
     return logs;
   } catch {
     return [];
@@ -629,25 +648,27 @@ export async function getJobLogs(jobId: string, limit: number = 10): Promise<Job
 /**
  * Clean up old log files
  */
-export async function cleanupOldLogs(maxAgeDays: number = DEFAULT_SCHEDULER_CONFIG.log_retention_days): Promise<number> {
+export async function cleanupOldLogs(
+  maxAgeDays: number = DEFAULT_SCHEDULER_CONFIG.log_retention_days,
+): Promise<number> {
   try {
     const files = await fs.readdir(LOGS_DIR);
     const now = Date.now();
     const maxAgeMs = maxAgeDays * 24 * 60 * 60 * 1000;
     let deleted = 0;
-    
+
     for (const file of files) {
       if (!file.endsWith(".log")) continue;
-      
+
       const filePath = path.join(LOGS_DIR, file);
       const stats = await fs.stat(filePath);
-      
+
       if (now - stats.mtime.getTime() > maxAgeMs) {
         await fs.unlink(filePath);
         deleted++;
       }
     }
-    
+
     return deleted;
   } catch {
     return 0;

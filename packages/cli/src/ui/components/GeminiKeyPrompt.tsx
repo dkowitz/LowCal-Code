@@ -76,7 +76,10 @@ export function GeminiKeyPrompt({
           <Text color={Colors.AccentBlue}>API Key:</Text>
         </Box>
         <Box flexGrow={1}>
-          <Text>{"> "}{apiKey || " "}</Text>
+          <Text>
+            {"> "}
+            {apiKey || " "}
+          </Text>
         </Box>
       </Box>
       <Box marginTop={1}>

@@ -18,24 +18,9 @@
       "web_search",
       "write_file"
     ],
-    "minimal": [
-      "read_file",
-      "write_file",
-      "run_shell_command",
-      "edit"
-    ],
-    "shell-only": [
-      "run_shell_command"
-    ],
-    "shedit": [
-      "edit",
-      "run_shell_command"
-    ],
-    "web-shell": [
-      "web_fetch",
-      "web_search",
-      "run_shell_command",
-      "todo_write"
-    ]
+    "minimal": ["read_file", "write_file", "run_shell_command", "edit"],
+    "shell-only": ["run_shell_command"],
+    "shedit": ["edit", "run_shell_command"],
+    "web-shell": ["web_fetch", "web_search", "run_shell_command", "todo_write"]
   }
 }

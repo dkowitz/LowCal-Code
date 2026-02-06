@@ -17,6 +17,7 @@ import {
   SlashCommandStatus,
   ToolConfirmationOutcome,
   Storage,
+  removeSession,
 } from "@qwen-code/qwen-code-core";
 import { useSessionStats } from "../contexts/SessionContext.js";
 import { formatDuration } from "../utils/formatters.js";
@@ -565,6 +566,15 @@ export const useSlashCommandProcessor = (
                   setQuittingMessages(result.messages);
                   setTimeout(async () => {
                     await runExitCleanup();
+                    // Ensure session is removed before exiting
+                    if (config) {
+                      const sessionId = config.getSessionId();
+                      try {
+                        await removeSession(sessionId);
+                      } catch (e) {
+                        console.error("Failed to remove session:", e);
+                      }
+                    }
                     process.exit(0);
                   }, 100);
                   return { type: "handled" };

@@ -62,17 +62,16 @@ Original request:
 `;
         try {
             const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
-            const candidates = (response.response
-                ?.candidates ??
+            const candidates = (response.response?.candidates ??
                 response.candidates ??
                 []);
-            const fallbackParts = candidates.length > 0 ? candidates[0]?.content?.parts ?? [] : [];
+            const fallbackParts = candidates.length > 0 ? (candidates[0]?.content?.parts ?? []) : [];
             const fallbackText = Array.isArray(fallbackParts)
                 ? fallbackParts
                     .map((part) => typeof part === "string"
                     ? part
                     : part && typeof part === "object" && "text" in part
-                        ? part.text ?? ""
+                        ? (part.text ?? "")
                         : "")
                     .join("")
                 : "";
@@ -93,15 +92,15 @@ Original request:
      */
     getSearchParameters(mode) {
         switch (mode) {
-            case 'speed':
+            case "speed":
                 return {
                     maxResults: 3,
                 };
-            case 'balanced':
+            case "balanced":
                 return {
                     maxResults: 7,
                 };
-            case 'quality':
+            case "quality":
                 return {
                     maxResults: 12,
                 };
@@ -204,13 +203,19 @@ ${this.params.query}
             return {
                 intent: (parsed?.intent ?? this.params.query).trim() || this.params.query,
                 constraints: Array.isArray(parsed?.constraints)
-                    ? parsed.constraints.map((item) => String(item).trim()).filter(Boolean)
+                    ? parsed.constraints
+                        .map((item) => String(item).trim())
+                        .filter(Boolean)
                     : [],
                 assumptions: Array.isArray(parsed?.assumptions)
-                    ? parsed.assumptions.map((item) => String(item).trim()).filter(Boolean)
+                    ? parsed.assumptions
+                        .map((item) => String(item).trim())
+                        .filter(Boolean)
                     : [],
                 clarifyingQuestions: Array.isArray(parsed?.clarifying_questions)
-                    ? parsed.clarifying_questions.map((item) => String(item).trim()).filter(Boolean)
+                    ? parsed.clarifying_questions
+                        .map((item) => String(item).trim())
+                        .filter(Boolean)
                     : [],
                 ambiguity: parsed?.ambiguity === "high"
                     ? "high"
@@ -281,17 +286,16 @@ ${this.params.query}
 `;
         try {
             const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: plannerPrompt }] }], {}, signal);
-            const candidates = (response.response
-                ?.candidates ??
+            const candidates = (response.response?.candidates ??
                 response.candidates ??
                 []);
-            const fallbackParts = candidates.length > 0 ? candidates[0]?.content?.parts ?? [] : [];
+            const fallbackParts = candidates.length > 0 ? (candidates[0]?.content?.parts ?? []) : [];
             const fallbackText = Array.isArray(fallbackParts)
                 ? fallbackParts
                     .map((part) => typeof part === "string"
                     ? part
                     : part && typeof part === "object" && "text" in part
-                        ? part.text ?? ""
+                        ? (part.text ?? "")
                         : "")
                     .join("")
                 : "";
@@ -359,11 +363,7 @@ ${this.params.query}
         const complexityScore = (wordCount >= 24 ? 2 : wordCount >= 14 ? 1 : 0) +
             (ambiguity === "high" ? 2 : ambiguity === "medium" ? 1 : 0) +
             (hasClarifyingAnswers ? 1 : 0);
-        const maxSubQueries = complexityScore >= 4
-            ? 14
-            : complexityScore >= 2
-                ? 12
-                : 10;
+        const maxSubQueries = complexityScore >= 4 ? 14 : complexityScore >= 2 ? 12 : 10;
         const maxResults = complexityScore >= 4 ? 80 : complexityScore >= 2 ? 60 : 45;
         const variantsPerQuery = complexityScore >= 4 ? 5 : complexityScore >= 2 ? 4 : 3;
         const emergentSlots = complexityScore >= 4 ? 4 : 3;
@@ -438,8 +438,14 @@ ${this.params.query}
             sections: [
                 { title: "Executive Summary", focus: "Key findings and context." },
                 { title: "Market Dynamics", focus: "Core mechanisms and structure." },
-                { title: "Emergent Issues", focus: "New risks, opportunities, and shifts." },
-                { title: "Counterpoints and Uncertainties", focus: "Competing views and limitations." },
+                {
+                    title: "Emergent Issues",
+                    focus: "New risks, opportunities, and shifts.",
+                },
+                {
+                    title: "Counterpoints and Uncertainties",
+                    focus: "Competing views and limitations.",
+                },
                 { title: "Open Questions", focus: "Key unknowns and next steps." },
             ],
         };
@@ -447,7 +453,8 @@ ${this.params.query}
             return defaultSpec;
         }
         const candidate = raw;
-        const summary = typeof candidate.summary === "string" && candidate.summary.trim().length > 0
+        const summary = typeof candidate.summary === "string" &&
+            candidate.summary.trim().length > 0
             ? candidate.summary.trim()
             : defaultSpec.summary;
         const targetWordCount = Number(candidate.target_word_count);
@@ -459,12 +466,8 @@ ${this.params.query}
                 .map((section) => {
                 const typed = section;
                 return {
-                    title: typeof typed.title === "string"
-                        ? typed.title.trim()
-                        : "",
-                    focus: typeof typed.focus === "string"
-                        ? typed.focus.trim()
-                        : "",
+                    title: typeof typed.title === "string" ? typed.title.trim() : "",
+                    focus: typeof typed.focus === "string" ? typed.focus.trim() : "",
                 };
             })
                 .filter((section) => section.title && section.focus)
@@ -518,11 +521,15 @@ ${plan.subQueries.map((item, index) => `${index + 1}. ${item.query}`).join("\n")
 ${intentBlock}
 
 Evidence highlights:
-${evidenceHighlights.slice(0, 30).map((item) => `- ${item}`).join("\n")}
+${evidenceHighlights
+            .slice(0, 30)
+            .map((item) => `- ${item}`)
+            .join("\n")}
 `;
         try {
             const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
-            const raw = (await getResponseText(response)) ?? this.extractCandidateText(response);
+            const raw = (await getResponseText(response)) ??
+                this.extractCandidateText(response);
             const parsed = JSON.parse(this.stripJsonFence(raw || ""));
             return this.normalizeReportSpec(parsed);
         }
@@ -567,7 +574,10 @@ Subtopic briefs:
 ${subtopicBriefs || "No subtopic briefs available."}
 
 Evidence highlights:
-${evidenceHighlights.slice(0, 40).map((item) => `- ${item}`).join("\n")}
+${evidenceHighlights
+            .slice(0, 40)
+            .map((item) => `- ${item}`)
+            .join("\n")}
 
 ${avoidBlock ? `Already covered (avoid repeating):\n${avoidBlock}\n` : ""}
 
@@ -847,12 +857,14 @@ Respond with valid JSON only:
             return approvedIndices;
         }
         // Get sources that need assessment (not already cited)
-        const sourcesToAssess = sources.map((source, index) => ({
+        const sourcesToAssess = sources
+            .map((source, index) => ({
             index,
             title: source.title,
             url: source.url,
             domain: new URL(source.url).hostname,
-        })).filter(item => !citedIndices.has(item.index));
+        }))
+            .filter((item) => !citedIndices.has(item.index));
         if (sourcesToAssess.length === 0) {
             return approvedIndices;
         }
@@ -860,7 +872,7 @@ Respond with valid JSON only:
             const geminiClient = this.config.getGeminiClient?.();
             if (!geminiClient) {
                 // If no LLM available, fall back to including all non-cited sources
-                sourcesToAssess.forEach(item => approvedIndices.add(item.index));
+                sourcesToAssess.forEach((item) => approvedIndices.add(item.index));
                 return approvedIndices;
             }
             const prompt = `
@@ -884,7 +896,7 @@ KEEP sources that are:
 For each source, respond with either "KEEP" or "FILTER" and a brief reason.
 
 Sources to assess:
-${sourcesToAssess.map((source, i) => `${i + 1}. [${source.domain}] ${source.title}`).join('\n')}
+${sourcesToAssess.map((source, i) => `${i + 1}. [${source.domain}] ${source.title}`).join("\n")}
 
 Respond in this format:
 1. KEEP - [reason]
@@ -893,25 +905,25 @@ etc.
 
 Be selective - only keep sources that truly add value to research on "${topic}".`;
             const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: prompt }] }], {}, signal);
-            const candidates = (response.response
-                ?.candidates ??
+            const candidates = (response.response?.candidates ??
                 response.candidates ??
                 []);
             if (candidates.length > 0) {
-                const fallbackParts = candidates.length > 0 ? candidates[0]?.content?.parts ?? [] : [];
+                const fallbackParts = candidates.length > 0 ? (candidates[0]?.content?.parts ?? []) : [];
                 const responseText = Array.isArray(fallbackParts)
                     ? fallbackParts
                         .map((part) => typeof part === "string"
                         ? part
                         : part && typeof part === "object" && "text" in part
-                            ? part.text ?? ""
+                            ? (part.text ?? "")
                             : "")
                         .join("")
                     : "";
-                const lines = responseText.split('\n').filter(line => line.trim());
+                const lines = responseText.split("\n").filter((line) => line.trim());
                 lines.forEach((line, i) => {
                     const sourceIndex = sourcesToAssess[i]?.index;
-                    if (sourceIndex !== undefined && line.toUpperCase().includes('KEEP')) {
+                    if (sourceIndex !== undefined &&
+                        line.toUpperCase().includes("KEEP")) {
                         approvedIndices.add(sourceIndex);
                     }
                 });
@@ -919,7 +931,7 @@ Be selective - only keep sources that truly add value to research on "${topic}".
         }
         catch (error) {
             // If assessment fails, include all sources to be safe
-            sourcesToAssess.forEach(item => approvedIndices.add(item.index));
+            sourcesToAssess.forEach((item) => approvedIndices.add(item.index));
         }
         return approvedIndices;
     }
@@ -1052,7 +1064,10 @@ Be selective - only keep sources that truly add value to research on "${topic}".
             const normalizedSubQueries = [];
             for (const sub of plan.subQueries) {
                 const normalized = await this.rephraseQuery(sub.query, signal);
-                normalizedSubQueries.push({ base: normalized, rationale: sub.rationale });
+                normalizedSubQueries.push({
+                    base: normalized,
+                    rationale: sub.rationale,
+                });
             }
             const { maxResults: defaultMaxResults } = this.getSearchParameters(this.params.mode);
             const maxResults = maxProfile?.maxResults ?? defaultMaxResults;
@@ -1176,8 +1191,7 @@ Be selective - only keep sources that truly add value to research on "${topic}".
                         const emergentSearchPlan = [];
                         normalizedEmergent.forEach((sub, subIndex) => {
                             const variants = this.buildEmergentQueryVariants(sub.base, maxProfile?.variantsPerQuery);
-                            const planIndex = subQueryIndexByQuery.get(sub.originalQuery.trim().toLowerCase()) ??
-                                initialCount + subIndex;
+                            const planIndex = subQueryIndexByQuery.get(sub.originalQuery.trim().toLowerCase()) ?? initialCount + subIndex;
                             variants.forEach((variant) => {
                                 const toolName = searchTools[emergentSearchPlan.length % searchTools.length];
                                 emergentSearchPlan.push({
@@ -1488,7 +1502,8 @@ Writing Guidelines:
                 const geminiClient = this.config.getGeminiClient();
                 const result = await geminiClient.generateContent([{ role: "user", parts: [{ text: finalPrompt }] }], {}, signal);
                 const candidateParts = (result.response?.candidates ??
-                    result.candidates ?? [])?.[0]?.content?.parts ?? [];
+                    result.candidates ??
+                    [])?.[0]?.content?.parts ?? [];
                 const candidateText = candidateParts
                     .map((part) => {
                     if (typeof part === "string") {
@@ -1504,9 +1519,10 @@ Writing Guidelines:
                 })
                     .join("");
                 const responseText = (await getResponseText(result)) ?? candidateText;
-                resultText = responseText && responseText.trim().length > 0
-                    ? responseText
-                    : candidateText;
+                resultText =
+                    responseText && responseText.trim().length > 0
+                        ? responseText
+                        : candidateText;
                 if (!resultText.trim()) {
                     fallbackReason = "LLM returned empty response.";
                 }
@@ -1527,7 +1543,7 @@ Writing Guidelines:
             const cleanedReport = this.stripGeneratedSourceSections(finalContent.trim());
             const citations = this.buildCitationMap(cleanedReport, sources);
             // Get indices of sources that are actually cited in the report
-            const citedIndices = new Set(Object.values(citations).map(c => c.sourceIndex));
+            const citedIndices = new Set(Object.values(citations).map((c) => c.sourceIndex));
             // Use LLM to assess which non-cited sources should be kept
             this.emitProgress(updateOutput, "ℹ🔍 Assessing source quality and relevance…", "append");
             const approvedSourceIndices = await this.assessSourceRelevance(this.params.query, sources, citedIndices, signal);
@@ -1553,7 +1569,11 @@ Writing Guidelines:
                 ].join("\n")
                 : "";
             const diagnosticsSection = diagnostics.length
-                ? ["", "## Diagnostics", ...diagnostics.map((line) => `- ${line}`)].join("\n")
+                ? [
+                    "",
+                    "## Diagnostics",
+                    ...diagnostics.map((line) => `- ${line}`),
+                ].join("\n")
                 : "";
             const finalReport = [
                 reportHeader,
@@ -1570,7 +1590,7 @@ Writing Guidelines:
                 llmContent: finalOutput,
                 returnDisplay: `Research complete for "${this.params.query}" (saved to ${savedReportPath})`,
                 sources: filteredSources,
-                citations
+                citations,
             };
         }
         catch (error) {
@@ -1630,7 +1650,8 @@ export class ResearchTool extends BaseDeclarativeTool {
             return "The 'mode' parameter must be one of: speed, balanced, quality, max";
         }
         if (params.searchTools) {
-            if (!Array.isArray(params.searchTools) || params.searchTools.length === 0) {
+            if (!Array.isArray(params.searchTools) ||
+                params.searchTools.length === 0) {
                 return "The 'searchTools' parameter must be a non-empty array when provided.";
             }
             const invalidEntry = params.searchTools.find((tool) => tool !== ToolNames.WEB_SEARCH && tool !== ToolNames.SEARXNG_SEARCH);

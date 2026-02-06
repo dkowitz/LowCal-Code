@@ -278,8 +278,7 @@ class GrepToolInvocation extends BaseToolInvocation {
         const { pattern, searchRoot, absoluteTargetPath, targetType, targetRelativePath, include, } = options;
         let strategyUsed = "none";
         const fileRelativePath = targetType === "file"
-            ? targetRelativePath ||
-                path.basename(absoluteTargetPath)
+            ? targetRelativePath || path.basename(absoluteTargetPath)
             : null;
         if (targetType === "file" && include && fileRelativePath) {
             const includeMatcher = picomatch(include, { dot: true });
@@ -287,9 +286,7 @@ class GrepToolInvocation extends BaseToolInvocation {
                 return [];
             }
         }
-        const outputBasePath = targetType === "file"
-            ? path.dirname(absoluteTargetPath)
-            : searchRoot;
+        const outputBasePath = targetType === "file" ? path.dirname(absoluteTargetPath) : searchRoot;
         try {
             // --- Strategy 1: git grep ---
             const isGit = isGitRepository(searchRoot);

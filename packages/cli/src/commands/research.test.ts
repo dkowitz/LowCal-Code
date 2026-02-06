@@ -11,8 +11,10 @@ describe("researchCommand", () => {
   it("should be defined with correct properties", () => {
     expect(researchCommand).toBeDefined();
     expect(researchCommand.command).toBe("research [mode] <query>");
-    expect(researchCommand.describe).toContain("Conduct deep internet research");
-    
+    expect(researchCommand.describe).toContain(
+      "Conduct deep internet research",
+    );
+
     // Check that handler is a function
     if (researchCommand.handler) {
       expect(typeof researchCommand.handler).toBe("function");

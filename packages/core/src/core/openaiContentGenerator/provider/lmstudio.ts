@@ -28,9 +28,7 @@ export class LMStudioOpenAICompatibleProvider extends DefaultOpenAICompatiblePro
     try {
       const parsed = new URL(baseURL);
       if (parsed.port === "1234") return true;
-      return (
-        parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1"
-      );
+      return parsed.hostname === "localhost" || parsed.hostname === "127.0.0.1";
     } catch {
       return (
         baseURL.includes("127.0.0.1:1234") ||

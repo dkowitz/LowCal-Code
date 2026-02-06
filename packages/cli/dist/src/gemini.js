@@ -127,6 +127,9 @@ export async function main() {
     if (rawArgv._?.[0] === "sessions" && rawArgv.watch) {
         return;
     }
+    if (rawArgv._?.[0] === "dashboard" && rawArgv.watch) {
+        return;
+    }
     const extensions = loadExtensions(workspaceRoot);
     const config = await loadCliConfig(settings.merged, extensions, sessionId, argv);
     await startSessionRegistration({

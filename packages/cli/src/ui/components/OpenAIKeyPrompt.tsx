@@ -126,9 +126,7 @@ export function OpenAIKeyPrompt({
         OpenAI Configuration Required
       </Text>
       <Box marginTop={1}>
-        <Text>
-          Please enter your OpenAI configuration.
-        </Text>
+        <Text>Please enter your OpenAI configuration.</Text>
       </Box>
       <Box marginTop={1}>
         <Text color={Colors.Gray}>Use /model to choose an OpenAI model.</Text>

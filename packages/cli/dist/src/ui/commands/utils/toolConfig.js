@@ -24,11 +24,7 @@ const DEFAULT_COLLECTIONS = {
         ToolNames.WEB_SEARCH,
         ToolNames.SEARXNG_SEARCH,
     ],
-    minimal: [
-        ToolNames.READ_FILE,
-        ToolNames.WRITE_FILE,
-        ToolNames.SHELL,
-    ],
+    minimal: [ToolNames.READ_FILE, ToolNames.WRITE_FILE, ToolNames.SHELL],
     "shell-only": [ToolNames.SHELL],
 };
 const CANONICAL_TOOL_NAMES = Object.values(ToolNames).reduce((map, name) => {
@@ -197,8 +193,7 @@ function normalizeActiveCustomPrompt(value, customPrompts) {
             names = filtered;
         }
     }
-    if (names &&
-        typeof obj["exclusive"] === "boolean") {
+    if (names && typeof obj["exclusive"] === "boolean") {
         return {
             name: names,
             exclusive: obj["exclusive"],

@@ -1,6 +1,7 @@
 # Two Critical Fixes - Complete Summary
 
 ## Overview
+
 Two critical issues have been identified and fixed in the LowCal Code project:
 
 1. **Message Repetition** - Thinking blocks repeated 1000+ times
@@ -13,12 +14,15 @@ Both fixes are complete, tested, and ready for production deployment.
 ## Fix #1: Message Repetition
 
 ### Problem
+
 Thinking blocks were being repeated thousands of times, causing:
+
 - 100-1000x token waste
 - Conversation failures due to token limits
 - Exponential degradation in long conversations
 
 ### Root Causes
+
 1. **Missing Thought Deduplication Reset on Retry**
    - `emittedThoughtHashes` wasn't cleared on RETRY events
    - Stale hashes blocked legitimate new thoughts
@@ -32,19 +36,22 @@ Thinking blocks were being repeated thousands of times, causing:
    - Thinking blocks (40-70 chars) bypassed deduplication
 
 ### Solution
+
 Three targeted fixes in `packages/core/src/core/turn.ts`:
 
 1. **Reset emittedThoughtHashes on RETRY** (Line 287)
+
    ```typescript
    this.emittedThoughtHashes.clear(); // CRITICAL: Reset thought deduplication on retry
    ```
 
 2. **Improve Thinking Block Normalization** (Lines 524-530)
+
    ```typescript
    const normalized = block
-     .replace(/💭/g, "")      // Remove emoji only
+     .replace(/💭/g, "") // Remove emoji only
      .toLowerCase()
-     .replace(/\s+/g, " ")    // Normalize whitespace
+     .replace(/\s+/g, " ") // Normalize whitespace
      .trim();
    ```
 
@@ -55,6 +62,7 @@ Three targeted fixes in `packages/core/src/core/turn.ts`:
    ```
 
 ### Impact
+
 - ✅ 100% elimination of message repetition
 - ✅ 100-1000x reduction in token consumption
 - ✅ Conversations complete successfully
@@ -65,15 +73,19 @@ Three targeted fixes in `packages/core/src/core/turn.ts`:
 ## Fix #2: Premature Turn Ending
 
 ### Problem
+
 Turns were ending prematurely mid-sentence with non-thinking models:
+
 - Model says "Let me do X" but doesn't execute
 - User must manually prompt to continue
 - Incomplete responses
 
 ### Root Cause
+
 The Turn class was yielding a `Finished` event **every time** it received a chunk with a `finishReason`. In streaming, multiple chunks can have finish reasons, causing the turn to end after the first chunk.
 
 **Problem Code:**
+
 ```typescript
 if (finishReason) {
   this.finishReason = finishReason;
@@ -84,20 +96,23 @@ if (finishReason) {
 This would emit `Finished` on **every chunk** with a finish reason.
 
 ### Solution
+
 Only emit the `Finished` event **once**, on the first chunk with a finish reason.
 
 Three changes in `packages/core/src/core/turn.ts`:
 
 1. **Add finishedEventEmitted Flag** (Line 249)
+
    ```typescript
    private finishedEventEmitted: boolean;
-   
+
    constructor(...) {
      this.finishedEventEmitted = false;
    }
    ```
 
 2. **Reset Flag on Retry** (Line 288)
+
    ```typescript
    this.finishedEventEmitted = false; // Reset finished flag on retry
    ```
@@ -112,6 +127,7 @@ Three changes in `packages/core/src/core/turn.ts`:
    ```
 
 ### Impact
+
 - ✅ Turns complete fully
 - ✅ Complete responses from all models
 - ✅ No manual continuation needed
@@ -123,26 +139,29 @@ Three changes in `packages/core/src/core/turn.ts`:
 ## Combined Impact
 
 ### Before Fixes
-| Metric | Value |
-|--------|-------|
-| Message repetitions | 1000+ |
-| Token waste | 100-1000x |
-| Turn completion | Premature |
-| User experience | Broken |
+
+| Metric              | Value     |
+| ------------------- | --------- |
+| Message repetitions | 1000+     |
+| Token waste         | 100-1000x |
+| Turn completion     | Premature |
+| User experience     | Broken    |
 
 ### After Fixes
-| Metric | Value |
-|--------|-------|
-| Message repetitions | 0 |
-| Token waste | Eliminated |
-| Turn completion | Full |
-| User experience | Smooth |
+
+| Metric              | Value      |
+| ------------------- | ---------- |
+| Message repetitions | 0          |
+| Token waste         | Eliminated |
+| Turn completion     | Full       |
+| User experience     | Smooth     |
 
 ---
 
 ## Testing Results
 
 ✅ **All 21 Turn tests pass**
+
 ```
 ✓ src/core/turn.test.ts (21 tests) 14ms
 ```
@@ -164,6 +183,7 @@ Three changes in `packages/core/src/core/turn.ts`:
 ## Documentation Created
 
 ### Message Repetition Fix
+
 - REPETITION_FIX_README.md (8.4K)
 - REPETITION_ANALYSIS.md (6.7K)
 - MESSAGE_REPETITION_FIX.md (6.7K)
@@ -174,6 +194,7 @@ Three changes in `packages/core/src/core/turn.ts`:
 - REPETITION_FIX.patch (4.0K)
 
 ### Premature Turn Ending Fix
+
 - PREMATURE_TURN_ENDING_FIX.md (4.5K)
 
 ---
@@ -181,24 +202,28 @@ Three changes in `packages/core/src/core/turn.ts`:
 ## Deployment Checklist
 
 ### Code Changes
+
 - ✅ Message repetition fix implemented
 - ✅ Premature turn ending fix implemented
 - ✅ All tests passing
 - ✅ No regressions
 
 ### Documentation
+
 - ✅ Root cause analysis complete
 - ✅ Implementation details documented
 - ✅ Before/after examples provided
 - ✅ Code review guide created
 
 ### Quality
+
 - ✅ Code coverage maintained
 - ✅ Type safety maintained
 - ✅ Performance improved
 - ✅ Backward compatible
 
 ### Ready For
+
 - ✅ Code review
 - ✅ Merge to main
 - ✅ Production deployment
@@ -209,6 +234,7 @@ Three changes in `packages/core/src/core/turn.ts`:
 ## Commit Messages
 
 ### Commit 1: Message Repetition Fix
+
 ```
 fix(core): eliminate message repetition in thinking blocks
 
@@ -224,6 +250,7 @@ Impact: 100-1000x reduction in token consumption
 ```
 
 ### Commit 2: Premature Turn Ending Fix
+
 ```
 fix(core): prevent premature turn ending with multiple finish reasons
 
@@ -243,23 +270,27 @@ Impact: Enables complete responses from all models
 ## Verification Steps
 
 ### 1. Run Tests
+
 ```bash
 npm test
 ```
 
 ### 2. Check for Regressions
+
 ```bash
 npm run lint
 npm run typecheck
 ```
 
 ### 3. Manual Testing
+
 - Switch to a non-thinking model (e.g., kimi-k2)
 - Start a conversation requiring tool calls
 - Verify model completes full response
 - Verify no manual "continue" prompts needed
 
 ### 4. Monitor Production
+
 - Monitor token consumption metrics
 - Check for any reported issues
 - Verify thinking blocks appear correctly
@@ -269,26 +300,26 @@ npm run typecheck
 
 ## Quality Metrics
 
-| Metric | Status |
-|--------|--------|
-| Code Coverage | ✓ Maintained |
-| Type Safety | ✓ Maintained |
-| Performance | ✓ Improved |
+| Metric                 | Status       |
+| ---------------------- | ------------ |
+| Code Coverage          | ✓ Maintained |
+| Type Safety            | ✓ Maintained |
+| Performance            | ✓ Improved   |
 | Backward Compatibility | ✓ Maintained |
-| Documentation | ✓ Complete |
-| Test Coverage | ✓ All Pass |
+| Documentation          | ✓ Complete   |
+| Test Coverage          | ✓ All Pass   |
 
 ---
 
 ## Risk Assessment
 
-| Factor | Level | Notes |
-|--------|-------|-------|
-| Code Changes | Low | Isolated, focused changes |
-| Test Coverage | Low | All tests pass |
-| Backward Compatibility | Low | No breaking changes |
-| Performance Impact | Positive | 100-1000x improvement |
-| User Impact | Positive | Better experience |
+| Factor                 | Level    | Notes                     |
+| ---------------------- | -------- | ------------------------- |
+| Code Changes           | Low      | Isolated, focused changes |
+| Test Coverage          | Low      | All tests pass            |
+| Backward Compatibility | Low      | No breaking changes       |
+| Performance Impact     | Positive | 100-1000x improvement     |
+| User Impact            | Positive | Better experience         |
 
 ---
 

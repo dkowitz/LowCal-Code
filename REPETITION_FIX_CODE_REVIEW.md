@@ -7,6 +7,7 @@
 **Location:** Line 286 (in the RETRY event handler)
 
 **Before:**
+
 ```typescript
 // Handle the new RETRY event
 if (streamEvent.type === "retry") {
@@ -19,6 +20,7 @@ if (streamEvent.type === "retry") {
 ```
 
 **After:**
+
 ```typescript
 // Handle the new RETRY event
 if (streamEvent.type === "retry") {
@@ -32,6 +34,7 @@ if (streamEvent.type === "retry") {
 ```
 
 **Rationale:**
+
 - When a retry occurs, all deduplication state must be reset consistently
 - Previously, `emittedThoughtHashes` was not cleared, causing stale hashes to persist
 - This led to legitimate new thoughts being blocked by old hashes
@@ -44,6 +47,7 @@ if (streamEvent.type === "retry") {
 **Location:** Lines 460-462 (in `shouldEmitTextDelta` method)
 
 **Before:**
+
 ```typescript
 private shouldEmitTextDelta(index: number, delta: string): boolean {
   const MIN_LENGTH_FOR_DEDUP = 80;
@@ -57,12 +61,13 @@ private shouldEmitTextDelta(index: number, delta: string): boolean {
 ```
 
 **After:**
+
 ```typescript
 private shouldEmitTextDelta(index: number, delta: string): boolean {
   // For thinking blocks, use a lower threshold since they tend to be shorter
   const isThinkingBlock = delta.includes("💭");
   const MIN_LENGTH_FOR_DEDUP = isThinkingBlock ? 20 : 80;
-  
+
   const normalized = delta.toLowerCase().replace(/\s+/g, " ").trim();
 
   if (!normalized || delta.length < MIN_LENGTH_FOR_DEDUP) {
@@ -73,6 +78,7 @@ private shouldEmitTextDelta(index: number, delta: string): boolean {
 ```
 
 **Rationale:**
+
 - Thinking blocks are typically 40-70 characters
 - With MIN_LENGTH_FOR_DEDUP = 80, they were bypassing deduplication
 - Now thinking blocks use a 20-character threshold
@@ -86,6 +92,7 @@ private shouldEmitTextDelta(index: number, delta: string): boolean {
 **Location:** Lines 524-530 (in `shouldEmitThinkingTextBlock` method)
 
 **Before:**
+
 ```typescript
 private shouldEmitThinkingTextBlock(index: number, block: string): boolean {
   if (!block.trim()) {
@@ -117,6 +124,7 @@ private shouldEmitThinkingTextBlock(index: number, block: string): boolean {
 ```
 
 **After:**
+
 ```typescript
 private shouldEmitThinkingTextBlock(index: number, block: string): boolean {
   if (!block.trim()) {
@@ -148,6 +156,7 @@ private shouldEmitThinkingTextBlock(index: number, block: string): boolean {
 ```
 
 **Rationale:**
+
 - The old normalization was too aggressive
 - Removing punctuation caused false positives:
   - "I've added X" → "i ve added x"
@@ -158,6 +167,7 @@ private shouldEmitThinkingTextBlock(index: number, block: string): boolean {
 - Maintains semantic differences between blocks
 
 **Example Impact:**
+
 ```
 // OLD BEHAVIOR (BROKEN)
 Block 1: "💭 I've added the '__logging' option."
@@ -178,15 +188,16 @@ Result: Correctly identified as different (CORRECT!)
 
 ## Summary of Changes
 
-| Change | Location | Type | Impact |
-|--------|----------|------|--------|
-| Reset `emittedThoughtHashes` on retry | Line 286 | Bug Fix | Prevents stale hashes from blocking new thoughts |
-| Lower dedup threshold for thinking blocks | Lines 460-462 | Enhancement | Catches short repetitive content |
-| Improve thinking block normalization | Lines 524-530 | Bug Fix | Prevents false positive duplicates |
+| Change                                    | Location      | Type        | Impact                                           |
+| ----------------------------------------- | ------------- | ----------- | ------------------------------------------------ |
+| Reset `emittedThoughtHashes` on retry     | Line 286      | Bug Fix     | Prevents stale hashes from blocking new thoughts |
+| Lower dedup threshold for thinking blocks | Lines 460-462 | Enhancement | Catches short repetitive content                 |
+| Improve thinking block normalization      | Lines 524-530 | Bug Fix     | Prevents false positive duplicates               |
 
 ## Testing
 
 All changes are covered by existing tests:
+
 - ✅ `src/core/turn.test.ts` - 21 tests pass
 - ✅ Tests verify duplicate thinking lines are dropped
 - ✅ Tests verify content events are properly yielded
@@ -195,6 +206,7 @@ All changes are covered by existing tests:
 ## Backward Compatibility
 
 ✅ **No breaking changes:**
+
 - No API changes
 - No event type changes
 - No configuration changes
@@ -203,6 +215,7 @@ All changes are covered by existing tests:
 ## Performance Impact
 
 ✅ **Positive impact:**
+
 - Fewer duplicate messages processed
 - Lower token consumption
 - Faster conversation completion
@@ -211,6 +224,7 @@ All changes are covered by existing tests:
 ## Risk Assessment
 
 ✅ **Low risk:**
+
 - All tests pass
 - Changes are isolated to deduplication logic
 - No changes to core streaming or event handling
@@ -234,6 +248,7 @@ All changes are covered by existing tests:
 ✅ This fix is ready for production deployment.
 
 **Recommended commit message:**
+
 ```
 fix(core): eliminate message repetition in thinking blocks
 

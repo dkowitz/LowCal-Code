@@ -493,10 +493,9 @@ export function SettingsDialog({
               definition.options.length > 0
             ) {
               const path = currentItem.value.split(".");
-              const currentValue = getNestedValue(
-                pendingSettings,
-                path,
-              ) as string | undefined;
+              const currentValue = getNestedValue(pendingSettings, path) as
+                | string
+                | undefined;
               const defaultValue = getDefaultValue(currentItem.value);
               const effectiveValue =
                 currentValue ??

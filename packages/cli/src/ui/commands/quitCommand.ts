@@ -5,6 +5,7 @@
  */
 
 import { formatDuration } from "../utils/formatters.js";
+import { stopSessionRegistration } from "../../session/sessionManager.js";
 import { CommandKind, type SlashCommand } from "./types.js";
 
 export const quitConfirmCommand: SlashCommand = {
@@ -39,7 +40,8 @@ export const quitCommand: SlashCommand = {
   altNames: ["exit"],
   description: "exit the cli",
   kind: CommandKind.BUILT_IN,
-  action: (context) => {
+  action: async (context) => {
+    await stopSessionRegistration();
     const now = Date.now();
     const { sessionStartTime } = context.session.stats;
     const wallDuration = now - sessionStartTime.getTime();

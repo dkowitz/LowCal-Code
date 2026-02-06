@@ -102,9 +102,7 @@ class GrepToolInvocation extends BaseToolInvocation<
       if (stats.isFile()) {
         return { type: "file", absolutePath: targetPath };
       }
-      throw new Error(
-        `Path is not a regular file or directory: ${targetPath}`,
-      );
+      throw new Error(`Path is not a regular file or directory: ${targetPath}`);
     } catch (error: unknown) {
       if (isNodeError(error) && error.code !== "ENOENT") {
         throw new Error(`Path does not exist: ${targetPath}`);
@@ -348,9 +346,7 @@ class GrepToolInvocation extends BaseToolInvocation<
       });
 
       const basePathForOutput =
-        targetType === "file"
-          ? path.dirname(absolutePath)
-          : absolutePath;
+        targetType === "file" ? path.dirname(absolutePath) : absolutePath;
 
       return this.parseRipgrepOutput(output, basePathForOutput);
     } catch (error: unknown) {
@@ -471,9 +467,7 @@ export class RipGrepTool extends BaseDeclarativeTool<
       if (stats.isFile()) {
         return { type: "file", absolutePath: targetPath };
       }
-      throw new Error(
-        `Path is not a regular file or directory: ${targetPath}`,
-      );
+      throw new Error(`Path is not a regular file or directory: ${targetPath}`);
     } catch (error: unknown) {
       if (isNodeError(error) && error.code !== "ENOENT") {
         throw new Error(`Path does not exist: ${targetPath}`);

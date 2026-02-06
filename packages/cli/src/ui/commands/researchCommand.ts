@@ -13,10 +13,7 @@ import {
 import React from "react";
 import { Box, Text } from "ink";
 import { parse } from "shell-quote";
-import {
-  type SlashCommand,
-  CommandKind,
-} from "../commands/types.js";
+import { type SlashCommand, CommandKind } from "../commands/types.js";
 import { Colors } from "../colors.js";
 
 type ResearchMode = "speed" | "balanced" | "quality" | "max";
@@ -33,7 +30,10 @@ const ALLOWED_MODES: readonly ResearchMode[] = [
 ] as const;
 
 function stripJsonFence(text: string): string {
-  return text.replace(/^\s*```(?:json)?/i, "").replace(/```$/i, "").trim();
+  return text
+    .replace(/^\s*```(?:json)?/i, "")
+    .replace(/```$/i, "")
+    .trim();
 }
 
 function isComplexQuery(query: string): boolean {
@@ -43,24 +43,24 @@ function isComplexQuery(query: string): boolean {
   }
   const wordCount = normalized.split(/\s+/u).length;
   const sentenceCount = normalized.split(/[.!?]+/u).filter(Boolean).length;
-  const conjunctions = /\b(and|or|versus|compare|vs\.?|along with|as well as)\b/iu;
+  const conjunctions =
+    /\b(and|or|versus|compare|vs\.?|along with|as well as)\b/iu;
   const hasConjunctions = conjunctions.test(normalized);
   const hasMultiClause = normalized.includes(";") || normalized.includes(":");
   return (
-    wordCount >= 12 ||
-    sentenceCount >= 2 ||
-    hasConjunctions ||
-    hasMultiClause
+    wordCount >= 12 || sentenceCount >= 2 || hasConjunctions || hasMultiClause
   );
 }
 
-function parseResearchArgs(args: string): {
-  mode: ResearchMode;
-  query: string;
-  clarifyMode: ClarifyMode;
-} | {
-  error: string;
-} {
+function parseResearchArgs(args: string):
+  | {
+      mode: ResearchMode;
+      query: string;
+      clarifyMode: ClarifyMode;
+    }
+  | {
+      error: string;
+    } {
   const trimmed = args.trim();
   if (!trimmed) {
     return {
@@ -170,14 +170,12 @@ function getActiveCollectionAllowlist(): Set<string> | null {
 
 export const researchCommand: SlashCommand = {
   name: "research",
-  description: "Conduct deep internet research with citation support (speed, balanced, quality, max modes)",
-  
+  description:
+    "Conduct deep internet research with citation support (speed, balanced, quality, max modes)",
+
   kind: CommandKind.BUILT_IN,
-  
-  action: async (
-    context,
-    args
-  ) => {
+
+  action: async (context, args) => {
     const { ui } = context;
     let progressActive = false;
     const progressLines: string[] = [];
@@ -245,7 +243,10 @@ export const researchCommand: SlashCommand = {
     const isAllowed = (toolName: string) =>
       !allowlist || allowlist.has(toolName);
 
-    if (!isAllowed(ToolNames.WEB_FETCH) || !toolRegistry.getTool(ToolNames.WEB_FETCH)) {
+    if (
+      !isAllowed(ToolNames.WEB_FETCH) ||
+      !toolRegistry.getTool(ToolNames.WEB_FETCH)
+    ) {
       return {
         type: "message",
         messageType: "error",
@@ -255,10 +256,16 @@ export const researchCommand: SlashCommand = {
     }
 
     const enabledSearchTools: SearchToolName[] = [];
-    if (isAllowed(ToolNames.WEB_SEARCH) && toolRegistry.getTool(ToolNames.WEB_SEARCH)) {
+    if (
+      isAllowed(ToolNames.WEB_SEARCH) &&
+      toolRegistry.getTool(ToolNames.WEB_SEARCH)
+    ) {
       enabledSearchTools.push(ToolNames.WEB_SEARCH);
     }
-    if (isAllowed(ToolNames.SEARXNG_SEARCH) && toolRegistry.getTool(ToolNames.SEARXNG_SEARCH)) {
+    if (
+      isAllowed(ToolNames.SEARXNG_SEARCH) &&
+      toolRegistry.getTool(ToolNames.SEARXNG_SEARCH)
+    ) {
       enabledSearchTools.push(ToolNames.SEARXNG_SEARCH);
     }
 
@@ -283,8 +290,7 @@ export const researchCommand: SlashCommand = {
         try {
           const abortController = new AbortController();
           const complexityHigh = isComplexQuery(query);
-          const forceQuestions =
-            clarifyMode === "force" || complexityHigh;
+          const forceQuestions = clarifyMode === "force" || complexityHigh;
           const clarifyPrompt = forceQuestions
             ? `
 You are a research assistant preparing a deep-dive investigation. Generate clarifying questions that would materially improve scope, framing, or depth.
@@ -328,13 +334,13 @@ ${query}
             abortController.signal,
           );
           const candidates =
-            (response as unknown as { response?: { candidates?: unknown } }).response
-              ?.candidates ??
+            (response as unknown as { response?: { candidates?: unknown } })
+              .response?.candidates ??
             (response as unknown as { candidates?: unknown }).candidates ??
             [];
           const parts = Array.isArray(candidates)
-            ? (candidates[0] as { content?: { parts?: unknown[] } })?.content
-                ?.parts ?? []
+            ? ((candidates[0] as { content?: { parts?: unknown[] } })?.content
+                ?.parts ?? [])
             : [];
           const raw = Array.isArray(parts)
             ? parts
@@ -347,9 +353,7 @@ ${query}
                 )
                 .join("")
             : "";
-          const parsedResponse = raw
-            ? JSON.parse(stripJsonFence(raw))
-            : null;
+          const parsedResponse = raw ? JSON.parse(stripJsonFence(raw)) : null;
           const shouldClarify = forceQuestions
             ? true
             : Boolean(parsedResponse?.should_clarify);
@@ -384,13 +388,17 @@ ${query}
               abortController.signal,
             );
             const retryCandidates =
-              (retryResponse as unknown as { response?: { candidates?: unknown } }).response
-                ?.candidates ??
-              (retryResponse as unknown as { candidates?: unknown }).candidates ??
+              (
+                retryResponse as unknown as {
+                  response?: { candidates?: unknown };
+                }
+              ).response?.candidates ??
+              (retryResponse as unknown as { candidates?: unknown })
+                .candidates ??
               [];
             const retryParts = Array.isArray(retryCandidates)
-              ? (retryCandidates[0] as { content?: { parts?: unknown[] } })?.content
-                  ?.parts ?? []
+              ? ((retryCandidates[0] as { content?: { parts?: unknown[] } })
+                  ?.content?.parts ?? [])
               : [];
             const retryRaw = Array.isArray(retryParts)
               ? retryParts
@@ -403,7 +411,9 @@ ${query}
                   )
                   .join("")
               : "";
-            const retryParsed = retryRaw ? JSON.parse(stripJsonFence(retryRaw)) : null;
+            const retryParsed = retryRaw
+              ? JSON.parse(stripJsonFence(retryRaw))
+              : null;
             finalQuestions = Array.isArray(retryParsed?.questions)
               ? retryParsed.questions
                   .map((item: unknown) => String(item).trim())
@@ -433,7 +443,9 @@ ${query}
                     `Reason: ${finalReason}`,
                   )
                 : null,
-              React.createElement(Box, { flexDirection: "column", marginTop: 1 },
+              React.createElement(
+                Box,
+                { flexDirection: "column", marginTop: 1 },
                 ...finalQuestions.map((item: string, index: number) =>
                   React.createElement(
                     Text,
@@ -497,9 +509,7 @@ ${query}
                 trimmed.slice(progressPrefix.length),
               ) as { mode?: string; message?: string };
               const message =
-                typeof payload.message === "string"
-                  ? payload.message
-                  : trimmed;
+                typeof payload.message === "string" ? payload.message : trimmed;
               const persist = payload.mode !== "replace";
               setProgress(message, persist);
               return;
@@ -512,11 +522,13 @@ ${query}
         },
       );
       clearProgress();
-      
+
       return {
         type: "message",
         messageType: "info",
-        content: partToString(result.llmContent) || "No results returned from research tool.",
+        content:
+          partToString(result.llmContent) ||
+          "No results returned from research tool.",
       };
     } catch (error) {
       clearProgress();

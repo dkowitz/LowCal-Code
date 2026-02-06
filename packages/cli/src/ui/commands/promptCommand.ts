@@ -41,7 +41,8 @@ function validatePromptName(name: string): { valid: boolean; error?: string } {
   if (!/^[a-zA-Z0-9_-]+$/.test(trimmed)) {
     return {
       valid: false,
-      error: "Prompt name must contain only alphanumeric characters, hyphens, and underscores",
+      error:
+        "Prompt name must contain only alphanumeric characters, hyphens, and underscores",
     };
   }
   if (trimmed.length > 50) {
@@ -59,7 +60,9 @@ function formatPromptInfo(
   isActive: boolean,
 ): string {
   const activeMarker = isActive ? " ✓ (ACTIVE)" : "";
-  const exclusiveMarker = metadata.exclusive ? " [EXCLUSIVE]" : " [SUPPLEMENTAL]";
+  const exclusiveMarker = metadata.exclusive
+    ? " [EXCLUSIVE]"
+    : " [SUPPLEMENTAL]";
   const createdDate = new Date(metadata.createdAt).toLocaleString();
   return `  • ${name}${activeMarker}${exclusiveMarker} | ${metadata.tokenCount} tokens | Created: ${createdDate}`;
 }
@@ -119,11 +122,17 @@ Examples:
       const promptNames = Object.keys(prompts);
 
       if (promptNames.length === 0) {
-        reply("No custom prompts defined. Use `/prompt create <name> <content>` to add one.");
+        reply(
+          "No custom prompts defined. Use `/prompt create <name> <content>` to add one.",
+        );
         return;
       }
 
-      const activePromptName = cfg.activeCustomPrompt?.name ? (Array.isArray(cfg.activeCustomPrompt.name) ? cfg.activeCustomPrompt.name.join(", ") : cfg.activeCustomPrompt.name) : null;
+      const activePromptName = cfg.activeCustomPrompt?.name
+        ? Array.isArray(cfg.activeCustomPrompt.name)
+          ? cfg.activeCustomPrompt.name.join(", ")
+          : cfg.activeCustomPrompt.name
+        : null;
       const lines = ["📋 Custom Prompts:"];
       for (const name of promptNames) {
         const metadata = prompts[name]!;
@@ -190,7 +199,9 @@ Examples:
 
       const prompts = cfg.customPrompts ?? {};
       if (prompts[name]) {
-        reply(`Prompt "${name}" already exists. Use /prompt delete ${name} first.`);
+        reply(
+          `Prompt "${name}" already exists. Use /prompt delete ${name} first.`,
+        );
         return;
       }
 
@@ -258,12 +269,18 @@ Examples:
 
       // If deleting the active prompt, disable it
       // If the prompt being deleted is active, remove it from the stack
-      if (cfg.activeCustomPrompt && cfg.activeCustomPrompt.name.includes(name)) {
+      if (
+        cfg.activeCustomPrompt &&
+        cfg.activeCustomPrompt.name.includes(name)
+      ) {
         const filtered = cfg.activeCustomPrompt.name.filter((n) => n !== name);
         if (filtered.length === 0) {
           cfg.activeCustomPrompt = null;
         } else {
-          cfg.activeCustomPrompt = { ...cfg.activeCustomPrompt, name: filtered };
+          cfg.activeCustomPrompt = {
+            ...cfg.activeCustomPrompt,
+            name: filtered,
+          };
         }
       }
 
@@ -283,7 +300,9 @@ Examples:
       // Remove the exclusive flag from arguments for parsing names
       const argsWithoutFlags = rest.filter((a) => a !== "--exclusive");
       if (argsWithoutFlags.length === 0) {
-        reply(`Usage: /prompt ${verbLower} <name|[name1,name2,...]> [--exclusive]`);
+        reply(
+          `Usage: /prompt ${verbLower} <name|[name1,name2,...]> [--exclusive]`,
+        );
         return;
       }
 
@@ -303,7 +322,10 @@ Examples:
       let names: string[];
       if (rawNameArg.startsWith("[") && rawNameArg.endsWith("]")) {
         const inner = rawNameArg.slice(1, -1);
-        names = inner.split(",").map((s) => s.trim()).filter(Boolean);
+        names = inner
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
       } else {
         names = [rawNameArg];
       }
@@ -318,7 +340,9 @@ Examples:
       }
 
       // Use the --exclusive flag if provided, otherwise default to first prompt's setting
-      const exclusive = hasExclusiveFlag ? true : prompts[names[0]]?.exclusive ?? false;
+      const exclusive = hasExclusiveFlag
+        ? true
+        : (prompts[names[0]]?.exclusive ?? false);
 
       cfg.activeCustomPrompt = { name: names, exclusive };
       saveCliToolConfig(cfg);
@@ -332,7 +356,10 @@ Examples:
           await geminiClient.reinitialize();
         }
       } catch (error) {
-        console.warn("[prompt] Failed to reinitialize chat after prompt change", error);
+        console.warn(
+          "[prompt] Failed to reinitialize chat after prompt change",
+          error,
+        );
       }
 
       reply(
@@ -348,7 +375,9 @@ Examples:
         return;
       }
 
-      const wasActive = Array.isArray(cfg.activeCustomPrompt?.name) ? cfg.activeCustomPrompt.name.join(", ") : cfg.activeCustomPrompt?.name;
+      const wasActive = Array.isArray(cfg.activeCustomPrompt?.name)
+        ? cfg.activeCustomPrompt.name.join(", ")
+        : cfg.activeCustomPrompt?.name;
       cfg.activeCustomPrompt = null;
       saveCliToolConfig(cfg);
       syncCoreToolConfig(cfg);
@@ -361,10 +390,15 @@ Examples:
           await geminiClient.reinitialize();
         }
       } catch (error) {
-        console.warn("[prompt] Failed to reinitialize chat after disabling prompt", error);
+        console.warn(
+          "[prompt] Failed to reinitialize chat after disabling prompt",
+          error,
+        );
       }
 
-      reply(`✓ Custom prompt "${wasActive}" disabled. Returning to base prompt.`);
+      reply(
+        `✓ Custom prompt "${wasActive}" disabled. Returning to base prompt.`,
+      );
       return;
     }
 

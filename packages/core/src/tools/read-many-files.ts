@@ -452,7 +452,10 @@ ${finalExclusionPatternsForDescription
                 } else {
                   contentParts.push(part);
                 }
-              } else if (part && typeof (part as { text?: unknown }).text === "string") {
+              } else if (
+                part &&
+                typeof (part as { text?: unknown }).text === "string"
+              ) {
                 const textPart = (part as { text: string }).text;
                 const separator = DEFAULT_OUTPUT_SEPARATOR_FORMAT.replace(
                   "{filePath}",

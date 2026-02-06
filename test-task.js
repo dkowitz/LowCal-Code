@@ -11,4 +11,3 @@ function logEntry() {
 
 logEntry();
 setInterval(logEntry, 60000);
-

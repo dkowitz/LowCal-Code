@@ -72,7 +72,9 @@ export class ContentGenerationPipeline {
 
         if (useResponses) {
           const response = (await this.client.responses.create(
-            this.buildResponsesRequest(openaiRequest) as ResponseCreateParamsBase,
+            this.buildResponsesRequest(
+              openaiRequest,
+            ) as ResponseCreateParamsBase,
           )) as Response;
 
           const geminiResponse =
@@ -261,7 +263,8 @@ export class ContentGenerationPipeline {
       for await (const event of stream) {
         collectedResponseEvents.push(event);
 
-        const response = this.converter.convertOpenAIResponseEventToGemini(event);
+        const response =
+          this.converter.convertOpenAIResponseEventToGemini(event);
 
         if (!response) {
           continue;
@@ -435,7 +438,11 @@ export class ContentGenerationPipeline {
       parameters?: Record<string, unknown>;
       strict?: boolean | null;
     }>;
-    tool_choice?: "auto" | "none" | "required" | { type: "function"; name: string };
+    tool_choice?:
+      | "auto"
+      | "none"
+      | "required"
+      | { type: "function"; name: string };
     max_output_tokens?: number;
     temperature?: number;
     top_p?: number;
@@ -544,11 +551,11 @@ export class ContentGenerationPipeline {
             description:
               tool.function?.description === null
                 ? undefined
-                : tool.function?.description ?? undefined,
+                : (tool.function?.description ?? undefined),
             parameters:
               tool.function?.parameters &&
               Object.keys(tool.function.parameters).length > 0
-                ? tool.function.parameters as Record<string, unknown>
+                ? (tool.function.parameters as Record<string, unknown>)
                 : undefined,
             strict: tool.function?.strict ?? null,
           };
@@ -563,7 +570,9 @@ export class ContentGenerationPipeline {
     const tool_choice =
       typeof toolChoice === "string"
         ? toolChoice
-        : toolChoice && typeof toolChoice === "object" && toolChoice.type === "function"
+        : toolChoice &&
+            typeof toolChoice === "object" &&
+            toolChoice.type === "function"
           ? { type: "function" as const, name: toolChoice.function.name }
           : undefined;
 
@@ -582,7 +591,8 @@ export class ContentGenerationPipeline {
         typeof chatRequest.temperature === "number"
           ? chatRequest.temperature
           : undefined,
-      top_p: typeof chatRequest.top_p === "number" ? chatRequest.top_p : undefined,
+      top_p:
+        typeof chatRequest.top_p === "number" ? chatRequest.top_p : undefined,
       stream:
         chatRequest.stream === true
           ? true

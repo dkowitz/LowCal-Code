@@ -55,9 +55,7 @@ export function InputRequestDialog({
         />
       </Box>
       <Box marginTop={1}>
-        <Text color={Colors.Gray}>
-          Press Enter to continue, Esc to cancel.
-        </Text>
+        <Text color={Colors.Gray}>Press Enter to continue, Esc to cancel.</Text>
       </Box>
     </Box>
   );

@@ -52,7 +52,7 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation {
         try {
             const output = execSync("docker ps --format '{{.Names}}'", {
                 stdio: "pipe",
-                encoding: "utf8"
+                encoding: "utf8",
             });
             // Check if searxng container is in the list
             return output.includes("searxng");
@@ -91,7 +91,7 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation {
         while (retries < maxRetries) {
             try {
                 const response = await fetch("http://localhost:8085", {
-                    method: "GET"
+                    method: "GET",
                 });
                 if (response.ok) {
                     return; // Service is ready
@@ -101,7 +101,7 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation {
                 // Ignore errors and continue waiting
             }
             retries++;
-            await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+            await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
         }
         throw new Error("SearXNG service did not become available within the expected time");
     }
@@ -130,8 +130,8 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation {
             const response = await fetch(searchUrl.toString(), {
                 method: "GET",
                 headers: {
-                    "Accept": "application/json",
-                    "User-Agent": "LowCal-SearXNG-Client/1.0"
+                    Accept: "application/json",
+                    "User-Agent": "LowCal-SearXNG-Client/1.0",
                 },
                 signal,
             });
@@ -170,7 +170,9 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation {
                     .slice(0, 3)
                     .map((s, i) => {
                     const result = filteredResults[i];
-                    const snippet = result?.content ? ` - ${result.content.substring(0, 150)}...` : "";
+                    const snippet = result?.content
+                        ? ` - ${result.content.substring(0, 150)}...`
+                        : "";
                     return `${i + 1}. ${s.title}${snippet}`;
                 })
                     .join("\n");

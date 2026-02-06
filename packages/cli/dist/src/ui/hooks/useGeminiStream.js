@@ -330,7 +330,8 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             setPendingHistoryItem(null);
         }
         addItem({ type: MessageType.INFO, text: "User cancelled the request." }, userMessageTimestamp);
-        if (turnStartTimestampRef.current !== null && !turnDurationLoggedRef.current) {
+        if (turnStartTimestampRef.current !== null &&
+            !turnDurationLoggedRef.current) {
             const durationMs = Date.now() - turnStartTimestampRef.current;
             if (durationMs >= 0) {
                 addItem({
@@ -360,7 +361,8 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             type: MessageType.ERROR,
             text: parseAndFormatApiError(eventValue.error, config.getContentGeneratorConfig()?.authType, undefined, config.getModel(), DEFAULT_GEMINI_FLASH_MODEL),
         }, userMessageTimestamp);
-        if (turnStartTimestampRef.current !== null && !turnDurationLoggedRef.current) {
+        if (turnStartTimestampRef.current !== null &&
+            !turnDurationLoggedRef.current) {
             const durationMs = Date.now() - turnStartTimestampRef.current;
             if (durationMs >= 0) {
                 addItem({

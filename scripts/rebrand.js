@@ -13,22 +13,23 @@
  *   npm run rebrand --dry-run  # preview without writing files
  */
 
-import process from 'node:process';
-import { readFile, writeFile } from 'node:fs/promises';
-import { resolve, relative } from 'node:path';
+import process from "node:process";
+import { readFile, writeFile } from "node:fs/promises";
+import { resolve, relative } from "node:path";
 
-const JSON_PATH = resolve('QWEN_REBRAND_FINAL.json');
+const JSON_PATH = resolve("QWEN_REBRAND_FINAL.json");
 const DASH_CHAR_REGEX = /[\u2010-\u2015\u2212\uFE63\uFF0D]/g; // various dash/hyphen forms
-const HYPHEN_CLASS = '[-\\u2010\\u2011\\u2012\\u2013\\u2014\\u2015\\u2212\\uFE63\\uFF0D]';
+const HYPHEN_CLASS =
+  "[-\\u2010\\u2011\\u2012\\u2013\\u2014\\u2015\\u2212\\uFE63\\uFF0D]";
 const DOUBLE_QUOTE_PATTERN = '[\\"“”]';
 const SINGLE_QUOTE_PATTERN = "[\\'’`]";
 
 function escapeRegExp(str) {
-  return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
 function normalizePath(inputPath) {
-  return resolve(String(inputPath).replace(DASH_CHAR_REGEX, '-'));
+  return resolve(String(inputPath).replace(DASH_CHAR_REGEX, "-"));
 }
 
 function diffStrings(original, replacement) {
@@ -45,7 +46,8 @@ function diffStrings(original, replacement) {
   while (
     suffix < original.length - prefix &&
     suffix < replacement.length - prefix &&
-    original[original.length - 1 - suffix] === replacement[replacement.length - 1 - suffix]
+    original[original.length - 1 - suffix] ===
+      replacement[replacement.length - 1 - suffix]
   ) {
     suffix++;
   }
@@ -59,7 +61,7 @@ function diffStrings(original, replacement) {
 }
 
 function buildPattern(input, { ellipsisIsWildcard = true } = {}) {
-  let pattern = '';
+  let pattern = "";
   const length = input.length;
 
   for (let i = 0; i < length; ) {
@@ -67,14 +69,14 @@ function buildPattern(input, { ellipsisIsWildcard = true } = {}) {
     const char = String.fromCodePoint(codePoint);
     const step = char.length;
 
-    if (ellipsisIsWildcard && char === '.' && input.startsWith('...', i)) {
-      pattern += '[\\s\\S]*?';
+    if (ellipsisIsWildcard && char === "." && input.startsWith("...", i)) {
+      pattern += "[\\s\\S]*?";
       i += 3;
       continue;
     }
 
-    if (ellipsisIsWildcard && char === '\u2026') {
-      pattern += '[\\s\\S]*?';
+    if (ellipsisIsWildcard && char === "\u2026") {
+      pattern += "[\\s\\S]*?";
       i += step;
       continue;
     }
@@ -87,7 +89,7 @@ function buildPattern(input, { ellipsisIsWildcard = true } = {}) {
         if (!/\s/.test(nextChar)) break;
         j += nextChar.length;
       }
-      pattern += '\\s+';
+      pattern += "\\s+";
       i = j;
       continue;
     }
@@ -98,13 +100,13 @@ function buildPattern(input, { ellipsisIsWildcard = true } = {}) {
       continue;
     }
 
-    if (['"', '“', '”'].includes(char)) {
+    if (['"', "“", "”"].includes(char)) {
       pattern += DOUBLE_QUOTE_PATTERN;
       i += step;
       continue;
     }
 
-    if (["'", '’', '`'].includes(char)) {
+    if (["'", "’", "`"].includes(char)) {
       pattern += SINGLE_QUOTE_PATTERN;
       i += step;
       continue;
@@ -126,12 +128,14 @@ function applyEntry(content, entry) {
   }
 
   const fullPattern = buildPattern(original, { ellipsisIsWildcard: true });
-  const regex = new RegExp(fullPattern, 'g');
-  const targetPattern = buildPattern(diff.target, { ellipsisIsWildcard: false });
+  const regex = new RegExp(fullPattern, "g");
+  const targetPattern = buildPattern(diff.target, {
+    ellipsisIsWildcard: false,
+  });
 
   let match;
   let lastIndex = 0;
-  let output = '';
+  let output = "";
   let count = 0;
   let matched = false;
 
@@ -185,11 +189,11 @@ function applyEntry(content, entry) {
 }
 
 async function main() {
-  const dryRun = process.argv.includes('--dry-run');
+  const dryRun = process.argv.includes("--dry-run");
   let manifest;
 
   try {
-    const raw = await readFile(JSON_PATH, 'utf8');
+    const raw = await readFile(JSON_PATH, "utf8");
     manifest = JSON.parse(raw);
   } catch (err) {
     console.error(`❌ Failed to read manifest ${JSON_PATH}: ${err.message}`);
@@ -197,7 +201,9 @@ async function main() {
   }
 
   if (!Array.isArray(manifest) || manifest.length === 0) {
-    console.error(`❌ Manifest ${JSON_PATH} must contain an array of replacement entries.`);
+    console.error(
+      `❌ Manifest ${JSON_PATH} must contain an array of replacement entries.`,
+    );
     process.exit(1);
   }
 
@@ -205,11 +211,11 @@ async function main() {
   for (const entry of manifest) {
     if (
       !entry ||
-      typeof entry.file !== 'string' ||
-      typeof entry.original !== 'string' ||
-      typeof entry.replacement !== 'string'
+      typeof entry.file !== "string" ||
+      typeof entry.original !== "string" ||
+      typeof entry.replacement !== "string"
     ) {
-      console.warn('⚠️  Skipping malformed entry:', entry);
+      console.warn("⚠️  Skipping malformed entry:", entry);
       continue;
     }
 
@@ -229,7 +235,7 @@ async function main() {
   for (const [filePath, fileEntries] of entriesByFile.entries()) {
     let content;
     try {
-      content = await readFile(filePath, 'utf8');
+      content = await readFile(filePath, "utf8");
     } catch (err) {
       console.error(`❌ Cannot read ${filePath}: ${err.message}`);
       process.exit(1);
@@ -257,16 +263,16 @@ async function main() {
     }
 
     if (!dryRun && content !== originalContent) {
-      await writeFile(filePath, content, 'utf8');
+      await writeFile(filePath, content, "utf8");
     }
   }
 
   console.log(
-    `\n${dryRun ? 'Previewed' : 'Applied'} ${processedEntries}/${totalEntries} replacement entries.`,
+    `\n${dryRun ? "Previewed" : "Applied"} ${processedEntries}/${totalEntries} replacement entries.`,
   );
 }
 
 main().catch((err) => {
-  console.error('❌ Unexpected error:', err);
+  console.error("❌ Unexpected error:", err);
   process.exit(1);
 });

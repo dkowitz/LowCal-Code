@@ -14,7 +14,16 @@ const scheduleTaskToolSchemaData = {
         properties: {
             action: {
                 type: "string",
-                enum: ["create", "list", "get", "update", "delete", "pause", "resume", "run_now"],
+                enum: [
+                    "create",
+                    "list",
+                    "get",
+                    "update",
+                    "delete",
+                    "pause",
+                    "resume",
+                    "run_now",
+                ],
                 description: "The action to perform on scheduled tasks",
             },
             id: {
@@ -262,7 +271,7 @@ class ScheduleTaskInvocation extends BaseToolInvocation {
                     timeout_minutes,
                     max_failures,
                     execution_mode: shouldOverrideExecutionMode
-                        ? sanitizedExecutionMode ?? null
+                        ? (sanitizedExecutionMode ?? null)
                         : undefined,
                 });
                 return this.formatJobUpdated(job);

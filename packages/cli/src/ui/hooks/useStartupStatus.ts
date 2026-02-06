@@ -13,7 +13,10 @@ import {
 } from "../commands/utils/toolConfig.js";
 
 export interface UseStartupStatusProps {
-  addItem: (itemData: Omit<HistoryItemInfo, "id">, baseTimestamp: number) => void;
+  addItem: (
+    itemData: Omit<HistoryItemInfo, "id">,
+    baseTimestamp: number,
+  ) => void;
 }
 
 /**
@@ -54,7 +57,10 @@ export function useStartupStatus({ addItem }: UseStartupStatusProps): void {
       addItem(infoItem, Date.now());
       hasShownStartupStatus.current = true;
     } catch (error) {
-      console.warn("[useStartupStatus] Failed to display startup status:", error);
+      console.warn(
+        "[useStartupStatus] Failed to display startup status:",
+        error,
+      );
       hasShownStartupStatus.current = true;
     }
   }, [addItem]);

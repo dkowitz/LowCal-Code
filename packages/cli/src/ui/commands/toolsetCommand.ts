@@ -265,7 +265,9 @@ export const toolsetCommand: SlashCommand = {
           ...cfg,
           activeCollection: target,
         };
-        await persist(`Active collection set to "${target}". Tool availability updated.`);
+        await persist(
+          `Active collection set to "${target}". Tool availability updated.`,
+        );
         break;
       }
       case "create": {
@@ -296,7 +298,9 @@ export const toolsetCommand: SlashCommand = {
           },
           activeCollection: cfg.activeCollection || name,
         };
-        await persist(`Created collection "${name}" with ${tools.length} tool(s).`);
+        await persist(
+          `Created collection "${name}" with ${tools.length} tool(s).`,
+        );
         break;
       }
       case "add": {
@@ -328,10 +332,14 @@ export const toolsetCommand: SlashCommand = {
           }
         }
         if (added.length === 0) {
-          reply(`All provided tools already exist in collection "${collection}".`);
+          reply(
+            `All provided tools already exist in collection "${collection}".`,
+          );
           break;
         }
-        await persist(`Added ${added.join(", ")} to collection "${collection}".`);
+        await persist(
+          `Added ${added.join(", ")} to collection "${collection}".`,
+        );
         break;
       }
       case "remove": {
@@ -367,7 +375,9 @@ export const toolsetCommand: SlashCommand = {
           }
         }
         if (removed.length === 0) {
-          reply(`None of the specified tools were present in collection "${collection}".`);
+          reply(
+            `None of the specified tools were present in collection "${collection}".`,
+          );
           break;
         }
         let message = `Removed ${removed.join(", ")} from collection "${collection}".`;
@@ -378,7 +388,9 @@ export const toolsetCommand: SlashCommand = {
         break;
       }
       default: {
-        reply("Unknown sub-command. Use /toolset list|show|activate|use|create|add|remove.");
+        reply(
+          "Unknown sub-command. Use /toolset list|show|activate|use|create|add|remove.",
+        );
       }
     }
   },

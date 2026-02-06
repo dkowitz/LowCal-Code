@@ -264,7 +264,11 @@ export async function runNonInteractive(
           console.log(prettyLine(line, COLORS.italic, COLORS.brightCyan));
         }
         console.log(prettyFooter(COLORS.brightCyan));
-      } else if (!prettyOutput && sawThought && currentAssistantText.length === 0) {
+      } else if (
+        !prettyOutput &&
+        sawThought &&
+        currentAssistantText.length === 0
+      ) {
         process.stdout.write("\n");
       }
 
@@ -276,7 +280,12 @@ export async function runNonInteractive(
               requestInfo.args && Object.keys(requestInfo.args).length > 0
                 ? JSON.stringify(requestInfo.args, null, 2)
                 : "";
-            console.log(prettyHeader(`TOOL CALL: ${requestInfo.name}`, COLORS.brightYellow));
+            console.log(
+              prettyHeader(
+                `TOOL CALL: ${requestInfo.name}`,
+                COLORS.brightYellow,
+              ),
+            );
             if (argsText) {
               for (const line of argsText.split(/\r?\n/)) {
                 console.log(prettyLine(line, "", COLORS.brightYellow));
@@ -300,7 +309,12 @@ export async function runNonInteractive(
               const errText =
                 formatToolResult(toolResponse.resultDisplay) ||
                 toolResponse.error.message;
-              console.log(prettyHeader(`TOOL ERROR: ${requestInfo.name}`, COLORS.brightRed));
+              console.log(
+                prettyHeader(
+                  `TOOL ERROR: ${requestInfo.name}`,
+                  COLORS.brightRed,
+                ),
+              );
               console.log(prettyLine(errText, "", COLORS.brightRed));
               console.log(prettyFooter(COLORS.brightRed));
             }
@@ -311,7 +325,12 @@ export async function runNonInteractive(
           }
 
           if (prettyOutput && toolResponse.resultDisplay) {
-            console.log(prettyHeader(`TOOL RESULT: ${requestInfo.name}`, COLORS.brightGreen));
+            console.log(
+              prettyHeader(
+                `TOOL RESULT: ${requestInfo.name}`,
+                COLORS.brightGreen,
+              ),
+            );
             const formatted = formatToolResult(toolResponse.resultDisplay);
             for (const line of formatted.split(/\r?\n/)) {
               console.log(prettyLine(line, "", COLORS.brightGreen));

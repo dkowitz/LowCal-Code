@@ -67,8 +67,7 @@ export const ModelSelectionDialog: React.FC<ModelSelectionDialogProps> = ({
 
       // Format context length with comma separators when available
       const max = model.maxContextLength ?? model.contextLength;
-      const ctxInfo =
-        max ? ` (${max.toLocaleString()} ctx)` : "";
+      const ctxInfo = max ? ` (${max.toLocaleString()} ctx)` : "";
 
       const quantInfo = model.quantization ? ` [${model.quantization}]` : "";
       const typeInfo = model.modelType ? ` {${model.modelType}}` : "";

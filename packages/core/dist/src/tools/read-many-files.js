@@ -284,7 +284,8 @@ ${finalExclusionPatternsForDescription
                                     contentParts.push(part);
                                 }
                             }
-                            else if (part && typeof part.text === "string") {
+                            else if (part &&
+                                typeof part.text === "string") {
                                 const textPart = part.text;
                                 const separator = DEFAULT_OUTPUT_SEPARATOR_FORMAT.replace("{filePath}", filePath);
                                 if (!separatorAdded) {

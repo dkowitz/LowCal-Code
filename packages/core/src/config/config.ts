@@ -589,7 +589,6 @@ export class Config {
     // Import tokenLimits functions lazily to avoid circular import issues at module load time
     let coreSet: ((m: string, l?: number) => void) | undefined;
     try {
-       
       coreSet = require("../core/tokenLimits.js").setModelContextLimit;
     } catch (e) {
       coreSet = undefined;
@@ -631,7 +630,6 @@ export class Config {
 
     // Fall back to core token limits dynamic map if available
     try {
-       
       const coreGet = require("../core/tokenLimits.js")
         .getModelContextLimit as (m: string) => number | undefined;
       if (typeof coreGet === "function") {
@@ -650,7 +648,6 @@ export class Config {
 
     // Check for dynamic/provider-supplied limit via core token limits map first
     try {
-       
       const coreGet = require("../core/tokenLimits.js")
         .getModelContextLimit as (m: string) => number | undefined;
       if (typeof coreGet === "function") {
@@ -1154,7 +1151,7 @@ export class Config {
     if (this.getTavilyApiKey()) {
       registerCoreTool(WebSearchTool, this);
     }
-    
+
     // Always register SearXNG search tool for local instance usage
     registerCoreTool(SearXNGSearchTool, this);
 

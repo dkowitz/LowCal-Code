@@ -1042,12 +1042,10 @@ export class CoreToolScheduler {
             }
 
             if (toolResult.error === undefined) {
-              const {
-                value: compactedContent,
-                wasCompacted,
-              } = compactPartListUnion(toolName, toolResult.llmContent, {
-                callId,
-              });
+              const { value: compactedContent, wasCompacted } =
+                compactPartListUnion(toolName, toolResult.llmContent, {
+                  callId,
+                });
               if (wasCompacted) {
                 console.warn(
                   `[Tool] Output truncated to preserve context (tool: ${toolName}, call: ${callId}).`,

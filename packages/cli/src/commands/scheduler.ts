@@ -68,18 +68,18 @@ function formatJob(job: Job, defaultMode: JobExecutionMode): string {
     job.execution_mode === undefined
       ? `${effectiveMode} (default)`
       : effectiveMode;
-  
+
   let output = `${statusIcon} ${job.id}${statusText}\n`;
   output += `   Schedule: ${job.schedule}\n`;
   output += `   Next run: ${job.next_run ? new Date(job.next_run).toLocaleString() : "Not scheduled"}\n`;
   output += `   Last run: ${job.last_run ? new Date(job.last_run).toLocaleString() : "Never"}\n`;
   output += `   Runs: ${job.run_count} successful, ${job.error_count} failed\n`;
   output += `   Execution: ${modeLabel}\n`;
-  
+
   if (job.description) {
     output += `   ${job.description}\n`;
   }
-  
+
   return output;
 }
 
@@ -91,7 +91,7 @@ const startCommand: CommandModule = {
   describe: "Start the scheduler daemon",
   handler: async () => {
     const running = await isDaemonRunning();
-    
+
     if (running) {
       console.log("✓ Scheduler daemon is already running");
       const status = await getDaemonStatus();
@@ -99,13 +99,13 @@ const startCommand: CommandModule = {
       console.log(`  Jobs: ${status.total_jobs} scheduled`);
       return;
     }
-    
+
     console.log("Starting scheduler daemon...");
     const started = await startDaemon();
-    
+
     if (started) {
       console.log("✓ Scheduler daemon started successfully");
-      
+
       // Show status
       const status = await getDaemonStatus();
       console.log(`\nStatus:`);
@@ -113,7 +113,7 @@ const startCommand: CommandModule = {
       console.log(`  PID: ${status.pid}`);
       console.log(`  Total jobs: ${status.total_jobs}`);
       console.log(`  Active executions: ${status.active_executions}`);
-      
+
       if (status.upcoming_jobs.length > 0) {
         console.log(`\nUpcoming jobs:`);
         for (const jobId of status.upcoming_jobs.slice(0, 5)) {
@@ -135,15 +135,15 @@ const stopCommand: CommandModule = {
   describe: "Stop the scheduler daemon",
   handler: async () => {
     const running = await isDaemonRunning();
-    
+
     if (!running) {
       console.log("Scheduler daemon is not running");
       return;
     }
-    
+
     console.log("Stopping scheduler daemon...");
     const stopped = await stopDaemon();
-    
+
     if (stopped) {
       console.log("✓ Scheduler daemon stopped");
     } else {
@@ -156,42 +156,102 @@ const stopCommand: CommandModule = {
 /**
  * Status command
  */
-const statusCommand: CommandModule = {
+type StatusArgs = {
+  watch?: boolean;
+  interval?: number;
+};
+
+const getIntervalMs = (intervalSeconds?: number): number => {
+  if (
+    !intervalSeconds ||
+    !Number.isFinite(intervalSeconds) ||
+    intervalSeconds <= 0
+  ) {
+    return 2000;
+  }
+  return intervalSeconds * 1000;
+};
+
+const statusCommand: CommandModule<StatusArgs, StatusArgs> = {
   command: "status",
   describe: "Show scheduler status and all jobs",
-  handler: async () => {
-    const status = await getDaemonStatus();
-    const defaultMode = getDefaultExecutionMode();
-    
-    console.log("## Scheduler Status\n");
-    console.log(`Running: ${status.running ? "🟢 Yes" : "🔴 No"}`);
-    
-    if (status.running) {
-      console.log(`PID: ${status.pid}`);
-      console.log(`Last tick: ${status.last_tick ? new Date(status.last_tick).toLocaleString() : "Never"}`);
-    }
-    
-    console.log(`\nTotal jobs: ${status.total_jobs}`);
-    console.log(`Active executions: ${status.active_executions}`);
-    
-    if (status.upcoming_jobs.length > 0) {
-      console.log(`\nUpcoming jobs (next 10):`);
-      for (const jobId of status.upcoming_jobs) {
-        const job = await getJob(jobId);
-        if (job && job.next_run) {
-          const nextRun = new Date(job.next_run);
-          console.log(`  - ${jobId}: ${nextRun.toLocaleString()}`);
+  builder: (yargs: Argv<StatusArgs>) =>
+    yargs
+      .option("watch", {
+        type: "boolean",
+        description: "Keep the output live (like top)",
+        default: false,
+      })
+      .option("interval", {
+        type: "number",
+        description: "Refresh interval in seconds (default: 2)",
+      }),
+  handler: async (argv) => {
+    const render = async () => {
+      process.stdout.write("\x1b[2J\x1b[H");
+      console.log(
+        `LowCal Scheduler Status (refresh ${Math.round(getIntervalMs(argv.interval) / 1000)}s) - press Ctrl+C to exit`,
+      );
+      console.log();
+
+      const status = await getDaemonStatus();
+      const defaultMode = getDefaultExecutionMode();
+
+      console.log("## Scheduler Status\n");
+      console.log(`Running: ${status.running ? "🟢 Yes" : "🔴 No"}`);
+
+      if (status.running) {
+        console.log(`PID: ${status.pid}`);
+        console.log(
+          `Last tick: ${status.last_tick ? new Date(status.last_tick).toLocaleString() : "Never"}`,
+        );
+      }
+
+      console.log(`\nTotal jobs: ${status.total_jobs}`);
+      console.log(`Active executions: ${status.active_executions}`);
+
+      if (status.upcoming_jobs.length > 0) {
+        console.log(`\nUpcoming jobs (next 10):`);
+        for (const jobId of status.upcoming_jobs) {
+          const job = await getJob(jobId);
+          if (job && job.next_run) {
+            const nextRun = new Date(job.next_run);
+            console.log(`  - ${jobId}: ${nextRun.toLocaleString()}`);
+          }
         }
       }
-    }
-    
-    // List all jobs
-    const jobs = await listJobs();
-    if (jobs.length > 0) {
-      console.log(`\n## All Jobs\n`);
-      for (const job of jobs) {
-        console.log(formatJob(job, defaultMode));
+
+      // List all jobs
+      const jobs = await listJobs();
+      if (jobs.length > 0) {
+        console.log(`\n## All Jobs\n`);
+        for (const job of jobs) {
+          console.log(formatJob(job, defaultMode));
+        }
       }
+    };
+
+    if (!argv.watch) {
+      await render();
+      return;
+    }
+
+    const intervalMs = getIntervalMs(argv.interval);
+    let intervalId: NodeJS.Timeout | undefined;
+
+    await render();
+    intervalId = setInterval(render, intervalMs);
+
+    if (process.stdin.isTTY) {
+      process.stdin.setRawMode(true);
+      process.stdin.resume();
+      process.stdin.on("data", async (data: Buffer) => {
+        const key = data.toString("utf-8");
+        if (key === "\u0003") {
+          clearInterval(intervalId);
+          process.exit(0);
+        }
+      });
     }
   },
 };
@@ -205,21 +265,25 @@ const listCommand: CommandModule = {
   handler: async () => {
     const jobs = await listJobs();
     const defaultMode = getDefaultExecutionMode();
-    
+
     if (jobs.length === 0) {
       console.log("No scheduled jobs found.");
       console.log("\nUse the schedule_task tool to create jobs:");
-      console.log('  lowcal --prompt "Create a scheduled job to run tests every hour"');
+      console.log(
+        '  lowcal --prompt "Create a scheduled job to run tests every hour"',
+      );
       return;
     }
-    
+
     console.log(`## Scheduled Jobs (${jobs.length} total)\n`);
-    
+
     for (const job of jobs) {
       console.log(formatJob(job, defaultMode));
     }
-    
-    console.log("\nUse 'lowcal scheduler logs <job-id>' to see execution history.");
+
+    console.log(
+      "\nUse 'lowcal scheduler logs <job-id>' to see execution history.",
+    );
   },
 };
 
@@ -237,7 +301,7 @@ const getCommand: CommandModule<{}, { id: string }> = {
     }),
   handler: async (argv) => {
     const job = await getJob(argv.id);
-    
+
     if (!job) {
       console.error(`Job "${argv.id}" not found`);
       process.exit(1);
@@ -248,22 +312,28 @@ const getCommand: CommandModule<{}, { id: string }> = {
       job.execution_mode === undefined
         ? `${effectiveMode} (default)`
         : effectiveMode;
-    
+
     console.log(`## Job Details: ${job.id}\n`);
     console.log(`Status: ${job.status}${job.enabled ? "" : " (disabled)"}`);
     console.log(`Schedule: ${job.schedule}`);
     console.log(`Created: ${new Date(job.created_at).toLocaleString()}`);
-    console.log(`Next run: ${job.next_run ? new Date(job.next_run).toLocaleString() : "Not scheduled"}`);
-    console.log(`Last run: ${job.last_run ? new Date(job.last_run).toLocaleString() : "Never"}`);
-    console.log(`Executions: ${job.run_count} successful, ${job.error_count} failed`);
+    console.log(
+      `Next run: ${job.next_run ? new Date(job.next_run).toLocaleString() : "Not scheduled"}`,
+    );
+    console.log(
+      `Last run: ${job.last_run ? new Date(job.last_run).toLocaleString() : "Never"}`,
+    );
+    console.log(
+      `Executions: ${job.run_count} successful, ${job.error_count} failed`,
+    );
     console.log(`Timeout: ${job.timeout_minutes} minutes`);
     console.log(`Max failures: ${job.max_failures}`);
     console.log(`Execution: ${modeLabel}`);
-    
+
     if (job.description) {
       console.log(`\nDescription: ${job.description}`);
     }
-    
+
     console.log(`\nPrompt:\n${job.prompt}\n`);
   },
 };
@@ -383,34 +453,41 @@ const logsCommand: CommandModule<{}, { id: string; tail: number }> = {
       }),
   handler: async (argv) => {
     const job = await getJob(argv.id);
-    
+
     if (!job) {
       console.error(`Job "${argv.id}" not found`);
       process.exit(1);
     }
-    
+
     const logs = await getJobLogs(argv.id, argv.tail);
-    
+
     if (logs.length === 0) {
       console.log(`No execution logs found for job "${argv.id}"`);
       return;
     }
-    
-    console.log(`## Execution Logs for "${argv.id}" (${logs.length} entries)\n`);
-    
+
+    console.log(
+      `## Execution Logs for "${argv.id}" (${logs.length} entries)\n`,
+    );
+
     for (const log of logs) {
-      const icon = log.status === "success" ? "✓" : (log.status === "timeout" ? "⏱" : "✗");
-      console.log(`${icon} ${new Date(log.started_at).toLocaleString()} - ${log.status.toUpperCase()}`);
-      
+      const icon =
+        log.status === "success" ? "✓" : log.status === "timeout" ? "⏱" : "✗";
+      console.log(
+        `${icon} ${new Date(log.started_at).toLocaleString()} - ${log.status.toUpperCase()}`,
+      );
+
       if (log.error) {
         console.log(`  Error: ${log.error}`);
       }
-      
+
       if (log.output && log.output.length > 0) {
         const preview = log.output.substring(0, 200);
-        console.log(`  Output: ${preview}${log.output.length > 200 ? "..." : ""}`);
+        console.log(
+          `  Output: ${preview}${log.output.length > 200 ? "..." : ""}`,
+        );
       }
-      
+
       console.log();
     }
   },
@@ -434,8 +511,7 @@ export const schedulerCommand: CommandModule = {
       .command(modeCommand)
       .command(logsCommand)
       .demandCommand(1, "You need at least one command before continuing.")
-      .version(false)
-      .epilogue(`Cron Format:
+      .version(false).epilogue(`Cron Format:
   The scheduler uses standard 5-field cron expressions:
   
   minute hour day month day_of_week

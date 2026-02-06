@@ -183,12 +183,19 @@ export class DefaultTelemetryService implements TelemetryService {
       const finalResponseEvent = [...openaiEvents]
         .reverse()
         .find(
-          (event): event is Extract<ResponseStreamEvent, { type: "response.completed" }> =>
-            event.type === "response.completed",
+          (
+            event,
+          ): event is Extract<
+            ResponseStreamEvent,
+            { type: "response.completed" }
+          > => event.type === "response.completed",
         );
 
       if (finalResponseEvent) {
-        await openaiLogger.logInteraction(openaiRequest, finalResponseEvent.response);
+        await openaiLogger.logInteraction(
+          openaiRequest,
+          finalResponseEvent.response,
+        );
       }
     }
   }

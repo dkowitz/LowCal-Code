@@ -600,8 +600,7 @@ Tip: If an edit fails, re-run ${ReadFileTool.Name} to copy the current file cont
             type: "string",
           },
           old_string: {
-            description:
-              `Copy-paste the exact bytes you want to replace. Include at least 3 lines of surrounding context so the snippet is unique. Do not escape or synthesize the text—always read it from the file immediately before editing. For multiple replacements, specify expected_replacements.`,
+            description: `Copy-paste the exact bytes you want to replace. Include at least 3 lines of surrounding context so the snippet is unique. Do not escape or synthesize the text—always read it from the file immediately before editing. For multiple replacements, specify expected_replacements.`,
             type: "string",
           },
           new_string: {

@@ -83,7 +83,9 @@ export interface ResearchToolParams {
   /**
    * Optional ordered list of search tools to use. Defaults to all available.
    */
-  searchTools?: Array<typeof ToolNames.WEB_SEARCH | typeof ToolNames.SEARXNG_SEARCH>;
+  searchTools?: Array<
+    typeof ToolNames.WEB_SEARCH | typeof ToolNames.SEARXNG_SEARCH
+  >;
 }
 
 /**
@@ -164,15 +166,14 @@ Original request:
         signal,
       );
 
-      const candidates = (
-        (response as unknown as { response?: { candidates?: unknown } }).response
-          ?.candidates ??
+      const candidates = ((
+        response as unknown as { response?: { candidates?: unknown } }
+      ).response?.candidates ??
         (response as unknown as { candidates?: unknown }).candidates ??
-        []
-      ) as Array<{ content?: { parts?: unknown[] } }>;
+        []) as Array<{ content?: { parts?: unknown[] } }>;
 
       const fallbackParts =
-        candidates.length > 0 ? candidates[0]?.content?.parts ?? [] : [];
+        candidates.length > 0 ? (candidates[0]?.content?.parts ?? []) : [];
 
       const fallbackText = Array.isArray(fallbackParts)
         ? fallbackParts
@@ -180,14 +181,13 @@ Original request:
               typeof part === "string"
                 ? part
                 : part && typeof part === "object" && "text" in part
-                  ? (part as { text?: string }).text ?? ""
+                  ? ((part as { text?: string }).text ?? "")
                   : "",
             )
             .join("")
         : "";
 
-      const candidateText =
-        (await getResponseText(response)) ?? fallbackText;
+      const candidateText = (await getResponseText(response)) ?? fallbackText;
       const rephrased = candidateText
         .split(/\r?\n/)
         .map((line) => line.trim().replace(/^[-•\d.]+\s*/, ""))
@@ -208,16 +208,16 @@ Original request:
     maxResults: number;
   } {
     switch (mode) {
-      case 'speed':
-        return { 
+      case "speed":
+        return {
           maxResults: 3,
         };
-      case 'balanced':
-        return { 
+      case "balanced":
+        return {
           maxResults: 7,
         };
-      case 'quality':
-        return { 
+      case "quality":
+        return {
           maxResults: 12,
         };
       case "max":
@@ -339,15 +339,22 @@ ${this.params.query}
       const raw = (await getResponseText(response)) ?? "";
       const parsed = JSON.parse(this.stripJsonFence(raw || ""));
       return {
-        intent: (parsed?.intent ?? this.params.query).trim() || this.params.query,
+        intent:
+          (parsed?.intent ?? this.params.query).trim() || this.params.query,
         constraints: Array.isArray(parsed?.constraints)
-          ? parsed.constraints.map((item: string) => String(item).trim()).filter(Boolean)
+          ? parsed.constraints
+              .map((item: string) => String(item).trim())
+              .filter(Boolean)
           : [],
         assumptions: Array.isArray(parsed?.assumptions)
-          ? parsed.assumptions.map((item: string) => String(item).trim()).filter(Boolean)
+          ? parsed.assumptions
+              .map((item: string) => String(item).trim())
+              .filter(Boolean)
           : [],
         clarifyingQuestions: Array.isArray(parsed?.clarifying_questions)
-          ? parsed.clarifying_questions.map((item: string) => String(item).trim()).filter(Boolean)
+          ? parsed.clarifying_questions
+              .map((item: string) => String(item).trim())
+              .filter(Boolean)
           : [],
         ambiguity:
           parsed?.ambiguity === "high"
@@ -377,8 +384,7 @@ ${this.params.query}
         "Generate 4-6 targeted search queries covering all major facets of the user's request.",
       quality:
         "Generate 6-8 in-depth search queries that exhaustively address every dimension of the user's request.",
-      max:
-        "Generate 10-12 deep, investigative search queries that cover primary, secondary, and emerging dimensions of the user's request.",
+      max: "Generate 10-12 deep, investigative search queries that cover primary, secondary, and emerging dimensions of the user's request.",
     } as const;
 
     const intentSummary = intentProfile
@@ -435,14 +441,13 @@ ${this.params.query}
         signal,
       );
 
-      const candidates = (
-        (response as unknown as { response?: { candidates?: unknown } }).response
-          ?.candidates ??
+      const candidates = ((
+        response as unknown as { response?: { candidates?: unknown } }
+      ).response?.candidates ??
         (response as unknown as { candidates?: unknown }).candidates ??
-        []
-      ) as Array<{ content?: { parts?: unknown[] } }>;
+        []) as Array<{ content?: { parts?: unknown[] } }>;
       const fallbackParts =
-        candidates.length > 0 ? candidates[0]?.content?.parts ?? [] : [];
+        candidates.length > 0 ? (candidates[0]?.content?.parts ?? []) : [];
 
       const fallbackText = Array.isArray(fallbackParts)
         ? fallbackParts
@@ -450,7 +455,7 @@ ${this.params.query}
               typeof part === "string"
                 ? part
                 : part && typeof part === "object" && "text" in part
-                  ? (part as { text?: string }).text ?? ""
+                  ? ((part as { text?: string }).text ?? "")
                   : "",
             )
             .join("")
@@ -537,11 +542,7 @@ ${this.params.query}
       (hasClarifyingAnswers ? 1 : 0);
 
     const maxSubQueries =
-      complexityScore >= 4
-        ? 14
-        : complexityScore >= 2
-          ? 12
-          : 10;
+      complexityScore >= 4 ? 14 : complexityScore >= 2 ? 12 : 10;
     const maxResults =
       complexityScore >= 4 ? 80 : complexityScore >= 2 ? 60 : 45;
     const variantsPerQuery =
@@ -584,15 +585,19 @@ ${this.params.query}
 
   private extractCandidateText(result: unknown): string {
     const candidateParts =
-      ((result as {
-        response?: {
+      ((
+        result as {
+          response?: {
+            candidates?: Array<{ content?: { parts?: unknown[] } }>;
+          };
           candidates?: Array<{ content?: { parts?: unknown[] } }>;
-        };
-        candidates?: Array<{ content?: { parts?: unknown[] } }>;
-      })?.response?.candidates ??
-        (result as {
-          candidates?: Array<{ content?: { parts?: unknown[] } }>;
-        })?.candidates ??
+        }
+      )?.response?.candidates ??
+        (
+          result as {
+            candidates?: Array<{ content?: { parts?: unknown[] } }>;
+          }
+        )?.candidates ??
         [])?.[0]?.content?.parts ?? [];
 
     return candidateParts
@@ -634,8 +639,14 @@ ${this.params.query}
       sections: [
         { title: "Executive Summary", focus: "Key findings and context." },
         { title: "Market Dynamics", focus: "Core mechanisms and structure." },
-        { title: "Emergent Issues", focus: "New risks, opportunities, and shifts." },
-        { title: "Counterpoints and Uncertainties", focus: "Competing views and limitations." },
+        {
+          title: "Emergent Issues",
+          focus: "New risks, opportunities, and shifts.",
+        },
+        {
+          title: "Counterpoints and Uncertainties",
+          focus: "Competing views and limitations.",
+        },
         { title: "Open Questions", focus: "Key unknowns and next steps." },
       ],
     };
@@ -651,7 +662,8 @@ ${this.params.query}
     };
 
     const summary =
-      typeof candidate.summary === "string" && candidate.summary.trim().length > 0
+      typeof candidate.summary === "string" &&
+      candidate.summary.trim().length > 0
         ? candidate.summary.trim()
         : defaultSpec.summary;
 
@@ -666,14 +678,8 @@ ${this.params.query}
           .map((section) => {
             const typed = section as { title?: unknown; focus?: unknown };
             return {
-              title:
-                typeof typed.title === "string"
-                  ? typed.title.trim()
-                  : "",
-              focus:
-                typeof typed.focus === "string"
-                  ? typed.focus.trim()
-                  : "",
+              title: typeof typed.title === "string" ? typed.title.trim() : "",
+              focus: typeof typed.focus === "string" ? typed.focus.trim() : "",
             };
           })
           .filter((section) => section.title && section.focus)
@@ -736,7 +742,10 @@ ${plan.subQueries.map((item, index) => `${index + 1}. ${item.query}`).join("\n")
 ${intentBlock}
 
 Evidence highlights:
-${evidenceHighlights.slice(0, 30).map((item) => `- ${item}`).join("\n")}
+${evidenceHighlights
+  .slice(0, 30)
+  .map((item) => `- ${item}`)
+  .join("\n")}
 `;
 
     try {
@@ -746,7 +755,8 @@ ${evidenceHighlights.slice(0, 30).map((item) => `- ${item}`).join("\n")}
         signal,
       );
       const raw =
-        (await getResponseText(response)) ?? this.extractCandidateText(response);
+        (await getResponseText(response)) ??
+        this.extractCandidateText(response);
       const parsed = JSON.parse(this.stripJsonFence(raw || ""));
       return this.normalizeReportSpec(parsed);
     } catch (_error) {
@@ -809,7 +819,10 @@ Subtopic briefs:
 ${subtopicBriefs || "No subtopic briefs available."}
 
 Evidence highlights:
-${evidenceHighlights.slice(0, 40).map((item) => `- ${item}`).join("\n")}
+${evidenceHighlights
+  .slice(0, 40)
+  .map((item) => `- ${item}`)
+  .join("\n")}
 
 ${avoidBlock ? `Already covered (avoid repeating):\n${avoidBlock}\n` : ""}
 
@@ -1176,32 +1189,34 @@ Respond with valid JSON only:
   ): Promise<Set<number>> {
     // Always include cited sources
     const approvedIndices = new Set(citedIndices);
-    
+
     // If no sources to assess, return early
     if (sources.length === 0) {
       return approvedIndices;
     }
-    
+
     // Get sources that need assessment (not already cited)
-    const sourcesToAssess = sources.map((source, index) => ({
-      index,
-      title: source.title,
-      url: source.url,
-      domain: new URL(source.url).hostname,
-    })).filter(item => !citedIndices.has(item.index));
-    
+    const sourcesToAssess = sources
+      .map((source, index) => ({
+        index,
+        title: source.title,
+        url: source.url,
+        domain: new URL(source.url).hostname,
+      }))
+      .filter((item) => !citedIndices.has(item.index));
+
     if (sourcesToAssess.length === 0) {
       return approvedIndices;
     }
-    
+
     try {
       const geminiClient = this.config.getGeminiClient?.();
       if (!geminiClient) {
         // If no LLM available, fall back to including all non-cited sources
-        sourcesToAssess.forEach(item => approvedIndices.add(item.index));
+        sourcesToAssess.forEach((item) => approvedIndices.add(item.index));
         return approvedIndices;
       }
-      
+
       const prompt = `
 You are a research quality assessor. Analyze the following sources and determine which ones are RELEVANT and SUBSTANTIVE for the research topic "${topic}".
 
@@ -1223,7 +1238,7 @@ KEEP sources that are:
 For each source, respond with either "KEEP" or "FILTER" and a brief reason.
 
 Sources to assess:
-${sourcesToAssess.map((source, i) => `${i + 1}. [${source.domain}] ${source.title}`).join('\n')}
+${sourcesToAssess.map((source, i) => `${i + 1}. [${source.domain}] ${source.title}`).join("\n")}
 
 Respond in this format:
 1. KEEP - [reason]
@@ -1237,17 +1252,16 @@ Be selective - only keep sources that truly add value to research on "${topic}".
         {},
         signal,
       );
-      
-      const candidates = (
-        (response as unknown as { response?: { candidates?: unknown } }).response
-          ?.candidates ??
+
+      const candidates = ((
+        response as unknown as { response?: { candidates?: unknown } }
+      ).response?.candidates ??
         (response as unknown as { candidates?: unknown }).candidates ??
-        []
-      ) as Array<{ content?: { parts?: unknown[] } }>;
-      
+        []) as Array<{ content?: { parts?: unknown[] } }>;
+
       if (candidates.length > 0) {
         const fallbackParts =
-          candidates.length > 0 ? candidates[0]?.content?.parts ?? [] : [];
+          candidates.length > 0 ? (candidates[0]?.content?.parts ?? []) : [];
 
         const responseText = Array.isArray(fallbackParts)
           ? fallbackParts
@@ -1255,27 +1269,29 @@ Be selective - only keep sources that truly add value to research on "${topic}".
                 typeof part === "string"
                   ? part
                   : part && typeof part === "object" && "text" in part
-                    ? (part as { text?: string }).text ?? ""
+                    ? ((part as { text?: string }).text ?? "")
                     : "",
               )
               .join("")
           : "";
-        
-        const lines = responseText.split('\n').filter(line => line.trim());
-        
+
+        const lines = responseText.split("\n").filter((line) => line.trim());
+
         lines.forEach((line, i) => {
           const sourceIndex = sourcesToAssess[i]?.index;
-          if (sourceIndex !== undefined && line.toUpperCase().includes('KEEP')) {
+          if (
+            sourceIndex !== undefined &&
+            line.toUpperCase().includes("KEEP")
+          ) {
             approvedIndices.add(sourceIndex);
           }
         });
       }
-      
     } catch (error) {
       // If assessment fails, include all sources to be safe
-      sourcesToAssess.forEach(item => approvedIndices.add(item.index));
+      sourcesToAssess.forEach((item) => approvedIndices.add(item.index));
     }
-    
+
     return approvedIndices;
   }
 
@@ -1363,19 +1379,24 @@ Be selective - only keep sources that truly add value to research on "${topic}".
     ].join("\n");
   }
 
-  private async persistReport(content: string, plan: QueryPlan): Promise<string> {
+  private async persistReport(
+    content: string,
+    plan: QueryPlan,
+  ): Promise<string> {
     const reportsDir = path.resolve("reports");
     await fs.promises.mkdir(reportsDir, { recursive: true });
 
-    const baseSlugSource = plan.slug && plan.slug.trim().length > 0
-      ? plan.slug
-      : plan.primaryTopic || this.params.query;
+    const baseSlugSource =
+      plan.slug && plan.slug.trim().length > 0
+        ? plan.slug
+        : plan.primaryTopic || this.params.query;
 
-    const safeSlug = baseSlugSource
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 40) || "research-report";
+    const safeSlug =
+      baseSlugSource
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/^-+|-+$/g, "")
+        .slice(0, 40) || "research-report";
 
     const timestamp = new Date().toISOString().replace(/[:.]/g, "-");
     const filename = `${safeSlug}-${timestamp}.md`;
@@ -1393,8 +1414,9 @@ Be selective - only keep sources that truly add value to research on "${topic}".
         ? this.params.searchTools
         : [ToolNames.WEB_SEARCH, ToolNames.SEARXNG_SEARCH];
 
-    const uniqueOrdered: Array<typeof ToolNames.WEB_SEARCH | typeof ToolNames.SEARXNG_SEARCH> =
-      [];
+    const uniqueOrdered: Array<
+      typeof ToolNames.WEB_SEARCH | typeof ToolNames.SEARXNG_SEARCH
+    > = [];
     const seen = new Set<string>();
     const toolRegistry =
       toolRegistryOverride ?? this.config.getToolRegistry?.();
@@ -1436,9 +1458,7 @@ Be selective - only keep sources that truly add value to research on "${topic}".
       this.ensureWebFetchAvailable();
       const diagnostics: string[] = [];
       const toolRegistry = this.config.getToolRegistry?.();
-      const hasWebSearch = Boolean(
-        toolRegistry?.getTool(ToolNames.WEB_SEARCH),
-      );
+      const hasWebSearch = Boolean(toolRegistry?.getTool(ToolNames.WEB_SEARCH));
       const hasSearxngSearch = Boolean(
         toolRegistry?.getTool(ToolNames.SEARXNG_SEARCH),
       );
@@ -1479,7 +1499,10 @@ Be selective - only keep sources that truly add value to research on "${topic}".
       }> = [];
       for (const sub of plan.subQueries) {
         const normalized = await this.rephraseQuery(sub.query, signal);
-        normalizedSubQueries.push({ base: normalized, rationale: sub.rationale });
+        normalizedSubQueries.push({
+          base: normalized,
+          rationale: sub.rationale,
+        });
       }
 
       const { maxResults: defaultMaxResults } = this.getSearchParameters(
@@ -1569,10 +1592,7 @@ Be selective - only keep sources that truly add value to research on "${topic}".
             : new SearXNGSearchTool(this.config);
         const invocation = tool.build({ query });
         const result = await invocation.execute(signal);
-        toolUsageCounts.set(
-          toolName,
-          (toolUsageCounts.get(toolName) ?? 0) + 1,
-        );
+        toolUsageCounts.set(toolName, (toolUsageCounts.get(toolName) ?? 0) + 1);
 
         const summaryText = partToString(result.llmContent);
         if (summaryText) {
@@ -1584,10 +1604,7 @@ Be selective - only keep sources that truly add value to research on "${topic}".
           searchResultsBySubIndex[subIndex]!.push(normalizedSummary);
           this.emitProgress(
             updateOutput,
-            `📌 ${label} highlight: ${this.truncate(
-              normalizedSummary,
-              160,
-            )}`,
+            `📌 ${label} highlight: ${this.truncate(normalizedSummary, 160)}`,
             "replace",
           );
         }
@@ -1647,7 +1664,10 @@ Be selective - only keep sources that truly add value to research on "${topic}".
           diagnostics.push(
             `Emergent queries suggested: ${emergentCandidates.length}`,
           );
-          const emergentSubQueries = emergentCandidates.slice(0, remainingSlots);
+          const emergentSubQueries = emergentCandidates.slice(
+            0,
+            remainingSlots,
+          );
 
           if (emergentSubQueries.length > 0) {
             const merged = this.dedupeSubQueries([
@@ -1697,13 +1717,12 @@ Be selective - only keep sources that truly add value to research on "${topic}".
                 maxProfile?.variantsPerQuery,
               );
               const planIndex =
-                subQueryIndexByQuery.get(sub.originalQuery.trim().toLowerCase()) ??
-                initialCount + subIndex;
+                subQueryIndexByQuery.get(
+                  sub.originalQuery.trim().toLowerCase(),
+                ) ?? initialCount + subIndex;
               variants.forEach((variant) => {
                 const toolName =
-                  searchTools[
-                    emergentSearchPlan.length % searchTools.length
-                  ];
+                  searchTools[emergentSearchPlan.length % searchTools.length];
                 emergentSearchPlan.push({
                   query: variant,
                   toolName,
@@ -2018,7 +2037,7 @@ Be selective - only keep sources that truly add value to research on "${topic}".
       diagnostics.push(`Evidence highlights: ${evidenceHighlights.length}`);
 
       const sourceCatalogForPrompt = this.buildSourceCatalogForPrompt(sources);
-      
+
       // Create a prompt that follows Perplexica's structure for generating the final report
       const planSummary = plan.subQueries
         .map(
@@ -2080,7 +2099,7 @@ Writing Guidelines:
 - Maintain a neutral, evidence-driven tone suitable for analysts and decision makers.
 - Do not add a Sources/References section; one will be appended automatically.
 `;
-      
+
       this.emitProgress(
         updateOutput,
         "ℹ🧠 Synthesizing final report…",
@@ -2095,7 +2114,7 @@ Writing Guidelines:
           "ℹ📐 Building a dynamic report blueprint…",
           "append",
         );
-      const reportSpec = await this.buildReportSpec(
+        const reportSpec = await this.buildReportSpec(
           plan,
           intentProfile ?? null,
           evidenceHighlights,
@@ -2197,15 +2216,20 @@ Writing Guidelines:
         );
 
         const candidateParts =
-          ((result as unknown as {
-            response?: {
+          ((
+            result as unknown as {
+              response?: {
+                candidates?: Array<{ content?: { parts?: unknown[] } }>;
+              };
               candidates?: Array<{ content?: { parts?: unknown[] } }>;
-            };
-            candidates?: Array<{ content?: { parts?: unknown[] } }>;
-          }).response?.candidates ??
-            (result as unknown as {
-              candidates?: Array<{ content?: { parts?: unknown[] } }>;
-            }).candidates ?? [])?.[0]?.content?.parts ?? [];
+            }
+          ).response?.candidates ??
+            (
+              result as unknown as {
+                candidates?: Array<{ content?: { parts?: unknown[] } }>;
+              }
+            ).candidates ??
+            [])?.[0]?.content?.parts ?? [];
 
         const candidateText = candidateParts
           .map((part) => {
@@ -2225,9 +2249,10 @@ Writing Guidelines:
           .join("");
 
         const responseText = (await getResponseText(result)) ?? candidateText;
-        resultText = responseText && responseText.trim().length > 0
-          ? responseText
-          : candidateText;
+        resultText =
+          responseText && responseText.trim().length > 0
+            ? responseText
+            : candidateText;
         if (!resultText.trim()) {
           fallbackReason = "LLM returned empty response.";
         }
@@ -2262,33 +2287,37 @@ Writing Guidelines:
         finalContent.trim(),
       );
       const citations = this.buildCitationMap(cleanedReport, sources);
-      
+
       // Get indices of sources that are actually cited in the report
-      const citedIndices = new Set(Object.values(citations).map(c => c.sourceIndex));
-      
+      const citedIndices = new Set(
+        Object.values(citations).map((c) => c.sourceIndex),
+      );
+
       // Use LLM to assess which non-cited sources should be kept
       this.emitProgress(
         updateOutput,
         "ℹ🔍 Assessing source quality and relevance…",
         "append",
       );
-      
+
       const approvedSourceIndices = await this.assessSourceRelevance(
         this.params.query,
         sources,
         citedIndices,
         signal,
       );
-      
+
       // Filter sources to only include cited + approved ones
-      const filteredSources = sources.filter((_, index) => approvedSourceIndices.has(index));
-      
+      const filteredSources = sources.filter((_, index) =>
+        approvedSourceIndices.has(index),
+      );
+
       this.emitProgress(
         updateOutput,
         `✅ Filtered to ${filteredSources.length} relevant sources (kept ${citedIndices.size} cited + ${filteredSources.length - citedIndices.size} approved).`,
         "append",
       );
-      
+
       this.emitProgress(
         updateOutput,
         resultText.trim().length > 0
@@ -2321,7 +2350,11 @@ Writing Guidelines:
         : "";
 
       const diagnosticsSection = diagnostics.length
-        ? ["", "## Diagnostics", ...diagnostics.map((line) => `- ${line}`)].join("\n")
+        ? [
+            "",
+            "## Diagnostics",
+            ...diagnostics.map((line) => `- ${line}`),
+          ].join("\n")
         : "";
 
       const finalReport = [
@@ -2341,13 +2374,13 @@ Writing Guidelines:
         llmContent: finalOutput,
         returnDisplay: `Research complete for "${this.params.query}" (saved to ${savedReportPath})`,
         sources: filteredSources,
-        citations
+        citations,
       };
     } catch (error: unknown) {
       const errorMessage = `Error during research for query "${this.params.query}": ${getErrorMessage(
         error,
       )}`;
-      
+
       return {
         llmContent: `Error: ${errorMessage}`,
         returnDisplay: "Error performing research.",
@@ -2381,7 +2414,8 @@ export class ResearchTool extends BaseDeclarativeTool<
           mode: {
             type: "string",
             enum: ["speed", "balanced", "quality", "max"],
-            description: "Optimization mode - speed, balanced, quality, or max.",
+            description:
+              "Optimization mode - speed, balanced, quality, or max.",
           },
           searchTools: {
             type: "array",
@@ -2409,7 +2443,7 @@ export class ResearchTool extends BaseDeclarativeTool<
     if (!params.query || params.query.trim() === "") {
       return "The 'query' parameter cannot be empty.";
     }
-    
+
     if (
       params.mode !== "speed" &&
       params.mode !== "balanced" &&
@@ -2420,7 +2454,10 @@ export class ResearchTool extends BaseDeclarativeTool<
     }
 
     if (params.searchTools) {
-      if (!Array.isArray(params.searchTools) || params.searchTools.length === 0) {
+      if (
+        !Array.isArray(params.searchTools) ||
+        params.searchTools.length === 0
+      ) {
         return "The 'searchTools' parameter must be a non-empty array when provided.";
       }
 
@@ -2450,17 +2487,17 @@ async function getResponseText(result: any): Promise<string | null> {
   if (!result || !result.response) {
     return null;
   }
-  
+
   const parts = result.response.candidates?.[0]?.content?.parts;
   if (!parts || !Array.isArray(parts)) {
     return null;
   }
-  
+
   for (const part of parts) {
     if (part.text) {
       return part.text;
     }
   }
-  
+
   return null;
 }

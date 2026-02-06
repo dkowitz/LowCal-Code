@@ -106,7 +106,9 @@ function isVisionCapableOpenAIModel(model) {
         return true;
     }
     const caps = model.capabilities?.map((cap) => cap.toLowerCase()) ?? [];
-    return caps.some((cap) => cap.includes("vision") || cap.includes("image") || cap.includes("multimodal"));
+    return caps.some((cap) => cap.includes("vision") ||
+        cap.includes("image") ||
+        cap.includes("multimodal"));
 }
 function getLmStudioVisionGuidanceMessage(hasLoadedVlm) {
     if (hasLoadedVlm) {

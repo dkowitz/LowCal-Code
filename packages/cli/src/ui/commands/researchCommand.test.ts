@@ -14,10 +14,7 @@ import {
 } from "vitest";
 import { researchCommand } from "./researchCommand.js";
 import { createMockCommandContext } from "../../test-utils/mockCommandContext.js";
-import type {
-  Config,
-  ToolRegistry,
-} from "@qwen-code/qwen-code-core";
+import type { Config, ToolRegistry } from "@qwen-code/qwen-code-core";
 
 const {
   buildMock,
@@ -67,8 +64,8 @@ describe("researchCommand", () => {
     researchToolConstructorMock.mockImplementation(() => ({
       build: buildMock,
     }));
-    partToStringMock.mockImplementation((content: unknown) =>
-      (content as string) || "",
+    partToStringMock.mockImplementation(
+      (content: unknown) => (content as string) || "",
     );
 
     // Configure toolset defaults for tests

@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { formatDuration } from "../utils/formatters.js";
+import { stopSessionRegistration } from "../../session/sessionManager.js";
 import { CommandKind } from "./types.js";
 export const quitConfirmCommand = {
     name: "quit-confirm",
@@ -35,7 +36,8 @@ export const quitCommand = {
     altNames: ["exit"],
     description: "exit the cli",
     kind: CommandKind.BUILT_IN,
-    action: (context) => {
+    action: async (context) => {
+        await stopSessionRegistration();
         const now = Date.now();
         const { sessionStartTime } = context.session.stats;
         const wallDuration = now - sessionStartTime.getTime();

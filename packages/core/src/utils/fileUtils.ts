@@ -434,9 +434,7 @@ export async function processSingleFileContent(
           }
 
           if (!parsedText && ocrImages.length === 0) {
-            const displaySuffix = ocrError
-              ? ` (OCR failed: ${ocrError})`
-              : "";
+            const displaySuffix = ocrError ? ` (OCR failed: ${ocrError})` : "";
             return {
               llmContent: {
                 inlineData: {
@@ -507,7 +505,8 @@ export async function processSingleFileContent(
             returnDisplay,
           };
         } catch (error) {
-          const errorMessage = error instanceof Error ? error.message : String(error);
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
           return {
             llmContent: {
               inlineData: {

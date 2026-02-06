@@ -81,7 +81,11 @@ function formatSession(
   const ageMs = Number.isFinite(lastSeen) ? now - lastSeen : Number.NaN;
   const isStale = Number.isFinite(ageMs) && ageMs > ttlMs;
   const statusLabel = isStale ? "stale" : session.status;
-  const statusColor = isStale ? "\x1b[31m" : session.status === "working" ? "\x1b[33m" : "\x1b[32m";
+  const statusColor = isStale
+    ? "\x1b[31m"
+    : session.status === "working"
+      ? "\x1b[33m"
+      : "\x1b[32m";
   const reset = "\x1b[0m";
   const details = session.details ?? {};
   const jobId =
@@ -141,12 +145,29 @@ const listCommand: CommandModule<SessionsArgs, SessionsArgs> = {
       console.log(
         `LowCal Sessions (refresh ${Math.round(intervalMs / 1000)}s) - press Ctrl+C to exit`,
       );
+      console.log("Press 'p' to prune stale sessions.");
       console.log();
       renderSessions(sessions, ttlMs);
     };
 
     await render();
-    setInterval(render, intervalMs);
+    const intervalId = setInterval(render, intervalMs);
+
+    if (process.stdin.isTTY) {
+      process.stdin.setRawMode(true);
+      process.stdin.resume();
+      process.stdin.on("data", async (data: Buffer) => {
+        const key = data.toString("utf-8");
+        if (key === "\u0003") {
+          clearInterval(intervalId);
+          process.exit(0);
+        }
+        if (key.toLowerCase() === "p") {
+          await pruneStaleSessions(ttlMs);
+          await render();
+        }
+      });
+    }
   },
 };
 

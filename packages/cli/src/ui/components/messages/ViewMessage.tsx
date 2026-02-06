@@ -73,11 +73,14 @@ export const ViewMessage: React.FC<ViewMessageProps> = ({
   );
 
   // Release lock on unmount if still held
-  React.useEffect(() => () => {
+  React.useEffect(
+    () => () => {
       try {
         releaseLock(owner);
       } catch (e) {}
-    }, [releaseLock, owner]);
+    },
+    [releaseLock, owner],
+  );
 
   const lines = text.split("\n");
   const visibleLines = lines.slice(scrollOffset, scrollOffset + maxHeight);

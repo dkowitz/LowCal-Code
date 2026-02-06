@@ -27,11 +27,7 @@ const DEFAULT_COLLECTIONS = {
         ToolNames.WEB_SEARCH,
         ToolNames.SEARXNG_SEARCH,
     ],
-    minimal: [
-        ToolNames.READ_FILE,
-        ToolNames.WRITE_FILE,
-        ToolNames.SHELL,
-    ],
+    minimal: [ToolNames.READ_FILE, ToolNames.WRITE_FILE, ToolNames.SHELL],
     "shell-only": [ToolNames.SHELL],
 };
 const TOOL_NAME_CANONICAL_MAP = Object.values(ToolNames).reduce((acc, value) => {
@@ -44,10 +40,10 @@ const TOOL_SUMMARIES = {
     [ToolNames.WRITE_FILE]: "Replace a file's contents. Provide the full desired content. Example: `write_file /workspace/src/index.ts`.",
     [ToolNames.READ_MANY_FILES]: "Batch-read multiple files or glob patterns to gather context. Example: `read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]`.",
     [ToolNames.GLOB]: "List files matching a glob pattern within the workspace. Example: `glob src/**/*.test.ts`.",
-    [ToolNames.GREP]: "Search file contents using ripgrep syntax; returns matching lines. Example: `search_file_content --pattern \"TODO\" --path src/`.",
+    [ToolNames.GREP]: 'Search file contents using ripgrep syntax; returns matching lines. Example: `search_file_content --pattern "TODO" --path src/`.',
     [ToolNames.EDIT]: "Apply structured edits to an existing file without rewriting it fully. Example: `edit /workspace/src/index.ts (old block → new block)`.",
     [ToolNames.SHELL]: "Run non-interactive shell commands. Explain risky operations first. Example: `run_shell_command npm test`.",
-    [ToolNames.TODO_WRITE]: "Manage the task list: add, update status, and track progress. Example: `todo_write add \"Refactor auth flow\"`.",
+    [ToolNames.TODO_WRITE]: 'Manage the task list: add, update status, and track progress. Example: `todo_write add "Refactor auth flow"`.',
     [ToolNames.MEMORY]: "Persist user-specific facts that will remain useful across sessions. Example: `save_memory preferred_editor=vscode`.",
     [ToolNames.TASK]: "Delegate work to a specialized subagent suited to the request. Example: `task code_review`.",
     [ToolNames.EXIT_PLAN_MODE]: "Exit plan mode after presenting the plan for user confirmation. Example: `exit_plan_mode`.",
@@ -128,9 +124,7 @@ function loadCustomPromptConfig() {
     }
 }
 function normalizePromptMode(value) {
-    const mode = typeof value === "string"
-        ? value.toLowerCase()
-        : undefined;
+    const mode = typeof value === "string" ? value.toLowerCase() : undefined;
     if (mode === "full" || mode === "concise" || mode === "auto") {
         return mode;
     }
@@ -355,7 +349,8 @@ export function getCoreSystemPrompt(userMemory, config, model) {
     if (shouldUseConcise) {
         let concisePrompt = buildConcisePrompt(activeToolNames);
         // Apply supplemental custom prompt if active (non‑exclusive)
-        if (customPromptConfig.activeCustomPrompt && !customPromptConfig.activeCustomPrompt.exclusive) {
+        if (customPromptConfig.activeCustomPrompt &&
+            !customPromptConfig.activeCustomPrompt.exclusive) {
             const customPrompts = customPromptConfig.customPrompts ?? {};
             const namesToAppend = Array.isArray(customPromptConfig.activeCustomPrompt?.name)
                 ? customPromptConfig.activeCustomPrompt.name
@@ -539,7 +534,8 @@ Your core function is efficient and safe assistance. Balance extreme conciseness
         }
     }
     // Apply supplemental custom prompt if active (exclusive mode was already handled above)
-    if (customPromptConfig.activeCustomPrompt && !customPromptConfig.activeCustomPrompt.exclusive) {
+    if (customPromptConfig.activeCustomPrompt &&
+        !customPromptConfig.activeCustomPrompt.exclusive) {
         const names = Array.isArray(customPromptConfig.activeCustomPrompt.name)
             ? customPromptConfig.activeCustomPrompt.name
             : [customPromptConfig.activeCustomPrompt.name].filter(Boolean);

@@ -71,7 +71,6 @@ const formatElapsed = (milliseconds: number): string => {
   return formatDuration(milliseconds);
 };
 
-
 enum StreamProcessingStatus {
   Completed,
   UserCancelled,
@@ -232,8 +231,7 @@ export const useGeminiStream = (
   }, [isResponding, toolCalls]);
 
   useEffect(() => {
-    const status =
-      streamingState === StreamingState.Idle ? "idle" : "working";
+    const status = streamingState === StreamingState.Idle ? "idle" : "working";
     void setSessionStatus(status);
   }, [streamingState]);
 
@@ -531,7 +529,10 @@ export const useGeminiStream = (
         { type: MessageType.INFO, text: "User cancelled the request." },
         userMessageTimestamp,
       );
-      if (turnStartTimestampRef.current !== null && !turnDurationLoggedRef.current) {
+      if (
+        turnStartTimestampRef.current !== null &&
+        !turnDurationLoggedRef.current
+      ) {
         const durationMs = Date.now() - turnStartTimestampRef.current;
         if (durationMs >= 0) {
           addItem(
@@ -577,7 +578,10 @@ export const useGeminiStream = (
         },
         userMessageTimestamp,
       );
-      if (turnStartTimestampRef.current !== null && !turnDurationLoggedRef.current) {
+      if (
+        turnStartTimestampRef.current !== null &&
+        !turnDurationLoggedRef.current
+      ) {
         const durationMs = Date.now() - turnStartTimestampRef.current;
         if (durationMs >= 0) {
           addItem(
@@ -786,10 +790,7 @@ export const useGeminiStream = (
               break;
             }
             toolCallSignatureCountsRef.current.set(signature, activeCount + 1);
-            toolCallIdToSignatureRef.current.set(
-              event.value.callId,
-              signature,
-            );
+            toolCallIdToSignatureRef.current.set(event.value.callId, signature);
             toolCallRequests.push(event.value);
             break;
           }

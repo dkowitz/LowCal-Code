@@ -30,24 +30,37 @@ const scheduleTaskToolSchemaData: FunctionDeclaration = {
     properties: {
       action: {
         type: "string",
-        enum: ["create", "list", "get", "update", "delete", "pause", "resume", "run_now"],
+        enum: [
+          "create",
+          "list",
+          "get",
+          "update",
+          "delete",
+          "pause",
+          "resume",
+          "run_now",
+        ],
         description: "The action to perform on scheduled tasks",
       },
       id: {
         type: "string",
-        description: "Unique identifier for the job (required for create, get, update, delete, pause, resume, run_now)",
+        description:
+          "Unique identifier for the job (required for create, get, update, delete, pause, resume, run_now)",
       },
       schedule: {
         type: "string",
-        description: "Cron expression in 5-field format (minute hour day month day_of_week). Examples: '0 * * * *' = hourly, '0 2 * * *' = daily at 2am, '*/5 * * * *' = every 5 minutes",
+        description:
+          "Cron expression in 5-field format (minute hour day month day_of_week). Examples: '0 * * * *' = hourly, '0 2 * * *' = daily at 2am, '*/5 * * * *' = every 5 minutes",
       },
       prompt: {
         type: "string",
-        description: "The prompt/instruction to execute when the job runs. This is what LowCal will do when triggered.",
+        description:
+          "The prompt/instruction to execute when the job runs. This is what LowCal will do when triggered.",
       },
       description: {
         type: "string",
-        description: "Optional human-readable description of what this job does",
+        description:
+          "Optional human-readable description of what this job does",
       },
       enabled: {
         type: "boolean",
@@ -59,7 +72,8 @@ const scheduleTaskToolSchemaData: FunctionDeclaration = {
       },
       max_failures: {
         type: "number",
-        description: "Number of consecutive failures before auto-pausing (default: 3)",
+        description:
+          "Number of consecutive failures before auto-pausing (default: 3)",
       },
       execution_mode: {
         type: "string",
@@ -214,7 +228,8 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
         returnDisplay: result,
       };
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
       return {
         llmContent: `Error: ${errorMessage}`,
         returnDisplay: `Error: ${errorMessage}`,
@@ -249,10 +264,10 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
         if (!id || !schedule || !this.params.prompt) {
           throw new Error("Creating a job requires: id, schedule, and prompt");
         }
-        
+
         if (!validateCronExpression(schedule)) {
           throw new Error(
-            `Invalid cron expression: "${schedule}". Use 5-field format: minute hour day month day_of_week (e.g., "0 * * * *" for hourly)`
+            `Invalid cron expression: "${schedule}". Use 5-field format: minute hour day month day_of_week (e.g., "0 * * * *" for hourly)`,
           );
         }
 
@@ -301,7 +316,7 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
 
         if (schedule && !validateCronExpression(schedule)) {
           throw new Error(
-            `Invalid cron expression: "${schedule}". Use 5-field format: minute hour day month day_of_week`
+            `Invalid cron expression: "${schedule}". Use 5-field format: minute hour day month day_of_week`,
           );
         }
 
@@ -314,7 +329,7 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
           timeout_minutes,
           max_failures,
           execution_mode: shouldOverrideExecutionMode
-            ? sanitizedExecutionMode ?? null
+            ? (sanitizedExecutionMode ?? null)
             : undefined,
         });
 
@@ -389,7 +404,7 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
 
   private formatJobList(jobs: Job[]): string {
     let output = `## Scheduled Jobs (${jobs.length} total)\n\n`;
-    
+
     for (const job of jobs) {
       const statusIcon = job.enabled ? "🟢" : "🔴";
       const statusText = job.status === "running" ? " (running)" : "";
@@ -407,9 +422,12 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
     return output;
   }
 
-  private formatJobDetails(job: Job, logs: Awaited<ReturnType<typeof getJobLogs>>): string {
+  private formatJobDetails(
+    job: Job,
+    logs: Awaited<ReturnType<typeof getJobLogs>>,
+  ): string {
     let output = `## Job Details: ${job.id}\n\n`;
-    
+
     output += `**Status:** ${job.status}${job.enabled ? "" : " (disabled)"}\n`;
     output += `**Schedule:** \`${job.schedule}\`\n`;
     output += `**Created:** ${new Date(job.created_at).toLocaleString()}\n`;
@@ -419,11 +437,11 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
     output += `**Timeout:** ${job.timeout_minutes} minutes\n`;
     output += `**Max failures:** ${job.max_failures}\n\n`;
     output += `**Execution:** ${job.execution_mode ?? "default"}\n\n`;
-    
+
     if (job.description) {
       output += `**Description:** ${job.description}\n\n`;
     }
-    
+
     output += `**Prompt:**\n\`\`\`\n${job.prompt}\n\`\`\`\n\n`;
 
     if (logs.length > 0) {
@@ -467,7 +485,9 @@ export class ScheduleTaskTool extends BaseDeclarativeTool<
     );
   }
 
-  protected override createInvocation(params: ScheduleTaskParams): ScheduleTaskInvocation {
+  protected override createInvocation(
+    params: ScheduleTaskParams,
+  ): ScheduleTaskInvocation {
     return new ScheduleTaskInvocation(params);
   }
 }

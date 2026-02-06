@@ -117,7 +117,7 @@ describe("OpenAIContentConverter", () => {
         typeof part === "string"
           ? part
           : "text" in part
-            ? (part as { text?: string }).text ?? ""
+            ? ((part as { text?: string }).text ?? "")
             : "",
       );
 
@@ -179,7 +179,7 @@ describe("OpenAIContentConverter", () => {
         typeof part === "string"
           ? part
           : "text" in part
-            ? (part as { text?: string }).text ?? ""
+            ? ((part as { text?: string }).text ?? "")
             : "",
       );
 
@@ -243,7 +243,7 @@ describe("OpenAIContentConverter", () => {
         typeof part === "string"
           ? part
           : "text" in part
-            ? (part as { text?: string }).text ?? ""
+            ? ((part as { text?: string }).text ?? "")
             : "",
       );
 
@@ -276,12 +276,12 @@ describe("OpenAIContentConverter", () => {
         typeof part === "string"
           ? part
           : "text" in part
-            ? (part as { text?: string }).text ?? ""
+            ? ((part as { text?: string }).text ?? "")
             : "",
       );
-      expect(
-        firstTextParts.some((value) => value?.includes("Plan next")),
-      ).toBe(true);
+      expect(firstTextParts.some((value) => value?.includes("Plan next"))).toBe(
+        true,
+      );
 
       const duplicateChunk = converter.convertOpenAIChunkToGemini({
         id: "chunk-4",
@@ -304,7 +304,7 @@ describe("OpenAIContentConverter", () => {
         typeof part === "string"
           ? part
           : "text" in part
-            ? (part as { text?: string }).text ?? ""
+            ? ((part as { text?: string }).text ?? "")
             : "",
       );
 
@@ -353,7 +353,7 @@ describe("OpenAIContentConverter", () => {
         typeof part === "string"
           ? part
           : "text" in part
-            ? (part as { text?: string }).text ?? ""
+            ? ((part as { text?: string }).text ?? "")
             : "",
       );
 
@@ -385,7 +385,7 @@ describe("OpenAIContentConverter", () => {
         typeof part === "string"
           ? part
           : "text" in part
-            ? (part as { text?: string }).text ?? ""
+            ? ((part as { text?: string }).text ?? "")
             : "",
       );
 
@@ -415,7 +415,7 @@ describe("OpenAIContentConverter", () => {
         typeof part === "string"
           ? part
           : "text" in part
-            ? (part as { text?: string }).text ?? ""
+            ? ((part as { text?: string }).text ?? "")
             : "",
       );
 
@@ -526,7 +526,7 @@ describe("OpenAIContentConverter", () => {
           {
             index: 0,
             delta: {
-              content: '</parameter></invoke></tool_call>Continuing with task.',
+              content: "</parameter></invoke></tool_call>Continuing with task.",
             },
             finish_reason: "stop",
           },

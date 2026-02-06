@@ -110713,11 +110713,7 @@ var DEFAULT_COLLECTIONS = {
     ToolNames.WEB_SEARCH,
     ToolNames.SEARXNG_SEARCH
   ],
-  minimal: [
-    ToolNames.READ_FILE,
-    ToolNames.WRITE_FILE,
-    ToolNames.SHELL
-  ],
+  minimal: [ToolNames.READ_FILE, ToolNames.WRITE_FILE, ToolNames.SHELL],
   "shell-only": [ToolNames.SHELL]
 };
 var TOOL_NAME_CANONICAL_MAP = Object.values(ToolNames).reduce((acc, value) => {
@@ -133618,7 +133614,7 @@ var SearXNGSearchToolInvocation = class extends BaseToolInvocation {
       const response = await fetch(searchUrl.toString(), {
         method: "GET",
         headers: {
-          "Accept": "application/json",
+          Accept: "application/json",
           "User-Agent": "LowCal-SearXNG-Client/1.0"
         },
         signal
@@ -136559,8 +136555,14 @@ ${this.params.query}
       sections: [
         { title: "Executive Summary", focus: "Key findings and context." },
         { title: "Market Dynamics", focus: "Core mechanisms and structure." },
-        { title: "Emergent Issues", focus: "New risks, opportunities, and shifts." },
-        { title: "Counterpoints and Uncertainties", focus: "Competing views and limitations." },
+        {
+          title: "Emergent Issues",
+          focus: "New risks, opportunities, and shifts."
+        },
+        {
+          title: "Counterpoints and Uncertainties",
+          focus: "Competing views and limitations."
+        },
         { title: "Open Questions", focus: "Key unknowns and next steps." }
       ]
     };
@@ -137090,7 +137092,10 @@ Be selective - only keep sources that truly add value to research on "${topic}".
       const normalizedSubQueries = [];
       for (const sub of plan.subQueries) {
         const normalized = await this.rephraseQuery(sub.query, signal);
-        normalizedSubQueries.push({ base: normalized, rationale: sub.rationale });
+        normalizedSubQueries.push({
+          base: normalized,
+          rationale: sub.rationale
+        });
       }
       const { maxResults: defaultMaxResults } = this.getSearchParameters(this.params.mode);
       const maxResults = maxProfile?.maxResults ?? defaultMaxResults;
@@ -137516,7 +137521,11 @@ Writing Guidelines:
         "## Tool Usage Summary",
         ...Array.from(toolUsageCounts.entries()).map(([name2, count]) => `- ${this.formatToolName(name2)}: ${count} search${count === 1 ? "" : "es"}`)
       ].join("\n") : "";
-      const diagnosticsSection = diagnostics.length ? ["", "## Diagnostics", ...diagnostics.map((line) => `- ${line}`)].join("\n") : "";
+      const diagnosticsSection = diagnostics.length ? [
+        "",
+        "## Diagnostics",
+        ...diagnostics.map((line) => `- ${line}`)
+      ].join("\n") : "";
       const finalReport = [
         reportHeader,
         cleanedReport,

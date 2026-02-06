@@ -327,7 +327,8 @@ export class Turn {
         const text = getResponseText(resp);
         if (text) {
           const candidateIndex = resp.candidates?.[0]?.index ?? 0;
-          const previousText = this.lastCandidateTexts.get(candidateIndex) ?? "";
+          const previousText =
+            this.lastCandidateTexts.get(candidateIndex) ?? "";
           let delta: string | null;
 
           if (
@@ -466,7 +467,7 @@ export class Turn {
     // For thinking blocks, use a lower threshold since they tend to be shorter
     const isThinkingBlock = delta.includes("💭");
     const MIN_LENGTH_FOR_DEDUP = isThinkingBlock ? 20 : 80;
-    
+
     const normalized = delta.toLowerCase().replace(/\s+/g, " ").trim();
 
     if (!normalized || delta.length < MIN_LENGTH_FOR_DEDUP) {

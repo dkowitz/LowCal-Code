@@ -211,7 +211,9 @@ export async function runNonInteractive(config, input, prompt_id) {
                 }
                 console.log(prettyFooter(COLORS.brightCyan));
             }
-            else if (!prettyOutput && sawThought && currentAssistantText.length === 0) {
+            else if (!prettyOutput &&
+                sawThought &&
+                currentAssistantText.length === 0) {
                 process.stdout.write("\n");
             }
             if (toolCallRequests.length > 0) {

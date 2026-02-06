@@ -117,10 +117,10 @@ export async function getDaemonStatus() {
     // Get upcoming jobs (next 5 minutes)
     const now = new Date();
     const upcomingJobs = store.jobs
-        .filter(j => j.enabled && j.next_run && new Date(j.next_run) > now)
+        .filter((j) => j.enabled && j.next_run && new Date(j.next_run) > now)
         .sort((a, b) => new Date(a.next_run).getTime() - new Date(b.next_run).getTime())
         .slice(0, 10)
-        .map(j => j.id);
+        .map((j) => j.id);
     // Read the status file to get last_tick
     let lastTick;
     if (running) {
@@ -135,7 +135,9 @@ export async function getDaemonStatus() {
     }
     const status = {
         running,
-        pid: running ? parseInt(await fs.readFile(DAEMON_PID_FILE, "utf-8"), 10) : undefined,
+        pid: running
+            ? parseInt(await fs.readFile(DAEMON_PID_FILE, "utf-8"), 10)
+            : undefined,
         last_tick: lastTick,
         active_executions: activeExecutions.size,
         total_jobs: store.jobs.length,
@@ -157,9 +159,12 @@ function spawnHeadlessJob(job) {
         const cliPath = path.join(schedulerCwd, "packages", "cli", "dist", "src", "scheduler", "headless.js");
         const child = spawn("node", [
             cliPath,
-            "--prompt", job.prompt,
-            "--job-id", job.id,
-            "--output", logPath,
+            "--prompt",
+            job.prompt,
+            "--job-id",
+            job.id,
+            "--output",
+            logPath,
         ], {
             detached: true,
             stdio: ["ignore", "pipe", "pipe"],
@@ -179,7 +184,10 @@ function spawnHeadlessJob(job) {
             stderr += data.toString();
         });
         // Set up timeout
-        const timeoutMs = (job.timeout_minutes ?? DEFAULT_SCHEDULER_CONFIG.default_timeout_minutes) * 60 * 1000;
+        const timeoutMs = (job.timeout_minutes ??
+            DEFAULT_SCHEDULER_CONFIG.default_timeout_minutes) *
+            60 *
+            1000;
         const timeoutId = setTimeout(() => {
             child.kill("SIGTERM");
         }, timeoutMs);
@@ -254,7 +262,14 @@ async function runZellijCommand(args) {
 async function ensureZellijTab(tabName, cwd) {
     if (!zellijTabs.has(tabName)) {
         try {
-            await runZellijCommand(["action", "new-tab", "--name", tabName, "--cwd", cwd]);
+            await runZellijCommand([
+                "action",
+                "new-tab",
+                "--name",
+                tabName,
+                "--cwd",
+                cwd,
+            ]);
             zellijTabs.add(tabName);
         }
         catch {
@@ -437,10 +452,10 @@ async function tick() {
     // Update daemon status
     const store = await loadStore();
     const upcomingJobs = store.jobs
-        .filter(j => j.enabled && j.next_run && new Date(j.next_run) > now)
+        .filter((j) => j.enabled && j.next_run && new Date(j.next_run) > now)
         .sort((a, b) => new Date(a.next_run).getTime() - new Date(b.next_run).getTime())
         .slice(0, 10)
-        .map(j => j.id);
+        .map((j) => j.id);
     await saveDaemonStatus({
         running: true,
         pid: process.pid,

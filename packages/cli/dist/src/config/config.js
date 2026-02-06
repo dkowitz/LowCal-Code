@@ -10,6 +10,7 @@ import * as path from "node:path";
 import process from "node:process";
 import { hideBin } from "yargs/helpers";
 import yargs from "yargs/yargs";
+import { dashboardCommand } from "../commands/dashboard.js";
 import { extensionsCommand } from "../commands/extensions.js";
 import { mcpCommand } from "../commands/mcp.js";
 import { researchCommand } from "../commands/research.js";
@@ -226,7 +227,8 @@ export async function parseArguments(settings) {
         .command(mcpCommand)
         .command(researchCommand)
         .command(schedulerCommand)
-        .command(sessionsCommand);
+        .command(sessionsCommand)
+        .command(dashboardCommand);
     if (settings?.experimental?.extensionManagement ?? false) {
         yargsInstance.command(extensionsCommand);
     }
@@ -245,9 +247,14 @@ export async function parseArguments(settings) {
         (result._[0] === "mcp" ||
             result._[0] === "extensions" ||
             result._[0] === "scheduler" ||
-            result._[0] === "sessions")) {
+            result._[0] === "sessions" ||
+            result._[0] === "dashboard")) {
         const isSessionsWatch = result._[0] === "sessions" && Boolean(result.watch);
         if (isSessionsWatch) {
+            return result;
+        }
+        const isDashboardWatch = result._[0] === "dashboard" && Boolean(result.watch);
+        if (isDashboardWatch) {
             return result;
         }
         // Subcommands handle their own execution and process exit

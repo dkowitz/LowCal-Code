@@ -130,11 +130,11 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
    */
   private async isSearXNGRunning(): Promise<boolean> {
     try {
-      const output = execSync("docker ps --format '{{.Names}}'", { 
+      const output = execSync("docker ps --format '{{.Names}}'", {
         stdio: "pipe",
-        encoding: "utf8"
+        encoding: "utf8",
       });
-      
+
       // Check if searxng container is in the list
       return output.includes("searxng");
     } catch (error) {
@@ -150,18 +150,26 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
       // Check if docker is available first
       const dockerAvailable = await this.isDockerAvailable();
       if (!dockerAvailable) {
-        throw new Error("Docker is not installed or not in PATH. Please install Docker to use SearXNG search.");
+        throw new Error(
+          "Docker is not installed or not in PATH. Please install Docker to use SearXNG search.",
+        );
       }
 
       // Start the container using our compose file
-      spawn("docker", ["compose", "-f", "docker-compose.searxng.yml", "up", "-d"], {
-        stdio: "ignore",
-        detached: true,
-      });
-      
+      spawn(
+        "docker",
+        ["compose", "-f", "docker-compose.searxng.yml", "up", "-d"],
+        {
+          stdio: "ignore",
+          detached: true,
+        },
+      );
+
       console.log("Starting SearXNG container...");
     } catch (error) {
-      throw new Error(`Failed to start SearXNG container: ${getErrorMessage(error)}`);
+      throw new Error(
+        `Failed to start SearXNG container: ${getErrorMessage(error)}`,
+      );
     }
   }
 
@@ -171,40 +179,42 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
   private async waitForSearXNGReady(): Promise<void> {
     const maxRetries = 30; // Wait up to 30 seconds (30 * 1 second)
     let retries = 0;
-    
+
     while (retries < maxRetries) {
       try {
-        const response = await fetch("http://localhost:8085", { 
-          method: "GET"
+        const response = await fetch("http://localhost:8085", {
+          method: "GET",
         });
-        
+
         if (response.ok) {
           return; // Service is ready
         }
       } catch (error) {
         // Ignore errors and continue waiting
       }
-      
+
       retries++;
-      await new Promise(resolve => setTimeout(resolve, 1000)); // Wait 1 second
+      await new Promise((resolve) => setTimeout(resolve, 1000)); // Wait 1 second
     }
-    
-    throw new Error("SearXNG service did not become available within the expected time");
+
+    throw new Error(
+      "SearXNG service did not become available within the expected time",
+    );
   }
 
   async execute(signal: AbortSignal): Promise<SearXNGSearchToolResult> {
     try {
       // Check if SearXNG container is running, start it if needed
       const isRunning = await this.isSearXNGRunning();
-      
+
       if (!isRunning) {
         console.log("SearXNG container not found. Starting it now...");
         await this.startSearXNG();
-        
+
         // Wait for the service to be ready
         await this.waitForSearXNGReady();
       }
-      
+
       // Make request to local SearXNG instance
       // Use GET request with query parameters as per SearXNG API documentation
       const searchUrl = new URL("http://localhost:8085/search");
@@ -217,12 +227,12 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
       searchUrl.searchParams.append("categories", "general");
       searchUrl.searchParams.append("max_results", "20");
       // Removed engines parameter - using default configuration now
-      
+
       const response = await fetch(searchUrl.toString(), {
         method: "GET",
         headers: {
-          "Accept": "application/json",
-          "User-Agent": "LowCal-SearXNG-Client/1.0"
+          Accept: "application/json",
+          "User-Agent": "LowCal-SearXNG-Client/1.0",
         },
         signal,
       });
@@ -230,7 +240,7 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
       if (!response.ok) {
         const text = await response.text().catch(() => "");
         throw new Error(
-          `SearXNG API error: ${response.status} ${response.statusText}${text ? ` - ${text}` : ""}`
+          `SearXNG API error: ${response.status} ${response.statusText}${text ? ` - ${text}` : ""}`,
         );
       }
 
@@ -258,14 +268,14 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
 
       // Build content from answers first, then fallback to results
       let content = "";
-      
+
       // Add answers if available
       if (data.answers && data.answers.length > 0) {
         content = data.answers
           .map((answer) => `${answer.answer} (from ${answer.engine})`)
           .join("\n\n");
       }
-      
+
       // If no answers, build summary from top results with content snippets
       if (!content.trim()) {
         const topSources = sources.slice(0, 8);
@@ -273,7 +283,9 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
           .slice(0, 3)
           .map((s, i) => {
             const result = filteredResults[i];
-            const snippet = result?.content ? ` - ${result.content.substring(0, 150)}...` : "";
+            const snippet = result?.content
+              ? ` - ${result.content.substring(0, 150)}...`
+              : "";
             return `${i + 1}. ${s.title}${snippet}`;
           })
           .join("\n");
@@ -306,17 +318,19 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
         error,
       )}`;
       console.error(errorMessage, error);
-      
+
       // If Docker isn't available or container can't be started, provide helpful message
-      if (error instanceof Error && 
-          (error.message.includes("Docker is not installed") || 
-           error.message.includes("command not found"))) {
+      if (
+        error instanceof Error &&
+        (error.message.includes("Docker is not installed") ||
+          error.message.includes("command not found"))
+      ) {
         return {
           llmContent: `Error: ${errorMessage}\n\nPlease install Docker to use SearXNG search functionality.`,
           returnDisplay: "SearXNG search requires Docker installation.",
         };
       }
-      
+
       return {
         llmContent: `Error: ${errorMessage}`,
         returnDisplay: "Error performing SearXNG web search.",

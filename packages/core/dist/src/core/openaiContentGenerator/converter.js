@@ -821,7 +821,7 @@ export class OpenAIContentConverter {
                 }
             }
             if (deltaText) {
-                const { text: cleanedText, toolCalls: xmlToolCalls, } = this.extractXmlToolCalls(choiceIndex, deltaText);
+                const { text: cleanedText, toolCalls: xmlToolCalls } = this.extractXmlToolCalls(choiceIndex, deltaText);
                 if (xmlToolCalls.length > 0) {
                     for (const toolCall of xmlToolCalls) {
                         parts.push({ functionCall: toolCall });

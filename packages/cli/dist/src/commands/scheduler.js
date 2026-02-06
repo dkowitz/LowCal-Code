@@ -111,40 +111,79 @@ const stopCommand = {
         }
     },
 };
-/**
- * Status command
- */
+const getIntervalMs = (intervalSeconds) => {
+    if (!intervalSeconds ||
+        !Number.isFinite(intervalSeconds) ||
+        intervalSeconds <= 0) {
+        return 2000;
+    }
+    return intervalSeconds * 1000;
+};
 const statusCommand = {
     command: "status",
     describe: "Show scheduler status and all jobs",
-    handler: async () => {
-        const status = await getDaemonStatus();
-        const defaultMode = getDefaultExecutionMode();
-        console.log("## Scheduler Status\n");
-        console.log(`Running: ${status.running ? "🟢 Yes" : "🔴 No"}`);
-        if (status.running) {
-            console.log(`PID: ${status.pid}`);
-            console.log(`Last tick: ${status.last_tick ? new Date(status.last_tick).toLocaleString() : "Never"}`);
-        }
-        console.log(`\nTotal jobs: ${status.total_jobs}`);
-        console.log(`Active executions: ${status.active_executions}`);
-        if (status.upcoming_jobs.length > 0) {
-            console.log(`\nUpcoming jobs (next 10):`);
-            for (const jobId of status.upcoming_jobs) {
-                const job = await getJob(jobId);
-                if (job && job.next_run) {
-                    const nextRun = new Date(job.next_run);
-                    console.log(`  - ${jobId}: ${nextRun.toLocaleString()}`);
+    builder: (yargs) => yargs
+        .option("watch", {
+        type: "boolean",
+        description: "Keep the output live (like top)",
+        default: false,
+    })
+        .option("interval", {
+        type: "number",
+        description: "Refresh interval in seconds (default: 2)",
+    }),
+    handler: async (argv) => {
+        const render = async () => {
+            process.stdout.write("\x1b[2J\x1b[H");
+            console.log(`LowCal Scheduler Status (refresh ${Math.round(getIntervalMs(argv.interval) / 1000)}s) - press Ctrl+C to exit`);
+            console.log();
+            const status = await getDaemonStatus();
+            const defaultMode = getDefaultExecutionMode();
+            console.log("## Scheduler Status\n");
+            console.log(`Running: ${status.running ? "🟢 Yes" : "🔴 No"}`);
+            if (status.running) {
+                console.log(`PID: ${status.pid}`);
+                console.log(`Last tick: ${status.last_tick ? new Date(status.last_tick).toLocaleString() : "Never"}`);
+            }
+            console.log(`\nTotal jobs: ${status.total_jobs}`);
+            console.log(`Active executions: ${status.active_executions}`);
+            if (status.upcoming_jobs.length > 0) {
+                console.log(`\nUpcoming jobs (next 10):`);
+                for (const jobId of status.upcoming_jobs) {
+                    const job = await getJob(jobId);
+                    if (job && job.next_run) {
+                        const nextRun = new Date(job.next_run);
+                        console.log(`  - ${jobId}: ${nextRun.toLocaleString()}`);
+                    }
                 }
             }
-        }
-        // List all jobs
-        const jobs = await listJobs();
-        if (jobs.length > 0) {
-            console.log(`\n## All Jobs\n`);
-            for (const job of jobs) {
-                console.log(formatJob(job, defaultMode));
+            // List all jobs
+            const jobs = await listJobs();
+            if (jobs.length > 0) {
+                console.log(`\n## All Jobs\n`);
+                for (const job of jobs) {
+                    console.log(formatJob(job, defaultMode));
+                }
             }
+        };
+        if (!argv.watch) {
+            await render();
+            return;
+        }
+        const intervalMs = getIntervalMs(argv.interval);
+        let intervalId;
+        await render();
+        intervalId = setInterval(render, intervalMs);
+        if (process.stdin.isTTY) {
+            process.stdin.setRawMode(true);
+            process.stdin.resume();
+            process.stdin.on("data", async (data) => {
+                const key = data.toString("utf-8");
+                if (key === "\u0003") {
+                    clearInterval(intervalId);
+                    process.exit(0);
+                }
+            });
         }
     },
 };
@@ -319,7 +358,7 @@ const logsCommand = {
         }
         console.log(`## Execution Logs for "${argv.id}" (${logs.length} entries)\n`);
         for (const log of logs) {
-            const icon = log.status === "success" ? "✓" : (log.status === "timeout" ? "⏱" : "✗");
+            const icon = log.status === "success" ? "✓" : log.status === "timeout" ? "⏱" : "✗";
             console.log(`${icon} ${new Date(log.started_at).toLocaleString()} - ${log.status.toUpperCase()}`);
             if (log.error) {
                 console.log(`  Error: ${log.error}`);
@@ -349,8 +388,7 @@ export const schedulerCommand = {
         .command(modeCommand)
         .command(logsCommand)
         .demandCommand(1, "You need at least one command before continuing.")
-        .version(false)
-        .epilogue(`Cron Format:
+        .version(false).epilogue(`Cron Format:
   The scheduler uses standard 5-field cron expressions:
   
   minute hour day month day_of_week

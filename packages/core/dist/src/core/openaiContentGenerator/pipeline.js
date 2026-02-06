@@ -301,7 +301,7 @@ export class ContentGenerationPipeline {
                     name: tool.function?.name ?? "",
                     description: tool.function?.description === null
                         ? undefined
-                        : tool.function?.description ?? undefined,
+                        : (tool.function?.description ?? undefined),
                     parameters: tool.function?.parameters &&
                         Object.keys(tool.function.parameters).length > 0
                         ? tool.function.parameters
@@ -317,7 +317,9 @@ export class ContentGenerationPipeline {
         const toolChoice = chatRequest.tool_choice;
         const tool_choice = typeof toolChoice === "string"
             ? toolChoice
-            : toolChoice && typeof toolChoice === "object" && toolChoice.type === "function"
+            : toolChoice &&
+                typeof toolChoice === "object" &&
+                toolChoice.type === "function"
                 ? { type: "function", name: toolChoice.function.name }
                 : undefined;
         const max_output_tokens = typeof chatRequest.max_tokens === "number"

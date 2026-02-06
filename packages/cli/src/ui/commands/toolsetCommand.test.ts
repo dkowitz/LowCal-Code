@@ -13,7 +13,8 @@ vi.mock("./utils/toolConfig.js", () => ({
 }));
 
 vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@qwen-code/qwen-code-core")>();
+  const actual =
+    await importOriginal<typeof import("@qwen-code/qwen-code-core")>();
   return {
     ...actual,
   };

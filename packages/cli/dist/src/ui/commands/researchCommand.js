@@ -7,7 +7,7 @@ import { ResearchTool, partToString, toolConfig, ToolNames, } from "@qwen-code/q
 import React from "react";
 import { Box, Text } from "ink";
 import { parse } from "shell-quote";
-import { CommandKind, } from "../commands/types.js";
+import { CommandKind } from "../commands/types.js";
 import { Colors } from "../colors.js";
 const ALLOWED_MODES = [
     "speed",
@@ -16,7 +16,10 @@ const ALLOWED_MODES = [
     "max",
 ];
 function stripJsonFence(text) {
-    return text.replace(/^\s*```(?:json)?/i, "").replace(/```$/i, "").trim();
+    return text
+        .replace(/^\s*```(?:json)?/i, "")
+        .replace(/```$/i, "")
+        .trim();
 }
 function isComplexQuery(query) {
     const normalized = query.trim();
@@ -28,10 +31,7 @@ function isComplexQuery(query) {
     const conjunctions = /\b(and|or|versus|compare|vs\.?|along with|as well as)\b/iu;
     const hasConjunctions = conjunctions.test(normalized);
     const hasMultiClause = normalized.includes(";") || normalized.includes(":");
-    return (wordCount >= 12 ||
-        sentenceCount >= 2 ||
-        hasConjunctions ||
-        hasMultiClause);
+    return (wordCount >= 12 || sentenceCount >= 2 || hasConjunctions || hasMultiClause);
 }
 function parseResearchArgs(args) {
     const trimmed = args.trim();
@@ -182,7 +182,8 @@ export const researchCommand = {
         }
         const allowlist = getActiveCollectionAllowlist();
         const isAllowed = (toolName) => !allowlist || allowlist.has(toolName);
-        if (!isAllowed(ToolNames.WEB_FETCH) || !toolRegistry.getTool(ToolNames.WEB_FETCH)) {
+        if (!isAllowed(ToolNames.WEB_FETCH) ||
+            !toolRegistry.getTool(ToolNames.WEB_FETCH)) {
             return {
                 type: "message",
                 messageType: "error",
@@ -190,10 +191,12 @@ export const researchCommand = {
             };
         }
         const enabledSearchTools = [];
-        if (isAllowed(ToolNames.WEB_SEARCH) && toolRegistry.getTool(ToolNames.WEB_SEARCH)) {
+        if (isAllowed(ToolNames.WEB_SEARCH) &&
+            toolRegistry.getTool(ToolNames.WEB_SEARCH)) {
             enabledSearchTools.push(ToolNames.WEB_SEARCH);
         }
-        if (isAllowed(ToolNames.SEARXNG_SEARCH) && toolRegistry.getTool(ToolNames.SEARXNG_SEARCH)) {
+        if (isAllowed(ToolNames.SEARXNG_SEARCH) &&
+            toolRegistry.getTool(ToolNames.SEARXNG_SEARCH)) {
             enabledSearchTools.push(ToolNames.SEARXNG_SEARCH);
         }
         if (enabledSearchTools.length === 0) {
@@ -251,13 +254,13 @@ User request:
 ${query}
 `;
                     const response = await geminiClient.generateContent([{ role: "user", parts: [{ text: clarifyPrompt }] }], {}, abortController.signal);
-                    const candidates = response.response
-                        ?.candidates ??
+                    const candidates = response
+                        .response?.candidates ??
                         response.candidates ??
                         [];
                     const parts = Array.isArray(candidates)
-                        ? candidates[0]?.content
-                            ?.parts ?? []
+                        ? (candidates[0]?.content
+                            ?.parts ?? [])
                         : [];
                     const raw = Array.isArray(parts)
                         ? parts
@@ -268,9 +271,7 @@ ${query}
                                 : "")
                             .join("")
                         : "";
-                    const parsedResponse = raw
-                        ? JSON.parse(stripJsonFence(raw))
-                        : null;
+                    const parsedResponse = raw ? JSON.parse(stripJsonFence(raw)) : null;
                     const shouldClarify = forceQuestions
                         ? true
                         : Boolean(parsedResponse?.should_clarify);
@@ -297,13 +298,13 @@ User request:
 ${query}
 `;
                         const retryResponse = await geminiClient.generateContent([{ role: "user", parts: [{ text: retryPrompt }] }], {}, abortController.signal);
-                        const retryCandidates = retryResponse.response
-                            ?.candidates ??
-                            retryResponse.candidates ??
+                        const retryCandidates = retryResponse.response?.candidates ??
+                            retryResponse
+                                .candidates ??
                             [];
                         const retryParts = Array.isArray(retryCandidates)
-                            ? retryCandidates[0]?.content
-                                ?.parts ?? []
+                            ? (retryCandidates[0]
+                                ?.content?.parts ?? [])
                             : [];
                         const retryRaw = Array.isArray(retryParts)
                             ? retryParts
@@ -314,7 +315,9 @@ ${query}
                                     : "")
                                 .join("")
                             : "";
-                        const retryParsed = retryRaw ? JSON.parse(stripJsonFence(retryRaw)) : null;
+                        const retryParsed = retryRaw
+                            ? JSON.parse(stripJsonFence(retryRaw))
+                            : null;
                         finalQuestions = Array.isArray(retryParsed?.questions)
                             ? retryParsed.questions
                                 .map((item) => String(item).trim())
@@ -372,9 +375,7 @@ ${query}
                 if (trimmed.startsWith(progressPrefix)) {
                     try {
                         const payload = JSON.parse(trimmed.slice(progressPrefix.length));
-                        const message = typeof payload.message === "string"
-                            ? payload.message
-                            : trimmed;
+                        const message = typeof payload.message === "string" ? payload.message : trimmed;
                         const persist = payload.mode !== "replace";
                         setProgress(message, persist);
                         return;
@@ -389,7 +390,8 @@ ${query}
             return {
                 type: "message",
                 messageType: "info",
-                content: partToString(result.llmContent) || "No results returned from research tool.",
+                content: partToString(result.llmContent) ||
+                    "No results returned from research tool.",
             };
         }
         catch (error) {

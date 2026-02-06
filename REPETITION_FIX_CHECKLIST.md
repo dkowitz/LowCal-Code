@@ -1,6 +1,7 @@
 # Message Repetition Fix - Implementation Checklist
 
 ## ✅ Analysis Phase
+
 - [x] Identified root causes of message repetition
 - [x] Analyzed deduplication logic in Turn.ts
 - [x] Traced issue through retry event handling
@@ -8,6 +9,7 @@
 - [x] Created comprehensive analysis document
 
 ## ✅ Implementation Phase
+
 - [x] Fix 1: Reset emittedThoughtHashes on RETRY events (Line 286)
 - [x] Fix 2: Lower deduplication threshold for thinking blocks (Lines 460-462)
 - [x] Fix 3: Improve thinking block normalization (Lines 524-530)
@@ -15,6 +17,7 @@
 - [x] Confirmed no breaking changes to APIs
 
 ## ✅ Testing Phase
+
 - [x] Run full test suite: `npm test`
 - [x] Verify Turn tests pass: `src/core/turn.test.ts (21 tests) 13ms`
 - [x] Check for regressions: No new failures
@@ -22,6 +25,7 @@
 - [x] Confirm backward compatibility: All existing code works
 
 ## ✅ Documentation Phase
+
 - [x] Created REPETITION_ANALYSIS.md - Root cause analysis
 - [x] Created MESSAGE_REPETITION_FIX.md - Implementation details
 - [x] Created REPETITION_FIX_SUMMARY.md - Executive summary
@@ -30,6 +34,7 @@
 - [x] Created this checklist document
 
 ## ✅ Code Quality
+
 - [x] Code follows project conventions
 - [x] Comments explain the fixes
 - [x] No console.log or debug code left
@@ -37,12 +42,14 @@
 - [x] Type safety preserved
 
 ## ✅ Performance
+
 - [x] No performance regressions
 - [x] Improved token consumption (100-1000x reduction)
 - [x] Faster conversation completion
 - [x] Better resource utilization
 
 ## ✅ Backward Compatibility
+
 - [x] No API changes
 - [x] No event type changes
 - [x] No configuration changes
@@ -50,6 +57,7 @@
 - [x] No migration needed
 
 ## ✅ Risk Assessment
+
 - [x] Low risk - isolated changes
 - [x] All tests pass
 - [x] No breaking changes
@@ -57,9 +65,11 @@
 - [x] Ready for production
 
 ## 📋 Files Modified
+
 - [x] `packages/core/src/core/turn.ts` - 3 changes
 
 ## 📋 Files Created (Documentation)
+
 - [x] `REPETITION_ANALYSIS.md`
 - [x] `MESSAGE_REPETITION_FIX.md`
 - [x] `REPETITION_FIX_SUMMARY.md`
@@ -70,6 +80,7 @@
 ## 🚀 Ready for Deployment
 
 ### Pre-Merge Checklist
+
 - [x] All tests pass
 - [x] No regressions detected
 - [x] Code reviewed
@@ -78,6 +89,7 @@
 - [x] Backward compatible
 
 ### Merge Steps
+
 1. Review all changes in `packages/core/src/core/turn.ts`
 2. Verify test results: `npm test`
 3. Run linting: `npm run lint`
@@ -86,6 +98,7 @@
 6. Deploy to production
 
 ### Post-Merge Verification
+
 - [ ] Monitor token consumption in production
 - [ ] Check for any reported issues
 - [ ] Verify thinking blocks appear correctly
@@ -93,16 +106,16 @@
 
 ## 📊 Impact Summary
 
-| Metric | Value |
-|--------|-------|
-| Files Modified | 1 |
-| Lines Changed | ~30 |
-| Tests Passing | 21/21 |
-| Regressions | 0 |
-| Breaking Changes | 0 |
-| Token Reduction | 100-1000x |
-| Risk Level | Low |
-| Status | ✅ Ready |
+| Metric           | Value     |
+| ---------------- | --------- |
+| Files Modified   | 1         |
+| Lines Changed    | ~30       |
+| Tests Passing    | 21/21     |
+| Regressions      | 0         |
+| Breaking Changes | 0         |
+| Token Reduction  | 100-1000x |
+| Risk Level       | Low       |
+| Status           | ✅ Ready  |
 
 ## 🎯 Success Criteria
 
@@ -142,14 +155,14 @@ Impact: 100-1000x reduction in token consumption
 
 ## ✨ Quality Metrics
 
-| Metric | Status |
-|--------|--------|
-| Code Coverage | ✅ Maintained |
-| Type Safety | ✅ Maintained |
-| Performance | ✅ Improved |
+| Metric                 | Status        |
+| ---------------------- | ------------- |
+| Code Coverage          | ✅ Maintained |
+| Type Safety            | ✅ Maintained |
+| Performance            | ✅ Improved   |
 | Backward Compatibility | ✅ Maintained |
-| Documentation | ✅ Complete |
-| Test Coverage | ✅ All Pass |
+| Documentation          | ✅ Complete   |
+| Test Coverage          | ✅ All Pass   |
 
 ## 🎉 Final Status
 
@@ -160,6 +173,7 @@ Impact: 100-1000x reduction in token consumption
 **Approval:** Ready for merge
 
 **Next Steps:**
+
 1. Merge to main branch
 2. Deploy to production
 3. Monitor for any issues

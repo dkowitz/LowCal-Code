@@ -104,9 +104,7 @@ class GrepToolInvocation extends BaseToolInvocation<
       if (stats.isFile()) {
         return { type: "file", absolutePath: targetPath };
       }
-      throw new Error(
-        `Path is not a regular file or directory: ${targetPath}`,
-      );
+      throw new Error(`Path is not a regular file or directory: ${targetPath}`);
     } catch (error: unknown) {
       if (isNodeError(error) && error.code !== "ENOENT") {
         throw new Error(`Path does not exist: ${targetPath}`);
@@ -390,8 +388,7 @@ class GrepToolInvocation extends BaseToolInvocation<
 
     const fileRelativePath =
       targetType === "file"
-        ? targetRelativePath ||
-          path.basename(absoluteTargetPath)
+        ? targetRelativePath || path.basename(absoluteTargetPath)
         : null;
 
     if (targetType === "file" && include && fileRelativePath) {
@@ -402,9 +399,7 @@ class GrepToolInvocation extends BaseToolInvocation<
     }
 
     const outputBasePath =
-      targetType === "file"
-        ? path.dirname(absoluteTargetPath)
-        : searchRoot;
+      targetType === "file" ? path.dirname(absoluteTargetPath) : searchRoot;
 
     try {
       // --- Strategy 1: git grep ---
@@ -592,10 +587,7 @@ class GrepToolInvocation extends BaseToolInvocation<
 
       if (targetType === "file" && fileRelativePath) {
         try {
-          const content = await fsPromises.readFile(
-            absoluteTargetPath,
-            "utf8",
-          );
+          const content = await fsPromises.readFile(absoluteTargetPath, "utf8");
           const lines = content.split(/\r?\n/);
           lines.forEach((line, index) => {
             if (regex.test(line)) {
@@ -738,9 +730,7 @@ export class GrepTool extends BaseDeclarativeTool<GrepToolParams, ToolResult> {
       if (stats.isFile()) {
         return { type: "file", absolutePath: targetPath };
       }
-      throw new Error(
-        `Path is not a regular file or directory: ${targetPath}`,
-      );
+      throw new Error(`Path is not a regular file or directory: ${targetPath}`);
     } catch (error: unknown) {
       if (isNodeError(error) && error.code !== "ENOENT") {
         throw new Error(`Path does not exist: ${targetPath}`);

@@ -14,9 +14,9 @@ describe("SearXNGSearchTool", () => {
       const mockConfig = {
         getTavilyApiKey: vi.fn(),
         getApprovalMode: vi.fn(),
-        setApprovalMode: vi.fn()
+        setApprovalMode: vi.fn(),
       };
-      
+
       const tool = new SearXNGSearchTool(mockConfig as any);
       expect(tool).toBeDefined();
       // Check that the static name property is correct

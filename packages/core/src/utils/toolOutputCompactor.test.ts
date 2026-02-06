@@ -42,7 +42,8 @@ describe("toolOutputCompactor", () => {
     });
 
     it("recognizes already-compacted strings", () => {
-      const truncated = "TOOL OUTPUT TRUNCATED\n• Tool: read_file\n--- OUTPUT PREVIEW ---\npreview";
+      const truncated =
+        "TOOL OUTPUT TRUNCATED\n• Tool: read_file\n--- OUTPUT PREVIEW ---\npreview";
       const result = compactToolOutputText("read_file", truncated, {
         maxChars: 10,
       });
@@ -72,7 +73,9 @@ describe("toolOutputCompactor", () => {
       const updated = result.value as Part;
       const output =
         updated.functionResponse?.response &&
-        (updated.functionResponse.response as Record<string, unknown>)["output"];
+        (updated.functionResponse.response as Record<string, unknown>)[
+          "output"
+        ];
 
       expect(typeof output).toBe("string");
       expect(output).toContain("TOOL OUTPUT TRUNCATED");
@@ -105,11 +108,12 @@ describe("toolOutputCompactor", () => {
       const toolEntry = compacted[2]?.parts?.[0] as Part;
       const output =
         toolEntry.functionResponse?.response &&
-        (toolEntry.functionResponse.response as Record<string, unknown>)["output"];
+        (toolEntry.functionResponse.response as Record<string, unknown>)[
+          "output"
+        ];
       expect(typeof output).toBe("string");
       expect(output).toContain("TOOL OUTPUT TRUNCATED");
       expect(output).toContain("tool-2");
     });
   });
 });
-

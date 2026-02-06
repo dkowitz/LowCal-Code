@@ -180,8 +180,7 @@ export class GeminiClient {
             return allDeclarations;
         }
         const configuredNames = toolConfig.collections[activeCollection] ?? [];
-        if (!Array.isArray(configuredNames) ||
-            configuredNames.length === 0) {
+        if (!Array.isArray(configuredNames) || configuredNames.length === 0) {
             return allDeclarations;
         }
         const normalizedNames = configuredNames.filter((name) => typeof name === "string" && name.trim().length > 0);
@@ -190,10 +189,7 @@ export class GeminiClient {
         }
         if (activeCollection === "full") {
             const registryNames = toolRegistry.getAllToolNames();
-            const merged = new Set([
-                ...normalizedNames,
-                ...registryNames,
-            ]);
+            const merged = new Set([...normalizedNames, ...registryNames]);
             const filtered = toolRegistry.getFunctionDeclarationsFiltered(Array.from(merged));
             return filtered.length > 0 ? filtered : allDeclarations;
         }

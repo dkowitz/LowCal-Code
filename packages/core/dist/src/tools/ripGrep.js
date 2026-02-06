@@ -243,9 +243,7 @@ class GrepToolInvocation extends BaseToolInvocation {
                     }
                 });
             });
-            const basePathForOutput = targetType === "file"
-                ? path.dirname(absolutePath)
-                : absolutePath;
+            const basePathForOutput = targetType === "file" ? path.dirname(absolutePath) : absolutePath;
             return this.parseRipgrepOutput(output, basePathForOutput);
         }
         catch (error) {

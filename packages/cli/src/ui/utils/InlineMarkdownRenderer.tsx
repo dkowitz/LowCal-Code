@@ -56,9 +56,7 @@ const RenderInlineInternal: React.FC<RenderInlineProps> = ({ text }) => {
     if (match.index > lastIndex) {
       nodes.push(
         <Text key={`t-${lastIndex}`}>
-          {stripThinkPlaceholders(
-            normalizedText.slice(lastIndex, match.index),
-          )}
+          {stripThinkPlaceholders(normalizedText.slice(lastIndex, match.index))}
         </Text>,
       );
     }

@@ -22,7 +22,10 @@ import { GenerateContentResponse, FinishReason } from "@google/genai";
 import type OpenAI from "openai";
 import { safeJsonParse } from "../../utils/safeJsonParse.js";
 import { StreamingToolCallParser } from "./streamingToolCallParser.js";
-import type { Response, ResponseStreamEvent } from "openai/resources/responses/responses.js";
+import type {
+  Response,
+  ResponseStreamEvent,
+} from "openai/resources/responses/responses.js";
 
 /**
  * Tool call accumulator for streaming responses
@@ -269,7 +272,8 @@ export class OpenAIContentConverter {
       return { text: chunkText, toolCalls: [] };
     }
 
-    const buffer = (this.streamingXmlToolCallBuffers.get(index) ?? "") + chunkText;
+    const buffer =
+      (this.streamingXmlToolCallBuffers.get(index) ?? "") + chunkText;
     const toolCalls: FunctionCall[] = [];
     const invokeRegex = /<invoke\b[^>]*>([\s\S]*?)<\/invoke>/g;
     let sanitized = "";
@@ -947,9 +951,7 @@ export class OpenAIContentConverter {
     const parts: Part[] = [];
 
     // Handle text content
-    let textContent = this.extractTextFromOpenAIContent(
-      choice.message.content,
-    );
+    let textContent = this.extractTextFromOpenAIContent(choice.message.content);
     if (!textContent && choice.message) {
       const maybeOutputText = (
         choice.message as unknown as { output_text?: unknown }
@@ -963,9 +965,11 @@ export class OpenAIContentConverter {
     }
 
     const reasoningText = this.extractReasoningText(
-      (choice.message as unknown as {
-        reasoning_details?: unknown;
-      }).reasoning_details,
+      (
+        choice.message as unknown as {
+          reasoning_details?: unknown;
+        }
+      ).reasoning_details,
     );
     if (reasoningText) {
       const formattedThought = this.formatThinkingBlock(reasoningText);
@@ -1061,9 +1065,7 @@ export class OpenAIContentConverter {
       const choiceIndex = choice.index ?? 0;
 
       // Handle text content
-      let deltaText = this.extractTextFromOpenAIContent(
-        choice.delta?.content,
-      );
+      let deltaText = this.extractTextFromOpenAIContent(choice.delta?.content);
       if (!deltaText && choice.delta) {
         const maybeDeltaOutputText = (
           choice.delta as unknown as { output_text?: unknown }
@@ -1076,10 +1078,8 @@ export class OpenAIContentConverter {
         }
       }
       if (deltaText) {
-        const {
-          text: cleanedText,
-          toolCalls: xmlToolCalls,
-        } = this.extractXmlToolCalls(choiceIndex, deltaText);
+        const { text: cleanedText, toolCalls: xmlToolCalls } =
+          this.extractXmlToolCalls(choiceIndex, deltaText);
 
         if (xmlToolCalls.length > 0) {
           for (const toolCall of xmlToolCalls) {
@@ -1102,13 +1102,14 @@ export class OpenAIContentConverter {
 
       // Handle reasoning content in streaming responses
       const deltaReasoningText = this.extractReasoningText(
-        (choice.delta as unknown as {
-          reasoning_details?: unknown;
-        })?.reasoning_details,
+        (
+          choice.delta as unknown as {
+            reasoning_details?: unknown;
+          }
+        )?.reasoning_details,
       );
       if (deltaReasoningText) {
-        const existing =
-          this.streamingReasoningBuffers.get(choiceIndex) ?? "";
+        const existing = this.streamingReasoningBuffers.get(choiceIndex) ?? "";
         this.streamingReasoningBuffers.set(
           choiceIndex,
           this.mergeReasoningChunks(existing, deltaReasoningText),
@@ -1321,7 +1322,8 @@ export class OpenAIContentConverter {
       const promptTokens = response.usage.input_tokens || 0;
       const completionTokens = response.usage.output_tokens || 0;
       const totalTokens = response.usage.total_tokens || 0;
-      const cachedTokens = response.usage.input_tokens_details?.cached_tokens || 0;
+      const cachedTokens =
+        response.usage.input_tokens_details?.cached_tokens || 0;
 
       geminiResponse.usageMetadata = {
         promptTokenCount: promptTokens,
@@ -1395,7 +1397,8 @@ export class OpenAIContentConverter {
   private convertResponsesCompletedToGemini(
     event: Extract<ResponseStreamEvent, { type: "response.completed" }>,
   ): GenerateContentResponse {
-    const completedToolCalls = this.streamingToolCallParser.getCompletedToolCalls();
+    const completedToolCalls =
+      this.streamingToolCallParser.getCompletedToolCalls();
 
     this.streamingToolCallParser.reset();
 

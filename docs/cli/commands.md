@@ -241,17 +241,18 @@ Slash commands provide meta-level control over the CLI itself.
     - **Startup Message:** When a custom prompt is active, the startup status message displays: `Custom Prompt: <name> (EXCLUSIVE|SUPPLEMENTAL)`
     - **Footer:** The footer status bar shows the active custom prompt name with a marker: `✓` for supplemental mode, `✕` for exclusive mode.
   - **Workflow Example:**
+
     ```
     > /prompt create code-reviewer "You are an expert code reviewer focusing on security and performance."
     ✓ Prompt "code-reviewer" created (250 tokens, SUPPLEMENTAL)
-    
+
     > /prompt list
     📋 Custom Prompts:
       • code-reviewer [SUPPLEMENTAL] | 250 tokens | Created: 10/22/2025, 2:30 PM
-    
+
     > /prompt activate code-reviewer
     ✓ Prompt "code-reviewer" activated (SUPPLEMENTAL mode)
-    
+
     > /prompt disable
     ✓ Custom prompt "code-reviewer" disabled. Returning to base prompt.
     ```

@@ -6,7 +6,7 @@
 import { useCallback, useMemo, useEffect, useState } from "react";
 import {} from "@google/genai";
 import process from "node:process";
-import { GitService, Logger, logSlashCommand, makeSlashCommandEvent, SlashCommandStatus, ToolConfirmationOutcome, Storage, } from "@qwen-code/qwen-code-core";
+import { GitService, Logger, logSlashCommand, makeSlashCommandEvent, SlashCommandStatus, ToolConfirmationOutcome, Storage, removeSession, } from "@qwen-code/qwen-code-core";
 import { useSessionStats } from "../contexts/SessionContext.js";
 import { formatDuration } from "../utils/formatters.js";
 import { runExitCleanup } from "../../utils/cleanup.js";
@@ -449,6 +449,16 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
                                 setQuittingMessages(result.messages);
                                 setTimeout(async () => {
                                     await runExitCleanup();
+                                    // Ensure session is removed before exiting
+                                    if (config) {
+                                        const sessionId = config.getSessionId();
+                                        try {
+                                            await removeSession(sessionId);
+                                        }
+                                        catch (e) {
+                                            console.error("Failed to remove session:", e);
+                                        }
+                                    }
                                     process.exit(0);
                                 }, 100);
                                 return { type: "handled" };

@@ -612,7 +612,7 @@ export class CoreToolScheduler {
                         return;
                     }
                     if (toolResult.error === undefined) {
-                        const { value: compactedContent, wasCompacted, } = compactPartListUnion(toolName, toolResult.llmContent, {
+                        const { value: compactedContent, wasCompacted } = compactPartListUnion(toolName, toolResult.llmContent, {
                             callId,
                         });
                         if (wasCompacted) {

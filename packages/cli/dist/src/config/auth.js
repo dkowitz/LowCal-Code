@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { AuthType, GEMINI_CONFIG_DIR as GEMINI_DIR } from "@qwen-code/qwen-code-core";
+import { AuthType, GEMINI_CONFIG_DIR as GEMINI_DIR, } from "@qwen-code/qwen-code-core";
 import { loadEnvironment } from "./settings.js";
 export function normalizeAuthType(authMethod) {
     if (!authMethod) {

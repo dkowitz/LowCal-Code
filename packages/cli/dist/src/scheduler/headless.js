@@ -101,7 +101,7 @@ async function main() {
         // Load settings
         const settings = loadSettings(cwd);
         if (settings.errors.length > 0) {
-            throw new Error(`Settings errors: ${settings.errors.map(e => e.message).join(", ")}`);
+            throw new Error(`Settings errors: ${settings.errors.map((e) => e.message).join(", ")}`);
         }
         // Load environment variables from .env files (API keys, etc.)
         loadEnvironment(settings.merged);
@@ -122,7 +122,8 @@ async function main() {
         // Get base URL for OpenAI-compatible providers
         const providerId = settings.merged.security?.auth?.providerId;
         const providers = settings.merged.security?.auth?.providers;
-        const baseUrl = providerId && providers?.[providerId]?.['baseUrl'];
+        const baseUrl = providerId &&
+            providers?.[providerId]?.["baseUrl"];
         // Set base URL environment variable if configured
         if (baseUrl) {
             process.env["OPENAI_BASE_URL"] = baseUrl;
@@ -160,8 +161,8 @@ async function main() {
         // Inject current timestamp for tasks that need real-time data
         const now = new Date();
         process.env["LOWCAL_CURRENT_TIMESTAMP"] = now.toISOString();
-        process.env["LOWCAL_CURRENT_DATE"] = now.toISOString().split('T')[0];
-        process.env["LOWCAL_CURRENT_TIME"] = now.toTimeString().split(' ')[0];
+        process.env["LOWCAL_CURRENT_DATE"] = now.toISOString().split("T")[0];
+        process.env["LOWCAL_CURRENT_TIME"] = now.toTimeString().split(" ")[0];
         // Prepend system context with current timestamp to the user's prompt
         const systemContext = `\n[System Context - Current timestamp: ${now.toISOString()}]\n`;
         const fullPrompt = systemContext + prompt;

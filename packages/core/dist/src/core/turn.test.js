@@ -130,7 +130,9 @@ describe("Turn", () => {
             for await (const event of turn.run([{ text: "Hi" }], new AbortController().signal)) {
                 events.push(event);
             }
-            expect(events).toEqual([{ type: GeminiEventType.Content, value: "Hello" }]);
+            expect(events).toEqual([
+                { type: GeminiEventType.Content, value: "Hello" },
+            ]);
         });
         it("should ignore chunks that are already contained within previous output", async () => {
             const mockResponseStream = (async function* () {
@@ -200,7 +202,11 @@ describe("Turn", () => {
                     type: StreamEventType.CHUNK,
                     value: {
                         candidates: [
-                            { content: { parts: [{ text: `${thinkingLine}\n${thinkingLine}` }] } },
+                            {
+                                content: {
+                                    parts: [{ text: `${thinkingLine}\n${thinkingLine}` }],
+                                },
+                            },
                         ],
                     },
                 };
@@ -223,7 +229,11 @@ describe("Turn", () => {
                         candidates: [
                             {
                                 content: {
-                                    parts: [{ text: `${thinkingLine}\n${thinkingLine}\n${thinkingLine}` }],
+                                    parts: [
+                                        {
+                                            text: `${thinkingLine}\n${thinkingLine}\n${thinkingLine}`,
+                                        },
+                                    ],
                                 },
                             },
                         ],

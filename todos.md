@@ -1,19 +1,18 @@
-More rebranding to LowCal 
+More rebranding to LowCal
 
 make /view window taller, fix overflow
 
 /toolset not filtering tool schemas?
 
 Handle SearchText errors:
- SearchText {"path":"/home/atmandk/LowCal-dev/packages/cli/src/services/BuiltinCommandLoader.ts","pattern":"viewCommand"}  │
- │                                                                                                                              │
- │    Failed to access path stats for /home/atmandk/LowCal-dev/packages/cli/src/services/BuiltinCommandLoader.ts:               │
- │    Error: Path is not a directory: /home/atmandk/LowCal-dev/packages/cli/src/services/BuiltinCommandLoader.ts 
+SearchText {"path":"/home/atmandk/LowCal-dev/packages/cli/src/services/BuiltinCommandLoader.ts","pattern":"viewCommand"} │
+│ │
+│ Failed to access path stats for /home/atmandk/LowCal-dev/packages/cli/src/services/BuiltinCommandLoader.ts: │
+│ Error: Path is not a directory: /home/atmandk/LowCal-dev/packages/cli/src/services/BuiltinCommandLoader.ts
 
-Track down the source when using the SearchText tool of the error: 'Failed to access path stats for ... Path is not a          │
-│    directory: ...'  What exactly causes this error and why does it happen so often - is the tool definition or required arguments │
-│     not clear enough for llms to understand how to use it properly?
-
+Track down the source when using the SearchText tool of the error: 'Failed to access path stats for ... Path is not a │
+│ directory: ...' What exactly causes this error and why does it happen so often - is the tool definition or required arguments │
+│ not clear enough for llms to understand how to use it properly?
 
 Handle out of turn errors
 
@@ -22,5 +21,3 @@ Fix compression error - maybe use OpenRouter Gemini or local Granite: ✕ [API E
 /model doesnt have search on first call
 
 Format tables with wordwrap
-
- 

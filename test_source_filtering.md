@@ -15,6 +15,7 @@ Instead of hardcoding domain filters, the system now:
 ### **Key Features:**
 
 #### **1. Source Assessment Function** (`assessSourceRelevance`)
+
 - Takes the research topic and all collected sources
 - Identifies which sources are already cited in the report (these are always kept)
 - Uses LLM to assess non-cited sources with this prompt:
@@ -39,6 +40,7 @@ KEEP sources that are:
 ```
 
 #### **2. Modified Report Generation Flow**
+
 - After generating the report, the system now:
   1. Builds citation map to identify cited sources
   2. Runs LLM assessment on non-cited sources
@@ -46,6 +48,7 @@ KEEP sources that are:
   4. Generates final sources section with filtered list
 
 #### **3. Progress Feedback**
+
 - Shows assessment progress: "ℹ🔍 Assessing source quality and relevance…"
 - Reports filtering results: "✅ Filtered to X relevant sources (kept Y cited + Z approved)."
 
@@ -62,6 +65,7 @@ KEEP sources that are:
 **Before**: Citations might include 80 sources with many StackExchange grammar questions, dictionary definitions, etc.
 
 **After**: Citations include only 15-25 sources that are:
+
 - Actually referenced in the report text
 - Assessed by LLM as relevant and substantive
 - Authoritative sources on the topic
@@ -75,6 +79,7 @@ The implementation has been built successfully and is ready for testing. You can
 ```
 
 The new system will:
+
 1. Collect sources from multiple search engines
 2. Generate the research report
 3. Assess source quality and filter out junk

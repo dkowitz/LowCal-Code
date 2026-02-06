@@ -30,6 +30,7 @@ import * as path from "node:path";
 import process from "node:process";
 import { hideBin } from "yargs/helpers";
 import yargs from "yargs/yargs";
+import { dashboardCommand } from "../commands/dashboard.js";
 import { extensionsCommand } from "../commands/extensions.js";
 import { mcpCommand } from "../commands/mcp.js";
 import { researchCommand } from "../commands/research.js";
@@ -313,7 +314,8 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     .command(mcpCommand)
     .command(researchCommand)
     .command(schedulerCommand)
-    .command(sessionsCommand);
+    .command(sessionsCommand)
+    .command(dashboardCommand);
 
   if (settings?.experimental?.extensionManagement ?? false) {
     yargsInstance.command(extensionsCommand);
@@ -337,11 +339,17 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     (result._[0] === "mcp" ||
       result._[0] === "extensions" ||
       result._[0] === "scheduler" ||
-      result._[0] === "sessions")
+      result._[0] === "sessions" ||
+      result._[0] === "dashboard")
   ) {
     const isSessionsWatch =
       result._[0] === "sessions" && Boolean((result as any).watch);
     if (isSessionsWatch) {
+      return result as unknown as CliArgs;
+    }
+    const isDashboardWatch =
+      result._[0] === "dashboard" && Boolean((result as any).watch);
+    if (isDashboardWatch) {
       return result as unknown as CliArgs;
     }
     // Subcommands handle their own execution and process exit

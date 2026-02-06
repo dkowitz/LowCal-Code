@@ -179,7 +179,9 @@ describe("Turn", () => {
         events.push(event);
       }
 
-      expect(events).toEqual([{ type: GeminiEventType.Content, value: "Hello" }]);
+      expect(events).toEqual([
+        { type: GeminiEventType.Content, value: "Hello" },
+      ]);
     });
 
     it("should ignore chunks that are already contained within previous output", async () => {
@@ -264,7 +266,11 @@ describe("Turn", () => {
           type: StreamEventType.CHUNK,
           value: {
             candidates: [
-              { content: { parts: [{ text: `${thinkingLine}\n${thinkingLine}` }] } },
+              {
+                content: {
+                  parts: [{ text: `${thinkingLine}\n${thinkingLine}` }],
+                },
+              },
             ],
           } as GenerateContentResponse,
         };
@@ -294,7 +300,11 @@ describe("Turn", () => {
             candidates: [
               {
                 content: {
-                  parts: [{ text: `${thinkingLine}\n${thinkingLine}\n${thinkingLine}` }],
+                  parts: [
+                    {
+                      text: `${thinkingLine}\n${thinkingLine}\n${thinkingLine}`,
+                    },
+                  ],
                 },
               },
             ],
@@ -764,9 +774,9 @@ describe("Turn", () => {
         (event) => event.type === GeminiEventType.Thought,
       );
       expect(thoughtEvents).toHaveLength(1);
-      expect(
-        (thoughtEvents[0] as ServerGeminiThoughtEvent).value.subject,
-      ).toBe("Plan");
+      expect((thoughtEvents[0] as ServerGeminiThoughtEvent).value.subject).toBe(
+        "Plan",
+      );
     });
   });
 

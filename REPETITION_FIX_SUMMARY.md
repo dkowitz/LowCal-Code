@@ -3,12 +3,15 @@
 ## Status: ✅ COMPLETE AND TESTED
 
 ## Problem
+
 Thinking blocks and content were being repeated thousands of times in conversations, causing:
+
 - Catastrophic token consumption
 - Conversation failures due to token limit overflows
 - Exponential degradation as conversation length increased
 
 Example of the issue:
+
 ```
 💭 I've added the '__logging' configuration option. Let me run the test again to see if this fixes the logging error.
 💭 I've added the '__logging' configuration option. Let me run the test again to see if this fixes the logging error.
@@ -17,9 +20,11 @@ Example of the issue:
 ```
 
 ## Solution Overview
+
 Three critical fixes were implemented in `packages/core/src/core/turn.ts`:
 
 ### Fix 1: Reset Thought Deduplication on Retry (Line 286)
+
 **Problem:** When the API retried, thought deduplication state wasn't reset, causing stale hashes to block legitimate new thoughts.
 
 **Solution:** Added `this.emittedThoughtHashes.clear();` to the RETRY event handler.
@@ -36,6 +41,7 @@ if (streamEvent.type === "retry") {
 ```
 
 ### Fix 2: Improve Thinking Block Normalization (Lines 524-530)
+
 **Problem:** Aggressive normalization (removing punctuation) caused semantically different blocks to be treated as duplicates.
 
 **Solution:** Use conservative normalization that preserves semantic meaning.
@@ -45,20 +51,21 @@ if (streamEvent.type === "retry") {
 const normalized = block
   .replace(/💭/g, "")
   .replace(/\*/g, "")
-  .replace(/[^\w\s]/g, " ")  // ← Removed ALL punctuation
+  .replace(/[^\w\s]/g, " ") // ← Removed ALL punctuation
   .toLowerCase()
   .replace(/\s+/g, " ")
   .trim();
 
 // AFTER: Preserves punctuation and structure
 const normalized = block
-  .replace(/💭/g, "")        // Remove emoji only
+  .replace(/💭/g, "") // Remove emoji only
   .toLowerCase()
-  .replace(/\s+/g, " ")      // Normalize whitespace
+  .replace(/\s+/g, " ") // Normalize whitespace
   .trim();
 ```
 
 ### Fix 3: Lower Deduplication Threshold for Thinking Blocks (Lines 460-462)
+
 **Problem:** Only deduplicating text >= 80 characters meant thinking blocks (typically 40-70 chars) bypassed deduplication.
 
 **Solution:** Use 20-character threshold for thinking blocks, 80 for regular content.
@@ -77,6 +84,7 @@ private shouldEmitTextDelta(index: number, delta: string): boolean {
 ✅ **All Turn tests pass:** `src/core/turn.test.ts (21 tests) 13ms`
 
 The test suite verifies:
+
 - ✅ Duplicate thinking lines appended over multiple chunks are dropped
 - ✅ Duplicate thinking lines within a single chunk are dropped
 - ✅ Tool call requests are properly handled
@@ -87,11 +95,13 @@ The test suite verifies:
 ## Impact
 
 ### Before Fix
+
 - **Repetitions:** 1000s of duplicate thinking blocks per turn
 - **Token waste:** Exponential with conversation length
 - **Failure mode:** Token limit exceeded errors
 
 ### After Fix
+
 - **Repetitions:** 0 (all duplicates filtered)
 - **Token waste:** Eliminated
 - **Failure mode:** Prevented
@@ -99,6 +109,7 @@ The test suite verifies:
 ## Formatting Preservation
 
 ✅ All formatting is preserved:
+
 - 💭 Thinking emoji is preserved
 - Markdown formatting (bold, italics, code) is preserved
 - Punctuation and structure are maintained
@@ -107,6 +118,7 @@ The test suite verifies:
 ## Backward Compatibility
 
 ✅ **Fully backward compatible:**
+
 - No API changes
 - No breaking changes to event types
 - Existing code continues to work

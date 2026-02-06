@@ -142,8 +142,11 @@ function isVisionCapableOpenAIModel(
     return true;
   }
   const caps = model.capabilities?.map((cap) => cap.toLowerCase()) ?? [];
-  return caps.some((cap) =>
-    cap.includes("vision") || cap.includes("image") || cap.includes("multimodal"),
+  return caps.some(
+    (cap) =>
+      cap.includes("vision") ||
+      cap.includes("image") ||
+      cap.includes("multimodal"),
   );
 }
 
@@ -319,8 +322,7 @@ export function useVisionAutoSwitch(
 
           if (!isVisionCapable) {
             const hasLoadedVlm = models.some(
-              (m) =>
-                m.state === "loaded" && isVisionCapableOpenAIModel(m),
+              (m) => m.state === "loaded" && isVisionCapableOpenAIModel(m),
             );
             addItem(
               {

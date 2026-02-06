@@ -77,7 +77,7 @@ import {
 } from "./components/subagents/index.js";
 import { Colors } from "./colors.js";
 import { loadHierarchicalGeminiMemory } from "../config/config.js";
-import { setOpenAIModel , validateAuthMethod } from "../config/auth.js";
+import { setOpenAIModel, validateAuthMethod } from "../config/auth.js";
 import type { LoadedSettings } from "../config/settings.js";
 import { SettingScope } from "../config/settings.js";
 import { Tips } from "./components/Tips.js";
@@ -342,8 +342,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       // ignore
     }
 
-        // If provider is LM Studio/OpenRouter, attempt to fetch REST models to get provider-reported context lengths.
-        let cancelled = false;
+    // If provider is LM Studio/OpenRouter, attempt to fetch REST models to get provider-reported context lengths.
+    let cancelled = false;
 
     (async () => {
       try {
@@ -940,7 +940,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           const providerSettings =
             settings.merged.security?.auth?.providers || {};
           const provider =
-            providerSettings[providerId as "openrouter" | "lmstudio" | "openai"];
+            providerSettings[
+              providerId as "openrouter" | "lmstudio" | "openai"
+            ];
           const providerWithKey = provider as
             | { apiKey?: string; baseUrl?: string }
             | undefined;
@@ -1042,7 +1044,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           try {
             setOpenAIModel(modelId);
           } catch (err) {
-            console.warn("Failed to persist OpenAI-compatible model to .env:", err);
+            console.warn(
+              "Failed to persist OpenAI-compatible model to .env:",
+              err,
+            );
           }
 
           // Attempt to fetch REST models immediately to pick up provider-reported context_length

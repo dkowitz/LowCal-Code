@@ -194,8 +194,14 @@ export async function main() {
   }
 
   const argv = await parseArguments(settings.merged);
-  const rawArgv = argv as unknown as { _: Array<string | number>; watch?: boolean };
+  const rawArgv = argv as unknown as {
+    _: Array<string | number>;
+    watch?: boolean;
+  };
   if (rawArgv._?.[0] === "sessions" && rawArgv.watch) {
+    return;
+  }
+  if (rawArgv._?.[0] === "dashboard" && rawArgv.watch) {
     return;
   }
   const extensions = loadExtensions(workspaceRoot);

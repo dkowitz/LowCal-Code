@@ -11,7 +11,7 @@ describe("ResearchTool", () => {
   it("should be defined with correct properties", () => {
     expect(ResearchTool).toBeDefined();
     expect(ResearchTool.Name).toBe("research");
-    
+
     // Check that we can create an instance
     const tool = new ResearchTool(null as any);
     expect(tool).toBeDefined();

@@ -143,12 +143,10 @@ export const Footer: React.FC<FooterProps> = ({
             no sandbox <Text color={theme.text.secondary}>(see /docs)</Text>
           </Text>
         )}
-        
+
         {/* Status Indicator: Prompt Mode, Custom Prompt, and Toolset */}
         <Text color={theme.ui.symbol}> | </Text>
-        <Text color={theme.text.secondary}>
-          {promptMode}
-        </Text>
+        <Text color={theme.text.secondary}>{promptMode}</Text>
         {customPromptName && (
           <>
             <Text color={theme.ui.symbol}> / </Text>
@@ -159,9 +157,7 @@ export const Footer: React.FC<FooterProps> = ({
           </>
         )}
         <Text color={theme.ui.symbol}> / </Text>
-        <Text color={theme.text.secondary}>
-          {activeCollection}
-        </Text>
+        <Text color={theme.text.secondary}>{activeCollection}</Text>
       </Box>
 
       {/* Right Section: Gemini Label and Console Summary */}

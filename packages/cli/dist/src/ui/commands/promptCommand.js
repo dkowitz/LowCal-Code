@@ -43,7 +43,9 @@ function validatePromptName(name) {
  */
 function formatPromptInfo(name, metadata, isActive) {
     const activeMarker = isActive ? " ✓ (ACTIVE)" : "";
-    const exclusiveMarker = metadata.exclusive ? " [EXCLUSIVE]" : " [SUPPLEMENTAL]";
+    const exclusiveMarker = metadata.exclusive
+        ? " [EXCLUSIVE]"
+        : " [SUPPLEMENTAL]";
     const createdDate = new Date(metadata.createdAt).toLocaleString();
     return `  • ${name}${activeMarker}${exclusiveMarker} | ${metadata.tokenCount} tokens | Created: ${createdDate}`;
 }
@@ -98,7 +100,11 @@ Examples:
                 reply("No custom prompts defined. Use `/prompt create <name> <content>` to add one.");
                 return;
             }
-            const activePromptName = cfg.activeCustomPrompt?.name ? (Array.isArray(cfg.activeCustomPrompt.name) ? cfg.activeCustomPrompt.name.join(", ") : cfg.activeCustomPrompt.name) : null;
+            const activePromptName = cfg.activeCustomPrompt?.name
+                ? Array.isArray(cfg.activeCustomPrompt.name)
+                    ? cfg.activeCustomPrompt.name.join(", ")
+                    : cfg.activeCustomPrompt.name
+                : null;
             const lines = ["📋 Custom Prompts:"];
             for (const name of promptNames) {
                 const metadata = prompts[name];
@@ -207,13 +213,17 @@ Examples:
             }
             // If deleting the active prompt, disable it
             // If the prompt being deleted is active, remove it from the stack
-            if (cfg.activeCustomPrompt && cfg.activeCustomPrompt.name.includes(name)) {
+            if (cfg.activeCustomPrompt &&
+                cfg.activeCustomPrompt.name.includes(name)) {
                 const filtered = cfg.activeCustomPrompt.name.filter((n) => n !== name);
                 if (filtered.length === 0) {
                     cfg.activeCustomPrompt = null;
                 }
                 else {
-                    cfg.activeCustomPrompt = { ...cfg.activeCustomPrompt, name: filtered };
+                    cfg.activeCustomPrompt = {
+                        ...cfg.activeCustomPrompt,
+                        name: filtered,
+                    };
                 }
             }
             delete prompts[name];
@@ -248,7 +258,10 @@ Examples:
             let names;
             if (rawNameArg.startsWith("[") && rawNameArg.endsWith("]")) {
                 const inner = rawNameArg.slice(1, -1);
-                names = inner.split(",").map((s) => s.trim()).filter(Boolean);
+                names = inner
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean);
             }
             else {
                 names = [rawNameArg];
@@ -262,7 +275,9 @@ Examples:
                 }
             }
             // Use the --exclusive flag if provided, otherwise default to first prompt's setting
-            const exclusive = hasExclusiveFlag ? true : prompts[names[0]]?.exclusive ?? false;
+            const exclusive = hasExclusiveFlag
+                ? true
+                : (prompts[names[0]]?.exclusive ?? false);
             cfg.activeCustomPrompt = { name: names, exclusive };
             saveCliToolConfig(cfg);
             syncCoreToolConfig(cfg);
@@ -286,7 +301,9 @@ Examples:
                 reply("No custom prompt is currently active.");
                 return;
             }
-            const wasActive = Array.isArray(cfg.activeCustomPrompt?.name) ? cfg.activeCustomPrompt.name.join(", ") : cfg.activeCustomPrompt?.name;
+            const wasActive = Array.isArray(cfg.activeCustomPrompt?.name)
+                ? cfg.activeCustomPrompt.name.join(", ")
+                : cfg.activeCustomPrompt?.name;
             cfg.activeCustomPrompt = null;
             saveCliToolConfig(cfg);
             syncCoreToolConfig(cfg);

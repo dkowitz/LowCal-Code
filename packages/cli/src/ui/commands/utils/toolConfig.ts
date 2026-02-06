@@ -51,11 +51,7 @@ const DEFAULT_COLLECTIONS: Record<string, string[]> = {
     ToolNames.WEB_SEARCH,
     ToolNames.SEARXNG_SEARCH,
   ],
-  minimal: [
-    ToolNames.READ_FILE,
-    ToolNames.WRITE_FILE,
-    ToolNames.SHELL,
-  ],
+  minimal: [ToolNames.READ_FILE, ToolNames.WRITE_FILE, ToolNames.SHELL],
   "shell-only": [ToolNames.SHELL],
 };
 
@@ -254,15 +250,14 @@ function normalizeActiveCustomPrompt(
     }
   } else if (Array.isArray(rawName)) {
     // Filter to existing prompts
-    const filtered = rawName.filter((n) => typeof n === "string" && customPrompts[n as string]);
+    const filtered = rawName.filter(
+      (n) => typeof n === "string" && customPrompts[n as string],
+    );
     if (filtered.length > 0) {
       names = filtered as string[];
     }
   }
-  if (
-    names &&
-    typeof obj["exclusive"] === "boolean"
-  ) {
+  if (names && typeof obj["exclusive"] === "boolean") {
     return {
       name: names,
       exclusive: obj["exclusive"] as boolean,

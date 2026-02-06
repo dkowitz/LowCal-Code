@@ -350,9 +350,7 @@ export async function processSingleFileContent(filePath, rootDirectory, fileSyst
                         }
                     }
                     if (!parsedText && ocrImages.length === 0) {
-                        const displaySuffix = ocrError
-                            ? ` (OCR failed: ${ocrError})`
-                            : "";
+                        const displaySuffix = ocrError ? ` (OCR failed: ${ocrError})` : "";
                         return {
                             llmContent: {
                                 inlineData: {
