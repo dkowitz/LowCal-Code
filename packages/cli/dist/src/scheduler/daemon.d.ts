@@ -20,3 +20,11 @@ export declare function stopDaemon(): Promise<boolean>;
  * Start the daemon (if not already running)
  */
 export declare function startDaemon(): Promise<boolean>;
+/**
+ * Pause a job by ID (via RPC call to daemon)
+ */
+export declare function pauseJob(id: string): Promise<boolean>;
+/**
+ * Resume a paused job by ID (via RPC call to daemon)
+ */
+export declare function resumeJob(id: string): Promise<boolean>;

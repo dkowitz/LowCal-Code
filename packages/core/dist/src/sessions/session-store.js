@@ -133,6 +133,30 @@ export async function removeSession(sessionId) {
         return store.sessions.length !== before;
     });
 }
+/**
+ * Kill a session by terminating its process
+ */
+export async function killSession(sessionId) {
+    return await withStore(async (store) => {
+        const index = store.sessions.findIndex((s) => s.id === sessionId);
+        if (index < 0) {
+            return false;
+        }
+        const session = store.sessions[index];
+        try {
+            // Terminate the process
+            process.kill(session.pid, "SIGTERM");
+            // Remove from store after killing
+            store.sessions.splice(index, 1);
+            return true;
+        }
+        catch {
+            // If process doesn't exist or other error, just remove from store
+            store.sessions.splice(index, 1);
+            return false;
+        }
+    });
+}
 export async function listSessions() {
     return await withStoreReadOnly(async (store) => store.sessions.slice());
 }

@@ -3,9 +3,9 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { listSessions, pruneStaleSessions, } from "@qwen-code/qwen-code-core";
+import { listSessions, pruneStaleSessions, killSession, } from "@qwen-code/qwen-code-core";
 import { DEFAULT_SESSION_TTL_MS } from "../session/sessionManager.js";
-import { isDaemonRunning, getDaemonStatus, startDaemon, stopDaemon, } from "../scheduler/daemon.js";
+import { isDaemonRunning, getDaemonStatus, startDaemon, stopDaemon, pauseJob as daemonPauseJob, resumeJob as daemonResumeJob, } from "../scheduler/daemon.js";
 import { listJobs, getJob, deleteJob, resetJob, } from "@qwen-code/qwen-code-core";
 import { loadSettings } from "../config/settings.js";
 function getTtlMs(ttlSeconds) {
@@ -121,7 +121,7 @@ async function renderDashboard(sessions, jobs, ttlMs, intervalMs) {
     }
     console.log("└───────────────────────────────────────────────────────────────────────────────┘");
     console.log();
-    // Sessions Section
+    // Sessions Section with numeric IDs
     const sessionsHeader = `┌─ Active Sessions (${sessions.length} total) ─────────────────────────────────────────────────────────┐`;
     console.log(sessionsHeader);
     if (sessions.length === 0) {
@@ -143,10 +143,14 @@ async function renderDashboard(sessions, jobs, ttlMs, intervalMs) {
             }
             return 0;
         });
-        for (const session of sorted) {
-            const formatted = formatSession(session, ttlMs, now);
-            // Indent each line
-            const indented = formatted.replace(/\n/g, "\n│ ");
+        for (let idx = 0; idx < sorted.length; idx++) {
+            const session = sorted[idx];
+            // Display numeric ID in brackets
+            const lines = formatSession(session, ttlMs, now).split("\n");
+            if (lines.length > 0) {
+                lines[0] = `[${idx + 1}] ${lines[0]}`;
+            }
+            const indented = lines.join("\n").replace(/\n/g, "\n│ ");
             console.log(`│ ${indented} │`);
             console.log("├───────────────────────────────────────────────────────────────────────────────┤");
         }
@@ -160,8 +164,12 @@ async function renderDashboard(sessions, jobs, ttlMs, intervalMs) {
         console.log("│ No scheduled jobs.                                                            │");
     }
     else {
-        for (let idx = 0; idx < jobs.length; idx++) {
-            const job = jobs[idx];
+        // Sort by created_at for consistent numbering
+        const sortedJobs = [...jobs].sort((a, b) => {
+            return Date.parse(b.created_at) - Date.parse(a.created_at);
+        });
+        for (let idx = 0; idx < sortedJobs.length; idx++) {
+            const job = sortedJobs[idx];
             // Display numeric ID in brackets followed by the actual job ID
             const jobIdDisplay = `[${idx + 1}] ${job.id}`;
             const formatted = formatJob(job, defaultMode);
@@ -177,17 +185,16 @@ async function renderDashboard(sessions, jobs, ttlMs, intervalMs) {
     }
     console.log("└───────────────────────────────────────────────────────────────────────────────┘");
     console.log();
-    // Footer with helper info
+    // Footer with helper info - horizontal layout
     const intervalSec = Math.round(intervalMs / 1000);
     console.log(`LowCal Dashboard (refresh ${intervalSec}s) - press Ctrl+C to exit`);
     console.log();
-    console.log("┌─ Keyboard Shortcuts ──────────────────────────────────────────────────────────┐");
-    console.log("│ [p] prune stale sessions                                                    │");
-    console.log("│ [s] start scheduler daemon                                                  │");
-    console.log("│ [t] stop scheduler daemon                                                   │");
-    console.log("│ [d] delete job <id or #num>                                                 │");
-    console.log("│ [r] reset job <id or #num>                                                  │");
-    console.log("└───────────────────────────────────────────────────────────────────────────────┘");
+    console.log("┌─ Keyboard Shortcuts ─────────────────────────────────────────────────────────────┐");
+    console.log("│ [p] prune stale sessions   │ [s] start daemon   │ [t] stop daemon              │");
+    console.log("│ [d] delete job <#num>      │ [r] reset job <#num>                            │");
+    console.log("│ [a] pause job <#num>       │ [e] resume job <#num>                           │");
+    console.log("│ [k] kill session <#num>                                                     │");
+    console.log("└──────────────────────────────────────────────────────────────────────────────────┘");
 }
 const dashboardCommand = {
     command: "dashboard",
@@ -225,6 +232,7 @@ const dashboardCommand = {
         let pendingAction = null;
         let interactivePrompt = "";
         let currentJobs = [];
+        let currentSessions = [];
         const render = async () => {
             // Clear screen and re-render dashboard
             process.stdout.write("\x1b[2J\x1b[H");
@@ -232,6 +240,7 @@ const dashboardCommand = {
                 listSessions(),
                 listJobs(),
             ]);
+            currentSessions = sessions;
             currentJobs = jobs;
             await renderDashboard(sessions, jobs, ttlMs, intervalMs);
             // If in interactive mode, re-display the prompt and input
@@ -258,30 +267,85 @@ const dashboardCommand = {
                         const jobId = inputBuffer.trim();
                         inputBuffer = "";
                         isInteractiveMode = false;
-                        if (jobId && pendingAction) {
-                            // Check if jobId is a numeric ID (starts with #)
-                            let actualJobId = jobId;
-                            if (jobId.startsWith("#")) {
-                                const numId = parseInt(jobId.slice(1), 10);
-                                if (!isNaN(numId) && numId > 0 && numId <= currentJobs.length) {
-                                    // Find the job by numeric index - sort by created_at
+                        let actualId = jobId;
+                        // Handle numeric ID lookup
+                        if (!isNaN(Number(jobId)) && Number(jobId) > 0) {
+                            const numId = parseInt(jobId, 10);
+                            if (pendingAction === "killSession") {
+                                // For sessions, find by index in sorted list
+                                if (numId <= currentSessions.length) {
+                                    actualId = currentSessions[numId - 1].id;
+                                }
+                            }
+                            else {
+                                // For jobs, find by index in sorted list
+                                if (numId <= currentJobs.length) {
                                     const sortedJobs = [...currentJobs].sort((a, b) => {
                                         return Date.parse(b.created_at) - Date.parse(a.created_at);
                                     });
-                                    actualJobId = sortedJobs[numId - 1]?.id || jobId;
+                                    actualId = sortedJobs[numId - 1]?.id || jobId;
                                 }
                             }
-                            const job = await getJob(actualJobId);
-                            if (!job) {
-                                console.error(`Job "${actualJobId}" not found`);
-                            }
-                            else if (pendingAction === "delete") {
-                                await deleteJob(jobId);
-                                console.log(`✓ Job "${jobId}" deleted successfully`);
+                        }
+                        if (actualId && pendingAction) {
+                            if (pendingAction === "delete") {
+                                const job = await getJob(actualId);
+                                if (!job) {
+                                    console.error(`Job "${actualId}" not found`);
+                                }
+                                else {
+                                    await deleteJob(actualId);
+                                    console.log(`✓ Job "${actualId}" deleted successfully`);
+                                }
                             }
                             else if (pendingAction === "reset") {
-                                await resetJob(jobId);
-                                console.log(`✓ Job "${jobId}" reset and re-enabled`);
+                                const job = await getJob(actualId);
+                                if (!job) {
+                                    console.error(`Job "${actualId}" not found`);
+                                }
+                                else {
+                                    await resetJob(actualId);
+                                    console.log(`✓ Job "${actualId}" reset and re-enabled`);
+                                }
+                            }
+                            else if (pendingAction === "pause") {
+                                const job = await getJob(actualId);
+                                if (!job) {
+                                    console.error(`Job "${actualId}" not found`);
+                                }
+                                else {
+                                    const paused = await daemonPauseJob(actualId);
+                                    if (paused) {
+                                        console.log(`✓ Job "${actualId}" paused`);
+                                    }
+                                    else {
+                                        console.log(`✗ Failed to pause job "${actualId}"`);
+                                    }
+                                }
+                            }
+                            else if (pendingAction === "resume") {
+                                const job = await getJob(actualId);
+                                if (!job) {
+                                    console.error(`Job "${actualId}" not found`);
+                                }
+                                else {
+                                    const resumed = await daemonResumeJob(actualId);
+                                    if (resumed) {
+                                        console.log(`✓ Job "${actualId}" resumed`);
+                                    }
+                                    else {
+                                        console.log(`✗ Failed to resume job "${actualId}"`);
+                                    }
+                                }
+                            }
+                            else if (pendingAction === "killSession") {
+                                const killed = await killSession(actualId);
+                                if (killed) {
+                                    console.log(`✓ Session "${actualId}" killed`);
+                                }
+                                else {
+                                    console.log(`✗ Failed to kill session "${actualId}" or process already terminated`);
+                                }
                             }
                         }
                         pendingAction = null;
@@ -358,7 +422,7 @@ const dashboardCommand = {
                     isInteractiveMode = true;
                     pendingAction = "delete";
                     inputBuffer = "";
-                    interactivePrompt = "\nEnter Job ID to delete: ";
+                    interactivePrompt = "\nEnter Job # to delete: ";
                     process.stdout.write(interactivePrompt);
                 }
                 // Reset job
@@ -366,7 +430,31 @@ const dashboardCommand = {
                     isInteractiveMode = true;
                     pendingAction = "reset";
                     inputBuffer = "";
-                    interactivePrompt = "\nEnter Job ID to reset: ";
+                    interactivePrompt = "\nEnter Job # to reset: ";
+                    process.stdout.write(interactivePrompt);
+                }
+                // Pause job
+                if (key.toLowerCase() === "a") {
+                    isInteractiveMode = true;
+                    pendingAction = "pause";
+                    inputBuffer = "";
+                    interactivePrompt = "\nEnter Job # to pause: ";
+                    process.stdout.write(interactivePrompt);
+                }
+                // Resume job
+                if (key.toLowerCase() === "e") {
+                    isInteractiveMode = true;
+                    pendingAction = "resume";
+                    inputBuffer = "";
+                    interactivePrompt = "\nEnter Job # to resume: ";
+                    process.stdout.write(interactivePrompt);
+                }
+                // Kill session
+                if (key.toLowerCase() === "k") {
+                    isInteractiveMode = true;
+                    pendingAction = "killSession";
+                    inputBuffer = "";
+                    interactivePrompt = "\nEnter Session # to kill: ";
                     process.stdout.write(interactivePrompt);
                 }
             };

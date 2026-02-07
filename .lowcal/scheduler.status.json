@@ -1,9 +1,11 @@
 {
   "running": true,
-  "pid": 1178175,
-  "started_at": "2026-02-06T17:22:05.432Z",
-  "last_tick": "2026-02-06T17:22:05.431Z",
+  "pid": 1624297,
+  "started_at": "2026-02-07T22:58:17.865Z",
+  "last_tick": "2026-02-07T22:58:17.865Z",
   "active_executions": 0,
   "total_jobs": 1,
-  "upcoming_jobs": []
+  "upcoming_jobs": [
+    "minute-log-writer"
+  ]
 }

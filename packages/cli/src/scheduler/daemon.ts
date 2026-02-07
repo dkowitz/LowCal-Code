@@ -794,6 +794,52 @@ export async function startDaemon(): Promise<boolean> {
   return await isDaemonRunning();
 }
 
+/**
+ * Pause a job by ID (via RPC call to daemon)
+ */
+export async function pauseJob(id: string): Promise<boolean> {
+  try {
+    const response = await fetch("http://localhost:3001/scheduler/pause", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    return response.ok;
+  } catch {
+    // Fallback: try to pause directly via job store
+    const { pauseJob: corePauseJob } = await import("@qwen-code/qwen-code-core");
+    try {
+      await corePauseJob(id);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
+/**
+ * Resume a paused job by ID (via RPC call to daemon)
+ */
+export async function resumeJob(id: string): Promise<boolean> {
+  try {
+    const response = await fetch("http://localhost:3001/scheduler/resume", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+    return response.ok;
+  } catch {
+    // Fallback: try to resume directly via job store
+    const { resumeJob: coreResumeJob } = await import("@qwen-code/qwen-code-core");
+    try {
+      await coreResumeJob(id);
+      return true;
+    } catch {
+      return false;
+    }
+  }
+}
+
 // Main entry point
 const isMainModule =
   import.meta.url === `file://${fileURLToPath(import.meta.url)}` ||
