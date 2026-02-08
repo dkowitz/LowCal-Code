@@ -103,9 +103,7 @@ export async function registerSession(session) {
     });
 }
 export async function getSession(sessionId) {
-    return await withStoreReadOnly(async (store) => {
-        return store.sessions.find((s) => s.id === sessionId) ?? null;
-    });
+    return await withStoreReadOnly(async (store) => store.sessions.find((s) => s.id === sessionId) ?? null);
 }
 export async function updateSession(sessionId, patch) {
     return await withStore(async (store) => {
@@ -125,6 +123,61 @@ export async function updateSession(sessionId, patch) {
 }
 export async function heartbeatSession(sessionId, status) {
     return await updateSession(sessionId, status ? { status } : {});
+}
+function normalizeConfidence(value) {
+    if (!Number.isFinite(value)) {
+        return 0.5;
+    }
+    return Math.min(1, Math.max(0, value ?? 0.5));
+}
+export async function setSessionHealth(sessionId, input) {
+    return await withStore(async (store) => {
+        const index = store.sessions.findIndex((s) => s.id === sessionId);
+        if (index < 0) {
+            return null;
+        }
+        const now = new Date().toISOString();
+        const current = store.sessions[index];
+        const previousHealth = current.health;
+        const keepFirstSeen = previousHealth?.state === input.state &&
+            previousHealth?.reason === input.reason;
+        const health = {
+            state: input.state,
+            confidence: normalizeConfidence(input.confidence ?? previousHealth?.confidence),
+            first_seen: keepFirstSeen && previousHealth ? previousHealth.first_seen : now,
+            last_seen: now,
+        };
+        if (input.reason) {
+            health.reason = input.reason;
+        }
+        if (input.evidence) {
+            health.evidence = input.evidence;
+        }
+        if (input.remediation) {
+            health.remediation = input.remediation;
+        }
+        const updated = {
+            ...current,
+            health,
+        };
+        store.sessions[index] = updated;
+        return updated;
+    });
+}
+export async function clearSessionHealth(sessionId) {
+    return await withStore(async (store) => {
+        const index = store.sessions.findIndex((s) => s.id === sessionId);
+        if (index < 0) {
+            return null;
+        }
+        const current = store.sessions[index];
+        const updated = {
+            ...current,
+            health: undefined,
+        };
+        store.sessions[index] = updated;
+        return updated;
+    });
 }
 export async function removeSession(sessionId) {
     return await withStore(async (store) => {

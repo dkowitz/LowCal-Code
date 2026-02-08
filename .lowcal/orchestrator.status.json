@@ -1,0 +1,14 @@
+{
+  "running": true,
+  "pid": 1926291,
+  "started_at": "2026-02-08T14:13:57.860Z",
+  "last_tick": "2026-02-08T16:36:00.203Z",
+  "tick_interval_ms": 15000,
+  "policy_ids": [
+    "recover_stalled_session"
+  ],
+  "sessions_scanned": 17,
+  "stalled_sessions": 0,
+  "recoveries_attempted": 0,
+  "recoveries_succeeded": 0
+}

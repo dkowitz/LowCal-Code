@@ -33,6 +33,12 @@ import {
   pauseJob as daemonPauseJob,
   resumeJob as daemonResumeJob,
 } from "../scheduler/daemon.js";
+import {
+  getOrchestratorStatus,
+  isOrchestratorRunning,
+  startOrchestrator,
+  stopOrchestrator,
+} from "../orchestrator/daemon.js";
 
 import { loadSettings } from "../config/settings.js";
 
@@ -145,7 +151,9 @@ function sortSessionsForDisplay(
 }
 
 function sortJobsForDisplay(jobs: Job[]): Job[] {
-  return [...jobs].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
+  return [...jobs].sort(
+    (a, b) => Date.parse(b.created_at) - Date.parse(a.created_at),
+  );
 }
 
 function formatSession(
@@ -185,6 +193,17 @@ function formatSession(
   if (typeof activeExecutions === "number") {
     parts.push(`  active_executions: ${activeExecutions}`);
   }
+  if (session.health) {
+    const reason = session.health.reason ? ` (${session.health.reason})` : "";
+    parts.push(
+      `  health: ${session.health.state}${reason} c=${session.health.confidence.toFixed(2)}`,
+    );
+    if (session.health.remediation) {
+      parts.push(
+        `  remediation: ${session.health.remediation.stage} attempts=${session.health.remediation.attempts}`,
+      );
+    }
+  }
   return parts.join("\n");
 }
 
@@ -200,14 +219,10 @@ function formatJob(job: Job, defaultMode: JobExecutionMode): string {
   let output = `${statusIcon} ${job.id}${statusText}\n`;
   output += `   Schedule: ${job.schedule}\n`;
   output += `   Next run: ${
-    job.next_run
-      ? new Date(job.next_run).toLocaleString()
-      : "Not scheduled"
+    job.next_run ? new Date(job.next_run).toLocaleString() : "Not scheduled"
   }\n`;
   output += `   Last run: ${
-    job.last_run
-      ? new Date(job.last_run).toLocaleString()
-      : "Never"
+    job.last_run ? new Date(job.last_run).toLocaleString() : "Never"
   }\n`;
   output += `   Runs: ${job.run_count} successful, ${job.error_count} failed\n`;
   output += `   Execution: ${modeLabel}\n`;
@@ -254,15 +269,27 @@ async function renderDashboard(
   // Clear screen and move cursor to top
   process.stdout.write("\x1b[2J\x1b[H");
 
+  const [daemonRunning, orchestratorStatus] = await Promise.all([
+    isDaemonRunning(),
+    getOrchestratorStatus(),
+  ]);
+
   // Header
-  console.log("╔═══════════════════════════════════════════════════════════════════════════════╗");
-  console.log("║                           LowCal Dashboard                                    ║");
-  console.log("╚═══════════════════════════════════════════════════════════════════════════════╝");
+  console.log(
+    "╔═══════════════════════════════════════════════════════════════════════════════╗",
+  );
+  console.log(
+    "║                           LowCal Dashboard                                    ║",
+  );
+  console.log(
+    "╚═══════════════════════════════════════════════════════════════════════════════╝",
+  );
   console.log();
 
   // Scheduler Status
-  const daemonRunning = await isDaemonRunning();
-  console.log("┌─ Scheduler Status ────────────────────────────────────────────────────────────┐");
+  console.log(
+    "┌─ Scheduler Status ────────────────────────────────────────────────────────────┐",
+  );
   const daemonStatusText = daemonRunning ? "🟢 Running" : "🔴 Not running";
   printBoxLine(`Daemon: ${daemonStatusText}`, DASHBOARD_SECTION_INNER_WIDTH);
   if (daemonRunning) {
@@ -273,7 +300,40 @@ async function renderDashboard(
       DASHBOARD_SECTION_INNER_WIDTH,
     );
   }
-  console.log("└───────────────────────────────────────────────────────────────────────────────┘");
+  console.log(
+    "└───────────────────────────────────────────────────────────────────────────────┘",
+  );
+  console.log();
+
+  // Orchestrator Status
+  console.log(
+    "┌─ Orchestrator Status ─────────────────────────────────────────────────────────┐",
+  );
+  printBoxLine(
+    `Daemon: ${orchestratorStatus.running ? "🟢 Running" : "🔴 Not running"}`,
+    DASHBOARD_SECTION_INNER_WIDTH,
+  );
+  printBoxLine(
+    `Policy: ${orchestratorStatus.policy_ids.join(", ")}`,
+    DASHBOARD_SECTION_INNER_WIDTH,
+  );
+  printBoxLine(
+    `Sessions scanned: ${orchestratorStatus.sessions_scanned} | stalled: ${orchestratorStatus.stalled_sessions}`,
+    DASHBOARD_SECTION_INNER_WIDTH,
+  );
+  printBoxLine(
+    `Recoveries: ${orchestratorStatus.recoveries_succeeded}/${orchestratorStatus.recoveries_attempted}`,
+    DASHBOARD_SECTION_INNER_WIDTH,
+  );
+  if (orchestratorStatus.last_action) {
+    printBoxLine(
+      `Last action: ${orchestratorStatus.last_action.outcome} -> ${orchestratorStatus.last_action.session_id}`,
+      DASHBOARD_SECTION_INNER_WIDTH,
+    );
+  }
+  console.log(
+    "└───────────────────────────────────────────────────────────────────────────────┘",
+  );
   console.log();
 
   // Sessions Section with numeric IDs
@@ -289,10 +349,14 @@ async function renderDashboard(
         lines[0] = `[${idx + 1}] ${lines[0]}`;
       }
       printBoxBlock(lines, DASHBOARD_SECTION_INNER_WIDTH);
-      console.log("├───────────────────────────────────────────────────────────────────────────────┤");
+      console.log(
+        "├───────────────────────────────────────────────────────────────────────────────┤",
+      );
     }
   }
-  console.log("└───────────────────────────────────────────────────────────────────────────────┘");
+  console.log(
+    "└───────────────────────────────────────────────────────────────────────────────┘",
+  );
   console.log();
 
   // Jobs Section with numeric IDs
@@ -310,10 +374,14 @@ async function renderDashboard(
         lines[0] = `${statusIcon} [${idx + 1}] ${job.id}${statusText}`;
       }
       printBoxBlock(lines, DASHBOARD_SECTION_INNER_WIDTH);
-      console.log("├───────────────────────────────────────────────────────────────────────────────┤");
+      console.log(
+        "├───────────────────────────────────────────────────────────────────────────────┤",
+      );
     }
   }
-  console.log("└───────────────────────────────────────────────────────────────────────────────┘");
+  console.log(
+    "└───────────────────────────────────────────────────────────────────────────────┘",
+  );
   console.log();
 
   // Footer with helper info
@@ -322,9 +390,15 @@ async function renderDashboard(
     `LowCal Dashboard (refresh ${intervalSec}s) - press Ctrl+C to exit`,
   );
   console.log();
-  console.log("┌─ Keyboard Shortcuts ─────────────────────────────────────────────────────────────┐");
+  console.log(
+    "┌─ Keyboard Shortcuts ─────────────────────────────────────────────────────────────┐",
+  );
   printBoxLine(
     "[p] prune stale sessions   | [s] start daemon   | [t] stop daemon",
+    DASHBOARD_SHORTCUTS_INNER_WIDTH,
+  );
+  printBoxLine(
+    "[o] start orchestrator     | [x] stop orchestrator",
     DASHBOARD_SHORTCUTS_INNER_WIDTH,
   );
   printBoxLine(
@@ -339,7 +413,9 @@ async function renderDashboard(
     "[k] kill session <#num>    | [Esc] cancel action",
     DASHBOARD_SHORTCUTS_INNER_WIDTH,
   );
-  console.log("└──────────────────────────────────────────────────────────────────────────────────┘");
+  console.log(
+    "└──────────────────────────────────────────────────────────────────────────────────┘",
+  );
 
   if (actionNotice) {
     console.log();
@@ -477,9 +553,7 @@ const dashboardCommand: CommandModule<DashboardArgs, DashboardArgs> = {
           return `Job "${id}" not found`;
         }
         const resumed = await daemonResumeJob(id);
-        return resumed
-          ? `Resumed job "${id}"`
-          : `Failed to resume job "${id}"`;
+        return resumed ? `Resumed job "${id}"` : `Failed to resume job "${id}"`;
       }
 
       const killed = await killSession(id);
@@ -646,6 +720,35 @@ const dashboardCommand: CommandModule<DashboardArgs, DashboardArgs> = {
             lastActionNotice = stopped
               ? "Stopped scheduler daemon"
               : "Failed to stop scheduler daemon";
+          }
+          await renderSafe();
+          return;
+        }
+
+        if (lower === "o") {
+          const running = await isOrchestratorRunning();
+          if (running) {
+            const status = await getOrchestratorStatus();
+            lastActionNotice = `Orchestrator already running (pid: ${status.pid})`;
+          } else {
+            const started = await startOrchestrator();
+            lastActionNotice = started
+              ? "Started orchestrator daemon"
+              : "Failed to start orchestrator daemon";
+          }
+          await renderSafe();
+          return;
+        }
+
+        if (lower === "x") {
+          const running = await isOrchestratorRunning();
+          if (!running) {
+            lastActionNotice = "Orchestrator daemon is not running";
+          } else {
+            const stopped = await stopOrchestrator();
+            lastActionNotice = stopped
+              ? "Stopped orchestrator daemon"
+              : "Failed to stop orchestrator daemon";
           }
           await renderSafe();
           return;

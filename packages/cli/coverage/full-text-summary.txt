@@ -1,18 +1,19 @@
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |       0 |     0.98 |    0.98 |       0 |                   
+All files          |       0 |     0.97 |    0.97 |       0 |                   
  src               |       0 |        0 |       0 |       0 |                   
-  gemini.tsx       |       0 |        0 |       0 |       0 | 1-472             
+  gemini.tsx       |       0 |        0 |       0 |       0 | 1-480             
   ...ractiveCli.ts |       0 |        0 |       0 |       0 | 1-368             
   ...ActiveAuth.ts |       0 |        0 |       0 |       0 | 1-59              
  src/commands      |       0 |        0 |       0 |       0 |                   
-  dashboard.ts     |       0 |        0 |       0 |       0 | 1-433             
+  dashboard.ts     |       0 |        0 |       0 |       0 | 1-799             
   extensions.tsx   |       0 |        0 |       0 |       0 | 1-32              
   mcp.ts           |       0 |        0 |       0 |       0 | 1-27              
+  orchestrator.ts  |       0 |        0 |       0 |       0 | 1-97              
   research.ts      |       0 |        0 |       0 |       0 | 1-45              
   scheduler.ts     |       0 |        0 |       0 |       0 | 1-536             
-  sessions.ts      |       0 |        0 |       0 |       0 | 1-258             
+  sessions.ts      |       0 |        0 |       0 |       0 | 1-269             
  ...nds/extensions |       0 |        0 |       0 |       0 |                   
   disable.ts       |       0 |        0 |       0 |       0 | 1-51              
   enable.ts        |       0 |        0 |       0 |       0 | 1-59              
@@ -26,7 +27,7 @@ All files          |       0 |     0.98 |    0.98 |       0 |
   remove.ts        |       0 |        0 |       0 |       0 | 1-60              
  src/config        |       0 |        0 |       0 |       0 |                   
   auth.ts          |       0 |        0 |       0 |       0 | 1-151             
-  config.ts        |       0 |        0 |       0 |       0 | 1-794             
+  config.ts        |       0 |        0 |       0 |       0 | 1-797             
   extension.ts     |       0 |        0 |       0 |       0 | 1-533             
   keyBindings.ts   |       0 |        0 |       0 |       0 | 1-190             
   sandboxConfig.ts |       0 |        0 |       0 |       0 | 1-105             
@@ -38,11 +39,13 @@ All files          |       0 |     0.98 |    0.98 |       0 |
   variables.ts     |       0 |        0 |       0 |       0 | 1-65              
  src/generated     |       0 |        0 |       0 |       0 |                   
   git-commit.ts    |       0 |        0 |       0 |       0 | 1-10              
+ src/orchestrator  |       0 |        0 |       0 |       0 |                   
+  daemon.ts        |       0 |        0 |       0 |       0 | 1-781             
  src/patches       |       0 |        0 |       0 |       0 |                   
   is-in-ci.ts      |       0 |        0 |       0 |       0 | 1-17              
  src/scheduler     |       0 |        0 |       0 |       0 |                   
-  daemon.ts        |       0 |        0 |       0 |       0 | 1-841             
-  headless.ts      |       0 |        0 |       0 |       0 | 1-367             
+  daemon.ts        |       0 |        0 |       0 |       0 | 1-900             
+  headless.ts      |       0 |        0 |       0 |       0 | 1-387             
  src/services      |       0 |        0 |       0 |       0 |                   
   ...mandLoader.ts |       0 |        0 |       0 |       0 | 1-114             
   ...andService.ts |       0 |        0 |       0 |       0 | 1-103             
@@ -57,7 +60,7 @@ All files          |       0 |     0.98 |    0.98 |       0 |
   ...lProcessor.ts |       0 |        0 |       0 |       0 | 1-207             
   types.ts         |       0 |        0 |       0 |       0 | 1-54              
  src/session       |       0 |        0 |       0 |       0 |                   
-  ...ionManager.ts |       0 |        0 |       0 |       0 | 1-126             
+  ...ionManager.ts |       0 |        0 |       0 |       0 | 1-657             
  src/test-utils    |       0 |        0 |       0 |       0 |                   
   ...omMatchers.ts |       0 |        0 |       0 |       0 | 1-56              
   ...andContext.ts |       0 |        0 |       0 |       0 | 1-110             
@@ -102,7 +105,7 @@ All files          |       0 |     0.98 |    0.98 |       0 |
   quitCommand.ts   |       0 |        0 |       0 |       0 | 1-65              
   ...rchCommand.ts |       0 |        0 |       0 |       0 | 1-542             
   ...oreCommand.ts |       0 |        0 |       0 |       0 | 1-153             
-  ...onsCommand.ts |       0 |        0 |       0 |       0 | 1-76              
+  ...onsCommand.ts |       0 |        0 |       0 |       0 | 1-82              
   ...ngsCommand.ts |       0 |        0 |       0 |       0 | 1-18              
   ...hubCommand.ts |       0 |        0 |       0 |       0 | 1-209             
   statsCommand.ts  |       0 |        0 |       0 |       0 | 1-71              
@@ -233,7 +236,7 @@ All files          |       0 |     0.98 |    0.98 |       0 |
   ...orSettings.ts |       0 |        0 |       0 |       0 | 1-75              
   useFocus.ts      |       0 |        0 |       0 |       0 | 1-48              
   ...olderTrust.ts |       0 |        0 |       0 |       0 | 1-85              
-  ...miniStream.ts |       0 |        0 |       0 |       0 | 1-1376            
+  ...miniStream.ts |       0 |        0 |       0 |       0 | 1-1440            
   ...BranchName.ts |       0 |        0 |       0 |       0 | 1-79              
   ...KeyRouting.ts |       0 |      100 |     100 |       0 | 6-28              
   ...oryManager.ts |       0 |        0 |       0 |       0 | 1-111             

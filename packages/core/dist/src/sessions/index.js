@@ -5,4 +5,5 @@
  */
 export * from "./types.js";
 export * from "./session-store.js";
+export * from "./session-api.js";
 //# sourceMappingURL=index.js.map

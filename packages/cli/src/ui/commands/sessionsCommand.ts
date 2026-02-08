@@ -37,6 +37,12 @@ function formatSessionLine(
   if (typeof activeExecutions === "number") {
     parts.push(`active_executions=${activeExecutions}`);
   }
+  if (session.health) {
+    parts.push(`health=${session.health.state}`);
+    if (session.health.reason) {
+      parts.push(`reason=${session.health.reason}`);
+    }
+  }
   return parts.join(" ");
 }
 

@@ -136,7 +136,15 @@ export async function main() {
         id: config.getSessionId(),
         mode: config.isInteractive() ? "tui" : "noninteractive",
         status: config.isInteractive() ? "idle" : "working",
-        details: { model: config.getModel() },
+        details: {
+            model: config.getModel(),
+            approval_mode: String(config.getApprovalMode()),
+        },
+        capabilities: {
+            observe: true,
+            control: config.isInteractive(),
+            interact: false,
+        },
     });
     const consolePatcher = new ConsolePatcher({
         stderr: true,

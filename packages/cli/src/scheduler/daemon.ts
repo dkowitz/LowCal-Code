@@ -689,6 +689,11 @@ async function runDaemon(): Promise<void> {
     mode: "scheduler",
     status: "idle",
     details: { scheduler_cwd: getSchedulerCwd() },
+    capabilities: {
+      observe: true,
+      control: true,
+      interact: false,
+    },
     cwd: getSchedulerCwd(),
   });
 
@@ -839,7 +844,9 @@ export async function resumeJob(id: string): Promise<boolean> {
   }
 
   // Fallback: try to resume directly via job store
-  const { resumeJob: coreResumeJob } = await import("@qwen-code/qwen-code-core");
+  const { resumeJob: coreResumeJob } = await import(
+    "@qwen-code/qwen-code-core"
+  );
   try {
     await coreResumeJob(id);
     return true;
@@ -850,8 +857,8 @@ export async function resumeJob(id: string): Promise<boolean> {
 
 // Main entry point
 const isMainModule =
-  import.meta.url === `file://${fileURLToPath(import.meta.url)}` ||
-  import.meta.url === process.argv[1];
+  !!process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 
 if (isMainModule) {
   const args = process.argv.slice(2);

@@ -8,8 +8,7 @@ Perplexica uses a two-stage prompting approach for deep research:
 
 - **Query Generation Stage**: A specialized prompt rephrases user queries into standalone questions that can be used by search engines.
 - For example, when given "What is Docker?", it generates "What is Docker" as the query to search with.
-- When given "Can you tell me what is X from https://example.com", it extracts both a question ("What is X?") and links for content retrieval.  
-
+- When given "Can you tell me what is X from https://example.com", it extracts both a question ("What is X?") and links for content retrieval.
 
 ### 2. Focus Mode-Specific Prompts
 
@@ -21,8 +20,7 @@ Perplexica implements different focus modes that each use distinct prompting str
   conversation history.
 - **Wolfram Alpha Search**: Prompt optimized for computational queries and data analysis.
 - **YouTube Search**: Prompt tailored to video content retrieval.
-- **Reddit Search**: Prompt focused on discussion-based information gathering.  
-
+- **Reddit Search**: Prompt focused on discussion-based information gathering.
 
 ### 3. Response Structure Instructions
 
@@ -32,8 +30,7 @@ The core response prompt includes detailed formatting instructions:
 - Maintain a neutral, journalistic tone
 - Structure responses like professional blog posts
 - Include inline citations using [number] notation for each fact or detail
-- Prioritize credibility by linking all statements to their source context  
-
+- Prioritize credibility by linking all statements to their source context
 
 ## Agentic Looping Structures
 
@@ -44,8 +41,7 @@ Perplexica implements an agentic loop that:
 - First rephrases the user query into a search-ready format
 - Then performs web searches using SearxNG with focus mode-specific engines
 - Retrieves content from relevant links (web pages or PDFs)
-- Processes and ranks results based on relevance to the original question  
-
+- Processes and ranks results based on relevance to the original question
 
 ### 2. Query Generation Loop
 
@@ -54,8 +50,7 @@ The system uses an iterative approach for complex queries:
 - Takes user input and conversation history as context
 - Generates multiple search queries using a specialized prompt template
 - Uses these generated queries to find more relevant sources from the web
-- Reranks results based on similarity scores  
-
+- Reranks results based on similarity scores
 
 ### 3. Contextual Processing with Embeddings
 
@@ -63,8 +58,7 @@ Perplexica uses embeddings for:
 
 - Document similarity calculations
 - Content ranking and filtering
-- Ensuring responses are grounded in retrieved information rather than hallucinations  
-
+- Ensuring responses are grounded in retrieved information rather than hallucinations
 
 ## Research Parameters and Configuration
 
@@ -77,8 +71,7 @@ The system supports six distinct focus modes that define research parameters:
 - Academic Search Mode: Targets academic databases (arXiv, Google Scholar, PubMed)
 - YouTube Search Mode: Focuses on video content retrieval
 - Wolfram Alpha Search Mode: For computational knowledge queries
-- Reddit Search Mode: Specialized for discussion-based information  
-
+- Reddit Search Mode: Specialized for discussion-based information
 
 ### 2. Optimization Modes
 
@@ -86,8 +79,7 @@ Three optimization modes control the research depth:
 
 - Speed mode: Fast but less comprehensive results
 - Balanced mode: Moderate processing time and quality
-- Quality mode: Most thorough, detailed analysis with longer processing times  
-
+- Quality mode: Most thorough, detailed analysis with longer processing times
 
 ### 3. Reranking Parameters
 
@@ -95,30 +87,28 @@ The system implements reranking for search results:
 
 - Enabled by default in most focus modes (except Wolfram Alpha)
 - Uses similarity thresholds to filter relevant content
-- Processes documents through embeddings to rank relevance  
-
+- Processes documents through embeddings to rank relevance
 
 ## Key Research Patterns
 
 1. **Context-Aware Query Generation**: The system analyzes conversation history and user input to generate appropriate queries, rather than  
-   just using the raw question.  
+   just using the raw question.
 
-2. **Multi-source Integration**: Responses are built from multiple sources with proper citation of each source's number in the context.  
+2. **Multi-source Integration**: Responses are built from multiple sources with proper citation of each source's number in the context.
 
 3. **Structured Output Requirements**: All responses must follow specific formatting rules including:
    - Proper headings
    - Inline citations for every statement
-   - Professional tone and structure  
+   - Professional tone and structure
 
 4. **Specialized Prompting per Focus Mode**: Each focus mode has its own prompt template that guides how to process information, ensuring  
-   domain-specific research approaches.  
+   domain-specific research approaches.
 
 5. **Document Processing Pipeline**: For URL-based queries, the system:
    - Retrieves content from links using HTTP requests
    - Converts HTML to text for processing
    - Parses PDFs when needed
-   - Splits documents into chunks for embedding and retrieval  
-
+   - Splits documents into chunks for embedding and retrieval
 
 This approach allows Perplexica to conduct deep research by combining multiple prompting strategies with structured agentic loops that ensure  
  comprehensive, well-cited responses.

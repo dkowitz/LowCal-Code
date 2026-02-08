@@ -21,6 +21,7 @@ import { normalizeAuthType } from "../config/auth.js";
 import {
   startSessionRegistration,
   stopSessionRegistration,
+  updateSessionDetails,
 } from "../session/sessionManager.js";
 import {
   loadCliToolConfig,
@@ -45,6 +46,8 @@ function parseArgs(): { prompt: string; jobId: string; output: string } {
         break;
       case "--output":
         output = args[++i] || "";
+        break;
+      default:
         break;
     }
   }
@@ -79,7 +82,12 @@ async function main(): Promise<void> {
     id: sessionRunId,
     mode: "headless",
     status: "working",
-    details: { job_id: jobId },
+    details: { job_id: jobId, phase: "initializing" },
+    capabilities: {
+      observe: true,
+      control: true,
+      interact: false,
+    },
     cwd: process.cwd(),
   });
 
@@ -182,6 +190,12 @@ async function main(): Promise<void> {
     const modelFromSettings = settings.merged.model?.name;
     const model = modelFromSettings || "gemini-1.5-flash";
 
+    await updateSessionDetails({
+      model,
+      approval_mode: String(approvalMode),
+      phase: "running",
+    });
+
     // Get base URL for OpenAI-compatible providers
     const providerId = settings.merged.security?.auth?.providerId;
     const providers = settings.merged.security?.auth?.providers as
@@ -202,7 +216,7 @@ async function main(): Promise<void> {
       embeddingModel: DEFAULT_GEMINI_EMBEDDING_MODEL,
       targetDir: cwd,
       cwd,
-      model: model,
+      model,
       includeDirectories: [],
       loadMemoryFromIncludeDirectories: false,
       debugMode: false,
@@ -243,6 +257,8 @@ async function main(): Promise<void> {
     // Capture stdout
     const originalWrite = process.stdout.write;
     const originalWriteErr = process.stderr.write;
+    const writeStdout = originalWrite.bind(process.stdout);
+    const writeStderr = originalWriteErr.bind(process.stderr);
     let stdout = "";
     let stderr = "";
     const echoStdout = prettyOutput;
@@ -252,14 +268,14 @@ async function main(): Promise<void> {
       const str = chunk.toString();
       stdout += str;
       if (!echoStdout) return true;
-      return originalWrite.apply(process.stdout, [chunk] as any);
+      return writeStdout(chunk);
     };
 
     process.stderr.write = function (chunk: string | Buffer): boolean {
       const str = chunk.toString();
       stderr += str;
       if (!echoStderr) return true;
-      return originalWriteErr.apply(process.stderr, [chunk] as any);
+      return writeStderr(chunk);
     };
 
     // Run the non-interactive mode with the full prompt (including system context)
@@ -282,6 +298,8 @@ async function main(): Promise<void> {
 
     await fs.mkdir(path.dirname(output), { recursive: true });
     await fs.writeFile(output, JSON.stringify(outputData, null, 2), "utf-8");
+
+    await updateSessionDetails({ phase: "completed" });
 
     await stopSessionRegistration();
 
@@ -356,6 +374,8 @@ async function main(): Promise<void> {
     } catch (writeError) {
       console.error("[Headless] Failed to write error log:", writeError);
     }
+
+    await updateSessionDetails({ phase: "error", last_error: errorMessage });
 
     await stopSessionRegistration();
 

@@ -15,7 +15,7 @@ import * as fs from "fs/promises";
 import * as path from "path";
 import * as process from "process";
 import { normalizeAuthType } from "../config/auth.js";
-import { startSessionRegistration, stopSessionRegistration, } from "../session/sessionManager.js";
+import { startSessionRegistration, stopSessionRegistration, updateSessionDetails, } from "../session/sessionManager.js";
 import { loadCliToolConfig, syncCoreToolConfig, } from "../ui/commands/utils/toolConfig.js";
 // Parse command line arguments
 function parseArgs() {
@@ -33,6 +33,8 @@ function parseArgs() {
                 break;
             case "--output":
                 output = args[++i] || "";
+                break;
+            default:
                 break;
         }
     }
@@ -61,7 +63,12 @@ async function main() {
         id: sessionRunId,
         mode: "headless",
         status: "working",
-        details: { job_id: jobId },
+        details: { job_id: jobId, phase: "initializing" },
+        capabilities: {
+            observe: true,
+            control: true,
+            interact: false,
+        },
         cwd: process.cwd(),
     });
     const COLORS = {
@@ -119,6 +126,11 @@ async function main() {
         // Get model from settings, fallback to default
         const modelFromSettings = settings.merged.model?.name;
         const model = modelFromSettings || "gemini-1.5-flash";
+        await updateSessionDetails({
+            model,
+            approval_mode: String(approvalMode),
+            phase: "running",
+        });
         // Get base URL for OpenAI-compatible providers
         const providerId = settings.merged.security?.auth?.providerId;
         const providers = settings.merged.security?.auth?.providers;
@@ -134,7 +146,7 @@ async function main() {
             embeddingModel: DEFAULT_GEMINI_EMBEDDING_MODEL,
             targetDir: cwd,
             cwd,
-            model: model,
+            model,
             includeDirectories: [],
             loadMemoryFromIncludeDirectories: false,
             debugMode: false,
@@ -169,6 +181,8 @@ async function main() {
         // Capture stdout
         const originalWrite = process.stdout.write;
         const originalWriteErr = process.stderr.write;
+        const writeStdout = originalWrite.bind(process.stdout);
+        const writeStderr = originalWriteErr.bind(process.stderr);
         let stdout = "";
         let stderr = "";
         const echoStdout = prettyOutput;
@@ -178,14 +192,14 @@ async function main() {
             stdout += str;
             if (!echoStdout)
                 return true;
-            return originalWrite.apply(process.stdout, [chunk]);
+            return writeStdout(chunk);
         };
         process.stderr.write = function (chunk) {
             const str = chunk.toString();
             stderr += str;
             if (!echoStderr)
                 return true;
-            return originalWriteErr.apply(process.stderr, [chunk]);
+            return writeStderr(chunk);
         };
         // Run the non-interactive mode with the full prompt (including system context)
         const prompt_id = `headless-${jobId}-${Date.now()}`;
@@ -204,6 +218,7 @@ async function main() {
         };
         await fs.mkdir(path.dirname(output), { recursive: true });
         await fs.writeFile(output, JSON.stringify(outputData, null, 2), "utf-8");
+        await updateSessionDetails({ phase: "completed" });
         await stopSessionRegistration();
         if (prettyOutput) {
             const durationMs = Date.now() - runStart.getTime();
@@ -250,6 +265,7 @@ async function main() {
         catch (writeError) {
             console.error("[Headless] Failed to write error log:", writeError);
         }
+        await updateSessionDetails({ phase: "error", last_error: errorMessage });
         await stopSessionRegistration();
         process.exit(1);
     }

@@ -32,6 +32,7 @@ import { ToolRegistry } from "../tools/tool-registry.js";
 import { WebFetchTool } from "../tools/web-fetch.js";
 import { WebSearchTool } from "../tools/web-search.js";
 import { ScheduleTaskTool } from "../tools/schedule-task.js";
+import { LaunchTaskTool } from "../tools/launch-task.js";
 import { SearXNGSearchTool } from "../tools/searxng-search.js";
 import { WriteFileTool } from "../tools/write-file.js";
 import { shouldAttemptBrowserLaunch } from "../utils/browser.js";
@@ -837,6 +838,8 @@ export class Config {
         registerCoreTool(SearXNGSearchTool, this);
         // Register the scheduler task tool
         registerCoreTool(ScheduleTaskTool);
+        // Register the launch task tool
+        registerCoreTool(LaunchTaskTool);
         await registry.discoverAllTools();
         return registry;
     }

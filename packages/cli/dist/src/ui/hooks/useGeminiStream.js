@@ -20,7 +20,7 @@ import { useReactToolScheduler, mapToDisplay as mapTrackedToolCallsToDisplay, } 
 import { useSessionStats } from "../contexts/SessionContext.js";
 import { formatDuration } from "../utils/formatters.js";
 import { useKeypress } from "./useKeypress.js";
-import { setSessionStatus } from "../../session/sessionManager.js";
+import { setSessionControlHandlers, setSessionStatus, } from "../../session/sessionManager.js";
 const formatElapsed = (milliseconds) => {
     if (!Number.isFinite(milliseconds) || milliseconds <= 0) {
         return "0s";
@@ -90,6 +90,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
     }, [coreMarkToolsAsSubmitted, releaseToolCallSignatures]);
     const pendingToolCallGroupDisplay = useMemo(() => toolCalls.length ? mapTrackedToolCallsToDisplay(toolCalls) : undefined, [toolCalls]);
     const loopDetectedRef = useRef(false);
+    const lastRestartableQueryRef = useRef(null);
     const onExec = useCallback(async (done) => {
         setIsResponding(true);
         await done;
@@ -592,6 +593,9 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             isSubmittingQueryRef.current = false;
             return;
         }
+        if (!options?.isContinuation) {
+            lastRestartableQueryRef.current = queryToSend;
+        }
         // Handle vision switch requirement
         const visionSwitchResult = await handleVisionSwitch(queryToSend, userMessageTimestamp, options?.isContinuation || false);
         if (!visionSwitchResult.shouldProceed) {
@@ -677,6 +681,54 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         restoreOriginalModel,
         refreshProviderState,
     ]);
+    const restartLastTurn = useCallback(async () => {
+        if (streamingState === StreamingState.WaitingForConfirmation) {
+            return {
+                accepted: false,
+                reason: "awaiting_confirmation",
+            };
+        }
+        const restartableQuery = lastRestartableQueryRef.current;
+        if (!restartableQuery) {
+            return {
+                accepted: false,
+                reason: "no_restartable_turn",
+            };
+        }
+        if (streamingState === StreamingState.Responding ||
+            isSubmittingQueryRef.current) {
+            cancelOngoingRequest();
+            await Promise.resolve();
+            if (isSubmittingQueryRef.current) {
+                return {
+                    accepted: false,
+                    reason: "cancel_in_progress",
+                };
+            }
+        }
+        void submitQuery(restartableQuery);
+        return {
+            accepted: true,
+        };
+    }, [cancelOngoingRequest, streamingState, submitQuery]);
+    useEffect(() => {
+        setSessionControlHandlers({
+            cancelTurn: () => {
+                if (streamingState !== StreamingState.Responding) {
+                    return {
+                        accepted: false,
+                        reason: "no_active_turn",
+                    };
+                }
+                cancelOngoingRequest();
+                return { accepted: true };
+            },
+            restartTurn: restartLastTurn,
+        });
+        return () => {
+            setSessionControlHandlers({});
+        };
+    }, [cancelOngoingRequest, restartLastTurn, streamingState]);
     const handleCompletedTools = useCallback(async (completedToolCallsFromScheduler) => {
         if (isResponding) {
             return;

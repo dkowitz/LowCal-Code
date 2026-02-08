@@ -75,6 +75,13 @@ function formatSession(session, ttlMs, now) {
     if (typeof activeExecutions === "number") {
         parts.push(`  active_executions: ${activeExecutions}`);
     }
+    if (session.health) {
+        const reason = session.health.reason ? ` (${session.health.reason})` : "";
+        parts.push(`  health: ${session.health.state}${reason} c=${session.health.confidence.toFixed(2)}`);
+        if (session.health.remediation) {
+            parts.push(`  remediation: ${session.health.remediation.stage} attempts=${session.health.remediation.attempts}`);
+        }
+    }
     return parts.join("\n");
 }
 const listCommand = {

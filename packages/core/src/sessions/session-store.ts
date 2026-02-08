@@ -8,7 +8,22 @@ import * as fs from "node:fs/promises";
 import * as path from "node:path";
 import * as process from "node:process";
 import { Storage } from "../config/storage.js";
-import type { SessionRecord, SessionStore, SessionStatus } from "./types.js";
+import type {
+  SessionHealthReason,
+  SessionHealthSnapshot,
+  SessionHealthState,
+  SessionRecord,
+  SessionStatus,
+  SessionStore,
+} from "./types.js";
+
+export interface SetSessionHealthInput {
+  state: SessionHealthState;
+  reason?: SessionHealthReason;
+  confidence?: number;
+  evidence?: Record<string, unknown>;
+  remediation?: SessionHealthSnapshot["remediation"];
+}
 
 const SESSIONS_FILE = path.join(Storage.getGlobalGeminiDir(), "sessions.json");
 const LOCK_FILE = path.join(Storage.getGlobalGeminiDir(), "sessions.lock");
@@ -118,9 +133,9 @@ export async function registerSession(session: SessionRecord): Promise<void> {
 export async function getSession(
   sessionId: string,
 ): Promise<SessionRecord | null> {
-  return await withStoreReadOnly(async (store) => {
-    return store.sessions.find((s) => s.id === sessionId) ?? null;
-  });
+  return await withStoreReadOnly(
+    async (store) => store.sessions.find((s) => s.id === sessionId) ?? null,
+  );
 }
 
 export async function updateSession(
@@ -150,6 +165,77 @@ export async function heartbeatSession(
   return await updateSession(sessionId, status ? { status } : {});
 }
 
+function normalizeConfidence(value: number | undefined): number {
+  if (!Number.isFinite(value)) {
+    return 0.5;
+  }
+  return Math.min(1, Math.max(0, value ?? 0.5));
+}
+
+export async function setSessionHealth(
+  sessionId: string,
+  input: SetSessionHealthInput,
+): Promise<SessionRecord | null> {
+  return await withStore(async (store) => {
+    const index = store.sessions.findIndex((s) => s.id === sessionId);
+    if (index < 0) {
+      return null;
+    }
+
+    const now = new Date().toISOString();
+    const current = store.sessions[index];
+    const previousHealth = current.health;
+    const keepFirstSeen =
+      previousHealth?.state === input.state &&
+      previousHealth?.reason === input.reason;
+
+    const health: SessionHealthSnapshot = {
+      state: input.state,
+      confidence: normalizeConfidence(
+        input.confidence ?? previousHealth?.confidence,
+      ),
+      first_seen:
+        keepFirstSeen && previousHealth ? previousHealth.first_seen : now,
+      last_seen: now,
+    };
+
+    if (input.reason) {
+      health.reason = input.reason;
+    }
+    if (input.evidence) {
+      health.evidence = input.evidence;
+    }
+    if (input.remediation) {
+      health.remediation = input.remediation;
+    }
+
+    const updated: SessionRecord = {
+      ...current,
+      health,
+    };
+    store.sessions[index] = updated;
+    return updated;
+  });
+}
+
+export async function clearSessionHealth(
+  sessionId: string,
+): Promise<SessionRecord | null> {
+  return await withStore(async (store) => {
+    const index = store.sessions.findIndex((s) => s.id === sessionId);
+    if (index < 0) {
+      return null;
+    }
+    const current = store.sessions[index];
+    const updated: SessionRecord = {
+      ...current,
+      health: undefined,
+    };
+    store.sessions[index] = updated;
+    return updated;
+  });
+}
+
 export async function removeSession(sessionId: string): Promise<boolean> {
   return await withStore(async (store) => {
     const before = store.sessions.length;
@@ -167,12 +253,12 @@ export async function killSession(sessionId: string): Promise<boolean> {
     if (index < 0) {
       return false;
     }
-    
+
     const session = store.sessions[index];
     try {
       // Terminate the process
       process.kill(session.pid, "SIGTERM");
-      
+
       // Remove from store after killing
       store.sessions.splice(index, 1);
       return true;

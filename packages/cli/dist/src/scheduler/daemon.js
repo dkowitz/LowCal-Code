@@ -513,6 +513,11 @@ async function runDaemon() {
         mode: "scheduler",
         status: "idle",
         details: { scheduler_cwd: getSchedulerCwd() },
+        capabilities: {
+            observe: true,
+            control: true,
+            interact: false,
+        },
         cwd: getSchedulerCwd(),
     });
     // Write PID file
@@ -653,8 +658,8 @@ export async function resumeJob(id) {
     }
 }
 // Main entry point
-const isMainModule = import.meta.url === `file://${fileURLToPath(import.meta.url)}` ||
-    import.meta.url === process.argv[1];
+const isMainModule = !!process.argv[1] &&
+    path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
 if (isMainModule) {
     const args = process.argv.slice(2);
     if (args.includes("--daemon")) {

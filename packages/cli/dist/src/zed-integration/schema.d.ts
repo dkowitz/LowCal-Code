@@ -196,11 +196,11 @@ export declare const planEntrySchema: z.ZodObject<{
     priority: z.ZodUnion<[z.ZodLiteral<"high">, z.ZodLiteral<"medium">, z.ZodLiteral<"low">]>;
     status: z.ZodUnion<[z.ZodLiteral<"pending">, z.ZodLiteral<"in_progress">, z.ZodLiteral<"completed">]>;
 }, "strip", z.ZodTypeAny, {
-    status: "completed" | "pending" | "in_progress";
+    status: "pending" | "completed" | "in_progress";
     content: string;
     priority: "medium" | "high" | "low";
 }, {
-    status: "completed" | "pending" | "in_progress";
+    status: "pending" | "completed" | "in_progress";
     content: string;
     priority: "medium" | "high" | "low";
 }>;
@@ -1581,7 +1581,7 @@ export declare const toolCallSchema: z.ZodObject<{
     title: z.ZodString;
     toolCallId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    status: "completed" | "pending" | "in_progress" | "failed";
+    status: "pending" | "completed" | "in_progress" | "failed";
     title: string;
     kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
     toolCallId: string;
@@ -1655,7 +1655,7 @@ export declare const toolCallSchema: z.ZodObject<{
     }[] | undefined;
     rawInput?: unknown;
 }, {
-    status: "completed" | "pending" | "in_progress" | "failed";
+    status: "pending" | "completed" | "in_progress" | "failed";
     title: string;
     kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
     toolCallId: string;
@@ -3486,7 +3486,7 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     title: z.ZodString;
     toolCallId: z.ZodString;
 }, "strip", z.ZodTypeAny, {
-    status: "completed" | "pending" | "in_progress" | "failed";
+    status: "pending" | "completed" | "in_progress" | "failed";
     title: string;
     kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
     toolCallId: string;
@@ -3561,7 +3561,7 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
     }[] | undefined;
     rawInput?: unknown;
 }, {
-    status: "completed" | "pending" | "in_progress" | "failed";
+    status: "pending" | "completed" | "in_progress" | "failed";
     title: string;
     kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
     toolCallId: string;
@@ -4011,7 +4011,7 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
 }, "strip", z.ZodTypeAny, {
     toolCallId: string;
     sessionUpdate: "tool_call_update";
-    status?: "completed" | "pending" | "in_progress" | "failed" | null | undefined;
+    status?: "pending" | "completed" | "in_progress" | "failed" | null | undefined;
     title?: string | null | undefined;
     content?: ({
         type: "content";
@@ -4086,7 +4086,7 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
 }, {
     toolCallId: string;
     sessionUpdate: "tool_call_update";
-    status?: "completed" | "pending" | "in_progress" | "failed" | null | undefined;
+    status?: "pending" | "completed" | "in_progress" | "failed" | null | undefined;
     title?: string | null | undefined;
     content?: ({
         type: "content";
@@ -4164,25 +4164,25 @@ export declare const sessionUpdateSchema: z.ZodUnion<[z.ZodObject<{
         priority: z.ZodUnion<[z.ZodLiteral<"high">, z.ZodLiteral<"medium">, z.ZodLiteral<"low">]>;
         status: z.ZodUnion<[z.ZodLiteral<"pending">, z.ZodLiteral<"in_progress">, z.ZodLiteral<"completed">]>;
     }, "strip", z.ZodTypeAny, {
-        status: "completed" | "pending" | "in_progress";
+        status: "pending" | "completed" | "in_progress";
         content: string;
         priority: "medium" | "high" | "low";
     }, {
-        status: "completed" | "pending" | "in_progress";
+        status: "pending" | "completed" | "in_progress";
         content: string;
         priority: "medium" | "high" | "low";
     }>, "many">;
     sessionUpdate: z.ZodLiteral<"plan">;
 }, "strip", z.ZodTypeAny, {
     entries: {
-        status: "completed" | "pending" | "in_progress";
+        status: "pending" | "completed" | "in_progress";
         content: string;
         priority: "medium" | "high" | "low";
     }[];
     sessionUpdate: "plan";
 }, {
     entries: {
-        status: "completed" | "pending" | "in_progress";
+        status: "pending" | "completed" | "in_progress";
         content: string;
         priority: "medium" | "high" | "low";
     }[];
@@ -4664,7 +4664,7 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
         title: z.ZodString;
         toolCallId: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -4738,7 +4738,7 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
         }[] | undefined;
         rawInput?: unknown;
     }, {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -4820,7 +4820,7 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
     }[];
     sessionId: string;
     toolCall: {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -4902,7 +4902,7 @@ export declare const requestPermissionRequestSchema: z.ZodObject<{
     }[];
     sessionId: string;
     toolCall: {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -6414,7 +6414,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         title: z.ZodString;
         toolCallId: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -6489,7 +6489,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         }[] | undefined;
         rawInput?: unknown;
     }, {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -6939,7 +6939,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         toolCallId: string;
         sessionUpdate: "tool_call_update";
-        status?: "completed" | "pending" | "in_progress" | "failed" | null | undefined;
+        status?: "pending" | "completed" | "in_progress" | "failed" | null | undefined;
         title?: string | null | undefined;
         content?: ({
             type: "content";
@@ -7014,7 +7014,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
     }, {
         toolCallId: string;
         sessionUpdate: "tool_call_update";
-        status?: "completed" | "pending" | "in_progress" | "failed" | null | undefined;
+        status?: "pending" | "completed" | "in_progress" | "failed" | null | undefined;
         title?: string | null | undefined;
         content?: ({
             type: "content";
@@ -7092,25 +7092,25 @@ export declare const sessionNotificationSchema: z.ZodObject<{
             priority: z.ZodUnion<[z.ZodLiteral<"high">, z.ZodLiteral<"medium">, z.ZodLiteral<"low">]>;
             status: z.ZodUnion<[z.ZodLiteral<"pending">, z.ZodLiteral<"in_progress">, z.ZodLiteral<"completed">]>;
         }, "strip", z.ZodTypeAny, {
-            status: "completed" | "pending" | "in_progress";
+            status: "pending" | "completed" | "in_progress";
             content: string;
             priority: "medium" | "high" | "low";
         }, {
-            status: "completed" | "pending" | "in_progress";
+            status: "pending" | "completed" | "in_progress";
             content: string;
             priority: "medium" | "high" | "low";
         }>, "many">;
         sessionUpdate: z.ZodLiteral<"plan">;
     }, "strip", z.ZodTypeAny, {
         entries: {
-            status: "completed" | "pending" | "in_progress";
+            status: "pending" | "completed" | "in_progress";
             content: string;
             priority: "medium" | "high" | "low";
         }[];
         sessionUpdate: "plan";
     }, {
         entries: {
-            status: "completed" | "pending" | "in_progress";
+            status: "pending" | "completed" | "in_progress";
             content: string;
             priority: "medium" | "high" | "low";
         }[];
@@ -7293,7 +7293,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         };
         sessionUpdate: "agent_thought_chunk";
     } | {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -7370,7 +7370,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
     } | {
         toolCallId: string;
         sessionUpdate: "tool_call_update";
-        status?: "completed" | "pending" | "in_progress" | "failed" | null | undefined;
+        status?: "pending" | "completed" | "in_progress" | "failed" | null | undefined;
         title?: string | null | undefined;
         content?: ({
             type: "content";
@@ -7444,7 +7444,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         rawInput?: unknown;
     } | {
         entries: {
-            status: "completed" | "pending" | "in_progress";
+            status: "pending" | "completed" | "in_progress";
             content: string;
             priority: "medium" | "high" | "low";
         }[];
@@ -7627,7 +7627,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         };
         sessionUpdate: "agent_thought_chunk";
     } | {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -7704,7 +7704,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
     } | {
         toolCallId: string;
         sessionUpdate: "tool_call_update";
-        status?: "completed" | "pending" | "in_progress" | "failed" | null | undefined;
+        status?: "pending" | "completed" | "in_progress" | "failed" | null | undefined;
         title?: string | null | undefined;
         content?: ({
             type: "content";
@@ -7778,7 +7778,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         rawInput?: unknown;
     } | {
         entries: {
-            status: "completed" | "pending" | "in_progress";
+            status: "pending" | "completed" | "in_progress";
             content: string;
             priority: "medium" | "high" | "low";
         }[];
@@ -8200,7 +8200,7 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
         title: z.ZodString;
         toolCallId: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -8274,7 +8274,7 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
         }[] | undefined;
         rawInput?: unknown;
     }, {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -8356,7 +8356,7 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
     }[];
     sessionId: string;
     toolCall: {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -8438,7 +8438,7 @@ export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
     }[];
     sessionId: string;
     toolCall: {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -10409,7 +10409,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
         title: z.ZodString;
         toolCallId: z.ZodString;
     }, "strip", z.ZodTypeAny, {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -10484,7 +10484,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
         }[] | undefined;
         rawInput?: unknown;
     }, {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -10934,7 +10934,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
     }, "strip", z.ZodTypeAny, {
         toolCallId: string;
         sessionUpdate: "tool_call_update";
-        status?: "completed" | "pending" | "in_progress" | "failed" | null | undefined;
+        status?: "pending" | "completed" | "in_progress" | "failed" | null | undefined;
         title?: string | null | undefined;
         content?: ({
             type: "content";
@@ -11009,7 +11009,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
     }, {
         toolCallId: string;
         sessionUpdate: "tool_call_update";
-        status?: "completed" | "pending" | "in_progress" | "failed" | null | undefined;
+        status?: "pending" | "completed" | "in_progress" | "failed" | null | undefined;
         title?: string | null | undefined;
         content?: ({
             type: "content";
@@ -11087,25 +11087,25 @@ export declare const agentNotificationSchema: z.ZodObject<{
             priority: z.ZodUnion<[z.ZodLiteral<"high">, z.ZodLiteral<"medium">, z.ZodLiteral<"low">]>;
             status: z.ZodUnion<[z.ZodLiteral<"pending">, z.ZodLiteral<"in_progress">, z.ZodLiteral<"completed">]>;
         }, "strip", z.ZodTypeAny, {
-            status: "completed" | "pending" | "in_progress";
+            status: "pending" | "completed" | "in_progress";
             content: string;
             priority: "medium" | "high" | "low";
         }, {
-            status: "completed" | "pending" | "in_progress";
+            status: "pending" | "completed" | "in_progress";
             content: string;
             priority: "medium" | "high" | "low";
         }>, "many">;
         sessionUpdate: z.ZodLiteral<"plan">;
     }, "strip", z.ZodTypeAny, {
         entries: {
-            status: "completed" | "pending" | "in_progress";
+            status: "pending" | "completed" | "in_progress";
             content: string;
             priority: "medium" | "high" | "low";
         }[];
         sessionUpdate: "plan";
     }, {
         entries: {
-            status: "completed" | "pending" | "in_progress";
+            status: "pending" | "completed" | "in_progress";
             content: string;
             priority: "medium" | "high" | "low";
         }[];
@@ -11288,7 +11288,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
         };
         sessionUpdate: "agent_thought_chunk";
     } | {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -11365,7 +11365,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
     } | {
         toolCallId: string;
         sessionUpdate: "tool_call_update";
-        status?: "completed" | "pending" | "in_progress" | "failed" | null | undefined;
+        status?: "pending" | "completed" | "in_progress" | "failed" | null | undefined;
         title?: string | null | undefined;
         content?: ({
             type: "content";
@@ -11439,7 +11439,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
         rawInput?: unknown;
     } | {
         entries: {
-            status: "completed" | "pending" | "in_progress";
+            status: "pending" | "completed" | "in_progress";
             content: string;
             priority: "medium" | "high" | "low";
         }[];
@@ -11622,7 +11622,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
         };
         sessionUpdate: "agent_thought_chunk";
     } | {
-        status: "completed" | "pending" | "in_progress" | "failed";
+        status: "pending" | "completed" | "in_progress" | "failed";
         title: string;
         kind: "search" | "delete" | "edit" | "other" | "move" | "read" | "execute" | "think" | "fetch";
         toolCallId: string;
@@ -11699,7 +11699,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
     } | {
         toolCallId: string;
         sessionUpdate: "tool_call_update";
-        status?: "completed" | "pending" | "in_progress" | "failed" | null | undefined;
+        status?: "pending" | "completed" | "in_progress" | "failed" | null | undefined;
         title?: string | null | undefined;
         content?: ({
             type: "content";
@@ -11773,7 +11773,7 @@ export declare const agentNotificationSchema: z.ZodObject<{
         rawInput?: unknown;
     } | {
         entries: {
-            status: "completed" | "pending" | "in_progress";
+            status: "pending" | "completed" | "in_progress";
             content: string;
             priority: "medium" | "high" | "low";
         }[];

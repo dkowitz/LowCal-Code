@@ -6,6 +6,7 @@ Orchestrator V1 adds an autonomous supervision layer for LowCal sessions and sch
 It monitors runtime health, applies policy-driven remediation, and records interventions.
 
 This is the bridge between:
+
 - Interactive operations (`dashboard --watch`, `sessions`, `scheduler`)
 - Autonomous reliability (self-healing without manual babysitting)
 
@@ -33,12 +34,14 @@ This is the bridge between:
 ## Session Control API (V1)
 
 Transport recommendation:
+
 - Local-only Unix domain socket per session (future fallback: loopback TCP with token auth).
 - Socket path stored in session metadata.
 
 ### Capability Model
 
 Each session advertises allowed capabilities:
+
 - `observe`: read status and summaries.
 - `control`: lifecycle and runtime controls.
 - `interact`: controlled task requests (disabled by default in V1).
@@ -46,15 +49,19 @@ Each session advertises allowed capabilities:
 ### Observe Methods
 
 1. `session.get_status`
+
 - Returns identity, mode, pid, cwd, uptime, current phase.
 
 2. `session.get_health`
+
 - Returns health state/reason, confidence, first_seen, last_seen, and current remediation stage.
 
 3. `session.get_context_summary`
+
 - Returns model, approval mode, token budget snapshot, active tool calls count, turn age.
 
 4. `session.get_recent_history`
+
 - Returns bounded recent history window (`max_items`, `max_chars`) with truncation metadata.
 
 ### Control Methods
@@ -68,6 +75,7 @@ Each session advertises allowed capabilities:
 7. `session.shutdown`
 
 All control methods return:
+
 - `accepted: boolean`
 - `reason?: string`
 - `action_id: string`
@@ -75,6 +83,7 @@ All control methods return:
 ### Interact Methods (V1: optional, default off)
 
 1. `session.request_self_repair`
+
 - Structured request (not arbitrary prompt text).
 - Example fields: `fault_type`, `constraints`, `target_outcome`.
 
@@ -165,26 +174,31 @@ Policies are declarative JSON records evaluated each orchestrator tick.
 ## First 5 Remediation Rules (V1)
 
 1. `recover_stalled_session`
+
 - Trigger: `stalled` for >= 2 minutes.
 - Actions: `cancel_turn` -> `restart_turn`.
 - Limits: 3 attempts / 15 minutes.
 
 2. `recover_loop_fault`
+
 - Trigger: `loop_fault` with confidence >= 0.8.
 - Actions: `cancel_turn` -> `set_model(fallback)` -> `restart_turn`.
 - Limits: 2 attempts / 30 minutes.
 
 3. `recover_headless_timeout`
+
 - Trigger: headless task exits timeout.
 - Actions: restart worker once, then pause related job if repeated.
 - Limits: 1 restart then escalate.
 
 4. `recover_scheduler_flap`
+
 - Trigger: daemon start/stop oscillation or repeated tick failures.
 - Actions: controlled daemon restart, then mark scheduler degraded.
 - Limits: 2 restarts / 10 minutes.
 
 5. `contain_repeated_job_failure`
+
 - Trigger: job `error_count` exceeds threshold in short window.
 - Actions: pause job, emit escalation event, require manual resume.
 - Limits: enforced per job.
@@ -192,6 +206,7 @@ Policies are declarative JSON records evaluated each orchestrator tick.
 ## Audit and Traceability
 
 Every orchestrator decision logs:
+
 - `decision_id`
 - target session/job id
 - matched policy id
@@ -204,12 +219,14 @@ Storage (V1): append-only JSONL under `.lowcal/orchestrator/logs/`.
 ## Dashboard Integration (V1)
 
 Add sections/fields to `dashboard --watch`:
+
 - health state + reason per session/job
 - remediation stage/attempt count
 - last orchestrator action + timestamp
 - policy match indicator
 
 Add shortcuts:
+
 - toggle orchestrator on/off
 - force re-evaluate target
 - ack/escalate a fault
@@ -217,20 +234,25 @@ Add shortcuts:
 ## Real Workflows Enabled
 
 1. Overnight test guardianship
+
 - Scheduled test tasks run hourly.
 - Orchestrator retries transient failures and pauses noisy jobs automatically.
 
 2. Autonomous long-running refactors
+
 - Headless refactor sessions are restarted on stalls.
 - Loop faults trigger fallback model and continue without manual intervention.
 
 3. Proactive repo hygiene
+
 - Recurring lint/typecheck/docs jobs stay healthy via bounded auto-recovery.
 
 4. Continuous monitoring tasks
+
 - Periodic log analysis sessions self-heal from temporary model/tool/runtime faults.
 
 5. Multi-session reliability
+
 - One orchestrator supervises mixed `tui` + scheduled jobs + ad hoc headless runs.
 
 ## Implementation Plan

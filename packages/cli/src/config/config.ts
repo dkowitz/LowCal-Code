@@ -33,6 +33,7 @@ import yargs from "yargs/yargs";
 import { dashboardCommand } from "../commands/dashboard.js";
 import { extensionsCommand } from "../commands/extensions.js";
 import { mcpCommand } from "../commands/mcp.js";
+import { orchestratorCommand } from "../commands/orchestrator.js";
 import { researchCommand } from "../commands/research.js";
 import { schedulerCommand } from "../commands/scheduler.js";
 import { sessionsCommand } from "../commands/sessions.js";
@@ -313,6 +314,7 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     // Register MCP subcommands
     .command(mcpCommand)
     .command(researchCommand)
+    .command(orchestratorCommand)
     .command(schedulerCommand)
     .command(sessionsCommand)
     .command(dashboardCommand);
@@ -339,6 +341,7 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     (result._[0] === "mcp" ||
       result._[0] === "extensions" ||
       result._[0] === "scheduler" ||
+      result._[0] === "orchestrator" ||
       result._[0] === "sessions" ||
       result._[0] === "dashboard")
   ) {

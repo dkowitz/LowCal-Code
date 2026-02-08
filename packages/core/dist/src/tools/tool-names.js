@@ -25,5 +25,6 @@ export const ToolNames = {
     SEARXNG_SEARCH: "searxng_search",
     RESEARCH: "research",
     SCHEDULE_TASK: "schedule_task",
+    LAUNCH_TASK: "launch_task",
 };
 //# sourceMappingURL=tool-names.js.map
