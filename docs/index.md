@@ -32,6 +32,7 @@ This documentation is organized into the following sections:
   - **[Web Search Tool](./tools/web-search.md):** Documentation for the `web_search` tool.
   - **[Memory Tool](./tools/memory.md):** Documentation for the `save_memory` tool.
 - **[Subagents](./subagents.md):** Specialized AI assistants for focused tasks with comprehensive management, configuration, and usage guidance.
+- **[Orchestrator V1 Spec](./orchestrator-v1.md):** Session supervision architecture, control API, policy DSL, remediation rules, and rollout plan for autonomous reliability.
 - **[Contributing & Development Guide](../CONTRIBUTING.md):** Information for contributors and developers, including setup, building, testing, and coding conventions.
 - **[NPM](./npm.md):** Details on how the project's packages are structured
 - **[Troubleshooting Guide](./troubleshooting.md):** Find solutions to common problems and FAQs.

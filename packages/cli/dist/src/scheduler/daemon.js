@@ -302,7 +302,7 @@ function shellQuoteArg(value) {
     if (value.length === 0) {
         return "''";
     }
-    return `'${value.replace(/'/g, `'\"'\"'`)}'`;
+    return `'${value.replace(/'/g, `'"'"'`)}'`;
 }
 async function waitForHeadlessLog(logPath, startedAt, timeoutMs, jobId) {
     const startTime = Date.now();
@@ -331,7 +331,7 @@ async function waitForHeadlessLog(logPath, startedAt, timeoutMs, jobId) {
                 };
             }
         }
-        catch (error) {
+        catch {
             // Likely file not found yet or incomplete write. Keep polling.
         }
         await new Promise((resolve) => setTimeout(resolve, 1000));
@@ -608,18 +608,21 @@ export async function pauseJob(id) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id }),
         });
-        return response.ok;
-    }
-    catch {
-        // Fallback: try to pause directly via job store
-        const { pauseJob: corePauseJob } = await import("@qwen-code/qwen-code-core");
-        try {
-            await corePauseJob(id);
+        if (response.ok) {
             return true;
         }
-        catch {
-            return false;
-        }
+    }
+    catch {
+        // Fall back below.
+    }
+    // Fallback: try to pause directly via job store
+    const { pauseJob: corePauseJob } = await import("@qwen-code/qwen-code-core");
+    try {
+        await corePauseJob(id);
+        return true;
+    }
+    catch {
+        return false;
     }
 }
 /**
@@ -632,18 +635,21 @@ export async function resumeJob(id) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ id }),
         });
-        return response.ok;
-    }
-    catch {
-        // Fallback: try to resume directly via job store
-        const { resumeJob: coreResumeJob } = await import("@qwen-code/qwen-code-core");
-        try {
-            await coreResumeJob(id);
+        if (response.ok) {
             return true;
         }
-        catch {
-            return false;
-        }
+    }
+    catch {
+        // Fall back below.
+    }
+    // Fallback: try to resume directly via job store
+    const { resumeJob: coreResumeJob } = await import("@qwen-code/qwen-code-core");
+    try {
+        await coreResumeJob(id);
+        return true;
+    }
+    catch {
+        return false;
     }
 }
 // Main entry point

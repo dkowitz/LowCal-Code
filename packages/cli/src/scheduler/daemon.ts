@@ -405,7 +405,7 @@ function shellQuoteArg(value: string): string {
   if (value.length === 0) {
     return "''";
   }
-  return `'${value.replace(/'/g, `'\"'\"'`)}'`;
+  return `'${value.replace(/'/g, `'"'"'`)}'`;
 }
 
 async function waitForHeadlessLog(
@@ -448,7 +448,7 @@ async function waitForHeadlessLog(
           error: parsed.error ?? parsed.stderr ?? "Unknown error",
         };
       }
-    } catch (error) {
+    } catch {
       // Likely file not found yet or incomplete write. Keep polling.
     }
 
@@ -804,16 +804,20 @@ export async function pauseJob(id: string): Promise<boolean> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    return response.ok;
-  } catch {
-    // Fallback: try to pause directly via job store
-    const { pauseJob: corePauseJob } = await import("@qwen-code/qwen-code-core");
-    try {
-      await corePauseJob(id);
+    if (response.ok) {
       return true;
-    } catch {
-      return false;
     }
+  } catch {
+    // Fall back below.
+  }
+
+  // Fallback: try to pause directly via job store
+  const { pauseJob: corePauseJob } = await import("@qwen-code/qwen-code-core");
+  try {
+    await corePauseJob(id);
+    return true;
+  } catch {
+    return false;
   }
 }
 
@@ -827,16 +831,20 @@ export async function resumeJob(id: string): Promise<boolean> {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ id }),
     });
-    return response.ok;
-  } catch {
-    // Fallback: try to resume directly via job store
-    const { resumeJob: coreResumeJob } = await import("@qwen-code/qwen-code-core");
-    try {
-      await coreResumeJob(id);
+    if (response.ok) {
       return true;
-    } catch {
-      return false;
     }
+  } catch {
+    // Fall back below.
+  }
+
+  // Fallback: try to resume directly via job store
+  const { resumeJob: coreResumeJob } = await import("@qwen-code/qwen-code-core");
+  try {
+    await coreResumeJob(id);
+    return true;
+  } catch {
+    return false;
   }
 }
 

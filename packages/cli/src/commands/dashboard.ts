@@ -9,12 +9,19 @@
  */
 
 import type { CommandModule, Argv } from "yargs";
+import stripAnsiLib from "strip-ansi";
 
 import {
   listSessions,
   pruneStaleSessions,
   killSession,
+  listJobs,
+  getJob,
+  deleteJob,
+  resetJob,
   type SessionRecord,
+  type Job,
+  type JobExecutionMode,
 } from "@qwen-code/qwen-code-core";
 import { DEFAULT_SESSION_TTL_MS } from "../session/sessionManager.js";
 
@@ -27,14 +34,6 @@ import {
   resumeJob as daemonResumeJob,
 } from "../scheduler/daemon.js";
 
-import {
-  listJobs,
-  getJob,
-  deleteJob,
-  resetJob,
-  type Job,
-  type JobExecutionMode,
-} from "@qwen-code/qwen-code-core";
 import { loadSettings } from "../config/settings.js";
 
 type DashboardArgs = {
@@ -42,6 +41,13 @@ type DashboardArgs = {
   watch?: boolean;
   interval?: number;
 };
+
+type DashboardAction = "delete" | "reset" | "pause" | "resume" | "killSession";
+
+const DASHBOARD_SECTION_INNER_WIDTH = 77;
+const DASHBOARD_SHORTCUTS_INNER_WIDTH = 80;
+const ALT_SCREEN_ON = "\x1b[?1049h\x1b[2J\x1b[H\x1b[?25l";
+const ALT_SCREEN_OFF = "\x1b[?25h\x1b[?1049l";
 
 function getTtlMs(ttlSeconds?: number): number {
   if (!ttlSeconds || !Number.isFinite(ttlSeconds) || ttlSeconds <= 0) {
@@ -59,6 +65,35 @@ function getIntervalMs(intervalSeconds?: number): number {
     return 2000;
   }
   return intervalSeconds * 1000;
+}
+
+function stripAnsi(value: string): string {
+  return stripAnsiLib(value);
+}
+
+function fitToWidth(value: string, width: number): string {
+  const visible = stripAnsi(value);
+  if (visible.length <= width) {
+    return value;
+  }
+  const truncated = visible.slice(0, Math.max(0, width - 1));
+  return `${truncated}…`;
+}
+
+function padToWidth(value: string, width: number): string {
+  const fitted = fitToWidth(value, width);
+  const padding = Math.max(0, width - stripAnsi(fitted).length);
+  return `${fitted}${" ".repeat(padding)}`;
+}
+
+function printBoxLine(value: string, width: number): void {
+  console.log(`│ ${padToWidth(value, width)} │`);
+}
+
+function printBoxBlock(lines: string[], width: number): void {
+  for (const line of lines) {
+    printBoxLine(line, width);
+  }
 }
 
 function normalizeExecutionMode(
@@ -85,6 +120,32 @@ function getDefaultExecutionMode(): JobExecutionMode {
     return "headless";
   }
   return modeFromSettings;
+}
+
+function sortSessionsForDisplay(
+  sessions: SessionRecord[],
+  ttlMs: number,
+  now: number,
+): SessionRecord[] {
+  return [...sessions].sort((a, b) => {
+    const aLast = Date.parse(a.last_seen);
+    const bLast = Date.parse(b.last_seen);
+    const aStale = Number.isFinite(aLast) && now - aLast > ttlMs;
+    const bStale = Number.isFinite(bLast) && now - bLast > ttlMs;
+    const aRank = aStale ? 2 : a.status === "working" ? 0 : 1;
+    const bRank = bStale ? 2 : b.status === "working" ? 0 : 1;
+    if (aRank !== bRank) {
+      return aRank - bRank;
+    }
+    if (Number.isFinite(aLast) && Number.isFinite(bLast)) {
+      return bLast - aLast;
+    }
+    return 0;
+  });
+}
+
+function sortJobsForDisplay(jobs: Job[]): Job[] {
+  return [...jobs].sort((a, b) => Date.parse(b.created_at) - Date.parse(a.created_at));
 }
 
 function formatSession(
@@ -158,13 +219,36 @@ function formatJob(job: Job, defaultMode: JobExecutionMode): string {
   return output;
 }
 
+function getActionPrompt(action: DashboardAction): string {
+  const prompts: Record<DashboardAction, string> = {
+    delete: "\nEnter Job # to delete: ",
+    reset: "\nEnter Job # to reset: ",
+    pause: "\nEnter Job # to pause: ",
+    resume: "\nEnter Job # to resume: ",
+    killSession: "\nEnter Session # to kill: ",
+  };
+  return prompts[action];
+}
+
+function getActionVerb(action: DashboardAction): string {
+  const verbs: Record<DashboardAction, string> = {
+    delete: "delete job",
+    reset: "reset job",
+    pause: "pause job",
+    resume: "resume job",
+    killSession: "kill session",
+  };
+  return verbs[action];
+}
+
 async function renderDashboard(
   sessions: SessionRecord[],
   jobs: Job[],
   ttlMs: number,
   intervalMs: number,
+  now: number,
+  actionNotice?: string,
 ): Promise<void> {
-  const now = Date.now();
   const defaultMode = getDefaultExecutionMode();
 
   // Clear screen and move cursor to top
@@ -180,13 +264,14 @@ async function renderDashboard(
   const daemonRunning = await isDaemonRunning();
   console.log("┌─ Scheduler Status ────────────────────────────────────────────────────────────┐");
   const daemonStatusText = daemonRunning ? "🟢 Running" : "🔴 Not running";
-  console.log(`│ Daemon: ${daemonStatusText}${" ".repeat(60 - daemonStatusText.length)}│`);
+  printBoxLine(`Daemon: ${daemonStatusText}`, DASHBOARD_SECTION_INNER_WIDTH);
   if (daemonRunning) {
     const status = await getDaemonStatus();
-    const pidText = `PID: ${status.pid}`;
-    console.log(`│ ${pidText}${" ".repeat(75 - pidText.length)}│`);
-    const activeExecText = `Active executions: ${status.active_executions}`;
-    console.log(`│ ${activeExecText}${" ".repeat(75 - activeExecText.length)}│`);
+    printBoxLine(`PID: ${status.pid}`, DASHBOARD_SECTION_INNER_WIDTH);
+    printBoxLine(
+      `Active executions: ${status.active_executions}`,
+      DASHBOARD_SECTION_INNER_WIDTH,
+    );
   }
   console.log("└───────────────────────────────────────────────────────────────────────────────┘");
   console.log();
@@ -195,33 +280,15 @@ async function renderDashboard(
   const sessionsHeader = `┌─ Active Sessions (${sessions.length} total) ─────────────────────────────────────────────────────────┐`;
   console.log(sessionsHeader);
   if (sessions.length === 0) {
-    console.log("│ No active sessions.                                                           │");
+    printBoxLine("No active sessions.", DASHBOARD_SECTION_INNER_WIDTH);
   } else {
-    const sorted = [...sessions].sort((a, b) => {
-      const aLast = Date.parse(a.last_seen);
-      const bLast = Date.parse(b.last_seen);
-      const aStale = Number.isFinite(aLast) && now - aLast > ttlMs;
-      const bStale = Number.isFinite(bLast) && now - bLast > ttlMs;
-      const aRank = aStale ? 2 : a.status === "working" ? 0 : 1;
-      const bRank = bStale ? 2 : b.status === "working" ? 0 : 1;
-      if (aRank !== bRank) {
-        return aRank - bRank;
-      }
-      if (Number.isFinite(aLast) && Number.isFinite(bLast)) {
-        return bLast - aLast;
-      }
-      return 0;
-    });
-
-    for (let idx = 0; idx < sorted.length; idx++) {
-      const session = sorted[idx];
-      // Display numeric ID in brackets
+    for (let idx = 0; idx < sessions.length; idx++) {
+      const session = sessions[idx];
       const lines = formatSession(session, ttlMs, now).split("\n");
       if (lines.length > 0) {
         lines[0] = `[${idx + 1}] ${lines[0]}`;
       }
-      const indented = lines.join("\n").replace(/\n/g, "\n│ ");
-      console.log(`│ ${indented} │`);
+      printBoxBlock(lines, DASHBOARD_SECTION_INNER_WIDTH);
       console.log("├───────────────────────────────────────────────────────────────────────────────┤");
     }
   }
@@ -232,43 +299,52 @@ async function renderDashboard(
   const jobsHeader = `┌─ Scheduled Jobs (${jobs.length} total) ─────────────────────────────────────────────────────────┐`;
   console.log(jobsHeader);
   if (jobs.length === 0) {
-    console.log("│ No scheduled jobs.                                                            │");
+    printBoxLine("No scheduled jobs.", DASHBOARD_SECTION_INNER_WIDTH);
   } else {
-    // Sort by created_at for consistent numbering
-    const sortedJobs = [...jobs].sort((a, b) => {
-      return Date.parse(b.created_at) - Date.parse(a.created_at);
-    });
-
-    for (let idx = 0; idx < sortedJobs.length; idx++) {
-      const job = sortedJobs[idx];
-      // Display numeric ID in brackets followed by the actual job ID
-      const jobIdDisplay = `[${idx + 1}] ${job.id}`;
-      const formatted = formatJob(job, defaultMode);
-      // Replace the first line with our numbered version
-      const lines = formatted.split("\n");
+    for (let idx = 0; idx < jobs.length; idx++) {
+      const job = jobs[idx];
+      const lines = formatJob(job, defaultMode).split("\n");
       if (lines.length > 0) {
-        lines[0] = lines[0].replace(/^(🟢|🔴) [^\s]+/, `$1 ${jobIdDisplay}`);
+        const statusIcon = job.enabled ? "🟢" : "🔴";
+        const statusText = job.status === "running" ? " (running)" : "";
+        lines[0] = `${statusIcon} [${idx + 1}] ${job.id}${statusText}`;
       }
-      const indented = lines.join("\n").replace(/\n/g, "\n│ ");
-      console.log(`│ ${indented} │`);
+      printBoxBlock(lines, DASHBOARD_SECTION_INNER_WIDTH);
       console.log("├───────────────────────────────────────────────────────────────────────────────┤");
     }
   }
   console.log("└───────────────────────────────────────────────────────────────────────────────┘");
   console.log();
 
-  // Footer with helper info - horizontal layout
+  // Footer with helper info
   const intervalSec = Math.round(intervalMs / 1000);
   console.log(
     `LowCal Dashboard (refresh ${intervalSec}s) - press Ctrl+C to exit`,
   );
   console.log();
   console.log("┌─ Keyboard Shortcuts ─────────────────────────────────────────────────────────────┐");
-  console.log("│ [p] prune stale sessions   │ [s] start daemon   │ [t] stop daemon              │");
-  console.log("│ [d] delete job <#num>      │ [r] reset job <#num>                            │");
-  console.log("│ [a] pause job <#num>       │ [e] resume job <#num>                           │");
-  console.log("│ [k] kill session <#num>                                                     │");
+  printBoxLine(
+    "[p] prune stale sessions   | [s] start daemon   | [t] stop daemon",
+    DASHBOARD_SHORTCUTS_INNER_WIDTH,
+  );
+  printBoxLine(
+    "[d] delete job <#num>      | [r] reset job <#num>",
+    DASHBOARD_SHORTCUTS_INNER_WIDTH,
+  );
+  printBoxLine(
+    "[a] pause job <#num>       | [e] resume job <#num>",
+    DASHBOARD_SHORTCUTS_INNER_WIDTH,
+  );
+  printBoxLine(
+    "[k] kill session <#num>    | [Esc] cancel action",
+    DASHBOARD_SHORTCUTS_INNER_WIDTH,
+  );
   console.log("└──────────────────────────────────────────────────────────────────────────────────┘");
+
+  if (actionNotice) {
+    console.log();
+    console.log(`Last action: ${actionNotice}`);
+  }
 }
 
 const dashboardCommand: CommandModule<DashboardArgs, DashboardArgs> = {
@@ -293,43 +369,51 @@ const dashboardCommand: CommandModule<DashboardArgs, DashboardArgs> = {
     const ttlMs = getTtlMs(argv.ttl);
 
     if (!argv.watch) {
-      const [sessions, jobs] = await Promise.all([
+      const [rawSessions, rawJobs] = await Promise.all([
         listSessions(),
         listJobs(),
       ]);
       const intervalMs = getIntervalMs(argv.interval);
-      await renderDashboard(sessions, jobs, ttlMs, intervalMs);
+      const now = Date.now();
+      const sessions = sortSessionsForDisplay(rawSessions, ttlMs, now);
+      const jobs = sortJobsForDisplay(rawJobs);
+      await renderDashboard(sessions, jobs, ttlMs, intervalMs, now);
       return;
     }
 
     const intervalMs = getIntervalMs(argv.interval);
-    let intervalId: NodeJS.Timeout | undefined;
+    let renderInProgress = false;
+    let renderRequested = false;
+    let lastActionNotice: string | undefined;
+    let inAltScreen = false;
 
     // Interactive mode state
     let isInteractiveMode = false;
+    let awaitingConfirmation = false;
     let inputBuffer = "";
-    let pendingAction:
-      | "delete"
-      | "reset"
-      | "pause"
-      | "resume"
-      | "killSession"
-      | null = null;
+    let pendingAction: DashboardAction | null = null;
+    let pendingTargetId: string | null = null;
     let interactivePrompt = "";
-    let currentJobs: Job[] = [];
-    let currentSessions: SessionRecord[] = [];
+    let displayJobs: Job[] = [];
+    let displaySessions: SessionRecord[] = [];
 
     const render = async () => {
-      // Clear screen and re-render dashboard
-      process.stdout.write("\x1b[2J\x1b[H");
-
-      const [sessions, jobs] = await Promise.all([
+      const [rawSessions, rawJobs] = await Promise.all([
         listSessions(),
         listJobs(),
       ]);
-      currentSessions = sessions;
-      currentJobs = jobs;
-      await renderDashboard(sessions, jobs, ttlMs, intervalMs);
+      const now = Date.now();
+      displaySessions = sortSessionsForDisplay(rawSessions, ttlMs, now);
+      displayJobs = sortJobsForDisplay(rawJobs);
+
+      await renderDashboard(
+        displaySessions,
+        displayJobs,
+        ttlMs,
+        intervalMs,
+        now,
+        lastActionNotice,
+      );
 
       // If in interactive mode, re-display the prompt and input
       if (isInteractiveMode && interactivePrompt) {
@@ -337,8 +421,100 @@ const dashboardCommand: CommandModule<DashboardArgs, DashboardArgs> = {
       }
     };
 
-    await render();
-    intervalId = setInterval(render, intervalMs);
+    const renderSafe = async () => {
+      if (renderInProgress) {
+        renderRequested = true;
+        return;
+      }
+      renderInProgress = true;
+      try {
+        do {
+          renderRequested = false;
+          await render();
+        } while (renderRequested);
+      } catch (error) {
+        const message = error instanceof Error ? error.message : String(error);
+        lastActionNotice = `Dashboard refresh failed: ${message}`;
+      } finally {
+        renderInProgress = false;
+      }
+    };
+
+    const executeAction = async (
+      action: DashboardAction,
+      id: string,
+    ): Promise<string> => {
+      if (action === "delete") {
+        const job = await getJob(id);
+        if (!job) {
+          return `Job "${id}" not found`;
+        }
+        await deleteJob(id);
+        return `Deleted job "${id}"`;
+      }
+
+      if (action === "reset") {
+        const job = await getJob(id);
+        if (!job) {
+          return `Job "${id}" not found`;
+        }
+        await resetJob(id);
+        return `Reset job "${id}"`;
+      }
+
+      if (action === "pause") {
+        const job = await getJob(id);
+        if (!job) {
+          return `Job "${id}" not found`;
+        }
+        const paused = await daemonPauseJob(id);
+        return paused ? `Paused job "${id}"` : `Failed to pause job "${id}"`;
+      }
+
+      if (action === "resume") {
+        const job = await getJob(id);
+        if (!job) {
+          return `Job "${id}" not found`;
+        }
+        const resumed = await daemonResumeJob(id);
+        return resumed
+          ? `Resumed job "${id}"`
+          : `Failed to resume job "${id}"`;
+      }
+
+      const killed = await killSession(id);
+      return killed
+        ? `Killed session "${id}"`
+        : `Failed to kill session "${id}" or process already terminated`;
+    };
+
+    const restoreTerminal = () => {
+      if (!inAltScreen) {
+        return;
+      }
+      inAltScreen = false;
+      if (process.stdout.isTTY) {
+        process.stdout.write(ALT_SCREEN_OFF);
+      }
+      if (process.stdin.isTTY) {
+        process.stdin.setRawMode(false);
+      }
+    };
+
+    if (process.stdout.isTTY) {
+      process.stdout.write(ALT_SCREEN_ON);
+      inAltScreen = true;
+      process.once("exit", restoreTerminal);
+      process.once("SIGTERM", () => {
+        restoreTerminal();
+        process.exit(0);
+      });
+    }
+
+    await renderSafe();
+    const intervalId = setInterval(() => {
+      void renderSafe();
+    }, intervalMs);
 
     if (process.stdin.isTTY) {
       process.stdin.setRawMode(true);
@@ -346,201 +522,186 @@ const dashboardCommand: CommandModule<DashboardArgs, DashboardArgs> = {
 
       const handleInput = async (data: Buffer) => {
         const key = data.toString("utf-8");
+        const lower = key.toLowerCase();
 
         // Ctrl+C to exit
         if (key === "\u0003") {
           clearInterval(intervalId);
+          restoreTerminal();
           process.exit(0);
         }
 
-        // Handle interactive mode input
         if (isInteractiveMode) {
-          if (key === "\r" || key === "\n") {
-            // Enter pressed - submit input
-            const jobId = inputBuffer.trim();
-            inputBuffer = "";
+          // ESC cancels current in-progress action
+          if (key === "\u001b") {
             isInteractiveMode = false;
-
-            let actualId = jobId;
-            
-            // Handle numeric ID lookup
-            if (!isNaN(Number(jobId)) && Number(jobId) > 0) {
-              const numId = parseInt(jobId, 10);
-              
-              if (pendingAction === "killSession") {
-                // For sessions, find by index in sorted list
-                if (numId <= currentSessions.length) {
-                  actualId = currentSessions[numId - 1].id;
-                }
-              } else {
-                // For jobs, find by index in sorted list
-                if (numId <= currentJobs.length) {
-                  const sortedJobs = [...currentJobs].sort((a, b) => {
-                    return Date.parse(b.created_at) - Date.parse(a.created_at);
-                  });
-                  actualId = sortedJobs[numId - 1]?.id || jobId;
-                }
-              }
-            }
-
-            if (actualId && pendingAction) {
-              if (pendingAction === "delete") {
-                const job = await getJob(actualId);
-                if (!job) {
-                  console.error(`Job "${actualId}" not found`);
-                } else {
-                  await deleteJob(actualId);
-                  console.log(`✓ Job "${actualId}" deleted successfully`);
-                }
-              } else if (pendingAction === "reset") {
-                const job = await getJob(actualId);
-                if (!job) {
-                  console.error(`Job "${actualId}" not found`);
-                } else {
-                  await resetJob(actualId);
-                  console.log(`✓ Job "${actualId}" reset and re-enabled`);
-                }
-              } else if (pendingAction === "pause") {
-                const job = await getJob(actualId);
-                if (!job) {
-                  console.error(`Job "${actualId}" not found`);
-                } else {
-                  const paused = await daemonPauseJob(actualId);
-                  if (paused) {
-                    console.log(`✓ Job "${actualId}" paused`);
-                  } else {
-                    console.log(`✗ Failed to pause job "${actualId}"`);
-                  }
-                }
-              } else if (pendingAction === "resume") {
-                const job = await getJob(actualId);
-                if (!job) {
-                  console.error(`Job "${actualId}" not found`);
-                } else {
-                  const resumed = await daemonResumeJob(actualId);
-                  if (resumed) {
-                    console.log(`✓ Job "${actualId}" resumed`);
-                  } else {
-                    console.log(`✗ Failed to resume job "${actualId}"`);
-                  }
-                }
-              } else if (pendingAction === "killSession") {
-                const killed = await killSession(actualId);
-                if (killed) {
-                  console.log(`✓ Session "${actualId}" killed`);
-                } else {
-                  console.log(`✗ Failed to kill session "${actualId}" or process already terminated`);
-                }
-              }
-            }
+            awaitingConfirmation = false;
             pendingAction = null;
-            console.log("\nPress any key to return...");
-          } else if (key === "\u007F" || key === "\b") {
-            // Backspace
+            pendingTargetId = null;
+            inputBuffer = "";
+            interactivePrompt = "";
+            lastActionNotice = "Cancelled pending action";
+            await renderSafe();
+            return;
+          }
+
+          if (awaitingConfirmation) {
+            const actionToRun = pendingAction;
+            const targetId = pendingTargetId;
+
+            isInteractiveMode = false;
+            awaitingConfirmation = false;
+            pendingAction = null;
+            pendingTargetId = null;
+            inputBuffer = "";
+            interactivePrompt = "";
+
+            if (lower === "y" && actionToRun && targetId) {
+              lastActionNotice = await executeAction(actionToRun, targetId);
+            } else {
+              lastActionNotice = "Action cancelled";
+            }
+            await renderSafe();
+            return;
+          }
+
+          if (key === "\r" || key === "\n") {
+            // Enter pressed - resolve target id and ask for confirmation
+            const requestedId = inputBuffer.trim();
+            inputBuffer = "";
+
+            if (!requestedId || !pendingAction) {
+              isInteractiveMode = false;
+              pendingAction = null;
+              interactivePrompt = "";
+              lastActionNotice = "No target selected";
+              await renderSafe();
+              return;
+            }
+
+            let actualId = requestedId;
+
+            if (!isNaN(Number(requestedId)) && Number(requestedId) > 0) {
+              const numId = parseInt(requestedId, 10);
+              if (pendingAction === "killSession") {
+                if (numId <= displaySessions.length) {
+                  actualId = displaySessions[numId - 1].id;
+                }
+              } else if (numId <= displayJobs.length) {
+                actualId = displayJobs[numId - 1]?.id || requestedId;
+              }
+            }
+
+            pendingTargetId = actualId;
+            awaitingConfirmation = true;
+            interactivePrompt = `\nConfirm ${getActionVerb(pendingAction)} "${actualId}"? [y/N]: `;
+            process.stdout.write(interactivePrompt);
+            return;
+          }
+
+          if (key === "\u007F" || key === "\b") {
             inputBuffer = inputBuffer.slice(0, -1);
             process.stdout.write(`\r\x1b[K${interactivePrompt}${inputBuffer}`);
-          } else if (!key.match(/[\r\n]/)) {
-            // Regular character
+            return;
+          }
+
+          if (!key.match(/[\r\n]/)) {
             inputBuffer += key;
             process.stdout.write(key);
           }
           return;
         }
 
-        // Prune stale sessions
-        if (key.toLowerCase() === "p") {
-          console.log("\nPruning stale sessions...");
+        if (lower === "p") {
           const removed = await pruneStaleSessions(ttlMs);
-          if (removed.length === 0) {
-            console.log("No stale sessions to remove.");
-          } else {
-            console.log(`Removed ${removed.length} stale session(s):`);
-            for (const session of removed) {
-              console.log(`- ${session.id}`);
-            }
-          }
-          await render();
+          lastActionNotice =
+            removed.length === 0
+              ? "No stale sessions to remove"
+              : `Pruned ${removed.length} stale session(s)`;
+          await renderSafe();
+          return;
         }
 
-        // Start daemon
-        if (key.toLowerCase() === "s") {
+        if (lower === "s") {
           const running = await isDaemonRunning();
           if (running) {
-            console.log("\nScheduler daemon is already running.");
             const status = await getDaemonStatus();
-            console.log(`  PID: ${status.pid}`);
-            console.log(`  Jobs: ${status.total_jobs} scheduled`);
+            lastActionNotice = `Scheduler already running (pid: ${status.pid})`;
           } else {
-            console.log("\nStarting scheduler daemon...");
             const started = await startDaemon();
-            if (started) {
-              console.log("✓ Scheduler daemon started successfully");
-            } else {
-              console.log("✗ Failed to start scheduler daemon");
-            }
+            lastActionNotice = started
+              ? "Started scheduler daemon"
+              : "Failed to start scheduler daemon";
           }
-          await render();
+          await renderSafe();
+          return;
         }
 
-        // Stop daemon
-        if (key.toLowerCase() === "t") {
+        if (lower === "t") {
           const running = await isDaemonRunning();
           if (!running) {
-            console.log("\nScheduler daemon is not running.");
+            lastActionNotice = "Scheduler daemon is not running";
           } else {
-            console.log("\nStopping scheduler daemon...");
             const stopped = await stopDaemon();
-            if (stopped) {
-              console.log("✓ Scheduler daemon stopped");
-            } else {
-              console.log("✗ Failed to stop scheduler daemon");
-            }
+            lastActionNotice = stopped
+              ? "Stopped scheduler daemon"
+              : "Failed to stop scheduler daemon";
           }
-          await render();
+          await renderSafe();
+          return;
         }
 
-        // Delete job
-        if (key.toLowerCase() === "d") {
+        if (lower === "d") {
           isInteractiveMode = true;
+          awaitingConfirmation = false;
           pendingAction = "delete";
+          pendingTargetId = null;
           inputBuffer = "";
-          interactivePrompt = "\nEnter Job # to delete: ";
+          interactivePrompt = getActionPrompt("delete");
           process.stdout.write(interactivePrompt);
+          return;
         }
 
-        // Reset job
-        if (key.toLowerCase() === "r") {
+        if (lower === "r") {
           isInteractiveMode = true;
+          awaitingConfirmation = false;
           pendingAction = "reset";
+          pendingTargetId = null;
           inputBuffer = "";
-          interactivePrompt = "\nEnter Job # to reset: ";
+          interactivePrompt = getActionPrompt("reset");
           process.stdout.write(interactivePrompt);
+          return;
         }
 
-        // Pause job
-        if (key.toLowerCase() === "a") {
+        if (lower === "a") {
           isInteractiveMode = true;
+          awaitingConfirmation = false;
           pendingAction = "pause";
+          pendingTargetId = null;
           inputBuffer = "";
-          interactivePrompt = "\nEnter Job # to pause: ";
+          interactivePrompt = getActionPrompt("pause");
           process.stdout.write(interactivePrompt);
+          return;
         }
 
-        // Resume job
-        if (key.toLowerCase() === "e") {
+        if (lower === "e") {
           isInteractiveMode = true;
+          awaitingConfirmation = false;
           pendingAction = "resume";
+          pendingTargetId = null;
           inputBuffer = "";
-          interactivePrompt = "\nEnter Job # to resume: ";
+          interactivePrompt = getActionPrompt("resume");
           process.stdout.write(interactivePrompt);
+          return;
         }
 
-        // Kill session
-        if (key.toLowerCase() === "k") {
+        if (lower === "k") {
           isInteractiveMode = true;
+          awaitingConfirmation = false;
           pendingAction = "killSession";
+          pendingTargetId = null;
           inputBuffer = "";
-          interactivePrompt = "\nEnter Session # to kill: ";
+          interactivePrompt = getActionPrompt("killSession");
           process.stdout.write(interactivePrompt);
         }
       };
@@ -548,9 +709,9 @@ const dashboardCommand: CommandModule<DashboardArgs, DashboardArgs> = {
       process.stdin.on("data", handleInput);
     }
 
-    // Keep the process alive by keeping stdin open
     process.stdin.on("end", () => {
       clearInterval(intervalId);
+      restoreTerminal();
       process.exit(0);
     });
   },
