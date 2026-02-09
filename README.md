@@ -8,9 +8,38 @@
 
 </div>
 
-LowCal is a powerful command-line AI workflow tool adapted from Qwen Code, specifically optimized for local use with LM Studio and cloud models with OpenRouter. It enhances your development workflow with advanced code understanding, automated tasks, and intelligent assistance.
+LowCal is a powerful command-line AI workflow tool adapted from Qwen Code, specifically optimized for local use with LM Studio and cloud models with OpenRouter. It enhances your development workflow with advanced code understanding, automated tasks, intelligent subagents, and comprehensive scheduling capabilities.
 
-#### Installation
+## Features
+
+### 🤖 Advanced AI Capabilities
+- **Subagents**: Specialized AI assistants for focused tasks with custom prompts and tool access
+- **Custom Prompts**: Create and manage system prompts tailored to specific workflows
+- **Model Selection**: Support for LM Studio, OpenRouter, OpenAI, and other OpenAI-compatible providers
+
+### ⚡ Task Automation & Scheduling
+- **Scheduler**: Cron-based job scheduling for recurring tasks (tests, builds, reports)
+- **Orchestrator**: Automated session management with health monitoring and recovery
+- **Dashboard**: Unified view of all sessions, jobs, and daemon status
+- **Background Tasks**: Launch parallel tasks with `launch_task` for concurrent work
+
+### 📁 File & Code Management
+- **Multi-file Operations**: Read and process multiple files at once
+- **Fast Search**: RipGrep integration for rapid code search
+- **Glob Patterns**: Find files using glob patterns
+- **Diff Editing**: In-place file modifications with diff preview
+
+### 🔌 Extensibility
+- **MCP Servers**: Connect to Model Context Protocol servers for external tools
+- **Extensions**: Installable packages that add new capabilities
+- **Custom Commands**: Save and reuse favorite prompts as personal shortcuts
+
+### 🛡️ Safety & Control
+- **Approval Modes**: Choose between `ask`, `yolo`, or `plan` modes
+- **Sandboxing**: Isolated execution environment for security
+- **Confirmation Prompts**: Review destructive operations before execution
+
+## Installation
 
 Instructions:
 
@@ -46,111 +75,95 @@ For LM Studio: Make sure LM Studio is running with the server enabled.
 For OpenRouter: An OpenRouter api key is required.
 
 For WebSearch: A Tavily api key is required. Highly recommend a free api key, which gets 1,000 api calls per month.
-Add "tavilyApiKey": "your-key-here" to your ~/.qwen/settings.json.
+Add `"tavilyApiKey": "your-key-here"` to your `~/.qwen/settings.json`.
 
-#### Session Commands
+## CLI Commands
 
-Ctrl+Y - YOLO Mode
+LowCal Code provides both in-session commands (slash commands) and terminal-level commands for system management.
 
+### In-Session Commands (`/` prefix)
+
+| Command | Description |
+|---------|-------------|
+| `/help` | Display available commands |
+| `/clear` | Clear conversation history |
+| `/summary` | Generate project summary from conversation |
+| `/compress` | Compress history to save tokens |
+| `/chat save/resume/list/delete <tag>` | Save and resume conversations |
+| `/model` | Select a model |
+| `/agents create/manage` | Manage subagents |
+| `/tools [desc/nodesc]` | List available tools |
+| `/prompt list/show/create/delete/activate/disable` | Manage custom prompts |
+| `/promptmode set <full/concise/auto>` | Set system prompt mode |
+| `/approval-mode <ask/yolo/plan> [--project|--user]` | Set approval mode |
+| `/directory add/remove/list` | Manage workspace directories |
+| `/init` | Generate LOWCAL.md project summary |
+| `/bug` | File an issue about LowCal Code |
+
+### Terminal Commands
+
+| Command | Description |
+|---------|-------------|
+| `lowcal dashboard [options]` | View all sessions and jobs in a unified interface |
+| `lowcal sessions list/get/prune [options]` | Manage active sessions |
+| `lowcal scheduler <start/stop/status/list/add/remove/pause/resume/reset>` | Manage scheduled jobs |
+| `lowcal orchestrator <start/stop/status>` | Manage the orchestrator daemon |
+| `lowcal extensions <install/uninstall/list/update/disable/enable> <name>` | Manage extensions |
+| `lowcal mcp <add/remove/list>` | Manage MCP servers |
+| `lowcal research [mode] <query>` | Conduct deep internet research |
+
+## Session Commands
+
+### YOLO Mode
+- **`Ctrl+Y`** - Toggle YOLO mode (execute without confirmation prompts)
+
+### Conversation Management
 - **`/compress`** - Compress conversation history to continue within token limits
 - **`/clear`** - Clear all conversation history and start fresh
-- **`/stats`** - Check current token usage and limits
+- **`/summary`** - Generate a comprehensive project summary from the current conversation
 
-- **`/init`** - Run in project directory to generate LOWCAL.md summary file that will automatically be included to guide the model on your project.
-
-- **`/auth`** - Select between either OpenRouter or LM Studio. OpenRouter requires an api key.
-- **`/model`** - Select a model.
-  - LM Studio shows only models that have been manually configured through the LM Studio gui. It finds them in the LM Studio's configuration files located in ~/.lmstudio/.internal/user-concrete-model-default-config/. The app tries to match the models here with the models returned by LM Studio's api - which often use different names. If it can't resolve a matching api model for a found configured model, it offers a wizard for the user to match the models. Matching the models allows the app to list available models, along with their maximum context size and their configured context size.
-  - OpenRouter shows available models, their maximum context size, and their cost along with a search filter (e.g. 'free', 'grok', 'qwen', etc). OpenRouter offers hundreds of available models, from GPT-5 to free models.
-
-#### Local Model Latency Enhancements (Designed for local model use, can be used with any model)
-
+### Custom Prompts & Toolsets
 - **`/promptmode set <full/concise/auto>`**
-  - full: full, long system prompt with verbose instructions and lots of examples
-  - concise: short, abbreviated prompt for conserving context space and decreasing latency, particularly for local models. Dynamically constructed to only include instructions/examples for tools from the currently activated /toolset.
-  - auto: automatically uses concise prompt when using LM Studio endpoint and full prompt when using OpenRouter endpoint
+  - `full`: full, long system prompt with verbose instructions and lots of examples
+  - `concise`: short, abbreviated prompt for conserving context space and decreasing latency, particularly for local models. Dynamically constructed to only include instructions/examples for tools from the currently activated toolset.
+  - `auto`: automatically uses concise prompt when using LM Studio endpoint and full prompt when using OpenRouter endpoint
 
-- **`/prompt <list/show/create/delete/[use/activate/set]/disable> --exclusive`** - Create, manage, and use custom prompts
-  - list: list available prompts
-  - show [name]: show the text of a prompt in a viewer (same as /view or /promptinfo)
-  - create [name] [string or .md file]: create a new prompt with the given string or from the referenced .md file
-  - delete [name]: delete an existing prompt
-  - activate/use/set [name]: the indicated prompt will be used
-  - disable: disables any currently set custom prompts and returns to base prompt from /promptmode
-  - --exclusive: if used, custom prompt will completely replace base prompt, otherwise the custom prompt is appended to the base prompt
+- **`/prompt <list/show/create/delete/[use/activate/set]/disable> [--exclusive]`** - Create, manage, and use custom prompts
+  - `list`: list available prompts
+  - `show [name]`: show the text of a prompt in a viewer (same as `/view` or `/promptinfo`)
+  - `create [name] [string or .md file]`: create a new prompt with the given string or from the referenced .md file
+  - `delete [name]`: delete an existing prompt
+  - `activate/use/set [name]`: the indicated prompt will be used
+  - `disable`: disables any currently set custom prompts and returns to base prompt from `/promptmode`
+  - `--exclusive`: if used, custom prompt will completely replace base prompt, otherwise the custom prompt is appended to the base prompt
 
-- **`/toolset (list, show, activate/use, create, add, remove)`** - use custom tool collections to exclude tools from being used and saving context space and decreasing latency, particularly with local models. Using the shell tool is often more efficient than using file tools.
-  - list: list available preset tool collections
-  - show <toolset collection name>: shows which tools are in a collection
-  - activate/use: Use a selected tool collection
-  - create: Create a new tool collection`/toolset create <name> [tool1, tool2, ...]` (Use tool names from /tools)
-  - add/remove: add/remove tool to/from a tool collection `/toolset add[remove] <name> tool`
+- **`/toolset (list, show, activate/use, create, add, remove)`** - Use custom tool collections to exclude tools from being used and saving context space and decreasing latency, particularly with local models. Using the shell tool is often more efficient than using file tools.
+  - `list`: list available preset tool collections
+  - `show <toolset collection name>`: shows which tools are in a collection
+  - `activate/use`: Use a selected tool collection
+  - `create`: Create a new tool collection `/toolset create <name> [tool1, tool2, ...]` (Use tool names from `/tools`)
+  - `add/remove`: add/remove tool to/from a tool collection `/toolset add[remove] <name> tool`
 
-- **`/promptinfo`** - Show the current system prompt in a /view window (↑↓ to scroll, 'q' to quit viewer).
+- **`/promptinfo`** - Show the current system prompt in a `/view` window (↑↓ to scroll, 'q' to quit viewer).
 
-#### Additional New Commands
+### Additional Commands
 
-- **`/view filename`** - view a markdown or text file in a viewer window in-line in the chat. Use ↑↓ to scroll, 'q' to quit viewer.
+- **`/view filename`** - View a markdown or text file in a viewer window in-line in the chat. Use ↑↓ to scroll, 'q' to quit viewer.
 
-- **`/tokens filename`** - show the token count of a file.
+- **`/tokens filename`** - Show the token count of a file.
 
 - **`/export [compact, report] [filename]`** - Export the current conversation to a markdown file. If no filename is provided one will be generated.
-  - no argument: saves full conversation, including tool use and all notification messages to ./conversations/
-  - `compact`: saves only the user and assistant messages, omitting all tool uses and other messages to ./conversations/
-  - `report`: saves the first user message and the trailing assistant messages of the conversation. Intended use is: user asks for a detailed report on x, assistant uses tools to generate material, and final messages are the actual report - this tries to capture just the request and the report. Saves to ./reports/
+  - No argument: saves full conversation, including tool use and all notification messages to `./conversations/`
+  - `compact`: saves only the user and assistant messages, omitting all tool uses and other messages to `./conversations/`
+  - `report`: saves the first user message and the trailing assistant messages of the conversation. Intended use is: user asks for a detailed report on x, assistant uses tools to generate material, and final messages are the actual report - this tries to capture just the request and the report. Saves to `./reports/`
 
-Note: Tavily api key required for WebSearch tool. A free key is highly recommended, allows up to 1,000 api calls per month.
+## Local Model Latency Enhancements
 
-### 🔍 Explore Codebases
+Designed for local model use, can be used with any model.
 
-```bash
-/init
-
-# Architecture analysis
-> Describe the main pieces of this system's architecture
-> What are the key dependencies and how do they interact?
-> Find all API endpoints and their authentication methods
-```
-
-### 💻 Code Development
-
-```bash
-# Refactoring
-> Refactor this function to improve readability and performance
-> Convert this class to use dependency injection
-> Split this large module into smaller, focused components
-
-# Code generation
-> Create a REST API endpoint for user management
-> Generate unit tests for the authentication module
-> Add error handling to all database operations
-```
-
-### 🔄 Automate Workflows
-
-```bash
-# Git automation
-> Analyze git commits from the last 7 days, grouped by feature
-> Create a changelog from recent commits
-> Find all TODO comments and create GitHub issues
-
-# File operations
-> Convert all images in this directory to PNG format
-> Rename all test files to follow the *.test.ts pattern
-> Find and remove all console.log statements
-```
-
-### 🐛 Debugging & Analysis
-
-```bash
-# Performance analysis
-> Identify performance bottlenecks in this React component
-> Find all N+1 query problems in the codebase
-
-# Security audit
-> Check for potential SQL injection vulnerabilities
-> Find all hardcoded credentials or API keys
-```
+- **`/promptmode set <full/concise/auto>`** - Adjust system prompt verbosity
+  - `concise`: Shorter prompts for faster responses and lower token usage
+  - `auto`: Automatically adjusts based on the endpoint being used
 
 ## Popular Tasks
 
@@ -194,21 +207,70 @@ Note: Tavily api key required for WebSearch tool. A free key is highly recommend
 > Configure CI/CD pipeline for this project
 ```
 
-## Commands & Shortcuts
+## Automation & Scheduling Examples
 
-### Session Commands
+### Schedule Daily Tests
+```bash
+lowcal scheduler add \
+  --id daily-tests \
+  --schedule "0 9 * * *" \
+  --prompt "Run npm test and report results"
+```
 
-- `/help` - Display available commands
-- `/clear` - Clear conversation history
-- `/compress` - Compress history to save tokens
-- `/stats` - Show current session information
-- `/exit` or `/quit` - Exit LowCal Code
+### Launch Background Build
+```json
+{
+  "action": "launch_task",
+  "id": "build-project",
+  "prompt": "Build the project and run tests. Report any failures.",
+  "description": "Background build and test"
+}
+```
 
-### Keyboard Shortcuts
+### Monitor Logs in Zellij Tab
+```json
+{
+  "action": "launch_task",
+  "id": "log-monitor",
+  "prompt": "Tail application.log and report errors",
+  "execution_mode": "zellij_tab",
+  "execution_mode_override": true
+}
+```
 
-- `Ctrl+C` - Cancel current operation
-- `Ctrl+D` - Exit (on empty line)
-- `Up/Down` - Navigate command history
+## Keyboard Shortcuts
+
+| Shortcut | Description |
+|----------|-------------|
+| `Ctrl+C` | Cancel current operation / Show quit confirmation (press twice to exit) |
+| `Ctrl+L` | Clear the terminal screen |
+| `Ctrl+R` | Search command history |
+| `Up/Down` | Navigate command history |
+| `Tab` | Auto-complete commands and file paths |
+
+## Documentation
+
+For detailed documentation on all features, see:
+
+- [CLI Commands](./docs/cli/commands.md) - Complete reference for all commands
+- [Dashboard](./docs/cli/dashboard.md) - Unified status monitoring
+- [Sessions](./docs/cli/sessions.md) - Session management
+- [Scheduler](./docs/cli/scheduler.md) - Job scheduling with cron
+- [Orchestrator](./docs/cli/orchestrator.md) - Automated session recovery
+- [Extensions](./docs/cli/extensions.md) - Extension management
+- [MCP](./docs/cli/mcp.md) - Model Context Protocol servers
+- [Research](./docs/cli/research.md) - Deep internet research
+
+### Tools Documentation
+
+- [Tools Index](./docs/tools/index.md) - All available tools overview
+- [File System](./docs/tools/file-system.md) - File operations
+- [Shell](./docs/tools/shell.md) - Command execution
+- [Web Fetch](./docs/tools/web-fetch.md) - URL content retrieval
+- [Web Search](./docs/tools/web-search.md) - Web search capabilities
+- [Multi-File Read](./docs/tools/multi-file.md) - Batch file operations
+- [Memory](./docs/tools/memory.md) - Cross-session memory
+- [Todo Write](./docs/tools/todo-write.md) - Task management
 
 ## License
 

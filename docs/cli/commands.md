@@ -19,7 +19,7 @@ Slash commands provide meta-level control over the CLI itself.
       - **Usage:** `/chat save <tag>`
       - **Details on Checkpoint Location:** The default locations for saved chat checkpoints are:
         - Linux/macOS: `~/.qwen/tmp/<project_hash>/`
-        - Windows: `C:\Users\<YourUsername>\.qwen\tmp\<project_hash>\`
+        - Windows: `C:\\Users\\<YourUsername>\\.qwen\\tmp\\<project_hash>\\`
         - When you run `/chat list`, the CLI only scans these specific directories to find available checkpoints.
         - **Note:** These checkpoints are for manually saving and resuming conversation states. For automatic checkpoints created before file modifications, see the [Checkpointing documentation](../checkpointing.md).
     - **`resume`**
@@ -58,101 +58,20 @@ Slash commands provide meta-level control over the CLI itself.
     - **`add`**:
       - **Description:** Add a directory to the workspace. The path can be absolute or relative to the current working directory. Moreover, the reference from home directory is supported as well.
       - **Usage:** `/directory add <path1>,<path2>`
-      - **Note:** Disabled in restrictive sandbox profiles. If you're using that, use `--include-directories` when starting the session instead.
-    - **`show`**:
-      - **Description:** Display all directories added by `/directory add` and `--include-directories`.
-      - **Usage:** `/directory show`
+      - **Note:** Disabled in restrictive sandbox profiles. If you're using that, use `--allow-all` flag when starting Qwen Code.
 
-- **`/directory`** (or **`/dir`**)
-  - **Description:** Manage workspace directories for multi-directory support.
-  - **Sub-commands:**
-    - **`add`**:
-      - **Description:** Add a directory to the workspace. The path can be absolute or relative to the current working directory. Moreover, the reference from home directory is supported as well.
-      - **Usage:** `/directory add <path1>,<path2>`
-      - **Note:** Disabled in restrictive sandbox profiles. If you're using that, use `--include-directories` when starting the session instead.
-    - **`show`**:
-      - **Description:** Display all directories added by `/directory add` and `--include-directories`.
-      - **Usage:** `/directory show`
+- **`/file`** (or **`/f`**)
+  - **Description:** Open a file for reading or editing.
+  - **Usage:** `/file <path>`
+  - **Features:**
+    - Supports reading files with syntax highlighting
+    - Can open multiple files simultaneously
+    - Shows file preview in the sidebar
 
-- **`/editor`**
-  - **Description:** Open a dialog for selecting supported editors.
-
-- **`/extensions`**
-  - **Description:** Lists all active extensions in the current Qwen Code session. See [Qwen Code Extensions](../extension.md).
-
-- **`/help`** (or **`/?`**)
-  - **Description:** Display help information about the Qwen Code, including available commands and their usage.
-
-- **`/mcp`**
-  - **Description:** List configured Model Context Protocol (MCP) servers, their connection status, server details, and available tools.
-  - **Sub-commands:**
-    - **`desc`** or **`descriptions`**:
-      - **Description:** Show detailed descriptions for MCP servers and tools.
-    - **`nodesc`** or **`nodescriptions`**:
-      - **Description:** Hide tool descriptions, showing only the tool names.
-    - **`schema`**:
-      - **Description:** Show the full JSON schema for the tool's configured parameters.
-  - **Keyboard Shortcut:** Press **Ctrl+T** at any time to toggle between showing and hiding tool descriptions.
-
-- **`/memory`**
-  - **Description:** Manage the AI's instructional context (hierarchical memory loaded from `LOWCAL.md` files by default; configurable via `contextFileName`).
-  - **Sub-commands:**
-    - **`add`**:
-      - **Description:** Adds the following text to the AI's memory. Usage: `/memory add <text to remember>`
-    - **`show`**:
-      - **Description:** Display the full, concatenated content of the current hierarchical memory that has been loaded from all context files (e.g., `LOWCAL.md`). This lets you inspect the instructional context being provided to the model.
-    - **`refresh`**:
-      - **Description:** Reload the hierarchical instructional memory from all context files (default: `LOWCAL.md`) found in the configured locations (global, project/ancestors, and sub-directories). This updates the model with the latest context content.
-    - **Note:** For more details on how context files contribute to hierarchical memory, see the [CLI Configuration documentation](./configuration.md#context-files-hierarchical-instructional-context).
-
-- **`/restore`**
-  - **Description:** Restores the project files to the state they were in just before a tool was executed. This is particularly useful for undoing file edits made by a tool. If run without a tool call ID, it will list available checkpoints to restore from.
-  - **Usage:** `/restore [tool_call_id]`
-  - **Note:** Only available if the CLI is invoked with the `--checkpointing` option or configured via [settings](./configuration.md). See [Checkpointing documentation](../checkpointing.md) for more details.
-
-- **`/settings`**
-  - **Description:** Open the settings editor to view and modify Qwen Code settings.
-  - **Details:** This command provides a user-friendly interface for changing settings that control the behavior and appearance of Qwen Code. It is equivalent to manually editing the `.qwen/settings.json` file, but with validation and guidance to prevent errors.
-  - **Usage:** Simply run `/settings` and the editor will open. You can then browse or search for specific settings, view their current values, and modify them as desired. Changes to some settings are applied immediately, while others require a restart.
-
-- **`/stats`**
-  - **Description:** Display detailed statistics for the current Qwen Code session, including token usage, cached token savings (when available), and session duration. Note: Cached token information is only displayed when cached tokens are being used, which occurs with API key authentication but not with OAuth authentication at this time.
-
-- [**`/theme`**](./themes.md)
-  - **Description:** Open a dialog that lets you change the visual theme of Qwen Code.
-
-- **`/auth`**
-  - **Description:** Open a dialog that lets you change the authentication method.
-
-  Extended behavior:
-
-  The `/auth` dialog now supports four built-in provider options:
-  1. QWEN OAuth — recommended; performs device/browser OAuth and manages tokens automatically.
-  2. OpenRouter — for OpenAI-compatible hosted endpoints. Selecting this will pre-populate the provider's base URL and prompt you to enter an API key.
-  3. LM Studio — for local LM Studio instances. Selecting this will pre-populate the LM Studio base URL and provide a dummy API key (local models typically don't require a real API key).
-  4. OpenAI — the classic OpenAI-compatible flow. Selecting this will prompt you for an API key, a base URL, and (optionally) a model.
-
-  After selecting OpenRouter or LM Studio, the CLI will fetch available models from the provider's `/v1/models` endpoint and open the model selection dialog. You can also open the model selection directly with the standalone `/model` command (see below).
-
-  Notes on behavior:
-  - When the CLI fetches available models it polls the provider's `/v1/models` endpoint (with a small timeout). If the provider responds, you'll be shown a list of models to choose from.
-  - When you select a new model, any previously loaded model is unloaded first. The CLI then loads the new model and sends a small warm-up query to the model to reduce first-request latency.
-  - LM Studio selections will have a pre-filled, dummy API key to simplify local development.
-
-- **`/approval-mode`**
-  - **Description:** Change the approval mode for tool usage.
-  - **Usage:** `/approval-mode [mode] [--session|--project|--user]`
-  - **Available Modes:**
-    - **`plan`**: Analyze only; do not modify files or execute commands
-    - **`default`**: Require approval for file edits or shell commands
-    - **`auto-edit`**: Automatically approve file edits
-    - **`yolo`**: Automatically approve all tools
-  - **Examples:**
-    - `/approval-mode plan --project` (persist plan mode for this project)
-    - `/approval-mode yolo --user` (persist YOLO mode for this user across projects)
-
-- **`/about`**
-  - **Description:** Show version info. Please share this information when filing issues.
+- **`/help`** (or **`/h`**)
+  - **Description:** Display this help message.
+  - **Usage:** `/help [command]`
+  - **Details:** When a specific command is provided, shows detailed help for that command.
 
 - **`/model`**
   - **Description:** Open a model selection dialog for the current authentication provider.
@@ -176,8 +95,8 @@ Slash commands provide meta-level control over the CLI itself.
     - **User-level:** `~/.qwen/agents/` (personal agents, available across projects)
   - **Note:** For detailed information on creating and managing subagents, see the [Subagents documentation](../subagents.md).
 
-- [**`/tools`**](../tools/index.md)
-  - **Description:** Display a list of tools that are currently available within Qwen Code.
+- **`/tools`** ([Tools Documentation](../tools/index.md))
+  - **Description:** Display a list of tools that are currently available within LowCal Code.
   - **Usage:** `/tools [desc]`
   - **Sub-commands:**
     - **`desc`** or **`descriptions`**:
@@ -257,8 +176,35 @@ Slash commands provide meta-level control over the CLI itself.
     ✓ Custom prompt "code-reviewer" disabled. Returning to base prompt.
     ```
 
+- **`/promptmode`**
+  - **Description:** Set the system prompt mode for the current session.
+  - **Modes:**
+    - **`auto`** (default): Automatically adjusts prompt length based on context needs.
+    - **`full`**: Uses the full, detailed system prompt with maximum context.
+    - **`concise`**: Uses a condensed system prompt for faster responses.
+  - **Usage:** `/promptmode <mode>`
+  - **Note:** This setting is session-only and does not persist between sessions.
+
+- **`/approval-mode`**
+  - **Description:** Set the approval mode for tool execution. Controls whether you're prompted to confirm potentially destructive operations.
+  - **Modes:**
+    - **`ask`** (default): Prompt for confirmation on all destructive operations.
+    - **`yolo`**: Execute all tools without confirmation (use with caution).
+    - **`plan`**: Plan mode - show what would be done without executing.
+  - **Usage:** `/approval-mode <mode> [--project|--user]`
+  - **Options:**
+    - `--project`: Persist the setting for this project only.
+    - `--user`: Persist the setting for all projects for this user.
+  - **Examples:**
+    - `/approval-mode yolo` (session-only)
+    - `/approval-mode plan --project` (persist plan mode for this project)
+    - `/approval-mode yolo --user` (persist YOLO mode for this user across projects)
+
+- **`/about`**
+  - **Description:** Show version info. Please share this information when filing issues.
+
 - **`/quit-confirm`**
-  - **Description:** Show a confirmation dialog before exiting Qwen Code, allowing you to choose how to handle your current session.
+  - **Description:** Show a confirmation dialog before exiting LowCal Code, allowing you to choose how to handle your current session.
   - **Usage:** `/quit-confirm`
   - **Features:**
     - **Quit immediately:** Exit without saving anything (equivalent to `/quit`)
@@ -268,7 +214,7 @@ Slash commands provide meta-level control over the CLI itself.
   - **Note:** This command is automatically triggered when you press Ctrl+C once, providing a safety mechanism to prevent accidental exits.
 
 - **`/quit`** (or **`/exit`**)
-  - **Description:** Exit Qwen Code immediately without any confirmation dialog.
+  - **Description:** Exit LowCal Code immediately without any confirmation dialog.
 
 - **`/vim`**
   - **Description:** Toggle vim mode on or off. When vim mode is enabled, the input area supports vim-style navigation and editing commands in both NORMAL and INSERT modes.
@@ -284,294 +230,246 @@ Slash commands provide meta-level control over the CLI itself.
 - **`/init`**
   - **Description:** Analyzes the current directory and creates a `LOWCAL.md` context file by default (or the filename specified by `contextFileName`). If a non-empty file already exists, no changes are made. The command seeds an empty file and prompts the model to populate it with project-specific instructions.
 
-### Custom Commands
+## CLI Commands (Terminal Mode)
+
+LowCal Code also provides several top-level commands that can be run from the terminal (not in REPL mode). These provide system-level management capabilities.
+
+### Dashboard Command
+
+The `dashboard` command provides a comprehensive overview of all sessions, scheduled jobs, and daemon status in a single interactive interface.
+
+**Usage:** `lowcal dashboard [options]`
+
+**Options:**
+- `--ttl <seconds>`: Stale threshold in seconds (default: 180)
+- `--watch`: Keep the dashboard live (refreshes automatically)
+- `--interval <seconds>`: Refresh interval in seconds (default: 2)
+
+**Features:**
+- Real-time view of all active sessions
+- Scheduler job status and scheduling information
+- Daemon health indicators
+- Interactive controls for managing sessions and jobs
+
+### Sessions Command
+
+Manage LowCal Code sessions - view, inspect, and clean up session data.
+
+**Usage:** `lowcal sessions <command> [options]`
+
+**Sub-commands:**
+- **`list`**: List all active sessions
+- **`get <id>`**: Show details for a specific session
+- **`prune`**: Remove stale sessions
+
+**Options:**
+- `--ttl <seconds>`: Stale threshold in seconds (default: 180)
+- `--watch`: Keep the list live (like top)
+- `--interval <seconds>`: Refresh interval in seconds (default: 2)
+
+**Examples:**
+```bash
+# List all active sessions
+lowcal sessions list
+
+# Watch sessions in real-time
+lowcal sessions list --watch --interval 5
+
+# Get details for a specific session
+lowcal sessions get abc123def456
+
+# Remove stale sessions older than 5 minutes
+lowcal sessions prune --ttl 300
+```
+
+### Scheduler Command
+
+Manage the LowCal scheduler daemon and scheduled jobs.
+
+**Usage:** `lowcal scheduler <command> [options]`
+
+**Sub-commands:**
+- **`start`**: Start the scheduler daemon
+- **`stop`**: Stop the scheduler daemon
+- **`status`**: Show scheduler status
+- **`list`**: List all scheduled jobs
+- **`add`**: Add a new scheduled job
+- **`remove <id>`**: Remove a scheduled job
+- **`pause <id>`**: Pause a scheduled job
+- **`resume <id>`**: Resume a paused job
+- **`delete <id>`**: Delete a scheduled job permanently
+- **`reset <id>`**: Reset a failed job to allow retry
+
+**Options:**
+- `--description <text>`: Job description
+- `--execution-mode <mode>`: Execution mode (headless, zellij_tab, default)
+- `--timeout <minutes>`: Job timeout in minutes (default: 10)
+
+**Examples:**
+```bash
+# Start the scheduler daemon
+lowcal scheduler start
+
+# List all scheduled jobs
+lowcal scheduler list
+
+# Add a new job to run tests daily at 9 AM
+lowcal scheduler add --id "daily-tests" --schedule "0 9 * * *" --prompt "Run npm test"
+
+# Pause a job temporarily
+lowcal scheduler pause daily-tests
+
+# Resume a paused job
+lowcal scheduler resume daily-tests
+```
+
+### Orchestrator Command
+
+Manage the LowCal orchestrator daemon for automated session management.
+
+**Usage:** `lowcal orchestrator <command> [options]`
+
+**Sub-commands:**
+- **`start`**: Start the orchestrator daemon
+- **`stop`**: Stop the orchestrator daemon
+- **`status`**: Show orchestrator status
+
+**Examples:**
+```bash
+# Check orchestrator status
+lowcal orchestrator status
+
+# Start the orchestrator
+lowcal orchestrator start
+
+# Stop the orchestrator
+lowcal orchestrator stop
+```
+
+### Extensions Command
+
+Manage LowCal Code extensions.
+
+**Usage:** `lowcal extensions <command> [options]`
+
+**Sub-commands:**
+- **`install <name>`**: Install an extension
+- **`uninstall <name>`**: Uninstall an extension
+- **`list`**: List all installed extensions
+- **`update [name]`**: Update a specific extension or all extensions
+- **`disable <name>`**: Disable an extension
+- **`enable <name>`**: Enable a disabled extension
+
+**Examples:**
+```bash
+# Install an extension
+lowcal extensions install my-extension
+
+# List installed extensions
+lowcal extensions list
+
+# Update all extensions
+lowcal extensions update
+```
+
+### MCP Command
+
+Manage Model Context Protocol (MCP) servers.
+
+**Usage:** `lowcal mcp <command> [options]`
+
+**Sub-commands:**
+- **`add <name> <command>`**: Add a new MCP server
+- **`remove <name>`**: Remove an MCP server
+- **`list`**: List all configured MCP servers
+
+**Examples:**
+```bash
+# Add an MCP server
+lowcal mcp add git "npx -y @modelcontextprotocol/server-git"
+
+# List configured servers
+lowcal mcp list
+```
+
+### Research Command
+
+Conduct deep internet research with citation support.
+
+**Usage:** `lowcal research [mode] <query>`
+
+**Modes:**
+- **`speed`**: Fastest research, fewer sources
+- **`balanced`** (default): Balanced speed and quality
+- **`quality`**: Thorough research with multiple sources
+- **`max`**: Maximum depth and breadth of research
+
+**Examples:**
+```bash
+# Quick research mode
+lowcal research speed "latest Node.js features"
+
+# Quality-focused research
+lowcal research quality "best practices for React state management"
+```
+
+## Custom Commands
 
 For a quick start, see the [example](#example-a-pure-function-refactoring-command) below.
 
-Custom commands allow you to save and reuse your favorite or most frequently used prompts as personal shortcuts within Qwen Code. You can create commands that are specific to a single project or commands that are available globally across all your projects, streamlining your workflow and ensuring consistency.
+Custom commands allow you to save and reuse your favorite or most frequently used prompts as personal shortcuts within LowCal Code. You can create commands that are specific to a single project or commands that are available globally across all your projects, streamlining your workflow and ensuring consistency.
 
-#### File Locations & Precedence
+### File Locations & Precedence
 
-Qwen Code discovers commands from two locations, loaded in a specific order:
+LowCal Code discovers commands from two locations, loaded in a specific order:
 
 1.  **User Commands (Global):** Located in `~/.qwen/commands/`. These commands are available in any project you are working on.
 2.  **Project Commands (Local):** Located in `<your-project-root>/.qwen/commands/`. These commands are specific to the current project and can be checked into version control to be shared with your team.
 
 If a command in the project directory has the same name as a command in the user directory, the **project command will always be used.** This allows projects to override global commands with project-specific versions.
 
-#### Naming and Namespacing
+### Creating Custom Commands
 
-The name of a command is determined by its file path relative to its `commands` directory. Subdirectories are used to create namespaced commands, with the path separator (`/` or `\`) being converted to a colon (`:`).
+Custom commands are defined as JSON files in the commands directory. Each file should contain:
 
-- A file at `~/.qwen/commands/test.toml` becomes the command `/test`.
-- A file at `<project>/.qwen/commands/git/commit.toml` becomes the namespaced command `/git:commit`.
-
-#### TOML File Format (v1)
-
-Your command definition files must be written in the TOML format and use the `.toml` file extension.
-
-##### Required Fields
-
-- `prompt` (String): The prompt that will be sent to the model when the command is executed. This can be a single-line or multi-line string.
-
-##### Optional Fields
-
-- `description` (String): A brief, one-line description of what the command does. This text will be displayed next to your command in the `/help` menu. **If you omit this field, a generic description will be generated from the filename.**
-
-#### Handling Arguments
-
-Custom commands support two powerful methods for handling arguments. The CLI automatically chooses the correct method based on the content of your command's `prompt`.
-
-##### 1. Context-Aware Injection with `{{args}}`
-
-If your `prompt` contains the special placeholder `{{args}}`, the CLI will replace that placeholder with the text the user typed after the command name.
-
-The behavior of this injection depends on where it is used:
-
-**A. Raw Injection (Outside Shell Commands)**
-
-When used in the main body of the prompt, the arguments are injected exactly as the user typed them.
-
-**Example (`git/fix.toml`):**
-
-```toml
-# Invoked via: /git:fix "Button is misaligned"
-
-description = "Generates a fix for a given issue."
-prompt = "Please provide a code fix for the issue described here: {{args}}."
+```json
+{
+  "name": "command-name",
+  "description": "What this command does",
+  "prompt": "The prompt template to execute"
+}
 ```
 
-The model receives: `Please provide a code fix for the issue described here: "Button is misaligned".`
+**Example: Pure Function Refactoring Command**
 
-**B. Using Arguments in Shell Commands (Inside `!{...}` Blocks)**
+Create a file `~/.qwen/commands/refactor-to-pure-function.json`:
 
-When you use `{{args}}` inside a shell injection block (`!{...}`), the arguments are automatically **shell-escaped** before replacement. This allows you to safely pass arguments to shell commands, ensuring the resulting command is syntactically correct and secure while preventing command injection vulnerabilities.
-
-**Example (`/grep-code.toml`):**
-
-```toml
-prompt = """
-Please summarize the findings for the pattern `{{args}}`.
-
-Search Results:
-!{grep -r {{args}} .}
-"""
+```json
+{
+  "name": "refactor-to-pure-function",
+  "description": "Refactor the selected code to be a pure function",
+  "prompt": "Refactor the following code to be a pure function. Ensure it has no side effects and returns a value:\n\n<CODE>"
+}
 ```
 
-When you run `/grep-code It's complicated`:
+### Using Custom Commands
 
-1. The CLI sees `{{args}}` used both outside and inside `!{...}`.
-2. Outside: The first `{{args}}` is replaced raw with `It's complicated`.
-3. Inside: The second `{{args}}` is replaced with the escaped version (e.g., on Linux: `"It's complicated"`).
-4. The command executed is `grep -r "It's complicated" .`.
-5. The CLI prompts you to confirm this exact, secure command before execution.
-6. The final prompt is sent.
-
-##### 2. Default Argument Handling
-
-If your `prompt` does **not** contain the special placeholder `{{args}}`, the CLI uses a default behavior for handling arguments.
-
-If you provide arguments to the command (e.g., `/mycommand arg1`), the CLI will append the full command you typed to the end of the prompt, separated by two newlines. This allows the model to see both the original instructions and the specific arguments you just provided.
-
-If you do **not** provide any arguments (e.g., `/mycommand`), the prompt is sent to the model exactly as it is, with nothing appended.
-
-**Example (`changelog.toml`):**
-
-This example shows how to create a robust command by defining a role for the model, explaining where to find the user's input, and specifying the expected format and behavior.
-
-```toml
-# In: <project>/.qwen/commands/changelog.toml
-# Invoked via: /changelog 1.2.0 added "Support for default argument parsing."
-
-description = "Adds a new entry to the project's CHANGELOG.md file."
-prompt = """
-# Task: Update Changelog
-
-You are an expert maintainer of this software project. A user has invoked a command to add a new entry to the changelog.
-
-**The user's raw command is appended below your instructions.**
-
-Your task is to parse the `<version>`, `<change_type>`, and `<message>` from their input and use the `write_file` tool to correctly update the `CHANGELOG.md` file.
-
-## Expected Format
-The command follows this format: `/changelog <version> <type> <message>`
-- `<type>` must be one of: "added", "changed", "fixed", "removed".
-
-## Behavior
-1. Read the `CHANGELOG.md` file.
-2. Find the section for the specified `<version>`.
-3. Add the `<message>` under the correct `<type>` heading.
-4. If the version or type section doesn't exist, create it.
-5. Adhere strictly to the "Keep a Changelog" format.
-"""
-```
-
-When you run `/changelog 1.2.0 added "New feature"`, the final text sent to the model will be the original prompt followed by two newlines and the command you typed.
-
-##### 3. Executing Shell Commands with `!{...}`
-
-You can make your commands dynamic by executing shell commands directly within your `prompt` and injecting their output. This is ideal for gathering context from your local environment, like reading file content or checking the status of Git.
-
-When a custom command attempts to execute a shell command, Qwen Code will now prompt you for confirmation before proceeding. This is a security measure to ensure that only intended commands can be run.
-
-**How It Works:**
-
-1.  **Inject Commands:** Use the `!{...}` syntax.
-2.  **Argument Substitution:** If `{{args}}` is present inside the block, it is automatically shell-escaped (see [Context-Aware Injection](#1-context-aware-injection-with-args) above).
-3.  **Robust Parsing:** The parser correctly handles complex shell commands that include nested braces, such as JSON payloads. **Note:** The content inside `!{...}` must have balanced braces (`{` and `}`). If you need to execute a command containing unbalanced braces, consider wrapping it in an external script file and calling the script within the `!{...}` block.
-4.  **Security Check and Confirmation:** The CLI performs a security check on the final, resolved command (after arguments are escaped and substituted). A dialog will appear showing the exact command(s) to be executed.
-5.  **Execution and Error Reporting:** The command is executed. If the command fails, the output injected into the prompt will include the error messages (stderr) followed by a status line, e.g., `[Shell command exited with code 1]`. This helps the model understand the context of the failure.
-
-**Example (`git/commit.toml`):**
-
-This command gets the staged git diff and uses it to ask the model to write a commit message.
-
-````toml
-# In: <project>/.qwen/commands/git/commit.toml
-# Invoked via: /git:commit
-
-description = "Generates a Git commit message based on staged changes."
-
-# The prompt uses !{...} to execute the command and inject its output.
-prompt = """
-Please generate a Conventional Commit message based on the following git diff:
-
-```diff
-!{git diff --staged}
-```
-
-"""
-
-````
-
-When you run `/git:commit`, the CLI first executes `git diff --staged`, then replaces `!{git diff --staged}` with the output of that command before sending the final, complete prompt to the model.
-
-##### 4. Injecting File Content with `@{...}`
-
-You can directly embed the content of a file or a directory listing into your prompt using the `@{...}` syntax. This is useful for creating commands that operate on specific files.
-
-**How It Works:**
-
-- **File Injection**: `@{path/to/file.txt}` is replaced by the content of `file.txt`.
-- **Multimodal Support**: If the path points to a supported image (e.g., PNG, JPEG), PDF, audio, or video file, it will be correctly encoded and injected as multimodal input. Other binary files are handled gracefully and skipped.
-- **Directory Listing**: `@{path/to/dir}` is traversed and each file present within the directory and all subdirectories are inserted into the prompt. This respects `.gitignore` and `.qwenignore` if enabled.
-- **Workspace-Aware**: The command searches for the path in the current directory and any other workspace directories. Absolute paths are allowed if they are within the workspace.
-- **Processing Order**: File content injection with `@{...}` is processed _before_ shell commands (`!{...}`) and argument substitution (`{{args}}`).
-- **Parsing**: The parser requires the content inside `@{...}` (the path) to have balanced braces (`{` and `}`).
-
-**Example (`review.toml`):**
-
-This command injects the content of a _fixed_ best practices file (`docs/best-practices.md`) and uses the user's arguments to provide context for the review.
-
-```toml
-# In: <project>/.qwen/commands/review.toml
-# Invoked via: /review FileCommandLoader.ts
-
-description = "Reviews the provided context using a best practice guide."
-prompt = """
-You are an expert code reviewer.
-
-Your task is to review {{args}}.
-
-Use the following best practices when providing your review:
-
-@{docs/best-practices.md}
-"""
-```
-
-When you run `/review FileCommandLoader.ts`, the `@{docs/best-practices.md}` placeholder is replaced by the content of that file, and `{{args}}` is replaced by the text you provided, before the final prompt is sent to the model.
-
----
-
-#### Example: A "Pure Function" Refactoring Command
-
-Let's create a global command that asks the model to refactor a piece of code.
-
-**1. Create the file and directories:**
-
-First, ensure the user commands directory exists, then create a `refactor` subdirectory for organization and the final TOML file.
-
-```bash
-mkdir -p ~/.qwen/commands/refactor
-touch ~/.qwen/commands/refactor/pure.toml
-```
-
-**2. Add the content to the file:**
-
-Open `~/.qwen/commands/refactor/pure.toml` in your editor and add the following content. We are including the optional `description` for best practice.
-
-```toml
-# In: ~/.qwen/commands/refactor/pure.toml
-# This command will be invoked via: /refactor:pure
-
-description = "Asks the model to refactor the current context into a pure function."
-
-prompt = """
-Please analyze the code I've provided in the current context.
-Refactor it into a pure function.
-
-Your response should include:
-1. The refactored, pure function code block.
-2. A brief explanation of the key changes you made and why they contribute to purity.
-"""
-```
-
-**3. Run the Command:**
-
-That's it! You can now run your command in the CLI. First, you might add a file to the context, and then invoke your command:
+Once created, custom commands appear in your command list and can be invoked like built-in commands:
 
 ```
-> @my-messy-function.js
-> /refactor:pure
+> @refactor-to-pure-function
 ```
 
-Qwen Code will then execute the multi-line prompt defined in your TOML file.
+## Keyboard Shortcuts
 
-## At commands (`@`)
+| Shortcut | Description |
+|----------|-------------|
+| `Ctrl+C` | Cancel current operation / Show quit confirmation (press twice to exit) |
+| `Ctrl+L` | Clear the terminal screen |
+| `Ctrl+R` | Search command history |
+| `Up/Down` | Navigate command history |
+| `Tab` | Auto-complete commands and file paths |
 
-At commands are used to include the content of files or directories as part of your prompt to the model. These commands include git-aware filtering.
+## Configuration
 
-- **`@<path_to_file_or_directory>`**
-  - **Description:** Inject the content of the specified file or files into your current prompt. This is useful for asking questions about specific code, text, or collections of files.
-  - **Examples:**
-    - `@path/to/your/file.txt Explain this text.`
-    - `@src/my_project/ Summarize the code in this directory.`
-    - `What is this file about? @README.md`
-  - **Details:**
-    - If a path to a single file is provided, the content of that file is read.
-    - If a path to a directory is provided, the command attempts to read the content of files within that directory and any subdirectories.
-    - Spaces in paths should be escaped with a backslash (e.g., `@My\ Documents/file.txt`).
-    - The command uses the `read_many_files` tool internally. The content is fetched and then inserted into your query before being sent to the model.
-    - **Git-aware filtering:** By default, git-ignored files (like `node_modules/`, `dist/`, `.env`, `.git/`) are excluded. This behavior can be changed via the `fileFiltering` settings.
-    - **File types:** The command is intended for text-based files. While it might attempt to read any file, binary files or very large files might be skipped or truncated by the underlying `read_many_files` tool to ensure performance and relevance. The tool indicates if files were skipped.
-  - **Output:** The CLI will show a tool call message indicating that `read_many_files` was used, along with a message detailing the status and the path(s) that were processed.
-
-- **`@` (Lone at symbol)**
-  - **Description:** If you type a lone `@` symbol without a path, the query is passed as-is to the model. This might be useful if you are specifically talking _about_ the `@` symbol in your prompt.
-
-### Error handling for `@` commands
-
-- If the path specified after `@` is not found or is invalid, an error message will be displayed, and the query might not be sent to the model, or it will be sent without the file content.
-- If the `read_many_files` tool encounters an error (e.g., permission issues), this will also be reported.
-
-## Shell mode & passthrough commands (`!`)
-
-The `!` prefix lets you interact with your system's shell directly from within Qwen Code.
-
-- **`!<shell_command>`**
-  - **Description:** Execute the given `<shell_command>` using `bash` on Linux/macOS or `cmd.exe` on Windows. Any output or errors from the command are displayed in the terminal.
-  - **Examples:**
-    - `!ls -la` (executes `ls -la` and returns to Qwen Code)
-    - `!git status` (executes `git status` and returns to Qwen Code)
-
-- **`!` (Toggle shell mode)**
-  - **Description:** Typing `!` on its own toggles shell mode.
-    - **Entering shell mode:**
-      - When active, shell mode uses a different coloring and a "Shell Mode Indicator".
-      - While in shell mode, text you type is interpreted directly as a shell command.
-    - **Exiting shell mode:**
-      - When exited, the UI reverts to its standard appearance and normal Qwen Code behavior resumes.
-
-- **Caution for all `!` usage:** Commands you execute in shell mode have the same permissions and impact as if you ran them directly in your terminal.
-
-- **Environment Variable:** When a command is executed via `!` or in shell mode, the `QWEN_CODE=1` environment variable is set in the subprocess's environment. This allows scripts or tools to detect if they are being run from within the CLI.
+Many CLI behaviors can be configured in your `.qwen/settings.json` file. See the [Configuration documentation](configuration.md) for a complete list of settings.

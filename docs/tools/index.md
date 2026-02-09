@@ -1,24 +1,25 @@
-# Qwen Code tools
+# LowCal Code Tools
 
-Qwen Code includes built-in tools that the model uses to interact with your local environment, access information, and perform actions. These tools enhance the CLI's capabilities, enabling it to go beyond text generation and assist with a wide range of tasks.
+LowCal Code includes built-in tools that the model uses to interact with your local environment, access information, and perform actions. These tools enhance the CLI's capabilities, enabling it to go beyond text generation and assist with a wide range of tasks.
 
-## Overview of Qwen Code tools
+## Overview of LowCal Code Tools
 
-In the context of Qwen Code, tools are specific functions or modules that the model can request to be executed. For example, if you ask the model to "Summarize the contents of `my_document.txt`," it will likely identify the need to read that file and will request the execution of the `read_file` tool.
+In the context of LowCal Code, tools are specific functions or modules that the model can request to be executed. For example, if you ask the model to "Summarize the contents of `my_document.txt`," it will likely identify the need to read that file and will request the execution of the `read_file` tool.
 
 The core component (`packages/core`) manages these tools, presents their definitions (schemas) to the model, executes them when requested, and returns the results to the model for further processing into a user-facing response.
 
 These tools provide the following capabilities:
 
 - **Access local information:** Tools allow the model to access your local file system, read file contents, list directories, etc.
-- **Execute commands:** With tools like `run_shell_command`, the model can run shell commands (with appropriate safety measures and user confirmation).
-- **Interact with the web:** Tools can fetch content from URLs.
+- **Execute commands:** With tools like `shell`, the model can run shell commands (with appropriate safety measures and user confirmation).
+- **Interact with the web:** Tools can fetch content from URLs or perform web searches.
 - **Take actions:** Tools can modify files, write new files, or perform other actions on your system (again, typically with safeguards).
 - **Ground responses:** By using tools to fetch real-time or specific local data, responses can be more accurate, relevant, and grounded in your actual context.
+- **Task orchestration:** Advanced tools for managing sub-tasks, scheduling, and session communication.
 
-## How to use Qwen Code tools
+## How to Use LowCal Code Tools
 
-To use Qwen Code tools, provide a prompt to the CLI. The process works as follows:
+To use LowCal Code tools, provide a prompt to the CLI. The process works as follows:
 
 1.  You provide a prompt to the CLI.
 2.  The CLI sends the prompt to the core.
@@ -30,28 +31,221 @@ To use Qwen Code tools, provide a prompt to the CLI. The process works as follow
 
 You will typically see messages in the CLI indicating when a tool is being called and whether it succeeded or failed.
 
-## Security and confirmation
+## Security and Confirmation
 
-Many tools, especially those that can modify your file system or execute commands (`write_file`, `edit`, `run_shell_command`), are designed with safety in mind. Qwen Code will typically:
+Many tools, especially those that can modify your file system or execute commands (`write_file`, `edit`, `shell`), are designed with safety in mind. LowCal Code will typically:
 
 - **Require confirmation:** Prompt you before executing potentially sensitive operations, showing you what action is about to be taken.
-- **Utilize sandboxing:** All tools are subject to restrictions enforced by sandboxing (see [Sandboxing in Qwen Code](../sandbox.md)). This means that when operating in a sandbox, any tools (including MCP servers) you wish to use must be available _inside_ the sandbox environment. For example, to run an MCP server through `npx`, the `npx` executable must be installed within the sandbox's Docker image or be available in the `sandbox-exec` environment.
+- **Utilize sandboxing:** All tools are subject to restrictions enforced by sandboxing (see [Sandboxing](../sandbox.md)). This means that when operating in a sandbox, any tools (including MCP servers) you wish to use must be available _inside_ the sandbox environment.
 
 It's important to always review confirmation prompts carefully before allowing a tool to proceed.
 
-## Learn more about Qwen Code's tools
+## Learn More About LowCal Code Tools
 
-Qwen Code's built-in tools can be broadly categorized as follows:
+LowCal Code's built-in tools can be broadly categorized as follows:
 
-- **[File System Tools](./file-system.md):** For interacting with files and directories (reading, writing, listing, searching, etc.).
-- **[Shell Tool](./shell.md) (`run_shell_command`):** For executing shell commands.
-- **[Web Fetch Tool](./web-fetch.md) (`web_fetch`):** For retrieving content from URLs.
-- **[Web Search Tool](./web-search.md) (`web_search`):** For searching the web.
-- **[Multi-File Read Tool](./multi-file.md) (`read_many_files`):** A specialized tool for reading content from multiple files or directories, often used by the `@` command.
-- **[Memory Tool](./memory.md) (`save_memory`):** For saving and recalling information across sessions.
-- **[Todo Write Tool](./todo-write.md) (`todo_write`):** For creating and managing structured task lists during coding sessions.
+### File System Tools
+- **[File System](./file-system.md)** (`read_file`, `write_file`, `edit`): For reading, writing, and modifying files.
+- **[Multi-File Read](./multi-file.md)** (`read_many_files`): Reading content from multiple files or directories at once.
 
-Additionally, these tools incorporate:
+### Directory and Search Tools
+- **[Directory Listing](#directory-listing)** (`ls`): List directory contents.
+- **[Grep](#grep)** (`grep`): Search for patterns in files.
+- **[Glob](#glob)** (`glob`): Find files matching glob patterns.
+- **[RipGrep](#ripgrep)** (`rip_grep`): Fast text search using ripgrep.
 
-- **[MCP servers](./mcp-server.md)**: MCP servers act as a bridge between the model and your local environment or other services like APIs.
-- **[Sandboxing](../sandbox.md)**: Sandboxing isolates the model and its changes from your environment to reduce potential risk.
+### Execution Tools
+- **[Shell](./shell.md)** (`shell`): Execute shell commands.
+
+### Web Tools
+- **[Web Fetch](./web-fetch.md)** (`web_fetch`): Retrieve content from URLs.
+- **[Web Search](./web-search.md)** (`web_search`): Perform web searches.
+- **[SearXNG Search](#searxng-search)** (`searxng_search`): Privacy-focused local web search.
+
+### Task Management Tools
+- **[Todo Write](./todo-write.md)** (`todo_write`): Create and manage structured task lists.
+- **[Task](#task)** (`task`): Execute tasks with automatic retry on failure.
+- **[Launch Task](#launch-task)** (`launch_task`): Spawn new LowCal instances for parallel work.
+
+### Scheduling Tools
+- **[Schedule Task](#schedule-task)** (`schedule_task`): Create and manage cron jobs.
+- **[Launch Task State](#launch-task-state)** (`launch_task_state`): Query task status and results.
+
+### Session Communication Tools
+- **[Read Session Messages](#read-session-messages)** (`read_session_messages`): Receive messages from launched tasks.
+
+### Memory Tools
+- **[Memory](./memory.md)** (`save_memory`, `recall_memory`): Save and recall information across sessions.
+
+### MCP Tools
+- **[MCP Server](./mcp-server.md)**: Model Context Protocol integration for external tools.
+- **[MCP Client](#mcp-client)** (`mcp_client`): Direct MCP server interaction.
+- **[MCP Tool](#mcp-tool)** (`mcp_tool`): Execute MCP-exposed tools.
+
+### Utility Tools
+- **[Exit Plan Mode](#exit-plan-mode)** (`exit_plan_mode`): Exit planning mode and execute actions.
+- **[Diff Options](#diff-options)** (`diff_options`): Configure file diff behavior.
+
+## Tool Categories Reference
+
+### Directory Listing (`ls`)
+Lists directory contents with various options for filtering and formatting.
+
+**Parameters:**
+- `path`: The directory to list (default: current directory)
+- `recursive`: Whether to list subdirectories recursively
+- `hidden`: Whether to include hidden files
+
+**Example Use:** "List all JavaScript files in the src directory"
+
+---
+
+### Grep (`grep`)
+Searches for patterns in files using regular expressions.
+
+**Parameters:**
+- `pattern`: The regex pattern to search for
+- `path`: Directory or file path to search in
+- `case_sensitive`: Whether matching is case-sensitive
+
+**Example Use:** "Find all occurrences of 'TODO' in the codebase"
+
+---
+
+### Glob (`glob`)
+Finds files and directories matching glob patterns.
+
+**Parameters:**
+- `pattern`: The glob pattern (e.g., `src/**/*.ts`)
+- `path`: Base directory for the search
+- `ignore`: Patterns to exclude from results
+
+**Example Use:** "Find all test files ending in .test.ts"
+
+---
+
+### RipGrep (`rip_grep`)
+Fast text search using ripgrep for large codebases.
+
+**Parameters:**
+- `pattern`: The pattern to search for
+- `path`: Directory to search in
+- `file_pattern`: Optional file filter (e.g., `*.ts`)
+
+**Example Use:** "Find all references to 'useState' in TypeScript files"
+
+---
+
+### SearXNG Search (`searxng_search`)
+Privacy-focused local web search using a self-hosted SearXNG instance.
+
+**Parameters:**
+- `query`: The search query
+- `categories`: Optional categories (general, images, news, etc.)
+- `language`: Optional language filter
+
+**Example Use:** "Search for privacy-focused alternatives to Google"
+
+---
+
+### Task (`task`)
+Executes a task with automatic retry on failure and progress tracking.
+
+**Parameters:**
+- `prompt`: The task description
+- `max_retries`: Maximum number of retries on failure
+- `timeout_minutes`: Task timeout
+
+**Example Use:** "Run the test suite as a task"
+
+---
+
+### Launch Task (`launch_task`)
+Spawns a new LowCal instance for parallel or background work.
+
+**Parameters:**
+- `id`: Unique identifier for the task
+- `prompt`: The task to execute
+- `execution_mode`: headless, zellij_tab, or default
+
+**Example Use:** "Launch a background task to build the project"
+
+---
+
+### Schedule Task (`schedule_task`)
+Creates and manages cron jobs for recurring automation.
+
+**Parameters:**
+- `action`: create, list, get, update, delete, pause, resume, run_now
+- `id`: Job identifier
+- `schedule`: Cron expression (e.g., "0 * * * *")
+- `prompt`: Task to execute
+
+**Example Use:** "Schedule tests to run every hour"
+
+---
+
+### Launch Task State (`launch_task_state`)
+Queries the status and results of launched tasks.
+
+**Parameters:**
+- `task_id`: The task identifier to query
+- `action`: get, list, or clear
+
+**Example Use:** "Check the status of my background build task"
+
+---
+
+### Read Session Messages (`read_session_messages`)
+Receives messages from launched tasks back to the parent session.
+
+**Parameters:**
+- `action`: pull, peek, clear, or wait
+- `session_id`: Target session mailbox
+- `task_id`: Optional filter for specific task
+
+**Example Use:** "Get results from my background research task"
+
+---
+
+### MCP Client (`mcp_client`)
+Direct interaction with Model Context Protocol servers.
+
+**Parameters:**
+- `server_name`: The MCP server to connect to
+- `method`: The method to call
+- `params`: Method parameters
+
+**Example Use:** "Query the Git MCP server for recent commits"
+
+---
+
+### MCP Tool (`mcp_tool`)
+Execute tools exposed by MCP servers.
+
+**Parameters:**
+- `tool_name`: The MCP tool name (e.g., `git__git_log`)
+- `arguments`: Tool-specific arguments
+
+**Example Use:** "Run the git log tool from the Git MCP server"
+
+---
+
+### Exit Plan Mode (`exit_plan_mode`)
+Exits planning mode and executes the planned actions.
+
+**Parameters:**
+- None (used as a command to confirm execution)
+
+**Example Use:** "Exit plan mode and execute the changes"
+
+---
+
+### Diff Options (`diff_options`)
+Configures file diff behavior for edit operations.
+
+**Parameters:**
+- `context_lines`: Number of context lines in diffs
+- `format`: Unified or side-by-side
+
+**Example Use:** "Configure diffs to show 5 lines of context"
