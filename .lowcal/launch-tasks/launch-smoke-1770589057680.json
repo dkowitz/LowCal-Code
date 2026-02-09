@@ -1,0 +1,7 @@
+{
+  "job_id": "launch-smoke-1770589057680",
+  "timestamp": "2026-02-08T22:17:38.945Z",
+  "prompt": "date",
+  "error": "Cannot truncate prompt with n_keep (8675) >= n_ctx (4096)",
+  "status": "error"
+}

@@ -50,6 +50,9 @@ const DEFAULT_COLLECTIONS: Record<string, string[]> = {
     ToolNames.WEB_FETCH,
     ToolNames.WEB_SEARCH,
     ToolNames.SEARXNG_SEARCH,
+    ToolNames.SCHEDULE_TASK,
+    ToolNames.LAUNCH_TASK,
+    ToolNames.READ_SESSION_MESSAGES,
   ],
   minimal: [ToolNames.READ_FILE, ToolNames.WRITE_FILE, ToolNames.SHELL],
   "shell-only": [ToolNames.SHELL],
@@ -66,10 +69,12 @@ const CANONICAL_TOOL_NAMES: Record<string, string> = Object.values(
 const DEFAULT_CONFIG: CliToolConfig = {
   promptMode: toolConfig.promptMode ?? "auto",
   activeCollection: toolConfig.activeCollection ?? "full",
-  collections: cloneCollections(
-    Object.keys(toolConfig.collections).length > 0
-      ? toolConfig.collections
-      : DEFAULT_COLLECTIONS,
+  collections: applyToolCollectionPolicies(
+    cloneCollections(
+      Object.keys(toolConfig.collections).length > 0
+        ? toolConfig.collections
+        : DEFAULT_COLLECTIONS,
+    ),
   ),
   customPrompts: {},
   activeCustomPrompt: null,
@@ -106,10 +111,10 @@ export function loadCliToolConfig(): CliToolConfig {
     const raw = fs.readFileSync(configPath, "utf8");
     const parsed = JSON.parse(raw) ?? {};
     const promptMode = normalizePromptMode(parsed.promptMode);
-    const mergedCollections = {
+    const mergedCollections = applyToolCollectionPolicies({
       ...cloneCollections(DEFAULT_COLLECTIONS),
       ...normalizeCollections(parsed.collections ?? {}),
-    };
+    });
     const active =
       typeof parsed.activeCollection === "string" &&
       mergedCollections[parsed.activeCollection]
@@ -191,6 +196,34 @@ function normalizeCollections(
       normalized[name] = list;
     }
   }
+  return normalized;
+}
+
+function applyToolCollectionPolicies(
+  collections: Record<string, string[]>,
+): Record<string, string[]> {
+  const normalized = cloneCollections(collections);
+
+  // Keep "full" current with all known core tools, even for older configs.
+  const fullSet = new Set(normalized["full"] ?? []);
+  for (const toolName of Object.values(ToolNames)) {
+    fullSet.add(toolName);
+  }
+  normalized["full"] = Array.from(fullSet);
+
+  // launch_task depends on read_session_messages for mailbox-based returns.
+  for (const [collectionName, toolList] of Object.entries(normalized)) {
+    if (
+      toolList.includes(ToolNames.LAUNCH_TASK) &&
+      !toolList.includes(ToolNames.READ_SESSION_MESSAGES)
+    ) {
+      normalized[collectionName] = [
+        ...toolList,
+        ToolNames.READ_SESSION_MESSAGES,
+      ];
+    }
+  }
+
   return normalized;
 }
 

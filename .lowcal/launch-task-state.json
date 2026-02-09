@@ -1,0 +1,26 @@
+{
+  "version": "1.0",
+  "updated_at": "2026-02-09T11:10:54.096Z",
+  "tasks": {
+    "simple-test-task": {
+      "task_id": "simple-test-task",
+      "status": "completed",
+      "created_at": "2026-02-09T11:09:50.393Z",
+      "started_at": "2026-02-09T11:09:50.547Z",
+      "finished_at": "2026-02-09T11:10:54.096Z",
+      "last_heartbeat": "2026-02-09T11:10:54.096Z",
+      "prompt_preview": "Print \"Hello from launch_task!\" to the console, then return a summary object with:\n- status: \"success\"\n- message: \"Task completed successfully\"\n- timestamp: current ISO date string\n\nThis is a simple test of the launch_task functionality.",
+      "parent_session_id": "fbe8be28-b5a4-491e-ae29-01525c6433a8",
+      "source_session_id": "fbe8be28-b5a4-491e-ae29-01525c6433a8",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/fbe8be28-b5a4-491e-ae29-01525c6433a8.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-simple-test-task-1770635390393.log",
+        "child_session_id": "headless-simple-test-task-1770635391057",
+        "message_timestamp": "2026-02-09T11:10:54.096Z"
+      },
+      "tab_name": "task:simple-test-task"
+    }
+  }
+}

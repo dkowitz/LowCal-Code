@@ -77,6 +77,8 @@ export * from "./tools/mcp-client.js";
 export * from "./tools/mcp-tool.js";
 export * from "./tools/research.js";
 export * from "./tools/schedule-task.js";
+export * from "./tools/read-session-messages.js";
+export * from "./tools/launch-task-state.js";
 export * from "./scheduler/index.js";
 export * from "./sessions/index.js";
 export { MCPOAuthProvider } from "./mcp/oauth-provider.js";

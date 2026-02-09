@@ -38,6 +38,9 @@ const DEFAULT_COLLECTIONS: Record<string, string[]> = {
     ToolNames.WEB_FETCH,
     ToolNames.WEB_SEARCH,
     ToolNames.SEARXNG_SEARCH,
+    ToolNames.SCHEDULE_TASK,
+    ToolNames.LAUNCH_TASK,
+    ToolNames.READ_SESSION_MESSAGES,
   ],
   minimal: [ToolNames.READ_FILE, ToolNames.WRITE_FILE, ToolNames.SHELL],
   "shell-only": [ToolNames.SHELL],
@@ -80,17 +83,53 @@ const TOOL_SUMMARIES: Record<string, string> = {
     "Search the web via Tavily to gather up-to-date information with cited sources. Example: `web_search latest Node.js LTS release`.",
   [ToolNames.SEARXNG_SEARCH]:
     "Search the web using your local SearXNG instance for private, non-API-key search results. Example: `searxng_search privacy-focused alternatives to Google Search`.",
+  [ToolNames.SCHEDULE_TASK]:
+    "Create/manage cron jobs for recurring automation. Example: `schedule_task action=create id=nightly schedule='0 2 * * *' ...`.",
+  [ToolNames.LAUNCH_TASK]:
+    "Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: `launch_task action=create id=task-1 prompt='...'`.",
+  [ToolNames.READ_SESSION_MESSAGES]:
+    "Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: `read_session_messages action=wait`.",
 };
+
+function applyToolCollectionPolicies(
+  collections: Record<string, string[]>,
+): Record<string, string[]> {
+  const normalized = Object.fromEntries(
+    Object.entries(collections).map(([name, tools]) => [name, [...tools]]),
+  ) as Record<string, string[]>;
+
+  const fullSet = new Set(normalized["full"] ?? []);
+  for (const toolName of Object.values(ToolNames)) {
+    fullSet.add(toolName);
+  }
+  normalized["full"] = Array.from(fullSet);
+
+  for (const [collectionName, toolList] of Object.entries(normalized)) {
+    if (
+      toolList.includes(ToolNames.LAUNCH_TASK) &&
+      !toolList.includes(ToolNames.READ_SESSION_MESSAGES)
+    ) {
+      normalized[collectionName] = [
+        ...toolList,
+        ToolNames.READ_SESSION_MESSAGES,
+      ];
+    }
+  }
+
+  return normalized;
+}
 
 function loadToolConfig(): ToolConfig {
   const defaultConfig: ToolConfig = {
     activeCollection: "full",
     promptMode: "auto",
-    collections: Object.fromEntries(
-      Object.entries(DEFAULT_COLLECTIONS).map(([name, tools]) => [
-        name,
-        [...tools],
-      ]),
+    collections: applyToolCollectionPolicies(
+      Object.fromEntries(
+        Object.entries(DEFAULT_COLLECTIONS).map(([name, tools]) => [
+          name,
+          [...tools],
+        ]),
+      ),
     ),
   };
   try {
@@ -119,7 +158,7 @@ function loadToolConfig(): ToolConfig {
         return acc;
       }, {});
 
-      const mergedCollections = {
+      const mergedCollections = applyToolCollectionPolicies({
         ...Object.fromEntries(
           Object.entries(DEFAULT_COLLECTIONS).map(([name, tools]) => [
             name,
@@ -127,7 +166,7 @@ function loadToolConfig(): ToolConfig {
           ]),
         ),
         ...normalizedCollections,
-      };
+      });
 
       const promptMode = normalizePromptMode(parsed.promptMode);
       const activeCollection =
@@ -276,6 +315,16 @@ function buildToolUsageSection(
     {
       include: hasTool(ToolNames.MEMORY),
       text: "- **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.",
+    },
+    {
+      include: hasTool(ToolNames.LAUNCH_TASK),
+      text: "- **Launch returns:** After `launch_task`, use `read_session_messages action=wait` (or pull/peek) instead of polling launch logs.",
+    },
+    {
+      include:
+        hasTool(ToolNames.LAUNCH_TASK) &&
+        hasTool(ToolNames.READ_SESSION_MESSAGES),
+      text: "- **No duplicate launches:** If `wait` times out, do not launch the same objective again; continue waiting or report that it is still running.",
     },
     {
       include: true,

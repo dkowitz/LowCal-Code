@@ -102,6 +102,8 @@ export * from "./tools/mcp-client.js";
 export * from "./tools/mcp-tool.js";
 export * from "./tools/research.js";
 export * from "./tools/schedule-task.js";
+export * from "./tools/read-session-messages.js";
+export * from "./tools/launch-task-state.js";
 
 // Export scheduler
 export * from "./scheduler/index.js";

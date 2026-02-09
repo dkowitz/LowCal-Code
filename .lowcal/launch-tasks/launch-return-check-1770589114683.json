@@ -1,0 +1,7 @@
+{
+  "job_id": "launch-return-check-1770589114683",
+  "timestamp": "2026-02-08T22:18:35.335Z",
+  "prompt": "What is 2+2? Return only the number.",
+  "error": "Cannot truncate prompt with n_keep (8675) >= n_ctx (4096)",
+  "status": "error"
+}

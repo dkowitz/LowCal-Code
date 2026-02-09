@@ -26,5 +26,6 @@ export const ToolNames = {
     RESEARCH: "research",
     SCHEDULE_TASK: "schedule_task",
     LAUNCH_TASK: "launch_task",
+    READ_SESSION_MESSAGES: "read_session_messages",
 };
 //# sourceMappingURL=tool-names.js.map

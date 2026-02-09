@@ -13,6 +13,8 @@ const DASHBOARD_SECTION_INNER_WIDTH = 77;
 const DASHBOARD_SHORTCUTS_INNER_WIDTH = 80;
 const ALT_SCREEN_ON = "\x1b[?1049h\x1b[2J\x1b[H\x1b[?25l";
 const ALT_SCREEN_OFF = "\x1b[?25h\x1b[?1049l";
+const MOUSE_TRACKING_ON = "\x1b[?1000h\x1b[?1006h";
+const MOUSE_TRACKING_OFF = "\x1b[?1000l\x1b[?1006l";
 function getTtlMs(ttlSeconds) {
     if (!ttlSeconds || !Number.isFinite(ttlSeconds) || ttlSeconds <= 0) {
         return DEFAULT_SESSION_TTL_MS;
@@ -26,6 +28,26 @@ function getIntervalMs(intervalSeconds) {
         return 2000;
     }
     return intervalSeconds * 1000;
+}
+function getMouseWheelDelta(key) {
+    // SGR mouse event format: ESC [ < Cb ; Cx ; Cy (M/m)
+    const sgrMatch = key.match(/\x1b\[<(\d+);(\d+);(\d+)([mM])/);
+    if (sgrMatch) {
+        const code = Number.parseInt(sgrMatch[1], 10);
+        if (code === 64)
+            return -1;
+        if (code === 65)
+            return 1;
+    }
+    // Legacy X10 mouse event format: ESC [ M Cb Cx Cy
+    if (key.startsWith("\x1b[M") && key.length >= 6) {
+        const code = key.charCodeAt(3) - 32;
+        if (code === 64)
+            return -1;
+        if (code === 65)
+            return 1;
+    }
+    return 0;
 }
 function stripAnsi(value) {
     return stripAnsiLib(value);
@@ -43,12 +65,12 @@ function padToWidth(value, width) {
     const padding = Math.max(0, width - stripAnsi(fitted).length);
     return `${fitted}${" ".repeat(padding)}`;
 }
-function printBoxLine(value, width) {
-    console.log(`│ ${padToWidth(value, width)} │`);
+function printBoxLine(value, width, sink) {
+    sink(`│ ${padToWidth(value, width)} │`);
 }
-function printBoxBlock(lines, width) {
+function printBoxBlock(lines, width, sink) {
     for (const line of lines) {
-        printBoxLine(line, width);
+        printBoxLine(line, width, sink);
     }
 }
 function normalizeExecutionMode(value) {
@@ -169,46 +191,48 @@ function getActionVerb(action) {
     };
     return verbs[action];
 }
-async function renderDashboard(sessions, jobs, ttlMs, intervalMs, now, actionNotice) {
+async function renderDashboard(sessions, jobs, ttlMs, intervalMs, now, actionNotice, options) {
     const defaultMode = getDefaultExecutionMode();
-    // Clear screen and move cursor to top
-    process.stdout.write("\x1b[2J\x1b[H");
+    const lines = [];
+    const writeLine = (line) => {
+        lines.push(line);
+    };
     const [daemonRunning, orchestratorStatus] = await Promise.all([
         isDaemonRunning(),
         getOrchestratorStatus(),
     ]);
     // Header
-    console.log("╔═══════════════════════════════════════════════════════════════════════════════╗");
-    console.log("║                           LowCal Dashboard                                    ║");
-    console.log("╚═══════════════════════════════════════════════════════════════════════════════╝");
-    console.log();
+    writeLine("╔═══════════════════════════════════════════════════════════════════════════════╗");
+    writeLine("║                           LowCal Dashboard                                    ║");
+    writeLine("╚═══════════════════════════════════════════════════════════════════════════════╝");
+    writeLine("");
     // Scheduler Status
-    console.log("┌─ Scheduler Status ────────────────────────────────────────────────────────────┐");
+    writeLine("┌─ Scheduler Status ────────────────────────────────────────────────────────────┐");
     const daemonStatusText = daemonRunning ? "🟢 Running" : "🔴 Not running";
-    printBoxLine(`Daemon: ${daemonStatusText}`, DASHBOARD_SECTION_INNER_WIDTH);
+    printBoxLine(`Daemon: ${daemonStatusText}`, DASHBOARD_SECTION_INNER_WIDTH, writeLine);
     if (daemonRunning) {
         const status = await getDaemonStatus();
-        printBoxLine(`PID: ${status.pid}`, DASHBOARD_SECTION_INNER_WIDTH);
-        printBoxLine(`Active executions: ${status.active_executions}`, DASHBOARD_SECTION_INNER_WIDTH);
+        printBoxLine(`PID: ${status.pid}`, DASHBOARD_SECTION_INNER_WIDTH, writeLine);
+        printBoxLine(`Active executions: ${status.active_executions}`, DASHBOARD_SECTION_INNER_WIDTH, writeLine);
     }
-    console.log("└───────────────────────────────────────────────────────────────────────────────┘");
-    console.log();
+    writeLine("└───────────────────────────────────────────────────────────────────────────────┘");
+    writeLine("");
     // Orchestrator Status
-    console.log("┌─ Orchestrator Status ─────────────────────────────────────────────────────────┐");
-    printBoxLine(`Daemon: ${orchestratorStatus.running ? "🟢 Running" : "🔴 Not running"}`, DASHBOARD_SECTION_INNER_WIDTH);
-    printBoxLine(`Policy: ${orchestratorStatus.policy_ids.join(", ")}`, DASHBOARD_SECTION_INNER_WIDTH);
-    printBoxLine(`Sessions scanned: ${orchestratorStatus.sessions_scanned} | stalled: ${orchestratorStatus.stalled_sessions}`, DASHBOARD_SECTION_INNER_WIDTH);
-    printBoxLine(`Recoveries: ${orchestratorStatus.recoveries_succeeded}/${orchestratorStatus.recoveries_attempted}`, DASHBOARD_SECTION_INNER_WIDTH);
+    writeLine("┌─ Orchestrator Status ─────────────────────────────────────────────────────────┐");
+    printBoxLine(`Daemon: ${orchestratorStatus.running ? "🟢 Running" : "🔴 Not running"}`, DASHBOARD_SECTION_INNER_WIDTH, writeLine);
+    printBoxLine(`Policy: ${orchestratorStatus.policy_ids.join(", ")}`, DASHBOARD_SECTION_INNER_WIDTH, writeLine);
+    printBoxLine(`Sessions scanned: ${orchestratorStatus.sessions_scanned} | stalled: ${orchestratorStatus.stalled_sessions}`, DASHBOARD_SECTION_INNER_WIDTH, writeLine);
+    printBoxLine(`Recoveries: ${orchestratorStatus.recoveries_succeeded}/${orchestratorStatus.recoveries_attempted}`, DASHBOARD_SECTION_INNER_WIDTH, writeLine);
     if (orchestratorStatus.last_action) {
-        printBoxLine(`Last action: ${orchestratorStatus.last_action.outcome} -> ${orchestratorStatus.last_action.session_id}`, DASHBOARD_SECTION_INNER_WIDTH);
+        printBoxLine(`Last action: ${orchestratorStatus.last_action.outcome} -> ${orchestratorStatus.last_action.session_id}`, DASHBOARD_SECTION_INNER_WIDTH, writeLine);
     }
-    console.log("└───────────────────────────────────────────────────────────────────────────────┘");
-    console.log();
+    writeLine("└───────────────────────────────────────────────────────────────────────────────┘");
+    writeLine("");
     // Sessions Section with numeric IDs
     const sessionsHeader = `┌─ Active Sessions (${sessions.length} total) ─────────────────────────────────────────────────────────┐`;
-    console.log(sessionsHeader);
+    writeLine(sessionsHeader);
     if (sessions.length === 0) {
-        printBoxLine("No active sessions.", DASHBOARD_SECTION_INNER_WIDTH);
+        printBoxLine("No active sessions.", DASHBOARD_SECTION_INNER_WIDTH, writeLine);
     }
     else {
         for (let idx = 0; idx < sessions.length; idx++) {
@@ -217,17 +241,17 @@ async function renderDashboard(sessions, jobs, ttlMs, intervalMs, now, actionNot
             if (lines.length > 0) {
                 lines[0] = `[${idx + 1}] ${lines[0]}`;
             }
-            printBoxBlock(lines, DASHBOARD_SECTION_INNER_WIDTH);
-            console.log("├───────────────────────────────────────────────────────────────────────────────┤");
+            printBoxBlock(lines, DASHBOARD_SECTION_INNER_WIDTH, writeLine);
+            writeLine("├───────────────────────────────────────────────────────────────────────────────┤");
         }
     }
-    console.log("└───────────────────────────────────────────────────────────────────────────────┘");
-    console.log();
+    writeLine("└───────────────────────────────────────────────────────────────────────────────┘");
+    writeLine("");
     // Jobs Section with numeric IDs
     const jobsHeader = `┌─ Scheduled Jobs (${jobs.length} total) ─────────────────────────────────────────────────────────┐`;
-    console.log(jobsHeader);
+    writeLine(jobsHeader);
     if (jobs.length === 0) {
-        printBoxLine("No scheduled jobs.", DASHBOARD_SECTION_INNER_WIDTH);
+        printBoxLine("No scheduled jobs.", DASHBOARD_SECTION_INNER_WIDTH, writeLine);
     }
     else {
         for (let idx = 0; idx < jobs.length; idx++) {
@@ -238,27 +262,55 @@ async function renderDashboard(sessions, jobs, ttlMs, intervalMs, now, actionNot
                 const statusText = job.status === "running" ? " (running)" : "";
                 lines[0] = `${statusIcon} [${idx + 1}] ${job.id}${statusText}`;
             }
-            printBoxBlock(lines, DASHBOARD_SECTION_INNER_WIDTH);
-            console.log("├───────────────────────────────────────────────────────────────────────────────┤");
+            printBoxBlock(lines, DASHBOARD_SECTION_INNER_WIDTH, writeLine);
+            writeLine("├───────────────────────────────────────────────────────────────────────────────┤");
         }
     }
-    console.log("└───────────────────────────────────────────────────────────────────────────────┘");
-    console.log();
+    writeLine("└───────────────────────────────────────────────────────────────────────────────┘");
+    writeLine("");
     // Footer with helper info
     const intervalSec = Math.round(intervalMs / 1000);
-    console.log(`LowCal Dashboard (refresh ${intervalSec}s) - press Ctrl+C to exit`);
-    console.log();
-    console.log("┌─ Keyboard Shortcuts ─────────────────────────────────────────────────────────────┐");
-    printBoxLine("[p] prune stale sessions   | [s] start daemon   | [t] stop daemon", DASHBOARD_SHORTCUTS_INNER_WIDTH);
-    printBoxLine("[o] start orchestrator     | [x] stop orchestrator", DASHBOARD_SHORTCUTS_INNER_WIDTH);
-    printBoxLine("[d] delete job <#num>      | [r] reset job <#num>", DASHBOARD_SHORTCUTS_INNER_WIDTH);
-    printBoxLine("[a] pause job <#num>       | [e] resume job <#num>", DASHBOARD_SHORTCUTS_INNER_WIDTH);
-    printBoxLine("[k] kill session <#num>    | [Esc] cancel action", DASHBOARD_SHORTCUTS_INNER_WIDTH);
-    console.log("└──────────────────────────────────────────────────────────────────────────────────┘");
+    writeLine(`LowCal Dashboard (refresh ${intervalSec}s) - press Ctrl+C to exit`);
+    writeLine("");
+    writeLine("┌─ Keyboard Shortcuts ─────────────────────────────────────────────────────────────┐");
+    printBoxLine("[p] prune stale sessions   | [s] start daemon   | [t] stop daemon", DASHBOARD_SHORTCUTS_INNER_WIDTH, writeLine);
+    printBoxLine("[o] start orchestrator     | [x] stop orchestrator", DASHBOARD_SHORTCUTS_INNER_WIDTH, writeLine);
+    printBoxLine("[d] delete job <#num>      | [r] reset job <#num>", DASHBOARD_SHORTCUTS_INNER_WIDTH, writeLine);
+    printBoxLine("[a] pause job <#num>       | [e] resume job <#num>", DASHBOARD_SHORTCUTS_INNER_WIDTH, writeLine);
+    printBoxLine("[↑/↓/wheel] scroll line    | [PgUp/PgDn] page", DASHBOARD_SHORTCUTS_INNER_WIDTH, writeLine);
+    printBoxLine("[Home/End] top/bottom      | [Esc] cancel action", DASHBOARD_SHORTCUTS_INNER_WIDTH, writeLine);
+    printBoxLine("[k] kill session <#num>", DASHBOARD_SHORTCUTS_INNER_WIDTH, writeLine);
+    writeLine("└──────────────────────────────────────────────────────────────────────────────────┘");
     if (actionNotice) {
-        console.log();
-        console.log(`Last action: ${actionNotice}`);
+        writeLine("");
+        writeLine(`Last action: ${actionNotice}`);
     }
+    const totalLines = lines.length;
+    const viewportRows = typeof options?.viewportRows === "number" && options.viewportRows > 0
+        ? Math.floor(options.viewportRows)
+        : undefined;
+    if (!viewportRows) {
+        process.stdout.write(`${lines.join("\n")}\n`);
+        return {
+            totalLines,
+            maxScrollOffset: 0,
+            scrollOffset: 0,
+        };
+    }
+    const maxScrollOffset = Math.max(0, totalLines - viewportRows);
+    const requestedOffset = options?.scrollOffset ?? 0;
+    const scrollOffset = Math.min(Math.max(0, requestedOffset), maxScrollOffset);
+    const visible = lines.slice(scrollOffset, scrollOffset + viewportRows);
+    process.stdout.write("\x1b[2J\x1b[H");
+    process.stdout.write(visible.join("\n"));
+    if (visible.length < viewportRows) {
+        process.stdout.write("\n".repeat(viewportRows - visible.length));
+    }
+    return {
+        totalLines,
+        maxScrollOffset,
+        scrollOffset,
+    };
 }
 const dashboardCommand = {
     command: "dashboard",
@@ -305,6 +357,8 @@ const dashboardCommand = {
         let interactivePrompt = "";
         let displayJobs = [];
         let displaySessions = [];
+        let scrollOffset = 0;
+        let maxScrollOffset = 0;
         const render = async () => {
             const [rawSessions, rawJobs] = await Promise.all([
                 listSessions(),
@@ -313,7 +367,15 @@ const dashboardCommand = {
             const now = Date.now();
             displaySessions = sortSessionsForDisplay(rawSessions, ttlMs, now);
             displayJobs = sortJobsForDisplay(rawJobs);
-            await renderDashboard(displaySessions, displayJobs, ttlMs, intervalMs, now, lastActionNotice);
+            const terminalRows = process.stdout.isTTY && Number.isFinite(process.stdout.rows)
+                ? Math.max(8, process.stdout.rows - (isInteractiveMode ? 2 : 1))
+                : undefined;
+            const rendered = await renderDashboard(displaySessions, displayJobs, ttlMs, intervalMs, now, lastActionNotice, {
+                viewportRows: terminalRows,
+                scrollOffset,
+            });
+            scrollOffset = rendered.scrollOffset;
+            maxScrollOffset = rendered.maxScrollOffset;
             // If in interactive mode, re-display the prompt and input
             if (isInteractiveMode && interactivePrompt) {
                 process.stdout.write(interactivePrompt + inputBuffer);
@@ -383,14 +445,14 @@ const dashboardCommand = {
             }
             inAltScreen = false;
             if (process.stdout.isTTY) {
-                process.stdout.write(ALT_SCREEN_OFF);
+                process.stdout.write(`${MOUSE_TRACKING_OFF}${ALT_SCREEN_OFF}`);
             }
             if (process.stdin.isTTY) {
                 process.stdin.setRawMode(false);
             }
         };
         if (process.stdout.isTTY) {
-            process.stdout.write(ALT_SCREEN_ON);
+            process.stdout.write(`${ALT_SCREEN_ON}${MOUSE_TRACKING_ON}`);
             inAltScreen = true;
             process.once("exit", restoreTerminal);
             process.once("SIGTERM", () => {
@@ -408,6 +470,7 @@ const dashboardCommand = {
             const handleInput = async (data) => {
                 const key = data.toString("utf-8");
                 const lower = key.toLowerCase();
+                const wheelDelta = getMouseWheelDelta(key);
                 // Ctrl+C to exit
                 if (key === "\u0003") {
                     clearInterval(intervalId);
@@ -415,6 +478,9 @@ const dashboardCommand = {
                     process.exit(0);
                 }
                 if (isInteractiveMode) {
+                    if (wheelDelta !== 0) {
+                        return;
+                    }
                     // ESC cancels current in-progress action
                     if (key === "\u001b") {
                         isInteractiveMode = false;
@@ -484,6 +550,44 @@ const dashboardCommand = {
                         inputBuffer += key;
                         process.stdout.write(key);
                     }
+                    return;
+                }
+                const pageSize = process.stdout.isTTY && Number.isFinite(process.stdout.rows)
+                    ? Math.max(1, process.stdout.rows - 4)
+                    : 10;
+                if (wheelDelta !== 0) {
+                    scrollOffset = Math.min(maxScrollOffset, Math.max(0, scrollOffset + wheelDelta));
+                    await renderSafe();
+                    return;
+                }
+                if (key === "\u001b[A") {
+                    scrollOffset = Math.max(0, scrollOffset - 1);
+                    await renderSafe();
+                    return;
+                }
+                if (key === "\u001b[B") {
+                    scrollOffset = Math.min(maxScrollOffset, scrollOffset + 1);
+                    await renderSafe();
+                    return;
+                }
+                if (key === "\u001b[5~") {
+                    scrollOffset = Math.max(0, scrollOffset - pageSize);
+                    await renderSafe();
+                    return;
+                }
+                if (key === "\u001b[6~") {
+                    scrollOffset = Math.min(maxScrollOffset, scrollOffset + pageSize);
+                    await renderSafe();
+                    return;
+                }
+                if (key === "\u001b[H" || key === "\u001b[1~") {
+                    scrollOffset = 0;
+                    await renderSafe();
+                    return;
+                }
+                if (key === "\u001b[F" || key === "\u001b[4~") {
+                    scrollOffset = maxScrollOffset;
+                    await renderSafe();
                     return;
                 }
                 if (lower === "p") {

@@ -14,9 +14,67 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as process from "process";
+import { upsertLaunchTaskState } from "@qwen-code/qwen-code-core";
 import { normalizeAuthType } from "../config/auth.js";
 import { startSessionRegistration, stopSessionRegistration, updateSessionDetails, } from "../session/sessionManager.js";
 import { loadCliToolConfig, syncCoreToolConfig, } from "../ui/commands/utils/toolConfig.js";
+const RETURN_PAYLOAD_MARKER = "RETURN_PAYLOAD:";
+const ENV_DISABLE_LAUNCH_TASK = "LOWCAL_DISABLE_LAUNCH_TASK";
+function stripAnsiForReturn(text) {
+    // Strip most ANSI escape sequences so we can reliably parse explicit markers.
+    return text.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
+}
+function extractReturnPayload(text) {
+    const normalized = stripAnsiForReturn(text);
+    const markerIndex = normalized.lastIndexOf(RETURN_PAYLOAD_MARKER);
+    if (markerIndex < 0) {
+        return undefined;
+    }
+    const afterMarker = normalized
+        .slice(markerIndex + RETURN_PAYLOAD_MARKER.length)
+        .split("\n")[0]
+        ?.trim();
+    if (!afterMarker) {
+        return undefined;
+    }
+    return afterMarker;
+}
+async function appendSessionReturnMessage(status, sessionRunId, jobId, outputPath, prompt, payload) {
+    const mailboxPath = process.env["LOWCAL_RETURN_MAILBOX_PATH"];
+    const toSessionId = process.env["LOWCAL_RETURN_TO_SESSION_ID"];
+    const fromTaskId = process.env["LOWCAL_RETURN_FROM_TASK_ID"] ?? jobId;
+    if (!mailboxPath || !toSessionId) {
+        return;
+    }
+    const previewSource = status === "success"
+        ? payload.result ?? ""
+        : payload.error ?? "Task failed with unknown error";
+    const explicitReturnPayload = status === "success" && payload.result
+        ? extractReturnPayload(payload.result)
+        : undefined;
+    const preview = previewSource.trim().slice(0, 1200);
+    const promptPreview = prompt.trim().slice(0, 400);
+    const message = {
+        to_session_id: toSessionId,
+        from_session_id: sessionRunId,
+        from_task_id: fromTaskId,
+        job_id: jobId,
+        status,
+        timestamp: new Date().toISOString(),
+        prompt_preview: promptPreview,
+        preview,
+        output_path: outputPath,
+        return_payload: explicitReturnPayload,
+    };
+    try {
+        await fs.mkdir(path.dirname(mailboxPath), { recursive: true });
+        await fs.appendFile(mailboxPath, `${JSON.stringify(message)}\n`, "utf-8");
+    }
+    catch (error) {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        console.error(`[Headless] Failed to write return message for task ${jobId}: ${errorMessage}`);
+    }
+}
 // Parse command line arguments
 function parseArgs() {
     const args = process.argv.slice(2);
@@ -59,6 +117,18 @@ async function main() {
     const { prompt, jobId, output } = parseArgs();
     const prettyOutput = process.env["LOWCAL_HEADLESS_PRETTY"] === "1";
     const sessionRunId = `headless-${jobId}-${Date.now()}`;
+    const returnToSessionId = process.env["LOWCAL_RETURN_TO_SESSION_ID"];
+    const launchStateBaseDir = process.cwd();
+    const taskPromptPreview = prompt.trim().slice(0, 400);
+    const touchTaskState = async (updater) => {
+        try {
+            await upsertLaunchTaskState(launchStateBaseDir, jobId, updater);
+        }
+        catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            console.error(`[Headless] Failed to update launch task state for ${jobId}: ${message}`);
+        }
+    };
     await startSessionRegistration({
         id: sessionRunId,
         mode: "headless",
@@ -97,6 +167,43 @@ async function main() {
         console.log(`[Headless] Starting job ${jobId}`);
         console.log(`[Headless] Prompt: ${prompt.substring(0, 100)}${prompt.length > 100 ? "..." : ""}`);
     }
+    await touchTaskState((current, nowIso) => ({
+        task_id: jobId,
+        status: "running",
+        created_at: current?.created_at ?? nowIso,
+        started_at: current?.started_at ?? nowIso,
+        last_heartbeat: nowIso,
+        prompt_preview: current?.prompt_preview ?? taskPromptPreview,
+        parent_session_id: current?.parent_session_id ?? returnToSessionId,
+        source_session_id: current?.source_session_id,
+        dedupe_key: current?.dedupe_key,
+        execution_mode_requested: current?.execution_mode_requested ?? "headless",
+        execution_mode_actual: "headless",
+        result_ref: current?.result_ref,
+        pid: current?.pid,
+        tab_name: current?.tab_name,
+        last_error: undefined,
+    }));
+    const heartbeatTimer = setInterval(() => {
+        void touchTaskState((current, nowIso) => ({
+            task_id: jobId,
+            status: current?.status === "queued" ? "running" : (current?.status ?? "running"),
+            created_at: current?.created_at ?? nowIso,
+            started_at: current?.started_at ?? nowIso,
+            last_heartbeat: nowIso,
+            prompt_preview: current?.prompt_preview ?? taskPromptPreview,
+            parent_session_id: current?.parent_session_id ?? returnToSessionId,
+            source_session_id: current?.source_session_id,
+            dedupe_key: current?.dedupe_key,
+            execution_mode_requested: current?.execution_mode_requested ?? "headless",
+            execution_mode_actual: "headless",
+            result_ref: current?.result_ref,
+            pid: current?.pid,
+            tab_name: current?.tab_name,
+            last_error: current?.last_error,
+        }));
+    }, 10000);
+    heartbeatTimer.unref();
     try {
         // Import required modules
         const { Config, ApprovalMode, DEFAULT_GEMINI_EMBEDDING_MODEL, AuthType } = await import("@qwen-code/qwen-code-core");
@@ -165,7 +272,20 @@ async function main() {
             },
         });
         const cliToolConfig = loadCliToolConfig();
-        syncCoreToolConfig(cliToolConfig);
+        const launchTaskDisabledInChild = process.env[ENV_DISABLE_LAUNCH_TASK] === "1";
+        if (launchTaskDisabledInChild) {
+            const prunedCollections = Object.fromEntries(Object.entries(cliToolConfig.collections).map(([name, tools]) => [
+                name,
+                tools.filter((toolName) => toolName !== "launch_task"),
+            ]));
+            syncCoreToolConfig({
+                ...cliToolConfig,
+                collections: prunedCollections,
+            });
+        }
+        else {
+            syncCoreToolConfig(cliToolConfig);
+        }
         // Initialize config
         await config.initialize();
         // Initialize auth using the configured auth type
@@ -177,7 +297,10 @@ async function main() {
         process.env["LOWCAL_CURRENT_TIME"] = now.toTimeString().split(" ")[0];
         // Prepend system context with current timestamp to the user's prompt
         const systemContext = `\n[System Context - Current timestamp: ${now.toISOString()}]\n`;
-        const fullPrompt = systemContext + prompt;
+        const returnContext = returnToSessionId
+            ? `\n[System Context - Parent Session Return Channel]\nThis task was launched by session "${returnToSessionId}".\nYour completion result is returned through a session mailbox.\nDo not tell the parent to read log files.\nDo not call launch_task from this child session.\nWhen finished, include one final line exactly in this format:\n${RETURN_PAYLOAD_MARKER} <concise summary for the parent session>\n`
+            : "";
+        const fullPrompt = systemContext + returnContext + prompt;
         // Capture stdout
         const originalWrite = process.stdout.write;
         const originalWriteErr = process.stderr.write;
@@ -218,6 +341,32 @@ async function main() {
         };
         await fs.mkdir(path.dirname(output), { recursive: true });
         await fs.writeFile(output, JSON.stringify(outputData, null, 2), "utf-8");
+        await appendSessionReturnMessage("success", sessionRunId, jobId, output, prompt, { result: stdout });
+        await touchTaskState((current, nowIso) => ({
+            task_id: jobId,
+            status: "completed",
+            created_at: current?.created_at ?? nowIso,
+            started_at: current?.started_at ?? nowIso,
+            finished_at: nowIso,
+            last_heartbeat: nowIso,
+            prompt_preview: current?.prompt_preview ?? taskPromptPreview,
+            parent_session_id: current?.parent_session_id ?? returnToSessionId,
+            source_session_id: current?.source_session_id,
+            dedupe_key: current?.dedupe_key,
+            execution_mode_requested: current?.execution_mode_requested ?? "headless",
+            execution_mode_actual: "headless",
+            result_ref: {
+                mailbox_path: process.env["LOWCAL_RETURN_MAILBOX_PATH"] ??
+                    current?.result_ref?.mailbox_path,
+                output_path: output,
+                child_session_id: sessionRunId,
+                message_timestamp: nowIso,
+            },
+            pid: current?.pid,
+            tab_name: current?.tab_name,
+            last_error: undefined,
+        }));
+        clearInterval(heartbeatTimer);
         await updateSessionDetails({ phase: "completed" });
         await stopSessionRegistration();
         if (prettyOutput) {
@@ -261,10 +410,36 @@ async function main() {
         try {
             await fs.mkdir(path.dirname(output), { recursive: true });
             await fs.writeFile(output, JSON.stringify(errorData, null, 2), "utf-8");
+            await appendSessionReturnMessage("error", sessionRunId, jobId, output, prompt, { error: errorMessage });
+            await touchTaskState((current, nowIso) => ({
+                task_id: jobId,
+                status: "failed",
+                created_at: current?.created_at ?? nowIso,
+                started_at: current?.started_at ?? nowIso,
+                finished_at: nowIso,
+                last_heartbeat: nowIso,
+                prompt_preview: current?.prompt_preview ?? taskPromptPreview,
+                parent_session_id: current?.parent_session_id ?? returnToSessionId,
+                source_session_id: current?.source_session_id,
+                dedupe_key: current?.dedupe_key,
+                execution_mode_requested: current?.execution_mode_requested ?? "headless",
+                execution_mode_actual: "headless",
+                result_ref: {
+                    mailbox_path: process.env["LOWCAL_RETURN_MAILBOX_PATH"] ??
+                        current?.result_ref?.mailbox_path,
+                    output_path: output,
+                    child_session_id: sessionRunId,
+                    message_timestamp: nowIso,
+                },
+                pid: current?.pid,
+                tab_name: current?.tab_name,
+                last_error: errorMessage,
+            }));
         }
         catch (writeError) {
             console.error("[Headless] Failed to write error log:", writeError);
         }
+        clearInterval(heartbeatTimer);
         await updateSessionDetails({ phase: "error", last_error: errorMessage });
         await stopSessionRegistration();
         process.exit(1);

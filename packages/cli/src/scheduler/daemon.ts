@@ -56,7 +56,6 @@ const DAEMON_STATUS_FILE = path.join(
 // Track active executions
 const activeExecutions = new Map<string, ReturnType<typeof spawnJob>>();
 const zellijTabs = new Set<string>();
-const zellijPreparedTabs = new Set<string>();
 
 const EXECUTION_MODE_FALLBACK: JobExecutionMode = "headless";
 const EXECUTION_MODE_VALUES = new Set<JobExecutionMode>([
@@ -385,20 +384,6 @@ async function ensureZellijTab(tabName: string, cwd: string): Promise<void> {
   } catch {
     // If we can't focus the tab, we'll still attempt to write to the current one.
   }
-
-  if (!zellijPreparedTabs.has(tabName)) {
-    try {
-      await runZellijCommand(["action", "go-to-tab-name", tabName]);
-      await runZellijCommand([
-        "action",
-        "write-chars",
-        "export PS1=''; unset PROMPT_COMMAND; stty -echo\n",
-      ]);
-      zellijPreparedTabs.add(tabName);
-    } catch {
-      // Ignore preparation failures; it only affects prompt appearance.
-    }
-  }
 }
 
 function shellQuoteArg(value: string): string {
@@ -506,15 +491,9 @@ async function spawnZellijJob(job: Job): Promise<JobExecutionResult> {
     logPath,
   ];
 
-  const command = `export PS1=''; unset PROMPT_COMMAND; stty -echo; cd ${shellQuoteArg(cwd)} && ${commandArgs
+  const command = `cd ${shellQuoteArg(cwd)} && ${commandArgs
     .map(shellQuoteArg)
     .join(" ")}; printf '\\n[scheduler idle]\\n'`;
-
-  try {
-    await runZellijCommand(["action", "go-to-tab-name", tabName]);
-  } catch {
-    // If focusing the tab fails, continue in the current one.
-  }
 
   try {
     await runZellijCommand(["action", "write-chars", `${command}\n`]);
