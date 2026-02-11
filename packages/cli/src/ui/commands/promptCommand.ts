@@ -93,18 +93,26 @@ Subcommands:
   show <name>             – Display a prompt's content
   create <name> <content> – Create a new prompt (string or .md file path)
   delete <name>           – Delete a prompt
-  activate <name>         – Enable a prompt (aliases: use, set)
-  disable                 – Disable the active custom prompt
+  activate <names>        – Enable one or more prompts (aliases: use, set)
+  disable                 – Disable the active custom prompt(s)
 
 Options:
   --exclusive             – Replace entire system prompt (default: supplement)
+
+Activating Multiple Prompts:
+  You can activate multiple prompts at once by providing a comma-separated list.
+  The prompts will be applied in order, stacking their content.
+
+  Examples:
+    /prompt activate k2so,darth-vader
+    /prompt activate prompt1,prompt2,prompt3 --exclusive
 
 Examples:
   /prompt list
   /prompt create my-prompt "Be concise and technical"
   /prompt create reviewer ./code-review-prompt.md
   /prompt activate my-prompt
-  /prompt activate reviewer --exclusive
+  /prompt activate k2so,darth-vader --exclusive
   /prompt show my-prompt
   /prompt delete my-prompt
   /prompt disable`,
@@ -294,14 +302,15 @@ Examples:
 
     // ACTIVATE / USE / SET subcommands
     if (["activate", "use", "set"].includes(verbLower)) {
-      // Support single name or list syntax e.g., [prompt1, prompt2]
+      // Support single name, comma-separated list (e.g., prompt1,prompt2),
+      // or bracketed syntax (e.g., [prompt1, prompt2])
       const hasExclusiveFlag = rest.includes("--exclusive");
 
       // Remove the exclusive flag from arguments for parsing names
       const argsWithoutFlags = rest.filter((a) => a !== "--exclusive");
       if (argsWithoutFlags.length === 0) {
         reply(
-          `Usage: /prompt ${verbLower} <name|[name1,name2,...]> [--exclusive]`,
+          `Usage: /prompt ${verbLower} <name|name1,name2,...> [--exclusive]`,
         );
         return;
       }
@@ -326,11 +335,15 @@ Examples:
           .split(",")
           .map((s) => s.trim())
           .filter(Boolean);
+      } else if (rawNameArg.includes(",")) {
+        // Handle comma-separated list without brackets: prompt1,prompt2,prompt3
+        names = rawNameArg
+          .split(",")
+          .map((s) => s.trim())
+          .filter(Boolean);
       } else {
         names = [rawNameArg];
       }
-
-      // Validate all prompts exist
       const prompts = cfg.customPrompts ?? {};
       for (const n of names) {
         if (!prompts[n]) {
