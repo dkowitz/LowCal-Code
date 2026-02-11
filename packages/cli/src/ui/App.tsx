@@ -58,6 +58,10 @@ import { QuitConfirmationDialog } from "./components/QuitConfirmationDialog.js";
 import { RadioButtonSelect } from "./components/shared/RadioButtonSelect.js";
 import { ModelSelectionDialog } from "./components/ModelSelectionDialog.js";
 import {
+  ResumeDialog,
+  type ResumeCheckpointOption,
+} from "./components/ResumeDialog.js";
+import {
   ModelSwitchDialog,
   type VisionSwitchOutcome,
 } from "./components/ModelSwitchDialog.js";
@@ -101,6 +105,7 @@ import {
   isProQuotaExceededError,
   isGenericQuotaExceededError,
   UserTierId,
+  CheckpointService,
 } from "@qwen-code/qwen-code-core";
 import type { IdeIntegrationNudgeResult } from "./IdeIntegrationNudge.js";
 import { IdeIntegrationNudge } from "./IdeIntegrationNudge.js";
@@ -472,6 +477,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     AvailableModel[]
   >([]);
   const [isFetchingModels, setIsFetchingModels] = useState(false);
+  const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false);
+  const [resumeCheckpoints, setResumeCheckpoints] = useState<
+    ResumeCheckpointOption[]
+  >([]);
 
   // Invalidate cached model lists when auth/provider changes so discovery is
   // re-run for the currently selected provider. This ensures that after the
@@ -1015,6 +1024,58 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     setIsModelSelectionDialogOpen(false);
   }, []);
 
+  const closeResumeDialog = useCallback(() => {
+    setIsResumeDialogOpen(false);
+    setResumeCheckpoints([]);
+  }, []);
+
+  const openResumeDialog = useCallback(() => {
+    try {
+      const checkpointService = new CheckpointService(config);
+      const checkpoints = checkpointService.listCheckpoints();
+
+      if (checkpoints.length === 0) {
+        addItem(
+          {
+            type: MessageType.INFO,
+            text: "No saved conversation checkpoints found.",
+          },
+          Date.now(),
+        );
+        return;
+      }
+
+      const checkpointOptions: ResumeCheckpointOption[] = checkpoints.map(
+        (checkpoint) => {
+          const lastMessage =
+            checkpoint.messages[checkpoint.messages.length - 1];
+          const content = lastMessage?.content ?? "";
+          const lastMessagePreview =
+            content.length > 40 ? `${content.slice(0, 40)}...` : content;
+
+          return {
+            id: checkpoint.id,
+            createdAt: new Date(checkpoint.createdAt),
+            messageCount: checkpoint.messages.length,
+            sessionId: checkpoint.sessionId,
+            lastMessagePreview: lastMessagePreview || undefined,
+          };
+        },
+      );
+
+      setResumeCheckpoints(checkpointOptions);
+      setIsResumeDialogOpen(true);
+    } catch (error) {
+      addItem(
+        {
+          type: MessageType.ERROR,
+          text: `Failed to load checkpoints: ${getErrorMessage(error)}`,
+        },
+        Date.now(),
+      );
+    }
+  }, [addItem, config]);
+
   const handleModelSelect = useCallback(
     async (modelId: string) => {
       try {
@@ -1217,6 +1278,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     openPrivacyNotice,
     openSettingsDialog,
     handleModelSelectionOpen,
+    openResumeDialog,
     openSubagentCreateDialog,
     openAgentsManagerDialog,
     toggleVimEnabled,
@@ -1224,6 +1286,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     setGeminiMdFileCount,
     showQuitConfirmation,
     sessionLoggingController,
+  );
+
+  const handleResumeCheckpointSelect = useCallback(
+    (checkpointId: string) => {
+      closeResumeDialog();
+      void handleSlashCommand(`/resume ${checkpointId}`);
+    },
+    [closeResumeDialog, handleSlashCommand],
   );
 
   const buffer = useTextBuffer({
@@ -1300,6 +1370,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     exitEditorDialog,
     isSettingsDialogOpen,
     closeSettingsDialog,
+    isResumeDialogOpen,
+    closeResumeDialog,
     isFolderTrustDialogOpen,
     showPrivacyNotice,
     setShowPrivacyNotice,
@@ -1677,6 +1749,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       !isThemeDialogOpen &&
       !isEditorDialogOpen &&
       !isModelSelectionDialogOpen &&
+      !isResumeDialogOpen &&
       !isVisionSwitchDialogOpen &&
       !isSubagentCreateDialogOpen &&
       !showPrivacyNotice &&
@@ -1700,6 +1773,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     welcomeBackChoice,
     geminiClient,
     isModelSelectionDialogOpen,
+    isResumeDialogOpen,
     isVisionSwitchDialogOpen,
   ]);
 
@@ -2026,6 +2100,12 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               currentModel={currentModel}
               onSelect={handleModelSelect}
               onCancel={handleModelSelectionClose}
+            />
+          ) : isResumeDialogOpen ? (
+            <ResumeDialog
+              checkpoints={resumeCheckpoints}
+              onSelect={handleResumeCheckpointSelect}
+              onClose={closeResumeDialog}
             />
           ) : isVisionSwitchDialogOpen ? (
             <ModelSwitchDialog onSelect={handleVisionSwitchSelect} />

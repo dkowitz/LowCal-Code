@@ -34,9 +34,20 @@ interface ListLaunchTaskStatesOptions {
     statuses?: LaunchTaskLifecycleStatus[];
     limit?: number;
 }
+export interface LaunchTaskMaintenanceOptions {
+    staleAfterMs?: number;
+    terminalRetentionMs?: number;
+}
+export interface LaunchTaskMaintenanceResult {
+    staleMarked: number;
+    staleTaskIds: string[];
+    pruned: number;
+    prunedTaskIds: string[];
+}
 export declare function isLaunchTaskTerminal(status: LaunchTaskLifecycleStatus): boolean;
 export declare function getLaunchTaskState(baseDir: string, taskId: string): Promise<LaunchTaskStateRecord | undefined>;
 export declare function listLaunchTaskStates(baseDir: string, options?: ListLaunchTaskStatesOptions): Promise<LaunchTaskStateRecord[]>;
 export declare function findActiveLaunchTaskByDedupeKey(baseDir: string, dedupeKey: string, parentSessionId?: string): Promise<LaunchTaskStateRecord | undefined>;
 export declare function upsertLaunchTaskState(baseDir: string, taskId: string, updater: (current: LaunchTaskStateRecord | undefined, nowIso: string) => LaunchTaskStateRecord): Promise<LaunchTaskStateRecord>;
+export declare function reconcileLaunchTaskState(baseDir: string, options?: LaunchTaskMaintenanceOptions): Promise<LaunchTaskMaintenanceResult>;
 export {};

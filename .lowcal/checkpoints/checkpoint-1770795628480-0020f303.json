@@ -1,0 +1,102 @@
+{
+  "id": "checkpoint-1770795628480-0020f303",
+  "sessionId": "7aa9f6d0-6a16-43ca-aafd-24463befcf15",
+  "projectRoot": "/home/atmandk/LowCal-dev",
+  "createdAt": "2026-02-11T07:40:28.480Z",
+  "lastUpdated": "2026-02-11T07:40:28.480Z",
+  "messages": [
+    {
+      "id": "msg-1770795628480-0",
+      "timestamp": "2026-02-11T07:40:28.479Z",
+      "type": "user",
+      "content": "This is the Qwen Code. We are setting up the context for our chat.\nToday's date is Wednesday, February 11, 2026 (formatted according to the user's locale).\nMy operating system is: linux\nI'm currently working in the directory: /home/atmandk/LowCal-dev\nHere is the folder structure of the current working directories:\n\nShowing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.\n\n/home/atmandk/LowCal-dev/\n├───.gitignore\n├───158285.pdf\n├───AGENTS.md\n├───apis.md\n├───bat.jpg\n├───bronc.jpg\n├───CHANGELOG.md\n├───CHANGES_SUMMARY.md\n├───context_indicator.md\n├───CONTRIBUTING.md\n├───conversation.md\n├───convo.txt\n├───curtime.txt\n├───debug_tool_selection.js\n├───diagnose_research_tools.cjs\n├───docker-compose.searxng.yml\n├───Dockerfile\n├───Error log summary.txt\n├───error_analysis.md\n├───esbuild.config.js\n├───...\n└───..."
+    },
+    {
+      "id": "msg-1770795628480-1",
+      "timestamp": "2026-02-11T07:40:28.479Z",
+      "type": "gemini",
+      "content": "Got it. Thanks for the context!"
+    },
+    {
+      "id": "msg-1770795628480-2",
+      "timestamp": "2026-02-11T07:40:28.479Z",
+      "type": "user",
+      "content": "List all .txt files in this directory."
+    },
+    {
+      "id": "msg-1770795628480-5",
+      "timestamp": "2026-02-11T07:40:28.479Z",
+      "type": "gemini",
+      "content": "Here are all the `.txt` files in `/home/atmandk/LowCal-dev`:\n\n- `convo.txt`\n- `curtime.txt`\n- `Error log summary.txt`\n- `minute-log.txt`\n- `temp_file.txt`\n- `unload.model.txt`"
+    }
+  ],
+  "contextSnapshot": {
+    "clientHistory": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "This is the Qwen Code. We are setting up the context for our chat.\nToday's date is Wednesday, February 11, 2026 (formatted according to the user's locale).\nMy operating system is: linux\nI'm currently working in the directory: /home/atmandk/LowCal-dev\nHere is the folder structure of the current working directories:\n\nShowing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.\n\n/home/atmandk/LowCal-dev/\n├───.gitignore\n├───158285.pdf\n├───AGENTS.md\n├───apis.md\n├───bat.jpg\n├───bronc.jpg\n├───CHANGELOG.md\n├───CHANGES_SUMMARY.md\n├───context_indicator.md\n├───CONTRIBUTING.md\n├───conversation.md\n├───convo.txt\n├───curtime.txt\n├───debug_tool_selection.js\n├───diagnose_research_tools.cjs\n├───docker-compose.searxng.yml\n├───Dockerfile\n├───Error log summary.txt\n├───error_analysis.md\n├───esbuild.config.js\n├───...\n└───..."
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Got it. Thanks for the context!"
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "List all .txt files in this directory."
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "functionCall": {
+              "id": "750996016",
+              "name": "run_shell_command",
+              "args": {
+                "command": "find /home/atmandk/LowCal-dev -maxdepth 1 -name \"*.txt\" -type f | sort",
+                "description": "List all .txt files in the current directory",
+                "is_background": false
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "functionResponse": {
+              "id": "750996016",
+              "name": "run_shell_command",
+              "response": {
+                "output": "Command: find /home/atmandk/LowCal-dev -maxdepth 1 -name \"*.txt\" -type f | sort\nDirectory: (root)\nOutput: /home/atmandk/LowCal-dev/convo.txt\n/home/atmandk/LowCal-dev/curtime.txt\n/home/atmandk/LowCal-dev/Error log summary.txt\n/home/atmandk/LowCal-dev/minute-log.txt\n/home/atmandk/LowCal-dev/temp_file.txt\n/home/atmandk/LowCal-dev/unload.model.txt\nError: (none)\nExit Code: 0\nSignal: (none)\nBackground PIDs: (none)\nProcess Group PGID: 796336"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Here are all the `.txt` files in `/home/atmandk/LowCal-dev`:\n\n- `convo.txt`\n- `curtime.txt`\n- `Error log summary.txt`\n- `minute-log.txt`\n- `temp_file.txt`\n- `unload.model.txt`"
+          }
+        ]
+      }
+    ],
+    "promptTokenCount": 9997,
+    "currentContextTokenCount": 19884,
+    "model": "qwen/qwen3-coder-next"
+  }
+}

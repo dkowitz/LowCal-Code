@@ -16,6 +16,7 @@ import {
   getLaunchTaskState,
   isLaunchTaskTerminal,
   listLaunchTaskStates,
+  reconcileLaunchTaskState,
 } from "./launch-task-state.js";
 
 type ReadSessionMessagesAction = "pull" | "peek" | "clear" | "wait";
@@ -270,6 +271,7 @@ class ReadSessionMessagesInvocation extends BaseToolInvocation<
     const waitTimeoutSeconds = clampWaitTimeoutSeconds(this.params.timeout_seconds);
     const baseDir = this.config.getTargetDir();
     const mailboxPath = getMailboxPath(baseDir, sessionId);
+    await reconcileLaunchTaskState(baseDir);
 
     const tryReadMessages = async (): Promise<{
       lines: ParsedMailboxLine[];

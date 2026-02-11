@@ -29,6 +29,10 @@ export interface DialogCloseOptions {
   isSettingsDialogOpen: boolean;
   closeSettingsDialog: () => void;
 
+  // Resume dialog
+  isResumeDialogOpen: boolean;
+  closeResumeDialog: () => void;
+
   // Folder trust dialog
   isFolderTrustDialogOpen: boolean;
 
@@ -80,6 +84,11 @@ export function useDialogClose(options: DialogCloseOptions) {
     if (options.isSettingsDialogOpen) {
       // Mimic ESC behavior: onSelect(undefined, selectedScope)
       options.closeSettingsDialog();
+      return true;
+    }
+
+    if (options.isResumeDialogOpen) {
+      options.closeResumeDialog();
       return true;
     }
 

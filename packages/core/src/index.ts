@@ -60,6 +60,7 @@ export {
 export * from "./services/fileDiscoveryService.js";
 export * from "./services/gitService.js";
 export * from "./services/chatRecordingService.js";
+export * from "./services/checkpointService.js";
 export * from "./services/fileSystemService.js";
 
 // Export IDE specific logic

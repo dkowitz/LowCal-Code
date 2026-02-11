@@ -59,13 +59,19 @@ export class UiTelemetryService extends EventEmitter {
                 // We should not emit update for any other event metric.
                 return;
         }
-        this.emitUpdate();
     }
     getMetrics() {
         return this.#metrics;
     }
     getLastPromptTokenCount() {
         return this.#lastPromptTokenCount;
+    }
+    setLastPromptTokenCount(tokenCount) {
+        this.#lastPromptTokenCount =
+            Number.isFinite(tokenCount) && tokenCount > 0
+                ? Math.floor(tokenCount)
+                : 0;
+        this.emitUpdate();
     }
     resetLastPromptTokenCount() {
         this.#lastPromptTokenCount = 0;
@@ -165,6 +171,7 @@ export class UiTelemetryService extends EventEmitter {
                 files.totalLinesRemoved += event.metadata["ai_removed_lines"];
             }
         }
+        this.emitUpdate();
     }
 }
 export const uiTelemetryService = new UiTelemetryService();

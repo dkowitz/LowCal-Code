@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-const { logSlashCommand } = vi.hoisted(() => ({
+const { logSlashCommand, mockRemoveSession } = vi.hoisted(() => ({
   logSlashCommand: vi.fn(),
+  mockRemoveSession: vi.fn().mockResolvedValue(undefined),
 }));
 
 vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
@@ -15,6 +16,7 @@ vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
     ...original,
     logSlashCommand,
     getIdeInstaller: vi.fn().mockReturnValue(null),
+    removeSession: mockRemoveSession,
   };
 });
 
@@ -87,6 +89,7 @@ import {
   makeFakeConfig,
   ToolConfirmationOutcome,
   type IdeClient,
+  uiTelemetryService,
 } from "@qwen-code/qwen-code-core";
 import { createMockLoggingController } from "../../test-utils/mockLoggingController.js";
 
@@ -109,6 +112,7 @@ describe("useSlashCommandProcessor", () => {
   const mockOpenThemeDialog = vi.fn();
   const mockOpenAuthDialog = vi.fn();
   const mockOpenModelSelectionDialog = vi.fn();
+  const mockOpenResumeDialog = vi.fn();
   const mockSetQuittingMessages = vi.fn();
 
   const mockConfig = makeFakeConfig({});
@@ -126,6 +130,8 @@ describe("useSlashCommandProcessor", () => {
     mockFileLoadCommands.mockResolvedValue([]);
     mockMcpLoadCommands.mockResolvedValue([]);
     mockOpenModelSelectionDialog.mockClear();
+    mockOpenResumeDialog.mockClear();
+    mockRemoveSession.mockClear();
   });
 
   const setupProcessorHook = (
@@ -159,6 +165,7 @@ describe("useSlashCommandProcessor", () => {
         vi.fn(), // openPrivacyNotice
         vi.fn(), // openSettingsDialog
         mockOpenModelSelectionDialog,
+        mockOpenResumeDialog,
         vi.fn(), // openSubagentCreateDialog
         vi.fn(), // openAgentsManagerDialog
         vi.fn(), // toggleVimEnabled
@@ -421,7 +428,26 @@ describe("useSlashCommandProcessor", () => {
       expect(mockOpenModelSelectionDialog).toHaveBeenCalled();
     });
 
+    it('should handle "dialog: resume" action', async () => {
+      const command = createTestCommand({
+        name: "resumecmd",
+        action: vi.fn().mockResolvedValue({ type: "dialog", dialog: "resume" }),
+      });
+      const result = setupProcessorHook([command]);
+      await waitFor(() => expect(result.current.slashCommands).toHaveLength(1));
+
+      await act(async () => {
+        await result.current.handleSlashCommand("/resumecmd");
+      });
+
+      expect(mockOpenResumeDialog).toHaveBeenCalled();
+    });
+
     it('should handle "load_history" action', async () => {
+      const resetPromptTokenSpy = vi.spyOn(
+        uiTelemetryService,
+        "resetLastPromptTokenCount",
+      );
       const command = createTestCommand({
         name: "load",
         action: vi.fn().mockResolvedValue({
@@ -442,6 +468,36 @@ describe("useSlashCommandProcessor", () => {
         { type: "user", text: "old prompt" },
         expect.any(Number),
       );
+      expect(resetPromptTokenSpy).toHaveBeenCalledTimes(1);
+
+      resetPromptTokenSpy.mockRestore();
+    });
+
+    it('should restore prompt token count for "load_history" action', async () => {
+      const telemetryWithRestore = uiTelemetryService as {
+        setLastPromptTokenCount?: (tokenCount: number) => void;
+      };
+      const originalSetPromptToken = telemetryWithRestore.setLastPromptTokenCount;
+      const setPromptTokenSpy = vi.fn();
+      telemetryWithRestore.setLastPromptTokenCount = setPromptTokenSpy;
+      const command = createTestCommand({
+        name: "load",
+        action: vi.fn().mockResolvedValue({
+          type: "load_history",
+          history: [{ type: MessageType.USER, text: "old prompt" }],
+          clientHistory: [{ role: "user", parts: [{ text: "old prompt" }] }],
+          restoredContext: { promptTokenCount: 4321 },
+        }),
+      });
+      const result = setupProcessorHook([command]);
+      await waitFor(() => expect(result.current.slashCommands).toHaveLength(1));
+
+      await act(async () => {
+        await result.current.handleSlashCommand("/load");
+      });
+
+      expect(setPromptTokenSpy).toHaveBeenCalledWith(4321);
+      telemetryWithRestore.setLastPromptTokenCount = originalSetPromptToken;
     });
 
     describe("with fake timers", () => {
@@ -933,6 +989,7 @@ describe("useSlashCommandProcessor", () => {
           vi.fn(), // openPrivacyNotice
           vi.fn(), // openSettingsDialog
           vi.fn(), // openModelSelectionDialog
+          vi.fn(), // openResumeDialog
           vi.fn(), // openSubagentCreateDialog
           vi.fn(), // openAgentsManagerDialog
           vi.fn(), // toggleVimEnabled

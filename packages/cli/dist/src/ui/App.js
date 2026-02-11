@@ -43,6 +43,7 @@ import { ShellConfirmationDialog } from "./components/ShellConfirmationDialog.js
 import { QuitConfirmationDialog } from "./components/QuitConfirmationDialog.js";
 import { RadioButtonSelect } from "./components/shared/RadioButtonSelect.js";
 import { ModelSelectionDialog } from "./components/ModelSelectionDialog.js";
+import { ResumeDialog, } from "./components/ResumeDialog.js";
 import { ModelSwitchDialog, } from "./components/ModelSwitchDialog.js";
 import { getOpenAIAvailableModelFromEnv, getFilteredGeminiModels, getFilteredQwenModels, fetchOpenAICompatibleModels, fetchGeminiModels, getLMStudioLoadedModel, } from "./models/availableModels.js";
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
@@ -59,7 +60,7 @@ import { HistoryItemDisplay } from "./components/HistoryItemDisplay.js";
 import { ContextSummaryDisplay } from "./components/ContextSummaryDisplay.js";
 import { useHistory } from "./hooks/useHistoryManager.js";
 import process from "node:process";
-import { ApprovalMode, getAllGeminiMdFilenames, isEditorAvailable, getErrorMessage, AuthType, logFlashFallback, FlashFallbackEvent, ideContext, isProQuotaExceededError, isGenericQuotaExceededError, UserTierId, } from "@qwen-code/qwen-code-core";
+import { ApprovalMode, getAllGeminiMdFilenames, isEditorAvailable, getErrorMessage, AuthType, logFlashFallback, FlashFallbackEvent, ideContext, isProQuotaExceededError, isGenericQuotaExceededError, UserTierId, CheckpointService, } from "@qwen-code/qwen-code-core";
 import { IdeIntegrationNudge } from "./IdeIntegrationNudge.js";
 import { useLogger } from "./hooks/useLogger.js";
 import { StreamingContext } from "./contexts/StreamingContext.js";
@@ -337,6 +338,8 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [availableModelsForDialog, setAvailableModelsForDialog] = useState([]);
     const [allAvailableModels, setAllAvailableModels] = useState([]);
     const [isFetchingModels, setIsFetchingModels] = useState(false);
+    const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false);
+    const [resumeCheckpoints, setResumeCheckpoints] = useState([]);
     // Invalidate cached model lists when auth/provider changes so discovery is
     // re-run for the currently selected provider. This ensures that after the
     // user switches authentication/provider, the model selection dialog will show
@@ -719,6 +722,43 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const handleModelSelectionClose = useCallback(() => {
         setIsModelSelectionDialogOpen(false);
     }, []);
+    const closeResumeDialog = useCallback(() => {
+        setIsResumeDialogOpen(false);
+        setResumeCheckpoints([]);
+    }, []);
+    const openResumeDialog = useCallback(() => {
+        try {
+            const checkpointService = new CheckpointService(config);
+            const checkpoints = checkpointService.listCheckpoints();
+            if (checkpoints.length === 0) {
+                addItem({
+                    type: MessageType.INFO,
+                    text: "No saved conversation checkpoints found.",
+                }, Date.now());
+                return;
+            }
+            const checkpointOptions = checkpoints.map((checkpoint) => {
+                const lastMessage = checkpoint.messages[checkpoint.messages.length - 1];
+                const content = lastMessage?.content ?? "";
+                const lastMessagePreview = content.length > 40 ? `${content.slice(0, 40)}...` : content;
+                return {
+                    id: checkpoint.id,
+                    createdAt: new Date(checkpoint.createdAt),
+                    messageCount: checkpoint.messages.length,
+                    sessionId: checkpoint.sessionId,
+                    lastMessagePreview: lastMessagePreview || undefined,
+                };
+            });
+            setResumeCheckpoints(checkpointOptions);
+            setIsResumeDialogOpen(true);
+        }
+        catch (error) {
+            addItem({
+                type: MessageType.ERROR,
+                text: `Failed to load checkpoints: ${getErrorMessage(error)}`,
+            }, Date.now());
+        }
+    }, [addItem, config]);
     const handleModelSelect = useCallback(async (modelId) => {
         try {
             const selectedModel = allAvailableModels.find((model) => model.id === modelId);
@@ -854,7 +894,11 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     // available models for dialog are populated via handleModelSelectionOpen
     // Core hooks and processors
     const { vimEnabled: vimModeEnabled, vimMode, toggleVimEnabled, } = useVimMode();
-    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController);
+    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openResumeDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController);
+    const handleResumeCheckpointSelect = useCallback((checkpointId) => {
+        closeResumeDialog();
+        void handleSlashCommand(`/resume ${checkpointId}`);
+    }, [closeResumeDialog, handleSlashCommand]);
     const buffer = useTextBuffer({
         initialText: "",
         viewport: { height: 10, width: inputWidth },
@@ -886,6 +930,8 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         exitEditorDialog,
         isSettingsDialogOpen,
         closeSettingsDialog,
+        isResumeDialogOpen,
+        closeResumeDialog,
         isFolderTrustDialogOpen,
         showPrivacyNotice,
         setShowPrivacyNotice,
@@ -1189,6 +1235,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             !isThemeDialogOpen &&
             !isEditorDialogOpen &&
             !isModelSelectionDialogOpen &&
+            !isResumeDialogOpen &&
             !isVisionSwitchDialogOpen &&
             !isSubagentCreateDialogOpen &&
             !showPrivacyNotice &&
@@ -1211,6 +1258,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         welcomeBackChoice,
         geminiClient,
         isModelSelectionDialogOpen,
+        isResumeDialogOpen,
         isVisionSwitchDialogOpen,
     ]);
     if (quittingMessages) {
@@ -1283,7 +1331,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                         setAuthError("Authentication timed out. Please try again.");
                                         cancelAuthentication();
                                         openAuthDialog();
-                                    } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: availableModelsForDialog, currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : showPrivacyNotice ? (_jsx(PrivacyNotice, { onExit: () => setShowPrivacyNotice(false), config: config })) : (_jsxs(_Fragment, { children: [_jsx(LoadingIndicator, { thought: streamingState === StreamingState.WaitingForConfirmation ||
+                                    } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: availableModelsForDialog, currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose })) : isResumeDialogOpen ? (_jsx(ResumeDialog, { checkpoints: resumeCheckpoints, onSelect: handleResumeCheckpointSelect, onClose: closeResumeDialog })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : showPrivacyNotice ? (_jsx(PrivacyNotice, { onExit: () => setShowPrivacyNotice(false), config: config })) : (_jsxs(_Fragment, { children: [_jsx(LoadingIndicator, { thought: streamingState === StreamingState.WaitingForConfirmation ||
                                         config.getAccessibility()?.disableLoadingPhrases ||
                                         config.getScreenReader()
                                         ? undefined

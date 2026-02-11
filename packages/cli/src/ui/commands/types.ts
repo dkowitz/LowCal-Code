@@ -121,6 +121,7 @@ export interface OpenDialogActionReturn {
     | "privacy"
     | "settings"
     | "model"
+    | "resume"
     | "subagent_create"
     | "subagent_list";
 }
@@ -133,6 +134,9 @@ export interface LoadHistoryActionReturn {
   type: "load_history";
   history: HistoryItemWithoutId[];
   clientHistory: Content[]; // The history for the generative client
+  restoredContext?: {
+    promptTokenCount?: number;
+  };
 }
 
 /**

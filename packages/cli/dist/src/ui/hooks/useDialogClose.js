@@ -37,6 +37,10 @@ export function useDialogClose(options) {
             options.closeSettingsDialog();
             return true;
         }
+        if (options.isResumeDialogOpen) {
+            options.closeResumeDialog();
+            return true;
+        }
         if (options.isFolderTrustDialogOpen) {
             // FolderTrustDialog doesn't expose close function, but ESC would prevent exit
             // We follow the same pattern - prevent exit behavior

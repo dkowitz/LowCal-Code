@@ -101,7 +101,7 @@ export declare const SETTINGS_SCHEMA: {
                         readonly label: "Enable Checkpointing";
                         readonly category: "General";
                         readonly requiresRestart: true;
-                        readonly default: false;
+                        readonly default: true;
                         readonly description: "Enable session checkpointing for recovery";
                         readonly showInDialog: false;
                     };

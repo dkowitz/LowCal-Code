@@ -41,6 +41,7 @@ const mockSendMessageStream = vi
   .fn()
   .mockReturnValue((async function* () {})());
 const mockStartChat = vi.fn();
+const mockCheckpointSave = vi.hoisted(() => vi.fn());
 
 const MockedGeminiClientClass = vi.hoisted(() =>
   vi.fn().mockImplementation(function (this: any, _config: any) {
@@ -72,6 +73,9 @@ vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
     GeminiClient: MockedGeminiClientClass,
     UserPromptEvent: MockedUserPromptEvent,
     parseAndFormatApiError: mockParseAndFormatApiError,
+    CheckpointService: vi.fn().mockImplementation(() => ({
+      saveCheckpoint: mockCheckpointSave,
+    })),
   };
 });
 
@@ -133,6 +137,10 @@ const mockStartNewPrompt = vi.fn();
 const mockAddUsage = vi.fn();
 vi.mock("../contexts/SessionContext.js", () => ({
   useSessionStats: vi.fn(() => ({
+    stats: {
+      lastPromptTokenCount: 0,
+      currentContextTokenCount: 0,
+    },
     startNewPrompt: mockStartNewPrompt,
     addUsage: mockAddUsage,
     getPromptCount: vi.fn(() => 5),
@@ -158,6 +166,7 @@ describe("useGeminiStream", () => {
 
   beforeEach(() => {
     vi.clearAllMocks(); // Clear mocks before each test
+    mockCheckpointSave.mockReset();
 
     mockAddItem = vi.fn();
     // Define the mock for getGeminiClient
@@ -2054,6 +2063,215 @@ describe("useGeminiStream", () => {
       await waitFor(() => {
         expect(mockSendMessageStream).toHaveBeenCalled();
       });
+    });
+  });
+
+  describe("Turn-end checkpointing", () => {
+    it("saves a checkpoint only after idle with a model response in the current turn", async () => {
+      const nowSpy = vi.spyOn(Date, "now").mockReturnValue(1000);
+      try {
+        mockConfig.getCheckpointingEnabled = vi.fn(() => true);
+        mockSendMessageStream.mockReturnValue(
+          (async function* () {
+            yield {
+              type: ServerGeminiEventType.Content,
+              value: "model output",
+            };
+            yield { type: ServerGeminiEventType.Finished, value: "STOP" };
+          })(),
+        );
+
+        const { result, rerender, client } = renderTestHook();
+
+        await act(async () => {
+          await result.current.submitQuery("checkpoint turn");
+        });
+
+        expect(mockCheckpointSave).not.toHaveBeenCalled();
+
+        await act(async () => {
+          rerender({
+            client,
+            history: [
+              { id: 1, type: MessageType.USER, text: "old user" },
+              { id: 2, type: MessageType.GEMINI, text: "old model" },
+              { id: 1001, type: MessageType.USER, text: "checkpoint turn" },
+              { id: 1002, type: MessageType.GEMINI, text: "model output" },
+            ] as HistoryItem[],
+            addItem:
+              mockAddItem as unknown as UseHistoryManagerReturn["addItem"],
+            config: mockConfig,
+            onDebugMessage: mockOnDebugMessage,
+            handleSlashCommand: mockHandleSlashCommand as unknown as (
+              cmd: PartListUnion,
+            ) => Promise<SlashCommandProcessorResult | false>,
+            shellModeActive: false,
+            loadedSettings: mockLoadedSettings,
+          });
+        });
+
+        expect(mockCheckpointSave).toHaveBeenCalledTimes(1);
+      } finally {
+        nowSpy.mockRestore();
+      }
+    });
+
+    it("does not save checkpoint for user-only history and waits for model output", async () => {
+      const nowSpy = vi.spyOn(Date, "now").mockReturnValue(2000);
+      try {
+        mockConfig.getCheckpointingEnabled = vi.fn(() => true);
+        mockSendMessageStream.mockReturnValue(
+          (async function* () {
+            yield {
+              type: ServerGeminiEventType.Content,
+              value: "model output",
+            };
+            yield { type: ServerGeminiEventType.Finished, value: "STOP" };
+          })(),
+        );
+
+        const { result, rerender, client } = renderTestHook();
+
+        await act(async () => {
+          await result.current.submitQuery("checkpoint turn");
+        });
+
+        await act(async () => {
+          rerender({
+            client,
+            history: [
+              { id: 2001, type: MessageType.USER, text: "checkpoint turn" },
+            ] as HistoryItem[],
+            addItem:
+              mockAddItem as unknown as UseHistoryManagerReturn["addItem"],
+            config: mockConfig,
+            onDebugMessage: mockOnDebugMessage,
+            handleSlashCommand: mockHandleSlashCommand as unknown as (
+              cmd: PartListUnion,
+            ) => Promise<SlashCommandProcessorResult | false>,
+            shellModeActive: false,
+            loadedSettings: mockLoadedSettings,
+          });
+        });
+
+        expect(mockCheckpointSave).not.toHaveBeenCalled();
+
+        await act(async () => {
+          rerender({
+            client,
+            history: [
+              { id: 2001, type: MessageType.USER, text: "checkpoint turn" },
+              { id: 2002, type: MessageType.GEMINI, text: "model output" },
+            ] as HistoryItem[],
+            addItem:
+              mockAddItem as unknown as UseHistoryManagerReturn["addItem"],
+            config: mockConfig,
+            onDebugMessage: mockOnDebugMessage,
+            handleSlashCommand: mockHandleSlashCommand as unknown as (
+              cmd: PartListUnion,
+            ) => Promise<SlashCommandProcessorResult | false>,
+            shellModeActive: false,
+            loadedSettings: mockLoadedSettings,
+          });
+        });
+
+        expect(mockCheckpointSave).toHaveBeenCalledTimes(1);
+      } finally {
+        nowSpy.mockRestore();
+      }
+    });
+
+    it("does not save checkpoint when checkpointing is disabled", async () => {
+      const nowSpy = vi.spyOn(Date, "now").mockReturnValue(3000);
+      try {
+        mockConfig.getCheckpointingEnabled = vi.fn(() => false);
+        mockSendMessageStream.mockReturnValue(
+          (async function* () {
+            yield {
+              type: ServerGeminiEventType.Content,
+              value: "model output",
+            };
+            yield { type: ServerGeminiEventType.Finished, value: "STOP" };
+          })(),
+        );
+
+        const { result, rerender, client } = renderTestHook();
+
+        await act(async () => {
+          await result.current.submitQuery("checkpoint disabled");
+        });
+
+        await act(async () => {
+          rerender({
+            client,
+            history: [
+              { id: 3001, type: MessageType.USER, text: "checkpoint disabled" },
+              { id: 3002, type: MessageType.GEMINI, text: "model output" },
+            ] as HistoryItem[],
+            addItem:
+              mockAddItem as unknown as UseHistoryManagerReturn["addItem"],
+            config: mockConfig,
+            onDebugMessage: mockOnDebugMessage,
+            handleSlashCommand: mockHandleSlashCommand as unknown as (
+              cmd: PartListUnion,
+            ) => Promise<SlashCommandProcessorResult | false>,
+            shellModeActive: false,
+            loadedSettings: mockLoadedSettings,
+          });
+        });
+
+        expect(mockCheckpointSave).not.toHaveBeenCalled();
+      } finally {
+        nowSpy.mockRestore();
+      }
+    });
+
+    it("saves checkpoint for tool-only turn output once idle", async () => {
+      const nowSpy = vi.spyOn(Date, "now").mockReturnValue(4000);
+      try {
+        mockConfig.getCheckpointingEnabled = vi.fn(() => true);
+        mockSendMessageStream.mockReturnValue(
+          (async function* () {
+            yield {
+              type: ServerGeminiEventType.Finished,
+              value: "STOP",
+            };
+          })(),
+        );
+
+        const { result, rerender, client } = renderTestHook();
+
+        await act(async () => {
+          await result.current.submitQuery("tool-only turn");
+        });
+
+        await act(async () => {
+          rerender({
+            client,
+            history: [
+              { id: 4001, type: MessageType.USER, text: "tool-only turn" },
+              {
+                id: 4002,
+                type: "tool_group",
+                tools: [],
+              },
+            ] as HistoryItem[],
+            addItem:
+              mockAddItem as unknown as UseHistoryManagerReturn["addItem"],
+            config: mockConfig,
+            onDebugMessage: mockOnDebugMessage,
+            handleSlashCommand: mockHandleSlashCommand as unknown as (
+              cmd: PartListUnion,
+            ) => Promise<SlashCommandProcessorResult | false>,
+            shellModeActive: false,
+            loadedSettings: mockLoadedSettings,
+          });
+        });
+
+        expect(mockCheckpointSave).toHaveBeenCalledTimes(1);
+      } finally {
+        nowSpy.mockRestore();
+      }
     });
   });
 

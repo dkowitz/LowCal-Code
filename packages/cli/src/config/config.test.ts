@@ -346,6 +346,44 @@ describe("loadCliConfig", () => {
     expect(config.getShowMemoryUsage()).toBe(true);
   });
 
+  describe("Checkpointing configuration", () => {
+    it("should default checkpointing to true when not specified in CLI or settings", async () => {
+      process.argv = ["node", "script.js"];
+      const argv = await parseArguments({} as Settings);
+      const settings: Settings = {};
+      const config = await loadCliConfig(settings, [], "test-session", argv);
+      expect(config.getCheckpointingEnabled()).toBe(true);
+    });
+
+    it("should respect settings when checkpointing is disabled", async () => {
+      process.argv = ["node", "script.js"];
+      const argv = await parseArguments({} as Settings);
+      const settings: Settings = {
+        general: {
+          checkpointing: {
+            enabled: false,
+          },
+        },
+      };
+      const config = await loadCliConfig(settings, [], "test-session", argv);
+      expect(config.getCheckpointingEnabled()).toBe(false);
+    });
+
+    it("should allow CLI to explicitly disable checkpointing", async () => {
+      process.argv = ["node", "script.js", "--no-checkpointing"];
+      const argv = await parseArguments({} as Settings);
+      const settings: Settings = {
+        general: {
+          checkpointing: {
+            enabled: true,
+          },
+        },
+      };
+      const config = await loadCliConfig(settings, [], "test-session", argv);
+      expect(config.getCheckpointingEnabled()).toBe(false);
+    });
+  });
+
   describe("Proxy configuration", () => {
     const originalProxyEnv: { [key: string]: string | undefined } = {};
     const proxyEnvVars = [

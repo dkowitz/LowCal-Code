@@ -185,6 +185,23 @@ Slash commands provide meta-level control over the CLI itself.
   - **Usage:** `/promptmode <mode>`
   - **Note:** This setting is session-only and does not persist between sessions.
 
+- **`/resume`**
+  - **Description:** Resume a previous conversation checkpoint from the automatic checkpointing system. Provides interactive selection or direct resume by index or ID.
+  - **Usage:** `/resume` or `/resume <index>` or `/resume <checkpoint-id>`
+  - **Sub-commands:**
+    - **`list`**
+      - **Description:** List saved conversation checkpoints (newest first).
+      - **Usage:** `/resume list`
+      - **Output Format:** Shows index, message count, session ID (color-coded), date/time, and last message preview.
+    - **`delete <index>`**
+      - **Description:** Delete a conversation checkpoint by index.
+      - **Usage:** `/resume delete <index>`
+  - **Details:**
+    - Running `/resume` without arguments opens an interactive dialog to select from available checkpoints.
+    - You can specify a checkpoint by its 1-based index (e.g., `/resume 1`) or by full checkpoint ID.
+    - Session IDs are color-coded in the list output for easier identification.
+    - Checkpoints contain full conversation history including user and model messages.
+
 - **`/approval-mode`**
   - **Description:** Set the approval mode for tool execution. Controls whether you're prompted to confirm potentially destructive operations.
   - **Modes:**

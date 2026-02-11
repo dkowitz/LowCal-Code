@@ -522,6 +522,23 @@ describe("UiTelemetryService", () => {
             expect(spy).toHaveBeenCalledOnce();
         });
     });
+    describe("setLastPromptTokenCount", () => {
+        it("should set and emit the last prompt token count", () => {
+            const spy = vi.fn();
+            service.on("update", spy);
+            service.setLastPromptTokenCount(321);
+            expect(service.getLastPromptTokenCount()).toBe(321);
+            expect(spy).toHaveBeenCalledOnce();
+            const { lastPromptTokenCount } = spy.mock.calls[0][0];
+            expect(lastPromptTokenCount).toBe(321);
+        });
+        it("should clamp invalid values to zero", () => {
+            service.setLastPromptTokenCount(Number.NaN);
+            expect(service.getLastPromptTokenCount()).toBe(0);
+            service.setLastPromptTokenCount(-12);
+            expect(service.getLastPromptTokenCount()).toBe(0);
+        });
+    });
     describe("Tool Call Event with Line Count Metadata", () => {
         it("should aggregate valid line count metadata", () => {
             const toolCall = createFakeCompletedToolCall("test_tool", true, 100);

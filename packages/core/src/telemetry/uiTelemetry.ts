@@ -129,8 +129,6 @@ export class UiTelemetryService extends EventEmitter {
         // We should not emit update for any other event metric.
         return;
     }
-
-    this.emitUpdate();
   }
 
   getMetrics(): SessionMetrics {
@@ -139,6 +137,14 @@ export class UiTelemetryService extends EventEmitter {
 
   getLastPromptTokenCount(): number {
     return this.#lastPromptTokenCount;
+  }
+
+  setLastPromptTokenCount(tokenCount: number): void {
+    this.#lastPromptTokenCount =
+      Number.isFinite(tokenCount) && tokenCount > 0
+        ? Math.floor(tokenCount)
+        : 0;
+    this.emitUpdate();
   }
 
   resetLastPromptTokenCount(): void {
@@ -252,6 +258,8 @@ export class UiTelemetryService extends EventEmitter {
         files.totalLinesRemoved += event.metadata["ai_removed_lines"];
       }
     }
+
+    this.emitUpdate();
   }
 }
 

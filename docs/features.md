@@ -152,7 +152,8 @@ This document provides a comprehensive overview of all LowCal Code features, org
 | `/clear` | Clear conversation history |
 | `/summary` | Generate project summary |
 | `/compress` | Compress conversation history |
-| `/chat save/resume/list/delete <tag>` | Conversation state management |
+| `/chat save/resume/list/delete <tag>` | Conversation state management (legacy) |
+| `/resume list/delete <index/id>` | Resume from automatic checkpointing system |
 | `/model` | Select a model |
 | `/agents create/manage` | Subagent management |
 | `/tools [desc/nodesc]` | List available tools |

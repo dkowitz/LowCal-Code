@@ -66,6 +66,7 @@ export declare class UiTelemetryService extends EventEmitter {
     addEvent(event: UiEvent): void;
     getMetrics(): SessionMetrics;
     getLastPromptTokenCount(): number;
+    setLastPromptTokenCount(tokenCount: number): void;
     resetLastPromptTokenCount(): void;
     private emitUpdate;
     private getOrCreateModelMetrics;

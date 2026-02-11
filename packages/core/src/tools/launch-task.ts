@@ -17,6 +17,7 @@ import {
   findActiveLaunchTaskByDedupeKey,
   getLaunchTaskState,
   isLaunchTaskTerminal,
+  reconcileLaunchTaskState,
   type LaunchTaskStateRecord,
   upsertLaunchTaskState,
 } from "./launch-task-state.js";
@@ -292,6 +293,7 @@ class LaunchTaskInvocation extends BaseToolInvocation<
             ? this.params.idempotency_key.trim()
             : undefined;
         const runtime = await this.resolveRuntimePaths();
+        await reconcileLaunchTaskState(runtime.workspaceRoot);
 
         const existingTaskById = await getLaunchTaskState(runtime.workspaceRoot, id);
         if (existingTaskById && !isLaunchTaskTerminal(existingTaskById.status)) {

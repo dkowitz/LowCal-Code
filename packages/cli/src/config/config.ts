@@ -226,7 +226,6 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
           alias: "c",
           type: "boolean",
           description: "Enables checkpointing of file edits",
-          default: false,
         })
         .option("experimental-acp", {
           type: "boolean",
@@ -670,7 +669,7 @@ export async function loadCliConfig(
       disableFuzzySearch: settings.context?.fileFiltering?.disableFuzzySearch,
     },
     checkpointing:
-      argv.checkpointing || settings.general?.checkpointing?.enabled,
+      argv.checkpointing ?? settings.general?.checkpointing?.enabled ?? true,
     proxy:
       argv.proxy ||
       process.env["HTTPS_PROXY"] ||

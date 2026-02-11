@@ -1,64 +1,68 @@
+
 <!doctype html>
 <html lang="en">
-  <head>
+
+<head>
     <title>Code coverage report for src/session/sessionManager.ts</title>
     <meta charset="utf-8" />
     <link rel="stylesheet" href="../../prettify.css" />
     <link rel="stylesheet" href="../../base.css" />
     <link rel="shortcut icon" type="image/x-icon" href="../../favicon.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <style type="text/css">
-      .coverage-summary .sorter {
-        background-image: url(../../sort-arrow-sprite.png);
-      }
+    <style type='text/css'>
+        .coverage-summary .sorter {
+            background-image: url(../../sort-arrow-sprite.png);
+        }
     </style>
-  </head>
-
-  <body>
-    <div class="wrapper">
-      <div class="pad1">
-        <h1>
-          <a href="../../index.html">All files</a> /
-          <a href="index.html">src/session</a> sessionManager.ts
-        </h1>
-        <div class="clearfix">
-          <div class="fl pad1y space-right2">
-            <span class="strong">0% </span>
-            <span class="quiet">Statements</span>
-            <span class="fraction">0/480</span>
-          </div>
-
-          <div class="fl pad1y space-right2">
-            <span class="strong">0% </span>
-            <span class="quiet">Branches</span>
-            <span class="fraction">0/1</span>
-          </div>
-
-          <div class="fl pad1y space-right2">
-            <span class="strong">0% </span>
-            <span class="quiet">Functions</span>
-            <span class="fraction">0/1</span>
-          </div>
-
-          <div class="fl pad1y space-right2">
-            <span class="strong">0% </span>
-            <span class="quiet">Lines</span>
-            <span class="fraction">0/480</span>
-          </div>
+</head>
+    
+<body>
+<div class='wrapper'>
+    <div class='pad1'>
+        <h1><a href="../../index.html">All files</a> / <a href="index.html">src/session</a> sessionManager.ts</h1>
+        <div class='clearfix'>
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">5.45% </span>
+                <span class="quiet">Statements</span>
+                <span class='fraction'>27/495</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">66.66% </span>
+                <span class="quiet">Branches</span>
+                <span class='fraction'>2/3</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">11.11% </span>
+                <span class="quiet">Functions</span>
+                <span class='fraction'>2/18</span>
+            </div>
+        
+            
+            <div class='fl pad1y space-right2'>
+                <span class="strong">5.45% </span>
+                <span class="quiet">Lines</span>
+                <span class='fraction'>27/495</span>
+            </div>
+        
+            
         </div>
         <p class="quiet">
-          Press <em>n</em> or <em>j</em> to go to the next uncovered block,
-          <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
+            Press <em>n</em> or <em>j</em> to go to the next uncovered block, <em>b</em>, <em>p</em> or <em>k</em> for the previous block.
         </p>
         <template id="filterTemplate">
-          <div class="quiet">
-            Filter:
-            <input type="search" id="fileSearch" />
-          </div>
+            <div class="quiet">
+                Filter:
+                <input type="search" id="fileSearch">
+            </div>
         </template>
-      </div>
-      <div class="status-line low"></div>
-      <pre><table class="coverage">
+    </div>
+    <div class='status-line low'></div>
+    <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
 <a name='L3'></a><a href='#L3'>3</a>
@@ -716,17 +720,32 @@
 <a name='L655'></a><a href='#L655'>655</a>
 <a name='L656'></a><a href='#L656'>656</a>
 <a name='L657'></a><a href='#L657'>657</a>
-<a name='L658'></a><a href='#L658'>658</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L658'></a><a href='#L658'>658</a>
+<a name='L659'></a><a href='#L659'>659</a>
+<a name='L660'></a><a href='#L660'>660</a>
+<a name='L661'></a><a href='#L661'>661</a>
+<a name='L662'></a><a href='#L662'>662</a>
+<a name='L663'></a><a href='#L663'>663</a>
+<a name='L664'></a><a href='#L664'>664</a>
+<a name='L665'></a><a href='#L665'>665</a>
+<a name='L666'></a><a href='#L666'>666</a>
+<a name='L667'></a><a href='#L667'>667</a>
+<a name='L668'></a><a href='#L668'>668</a>
+<a name='L669'></a><a href='#L669'>669</a>
+<a name='L670'></a><a href='#L670'>670</a>
+<a name='L671'></a><a href='#L671'>671</a>
+<a name='L672'></a><a href='#L672'>672</a>
+<a name='L673'></a><a href='#L673'>673</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -735,7 +754,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -750,15 +769,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -802,7 +821,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -891,6 +910,10 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -922,11 +945,11 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">128x</span>
+<span class="cline-any cline-yes">128x</span>
+<span class="cline-any cline-yes">128x</span>
+<span class="cline-any cline-yes">128x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1031,6 +1054,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1154,7 +1183,12 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1334,17 +1368,17 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-yes">54x</span>
+<span class="cline-any cline-yes">54x</span>
+<span class="cline-any cline-yes">54x</span>
+<span class="cline-any cline-yes">54x</span>
+<span class="cline-any cline-yes">54x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1370,20 +1404,20 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @license
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-<span class="cstat-no" title="statement not covered" >import * as crypto from "node:crypto";</span>
-<span class="cstat-no" title="statement not covered" >import * as fs from "node:fs/promises";</span>
-<span class="cstat-no" title="statement not covered" >import * as net from "node:net";</span>
-<span class="cstat-no" title="statement not covered" >import * as path from "node:path";</span>
-<span class="cstat-no" title="statement not covered" >import process from "node:process";</span>
+import * as crypto from "node:crypto";
+import * as fs from "node:fs/promises";
+import * as net from "node:net";
+import * as path from "node:path";
+import process from "node:process";
 import type {
   SessionCapabilities,
   SessionControlEndpoint,
@@ -1392,7 +1426,7 @@ import type {
   SessionRecord,
   SetSessionHealthInput,
 } from "@qwen-code/qwen-code-core";
-<span class="cstat-no" title="statement not covered" >import {</span>
+import {
   clearSessionHealth,
   getSessionContextSummary,
   getSessionHealthView,
@@ -1407,15 +1441,15 @@ import type {
   Storage,
 } from "@qwen-code/qwen-code-core";
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export const DEFAULT_SESSION_HEARTBEAT_MS = 60 * 1000;</span>
-<span class="cstat-no" title="statement not covered" >export const DEFAULT_SESSION_TTL_MS = 3 * 60 * 1000;</span>
+export const DEFAULT_SESSION_HEARTBEAT_MS = 60 * 1000;
+export const DEFAULT_SESSION_TTL_MS = 3 * 60 * 1000;
 &nbsp;
-<span class="cstat-no" title="statement not covered" >let registeredSessionId: string | null = null;</span>
-<span class="cstat-no" title="statement not covered" >let heartbeatTimer: NodeJS.Timeout | null = null;</span>
-<span class="cstat-no" title="statement not covered" >let exitHandlersRegistered = false;</span>
-<span class="cstat-no" title="statement not covered" >let sessionApiServer: net.Server | null = null;</span>
-<span class="cstat-no" title="statement not covered" >let sessionApiSocketPath: string | null = null;</span>
-<span class="cstat-no" title="statement not covered" >let sessionApiAuthToken: string | null = null;</span>
+let registeredSessionId: string | null = null;
+let heartbeatTimer: NodeJS.Timeout | null = null;
+let exitHandlersRegistered = false;
+let sessionApiServer: net.Server | null = null;
+let sessionApiSocketPath: string | null = null;
+let sessionApiAuthToken: string | null = null;
 &nbsp;
 export interface SessionControlHandlerResult {
   accepted: boolean;
@@ -1459,7 +1493,7 @@ export interface SessionControlHandlers {
     | SessionControlHandlerResult;
 }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >let sessionControlHandlers: SessionControlHandlers = {};</span>
+let sessionControlHandlers: SessionControlHandlers = {};
 &nbsp;
 type SessionApiMethod =
   | "session.get_status"
@@ -1489,7 +1523,7 @@ interface SessionApiResponse {
   error?: string;
 }
 &nbsp;
-<span class="cstat-no" title="statement not covered" >function requiresAuthToken(method: SessionApiMethod): boolean {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function requiresAuthToken(method: SessionApiMethod): boolean {</span></span>
 <span class="cstat-no" title="statement not covered" >  switch (method) {</span>
 <span class="cstat-no" title="statement not covered" >    case "session.get_status":</span>
 <span class="cstat-no" title="statement not covered" >    case "session.get_health":</span>
@@ -1509,7 +1543,7 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >function makeActionResult(result: {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function makeActionResult(result: {</span></span>
   accepted: boolean;
   reason?: string;
   action_id?: string;
@@ -1525,7 +1559,7 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  };</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >function normalizeControlHandlerResult(</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function normalizeControlHandlerResult(</span></span>
 <span class="cstat-no" title="statement not covered" >  value: boolean | SessionControlHandlerResult | undefined,</span>
 ): {
   accepted: boolean;
@@ -1537,7 +1571,11 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >      reason: value ? undefined : "handler_rejected",</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
-<span class="cstat-no" title="statement not covered" >  if (value &amp;&amp; typeof value === "object" &amp;&amp; typeof value.accepted === "boolean") {</span>
+<span class="cstat-no" title="statement not covered" >  if (</span>
+<span class="cstat-no" title="statement not covered" >    value &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >    typeof value === "object" &amp;&amp;</span>
+<span class="cstat-no" title="statement not covered" >    typeof value.accepted === "boolean"</span>
+<span class="cstat-no" title="statement not covered" >  ) {</span>
 <span class="cstat-no" title="statement not covered" >    return {</span>
 <span class="cstat-no" title="statement not covered" >      accepted: value.accepted,</span>
 <span class="cstat-no" title="statement not covered" >      reason: value.reason,</span>
@@ -1549,7 +1587,7 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  };</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >async function invokeControlHandler&lt;TArgs extends unknown[]&gt;(</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async function invokeControlHandler&lt;TArgs extends unknown[]&gt;(</span></span>
 <span class="cstat-no" title="statement not covered" >  handler:</span>
     | ((
         ...args: TArgs
@@ -1579,13 +1617,13 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export function setSessionControlHandlers(</span>
-<span class="cstat-no" title="statement not covered" >  handlers: SessionControlHandlers,</span>
-<span class="cstat-no" title="statement not covered" >): void {</span>
-<span class="cstat-no" title="statement not covered" >  sessionControlHandlers = { ...handlers };</span>
-<span class="cstat-no" title="statement not covered" >}</span>
+export function setSessionControlHandlers(
+  handlers: SessionControlHandlers,
+): void {
+  sessionControlHandlers = { ...handlers };
+}
 &nbsp;
-<span class="cstat-no" title="statement not covered" >function getSocketPath(sessionId: string): string {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function getSocketPath(sessionId: string): string {</span></span>
 <span class="cstat-no" title="statement not covered" >  if (process.platform === "win32") {</span>
 <span class="cstat-no" title="statement not covered" >    const hash = crypto</span>
 <span class="cstat-no" title="statement not covered" >      .createHash("sha256")</span>
@@ -1609,7 +1647,7 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  return path.join(baseDir, fileName);</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >async function stopSessionApiServer(): Promise&lt;void&gt; {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async function stopSessionApiServer(): Promise&lt;void&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >  if (!sessionApiServer) {</span>
 <span class="cstat-no" title="statement not covered" >    return;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
@@ -1630,7 +1668,7 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  sessionApiAuthToken = null;</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >function makeUnsupportedControlResult(): {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function makeUnsupportedControlResult(): {</span></span>
   accepted: boolean;
   reason: string;
   action_id: string;
@@ -1642,7 +1680,7 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  };</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >async function handleSessionApiRequest(</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async function handleSessionApiRequest(</span></span>
 <span class="cstat-no" title="statement not covered" >  request: SessionApiRequest,</span>
 <span class="cstat-no" title="statement not covered" >): Promise&lt;SessionApiResponse&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  const id = request.id;</span>
@@ -1744,7 +1782,9 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >        return {</span>
 <span class="cstat-no" title="statement not covered" >          id,</span>
 <span class="cstat-no" title="statement not covered" >          ok: true,</span>
-<span class="cstat-no" title="statement not covered" >          result: await invokeControlHandler(sessionControlHandlers.restartTurn),</span>
+<span class="cstat-no" title="statement not covered" >          result: await invokeControlHandler(</span>
+<span class="cstat-no" title="statement not covered" >            sessionControlHandlers.restartTurn,</span>
+<span class="cstat-no" title="statement not covered" >          ),</span>
 <span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >      case "session.pause":</span>
 <span class="cstat-no" title="statement not covered" >        return {</span>
@@ -1767,7 +1807,10 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >        return {</span>
 <span class="cstat-no" title="statement not covered" >          id,</span>
 <span class="cstat-no" title="statement not covered" >          ok: true,</span>
-<span class="cstat-no" title="statement not covered" >          result: await invokeControlHandler(sessionControlHandlers.setModel, model),</span>
+<span class="cstat-no" title="statement not covered" >          result: await invokeControlHandler(</span>
+<span class="cstat-no" title="statement not covered" >            sessionControlHandlers.setModel,</span>
+<span class="cstat-no" title="statement not covered" >            model,</span>
+<span class="cstat-no" title="statement not covered" >          ),</span>
 <span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >      case "session.set_approval_mode": {</span>
@@ -1801,7 +1844,11 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >          ),</span>
 <span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >      default:</span>
-<span class="cstat-no" title="statement not covered" >        return { id, ok: false, error: `unsupported method: ${request.method}` };</span>
+<span class="cstat-no" title="statement not covered" >        return {</span>
+<span class="cstat-no" title="statement not covered" >          id,</span>
+<span class="cstat-no" title="statement not covered" >          ok: false,</span>
+<span class="cstat-no" title="statement not covered" >          error: `unsupported method: ${request.method}`,</span>
+<span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 <span class="cstat-no" title="statement not covered" >  } catch (error) {</span>
 <span class="cstat-no" title="statement not covered" >    return {</span>
@@ -1812,11 +1859,13 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >async function startSessionApiServer(</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async function startSessionApiServer(</span></span>
 <span class="cstat-no" title="statement not covered" >  sessionId: string,</span>
 <span class="cstat-no" title="statement not covered" >  capabilities: SessionCapabilities,</span>
 <span class="cstat-no" title="statement not covered" >): Promise&lt;SessionControlEndpoint | undefined&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  if (!(capabilities.observe || capabilities.control || capabilities.interact)) {</span>
+<span class="cstat-no" title="statement not covered" >  if (</span>
+<span class="cstat-no" title="statement not covered" >    !(capabilities.observe || capabilities.control || capabilities.interact)</span>
+<span class="cstat-no" title="statement not covered" >  ) {</span>
 <span class="cstat-no" title="statement not covered" >    return undefined;</span>
 <span class="cstat-no" title="statement not covered" >  }</span>
 &nbsp;
@@ -1888,7 +1937,7 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  };</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >function registerExitHandlers(): void {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function registerExitHandlers(): void {</span></span>
 <span class="cstat-no" title="statement not covered" >  if (exitHandlersRegistered) return;</span>
 <span class="cstat-no" title="statement not covered" >  exitHandlersRegistered = true;</span>
 &nbsp;
@@ -1909,7 +1958,7 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  });</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export async function startSessionRegistration(options: {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function startSessionRegistration(options: {</span></span>
   id: string;
   mode: SessionMode;
   status?: SessionStatus;
@@ -1979,7 +2028,7 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  registerExitHandlers();</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export async function stopSessionRegistration(): Promise&lt;void&gt; {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function stopSessionRegistration(): Promise&lt;void&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >  if (heartbeatTimer) {</span>
 <span class="cstat-no" title="statement not covered" >    clearInterval(heartbeatTimer);</span>
 <span class="cstat-no" title="statement not covered" >    heartbeatTimer = null;</span>
@@ -1991,11 +2040,11 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  registeredSessionId = null;</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export async function setSessionStatus(</span>
-<span class="cstat-no" title="statement not covered" >  status: SessionStatus,</span>
-<span class="cstat-no" title="statement not covered" >  details?: Record&lt;string, unknown&gt;,</span>
-<span class="cstat-no" title="statement not covered" >): Promise&lt;void&gt; {</span>
-<span class="cstat-no" title="statement not covered" >  if (!registeredSessionId) return;</span>
+export async function setSessionStatus(
+  status: SessionStatus,
+  details?: Record&lt;string, unknown&gt;,
+): Promise&lt;void&gt; {
+  if (!registeredSessionId) <span class="branch-0 cbranch-no" title="branch not covered" >return;</span>
 <span class="cstat-no" title="statement not covered" >  const patch: Partial&lt;SessionRecord&gt; = { status };</span>
 <span class="cstat-no" title="statement not covered" >  if (details) {</span>
 <span class="cstat-no" title="statement not covered" >    patch.details = details;</span>
@@ -2003,7 +2052,7 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  await updateSession(registeredSessionId, patch);</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export async function updateSessionDetails(</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function updateSessionDetails(</span></span>
 <span class="cstat-no" title="statement not covered" >  details: Record&lt;string, unknown&gt;,</span>
 <span class="cstat-no" title="statement not covered" >): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  if (!registeredSessionId) return;</span>
@@ -2015,44 +2064,38 @@ interface SessionApiResponse {
 <span class="cstat-no" title="statement not covered" >  await updateSession(registeredSessionId, { details: mergedDetails });</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export async function setRegisteredSessionHealth(</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function setRegisteredSessionHealth(</span></span>
 <span class="cstat-no" title="statement not covered" >  input: SetSessionHealthInput,</span>
 <span class="cstat-no" title="statement not covered" >): Promise&lt;void&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  if (!registeredSessionId) return;</span>
 <span class="cstat-no" title="statement not covered" >  await setSessionHealth(registeredSessionId, input);</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export async function clearRegisteredSessionHealth(): Promise&lt;void&gt; {</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function clearRegisteredSessionHealth(): Promise&lt;void&gt; {</span></span>
 <span class="cstat-no" title="statement not covered" >  if (!registeredSessionId) return;</span>
 <span class="cstat-no" title="statement not covered" >  await clearSessionHealth(registeredSessionId);</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >export function getRegisteredSessionId(): string | null {</span>
+export <span class="fstat-no" title="function not covered" >function getRegisteredSessionId(): string | null {</span>
 <span class="cstat-no" title="statement not covered" >  return registeredSessionId;</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;</pre></td></tr></table></pre>
 
-      <div class="push"></div>
-      <!-- for sticky footer -->
-    </div>
-    <!-- /wrapper -->
-    <div class="footer quiet pad2 space-top1 center small">
-      Code coverage generated by
-      <a
-        href="https://istanbul.js.org/"
-        target="_blank"
-        rel="noopener noreferrer"
-        >istanbul</a
-      >
-      at 2026-02-08T14:30:06.309Z
-    </div>
-    <script src="../../prettify.js"></script>
-    <script>
-      window.onload = function () {
-        prettyPrint();
-      };
-    </script>
-    <script src="../../sorter.js"></script>
-    <script src="../../block-navigation.js"></script>
-  </body>
+                <div class='push'></div><!-- for sticky footer -->
+            </div><!-- /wrapper -->
+            <div class='footer quiet pad2 space-top1 center small'>
+                Code coverage generated by
+                <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
+                at 2026-02-11T01:14:22.706Z
+            </div>
+        <script src="../../prettify.js"></script>
+        <script>
+            window.onload = function () {
+                prettyPrint();
+            };
+        </script>
+        <script src="../../sorter.js"></script>
+        <script src="../../block-navigation.js"></script>
+    </body>
 </html>
+    

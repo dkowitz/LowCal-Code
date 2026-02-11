@@ -8,7 +8,7 @@ import { ToolErrorType } from "./tool-error.js";
 import { ToolNames } from "./tool-names.js";
 import * as fs from "node:fs/promises";
 import * as path from "node:path";
-import { getLaunchTaskState, isLaunchTaskTerminal, listLaunchTaskStates, } from "./launch-task-state.js";
+import { getLaunchTaskState, isLaunchTaskTerminal, listLaunchTaskStates, reconcileLaunchTaskState, } from "./launch-task-state.js";
 const DEFAULT_MAX_ITEMS = 20;
 const MAX_ITEMS_LIMIT = 200;
 const DEFAULT_WAIT_TIMEOUT_SECONDS = 30;
@@ -196,6 +196,7 @@ class ReadSessionMessagesInvocation extends BaseToolInvocation {
         const waitTimeoutSeconds = clampWaitTimeoutSeconds(this.params.timeout_seconds);
         const baseDir = this.config.getTargetDir();
         const mailboxPath = getMailboxPath(baseDir, sessionId);
+        await reconcileLaunchTaskState(baseDir);
         const tryReadMessages = async () => {
             const lines = await readMailboxLines(mailboxPath);
             const validMessages = lines

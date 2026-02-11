@@ -111,7 +111,7 @@ export const SETTINGS_SCHEMA = {
             label: "Enable Checkpointing",
             category: "General",
             requiresRestart: true,
-            default: false,
+            default: true,
             description: "Enable session checkpointing for recovery",
             showInDialog: false,
           },

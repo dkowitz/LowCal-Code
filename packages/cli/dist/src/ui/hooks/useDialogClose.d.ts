@@ -15,6 +15,8 @@ export interface DialogCloseOptions {
     exitEditorDialog: () => void;
     isSettingsDialogOpen: boolean;
     closeSettingsDialog: () => void;
+    isResumeDialogOpen: boolean;
+    closeResumeDialog: () => void;
     isFolderTrustDialogOpen: boolean;
     showPrivacyNotice: boolean;
     setShowPrivacyNotice: (show: boolean) => void;

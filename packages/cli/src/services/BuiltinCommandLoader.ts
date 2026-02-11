@@ -48,6 +48,7 @@ import { setupGithubCommand } from "../ui/commands/setupGithubCommand.js";
 import { viewCommand } from "../ui/commands/viewCommand.js";
 import { researchCommand } from "../ui/commands/researchCommand.js";
 import { sessionsCommand } from "../ui/commands/sessionsCommand.js";
+import { resumeCommandGroup } from "../ui/commands/resumeCommand.js";
 
 /**
  * Loads the core, hard-coded slash commands that are an integral part
@@ -107,6 +108,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       toolsetCommand,
       researchCommand,
       sessionsCommand,
+      resumeCommandGroup,
     ];
 
     return allDefinitions.filter((cmd): cmd is SlashCommand => cmd !== null);

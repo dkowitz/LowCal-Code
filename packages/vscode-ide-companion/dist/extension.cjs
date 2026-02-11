@@ -54695,13 +54695,16 @@ var init_uiTelemetry = __esm({
           default:
             return;
         }
-        this.emitUpdate();
       }
       getMetrics() {
         return this.#metrics;
       }
       getLastPromptTokenCount() {
         return this.#lastPromptTokenCount;
+      }
+      setLastPromptTokenCount(tokenCount) {
+        this.#lastPromptTokenCount = Number.isFinite(tokenCount) && tokenCount > 0 ? Math.floor(tokenCount) : 0;
+        this.emitUpdate();
       }
       resetLastPromptTokenCount() {
         this.#lastPromptTokenCount = 0;
@@ -54792,6 +54795,7 @@ var init_uiTelemetry = __esm({
             files.totalLinesRemoved += event.metadata["ai_removed_lines"];
           }
         }
+        this.emitUpdate();
       }
     };
     uiTelemetryService = new UiTelemetryService();
@@ -133539,6 +133543,29 @@ var STORE_RELATIVE_PATH = path22.join(".lowcal", "launch-task-state.json");
 var LOCK_RELATIVE_PATH = path22.join(".lowcal", "launch-task-state.lock");
 var LOCK_TIMEOUT_MS = 5e3;
 var LOCK_RETRY_MS = 100;
+var DEFAULT_STALE_AFTER_MS = 5 * 60 * 1e3;
+var DEFAULT_TERMINAL_RETENTION_MS = 14 * 24 * 60 * 60 * 1e3;
+function parseIsoTime(value) {
+  if (!value) {
+    return void 0;
+  }
+  const parsed = Date.parse(value);
+  return Number.isFinite(parsed) ? parsed : void 0;
+}
+function isPositiveFiniteNumber(value) {
+  return typeof value === "number" && Number.isFinite(value) && value > 0;
+}
+function isProcessAlive(pid2) {
+  if (!Number.isInteger(pid2) || pid2 <= 0) {
+    return false;
+  }
+  try {
+    process6.kill(pid2, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
 function createEmptyStore() {
   const now = (/* @__PURE__ */ new Date()).toISOString();
   return {
@@ -133661,6 +133688,60 @@ async function listLaunchTaskStates(baseDir, options2 = {}) {
     return filtered.slice(0, Math.floor(limit2));
   }
   return filtered;
+}
+async function reconcileLaunchTaskState(baseDir, options2 = {}) {
+  const staleAfterMs = isPositiveFiniteNumber(options2.staleAfterMs) ? options2.staleAfterMs : DEFAULT_STALE_AFTER_MS;
+  const terminalRetentionMs = isPositiveFiniteNumber(options2.terminalRetentionMs) ? options2.terminalRetentionMs : DEFAULT_TERMINAL_RETENTION_MS;
+  return await withStore(baseDir, true, async (store) => {
+    const nowIso = (/* @__PURE__ */ new Date()).toISOString();
+    const nowMs = Date.now();
+    let staleMarked = 0;
+    let pruned = 0;
+    const staleTaskIds = [];
+    const prunedTaskIds = [];
+    for (const [taskId, record] of Object.entries(store.tasks)) {
+      const isActive = record.status === "queued" || record.status === "running";
+      if (isActive) {
+        const heartbeatMs = parseIsoTime(record.last_heartbeat ?? record.started_at ?? record.created_at);
+        const ageMs = typeof heartbeatMs === "number" ? Math.max(0, nowMs - heartbeatMs) : void 0;
+        const pidRunning = typeof record.pid === "number" ? isProcessAlive(record.pid) : void 0;
+        const staleByHeartbeat = typeof ageMs === "number" && ageMs > staleAfterMs && pidRunning !== true;
+        const staleByDeadPid = pidRunning === false;
+        if (staleByHeartbeat || staleByDeadPid) {
+          staleMarked += 1;
+          staleTaskIds.push(taskId);
+          const staleReason = staleByDeadPid ? "Marked failed by launch task maintenance: process is no longer running." : `Marked failed by launch task maintenance: no heartbeat for ${Math.floor((ageMs ?? 0) / 1e3)}s.`;
+          store.tasks[taskId] = {
+            ...record,
+            status: "failed",
+            finished_at: nowIso,
+            last_heartbeat: nowIso,
+            last_error: staleReason
+          };
+        }
+      }
+    }
+    for (const [taskId, record] of Object.entries(store.tasks)) {
+      if (!isLaunchTaskTerminal(record.status)) {
+        continue;
+      }
+      const terminalMs = parseIsoTime(record.finished_at ?? record.last_heartbeat ?? record.started_at ?? record.created_at);
+      if (typeof terminalMs !== "number") {
+        continue;
+      }
+      if (nowMs - terminalMs > terminalRetentionMs) {
+        delete store.tasks[taskId];
+        pruned += 1;
+        prunedTaskIds.push(taskId);
+      }
+    }
+    return {
+      staleMarked,
+      staleTaskIds,
+      pruned,
+      prunedTaskIds
+    };
+  });
 }
 
 // ../core/dist/src/tools/launch-task.js
@@ -133846,6 +133927,7 @@ var ReadSessionMessagesInvocation = class extends BaseToolInvocation {
     const waitTimeoutSeconds = clampWaitTimeoutSeconds(this.params.timeout_seconds);
     const baseDir = this.config.getTargetDir();
     const mailboxPath = getMailboxPath(baseDir, sessionId2);
+    await reconcileLaunchTaskState(baseDir);
     const tryReadMessages = async () => {
       const lines2 = await readMailboxLines(mailboxPath);
       const validMessages = lines2.map((line, lineIndex) => ({ lineIndex, message: line.parsed })).filter((item) => item.message !== void 0).filter((item) => matchesTaskId(item.message, taskId));

@@ -8,7 +8,7 @@ import { ToolErrorType } from "./tool-error.js";
 import * as fs from "fs/promises";
 import * as path from "node:path";
 import { fileURLToPath } from "node:url";
-import { findActiveLaunchTaskByDedupeKey, getLaunchTaskState, isLaunchTaskTerminal, upsertLaunchTaskState, } from "./launch-task-state.js";
+import { findActiveLaunchTaskByDedupeKey, getLaunchTaskState, isLaunchTaskTerminal, reconcileLaunchTaskState, upsertLaunchTaskState, } from "./launch-task-state.js";
 const launchTaskToolSchemaData = {
     name: "launch_task",
     description: "Spawns a new instance of LowCal with a tasking prompt immediately (headless or in a zellij tab). This enables LowCal to execute tasks autonomously without scheduling.",
@@ -215,6 +215,7 @@ class LaunchTaskInvocation extends BaseToolInvocation {
                     ? this.params.idempotency_key.trim()
                     : undefined;
                 const runtime = await this.resolveRuntimePaths();
+                await reconcileLaunchTaskState(runtime.workspaceRoot);
                 const existingTaskById = await getLaunchTaskState(runtime.workspaceRoot, id);
                 if (existingTaskById && !isLaunchTaskTerminal(existingTaskById.status)) {
                     return this.formatExistingTask(existingTaskById, `Task "${id}" is already ${existingTaskById.status}. Reusing existing task handle.`);

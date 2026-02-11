@@ -6,7 +6,7 @@
 import { useCallback, useMemo, useEffect, useState } from "react";
 import {} from "@google/genai";
 import process from "node:process";
-import { GitService, Logger, logSlashCommand, makeSlashCommandEvent, SlashCommandStatus, ToolConfirmationOutcome, Storage, removeSession, } from "@qwen-code/qwen-code-core";
+import { GitService, Logger, logSlashCommand, makeSlashCommandEvent, SlashCommandStatus, ToolConfirmationOutcome, Storage, removeSession, uiTelemetryService, } from "@qwen-code/qwen-code-core";
 import { useSessionStats } from "../contexts/SessionContext.js";
 import { formatDuration } from "../utils/formatters.js";
 import { runExitCleanup } from "../../utils/cleanup.js";
@@ -23,7 +23,7 @@ function quoteForShell(value) {
 /**
  * Hook to define and process slash commands (e.g., /help, /clear).
  */
-export const useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController) => {
+export const useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openResumeDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController) => {
     const session = useSessionStats();
     const [commands, setCommands] = useState([]);
     const [reloadTrigger, setReloadTrigger] = useState(0);
@@ -354,6 +354,9 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
                                     case "model":
                                         openModelSelectionDialog();
                                         return { type: "handled" };
+                                    case "resume":
+                                        openResumeDialog();
+                                        return { type: "handled" };
                                     case "subagent_create":
                                         openSubagentCreateDialog();
                                         return { type: "handled" };
@@ -375,6 +378,20 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
                                 result.history.forEach((item, index) => {
                                     fullCommandContext.ui.addItem(item, index);
                                 });
+                                if (typeof result.restoredContext?.promptTokenCount ===
+                                    "number") {
+                                    const telemetryWithRestore = uiTelemetryService;
+                                    if (typeof telemetryWithRestore.setLastPromptTokenCount ===
+                                        "function") {
+                                        telemetryWithRestore.setLastPromptTokenCount(result.restoredContext.promptTokenCount);
+                                    }
+                                    else {
+                                        uiTelemetryService.resetLastPromptTokenCount();
+                                    }
+                                }
+                                else {
+                                    uiTelemetryService.resetLastPromptTokenCount();
+                                }
                                 return { type: "handled" };
                             }
                             case "quit_confirmation":
@@ -627,6 +644,7 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
         setConfirmationRequest,
         setInputRequest,
         openModelSelectionDialog,
+        openResumeDialog,
         session.stats,
         loggingController,
     ]);

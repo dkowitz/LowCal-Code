@@ -18,6 +18,7 @@ import {
   ToolConfirmationOutcome,
   Storage,
   removeSession,
+  uiTelemetryService,
 } from "@qwen-code/qwen-code-core";
 import { useSessionStats } from "../contexts/SessionContext.js";
 import { formatDuration } from "../utils/formatters.js";
@@ -66,6 +67,7 @@ export const useSlashCommandProcessor = (
   openPrivacyNotice: () => void,
   openSettingsDialog: () => void,
   openModelSelectionDialog: () => void,
+  openResumeDialog: () => void,
   openSubagentCreateDialog: () => void,
   openAgentsManagerDialog: () => void,
   toggleVimEnabled: () => Promise<boolean>,
@@ -462,6 +464,9 @@ export const useSlashCommandProcessor = (
                     case "model":
                       openModelSelectionDialog();
                       return { type: "handled" };
+                    case "resume":
+                      openResumeDialog();
+                      return { type: "handled" };
                     case "subagent_create":
                       openSubagentCreateDialog();
                       return { type: "handled" };
@@ -487,6 +492,26 @@ export const useSlashCommandProcessor = (
                       fullCommandContext.ui.addItem(item, index);
                     },
                   );
+                  if (
+                    typeof result.restoredContext?.promptTokenCount ===
+                    "number"
+                  ) {
+                    const telemetryWithRestore = uiTelemetryService as {
+                      setLastPromptTokenCount?: (tokenCount: number) => void;
+                    };
+                    if (
+                      typeof telemetryWithRestore.setLastPromptTokenCount ===
+                      "function"
+                    ) {
+                      telemetryWithRestore.setLastPromptTokenCount(
+                        result.restoredContext.promptTokenCount,
+                      );
+                    } else {
+                      uiTelemetryService.resetLastPromptTokenCount();
+                    }
+                  } else {
+                    uiTelemetryService.resetLastPromptTokenCount();
+                  }
                   return { type: "handled" };
                 }
                 case "quit_confirmation":
@@ -786,6 +811,7 @@ export const useSlashCommandProcessor = (
       setConfirmationRequest,
       setInputRequest,
       openModelSelectionDialog,
+      openResumeDialog,
       session.stats,
       loggingController,
     ],

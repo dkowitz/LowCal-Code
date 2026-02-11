@@ -16,6 +16,8 @@ import type {
   ToolCallRequestInfo,
   EditorType,
   ThoughtSummary,
+  CheckpointMessage,
+  CheckpointContextSnapshot,
 } from "@qwen-code/qwen-code-core";
 import {
   GeminiEventType as ServerGeminiEventType,
@@ -31,8 +33,14 @@ import {
   ConversationFinishedEvent,
   ApprovalMode,
   parseAndFormatApiError,
+  CheckpointService,
 } from "@qwen-code/qwen-code-core";
-import { type Part, type PartListUnion, FinishReason } from "@google/genai";
+import {
+  type Content,
+  type Part,
+  type PartListUnion,
+  FinishReason,
+} from "@google/genai";
 import type {
   HistoryItem,
   HistoryItemWithoutId,
@@ -123,7 +131,9 @@ export const useGeminiStream = (
   const needsAntiRepeatHintRef = useRef<boolean>(false);
   const toolCallSignatureCountsRef = useRef<Map<string, number>>(new Map());
   const toolCallIdToSignatureRef = useRef<Map<string, string>>(new Map());
-  const { startNewPrompt, getPromptCount } = useSessionStats();
+  const checkpointPendingForTurnRef = useRef(false);
+  const checkpointTurnStartTimestampRef = useRef<number | null>(null);
+  const { stats, startNewPrompt, getPromptCount } = useSessionStats();
   const storage = config.storage;
   const logger = useLogger(storage);
   const gitService = useMemo(() => {
@@ -157,6 +167,21 @@ export const useGeminiStream = (
       getPreferredEditor,
       onEditorClose,
     );
+
+  useEffect(() => {
+    if (!config.getDebugMode()) {
+      return;
+    }
+    const projectRoot = config.getProjectRoot();
+    const checkpointPath = projectRoot
+      ? path.join(projectRoot, ".lowcal", "checkpoints")
+      : "(unknown project root)";
+    onDebugMessage(
+      `[Checkpoint] Auto turn checkpointing ${
+        config.getCheckpointingEnabled() ? "ENABLED" : "DISABLED"
+      } (${checkpointPath})`,
+    );
+  }, [config, onDebugMessage]);
 
   const releaseToolCallSignatures = useCallback((callIds: string[]) => {
     for (const id of callIds) {
@@ -267,6 +292,8 @@ export const useGeminiStream = (
     if (turnCancelledRef.current) {
       return;
     }
+    checkpointPendingForTurnRef.current = false;
+    checkpointTurnStartTimestampRef.current = null;
     turnCancelledRef.current = true;
     isSubmittingQueryRef.current = false;
     abortControllerRef.current?.abort();
@@ -506,6 +533,8 @@ export const useGeminiStream = (
 
   const handleUserCancelledEvent = useCallback(
     (userMessageTimestamp: number) => {
+      checkpointPendingForTurnRef.current = false;
+      checkpointTurnStartTimestampRef.current = null;
       if (turnCancelledRef.current) {
         return;
       }
@@ -565,6 +594,8 @@ export const useGeminiStream = (
 
   const handleErrorEvent = useCallback(
     (eventValue: ErrorEvent["value"], userMessageTimestamp: number) => {
+      checkpointPendingForTurnRef.current = false;
+      checkpointTurnStartTimestampRef.current = null;
       if (pendingHistoryItemRef.current) {
         addItem(pendingHistoryItemRef.current, userMessageTimestamp);
         setPendingHistoryItem(null);
@@ -611,6 +642,215 @@ export const useGeminiStream = (
       turnDurationLoggedRef,
     ],
   );
+
+  const buildCheckpointMessages = useCallback(
+    (historyItems: HistoryItem[]): CheckpointMessage[] => {
+      const timestamp = new Date().toISOString();
+      const checkpointMessages: CheckpointMessage[] = [];
+
+      historyItems.forEach((item, index) => {
+        if (item.type === MessageType.USER && item.text) {
+          checkpointMessages.push({
+            id: `msg-${Date.now()}-${index}`,
+            timestamp,
+            type: "user",
+            content: item.text,
+          });
+          return;
+        }
+
+        if (
+          (item.type === MessageType.GEMINI ||
+            item.type === "gemini_content") &&
+          item.text
+        ) {
+          checkpointMessages.push({
+            id: `msg-${Date.now()}-${index}`,
+            timestamp,
+            type: "gemini",
+            content: item.text,
+          });
+        }
+      });
+
+      return checkpointMessages;
+    },
+    [],
+  );
+
+  const buildCheckpointMessagesFromClientHistory = useCallback(
+    (clientHistory: Content[]): CheckpointMessage[] => {
+      const timestamp = new Date().toISOString();
+      const checkpointMessages: CheckpointMessage[] = [];
+
+      clientHistory.forEach((content, index) => {
+        const text =
+          content.parts
+            ?.filter(
+              (
+                part,
+              ): part is {
+                text: string;
+              } =>
+                !!part &&
+                typeof part === "object" &&
+                "text" in part &&
+                typeof part.text === "string",
+            )
+            .map((part) => part.text)
+            .join("") ?? "";
+
+        if (!text) {
+          return;
+        }
+
+        checkpointMessages.push({
+          id: `msg-${Date.now()}-${index}`,
+          timestamp,
+          type: content.role === "user" ? "user" : "gemini",
+          content: text,
+        });
+      });
+
+      return checkpointMessages;
+    },
+    [],
+  );
+
+  const buildCheckpointContextSnapshot =
+    useCallback((): CheckpointContextSnapshot | undefined => {
+      try {
+        const clientHistory = geminiClient.getHistory();
+        if (!Array.isArray(clientHistory) || clientHistory.length === 0) {
+          return undefined;
+        }
+
+        return {
+          clientHistory,
+          promptTokenCount: stats.lastPromptTokenCount,
+          currentContextTokenCount: stats.currentContextTokenCount,
+          model: config.getModel(),
+        };
+      } catch {
+        return undefined;
+      }
+    }, [
+      config,
+      geminiClient,
+      stats.currentContextTokenCount,
+      stats.lastPromptTokenCount,
+    ]);
+
+  const saveCheckpointFromHistory = useCallback(
+    (
+      historyItems: HistoryItem[],
+      contextSnapshotOverride?: CheckpointContextSnapshot,
+    ) => {
+      try {
+        if (!config.getCheckpointingEnabled()) {
+          return false;
+        }
+
+        if (historyItems.length === 0) {
+          return false;
+        }
+
+        const contextSnapshot =
+          contextSnapshotOverride ?? buildCheckpointContextSnapshot();
+        const checkpointMessages =
+          contextSnapshot && Array.isArray(contextSnapshot.clientHistory)
+            ? buildCheckpointMessagesFromClientHistory(
+                contextSnapshot.clientHistory,
+              )
+            : buildCheckpointMessages(historyItems);
+        if (checkpointMessages.length === 0) {
+          return false;
+        }
+
+        const checkpointService = new CheckpointService(config);
+        const checkpointId = checkpointService.saveCheckpoint(
+          checkpointMessages,
+          contextSnapshot,
+        );
+        console.debug(
+          `[Checkpoint] Saved checkpoint ${checkpointId} with ${checkpointMessages.length} messages`,
+        );
+        return true;
+      } catch (error) {
+        // Silent failure - checkpoint saving should not interrupt the user
+        console.debug("Failed to save checkpoint:", error);
+        onDebugMessage(
+          `[Checkpoint] Failed to save checkpoint: ${getErrorMessage(error)}`,
+        );
+        return false;
+      }
+    },
+    [
+      buildCheckpointContextSnapshot,
+      buildCheckpointMessages,
+      buildCheckpointMessagesFromClientHistory,
+      config,
+    ],
+  );
+
+  useEffect(() => {
+    if (!config.getCheckpointingEnabled()) {
+      checkpointPendingForTurnRef.current = false;
+      checkpointTurnStartTimestampRef.current = null;
+      return;
+    }
+
+    if (!checkpointPendingForTurnRef.current) {
+      return;
+    }
+
+    if (
+      streamingState !== StreamingState.Idle ||
+      isSubmittingQueryRef.current
+    ) {
+      return;
+    }
+
+    const checkpointTurnStart = checkpointTurnStartTimestampRef.current;
+    if (!checkpointTurnStart) {
+      return;
+    }
+
+    const contextSnapshot = buildCheckpointContextSnapshot();
+    if (!contextSnapshot) {
+      const hasTurnOutputInHistory = history.some(
+        (item) =>
+          (item.type === MessageType.GEMINI ||
+            item.type === "gemini_content" ||
+            item.type === "tool_group") &&
+          item.id >= checkpointTurnStart,
+      );
+
+      if (!hasTurnOutputInHistory) {
+        return;
+      }
+    }
+
+    const saved = saveCheckpointFromHistory(history, contextSnapshot);
+    if (saved) {
+      checkpointPendingForTurnRef.current = false;
+      checkpointTurnStartTimestampRef.current = null;
+    } else {
+      console.debug(
+        `[Checkpoint] Failed to save turn ending at ${new Date(checkpointTurnStart).toISOString()}`,
+      );
+      onDebugMessage(
+        `[Checkpoint] Save deferred or failed for turn ending at ${new Date(checkpointTurnStart).toISOString()}`,
+      );
+    }
+  }, [
+    buildCheckpointContextSnapshot,
+    config,
+    history,
+    onDebugMessage,
+    saveCheckpointFromHistory,
+    streamingState,
+  ]);
 
   const handleFinishedEvent = useCallback(
     (event: ServerGeminiFinishedEvent, userMessageTimestamp: number) => {
@@ -962,6 +1202,13 @@ export const useGeminiStream = (
       if (!options?.isContinuation) {
         startNewPrompt();
         setThought(null); // Reset thought when starting a new prompt
+        if (config.getCheckpointingEnabled()) {
+          checkpointPendingForTurnRef.current = true;
+          checkpointTurnStartTimestampRef.current = userMessageTimestamp;
+        } else {
+          checkpointPendingForTurnRef.current = false;
+          checkpointTurnStartTimestampRef.current = null;
+        }
       }
 
       setIsResponding(true);
@@ -1015,6 +1262,8 @@ export const useGeminiStream = (
           console.error("Failed to restore original model:", error);
         });
       } catch (error: unknown) {
+        checkpointPendingForTurnRef.current = false;
+        checkpointTurnStartTimestampRef.current = null;
         // Restore original model if it was temporarily overridden
         restoreOriginalModel().catch((error) => {
           console.error("Failed to restore original model:", error);

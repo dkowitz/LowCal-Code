@@ -10,6 +10,30 @@ const STORE_RELATIVE_PATH = path.join(".lowcal", "launch-task-state.json");
 const LOCK_RELATIVE_PATH = path.join(".lowcal", "launch-task-state.lock");
 const LOCK_TIMEOUT_MS = 5000;
 const LOCK_RETRY_MS = 100;
+const DEFAULT_STALE_AFTER_MS = 5 * 60 * 1000;
+const DEFAULT_TERMINAL_RETENTION_MS = 14 * 24 * 60 * 60 * 1000;
+function parseIsoTime(value) {
+    if (!value) {
+        return undefined;
+    }
+    const parsed = Date.parse(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+}
+function isPositiveFiniteNumber(value) {
+    return typeof value === "number" && Number.isFinite(value) && value > 0;
+}
+function isProcessAlive(pid) {
+    if (!Number.isInteger(pid) || pid <= 0) {
+        return false;
+    }
+    try {
+        process.kill(pid, 0);
+        return true;
+    }
+    catch {
+        return false;
+    }
+}
 function createEmptyStore() {
     const now = new Date().toISOString();
     return {
@@ -155,6 +179,69 @@ export async function upsertLaunchTaskState(baseDir, taskId, updater) {
             task_id: taskId,
         };
         return store.tasks[taskId];
+    });
+}
+export async function reconcileLaunchTaskState(baseDir, options = {}) {
+    const staleAfterMs = isPositiveFiniteNumber(options.staleAfterMs)
+        ? options.staleAfterMs
+        : DEFAULT_STALE_AFTER_MS;
+    const terminalRetentionMs = isPositiveFiniteNumber(options.terminalRetentionMs)
+        ? options.terminalRetentionMs
+        : DEFAULT_TERMINAL_RETENTION_MS;
+    return await withStore(baseDir, true, async (store) => {
+        const nowIso = new Date().toISOString();
+        const nowMs = Date.now();
+        let staleMarked = 0;
+        let pruned = 0;
+        const staleTaskIds = [];
+        const prunedTaskIds = [];
+        for (const [taskId, record] of Object.entries(store.tasks)) {
+            const isActive = record.status === "queued" || record.status === "running";
+            if (isActive) {
+                const heartbeatMs = parseIsoTime(record.last_heartbeat ?? record.started_at ?? record.created_at);
+                const ageMs = typeof heartbeatMs === "number" ? Math.max(0, nowMs - heartbeatMs) : undefined;
+                const pidRunning = typeof record.pid === "number" ? isProcessAlive(record.pid) : undefined;
+                const staleByHeartbeat = typeof ageMs === "number" && ageMs > staleAfterMs && pidRunning !== true;
+                const staleByDeadPid = pidRunning === false;
+                if (staleByHeartbeat || staleByDeadPid) {
+                    staleMarked += 1;
+                    staleTaskIds.push(taskId);
+                    const staleReason = staleByDeadPid
+                        ? "Marked failed by launch task maintenance: process is no longer running."
+                        : `Marked failed by launch task maintenance: no heartbeat for ${Math.floor((ageMs ?? 0) / 1000)}s.`;
+                    store.tasks[taskId] = {
+                        ...record,
+                        status: "failed",
+                        finished_at: nowIso,
+                        last_heartbeat: nowIso,
+                        last_error: staleReason,
+                    };
+                }
+            }
+        }
+        for (const [taskId, record] of Object.entries(store.tasks)) {
+            if (!isLaunchTaskTerminal(record.status)) {
+                continue;
+            }
+            const terminalMs = parseIsoTime(record.finished_at ??
+                record.last_heartbeat ??
+                record.started_at ??
+                record.created_at);
+            if (typeof terminalMs !== "number") {
+                continue;
+            }
+            if (nowMs - terminalMs > terminalRetentionMs) {
+                delete store.tasks[taskId];
+                pruned += 1;
+                prunedTaskIds.push(taskId);
+            }
+        }
+        return {
+            staleMarked,
+            staleTaskIds,
+            pruned,
+            prunedTaskIds,
+        };
     });
 }
 //# sourceMappingURL=launch-task-state.js.map
