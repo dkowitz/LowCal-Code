@@ -1,17 +1,35 @@
-import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+import { jsxs as _jsxs, jsx as _jsx } from "react/jsx-runtime";
 import { Box, Text } from "ink";
 import { Colors } from "../colors.js";
 import { RadioButtonSelect, } from "./shared/RadioButtonSelect.js";
 import { useKeypress } from "../hooks/useKeypress.js";
+// Color codes for different session IDs - consistent with resumeCommand.ts
+const getSessionColor = (sessionId) => {
+    // Use the first few characters of the session ID to generate a consistent color
+    const hash = sessionId.substring(0, 8);
+    const num = parseInt(hash, 16) || 0;
+    // Map to Ink colors that work well with themes
+    const colors = [
+        Colors.AccentBlue,
+        Colors.AccentPurple,
+        Colors.AccentCyan,
+        Colors.AccentGreen,
+        Colors.AccentYellow,
+        Colors.AccentRed,
+        Colors.LightBlue,
+    ];
+    return colors[num % colors.length];
+};
 function formatCheckpointLabel(checkpoint) {
     const isoString = checkpoint.createdAt.toISOString();
     const match = isoString.match(/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
     const formattedDate = match ? `${match[1]} ${match[2]}` : "Invalid Date";
     const shortSessionId = checkpoint.sessionId.slice(0, 8);
+    const sessionColor = getSessionColor(checkpoint.sessionId);
     const preview = checkpoint.lastMessagePreview
         ? ` - ${checkpoint.lastMessagePreview}`
         : "";
-    return `[${checkpoint.messageCount} messages] ${shortSessionId} ${formattedDate}${preview}`;
+    return (_jsxs(Text, { children: [_jsxs(Text, { color: Colors.Gray, children: ["[", checkpoint.messageCount, " messages]"] }), " ", _jsx(Text, { color: sessionColor, children: shortSessionId }), " ", formattedDate, preview] }));
 }
 export const ResumeDialog = ({ checkpoints, onSelect, onClose, }) => {
     useKeypress((key) => {

@@ -1,3 +1,254 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="0" failures="0" errors="0" time="0">
+<testsuites name="vitest tests" tests="19" failures="0" errors="0" time="0.256752848">
+    <testsuite name="src/ui/commands/resumeCommand.test.ts" timestamp="2026-02-11T19:58:30.374Z" hostname="uby" tests="6" failures="0" errors="0" skipped="0" time="0.004198687">
+        <testcase classname="src/ui/commands/resumeCommand.test.ts" name="resumeCommandGroup &gt; opens the resume dialog when no args are provided" time="0.001663217">
+        </testcase>
+        <testcase classname="src/ui/commands/resumeCommand.test.ts" name="resumeCommandGroup &gt; loads a checkpoint when called with a checkpoint id" time="0.000565126">
+        </testcase>
+        <testcase classname="src/ui/commands/resumeCommand.test.ts" name="resumeCommandGroup &gt; prefers context snapshot client history and restores token context" time="0.000331884">
+        </testcase>
+        <testcase classname="src/ui/commands/resumeCommand.test.ts" name="resumeCommandGroup &gt; loads a checkpoint when called with a checkpoint index" time="0.000308711">
+        </testcase>
+        <testcase classname="src/ui/commands/resumeCommand.test.ts" name="resumeCommandGroup &gt; returns an error when checkpoint id is not found" time="0.000251646">
+        </testcase>
+        <testcase classname="src/ui/commands/resumeCommand.test.ts" name="resumeCommandGroup &gt; still supports the list subcommand" time="0.000372509">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/ui/components/shared/RadioButtonSelect.test.tsx" timestamp="2026-02-11T19:58:30.374Z" hostname="uby" tests="13" failures="0" errors="0" skipped="0" time="0.252554161">
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="&lt;RadioButtonSelect /&gt; &gt; renders a list of items and matches snapshot" time="0.01829696">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="&lt;RadioButtonSelect /&gt; &gt; renders with the second item selected and matches snapshot" time="0.002650403">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="&lt;RadioButtonSelect /&gt; &gt; renders with numbers hidden and matches snapshot" time="0.001784471">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="&lt;RadioButtonSelect /&gt; &gt; renders with scroll arrows and matches snapshot" time="0.002691289">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="&lt;RadioButtonSelect /&gt; &gt; renders with special theme display and matches snapshot" time="0.001651826">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="&lt;RadioButtonSelect /&gt; &gt; renders a list with &gt;10 items and matches snapshot" time="0.003779282">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="&lt;RadioButtonSelect /&gt; &gt; renders nothing when no items are provided" time="0.000896789">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="keyboard navigation &gt; should call onSelect when &quot;enter&quot; is pressed" time="0.002946361">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="keyboard navigation &gt; when isFocused is false &gt; should not handle any keyboard input" time="0.001734169">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="keyboard navigation &gt; &apos;when isFocused is true&apos; &gt; should navigate down with arrow key and select with enter" time="0.052998719">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to RadioButtonSelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="keyboard navigation &gt; &apos;when isFocused is true&apos; &gt; should navigate up with arrow key and select with enter" time="0.054489567">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to RadioButtonSelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="keyboard navigation &gt; &apos;when isFocused is omitted&apos; &gt; should navigate down with arrow key and select with enter" time="0.053903273">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to RadioButtonSelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/components/shared/RadioButtonSelect.test.tsx" name="keyboard navigation &gt; &apos;when isFocused is omitted&apos; &gt; should navigate up with arrow key and select with enter" time="0.053499125">
+            <system-err>
+An update to Root inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+An update to RadioButtonSelect inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+    </testsuite>
 </testsuites>

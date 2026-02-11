@@ -9,7 +9,7 @@ import type React from "react";
  * Requires a label for display and a value to be returned on selection.
  */
 export interface RadioSelectItem<T> {
-    label: string;
+    label: React.ReactNode;
     value: T;
     disabled?: boolean;
     themeNameDisplay?: string;

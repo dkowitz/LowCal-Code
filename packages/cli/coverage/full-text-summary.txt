@@ -1,7 +1,7 @@
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |       0 |     0.97 |    0.97 |       0 |                   
+All files          |    7.27 |    25.11 |    7.98 |    7.27 |                   
  src               |       0 |        0 |       0 |       0 |                   
   gemini.tsx       |       0 |        0 |       0 |       0 | 1-480             
   ...ractiveCli.ts |       0 |        0 |       0 |       0 | 1-368             
@@ -61,21 +61,21 @@ All files          |       0 |     0.97 |    0.97 |       0 |
   types.ts         |       0 |        0 |       0 |       0 | 1-54              
  src/session       |       0 |        0 |       0 |       0 |                   
   ...ionManager.ts |       0 |        0 |       0 |       0 | 1-672             
- src/test-utils    |       0 |        0 |       0 |       0 |                   
-  ...omMatchers.ts |       0 |        0 |       0 |       0 | 1-56              
-  ...andContext.ts |       0 |        0 |       0 |       0 | 1-110             
-  ...Controller.ts |       0 |        0 |       0 |       0 | 1-18              
-  render.tsx       |       0 |        0 |       0 |       0 | 1-18              
- src/ui            |       0 |        0 |       0 |       0 |                   
+ src/test-utils    |   80.15 |      100 |      80 |   80.15 |                   
+  ...omMatchers.ts |   21.21 |      100 |       0 |   21.21 | 23-51             
+  ...andContext.ts |     100 |      100 |     100 |     100 |                   
+  ...Controller.ts |     100 |      100 |     100 |     100 |                   
+  render.tsx       |     100 |      100 |     100 |     100 |                   
+ src/ui            |    2.57 |    53.84 |   14.28 |    2.57 |                   
   App.tsx          |       0 |        0 |       0 |       0 | 1-2312            
   ...tionNudge.tsx |       0 |        0 |       0 |       0 | 1-96              
-  colors.ts        |       0 |        0 |       0 |       0 | 1-56              
+  colors.ts        |   51.02 |      100 |      20 |   51.02 | ...46,48-49,54-55 
   constants.ts     |       0 |        0 |       0 |       0 | 1-27              
   keyMatchers.ts   |       0 |        0 |       0 |       0 | 1-98              
   ...tic-colors.ts |       0 |        0 |       0 |       0 | 1-26              
   textConstants.ts |       0 |        0 |       0 |       0 | 1-13              
-  types.ts         |       0 |        0 |       0 |       0 | 1-206             
- src/ui/commands   |       0 |     2.32 |    2.32 |       0 |                   
+  types.ts         |     100 |      100 |     100 |     100 |                   
+ src/ui/commands   |    2.37 |    36.25 |    8.33 |    2.37 |                   
   aboutCommand.ts  |       0 |        0 |       0 |       0 | 1-50              
   agentsCommand.ts |       0 |        0 |       0 |       0 | 1-37              
   ...odeCommand.ts |       0 |        0 |       0 |       0 | 1-434             
@@ -105,7 +105,7 @@ All files          |       0 |     0.97 |    0.97 |       0 |
   quitCommand.ts   |       0 |        0 |       0 |       0 | 1-65              
   ...rchCommand.ts |       0 |        0 |       0 |       0 | 1-542             
   ...oreCommand.ts |       0 |        0 |       0 |       0 | 1-153             
-  resumeCommand.ts |       0 |        0 |       0 |       0 | 1-334             
+  resumeCommand.ts |   42.69 |    71.05 |   42.85 |   42.69 | ...72-273,284-311 
   ...onsCommand.ts |       0 |        0 |       0 |       0 | 1-82              
   ...ngsCommand.ts |       0 |        0 |       0 |       0 | 1-18              
   ...hubCommand.ts |       0 |        0 |       0 |       0 | 1-209             
@@ -116,7 +116,7 @@ All files          |       0 |     0.97 |    0.97 |       0 |
   tokensCommand.ts |       0 |        0 |       0 |       0 | 1-97              
   toolsCommand.ts  |       0 |        0 |       0 |       0 | 1-71              
   ...setCommand.ts |       0 |        0 |       0 |       0 | 1-397             
-  types.ts         |       0 |        0 |       0 |       0 | 1-207             
+  types.ts         |     100 |      100 |     100 |     100 |                   
   viewCommand.ts   |       0 |        0 |       0 |       0 | 1-109             
   vimCommand.ts    |       0 |        0 |       0 |       0 | 1-26              
  ...commands/utils |       0 |        0 |       0 |       0 |                   
@@ -153,7 +153,7 @@ All files          |       0 |     0.97 |    0.97 |       0 |
   ...KeyPrompt.tsx |       0 |        0 |       0 |       0 | 1-150             
   ...ionDialog.tsx |       0 |        0 |       0 |       0 | 1-74              
   ...hProgress.tsx |       0 |        0 |       0 |       0 | 1-268             
-  ResumeDialog.tsx |       0 |        0 |       0 |       0 | 1-99              
+  ResumeDialog.tsx |       0 |        0 |       0 |       0 | 1-123             
   ...ryDisplay.tsx |       0 |        0 |       0 |       0 | 1-17              
   ...ngsDialog.tsx |       0 |        0 |       0 |       0 | 1-835             
   ...ionDialog.tsx |       0 |        0 |       0 |       0 | 1-101             
@@ -183,9 +183,9 @@ All files          |       0 |     0.97 |    0.97 |       0 |
   UserMessage.tsx  |       0 |        0 |       0 |       0 | 1-47              
   ...llMessage.tsx |       0 |        0 |       0 |       0 | 1-25              
   ViewMessage.tsx  |       0 |        0 |       0 |       0 | 1-106             
- ...ponents/shared |       0 |        0 |       0 |       0 |                   
+ ...ponents/shared |    4.23 |     62.5 |   33.33 |    4.23 |                   
   MaxSizedBox.tsx  |       0 |        0 |       0 |       0 | 1-624             
-  ...tonSelect.tsx |       0 |        0 |       0 |       0 | 1-244             
+  ...tonSelect.tsx |   74.69 |    69.44 |     100 |   74.69 | ...26-163,228,238 
   TextInput.tsx    |       0 |        0 |       0 |       0 | 1-194             
   text-buffer.ts   |       0 |        0 |       0 |       0 | 1-1944            
   ...er-actions.ts |       0 |        0 |       0 |       0 | 1-813             
@@ -213,8 +213,8 @@ All files          |       0 |     0.97 |    0.97 |       0 |
   ...gerDialog.tsx |       0 |        0 |       0 |       0 | 1-332             
  ...agents/runtime |       0 |        0 |       0 |       0 |                   
   ...onDisplay.tsx |       0 |        0 |       0 |       0 | 1-550             
- src/ui/contexts   |       0 |        0 |       0 |       0 |                   
-  ...ssContext.tsx |       0 |        0 |       0 |       0 | 1-513             
+ src/ui/contexts   |   18.07 |    35.13 |   28.57 |   18.07 |                   
+  ...ssContext.tsx |   27.18 |    40.62 |   44.44 |   27.18 | ...49-455,463-497 
   ...owContext.tsx |       0 |        0 |       0 |       0 | 1-88              
   ...onContext.tsx |       0 |        0 |       0 |       0 | 1-148             
   ...gsContext.tsx |       0 |        0 |       0 |       0 | 1-20              
@@ -222,7 +222,7 @@ All files          |       0 |     0.97 |    0.97 |       0 |
   ...deContext.tsx |       0 |        0 |       0 |       0 | 1-80              
  src/ui/editors    |       0 |        0 |       0 |       0 |                   
   ...ngsManager.ts |       0 |        0 |       0 |       0 | 1-66              
- src/ui/hooks      |       0 |     2.04 |    2.04 |       0 |                   
+ src/ui/hooks      |    0.39 |    11.53 |    4.08 |    0.39 |                   
   ...dProcessor.ts |       0 |        0 |       0 |       0 | 1-480             
   ...dProcessor.ts |       0 |        0 |       0 |       0 | 1-313             
   ...dProcessor.ts |       0 |        0 |       0 |       0 | 1-830             
@@ -236,14 +236,14 @@ All files          |       0 |     0.97 |    0.97 |       0 |
   ...leMessages.ts |       0 |        0 |       0 |       0 | 1-110             
   ...ialogClose.ts |       0 |        0 |       0 |       0 | 1-121             
   ...orSettings.ts |       0 |        0 |       0 |       0 | 1-75              
-  useFocus.ts      |       0 |        0 |       0 |       0 | 1-48              
+  useFocus.ts      |    25.8 |      100 |       0 |    25.8 | 19-48             
   ...olderTrust.ts |       0 |        0 |       0 |       0 | 1-85              
   ...miniStream.ts |       0 |        0 |       0 |       0 | 1-1689            
   ...BranchName.ts |       0 |        0 |       0 |       0 | 1-79              
   ...KeyRouting.ts |       0 |      100 |     100 |       0 | 6-28              
   ...oryManager.ts |       0 |        0 |       0 |       0 | 1-111             
   ...putHistory.ts |       0 |        0 |       0 |       0 | 1-111             
-  useKeypress.ts   |       0 |        0 |       0 |       0 | 1-36              
+  useKeypress.ts   |     100 |      100 |     100 |     100 |                   
   ...rdProtocol.ts |       0 |        0 |       0 |       0 | 1-31              
   ...unchEditor.ts |       0 |        0 |       0 |       0 | 1-82              
   ...gIndicator.ts |       0 |        0 |       0 |       0 | 1-57              
@@ -282,28 +282,28 @@ All files          |       0 |     0.97 |    0.97 |       0 |
   ...acyNotice.tsx |       0 |        0 |       0 |       0 | 1-59              
   ...acyNotice.tsx |       0 |        0 |       0 |       0 | 1-62              
   ...acyNotice.tsx |       0 |        0 |       0 |       0 | 1-41              
- src/ui/themes     |       0 |        0 |       0 |       0 |                   
-  ansi-light.ts    |       0 |        0 |       0 |       0 | 1-150             
-  ansi.ts          |       0 |        0 |       0 |       0 | 1-159             
-  atom-one-dark.ts |       0 |        0 |       0 |       0 | 1-145             
-  ayu-light.ts     |       0 |        0 |       0 |       0 | 1-137             
-  ayu.ts           |       0 |        0 |       0 |       0 | 1-111             
-  color-utils.ts   |       0 |        0 |       0 |       0 | 1-231             
-  default-light.ts |       0 |        0 |       0 |       0 | 1-106             
-  default.ts       |       0 |        0 |       0 |       0 | 1-149             
-  dracula.ts       |       0 |        0 |       0 |       0 | 1-122             
-  github-dark.ts   |       0 |        0 |       0 |       0 | 1-145             
-  github-light.ts  |       0 |        0 |       0 |       0 | 1-147             
-  googlecode.ts    |       0 |        0 |       0 |       0 | 1-144             
-  no-color.ts      |       0 |        0 |       0 |       0 | 1-126             
-  qwen-dark.ts     |       0 |        0 |       0 |       0 | 1-113             
-  qwen-light.ts    |       0 |        0 |       0 |       0 | 1-139             
-  ...tic-tokens.ts |       0 |        0 |       0 |       0 | 1-127             
-  ...-of-purple.ts |       0 |        0 |       0 |       0 | 1-350             
-  theme-manager.ts |       0 |        0 |       0 |       0 | 1-338             
-  theme.ts         |       0 |        0 |       0 |       0 | 1-481             
-  xcode.ts         |       0 |        0 |       0 |       0 | 1-152             
- src/ui/utils      |       0 |        0 |       0 |       0 |                   
+ src/ui/themes     |    87.2 |    80.76 |   31.81 |    87.2 |                   
+  ansi-light.ts    |     100 |      100 |     100 |     100 |                   
+  ansi.ts          |     100 |      100 |     100 |     100 |                   
+  atom-one-dark.ts |     100 |      100 |     100 |     100 |                   
+  ayu-light.ts     |     100 |      100 |     100 |     100 |                   
+  ayu.ts           |     100 |      100 |     100 |     100 |                   
+  color-utils.ts   |    90.2 |    71.42 |      50 |    90.2 | ...14-215,227-231 
+  default-light.ts |     100 |      100 |     100 |     100 |                   
+  default.ts       |     100 |      100 |     100 |     100 |                   
+  dracula.ts       |     100 |      100 |     100 |     100 |                   
+  github-dark.ts   |     100 |      100 |     100 |     100 |                   
+  github-light.ts  |     100 |      100 |     100 |     100 |                   
+  googlecode.ts    |     100 |      100 |     100 |     100 |                   
+  no-color.ts      |     100 |      100 |     100 |     100 |                   
+  qwen-dark.ts     |     100 |      100 |     100 |     100 |                   
+  qwen-light.ts    |     100 |      100 |     100 |     100 |                   
+  ...tic-tokens.ts |     100 |      100 |     100 |     100 |                   
+  ...-of-purple.ts |     100 |      100 |     100 |     100 |                   
+  theme-manager.ts |   31.06 |    57.14 |   23.07 |   31.06 | ...51-307,310-334 
+  theme.ts         |   37.16 |      100 |   42.85 |   37.16 | ...53-448,459-481 
+  xcode.ts         |     100 |      100 |     100 |     100 |                   
+ src/ui/utils      |    0.85 |        0 |       0 |    0.85 |                   
   ...Colorizer.tsx |       0 |        0 |       0 |       0 | 1-217             
   ...olePatcher.ts |       0 |        0 |       0 |       0 | 1-71              
   ...nRenderer.tsx |       0 |        0 |       0 |       0 | 1-225             
@@ -317,7 +317,7 @@ All files          |       0 |     0.97 |    0.97 |       0 |
   isNarrowWidth.ts |       0 |        0 |       0 |       0 | 1-9               
   ...olDetector.ts |       0 |        0 |       0 |       0 | 1-105             
   ...nUtilities.ts |       0 |        0 |       0 |       0 | 1-125             
-  ...mConstants.ts |       0 |        0 |       0 |       0 | 1-60              
+  ...mConstants.ts |     100 |      100 |     100 |     100 |                   
   terminalSetup.ts |       0 |        0 |       0 |       0 | 1-342             
   textUtils.ts     |       0 |        0 |       0 |       0 | 1-89              
   updateCheck.ts   |       0 |        0 |       0 |       0 | 1-101             

@@ -27,16 +27,40 @@ interface ResumeDialogProps {
   onClose: () => void;
 }
 
-function formatCheckpointLabel(checkpoint: ResumeCheckpointOption): string {
+// Color codes for different session IDs - consistent with resumeCommand.ts
+const getSessionColor = (sessionId: string): string => {
+  // Use the first few characters of the session ID to generate a consistent color
+  const hash = sessionId.substring(0, 8);
+  const num = parseInt(hash, 16) || 0;
+  // Map to Ink colors that work well with themes
+  const colors = [
+    Colors.AccentBlue,
+    Colors.AccentPurple,
+    Colors.AccentCyan,
+    Colors.AccentGreen,
+    Colors.AccentYellow,
+    Colors.AccentRed,
+    Colors.LightBlue,
+  ];
+  return colors[num % colors.length];
+};
+
+function formatCheckpointLabel(checkpoint: ResumeCheckpointOption): React.ReactNode {
   const isoString = checkpoint.createdAt.toISOString();
   const match = isoString.match(/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
   const formattedDate = match ? `${match[1]} ${match[2]}` : "Invalid Date";
   const shortSessionId = checkpoint.sessionId.slice(0, 8);
+  const sessionColor = getSessionColor(checkpoint.sessionId);
   const preview = checkpoint.lastMessagePreview
     ? ` - ${checkpoint.lastMessagePreview}`
     : "";
 
-  return `[${checkpoint.messageCount} messages] ${shortSessionId} ${formattedDate}${preview}`;
+  return (
+    <Text>
+      <Text color={Colors.Gray}>[{checkpoint.messageCount} messages]</Text>{" "}
+      <Text color={sessionColor}>{shortSessionId}</Text> {formattedDate}{preview}
+    </Text>
+  );
 }
 
 export const ResumeDialog: React.FC<ResumeDialogProps> = ({

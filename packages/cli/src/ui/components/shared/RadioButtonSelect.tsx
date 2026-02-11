@@ -15,7 +15,7 @@ import { useKeypress } from "../../hooks/useKeypress.js";
  * Requires a label for display and a value to be returned on selection.
  */
 export interface RadioSelectItem<T> {
-  label: string;
+  label: React.ReactNode;
   value: T;
   disabled?: boolean;
   themeNameDisplay?: string;
@@ -220,10 +220,12 @@ export function RadioButtonSelect<T>({
                 {item.themeNameDisplay}{" "}
                 <Text color={Colors.Gray}>{item.themeTypeDisplay}</Text>
               </Text>
-            ) : (
+            ) : typeof item.label === "string" ? (
               <Text color={textColor} wrap="truncate">
                 {item.label}
               </Text>
+            ) : (
+              <Box>{item.label}</Box>
             )}
           </Box>
         );
