@@ -121,6 +121,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -137,6 +139,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -353,6 +360,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -369,6 +378,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -595,6 +609,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -611,6 +627,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -822,6 +843,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -838,6 +861,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -1049,6 +1077,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -1065,6 +1095,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -1276,6 +1311,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -1292,6 +1329,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -1503,6 +1545,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -1519,6 +1563,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -1730,6 +1779,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -1746,6 +1797,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -1957,6 +2013,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -1973,6 +2031,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -2184,6 +2247,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -2200,6 +2265,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -2434,6 +2504,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -2450,6 +2522,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -2744,6 +2821,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -2760,6 +2839,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -2994,6 +3078,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -3010,6 +3096,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -3300,6 +3391,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -3316,6 +3409,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.
@@ -3527,6 +3625,8 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - **Task tracking:** Maintain the todo list for multi-step work and update statuses promptly.
 - **Subagents:** Delegate via the task tool when a specialized agent matches the request.
 - **Memory:** Store only durable, user-specific facts with the memory tool; skip project trivia.
+- **Launch returns:** After \`launch_task\`, use \`read_session_messages action=wait\` (or pull/peek) instead of polling launch logs.
+- **No duplicate launches:** If \`wait\` times out, do not launch the same objective again; continue waiting or report that it is still running.
 - **Approvals:** Respect cancelled tool calls and retry only when the user explicitly asks.
 
 ### Available Tools
@@ -3543,6 +3643,11 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`exit_plan_mode\` — Exit plan mode after presenting the plan for user confirmation. Example: \`exit_plan_mode\`.
 - \`web_fetch\` — Fetch HTML content, summarize it with a custom prompt, and report relevant findings. Example: \`web_fetch https://example.com/docs\`.
 - \`web_search\` — Search the web via Tavily to gather up-to-date information with cited sources. Example: \`web_search latest Node.js LTS release\`.
+- \`searxng_search\` — Search the web using your local SearXNG instance for private, non-API-key search results. Example: \`searxng_search privacy-focused alternatives to Google Search\`.
+- \`schedule_task\` — Create/manage cron jobs for recurring automation. Example: \`schedule_task action=create id=nightly schedule='0 2 * * *' ...\`.
+- \`launch_task\` — Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: \`launch_task action=create id=task-1 prompt='...'\`.
+- \`read_session_messages\` — Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: \`read_session_messages action=wait\`.
+- \`research\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
 - **Help Command:** The user can use '/help' to display help information.

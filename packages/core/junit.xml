@@ -1,3 +1,85 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="0" failures="0" errors="0" time="0">
+<testsuites name="vitest tests" tests="40" failures="0" errors="0" time="0.014437728">
+    <testsuite name="src/core/prompts.test.ts" timestamp="2026-02-11T16:23:50.915Z" hostname="uby" tests="40" failures="0" errors="0" skipped="0" time="0.014437728">
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should return the base prompt when no userMemory is provided" time="0.002896571">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should return the base prompt when userMemory is empty string" time="0.000452157">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should return the base prompt when userMemory is whitespace only" time="0.000269188">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should append userMemory with separator when provided" time="0.000299234">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should include sandbox-specific instructions when SANDBOX env var is set" time="0.000259921">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should include seatbelt-specific instructions when SANDBOX env var is &quot;sandbox-exec&quot;" time="0.000249432">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should include non-sandbox instructions when SANDBOX env var is not set" time="0.000266784">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should include git instructions when in a git repo" time="0.000238943">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; should not include git instructions when not in a git repo" time="0.000213555">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should use default prompt when GEMINI_SYSTEM_MD is &quot;false&quot;" time="0.000889306">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should use default prompt when GEMINI_SYSTEM_MD is &quot;0&quot;" time="0.000226589">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should throw error if GEMINI_SYSTEM_MD points to a non-existent file" time="0.000577098">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should read from default path when GEMINI_SYSTEM_MD is &quot;true&quot;" time="0.000828914">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should read from default path when GEMINI_SYSTEM_MD is &quot;1&quot;" time="0.000212203">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should read from custom path when GEMINI_SYSTEM_MD provides one, preserving case" time="0.000180193">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_SYSTEM_MD environment variable &gt; should expand tilde in custom path when GEMINI_SYSTEM_MD is set" time="0.000257867">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should not write to file when GEMINI_WRITE_SYSTEM_MD is &quot;false&quot;" time="0.00020023">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should not write to file when GEMINI_WRITE_SYSTEM_MD is &quot;0&quot;" time="0.000159726">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should write to default path when GEMINI_WRITE_SYSTEM_MD is &quot;true&quot;" time="0.0005778">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should write to default path when GEMINI_WRITE_SYSTEM_MD is &quot;1&quot;" time="0.000355588">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should write to custom path when GEMINI_WRITE_SYSTEM_MD provides one" time="0.000231278">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should expand tilde in custom path when GEMINI_WRITE_SYSTEM_MD is set" time="0.000290868">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Core System Prompt (prompts.ts) &gt; GEMINI_WRITE_SYSTEM_MD environment variable &gt; should expand tilde in custom path when GEMINI_WRITE_SYSTEM_MD is just ~" time="0.000265751">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="URL matching with trailing slash compatibility &gt; should match URLs with and without trailing slash" time="0.000645004">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="URL matching with trailing slash compatibility &gt; should not match when URLs are different" time="0.000212263">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should use XML format for qwen3-coder model" time="0.000302199">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should use JSON format for qwen-vl model" time="0.000316486">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should use bracket format for generic models" time="0.000308611">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should use bracket format when no model is specified" time="0.000267154">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should preserve model-specific formats with user memory" time="0.000238662">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="Model-specific tool call formats &gt; should preserve model-specific formats with sandbox environment" time="0.000222802">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="getCustomSystemPrompt &gt; should handle string custom instruction without user memory" time="0.000101307">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="getCustomSystemPrompt &gt; should handle string custom instruction with user memory" time="0.000047097">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="getCustomSystemPrompt &gt; should handle Content object with parts array and user memory" time="0.000062606">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="getSubagentSystemReminder &gt; should format single agent type correctly" time="0.000109904">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="getSubagentSystemReminder &gt; should join multiple agent types with commas" time="0.000034544">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="getSubagentSystemReminder &gt; should handle empty array" time="0.000034213">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="getPlanModeSystemReminder &gt; should return plan mode system reminder with proper structure" time="0.000074999">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="getPlanModeSystemReminder &gt; should include workflow instructions" time="0.000041697">
+        </testcase>
+        <testcase classname="src/core/prompts.test.ts" name="getPlanModeSystemReminder &gt; should be deterministic" time="0.000025467">
+        </testcase>
+    </testsuite>
 </testsuites>
