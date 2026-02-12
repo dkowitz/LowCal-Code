@@ -1,8 +1,8 @@
 {
   "running": true,
-  "pid": 11918,
-  "started_at": "2026-02-09T18:13:49.282Z",
-  "last_tick": "2026-02-12T01:08:51.340Z",
+  "pid": 1119462,
+  "started_at": "2026-02-12T10:51:28.518Z",
+  "last_tick": "2026-02-12T11:59:14.760Z",
   "tick_interval_ms": 15000,
   "policy_ids": [
     "recover_stalled_session"
@@ -12,8 +12,8 @@
   "recoveries_attempted": 0,
   "recoveries_succeeded": 0,
   "last_action": {
-    "timestamp": "2026-02-11T22:32:47.020Z",
-    "session_id": "6cc381dc-09c0-43ac-8fa0-69342dbf6e07",
+    "timestamp": "2026-02-12T11:58:59.756Z",
+    "session_id": "49fe59d2-8350-468d-9ce2-6d5764466c09",
     "outcome": "removed_dead_session_record",
     "attempt": 1
   }

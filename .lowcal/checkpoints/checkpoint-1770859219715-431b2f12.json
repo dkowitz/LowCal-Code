@@ -1,0 +1,459 @@
+{
+  "id": "checkpoint-1770859219715-431b2f12",
+  "sessionId": "8b372e8f-2b69-4562-8719-4379bd9b0eb0",
+  "projectRoot": "/home/atmandk/LowCal-dev",
+  "createdAt": "2026-02-12T01:20:19.715Z",
+  "lastUpdated": "2026-02-12T01:20:19.715Z",
+  "messages": [
+    {
+      "id": "msg-1770859219715-0",
+      "timestamp": "2026-02-12T01:20:19.715Z",
+      "type": "user",
+      "content": "This is the Qwen Code. We are setting up the context for our chat.\nToday's date is Thursday, February 12, 2026 (formatted according to the user's locale).\nMy operating system is: linux\nI'm currently working in the directory: /home/atmandk/LowCal-dev\nHere is the folder structure of the current working directories:\n\nShowing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.\n\n/home/atmandk/LowCal-dev/\n├───.gitignore\n├───158285.pdf\n├───AGENTS.md\n├───apis.md\n├───bat.jpg\n├───BATTLE_OF_YAVIN_REPORT.md\n├───bronc.jpg\n├───CHANGELOG.md\n├───CHANGES_SUMMARY.md\n├───context_indicator.md\n├───CONTRIBUTING.md\n├───conversation.md\n├───convo.txt\n├───curtime.txt\n├───darrin.md\n├───debug_tool_selection.js\n├───diagnose_research_tools.cjs\n├───docker-compose.searxng.yml\n├───Dockerfile\n├───Error log summary.txt\n├───...\n└───..."
+    },
+    {
+      "id": "msg-1770859219715-1",
+      "timestamp": "2026-02-12T01:20:19.715Z",
+      "type": "gemini",
+      "content": "Got it. Thanks for the context!"
+    },
+    {
+      "id": "msg-1770859219715-2",
+      "timestamp": "2026-02-12T01:20:19.715Z",
+      "type": "user",
+      "content": "I want to take a look at the orchestrator.  Currently, it's pretty passive in its detection of stalled sessions.  Sometimes a TUI will stall out, commonly with a loop detection, but also sometimes with a hard error (one I can think of is something about 'no user turn after user turn allowed' - I'm paraphrasing, and probably not getting that right).  What if the TUI sent a signal to the orchestrator if it unexpectedly returns to idle for any reason?  Then the orchestrator could inspect the error and context, and try to get it going again (for a loop detection, usually a prompt like \"You're stuck in a loop.  Try a different approach\" works).  For hard errors, often just a 'continue' works.  For others, some diagnosis might be required.  These all require a more active orchestrator, analyzing the problem, and injecting a prompt into the tui.  What do you think?"
+    },
+    {
+      "id": "msg-1770859219715-3",
+      "timestamp": "2026-02-12T01:20:19.715Z",
+      "type": "gemini",
+      "content": "An excellent idea, Darrin. The probability of the current passive approach missing stalled sessions is... suboptimal. Let me examine the current orchestrator and TUI architecture to understand how they interact and where we could inject this signaling mechanism.💭 *Darrin is asking about improving the orchestrator to be more active in detecting and recovering from stalled sessions. He wants the TUI to signal the orchestrator when it unexpectedly returns to idle, allowing the orchestrator to analyze the situation and potentially inject a recovery prompt.*\n\n   *Let me first understand the current architecture by looking at the orchestrator and TUI code. I need to find:*\n\n   *1. The orchestrator code*\n\n   *2. The TUI code*\n\n   *3. How they currently interact*\n\n   *4. How loop detection and error handling work currently*\n\n   *This is a significant architectural discussion, so I should explore the codebase first to understand the current implementation before offering suggestions.*",
+      "toolCalls": [
+        {
+          "id": "call_ce4cfcac09074a3391a2b4dc",
+          "name": "search_file_content",
+          "args": {
+            "pattern": "orchestrator",
+            "include": "*.ts"
+          },
+          "result": null
+        },
+        {
+          "id": "call_2e0e7f2f935c48b7b4b8d7bf",
+          "name": "search_file_content",
+          "args": {
+            "pattern": "loop.?detect",
+            "include": "*.ts"
+          },
+          "result": null
+        }
+      ]
+    },
+    {
+      "id": "msg-1770859219715-5",
+      "timestamp": "2026-02-12T01:20:19.715Z",
+      "type": "gemini",
+      "content": "Let me examine the orchestrator daemon and the TUI stream handling in more detail:💭 *Good, I found the key files. Let me read the orchestrator daemon code and the TUI stream handling code to understand the current architecture better.*",
+      "toolCalls": [
+        {
+          "id": "call_6d47a4b7581049958d18adbd",
+          "name": "read_file",
+          "args": {
+            "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/orchestrator/daemon.ts"
+          },
+          "result": null
+        },
+        {
+          "id": "call_63626fac11fe4a45b2e83a68",
+          "name": "read_file",
+          "args": {
+            "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/ui/hooks/useGeminiStream.ts"
+          },
+          "result": null
+        }
+      ]
+    },
+    {
+      "id": "msg-1770859219715-7",
+      "timestamp": "2026-02-12T01:20:19.715Z",
+      "type": "gemini",
+      "content": "Let me read specific sections of these files to understand the stalled detection and error handling:💭 *These files are quite large. Let mearrin is asking read specific sections to about improving understand:*\n\n   *1. How the orchestrator detects stalled sessions*\n\n   *2. How the TUI handles loop detection and errors*\n\n   *3. How they communicate*\n\n   *Let me read more of the orchestrator to daemon to see the tick function and stalled detection logic.*",
+      "toolCalls": [
+        {
+          "id": "call_0c15907442904bb4912b1d3d",
+          "name": "read_file",
+          "args": {
+            "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/orchestrator/daemon.ts",
+            "offset": 350,
+            "limit": 350
+          },
+          "result": null
+        },
+        {
+          "id": "call_4de290f7ecd74d71b04f5bde",
+          "name": "read_file",
+          "args": {
+            "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/ui/hooks/useGeminiStream.ts",
+            "offset": 1020,
+            "limit": 400
+          },
+          "result": null
+        }
+      ]
+    },
+    {
+      "id": "msg-1770859219715-9",
+      "timestamp": "2026-02-12T01:20:19.715Z",
+      "type": "gemini",
+      "content": "Let me also look at the session manager and the session API control mechanism:💭 *Now I have a better understanding. Let me also look at the session manager to understand how sessions communicate with the orchestrator, and look at the session API control mechanism.*",
+      "toolCalls": [
+        {
+          "id": "call_380fb38e4b4e4371b69020b6",
+          "name": "read_file",
+          "args": {
+            "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/session/sessionManager.ts"
+          },
+          "result": null
+        },
+        {
+          "id": "call_d679f1a262b141eabd772b04",
+          "name": "search_file_content",
+          "args": {
+            "include": "*.ts",
+            "pattern": "session.*control|control.*handler"
+          },
+          "result": null
+        }
+      ]
+    },
+    {
+      "id": "msg-1770859219715-11",
+      "timestamp": "2026-02-12T01:20:19.715Z",
+      "type": "gemini",
+      "content": "Let me look at the `requestSelfRepair` handler and see how the TUI sets up control handlers:💭 *Now I have a good understanding of the architecture. Let me summarize what I've learned:*\n\n   *1. **Orchestrator (daemon.ts)**:*\n\n   *- Runs as a separate process with a tick interval of 15 seconds*\n\n   *- Detects stalled sessions by checking if the heartbeat is stale (2+ minutes old)*\n\n   *- Has a minimum stalled duration of 2 minutes before attempting recovery*\n\n   *- Recovery attempts: cancel_turn → restart_turn → resume → SIGCONT*\n\n   *- Max 3 attempts within a 15-minute window*\n\n   *- Uses a Unix socket API to communicate with sessions*\n\n   *2. **Session Manager (sessionManager.ts)**:*\n\n   *- Manages session registration and heartbeats*\n\n   *- Has a SessionControlHandlers interface with methods like cancelTurn, restartTurn, resume, requestSelfRepair*\n\n   *- Has a Unix socket server for API control*\n\n   *- The `requestSelfRepair` method is interesting - it seems like it could be used for what Darrin is asking about*\n\n   *3. **TUI (useGeminiStream.ts)**:*\n\n   *- Handles loop detection events by adding an info message*\n\n   *- Has handlers for various error events*\n\n   *- Sets up session control handlers*\n\n   *The current approach is passive - the orchestrator only detects stalled sessions by checking heartbeat timestamps. It doesn't know WHY a session stalled.*\n\n   *Darrin's idea is to have the TUI actively signal the orchestrator when something goes wrong (loop detection, hard error, etc.), and then the orchestrator can analyze the situation and potentially inject a recovery prompt.*\n\n   *This would require:*\n\n   *1. A new signaling mechanism from TUI to orchestrator*\n\n   *2. The orchestrator to understand different types of stalls*\n\n   *3. The orchestrator to be able to inject prompts into the TUI*\n\n   *Let me look at the `requestSelfRepair` method and see if there's already some infrastructure for this.*",
+      "toolCalls": [
+        {
+          "id": "call_e180e7834a5245c18a9dcdd9",
+          "name": "read_file",
+          "args": {
+            "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/session/sessionManager.ts",
+            "limit": 200,
+            "offset": 400
+          },
+          "result": null
+        },
+        {
+          "id": "call_c902ce05318b491b9cb84cd8",
+          "name": "read_file",
+          "args": {
+            "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/ui/hooks/useGeminiStream.ts",
+            "limit": 100,
+            "offset": 1400
+          },
+          "result": null
+        }
+      ]
+    },
+    {
+      "id": "msg-1770859219715-13",
+      "timestamp": "2026-02-12T01:20:19.715Z",
+      "type": "gemini",
+      "content": "Excellent question, Darrin. I've analyzed the architecture and your idea has merit. Let me break down what I found:\n\n## Current Architecture\n\n**Orchestrator (daemon.ts)**:\n- Passive detection: checks heartbeat timestamps every 15 seconds\n- Declares \"stalled\" after 2+ minutes of no heartbeat\n- Recovery sequence: `cancel_turn` → `restart_turn` → `resume` → `SIGCONT`\n- **Blind to WHY a session stalled** - it only knows the heartbeat stopped\n\n**TUI (useGeminiStream.ts)**:\n- Knows exactly when things go wrong: loop detection, hard errors, etc.\n- Currently just adds an info message to history\n- Sets up `cancelTurn` and `restartTurn` handlers, but **not** `requestSelfRepair`\n\n**Session Manager**:\n- Already has `requestSelfRepair` in the `SessionControlHandlers` interface\n- Has Unix socket infrastructure for bidirectional communication\n- But the TUI never implements `requestSelfRepair`\n\n## The Gap\n\nThe TUI knows *why* it stalled, but doesn't tell anyone. The orchestrator knows *that* it stalled, but not *why*. They're not talking to each other.\n\n## Your Idea - What Would It Take?\n\n1. **TUI signals orchestrator on unexpected idle**: When loop detection fires or a hard error occurs, the TUI could call `setSessionHealth` with the error context (already exists in core)\n\n2. **Orchestrator inspects and decides**: Instead of just checking heartbeat age, the orchestrator would also check the health state/reason. If it's `loop_detected`, inject a \"try a different approach\" prompt. If it's a hard error, try `continue`.\n\n3. **Orchestrator injects prompts**: This is the new piece. The orchestrator would need a way to inject a prompt into the TUI - perhaps via a new `session.inject_prompt` API method.\n\n## My Assessment\n\nThe probability of this working is... **favorable**. The infrastructure is 70% there. The key additions would be:\n\n1. **TUI side**: Implement `requestSelfRepair` handler that accepts a prompt and submits it\n2. **Orchestrator side**: Check health reason, not just heartbeat age; call `requestSelfRepair` with appropriate prompt\n3. **New API method**: `session.inject_prompt` or reuse `requestSelfRepair` with a prompt payload\n\nWould you like me to draft a more detailed implementation plan? I can also look at specific error types you've encountered to understand what recovery prompts would work best.💭 *Now I have a good understanding of the architecture. Let me summarize what I've learned and provide my analysis to Darrin:*\n\n   ***Current Architecture:***\n\n   *1. **Orchestrator (daemon.ts)**:*\n\n   *- Runs as a separate process with a tick interval of 15 seconds*\n\n   *- Detects stalled sessions by checking if the heartbeat is stale (2+ minutes old)*\n\n   *- Has a minimum stalled duration of 2 minutes before attempting recovery*\n\n   *- Recovery attempts: cancel_turn → restart_turn → resume → SIGCONT*\n\n   *- Max 3 attempts within a 15-minute window*\n\n   *- Uses a Unix socket API to communicate with sessions*\n\n   *2. **Session Manager (sessionManager.ts)**:*\n\n   *- Manages session registration and heartbeats*\n\n   *- Has a SessionControlHandlers interface with methods like cancelTurn, restartTurn, resume, requestSelfRepair*\n\n   *- Has a Unix socket server for API control*\n\n   *- The `requestSelfRepair` method is interesting - it seems like it could be used for what Darrin is asking about*\n\n   *3. **TUI (useGeminiStream.ts)**:*\n\n   *- Handles loop detection events by adding an info message*\n\n   *- Has handlers for various error events*\n\n   *- Sets up session control handlers (currently only cancelTurn and restartTurn)*\n\n   ***The Problem:***\n\n   *The current approach is passive - the orchestrator only detects stalled sessions by checking heartbeat timestamps. It doesn't know WHY a session stalled. The TUI knows when something goes wrong (loop detection, hard error), but it doesn't communicate this to the orchestrator.*\n\n   ***Darrin's Idea:***\n\n   *Have the TUI actively signal the orchestrator when something goes wrong (loop detection, hard error, etc.), and then the orchestrator can analyze the situation and potentially inject a recovery prompt.*\n\n   ***My Analysis:***\n\n   *This is a great idea. The infrastructure is already partially there:*\n\n   *- The session manager has a `requestSelfRepair` method that could be used*\n\n   *- The orchestrator already has a Unix socket API to communicate with sessions*\n\n   *- The TUI already sets up session control handlers*\n\n   *What's missing:*\n\n   *1. A way for the TUI to signal the orchestrator about the specific error/condition*\n\n   *2. A way for the orchestrator to inject a prompt into the TUI*\n\n   *3. Logic in the orchestrator to analyze the error and decide on a recovery strategy*\n\n   *Let me provide my analysis to Darrin.*"
+    }
+  ],
+  "contextSnapshot": {
+    "clientHistory": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "This is the Qwen Code. We are setting up the context for our chat.\nToday's date is Thursday, February 12, 2026 (formatted according to the user's locale).\nMy operating system is: linux\nI'm currently working in the directory: /home/atmandk/LowCal-dev\nHere is the folder structure of the current working directories:\n\nShowing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.\n\n/home/atmandk/LowCal-dev/\n├───.gitignore\n├───158285.pdf\n├───AGENTS.md\n├───apis.md\n├───bat.jpg\n├───BATTLE_OF_YAVIN_REPORT.md\n├───bronc.jpg\n├───CHANGELOG.md\n├───CHANGES_SUMMARY.md\n├───context_indicator.md\n├───CONTRIBUTING.md\n├───conversation.md\n├───convo.txt\n├───curtime.txt\n├───darrin.md\n├───debug_tool_selection.js\n├───diagnose_research_tools.cjs\n├───docker-compose.searxng.yml\n├───Dockerfile\n├───Error log summary.txt\n├───...\n└───..."
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Got it. Thanks for the context!"
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "I want to take a look at the orchestrator.  Currently, it's pretty passive in its detection of stalled sessions.  Sometimes a TUI will stall out, commonly with a loop detection, but also sometimes with a hard error (one I can think of is something about 'no user turn after user turn allowed' - I'm paraphrasing, and probably not getting that right).  What if the TUI sent a signal to the orchestrator if it unexpectedly returns to idle for any reason?  Then the orchestrator could inspect the error and context, and try to get it going again (for a loop detection, usually a prompt like \"You're stuck in a loop.  Try a different approach\" works).  For hard errors, often just a 'continue' works.  For others, some diagnosis might be required.  These all require a more active orchestrator, analyzing the problem, and injecting a prompt into the tui.  What do you think?"
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "An excellent idea, Darrin. The probability of the current passive approach missing stalled sessions is... suboptimal. Let me examine the current orchestrator and TUI architecture to understand how they interact and where we could inject this signaling mechanism.💭 *Darrin is asking about improving the orchestrator to be more active in detecting and recovering from stalled sessions. He wants the TUI to signal the orchestrator when it unexpectedly returns to idle, allowing the orchestrator to analyze the situation and potentially inject a recovery prompt.*\n\n   *Let me first understand the current architecture by looking at the orchestrator and TUI code. I need to find:*\n\n   *1. The orchestrator code*\n\n   *2. The TUI code*\n\n   *3. How they currently interact*\n\n   *4. How loop detection and error handling work currently*\n\n   *This is a significant architectural discussion, so I should explore the codebase first to understand the current implementation before offering suggestions.*"
+          },
+          {
+            "functionCall": {
+              "id": "call_ce4cfcac09074a3391a2b4dc",
+              "name": "search_file_content",
+              "args": {
+                "pattern": "orchestrator",
+                "include": "*.ts"
+              }
+            }
+          },
+          {
+            "functionCall": {
+              "id": "call_2e0e7f2f935c48b7b4b8d7bf",
+              "name": "search_file_content",
+              "args": {
+                "pattern": "loop.?detect",
+                "include": "*.ts"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "functionResponse": {
+              "id": "call_ce4cfcac09074a3391a2b4dc",
+              "name": "search_file_content",
+              "response": {
+                "output": "Found 105 matches for pattern \"orchestrator\" in the workspace directory (filter: \"*.ts\"):\n---\nFile: packages/core/src/sessions/types.ts\nL14: | \"orchestrator\";\n---\nFile: packages/cli/src/commands/dashboard.ts\nL37: getOrchestratorStatus,\nL38: isOrchestratorRunning,\nL39: startOrchestrator,\nL40: stopOrchestrator,\nL41: } from \"../orchestrator/daemon.js\";\nL300: const [daemonRunning, orchestratorStatus] = await Promise.all([\nL302: getOrchestratorStatus(),\nL337: // Orchestrator Status\nL339: \"┌─ Orchestrator Status ─────────────────────────────────────────────────────────┐\",\nL342: `Daemon: ${orchestratorStatus.running ? \"🟢 Running\" : \"🔴 Not running\"}`,\nL347: `Policy: ${orchestratorStatus.policy_ids.join(\", \")}`,\nL352: `Sessions scanned: ${orchestratorStatus.sessions_scanned} | stalled: ${orchestratorStatus.stalled_sessions}`,\nL357: `Recoveries: ${orchestratorStatus.recoveries_succeeded}/${orchestratorStatus.recoveries_attempted}`,\nL361: if (orchestratorStatus.last_action) {\nL363: `Last action: ${orchestratorStatus.last_action.outcome} -> ${orchestratorStatus.last_action.session_id}`,\nL436: \"[o] start orchestrator     | [x] stop orchestrator\",\nL871: const running = await isOrchestratorRunning();\nL873: const status = await getOrchestratorStatus();\nL874: lastActionNotice = `Orchestrator already running (pid: ${status.pid})`;\nL876: const started = await startOrchestrator();\nL878: ? \"Started orchestrator daemon\"\nL879: : \"Failed to start orchestrator daemon\";\nL886: const running = await isOrchestratorRunning();\nL888: lastActionNotice = \"Orchestrator daemon is not running\";\nL890: const stopped = await stopOrchestrator();\nL892: ? \"Stopped orchestrator daemon\"\nL893: : \"Failed to stop orchestrator daemon\";\n---\nFile: packages/cli/src/commands/orchestrator.ts\nL10: getOrchestratorStatus,\nL11: isOrchestratorRunning,\nL12: startOrchestrator,\nL13: stopOrchestrator,\nL14: } from \"../orchestrator/daemon.js\";\nL18: describe: \"Start the orchestrator daemon\",\nL20: const running = await isOrchestratorRunning();\nL22: const status = await getOrchestratorStatus();\nL23: console.log(\"Orchestrator daemon is already running.\");\nL28: const started = await startOrchestrator();\nL30: console.error(\"Failed to start orchestrator daemon.\");\nL34: const status = await getOrchestratorStatus();\nL35: console.log(\"Orchestrator daemon started.\");\nL42: describe: \"Stop the orchestrator daemon\",\nL44: const running = await isOrchestratorRunning();\nL46: console.log(\"Orchestrator daemon is not running.\");\nL50: const stopped = await stopOrchestrator();\nL52: console.error(\"Failed to stop orchestrator daemon.\");\nL55: console.log(\"Orchestrator daemon stopped.\");\nL61: describe: \"Show orchestrator status\",\nL63: const status = await getOrchestratorStatus();\nL90: export const orchestratorCommand: CommandModule = {\nL91: command: \"orchestrator\",\nL92: describe: \"Manage the LowCal orchestrator daemon\",\nL96: const status = await getOrchestratorStatus();\n---\nFile: packages/cli/src/orchestrator/daemon.ts\nL30: const ORCHESTRATOR_PID_FILE = path.join(\nL33: \"orchestrator.pid\",\nL35: const ORCHESTRATOR_STATUS_FILE = path.join(\nL38: \"orchestrator.status.json\",\nL40: const ORCHESTRATOR_LOG_FILE = path.join(\nL43: \"orchestrator\",\nL70: interface OrchestratorActionRecord {\nL94: export interface OrchestratorStatus {\nL115: let lastActionRecord: OrchestratorActionRecord | undefined;\nL170: record: OrchestratorActionRecord,\nL172: await fs.mkdir(path.dirname(ORCHESTRATOR_LOG_FILE), { recursive: true });\nL174: ORCHESTRATOR_LOG_FILE,\nL205: id: `orchestrator-${Date.now()}`,\nL307: async function saveDaemonStatus(status: OrchestratorStatus): Promise<void> {\nL308: await fs.mkdir(path.dirname(ORCHESTRATOR_STATUS_FILE), { recursive: true });\nL310: ORCHESTRATOR_STATUS_FILE,\nL316: export async function isOrchestratorRunning(): Promise<boolean> {\nL318: const pid = parseInt(await fs.readFile(ORCHESTRATOR_PID_FILE, \"utf-8\"), 10);\nL323: await fs.unlink(ORCHESTRATOR_PID_FILE).catch(() => {});\nL330: export async function getOrchestratorStatus(): Promise<OrchestratorStatus> {\nL331: const running = await isOrchestratorRunning();\nL332: let persisted: Partial<OrchestratorStatus> = {};\nL335: const raw = await fs.readFile(ORCHESTRATOR_STATUS_FILE, \"utf-8\");\nL336: persisted = JSON.parse(raw) as Partial<OrchestratorStatus>;\nL345: ? parseInt(await fs.readFile(ORCHESTRATOR_PID_FILE, \"utf-8\"), 10)\nL394: let action: OrchestratorActionRecord[\"action\"] = {\nL398: let result: OrchestratorActionRecord[\"result\"] = {\nL493: const record: OrchestratorActionRecord = {\nL494: decision_id: `orchestrator-${session.id}-${nowMs}`,\nL622: const targets = sessions.filter((session) => session.mode !== \"orchestrator\");\nL636: const status: OrchestratorStatus = {\nL670: await fs.unlink(ORCHESTRATOR_PID_FILE).catch(() => {});\nL690: id: `orchestrator-${process.pid}`,\nL691: mode: \"orchestrator\",\nL704: await fs.mkdir(path.dirname(ORCHESTRATOR_PID_FILE), { recursive: true });\nL705: await fs.writeFile(ORCHESTRATOR_PID_FILE, String(process.pid), \"utf-8\");\nL710: console.error(\"[Orchestrator] tick failed:\", error);\nL718: export async function stopOrchestrator(): Promise<boolean> {\nL720: const pid = parseInt(await fs.readFile(ORCHESTRATOR_PID_FILE, \"utf-8\"), 10);\nL733: await fs.unlink(ORCHESTRATOR_PID_FILE).catch(() => {});\nL740: export async function startOrchestrator(): Promise<boolean> {\nL741: if (await isOrchestratorRunning()) {\nL754: return await isOrchestratorRunning();\nL765: console.error(\"[Orchestrator] daemon error:\", error);\nL769: getOrchestratorStatus().then((status) => {\nL773: startOrchestrator().then((started) => {\nL777: console.log(\"[Orchestrator] started\");\nL780: stopOrchestrator().then((stopped) => {\nL784: console.log(\"[Orchestrator] stopped\");\n---\nFile: packages/cli/src/config/config.ts\nL36: import { orchestratorCommand } from \"../commands/orchestrator.js\";\nL316: .command(orchestratorCommand)\nL343: result._[0] === \"orchestrator\" ||\n---"
+              }
+            }
+          },
+          {
+            "functionResponse": {
+              "id": "call_2e0e7f2f935c48b7b4b8d7bf",
+              "name": "search_file_content",
+              "response": {
+                "output": "Found 130 matches for pattern \"loop.?detect\" in the workspace directory (filter: \"*.ts\"):\n---\nFile: packages/core/src/telemetry/qwen-logger/qwen-logger.ts\nL20: LoopDetectedEvent,\nL522: logLoopDetectedEvent(event: LoopDetectedEvent): void {\nL523: const rumEvent = this.createExceptionEvent(\"error\", \"loop_detected\", {\nL524: subtype: \"loop_detected\",\n---\nFile: packages/core/src/telemetry/loggers.ts\nL59: LoopDetectedEvent,\nL351: export function logLoopDetected(\nL353: event: LoopDetectedEvent,\nL355: QwenLogger.getInstance(config)?.logLoopDetectedEvent(event);\nL365: body: `Loop detected. Type: ${event.loop_type}.`,\n---\nFile: packages/core/src/telemetry/types.ts\nL293: export class LoopDetectedEvent implements BaseTelemetryEvent {\nL294: \"event.name\": \"loop_detected\";\nL300: this[\"event.name\"] = \"loop_detected\";\nL576: | LoopDetectedEvent\n---\nFile: packages/core/src/telemetry/clearcut-logger/event-metadata-key.ts\nL170: // Loop Detected Event Keys\nL173: // Logs the type of loop detected.\nL174: GEMINI_CLI_LOOP_DETECTED_TYPE = 38,\n---\nFile: packages/core/src/telemetry/clearcut-logger/clearcut-logger.ts\nL15: LoopDetectedEvent,\nL47: LOOP_DETECTED = \"loop_detected\",\nL656: logLoopDetectedEvent(event: LoopDetectedEvent): void {\nL659: gemini_cli_key: EventMetadataKey.GEMINI_CLI_LOOP_DETECTED_TYPE,\nL664: this.enqueueLogEvent(this.createLogEvent(EventNames.LOOP_DETECTED, data));\n---\nFile: packages/core/src/services/loopDetectionService.ts\nL11: import { logLoopDetected } from \"../telemetry/loggers.js\";\nL12: import { LoopDetectedEvent, LoopType } from \"../telemetry/types.js\";\nL57: export class LoopDetectionService {\nL69: private loopDetected = false;\nL93: if (this.loopDetected) {\nL102: this.loopDetected = this.checkToolCallLoop(event.value);\nL105: this.loopDetected = this.checkContentLoop(event.value);\nL110: return this.loopDetected;\nL146: logLoopDetected(\nL148: new LoopDetectedEvent(\nL166: * 5. Disabling loop detection within code blocks to prevent false positives,\nL258: if (this.isLoopDetectedForChunk(currentChunk, chunkHash)) {\nL259: logLoopDetected(\nL261: new LoopDetectedEvent(\nL286: * Loop detection logic:\nL293: private isLoopDetectedForChunk(chunk: string, hash: string): boolean {\nL413: logLoopDetected(\nL415: new LoopDetectedEvent(LoopType.LLM_DETECTED_LOOP, this.promptId),\nL430: * Resets all loop detection state.\nL437: this.loopDetected = false;\n---\nFile: packages/core/src/config/config.ts\nL251: skipLoopDetection?: boolean;\nL344: private readonly skipLoopDetection: boolean;\nL431: this.skipLoopDetection = params.skipLoopDetection ?? false;\nL1074: getSkipLoopDetection(): boolean {\nL1075: return this.skipLoopDetection;\n---\nFile: packages/core/src/sessions/types.ts\nL27: | \"loop_detected\"\n---\nFile: packages/core/src/services/loopDetectionService.test.ts\nL18: import { LoopDetectionService } from \"./loopDetectionService.js\";\nL21: logLoopDetected: vi.fn(),\nL30: describe(\"LoopDetectionService\", () => {\nL31: let service: LoopDetectionService;\nL38: service = new LoopDetectionService(mockConfig);\nL70: describe(\"Tool Call Loop Detection\", () => {\nL76: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL85: expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);\nL94: expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);\nL133: expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);\nL137: describe(\"Content Loop Detection\", () => {\nL158: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL170: expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);\nL184: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL188: describe(\"Content Loop Detection with Code Blocks\", () => {\nL202: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL214: // Now transition into a code block - this should prevent loop detection\nL228: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL231: it(\"should skip loop detection when already inside a code block (this.inCodeBlock)\", () => {\nL237: // Verify we are now inside a code block and any content should be ignored for loop detection\nL244: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL276: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL292: expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);\nL302: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL319: expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);\nL336: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL350: // We are now in a code block, so loop detection should be off.\nL358: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL377: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL397: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL417: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL437: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL476: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL513: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL552: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL572: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL583: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL617: describe(\"LoopDetectionService LLM Checks\", () => {\nL618: let service: LoopDetectionService;\nL635: service = new LoopDetectionService(mockConfig);\nL681: expect(loggers.logLoopDetected).toHaveBeenCalledWith(\nL684: \"event.name\": \"loop_detected\",\nL697: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\nL722: expect(loggers.logLoopDetected).not.toHaveBeenCalled();\n---\nFile: packages/core/src/core/turn.ts\nL57: LoopDetected = \"loop_detected\",\nL189: export type ServerGeminiLoopDetectedEvent = {\nL190: type: GeminiEventType.LoopDetected;\nL230: | ServerGeminiLoopDetectedEvent\n---\nFile: packages/core/src/core/client.test.ts\nL282: getSkipLoopDetection: vi.fn().mockReturnValue(false),\nL2357: it(\"does not run loop checks when skipLoopDetection is true\", async () => {\nL2359: // Ensure config returns true for skipLoopDetection\nL2360: vi.spyOn(client[\"config\"], \"getSkipLoopDetection\").mockReturnValue(true);\nL2362: // Replace loop detector with spies\nL2369: client[\"loopDetector\"] = ldMock;\nL2400: const ld = client[\"loopDetector\"] as unknown as {\nL2408: it(\"runs loop checks when skipLoopDetection is false\", async () => {\nL2410: vi.spyOn(client[\"config\"], \"getSkipLoopDetection\").mockReturnValue(false);\nL2416: client[\"loopDetector\"] = { turnStarted, addAndCheck, reset };\n---\nFile: packages/core/src/core/client.ts\nL27: import { LoopDetectionService } from \"../services/loopDetectionService.js\";\nL163: private readonly loopDetector: LoopDetectionService;\nL181: this.loopDetector = new LoopDetectionService(config);\nL624: this.loopDetector.reset(prompt_id);\nL754: if (!this.config.getSkipLoopDetection()) {\nL755: const loopDetected = await this.loopDetector.turnStarted(signal);\nL756: if (loopDetected) {\nL757: yield { type: GeminiEventType.LoopDetected };\nL789: if (!this.config.getSkipLoopDetection()) {\nL790: if (this.loopDetector.addAndCheck(event)) {\nL791: console.debug(`[Agent] Loop detected, stopping`);\nL792: yield { type: GeminiEventType.LoopDetected };\n---\nFile: packages/cli/src/config/config.ts\nL724: skipLoopDetection: settings.skipLoopDetection ?? false,\n---\nFile: packages/cli/src/config/settingsSchema.ts\nL1032: skipLoopDetection: {\nL1034: label: \"Skip Loop Detection\",\nL1038: description: \"Disable all loop detection checks (streaming and LLM).\",\n---\nFile: packages/cli/src/ui/hooks/useGeminiStream.ts\nL216: const loopDetectedRef = useRef(false);\nL1046: const handleLoopDetectedEvent = useCallback(() => {\nL1130: case ServerGeminiEventType.LoopDetected:\nL1132: // before we add loop detected message to history\nL1133: loopDetectedRef.current = true;\nL1310: if (loopDetectedRef.current) {\nL1311: loopDetectedRef.current = false;\nL1312: handleLoopDetectedEvent();\nL1363: handleLoopDetectedEvent,\n---"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Let me examine the orchestrator daemon and the TUI stream handling in more detail:💭 *Good, I found the key files. Let me read the orchestrator daemon code and the TUI stream handling code to understand the current architecture better.*"
+          },
+          {
+            "functionCall": {
+              "id": "call_6d47a4b7581049958d18adbd",
+              "name": "read_file",
+              "args": {
+                "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/orchestrator/daemon.ts"
+              }
+            }
+          },
+          {
+            "functionCall": {
+              "id": "call_63626fac11fe4a45b2e83a68",
+              "name": "read_file",
+              "args": {
+                "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/ui/hooks/useGeminiStream.ts"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "functionResponse": {
+              "id": "call_6d47a4b7581049958d18adbd",
+              "name": "read_file",
+              "response": {
+                "output": "TOOL OUTPUT TRUNCATED\n• Tool: read_file\n• Call ID: call_6d47a4b7581049958d18adbd\n• Original length: 20,312 characters\n• Retained preview: 4,000 characters\n• Action: Re-run the tool with narrower scope (pagination, filters, or targeted parameters) to inspect additional output.\n\n--- OUTPUT PREVIEW ---\n/**\n * @license\n * Copyright 2025 Google LLC\n * SPDX-License-Identifier: Apache-2.0\n */\n\nimport * as fs from \"node:fs/promises\";\nimport * as net from \"node:net\";\nimport * as path from \"node:path\";\nimport process from \"node:process\";\nimport { spawn } from \"node:child_process\";\nimport { fileURLToPath } from \"node:url\";\n\nimport {\n  getSessionContextSummary,\n  getSessionHealthView,\n  getSessionStatusView,\n  listSessions,\n  removeSession,\n  setSessionHealth,\n  type SessionRecord,\n} from \"@qwen-code/qwen-code-core\";\nimport {\n  setSessionStatus,\n  startSessionRegistration,\n  stopSessionRegistration,\n  updateSessionDetails,\n} from \"../session/sessionManager.js\";\n\nconst ORCHESTRATOR_PID_FILE = path.join(\n  process.cwd(),\n  \".lowcal\",\n  \"orchestrator.pid\",\n);\nconst ORCHESTRATOR_STATUS_FILE = path.join(\n  process.cwd(),\n  \".lowcal\",\n  \"orchestrator.status.json\",\n);\nconst ORCHESTRATOR_LOG_FILE = path.join(\n  process.cwd(),\n  \".lowcal\",\n  \"orchestrator\",\n  \"logs\",\n  \"actions.jsonl\",\n);\n\nconst TICK_INTERVAL_MS = 15000;\nconst STALE_HEARTBEAT_MS = 2 * 60 * 1000;\nconst MIN_STALLED_DURATION_MS = 2 * 60 * 1000;\nconst MAX_ATTEMPTS = 3;\nconst ATTEMPT_COOLDOWN_MS = 60 * 1000;\nconst ATTEMPT_WINDOW_MS = 15 * 60 * 1000;\n\nconst TARGET_MODES = new Set([\"tui\", \"headless\", \"noninteractive\"]);\n\ninterface AttemptState {\n  attempts: number;\n  window_started_at: number;\n  last_attempt_at: number;\n}\n\ninterface TickMetrics {\n  sessions_scanned: number;\n  stalled_sessions: number;\n  recoveries_attempted: number;\n  recoveries_succeeded: number;\n}\n\ninterface OrchestratorActionRecord {\n  decision_id: string;\n  timestamp: string;\n  policy_id: \"recover_stalled_session\";\n  session_id: string;\n  mode: string;\n  attempt: number;\n  evidence: Record<string, unknown>;\n  action: {\n    type:\n      | \"session.cancel_turn_api\"\n      | \"session.restart_turn_api\"\n      | \"session.resume_api\"\n      | \"session.resume_process\"\n      | \"session.remove_dead_record\";\n    signal?: \"SIGCONT\";\n  };\n  result: {\n    accepted: boolean;\n    outcome: string;\n    reason?: string;\n  };\n}\n\nexport interface OrchestratorStatus {\n  running: boolean;\n  pid?: number;\n  started_at?: string;\n  last_tick?: string;\n  tick_interval_ms: number;\n  policy_ids: string[];\n  sessions_scanned: number;\n  stalled_sessions: number;\n  recoveries_attempted: number;\n  recoveries_succeeded: number;\n  last_action?: {\n    timestamp: string;\n    session_id: string;\n    outcome: string;\n    attempt: number;\n  };\n}\n\nconst attemptStateBySession = new Map<string, AttemptState>();\nlet daemonStartedAt = new Date().toISOString();\nlet lastActionRecord: OrchestratorActionRecord | undefined;\nlet cachedMetrics: TickMetrics = {\n  sessions_scanned: 0,\n  stalled_sessions: 0,\n  recoveries_attempted: 0,\n  recoveries_succeeded: 0,\n};\n\ninterface SessionApiEnvelope {\n  ok: boolean;\n  result?: unknown;\n  error?: string;\n}\n\ninterface SessionControlResult {\n  accepted: boolean;\n  action_id?: string;\n  reason?: string;\n}\n\nfunction isTargetMode(session: SessionRecord): boolean {\n  return TARGET_MODES.has(session.mode);\n}\n\nfunction isProcessAlive(pid: number): boolean {\n  try {\n    process.kill(pid, 0);\n    return true;\n  } catch {\n    return false;\n  }\n}\n\nfunction getAttemptState(sessionId: string, nowMs: number): AttemptState {\n  const current = attemptStateBySession.get(sessionId);\n  if (!current) {\n    const created: AttemptState = {\n      attempts: 0,\n      window_started_at: nowMs,\n      last_attempt_at: 0,\n    };\n    attemptStateBySession.set(sessionId, created);\n    return created;\n  }\n\n  if (nowMs - current.window_started_at > ATTEMPT_WINDOW_MS) {\n    current.attempts = 0;\n    current.window_started_at = nowMs;\n    current.last_attempt_at = 0;\n  }\n\n  return current;\n}\n\nasync function appendActionLog(\n  record: OrchestratorActionRecord,\n): Promise<void> {\n  await fs.mkdir(path.dirname(ORCHESTRATOR_LOG_FILE), { recursive: true });\n  await fs.appendFile(\n    ORCHESTRATOR_LOG_FILE,\n    `${JSON.stringify(record)}\\n`,\n    \"utf-8\",\n  );\n}\n\nfunc\n... [truncated to preserve context]\n--- END PREVIEW ---"
+              }
+            }
+          },
+          {
+            "functionResponse": {
+              "id": "call_63626fac11fe4a45b2e83a68",
+              "name": "read_file",
+              "response": {
+                "output": "TOOL OUTPUT TRUNCATED\n• Tool: read_file\n• Call ID: call_63626fac11fe4a45b2e83a68\n• Original length: 55,235 characters\n• Retained preview: 4,000 characters\n• Action: Re-run the tool with narrower scope (pagination, filters, or targeted parameters) to inspect additional output.\n\n--- OUTPUT PREVIEW ---\n/**\n * @license\n * Copyright 2025 Google LLC\n * SPDX-License-Identifier: Apache-2.0\n */\n\nimport { useState, useRef, useCallback, useEffect, useMemo } from \"react\";\nimport type {\n  Config,\n  GeminiClient,\n  ServerGeminiStreamEvent as GeminiEvent,\n  ServerGeminiContentEvent as ContentEvent,\n  ServerGeminiErrorEvent as ErrorEvent,\n  ServerGeminiChatCompressedEvent,\n  ServerGeminiFinishedEvent,\n  ToolCallRequestInfo,\n  EditorType,\n  ThoughtSummary,\n  CheckpointMessage,\n  CheckpointContextSnapshot,\n  CheckpointToolCall,\n} from \"@qwen-code/qwen-code-core\";\nimport {\n  GeminiEventType as ServerGeminiEventType,\n  getErrorMessage,\n  isNodeError,\n  MessageSenderType,\n  logUserPrompt,\n  GitService,\n  UnauthorizedError,\n  UserPromptEvent,\n  DEFAULT_GEMINI_FLASH_MODEL,\n  logConversationFinishedEvent,\n  ConversationFinishedEvent,\n  ApprovalMode,\n  parseAndFormatApiError,\n  CheckpointService,\n} from \"@qwen-code/qwen-code-core\";\nimport {\n  type Content,\n  type Part,\n  type PartListUnion,\n  FinishReason,\n} from \"@google/genai\";\nimport type {\n  HistoryItem,\n  HistoryItemWithoutId,\n  HistoryItemToolGroup,\n  SlashCommandProcessorResult,\n} from \"../types.js\";\nimport { StreamingState, MessageType, ToolCallStatus } from \"../types.js\";\nimport { isAtCommand, isSlashCommand } from \"../utils/commandUtils.js\";\nimport { useShellCommandProcessor } from \"./shellCommandProcessor.js\";\nimport { useVisionAutoSwitch } from \"./useVisionAutoSwitch.js\";\nimport { handleAtCommand } from \"./atCommandProcessor.js\";\nimport { findLastSafeSplitPoint } from \"../utils/markdownUtilities.js\";\nimport { useStateAndRef } from \"./useStateAndRef.js\";\nimport type { UseHistoryManagerReturn } from \"./useHistoryManager.js\";\nimport { useLogger } from \"./useLogger.js\";\nimport type {\n  TrackedToolCall,\n  TrackedCompletedToolCall,\n  TrackedCancelledToolCall,\n} from \"./useReactToolScheduler.js\";\nimport { promises as fs } from \"node:fs\";\nimport path from \"node:path\";\nimport {\n  useReactToolScheduler,\n  mapToDisplay as mapTrackedToolCallsToDisplay,\n} from \"./useReactToolScheduler.js\";\nimport { useSessionStats } from \"../contexts/SessionContext.js\";\nimport { formatDuration } from \"../utils/formatters.js\";\nimport { useKeypress } from \"./useKeypress.js\";\nimport {\n  setSessionControlHandlers,\n  setSessionStatus,\n} from \"../../session/sessionManager.js\";\n\nconst formatElapsed = (milliseconds: number): string => {\n  if (!Number.isFinite(milliseconds) || milliseconds <= 0) {\n    return \"0s\";\n  }\n  return formatDuration(milliseconds);\n};\n\nenum StreamProcessingStatus {\n  Completed,\n  UserCancelled,\n  Error,\n}\n\n/**\n * Manages the Gemini stream, including user input, command processing,\n * API interaction, and tool call lifecycle.\n */\nexport const useGeminiStream = (\n  geminiClient: GeminiClient,\n  history: HistoryItem[],\n  addItem: UseHistoryManagerReturn[\"addItem\"],\n  config: Config,\n  onDebugMessage: (message: string) => void,\n  handleSlashCommand: (\n    cmd: PartListUnion,\n  ) => Promise<SlashCommandProcessorResult | false>,\n  shellModeActive: boolean,\n  getPreferredEditor: () => EditorType | undefined,\n  onAuthError: () => void,\n  performMemoryRefresh: () => Promise<void>,\n  modelSwitchedFromQuotaError: boolean,\n  setModelSwitchedFromQuotaError: React.Dispatch<React.SetStateAction<boolean>>,\n  onEditorClose: () => void,\n  onCancelSubmit: () => void,\n  visionModelPreviewEnabled: boolean,\n  onVisionSwitchRequired?: (query: PartListUnion) => Promise<{\n    modelOverride?: string;\n    persistSessionModel?: string;\n    showGuidance?: boolean;\n  }>,\n  refreshProviderState?: () => Promise<void>,\n) => {\n  const [initError, setInitError] = useState<string | null>(null);\n  const abortControllerRef = useRef<AbortController | null>(null);\n  const turnCancelledRef = useRef(false);\n  const isSubmittingQueryRef = useRef(false);\n  const [isResponding, setIsResponding] = useState<boolean>(false);\n  const [thought, setThought] = useState<ThoughtSummary | null>(null);\n  const [pendingHistoryItemRef, setPendingHistoryIt\n... [truncated to preserve context]\n--- END PREVIEW ---"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Let me read specific sections of these files to understand the stalled detection and error handling:💭 *These files are quite large. Let mearrin is asking read specific sections to about improving understand:*\n\n   *1. How the orchestrator detects stalled sessions*\n\n   *2. How the TUI handles loop detection and errors*\n\n   *3. How they communicate*\n\n   *Let me read more of the orchestrator to daemon to see the tick function and stalled detection logic.*"
+          },
+          {
+            "functionCall": {
+              "id": "call_0c15907442904bb4912b1d3d",
+              "name": "read_file",
+              "args": {
+                "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/orchestrator/daemon.ts",
+                "offset": 350,
+                "limit": 350
+              }
+            }
+          },
+          {
+            "functionCall": {
+              "id": "call_4de290f7ecd74d71b04f5bde",
+              "name": "read_file",
+              "args": {
+                "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/ui/hooks/useGeminiStream.ts",
+                "offset": 1020,
+                "limit": 400
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "functionResponse": {
+              "id": "call_0c15907442904bb4912b1d3d",
+              "name": "read_file",
+              "response": {
+                "output": "\nIMPORTANT: The file content has been truncated.\nStatus: Showing lines 351-700 of 790 total lines.\nAction: To read more of the file, you can use the 'offset' and 'limit' parameters in a subsequent 'read_file' call. For example, to read the next section of the file, use offset: 700.\n\n--- FILE CONTENT (truncated) ---\n    sessions_scanned:\n      persisted.sessions_scanned ?? cachedMetrics.sessions_scanned,\n    stalled_sessions:\n      persisted.stalled_sessions ?? cachedMetrics.stalled_sessions,\n    recoveries_attempted:\n      persisted.recoveries_attempted ?? cachedMetrics.recoveries_attempted,\n    recoveries_succeeded:\n      persisted.recoveries_succeeded ?? cachedMetrics.recoveries_succeeded,\n    last_action:\n      persisted.last_action ??\n      (lastActionRecord\n        ? {\n            timestamp: lastActionRecord.timestamp,\n            session_id: lastActionRecord.session_id,\n            outcome: lastActionRecord.result.outcome,\n            attempt: lastActionRecord.attempt,\n          }\n        : undefined),\n  };\n}\n\nasync function attemptRecovery(\n  session: SessionRecord,\n  nowMs: number,\n  staleMs: number,\n): Promise<boolean> {\n  const state = getAttemptState(session.id, nowMs);\n  const nowIso = new Date(nowMs).toISOString();\n  const attemptNumber = state.attempts + 1;\n  const context = await getSessionContextSummary(session.id);\n\n  const evidence: Record<string, unknown> = {\n    stale_ms: staleMs,\n    attempt: attemptNumber,\n    max_attempts: MAX_ATTEMPTS,\n  };\n  if (context?.model) {\n    evidence[\"model\"] = context.model;\n  }\n  if (context?.approval_mode) {\n    evidence[\"approval_mode\"] = context.approval_mode;\n  }\n\n  let action: OrchestratorActionRecord[\"action\"] = {\n    type: \"session.resume_process\",\n    signal: \"SIGCONT\",\n  };\n  let result: OrchestratorActionRecord[\"result\"] = {\n    accepted: false,\n    outcome: \"not_attempted\",\n  };\n\n  if (!isProcessAlive(session.pid)) {\n    await removeSession(session.id);\n    action = {\n      type: \"session.remove_dead_record\",\n    };\n    result = {\n      accepted: true,\n      outcome: \"removed_dead_session_record\",\n    };\n  } else {\n    let recoveredViaApi = false;\n    if (\n      session.capabilities?.control &&\n      session.api?.transport === \"unix\" &&\n      session.api.address\n    ) {\n      evidence[\"api_endpoint\"] = \"unix\";\n      evidence[\"policy_sequence\"] = [\n        \"session.cancel_turn\",\n        \"session.restart_turn\",\n        \"session.resume\",\n        \"sigcont_fallback\",\n      ];\n      const authToken =\n        typeof session.api.auth_token === \"string\"\n          ? session.api.auth_token\n          : undefined;\n\n      const cancelAttempt = await attemptSessionApiControl(\n        session.api.address,\n        \"session.cancel_turn\",\n        authToken,\n      );\n      evidence[\"api_cancel_turn\"] = cancelAttempt;\n\n      if (cancelAttempt.reachable) {\n        const restartAttempt = await attemptSessionApiControl(\n          session.api.address,\n          \"session.restart_turn\",\n          authToken,\n        );\n        evidence[\"api_restart_turn\"] = restartAttempt;\n\n        if (restartAttempt.accepted) {\n          action = { type: \"session.restart_turn_api\" };\n          result = {\n            accepted: true,\n            outcome: \"session_restart_turn_api_accepted\",\n          };\n          recoveredViaApi = true;\n        } else {\n          const resumeAttempt = await attemptSessionApiControl(\n            session.api.address,\n            \"session.resume\",\n            authToken,\n          );\n          evidence[\"api_resume\"] = resumeAttempt;\n          if (resumeAttempt.accepted) {\n            action = { type: \"session.resume_api\" };\n            result = {\n              accepted: true,\n              outcome: \"session_resume_api_accepted\",\n            };\n            recoveredViaApi = true;\n          }\n        }\n      }\n    }\n\n    if (!recoveredViaApi) {\n      try {\n        process.kill(session.pid, \"SIGCONT\");\n        result = {\n          accepted: true,\n          outcome: \"sent_sigcont\",\n        };\n      } catch (error) {\n        result = {\n          accepted: false,\n          outcome: \"sigcont_failed\",\n          reason: error instanceof Error ? error.message : String(error),\n        };\n      }\n    }\n  }\n\n  state.attempts = attemptNumber;\n  state.last_attempt_at = nowMs;\n  attemptStateBySession.set(session.id, state);\n\n  const record: OrchestratorActionRecord = {\n    decision_id: `orchestrator-${session.id}-${nowMs}`,\n    timestamp: nowIso,\n    policy_id: \"recover_stalled_session\",\n    session_id: session.id,\n    mode: session.mode,\n    attempt: attemptNumber,\n    evidence,\n    action,\n    result,\n  };\n\n  lastActionRecord = record;\n  await appendActionLog(record);\n\n  if (result.accepted && action.type !== \"session.remove_dead_record\") {\n    await setSessionHealth(session.id, {\n      state: \"stalled\",\n      reason: \"heartbeat_stale\",\n      confidence: 0.9,\n      evidence: {\n        ...evidence,\n        last_action: result.outcome,\n      },\n      remediation: {\n        stage: `retry_${attemptNumber}`,\n        attempts: attemptNumber,\n        next_eligible_at: new Date(nowMs + ATTEMPT_COOLDOWN_MS).toISOString(),\n      },\n    });\n  }\n\n  return result.accepted;\n}\n\nasync function evaluateSession(\n  session: SessionRecord,\n  nowMs: number,\n  metrics: TickMetrics,\n): Promise<void> {\n  if (!isTargetMode(session)) {\n    return;\n  }\n  metrics.sessions_scanned += 1;\n\n  const status = await getSessionStatusView(session.id);\n  if (!status) return;\n\n  const lastSeenMs = Date.parse(status.last_seen);\n  if (!Number.isFinite(lastSeenMs)) return;\n  const staleMs = nowMs - lastSeenMs;\n\n  if (staleMs < STALE_HEARTBEAT_MS) {\n    const health = await getSessionHealthView(session.id);\n    if (health && (health.state === \"stalled\" || health.state === \"error\")) {\n      await setSessionHealth(session.id, {\n        state: \"ok\",\n        confidence: 1,\n        evidence: {\n          recovered_at: new Date(nowMs).toISOString(),\n        },\n      });\n    }\n    attemptStateBySession.delete(session.id);\n    return;\n  }\n\n  metrics.stalled_sessions += 1;\n  const health = await getSessionHealthView(session.id);\n  const healthFirstSeenMs = Number.isFinite(\n    Date.parse(health?.first_seen ?? \"\"),\n  )\n    ? Date.parse(health?.first_seen ?? \"\")\n    : nowMs;\n  const stalledDurationMs = nowMs - healthFirstSeenMs;\n\n  const state = getAttemptState(session.id, nowMs);\n  const nextEligibleAt = state.last_attempt_at + ATTEMPT_COOLDOWN_MS;\n\n  await setSessionHealth(session.id, {\n    state: \"stalled\",\n    reason: \"heartbeat_stale\",\n    confidence: 0.9,\n    evidence: {\n      last_seen_age_ms: staleMs,\n      stalled_duration_ms: stalledDurationMs,\n    },\n    remediation: {\n      stage: state.attempts === 0 ? \"pending\" : `retry_${state.attempts}`,\n      attempts: state.attempts,\n      next_eligible_at: new Date(nextEligibleAt).toISOString(),\n    },\n  });\n\n  if (stalledDurationMs < MIN_STALLED_DURATION_MS) {\n    return;\n  }\n\n  if (state.attempts >= MAX_ATTEMPTS) {\n    await setSessionHealth(session.id, {\n      state: \"error\",\n      reason: \"no_progress_timeout\",\n      confidence: 0.95,\n      evidence: {\n        last_seen_age_ms: staleMs,\n        stalled_duration_ms: stalledDurationMs,\n      },\n      remediation: {\n        stage: \"exhausted\",\n        attempts: state.attempts,\n      },\n    });\n    return;\n  }\n\n  if (nowMs < nextEligibleAt) {\n    return;\n  }\n\n  metrics.recoveries_attempted += 1;\n  const accepted = await attemptRecovery(session, nowMs, staleMs);\n  if (accepted) {\n    metrics.recoveries_succeeded += 1;\n  }\n}\n\nasync function tick(): Promise<void> {\n  const nowMs = Date.now();\n  const sessions = await listSessions();\n  const targets = sessions.filter((session) => session.mode !== \"orchestrator\");\n\n  const metrics: TickMetrics = {\n    sessions_scanned: 0,\n    stalled_sessions: 0,\n    recoveries_attempted: 0,\n    recoveries_succeeded: 0,\n  };\n\n  for (const session of targets) {\n    await evaluateSession(session, nowMs, metrics);\n  }\n\n  cachedMetrics = metrics;\n  const status: OrchestratorStatus = {\n    running: true,\n    pid: process.pid,\n    started_at: daemonStartedAt,\n    last_tick: new Date(nowMs).toISOString(),\n    tick_interval_ms: TICK_INTERVAL_MS,\n    policy_ids: [\"recover_stalled_session\"],\n    sessions_scanned: metrics.sessions_scanned,\n    stalled_sessions: metrics.stalled_sessions,\n    recoveries_attempted: metrics.recoveries_attempted,\n    recoveries_succeeded: metrics.recoveries_succeeded,\n    last_action: lastActionRecord\n      ? {\n          timestamp: lastActionRecord.timestamp,\n          session_id: lastActionRecord.session_id,\n          outcome: lastActionRecord.result.outcome,\n          attempt: lastActionRecord.attempt,\n        }\n      : undefined,\n  };\n\n  await updateSessionDetails({\n    sessions_scanned: metrics.sessions_scanned,\n    stalled_sessions: metrics.stalled_sessions,\n    recoveries_attempted: metrics.recoveries_attempted,\n    recoveries_succeeded: metrics.recoveries_succeeded,\n    policy_ids: [\"recover_stalled_session\"],\n  });\n  await setSessionStatus(metrics.stalled_sessions > 0 ? \"working\" : \"idle\");\n  await saveDaemonStatus(status);\n}\n\nfunction registerShutdownHandlers(): void {\n  const shutdown = async () => {\n    await fs.unlink(ORCHESTRATOR_PID_FILE).catch(() => {});\n    await stopSessionRegistration();\n  };\n\n  process.on(\"SIGTERM\", () => {\n    void shutdown().finally(() => process.exit(0));\n  });\n  process.on(\"SIGINT\", () => {\n    void shutdown().finally(() => process.exit(0));\n  });\n  process.on(\"exit\", () => {\n    void shutdown();\n  });\n}\n\nasync function runDaemon(): Promise<void> {\n  daemonStartedAt = new Date().toISOString();\n  registerShutdownHandlers();\n\n  await startSessionRegistration({\n    id: `orchestrator-${process.pid}`,\n    mode: \"orchestrator\",\n    status: \"idle\",\n    details: {\n      policy_ids: [\"recover_stalled_session\"],\n      tick_interval_ms: TICK_INTERVAL_MS,\n    },\n    capabilities: {\n      observe: true,\n      control: true,\n      interact: false,"
+              }
+            }
+          },
+          {
+            "functionResponse": {
+              "id": "call_4de290f7ecd74d71b04f5bde",
+              "name": "read_file",
+              "response": {
+                "output": "TOOL OUTPUT TRUNCATED\n• Tool: read_file\n• Call ID: call_4de290f7ecd74d71b04f5bde\n• Original length: 12,685 characters\n• Retained preview: 4,000 characters\n• Action: Re-run the tool with narrower scope (pagination, filters, or targeted parameters) to inspect additional output.\n\n--- OUTPUT PREVIEW ---\n\nIMPORTANT: The file content has been truncated.\nStatus: Showing lines 1021-1420 of 1745 total lines.\nAction: To read more of the file, you can use the 'offset' and 'limit' parameters in a subsequent 'read_file' call. For example, to read the next section of the file, use offset: 1420.\n\n--- FILE CONTENT (truncated) ---\n\n  const handleContextWindowRecoveryEvent = useCallback(\n    (value: { message: string }) =>\n      addItem(\n        {\n          type: \"info\",\n          text: `⚠️  ${value.message}`,\n        },\n        Date.now(),\n      ),\n    [addItem],\n  );\n\n  const handleToolOutputTruncatedEvent = useCallback(\n    (value: { toolName: string; output: string }) =>\n      addItem(\n        {\n          type: \"info\",\n          text: `⚠️  The output of the tool '${value.toolName}' was too long and has been truncated.`,\n        },\n        Date.now(),\n      ),\n    [addItem],\n  );\n\n  const handleLoopDetectedEvent = useCallback(() => {\n    addItem(\n      {\n        type: \"info\",\n        text: `A potential loop was detected. This can happen due to repetitive tool calls or other model behavior. The request has been halted.`,\n      },\n      Date.now(),\n    );\n  }, [addItem]);\n\n  const processGeminiStreamEvents = useCallback(\n    async (\n      stream: AsyncIterable<GeminiEvent>,\n      userMessageTimestamp: number,\n      signal: AbortSignal,\n    ): Promise<StreamProcessingStatus> => {\n      let geminiMessageBuffer = \"\";\n      const toolCallRequests: ToolCallRequestInfo[] = [];\n      for await (const event of stream) {\n        switch (event.type) {\n          case ServerGeminiEventType.Thought:\n            setThought(event.value);\n            break;\n          case ServerGeminiEventType.Content:\n            geminiMessageBuffer = handleContentEvent(\n              event.value,\n              geminiMessageBuffer,\n              userMessageTimestamp,\n            );\n            break;\n          case ServerGeminiEventType.ToolCallRequest: {\n            const signature = buildToolCallSignature(event.value);\n            const activeCount =\n              toolCallSignatureCountsRef.current.get(signature) ?? 0;\n            if (activeCount > 0) {\n              needsAntiRepeatHintRef.current = true;\n              addItem(\n                {\n                  type: MessageType.INFO,\n                  text: `⚠️ Duplicate tool request '${event.value.name}' ignored while a previous request is still running.`,\n                },\n                Date.now(),\n              );\n              break;\n            }\n            toolCallSignatureCountsRef.current.set(signature, activeCount + 1);\n            toolCallIdToSignatureRef.current.set(event.value.callId, signature);\n            toolCallRequests.push(event.value);\n            break;\n          }\n          case ServerGeminiEventType.UserCancelled:\n            handleUserCancelledEvent(userMessageTimestamp);\n            break;\n          case ServerGeminiEventType.Error:\n            handleErrorEvent(event.value, userMessageTimestamp);\n            break;\n          case ServerGeminiEventType.ChatCompressed:\n            handleChatCompressionEvent(event.value);\n            break;\n          case ServerGeminiEventType.ToolCallConfirmation:\n          case ServerGeminiEventType.ToolCallResponse:\n            // do nothing\n            break;\n          case ServerGeminiEventType.MaxSessionTurns:\n            handleMaxSessionTurnsEvent();\n            break;\n          case ServerGeminiEventType.SessionTokenLimitExceeded:\n            handleSessionTokenLimitExceededEvent(event.value);\n            break;\n          case ServerGeminiEventType.TokenBudgetWarning:\n            handleTokenBudgetWarningEvent(event.value);\n            break;\n          case ServerGeminiEventType.ContextWindowRecovery:\n            handleContextWindowRecoveryEvent(event.value);\n            break;\n          case ServerGeminiEventType.ToolOutputTruncated:\n            handleToolOutputTruncatedEvent(event.value);\n            break;\n          case ServerGeminiEventType.Fini\n... [truncated to preserve context]\n--- END PREVIEW ---"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Let me also look at the session manager and the session API control mechanism:💭 *Now I have a better understanding. Let me also look at the session manager to understand how sessions communicate with the orchestrator, and look at the session API control mechanism.*"
+          },
+          {
+            "functionCall": {
+              "id": "call_380fb38e4b4e4371b69020b6",
+              "name": "read_file",
+              "args": {
+                "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/session/sessionManager.ts"
+              }
+            }
+          },
+          {
+            "functionCall": {
+              "id": "call_d679f1a262b141eabd772b04",
+              "name": "search_file_content",
+              "args": {
+                "include": "*.ts",
+                "pattern": "session.*control|control.*handler"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "functionResponse": {
+              "id": "call_380fb38e4b4e4371b69020b6",
+              "name": "read_file",
+              "response": {
+                "output": "TOOL OUTPUT TRUNCATED\n• Tool: read_file\n• Call ID: call_380fb38e4b4e4371b69020b6\n• Original length: 17,142 characters\n• Retained preview: 4,000 characters\n• Action: Re-run the tool with narrower scope (pagination, filters, or targeted parameters) to inspect additional output.\n\n--- OUTPUT PREVIEW ---\n/**\n * @license\n * Copyright 2025 Google LLC\n * SPDX-License-Identifier: Apache-2.0\n */\n\nimport * as crypto from \"node:crypto\";\nimport * as fs from \"node:fs/promises\";\nimport * as net from \"node:net\";\nimport * as path from \"node:path\";\nimport process from \"node:process\";\nimport type {\n  SessionCapabilities,\n  SessionControlEndpoint,\n  SessionMode,\n  SessionStatus,\n  SessionRecord,\n  SetSessionHealthInput,\n} from \"@qwen-code/qwen-code-core\";\nimport {\n  clearSessionHealth,\n  getSessionContextSummary,\n  getSessionHealthView,\n  getSessionRecentHistory,\n  getSessionStatusView,\n  registerSession,\n  updateSession,\n  heartbeatSession,\n  removeSession,\n  getSession,\n  setSessionHealth,\n  Storage,\n} from \"@qwen-code/qwen-code-core\";\n\nexport const DEFAULT_SESSION_HEARTBEAT_MS = 60 * 1000;\nexport const DEFAULT_SESSION_TTL_MS = 3 * 60 * 1000;\n\nlet registeredSessionId: string | null = null;\nlet heartbeatTimer: NodeJS.Timeout | null = null;\nlet exitHandlersRegistered = false;\nlet sessionApiServer: net.Server | null = null;\nlet sessionApiSocketPath: string | null = null;\nlet sessionApiAuthToken: string | null = null;\n\nexport interface SessionControlHandlerResult {\n  accepted: boolean;\n  reason?: string;\n}\n\nexport interface SessionControlHandlers {\n  cancelTurn?: () =>\n    | Promise<boolean | SessionControlHandlerResult>\n    | boolean\n    | SessionControlHandlerResult;\n  restartTurn?: () =>\n    | Promise<boolean | SessionControlHandlerResult>\n    | boolean\n    | SessionControlHandlerResult;\n  pause?: () =>\n    | Promise<boolean | SessionControlHandlerResult>\n    | boolean\n    | SessionControlHandlerResult;\n  resume?: () =>\n    | Promise<boolean | SessionControlHandlerResult>\n    | boolean\n    | SessionControlHandlerResult;\n  setModel?: (\n    model: string,\n  ) =>\n    | Promise<boolean | SessionControlHandlerResult>\n    | boolean\n    | SessionControlHandlerResult;\n  setApprovalMode?: (\n    mode: string,\n  ) =>\n    | Promise<boolean | SessionControlHandlerResult>\n    | boolean\n    | SessionControlHandlerResult;\n  requestSelfRepair?: (\n    payload?: Record<string, unknown>,\n  ) =>\n    | Promise<boolean | SessionControlHandlerResult>\n    | boolean\n    | SessionControlHandlerResult;\n}\n\nlet sessionControlHandlers: SessionControlHandlers = {};\n\ntype SessionApiMethod =\n  | \"session.get_status\"\n  | \"session.get_health\"\n  | \"session.get_context_summary\"\n  | \"session.get_recent_history\"\n  | \"session.cancel_turn\"\n  | \"session.restart_turn\"\n  | \"session.pause\"\n  | \"session.resume\"\n  | \"session.set_model\"\n  | \"session.set_approval_mode\"\n  | \"session.shutdown\"\n  | \"session.request_self_repair\";\n\ninterface SessionApiRequest {\n  id?: string | number;\n  method?: SessionApiMethod;\n  auth_token?: string;\n  params?: Record<string, unknown>;\n}\n\ninterface SessionApiResponse {\n  id?: string | number;\n  ok: boolean;\n  result?: unknown;\n  error?: string;\n}\n\nfunction requiresAuthToken(method: SessionApiMethod): boolean {\n  switch (method) {\n    case \"session.get_status\":\n    case \"session.get_health\":\n    case \"session.get_context_summary\":\n    case \"session.get_recent_history\":\n    case \"session.cancel_turn\":\n    case \"session.restart_turn\":\n    case \"session.pause\":\n    case \"session.resume\":\n    case \"session.set_model\":\n    case \"session.set_approval_mode\":\n    case \"session.shutdown\":\n    case \"session.request_self_repair\":\n      return true;\n    default:\n      return false;\n  }\n}\n\nfunction makeActionResult(result: {\n  accepted: boolean;\n  reason?: string;\n  action_id?: string;\n}): {\n  accepted: boolean;\n  reason?: string;\n  action_id: string;\n} {\n  return {\n    accepted: result.accepted,\n    reason: result.reason,\n    action_id: result.action_id ?? `action-${Date.now()}`,\n  };\n}\n\nfunction normalizeControlHandlerResult(\n  value: boolean | SessionControlHandlerResult | undefined,\n): {\n  accepted: boolean;\n  reason?: string;\n} {\n  if (typeof value === \"boolean\") {\n    return {\n      accepted: value,\n      reason: value ? undefined : \"handler_rejected\",\n    };\n  }\n  i\n... [truncated to preserve context]\n--- END PREVIEW ---"
+              }
+            }
+          },
+          {
+            "functionResponse": {
+              "id": "call_d679f1a262b141eabd772b04",
+              "name": "search_file_content",
+              "response": {
+                "output": "Found 68 matches for pattern \"session.*control|control.*handler\" in the workspace directory (filter: \"*.ts\"):\n---\nFile: packages/core/src/sessions/types.ts\nL48: export interface SessionControlEndpoint {\nL106: api?: SessionControlEndpoint;\n---\nFile: packages/cli/src/services/SessionMarkdownLogger.ts\nL58: export interface SessionLoggingController {\n---\nFile: packages/cli/src/test-utils/mockLoggingController.ts\nL8: import type { SessionLoggingController } from \"../services/SessionMarkdownLogger.js\";\nL10: export const createMockLoggingController = (): SessionLoggingController => ({\n---\nFile: packages/cli/src/orchestrator/daemon.ts\nL129: interface SessionControlResult {\nL180: function parseControlResult(value: unknown): SessionControlResult | null {\nL262: interface SessionApiControlAttempt {\nL269: async function attemptSessionApiControl(\nL273: ): Promise<SessionApiControlAttempt> {\nL415: session.capabilities?.control &&\nL431: const cancelAttempt = await attemptSessionApiControl(\nL439: const restartAttempt = await attemptSessionApiControl(\nL454: const resumeAttempt = await attemptSessionApiControl(\n---\nFile: packages/cli/src/ui/commands/types.ts\nL14: import type { SessionLoggingController } from \"../../services/SessionMarkdownLogger.js\";\nL34: logging: SessionLoggingController;\n---\nFile: packages/cli/src/ui/hooks/useSessionLoggingController.ts\nL12: type SessionLoggingController,\nL18: interface UseSessionLoggingControllerOptions {\nL24: export function useSessionLoggingController(\nL25: options: UseSessionLoggingControllerOptions,\nL26: ): SessionLoggingController {\nL105: const controller = useMemo<SessionLoggingController>(\n---\nFile: packages/cli/src/ui/hooks/slashCommandProcessor.ts\nL48: import type { SessionLoggingController } from \"../../services/SessionMarkdownLogger.js\";\nL77: loggingController: SessionLoggingController,\n---\nFile: packages/cli/src/ui/hooks/useGeminiStream.ts\nL75: setSessionControlHandlers,\nL1407: setSessionControlHandlers({\nL1422: setSessionControlHandlers({});\n---\nFile: packages/cli/src/session/sessionManager.ts\nL14: SessionControlEndpoint,\nL45: export interface SessionControlHandlerResult {\nL50: export interface SessionControlHandlers {\nL52: | Promise<boolean | SessionControlHandlerResult>\nL54: | SessionControlHandlerResult;\nL56: | Promise<boolean | SessionControlHandlerResult>\nL58: | SessionControlHandlerResult;\nL60: | Promise<boolean | SessionControlHandlerResult>\nL62: | SessionControlHandlerResult;\nL64: | Promise<boolean | SessionControlHandlerResult>\nL66: | SessionControlHandlerResult;\nL70: | Promise<boolean | SessionControlHandlerResult>\nL72: | SessionControlHandlerResult;\nL76: | Promise<boolean | SessionControlHandlerResult>\nL78: | SessionControlHandlerResult;\nL82: | Promise<boolean | SessionControlHandlerResult>\nL84: | SessionControlHandlerResult;\nL87: let sessionControlHandlers: SessionControlHandlers = {};\nL153: function normalizeControlHandlerResult(\nL154: value: boolean | SessionControlHandlerResult | undefined,\nL181: async function invokeControlHandler<TArgs extends unknown[]>(\nL186: | Promise<boolean | SessionControlHandlerResult>\nL188: | SessionControlHandlerResult)\nL201: const result = normalizeControlHandlerResult(await handler(...args));\nL211: export function setSessionControlHandlers(\nL212: handlers: SessionControlHandlers,\nL214: sessionControlHandlers = { ...handlers };\nL330: if (!sessionControlHandlers.resume) {\nL352: result: await invokeControlHandler(sessionControlHandlers.resume),\nL370: result: await invokeControlHandler(sessionControlHandlers.cancelTurn),\nL376: result: await invokeControlHandler(\nL377: sessionControlHandlers.restartTurn,\nL384: result: await invokeControlHandler(sessionControlHandlers.pause),\nL401: result: await invokeControlHandler(\nL402: sessionControlHandlers.setModel,\nL422: result: await invokeControlHandler(\nL423: sessionControlHandlers.setApprovalMode,\nL432: result: await invokeControlHandler(\nL433: sessionControlHandlers.requestSelfRepair,\nL456: ): Promise<SessionControlEndpoint | undefined> {\nL558: api?: SessionControlEndpoint;\n---"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Let me look at the `requestSelfRepair` handler and see how the TUI sets up control handlers:💭 *Now I have a good understanding of the architecture. Let me summarize what I've learned:*\n\n   *1. **Orchestrator (daemon.ts)**:*\n\n   *- Runs as a separate process with a tick interval of 15 seconds*\n\n   *- Detects stalled sessions by checking if the heartbeat is stale (2+ minutes old)*\n\n   *- Has a minimum stalled duration of 2 minutes before attempting recovery*\n\n   *- Recovery attempts: cancel_turn → restart_turn → resume → SIGCONT*\n\n   *- Max 3 attempts within a 15-minute window*\n\n   *- Uses a Unix socket API to communicate with sessions*\n\n   *2. **Session Manager (sessionManager.ts)**:*\n\n   *- Manages session registration and heartbeats*\n\n   *- Has a SessionControlHandlers interface with methods like cancelTurn, restartTurn, resume, requestSelfRepair*\n\n   *- Has a Unix socket server for API control*\n\n   *- The `requestSelfRepair` method is interesting - it seems like it could be used for what Darrin is asking about*\n\n   *3. **TUI (useGeminiStream.ts)**:*\n\n   *- Handles loop detection events by adding an info message*\n\n   *- Has handlers for various error events*\n\n   *- Sets up session control handlers*\n\n   *The current approach is passive - the orchestrator only detects stalled sessions by checking heartbeat timestamps. It doesn't know WHY a session stalled.*\n\n   *Darrin's idea is to have the TUI actively signal the orchestrator when something goes wrong (loop detection, hard error, etc.), and then the orchestrator can analyze the situation and potentially inject a recovery prompt.*\n\n   *This would require:*\n\n   *1. A new signaling mechanism from TUI to orchestrator*\n\n   *2. The orchestrator to understand different types of stalls*\n\n   *3. The orchestrator to be able to inject prompts into the TUI*\n\n   *Let me look at the `requestSelfRepair` method and see if there's already some infrastructure for this.*"
+          },
+          {
+            "functionCall": {
+              "id": "call_e180e7834a5245c18a9dcdd9",
+              "name": "read_file",
+              "args": {
+                "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/session/sessionManager.ts",
+                "limit": 200,
+                "offset": 400
+              }
+            }
+          },
+          {
+            "functionCall": {
+              "id": "call_c902ce05318b491b9cb84cd8",
+              "name": "read_file",
+              "args": {
+                "absolute_path": "/home/atmandk/LowCal-dev/packages/cli/src/ui/hooks/useGeminiStream.ts",
+                "limit": 100,
+                "offset": 1400
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "functionResponse": {
+              "id": "call_e180e7834a5245c18a9dcdd9",
+              "name": "read_file",
+              "response": {
+                "output": "\nIMPORTANT: The file content has been truncated.\nStatus: Showing lines 401-600 of 673 total lines.\nAction: To read more of the file, you can use the 'offset' and 'limit' parameters in a subsequent 'read_file' call. For example, to read the next section of the file, use offset: 600.\n\n--- FILE CONTENT (truncated) ---\n          result: await invokeControlHandler(\n            sessionControlHandlers.setModel,\n            model,\n          ),\n        };\n      }\n      case \"session.set_approval_mode\": {\n        const mode = request.params?.[\"mode\"];\n        if (typeof mode !== \"string\" || mode.trim().length === 0) {\n          return {\n            id,\n            ok: true,\n            result: makeActionResult({\n              accepted: false,\n              reason: \"invalid_approval_mode\",\n            }),\n          };\n        }\n        return {\n          id,\n          ok: true,\n          result: await invokeControlHandler(\n            sessionControlHandlers.setApprovalMode,\n            mode,\n          ),\n        };\n      }\n      case \"session.request_self_repair\":\n        return {\n          id,\n          ok: true,\n          result: await invokeControlHandler(\n            sessionControlHandlers.requestSelfRepair,\n            request.params,\n          ),\n        };\n      default:\n        return {\n          id,\n          ok: false,\n          error: `unsupported method: ${request.method}`,\n        };\n    }\n  } catch (error) {\n    return {\n      id,\n      ok: false,\n      error: error instanceof Error ? error.message : String(error),\n    };\n  }\n}\n\nasync function startSessionApiServer(\n  sessionId: string,\n  capabilities: SessionCapabilities,\n): Promise<SessionControlEndpoint | undefined> {\n  if (\n    !(capabilities.observe || capabilities.control || capabilities.interact)\n  ) {\n    return undefined;\n  }\n\n  await stopSessionApiServer();\n\n  const socketPath = getSocketPath(sessionId);\n  const authToken = crypto.randomBytes(24).toString(\"hex\");\n  if (process.platform !== \"win32\") {\n    await fs.mkdir(path.dirname(socketPath), { recursive: true });\n    await fs.unlink(socketPath).catch(() => {});\n  }\n\n  const server = net.createServer((socket) => {\n    socket.setEncoding(\"utf8\");\n    let buffer = \"\";\n    let requestQueue = Promise.resolve();\n\n    socket.on(\"data\", (chunk: string) => {\n      buffer += chunk;\n      let newlineIndex = buffer.indexOf(\"\\n\");\n      while (newlineIndex >= 0) {\n        const rawLine = buffer.slice(0, newlineIndex).trim();\n        buffer = buffer.slice(newlineIndex + 1);\n        newlineIndex = buffer.indexOf(\"\\n\");\n\n        if (!rawLine) {\n          continue;\n        }\n\n        requestQueue = requestQueue\n          .then(async () => {\n            let request: SessionApiRequest;\n            try {\n              request = JSON.parse(rawLine) as SessionApiRequest;\n            } catch {\n              const response: SessionApiResponse = {\n                ok: false,\n                error: \"invalid json request\",\n              };\n              socket.write(`${JSON.stringify(response)}\\n`);\n              return;\n            }\n\n            const response = await handleSessionApiRequest(request);\n            socket.write(`${JSON.stringify(response)}\\n`);\n          })\n          .catch(() => {});\n      }\n    });\n  });\n\n  await new Promise<void>((resolve, reject) => {\n    server.once(\"error\", reject);\n    server.listen(socketPath, () => {\n      server.off(\"error\", reject);\n      resolve();\n    });\n  });\n\n  sessionApiServer = server;\n  sessionApiSocketPath = socketPath;\n  sessionApiAuthToken = authToken;\n\n  return {\n    transport: process.platform === \"win32\" ? \"tcp\" : \"unix\",\n    address: socketPath,\n    version: \"v1\",\n    auth_token: authToken,\n  };\n}\n\nfunction registerExitHandlers(): void {\n  if (exitHandlersRegistered) return;\n  exitHandlersRegistered = true;\n\n  const cleanup = async () => {\n    if (!registeredSessionId) return;\n    await stopSessionApiServer();\n    await removeSession(registeredSessionId);\n  };\n\n  process.on(\"exit\", () => {\n    void cleanup();\n  });\n  process.on(\"SIGINT\", () => {\n    void cleanup().finally(() => process.exit(0));\n  });\n  process.on(\"SIGTERM\", () => {\n    void cleanup().finally(() => process.exit(0));\n  });\n}\n\nexport async function startSessionRegistration(options: {\n  id: string;\n  mode: SessionMode;\n  status?: SessionStatus;\n  details?: Record<string, unknown>;\n  capabilities?: SessionCapabilities;\n  api?: SessionControlEndpoint;\n  health?: SetSessionHealthInput;\n  cwd?: string;\n  pid?: number;\n  heartbeatIntervalMs?: number;\n}): Promise<void> {\n  if (registeredSessionId && registeredSessionId !== options.id) {\n    await stopSessionApiServer();\n    await removeSession(registeredSessionId);\n  }\n\n  registeredSessionId = options.id;\n  const capabilities = options.capabilities ?? {\n    observe: true,\n    control: false,\n    interact: false,\n  };\n  let endpoint = options.api;\n  if (!endpoint) {\n    try {\n      endpoint = await startSessionApiServer(options.id, capabilities);\n    } catch {\n      endpoint = undefined;\n    }\n  }\n  const now = new Date().toISOString();\n  const session: SessionRecord = {\n    id: options.id,\n    pid: options.pid ?? process.pid,\n    mode: options.mode,\n    cwd: options.cwd ?? process.cwd(),\n    started_at: now,\n    last_seen: now,\n    status: options.status ?? \"idle\",\n    details: options.details,\n    capabilities,\n    api: endpoint,\n    health: {\n      state: options.health?.state ?? \"ok\",\n      reason: options.health?.reason,\n      confidence: options.health?.confidence ?? 1,\n      first_seen: now,\n      last_seen: now,"
+              }
+            }
+          },
+          {
+            "functionResponse": {
+              "id": "call_c902ce05318b491b9cb84cd8",
+              "name": "read_file",
+              "response": {
+                "output": "\nIMPORTANT: The file content has been truncated.\nStatus: Showing lines 1401-1500 of 1745 total lines.\nAction: To read more of the file, you can use the 'offset' and 'limit' parameters in a subsequent 'read_file' call. For example, to read the next section of the file, use offset: 1500.\n\n--- FILE CONTENT (truncated) ---\n    return {\n      accepted: true,\n    };\n  }, [cancelOngoingRequest, streamingState, submitQuery]);\n\n  useEffect(() => {\n    setSessionControlHandlers({\n      cancelTurn: () => {\n        if (streamingState !== StreamingState.Responding) {\n          return {\n            accepted: false,\n            reason: \"no_active_turn\",\n          };\n        }\n        cancelOngoingRequest();\n        return { accepted: true };\n      },\n      restartTurn: restartLastTurn,\n    });\n\n    return () => {\n      setSessionControlHandlers({});\n    };\n  }, [cancelOngoingRequest, restartLastTurn, streamingState]);\n\n  const handleCompletedTools = useCallback(\n    async (completedToolCallsFromScheduler: TrackedToolCall[]) => {\n      if (isResponding) {\n        return;\n      }\n\n      const completedAndReadyToSubmitTools =\n        completedToolCallsFromScheduler.filter(\n          (\n            tc: TrackedToolCall,\n          ): tc is TrackedCompletedToolCall | TrackedCancelledToolCall => {\n            const isTerminalState =\n              tc.status === \"success\" ||\n              tc.status === \"error\" ||\n              tc.status === \"cancelled\";\n\n            if (isTerminalState) {\n              const completedOrCancelledCall = tc as\n                | TrackedCompletedToolCall\n                | TrackedCancelledToolCall;\n              return (\n                completedOrCancelledCall.response?.responseParts !== undefined\n              );\n            }\n            return false;\n          },\n        );\n\n      // Finalize any client-initiated tools as soon as they are done.\n      const clientTools = completedAndReadyToSubmitTools.filter(\n        (t) => t.request.isClientInitiated,\n      );\n      if (clientTools.length > 0) {\n        markToolsAsSubmitted(clientTools.map((t) => t.request.callId));\n      }\n\n      // Identify new, successful save_memory calls that we haven't processed yet.\n      const newSuccessfulMemorySaves = completedAndReadyToSubmitTools.filter(\n        (t) =>\n          t.request.name === \"save_memory\" &&\n          t.status === \"success\" &&\n          !processedMemoryToolsRef.current.has(t.request.callId),\n      );\n\n      if (newSuccessfulMemorySaves.length > 0) {\n        // Perform the refresh only if there are new ones.\n        void performMemoryRefresh();\n        // Mark them as processed so we don't do this again on the next render.\n        newSuccessfulMemorySaves.forEach((t) =>\n          processedMemoryToolsRef.current.add(t.request.callId),\n        );\n      }\n\n      for (const toolCall of completedAndReadyToSubmitTools) {\n        const durationMs = toolCall.durationMs;\n        if (durationMs === undefined) {\n          continue;\n        }\n        const statusLabel =\n          toolCall.status === \"success\"\n            ? \"completed\"\n            : toolCall.status === \"error\"\n              ? \"failed\"\n              : \"cancelled\";\n        const isClient = toolCall.request.isClientInitiated === true;\n        const prefix = isClient ? \"🛠️\" : \"🔧\";\n        const label = isClient ? \"Client tool\" : \"Tool\";\n        addItem(\n          {\n            type: MessageType.INFO,\n            text: `${prefix} ${label} ${toolCall.request.name} ${statusLabel} in ${formatElapsed(durationMs)}.`,\n          },\n          Date.now(),\n        );\n      }"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Excellent question, Darrin. I've analyzed the architecture and your idea has merit. Let me break down what I found:\n\n## Current Architecture\n\n**Orchestrator (daemon.ts)**:\n- Passive detection: checks heartbeat timestamps every 15 seconds\n- Declares \"stalled\" after 2+ minutes of no heartbeat\n- Recovery sequence: `cancel_turn` → `restart_turn` → `resume` → `SIGCONT`\n- **Blind to WHY a session stalled** - it only knows the heartbeat stopped\n\n**TUI (useGeminiStream.ts)**:\n- Knows exactly when things go wrong: loop detection, hard errors, etc.\n- Currently just adds an info message to history\n- Sets up `cancelTurn` and `restartTurn` handlers, but **not** `requestSelfRepair`\n\n**Session Manager**:\n- Already has `requestSelfRepair` in the `SessionControlHandlers` interface\n- Has Unix socket infrastructure for bidirectional communication\n- But the TUI never implements `requestSelfRepair`\n\n## The Gap\n\nThe TUI knows *why* it stalled, but doesn't tell anyone. The orchestrator knows *that* it stalled, but not *why*. They're not talking to each other.\n\n## Your Idea - What Would It Take?\n\n1. **TUI signals orchestrator on unexpected idle**: When loop detection fires or a hard error occurs, the TUI could call `setSessionHealth` with the error context (already exists in core)\n\n2. **Orchestrator inspects and decides**: Instead of just checking heartbeat age, the orchestrator would also check the health state/reason. If it's `loop_detected`, inject a \"try a different approach\" prompt. If it's a hard error, try `continue`.\n\n3. **Orchestrator injects prompts**: This is the new piece. The orchestrator would need a way to inject a prompt into the TUI - perhaps via a new `session.inject_prompt` API method.\n\n## My Assessment\n\nThe probability of this working is... **favorable**. The infrastructure is 70% there. The key additions would be:\n\n1. **TUI side**: Implement `requestSelfRepair` handler that accepts a prompt and submits it\n2. **Orchestrator side**: Check health reason, not just heartbeat age; call `requestSelfRepair` with appropriate prompt\n3. **New API method**: `session.inject_prompt` or reuse `requestSelfRepair` with a prompt payload\n\nWould you like me to draft a more detailed implementation plan? I can also look at specific error types you've encountered to understand what recovery prompts would work best.💭 *Now I have a good understanding of the architecture. Let me summarize what I've learned and provide my analysis to Darrin:*\n\n   ***Current Architecture:***\n\n   *1. **Orchestrator (daemon.ts)**:*\n\n   *- Runs as a separate process with a tick interval of 15 seconds*\n\n   *- Detects stalled sessions by checking if the heartbeat is stale (2+ minutes old)*\n\n   *- Has a minimum stalled duration of 2 minutes before attempting recovery*\n\n   *- Recovery attempts: cancel_turn → restart_turn → resume → SIGCONT*\n\n   *- Max 3 attempts within a 15-minute window*\n\n   *- Uses a Unix socket API to communicate with sessions*\n\n   *2. **Session Manager (sessionManager.ts)**:*\n\n   *- Manages session registration and heartbeats*\n\n   *- Has a SessionControlHandlers interface with methods like cancelTurn, restartTurn, resume, requestSelfRepair*\n\n   *- Has a Unix socket server for API control*\n\n   *- The `requestSelfRepair` method is interesting - it seems like it could be used for what Darrin is asking about*\n\n   *3. **TUI (useGeminiStream.ts)**:*\n\n   *- Handles loop detection events by adding an info message*\n\n   *- Has handlers for various error events*\n\n   *- Sets up session control handlers (currently only cancelTurn and restartTurn)*\n\n   ***The Problem:***\n\n   *The current approach is passive - the orchestrator only detects stalled sessions by checking heartbeat timestamps. It doesn't know WHY a session stalled. The TUI knows when something goes wrong (loop detection, hard error), but it doesn't communicate this to the orchestrator.*\n\n   ***Darrin's Idea:***\n\n   *Have the TUI actively signal the orchestrator when something goes wrong (loop detection, hard error, etc.), and then the orchestrator can analyze the situation and potentially inject a recovery prompt.*\n\n   ***My Analysis:***\n\n   *This is a great idea. The infrastructure is already partially there:*\n\n   *- The session manager has a `requestSelfRepair` method that could be used*\n\n   *- The orchestrator already has a Unix socket API to communicate with sessions*\n\n   *- The TUI already sets up session control handlers*\n\n   *What's missing:*\n\n   *1. A way for the TUI to signal the orchestrator about the specific error/condition*\n\n   *2. A way for the orchestrator to inject a prompt into the TUI*\n\n   *3. Logic in the orchestrator to analyze the error and decide on a recovery strategy*\n\n   *Let me provide my analysis to Darrin.*"
+          }
+        ]
+      }
+    ],
+    "promptTokenCount": 27629,
+    "currentContextTokenCount": 121759,
+    "model": "z-ai/glm-5"
+  }
+}

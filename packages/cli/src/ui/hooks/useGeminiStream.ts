@@ -74,6 +74,7 @@ import { useKeypress } from "./useKeypress.js";
 import {
   setSessionControlHandlers,
   setSessionStatus,
+  setRegisteredSessionHealth,
 } from "../../session/sessionManager.js";
 
 const formatElapsed = (milliseconds: number): string => {
@@ -215,6 +216,7 @@ export const useGeminiStream = (
 
   const loopDetectedRef = useRef(false);
   const lastRestartableQueryRef = useRef<PartListUnion | null>(null);
+  const recoveryRetryCountRef = useRef(0);
 
   const onExec = useCallback(async (done: Promise<void>) => {
     setIsResponding(true);
@@ -597,6 +599,17 @@ export const useGeminiStream = (
     (eventValue: ErrorEvent["value"], userMessageTimestamp: number) => {
       checkpointPendingForTurnRef.current = false;
       checkpointTurnStartTimestampRef.current = null;
+
+      // Signal the orchestrator that we've encountered an error
+      setRegisteredSessionHealth({
+        state: "error",
+        reason: "unhandled_error",
+        confidence: 0.9,
+        evidence: {
+          error_message: eventValue.error,
+        },
+      });
+
       if (pendingHistoryItemRef.current) {
         addItem(pendingHistoryItemRef.current, userMessageTimestamp);
         setPendingHistoryItem(null);
@@ -632,6 +645,9 @@ export const useGeminiStream = (
         turnStartTimestampRef.current = null;
       }
       setThought(null); // Reset thought when there's an error
+
+      // Trigger self-recovery for the error with context
+      handleSelfRecovery("error", getErrorMessage(eventValue.error));
     },
     [
       addItem,
@@ -641,6 +657,7 @@ export const useGeminiStream = (
       setThought,
       turnStartTimestampRef,
       turnDurationLoggedRef,
+      geminiClient,
     ],
   );
 
@@ -1044,6 +1061,17 @@ export const useGeminiStream = (
   );
 
   const handleLoopDetectedEvent = useCallback(() => {
+    // Signal the orchestrator that we've detected a loop (for visibility)
+    setRegisteredSessionHealth({
+      state: "loop_fault",
+      reason: "loop_detected",
+      confidence: 0.95,
+      evidence: {
+        message:
+          "A potential loop was detected. This can happen due to repetitive tool calls or other model behavior.",
+      },
+    });
+
     addItem(
       {
         type: "info",
@@ -1208,6 +1236,9 @@ export const useGeminiStream = (
       if (!options?.isContinuation) {
         turnStartTimestampRef.current = userMessageTimestamp;
         turnDurationLoggedRef.current = false;
+        
+        // Reset recovery retry counter on new successful query
+        recoveryRetryCountRef.current = 0;
       }
 
       // Reset quota error flag when starting a new query (not a continuation)
@@ -1310,6 +1341,10 @@ export const useGeminiStream = (
         if (loopDetectedRef.current) {
           loopDetectedRef.current = false;
           handleLoopDetectedEvent();
+          // Reset retry counter for loop recovery (different issue type)
+          recoveryRetryCountRef.current = 0;
+          // Trigger self-recovery for the loop
+          handleSelfRecovery("loop");
         }
 
         // Restore original model if it was temporarily overridden
@@ -1402,6 +1437,67 @@ export const useGeminiStream = (
       accepted: true,
     };
   }, [cancelOngoingRequest, streamingState, submitQuery]);
+
+  // Self-recovery function - called when loop detection or hard error occurs
+  const handleSelfRecovery = useCallback(
+    (errorType: "loop" | "error", errorMessage?: string) => {
+      if (errorType === "loop") {
+        // For loop detection, submit a specific recovery prompt
+        void submitQuery(
+          "You appear to be stuck in a loop. Please try a different approach or ask for help.",
+        );
+      } else if (errorMessage) {
+        // Increment retry counter for errors
+        recoveryRetryCountRef.current += 1;
+        
+        // Check if we've exceeded max retries
+        const maxRetries = 3;
+        if (recoveryRetryCountRef.current > maxRetries) {
+          addItem(
+            {
+              type: MessageType.ERROR,
+              text: `❌ Recovery failed after ${maxRetries} attempts. The error is not recoverable. Please try a different approach.`,
+            },
+            Date.now(),
+          );
+          // Reset the counter for future sessions
+          recoveryRetryCountRef.current = 0;
+          return;
+        }
+
+        // For hard errors, get recent history and include context
+        const clientHistory = geminiClient.getHistory();
+        let contextSnippet = "";
+        if (Array.isArray(clientHistory) && clientHistory.length > 0) {
+          const recentMessages = clientHistory.slice(-3);
+          const contextText = recentMessages
+            .map((msg) => {
+              if (typeof msg === "string") return msg;
+              // Try to get content from the message
+              const content =
+                (msg as any).content ||
+                (msg as any).text ||
+                (msg as { parts?: Array<{ text?: string }> }).parts?.[0]?.text;
+              if (content && typeof content === "string") {
+                return content.substring(0, 200);
+              }
+              return "";
+            })
+            .filter((text) => text.length > 0)
+            .join("... ");
+          contextSnippet = ` Here's recent context: "${contextText.substring(
+            0,
+            300,
+          )}".`;
+        }
+
+        void submitQuery(
+          `An error occurred: ${errorMessage}.${contextSnippet} Please continue with your task or ask for help.`,
+        );
+      }
+    },
+    [geminiClient, submitQuery],
+  );
 
   useEffect(() => {
     setSessionControlHandlers({

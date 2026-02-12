@@ -29,7 +29,9 @@ export type SessionHealthReason =
   | "repeated_tool_failure"
   | "scheduler_flap"
   | "unhandled_error"
-  | "manual_pause";
+  | "manual_pause"
+  | "loop_remediation_attempt"
+  | "error_remediation_attempt";
 
 export interface SessionHealthSnapshot {
   state: SessionHealthState;
