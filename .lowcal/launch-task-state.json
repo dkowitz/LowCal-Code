@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": "2026-02-11T13:45:05.598Z",
+  "updated_at": "2026-02-12T00:42:43.730Z",
   "tasks": {
     "simple-test-task": {
       "task_id": "simple-test-task",
@@ -138,6 +138,244 @@
         "message_timestamp": "2026-02-11T13:42:49.007Z"
       },
       "tab_name": "task:memory-system-research"
+    },
+    "test-return-payload": {
+      "task_id": "test-return-payload",
+      "status": "failed",
+      "created_at": "2026-02-11T20:43:29.206Z",
+      "started_at": "2026-02-11T20:43:29.344Z",
+      "last_heartbeat": "2026-02-11T21:12:41.980Z",
+      "prompt_preview": "Create a detailed research report about the history of the Rebel Alliance's intelligence network during the Galactic Civil War. Include at least 5 sections with specific examples, dates, and key operatives. Make this report very thorough - aim for at least 2000 words of detailed content.",
+      "parent_session_id": "2a004172-4db1-48a6-bc70-44eb6af4ddc2",
+      "source_session_id": "2a004172-4db1-48a6-bc70-44eb6af4ddc2",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/2a004172-4db1-48a6-bc70-44eb6af4ddc2.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-test-return-payload-1770842609206.log"
+      },
+      "tab_name": "task:test-return-payload",
+      "finished_at": "2026-02-11T21:12:41.980Z",
+      "last_error": "Marked failed by launch task maintenance: no heartbeat for 400s."
+    },
+    "test-return-payload-quick": {
+      "task_id": "test-return-payload-quick",
+      "status": "completed",
+      "created_at": "2026-02-11T21:06:14.994Z",
+      "started_at": "2026-02-11T21:06:15.002Z",
+      "finished_at": "2026-02-11T21:13:28.414Z",
+      "last_heartbeat": "2026-02-11T21:13:28.414Z",
+      "prompt_preview": "Write a detailed 500-word report about the Battle of Yavin. Include: 1) Background context, 2) Rebel Alliance strategy, 3) Imperial defenses, 4) Key moments in the battle, 5) Aftermath and significance. Format it with clear section headers.",
+      "parent_session_id": "2a004172-4db1-48a6-bc70-44eb6af4ddc2",
+      "source_session_id": "2a004172-4db1-48a6-bc70-44eb6af4ddc2",
+      "execution_mode_requested": "headless",
+      "execution_mode_actual": "headless",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/2a004172-4db1-48a6-bc70-44eb6af4ddc2.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/launch-tasks/test-return-payload-quick.json",
+        "child_session_id": "headless-test-return-payload-quick-1770843975404",
+        "message_timestamp": "2026-02-11T21:13:28.414Z"
+      },
+      "pid": 951484
+    },
+    "test-result-file": {
+      "task_id": "test-result-file",
+      "status": "completed",
+      "created_at": "2026-02-11T21:35:25.079Z",
+      "started_at": "2026-02-11T21:35:25.092Z",
+      "finished_at": "2026-02-11T21:48:18.272Z",
+      "last_heartbeat": "2026-02-11T21:48:18.272Z",
+      "prompt_preview": "Write a detailed 300-word report about the Battle of Yavin. Include: 1) Background context, 2) Rebel Alliance strategy, 3) Imperial defenses, 4) Key moments in the battle, 5) Aftermath and significance. Format it with clear section headers using markdown.",
+      "parent_session_id": "2a004172-4db1-48a6-bc70-44eb6af4ddc2",
+      "source_session_id": "2a004172-4db1-48a6-bc70-44eb6af4ddc2",
+      "execution_mode_requested": "headless",
+      "execution_mode_actual": "headless",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/2a004172-4db1-48a6-bc70-44eb6af4ddc2.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/launch-tasks/test-result-file.json",
+        "child_session_id": "headless-test-result-file-1770845725478",
+        "message_timestamp": "2026-02-11T21:48:18.272Z"
+      },
+      "pid": 956780
+    },
+    "test-result-file-2": {
+      "task_id": "test-result-file-2",
+      "status": "completed",
+      "created_at": "2026-02-11T21:50:52.901Z",
+      "started_at": "2026-02-11T21:50:52.915Z",
+      "finished_at": "2026-02-11T21:52:57.299Z",
+      "last_heartbeat": "2026-02-11T21:52:57.299Z",
+      "prompt_preview": "Write a detailed 300-word report about the Battle of Yavin. Include: 1) Background context, 2) Rebel Alliance strategy, 3) Imperial defenses, 4) Key moments in the battle, 5) Aftermath and significance. Format it with clear section headers using markdown.",
+      "parent_session_id": "2a004172-4db1-48a6-bc70-44eb6af4ddc2",
+      "source_session_id": "2a004172-4db1-48a6-bc70-44eb6af4ddc2",
+      "execution_mode_requested": "headless",
+      "execution_mode_actual": "headless",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/2a004172-4db1-48a6-bc70-44eb6af4ddc2.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/launch-tasks/test-result-file-2.json",
+        "child_session_id": "headless-test-result-file-2-1770846653308",
+        "message_timestamp": "2026-02-11T21:52:57.299Z"
+      },
+      "pid": 959442
+    },
+    "test-result-file-3": {
+      "task_id": "test-result-file-3",
+      "status": "completed",
+      "created_at": "2026-02-11T21:53:51.209Z",
+      "started_at": "2026-02-11T21:53:51.222Z",
+      "finished_at": "2026-02-11T21:56:07.276Z",
+      "last_heartbeat": "2026-02-11T21:56:07.276Z",
+      "prompt_preview": "Write a detailed 300-word report about the Battle of Yavin. Include: 1) Background context, 2) Rebel Alliance strategy, 3) Imperial defenses, 4) Key moments in the battle, 5) Aftermath and significance. Format it with clear section headers using markdown.",
+      "parent_session_id": "2a004172-4db1-48a6-bc70-44eb6af4ddc2",
+      "source_session_id": "2a004172-4db1-48a6-bc70-44eb6af4ddc2",
+      "execution_mode_requested": "headless",
+      "execution_mode_actual": "headless",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/2a004172-4db1-48a6-bc70-44eb6af4ddc2.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/launch-tasks/test-result-file-3.json",
+        "child_session_id": "headless-test-result-file-3-1770846831596",
+        "message_timestamp": "2026-02-11T21:56:07.276Z"
+      },
+      "pid": 960010
+    },
+    "test-checkpoint-tools": {
+      "task_id": "test-checkpoint-tools",
+      "status": "completed",
+      "created_at": "2026-02-11T22:31:48.232Z",
+      "started_at": "2026-02-11T22:31:48.246Z",
+      "finished_at": "2026-02-11T22:45:21.215Z",
+      "last_heartbeat": "2026-02-11T22:45:21.215Z",
+      "prompt_preview": "Write a detailed report about the Battle of Yavin. Include background context, Rebel Alliance strategy, Imperial defenses, key moments in the battle, and aftermath/significance.",
+      "parent_session_id": "2a004172-4db1-48a6-bc70-44eb6af4ddc2",
+      "source_session_id": "2a004172-4db1-48a6-bc70-44eb6af4ddc2",
+      "execution_mode_requested": "headless",
+      "execution_mode_actual": "headless",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/2a004172-4db1-48a6-bc70-44eb6af4ddc2.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/launch-tasks/test-checkpoint-tools.json",
+        "child_session_id": "headless-test-checkpoint-tools-1770849108630",
+        "message_timestamp": "2026-02-11T22:45:21.215Z"
+      },
+      "pid": 967581
+    },
+    "web-tools-test": {
+      "task_id": "web-tools-test",
+      "status": "completed",
+      "created_at": "2026-02-12T00:04:37.698Z",
+      "started_at": "2026-02-12T00:04:37.836Z",
+      "finished_at": "2026-02-12T00:05:56.238Z",
+      "last_heartbeat": "2026-02-12T00:05:56.238Z",
+      "prompt_preview": "You are testing web search tools. Please perform the following tests and report the results:\n\n1. Test web_search tool with query: \"TypeScript 5.0 release date\"\n2. Test searxng_search tool with query: \"TypeScript 5.0 release date\"  \n3. Test web_fetch tool with URL: https://www.typescriptlang.org/docs/handbook/release-notes/typescript-5-0.html and prompt: \"What are the main features of TypeScript 5.",
+      "parent_session_id": "8676c1a5-5188-47d2-8fbe-a2e2326f99d5",
+      "source_session_id": "8676c1a5-5188-47d2-8fbe-a2e2326f99d5",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/8676c1a5-5188-47d2-8fbe-a2e2326f99d5.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-web-tools-test-1770854677698.log",
+        "child_session_id": "headless-web-tools-test-1770854678492",
+        "message_timestamp": "2026-02-12T00:05:56.238Z"
+      },
+      "tab_name": "task:web-tools-test"
+    },
+    "web-search-env-test": {
+      "task_id": "web-search-env-test",
+      "status": "failed",
+      "created_at": "2026-02-12T00:26:34.692Z",
+      "started_at": "2026-02-12T00:26:34.845Z",
+      "last_heartbeat": "2026-02-12T00:32:02.259Z",
+      "prompt_preview": "You are testing if the web_search tool is now available. Please:\n\n1. Test web_search tool with query: \"Go programming language latest version\"\n2. Report whether it succeeded or failed\n3. If it failed, report the exact error message\n\nThis is a test to verify that environment variables are properly inherited in zellij tab sessions.",
+      "parent_session_id": "d232a4c9-5f6c-45f2-b7eb-869b19e3197e",
+      "source_session_id": "d232a4c9-5f6c-45f2-b7eb-869b19e3197e",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "zellij_tab",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/d232a4c9-5f6c-45f2-b7eb-869b19e3197e.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-web-search-env-test-1770855994696.log"
+      },
+      "tab_name": "task:web-search-env-test",
+      "finished_at": "2026-02-12T00:32:02.259Z",
+      "last_error": "Marked failed by launch task maintenance: no heartbeat for 327s."
+    },
+    "web-search-env-test-v2": {
+      "task_id": "web-search-env-test-v2",
+      "status": "completed",
+      "created_at": "2026-02-12T00:30:33.493Z",
+      "started_at": "2026-02-12T00:30:33.642Z",
+      "finished_at": "2026-02-12T00:31:00.436Z",
+      "last_heartbeat": "2026-02-12T00:31:00.436Z",
+      "prompt_preview": "You are testing if the web_search tool is now available. Please:\n\n1. Test web_search tool with query: \"Go programming language latest version\"\n2. Report whether it succeeded or failed\n3. If it failed, report the exact error message\n\nThis is a test to verify that environment variables are properly inherited in zellij tab sessions.",
+      "parent_session_id": "c67c71dc-4ae1-406d-9ff8-1969e016c855",
+      "source_session_id": "c67c71dc-4ae1-406d-9ff8-1969e016c855",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/c67c71dc-4ae1-406d-9ff8-1969e016c855.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-web-search-env-test-v2-1770856233497.log",
+        "child_session_id": "headless-web-search-env-test-v2-1770856234074",
+        "message_timestamp": "2026-02-12T00:31:00.436Z"
+      },
+      "tab_name": "task:web-search-env-test-v2"
+    },
+    "web-search-explicit-test": {
+      "task_id": "web-search-explicit-test",
+      "status": "completed",
+      "created_at": "2026-02-12T00:32:02.260Z",
+      "started_at": "2026-02-12T00:32:02.406Z",
+      "finished_at": "2026-02-12T00:32:21.623Z",
+      "last_heartbeat": "2026-02-12T00:32:21.623Z",
+      "prompt_preview": "IMPORTANT: You must test the web_search tool specifically, NOT searxng_search.\n\nFirst, list your available tools to see if web_search is in the list.\n\nThen, if web_search is available, use it with query: \"Go programming language latest version\"\n\nIf web_search is NOT available, report: \"web_search is NOT available - tool not in toolset\"\n\nDo NOT use searxng_search as a fallback. We are specifically ",
+      "parent_session_id": "c67c71dc-4ae1-406d-9ff8-1969e016c855",
+      "source_session_id": "c67c71dc-4ae1-406d-9ff8-1969e016c855",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/c67c71dc-4ae1-406d-9ff8-1969e016c855.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-web-search-explicit-test-1770856322260.log",
+        "child_session_id": "headless-web-search-explicit-test-1770856322822",
+        "message_timestamp": "2026-02-12T00:32:21.623Z"
+      },
+      "tab_name": "task:web-search-explicit-test"
+    },
+    "web-search-final-test": {
+      "task_id": "web-search-final-test",
+      "status": "completed",
+      "created_at": "2026-02-12T00:35:46.493Z",
+      "started_at": "2026-02-12T00:35:46.640Z",
+      "finished_at": "2026-02-12T00:36:19.031Z",
+      "last_heartbeat": "2026-02-12T00:36:19.031Z",
+      "prompt_preview": "IMPORTANT: You must test the web_search tool specifically, NOT searxng_search.\n\nFirst, list your available tools to see if web_search is in the list.\n\nThen, if web_search is available, use it with query: \"Go programming language latest version\"\n\nIf web_search is NOT available, report: \"web_search is NOT available - tool not in toolset\"\n\nDo NOT use searxng_search as a fallback. We are specifically ",
+      "parent_session_id": "a4ec55f9-1c0b-48fa-90c1-ac6843ac6a92",
+      "source_session_id": "a4ec55f9-1c0b-48fa-90c1-ac6843ac6a92",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/a4ec55f9-1c0b-48fa-90c1-ac6843ac6a92.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-web-search-final-test-1770856546497.log",
+        "child_session_id": "headless-web-search-final-test-1770856547076",
+        "message_timestamp": "2026-02-12T00:36:19.031Z"
+      },
+      "tab_name": "task:web-search-final-test"
+    },
+    "web-search-headless-fix": {
+      "task_id": "web-search-headless-fix",
+      "status": "completed",
+      "created_at": "2026-02-12T00:39:41.585Z",
+      "started_at": "2026-02-12T00:39:41.743Z",
+      "finished_at": "2026-02-12T00:42:43.730Z",
+      "last_heartbeat": "2026-02-12T00:42:43.730Z",
+      "prompt_preview": "IMPORTANT: You must test the web_search tool specifically, NOT searxng_search.\n\nFirst, list your available tools to see if web_search is in the list.\n\nThen, if web_search is available, use it with query: \"Go programming language latest version\"\n\nIf web_search is NOT available, report: \"web_search is NOT available - tool not in toolset\"\n\nDo NOT use searxng_search as a fallback. We are specifically ",
+      "parent_session_id": "74bae298-0275-4da7-8e8c-daf0604e35da",
+      "source_session_id": "74bae298-0275-4da7-8e8c-daf0604e35da",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/74bae298-0275-4da7-8e8c-daf0604e35da.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-web-search-headless-fix-1770856781589.log",
+        "child_session_id": "headless-web-search-headless-fix-1770856782181",
+        "message_timestamp": "2026-02-12T00:42:43.730Z"
+      },
+      "tab_name": "task:web-search-headless-fix"
     }
   }
 }

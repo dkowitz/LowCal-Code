@@ -33,6 +33,40 @@ import {
 const RETURN_PAYLOAD_MARKER = "RETURN_PAYLOAD:";
 const ENV_DISABLE_LAUNCH_TASK = "LOWCAL_DISABLE_LAUNCH_TASK";
 
+/**
+ * Extract clean markdown content from stdout by stripping ANSI codes and tool call markers.
+ * Returns just the LLM's final response content, suitable for saving as a .md file.
+ */
+function extractCleanMarkdown(stdout: string): string {
+  let text = stripAnsiForReturn(stdout);
+  
+  // Remove tool call headers/footers
+  const toolBlockRegex = /┌─ (TOOL CALL|TOOL RESULT|TOOL ERROR|TOOL):\s*[\s\S]*?└────────────────────────/g;
+  text = text.replace(toolBlockRegex, "");
+  
+  // Remove "Error executing tool" lines
+  text = text.replace(/Error executing tool[^\n]*\n/g, "");
+  
+  // Extract content between LLM markers (┌─ LLM ... │content... └────────────────────────)
+  const llmBlocks: string[] = [];
+  const llmRegex = /┌─ LLM\s*[\s\S]*?│([\s\S]*?)\n└────────────────────────/g;
+  let match;
+  while ((match = llmRegex.exec(text)) !== null) {
+    // Extract content between │ and └
+    let content = match[1].trim();
+    // Clean up leading │ characters from multi-line responses
+    content = content.replace(/^│\s*/gm, "").trim();
+    if (content.length > 0) {
+      llmBlocks.push(content);
+    }
+  }
+  
+  // Join all LLM responses with newlines
+  const cleanContent = llmBlocks.join("\n\n").trim();
+  
+  return cleanContent;
+}
+
 function stripAnsiForReturn(text: string): string {
   // Strip most ANSI escape sequences so we can reliably parse explicit markers.
   return text.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
@@ -80,10 +114,43 @@ async function appendSessionReturnMessage(
     status === "success" && payload.result
       ? extractReturnPayload(payload.result)
       : undefined;
+  
+  // Extract clean markdown content for the result file
+  let cleanMarkdown = "";
+  if (status === "success" && payload.result) {
+    cleanMarkdown = extractCleanMarkdown(payload.result);
+  }
+  
   const preview = previewSource.trim().slice(0, 1200);
   const promptPreview = prompt.trim().slice(0, 400);
 
-  const message = {
+  // Write clean markdown file when returnToSessionId is set
+  let resultFilePath: string | undefined;
+  if (cleanMarkdown.length > 0 && toSessionId) {
+    try {
+      const resultsDir = path.join(process.cwd(), ".lowcal", "results");
+      await fs.mkdir(resultsDir, { recursive: true });
+      resultFilePath = path.join(resultsDir, `${jobId}.md`);
+      await fs.writeFile(resultFilePath, cleanMarkdown, "utf-8");
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      console.error(`[Headless] Failed to write result file for task ${jobId}: ${errorMessage}`);
+    }
+  }
+
+  const message: {
+    to_session_id: string;
+    from_session_id?: string;
+    from_task_id?: string;
+    job_id: string;
+    status: "success" | "error";
+    timestamp: string;
+    prompt_preview: string;
+    preview: string;
+    output_path: string;
+    return_payload?: string;
+    result_file_path?: string;
+  } = {
     to_session_id: toSessionId,
     from_session_id: sessionRunId,
     from_task_id: fromTaskId,
@@ -95,6 +162,11 @@ async function appendSessionReturnMessage(
     output_path: outputPath,
     return_payload: explicitReturnPayload,
   };
+
+  // Include result_file_path as the primary payload when available
+  if (resultFilePath) {
+    message.result_file_path = resultFilePath;
+  }
 
   try {
     await fs.mkdir(path.dirname(mailboxPath), { recursive: true });
@@ -369,6 +441,8 @@ async function main(): Promise<void> {
         respectGitIgnore: true,
         respectGeminiIgnore: true,
       },
+      tavilyApiKey:
+        settings.merged.tavilyApiKey || process.env["TAVILY_API_KEY"],
     });
 
     const cliToolConfig = loadCliToolConfig();

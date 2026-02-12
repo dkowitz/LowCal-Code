@@ -683,7 +683,7 @@ export class Config {
     }
     // Web search provider configuration
     getTavilyApiKey() {
-        return this.tavilyApiKey;
+        return this.tavilyApiKey || process.env["TAVILY_API_KEY"];
     }
     getIdeClient() {
         return this.ideClient;

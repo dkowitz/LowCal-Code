@@ -444,8 +444,8 @@ class LaunchTaskInvocation extends BaseToolInvocation {
         ]);
         // Go to the tab
         await this.runZellijCommand(["action", "go-to-tab-name", tabName]);
-        const commandArgs = [
-            "env",
+        // Environment variables to set (NOT quoted - shell needs to interpret these)
+        const envVars = [
             `LOWCAL_HEADLESS=1`,
             `LOWCAL_JOB_ID=${id}`,
             `LOWCAL_HEADLESS_PRETTY=1`,
@@ -457,6 +457,9 @@ class LaunchTaskInvocation extends BaseToolInvocation {
                 ? [`${ENV_RETURN_MAILBOX_PATH}=${returnMailboxPath}`]
                 : []),
             ...(returnToSessionId ? [`${ENV_RETURN_FROM_TASK_ID}=${id}`] : []),
+        ];
+        // Command arguments (these need to be quoted)
+        const commandArgs = [
             "node",
             cliPath,
             "--prompt",
@@ -466,7 +469,8 @@ class LaunchTaskInvocation extends BaseToolInvocation {
             "--output",
             logPath,
         ];
-        const command = `cd ${this.shellQuoteArg(schedulerCwd)} && ${commandArgs
+        // Build command: env vars (unquoted) + command args (quoted)
+        const command = `cd ${this.shellQuoteArg(schedulerCwd)} && ${envVars.join(" ")} ${commandArgs
             .map(this.shellQuoteArg)
             .join(" ")}; printf '\\n[scheduler idle]\\n'`;
         try {

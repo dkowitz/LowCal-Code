@@ -952,7 +952,7 @@ export class Config {
 
   // Web search provider configuration
   getTavilyApiKey(): string | undefined {
-    return this.tavilyApiKey;
+    return this.tavilyApiKey || process.env["TAVILY_API_KEY"];
   }
 
   getIdeClient(): IdeClient {

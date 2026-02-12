@@ -133879,8 +133879,15 @@ function formatMessage(index, message) {
   const taskId = message.from_task_id ?? message.job_id ?? message.from_session_id ?? "unknown-task";
   const status = message.status ?? "unknown";
   const time = message.timestamp ? new Date(message.timestamp).toLocaleString() : "unknown-time";
-  const preview = (message.return_payload && message.return_payload.trim().length > 0 ? message.return_payload : message.preview) ?? "";
-  const compactPreview = preview.trim().replace(/\s+/g, " ").slice(0, 500);
+  let displayContent = "";
+  if (message.result_file_path) {
+    displayContent = `Result: ${message.result_file_path}`;
+  } else if (message.return_payload && message.return_payload.trim().length > 0) {
+    displayContent = message.return_payload;
+  } else {
+    displayContent = message.preview ?? "";
+  }
+  const compactPreview = displayContent.trim().replace(/\s+/g, " ").slice(0, 500);
   const outputPath = message.output_path ? `
   output: ${message.output_path}` : "";
   return `[${index}] ${taskId} (${status}) at ${time}
@@ -134192,7 +134199,7 @@ ${sourceListFormatted.join("\n")}`;
         llmContent: `SearXNG search results for "${this.params.query}":
 
 ${content}`,
-        returnDisplay: `Search results for "${this.params.query}" returned ${data.number_of_results || 0} results.`,
+        returnDisplay: `Search results for "${this.params.query}" returned ${filteredResults.length} results.`,
         sources
       };
     } catch (error) {

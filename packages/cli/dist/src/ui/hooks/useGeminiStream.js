@@ -425,6 +425,30 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                     content: item.text,
                 });
             }
+            // Include tool calls from tool groups
+            if (item.type === "tool_group" && item.tools) {
+                const toolCalls = item.tools.map((tool) => ({
+                    id: tool.callId,
+                    name: tool.name,
+                    args: {}, // Args not available in IndividualToolCallDisplay - will be populated from client history
+                    result: tool.resultDisplay ?? null,
+                }));
+                // Add to the most recent gemini message if it exists
+                const lastGeminiMsg = checkpointMessages.filter((m) => m.type === "gemini").pop();
+                if (lastGeminiMsg && !lastGeminiMsg.toolCalls) {
+                    lastGeminiMsg.toolCalls = toolCalls;
+                }
+                else if (!lastGeminiMsg) {
+                    // If no gemini message exists, create a placeholder
+                    checkpointMessages.push({
+                        id: `msg-${Date.now()}-${index}-tools`,
+                        timestamp,
+                        type: "gemini",
+                        content: "[Tool calls executed]",
+                        toolCalls,
+                    });
+                }
+            }
         });
         return checkpointMessages;
     }, []);
@@ -432,6 +456,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         const timestamp = new Date().toISOString();
         const checkpointMessages = [];
         clientHistory.forEach((content, index) => {
+            // Extract text parts
             const text = content.parts
                 ?.filter((part) => !!part &&
                 typeof part === "object" &&
@@ -439,15 +464,36 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 typeof part.text === "string")
                 .map((part) => part.text)
                 .join("") ?? "";
-            if (!text) {
+            // Extract tool calls (functionCall parts)
+            const toolCalls = [];
+            content.parts?.forEach((part) => {
+                if (part &&
+                    typeof part === "object" &&
+                    "functionCall" in part) {
+                    const functionCall = part.functionCall;
+                    if (functionCall && typeof functionCall === "object") {
+                        toolCalls.push({
+                            id: functionCall.id ?? `tool-${index}-${toolCalls.length}`,
+                            name: functionCall.name ?? "",
+                            args: functionCall.args || {},
+                            result: null, // Tool results are in functionResponse parts
+                        });
+                    }
+                }
+            });
+            if (!text && toolCalls.length === 0) {
                 return;
             }
-            checkpointMessages.push({
+            const message = {
                 id: `msg-${Date.now()}-${index}`,
                 timestamp,
                 type: content.role === "user" ? "user" : "gemini",
-                content: text,
-            });
+                content: (text ?? "") || (toolCalls.length > 0 ? "[Tool calls]" : ""),
+            };
+            if (toolCalls.length > 0) {
+                message.toolCalls = toolCalls;
+            }
+            checkpointMessages.push(message);
         });
         return checkpointMessages;
     }, []);

@@ -2,18 +2,18 @@
   "running": true,
   "pid": 11918,
   "started_at": "2026-02-09T18:13:49.282Z",
-  "last_tick": "2026-02-11T20:01:12.758Z",
+  "last_tick": "2026-02-12T00:46:05.837Z",
   "tick_interval_ms": 15000,
   "policy_ids": [
     "recover_stalled_session"
   ],
-  "sessions_scanned": 1,
+  "sessions_scanned": 0,
   "stalled_sessions": 0,
   "recoveries_attempted": 0,
   "recoveries_succeeded": 0,
   "last_action": {
-    "timestamp": "2026-02-10T20:38:26.182Z",
-    "session_id": "421da5d6-c119-42f1-b011-5d993427225d",
+    "timestamp": "2026-02-11T22:32:47.020Z",
+    "session_id": "6cc381dc-09c0-43ac-8fa0-69342dbf6e07",
     "outcome": "removed_dead_session_record",
     "attempt": 1
   }

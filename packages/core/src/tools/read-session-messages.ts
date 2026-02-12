@@ -40,6 +40,7 @@ interface SessionMessageRecord {
   preview?: string;
   output_path?: string;
   return_payload?: string;
+  result_file_path?: string; // Path to clean markdown file with full task result
 }
 
 interface ParsedMailboxLine {
@@ -208,11 +209,18 @@ function formatMessage(
   const time = message.timestamp
     ? new Date(message.timestamp).toLocaleString()
     : "unknown-time";
-  const preview =
-    (message.return_payload && message.return_payload.trim().length > 0
-      ? message.return_payload
-      : message.preview) ?? "";
-  const compactPreview = preview.trim().replace(/\s+/g, " ").slice(0, 500);
+  
+  // Prioritize result_file_path as the primary payload (clean markdown file)
+  let displayContent = "";
+  if (message.result_file_path) {
+    displayContent = `Result: ${message.result_file_path}`;
+  } else if (message.return_payload && message.return_payload.trim().length > 0) {
+    displayContent = message.return_payload;
+  } else {
+    displayContent = message.preview ?? "";
+  }
+  
+  const compactPreview = displayContent.trim().replace(/\s+/g, " ").slice(0, 500);
   const outputPath = message.output_path ? `\n  output: ${message.output_path}` : "";
   return `[${index}] ${taskId} (${status}) at ${time}\n  ${compactPreview}${outputPath}`;
 }

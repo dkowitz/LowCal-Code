@@ -193,7 +193,7 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation {
             }
             return {
                 llmContent: `SearXNG search results for "${this.params.query}":\n\n${content}`,
-                returnDisplay: `Search results for "${this.params.query}" returned ${data.number_of_results || 0} results.`,
+                returnDisplay: `Search results for "${this.params.query}" returned ${filteredResults.length} results.`,
                 sources,
             };
         }
