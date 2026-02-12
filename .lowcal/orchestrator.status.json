@@ -2,12 +2,12 @@
   "running": true,
   "pid": 11918,
   "started_at": "2026-02-09T18:13:49.282Z",
-  "last_tick": "2026-02-12T00:46:05.837Z",
+  "last_tick": "2026-02-12T01:08:51.340Z",
   "tick_interval_ms": 15000,
   "policy_ids": [
     "recover_stalled_session"
   ],
-  "sessions_scanned": 0,
+  "sessions_scanned": 1,
   "stalled_sessions": 0,
   "recoveries_attempted": 0,
   "recoveries_succeeded": 0,

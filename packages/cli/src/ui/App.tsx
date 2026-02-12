@@ -1050,8 +1050,12 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
           const lastMessage =
             checkpoint.messages[checkpoint.messages.length - 1];
           const content = lastMessage?.content ?? "";
+          // Strip newlines and collapse whitespace for single-line display
+          const cleanedContent = content.replace(/\s+/g, " ").trim();
           const lastMessagePreview =
-            content.length > 40 ? `${content.slice(0, 40)}...` : content;
+            cleanedContent.length > 40
+              ? `${cleanedContent.slice(0, 40)}...`
+              : cleanedContent;
 
           return {
             id: checkpoint.id,

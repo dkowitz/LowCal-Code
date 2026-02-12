@@ -20,8 +20,10 @@ const getResumeDetails = async (context) => {
             if (checkpoint.messages.length > 0) {
                 const lastMsg = checkpoint.messages[checkpoint.messages.length - 1];
                 if (lastMsg.content) {
-                    lastMessagePreview = lastMsg.content.substring(0, 40);
-                    if (lastMsg.content.length > 40) {
+                    // Strip newlines and collapse whitespace for single-line display
+                    const cleanedContent = lastMsg.content.replace(/\s+/g, " ").trim();
+                    lastMessagePreview = cleanedContent.substring(0, 40);
+                    if (cleanedContent.length > 40) {
                         lastMessagePreview += "...";
                     }
                 }

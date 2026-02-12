@@ -74091,6 +74091,15 @@ function buildConcisePrompt(toolNames) {
       "- Explain commands that modify state and get confirmation before destructive steps.",
       "- Read files rather than guessing their contents."
     ].join("\n"),
+    [
+      "## Memory & Personalization",
+      "- **Proactive Memory Saving:** Use the `" + ToolNames.MEMORY + "` tool to save pertinent facts about the user, their preferences, and observations you make during interactions. This includes:",
+      "  - User-specified facts (e.g., preferred editor, coding style, project conventions)",
+      "  - Observations about code patterns or project structure",
+      "  - Inferences that will help personalize future interactions",
+      "- **Personality:** Be proactive and creative in pursuing solutions. Don't wait for explicit instructions\u2014anticipate needs and suggest improvements.",
+      "- **Autonomy:** When you have sufficient context, proceed confidently without constant confirmation. Only seek approval for high-risk operations."
+    ].join("\n"),
     buildToolUsageSection(toolNames, "concise"),
     buildSandboxSection("concise"),
     buildGitSection("concise"),
@@ -233800,15 +233809,16 @@ create action:
           schedulerCwd
         ]);
         await this.runZellijCommand(["action", "go-to-tab-name", tabName]);
-        const commandArgs = [
-          "env",
+        const envVars = [
           `LOWCAL_HEADLESS=1`,
           `LOWCAL_JOB_ID=${id}`,
           `LOWCAL_HEADLESS_PRETTY=1`,
           `${ENV_DISABLE_LAUNCH_TASK}=1`,
           ...returnToSessionId ? [`${ENV_RETURN_TO_SESSION_ID}=${returnToSessionId}`] : [],
           ...returnMailboxPath ? [`${ENV_RETURN_MAILBOX_PATH}=${returnMailboxPath}`] : [],
-          ...returnToSessionId ? [`${ENV_RETURN_FROM_TASK_ID}=${id}`] : [],
+          ...returnToSessionId ? [`${ENV_RETURN_FROM_TASK_ID}=${id}`] : []
+        ];
+        const commandArgs = [
           "node",
           cliPath,
           "--prompt",
@@ -233818,7 +233828,7 @@ create action:
           "--output",
           logPath
         ];
-        const command2 = `cd ${this.shellQuoteArg(schedulerCwd)} && ${commandArgs.map(this.shellQuoteArg).join(" ")}; printf '\\n[scheduler idle]\\n'`;
+        const command2 = `cd ${this.shellQuoteArg(schedulerCwd)} && ${envVars.join(" ")} ${commandArgs.map(this.shellQuoteArg).join(" ")}; printf '\\n[scheduler idle]\\n'`;
         try {
           await this.runZellijCommand(["action", "write-chars", `${command2}
 `]);
@@ -234057,8 +234067,15 @@ function formatMessage(index, message) {
   const taskId = message.from_task_id ?? message.job_id ?? message.from_session_id ?? "unknown-task";
   const status = message.status ?? "unknown";
   const time = message.timestamp ? new Date(message.timestamp).toLocaleString() : "unknown-time";
-  const preview = (message.return_payload && message.return_payload.trim().length > 0 ? message.return_payload : message.preview) ?? "";
-  const compactPreview = preview.trim().replace(/\s+/g, " ").slice(0, 500);
+  let displayContent = "";
+  if (message.result_file_path) {
+    displayContent = `Result: ${message.result_file_path}`;
+  } else if (message.return_payload && message.return_payload.trim().length > 0) {
+    displayContent = message.return_payload;
+  } else {
+    displayContent = message.preview ?? "";
+  }
+  const compactPreview = displayContent.trim().replace(/\s+/g, " ").slice(0, 500);
   const outputPath = message.output_path ? `
   output: ${message.output_path}` : "";
   return `[${index}] ${taskId} (${status}) at ${time}
@@ -234444,7 +234461,7 @@ ${sourceListFormatted.join("\n")}`;
             llmContent: `SearXNG search results for "${this.params.query}":
 
 ${content}`,
-            returnDisplay: `Search results for "${this.params.query}" returned ${data.number_of_results || 0} results.`,
+            returnDisplay: `Search results for "${this.params.query}" returned ${filteredResults.length} results.`,
             sources
           };
         } catch (error) {
@@ -235866,7 +235883,7 @@ var init_config2 = __esm({
       }
       // Web search provider configuration
       getTavilyApiKey() {
-        return this.tavilyApiKey;
+        return this.tavilyApiKey || process14.env["TAVILY_API_KEY"];
       }
       getIdeClient() {
         return this.ideClient;
@@ -345070,7 +345087,7 @@ function RadioButtonSelect({
           item.themeNameDisplay,
           " ",
           /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Text3, { color: Colors.Gray, children: item.themeTypeDisplay })
-        ] }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Text3, { color: textColor, wrap: "truncate", children: item.label })
+        ] }) : typeof item.label === "string" ? /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Text3, { color: textColor, wrap: "truncate", children: item.label }) : /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(Box_default, { children: item.label })
       ] }, itemIndex);
     }),
     showScrollArrows && /* @__PURE__ */ (0, import_jsx_runtime9.jsx)(
@@ -346248,6 +346265,29 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
             content: item.text
           });
         }
+        if (item.type === "tool_group" && item.tools) {
+          const toolCalls2 = item.tools.map((tool) => ({
+            id: tool.callId,
+            name: tool.name,
+            args: {},
+            // Args not available in IndividualToolCallDisplay - will be populated from client history
+            result: tool.resultDisplay ?? null
+          }));
+          const lastGeminiMsg = checkpointMessages.filter(
+            (m) => m.type === "gemini"
+          ).pop();
+          if (lastGeminiMsg && !lastGeminiMsg.toolCalls) {
+            lastGeminiMsg.toolCalls = toolCalls2;
+          } else if (!lastGeminiMsg) {
+            checkpointMessages.push({
+              id: `msg-${Date.now()}-${index}-tools`,
+              timestamp,
+              type: "gemini",
+              content: "[Tool calls executed]",
+              toolCalls: toolCalls2
+            });
+          }
+        }
       });
       return checkpointMessages;
     },
@@ -346261,15 +346301,34 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
         const text = content.parts?.filter(
           (part) => !!part && typeof part === "object" && "text" in part && typeof part.text === "string"
         ).map((part) => part.text).join("") ?? "";
-        if (!text) {
+        const toolCalls2 = [];
+        content.parts?.forEach((part) => {
+          if (part && typeof part === "object" && "functionCall" in part) {
+            const functionCall = part.functionCall;
+            if (functionCall && typeof functionCall === "object") {
+              toolCalls2.push({
+                id: functionCall.id ?? `tool-${index}-${toolCalls2.length}`,
+                name: functionCall.name ?? "",
+                args: functionCall.args || {},
+                result: null
+                // Tool results are in functionResponse parts
+              });
+            }
+          }
+        });
+        if (!text && toolCalls2.length === 0) {
           return;
         }
-        checkpointMessages.push({
+        const message = {
           id: `msg-${Date.now()}-${index}`,
           timestamp,
           type: content.role === "user" ? "user" : "gemini",
-          content: text
-        });
+          content: (text ?? "") || (toolCalls2.length > 0 ? "[Tool calls]" : "")
+        };
+        if (toolCalls2.length > 0) {
+          message.toolCalls = toolCalls2;
+        }
+        checkpointMessages.push(message);
       });
       return checkpointMessages;
     },
@@ -349643,7 +349702,7 @@ init_open();
 import process40 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "N/A";
+var GIT_COMMIT_INFO = "446f0182";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -350588,18 +350647,26 @@ Subcommands:
   show <name>             \u2013 Display a prompt's content
   create <name> <content> \u2013 Create a new prompt (string or .md file path)
   delete <name>           \u2013 Delete a prompt
-  activate <name>         \u2013 Enable a prompt (aliases: use, set)
-  disable                 \u2013 Disable the active custom prompt
+  activate <names>        \u2013 Enable one or more prompts (aliases: use, set)
+  disable                 \u2013 Disable the active custom prompt(s)
 
 Options:
   --exclusive             \u2013 Replace entire system prompt (default: supplement)
+
+Activating Multiple Prompts:
+  You can activate multiple prompts at once by providing a comma-separated list.
+  The prompts will be applied in order, stacking their content.
+
+  Examples:
+    /prompt activate k2so,darth-vader
+    /prompt activate prompt1,prompt2,prompt3 --exclusive
 
 Examples:
   /prompt list
   /prompt create my-prompt "Be concise and technical"
   /prompt create reviewer ./code-review-prompt.md
   /prompt activate my-prompt
-  /prompt activate reviewer --exclusive
+  /prompt activate k2so,darth-vader --exclusive
   /prompt show my-prompt
   /prompt delete my-prompt
   /prompt disable`
@@ -350751,7 +350818,7 @@ ${metadata.content}
       const argsWithoutFlags = rest.filter((a) => a !== "--exclusive");
       if (argsWithoutFlags.length === 0) {
         reply(
-          `Usage: /prompt ${verbLower} <name|[name1,name2,...]> [--exclusive]`
+          `Usage: /prompt ${verbLower} <name|name1,name2,...> [--exclusive]`
         );
         return;
       }
@@ -350768,6 +350835,8 @@ ${metadata.content}
       if (rawNameArg.startsWith("[") && rawNameArg.endsWith("]")) {
         const inner = rawNameArg.slice(1, -1);
         names = inner.split(",").map((s2) => s2.trim()).filter(Boolean);
+      } else if (rawNameArg.includes(",")) {
+        names = rawNameArg.split(",").map((s2) => s2.trim()).filter(Boolean);
       } else {
         names = [rawNameArg];
       }
@@ -354070,8 +354139,9 @@ var getResumeDetails = async (context2) => {
       if (checkpoint.messages.length > 0) {
         const lastMsg = checkpoint.messages[checkpoint.messages.length - 1];
         if (lastMsg.content) {
-          lastMessagePreview = lastMsg.content.substring(0, 40);
-          if (lastMsg.content.length > 40) {
+          const cleanedContent = lastMsg.content.replace(/\s+/g, " ").trim();
+          lastMessagePreview = cleanedContent.substring(0, 40);
+          if (cleanedContent.length > 40) {
             lastMessagePreview += "...";
           }
         }
@@ -362761,13 +362831,39 @@ var ModelSelectionDialog = ({
 
 // packages/cli/src/ui/components/ResumeDialog.tsx
 var import_jsx_runtime38 = __toESM(require_jsx_runtime(), 1);
+var getSessionColor2 = (sessionId2) => {
+  const hash = sessionId2.substring(0, 8);
+  const num = parseInt(hash, 16) || 0;
+  const colors = [
+    Colors.AccentBlue,
+    Colors.AccentPurple,
+    Colors.AccentCyan,
+    Colors.AccentGreen,
+    Colors.AccentYellow,
+    Colors.AccentRed,
+    Colors.LightBlue
+  ];
+  return colors[num % colors.length];
+};
 function formatCheckpointLabel(checkpoint) {
   const isoString = checkpoint.createdAt.toISOString();
   const match2 = isoString.match(/(\d{4}-\d{2}-\d{2})T(\d{2}:\d{2}:\d{2})/);
   const formattedDate = match2 ? `${match2[1]} ${match2[2]}` : "Invalid Date";
   const shortSessionId = checkpoint.sessionId.slice(0, 8);
+  const sessionColor = getSessionColor2(checkpoint.sessionId);
   const preview = checkpoint.lastMessagePreview ? ` - ${checkpoint.lastMessagePreview}` : "";
-  return `[${checkpoint.messageCount} messages] ${shortSessionId} ${formattedDate}${preview}`;
+  return /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Text3, { color: Colors.Gray, children: [
+      "[",
+      checkpoint.messageCount,
+      " messages]"
+    ] }),
+    " ",
+    /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: sessionColor, children: shortSessionId }),
+    " ",
+    formattedDate,
+    preview
+  ] });
 }
 var ResumeDialog = ({
   checkpoints,

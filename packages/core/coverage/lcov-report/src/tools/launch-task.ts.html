@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/672</span>
+                <span class='fraction'>0/673</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/672</span>
+                <span class='fraction'>0/673</span>
             </div>
         
             
@@ -914,7 +914,12 @@
 <a name='L849'></a><a href='#L849'>849</a>
 <a name='L850'></a><a href='#L850'>850</a>
 <a name='L851'></a><a href='#L851'>851</a>
-<a name='L852'></a><a href='#L852'>852</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L852'></a><a href='#L852'>852</a>
+<a name='L853'></a><a href='#L853'>853</a>
+<a name='L854'></a><a href='#L854'>854</a>
+<a name='L855'></a><a href='#L855'>855</a>
+<a name='L856'></a><a href='#L856'>856</a>
+<a name='L857'></a><a href='#L857'>857</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -1554,6 +1559,8 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1566,6 +1573,8 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -1576,6 +1585,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -2405,8 +2415,8 @@ interface LaunchResult {
     // Go to the tab
 <span class="cstat-no" title="statement not covered" >    await this.runZellijCommand(["action", "go-to-tab-name", tabName]);</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    const commandArgs = [</span>
-<span class="cstat-no" title="statement not covered" >      "env",</span>
+    // Environment variables to set (NOT quoted - shell needs to interpret these)
+<span class="cstat-no" title="statement not covered" >    const envVars = [</span>
 <span class="cstat-no" title="statement not covered" >      `LOWCAL_HEADLESS=1`,</span>
 <span class="cstat-no" title="statement not covered" >      `LOWCAL_JOB_ID=${id}`,</span>
 <span class="cstat-no" title="statement not covered" >      `LOWCAL_HEADLESS_PRETTY=1`,</span>
@@ -2418,6 +2428,10 @@ interface LaunchResult {
 <span class="cstat-no" title="statement not covered" >        ? [`${ENV_RETURN_MAILBOX_PATH}=${returnMailboxPath}`]</span>
 <span class="cstat-no" title="statement not covered" >        : []),</span>
 <span class="cstat-no" title="statement not covered" >      ...(returnToSessionId ? [`${ENV_RETURN_FROM_TASK_ID}=${id}`] : []),</span>
+<span class="cstat-no" title="statement not covered" >    ];</span>
+&nbsp;
+    // Command arguments (these need to be quoted)
+<span class="cstat-no" title="statement not covered" >    const commandArgs = [</span>
 <span class="cstat-no" title="statement not covered" >      "node",</span>
 <span class="cstat-no" title="statement not covered" >      cliPath,</span>
 <span class="cstat-no" title="statement not covered" >      "--prompt",</span>
@@ -2428,7 +2442,8 @@ interface LaunchResult {
 <span class="cstat-no" title="statement not covered" >      logPath,</span>
 <span class="cstat-no" title="statement not covered" >    ];</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    const command = `cd ${this.shellQuoteArg(schedulerCwd)} &amp;&amp; ${commandArgs</span>
+    // Build command: env vars (unquoted) + command args (quoted)
+<span class="cstat-no" title="statement not covered" >    const command = `cd ${this.shellQuoteArg(schedulerCwd)} &amp;&amp; ${envVars.join(" ")} ${commandArgs</span>
 <span class="cstat-no" title="statement not covered" >      .map(this.shellQuoteArg)</span>
 <span class="cstat-no" title="statement not covered" >      .join(" ")}; printf '\\n[scheduler idle]\\n'`;</span>
 &nbsp;
@@ -2623,7 +2638,7 @@ export interface LaunchTaskParams {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-11T19:48:38.003Z
+                at 2026-02-12T01:07:35.476Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
