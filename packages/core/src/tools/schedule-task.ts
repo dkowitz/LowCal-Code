@@ -8,7 +8,12 @@ import type { ToolResult } from "./tools.js";
 import { BaseDeclarativeTool, BaseToolInvocation, Kind } from "./tools.js";
 import { ToolErrorType } from "./tool-error.js";
 import type { FunctionDeclaration } from "@google/genai";
-import type { ScheduleTaskParams, Job } from "../scheduler/types.js";
+import type { Config } from "../config/config.js";
+import type {
+  ScheduleTaskParams,
+  Job,
+  JobExecutionMode,
+} from "../scheduler/types.js";
 import {
   createJob,
   getJob,
@@ -20,11 +25,28 @@ import {
   getJobLogs,
   validateCronExpression,
 } from "../scheduler/job-store.js";
+import {
+  mergeRuntimeProfiles,
+  normalizeActionType,
+  normalizeAuthProfile,
+  normalizeExecutionMode,
+  normalizeModelProfile,
+  normalizeRunProfile,
+  normalizeRuntimeProfile,
+  normalizeTemplateLevel,
+  runtimeProfileFromTemplate,
+  sanitizeRuntimeProfile,
+} from "../task-templates/runtime.js";
+import type {
+  TaskRuntimeProfile,
+  TaskTemplate,
+} from "../task-templates/types.js";
+import { TaskTemplateManager } from "../task-templates/manager.js";
 
 const scheduleTaskToolSchemaData: FunctionDeclaration = {
   name: "schedule_task",
   description:
-    "Creates and manages scheduled tasks (cron jobs) that run automatically at specified times. This enables LowCal to execute tasks autonomously on a schedule, such as running tests, checking logs, or performing maintenance.",
+    "Creates and manages scheduled tasks (cron jobs) that run automatically at specified times. Supports task templates and per-job auth/model/runtime overrides.",
   parametersJsonSchema: {
     type: "object",
     properties: {
@@ -50,12 +72,12 @@ const scheduleTaskToolSchemaData: FunctionDeclaration = {
       schedule: {
         type: "string",
         description:
-          "Cron expression in 5-field format (minute hour day month day_of_week). Examples: '0 * * * *' = hourly, '0 2 * * *' = daily at 2am, '*/5 * * * *' = every 5 minutes",
+          "Cron expression in 5-field format (minute hour day month day_of_week).",
       },
       prompt: {
         type: "string",
         description:
-          "The prompt/instruction to execute when the job runs. This is what LowCal will do when triggered.",
+          "Optional prompt/action value for the job. Required unless template/action_value provides content.",
       },
       description: {
         type: "string",
@@ -77,7 +99,7 @@ const scheduleTaskToolSchemaData: FunctionDeclaration = {
       },
       execution_mode: {
         type: "string",
-        enum: ["default", "headless", "zellij_tab"],
+        enum: ["default", "headless", "zellij_tab", "in_process"],
         description:
           "Optional execution mode override for this job. Use 'default' (or omit) to follow the scheduler setting.",
       },
@@ -85,6 +107,51 @@ const scheduleTaskToolSchemaData: FunctionDeclaration = {
         type: "boolean",
         description:
           "Set to true to apply execution_mode. If false/omitted, execution_mode is ignored and defaults are used.",
+      },
+      action_type: {
+        type: "string",
+        enum: ["prompt", "slash_command"],
+        description:
+          "Optional action type. slash_command is supported only with in_process execution mode.",
+      },
+      action_value: {
+        type: "string",
+        description:
+          "Optional action payload. If omitted, prompt is used as action_value.",
+      },
+      template_id: {
+        type: "string",
+        description:
+          "Optional task template id used to pre-fill job runtime fields.",
+      },
+      template_level: {
+        type: "string",
+        enum: ["auto", "project", "user", "builtin"],
+        description:
+          "Optional template scope. auto resolves project > user > builtin.",
+      },
+      template_overrides: {
+        type: "object",
+        description:
+          "Optional runtime overrides merged on top of template/runtime values.",
+      },
+      auth: {
+        type: "object",
+        description: "Optional auth override for this job runtime.",
+      },
+      model: {
+        type: "object",
+        description: "Optional model override for this job runtime.",
+      },
+      run: {
+        type: "object",
+        description:
+          "Optional run settings (returnToSession, allowRecursive) for this job runtime.",
+      },
+      return_to_session_id: {
+        type: "string",
+        description:
+          "Optional explicit target session id for in_process execution.",
       },
     },
     required: ["action"],
@@ -94,105 +161,51 @@ const scheduleTaskToolSchemaData: FunctionDeclaration = {
 
 const scheduleTaskToolDescription = `
 Use this tool to create and manage scheduled tasks (cron jobs) that run automatically at specified times.
-This enables LowCal to execute tasks autonomously on a schedule, enabling long-horizon task completion,
-automated maintenance, and proactive monitoring.
 
-## When to Use This Tool
-
-Use this tool proactively in these scenarios:
-
-1. **Recurring tasks** - Schedule tasks that need to run repeatedly (e.g., hourly tests, daily backups)
-2. **Delayed execution** - Schedule a task to run at a specific future time
-3. **Automated monitoring** - Set up jobs to check system health, logs, or external resources
-4. **Long-horizon workflows** - Break complex tasks into scheduled steps that execute over time
-5. **Self-maintenance** - Schedule jobs to clean up, update dependencies, or perform routine checks
-
-## Cron Expression Format
-
-The schedule uses standard 5-field cron format:
-\`\`\`
-┌───────────── minute (0 - 59)
-│ ┌───────────── hour (0 - 23)
-│ │ ┌───────────── day of month (1 - 31)
-│ │ │ ┌───────────── month (1 - 12)
-│ │ │ │ ┌───────────── day of week (0 - 6, Sunday = 0)
-│ │ │ │ │
-* * * * *
-\`\`\`
-
-Common patterns:
-- \`0 * * * *\` - Every hour
-- \`0 2 * * *\` - Daily at 2:00 AM
-- \`*/5 * * * *\` - Every 5 minutes
-- \`0 9 * * 1\` - Every Monday at 9:00 AM
-- \`0 0 1 * *\` - First day of every month at midnight
+Jobs support:
+- task templates (template_id/template_level)
+- per-job auth/model overrides
+- action types (prompt or slash_command)
+- execution modes (headless, zellij_tab, in_process)
 
 ## Actions
 
-- **create**: Create a new scheduled job (requires: id, schedule, prompt)
-- **list**: List all scheduled jobs
-- **get**: Get details of a specific job including recent execution logs (requires: id)
-- **update**: Update an existing job's properties (requires: id)
-- **delete**: Remove a scheduled job permanently (requires: id)
-- **pause**: Temporarily disable a job without deleting it (requires: id)
-- **resume**: Re-enable a paused job (requires: id)
-- **run_now**: Trigger a job to run immediately (requires: id)
-- Optional execution mode override: set \`execution_mode\` to \`headless\` or \`zellij_tab\`
-
-## Examples
-
-<example>
-User: I want to run tests every hour and notify me if they fail.
-Assistant: I'll create a scheduled job to run tests hourly.
-
-create action:
-- id: "hourly-test-runner"
-- schedule: "0 * * * *"
-- prompt: "Run 'npm test'. If tests fail, analyze the errors and create a summary of what needs to be fixed."
-- description: "Run tests every hour and report failures"
-</example>
-
-<example>
-User: Check the error logs every 10 minutes and alert me if there are new errors.
-Assistant: I'll set up a monitoring job to check logs regularly.
-
-create action:
-- id: "log-monitor"
-- schedule: "*/10 * * * *"
-- prompt: "Check the application error logs for any new errors in the last 10 minutes. If found, summarize them and suggest actions."
-- description: "Monitor error logs every 10 minutes"
-</example>
-
-<example>
-User: Show me all scheduled jobs
-Assistant: I'll list all your scheduled jobs.
-
-list action
-</example>
-
-<example>
-User: Pause the hourly test runner
-Assistant: I'll pause that job for now.
-
-pause action:
-- id: "hourly-test-runner"
-</example>
-
-## Important Notes
-
-- Job IDs must be unique and contain only letters, numbers, underscores, and hyphens
-- The scheduler daemon must be running for jobs to execute (use 'lowcal scheduler start')
-- Jobs have a default timeout of 10 minutes and auto-pause after 3 consecutive failures
-- Maximum 100 jobs can be scheduled at once
-- Job execution logs are stored in .lowcal/logs/
-- Execution mode defaults to the scheduler setting unless overridden per job (set execution_mode_override to true)
+- create: Create a new scheduled job (requires: id, schedule, and action content)
+- list: List all scheduled jobs
+- get: Get details of a specific job including recent execution logs
+- update: Update an existing job's properties
+- delete: Remove a scheduled job permanently
+- pause: Temporarily disable a job without deleting it
+- resume: Re-enable a paused job
+- run_now: Trigger a job to run immediately
 `;
+
+function isRuntimeFieldPresent(params: ScheduleTaskParams): boolean {
+  return (
+    params.prompt !== undefined ||
+    params.action_type !== undefined ||
+    params.action_value !== undefined ||
+    params.execution_mode !== undefined ||
+    params.execution_mode_override !== undefined ||
+    params.template_id !== undefined ||
+    params.template_level !== undefined ||
+    params.template_overrides !== undefined ||
+    params.auth !== undefined ||
+    params.model !== undefined ||
+    params.run !== undefined ||
+    params.return_to_session_id !== undefined
+  );
+}
 
 class ScheduleTaskInvocation extends BaseToolInvocation<
   ScheduleTaskParams,
   ToolResult
 > {
-  constructor(params: ScheduleTaskParams) {
+  constructor(
+    params: ScheduleTaskParams,
+    private readonly sourceSessionId?: string,
+    private readonly config?: Config,
+  ) {
     super(params);
   }
 
@@ -241,6 +254,210 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
     }
   }
 
+  private getWorkspaceRoot(): string {
+    return this.config?.getProjectRoot() ?? process.cwd();
+  }
+
+  private async resolveTemplateFromParams(
+    templateIdRaw: string | undefined,
+    templateLevelRaw: ScheduleTaskParams["template_level"],
+  ): Promise<TaskTemplate | null> {
+    const templateId =
+      typeof templateIdRaw === "string" && templateIdRaw.trim().length > 0
+        ? templateIdRaw.trim()
+        : undefined;
+    if (!templateId) {
+      return null;
+    }
+    const templateLevel = normalizeTemplateLevel(templateLevelRaw);
+    const templateManager = new TaskTemplateManager(this.getWorkspaceRoot());
+    const template = await templateManager.resolveTemplate(
+      templateId,
+      templateLevel ? { level: templateLevel } : undefined,
+    );
+    if (!template) {
+      throw new Error(`Task template "${templateId}" not found`);
+    }
+    return template;
+  }
+
+  private resolveRunTarget(
+    runtimeProfile: TaskRuntimeProfile,
+    explicitReturnToSessionId: string | undefined,
+    executionMode: JobExecutionMode | undefined,
+  ): string | undefined {
+    const explicitTarget =
+      typeof explicitReturnToSessionId === "string" &&
+      explicitReturnToSessionId.trim().length > 0
+        ? explicitReturnToSessionId.trim()
+        : undefined;
+    if (explicitTarget) {
+      return explicitTarget;
+    }
+
+    const returnToSession = runtimeProfile.run?.returnToSession;
+    if (typeof returnToSession === "string" && returnToSession.trim().length > 0) {
+      return returnToSession.trim();
+    }
+    if (returnToSession === true) {
+      return this.sourceSessionId;
+    }
+
+    if (executionMode === "in_process") {
+      return this.sourceSessionId;
+    }
+
+    return undefined;
+  }
+
+  private buildExistingRuntimeProfile(job: Job): TaskRuntimeProfile {
+    if (job.runtime_profile) {
+      return { ...job.runtime_profile };
+    }
+    return {
+      template_id: job.template_id,
+      template_level: job.template_level,
+      action_type: job.action_type,
+      action_value: job.action_value ?? job.prompt,
+      execution_mode: job.execution_mode,
+    };
+  }
+
+  private async resolveJobRuntime(
+    options: {
+      params: ScheduleTaskParams;
+      fallbackPrompt?: string;
+      existingRuntime?: TaskRuntimeProfile;
+    },
+  ): Promise<{
+    runtimeProfile: TaskRuntimeProfile;
+    actionType: "prompt" | "slash_command";
+    actionValue: string;
+    executionMode?: JobExecutionMode;
+    template?: TaskTemplate;
+    returnToSessionId?: string;
+    modeIgnoredWarning?: string;
+  }> {
+    const { params, fallbackPrompt, existingRuntime } = options;
+
+    const explicitPrompt =
+      typeof params.prompt === "string" && params.prompt.trim().length > 0
+        ? params.prompt
+        : fallbackPrompt;
+    const directActionType = normalizeActionType(params.action_type);
+    const directActionValue =
+      typeof params.action_value === "string" &&
+      params.action_value.trim().length > 0
+        ? params.action_value
+        : explicitPrompt;
+
+    const rawExecutionMode = normalizeExecutionMode(params.execution_mode);
+    const shouldOverrideExecutionMode = params.execution_mode_override === true;
+    const explicitExecutionMode = shouldOverrideExecutionMode
+      ? rawExecutionMode
+      : undefined;
+
+    const template = await this.resolveTemplateFromParams(
+      params.template_id,
+      params.template_level,
+    );
+
+    const templateRuntime = template
+      ? runtimeProfileFromTemplate(template)
+      : undefined;
+
+    const explicitRuntime: TaskRuntimeProfile = {
+      action_type: directActionType ?? (directActionValue ? "prompt" : undefined),
+      action_value: directActionValue,
+      execution_mode: explicitExecutionMode,
+      auth: normalizeAuthProfile(params.auth),
+      model: normalizeModelProfile(params.model),
+      run: normalizeRunProfile(params.run),
+    };
+
+    let merged = mergeRuntimeProfiles(
+      existingRuntime,
+      templateRuntime,
+      normalizeRuntimeProfile(params.template_overrides),
+      explicitRuntime,
+    );
+
+    if (params.return_to_session_id !== undefined) {
+      merged = {
+        ...merged,
+        run: {
+          ...(merged.run ?? {}),
+          returnToSession: params.return_to_session_id,
+        },
+      };
+    }
+
+    const actionType =
+      merged.action_type ?? (merged.action_value ? "prompt" : undefined);
+    const actionValue = merged.action_value ?? explicitPrompt;
+
+    if (!actionType || !actionValue) {
+      throw new Error(
+        "Job requires action content: provide prompt/action_value or template action content.",
+      );
+    }
+
+    if (actionValue.length > 10000) {
+      throw new Error(
+        `Action value is too long (${actionValue.length} characters). Maximum is 10000 characters.`,
+      );
+    }
+
+    const normalizedExecutionMode =
+      merged.execution_mode === "default" ? undefined : merged.execution_mode;
+
+    if (actionType === "slash_command" && normalizedExecutionMode !== "in_process") {
+      throw new Error(
+        'slash_command action_type requires execution_mode="in_process".',
+      );
+    }
+
+    const returnToSessionId = this.resolveRunTarget(
+      merged,
+      params.return_to_session_id,
+      normalizedExecutionMode,
+    );
+
+    if (normalizedExecutionMode === "in_process" && !returnToSessionId) {
+      throw new Error(
+        "in_process execution requires a target session. Provide return_to_session_id or set run.returnToSession=true from an interactive session.",
+      );
+    }
+
+    const modeIgnoredWarning =
+      rawExecutionMode &&
+      rawExecutionMode !== "default" &&
+      !shouldOverrideExecutionMode
+        ? `execution_mode="${rawExecutionMode}" was ignored because execution_mode_override=true was not set.`
+        : undefined;
+
+    return {
+      runtimeProfile: sanitizeRuntimeProfile({
+        ...merged,
+        template_id: template?.id ?? merged.template_id,
+        template_level: template?.level ?? merged.template_level,
+        action_type: actionType,
+        action_value: actionValue,
+        execution_mode: normalizedExecutionMode,
+        run: {
+          ...(merged.run ?? {}),
+          returnToSession: returnToSessionId ?? merged.run?.returnToSession,
+        },
+      }) ?? {},
+      actionType,
+      actionValue,
+      executionMode: normalizedExecutionMode,
+      template: template ?? undefined,
+      returnToSessionId,
+      modeIgnoredWarning,
+    };
+  }
+
   private async executeAction(): Promise<string> {
     const {
       action,
@@ -250,19 +467,12 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
       enabled,
       timeout_minutes,
       max_failures,
-      execution_mode,
-      execution_mode_override,
     } = this.params;
-    const shouldOverrideExecutionMode = execution_mode_override === true;
-    const resolvedExecutionMode =
-      execution_mode === "default" ? undefined : execution_mode;
-    const sanitizedExecutionMode =
-      resolvedExecutionMode === "headless" ? undefined : resolvedExecutionMode;
 
     switch (action) {
       case "create": {
-        if (!id || !schedule || !this.params.prompt) {
-          throw new Error("Creating a job requires: id, schedule, and prompt");
+        if (!id || !schedule) {
+          throw new Error("Creating a job requires: id and schedule");
         }
 
         if (!validateCronExpression(schedule)) {
@@ -271,20 +481,28 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
           );
         }
 
+        const resolved = await this.resolveJobRuntime({
+          params: this.params,
+        });
+
         const job = await createJob({
           id,
           schedule,
-          prompt: this.params.prompt!,
+          prompt: resolved.actionValue,
           description,
           enabled,
           timeout_minutes,
           max_failures,
-          execution_mode: shouldOverrideExecutionMode
-            ? sanitizedExecutionMode
-            : undefined,
+          execution_mode: resolved.executionMode,
+          action_type: resolved.actionType,
+          action_value: resolved.actionValue,
+          template_id: resolved.template?.id,
+          template_level: resolved.template?.level,
+          return_to_session_id: resolved.returnToSessionId,
+          runtime_profile: resolved.runtimeProfile,
         });
 
-        return this.formatJobCreated(job);
+        return this.formatJobCreated(job, resolved.modeIgnoredWarning);
       }
 
       case "list": {
@@ -314,26 +532,63 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
           throw new Error("Updating a job requires: id");
         }
 
+        const existing = await getJob(id);
+        if (!existing) {
+          throw new Error(`Job "${id}" not found`);
+        }
+
         if (schedule && !validateCronExpression(schedule)) {
           throw new Error(
             `Invalid cron expression: "${schedule}". Use 5-field format: minute hour day month day_of_week`,
           );
         }
 
+        const shouldResolveRuntime = isRuntimeFieldPresent(this.params);
+        const resolved = shouldResolveRuntime
+          ? await this.resolveJobRuntime({
+              params: this.params,
+              fallbackPrompt: existing.prompt,
+              existingRuntime: this.buildExistingRuntimeProfile(existing),
+            })
+          : undefined;
+
         const job = await updateJob({
           id,
           schedule,
-          prompt: this.params.prompt,
+          prompt: resolved?.actionValue ?? this.params.prompt,
           description,
           enabled,
           timeout_minutes,
           max_failures,
-          execution_mode: shouldOverrideExecutionMode
-            ? (sanitizedExecutionMode ?? null)
-            : undefined,
+          execution_mode:
+            shouldResolveRuntime && resolved
+              ? resolved.executionMode ?? null
+              : undefined,
+          action_type:
+            shouldResolveRuntime && resolved ? resolved.actionType : undefined,
+          action_value:
+            shouldResolveRuntime && resolved ? resolved.actionValue : undefined,
+          template_id:
+            shouldResolveRuntime && resolved
+              ? (resolved.template?.id ?? resolved.runtimeProfile.template_id ?? null)
+              : undefined,
+          template_level:
+            shouldResolveRuntime && resolved
+              ? (resolved.template?.level ??
+                resolved.runtimeProfile.template_level ??
+                null)
+              : undefined,
+          return_to_session_id:
+            shouldResolveRuntime && resolved
+              ? (resolved.returnToSessionId ?? null)
+              : undefined,
+          runtime_profile:
+            shouldResolveRuntime && resolved
+              ? resolved.runtimeProfile
+              : undefined,
         });
 
-        return this.formatJobUpdated(job);
+        return this.formatJobUpdated(job, resolved?.modeIgnoredWarning);
       }
 
       case "delete": {
@@ -377,8 +632,6 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
           throw new Error(`Job "${id}" not found`);
         }
 
-        // Note: Actual execution would be handled by the daemon
-        // For now, we just acknowledge the request
         return `✓ Job "${id}" has been queued to run immediately. The scheduler daemon will execute it on the next tick.`;
       }
 
@@ -387,16 +640,32 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
     }
   }
 
-  private formatJobCreated(job: Job): string {
+  private formatJobCreated(job: Job, warning?: string): string {
     let output = `✓ Created scheduled job "${job.id}"\n\n`;
     output += `Schedule: ${job.schedule}\n`;
     output += `Next run: ${job.next_run ? new Date(job.next_run).toLocaleString() : "Not scheduled"}\n`;
     output += `Status: ${job.enabled ? "Enabled" : "Disabled"}\n`;
     output += `Execution: ${job.execution_mode ?? "default"}\n`;
+    output += `Action: ${job.action_type ?? "prompt"}\n`;
+    if (job.template_id) {
+      output += `Template: ${job.template_id} (${job.template_level ?? "auto"})\n`;
+    }
+    if (job.runtime_profile?.model?.name) {
+      output += `Model override: ${job.runtime_profile.model.name}\n`;
+    }
+    if (job.runtime_profile?.auth?.providerId || job.runtime_profile?.auth?.selectedType) {
+      output += `Auth override: ${job.runtime_profile.auth?.providerId ?? job.runtime_profile.auth?.selectedType}\n`;
+    }
+    if (job.return_to_session_id) {
+      output += `Return target session: ${job.return_to_session_id}\n`;
+    }
+    if (warning) {
+      output += `Warning: ${warning}\n`;
+    }
     if (job.description) {
       output += `Description: ${job.description}\n`;
     }
-    output += `\nPrompt:\n${job.prompt}\n\n`;
+    output += `\nAction Value:\n${job.action_value ?? job.prompt}\n\n`;
     output += `The job will execute automatically according to its schedule. `;
     output += `Make sure the scheduler daemon is running (use 'lowcal scheduler start').`;
     return output;
@@ -412,6 +681,16 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
       output += `   Schedule: \`${job.schedule}\`\n`;
       output += `   Next run: ${job.next_run ? new Date(job.next_run).toLocaleString() : "Not scheduled"}\n`;
       output += `   Execution: ${job.execution_mode ?? "default"}\n`;
+      output += `   Action: ${job.action_type ?? "prompt"}\n`;
+      if (job.template_id) {
+        output += `   Template: ${job.template_id} (${job.template_level ?? "auto"})\n`;
+      }
+      if (job.runtime_profile?.model?.name) {
+        output += `   Model override: ${job.runtime_profile.model.name}\n`;
+      }
+      if (job.runtime_profile?.auth?.providerId || job.runtime_profile?.auth?.selectedType) {
+        output += `   Auth override: ${job.runtime_profile.auth?.providerId ?? job.runtime_profile.auth?.selectedType}\n`;
+      }
       if (job.description) {
         output += `   ${job.description}\n`;
       }
@@ -435,14 +714,25 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
     output += `**Last run:** ${job.last_run ? new Date(job.last_run).toLocaleString() : "Never"}\n`;
     output += `**Executions:** ${job.run_count} successful, ${job.error_count} failed\n`;
     output += `**Timeout:** ${job.timeout_minutes} minutes\n`;
-    output += `**Max failures:** ${job.max_failures}\n\n`;
-    output += `**Execution:** ${job.execution_mode ?? "default"}\n\n`;
-
-    if (job.description) {
-      output += `**Description:** ${job.description}\n\n`;
+    output += `**Max failures:** ${job.max_failures}\n`;
+    output += `**Execution:** ${job.execution_mode ?? "default"}\n`;
+    output += `**Action:** ${job.action_type ?? "prompt"}\n`;
+    if (job.template_id) {
+      output += `**Template:** ${job.template_id} (${job.template_level ?? "auto"})\n`;
+    }
+    if (job.return_to_session_id) {
+      output += `**Return target session:** ${job.return_to_session_id}\n`;
     }
 
-    output += `**Prompt:**\n\`\`\`\n${job.prompt}\n\`\`\`\n\n`;
+    if (job.runtime_profile) {
+      output += `\n**Runtime Profile:**\n\`\`\`json\n${JSON.stringify(job.runtime_profile, null, 2)}\n\`\`\`\n`;
+    }
+
+    if (job.description) {
+      output += `\n**Description:** ${job.description}\n`;
+    }
+
+    output += `\n**Action Value:**\n\`\`\`\n${job.action_value ?? job.prompt}\n\`\`\`\n\n`;
 
     if (logs.length > 0) {
       output += `## Recent Execution Logs (${logs.length} shown)\n\n`;
@@ -460,11 +750,19 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
     return output;
   }
 
-  private formatJobUpdated(job: Job): string {
+  private formatJobUpdated(job: Job, warning?: string): string {
     let output = `✓ Updated job "${job.id}"\n\n`;
     output += `Schedule: ${job.schedule}\n`;
     output += `Next run: ${job.next_run ? new Date(job.next_run).toLocaleString() : "Not scheduled"}\n`;
     output += `Status: ${job.enabled ? "Enabled" : "Disabled"}\n`;
+    output += `Execution: ${job.execution_mode ?? "default"}\n`;
+    output += `Action: ${job.action_type ?? "prompt"}\n`;
+    if (job.template_id) {
+      output += `Template: ${job.template_id} (${job.template_level ?? "auto"})\n`;
+    }
+    if (warning) {
+      output += `Warning: ${warning}\n`;
+    }
     return output;
   }
 }
@@ -473,7 +771,7 @@ export class ScheduleTaskTool extends BaseDeclarativeTool<
   ScheduleTaskParams,
   ToolResult
 > {
-  constructor() {
+  constructor(private readonly config?: Config) {
     super(
       "schedule_task",
       "Schedule Task",
@@ -488,6 +786,10 @@ export class ScheduleTaskTool extends BaseDeclarativeTool<
   protected override createInvocation(
     params: ScheduleTaskParams,
   ): ScheduleTaskInvocation {
-    return new ScheduleTaskInvocation(params);
+    return new ScheduleTaskInvocation(
+      params,
+      this.config?.getSessionId(),
+      this.config,
+    );
   }
 }

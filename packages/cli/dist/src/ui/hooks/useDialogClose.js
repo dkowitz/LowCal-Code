@@ -32,6 +32,10 @@ export function useDialogClose(options) {
             options.exitEditorDialog();
             return true;
         }
+        if (options.isTaskTemplateDialogOpen) {
+            options.closeTaskTemplateDialog();
+            return true;
+        }
         if (options.isSettingsDialogOpen) {
             // Mimic ESC behavior: onSelect(undefined, selectedScope)
             options.closeSettingsDialog();

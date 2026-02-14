@@ -16,7 +16,11 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import * as process from "process";
-import type { LaunchTaskStateRecord } from "@qwen-code/qwen-code-core";
+import type {
+  LaunchTaskStateRecord,
+  TaskRuntimeProfile,
+  TaskTemplateAuthProfile,
+} from "@qwen-code/qwen-code-core";
 import { upsertLaunchTaskState } from "@qwen-code/qwen-code-core";
 
 import { normalizeAuthType } from "../config/auth.js";
@@ -32,6 +36,35 @@ import {
 
 const RETURN_PAYLOAD_MARKER = "RETURN_PAYLOAD:";
 const ENV_DISABLE_LAUNCH_TASK = "LOWCAL_DISABLE_LAUNCH_TASK";
+const ENV_TASK_RUNTIME_B64 = "LOWCAL_TASK_RUNTIME_B64";
+
+function decodeRuntimeProfileFromEnv(): TaskRuntimeProfile | undefined {
+  const encoded = process.env[ENV_TASK_RUNTIME_B64];
+  if (!encoded || encoded.trim().length === 0) {
+    return undefined;
+  }
+  try {
+    const raw = Buffer.from(encoded, "base64").toString("utf-8");
+    const parsed = JSON.parse(raw) as TaskRuntimeProfile;
+    if (!parsed || typeof parsed !== "object") {
+      return undefined;
+    }
+    return parsed;
+  } catch {
+    return undefined;
+  }
+}
+
+function getAuthLabel(auth: TaskTemplateAuthProfile | undefined): string | undefined {
+  if (!auth) return undefined;
+  if (auth.providerId && auth.providerId.trim().length > 0) {
+    return auth.providerId;
+  }
+  if (auth.selectedType && auth.selectedType.trim().length > 0) {
+    return auth.selectedType;
+  }
+  return undefined;
+}
 
 /**
  * Extract clean markdown content from stdout by stripping ANSI codes and tool call markers.
@@ -226,6 +259,9 @@ function parseArgs(): { prompt: string; jobId: string; output: string } {
  */
 async function main(): Promise<void> {
   const { prompt, jobId, output } = parseArgs();
+  const runtimeProfile = decodeRuntimeProfileFromEnv();
+  const runtimeAuthLabel = getAuthLabel(runtimeProfile?.auth);
+  const runtimeModel = runtimeProfile?.model?.name;
   const prettyOutput = process.env["LOWCAL_HEADLESS_PRETTY"] === "1";
   const sessionRunId = `headless-${jobId}-${Date.now()}`;
   const returnToSessionId = process.env["LOWCAL_RETURN_TO_SESSION_ID"];
@@ -316,6 +352,9 @@ async function main(): Promise<void> {
     dedupe_key: current?.dedupe_key,
     execution_mode_requested: current?.execution_mode_requested ?? "headless",
     execution_mode_actual: "headless",
+    model_requested: current?.model_requested ?? runtimeModel,
+    auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+    runtime_profile: current?.runtime_profile ?? runtimeProfile,
     result_ref: current?.result_ref,
     pid: current?.pid,
     tab_name: current?.tab_name,
@@ -335,6 +374,9 @@ async function main(): Promise<void> {
       dedupe_key: current?.dedupe_key,
       execution_mode_requested: current?.execution_mode_requested ?? "headless",
       execution_mode_actual: "headless",
+      model_requested: current?.model_requested ?? runtimeModel,
+      auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+      runtime_profile: current?.runtime_profile ?? runtimeProfile,
       result_ref: current?.result_ref,
       pid: current?.pid,
       tab_name: current?.tab_name,
@@ -388,35 +430,85 @@ async function main(): Promise<void> {
     // Determine approval mode - use YOLO for scheduled tasks to avoid interactive prompts
     const approvalMode = ApprovalMode.YOLO;
 
-    // Get auth type from settings, fallback to USE_GEMINI
-    const authTypeFromSettings = normalizeAuthType(
-      settings.merged.security?.auth?.selectedType,
-    );
-    const authType = authTypeFromSettings || AuthType.USE_GEMINI;
+    const selectedTypeFromSettings = settings.merged.security?.auth?.selectedType;
+    const providerIdFromSettings = settings.merged.security?.auth?.providerId;
+    const providers = settings.merged.security?.auth?.providers as
+      | Record<string, Record<string, unknown>>
+      | undefined;
 
-    // Get model from settings, fallback to default
+    const runtimeAuth = runtimeProfile?.auth;
+    const runtimeSelectedType =
+      typeof runtimeAuth?.selectedType === "string"
+        ? runtimeAuth.selectedType
+        : undefined;
+    const runtimeProviderId =
+      typeof runtimeAuth?.providerId === "string" &&
+      runtimeAuth.providerId.trim().length > 0
+        ? runtimeAuth.providerId.trim()
+        : undefined;
+    const authTypeOverride = normalizeAuthType(
+      runtimeSelectedType ?? runtimeProviderId,
+    );
+    const authTypeFromSettings = normalizeAuthType(selectedTypeFromSettings);
+    const authType = authTypeOverride || authTypeFromSettings || AuthType.USE_GEMINI;
+
+    const providerId = runtimeProviderId ?? providerIdFromSettings;
+
+    const providerBaseUrl =
+      providerId &&
+      (providers?.[providerId]?.["baseUrl"] as string | undefined);
+    const baseUrl =
+      runtimeAuth?.baseUrl?.trim() ||
+      providerBaseUrl ||
+      process.env["OPENAI_BASE_URL"]?.trim();
+    if (baseUrl) {
+      process.env["OPENAI_BASE_URL"] = baseUrl;
+    }
+
+    if (runtimeAuth?.apiKeyEnvVar && runtimeAuth.apiKeyEnvVar.trim().length > 0) {
+      const envVarName = runtimeAuth.apiKeyEnvVar.trim();
+      const runtimeApiKey = process.env[envVarName]?.trim();
+      if (!runtimeApiKey) {
+        throw new Error(
+          `Runtime auth override requires env var ${envVarName}, but it is not set.`,
+        );
+      }
+      process.env["OPENAI_API_KEY"] = runtimeApiKey;
+    }
+
+    // Get model from runtime profile or settings, fallback to default
     const modelFromSettings = settings.merged.model?.name;
-    const model = modelFromSettings || "gemini-1.5-flash";
+    const model = runtimeModel || modelFromSettings || "gemini-1.5-flash";
 
     await updateSessionDetails({
       model,
       approval_mode: String(approvalMode),
+      auth: runtimeAuthLabel ?? String(authType),
       phase: "running",
     });
 
-    // Get base URL for OpenAI-compatible providers
-    const providerId = settings.merged.security?.auth?.providerId;
-    const providers = settings.merged.security?.auth?.providers as
-      | Record<string, Record<string, unknown>>
-      | undefined;
-    const baseUrl =
-      providerId &&
-      (providers?.[providerId]?.["baseUrl"] as string | undefined);
-
-    // Set base URL environment variable if configured
-    if (baseUrl) {
-      process.env["OPENAI_BASE_URL"] = baseUrl;
-    }
+    await touchTaskState((current, nowIso) => ({
+      task_id: jobId,
+      status: current?.status ?? "running",
+      created_at: current?.created_at ?? nowIso,
+      started_at: current?.started_at ?? nowIso,
+      last_heartbeat: nowIso,
+      prompt_preview: current?.prompt_preview ?? taskPromptPreview,
+      parent_session_id: current?.parent_session_id ?? returnToSessionId,
+      source_session_id: current?.source_session_id,
+      dedupe_key: current?.dedupe_key,
+      execution_mode_requested: current?.execution_mode_requested ?? "headless",
+      execution_mode_actual: "headless",
+      model_requested: current?.model_requested ?? runtimeModel,
+      model_actual: current?.model_actual ?? model,
+      auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+      auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
+      runtime_profile: current?.runtime_profile ?? runtimeProfile,
+      result_ref: current?.result_ref,
+      pid: current?.pid,
+      tab_name: current?.tab_name,
+      last_error: current?.last_error,
+    }));
 
     // Create config
     const config = new Config({
@@ -547,6 +639,11 @@ async function main(): Promise<void> {
       dedupe_key: current?.dedupe_key,
       execution_mode_requested: current?.execution_mode_requested ?? "headless",
       execution_mode_actual: "headless",
+      model_requested: current?.model_requested ?? runtimeModel,
+      model_actual: current?.model_actual ?? runtimeModel,
+      auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+      auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
+      runtime_profile: current?.runtime_profile ?? runtimeProfile,
       result_ref: {
         mailbox_path:
           process.env["LOWCAL_RETURN_MAILBOX_PATH"] ??
@@ -654,6 +751,11 @@ async function main(): Promise<void> {
         dedupe_key: current?.dedupe_key,
         execution_mode_requested: current?.execution_mode_requested ?? "headless",
         execution_mode_actual: "headless",
+        model_requested: current?.model_requested ?? runtimeModel,
+        model_actual: current?.model_actual ?? runtimeModel,
+        auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+        auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
+        runtime_profile: current?.runtime_profile ?? runtimeProfile,
         result_ref: {
           mailbox_path:
             process.env["LOWCAL_RETURN_MAILBOX_PATH"] ??

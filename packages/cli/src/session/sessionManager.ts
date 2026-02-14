@@ -16,6 +16,7 @@ import type {
   SessionStatus,
   SessionRecord,
   SetSessionHealthInput,
+  TaskRuntimeProfile,
 } from "@qwen-code/qwen-code-core";
 import {
   clearSessionHealth,
@@ -45,6 +46,16 @@ let sessionApiAuthToken: string | null = null;
 export interface SessionControlHandlerResult {
   accepted: boolean;
   reason?: string;
+}
+
+export interface SessionEnqueueTaskPayload {
+  task_id: string;
+  action_type: "prompt" | "slash_command";
+  action_value: string;
+  description?: string;
+  source_session_id?: string;
+  return_to_session_id?: string;
+  runtime_profile?: TaskRuntimeProfile;
 }
 
 export interface SessionControlHandlers {
@@ -82,6 +93,12 @@ export interface SessionControlHandlers {
     | Promise<boolean | SessionControlHandlerResult>
     | boolean
     | SessionControlHandlerResult;
+  enqueueTask?: (
+    payload: SessionEnqueueTaskPayload,
+  ) =>
+    | Promise<boolean | SessionControlHandlerResult>
+    | boolean
+    | SessionControlHandlerResult;
 }
 
 let sessionControlHandlers: SessionControlHandlers = {};
@@ -98,7 +115,8 @@ type SessionApiMethod =
   | "session.set_model"
   | "session.set_approval_mode"
   | "session.shutdown"
-  | "session.request_self_repair";
+  | "session.request_self_repair"
+  | "session.enqueue_task";
 
 interface SessionApiRequest {
   id?: string | number;
@@ -128,6 +146,7 @@ function requiresAuthToken(method: SessionApiMethod): boolean {
     case "session.set_approval_mode":
     case "session.shutdown":
     case "session.request_self_repair":
+    case "session.enqueue_task":
       return true;
     default:
       return false;
@@ -434,6 +453,59 @@ async function handleSessionApiRequest(
             request.params,
           ),
         };
+      case "session.enqueue_task": {
+        const task_id = request.params?.["task_id"];
+        const action_type = request.params?.["action_type"];
+        const action_value = request.params?.["action_value"];
+        const description = request.params?.["description"];
+        const source_session_id = request.params?.["source_session_id"];
+        const return_to_session_id = request.params?.["return_to_session_id"];
+        const runtime_profile = request.params?.[
+          "runtime_profile"
+        ] as TaskRuntimeProfile | undefined;
+
+        if (
+          typeof task_id !== "string" ||
+          task_id.trim().length === 0 ||
+          (action_type !== "prompt" && action_type !== "slash_command") ||
+          typeof action_value !== "string" ||
+          action_value.trim().length === 0
+        ) {
+          return {
+            id,
+            ok: true,
+            result: makeActionResult({
+              accepted: false,
+              reason: "invalid_enqueue_payload",
+            }),
+          };
+        }
+
+        return {
+          id,
+          ok: true,
+          result: await invokeControlHandler(sessionControlHandlers.enqueueTask, {
+            task_id: task_id.trim(),
+            action_type,
+            action_value,
+            description:
+              typeof description === "string" && description.trim().length > 0
+                ? description.trim()
+                : undefined,
+            source_session_id:
+              typeof source_session_id === "string" &&
+              source_session_id.trim().length > 0
+                ? source_session_id.trim()
+                : undefined,
+            return_to_session_id:
+              typeof return_to_session_id === "string" &&
+              return_to_session_id.trim().length > 0
+                ? return_to_session_id.trim()
+                : undefined,
+            runtime_profile,
+          }),
+        };
+      }
       default:
         return {
           id,

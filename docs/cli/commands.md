@@ -81,6 +81,21 @@ Slash commands provide meta-level control over the CLI itself.
     - For OpenAI, if `OPENAI_MODEL` is present in the environment it will be offered; if a custom `OPENAI_BASE_URL` is configured the CLI will attempt to poll `/v1/models` from that base URL as well.
   - **Model switching:** Selecting a model unloads any previously loaded model and then loads the new one. A short warm-up query is sent after loading to prime the model.
 
+- **`/tasks`** (alias: **`/task`**)
+  - **Description:** Open the task template editor dialog and manage reusable task templates.
+  - **Usage:**
+    - `/tasks` or `/tasks open` - Open the interactive template editor
+    - `/tasks list` - List available templates
+    - `/tasks run <template_id> [--level project|user|builtin]` - Launch template immediately
+    - `/tasks schedule <template_id> "<cron>" [--id job-id] [--level project|user|builtin]` - Create scheduled job from template
+  - **Editor capabilities:**
+    - Create/edit/delete templates in project (`.qwen/task-templates/`) or user (`~/.qwen/task-templates/`) scope
+    - Select auth/provider via list (mirrors `/auth`)
+    - Select model via list (mirrors `/model` for selected provider)
+    - Choose execution mode: `default`, `headless`, `zellij_tab`, `in_process`
+    - Deploy directly as immediate launch or scheduled cron job
+  - **Template flexibility:** Templates can be skeleton-only, partially prefilled, or fully prefilled and deploy-ready.
+
 - **`/agents`**
   - **Description:** Manage specialized AI subagents for focused tasks. Subagents are independent AI assistants configured with specific expertise and tool access.
   - **Sub-commands:**
@@ -258,11 +273,13 @@ The `dashboard` command provides a comprehensive overview of all sessions, sched
 **Usage:** `lowcal dashboard [options]`
 
 **Options:**
+
 - `--ttl <seconds>`: Stale threshold in seconds (default: 180)
 - `--watch`: Keep the dashboard live (refreshes automatically)
 - `--interval <seconds>`: Refresh interval in seconds (default: 2)
 
 **Features:**
+
 - Real-time view of all active sessions
 - Scheduler job status and scheduling information
 - Daemon health indicators
@@ -275,16 +292,19 @@ Manage LowCal Code sessions - view, inspect, and clean up session data.
 **Usage:** `lowcal sessions <command> [options]`
 
 **Sub-commands:**
+
 - **`list`**: List all active sessions
 - **`get <id>`**: Show details for a specific session
 - **`prune`**: Remove stale sessions
 
 **Options:**
+
 - `--ttl <seconds>`: Stale threshold in seconds (default: 180)
 - `--watch`: Keep the list live (like top)
 - `--interval <seconds>`: Refresh interval in seconds (default: 2)
 
 **Examples:**
+
 ```bash
 # List all active sessions
 lowcal sessions list
@@ -301,28 +321,26 @@ lowcal sessions prune --ttl 300
 
 ### Scheduler Command
 
-Manage the LowCal scheduler daemon and scheduled jobs.
+Manage the LowCal scheduler daemon and inspect or maintain scheduled jobs.
 
 **Usage:** `lowcal scheduler <command> [options]`
 
 **Sub-commands:**
+
 - **`start`**: Start the scheduler daemon
 - **`stop`**: Stop the scheduler daemon
 - **`status`**: Show scheduler status
 - **`list`**: List all scheduled jobs
-- **`add`**: Add a new scheduled job
-- **`remove <id>`**: Remove a scheduled job
-- **`pause <id>`**: Pause a scheduled job
-- **`resume <id>`**: Resume a paused job
+- **`get <id>`**: Show details for one job
+- **`mode <id> <headless|zellij_tab|default>`**: Set/clear execution mode override for a job
 - **`delete <id>`**: Delete a scheduled job permanently
 - **`reset <id>`**: Reset a failed job to allow retry
+- **`logs <id> [--tail N]`**: Show recent execution logs for a job
 
-**Options:**
-- `--description <text>`: Job description
-- `--execution-mode <mode>`: Execution mode (headless, zellij_tab, default)
-- `--timeout <minutes>`: Job timeout in minutes (default: 10)
+**Note:** New jobs are created through `schedule_task`, `/tasks schedule ...`, or `lowcal tasks schedule ...`.
 
 **Examples:**
+
 ```bash
 # Start the scheduler daemon
 lowcal scheduler start
@@ -330,14 +348,43 @@ lowcal scheduler start
 # List all scheduled jobs
 lowcal scheduler list
 
-# Add a new job to run tests daily at 9 AM
-lowcal scheduler add --id "daily-tests" --schedule "0 9 * * *" --prompt "Run npm test"
+# Show one job including runtime profile details
+lowcal scheduler get daily-tests
 
-# Pause a job temporarily
-lowcal scheduler pause daily-tests
+# Set execution override to zellij tab
+lowcal scheduler mode daily-tests zellij_tab
 
-# Resume a paused job
-lowcal scheduler resume daily-tests
+# Tail recent logs
+lowcal scheduler logs daily-tests --tail 20
+```
+
+### Tasks Command
+
+Manage and deploy task templates from terminal mode.
+
+**Usage:** `lowcal tasks <command> [options]`
+
+**Sub-commands:**
+
+- **`open`**: Open the interactive `/tasks` dialog in a TUI session
+- **`list`**: List templates (supports `--level` and `--tag`)
+- **`run <templateId>`**: Launch template immediately (supports `--level` and `--id`)
+- **`schedule <templateId> <cron>`**: Create scheduled job from template (supports `--level` and `--id`)
+
+**Examples:**
+
+```bash
+# Open the interactive task template editor
+lowcal tasks open
+
+# List user templates tagged "vision"
+lowcal tasks list --level user --tag vision
+
+# Launch a template now
+lowcal tasks run vision-ocr --level auto
+
+# Schedule a template daily at 2 AM
+lowcal tasks schedule compress-context "0 2 * * *" --id nightly-compress
 ```
 
 ### Orchestrator Command
@@ -347,11 +394,13 @@ Manage the LowCal orchestrator daemon for automated session management.
 **Usage:** `lowcal orchestrator <command> [options]`
 
 **Sub-commands:**
+
 - **`start`**: Start the orchestrator daemon
 - **`stop`**: Stop the orchestrator daemon
 - **`status`**: Show orchestrator status
 
 **Examples:**
+
 ```bash
 # Check orchestrator status
 lowcal orchestrator status
@@ -370,6 +419,7 @@ Manage LowCal Code extensions.
 **Usage:** `lowcal extensions <command> [options]`
 
 **Sub-commands:**
+
 - **`install <name>`**: Install an extension
 - **`uninstall <name>`**: Uninstall an extension
 - **`list`**: List all installed extensions
@@ -378,6 +428,7 @@ Manage LowCal Code extensions.
 - **`enable <name>`**: Enable a disabled extension
 
 **Examples:**
+
 ```bash
 # Install an extension
 lowcal extensions install my-extension
@@ -396,11 +447,13 @@ Manage Model Context Protocol (MCP) servers.
 **Usage:** `lowcal mcp <command> [options]`
 
 **Sub-commands:**
+
 - **`add <name> <command>`**: Add a new MCP server
 - **`remove <name>`**: Remove an MCP server
 - **`list`**: List all configured MCP servers
 
 **Examples:**
+
 ```bash
 # Add an MCP server
 lowcal mcp add git "npx -y @modelcontextprotocol/server-git"
@@ -416,12 +469,14 @@ Conduct deep internet research with citation support.
 **Usage:** `lowcal research [mode] <query>`
 
 **Modes:**
+
 - **`speed`**: Fastest research, fewer sources
 - **`balanced`** (default): Balanced speed and quality
 - **`quality`**: Thorough research with multiple sources
 - **`max`**: Maximum depth and breadth of research
 
 **Examples:**
+
 ```bash
 # Quick research mode
 lowcal research speed "latest Node.js features"
@@ -479,13 +534,13 @@ Once created, custom commands appear in your command list and can be invoked lik
 
 ## Keyboard Shortcuts
 
-| Shortcut | Description |
-|----------|-------------|
-| `Ctrl+C` | Cancel current operation / Show quit confirmation (press twice to exit) |
-| `Ctrl+L` | Clear the terminal screen |
-| `Ctrl+R` | Search command history |
-| `Up/Down` | Navigate command history |
-| `Tab` | Auto-complete commands and file paths |
+| Shortcut  | Description                                                             |
+| --------- | ----------------------------------------------------------------------- |
+| `Ctrl+C`  | Cancel current operation / Show quit confirmation (press twice to exit) |
+| `Ctrl+L`  | Clear the terminal screen                                               |
+| `Ctrl+R`  | Search command history                                                  |
+| `Up/Down` | Navigate command history                                                |
+| `Tab`     | Auto-complete commands and file paths                                   |
 
 ## Configuration
 

@@ -58,6 +58,10 @@ import { QuitConfirmationDialog } from "./components/QuitConfirmationDialog.js";
 import { RadioButtonSelect } from "./components/shared/RadioButtonSelect.js";
 import { ModelSelectionDialog } from "./components/ModelSelectionDialog.js";
 import {
+  TaskTemplateEditorDialog,
+  type TaskTemplateDeployRequest,
+} from "./components/TaskTemplateEditorDialog.js";
+import {
   ResumeDialog,
   type ResumeCheckpointOption,
 } from "./components/ResumeDialog.js";
@@ -481,6 +485,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const [resumeCheckpoints, setResumeCheckpoints] = useState<
     ResumeCheckpointOption[]
   >([]);
+  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] =
+    useState(false);
 
   // Invalidate cached model lists when auth/provider changes so discovery is
   // re-run for the currently selected provider. This ensures that after the
@@ -554,6 +560,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const openPrivacyNotice = useCallback(() => {
     setShowPrivacyNotice(true);
+  }, []);
+
+  const openTaskTemplateDialog = useCallback(() => {
+    setIsTaskTemplateDialogOpen(true);
+  }, []);
+
+  const closeTaskTemplateDialog = useCallback(() => {
+    setIsTaskTemplateDialogOpen(false);
   }, []);
 
   const handleEscapePromptChange = useCallback((showPrompt: boolean) => {
@@ -1277,6 +1291,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     openThemeDialog,
     openAuthDialog,
     openEditorDialog,
+    openTaskTemplateDialog,
     toggleCorgiMode,
     setQuittingMessages,
     openPrivacyNotice,
@@ -1298,6 +1313,53 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       void handleSlashCommand(`/resume ${checkpointId}`);
     },
     [closeResumeDialog, handleSlashCommand],
+  );
+
+  const handleTaskTemplateDeploy = useCallback(
+    async (request: TaskTemplateDeployRequest) => {
+      const templateId = request.templateId.trim();
+      if (!templateId) {
+        addItem(
+          {
+            type: MessageType.ERROR,
+            text: "Cannot deploy task template: missing template id.",
+          },
+          Date.now(),
+        );
+        return;
+      }
+
+      const levelArg = request.templateLevel
+        ? ` --level ${request.templateLevel}`
+        : "";
+
+      if (request.deployMode === "schedule") {
+        const schedule = request.schedule?.trim();
+        if (!schedule) {
+          addItem(
+            {
+              type: MessageType.ERROR,
+              text: "Cannot schedule task template: missing cron expression.",
+            },
+            Date.now(),
+          );
+          return;
+        }
+        const escapedSchedule = schedule.replace(/"/g, '\\"');
+        const trimmedJobId = request.jobId?.trim();
+        const jobArg = trimmedJobId
+          ? ` --id "${trimmedJobId.replace(/"/g, '\\"')}"`
+          : "";
+        await handleSlashCommand(
+          `/tasks schedule ${templateId} "${escapedSchedule}"${jobArg}${levelArg}`,
+        );
+      } else {
+        await handleSlashCommand(`/tasks run ${templateId}${levelArg}`);
+      }
+
+      setIsTaskTemplateDialogOpen(false);
+    },
+    [addItem, handleSlashCommand],
   );
 
   const buffer = useTextBuffer({
@@ -1372,6 +1434,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     selectedAuthType: settings.merged.security?.auth?.selectedType,
     isEditorDialogOpen,
     exitEditorDialog,
+    isTaskTemplateDialogOpen,
+    closeTaskTemplateDialog,
     isSettingsDialogOpen,
     closeSettingsDialog,
     isResumeDialogOpen,
@@ -1745,6 +1809,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   const geminiClient = config.getGeminiClient();
 
   useEffect(() => {
+    const isSlashInitialPrompt =
+      typeof initialPrompt === "string" && initialPrompt.trim().startsWith("/");
+    const slashCommandsReady = slashCommands.length > 0;
+
     if (
       initialPrompt &&
       !initialPromptSubmitted.current &&
@@ -1752,6 +1820,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       !isAuthDialogOpen &&
       !isThemeDialogOpen &&
       !isEditorDialogOpen &&
+      !isTaskTemplateDialogOpen &&
       !isModelSelectionDialogOpen &&
       !isResumeDialogOpen &&
       !isVisionSwitchDialogOpen &&
@@ -1759,7 +1828,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       !showPrivacyNotice &&
       !showWelcomeBackDialog &&
       welcomeBackChoice !== "restart" &&
-      geminiClient?.isInitialized?.()
+      geminiClient?.isInitialized?.() &&
+      (!isSlashInitialPrompt || slashCommandsReady)
     ) {
       submitQuery(initialPrompt);
       initialPromptSubmitted.current = true;
@@ -1771,6 +1841,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     isAuthDialogOpen,
     isThemeDialogOpen,
     isEditorDialogOpen,
+    isTaskTemplateDialogOpen,
     isSubagentCreateDialogOpen,
     showPrivacyNotice,
     showWelcomeBackDialog,
@@ -1779,6 +1850,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     isModelSelectionDialogOpen,
     isResumeDialogOpen,
     isVisionSwitchDialogOpen,
+    slashCommands,
   ]);
 
   if (quittingMessages) {
@@ -1863,7 +1935,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 item={item}
                 isPending={true}
                 config={config}
-                isFocused={!isEditorDialogOpen}
+                isFocused={!isEditorDialogOpen && !isTaskTemplateDialogOpen}
                 viewControls={
                   item.type === "view"
                     ? {
@@ -2098,6 +2170,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 onExit={exitEditorDialog}
               />
             </Box>
+          ) : isTaskTemplateDialogOpen ? (
+            <TaskTemplateEditorDialog
+              projectRoot={config.getProjectRoot() || process.cwd()}
+              settings={settings}
+              currentModel={currentModel}
+              onExit={closeTaskTemplateDialog}
+              onDeploy={handleTaskTemplateDeploy}
+            />
           ) : isModelSelectionDialogOpen ? (
             <ModelSelectionDialog
               availableModels={availableModelsForDialog}

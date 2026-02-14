@@ -25,6 +25,10 @@ export interface DialogCloseOptions {
   isEditorDialogOpen: boolean;
   exitEditorDialog: () => void;
 
+  // Task template dialog
+  isTaskTemplateDialogOpen: boolean;
+  closeTaskTemplateDialog: () => void;
+
   // Settings dialog
   isSettingsDialogOpen: boolean;
   closeSettingsDialog: () => void;
@@ -78,6 +82,11 @@ export function useDialogClose(options: DialogCloseOptions) {
     if (options.isEditorDialogOpen) {
       // Mimic ESC behavior: call onExit() directly
       options.exitEditorDialog();
+      return true;
+    }
+
+    if (options.isTaskTemplateDialogOpen) {
+      options.closeTaskTemplateDialog();
       return true;
     }
 

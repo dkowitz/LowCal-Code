@@ -5,6 +5,7 @@ The `task` tool executes a task with automatic retry on failure and progress tra
 ## Overview
 
 Use the `task` tool when you need:
+
 - **Automatic retries**: Handle transient failures gracefully
 - **Progress tracking**: Monitor long-running operations
 - **Error handling**: Built-in retry logic with configurable limits
@@ -12,20 +13,22 @@ Use the `task` tool when you need:
 
 ## Parameters
 
-| Parameter | Type | Required | Description |
-|-----------|------|----------|-------------|
-| `prompt` | string | Yes | The task description or instruction to execute |
-| `max_retries` | number | No | Maximum number of retries on failure (default: 3) |
-| `timeout_minutes` | number | No | Task timeout in minutes (default: 10) |
+| Parameter         | Type   | Required | Description                                       |
+| ----------------- | ------ | -------- | ------------------------------------------------- |
+| `prompt`          | string | Yes      | The task description or instruction to execute    |
+| `max_retries`     | number | No       | Maximum number of retries on failure (default: 3) |
+| `timeout_minutes` | number | No       | Task timeout in minutes (default: 10)             |
 
 ## Behavior
 
 ### Retry Logic
+
 - On failure, the task automatically retries up to `max_retries` times
 - Retries are spaced with exponential backoff
 - After all retries are exhausted, the task fails and reports the error
 
 ### Progress Tracking
+
 - The tool provides periodic progress updates
 - You can query task status during execution
 - Failed tasks include detailed error information for debugging
@@ -33,6 +36,7 @@ Use the `task` tool when you need:
 ## Examples
 
 ### Basic Task Execution
+
 ```json
 {
   "prompt": "Download the latest dataset from the API endpoint",
@@ -42,6 +46,7 @@ Use the `task` tool when you need:
 ```
 
 ### Long-Running Data Processing
+
 ```json
 {
   "prompt": "Process all CSV files in the data directory and generate summary reports",
@@ -51,6 +56,7 @@ Use the `task` tool when you need:
 ```
 
 ### Critical Database Migration
+
 ```json
 {
   "prompt": "Run database migration script and verify success",
@@ -69,5 +75,6 @@ Use the `task` tool when you need:
 
 ## Related Tools
 
-- [`launch_task`](#launch-task): For spawning independent tasks without automatic retry
-- [`schedule_task`](#schedule-task): For recurring automated tasks
+- [`task_template`](./task-template.md): For reusable task definitions and runtime profiles
+- [`launch_task`](./launch-task.md): For spawning independent tasks without automatic retry
+- [`schedule_task`](./schedule-task.md): For recurring automated tasks

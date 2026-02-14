@@ -62,6 +62,7 @@ export const useSlashCommandProcessor = (
   openThemeDialog: () => void,
   openAuthDialog: () => void,
   openEditorDialog: () => void,
+  openTasksDialog: () => void,
   toggleCorgiMode: () => void,
   setQuittingMessages: (message: HistoryItem[]) => void,
   openPrivacyNotice: () => void,
@@ -455,6 +456,9 @@ export const useSlashCommandProcessor = (
                     case "editor":
                       openEditorDialog();
                       return { type: "handled" };
+                    case "tasks":
+                      openTasksDialog();
+                      return { type: "handled" };
                     case "privacy":
                       openPrivacyNotice();
                       return { type: "handled" };
@@ -801,6 +805,7 @@ export const useSlashCommandProcessor = (
       openThemeDialog,
       openPrivacyNotice,
       openEditorDialog,
+      openTasksDialog,
       setQuittingMessages,
       openSettingsDialog,
       openSubagentCreateDialog,

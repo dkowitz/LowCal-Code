@@ -45,53 +45,66 @@ It's important to always review confirmation prompts carefully before allowing a
 LowCal Code's built-in tools can be broadly categorized as follows:
 
 ### File System Tools
+
 - **[File System](./file-system.md)** (`read_file`, `write_file`, `edit`): For reading, writing, and modifying files.
 - **[Multi-File Read](./multi-file.md)** (`read_many_files`): Reading content from multiple files or directories at once.
 
 ### Directory and Search Tools
+
 - **[Directory Listing](#directory-listing)** (`ls`): List directory contents.
 - **[Grep](#grep)** (`grep`): Search for patterns in files.
 - **[Glob](#glob)** (`glob`): Find files matching glob patterns.
 - **[RipGrep](#ripgrep)** (`rip_grep`): Fast text search using ripgrep.
 
 ### Execution Tools
+
 - **[Shell](./shell.md)** (`shell`): Execute shell commands.
 
 ### Web Tools
+
 - **[Web Fetch](./web-fetch.md)** (`web_fetch`): Retrieve content from URLs.
 - **[Web Search](./web-search.md)** (`web_search`): Perform web searches.
 - **[SearXNG Search](#searxng-search)** (`searxng_search`): Privacy-focused local web search.
 
 ### Task Management Tools
+
 - **[Todo Write](./todo-write.md)** (`todo_write`): Create and manage structured task lists.
 - **[Task](#task)** (`task`): Execute tasks with automatic retry on failure.
-- **[Launch Task](#launch-task)** (`launch_task`): Spawn new LowCal instances for parallel work.
+- **[Task Template](./task-template.md)** (`task_template`): Manage reusable task templates and resolve runtime profiles.
+- **[Launch Task](./launch-task.md)** (`launch_task`): Spawn or enqueue task runs with runtime overrides.
 
 ### Scheduling Tools
-- **[Schedule Task](#schedule-task)** (`schedule_task`): Create and manage cron jobs.
+
+- **[Schedule Task](./schedule-task.md)** (`schedule_task`): Create and manage cron jobs with template/runtime support.
 - **[Launch Task State](#launch-task-state)** (`launch_task_state`): Query task status and results.
 
 ### Session Communication Tools
+
 - **[Read Session Messages](#read-session-messages)** (`read_session_messages`): Receive messages from launched tasks.
 
 ### Memory Tools
+
 - **[Memory](./memory.md)** (`save_memory`, `recall_memory`): Save and recall information across sessions.
 
 ### MCP Tools
+
 - **[MCP Server](./mcp-server.md)**: Model Context Protocol integration for external tools.
 - **[MCP Client](#mcp-client)** (`mcp_client`): Direct MCP server interaction.
 - **[MCP Tool](#mcp-tool)** (`mcp_tool`): Execute MCP-exposed tools.
 
 ### Utility Tools
+
 - **[Exit Plan Mode](#exit-plan-mode)** (`exit_plan_mode`): Exit planning mode and execute actions.
 - **[Diff Options](#diff-options)** (`diff_options`): Configure file diff behavior.
 
 ## Tool Categories Reference
 
 ### Directory Listing (`ls`)
+
 Lists directory contents with various options for filtering and formatting.
 
 **Parameters:**
+
 - `path`: The directory to list (default: current directory)
 - `recursive`: Whether to list subdirectories recursively
 - `hidden`: Whether to include hidden files
@@ -101,9 +114,11 @@ Lists directory contents with various options for filtering and formatting.
 ---
 
 ### Grep (`grep`)
+
 Searches for patterns in files using regular expressions.
 
 **Parameters:**
+
 - `pattern`: The regex pattern to search for
 - `path`: Directory or file path to search in
 - `case_sensitive`: Whether matching is case-sensitive
@@ -113,9 +128,11 @@ Searches for patterns in files using regular expressions.
 ---
 
 ### Glob (`glob`)
+
 Finds files and directories matching glob patterns.
 
 **Parameters:**
+
 - `pattern`: The glob pattern (e.g., `src/**/*.ts`)
 - `path`: Base directory for the search
 - `ignore`: Patterns to exclude from results
@@ -125,9 +142,11 @@ Finds files and directories matching glob patterns.
 ---
 
 ### RipGrep (`rip_grep`)
+
 Fast text search using ripgrep for large codebases.
 
 **Parameters:**
+
 - `pattern`: The pattern to search for
 - `path`: Directory to search in
 - `file_pattern`: Optional file filter (e.g., `*.ts`)
@@ -137,9 +156,11 @@ Fast text search using ripgrep for large codebases.
 ---
 
 ### SearXNG Search (`searxng_search`)
+
 Privacy-focused local web search using a self-hosted SearXNG instance.
 
 **Parameters:**
+
 - `query`: The search query
 - `categories`: Optional categories (general, images, news, etc.)
 - `language`: Optional language filter
@@ -149,9 +170,11 @@ Privacy-focused local web search using a self-hosted SearXNG instance.
 ---
 
 ### Task (`task`)
+
 Executes a task with automatic retry on failure and progress tracking.
 
 **Parameters:**
+
 - `prompt`: The task description
 - `max_retries`: Maximum number of retries on failure
 - `timeout_minutes`: Task timeout
@@ -161,34 +184,62 @@ Executes a task with automatic retry on failure and progress tracking.
 ---
 
 ### Launch Task (`launch_task`)
-Spawns a new LowCal instance for parallel or background work.
+
+Spawns a new LowCal instance or queues in-process work.
 
 **Parameters:**
+
+- `action`: create
 - `id`: Unique identifier for the task
-- `prompt`: The task to execute
-- `execution_mode`: headless, zellij_tab, or default
+- `prompt`/`action_value`: Task payload
+- `execution_mode`: default, headless, zellij_tab, or in_process
+- `template_id`/`template_level`: Template-based prefill
+- `auth`/`model`: Per-task runtime overrides
 
 **Example Use:** "Launch a background task to build the project"
 
 ---
 
 ### Schedule Task (`schedule_task`)
+
 Creates and manages cron jobs for recurring automation.
 
 **Parameters:**
+
 - `action`: create, list, get, update, delete, pause, resume, run_now
 - `id`: Job identifier
-- `schedule`: Cron expression (e.g., "0 * * * *")
-- `prompt`: Task to execute
+- `schedule`: Cron expression (e.g., "0 \* \* \* \*")
+- `prompt`/`action_value`: Task payload
+- `execution_mode`: default, headless, zellij_tab, or in_process
+- `template_id`/`template_level`: Template-based prefill
+- `auth`/`model`/`run`: Runtime overrides
 
 **Example Use:** "Schedule tests to run every hour"
 
 ---
 
+### Task Template (`task_template`)
+
+Manages reusable task templates used by launch/schedule workflows.
+
+**Parameters:**
+
+- `action`: list, get, create, update, delete, validate, resolve
+- `id`: Template ID
+- `level`: auto, project, user, builtin
+- `template`: Template payload for create/update/validate
+- `overrides`: Runtime overrides for resolve
+
+**Example Use:** "Create a vision OCR template with LM Studio auth and model defaults"
+
+---
+
 ### Launch Task State (`launch_task_state`)
+
 Queries the status and results of launched tasks.
 
 **Parameters:**
+
 - `task_id`: The task identifier to query
 - `action`: get, list, or clear
 
@@ -197,9 +248,11 @@ Queries the status and results of launched tasks.
 ---
 
 ### Read Session Messages (`read_session_messages`)
+
 Receives messages from launched tasks back to the parent session.
 
 **Parameters:**
+
 - `action`: pull, peek, clear, or wait
 - `session_id`: Target session mailbox
 - `task_id`: Optional filter for specific task
@@ -209,9 +262,11 @@ Receives messages from launched tasks back to the parent session.
 ---
 
 ### MCP Client (`mcp_client`)
+
 Direct interaction with Model Context Protocol servers.
 
 **Parameters:**
+
 - `server_name`: The MCP server to connect to
 - `method`: The method to call
 - `params`: Method parameters
@@ -221,9 +276,11 @@ Direct interaction with Model Context Protocol servers.
 ---
 
 ### MCP Tool (`mcp_tool`)
+
 Execute tools exposed by MCP servers.
 
 **Parameters:**
+
 - `tool_name`: The MCP tool name (e.g., `git__git_log`)
 - `arguments`: Tool-specific arguments
 
@@ -232,9 +289,11 @@ Execute tools exposed by MCP servers.
 ---
 
 ### Exit Plan Mode (`exit_plan_mode`)
+
 Exits planning mode and executes the planned actions.
 
 **Parameters:**
+
 - None (used as a command to confirm execution)
 
 **Example Use:** "Exit plan mode and execute the changes"
@@ -242,9 +301,11 @@ Exits planning mode and executes the planned actions.
 ---
 
 ### Diff Options (`diff_options`)
+
 Configures file diff behavior for edit operations.
 
 **Parameters:**
+
 - `context_lines`: Number of context lines in diffs
 - `format`: Unified or side-by-side
 

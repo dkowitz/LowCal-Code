@@ -3,6 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
+import type { TaskActionType, TaskRuntimeProfile, TaskTemplateAuthProfile, TaskTemplateLevel, TaskTemplateModelProfile, TaskTemplateRunProfile } from "../task-templates/types.js";
 /**
  * Status of a scheduled job
  */
@@ -10,7 +11,7 @@ export type JobStatus = "scheduled" | "running" | "paused" | "error" | "complete
 /**
  * Execution mode for a scheduled job
  */
-export type JobExecutionMode = "headless" | "zellij_tab";
+export type JobExecutionMode = "headless" | "zellij_tab" | "in_process";
 export type ScheduleTaskExecutionMode = JobExecutionMode | "default";
 /**
  * Represents a single scheduled job
@@ -44,6 +45,18 @@ export interface Job {
     max_failures?: number;
     /** Optional execution mode override for this job */
     execution_mode?: JobExecutionMode;
+    /** Optional action type for the job payload */
+    action_type?: TaskActionType;
+    /** Optional action payload (prompt text or slash command) */
+    action_value?: string;
+    /** Optional originating task template id */
+    template_id?: string;
+    /** Optional originating task template level */
+    template_level?: TaskTemplateLevel;
+    /** Optional session id for in_process execution targets */
+    return_to_session_id?: string;
+    /** Optional merged runtime profile for this job */
+    runtime_profile?: TaskRuntimeProfile;
 }
 /**
  * Root structure of the cron.json file
@@ -87,6 +100,12 @@ export interface CreateJobParams {
     timeout_minutes?: number;
     max_failures?: number;
     execution_mode?: JobExecutionMode;
+    action_type?: TaskActionType;
+    action_value?: string;
+    template_id?: string;
+    template_level?: TaskTemplateLevel;
+    return_to_session_id?: string;
+    runtime_profile?: TaskRuntimeProfile;
 }
 /**
  * Parameters for updating an existing job
@@ -101,6 +120,12 @@ export interface UpdateJobParams {
     timeout_minutes?: number;
     max_failures?: number;
     execution_mode?: JobExecutionMode | null;
+    action_type?: TaskActionType | null;
+    action_value?: string | null;
+    template_id?: string | null;
+    template_level?: TaskTemplateLevel | null;
+    return_to_session_id?: string | null;
+    runtime_profile?: TaskRuntimeProfile | null;
 }
 /**
  * Valid actions for the schedule_task tool
@@ -120,6 +145,15 @@ export interface ScheduleTaskParams {
     max_failures?: number;
     execution_mode?: ScheduleTaskExecutionMode;
     execution_mode_override?: boolean;
+    action_type?: TaskActionType;
+    action_value?: string;
+    template_id?: string;
+    template_level?: TaskTemplateLevel | "auto";
+    template_overrides?: TaskRuntimeProfile;
+    auth?: TaskTemplateAuthProfile;
+    model?: TaskTemplateModelProfile;
+    run?: TaskTemplateRunProfile;
+    return_to_session_id?: string;
 }
 /**
  * Configuration for the scheduler daemon

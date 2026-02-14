@@ -1,14 +1,18 @@
 # Scheduler Command
 
-The `scheduler` command manages the LowCal scheduler daemon and scheduled jobs for automated task execution.
+The `scheduler` command manages the LowCal scheduler daemon and provides operational controls for existing scheduled jobs.
 
 ## Overview
 
-The scheduler allows you to run LowCal Code tasks on a recurring basis using cron-style scheduling. This is useful for:
-- Automated testing and builds
-- Periodic code analysis
-- Scheduled reports and summaries
-- Regular data collection or monitoring
+Use this command to:
+
+- start/stop the scheduler daemon
+- inspect scheduled jobs and their runtime state
+- adjust job execution mode overrides
+- reset or delete jobs
+- review execution logs
+
+Job creation and updates are handled by the `schedule_task` tool (or via `/tasks schedule` / `lowcal tasks schedule`).
 
 ## Usage
 
@@ -26,24 +30,6 @@ Start the scheduler daemon.
 lowcal scheduler start
 ```
 
-The daemon runs in the background and executes scheduled jobs at their configured times.
-
-**Example Output:**
-```
-✓ Scheduler daemon started successfully
-
-Status:
-  Running: Yes
-  PID: 12345
-  Total jobs: 3
-  Active executions: 0
-
-Upcoming jobs:
-  - daily-tests
-  - weekly-report
-  - hourly-backup
-```
-
 ### stop
 
 Stop the scheduler daemon.
@@ -52,27 +38,12 @@ Stop the scheduler daemon.
 lowcal scheduler stop
 ```
 
-**Example Output:**
-```
-✓ Scheduler daemon stopped
-```
-
 ### status
 
-Show current scheduler status.
+Show daemon + job status. Supports live mode.
 
 ```bash
-lowcal scheduler status
-```
-
-**Example Output:**
-```
-Running: yes
-PID: 12345
-Jobs: 3 scheduled
-Next job: daily-tests at 9:00 AM
-Active executions: 0
-Last tick: 2/9/2026, 10:30 AM
+lowcal scheduler status [--watch] [--interval <seconds>]
 ```
 
 ### list
@@ -80,172 +51,71 @@ Last tick: 2/9/2026, 10:30 AM
 List all scheduled jobs.
 
 ```bash
-lowcal scheduler list [options]
+lowcal scheduler list
 ```
 
-**Options:**
-| Option | Description |
-|--------|-------------|
-| `--json` | Output in JSON format |
+### get
 
-**Example Output:**
-```
-🟢 daily-tests (running)
-   Schedule: 0 9 * * *
-   Next run: 2/10/2026, 9:00 AM
-   Last run: 2/9/2026, 9:00 AM
-   Runs: 45 successful, 2 failed
-   Execution: headless (default)
-
-🔴 weekly-report
-   Schedule: 0 8 * * 1
-   Next run: 2/16/2026, 8:00 AM
-   Last run: 2/2/2026, 8:00 AM
-   Runs: 4 successful, 0 failed
-   Execution: zellij_tab
-
-   Generate weekly project summary report
-```
-
-### add
-
-Add a new scheduled job.
+Show details for one job.
 
 ```bash
-lowcal scheduler add --id <job-id> --schedule <cron-expression> --prompt <prompt>
+lowcal scheduler get <job-id>
 ```
 
-**Options:**
-| Option | Description | Required |
-|--------|-------------|----------|
-| `--id` | Unique identifier for the job | Yes |
-| `--schedule` | Cron expression (e.g., "0 9 * * *" for daily at 9 AM) | Yes |
-| `--prompt` | The prompt/instruction to execute | Yes |
-| `--description` | Human-readable description | No |
-| `--execution-mode` | Execution mode: headless, zellij_tab, or default | No |
-| `--timeout <minutes>` | Job timeout in minutes | No (default: 10) |
-| `--enabled` | Whether the job is enabled | No (default: true) |
+### mode
 
-**Cron Expression Format:**
-```
-┌───────────── minute (0 - 59)
-│ ┌───────────── hour (0 - 23)
-│ │ ┌───────────── day of month (1 - 31)
-│ │ │ ┌───────────── month (1 - 12)
-│ │ │ │ ┌───────────── day of week (0 - 6, Sunday = 0)
-* * * * *
-```
-
-**Examples:**
-```bash
-# Run tests every hour
-lowcal scheduler add --id hourly-tests --schedule "0 * * * *" \
-  --prompt "Run npm test and report results"
-
-# Daily build at 9 AM
-lowcal scheduler add --id daily-build --schedule "0 9 * * *" \
-  --prompt "Build the project and check for errors" \
-  --description "Daily build verification"
-
-# Weekly report on Monday at 8 AM
-lowcal scheduler add --id weekly-report --schedule "0 8 * * 1" \
-  --prompt "Generate a summary of this week's work" \
-  --execution-mode zellij_tab
-
-# Every 5 minutes (monitoring)
-lowcal scheduler add --id health-check --schedule "*/5 * * * *" \
-  --prompt "Check system health and report any issues" \
-  --timeout 2
-```
-
-### remove / delete
-
-Remove a scheduled job.
+Set or clear a per-job execution mode override.
 
 ```bash
-lowcal scheduler remove <job-id>
-# or
+lowcal scheduler mode <job-id> <headless|zellij_tab|default>
+```
+
+### delete
+
+Delete a scheduled job permanently.
+
+```bash
 lowcal scheduler delete <job-id>
-```
-
-**Example:**
-```bash
-lowcal scheduler remove hourly-tests
-```
-
-### pause
-
-Temporarily disable a scheduled job without deleting it.
-
-```bash
-lowcal scheduler pause <job-id>
-```
-
-The job will not run at its scheduled time but can be resumed later.
-
-### resume
-
-Re-enable a paused job.
-
-```bash
-lowcal scheduler resume <job-id>
 ```
 
 ### reset
 
-Reset a failed job to allow retry. Use this when a job has failed multiple times and you want to clear the failure count.
+Reset a failed/paused job so it can run again.
 
 ```bash
 lowcal scheduler reset <job-id>
 ```
 
-## Examples
+### logs
 
-### Create a Daily Test Suite
+Show recent execution logs for a job.
+
 ```bash
-lowcal scheduler add \
-  --id daily-tests \
-  --schedule "0 9 * * *" \
-  --prompt "Run the full test suite with coverage and report results" \
-  --description "Daily test suite execution"
+lowcal scheduler logs <job-id> [--tail <count>]
 ```
 
-### Monitor a Service
+## Creating Jobs
+
+Create jobs through task-template and tool workflows:
+
 ```bash
-lowcal scheduler add \
-  --id service-monitor \
-  --schedule "*/15 * * * *" \
-  --prompt "Check if the API is responding and report any issues" \
-  --timeout 5 \
-  --execution-mode headless
+# Schedule from template in TUI
+/tasks schedule nightly-compress "0 2 * * *" --id nightly-compress
+
+# Schedule from template in terminal mode
+lowcal tasks schedule nightly-compress "0 2 * * *" --id nightly-compress
 ```
 
-### View All Jobs
-```bash
-# List all jobs with details
-lowcal scheduler list
+Or by calling `schedule_task` directly from a prompt/tool call.
 
-# Get JSON output for scripting
-lowcal scheduler list --json
-```
+## Runtime Notes
 
-## Job Execution Modes
-
-| Mode | Description |
-|------|-------------|
-| `headless` | Runs silently without UI, ideal for automated tasks |
-| `zellij_tab` | Opens in a new Zellij tab for visibility during execution |
-| `default` | Uses the scheduler's configured default mode |
-
-## Best Practices
-
-1. **Set appropriate timeouts**: Long-running jobs should have generous timeout values
-2. **Use descriptive IDs**: Choose meaningful job IDs that describe what the job does
-3. **Add descriptions**: Help others (and your future self) understand each job's purpose
-4. **Test cron expressions**: Use tools like crontab.guru to verify your schedule
-5. **Monitor failures**: Regularly check job status and investigate failures
+- Jobs can run in `headless`, `zellij_tab`, or `in_process` mode.
+- `in_process` jobs require a target interactive session (`return_to_session_id` or `run.returnToSession`).
+- Scheduler `get` output includes runtime profile details when present (template, auth/model overrides, action type/value, run settings).
 
 ## Related Commands
 
-- [`lowcal dashboard`](dashboard.md) - Unified view of scheduler status
-- [`lowcal orchestrator`](orchestrator.md) - Session orchestration
+- [`lowcal tasks`](./commands.md#tasks-command) - Template management and deploy
+- [`lowcal dashboard`](./dashboard.md) - Unified session/job/daemon view
+- [`lowcal orchestrator`](./orchestrator.md) - Session orchestration

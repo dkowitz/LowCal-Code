@@ -37,26 +37,55 @@ import { ideCommand } from "../ui/commands/ideCommand.js";
 import { restoreCommand } from "../ui/commands/restoreCommand.js";
 
 vi.mock("../ui/commands/authCommand.js", () => ({ authCommand: {} }));
+vi.mock("../ui/commands/agentsCommand.js", () => ({ agentsCommand: {} }));
 vi.mock("../ui/commands/bugCommand.js", () => ({ bugCommand: {} }));
 vi.mock("../ui/commands/chatCommand.js", () => ({ chatCommand: {} }));
 vi.mock("../ui/commands/clearCommand.js", () => ({ clearCommand: {} }));
 vi.mock("../ui/commands/compressCommand.js", () => ({ compressCommand: {} }));
 vi.mock("../ui/commands/corgiCommand.js", () => ({ corgiCommand: {} }));
 vi.mock("../ui/commands/docsCommand.js", () => ({ docsCommand: {} }));
+vi.mock("../ui/commands/directoryCommand.js", () => ({ directoryCommand: {} }));
 vi.mock("../ui/commands/editorCommand.js", () => ({ editorCommand: {} }));
+vi.mock("../ui/commands/exportCommand.js", () => ({ exportCommand: {} }));
 vi.mock("../ui/commands/extensionsCommand.js", () => ({
   extensionsCommand: {},
 }));
 vi.mock("../ui/commands/helpCommand.js", () => ({ helpCommand: {} }));
+vi.mock("../ui/commands/initCommand.js", () => ({ initCommand: {} }));
+vi.mock("../ui/commands/loggingCommand.js", () => ({ loggingCommand: {} }));
 vi.mock("../ui/commands/memoryCommand.js", () => ({ memoryCommand: {} }));
+vi.mock("../ui/commands/promptCommand.js", () => ({ promptCommand: {} }));
+vi.mock("../ui/commands/promptInfoCommand.js", () => ({
+  promptInfoCommand: {},
+}));
+vi.mock("../ui/commands/promptModeCommand.js", () => ({
+  promptModeCommand: {},
+}));
 vi.mock("../ui/commands/privacyCommand.js", () => ({ privacyCommand: {} }));
 vi.mock("../ui/commands/quitCommand.js", () => ({
   quitCommand: {},
   quitConfirmCommand: {},
 }));
+vi.mock("../ui/commands/researchCommand.js", () => ({ researchCommand: {} }));
+vi.mock("../ui/commands/resumeCommand.js", () => ({
+  resumeCommandGroup: {},
+}));
+vi.mock("../ui/commands/sessionsCommand.js", () => ({ sessionsCommand: {} }));
+vi.mock("../ui/commands/setupGithubCommand.js", () => ({
+  setupGithubCommand: {},
+}));
 vi.mock("../ui/commands/statsCommand.js", () => ({ statsCommand: {} }));
+vi.mock("../ui/commands/summaryCommand.js", () => ({ summaryCommand: {} }));
+vi.mock("../ui/commands/terminalSetupCommand.js", () => ({
+  terminalSetupCommand: {},
+}));
+vi.mock("../ui/commands/tasksCommand.js", () => ({ tasksCommand: {} }));
 vi.mock("../ui/commands/themeCommand.js", () => ({ themeCommand: {} }));
+vi.mock("../ui/commands/tokensCommand.js", () => ({ tokensCommand: {} }));
 vi.mock("../ui/commands/toolsCommand.js", () => ({ toolsCommand: {} }));
+vi.mock("../ui/commands/toolsetCommand.js", () => ({ toolsetCommand: {} }));
+vi.mock("../ui/commands/viewCommand.js", () => ({ viewCommand: {} }));
+vi.mock("../ui/commands/vimCommand.js", () => ({ vimCommand: {} }));
 vi.mock("../ui/commands/mcpCommand.js", () => ({
   mcpCommand: {
     name: "mcp",

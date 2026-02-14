@@ -109382,6 +109382,7 @@ var ToolNames = {
   RESEARCH: "research",
   SCHEDULE_TASK: "schedule_task",
   LAUNCH_TASK: "launch_task",
+  TASK_TEMPLATE: "task_template",
   READ_SESSION_MESSAGES: "read_session_messages"
 };
 
@@ -110720,6 +110721,7 @@ var DEFAULT_COLLECTIONS = {
     ToolNames.SEARXNG_SEARCH,
     ToolNames.SCHEDULE_TASK,
     ToolNames.LAUNCH_TASK,
+    ToolNames.TASK_TEMPLATE,
     ToolNames.READ_SESSION_MESSAGES
   ],
   minimal: [ToolNames.READ_FILE, ToolNames.WRITE_FILE, ToolNames.SHELL],
@@ -110747,6 +110749,7 @@ var TOOL_SUMMARIES = {
   [ToolNames.SEARXNG_SEARCH]: "Search the web using your local SearXNG instance for private, non-API-key search results. Example: `searxng_search privacy-focused alternatives to Google Search`.",
   [ToolNames.SCHEDULE_TASK]: "Create/manage cron jobs for recurring automation. Example: `schedule_task action=create id=nightly schedule='0 2 * * *' ...`.",
   [ToolNames.LAUNCH_TASK]: "Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: `launch_task action=create id=task-1 prompt='...'`.",
+  [ToolNames.TASK_TEMPLATE]: "Manage reusable task templates (list/get/create/update/delete/resolve) used by launch_task and schedule_task. Example: `task_template action=list`.",
   [ToolNames.READ_SESSION_MESSAGES]: "Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: `read_session_messages action=wait`."
 };
 function applyToolCollectionPolicies(collections) {
@@ -133533,14 +133536,20 @@ var LOGS_DIR = path21.join(QWEN_DIR, "logs");
 // ../core/dist/src/tools/launch-task.js
 init_tools();
 init_tool_error();
-var path23 = __toESM(require("node:path"), 1);
+var path24 = __toESM(require("node:path"), 1);
+
+// ../core/dist/src/sessions/session-store.js
+var path22 = __toESM(require("node:path"), 1);
+init_storage();
+var SESSIONS_FILE = path22.join(Storage.getGlobalGeminiDir(), "sessions.json");
+var LOCK_FILE2 = path22.join(Storage.getGlobalGeminiDir(), "sessions.lock");
 
 // ../core/dist/src/tools/launch-task-state.js
 var fs14 = __toESM(require("node:fs/promises"), 1);
-var path22 = __toESM(require("node:path"), 1);
+var path23 = __toESM(require("node:path"), 1);
 var process6 = __toESM(require("node:process"), 1);
-var STORE_RELATIVE_PATH = path22.join(".lowcal", "launch-task-state.json");
-var LOCK_RELATIVE_PATH = path22.join(".lowcal", "launch-task-state.lock");
+var STORE_RELATIVE_PATH = path23.join(".lowcal", "launch-task-state.json");
+var LOCK_RELATIVE_PATH = path23.join(".lowcal", "launch-task-state.lock");
 var LOCK_TIMEOUT_MS = 5e3;
 var LOCK_RETRY_MS = 100;
 var DEFAULT_STALE_AFTER_MS = 5 * 60 * 1e3;
@@ -133575,13 +133584,13 @@ function createEmptyStore() {
   };
 }
 function resolveStorePath(baseDir) {
-  return path22.join(baseDir, STORE_RELATIVE_PATH);
+  return path23.join(baseDir, STORE_RELATIVE_PATH);
 }
 function resolveLockPath(baseDir) {
-  return path22.join(baseDir, LOCK_RELATIVE_PATH);
+  return path23.join(baseDir, LOCK_RELATIVE_PATH);
 }
 async function ensureDirectories(baseDir) {
-  await fs14.mkdir(path22.join(baseDir, ".lowcal"), { recursive: true });
+  await fs14.mkdir(path23.join(baseDir, ".lowcal"), { recursive: true });
 }
 async function acquireLock(baseDir, timeoutMs = LOCK_TIMEOUT_MS) {
   await ensureDirectories(baseDir);
@@ -133745,13 +133754,13 @@ async function reconcileLaunchTaskState(baseDir, options2 = {}) {
 }
 
 // ../core/dist/src/tools/launch-task.js
-var HEADLESS_CLI_RELATIVE_PATH = path23.join("packages", "cli", "dist", "src", "scheduler", "headless.js");
+var HEADLESS_CLI_RELATIVE_PATH = path24.join("packages", "cli", "dist", "src", "scheduler", "headless.js");
 
 // ../core/dist/src/tools/read-session-messages.js
 init_tools();
 init_tool_error();
 var fs15 = __toESM(require("node:fs/promises"), 1);
-var path24 = __toESM(require("node:path"), 1);
+var path25 = __toESM(require("node:path"), 1);
 var DEFAULT_MAX_ITEMS = 20;
 var MAX_ITEMS_LIMIT = 200;
 var DEFAULT_WAIT_TIMEOUT_SECONDS = 30;
@@ -133833,7 +133842,7 @@ function clampWaitTimeoutSeconds(value) {
   return normalized;
 }
 function getMailboxPath(baseDir, sessionId2) {
-  return path24.join(baseDir, ".lowcal", "session-messages", `${sessionId2}.jsonl`);
+  return path25.join(baseDir, ".lowcal", "session-messages", `${sessionId2}.jsonl`);
 }
 async function readMailboxLines(mailboxPath) {
   try {
@@ -133865,7 +133874,7 @@ async function writeMailboxLines(mailboxPath, lines) {
     });
     return;
   }
-  await fs15.mkdir(path24.dirname(mailboxPath), { recursive: true });
+  await fs15.mkdir(path25.dirname(mailboxPath), { recursive: true });
   await fs15.writeFile(mailboxPath, `${lines.map((line) => line.raw).join("\n")}
 `, "utf-8");
 }
@@ -134029,6 +134038,10 @@ var ReadSessionMessagesTool = class extends BaseDeclarativeTool {
     return new ReadSessionMessagesInvocation(params, this.config);
   }
 };
+
+// ../core/dist/src/tools/task-template.js
+init_tool_error();
+init_tools();
 
 // ../core/dist/src/tools/searxng-search.js
 init_tools();
@@ -136721,7 +136734,7 @@ init_mcp_tool();
 // ../core/dist/src/tools/research.js
 init_tools();
 var fs17 = __toESM(require("node:fs"), 1);
-var path26 = __toESM(require("node:path"), 1);
+var path27 = __toESM(require("node:path"), 1);
 init_errors();
 var ResearchToolInvocation = class extends BaseToolInvocation {
   config;
@@ -137564,15 +137577,15 @@ Be selective - only keep sources that truly add value to research on "${topic}".
     ].join("\n");
   }
   async persistReport(content, plan) {
-    const reportsDir = path26.resolve("reports");
+    const reportsDir = path27.resolve("reports");
     await fs17.promises.mkdir(reportsDir, { recursive: true });
     const baseSlugSource = plan.slug && plan.slug.trim().length > 0 ? plan.slug : plan.primaryTopic || this.params.query;
     const safeSlug = baseSlugSource.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "research-report";
     const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
     const filename = `${safeSlug}-${timestamp}.md`;
-    const filepath = path26.join(reportsDir, filename);
+    const filepath = path27.join(reportsDir, filename);
     await fs17.promises.writeFile(filepath, content, "utf8");
-    return path26.relative(process.cwd(), filepath);
+    return path27.relative(process.cwd(), filepath);
   }
   resolveSearchTools(toolRegistryOverride) {
     const preferredOrder = this.params.searchTools && this.params.searchTools.length > 0 ? this.params.searchTools : [ToolNames.WEB_SEARCH, ToolNames.SEARXNG_SEARCH];
@@ -138152,12 +138165,6 @@ async function getResponseText2(result) {
   }
   return null;
 }
-
-// ../core/dist/src/sessions/session-store.js
-var path27 = __toESM(require("node:path"), 1);
-init_storage();
-var SESSIONS_FILE = path27.join(Storage.getGlobalGeminiDir(), "sessions.json");
-var LOCK_FILE2 = path27.join(Storage.getGlobalGeminiDir(), "sessions.lock");
 
 // ../core/dist/src/utils/session.js
 var import_node_crypto3 = require("node:crypto");

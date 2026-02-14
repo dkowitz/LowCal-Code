@@ -7117,7 +7117,6 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         sessionUpdate: "plan";
     }>]>;
 }, "strip", z.ZodTypeAny, {
-    sessionId: string;
     update: {
         content: {
             type: "text";
@@ -7450,8 +7449,8 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         }[];
         sessionUpdate: "plan";
     };
+    sessionId: string;
 }, {
-    sessionId: string;
     update: {
         content: {
             type: "text";
@@ -7784,6 +7783,7 @@ export declare const sessionNotificationSchema: z.ZodObject<{
         }[];
         sessionUpdate: "plan";
     };
+    sessionId: string;
 }>;
 export declare const clientRequestSchema: z.ZodUnion<[z.ZodObject<{
     content: z.ZodString;
@@ -11112,7 +11112,6 @@ export declare const agentNotificationSchema: z.ZodObject<{
         sessionUpdate: "plan";
     }>]>;
 }, "strip", z.ZodTypeAny, {
-    sessionId: string;
     update: {
         content: {
             type: "text";
@@ -11445,8 +11444,8 @@ export declare const agentNotificationSchema: z.ZodObject<{
         }[];
         sessionUpdate: "plan";
     };
+    sessionId: string;
 }, {
-    sessionId: string;
     update: {
         content: {
             type: "text";
@@ -11779,4 +11778,5 @@ export declare const agentNotificationSchema: z.ZodObject<{
         }[];
         sessionUpdate: "plan";
     };
+    sessionId: string;
 }>;

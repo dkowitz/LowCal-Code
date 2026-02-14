@@ -3,12 +3,21 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { SessionCapabilities, SessionControlEndpoint, SessionMode, SessionStatus, SetSessionHealthInput } from "@qwen-code/qwen-code-core";
+import type { SessionCapabilities, SessionControlEndpoint, SessionMode, SessionStatus, SetSessionHealthInput, TaskRuntimeProfile } from "@qwen-code/qwen-code-core";
 export declare const DEFAULT_SESSION_HEARTBEAT_MS: number;
 export declare const DEFAULT_SESSION_TTL_MS: number;
 export interface SessionControlHandlerResult {
     accepted: boolean;
     reason?: string;
+}
+export interface SessionEnqueueTaskPayload {
+    task_id: string;
+    action_type: "prompt" | "slash_command";
+    action_value: string;
+    description?: string;
+    source_session_id?: string;
+    return_to_session_id?: string;
+    runtime_profile?: TaskRuntimeProfile;
 }
 export interface SessionControlHandlers {
     cancelTurn?: () => Promise<boolean | SessionControlHandlerResult> | boolean | SessionControlHandlerResult;
@@ -18,6 +27,7 @@ export interface SessionControlHandlers {
     setModel?: (model: string) => Promise<boolean | SessionControlHandlerResult> | boolean | SessionControlHandlerResult;
     setApprovalMode?: (mode: string) => Promise<boolean | SessionControlHandlerResult> | boolean | SessionControlHandlerResult;
     requestSelfRepair?: (payload?: Record<string, unknown>) => Promise<boolean | SessionControlHandlerResult> | boolean | SessionControlHandlerResult;
+    enqueueTask?: (payload: SessionEnqueueTaskPayload) => Promise<boolean | SessionControlHandlerResult> | boolean | SessionControlHandlerResult;
 }
 export declare function setSessionControlHandlers(handlers: SessionControlHandlers): void;
 export declare function startSessionRegistration(options: {

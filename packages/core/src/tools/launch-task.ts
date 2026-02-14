@@ -12,15 +12,34 @@ import type { JobExecutionMode } from "../scheduler/types.js";
 import type { Config } from "../config/config.js";
 import * as fs from "fs/promises";
 import * as path from "node:path";
+import * as net from "node:net";
 import { fileURLToPath } from "node:url";
+import { getSession } from "../sessions/session-store.js";
 import {
   findActiveLaunchTaskByDedupeKey,
   getLaunchTaskState,
   isLaunchTaskTerminal,
+  type LaunchTaskExecutionMode,
   reconcileLaunchTaskState,
   type LaunchTaskStateRecord,
   upsertLaunchTaskState,
 } from "./launch-task-state.js";
+import {
+  mergeRuntimeProfiles,
+  normalizeActionType,
+  normalizeAuthProfile,
+  normalizeExecutionMode,
+  normalizeModelProfile,
+  normalizeRuntimeProfile,
+  normalizeTemplateLevel,
+  runtimeProfileFromTemplate,
+  sanitizeRuntimeProfile,
+} from "../task-templates/runtime.js";
+import type {
+  TaskActionType,
+  TaskRuntimeProfile,
+} from "../task-templates/types.js";
+import { TaskTemplateManager } from "../task-templates/manager.js";
 
 const launchTaskToolSchemaData: FunctionDeclaration = {
   name: "launch_task",
@@ -50,9 +69,45 @@ const launchTaskToolSchemaData: FunctionDeclaration = {
       },
       execution_mode: {
         type: "string",
-        enum: ["default", "headless", "zellij_tab"],
+        enum: ["default", "headless", "zellij_tab", "in_process"],
         description:
           "Optional execution mode override for the new LowCal instance. Use 'default' (or omit) to follow scheduler/session defaults.",
+      },
+      action_type: {
+        type: "string",
+        enum: ["prompt", "slash_command"],
+        description:
+          "Optional action type. prompt runs a prompt/query. slash_command executes a slash command (supported in in_process mode).",
+      },
+      action_value: {
+        type: "string",
+        description:
+          "Optional action payload. If omitted, prompt is used as the action value.",
+      },
+      template_id: {
+        type: "string",
+        description:
+          "Optional task template id. Template values are merged and can be overridden by explicit launch params.",
+      },
+      template_level: {
+        type: "string",
+        enum: ["auto", "project", "user", "builtin"],
+        description:
+          "Optional template scope. auto resolves project > user > builtin.",
+      },
+      template_overrides: {
+        type: "object",
+        description:
+          "Optional runtime overrides merged on top of template values (execution_mode, auth, model, run, action fields).",
+      },
+      auth: {
+        type: "object",
+        description:
+          "Optional auth override for this task (selectedType/providerId/baseUrl/apiKeyEnvVar).",
+      },
+      model: {
+        type: "object",
+        description: "Optional model override for this task (name).",
       },
       execution_mode_override: {
         type: "boolean",
@@ -75,7 +130,7 @@ const launchTaskToolSchemaData: FunctionDeclaration = {
           "Allow launch_task to run from within launched headless tasks. Defaults to false for safety.",
       },
     },
-    required: ["action", "id", "prompt"],
+    required: ["action", "id"],
     $schema: "http://json-schema.org/draft-07/schema#",
   },
 };
@@ -98,11 +153,12 @@ Use this tool when you need:
 
 - **headless**: Runs silently without UI, ideal for automated tasks
 - **zellij_tab**: Opens in a new Zellij tab if you're running in Zellij, allowing you to monitor progress
+- **in_process**: Queues work inside the parent interactive session with temporary auth/model overrides
 - **default**: Uses your configured scheduler default mode (recommended unless the user explicitly asks otherwise)
 
 ## Actions
 
-- **create**: Launch a new LowCal instance with the given prompt (requires: id, prompt)
+- **create**: Launch or queue a task (requires: id and either prompt/action_value or a template that provides action_value)
 
 ## Parent Protocol (Recommended)
 
@@ -163,6 +219,21 @@ const ENV_DISABLE_LAUNCH_TASK = "LOWCAL_DISABLE_LAUNCH_TASK";
 const ENV_RETURN_TO_SESSION_ID = "LOWCAL_RETURN_TO_SESSION_ID";
 const ENV_RETURN_MAILBOX_PATH = "LOWCAL_RETURN_MAILBOX_PATH";
 const ENV_RETURN_FROM_TASK_ID = "LOWCAL_RETURN_FROM_TASK_ID";
+const ENV_TASK_RUNTIME_B64 = "LOWCAL_TASK_RUNTIME_B64";
+
+type LaunchExecutionMode = LaunchTaskExecutionMode;
+
+interface SessionApiEnvelope {
+  ok: boolean;
+  result?: unknown;
+  error?: string;
+}
+
+interface SessionApiControlResult {
+  accepted: boolean;
+  reason?: string;
+  action_id?: string;
+}
 
 interface RuntimePaths {
   workspaceRoot: string;
@@ -170,14 +241,15 @@ interface RuntimePaths {
 }
 
 interface LaunchResult {
-  requestedMode: JobExecutionMode;
-  actualMode: JobExecutionMode;
+  requestedMode: LaunchExecutionMode;
+  actualMode: LaunchExecutionMode;
   logPath: string;
   pid?: number;
   tabName?: string;
   warning?: string;
   returnMailboxPath?: string;
   returnToSessionId?: string;
+  runtimeProfile?: TaskRuntimeProfile;
 }
 
 function isRunningInZellijSession(): boolean {
@@ -242,8 +314,8 @@ class LaunchTaskInvocation extends BaseToolInvocation<
 
     switch (action) {
       case "create": {
-        if (!id || !this.params.prompt) {
-          throw new Error("Creating a task requires: id and prompt");
+        if (!id) {
+          throw new Error("Creating a task requires: id");
         }
         if (
           process.env[ENV_DISABLE_LAUNCH_TASK] === "1" &&
@@ -262,26 +334,102 @@ class LaunchTaskInvocation extends BaseToolInvocation<
           );
         }
 
-        // Validate prompt length
-        const promptValue = this.params.prompt!;
-        if (promptValue.length > 10000) {
+        const directPrompt =
+          typeof this.params.prompt === "string" &&
+          this.params.prompt.trim().length > 0
+            ? this.params.prompt
+            : undefined;
+        const directActionType = normalizeActionType(this.params.action_type);
+        const directActionValue =
+          typeof this.params.action_value === "string" &&
+          this.params.action_value.trim().length > 0
+            ? this.params.action_value
+            : directPrompt;
+        if (directActionValue && directActionValue.length > 10000) {
           throw new Error(
-            `Prompt is too long (${promptValue.length} characters). Maximum is 10000 characters.`,
+            `Action value is too long (${directActionValue.length} characters). Maximum is 10000 characters.`,
           );
         }
 
-        // Determine execution mode.
-        // By default we follow configured defaults, even if execution_mode is present.
-        // execution_mode only applies when execution_mode_override=true.
-        const explicitExecutionMode: JobExecutionMode | undefined =
-          execution_mode === "headless" || execution_mode === "zellij_tab"
-            ? execution_mode
+        const runtime = await this.resolveRuntimePaths();
+        const templateLevel = normalizeTemplateLevel(this.params.template_level);
+        const templateId =
+          typeof this.params.template_id === "string" &&
+          this.params.template_id.trim().length > 0
+            ? this.params.template_id.trim()
+            : undefined;
+        const templateManager = new TaskTemplateManager(runtime.workspaceRoot);
+        const template =
+          templateId !== undefined
+            ? await templateManager.resolveTemplate(
+                templateId,
+                templateLevel ? { level: templateLevel } : undefined,
+              )
+            : null;
+        if (templateId && !template) {
+          throw new Error(`Task template "${templateId}" was not found`);
+        }
+
+        const explicitExecutionModeRaw = normalizeExecutionMode(execution_mode);
+        const explicitExecutionMode: LaunchExecutionMode | undefined =
+          explicitExecutionModeRaw && explicitExecutionModeRaw !== "default"
+            ? explicitExecutionModeRaw
             : undefined;
         const shouldOverrideExecutionMode = execution_mode_override === true;
-        const resolvedExecutionMode: JobExecutionMode =
+        const resolvedExecutionMode: LaunchExecutionMode =
           shouldOverrideExecutionMode && explicitExecutionMode
             ? explicitExecutionMode
             : this.defaultExecutionMode;
+
+        const explicitRuntimeProfile: TaskRuntimeProfile = {
+          action_type: directActionType ?? (directActionValue ? "prompt" : undefined),
+          action_value: directActionValue,
+          execution_mode: explicitExecutionMode,
+          auth: normalizeAuthProfile(this.params.auth),
+          model: normalizeModelProfile(this.params.model),
+          run: this.params.allow_recursive !== undefined
+            ? { allowRecursive: this.params.allow_recursive }
+            : undefined,
+        };
+        const templateRuntimeProfile = template
+          ? runtimeProfileFromTemplate(template)
+          : undefined;
+        const overrideRuntimeProfile = normalizeRuntimeProfile(
+          this.params.template_overrides,
+        );
+        const mergedRuntimeProfile = mergeRuntimeProfiles(
+          templateRuntimeProfile,
+          overrideRuntimeProfile,
+          explicitRuntimeProfile,
+        );
+        const mergedExecutionModeRaw = mergedRuntimeProfile.execution_mode;
+        const mergedExecutionMode: LaunchExecutionMode | undefined =
+          mergedExecutionModeRaw && mergedExecutionModeRaw !== "default"
+            ? mergedExecutionModeRaw
+            : undefined;
+        const finalExecutionMode = mergedExecutionMode ?? resolvedExecutionMode;
+        mergedRuntimeProfile.execution_mode = finalExecutionMode;
+
+        const actionType =
+          mergedRuntimeProfile.action_type ??
+          (mergedRuntimeProfile.action_value ? "prompt" : undefined);
+        const actionValue = mergedRuntimeProfile.action_value ?? directPrompt;
+        if (!actionType || !actionValue) {
+          throw new Error(
+            "Creating a task requires prompt/action_value or a template that provides action content.",
+          );
+        }
+        if (actionValue.length > 10000) {
+          throw new Error(
+            `Action value is too long (${actionValue.length} characters). Maximum is 10000 characters.`,
+          );
+        }
+        if (actionType === "slash_command" && finalExecutionMode !== "in_process") {
+          throw new Error(
+            'slash_command action_type requires execution_mode="in_process".',
+          );
+        }
+
         const returnToSessionId =
           typeof this.params.return_to_session_id === "string" &&
             this.params.return_to_session_id.trim().length > 0
@@ -292,7 +440,6 @@ class LaunchTaskInvocation extends BaseToolInvocation<
             this.params.idempotency_key.trim().length > 0
             ? this.params.idempotency_key.trim()
             : undefined;
-        const runtime = await this.resolveRuntimePaths();
         await reconcileLaunchTaskState(runtime.workspaceRoot);
 
         const existingTaskById = await getLaunchTaskState(runtime.workspaceRoot, id);
@@ -317,18 +464,23 @@ class LaunchTaskInvocation extends BaseToolInvocation<
           }
         }
 
-        const initialRequestedMode = resolvedExecutionMode;
+        const initialRequestedMode = finalExecutionMode;
         await upsertLaunchTaskState(runtime.workspaceRoot, id, (_current, nowIso) => ({
           task_id: id,
           status: "queued",
           created_at: nowIso,
           last_heartbeat: nowIso,
-          prompt_preview: promptValue.trim().slice(0, 400),
+          prompt_preview: actionValue.trim().slice(0, 400),
           parent_session_id: returnToSessionId,
           source_session_id: this.sourceSessionId,
           dedupe_key: idempotencyKey,
+          template_id: template?.id,
+          template_level: template?.level,
           execution_mode_requested: initialRequestedMode,
           execution_mode_actual: initialRequestedMode,
+          model_requested: mergedRuntimeProfile.model?.name,
+          auth_requested: mergedRuntimeProfile.auth,
+          runtime_profile: sanitizeRuntimeProfile(mergedRuntimeProfile),
         }));
 
         // Launch the new LowCal instance
@@ -336,10 +488,12 @@ class LaunchTaskInvocation extends BaseToolInvocation<
         try {
           launchResult = await this.launchLowCalInstance(
             id,
-            promptValue,
-            resolvedExecutionMode,
+            actionType,
+            actionValue,
+            finalExecutionMode,
             runtime,
             returnToSessionId,
+            mergedRuntimeProfile,
           );
         } catch (error) {
           const errorMessage =
@@ -354,14 +508,26 @@ class LaunchTaskInvocation extends BaseToolInvocation<
               started_at: current?.started_at,
               finished_at: nowIso,
               last_heartbeat: nowIso,
-              prompt_preview: current?.prompt_preview ?? promptValue.trim().slice(0, 400),
+              prompt_preview: current?.prompt_preview ?? actionValue.trim().slice(0, 400),
               parent_session_id: current?.parent_session_id ?? returnToSessionId,
               source_session_id: current?.source_session_id ?? this.sourceSessionId,
               dedupe_key: current?.dedupe_key ?? idempotencyKey,
+              template_id: current?.template_id ?? template?.id,
+              template_level: current?.template_level ?? template?.level,
               execution_mode_requested:
-                current?.execution_mode_requested ?? resolvedExecutionMode,
+                current?.execution_mode_requested ??
+                finalExecutionMode ??
+                resolvedExecutionMode,
               execution_mode_actual:
-                current?.execution_mode_actual ?? resolvedExecutionMode,
+                current?.execution_mode_actual ??
+                finalExecutionMode ??
+                resolvedExecutionMode,
+              model_requested:
+                current?.model_requested ?? mergedRuntimeProfile.model?.name,
+              auth_requested:
+                current?.auth_requested ?? mergedRuntimeProfile.auth,
+              runtime_profile:
+                current?.runtime_profile ?? sanitizeRuntimeProfile(mergedRuntimeProfile),
               result_ref: current?.result_ref,
               last_error: errorMessage,
               pid: current?.pid,
@@ -376,13 +542,29 @@ class LaunchTaskInvocation extends BaseToolInvocation<
           created_at: current?.created_at ?? nowIso,
           started_at: current?.started_at ?? nowIso,
           last_heartbeat: nowIso,
-          prompt_preview: current?.prompt_preview ?? promptValue.trim().slice(0, 400),
+          prompt_preview: current?.prompt_preview ?? actionValue.trim().slice(0, 400),
           parent_session_id: current?.parent_session_id ?? returnToSessionId,
           source_session_id: current?.source_session_id ?? this.sourceSessionId,
           dedupe_key: current?.dedupe_key ?? idempotencyKey,
+          template_id: current?.template_id ?? template?.id,
+          template_level: current?.template_level ?? template?.level,
           execution_mode_requested:
-            current?.execution_mode_requested ?? resolvedExecutionMode,
+            current?.execution_mode_requested ??
+            finalExecutionMode ??
+            resolvedExecutionMode,
           execution_mode_actual: launchResult.actualMode,
+          model_requested: current?.model_requested ?? mergedRuntimeProfile.model?.name,
+          model_actual:
+            launchResult.runtimeProfile?.model?.name ??
+            current?.model_actual ??
+            mergedRuntimeProfile.model?.name,
+          auth_requested: current?.auth_requested ?? mergedRuntimeProfile.auth,
+          auth_actual:
+            launchResult.runtimeProfile?.auth ??
+            current?.auth_actual ??
+            mergedRuntimeProfile.auth,
+          runtime_profile:
+            current?.runtime_profile ?? sanitizeRuntimeProfile(mergedRuntimeProfile),
           result_ref: {
             mailbox_path:
               launchResult.returnMailboxPath ?? current?.result_ref?.mailbox_path,
@@ -411,7 +593,7 @@ class LaunchTaskInvocation extends BaseToolInvocation<
 
         return this.formatTaskCreated(
           id,
-          promptValue,
+          actionValue,
           description,
           resultWithWarnings,
         );
@@ -454,10 +636,12 @@ class LaunchTaskInvocation extends BaseToolInvocation<
 
   private async launchLowCalInstance(
     id: string,
-    prompt: string,
-    executionMode: JobExecutionMode,
+    actionType: TaskActionType,
+    actionValue: string,
+    executionMode: LaunchExecutionMode,
     runtime: RuntimePaths,
     returnToSessionId?: string,
+    runtimeProfile?: TaskRuntimeProfile,
   ): Promise<LaunchResult> {
     const returnMailboxPath =
       typeof returnToSessionId === "string" && returnToSessionId.trim().length > 0
@@ -469,14 +653,30 @@ class LaunchTaskInvocation extends BaseToolInvocation<
           )
         : undefined;
 
+    if (executionMode === "in_process") {
+      return await this.enqueueInProcessTask(
+        id,
+        actionType,
+        actionValue,
+        runtime,
+        returnToSessionId,
+        runtimeProfile,
+      );
+    }
+
+    if (actionType === "slash_command") {
+      throw new Error('slash_command actions are only supported in "in_process" mode.');
+    }
+
     if (executionMode === "zellij_tab") {
       if (!isRunningInZellijSession()) {
         const fallback = await this.spawnHeadlessJob(
           id,
-          prompt,
+          actionValue,
           runtime,
           returnToSessionId,
           returnMailboxPath,
+          runtimeProfile,
         );
         return {
           ...fallback,
@@ -488,18 +688,20 @@ class LaunchTaskInvocation extends BaseToolInvocation<
       try {
         return await this.spawnZellijJob(
           id,
-          prompt,
+          actionValue,
           runtime,
           returnToSessionId,
           returnMailboxPath,
+          runtimeProfile,
         );
       } catch (error) {
         const fallback = await this.spawnHeadlessJob(
           id,
-          prompt,
+          actionValue,
           runtime,
           returnToSessionId,
           returnMailboxPath,
+          runtimeProfile,
         );
         return {
           ...fallback,
@@ -513,10 +715,11 @@ class LaunchTaskInvocation extends BaseToolInvocation<
 
     return await this.spawnHeadlessJob(
       id,
-      prompt,
+      actionValue,
       runtime,
       returnToSessionId,
       returnMailboxPath,
+      runtimeProfile,
     );
   }
 
@@ -526,6 +729,7 @@ class LaunchTaskInvocation extends BaseToolInvocation<
     runtime: RuntimePaths,
     returnToSessionId?: string,
     returnMailboxPath?: string,
+    runtimeProfile?: TaskRuntimeProfile,
   ): Promise<LaunchResult> {
     const { spawn } = await import("child_process");
     const schedulerCwd = runtime.workspaceRoot;
@@ -547,6 +751,11 @@ class LaunchTaskInvocation extends BaseToolInvocation<
       env[ENV_RETURN_TO_SESSION_ID] = returnToSessionId;
       env[ENV_RETURN_MAILBOX_PATH] = returnMailboxPath;
       env[ENV_RETURN_FROM_TASK_ID] = id;
+    }
+    if (runtimeProfile) {
+      env[ENV_TASK_RUNTIME_B64] = Buffer.from(
+        JSON.stringify(sanitizeRuntimeProfile(runtimeProfile)),
+      ).toString("base64");
     }
 
     const args = [
@@ -585,6 +794,7 @@ class LaunchTaskInvocation extends BaseToolInvocation<
           pid: child.pid ?? undefined,
           returnMailboxPath,
           returnToSessionId,
+          runtimeProfile: sanitizeRuntimeProfile(runtimeProfile),
         });
       });
 
@@ -612,6 +822,7 @@ class LaunchTaskInvocation extends BaseToolInvocation<
     runtime: RuntimePaths,
     returnToSessionId?: string,
     returnMailboxPath?: string,
+    runtimeProfile?: TaskRuntimeProfile,
   ): Promise<LaunchResult> {
     const schedulerCwd = runtime.workspaceRoot;
     const cliPath = runtime.cliPath;
@@ -651,6 +862,13 @@ class LaunchTaskInvocation extends BaseToolInvocation<
         ? [`${ENV_RETURN_MAILBOX_PATH}=${returnMailboxPath}`]
         : []),
       ...(returnToSessionId ? [`${ENV_RETURN_FROM_TASK_ID}=${id}`] : []),
+      ...(runtimeProfile
+        ? [
+            `${ENV_TASK_RUNTIME_B64}=${Buffer.from(
+              JSON.stringify(sanitizeRuntimeProfile(runtimeProfile)),
+            ).toString("base64")}`,
+          ]
+        : []),
     ];
 
     // Command arguments (these need to be quoted)
@@ -683,6 +901,143 @@ class LaunchTaskInvocation extends BaseToolInvocation<
       tabName,
       returnMailboxPath,
       returnToSessionId,
+      runtimeProfile: sanitizeRuntimeProfile(runtimeProfile),
+    };
+  }
+
+  private parseControlResult(value: unknown): SessionApiControlResult | null {
+    if (!value || typeof value !== "object") {
+      return null;
+    }
+    const record = value as Record<string, unknown>;
+    const accepted = record["accepted"];
+    if (typeof accepted !== "boolean") {
+      return null;
+    }
+    return {
+      accepted,
+      reason: typeof record["reason"] === "string" ? record["reason"] : undefined,
+      action_id:
+        typeof record["action_id"] === "string" ? record["action_id"] : undefined,
+    };
+  }
+
+  private async callSessionApi(
+    socketPath: string,
+    method: string,
+    authToken: string | undefined,
+    params: Record<string, unknown>,
+  ): Promise<SessionApiEnvelope | null> {
+    return await new Promise<SessionApiEnvelope | null>((resolve) => {
+      const request = {
+        id: `launch-task-${Date.now()}`,
+        method,
+        auth_token: authToken,
+        params,
+      };
+      let resolved = false;
+      let buffer = "";
+      const socket = net.createConnection({ path: socketPath });
+      const timeout = setTimeout(() => {
+        if (resolved) return;
+        resolved = true;
+        socket.destroy();
+        resolve(null);
+      }, 1500);
+      const finish = (value: SessionApiEnvelope | null) => {
+        if (resolved) return;
+        resolved = true;
+        clearTimeout(timeout);
+        socket.destroy();
+        resolve(value);
+      };
+      socket.on("connect", () => {
+        socket.write(`${JSON.stringify(request)}\n`);
+      });
+      socket.on("data", (chunk: Buffer | string) => {
+        buffer += chunk.toString();
+        const newlineIndex = buffer.indexOf("\n");
+        if (newlineIndex < 0) return;
+        const line = buffer.slice(0, newlineIndex).trim();
+        if (!line) {
+          finish(null);
+          return;
+        }
+        try {
+          finish(JSON.parse(line) as SessionApiEnvelope);
+        } catch {
+          finish(null);
+        }
+      });
+      socket.on("error", () => finish(null));
+      socket.on("end", () => finish(null));
+    });
+  }
+
+  private async enqueueInProcessTask(
+    id: string,
+    actionType: TaskActionType,
+    actionValue: string,
+    runtime: RuntimePaths,
+    returnToSessionId?: string,
+    runtimeProfile?: TaskRuntimeProfile,
+  ): Promise<LaunchResult> {
+    const targetSessionId = returnToSessionId ?? this.sourceSessionId;
+    if (!targetSessionId) {
+      throw new Error(
+        "in_process mode requires an interactive target session. Set return_to_session_id or run from an interactive session.",
+      );
+    }
+
+    const session = await getSession(targetSessionId);
+    if (!session || !session.api) {
+      throw new Error(
+        `Target session "${targetSessionId}" is not available for in_process execution.`,
+      );
+    }
+    if (session.api.transport !== "unix") {
+      throw new Error(
+        `Unsupported session API transport for in_process mode: ${session.api.transport}`,
+      );
+    }
+
+    const payload = {
+      task_id: id,
+      action_type: actionType,
+      action_value: actionValue,
+      description: this.params.description,
+      source_session_id: this.sourceSessionId,
+      return_to_session_id: targetSessionId,
+      runtime_profile: sanitizeRuntimeProfile(runtimeProfile),
+    };
+    const response = await this.callSessionApi(
+      session.api.address,
+      "session.enqueue_task",
+      session.api.auth_token,
+      payload,
+    );
+    if (!response || response.ok !== true) {
+      const reason = response?.error ?? "session API unavailable";
+      throw new Error(`Failed to enqueue in_process task: ${reason}`);
+    }
+    const control = this.parseControlResult(response.result);
+    if (!control || !control.accepted) {
+      throw new Error(
+        `Failed to enqueue in_process task: ${control?.reason ?? "rejected"}`,
+      );
+    }
+
+    return {
+      requestedMode: "in_process",
+      actualMode: "in_process",
+      logPath: path.join(
+        runtime.workspaceRoot,
+        ".lowcal",
+        "in-process-tasks",
+        `${targetSessionId}.jsonl`,
+      ),
+      returnToSessionId: targetSessionId,
+      runtimeProfile: sanitizeRuntimeProfile(runtimeProfile),
     };
   }
 
@@ -808,7 +1163,9 @@ class LaunchTaskInvocation extends BaseToolInvocation<
     output += `Task state is tracked in .lowcal/launch-task-state.json. `;
     output += actualMode === "headless"
       ? `Debug logs are available at .lowcal/launch-tasks/${id}.json`
-      : `Check your Zellij tab for progress.`;
+      : actualMode === "zellij_tab"
+        ? `Check your Zellij tab for progress.`
+        : `Task was queued in-process and will run in the target interactive session.`;
     return output;
   }
 }
@@ -817,9 +1174,16 @@ export interface LaunchTaskParams {
   action: "create";
   id?: string;
   prompt?: string;
+  action_type?: TaskActionType;
+  action_value?: string;
   description?: string;
-  execution_mode?: JobExecutionMode | "default";
+  execution_mode?: LaunchTaskExecutionMode | "default";
   execution_mode_override?: boolean;
+  template_id?: string;
+  template_level?: "auto" | "project" | "user" | "builtin";
+  template_overrides?: TaskRuntimeProfile;
+  auth?: TaskRuntimeProfile["auth"];
+  model?: TaskRuntimeProfile["model"];
   return_to_session_id?: string;
   idempotency_key?: string;
   allow_recursive?: boolean;

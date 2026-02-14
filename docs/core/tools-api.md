@@ -47,6 +47,11 @@ The core comes with a suite of pre-defined tools, typically found in `packages/c
   - `WebSearchTool` (`web-search.ts`): Performs a web search.
 - **Memory Tools:**
   - `MemoryTool` (`memoryTool.ts`): Interacts with the AI's memory.
+- **Task and Automation Tools:**
+  - `TaskTemplateTool` (`task-template.ts`): Manages reusable task templates and runtime profile resolution.
+  - `LaunchTaskTool` (`launch-task.ts`): Launches immediate task runs with template/runtime overrides.
+  - `ScheduleTaskTool` (`schedule-task.ts`): Creates and manages cron jobs with template/runtime overrides.
+  - `launch-task-state.ts` helpers: Persist and reconcile launched task lifecycle state.
 
 Each of these tools extends `BaseTool` and implements the required methods for its specific functionality.
 

@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { GeminiEventType as ServerGeminiEventType, getErrorMessage, isNodeError, MessageSenderType, logUserPrompt, GitService, UnauthorizedError, UserPromptEvent, DEFAULT_GEMINI_FLASH_MODEL, logConversationFinishedEvent, ConversationFinishedEvent, ApprovalMode, parseAndFormatApiError, CheckpointService, } from "@qwen-code/qwen-code-core";
+import { GeminiEventType as ServerGeminiEventType, getErrorMessage, isNodeError, MessageSenderType, logUserPrompt, GitService, UnauthorizedError, UserPromptEvent, DEFAULT_GEMINI_FLASH_MODEL, logConversationFinishedEvent, ConversationFinishedEvent, ApprovalMode, parseAndFormatApiError, CheckpointService, upsertLaunchTaskState, } from "@qwen-code/qwen-code-core";
 import { FinishReason, } from "@google/genai";
 import { StreamingState, MessageType, ToolCallStatus } from "../types.js";
 import { isAtCommand, isSlashCommand } from "../utils/commandUtils.js";
@@ -21,6 +21,7 @@ import { useSessionStats } from "../contexts/SessionContext.js";
 import { formatDuration } from "../utils/formatters.js";
 import { useKeypress } from "./useKeypress.js";
 import { setSessionControlHandlers, setSessionStatus, setRegisteredSessionHealth, } from "../../session/sessionManager.js";
+import { normalizeAuthType } from "../../config/auth.js";
 const formatElapsed = (milliseconds) => {
     if (!Number.isFinite(milliseconds) || milliseconds <= 0) {
         return "0s";
@@ -51,6 +52,9 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
     const needsAntiRepeatHintRef = useRef(false);
     const toolCallSignatureCountsRef = useRef(new Map());
     const toolCallIdToSignatureRef = useRef(new Map());
+    const streamingStateRef = useRef(StreamingState.Idle);
+    const inProcessTaskQueueRef = useRef([]);
+    const processingInProcessTaskRef = useRef(false);
     const checkpointPendingForTurnRef = useRef(false);
     const checkpointTurnStartTimestampRef = useRef(null);
     const { stats, startNewPrompt, getPromptCount } = useSessionStats();
@@ -131,6 +135,9 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
     useEffect(() => {
         const status = streamingState === StreamingState.Idle ? "idle" : "working";
         void setSessionStatus(status);
+    }, [streamingState]);
+    useEffect(() => {
+        streamingStateRef.current = streamingState;
     }, [streamingState]);
     useEffect(() => {
         if (config.getApprovalMode() === ApprovalMode.YOLO &&
@@ -960,6 +967,252 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             accepted: true,
         };
     }, [cancelOngoingRequest, streamingState, submitQuery]);
+    const appendInProcessTaskLog = useCallback(async (task, status, detail) => {
+        const logPath = path.join(process.cwd(), ".lowcal", "in-process-tasks", `${config.getSessionId()}.jsonl`);
+        await fs.mkdir(path.dirname(logPath), { recursive: true });
+        await fs.appendFile(logPath, `${JSON.stringify({
+            timestamp: new Date().toISOString(),
+            task_id: task.task_id,
+            status,
+            action_type: task.action_type,
+            detail,
+        })}\n`, "utf-8");
+        return logPath;
+    }, [config]);
+    const appendInProcessMailboxMessage = useCallback(async (task, status, preview, outputPath) => {
+        const toSessionId = task.return_to_session_id;
+        if (!toSessionId)
+            return;
+        const mailboxPath = path.join(process.cwd(), ".lowcal", "session-messages", `${toSessionId}.jsonl`);
+        await fs.mkdir(path.dirname(mailboxPath), { recursive: true });
+        await fs.appendFile(mailboxPath, `${JSON.stringify({
+            to_session_id: toSessionId,
+            from_session_id: config.getSessionId(),
+            from_task_id: task.task_id,
+            job_id: task.task_id,
+            status,
+            timestamp: new Date().toISOString(),
+            prompt_preview: task.action_value.trim().slice(0, 400),
+            preview: preview.trim().slice(0, 1200),
+            output_path: outputPath,
+        })}\n`, "utf-8");
+    }, [config]);
+    const applyInProcessRuntimeOverrides = useCallback(async (task) => {
+        const profile = task.runtime_profile;
+        const previousModel = config.getModel();
+        const previousAuthType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
+        const previousOpenAIBaseUrl = process.env["OPENAI_BASE_URL"];
+        const previousOpenAIApiKey = process.env["OPENAI_API_KEY"];
+        const restore = async () => {
+            if (previousOpenAIBaseUrl === undefined) {
+                delete process.env["OPENAI_BASE_URL"];
+            }
+            else {
+                process.env["OPENAI_BASE_URL"] = previousOpenAIBaseUrl;
+            }
+            if (previousOpenAIApiKey === undefined) {
+                delete process.env["OPENAI_API_KEY"];
+            }
+            else {
+                process.env["OPENAI_API_KEY"] = previousOpenAIApiKey;
+            }
+            const currentAuthType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
+            if (previousAuthType &&
+                currentAuthType &&
+                previousAuthType !== currentAuthType) {
+                await config.refreshAuth(previousAuthType);
+            }
+            if (previousModel && config.getModel() !== previousModel) {
+                await config.setModel(previousModel, {
+                    reason: "manual",
+                    context: "restore_in_process_task_runtime",
+                });
+            }
+        };
+        if (!profile) {
+            return restore;
+        }
+        try {
+            const runtimeAuth = profile.auth;
+            if (runtimeAuth?.baseUrl && runtimeAuth.baseUrl.trim().length > 0) {
+                process.env["OPENAI_BASE_URL"] = runtimeAuth.baseUrl.trim();
+            }
+            if (runtimeAuth?.apiKeyEnvVar &&
+                runtimeAuth.apiKeyEnvVar.trim().length > 0) {
+                const envVarName = runtimeAuth.apiKeyEnvVar.trim();
+                const apiKey = process.env[envVarName]?.trim();
+                if (!apiKey) {
+                    throw new Error(`Task runtime requires API key env var ${envVarName}, but it is not set.`);
+                }
+                process.env["OPENAI_API_KEY"] = apiKey;
+            }
+            const authOverride = normalizeAuthType(runtimeAuth?.selectedType ?? runtimeAuth?.providerId);
+            if (authOverride && authOverride !== previousAuthType) {
+                await config.refreshAuth(authOverride);
+            }
+            const modelOverride = profile.model?.name && profile.model.name.trim().length > 0
+                ? profile.model.name.trim()
+                : undefined;
+            if (modelOverride && modelOverride !== config.getModel()) {
+                await config.setModel(modelOverride, {
+                    reason: "manual",
+                    context: "in_process_task_runtime_override",
+                });
+            }
+        }
+        catch (error) {
+            await restore();
+            throw error;
+        }
+        return restore;
+    }, [config]);
+    const executeInProcessTask = useCallback(async (task) => {
+        let logPath = path.join(process.cwd(), ".lowcal", "in-process-tasks", `${config.getSessionId()}.jsonl`);
+        const runtimeProfile = task.runtime_profile;
+        const promptPreview = task.action_value.trim().slice(0, 400);
+        await upsertLaunchTaskState(process.cwd(), task.task_id, (current, nowIso) => ({
+            task_id: task.task_id,
+            status: "running",
+            created_at: current?.created_at ?? nowIso,
+            started_at: current?.started_at ?? nowIso,
+            last_heartbeat: nowIso,
+            prompt_preview: current?.prompt_preview ?? promptPreview,
+            parent_session_id: current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
+            source_session_id: current?.source_session_id ?? task.source_session_id,
+            dedupe_key: current?.dedupe_key,
+            execution_mode_requested: "in_process",
+            execution_mode_actual: "in_process",
+            model_requested: current?.model_requested ?? runtimeProfile?.model?.name,
+            model_actual: current?.model_actual ?? config.getModel(),
+            auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+            auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
+            runtime_profile: current?.runtime_profile ?? runtimeProfile,
+            result_ref: current?.result_ref,
+            pid: current?.pid,
+            tab_name: current?.tab_name,
+            last_error: undefined,
+        }));
+        let restoreRuntime;
+        try {
+            logPath = await appendInProcessTaskLog(task, "started");
+            restoreRuntime = await applyInProcessRuntimeOverrides(task);
+            await submitQuery(task.action_value);
+            await upsertLaunchTaskState(process.cwd(), task.task_id, (current, nowIso) => ({
+                task_id: task.task_id,
+                status: "completed",
+                created_at: current?.created_at ?? nowIso,
+                started_at: current?.started_at ?? nowIso,
+                finished_at: nowIso,
+                last_heartbeat: nowIso,
+                prompt_preview: current?.prompt_preview ?? promptPreview,
+                parent_session_id: current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
+                source_session_id: current?.source_session_id ?? task.source_session_id,
+                dedupe_key: current?.dedupe_key,
+                execution_mode_requested: "in_process",
+                execution_mode_actual: "in_process",
+                model_requested: current?.model_requested ?? runtimeProfile?.model?.name,
+                model_actual: config.getModel(),
+                auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+                auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
+                runtime_profile: current?.runtime_profile ?? runtimeProfile,
+                result_ref: {
+                    mailbox_path: current?.result_ref?.mailbox_path ??
+                        (task.return_to_session_id
+                            ? path.join(process.cwd(), ".lowcal", "session-messages", `${task.return_to_session_id}.jsonl`)
+                            : undefined),
+                    output_path: logPath,
+                    child_session_id: config.getSessionId(),
+                    message_timestamp: nowIso,
+                },
+                pid: current?.pid,
+                tab_name: current?.tab_name,
+                last_error: undefined,
+            }));
+            await appendInProcessTaskLog(task, "completed");
+            await appendInProcessMailboxMessage(task, "success", `In-process task ${task.task_id} completed successfully.`, logPath);
+        }
+        catch (error) {
+            const message = error instanceof Error ? error.message : String(error);
+            await appendInProcessTaskLog(task, "failed", message);
+            await upsertLaunchTaskState(process.cwd(), task.task_id, (current, nowIso) => ({
+                task_id: task.task_id,
+                status: "failed",
+                created_at: current?.created_at ?? nowIso,
+                started_at: current?.started_at ?? nowIso,
+                finished_at: nowIso,
+                last_heartbeat: nowIso,
+                prompt_preview: current?.prompt_preview ?? promptPreview,
+                parent_session_id: current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
+                source_session_id: current?.source_session_id ?? task.source_session_id,
+                dedupe_key: current?.dedupe_key,
+                execution_mode_requested: "in_process",
+                execution_mode_actual: "in_process",
+                model_requested: current?.model_requested ?? runtimeProfile?.model?.name,
+                model_actual: config.getModel(),
+                auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+                auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
+                runtime_profile: current?.runtime_profile ?? runtimeProfile,
+                result_ref: {
+                    mailbox_path: current?.result_ref?.mailbox_path ??
+                        (task.return_to_session_id
+                            ? path.join(process.cwd(), ".lowcal", "session-messages", `${task.return_to_session_id}.jsonl`)
+                            : undefined),
+                    output_path: logPath,
+                    child_session_id: config.getSessionId(),
+                    message_timestamp: nowIso,
+                },
+                pid: current?.pid,
+                tab_name: current?.tab_name,
+                last_error: message,
+            }));
+            await appendInProcessMailboxMessage(task, "error", `In-process task ${task.task_id} failed: ${message}`, logPath);
+        }
+        finally {
+            if (restoreRuntime) {
+                try {
+                    await restoreRuntime();
+                }
+                catch (restoreError) {
+                    const message = restoreError instanceof Error
+                        ? restoreError.message
+                        : String(restoreError);
+                    addItem({
+                        type: MessageType.ERROR,
+                        text: `Failed to restore runtime after in-process task ${task.task_id}: ${message}`,
+                    }, Date.now());
+                }
+            }
+        }
+    }, [
+        addItem,
+        appendInProcessMailboxMessage,
+        appendInProcessTaskLog,
+        applyInProcessRuntimeOverrides,
+        config,
+        submitQuery,
+    ]);
+    const drainInProcessTaskQueue = useCallback(async () => {
+        if (processingInProcessTaskRef.current) {
+            return;
+        }
+        if (streamingStateRef.current !== StreamingState.Idle) {
+            return;
+        }
+        const nextTask = inProcessTaskQueueRef.current.shift();
+        if (!nextTask) {
+            return;
+        }
+        processingInProcessTaskRef.current = true;
+        try {
+            await executeInProcessTask(nextTask);
+        }
+        finally {
+            processingInProcessTaskRef.current = false;
+            if (inProcessTaskQueueRef.current.length > 0) {
+                void drainInProcessTaskQueue();
+            }
+        }
+    }, [executeInProcessTask]);
     // Self-recovery function - called when loop detection or hard error occurs
     const handleSelfRecovery = useCallback((errorType, errorMessage) => {
         if (errorType === "loop") {
@@ -1006,6 +1259,11 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         }
     }, [geminiClient, submitQuery]);
     useEffect(() => {
+        if (streamingState === StreamingState.Idle) {
+            void drainInProcessTaskQueue();
+        }
+    }, [drainInProcessTaskQueue, streamingState]);
+    useEffect(() => {
         setSessionControlHandlers({
             cancelTurn: () => {
                 if (streamingState !== StreamingState.Responding) {
@@ -1018,11 +1276,23 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 return { accepted: true };
             },
             restartTurn: restartLastTurn,
+            enqueueTask: (payload) => {
+                inProcessTaskQueueRef.current.push(payload);
+                if (streamingStateRef.current === StreamingState.Idle) {
+                    void drainInProcessTaskQueue();
+                }
+                return { accepted: true };
+            },
         });
         return () => {
             setSessionControlHandlers({});
         };
-    }, [cancelOngoingRequest, restartLastTurn, streamingState]);
+    }, [
+        cancelOngoingRequest,
+        drainInProcessTaskQueue,
+        restartLastTurn,
+        streamingState,
+    ]);
     const handleCompletedTools = useCallback(async (completedToolCallsFromScheduler) => {
         if (isResponding) {
             return;

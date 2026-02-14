@@ -15,12 +15,13 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import { spawn } from "child_process";
+import * as net from "node:net";
 import * as process from "process";
 import { fileURLToPath } from "url";
 import { loadSettings } from "../config/settings.js";
 import { startSessionRegistration, setSessionStatus, updateSessionDetails, } from "../session/sessionManager.js";
 // Import from core package
-import { loadStore, getDueJobs, markJobRunning, markJobCompleted, markJobFailed, saveExecutionLog, cleanupOldLogs, updateJob, calculateNextRun, DEFAULT_SCHEDULER_CONFIG, } from "@qwen-code/qwen-code-core";
+import { loadStore, getDueJobs, markJobRunning, markJobCompleted, markJobFailed, saveExecutionLog, cleanupOldLogs, updateJob, calculateNextRun, getSession, sanitizeRuntimeProfile, DEFAULT_SCHEDULER_CONFIG, } from "@qwen-code/qwen-code-core";
 // PID file for daemon management
 const DAEMON_PID_FILE = path.join(process.cwd(), ".lowcal", "scheduler.pid");
 const DAEMON_STATUS_FILE = path.join(process.cwd(), ".lowcal", "scheduler.status.json");
@@ -31,7 +32,9 @@ const EXECUTION_MODE_FALLBACK = "headless";
 const EXECUTION_MODE_VALUES = new Set([
     "headless",
     "zellij_tab",
+    "in_process",
 ]);
+const ENV_TASK_RUNTIME_B64 = "LOWCAL_TASK_RUNTIME_B64";
 let cachedDefaultExecutionMode = null;
 function normalizeExecutionMode(value) {
     if (typeof value !== "string")
@@ -40,6 +43,93 @@ function normalizeExecutionMode(value) {
         return value;
     }
     return null;
+}
+function buildJobRuntimeProfile(job) {
+    return sanitizeRuntimeProfile(job.runtime_profile ?? {
+        template_id: job.template_id,
+        template_level: job.template_level,
+        action_type: job.action_type,
+        action_value: job.action_value ?? job.prompt,
+        execution_mode: job.execution_mode,
+        run: job.return_to_session_id
+            ? { returnToSession: job.return_to_session_id }
+            : undefined,
+    }) ?? { action_type: "prompt", action_value: job.prompt };
+}
+function getJobActionType(job, runtimeProfile) {
+    return runtimeProfile.action_type ?? job.action_type ?? "prompt";
+}
+function getJobActionValue(job, runtimeProfile) {
+    const value = runtimeProfile.action_value ?? job.action_value ?? job.prompt;
+    if (typeof value !== "string" || value.trim().length === 0) {
+        throw new Error(`Job ${job.id} is missing action content`);
+    }
+    return value;
+}
+function parseControlResult(value) {
+    if (!value || typeof value !== "object") {
+        return null;
+    }
+    const record = value;
+    const accepted = record["accepted"];
+    if (typeof accepted !== "boolean") {
+        return null;
+    }
+    return {
+        accepted,
+        reason: typeof record["reason"] === "string" ? record["reason"] : undefined,
+        action_id: typeof record["action_id"] === "string" ? record["action_id"] : undefined,
+    };
+}
+async function callSessionApi(socketPath, method, authToken, params) {
+    return await new Promise((resolve) => {
+        const request = {
+            id: `scheduler-${Date.now()}`,
+            method,
+            auth_token: authToken,
+            params,
+        };
+        let resolved = false;
+        let buffer = "";
+        const socket = net.createConnection({ path: socketPath });
+        const timeout = setTimeout(() => {
+            if (resolved)
+                return;
+            resolved = true;
+            socket.destroy();
+            resolve(null);
+        }, 1500);
+        const finish = (value) => {
+            if (resolved)
+                return;
+            resolved = true;
+            clearTimeout(timeout);
+            socket.destroy();
+            resolve(value);
+        };
+        socket.on("connect", () => {
+            socket.write(`${JSON.stringify(request)}\n`);
+        });
+        socket.on("data", (chunk) => {
+            buffer += chunk.toString();
+            const newlineIndex = buffer.indexOf("\n");
+            if (newlineIndex < 0)
+                return;
+            const line = buffer.slice(0, newlineIndex).trim();
+            if (!line) {
+                finish(null);
+                return;
+            }
+            try {
+                finish(JSON.parse(line));
+            }
+            catch {
+                finish(null);
+            }
+        });
+        socket.on("error", () => finish(null));
+        socket.on("end", () => finish(null));
+    });
 }
 function getSchedulerCwd() {
     return process.env["LOWCAL_SCHEDULER_CWD"] || process.cwd();
@@ -69,7 +159,8 @@ async function getDefaultExecutionMode() {
 }
 async function resolveExecutionMode(job) {
     const defaultMode = await getDefaultExecutionMode();
-    const requestedMode = normalizeExecutionMode(job.execution_mode);
+    const runtimeMode = normalizeExecutionMode(job.runtime_profile?.execution_mode);
+    const requestedMode = runtimeMode ?? normalizeExecutionMode(job.execution_mode);
     const effectiveMode = requestedMode ?? defaultMode;
     if (effectiveMode === "zellij_tab" && !isRunningInZellij()) {
         console.warn(`[Scheduler] Job ${job.id} requested zellij_tab, but Zellij is not available. Falling back to headless.`);
@@ -147,7 +238,7 @@ export async function getDaemonStatus() {
 /**
  * Spawn a headless LowCal process to execute a job
  */
-function spawnHeadlessJob(job) {
+function spawnHeadlessJob(job, actionValue, runtimeProfile) {
     return new Promise((resolve) => {
         const startedAt = new Date().toISOString();
         const schedulerCwd = getSchedulerCwd();
@@ -159,7 +250,7 @@ function spawnHeadlessJob(job) {
         const child = spawn("node", [
             cliPath,
             "--prompt",
-            job.prompt,
+            actionValue,
             "--job-id",
             job.id,
             "--output",
@@ -172,6 +263,7 @@ function spawnHeadlessJob(job) {
                 ...process.env,
                 LOWCAL_HEADLESS: "1",
                 LOWCAL_JOB_ID: job.id,
+                [ENV_TASK_RUNTIME_B64]: Buffer.from(JSON.stringify(sanitizeRuntimeProfile(runtimeProfile))).toString("base64"),
             },
         });
         let stdout = "";
@@ -330,7 +422,7 @@ async function waitForHeadlessLog(logPath, startedAt, timeoutMs, jobId) {
         error: `Job timed out after ${timeoutMs / 1000 / 60} minutes`,
     };
 }
-async function spawnZellijJob(job) {
+async function spawnZellijJob(job, actionValue, runtimeProfile) {
     const startedAt = new Date().toISOString();
     const schedulerCwd = getSchedulerCwd();
     const logPath = path.join(schedulerCwd, ".lowcal", "logs", `${job.id}-${Date.now()}.log`);
@@ -344,10 +436,11 @@ async function spawnZellijJob(job) {
         `LOWCAL_HEADLESS=1`,
         `LOWCAL_JOB_ID=${job.id}`,
         `LOWCAL_HEADLESS_PRETTY=1`,
+        `${ENV_TASK_RUNTIME_B64}=${Buffer.from(JSON.stringify(sanitizeRuntimeProfile(runtimeProfile))).toString("base64")}`,
         "node",
         cliPath,
         "--prompt",
-        job.prompt,
+        actionValue,
         "--job-id",
         job.id,
         "--output",
@@ -367,16 +460,97 @@ async function spawnZellijJob(job) {
         1000;
     return await waitForHeadlessLog(logPath, startedAt, timeoutMs, job.id);
 }
-async function spawnJob(job, executionMode) {
+async function enqueueInProcessJob(job, actionType, actionValue, runtimeProfile) {
+    const startedAt = new Date().toISOString();
+    const targetSessionId = typeof job.return_to_session_id === "string" &&
+        job.return_to_session_id.trim().length > 0
+        ? job.return_to_session_id.trim()
+        : typeof runtimeProfile.run?.returnToSession === "string"
+            ? runtimeProfile.run.returnToSession
+            : undefined;
+    if (!targetSessionId) {
+        return {
+            job_id: job.id,
+            started_at: startedAt,
+            completed_at: new Date().toISOString(),
+            status: "error",
+            output: "",
+            error: "in_process job requires return_to_session_id or run.returnToSession",
+        };
+    }
+    const session = await getSession(targetSessionId);
+    if (!session || !session.api) {
+        return {
+            job_id: job.id,
+            started_at: startedAt,
+            completed_at: new Date().toISOString(),
+            status: "error",
+            output: "",
+            error: `Target session \"${targetSessionId}\" is unavailable`,
+        };
+    }
+    if (session.api.transport !== "unix") {
+        return {
+            job_id: job.id,
+            started_at: startedAt,
+            completed_at: new Date().toISOString(),
+            status: "error",
+            output: "",
+            error: `Unsupported session transport: ${session.api.transport}`,
+        };
+    }
+    const response = await callSessionApi(session.api.address, "session.enqueue_task", session.api.auth_token, {
+        task_id: `scheduled-${job.id}-${Date.now()}`,
+        action_type: actionType,
+        action_value: actionValue,
+        description: job.description,
+        source_session_id: `scheduler-${process.pid}`,
+        return_to_session_id: targetSessionId,
+        runtime_profile: sanitizeRuntimeProfile(runtimeProfile),
+    });
+    if (!response || response.ok !== true) {
+        return {
+            job_id: job.id,
+            started_at: startedAt,
+            completed_at: new Date().toISOString(),
+            status: "error",
+            output: "",
+            error: `Failed to enqueue in_process job: ${response?.error ?? "session API unavailable"}`,
+        };
+    }
+    const control = parseControlResult(response.result);
+    if (!control?.accepted) {
+        return {
+            job_id: job.id,
+            started_at: startedAt,
+            completed_at: new Date().toISOString(),
+            status: "error",
+            output: "",
+            error: `In-process enqueue rejected: ${control?.reason ?? "rejected"}`,
+        };
+    }
+    return {
+        job_id: job.id,
+        started_at: startedAt,
+        completed_at: new Date().toISOString(),
+        status: "success",
+        output: `Queued in target session ${targetSessionId} (action_id: ${control.action_id ?? "unknown"})`,
+        error: null,
+    };
+}
+async function spawnJob(job, executionMode, actionType, actionValue, runtimeProfile) {
+    if (executionMode === "in_process") {
+        return await enqueueInProcessJob(job, actionType, actionValue, runtimeProfile);
+    }
     if (executionMode === "zellij_tab") {
         try {
-            return await spawnZellijJob(job);
+            return await spawnZellijJob(job, actionValue, runtimeProfile);
         }
         catch (error) {
             console.warn(`[Scheduler] Failed to run job ${job.id} in Zellij; falling back to headless. Error:`, error instanceof Error ? error.message : String(error));
         }
     }
-    return await spawnHeadlessJob(job);
+    return await spawnHeadlessJob(job, actionValue, runtimeProfile);
 }
 /**
  * Execute a single job
@@ -386,9 +560,15 @@ async function executeJob(job) {
     try {
         // Mark job as running
         await markJobRunning(job.id);
-        // Execute the job
+        const runtimeProfile = buildJobRuntimeProfile(job);
+        const actionType = getJobActionType(job, runtimeProfile);
+        const actionValue = getJobActionValue(job, runtimeProfile);
         const executionMode = await resolveExecutionMode(job);
-        const executionPromise = spawnJob(job, executionMode);
+        if (actionType === "slash_command" && executionMode !== "in_process") {
+            throw new Error(`Job ${job.id} has action_type=slash_command but execution mode is ${executionMode}`);
+        }
+        // Execute the job
+        const executionPromise = spawnJob(job, executionMode, actionType, actionValue, runtimeProfile);
         activeExecutions.set(job.id, executionPromise);
         await updateSchedulerSessionState();
         const result = await executionPromise;

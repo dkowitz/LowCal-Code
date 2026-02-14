@@ -40,6 +40,7 @@ const DEFAULT_COLLECTIONS: Record<string, string[]> = {
     ToolNames.SEARXNG_SEARCH,
     ToolNames.SCHEDULE_TASK,
     ToolNames.LAUNCH_TASK,
+    ToolNames.TASK_TEMPLATE,
     ToolNames.READ_SESSION_MESSAGES,
   ],
   minimal: [ToolNames.READ_FILE, ToolNames.WRITE_FILE, ToolNames.SHELL],
@@ -87,6 +88,8 @@ const TOOL_SUMMARIES: Record<string, string> = {
     "Create/manage cron jobs for recurring automation. Example: `schedule_task action=create id=nightly schedule='0 2 * * *' ...`.",
   [ToolNames.LAUNCH_TASK]:
     "Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: `launch_task action=create id=task-1 prompt='...'`.",
+  [ToolNames.TASK_TEMPLATE]:
+    "Manage reusable task templates (list/get/create/update/delete/resolve) used by launch_task and schedule_task. Example: `task_template action=list`.",
   [ToolNames.READ_SESSION_MESSAGES]:
     "Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: `read_session_messages action=wait`.",
 };

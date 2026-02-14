@@ -12,6 +12,7 @@ LowCal Code has been significantly enhanced with:
 
 - **Subagents**: Specialized AI assistants with custom configurations
 - **Job Scheduler**: Cron-based scheduling for recurring automated tasks
+- **Task Template Library**: Reusable templates with per-task auth/model/runtime profiles
 - **Orchestrator**: Automated session management with health monitoring and recovery
 - **Dashboard**: Unified view of all sessions, jobs, and daemon status
 - **MCP Integration**: Model Context Protocol server support
@@ -33,10 +34,10 @@ Documentation for `packages/cli`:
 
 - **[CLI Introduction](./cli/index.md)**: Overview of the command-line interface
 - **[Commands](./cli/commands.md)**: Description of all available CLI commands (slash and terminal)
+- **[Scheduler](./cli/scheduler.md)**: Scheduler daemon operations and job inspection
 - **[Configuration](./cli/configuration.md)**: Information on configuring the CLI
 - **[Dashboard](./cli/dashboard.md)**: Unified status monitoring with sessions and jobs
 - **[Sessions](./cli/sessions.md)**: Session management commands
-- **[Scheduler](./cli/scheduler.md)**: Job scheduling with cron expressions
 - **[Orchestrator](./cli/orchestrator.md)**: Orchestrator daemon management
 - **[Extensions](./cli/extensions.md)**: Extension management
 - **[MCP](./cli/mcp.md)**: Model Context Protocol server configuration
@@ -64,6 +65,7 @@ Documentation for `packages/core`:
 
 - **[Launch Task](./tools/launch-task.md)**: Spawn parallel tasks with `launch_task`
 - **[Schedule Task](./tools/schedule-task.md)**: Cron-based automation with `schedule_task`
+- **[Task Template](./tools/task-template.md)**: Manage reusable task templates and resolve runtime profiles
 - **[Read Session Messages](./tools/read-session-messages.md)**: Inter-session communication
 - **[Task Tool](./tools/task.md)**: Execute tasks with automatic retry
 - **[Launch Task State](./tools/launch-task-state.md)**: Query task status and results

@@ -82,6 +82,7 @@ export { ToolNames } from "./tools/tool-names.js";
 
 // Export subagents (Phase 1)
 export * from "./subagents/index.js";
+export * from "./task-templates/index.js";
 
 // Export prompt logic
 export * from "./prompts/mcp-prompts.js";
@@ -102,7 +103,9 @@ export * from "./tools/read-many-files.js";
 export * from "./tools/mcp-client.js";
 export * from "./tools/mcp-tool.js";
 export * from "./tools/research.js";
+export * from "./tools/launch-task.js";
 export * from "./tools/schedule-task.js";
+export * from "./tools/task-template.js";
 export * from "./tools/read-session-messages.js";
 export * from "./tools/launch-task-state.js";
 

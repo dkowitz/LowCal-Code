@@ -32,6 +32,7 @@ function requiresAuthToken(method) {
         case "session.set_approval_mode":
         case "session.shutdown":
         case "session.request_self_repair":
+        case "session.enqueue_task":
             return true;
         default:
             return false;
@@ -270,6 +271,50 @@ async function handleSessionApiRequest(request) {
                     ok: true,
                     result: await invokeControlHandler(sessionControlHandlers.requestSelfRepair, request.params),
                 };
+            case "session.enqueue_task": {
+                const task_id = request.params?.["task_id"];
+                const action_type = request.params?.["action_type"];
+                const action_value = request.params?.["action_value"];
+                const description = request.params?.["description"];
+                const source_session_id = request.params?.["source_session_id"];
+                const return_to_session_id = request.params?.["return_to_session_id"];
+                const runtime_profile = request.params?.["runtime_profile"];
+                if (typeof task_id !== "string" ||
+                    task_id.trim().length === 0 ||
+                    (action_type !== "prompt" && action_type !== "slash_command") ||
+                    typeof action_value !== "string" ||
+                    action_value.trim().length === 0) {
+                    return {
+                        id,
+                        ok: true,
+                        result: makeActionResult({
+                            accepted: false,
+                            reason: "invalid_enqueue_payload",
+                        }),
+                    };
+                }
+                return {
+                    id,
+                    ok: true,
+                    result: await invokeControlHandler(sessionControlHandlers.enqueueTask, {
+                        task_id: task_id.trim(),
+                        action_type,
+                        action_value,
+                        description: typeof description === "string" && description.trim().length > 0
+                            ? description.trim()
+                            : undefined,
+                        source_session_id: typeof source_session_id === "string" &&
+                            source_session_id.trim().length > 0
+                            ? source_session_id.trim()
+                            : undefined,
+                        return_to_session_id: typeof return_to_session_id === "string" &&
+                            return_to_session_id.trim().length > 0
+                            ? return_to_session_id.trim()
+                            : undefined,
+                        runtime_profile,
+                    }),
+                };
+            }
             default:
                 return {
                     id,

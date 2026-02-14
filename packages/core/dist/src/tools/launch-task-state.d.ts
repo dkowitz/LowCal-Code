@@ -4,6 +4,8 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import type { JobExecutionMode } from "../scheduler/types.js";
+import type { TaskRuntimeProfile, TaskTemplateAuthProfile, TaskTemplateLevel } from "../task-templates/types.js";
+export type LaunchTaskExecutionMode = JobExecutionMode | "in_process";
 export type LaunchTaskLifecycleStatus = "queued" | "running" | "completed" | "failed" | "cancelled";
 export interface LaunchTaskResultRef {
     mailbox_path?: string;
@@ -22,8 +24,15 @@ export interface LaunchTaskStateRecord {
     parent_session_id?: string;
     source_session_id?: string;
     dedupe_key?: string;
-    execution_mode_requested?: JobExecutionMode;
-    execution_mode_actual?: JobExecutionMode;
+    template_id?: string;
+    template_level?: TaskTemplateLevel;
+    execution_mode_requested?: LaunchTaskExecutionMode;
+    execution_mode_actual?: LaunchTaskExecutionMode;
+    model_requested?: string;
+    model_actual?: string;
+    auth_requested?: TaskTemplateAuthProfile;
+    auth_actual?: TaskTemplateAuthProfile;
+    runtime_profile?: TaskRuntimeProfile;
     pid?: number;
     tab_name?: string;
     result_ref?: LaunchTaskResultRef;

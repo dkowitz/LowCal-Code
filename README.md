@@ -13,28 +13,34 @@ LowCal is a powerful command-line AI workflow tool adapted from Qwen Code, speci
 ## Features
 
 ### 🤖 Advanced AI Capabilities
+
 - **Subagents**: Specialized AI assistants for focused tasks with custom prompts and tool access
 - **Custom Prompts**: Create and manage system prompts tailored to specific workflows
 - **Model Selection**: Support for LM Studio, OpenRouter, OpenAI, and other OpenAI-compatible providers
 
 ### ⚡ Task Automation & Scheduling
+
 - **Scheduler**: Cron-based job scheduling for recurring tasks (tests, builds, reports)
 - **Orchestrator**: Automated session management with health monitoring and recovery
 - **Dashboard**: Unified view of all sessions, jobs, and daemon status
 - **Background Tasks**: Launch parallel tasks with `launch_task` for concurrent work
+- **Task Templates**: Reusable task library with per-task auth/model/runtime overrides
 
 ### 📁 File & Code Management
+
 - **Multi-file Operations**: Read and process multiple files at once
 - **Fast Search**: RipGrep integration for rapid code search
 - **Glob Patterns**: Find files using glob patterns
 - **Diff Editing**: In-place file modifications with diff preview
 
 ### 🔌 Extensibility
+
 - **MCP Servers**: Connect to Model Context Protocol servers for external tools
 - **Extensions**: Installable packages that add new capabilities
 - **Custom Commands**: Save and reuse favorite prompts as personal shortcuts
 
 ### 🛡️ Safety & Control
+
 - **Approval Modes**: Choose between `ask`, `yolo`, or `plan` modes
 - **Sandboxing**: Isolated execution environment for security
 - **Confirmation Prompts**: Review destructive operations before execution
@@ -83,46 +89,51 @@ LowCal Code provides both in-session commands (slash commands) and terminal-leve
 
 ### In-Session Commands (`/` prefix)
 
-| Command | Description |
-|---------|-------------|
-| `/help` | Display available commands |
-| `/clear` | Clear conversation history |
-| `/summary` | Generate project summary from conversation |
-| `/compress` | Compress history to save tokens |
-| `/chat save/resume/list/delete <tag>` | Save and resume conversations |
-| `/model` | Select a model |
-| `/agents create/manage` | Manage subagents |
-| `/tools [desc/nodesc]` | List available tools |
-| `/prompt list/show/create/delete/activate/disable` | Manage custom prompts |
-| `/promptmode set <full/concise/auto>` | Set system prompt mode |
-| `/approval-mode <ask/yolo/plan> [--project|--user]` | Set approval mode |
-| `/directory add/remove/list` | Manage workspace directories |
-| `/init` | Generate LOWCAL.md project summary |
-| `/bug` | File an issue about LowCal Code |
+| Command                                              | Description                                             |
+| ---------------------------------------------------- | ------------------------------------------------------- |
+| `/help`                                              | Display available commands                              |
+| `/clear`                                             | Clear conversation history                              |
+| `/summary`                                           | Generate project summary from conversation              |
+| `/compress`                                          | Compress history to save tokens                         |
+| `/chat save/resume/list/delete <tag>`                | Save and resume conversations                           |
+| `/model`                                             | Select a model                                          |
+| `/tasks [open/list/run/schedule]`                    | Open task template editor, manage templates, and deploy |
+| `/agents create/manage`                              | Manage subagents                                        |
+| `/tools [desc/nodesc]`                               | List available tools                                    |
+| `/prompt list/show/create/delete/activate/disable`   | Manage custom prompts                                   |
+| `/promptmode set <full/concise/auto>`                | Set system prompt mode                                  |
+| `/approval-mode <ask/yolo/plan> [--project\|--user]` | Set approval mode                                       |
+| `/directory add/remove/list`                         | Manage workspace directories                            |
+| `/init`                                              | Generate LOWCAL.md project summary                      |
+| `/bug`                                               | File an issue about LowCal Code                         |
 
 ### Terminal Commands
 
-| Command | Description |
-|---------|-------------|
-| `lowcal dashboard [options]` | View all sessions and jobs in a unified interface |
-| `lowcal sessions list/get/prune [options]` | Manage active sessions |
-| `lowcal scheduler <start/stop/status/list/add/remove/pause/resume/reset>` | Manage scheduled jobs |
-| `lowcal orchestrator <start/stop/status>` | Manage the orchestrator daemon |
-| `lowcal extensions <install/uninstall/list/update/disable/enable> <name>` | Manage extensions |
-| `lowcal mcp <add/remove/list>` | Manage MCP servers |
-| `lowcal research [mode] <query>` | Conduct deep internet research |
+| Command                                                                   | Description                                         |
+| ------------------------------------------------------------------------- | --------------------------------------------------- |
+| `lowcal dashboard [options]`                                              | View all sessions and jobs in a unified interface   |
+| `lowcal sessions list/get/prune [options]`                                | Manage active sessions                              |
+| `lowcal scheduler <start/stop/status/list/get/mode/delete/reset/logs>`    | Manage scheduler daemon and inspect/maintain jobs   |
+| `lowcal tasks <open/list/run/schedule>`                                   | Manage and deploy task templates from terminal mode |
+| `lowcal orchestrator <start/stop/status>`                                 | Manage the orchestrator daemon                      |
+| `lowcal extensions <install/uninstall/list/update/disable/enable> <name>` | Manage extensions                                   |
+| `lowcal mcp <add/remove/list>`                                            | Manage MCP servers                                  |
+| `lowcal research [mode] <query>`                                          | Conduct deep internet research                      |
 
 ## Session Commands
 
 ### YOLO Mode
+
 - **`Ctrl+Y`** - Toggle YOLO mode (execute without confirmation prompts)
 
 ### Conversation Management
+
 - **`/compress`** - Compress conversation history to continue within token limits
 - **`/clear`** - Clear all conversation history and start fresh
 - **`/summary`** - Generate a comprehensive project summary from the current conversation
 
 ### Custom Prompts & Toolsets
+
 - **`/promptmode set <full/concise/auto>`**
   - `full`: full, long system prompt with verbose instructions and lots of examples
   - `concise`: short, abbreviated prompt for conserving context space and decreasing latency, particularly for local models. Dynamically constructed to only include instructions/examples for tools from the currently activated toolset.
@@ -210,14 +221,13 @@ Designed for local model use, can be used with any model.
 ## Automation & Scheduling Examples
 
 ### Schedule Daily Tests
+
 ```bash
-lowcal scheduler add \
-  --id daily-tests \
-  --schedule "0 9 * * *" \
-  --prompt "Run npm test and report results"
+lowcal tasks schedule ci-tests "0 9 * * *" --id daily-tests
 ```
 
 ### Launch Background Build
+
 ```json
 {
   "action": "launch_task",
@@ -228,6 +238,7 @@ lowcal scheduler add \
 ```
 
 ### Monitor Logs in Zellij Tab
+
 ```json
 {
   "action": "launch_task",
@@ -238,15 +249,21 @@ lowcal scheduler add \
 }
 ```
 
+### Run an In-Process `/compress` Template
+
+```bash
+lowcal tasks run compress-context --level auto
+```
+
 ## Keyboard Shortcuts
 
-| Shortcut | Description |
-|----------|-------------|
-| `Ctrl+C` | Cancel current operation / Show quit confirmation (press twice to exit) |
-| `Ctrl+L` | Clear the terminal screen |
-| `Ctrl+R` | Search command history |
-| `Up/Down` | Navigate command history |
-| `Tab` | Auto-complete commands and file paths |
+| Shortcut  | Description                                                             |
+| --------- | ----------------------------------------------------------------------- |
+| `Ctrl+C`  | Cancel current operation / Show quit confirmation (press twice to exit) |
+| `Ctrl+L`  | Clear the terminal screen                                               |
+| `Ctrl+R`  | Search command history                                                  |
+| `Up/Down` | Navigate command history                                                |
+| `Tab`     | Auto-complete commands and file paths                                   |
 
 ## Documentation
 
@@ -256,6 +273,7 @@ For detailed documentation on all features, see:
 - [Dashboard](./docs/cli/dashboard.md) - Unified status monitoring
 - [Sessions](./docs/cli/sessions.md) - Session management
 - [Scheduler](./docs/cli/scheduler.md) - Job scheduling with cron
+- [Tasks](./docs/cli/commands.md) - Task template editor and deployment commands
 - [Orchestrator](./docs/cli/orchestrator.md) - Automated session recovery
 - [Extensions](./docs/cli/extensions.md) - Extension management
 - [MCP](./docs/cli/mcp.md) - Model Context Protocol servers
@@ -271,6 +289,9 @@ For detailed documentation on all features, see:
 - [Multi-File Read](./docs/tools/multi-file.md) - Batch file operations
 - [Memory](./docs/tools/memory.md) - Cross-session memory
 - [Todo Write](./docs/tools/todo-write.md) - Task management
+- [Launch Task](./docs/tools/launch-task.md) - Immediate task runs with runtime overrides
+- [Schedule Task](./docs/tools/schedule-task.md) - Cron automation with template/runtime support
+- [Task Template](./docs/tools/task-template.md) - Reusable task template library
 
 ## License
 

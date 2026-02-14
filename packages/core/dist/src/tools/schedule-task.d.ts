@@ -5,11 +5,19 @@
  */
 import type { ToolResult } from "./tools.js";
 import { BaseDeclarativeTool, BaseToolInvocation } from "./tools.js";
+import type { Config } from "../config/config.js";
 import type { ScheduleTaskParams } from "../scheduler/types.js";
 declare class ScheduleTaskInvocation extends BaseToolInvocation<ScheduleTaskParams, ToolResult> {
-    constructor(params: ScheduleTaskParams);
+    private readonly sourceSessionId?;
+    private readonly config?;
+    constructor(params: ScheduleTaskParams, sourceSessionId?: string | undefined, config?: Config | undefined);
     getDescription(): string;
     execute(): Promise<ToolResult>;
+    private getWorkspaceRoot;
+    private resolveTemplateFromParams;
+    private resolveRunTarget;
+    private buildExistingRuntimeProfile;
+    private resolveJobRuntime;
     private executeAction;
     private formatJobCreated;
     private formatJobList;
@@ -17,7 +25,8 @@ declare class ScheduleTaskInvocation extends BaseToolInvocation<ScheduleTaskPara
     private formatJobUpdated;
 }
 export declare class ScheduleTaskTool extends BaseDeclarativeTool<ScheduleTaskParams, ToolResult> {
-    constructor();
+    private readonly config?;
+    constructor(config?: Config | undefined);
     protected createInvocation(params: ScheduleTaskParams): ScheduleTaskInvocation;
 }
 export {};

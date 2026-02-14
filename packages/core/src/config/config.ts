@@ -51,6 +51,7 @@ import { WebSearchTool } from "../tools/web-search.js";
 import { ScheduleTaskTool } from "../tools/schedule-task.js";
 import { LaunchTaskTool } from "../tools/launch-task.js";
 import { ReadSessionMessagesTool } from "../tools/read-session-messages.js";
+import { TaskTemplateTool } from "../tools/task-template.js";
 import { SearXNGSearchTool } from "../tools/searxng-search.js";
 import { WriteFileTool } from "../tools/write-file.js";
 import { shouldAttemptBrowserLaunch } from "../utils/browser.js";
@@ -1158,10 +1159,11 @@ export class Config {
     registerCoreTool(SearXNGSearchTool, this);
 
     // Register the scheduler task tool
-    registerCoreTool(ScheduleTaskTool);
+    registerCoreTool(ScheduleTaskTool, this);
 
     // Register the launch task tool
     registerCoreTool(LaunchTaskTool, this);
+    registerCoreTool(TaskTemplateTool, this);
     registerCoreTool(ReadSessionMessagesTool, this);
 
     await registry.discoverAllTools();

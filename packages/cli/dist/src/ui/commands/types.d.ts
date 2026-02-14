@@ -98,7 +98,7 @@ export interface MessageActionReturn {
  */
 export interface OpenDialogActionReturn {
     type: "dialog";
-    dialog: "help" | "auth" | "theme" | "editor" | "privacy" | "settings" | "model" | "resume" | "subagent_create" | "subagent_list";
+    dialog: "help" | "auth" | "theme" | "editor" | "tasks" | "privacy" | "settings" | "model" | "resume" | "subagent_create" | "subagent_list";
 }
 /**
  * The return type for a command action that results in replacing

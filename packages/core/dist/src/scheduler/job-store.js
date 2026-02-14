@@ -287,6 +287,12 @@ export async function createJob(params) {
                 DEFAULT_SCHEDULER_CONFIG.default_timeout_minutes,
             max_failures: params.max_failures ?? DEFAULT_SCHEDULER_CONFIG.default_max_failures,
             execution_mode: params.execution_mode,
+            action_type: params.action_type,
+            action_value: params.action_value,
+            template_id: params.template_id,
+            template_level: params.template_level,
+            return_to_session_id: params.return_to_session_id,
+            runtime_profile: params.runtime_profile,
         };
         store.jobs.push(job);
         return job;
@@ -352,6 +358,54 @@ export async function updateJob(params) {
             }
             else {
                 job.execution_mode = params.execution_mode;
+            }
+        }
+        if (params.action_type !== undefined) {
+            if (params.action_type === null) {
+                job.action_type = undefined;
+            }
+            else {
+                job.action_type = params.action_type;
+            }
+        }
+        if (params.action_value !== undefined) {
+            if (params.action_value === null) {
+                job.action_value = undefined;
+            }
+            else {
+                job.action_value = params.action_value;
+            }
+        }
+        if (params.template_id !== undefined) {
+            if (params.template_id === null) {
+                job.template_id = undefined;
+            }
+            else {
+                job.template_id = params.template_id;
+            }
+        }
+        if (params.template_level !== undefined) {
+            if (params.template_level === null) {
+                job.template_level = undefined;
+            }
+            else {
+                job.template_level = params.template_level;
+            }
+        }
+        if (params.return_to_session_id !== undefined) {
+            if (params.return_to_session_id === null) {
+                job.return_to_session_id = undefined;
+            }
+            else {
+                job.return_to_session_id = params.return_to_session_id;
+            }
+        }
+        if (params.runtime_profile !== undefined) {
+            if (params.runtime_profile === null) {
+                job.runtime_profile = undefined;
+            }
+            else {
+                job.runtime_profile = params.runtime_profile;
             }
         }
         return job;

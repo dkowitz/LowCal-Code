@@ -13,6 +13,8 @@ export interface DialogCloseOptions {
     selectedAuthType: AuthType | undefined;
     isEditorDialogOpen: boolean;
     exitEditorDialog: () => void;
+    isTaskTemplateDialogOpen: boolean;
+    closeTaskTemplateDialog: () => void;
     isSettingsDialogOpen: boolean;
     closeSettingsDialog: () => void;
     isResumeDialogOpen: boolean;
