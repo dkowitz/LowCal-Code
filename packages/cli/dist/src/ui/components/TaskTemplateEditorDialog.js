@@ -212,6 +212,7 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
     const [isBusy, setIsBusy] = useState(false);
     const [models, setModels] = useState([]);
     const [isFetchingModels, setIsFetchingModels] = useState(false);
+    const [editorResetToken, setEditorResetToken] = useState(0);
     const manager = useMemo(() => new TaskTemplateManager(projectRoot), [projectRoot]);
     const templatesByKey = useMemo(() => {
         const map = new Map();
@@ -269,9 +270,11 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
     useEffect(() => {
         if (!selectedTemplate) {
             setDraft(buildEmptyDraft(settings, currentModel));
+            setEditorResetToken((value) => value + 1);
             return;
         }
         setDraft(buildDraftFromTemplate(selectedTemplate, settings, currentModel));
+        setEditorResetToken((value) => value + 1);
     }, [selectedTemplate, settings, currentModel]);
     useEffect(() => {
         let cancelled = false;
@@ -319,11 +322,13 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
                 "editor",
                 "actions",
             ];
-            const currentIndex = order.indexOf(focusSection);
-            const nextIndex = key.shift
-                ? (currentIndex - 1 + order.length) % order.length
-                : (currentIndex + 1) % order.length;
-            setFocusSection(order[nextIndex]);
+            setFocusSection((current) => {
+                const currentIndex = order.indexOf(current);
+                const nextIndex = key.shift
+                    ? (currentIndex - 1 + order.length) % order.length
+                    : (currentIndex + 1) % order.length;
+                return order[nextIndex];
+            });
         }
     }, { isActive: true });
     const templateOptions = useMemo(() => {
@@ -605,6 +610,7 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         if (action === "new") {
             setSelectedTemplateKey(NEW_TEMPLATE_KEY);
             setDraft(buildEmptyDraft(settings, currentModel));
+            setEditorResetToken((value) => value + 1);
             setStatusMessage("Switched to new template draft.");
             return;
         }
@@ -628,16 +634,16 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             const readOnly = isExistingEditableTemplate;
             return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { color: Colors.Gray, children: readOnly
                             ? "ID is fixed for existing project/user templates."
-                            : "Unique id used by launch_task/schedule_task and task_template tools." }), _jsx(TextInput, { value: readOnly ? (selectedTemplate?.id ?? draft.id) : draft.id, onChange: (value) => updateDraft({ id: value }), placeholder: "vision-ocr", isActive: !readOnly && focusSection === "editor" })] }));
+                            : "Unique id used by launch_task/schedule_task and task_template tools." }), _jsx(TextInput, { value: readOnly ? (selectedTemplate?.id ?? draft.id) : draft.id, onChange: (value) => updateDraft({ id: value }), placeholder: "vision-ocr", isActive: !readOnly && focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`)] }));
         }
         if (selectedField === "name") {
-            return (_jsx(TextInput, { value: draft.name, onChange: (value) => updateDraft({ name: value }), placeholder: "Human-friendly display name", isActive: focusSection === "editor" }));
+            return (_jsx(TextInput, { value: draft.name, onChange: (value) => updateDraft({ name: value }), placeholder: "Human-friendly display name", isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`));
         }
         if (selectedField === "description") {
-            return (_jsx(TextInput, { value: draft.description, onChange: (value) => updateDraft({ description: value }), placeholder: "What this template is for", isActive: focusSection === "editor" }));
+            return (_jsx(TextInput, { value: draft.description, onChange: (value) => updateDraft({ description: value }), placeholder: "What this template is for", isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`));
         }
         if (selectedField === "tags") {
-            return (_jsx(TextInput, { value: draft.tags, onChange: (value) => updateDraft({ tags: value }), placeholder: "vision, ocr, docs", isActive: focusSection === "editor" }));
+            return (_jsx(TextInput, { value: draft.tags, onChange: (value) => updateDraft({ tags: value }), placeholder: "vision, ocr, docs", isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`));
         }
         if (selectedField === "action_type") {
             return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { color: Colors.Gray, children: "prompt uses the Prompt field. slash_command runs in in_process mode only." }), _jsx(RadioButtonSelect, { items: [
@@ -651,7 +657,7 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
                             ? "Enter the task prompt. Use Shift+Enter for new lines."
                             : "Enter the slash command payload. Use Shift+Enter for new lines." }), _jsx(TextInput, { value: draft.actionValue, onChange: (value) => updateDraft({ actionValue: value }), placeholder: isPrompt
                             ? "Prompt for this task"
-                            : "Slash command payload (for example: /compress)", height: 5, isActive: focusSection === "editor" })] }));
+                            : "Slash command payload (for example: /compress)", height: 5, isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`)] }));
         }
         if (selectedField === "execution_mode") {
             const items = [
@@ -721,9 +727,9 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             return (_jsx(RadioButtonSelect, { items: items, initialIndex: draft.deployMode === "schedule" ? 1 : 0, onSelect: (value) => updateDraft({ deployMode: value }), isFocused: focusSection === "editor" }, `deploy-${draft.deployMode}`));
         }
         if (selectedField === "schedule") {
-            return (_jsx(TextInput, { value: draft.schedule, onChange: (value) => updateDraft({ schedule: value }), placeholder: "0 * * * *", isActive: focusSection === "editor" }));
+            return (_jsx(TextInput, { value: draft.schedule, onChange: (value) => updateDraft({ schedule: value }), placeholder: "0 * * * *", isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`));
         }
-        return (_jsx(TextInput, { value: draft.scheduleJobId, onChange: (value) => updateDraft({ scheduleJobId: value }), placeholder: "Optional; defaults to <template>-schedule", isActive: focusSection === "editor" }));
+        return (_jsx(TextInput, { value: draft.scheduleJobId, onChange: (value) => updateDraft({ scheduleJobId: value }), placeholder: "Optional; defaults to <template>-schedule", isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`));
     };
     return (_jsxs(Box, { borderStyle: "round", borderColor: Colors.AccentBlue, flexDirection: "row", width: "100%", padding: 1, gap: 1, children: [_jsxs(Box, { flexDirection: "column", width: "40%", paddingRight: 1, children: [_jsxs(Text, { bold: focusSection === "templates", children: [focusSection === "templates" ? "> " : "  ", "Templates"] }), isLoadingTemplates ? (_jsx(Text, { color: Colors.Gray, children: "Loading templates..." })) : (_jsx(RadioButtonSelect, { items: templateOptions, initialIndex: selectedTemplateIndex, onSelect: (value) => {
                             setSelectedTemplateKey(value);

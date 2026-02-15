@@ -1666,4 +1666,130 @@ describe("CoreToolScheduler request queueing", () => {
     // Verify approval mode was changed
     expect(approvalMode).toBe(ApprovalMode.AUTO_EDIT);
   });
+
+  it("normalizes legacy read_file args from path to absolute_path", async () => {
+    const executeSpy = vi.fn().mockResolvedValue({
+      llmContent: "ok",
+      returnDisplay: "ok",
+    });
+    const tool = new SimpleTool("read_file", Kind.Read, executeSpy);
+
+    const mockToolRegistry = {
+      getTool: vi.fn().mockReturnValue(tool),
+      getAllToolNames: vi.fn().mockReturnValue([tool.name]),
+    } as unknown as ToolRegistry;
+
+    const onAllToolCallsComplete = vi.fn();
+    const onToolCallsUpdate = vi.fn();
+
+    const scheduler = new CoreToolScheduler({
+      config: {
+        getSessionId: () => "test-session-id",
+        getUsageStatisticsEnabled: () => false,
+        getDebugMode: () => false,
+        getApprovalMode: () => ApprovalMode.DEFAULT,
+        getAllowedTools: () => [],
+        getContentGeneratorConfig: () => ({
+          model: "test-model",
+          authType: "oauth-personal",
+        }),
+        getToolRegistry: () => mockToolRegistry,
+      } as unknown as Config,
+      onAllToolCallsComplete,
+      onToolCallsUpdate,
+      getPreferredEditor: () => "vscode",
+      onEditorClose: vi.fn(),
+    });
+
+    await scheduler.schedule(
+      [
+        {
+          callId: "legacy-read-file",
+          name: "read_file",
+          args: { path: "/tmp/bronc.jpg" },
+          isClientInitiated: false,
+          prompt_id: "prompt-legacy-read-file",
+        },
+      ],
+      new AbortController().signal,
+    );
+
+    const successCall = (await waitForStatus(
+      onToolCallsUpdate,
+      "success",
+    )) as SuccessfulToolCall;
+
+    expect(executeSpy).toHaveBeenCalledTimes(1);
+    expect(successCall.request.args).toMatchObject({
+      path: "/tmp/bronc.jpg",
+      absolute_path: "/tmp/bronc.jpg",
+    });
+  });
+
+  it("normalizes legacy edit args to file_path/old_string/new_string", async () => {
+    const executeSpy = vi.fn().mockResolvedValue({
+      llmContent: "ok",
+      returnDisplay: "ok",
+    });
+    const tool = new SimpleTool("edit", Kind.Edit, executeSpy);
+
+    const mockToolRegistry = {
+      getTool: vi.fn().mockReturnValue(tool),
+      getAllToolNames: vi.fn().mockReturnValue([tool.name]),
+    } as unknown as ToolRegistry;
+
+    const onAllToolCallsComplete = vi.fn();
+    const onToolCallsUpdate = vi.fn();
+
+    const scheduler = new CoreToolScheduler({
+      config: {
+        getSessionId: () => "test-session-id",
+        getUsageStatisticsEnabled: () => false,
+        getDebugMode: () => false,
+        getApprovalMode: () => ApprovalMode.DEFAULT,
+        getAllowedTools: () => [],
+        getContentGeneratorConfig: () => ({
+          model: "test-model",
+          authType: "oauth-personal",
+        }),
+        getToolRegistry: () => mockToolRegistry,
+      } as unknown as Config,
+      onAllToolCallsComplete,
+      onToolCallsUpdate,
+      getPreferredEditor: () => "vscode",
+      onEditorClose: vi.fn(),
+    });
+
+    await scheduler.schedule(
+      [
+        {
+          callId: "legacy-edit",
+          name: "edit",
+          args: {
+            path: "/tmp/app.ts",
+            old_content: "a",
+            new_content: "b",
+          },
+          isClientInitiated: false,
+          prompt_id: "prompt-legacy-edit",
+        },
+      ],
+      new AbortController().signal,
+    );
+
+    const successCall = (await waitForStatus(
+      onToolCallsUpdate,
+      "success",
+    )) as SuccessfulToolCall;
+
+    expect(executeSpy).toHaveBeenCalledTimes(1);
+    expect(successCall.request.args).toMatchObject({
+      path: "/tmp/app.ts",
+      file_path: "/tmp/app.ts",
+      old_content: "a",
+      new_content: "b",
+      old_string: "a",
+      new_string: "b",
+    });
+  });
 });

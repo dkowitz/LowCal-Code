@@ -454,7 +454,9 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                     result: tool.resultDisplay ?? null,
                 }));
                 // Add to the most recent gemini message if it exists
-                const lastGeminiMsg = checkpointMessages.filter((m) => m.type === "gemini").pop();
+                const lastGeminiMsg = checkpointMessages
+                    .filter((m) => m.type === "gemini")
+                    .pop();
                 if (lastGeminiMsg && !lastGeminiMsg.toolCalls) {
                     lastGeminiMsg.toolCalls = toolCalls;
                 }
@@ -487,13 +489,12 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             // Extract tool calls (functionCall parts)
             const toolCalls = [];
             content.parts?.forEach((part) => {
-                if (part &&
-                    typeof part === "object" &&
-                    "functionCall" in part) {
+                if (part && typeof part === "object" && "functionCall" in part) {
                     const functionCall = part.functionCall;
                     if (functionCall && typeof functionCall === "object") {
                         toolCalls.push({
-                            id: functionCall.id ?? `tool-${index}-${toolCalls.length}`,
+                            id: functionCall.id ??
+                                `tool-${index}-${toolCalls.length}`,
                             name: functionCall.name ?? "",
                             args: functionCall.args || {},
                             result: null, // Tool results are in functionResponse parts
@@ -1003,6 +1004,8 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         const previousAuthType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
         const previousOpenAIBaseUrl = process.env["OPENAI_BASE_URL"];
         const previousOpenAIApiKey = process.env["OPENAI_API_KEY"];
+        const previousOpenAIModel = process.env["OPENAI_MODEL"];
+        let runtimeAuthRefreshed = false;
         const restore = async () => {
             if (previousOpenAIBaseUrl === undefined) {
                 delete process.env["OPENAI_BASE_URL"];
@@ -1016,10 +1019,16 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             else {
                 process.env["OPENAI_API_KEY"] = previousOpenAIApiKey;
             }
+            if (previousOpenAIModel === undefined) {
+                delete process.env["OPENAI_MODEL"];
+            }
+            else {
+                process.env["OPENAI_MODEL"] = previousOpenAIModel;
+            }
             const currentAuthType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
             if (previousAuthType &&
-                currentAuthType &&
-                previousAuthType !== currentAuthType) {
+                (runtimeAuthRefreshed ||
+                    (currentAuthType && previousAuthType !== currentAuthType))) {
                 await config.refreshAuth(previousAuthType);
             }
             if (previousModel && config.getModel() !== previousModel) {
@@ -1034,9 +1043,13 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         }
         try {
             const runtimeAuth = profile.auth;
-            if (runtimeAuth?.baseUrl && runtimeAuth.baseUrl.trim().length > 0) {
-                process.env["OPENAI_BASE_URL"] = runtimeAuth.baseUrl.trim();
+            const runtimeBaseUrl = runtimeAuth?.baseUrl && runtimeAuth.baseUrl.trim().length > 0
+                ? runtimeAuth.baseUrl.trim()
+                : undefined;
+            if (runtimeBaseUrl) {
+                process.env["OPENAI_BASE_URL"] = runtimeBaseUrl;
             }
+            let runtimeApiKey;
             if (runtimeAuth?.apiKeyEnvVar &&
                 runtimeAuth.apiKeyEnvVar.trim().length > 0) {
                 const envVarName = runtimeAuth.apiKeyEnvVar.trim();
@@ -1044,15 +1057,29 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 if (!apiKey) {
                     throw new Error(`Task runtime requires API key env var ${envVarName}, but it is not set.`);
                 }
-                process.env["OPENAI_API_KEY"] = apiKey;
-            }
-            const authOverride = normalizeAuthType(runtimeAuth?.selectedType ?? runtimeAuth?.providerId);
-            if (authOverride && authOverride !== previousAuthType) {
-                await config.refreshAuth(authOverride);
+                runtimeApiKey = apiKey;
+                process.env["OPENAI_API_KEY"] = runtimeApiKey;
             }
             const modelOverride = profile.model?.name && profile.model.name.trim().length > 0
                 ? profile.model.name.trim()
                 : undefined;
+            if ((modelOverride ?? previousModel)?.trim().length > 0) {
+                process.env["OPENAI_MODEL"] = (modelOverride ?? previousModel).trim();
+            }
+            const authOverride = normalizeAuthType(runtimeAuth?.selectedType ?? runtimeAuth?.providerId);
+            const currentAuthType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
+            const targetAuthType = authOverride ?? currentAuthType;
+            const runtimeOpenAIConfigChanged = (runtimeBaseUrl !== undefined &&
+                runtimeBaseUrl !== previousOpenAIBaseUrl) ||
+                (runtimeApiKey !== undefined &&
+                    runtimeApiKey !== previousOpenAIApiKey);
+            const shouldRefreshAuth = Boolean(targetAuthType &&
+                ((currentAuthType && targetAuthType !== currentAuthType) ||
+                    runtimeOpenAIConfigChanged));
+            if (shouldRefreshAuth && targetAuthType) {
+                await config.refreshAuth(targetAuthType);
+                runtimeAuthRefreshed = true;
+            }
             if (modelOverride && modelOverride !== config.getModel()) {
                 await config.setModel(modelOverride, {
                     reason: "manual",
@@ -1077,7 +1104,9 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             started_at: current?.started_at ?? nowIso,
             last_heartbeat: nowIso,
             prompt_preview: current?.prompt_preview ?? promptPreview,
-            parent_session_id: current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
+            parent_session_id: current?.parent_session_id ??
+                task.return_to_session_id ??
+                config.getSessionId(),
             source_session_id: current?.source_session_id ?? task.source_session_id,
             dedupe_key: current?.dedupe_key,
             execution_mode_requested: "in_process",
@@ -1105,7 +1134,9 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 finished_at: nowIso,
                 last_heartbeat: nowIso,
                 prompt_preview: current?.prompt_preview ?? promptPreview,
-                parent_session_id: current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
+                parent_session_id: current?.parent_session_id ??
+                    task.return_to_session_id ??
+                    config.getSessionId(),
                 source_session_id: current?.source_session_id ?? task.source_session_id,
                 dedupe_key: current?.dedupe_key,
                 execution_mode_requested: "in_process",
@@ -1142,7 +1173,9 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 finished_at: nowIso,
                 last_heartbeat: nowIso,
                 prompt_preview: current?.prompt_preview ?? promptPreview,
-                parent_session_id: current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
+                parent_session_id: current?.parent_session_id ??
+                    task.return_to_session_id ??
+                    config.getSessionId(),
                 source_session_id: current?.source_session_id ?? task.source_session_id,
                 dedupe_key: current?.dedupe_key,
                 execution_mode_requested: "in_process",

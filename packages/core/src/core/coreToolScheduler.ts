@@ -254,6 +254,111 @@ type ToolCollectionGate = {
   allowedToolNames?: Set<string>;
 };
 
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+
+function normalizeLegacyToolArgs(
+  toolName: string,
+  args: unknown,
+): Record<string, unknown> {
+  if (!isRecord(args)) {
+    return {};
+  }
+
+  const normalized = { ...args };
+
+  switch (toolName) {
+    case "read_file": {
+      if (
+        typeof normalized["absolute_path"] !== "string" ||
+        normalized["absolute_path"].length === 0
+      ) {
+        if (
+          typeof normalized["path"] === "string" &&
+          normalized["path"].length > 0
+        ) {
+          normalized["absolute_path"] = normalized["path"];
+        } else if (
+          typeof normalized["file_path"] === "string" &&
+          normalized["file_path"].length > 0
+        ) {
+          normalized["absolute_path"] = normalized["file_path"];
+        }
+      }
+      break;
+    }
+    case "write_file": {
+      if (
+        typeof normalized["file_path"] !== "string" ||
+        normalized["file_path"].length === 0
+      ) {
+        if (
+          typeof normalized["path"] === "string" &&
+          normalized["path"].length > 0
+        ) {
+          normalized["file_path"] = normalized["path"];
+        } else if (
+          typeof normalized["absolute_path"] === "string" &&
+          normalized["absolute_path"].length > 0
+        ) {
+          normalized["file_path"] = normalized["absolute_path"];
+        }
+      }
+      break;
+    }
+    case "edit": {
+      if (
+        typeof normalized["file_path"] !== "string" ||
+        normalized["file_path"].length === 0
+      ) {
+        if (
+          typeof normalized["path"] === "string" &&
+          normalized["path"].length > 0
+        ) {
+          normalized["file_path"] = normalized["path"];
+        } else if (
+          typeof normalized["absolute_path"] === "string" &&
+          normalized["absolute_path"].length > 0
+        ) {
+          normalized["file_path"] = normalized["absolute_path"];
+        }
+      }
+      if (
+        typeof normalized["old_string"] !== "string" &&
+        typeof normalized["old_content"] === "string"
+      ) {
+        normalized["old_string"] = normalized["old_content"];
+      }
+      if (
+        typeof normalized["new_string"] !== "string" &&
+        typeof normalized["new_content"] === "string"
+      ) {
+        normalized["new_string"] = normalized["new_content"];
+      }
+      break;
+    }
+    case "glob": {
+      if (
+        typeof normalized["pattern"] !== "string" ||
+        normalized["pattern"].length === 0
+      ) {
+        if (
+          typeof normalized["path"] === "string" &&
+          normalized["path"].length > 0
+        ) {
+          normalized["pattern"] = normalized["path"];
+        }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+
+  return normalized;
+}
+
 function getActiveToolCollectionGate(): ToolCollectionGate {
   const activeCollection = toolConfig?.activeCollection;
   if (!activeCollection) {
@@ -502,10 +607,8 @@ export class CoreToolScheduler {
         return call;
       }
 
-      const invocationOrError = this.buildInvocation(
-        call.tool,
-        args as Record<string, unknown>,
-      );
+      const normalizedArgs = normalizeLegacyToolArgs(call.request.name, args);
+      const invocationOrError = this.buildInvocation(call.tool, normalizedArgs);
       if (invocationOrError instanceof Error) {
         const response = createErrorResponse(
           call.request,
@@ -513,7 +616,7 @@ export class CoreToolScheduler {
           ToolErrorType.INVALID_TOOL_PARAMS,
         );
         return {
-          request: { ...call.request, args: args as Record<string, unknown> },
+          request: { ...call.request, args: normalizedArgs },
           status: "error",
           tool: call.tool,
           response,
@@ -523,7 +626,7 @@ export class CoreToolScheduler {
       // Proactive validation for potentially large results
       const warning = validateToolCall(
         call.request.name,
-        args as Record<string, unknown>,
+        normalizedArgs,
       );
       if (warning && warning.severity !== "info") {
         console.warn(`[Tool Validation] ${formatToolWarning(warning)}`);
@@ -531,7 +634,7 @@ export class CoreToolScheduler {
 
       return {
         ...call,
-        request: { ...call.request, args: args as Record<string, unknown> },
+        request: { ...call.request, args: normalizedArgs },
         invocation: invocationOrError,
       };
     });
@@ -701,17 +804,23 @@ export class CoreToolScheduler {
             };
           }
 
+          const normalizedArgs = normalizeLegacyToolArgs(
+            normalizedToolName,
+            reqInfo.args,
+          );
+          const normalizedRequest = { ...reqInfo, args: normalizedArgs };
+
           const invocationOrError = this.buildInvocation(
             toolInstance,
-            reqInfo.args,
+            normalizedArgs,
           );
           if (invocationOrError instanceof Error) {
             return {
               status: "error",
-              request: reqInfo,
+              request: normalizedRequest,
               tool: toolInstance,
               response: createErrorResponse(
-                reqInfo,
+                normalizedRequest,
                 invocationOrError,
                 ToolErrorType.INVALID_TOOL_PARAMS,
               ),
@@ -721,7 +830,7 @@ export class CoreToolScheduler {
 
           return {
             status: "validating",
-            request: reqInfo,
+            request: normalizedRequest,
             tool: toolInstance,
             invocation: invocationOrError,
             startTime: Date.now(),

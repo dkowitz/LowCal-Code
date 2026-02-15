@@ -64,11 +64,31 @@ export function RadioButtonSelect<T>({
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const [scrollOffset, setScrollOffset] = useState(0);
   const [numberInput, setNumberInput] = useState("");
+  const activeIndexRef = useRef(initialIndex);
+  const numberInputRef = useRef("");
   const numberInputTimer = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    activeIndexRef.current = activeIndex;
+  }, [activeIndex]);
+
+  useEffect(() => {
+    numberInputRef.current = numberInput;
+  }, [numberInput]);
+
+  useEffect(() => {
+    const boundedIndex =
+      items.length === 0
+        ? 0
+        : Math.max(0, Math.min(initialIndex, items.length - 1));
+    setActiveIndex(boundedIndex);
+    activeIndexRef.current = boundedIndex;
+  }, [initialIndex, items.length]);
 
   useEffect(() => {
     if (activeIndex >= items.length) {
       setActiveIndex(0);
+      activeIndexRef.current = 0;
     }
   }, [items, activeIndex]);
   useEffect(() => {
@@ -101,24 +121,29 @@ export function RadioButtonSelect<T>({
       if (!isNumeric && numberInputTimer.current) {
         clearTimeout(numberInputTimer.current);
         setNumberInput("");
+        numberInputRef.current = "";
       }
 
       if (name === "k" || name === "up") {
-        const newIndex = activeIndex > 0 ? activeIndex - 1 : items.length - 1;
+        const currentIndex = activeIndexRef.current;
+        const newIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
         setActiveIndex(newIndex);
+        activeIndexRef.current = newIndex;
         onHighlight?.(items[newIndex]!.value);
         return;
       }
 
       if (name === "j" || name === "down") {
-        const newIndex = activeIndex < items.length - 1 ? activeIndex + 1 : 0;
+        const currentIndex = activeIndexRef.current;
+        const newIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
         setActiveIndex(newIndex);
+        activeIndexRef.current = newIndex;
         onHighlight?.(items[newIndex]!.value);
         return;
       }
 
       if (name === "return") {
-        onSelect(items[activeIndex]!.value);
+        onSelect(items[activeIndexRef.current]!.value);
         return;
       }
 
@@ -128,20 +153,25 @@ export function RadioButtonSelect<T>({
           clearTimeout(numberInputTimer.current);
         }
 
-        const newNumberInput = numberInput + sequence;
+        const newNumberInput = numberInputRef.current + sequence;
         setNumberInput(newNumberInput);
+        numberInputRef.current = newNumberInput;
 
         const targetIndex = Number.parseInt(newNumberInput, 10) - 1;
 
         // A single '0' is not a valid selection since items are 1-indexed.
         if (newNumberInput === "0") {
-          numberInputTimer.current = setTimeout(() => setNumberInput(""), 350);
+          numberInputTimer.current = setTimeout(() => {
+            setNumberInput("");
+            numberInputRef.current = "";
+          }, 350);
           return;
         }
 
         if (targetIndex >= 0 && targetIndex < items.length) {
           const targetItem = items[targetIndex]!;
           setActiveIndex(targetIndex);
+          activeIndexRef.current = targetIndex;
           onHighlight?.(targetItem.value);
 
           // If the typed number can't be a prefix for another valid number,
@@ -150,15 +180,18 @@ export function RadioButtonSelect<T>({
           if (potentialNextNumber > items.length) {
             onSelect(targetItem.value);
             setNumberInput("");
+            numberInputRef.current = "";
           } else {
             numberInputTimer.current = setTimeout(() => {
               onSelect(targetItem.value);
               setNumberInput("");
+              numberInputRef.current = "";
             }, 350); // Debounce time for multi-digit input.
           }
         } else {
           // The typed number is out of bounds, clear the buffer
           setNumberInput("");
+          numberInputRef.current = "";
         }
       }
     },

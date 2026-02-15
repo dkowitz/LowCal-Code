@@ -169,6 +169,19 @@ const ENV_RETURN_TO_SESSION_ID = "LOWCAL_RETURN_TO_SESSION_ID";
 const ENV_RETURN_MAILBOX_PATH = "LOWCAL_RETURN_MAILBOX_PATH";
 const ENV_RETURN_FROM_TASK_ID = "LOWCAL_RETURN_FROM_TASK_ID";
 const ENV_TASK_RUNTIME_B64 = "LOWCAL_TASK_RUNTIME_B64";
+function collectAncestorDirectories(start) {
+    const directories = [];
+    let current = path.resolve(start);
+    while (true) {
+        directories.push(current);
+        const parent = path.dirname(current);
+        if (parent === current) {
+            break;
+        }
+        current = parent;
+    }
+    return directories;
+}
 function isRunningInZellijSession() {
     return Boolean(process.env["ZELLIJ_SESSION_NAME"] ||
         process.env["ZELLIJ_PANE_ID"] ||
@@ -212,7 +225,7 @@ class LaunchTaskInvocation extends BaseToolInvocation {
         }
     }
     async executeAction() {
-        const { action, id, description, execution_mode, execution_mode_override, } = this.params;
+        const { action, id, description, execution_mode, execution_mode_override } = this.params;
         switch (action) {
             case "create": {
                 if (!id) {
@@ -290,7 +303,8 @@ class LaunchTaskInvocation extends BaseToolInvocation {
                 if (actionValue.length > 10000) {
                     throw new Error(`Action value is too long (${actionValue.length} characters). Maximum is 10000 characters.`);
                 }
-                if (actionType === "slash_command" && finalExecutionMode !== "in_process") {
+                if (actionType === "slash_command" &&
+                    finalExecutionMode !== "in_process") {
                     throw new Error('slash_command action_type requires execution_mode="in_process".');
                 }
                 const returnToSessionId = typeof this.params.return_to_session_id === "string" &&
@@ -303,7 +317,8 @@ class LaunchTaskInvocation extends BaseToolInvocation {
                     : undefined;
                 await reconcileLaunchTaskState(runtime.workspaceRoot);
                 const existingTaskById = await getLaunchTaskState(runtime.workspaceRoot, id);
-                if (existingTaskById && !isLaunchTaskTerminal(existingTaskById.status)) {
+                if (existingTaskById &&
+                    !isLaunchTaskTerminal(existingTaskById.status)) {
                     return this.formatExistingTask(existingTaskById, `Task "${id}" is already ${existingTaskById.status}. Reusing existing task handle.`);
                 }
                 if (idempotencyKey) {
@@ -358,7 +373,8 @@ class LaunchTaskInvocation extends BaseToolInvocation {
                             resolvedExecutionMode,
                         model_requested: current?.model_requested ?? mergedRuntimeProfile.model?.name,
                         auth_requested: current?.auth_requested ?? mergedRuntimeProfile.auth,
-                        runtime_profile: current?.runtime_profile ?? sanitizeRuntimeProfile(mergedRuntimeProfile),
+                        runtime_profile: current?.runtime_profile ??
+                            sanitizeRuntimeProfile(mergedRuntimeProfile),
                         result_ref: current?.result_ref,
                         last_error: errorMessage,
                         pid: current?.pid,
@@ -390,9 +406,11 @@ class LaunchTaskInvocation extends BaseToolInvocation {
                     auth_actual: launchResult.runtimeProfile?.auth ??
                         current?.auth_actual ??
                         mergedRuntimeProfile.auth,
-                    runtime_profile: current?.runtime_profile ?? sanitizeRuntimeProfile(mergedRuntimeProfile),
+                    runtime_profile: current?.runtime_profile ??
+                        sanitizeRuntimeProfile(mergedRuntimeProfile),
                     result_ref: {
-                        mailbox_path: launchResult.returnMailboxPath ?? current?.result_ref?.mailbox_path,
+                        mailbox_path: launchResult.returnMailboxPath ??
+                            current?.result_ref?.mailbox_path,
                         output_path: launchResult.logPath ?? current?.result_ref?.output_path,
                         child_session_id: current?.result_ref?.child_session_id,
                         message_timestamp: current?.result_ref?.message_timestamp,
@@ -408,7 +426,7 @@ class LaunchTaskInvocation extends BaseToolInvocation {
                     : undefined;
                 const warning = launchResult.warning && modeIgnoredWarning
                     ? `${launchResult.warning} ${modeIgnoredWarning}`
-                    : launchResult.warning ?? modeIgnoredWarning;
+                    : (launchResult.warning ?? modeIgnoredWarning);
                 const resultWithWarnings = warning !== launchResult.warning
                     ? { ...launchResult, warning }
                     : launchResult;
@@ -421,19 +439,24 @@ class LaunchTaskInvocation extends BaseToolInvocation {
     async resolveRuntimePaths() {
         const moduleDir = path.dirname(fileURLToPath(import.meta.url));
         const cwd = process.cwd();
-        const envRoot = process.env["LOWCAL_SCHEDULER_CWD"];
-        const candidateRoots = [
-            envRoot,
-            cwd,
-            path.resolve(moduleDir, "..", "..", "..", "..", ".."),
-            path.resolve(moduleDir, "..", "..", "..", ".."),
-        ].filter((value) => Boolean(value));
+        const envRoot = process.env["LOWCAL_SCHEDULER_CWD"]?.trim();
+        const entryScriptPath = process.argv[1]?.trim();
+        const entryScriptDir = entryScriptPath
+            ? path.dirname(path.resolve(entryScriptPath))
+            : undefined;
+        const workspaceRoot = envRoot && envRoot.length > 0 ? envRoot : cwd;
+        const candidateRoots = Array.from(new Set([
+            ...(envRoot ? collectAncestorDirectories(envRoot) : []),
+            ...collectAncestorDirectories(cwd),
+            ...(entryScriptDir ? collectAncestorDirectories(entryScriptDir) : []),
+            ...collectAncestorDirectories(moduleDir),
+        ]));
         for (const root of candidateRoots) {
             const cliPath = path.join(root, HEADLESS_CLI_RELATIVE_PATH);
             try {
                 await fs.access(cliPath);
                 return {
-                    workspaceRoot: root,
+                    workspaceRoot,
                     cliPath,
                 };
             }
@@ -441,10 +464,11 @@ class LaunchTaskInvocation extends BaseToolInvocation {
                 // Try next candidate.
             }
         }
-        throw new Error(`Unable to locate headless runtime at ${HEADLESS_CLI_RELATIVE_PATH}. Current cwd: ${cwd}`);
+        throw new Error(`Unable to locate headless runtime at ${HEADLESS_CLI_RELATIVE_PATH}. Current cwd: ${cwd}. Searched roots: ${candidateRoots.join(", ")}`);
     }
     async launchLowCalInstance(id, actionType, actionValue, executionMode, runtime, returnToSessionId, runtimeProfile) {
-        const returnMailboxPath = typeof returnToSessionId === "string" && returnToSessionId.trim().length > 0
+        const returnMailboxPath = typeof returnToSessionId === "string" &&
+            returnToSessionId.trim().length > 0
             ? path.join(runtime.workspaceRoot, ".lowcal", "session-messages", `${returnToSessionId.trim()}.jsonl`)
             : undefined;
         if (executionMode === "in_process") {
@@ -629,7 +653,9 @@ class LaunchTaskInvocation extends BaseToolInvocation {
         return {
             accepted,
             reason: typeof record["reason"] === "string" ? record["reason"] : undefined,
-            action_id: typeof record["action_id"] === "string" ? record["action_id"] : undefined,
+            action_id: typeof record["action_id"] === "string"
+                ? record["action_id"]
+                : undefined,
         };
     }
     async callSessionApi(socketPath, method, authToken, params) {
@@ -740,13 +766,13 @@ class LaunchTaskInvocation extends BaseToolInvocation {
             });
             child.on("close", (code) => {
                 const output = `${stdout}\n${stderr}`.trim();
-                const missingSessionOutput = output.includes("Please specify the session name to send actions to") ||
-                    output.includes("No active zellij session found");
+                const missingSessionOutput = output.includes("Please specify the session name to send actions to") || output.includes("No active zellij session found");
                 if (code === 0 && !missingSessionOutput) {
                     resolve();
                 }
                 else {
-                    reject(new Error(output || `zellij command failed with exit code ${code ?? "unknown"}`));
+                    reject(new Error(output ||
+                        `zellij command failed with exit code ${code ?? "unknown"}`));
                 }
             });
         });
@@ -783,8 +809,7 @@ class LaunchTaskInvocation extends BaseToolInvocation {
         if (existing.last_error) {
             output += `Last error: ${existing.last_error}\n`;
         }
-        output +=
-            `\nUse read_session_messages (action: "wait" or "pull") to receive completion updates.\nTask state is tracked in .lowcal/launch-task-state.json.`;
+        output += `\nUse read_session_messages (action: "wait" or "pull") to receive completion updates.\nTask state is tracked in .lowcal/launch-task-state.json.`;
         return output;
     }
     formatTaskCreated(id, prompt, description, result) {
@@ -817,15 +842,15 @@ class LaunchTaskInvocation extends BaseToolInvocation {
         output += `\nPrompt:\n${prompt}\n\n`;
         output += `The task is running in the background. `;
         if (result?.returnToSessionId) {
-            output +=
-                `Use read_session_messages (action: "wait" or "pull") to receive its completion message. `;
+            output += `Use read_session_messages (action: "wait" or "pull") to receive its completion message. `;
         }
         output += `Task state is tracked in .lowcal/launch-task-state.json. `;
-        output += actualMode === "headless"
-            ? `Debug logs are available at .lowcal/launch-tasks/${id}.json`
-            : actualMode === "zellij_tab"
-                ? `Check your Zellij tab for progress.`
-                : `Task was queued in-process and will run in the target interactive session.`;
+        output +=
+            actualMode === "headless"
+                ? `Debug logs are available at .lowcal/launch-tasks/${id}.json`
+                : actualMode === "zellij_tab"
+                    ? `Check your Zellij tab for progress.`
+                    : `Task was queued in-process and will run in the target interactive session.`;
         return output;
     }
 }

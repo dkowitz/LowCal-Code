@@ -702,17 +702,19 @@ export const useGeminiStream = (
 
         // Include tool calls from tool groups
         if (item.type === "tool_group" && item.tools) {
-          const toolCalls = item.tools.map((tool): CheckpointToolCall => ({
-            id: tool.callId,
-            name: tool.name,
-            args: {}, // Args not available in IndividualToolCallDisplay - will be populated from client history
-            result: (tool.resultDisplay as PartListUnion | null) ?? null,
-          }));
-          
+          const toolCalls = item.tools.map(
+            (tool): CheckpointToolCall => ({
+              id: tool.callId,
+              name: tool.name,
+              args: {}, // Args not available in IndividualToolCallDisplay - will be populated from client history
+              result: (tool.resultDisplay as PartListUnion | null) ?? null,
+            }),
+          );
+
           // Add to the most recent gemini message if it exists
-          const lastGeminiMsg = checkpointMessages.filter(
-            (m) => m.type === "gemini"
-          ).pop();
+          const lastGeminiMsg = checkpointMessages
+            .filter((m) => m.type === "gemini")
+            .pop();
           if (lastGeminiMsg && !lastGeminiMsg.toolCalls) {
             lastGeminiMsg.toolCalls = toolCalls;
           } else if (!lastGeminiMsg) {
@@ -759,15 +761,13 @@ export const useGeminiStream = (
         // Extract tool calls (functionCall parts)
         const toolCalls: CheckpointToolCall[] = [];
         content.parts?.forEach((part) => {
-          if (
-            part &&
-            typeof part === "object" &&
-            "functionCall" in part
-          ) {
+          if (part && typeof part === "object" && "functionCall" in part) {
             const functionCall = part.functionCall;
             if (functionCall && typeof functionCall === "object") {
               toolCalls.push({
-                id: (functionCall.id as string) ?? `tool-${index}-${toolCalls.length}`,
+                id:
+                  (functionCall.id as string) ??
+                  `tool-${index}-${toolCalls.length}`,
                 name: (functionCall.name as string) ?? "",
                 args: (functionCall.args as Record<string, unknown>) || {},
                 result: null, // Tool results are in functionResponse parts
@@ -799,29 +799,30 @@ export const useGeminiStream = (
     [],
   );
 
-  const buildCheckpointContextSnapshot =
-    useCallback((): CheckpointContextSnapshot | undefined => {
-      try {
-        const clientHistory = geminiClient.getHistory();
-        if (!Array.isArray(clientHistory) || clientHistory.length === 0) {
-          return undefined;
-        }
-
-        return {
-          clientHistory,
-          promptTokenCount: stats.lastPromptTokenCount,
-          currentContextTokenCount: stats.currentContextTokenCount,
-          model: config.getModel(),
-        };
-      } catch {
+  const buildCheckpointContextSnapshot = useCallback(():
+    | CheckpointContextSnapshot
+    | undefined => {
+    try {
+      const clientHistory = geminiClient.getHistory();
+      if (!Array.isArray(clientHistory) || clientHistory.length === 0) {
         return undefined;
       }
-    }, [
-      config,
-      geminiClient,
-      stats.currentContextTokenCount,
-      stats.lastPromptTokenCount,
-    ]);
+
+      return {
+        clientHistory,
+        promptTokenCount: stats.lastPromptTokenCount,
+        currentContextTokenCount: stats.currentContextTokenCount,
+        model: config.getModel(),
+      };
+    } catch {
+      return undefined;
+    }
+  }, [
+    config,
+    geminiClient,
+    stats.currentContextTokenCount,
+    stats.lastPromptTokenCount,
+  ]);
 
   const saveCheckpointFromHistory = useCallback(
     (
@@ -1246,7 +1247,7 @@ export const useGeminiStream = (
       if (!options?.isContinuation) {
         turnStartTimestampRef.current = userMessageTimestamp;
         turnDurationLoggedRef.current = false;
-        
+
         // Reset recovery retry counter on new successful query
         recoveryRetryCountRef.current = 0;
       }
@@ -1514,7 +1515,7 @@ export const useGeminiStream = (
   );
 
   const applyInProcessRuntimeOverrides = useCallback(
-    async (task: SessionEnqueueTaskPayload): Promise<(() => Promise<void>)> => {
+    async (task: SessionEnqueueTaskPayload): Promise<() => Promise<void>> => {
       const profile = task.runtime_profile;
       const previousModel = config.getModel();
       const previousAuthType = normalizeAuthType(
@@ -1522,6 +1523,8 @@ export const useGeminiStream = (
       );
       const previousOpenAIBaseUrl = process.env["OPENAI_BASE_URL"];
       const previousOpenAIApiKey = process.env["OPENAI_API_KEY"];
+      const previousOpenAIModel = process.env["OPENAI_MODEL"];
+      let runtimeAuthRefreshed = false;
 
       const restore = async () => {
         if (previousOpenAIBaseUrl === undefined) {
@@ -1534,14 +1537,19 @@ export const useGeminiStream = (
         } else {
           process.env["OPENAI_API_KEY"] = previousOpenAIApiKey;
         }
+        if (previousOpenAIModel === undefined) {
+          delete process.env["OPENAI_MODEL"];
+        } else {
+          process.env["OPENAI_MODEL"] = previousOpenAIModel;
+        }
 
         const currentAuthType = normalizeAuthType(
           config.getContentGeneratorConfig()?.authType,
         );
         if (
           previousAuthType &&
-          currentAuthType &&
-          previousAuthType !== currentAuthType
+          (runtimeAuthRefreshed ||
+            (currentAuthType && previousAuthType !== currentAuthType))
         ) {
           await config.refreshAuth(previousAuthType);
         }
@@ -1559,9 +1567,14 @@ export const useGeminiStream = (
 
       try {
         const runtimeAuth = profile.auth;
-        if (runtimeAuth?.baseUrl && runtimeAuth.baseUrl.trim().length > 0) {
-          process.env["OPENAI_BASE_URL"] = runtimeAuth.baseUrl.trim();
+        const runtimeBaseUrl =
+          runtimeAuth?.baseUrl && runtimeAuth.baseUrl.trim().length > 0
+            ? runtimeAuth.baseUrl.trim()
+            : undefined;
+        if (runtimeBaseUrl) {
+          process.env["OPENAI_BASE_URL"] = runtimeBaseUrl;
         }
+        let runtimeApiKey: string | undefined;
         if (
           runtimeAuth?.apiKeyEnvVar &&
           runtimeAuth.apiKeyEnvVar.trim().length > 0
@@ -1573,20 +1586,41 @@ export const useGeminiStream = (
               `Task runtime requires API key env var ${envVarName}, but it is not set.`,
             );
           }
-          process.env["OPENAI_API_KEY"] = apiKey;
-        }
-
-        const authOverride = normalizeAuthType(
-          runtimeAuth?.selectedType ?? runtimeAuth?.providerId,
-        );
-        if (authOverride && authOverride !== previousAuthType) {
-          await config.refreshAuth(authOverride);
+          runtimeApiKey = apiKey;
+          process.env["OPENAI_API_KEY"] = runtimeApiKey;
         }
 
         const modelOverride =
           profile.model?.name && profile.model.name.trim().length > 0
             ? profile.model.name.trim()
             : undefined;
+        if ((modelOverride ?? previousModel)?.trim().length > 0) {
+          process.env["OPENAI_MODEL"] = (modelOverride ?? previousModel).trim();
+        }
+
+        const authOverride = normalizeAuthType(
+          runtimeAuth?.selectedType ?? runtimeAuth?.providerId,
+        );
+        const currentAuthType = normalizeAuthType(
+          config.getContentGeneratorConfig()?.authType,
+        );
+        const targetAuthType = authOverride ?? currentAuthType;
+        const runtimeOpenAIConfigChanged =
+          (runtimeBaseUrl !== undefined &&
+            runtimeBaseUrl !== previousOpenAIBaseUrl) ||
+          (runtimeApiKey !== undefined &&
+            runtimeApiKey !== previousOpenAIApiKey);
+
+        const shouldRefreshAuth = Boolean(
+          targetAuthType &&
+            ((currentAuthType && targetAuthType !== currentAuthType) ||
+              runtimeOpenAIConfigChanged),
+        );
+        if (shouldRefreshAuth && targetAuthType) {
+          await config.refreshAuth(targetAuthType);
+          runtimeAuthRefreshed = true;
+        }
+
         if (modelOverride && modelOverride !== config.getModel()) {
           await config.setModel(modelOverride, {
             reason: "manual",
@@ -1614,31 +1648,37 @@ export const useGeminiStream = (
       const runtimeProfile = task.runtime_profile;
       const promptPreview = task.action_value.trim().slice(0, 400);
 
-      await upsertLaunchTaskState(process.cwd(), task.task_id, (current, nowIso) => ({
-        task_id: task.task_id,
-        status: "running",
-        created_at: current?.created_at ?? nowIso,
-        started_at: current?.started_at ?? nowIso,
-        last_heartbeat: nowIso,
-        prompt_preview: current?.prompt_preview ?? promptPreview,
-        parent_session_id:
-          current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
-        source_session_id: current?.source_session_id ?? task.source_session_id,
-        dedupe_key: current?.dedupe_key,
-        execution_mode_requested: "in_process",
-        execution_mode_actual: "in_process",
-        model_requested:
-          current?.model_requested ?? runtimeProfile?.model?.name,
-        model_actual: current?.model_actual ?? config.getModel(),
-        auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
-        auth_actual:
-          current?.auth_actual ?? runtimeProfile?.auth,
-        runtime_profile: current?.runtime_profile ?? runtimeProfile,
-        result_ref: current?.result_ref,
-        pid: current?.pid,
-        tab_name: current?.tab_name,
-        last_error: undefined,
-      }));
+      await upsertLaunchTaskState(
+        process.cwd(),
+        task.task_id,
+        (current, nowIso) => ({
+          task_id: task.task_id,
+          status: "running",
+          created_at: current?.created_at ?? nowIso,
+          started_at: current?.started_at ?? nowIso,
+          last_heartbeat: nowIso,
+          prompt_preview: current?.prompt_preview ?? promptPreview,
+          parent_session_id:
+            current?.parent_session_id ??
+            task.return_to_session_id ??
+            config.getSessionId(),
+          source_session_id:
+            current?.source_session_id ?? task.source_session_id,
+          dedupe_key: current?.dedupe_key,
+          execution_mode_requested: "in_process",
+          execution_mode_actual: "in_process",
+          model_requested:
+            current?.model_requested ?? runtimeProfile?.model?.name,
+          model_actual: current?.model_actual ?? config.getModel(),
+          auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+          auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
+          runtime_profile: current?.runtime_profile ?? runtimeProfile,
+          result_ref: current?.result_ref,
+          pid: current?.pid,
+          tab_name: current?.tab_name,
+          last_error: undefined,
+        }),
+      );
 
       let restoreRuntime: (() => Promise<void>) | undefined;
       try {
@@ -1647,45 +1687,52 @@ export const useGeminiStream = (
 
         await submitQuery(task.action_value);
 
-        await upsertLaunchTaskState(process.cwd(), task.task_id, (current, nowIso) => ({
-          task_id: task.task_id,
-          status: "completed",
-          created_at: current?.created_at ?? nowIso,
-          started_at: current?.started_at ?? nowIso,
-          finished_at: nowIso,
-          last_heartbeat: nowIso,
-          prompt_preview: current?.prompt_preview ?? promptPreview,
-          parent_session_id:
-            current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
-          source_session_id: current?.source_session_id ?? task.source_session_id,
-          dedupe_key: current?.dedupe_key,
-          execution_mode_requested: "in_process",
-          execution_mode_actual: "in_process",
-          model_requested:
-            current?.model_requested ?? runtimeProfile?.model?.name,
-          model_actual: config.getModel(),
-          auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
-          auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
-          runtime_profile: current?.runtime_profile ?? runtimeProfile,
-          result_ref: {
-            mailbox_path:
-              current?.result_ref?.mailbox_path ??
-              (task.return_to_session_id
-                ? path.join(
-                    process.cwd(),
-                    ".lowcal",
-                    "session-messages",
-                    `${task.return_to_session_id}.jsonl`,
-                  )
-                : undefined),
-            output_path: logPath,
-            child_session_id: config.getSessionId(),
-            message_timestamp: nowIso,
-          },
-          pid: current?.pid,
-          tab_name: current?.tab_name,
-          last_error: undefined,
-        }));
+        await upsertLaunchTaskState(
+          process.cwd(),
+          task.task_id,
+          (current, nowIso) => ({
+            task_id: task.task_id,
+            status: "completed",
+            created_at: current?.created_at ?? nowIso,
+            started_at: current?.started_at ?? nowIso,
+            finished_at: nowIso,
+            last_heartbeat: nowIso,
+            prompt_preview: current?.prompt_preview ?? promptPreview,
+            parent_session_id:
+              current?.parent_session_id ??
+              task.return_to_session_id ??
+              config.getSessionId(),
+            source_session_id:
+              current?.source_session_id ?? task.source_session_id,
+            dedupe_key: current?.dedupe_key,
+            execution_mode_requested: "in_process",
+            execution_mode_actual: "in_process",
+            model_requested:
+              current?.model_requested ?? runtimeProfile?.model?.name,
+            model_actual: config.getModel(),
+            auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+            auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
+            runtime_profile: current?.runtime_profile ?? runtimeProfile,
+            result_ref: {
+              mailbox_path:
+                current?.result_ref?.mailbox_path ??
+                (task.return_to_session_id
+                  ? path.join(
+                      process.cwd(),
+                      ".lowcal",
+                      "session-messages",
+                      `${task.return_to_session_id}.jsonl`,
+                    )
+                  : undefined),
+              output_path: logPath,
+              child_session_id: config.getSessionId(),
+              message_timestamp: nowIso,
+            },
+            pid: current?.pid,
+            tab_name: current?.tab_name,
+            last_error: undefined,
+          }),
+        );
 
         await appendInProcessTaskLog(task, "completed");
         await appendInProcessMailboxMessage(
@@ -1697,45 +1744,52 @@ export const useGeminiStream = (
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         await appendInProcessTaskLog(task, "failed", message);
-        await upsertLaunchTaskState(process.cwd(), task.task_id, (current, nowIso) => ({
-          task_id: task.task_id,
-          status: "failed",
-          created_at: current?.created_at ?? nowIso,
-          started_at: current?.started_at ?? nowIso,
-          finished_at: nowIso,
-          last_heartbeat: nowIso,
-          prompt_preview: current?.prompt_preview ?? promptPreview,
-          parent_session_id:
-            current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
-          source_session_id: current?.source_session_id ?? task.source_session_id,
-          dedupe_key: current?.dedupe_key,
-          execution_mode_requested: "in_process",
-          execution_mode_actual: "in_process",
-          model_requested:
-            current?.model_requested ?? runtimeProfile?.model?.name,
-          model_actual: config.getModel(),
-          auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
-          auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
-          runtime_profile: current?.runtime_profile ?? runtimeProfile,
-          result_ref: {
-            mailbox_path:
-              current?.result_ref?.mailbox_path ??
-              (task.return_to_session_id
-                ? path.join(
-                    process.cwd(),
-                    ".lowcal",
-                    "session-messages",
-                    `${task.return_to_session_id}.jsonl`,
-                  )
-                : undefined),
-            output_path: logPath,
-            child_session_id: config.getSessionId(),
-            message_timestamp: nowIso,
-          },
-          pid: current?.pid,
-          tab_name: current?.tab_name,
-          last_error: message,
-        }));
+        await upsertLaunchTaskState(
+          process.cwd(),
+          task.task_id,
+          (current, nowIso) => ({
+            task_id: task.task_id,
+            status: "failed",
+            created_at: current?.created_at ?? nowIso,
+            started_at: current?.started_at ?? nowIso,
+            finished_at: nowIso,
+            last_heartbeat: nowIso,
+            prompt_preview: current?.prompt_preview ?? promptPreview,
+            parent_session_id:
+              current?.parent_session_id ??
+              task.return_to_session_id ??
+              config.getSessionId(),
+            source_session_id:
+              current?.source_session_id ?? task.source_session_id,
+            dedupe_key: current?.dedupe_key,
+            execution_mode_requested: "in_process",
+            execution_mode_actual: "in_process",
+            model_requested:
+              current?.model_requested ?? runtimeProfile?.model?.name,
+            model_actual: config.getModel(),
+            auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+            auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
+            runtime_profile: current?.runtime_profile ?? runtimeProfile,
+            result_ref: {
+              mailbox_path:
+                current?.result_ref?.mailbox_path ??
+                (task.return_to_session_id
+                  ? path.join(
+                      process.cwd(),
+                      ".lowcal",
+                      "session-messages",
+                      `${task.return_to_session_id}.jsonl`,
+                    )
+                  : undefined),
+              output_path: logPath,
+              child_session_id: config.getSessionId(),
+              message_timestamp: nowIso,
+            },
+            pid: current?.pid,
+            tab_name: current?.tab_name,
+            last_error: message,
+          }),
+        );
         await appendInProcessMailboxMessage(
           task,
           "error",
@@ -1806,7 +1860,7 @@ export const useGeminiStream = (
       } else if (errorMessage) {
         // Increment retry counter for errors
         recoveryRetryCountRef.current += 1;
-        
+
         // Check if we've exceeded max retries
         const maxRetries = 3;
         if (recoveryRetryCountRef.current > maxRetries) {

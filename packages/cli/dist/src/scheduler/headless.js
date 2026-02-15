@@ -350,6 +350,11 @@ async function main() {
         // Get model from runtime profile or settings, fallback to default
         const modelFromSettings = settings.merged.model?.name;
         const model = runtimeModel || modelFromSettings || "gemini-1.5-flash";
+        if (runtimeModel && runtimeModel.trim().length > 0) {
+            // Prevent refreshAuth/createContentGeneratorConfig from re-applying a stale
+            // OPENAI_MODEL value from the parent shell when this task explicitly sets a model.
+            process.env["OPENAI_MODEL"] = runtimeModel.trim();
+        }
         await updateSessionDetails({
             model,
             approval_mode: String(approvalMode),

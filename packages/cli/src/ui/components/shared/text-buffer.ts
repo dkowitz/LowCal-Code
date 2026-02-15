@@ -952,13 +952,17 @@ export function textBufferReducer(
 
   switch (action.type) {
     case "set_text": {
+      const normalizedPayload = action.payload.replace(/\r\n?/g, "\n");
+      const currentText = state.lines.join("\n");
+      if (normalizedPayload === currentText) {
+        return state;
+      }
+
       let nextState = state;
       if (action.pushToUndo !== false) {
         nextState = pushUndoLocal(state);
       }
-      const newContentLines = action.payload
-        .replace(/\r\n?/g, "\n")
-        .split("\n");
+      const newContentLines = normalizedPayload.split("\n");
       const lines = newContentLines.length === 0 ? [""] : newContentLines;
       const lastNewLineIndex = lines.length - 1;
       return {

@@ -41,7 +41,14 @@ export declare class OpenAIContentConverter {
     private shouldEmitThinkingBlock;
     private normalizeThinkingBlock;
     private extractXmlToolCalls;
+    private extractCompleteTagBlocks;
+    private findTrailingOpenTagIndex;
+    private stripStrayToolCallMarkup;
+    private parseToolCallBlock;
     private parseInvokeBlock;
+    private parseFunctionBlock;
+    private parseJsonToolCallBlock;
+    private isRecord;
     private parseParameterValue;
     private generateToolCallId;
     private getSessionIdFromPrompt;

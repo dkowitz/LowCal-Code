@@ -169,46 +169,96 @@ export class OpenAIContentConverter {
         }
         const buffer = (this.streamingXmlToolCallBuffers.get(index) ?? "") + chunkText;
         const toolCalls = [];
-        const invokeRegex = /<invoke\b[^>]*>([\s\S]*?)<\/invoke>/g;
-        let sanitized = "";
-        let lastIndex = 0;
-        let match;
-        while ((match = invokeRegex.exec(buffer)) !== null) {
-            const invokeStart = match.index;
-            sanitized += buffer.slice(lastIndex, invokeStart);
-            const invokeBlock = buffer.slice(invokeStart, invokeRegex.lastIndex);
-            const parsed = this.parseInvokeBlock(invokeBlock);
+        // First parse complete <tool_call>...</tool_call> blocks.
+        const { blocks: toolCallBlocks, remainingText: withoutToolCallBlocks, } = this.extractCompleteTagBlocks(buffer, "tool_call");
+        for (const block of toolCallBlocks) {
+            const parsed = this.parseToolCallBlock(block);
             if (parsed) {
                 toolCalls.push(parsed);
             }
-            lastIndex = invokeRegex.lastIndex;
         }
-        sanitized += buffer.slice(lastIndex);
-        const lastOpenInvoke = sanitized.lastIndexOf("<invoke");
-        const lastCloseInvoke = sanitized.lastIndexOf("</invoke>");
-        if (lastOpenInvoke > lastCloseInvoke) {
-            this.streamingXmlToolCallBuffers.set(index, sanitized.slice(lastOpenInvoke));
-            sanitized = sanitized.slice(0, lastOpenInvoke);
+        // Also support legacy direct <invoke>...</invoke> blocks that are not wrapped.
+        const { blocks: invokeBlocks, remainingText: withoutInvokeBlocks, } = this.extractCompleteTagBlocks(withoutToolCallBlocks, "invoke");
+        for (const block of invokeBlocks) {
+            const parsed = this.parseInvokeBlock(block);
+            if (parsed) {
+                toolCalls.push(parsed);
+            }
+        }
+        let sanitized = withoutInvokeBlocks;
+        const trailingOpenTagIndex = this.findTrailingOpenTagIndex(sanitized, [
+            "tool_call",
+            "invoke",
+        ]);
+        if (trailingOpenTagIndex >= 0) {
+            this.streamingXmlToolCallBuffers.set(index, sanitized.slice(trailingOpenTagIndex));
+            sanitized = sanitized.slice(0, trailingOpenTagIndex);
         }
         else {
             this.streamingXmlToolCallBuffers.delete(index);
         }
-        sanitized = sanitized
-            .replace(/<\/?tool_call\b[^>]*>/g, "")
-            .replace(/<\/?parameter\b[^>]*>/g, "")
-            .replace(/<\/?invoke\b[^>]*>/g, "");
         return {
-            text: sanitized,
+            text: this.stripStrayToolCallMarkup(sanitized),
             toolCalls,
         };
     }
+    extractCompleteTagBlocks(input, tagName) {
+        const regex = new RegExp(`<${tagName}\\b[^>]*>[\\s\\S]*?<\\/${tagName}>`, "gi");
+        const blocks = [];
+        let remainingText = "";
+        let lastIndex = 0;
+        let match;
+        while ((match = regex.exec(input)) !== null) {
+            remainingText += input.slice(lastIndex, match.index);
+            blocks.push(match[0]);
+            lastIndex = regex.lastIndex;
+        }
+        remainingText += input.slice(lastIndex);
+        return { blocks, remainingText };
+    }
+    findTrailingOpenTagIndex(input, tags) {
+        let trailingIndex = -1;
+        for (const tag of tags) {
+            const openIndex = input.lastIndexOf(`<${tag}`);
+            const closeIndex = input.lastIndexOf(`</${tag}>`);
+            if (openIndex > closeIndex) {
+                trailingIndex = Math.max(trailingIndex, openIndex);
+            }
+        }
+        return trailingIndex;
+    }
+    stripStrayToolCallMarkup(text) {
+        return text
+            .replace(/<\/?tool_call\b[^>]*>/gi, "")
+            .replace(/<\/?invoke\b[^>]*>/gi, "")
+            .replace(/<\/?function\b[^>]*>/gi, "")
+            .replace(/<function=[^>]*>/gi, "")
+            .replace(/<\/?parameter\b[^>]*>/gi, "")
+            .replace(/<parameter=[^>]*>/gi, "");
+    }
+    parseToolCallBlock(block) {
+        const inner = block
+            .replace(/^<tool_call\b[^>]*>/i, "")
+            .replace(/<\/tool_call>\s*$/i, "")
+            .trim();
+        if (!inner) {
+            return null;
+        }
+        if (/<invoke\b/i.test(inner)) {
+            return this.parseInvokeBlock(inner);
+        }
+        if (/<function=/i.test(inner)) {
+            return this.parseFunctionBlock(inner);
+        }
+        return this.parseJsonToolCallBlock(inner);
+    }
     parseInvokeBlock(block) {
-        const nameMatch = block.match(/<invoke\b[^>]*name="([^"]+)"[^>]*>/);
+        const nameMatch = block.match(/<invoke\b[^>]*name="([^"]+)"[^>]*>/i);
         if (!nameMatch) {
             return null;
         }
         const params = {};
-        const paramRegex = /<parameter\b[^>]*name="([^"]+)"[^>]*>([\s\S]*?)<\/parameter>/g;
+        const paramRegex = /<parameter\b[^>]*name="([^"]+)"[^>]*>([\s\S]*?)<\/parameter>/gi;
         let paramMatch;
         while ((paramMatch = paramRegex.exec(block)) !== null) {
             const paramName = paramMatch[1].trim();
@@ -220,6 +270,70 @@ export class OpenAIContentConverter {
             name: nameMatch[1],
             args: params,
         };
+    }
+    parseFunctionBlock(block) {
+        const nameMatch = block.match(/<function=([^>\s]+)>/i);
+        if (!nameMatch) {
+            return null;
+        }
+        const params = {};
+        const paramRegex = /<parameter=([^>\s]+)>([\s\S]*?)<\/parameter>/gi;
+        let paramMatch;
+        while ((paramMatch = paramRegex.exec(block)) !== null) {
+            const paramName = paramMatch[1].trim();
+            const paramValue = this.parseParameterValue(paramMatch[2]);
+            params[paramName] = paramValue;
+        }
+        return {
+            id: this.generateToolCallId(nameMatch[1]),
+            name: nameMatch[1],
+            args: params,
+        };
+    }
+    parseJsonToolCallBlock(block) {
+        const jsonCandidate = block
+            .replace(/^```json\s*/i, "")
+            .replace(/^```\s*/i, "")
+            .replace(/\s*```$/i, "")
+            .trim();
+        if (!(jsonCandidate.startsWith("{") && jsonCandidate.endsWith("}")) &&
+            !(jsonCandidate.startsWith("[") && jsonCandidate.endsWith("]"))) {
+            return null;
+        }
+        let parsed;
+        try {
+            parsed = JSON.parse(jsonCandidate);
+        }
+        catch {
+            return null;
+        }
+        if (!this.isRecord(parsed)) {
+            return null;
+        }
+        const parsedName = parsed["name"];
+        const name = typeof parsedName === "string" ? parsedName.trim() : "";
+        if (!name) {
+            return null;
+        }
+        let args = {};
+        const parsedArguments = parsed["arguments"];
+        if (this.isRecord(parsedArguments)) {
+            args = parsedArguments;
+        }
+        else if (typeof parsedArguments === "string") {
+            const parsedArgs = safeJsonParse(parsedArguments, {});
+            if (this.isRecord(parsedArgs)) {
+                args = parsedArgs;
+            }
+        }
+        return {
+            id: this.generateToolCallId(name),
+            name,
+            args,
+        };
+    }
+    isRecord(value) {
+        return (typeof value === "object" && value !== null && !Array.isArray(value));
     }
     parseParameterValue(value) {
         const trimmed = value.trim();

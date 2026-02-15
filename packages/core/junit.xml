@@ -1,3 +1,235 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="0" failures="0" errors="0" time="0">
+<testsuites name="vitest tests" tests="42" failures="0" errors="0" time="0.25084833">
+    <testsuite name="src/core/coreToolScheduler.test.ts" timestamp="2026-02-15T11:50:11.405Z" hostname="uby" tests="27" failures="0" errors="0" skipped="0" time="0.242920356">
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler &gt; should cancel a tool call if the signal is aborted before confirmation" time="0.018840139">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler &gt; plan mode enforcement &gt; returns plan reminder and skips execution for edit tools" time="0.001182918">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler &gt; plan mode enforcement &gt; allows read tools to execute in plan mode" time="0.010829461">
+            <system-out>
+[Tool] Starting: read_file (plan-2...)
+
+[Tool] Completed: read_file in 1ms
+[Tool] Success: read_file
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler &gt; plan mode enforcement &gt; enforces shell command restrictions in plan mode" time="0.012202331">
+            <system-out>
+[Tool] Starting: run_shell_command (plan-she...)
+[Tool] Args: {
+  &quot;command&quot;: &quot;ls -la&quot;
+}
+
+[Tool] Completed: run_shell_command in 0ms
+[Tool] Success: run_shell_command
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler &gt; tool collection enforcement &gt; rejects tool calls that are not in the active collection" time="0.00114077">
+            <system-out>
+[Tool] Starting: run_shell_command (2...)
+
+[Tool] Completed: run_shell_command in 0ms
+[Tool] Success: run_shell_command
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler &gt; getToolSuggestion &gt; should suggest the top N closest tool names for a typo" time="0.000393088">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler with payload &gt; should update args and diff and execute tool when payload is provided" time="0.002801241">
+            <system-out>
+[Tool] Starting: mockModifiableTool (1...)
+[Tool] Args: {
+  &quot;newContent&quot;: &quot;final version&quot;
+}
+
+[Tool] Completed: mockModifiableTool in 0ms
+[Tool] Success: mockModifiableTool
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="convertToFunctionResponse &gt; should handle simple string llmContent" time="0.0001456">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="convertToFunctionResponse &gt; should handle llmContent as a single Part with text" time="0.000080229">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="convertToFunctionResponse &gt; should handle llmContent as a PartListUnion array with a single text Part" time="0.000057226">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="convertToFunctionResponse &gt; should handle llmContent with inlineData" time="0.000058538">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="convertToFunctionResponse &gt; should handle llmContent with fileData" time="0.00005939">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="convertToFunctionResponse &gt; should handle llmContent as an array of multiple Parts (text and inlineData)" time="0.000092871">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="convertToFunctionResponse &gt; should handle llmContent as an array with a single inlineData Part" time="0.000055703">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="convertToFunctionResponse &gt; should handle llmContent as a generic Part (not text, inlineData, or fileData)" time="0.000047969">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="convertToFunctionResponse &gt; should handle empty string llmContent" time="0.000055263">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="convertToFunctionResponse &gt; should handle llmContent as an empty array" time="0.000049381">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="convertToFunctionResponse &gt; should handle llmContent as a Part with undefined inlineData/fileData/text" time="0.000079928">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler edit cancellation &gt; should preserve diff when an edit is cancelled" time="0.000545489">
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler YOLO mode &gt; should execute tool requiring confirmation directly without waiting" time="0.001110444">
+            <system-out>
+[Tool] Starting: mockTool (1...)
+[Tool] Args: {
+  &quot;param&quot;: &quot;value&quot;
+}
+
+[Tool] Completed: mockTool in 0ms
+[Tool] Success: mockTool
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler cancellation during executing with live output &gt; sets status to cancelled and preserves last output" time="0.102887173">
+            <system-out>
+[Tool] Starting: stream-tool (1...)
+[Tool] Args: {
+  &quot;id&quot;: &quot;x&quot;
+}
+
+[Tool] Completed: stream-tool in 51ms
+[Tool] Cancelled: stream-tool
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler request queueing &gt; should queue a request if another is running" time="0.012801238">
+            <system-out>
+[Tool] Starting: mockTool (1...)
+[Tool] Args: {
+  &quot;a&quot;: 1
+}
+
+[Tool] Completed: mockTool in 11ms
+[Tool] Success: mockTool
+
+[Tool] Starting: mockTool (2...)
+[Tool] Args: {
+  &quot;b&quot;: 2
+}
+
+[Tool] Completed: mockTool in 0ms
+[Tool] Success: mockTool
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler request queueing &gt; should auto-approve a tool call if it is on the allowedTools list" time="0.001504162">
+            <system-out>
+[Tool] Starting: mockTool (1...)
+[Tool] Args: {
+  &quot;param&quot;: &quot;value&quot;
+}
+
+[Tool] Completed: mockTool in 0ms
+[Tool] Success: mockTool
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler request queueing &gt; should handle two synchronous calls to schedule" time="0.001044212">
+            <system-out>
+[Tool] Starting: mockTool (1...)
+[Tool] Args: {
+  &quot;a&quot;: 1
+}
+
+[Tool] Completed: mockTool in 0ms
+[Tool] Success: mockTool
+
+[Tool] Starting: mockTool (2...)
+[Tool] Args: {
+  &quot;b&quot;: 2
+}
+
+[Tool] Completed: mockTool in 0ms
+[Tool] Success: mockTool
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler request queueing &gt; should auto-approve remaining tool calls when first tool call is approved with ProceedAlways" time="0.051513977">
+            <system-out>
+[Tool] Starting: testApprovalTool (1...)
+[Tool] Args: {
+  &quot;id&quot;: &quot;first&quot;
+}
+[Tool] Starting: testApprovalTool (2...)
+[Tool] Args: {
+  &quot;id&quot;: &quot;second&quot;
+}
+[Tool] Starting: testApprovalTool (3...)
+[Tool] Args: {
+  &quot;id&quot;: &quot;third&quot;
+}
+[Tool] Completed: testApprovalTool in 0ms
+[Tool] Success: testApprovalTool
+[Tool] Completed: testApprovalTool in 0ms
+[Tool] Success: testApprovalTool
+[Tool] Completed: testApprovalTool in 0ms
+[Tool] Success: testApprovalTool
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler request queueing &gt; normalizes legacy read_file args from path to absolute_path" time="0.010912155">
+            <system-out>
+[Tool] Starting: read_file (legacy-r...)
+[Tool] Args: {
+  &quot;path&quot;: &quot;/tmp/bronc.jpg&quot;,
+  &quot;absolute_path&quot;: &quot;/tmp/bronc.jpg&quot;
+}
+
+[Tool] Completed: read_file in 1ms
+[Tool] Success: read_file
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/core/coreToolScheduler.test.ts" name="CoreToolScheduler request queueing &gt; normalizes legacy edit args to file_path/old_string/new_string" time="0.011197342">
+            <system-out>
+[Tool] Starting: edit (legacy-e...)
+[Tool] Args: {
+  &quot;path&quot;: &quot;/tmp/app.ts&quot;,
+  &quot;old_content&quot;: &quot;a&quot;,
+  &quot;new_content&quot;: &quot;b&quot;,
+  &quot;file_path&quot;: &quot;/tmp/app.ts&quot;,...
+
+[Tool] Completed: edit in 0ms
+[Tool] Success: edit
+
+            </system-out>
+        </testcase>
+    </testsuite>
+    <testsuite name="src/core/openaiContentGenerator/converter.test.ts" timestamp="2026-02-15T11:50:11.408Z" hostname="uby" tests="15" failures="0" errors="0" skipped="0" time="0.007927974">
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; resetStreamingToolCalls &gt; should clear streaming tool calls accumulator" time="0.001258378">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; resetStreamingToolCalls &gt; should be safe to call multiple times" time="0.000106948">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; resetStreamingToolCalls &gt; should be safe to call on empty accumulator" time="0.00006468">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; resetStreamingToolCalls &gt; should clear streaming reasoning buffers" time="0.000050754">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; convertOpenAIResponseToGemini &gt; should include thinking content when reasoning details are present" time="0.000720182">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; convertOpenAIChunkToGemini &gt; should buffer reasoning until finish_reason and emit &lt;think&gt; block" time="0.001341923">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; convertOpenAIChunkToGemini &gt; deduplicates repeated reasoning_details chunks" time="0.000359255">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; convertOpenAIChunkToGemini &gt; omits duplicate streaming &lt;think&gt; blocks" time="0.000187617">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; convertOpenAIChunkToGemini &gt; persists thinking dedupe across continuations within same session" time="0.000131934">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; convertOpenAIChunkToGemini &gt; allows identical thinking blocks after prompt id changes" time="0.000155116">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; convertOpenAIChunkToGemini &gt; converts XML tool calls embedded in text to function calls" time="0.001403235">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; convertOpenAIChunkToGemini &gt; buffers partial XML tool calls across chunks" time="0.000261543">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; convertOpenAIChunkToGemini &gt; converts qwen-coder style function blocks to function calls" time="0.000464288">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; convertOpenAIChunkToGemini &gt; converts qwen-vl JSON tool_call blocks to function calls" time="0.000322326">
+        </testcase>
+        <testcase classname="src/core/openaiContentGenerator/converter.test.ts" name="OpenAIContentConverter &gt; convertOpenAIChunkToGemini &gt; strips stray parameter tags after tool calls" time="0.000144828">
+        </testcase>
+    </testsuite>
 </testsuites>

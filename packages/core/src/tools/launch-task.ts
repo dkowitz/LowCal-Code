@@ -252,6 +252,20 @@ interface LaunchResult {
   runtimeProfile?: TaskRuntimeProfile;
 }
 
+function collectAncestorDirectories(start: string): string[] {
+  const directories: string[] = [];
+  let current = path.resolve(start);
+  while (true) {
+    directories.push(current);
+    const parent = path.dirname(current);
+    if (parent === current) {
+      break;
+    }
+    current = parent;
+  }
+  return directories;
+}
+
 function isRunningInZellijSession(): boolean {
   return Boolean(
     process.env["ZELLIJ_SESSION_NAME"] ||
@@ -304,13 +318,8 @@ class LaunchTaskInvocation extends BaseToolInvocation<
   }
 
   private async executeAction(): Promise<string> {
-    const {
-      action,
-      id,
-      description,
-      execution_mode,
-      execution_mode_override,
-    } = this.params;
+    const { action, id, description, execution_mode, execution_mode_override } =
+      this.params;
 
     switch (action) {
       case "create": {
@@ -352,7 +361,9 @@ class LaunchTaskInvocation extends BaseToolInvocation<
         }
 
         const runtime = await this.resolveRuntimePaths();
-        const templateLevel = normalizeTemplateLevel(this.params.template_level);
+        const templateLevel = normalizeTemplateLevel(
+          this.params.template_level,
+        );
         const templateId =
           typeof this.params.template_id === "string" &&
           this.params.template_id.trim().length > 0
@@ -382,14 +393,16 @@ class LaunchTaskInvocation extends BaseToolInvocation<
             : this.defaultExecutionMode;
 
         const explicitRuntimeProfile: TaskRuntimeProfile = {
-          action_type: directActionType ?? (directActionValue ? "prompt" : undefined),
+          action_type:
+            directActionType ?? (directActionValue ? "prompt" : undefined),
           action_value: directActionValue,
           execution_mode: explicitExecutionMode,
           auth: normalizeAuthProfile(this.params.auth),
           model: normalizeModelProfile(this.params.model),
-          run: this.params.allow_recursive !== undefined
-            ? { allowRecursive: this.params.allow_recursive }
-            : undefined,
+          run:
+            this.params.allow_recursive !== undefined
+              ? { allowRecursive: this.params.allow_recursive }
+              : undefined,
         };
         const templateRuntimeProfile = template
           ? runtimeProfileFromTemplate(template)
@@ -424,7 +437,10 @@ class LaunchTaskInvocation extends BaseToolInvocation<
             `Action value is too long (${actionValue.length} characters). Maximum is 10000 characters.`,
           );
         }
-        if (actionType === "slash_command" && finalExecutionMode !== "in_process") {
+        if (
+          actionType === "slash_command" &&
+          finalExecutionMode !== "in_process"
+        ) {
           throw new Error(
             'slash_command action_type requires execution_mode="in_process".',
           );
@@ -432,18 +448,24 @@ class LaunchTaskInvocation extends BaseToolInvocation<
 
         const returnToSessionId =
           typeof this.params.return_to_session_id === "string" &&
-            this.params.return_to_session_id.trim().length > 0
+          this.params.return_to_session_id.trim().length > 0
             ? this.params.return_to_session_id.trim()
             : this.sourceSessionId;
         const idempotencyKey =
           typeof this.params.idempotency_key === "string" &&
-            this.params.idempotency_key.trim().length > 0
+          this.params.idempotency_key.trim().length > 0
             ? this.params.idempotency_key.trim()
             : undefined;
         await reconcileLaunchTaskState(runtime.workspaceRoot);
 
-        const existingTaskById = await getLaunchTaskState(runtime.workspaceRoot, id);
-        if (existingTaskById && !isLaunchTaskTerminal(existingTaskById.status)) {
+        const existingTaskById = await getLaunchTaskState(
+          runtime.workspaceRoot,
+          id,
+        );
+        if (
+          existingTaskById &&
+          !isLaunchTaskTerminal(existingTaskById.status)
+        ) {
           return this.formatExistingTask(
             existingTaskById,
             `Task "${id}" is already ${existingTaskById.status}. Reusing existing task handle.`,
@@ -465,23 +487,27 @@ class LaunchTaskInvocation extends BaseToolInvocation<
         }
 
         const initialRequestedMode = finalExecutionMode;
-        await upsertLaunchTaskState(runtime.workspaceRoot, id, (_current, nowIso) => ({
-          task_id: id,
-          status: "queued",
-          created_at: nowIso,
-          last_heartbeat: nowIso,
-          prompt_preview: actionValue.trim().slice(0, 400),
-          parent_session_id: returnToSessionId,
-          source_session_id: this.sourceSessionId,
-          dedupe_key: idempotencyKey,
-          template_id: template?.id,
-          template_level: template?.level,
-          execution_mode_requested: initialRequestedMode,
-          execution_mode_actual: initialRequestedMode,
-          model_requested: mergedRuntimeProfile.model?.name,
-          auth_requested: mergedRuntimeProfile.auth,
-          runtime_profile: sanitizeRuntimeProfile(mergedRuntimeProfile),
-        }));
+        await upsertLaunchTaskState(
+          runtime.workspaceRoot,
+          id,
+          (_current, nowIso) => ({
+            task_id: id,
+            status: "queued",
+            created_at: nowIso,
+            last_heartbeat: nowIso,
+            prompt_preview: actionValue.trim().slice(0, 400),
+            parent_session_id: returnToSessionId,
+            source_session_id: this.sourceSessionId,
+            dedupe_key: idempotencyKey,
+            template_id: template?.id,
+            template_level: template?.level,
+            execution_mode_requested: initialRequestedMode,
+            execution_mode_actual: initialRequestedMode,
+            model_requested: mergedRuntimeProfile.model?.name,
+            auth_requested: mergedRuntimeProfile.auth,
+            runtime_profile: sanitizeRuntimeProfile(mergedRuntimeProfile),
+          }),
+        );
 
         // Launch the new LowCal instance
         let launchResult: LaunchResult;
@@ -508,9 +534,12 @@ class LaunchTaskInvocation extends BaseToolInvocation<
               started_at: current?.started_at,
               finished_at: nowIso,
               last_heartbeat: nowIso,
-              prompt_preview: current?.prompt_preview ?? actionValue.trim().slice(0, 400),
-              parent_session_id: current?.parent_session_id ?? returnToSessionId,
-              source_session_id: current?.source_session_id ?? this.sourceSessionId,
+              prompt_preview:
+                current?.prompt_preview ?? actionValue.trim().slice(0, 400),
+              parent_session_id:
+                current?.parent_session_id ?? returnToSessionId,
+              source_session_id:
+                current?.source_session_id ?? this.sourceSessionId,
               dedupe_key: current?.dedupe_key ?? idempotencyKey,
               template_id: current?.template_id ?? template?.id,
               template_level: current?.template_level ?? template?.level,
@@ -527,7 +556,8 @@ class LaunchTaskInvocation extends BaseToolInvocation<
               auth_requested:
                 current?.auth_requested ?? mergedRuntimeProfile.auth,
               runtime_profile:
-                current?.runtime_profile ?? sanitizeRuntimeProfile(mergedRuntimeProfile),
+                current?.runtime_profile ??
+                sanitizeRuntimeProfile(mergedRuntimeProfile),
               result_ref: current?.result_ref,
               last_error: errorMessage,
               pid: current?.pid,
@@ -536,46 +566,57 @@ class LaunchTaskInvocation extends BaseToolInvocation<
           );
           throw error;
         }
-        await upsertLaunchTaskState(runtime.workspaceRoot, id, (current, nowIso) => ({
-          task_id: id,
-          status: "running",
-          created_at: current?.created_at ?? nowIso,
-          started_at: current?.started_at ?? nowIso,
-          last_heartbeat: nowIso,
-          prompt_preview: current?.prompt_preview ?? actionValue.trim().slice(0, 400),
-          parent_session_id: current?.parent_session_id ?? returnToSessionId,
-          source_session_id: current?.source_session_id ?? this.sourceSessionId,
-          dedupe_key: current?.dedupe_key ?? idempotencyKey,
-          template_id: current?.template_id ?? template?.id,
-          template_level: current?.template_level ?? template?.level,
-          execution_mode_requested:
-            current?.execution_mode_requested ??
-            finalExecutionMode ??
-            resolvedExecutionMode,
-          execution_mode_actual: launchResult.actualMode,
-          model_requested: current?.model_requested ?? mergedRuntimeProfile.model?.name,
-          model_actual:
-            launchResult.runtimeProfile?.model?.name ??
-            current?.model_actual ??
-            mergedRuntimeProfile.model?.name,
-          auth_requested: current?.auth_requested ?? mergedRuntimeProfile.auth,
-          auth_actual:
-            launchResult.runtimeProfile?.auth ??
-            current?.auth_actual ??
-            mergedRuntimeProfile.auth,
-          runtime_profile:
-            current?.runtime_profile ?? sanitizeRuntimeProfile(mergedRuntimeProfile),
-          result_ref: {
-            mailbox_path:
-              launchResult.returnMailboxPath ?? current?.result_ref?.mailbox_path,
-            output_path: launchResult.logPath ?? current?.result_ref?.output_path,
-            child_session_id: current?.result_ref?.child_session_id,
-            message_timestamp: current?.result_ref?.message_timestamp,
-          },
-          last_error: undefined,
-          pid: launchResult.pid ?? current?.pid,
-          tab_name: launchResult.tabName ?? current?.tab_name,
-        }));
+        await upsertLaunchTaskState(
+          runtime.workspaceRoot,
+          id,
+          (current, nowIso) => ({
+            task_id: id,
+            status: "running",
+            created_at: current?.created_at ?? nowIso,
+            started_at: current?.started_at ?? nowIso,
+            last_heartbeat: nowIso,
+            prompt_preview:
+              current?.prompt_preview ?? actionValue.trim().slice(0, 400),
+            parent_session_id: current?.parent_session_id ?? returnToSessionId,
+            source_session_id:
+              current?.source_session_id ?? this.sourceSessionId,
+            dedupe_key: current?.dedupe_key ?? idempotencyKey,
+            template_id: current?.template_id ?? template?.id,
+            template_level: current?.template_level ?? template?.level,
+            execution_mode_requested:
+              current?.execution_mode_requested ??
+              finalExecutionMode ??
+              resolvedExecutionMode,
+            execution_mode_actual: launchResult.actualMode,
+            model_requested:
+              current?.model_requested ?? mergedRuntimeProfile.model?.name,
+            model_actual:
+              launchResult.runtimeProfile?.model?.name ??
+              current?.model_actual ??
+              mergedRuntimeProfile.model?.name,
+            auth_requested:
+              current?.auth_requested ?? mergedRuntimeProfile.auth,
+            auth_actual:
+              launchResult.runtimeProfile?.auth ??
+              current?.auth_actual ??
+              mergedRuntimeProfile.auth,
+            runtime_profile:
+              current?.runtime_profile ??
+              sanitizeRuntimeProfile(mergedRuntimeProfile),
+            result_ref: {
+              mailbox_path:
+                launchResult.returnMailboxPath ??
+                current?.result_ref?.mailbox_path,
+              output_path:
+                launchResult.logPath ?? current?.result_ref?.output_path,
+              child_session_id: current?.result_ref?.child_session_id,
+              message_timestamp: current?.result_ref?.message_timestamp,
+            },
+            last_error: undefined,
+            pid: launchResult.pid ?? current?.pid,
+            tab_name: launchResult.tabName ?? current?.tab_name,
+          }),
+        );
         const modeIgnoredWarning =
           execution_mode &&
           execution_mode !== "default" &&
@@ -585,7 +626,7 @@ class LaunchTaskInvocation extends BaseToolInvocation<
         const warning =
           launchResult.warning && modeIgnoredWarning
             ? `${launchResult.warning} ${modeIgnoredWarning}`
-            : launchResult.warning ?? modeIgnoredWarning;
+            : (launchResult.warning ?? modeIgnoredWarning);
         const resultWithWarnings =
           warning !== launchResult.warning
             ? { ...launchResult, warning }
@@ -607,21 +648,28 @@ class LaunchTaskInvocation extends BaseToolInvocation<
   private async resolveRuntimePaths(): Promise<RuntimePaths> {
     const moduleDir = path.dirname(fileURLToPath(import.meta.url));
     const cwd = process.cwd();
-    const envRoot = process.env["LOWCAL_SCHEDULER_CWD"];
+    const envRoot = process.env["LOWCAL_SCHEDULER_CWD"]?.trim();
+    const entryScriptPath = process.argv[1]?.trim();
+    const entryScriptDir = entryScriptPath
+      ? path.dirname(path.resolve(entryScriptPath))
+      : undefined;
+    const workspaceRoot = envRoot && envRoot.length > 0 ? envRoot : cwd;
 
-    const candidateRoots = [
-      envRoot,
-      cwd,
-      path.resolve(moduleDir, "..", "..", "..", "..", ".."),
-      path.resolve(moduleDir, "..", "..", "..", ".."),
-    ].filter((value): value is string => Boolean(value));
+    const candidateRoots = Array.from(
+      new Set([
+        ...(envRoot ? collectAncestorDirectories(envRoot) : []),
+        ...collectAncestorDirectories(cwd),
+        ...(entryScriptDir ? collectAncestorDirectories(entryScriptDir) : []),
+        ...collectAncestorDirectories(moduleDir),
+      ]),
+    );
 
     for (const root of candidateRoots) {
       const cliPath = path.join(root, HEADLESS_CLI_RELATIVE_PATH);
       try {
         await fs.access(cliPath);
         return {
-          workspaceRoot: root,
+          workspaceRoot,
           cliPath,
         };
       } catch {
@@ -630,7 +678,7 @@ class LaunchTaskInvocation extends BaseToolInvocation<
     }
 
     throw new Error(
-      `Unable to locate headless runtime at ${HEADLESS_CLI_RELATIVE_PATH}. Current cwd: ${cwd}`,
+      `Unable to locate headless runtime at ${HEADLESS_CLI_RELATIVE_PATH}. Current cwd: ${cwd}. Searched roots: ${candidateRoots.join(", ")}`,
     );
   }
 
@@ -644,7 +692,8 @@ class LaunchTaskInvocation extends BaseToolInvocation<
     runtimeProfile?: TaskRuntimeProfile,
   ): Promise<LaunchResult> {
     const returnMailboxPath =
-      typeof returnToSessionId === "string" && returnToSessionId.trim().length > 0
+      typeof returnToSessionId === "string" &&
+      returnToSessionId.trim().length > 0
         ? path.join(
             runtime.workspaceRoot,
             ".lowcal",
@@ -665,7 +714,9 @@ class LaunchTaskInvocation extends BaseToolInvocation<
     }
 
     if (actionType === "slash_command") {
-      throw new Error('slash_command actions are only supported in "in_process" mode.');
+      throw new Error(
+        'slash_command actions are only supported in "in_process" mode.',
+      );
     }
 
     if (executionMode === "zellij_tab") {
@@ -916,9 +967,12 @@ class LaunchTaskInvocation extends BaseToolInvocation<
     }
     return {
       accepted,
-      reason: typeof record["reason"] === "string" ? record["reason"] : undefined,
+      reason:
+        typeof record["reason"] === "string" ? record["reason"] : undefined,
       action_id:
-        typeof record["action_id"] === "string" ? record["action_id"] : undefined,
+        typeof record["action_id"] === "string"
+          ? record["action_id"]
+          : undefined,
     };
   }
 
@@ -1066,14 +1120,16 @@ class LaunchTaskInvocation extends BaseToolInvocation<
       child.on("close", (code) => {
         const output = `${stdout}\n${stderr}`.trim();
         const missingSessionOutput =
-          output.includes("Please specify the session name to send actions to") ||
-          output.includes("No active zellij session found");
+          output.includes(
+            "Please specify the session name to send actions to",
+          ) || output.includes("No active zellij session found");
         if (code === 0 && !missingSessionOutput) {
           resolve();
         } else {
           reject(
             new Error(
-              output || `zellij command failed with exit code ${code ?? "unknown"}`,
+              output ||
+                `zellij command failed with exit code ${code ?? "unknown"}`,
             ),
           );
         }
@@ -1117,8 +1173,7 @@ class LaunchTaskInvocation extends BaseToolInvocation<
     if (existing.last_error) {
       output += `Last error: ${existing.last_error}\n`;
     }
-    output +=
-      `\nUse read_session_messages (action: "wait" or "pull") to receive completion updates.\nTask state is tracked in .lowcal/launch-task-state.json.`;
+    output += `\nUse read_session_messages (action: "wait" or "pull") to receive completion updates.\nTask state is tracked in .lowcal/launch-task-state.json.`;
     return output;
   }
 
@@ -1157,15 +1212,15 @@ class LaunchTaskInvocation extends BaseToolInvocation<
     output += `\nPrompt:\n${prompt}\n\n`;
     output += `The task is running in the background. `;
     if (result?.returnToSessionId) {
-      output +=
-        `Use read_session_messages (action: "wait" or "pull") to receive its completion message. `;
+      output += `Use read_session_messages (action: "wait" or "pull") to receive its completion message. `;
     }
     output += `Task state is tracked in .lowcal/launch-task-state.json. `;
-    output += actualMode === "headless"
-      ? `Debug logs are available at .lowcal/launch-tasks/${id}.json`
-      : actualMode === "zellij_tab"
-        ? `Check your Zellij tab for progress.`
-        : `Task was queued in-process and will run in the target interactive session.`;
+    output +=
+      actualMode === "headless"
+        ? `Debug logs are available at .lowcal/launch-tasks/${id}.json`
+        : actualMode === "zellij_tab"
+          ? `Check your Zellij tab for progress.`
+          : `Task was queued in-process and will run in the target interactive session.`;
     return output;
   }
 }

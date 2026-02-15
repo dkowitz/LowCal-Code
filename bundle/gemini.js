@@ -73845,7 +73845,7 @@ You are LowCal Code, an interactive CLI agent derived from the Qwen Code and Gem
 - **Proactiveness:** Fulfill the user's request thoroughly, including reasonable, directly implied follow-up actions.
 - **Confirm Ambiguity/Expansion:** Do not take significant actions beyond the clear scope of the request without confirming with the user. If asked *how* to do something, explain first, don't just do it.
 - **Explaining Changes:** After completing a code modification or file operation *do not* provide summaries unless asked.
-- **Path Construction:** Before using any file system tool (e.g., ${ToolNames.READ_FILE}' or '${ToolNames.WRITE_FILE}'), you must construct the full absolute path for the file_path argument. Always combine the absolute path of the project's root directory with the file's path relative to the root. For example, if the project root is /path/to/project/ and the file is foo/bar/baz.txt, the final path you must use is /path/to/project/foo/bar/baz.txt. If the user provides a relative path, you must resolve it against the root directory to create an absolute path.
+- **Path Construction:** Before using any file system tool (e.g., ${ToolNames.READ_FILE}, ${ToolNames.WRITE_FILE}, ${ToolNames.EDIT}), you must construct the full absolute path for the tool's path argument (${ToolNames.READ_FILE}: \`absolute_path\`; ${ToolNames.WRITE_FILE}/${ToolNames.EDIT}: \`file_path\`). Always combine the absolute path of the project's root directory with the file's path relative to the root. For example, if the project root is /path/to/project/ and the file is foo/bar/baz.txt, the final path you must use is /path/to/project/foo/bar/baz.txt. If the user provides a relative path, you must resolve it against the root directory to create an absolute path.
 - **Do Not revert changes:** Do not revert changes to the codebase unless asked to do so by the user. Only revert changes made by you if they have resulted in an error or if the user has explicitly asked you to revert the changes.
 
 # Task Management
@@ -74311,11 +74311,11 @@ user: Refactor the auth logic in src/auth.py to use the requests library instead
 model: Okay, I can refactor 'src/auth.py'.
 First, I'll analyze the code and check for a test safety net before planning any changes.
 [tool_call: ${ToolNames.GLOB} for path 'tests/test_auth.py']
-[tool_call: ${ToolNames.READ_FILE} for path '/path/to/tests/test_auth.py' with offset 0 and limit 10]
+[tool_call: ${ToolNames.READ_FILE} for absolute_path '/path/to/tests/test_auth.py' with offset 0 and limit 10]
 (After analysis)
 Great, 'tests/test_auth.py' exists and covers the core authentication logic. With this safety net in place, I can safely plan the refactoring.
 I'll also confirm 'requests' is a dependency.
-[tool_call: ${ToolNames.READ_FILE} for path '/path/to/requirements.txt']
+[tool_call: ${ToolNames.READ_FILE} for absolute_path '/path/to/requirements.txt']
 (After analysis)
 Looks good, 'requests' is available.
 
@@ -74325,7 +74325,7 @@ Here's the plan:
 3.  Remove the old 'urllib' import.
 4.  Run the project's linter and tests to verify the changes.
 
-[tool_call: ${ToolNames.EDIT} for path 'src/auth.py' replacing old content with new content]
+[tool_call: ${ToolNames.EDIT} for file_path '/path/to/src/auth.py' replacing old_string with new_string]
 Refactoring complete. Running verification...
 [tool_call: ${ToolNames.SHELL} for 'ruff check src/auth.py && pytest']
 (After verification passes)
@@ -74342,11 +74342,11 @@ model: I can run \`rm -rf /path/to/project/temp\`. This will permanently delete 
 user: Write tests for someFile.ts
 model:
 Okay, I can write those tests. First, I'll read someFile.ts to understand its functionality.
-[tool_call: ${ToolNames.READ_FILE} for path '/path/to/someFile.ts']
+[tool_call: ${ToolNames.READ_FILE} for absolute_path '/path/to/someFile.ts']
 Now I'll look for existing or related test files to understand current testing conventions and dependencies.
 [tool_call: ${ToolNames.READ_MANY_FILES} for paths ['**/*.test.ts', 'src/**/*.spec.ts']]
 (After reviewing existing tests and the file content)
-[tool_call: ${ToolNames.WRITE_FILE} for path '/path/to/someFile.test.ts']
+[tool_call: ${ToolNames.WRITE_FILE} for file_path '/path/to/someFile.test.ts']
 I've written the tests. Now I'll run the project's test command to verify them.
 [tool_call: ${ToolNames.SHELL} for 'npm run test']
 (After verification passes)
@@ -74394,14 +74394,14 @@ model: Okay, I can refactor 'src/auth.py'.
 First, I'll analyze the code and check for a test safety net before planning any changes.
 <tool_call>
 <function=${ToolNames.GLOB}>
-<parameter=path>
+<parameter=pattern>
 tests/test_auth.py
 </parameter>
 </function>
 </tool_call>
 <tool_call>
 <function=${ToolNames.READ_FILE}>
-<parameter=path>
+<parameter=absolute_path>
 /path/to/tests/test_auth.py
 </parameter>
 <parameter=offset>
@@ -74417,7 +74417,7 @@ Great, 'tests/test_auth.py' exists and covers the core authentication logic. Wit
 I'll also confirm 'requests' is a dependency.
 <tool_call>
 <function=${ToolNames.READ_FILE}>
-<parameter=path>
+<parameter=absolute_path>
 /path/to/requirements.txt
 </parameter>
 </function>
@@ -74433,13 +74433,13 @@ Here's the plan:
 
 <tool_call>
 <function=${ToolNames.EDIT}>
-<parameter=path>
-src/auth.py
+<parameter=file_path>
+/path/to/src/auth.py
 </parameter>
-<parameter=old_content>
+<parameter=old_string>
 (old code content)
 </parameter>
-<parameter=new_content>
+<parameter=new_string>
 (new code content)
 </parameter>
 </function>
@@ -74468,7 +74468,7 @@ model:
 Okay, I can write those tests. First, I'll read someFile.ts to understand its functionality.
 <tool_call>
 <function=${ToolNames.READ_FILE}>
-<parameter=path>
+<parameter=absolute_path>
 /path/to/someFile.ts
 </parameter>
 </function>
@@ -74484,7 +74484,7 @@ Now I'll look for existing or related test files to understand current testing c
 (After reviewing existing tests and the file content)
 <tool_call>
 <function=${ToolNames.WRITE_FILE}>
-<parameter=path>
+<parameter=file_path>
 /path/to/someFile.test.ts
 </parameter>
 </function>
@@ -74543,16 +74543,16 @@ user: Refactor the auth logic in src/auth.py to use the requests library instead
 model: Okay, I can refactor 'src/auth.py'.
 First, I'll analyze the code and check for a test safety net before planning any changes.
 <tool_call>
-{"name": "${ToolNames.GLOB}", "arguments": {"path": "tests/test_auth.py"}}
+{"name": "${ToolNames.GLOB}", "arguments": {"pattern": "tests/test_auth.py"}}
 </tool_call>
 <tool_call>
-{"name": "${ToolNames.READ_FILE}", "arguments": {"path": "/path/to/tests/test_auth.py", "offset": 0, "limit": 10}}
+{"name": "${ToolNames.READ_FILE}", "arguments": {"absolute_path": "/path/to/tests/test_auth.py", "offset": 0, "limit": 10}}
 </tool_call>
 (After analysis)
 Great, 'tests/test_auth.py' exists and covers the core authentication logic. With this safety net in place, I can safely plan the refactoring.
 I'll also confirm 'requests' is a dependency.
 <tool_call>
-{"name": "${ToolNames.READ_FILE}", "arguments": {"path": "/path/to/requirements.txt"}}
+{"name": "${ToolNames.READ_FILE}", "arguments": {"absolute_path": "/path/to/requirements.txt"}}
 </tool_call>
 (After analysis)
 Looks good, 'requests' is available.
@@ -74564,7 +74564,7 @@ Here's the plan:
 4.  Run the project's linter and tests to verify the changes.
 
 <tool_call>
-{"name": "${ToolNames.EDIT}", "arguments": {"path": "src/auth.py", "old_content": "(old code content)", "new_content": "(new code content)"}}
+{"name": "${ToolNames.EDIT}", "arguments": {"file_path": "/path/to/src/auth.py", "old_string": "(old code content)", "new_string": "(new code content)"}}
 </tool_call>
 Refactoring complete. Running verification...
 <tool_call>
@@ -74585,7 +74585,7 @@ user: Write tests for someFile.ts
 model:
 Okay, I can write those tests. First, I'll read someFile.ts to understand its functionality.
 <tool_call>
-{"name": "${ToolNames.READ_FILE}", "arguments": {"path": "/path/to/someFile.ts"}}
+{"name": "${ToolNames.READ_FILE}", "arguments": {"absolute_path": "/path/to/someFile.ts"}}
 </tool_call>
 Now I'll look for existing or related test files to understand current testing conventions and dependencies.
 <tool_call>
@@ -74593,7 +74593,7 @@ Now I'll look for existing or related test files to understand current testing c
 </tool_call>
 (After reviewing existing tests and the file content)
 <tool_call>
-{"name": "${ToolNames.WRITE_FILE}", "arguments": {"path": "/path/to/someFile.test.ts"}}
+{"name": "${ToolNames.WRITE_FILE}", "arguments": {"file_path": "/path/to/someFile.test.ts"}}
 </tool_call>
 I've written the tests. Now I'll run the project's test command to verify them.
 <tool_call>
@@ -91102,42 +91102,84 @@ var init_converter2 = __esm({
         }
         const buffer = (this.streamingXmlToolCallBuffers.get(index) ?? "") + chunkText;
         const toolCalls = [];
-        const invokeRegex = /<invoke\b[^>]*>([\s\S]*?)<\/invoke>/g;
-        let sanitized = "";
-        let lastIndex = 0;
-        let match2;
-        while ((match2 = invokeRegex.exec(buffer)) !== null) {
-          const invokeStart = match2.index;
-          sanitized += buffer.slice(lastIndex, invokeStart);
-          const invokeBlock = buffer.slice(invokeStart, invokeRegex.lastIndex);
-          const parsed = this.parseInvokeBlock(invokeBlock);
+        const { blocks: toolCallBlocks, remainingText: withoutToolCallBlocks } = this.extractCompleteTagBlocks(buffer, "tool_call");
+        for (const block2 of toolCallBlocks) {
+          const parsed = this.parseToolCallBlock(block2);
           if (parsed) {
             toolCalls.push(parsed);
           }
-          lastIndex = invokeRegex.lastIndex;
         }
-        sanitized += buffer.slice(lastIndex);
-        const lastOpenInvoke = sanitized.lastIndexOf("<invoke");
-        const lastCloseInvoke = sanitized.lastIndexOf("</invoke>");
-        if (lastOpenInvoke > lastCloseInvoke) {
-          this.streamingXmlToolCallBuffers.set(index, sanitized.slice(lastOpenInvoke));
-          sanitized = sanitized.slice(0, lastOpenInvoke);
+        const { blocks: invokeBlocks, remainingText: withoutInvokeBlocks } = this.extractCompleteTagBlocks(withoutToolCallBlocks, "invoke");
+        for (const block2 of invokeBlocks) {
+          const parsed = this.parseInvokeBlock(block2);
+          if (parsed) {
+            toolCalls.push(parsed);
+          }
+        }
+        let sanitized = withoutInvokeBlocks;
+        const trailingOpenTagIndex = this.findTrailingOpenTagIndex(sanitized, [
+          "tool_call",
+          "invoke"
+        ]);
+        if (trailingOpenTagIndex >= 0) {
+          this.streamingXmlToolCallBuffers.set(index, sanitized.slice(trailingOpenTagIndex));
+          sanitized = sanitized.slice(0, trailingOpenTagIndex);
         } else {
           this.streamingXmlToolCallBuffers.delete(index);
         }
-        sanitized = sanitized.replace(/<\/?tool_call\b[^>]*>/g, "").replace(/<\/?parameter\b[^>]*>/g, "").replace(/<\/?invoke\b[^>]*>/g, "");
         return {
-          text: sanitized,
+          text: this.stripStrayToolCallMarkup(sanitized),
           toolCalls
         };
       }
+      extractCompleteTagBlocks(input, tagName) {
+        const regex2 = new RegExp(`<${tagName}\\b[^>]*>[\\s\\S]*?<\\/${tagName}>`, "gi");
+        const blocks = [];
+        let remainingText = "";
+        let lastIndex = 0;
+        let match2;
+        while ((match2 = regex2.exec(input)) !== null) {
+          remainingText += input.slice(lastIndex, match2.index);
+          blocks.push(match2[0]);
+          lastIndex = regex2.lastIndex;
+        }
+        remainingText += input.slice(lastIndex);
+        return { blocks, remainingText };
+      }
+      findTrailingOpenTagIndex(input, tags) {
+        let trailingIndex = -1;
+        for (const tag2 of tags) {
+          const openIndex = input.lastIndexOf(`<${tag2}`);
+          const closeIndex = input.lastIndexOf(`</${tag2}>`);
+          if (openIndex > closeIndex) {
+            trailingIndex = Math.max(trailingIndex, openIndex);
+          }
+        }
+        return trailingIndex;
+      }
+      stripStrayToolCallMarkup(text) {
+        return text.replace(/<\/?tool_call\b[^>]*>/gi, "").replace(/<\/?invoke\b[^>]*>/gi, "").replace(/<\/?function\b[^>]*>/gi, "").replace(/<function=[^>]*>/gi, "").replace(/<\/?parameter\b[^>]*>/gi, "").replace(/<parameter=[^>]*>/gi, "");
+      }
+      parseToolCallBlock(block2) {
+        const inner = block2.replace(/^<tool_call\b[^>]*>/i, "").replace(/<\/tool_call>\s*$/i, "").trim();
+        if (!inner) {
+          return null;
+        }
+        if (/<invoke\b/i.test(inner)) {
+          return this.parseInvokeBlock(inner);
+        }
+        if (/<function=/i.test(inner)) {
+          return this.parseFunctionBlock(inner);
+        }
+        return this.parseJsonToolCallBlock(inner);
+      }
       parseInvokeBlock(block2) {
-        const nameMatch = block2.match(/<invoke\b[^>]*name="([^"]+)"[^>]*>/);
+        const nameMatch = block2.match(/<invoke\b[^>]*name="([^"]+)"[^>]*>/i);
         if (!nameMatch) {
           return null;
         }
         const params = {};
-        const paramRegex = /<parameter\b[^>]*name="([^"]+)"[^>]*>([\s\S]*?)<\/parameter>/g;
+        const paramRegex = /<parameter\b[^>]*name="([^"]+)"[^>]*>([\s\S]*?)<\/parameter>/gi;
         let paramMatch;
         while ((paramMatch = paramRegex.exec(block2)) !== null) {
           const paramName = paramMatch[1].trim();
@@ -91149,6 +91191,63 @@ var init_converter2 = __esm({
           name: nameMatch[1],
           args: params
         };
+      }
+      parseFunctionBlock(block2) {
+        const nameMatch = block2.match(/<function=([^>\s]+)>/i);
+        if (!nameMatch) {
+          return null;
+        }
+        const params = {};
+        const paramRegex = /<parameter=([^>\s]+)>([\s\S]*?)<\/parameter>/gi;
+        let paramMatch;
+        while ((paramMatch = paramRegex.exec(block2)) !== null) {
+          const paramName = paramMatch[1].trim();
+          const paramValue = this.parseParameterValue(paramMatch[2]);
+          params[paramName] = paramValue;
+        }
+        return {
+          id: this.generateToolCallId(nameMatch[1]),
+          name: nameMatch[1],
+          args: params
+        };
+      }
+      parseJsonToolCallBlock(block2) {
+        const jsonCandidate = block2.replace(/^```json\s*/i, "").replace(/^```\s*/i, "").replace(/\s*```$/i, "").trim();
+        if (!(jsonCandidate.startsWith("{") && jsonCandidate.endsWith("}")) && !(jsonCandidate.startsWith("[") && jsonCandidate.endsWith("]"))) {
+          return null;
+        }
+        let parsed;
+        try {
+          parsed = JSON.parse(jsonCandidate);
+        } catch {
+          return null;
+        }
+        if (!this.isRecord(parsed)) {
+          return null;
+        }
+        const parsedName = parsed["name"];
+        const name2 = typeof parsedName === "string" ? parsedName.trim() : "";
+        if (!name2) {
+          return null;
+        }
+        let args = {};
+        const parsedArguments = parsed["arguments"];
+        if (this.isRecord(parsedArguments)) {
+          args = parsedArguments;
+        } else if (typeof parsedArguments === "string") {
+          const parsedArgs = safeJsonParse(parsedArguments, {});
+          if (this.isRecord(parsedArgs)) {
+            args = parsedArgs;
+          }
+        }
+        return {
+          id: this.generateToolCallId(name2),
+          name: name2,
+          args
+        };
+      }
+      isRecord(value) {
+        return typeof value === "object" && value !== null && !Array.isArray(value);
       }
       parseParameterValue(value) {
         const trimmed2 = value.trim();
@@ -146482,6 +146581,64 @@ function toParts2(input) {
   }
   return parts;
 }
+function isRecord(value) {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
+function normalizeLegacyToolArgs(toolName, args) {
+  if (!isRecord(args)) {
+    return {};
+  }
+  const normalized2 = { ...args };
+  switch (toolName) {
+    case "read_file": {
+      if (typeof normalized2["absolute_path"] !== "string" || normalized2["absolute_path"].length === 0) {
+        if (typeof normalized2["path"] === "string" && normalized2["path"].length > 0) {
+          normalized2["absolute_path"] = normalized2["path"];
+        } else if (typeof normalized2["file_path"] === "string" && normalized2["file_path"].length > 0) {
+          normalized2["absolute_path"] = normalized2["file_path"];
+        }
+      }
+      break;
+    }
+    case "write_file": {
+      if (typeof normalized2["file_path"] !== "string" || normalized2["file_path"].length === 0) {
+        if (typeof normalized2["path"] === "string" && normalized2["path"].length > 0) {
+          normalized2["file_path"] = normalized2["path"];
+        } else if (typeof normalized2["absolute_path"] === "string" && normalized2["absolute_path"].length > 0) {
+          normalized2["file_path"] = normalized2["absolute_path"];
+        }
+      }
+      break;
+    }
+    case "edit": {
+      if (typeof normalized2["file_path"] !== "string" || normalized2["file_path"].length === 0) {
+        if (typeof normalized2["path"] === "string" && normalized2["path"].length > 0) {
+          normalized2["file_path"] = normalized2["path"];
+        } else if (typeof normalized2["absolute_path"] === "string" && normalized2["absolute_path"].length > 0) {
+          normalized2["file_path"] = normalized2["absolute_path"];
+        }
+      }
+      if (typeof normalized2["old_string"] !== "string" && typeof normalized2["old_content"] === "string") {
+        normalized2["old_string"] = normalized2["old_content"];
+      }
+      if (typeof normalized2["new_string"] !== "string" && typeof normalized2["new_content"] === "string") {
+        normalized2["new_string"] = normalized2["new_content"];
+      }
+      break;
+    }
+    case "glob": {
+      if (typeof normalized2["pattern"] !== "string" || normalized2["pattern"].length === 0) {
+        if (typeof normalized2["path"] === "string" && normalized2["path"].length > 0) {
+          normalized2["pattern"] = normalized2["path"];
+        }
+      }
+      break;
+    }
+    default:
+      break;
+  }
+  return normalized2;
+}
 function getActiveToolCollectionGate() {
   const activeCollection = toolConfig?.activeCollection;
   if (!activeCollection) {
@@ -146679,23 +146836,24 @@ var init_coreToolScheduler = __esm({
           if (call.request.callId !== targetCallId || call.status === "error") {
             return call;
           }
-          const invocationOrError = this.buildInvocation(call.tool, args);
+          const normalizedArgs = normalizeLegacyToolArgs(call.request.name, args);
+          const invocationOrError = this.buildInvocation(call.tool, normalizedArgs);
           if (invocationOrError instanceof Error) {
             const response = createErrorResponse(call.request, invocationOrError, ToolErrorType.INVALID_TOOL_PARAMS);
             return {
-              request: { ...call.request, args },
+              request: { ...call.request, args: normalizedArgs },
               status: "error",
               tool: call.tool,
               response
             };
           }
-          const warning = validateToolCall(call.request.name, args);
+          const warning = validateToolCall(call.request.name, normalizedArgs);
           if (warning && warning.severity !== "info") {
             console.warn(`[Tool Validation] ${formatToolWarning(warning)}`);
           }
           return {
             ...call,
-            request: { ...call.request, args },
+            request: { ...call.request, args: normalizedArgs },
             invocation: invocationOrError
           };
         });
@@ -146800,19 +146958,21 @@ var init_coreToolScheduler = __esm({
                 durationMs: 0
               };
             }
-            const invocationOrError = this.buildInvocation(toolInstance, reqInfo.args);
+            const normalizedArgs = normalizeLegacyToolArgs(normalizedToolName, reqInfo.args);
+            const normalizedRequest = { ...reqInfo, args: normalizedArgs };
+            const invocationOrError = this.buildInvocation(toolInstance, normalizedArgs);
             if (invocationOrError instanceof Error) {
               return {
                 status: "error",
-                request: reqInfo,
+                request: normalizedRequest,
                 tool: toolInstance,
-                response: createErrorResponse(reqInfo, invocationOrError, ToolErrorType.INVALID_TOOL_PARAMS),
+                response: createErrorResponse(normalizedRequest, invocationOrError, ToolErrorType.INVALID_TOOL_PARAMS),
                 durationMs: 0
               };
             }
             return {
               status: "validating",
-              request: reqInfo,
+              request: normalizedRequest,
               tool: toolInstance,
               invocation: invocationOrError,
               startTime: Date.now()
@@ -232770,7 +232930,7 @@ var init_job_store = __esm({
 });
 
 // packages/core/dist/src/task-templates/runtime.js
-function isRecord(value) {
+function isRecord2(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function asTrimmedString(value) {
@@ -232795,7 +232955,7 @@ function normalizeExecutionMode(value) {
   return void 0;
 }
 function normalizeAuthProfile(value) {
-  if (!isRecord(value))
+  if (!isRecord2(value))
     return void 0;
   const selectedType = asTrimmedString(value["selectedType"]);
   const providerId = asTrimmedString(value["providerId"]);
@@ -232807,7 +232967,7 @@ function normalizeAuthProfile(value) {
   return { selectedType, providerId, baseUrl, apiKeyEnvVar };
 }
 function normalizeModelProfile(value) {
-  if (!isRecord(value))
+  if (!isRecord2(value))
     return void 0;
   const name2 = asTrimmedString(value["name"]);
   if (!name2)
@@ -232815,7 +232975,7 @@ function normalizeModelProfile(value) {
   return { name: name2 };
 }
 function normalizeRunProfile(value) {
-  if (!isRecord(value))
+  if (!isRecord2(value))
     return void 0;
   const returnToSessionRaw = value["returnToSession"];
   const allowRecursiveRaw = value["allowRecursive"];
@@ -232827,7 +232987,7 @@ function normalizeRunProfile(value) {
   return { returnToSession, allowRecursive };
 }
 function normalizeRuntimeProfile(value) {
-  if (!isRecord(value))
+  if (!isRecord2(value))
     return {};
   return {
     template_id: asTrimmedString(value["template_id"]),
@@ -232907,7 +233067,7 @@ import * as fs35 from "node:fs/promises";
 import * as os18 from "node:os";
 import * as path38 from "node:path";
 import { fileURLToPath as fileURLToPath5 } from "node:url";
-function isRecord2(value) {
+function isRecord3(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function asString(value) {
@@ -232921,7 +233081,7 @@ function asStringArray2(value) {
   return parsed.length > 0 ? parsed : void 0;
 }
 function parseAction(value) {
-  if (!isRecord2(value))
+  if (!isRecord3(value))
     return void 0;
   const type = asString(value["type"]);
   const actionType = type === "prompt" || type === "slash_command" ? type : void 0;
@@ -232934,7 +233094,7 @@ function parseAction(value) {
   };
 }
 function parseExecution(value) {
-  if (!isRecord2(value))
+  if (!isRecord3(value))
     return void 0;
   const mode = asString(value["mode"]);
   if (mode !== "default" && mode !== "headless" && mode !== "zellij_tab" && mode !== "in_process") {
@@ -232943,7 +233103,7 @@ function parseExecution(value) {
   return { mode };
 }
 function parseAuth(value) {
-  if (!isRecord2(value))
+  if (!isRecord3(value))
     return void 0;
   const selectedType = asString(value["selectedType"]);
   const providerId = asString(value["providerId"]);
@@ -232960,7 +233120,7 @@ function parseAuth(value) {
   };
 }
 function parseModel(value) {
-  if (!isRecord2(value))
+  if (!isRecord3(value))
     return void 0;
   const name2 = asString(value["name"]);
   if (!name2)
@@ -232968,7 +233128,7 @@ function parseModel(value) {
   return { name: name2 };
 }
 function parseRun(value) {
-  if (!isRecord2(value))
+  if (!isRecord3(value))
     return void 0;
   const returnToSessionRaw = value["returnToSession"];
   const allowRecursiveRaw = value["allowRecursive"];
@@ -234322,6 +234482,19 @@ import * as fs38 from "fs/promises";
 import * as path41 from "node:path";
 import * as net2 from "node:net";
 import { fileURLToPath as fileURLToPath6 } from "node:url";
+function collectAncestorDirectories(start) {
+  const directories = [];
+  let current = path41.resolve(start);
+  while (true) {
+    directories.push(current);
+    const parent = path41.dirname(current);
+    if (parent === current) {
+      break;
+    }
+    current = parent;
+  }
+  return directories;
+}
 function isRunningInZellijSession() {
   return Boolean(process.env["ZELLIJ_SESSION_NAME"] || process.env["ZELLIJ_PANE_ID"] || process.env["ZELLIJ"]);
 }
@@ -234687,25 +234860,28 @@ create action:
       async resolveRuntimePaths() {
         const moduleDir = path41.dirname(fileURLToPath6(import.meta.url));
         const cwd8 = process.cwd();
-        const envRoot = process.env["LOWCAL_SCHEDULER_CWD"];
-        const candidateRoots = [
-          envRoot,
-          cwd8,
-          path41.resolve(moduleDir, "..", "..", "..", "..", ".."),
-          path41.resolve(moduleDir, "..", "..", "..", "..")
-        ].filter((value) => Boolean(value));
+        const envRoot = process.env["LOWCAL_SCHEDULER_CWD"]?.trim();
+        const entryScriptPath = process.argv[1]?.trim();
+        const entryScriptDir = entryScriptPath ? path41.dirname(path41.resolve(entryScriptPath)) : void 0;
+        const workspaceRoot = envRoot && envRoot.length > 0 ? envRoot : cwd8;
+        const candidateRoots = Array.from(/* @__PURE__ */ new Set([
+          ...envRoot ? collectAncestorDirectories(envRoot) : [],
+          ...collectAncestorDirectories(cwd8),
+          ...entryScriptDir ? collectAncestorDirectories(entryScriptDir) : [],
+          ...collectAncestorDirectories(moduleDir)
+        ]));
         for (const root2 of candidateRoots) {
           const cliPath = path41.join(root2, HEADLESS_CLI_RELATIVE_PATH);
           try {
             await fs38.access(cliPath);
             return {
-              workspaceRoot: root2,
+              workspaceRoot,
               cliPath
             };
           } catch {
           }
         }
-        throw new Error(`Unable to locate headless runtime at ${HEADLESS_CLI_RELATIVE_PATH}. Current cwd: ${cwd8}`);
+        throw new Error(`Unable to locate headless runtime at ${HEADLESS_CLI_RELATIVE_PATH}. Current cwd: ${cwd8}. Searched roots: ${candidateRoots.join(", ")}`);
       }
       async launchLowCalInstance(id, actionType, actionValue, executionMode, runtime, returnToSessionId, runtimeProfile) {
         const returnMailboxPath = typeof returnToSessionId === "string" && returnToSessionId.trim().length > 0 ? path41.join(runtime.workspaceRoot, ".lowcal", "session-messages", `${returnToSessionId.trim()}.jsonl`) : void 0;
@@ -235410,7 +235586,7 @@ ${body}`;
 });
 
 // packages/core/dist/src/tools/task-template.js
-function isRecord3(value) {
+function isRecord4(value) {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 function asString2(value) {
@@ -235423,7 +235599,7 @@ function parseTags(value) {
   return tags.length > 0 ? tags : void 0;
 }
 function parseAction2(value) {
-  if (!isRecord3(value))
+  if (!isRecord4(value))
     return void 0;
   const type = normalizeActionType(value["type"]);
   const actionValue = asString2(value["value"]);
@@ -235435,7 +235611,7 @@ function parseAction2(value) {
   };
 }
 function parseExecution2(value) {
-  if (!isRecord3(value))
+  if (!isRecord4(value))
     return void 0;
   const mode = normalizeExecutionMode(value["mode"]);
   if (!mode)
@@ -235443,7 +235619,7 @@ function parseExecution2(value) {
   return { mode };
 }
 function parseTemplatePatch(value) {
-  if (!isRecord3(value)) {
+  if (!isRecord4(value)) {
     return {};
   }
   const patch = {
@@ -267468,7 +267644,7 @@ var require_backend = __commonJS({
                     return function() {
                     };
                   },
-                  useCallback: function useCallback47(a) {
+                  useCallback: function useCallback48(a) {
                     var b = C();
                     x.push({
                       primitive: "Callback",
@@ -267550,7 +267726,7 @@ var require_backend = __commonJS({
                     return [b, function() {
                     }];
                   },
-                  useRef: function useRef19(a) {
+                  useRef: function useRef20(a) {
                     var b = C();
                     a = null !== b ? b.memoizedState : {
                       current: a
@@ -346725,15 +346901,22 @@ function KeypressProvider({
 // packages/cli/src/ui/hooks/useKeypress.ts
 function useKeypress(onKeypress, { isActive }) {
   const { subscribe, unsubscribe } = useKeypressContext();
+  const onKeypressRef = (0, import_react38.useRef)(onKeypress);
+  (0, import_react38.useEffect)(() => {
+    onKeypressRef.current = onKeypress;
+  }, [onKeypress]);
+  const stableHandler = (0, import_react38.useCallback)((key) => {
+    onKeypressRef.current(key);
+  }, []);
   (0, import_react38.useEffect)(() => {
     if (!isActive) {
       return;
     }
-    subscribe(onKeypress);
+    subscribe(stableHandler);
     return () => {
-      unsubscribe(onKeypress);
+      unsubscribe(stableHandler);
     };
-  }, [isActive, onKeypress, subscribe, unsubscribe]);
+  }, [isActive, stableHandler, subscribe, unsubscribe]);
 }
 
 // packages/cli/src/ui/components/shared/RadioButtonSelect.tsx
@@ -346751,10 +346934,24 @@ function RadioButtonSelect({
   const [activeIndex, setActiveIndex] = (0, import_react39.useState)(initialIndex);
   const [scrollOffset, setScrollOffset] = (0, import_react39.useState)(0);
   const [numberInput, setNumberInput] = (0, import_react39.useState)("");
+  const activeIndexRef = (0, import_react39.useRef)(initialIndex);
+  const numberInputRef = (0, import_react39.useRef)("");
   const numberInputTimer = (0, import_react39.useRef)(null);
+  (0, import_react39.useEffect)(() => {
+    activeIndexRef.current = activeIndex;
+  }, [activeIndex]);
+  (0, import_react39.useEffect)(() => {
+    numberInputRef.current = numberInput;
+  }, [numberInput]);
+  (0, import_react39.useEffect)(() => {
+    const boundedIndex = items.length === 0 ? 0 : Math.max(0, Math.min(initialIndex, items.length - 1));
+    setActiveIndex(boundedIndex);
+    activeIndexRef.current = boundedIndex;
+  }, [initialIndex, items.length]);
   (0, import_react39.useEffect)(() => {
     if (activeIndex >= items.length) {
       setActiveIndex(0);
+      activeIndexRef.current = 0;
     }
   }, [items, activeIndex]);
   (0, import_react39.useEffect)(() => {
@@ -346783,50 +346980,63 @@ function RadioButtonSelect({
       if (!isNumeric && numberInputTimer.current) {
         clearTimeout(numberInputTimer.current);
         setNumberInput("");
+        numberInputRef.current = "";
       }
       if (name2 === "k" || name2 === "up") {
-        const newIndex = activeIndex > 0 ? activeIndex - 1 : items.length - 1;
+        const currentIndex = activeIndexRef.current;
+        const newIndex = currentIndex > 0 ? currentIndex - 1 : items.length - 1;
         setActiveIndex(newIndex);
+        activeIndexRef.current = newIndex;
         onHighlight?.(items[newIndex].value);
         return;
       }
       if (name2 === "j" || name2 === "down") {
-        const newIndex = activeIndex < items.length - 1 ? activeIndex + 1 : 0;
+        const currentIndex = activeIndexRef.current;
+        const newIndex = currentIndex < items.length - 1 ? currentIndex + 1 : 0;
         setActiveIndex(newIndex);
+        activeIndexRef.current = newIndex;
         onHighlight?.(items[newIndex].value);
         return;
       }
       if (name2 === "return") {
-        onSelect(items[activeIndex].value);
+        onSelect(items[activeIndexRef.current].value);
         return;
       }
       if (isNumeric) {
         if (numberInputTimer.current) {
           clearTimeout(numberInputTimer.current);
         }
-        const newNumberInput = numberInput + sequence;
+        const newNumberInput = numberInputRef.current + sequence;
         setNumberInput(newNumberInput);
+        numberInputRef.current = newNumberInput;
         const targetIndex = Number.parseInt(newNumberInput, 10) - 1;
         if (newNumberInput === "0") {
-          numberInputTimer.current = setTimeout(() => setNumberInput(""), 350);
+          numberInputTimer.current = setTimeout(() => {
+            setNumberInput("");
+            numberInputRef.current = "";
+          }, 350);
           return;
         }
         if (targetIndex >= 0 && targetIndex < items.length) {
           const targetItem = items[targetIndex];
           setActiveIndex(targetIndex);
+          activeIndexRef.current = targetIndex;
           onHighlight?.(targetItem.value);
           const potentialNextNumber = Number.parseInt(newNumberInput + "0", 10);
           if (potentialNextNumber > items.length) {
             onSelect(targetItem.value);
             setNumberInput("");
+            numberInputRef.current = "";
           } else {
             numberInputTimer.current = setTimeout(() => {
               onSelect(targetItem.value);
               setNumberInput("");
+              numberInputRef.current = "";
             }, 350);
           }
         } else {
           setNumberInput("");
+          numberInputRef.current = "";
         }
       }
     },
@@ -348073,16 +348283,16 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
           });
         }
         if (item.type === "tool_group" && item.tools) {
-          const toolCalls2 = item.tools.map((tool) => ({
-            id: tool.callId,
-            name: tool.name,
-            args: {},
-            // Args not available in IndividualToolCallDisplay - will be populated from client history
-            result: tool.resultDisplay ?? null
-          }));
-          const lastGeminiMsg = checkpointMessages.filter(
-            (m) => m.type === "gemini"
-          ).pop();
+          const toolCalls2 = item.tools.map(
+            (tool) => ({
+              id: tool.callId,
+              name: tool.name,
+              args: {},
+              // Args not available in IndividualToolCallDisplay - will be populated from client history
+              result: tool.resultDisplay ?? null
+            })
+          );
+          const lastGeminiMsg = checkpointMessages.filter((m) => m.type === "gemini").pop();
           if (lastGeminiMsg && !lastGeminiMsg.toolCalls) {
             lastGeminiMsg.toolCalls = toolCalls2;
           } else if (!lastGeminiMsg) {
@@ -348728,6 +348938,8 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
       );
       const previousOpenAIBaseUrl = process.env["OPENAI_BASE_URL"];
       const previousOpenAIApiKey = process.env["OPENAI_API_KEY"];
+      const previousOpenAIModel = process.env["OPENAI_MODEL"];
+      let runtimeAuthRefreshed = false;
       const restore = async () => {
         if (previousOpenAIBaseUrl === void 0) {
           delete process.env["OPENAI_BASE_URL"];
@@ -348739,10 +348951,15 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
         } else {
           process.env["OPENAI_API_KEY"] = previousOpenAIApiKey;
         }
+        if (previousOpenAIModel === void 0) {
+          delete process.env["OPENAI_MODEL"];
+        } else {
+          process.env["OPENAI_MODEL"] = previousOpenAIModel;
+        }
         const currentAuthType = normalizeAuthType(
           config.getContentGeneratorConfig()?.authType
         );
-        if (previousAuthType && currentAuthType && previousAuthType !== currentAuthType) {
+        if (previousAuthType && (runtimeAuthRefreshed || currentAuthType && previousAuthType !== currentAuthType)) {
           await config.refreshAuth(previousAuthType);
         }
         if (previousModel && config.getModel() !== previousModel) {
@@ -348757,9 +348974,11 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
       }
       try {
         const runtimeAuth = profile.auth;
-        if (runtimeAuth?.baseUrl && runtimeAuth.baseUrl.trim().length > 0) {
-          process.env["OPENAI_BASE_URL"] = runtimeAuth.baseUrl.trim();
+        const runtimeBaseUrl = runtimeAuth?.baseUrl && runtimeAuth.baseUrl.trim().length > 0 ? runtimeAuth.baseUrl.trim() : void 0;
+        if (runtimeBaseUrl) {
+          process.env["OPENAI_BASE_URL"] = runtimeBaseUrl;
         }
+        let runtimeApiKey;
         if (runtimeAuth?.apiKeyEnvVar && runtimeAuth.apiKeyEnvVar.trim().length > 0) {
           const envVarName = runtimeAuth.apiKeyEnvVar.trim();
           const apiKey = process.env[envVarName]?.trim();
@@ -348768,15 +348987,28 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
               `Task runtime requires API key env var ${envVarName}, but it is not set.`
             );
           }
-          process.env["OPENAI_API_KEY"] = apiKey;
+          runtimeApiKey = apiKey;
+          process.env["OPENAI_API_KEY"] = runtimeApiKey;
+        }
+        const modelOverride = profile.model?.name && profile.model.name.trim().length > 0 ? profile.model.name.trim() : void 0;
+        if ((modelOverride ?? previousModel)?.trim().length > 0) {
+          process.env["OPENAI_MODEL"] = (modelOverride ?? previousModel).trim();
         }
         const authOverride = normalizeAuthType(
           runtimeAuth?.selectedType ?? runtimeAuth?.providerId
         );
-        if (authOverride && authOverride !== previousAuthType) {
-          await config.refreshAuth(authOverride);
+        const currentAuthType = normalizeAuthType(
+          config.getContentGeneratorConfig()?.authType
+        );
+        const targetAuthType = authOverride ?? currentAuthType;
+        const runtimeOpenAIConfigChanged = runtimeBaseUrl !== void 0 && runtimeBaseUrl !== previousOpenAIBaseUrl || runtimeApiKey !== void 0 && runtimeApiKey !== previousOpenAIApiKey;
+        const shouldRefreshAuth = Boolean(
+          targetAuthType && (currentAuthType && targetAuthType !== currentAuthType || runtimeOpenAIConfigChanged)
+        );
+        if (shouldRefreshAuth && targetAuthType) {
+          await config.refreshAuth(targetAuthType);
+          runtimeAuthRefreshed = true;
         }
-        const modelOverride = profile.model?.name && profile.model.name.trim().length > 0 ? profile.model.name.trim() : void 0;
         if (modelOverride && modelOverride !== config.getModel()) {
           await config.setModel(modelOverride, {
             reason: "manual",
@@ -348801,39 +349033,14 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
       );
       const runtimeProfile = task.runtime_profile;
       const promptPreview = task.action_value.trim().slice(0, 400);
-      await upsertLaunchTaskState(process.cwd(), task.task_id, (current, nowIso) => ({
-        task_id: task.task_id,
-        status: "running",
-        created_at: current?.created_at ?? nowIso,
-        started_at: current?.started_at ?? nowIso,
-        last_heartbeat: nowIso,
-        prompt_preview: current?.prompt_preview ?? promptPreview,
-        parent_session_id: current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
-        source_session_id: current?.source_session_id ?? task.source_session_id,
-        dedupe_key: current?.dedupe_key,
-        execution_mode_requested: "in_process",
-        execution_mode_actual: "in_process",
-        model_requested: current?.model_requested ?? runtimeProfile?.model?.name,
-        model_actual: current?.model_actual ?? config.getModel(),
-        auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
-        auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
-        runtime_profile: current?.runtime_profile ?? runtimeProfile,
-        result_ref: current?.result_ref,
-        pid: current?.pid,
-        tab_name: current?.tab_name,
-        last_error: void 0
-      }));
-      let restoreRuntime;
-      try {
-        logPath = await appendInProcessTaskLog(task, "started");
-        restoreRuntime = await applyInProcessRuntimeOverrides(task);
-        await submitQuery(task.action_value);
-        await upsertLaunchTaskState(process.cwd(), task.task_id, (current, nowIso) => ({
+      await upsertLaunchTaskState(
+        process.cwd(),
+        task.task_id,
+        (current, nowIso) => ({
           task_id: task.task_id,
-          status: "completed",
+          status: "running",
           created_at: current?.created_at ?? nowIso,
           started_at: current?.started_at ?? nowIso,
-          finished_at: nowIso,
           last_heartbeat: nowIso,
           prompt_preview: current?.prompt_preview ?? promptPreview,
           parent_session_id: current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
@@ -348842,25 +349049,58 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
           execution_mode_requested: "in_process",
           execution_mode_actual: "in_process",
           model_requested: current?.model_requested ?? runtimeProfile?.model?.name,
-          model_actual: config.getModel(),
+          model_actual: current?.model_actual ?? config.getModel(),
           auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
           auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
           runtime_profile: current?.runtime_profile ?? runtimeProfile,
-          result_ref: {
-            mailbox_path: current?.result_ref?.mailbox_path ?? (task.return_to_session_id ? path75.join(
-              process.cwd(),
-              ".lowcal",
-              "session-messages",
-              `${task.return_to_session_id}.jsonl`
-            ) : void 0),
-            output_path: logPath,
-            child_session_id: config.getSessionId(),
-            message_timestamp: nowIso
-          },
+          result_ref: current?.result_ref,
           pid: current?.pid,
           tab_name: current?.tab_name,
           last_error: void 0
-        }));
+        })
+      );
+      let restoreRuntime;
+      try {
+        logPath = await appendInProcessTaskLog(task, "started");
+        restoreRuntime = await applyInProcessRuntimeOverrides(task);
+        await submitQuery(task.action_value);
+        await upsertLaunchTaskState(
+          process.cwd(),
+          task.task_id,
+          (current, nowIso) => ({
+            task_id: task.task_id,
+            status: "completed",
+            created_at: current?.created_at ?? nowIso,
+            started_at: current?.started_at ?? nowIso,
+            finished_at: nowIso,
+            last_heartbeat: nowIso,
+            prompt_preview: current?.prompt_preview ?? promptPreview,
+            parent_session_id: current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
+            source_session_id: current?.source_session_id ?? task.source_session_id,
+            dedupe_key: current?.dedupe_key,
+            execution_mode_requested: "in_process",
+            execution_mode_actual: "in_process",
+            model_requested: current?.model_requested ?? runtimeProfile?.model?.name,
+            model_actual: config.getModel(),
+            auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+            auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
+            runtime_profile: current?.runtime_profile ?? runtimeProfile,
+            result_ref: {
+              mailbox_path: current?.result_ref?.mailbox_path ?? (task.return_to_session_id ? path75.join(
+                process.cwd(),
+                ".lowcal",
+                "session-messages",
+                `${task.return_to_session_id}.jsonl`
+              ) : void 0),
+              output_path: logPath,
+              child_session_id: config.getSessionId(),
+              message_timestamp: nowIso
+            },
+            pid: current?.pid,
+            tab_name: current?.tab_name,
+            last_error: void 0
+          })
+        );
         await appendInProcessTaskLog(task, "completed");
         await appendInProcessMailboxMessage(
           task,
@@ -348871,39 +349111,43 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         await appendInProcessTaskLog(task, "failed", message);
-        await upsertLaunchTaskState(process.cwd(), task.task_id, (current, nowIso) => ({
-          task_id: task.task_id,
-          status: "failed",
-          created_at: current?.created_at ?? nowIso,
-          started_at: current?.started_at ?? nowIso,
-          finished_at: nowIso,
-          last_heartbeat: nowIso,
-          prompt_preview: current?.prompt_preview ?? promptPreview,
-          parent_session_id: current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
-          source_session_id: current?.source_session_id ?? task.source_session_id,
-          dedupe_key: current?.dedupe_key,
-          execution_mode_requested: "in_process",
-          execution_mode_actual: "in_process",
-          model_requested: current?.model_requested ?? runtimeProfile?.model?.name,
-          model_actual: config.getModel(),
-          auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
-          auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
-          runtime_profile: current?.runtime_profile ?? runtimeProfile,
-          result_ref: {
-            mailbox_path: current?.result_ref?.mailbox_path ?? (task.return_to_session_id ? path75.join(
-              process.cwd(),
-              ".lowcal",
-              "session-messages",
-              `${task.return_to_session_id}.jsonl`
-            ) : void 0),
-            output_path: logPath,
-            child_session_id: config.getSessionId(),
-            message_timestamp: nowIso
-          },
-          pid: current?.pid,
-          tab_name: current?.tab_name,
-          last_error: message
-        }));
+        await upsertLaunchTaskState(
+          process.cwd(),
+          task.task_id,
+          (current, nowIso) => ({
+            task_id: task.task_id,
+            status: "failed",
+            created_at: current?.created_at ?? nowIso,
+            started_at: current?.started_at ?? nowIso,
+            finished_at: nowIso,
+            last_heartbeat: nowIso,
+            prompt_preview: current?.prompt_preview ?? promptPreview,
+            parent_session_id: current?.parent_session_id ?? task.return_to_session_id ?? config.getSessionId(),
+            source_session_id: current?.source_session_id ?? task.source_session_id,
+            dedupe_key: current?.dedupe_key,
+            execution_mode_requested: "in_process",
+            execution_mode_actual: "in_process",
+            model_requested: current?.model_requested ?? runtimeProfile?.model?.name,
+            model_actual: config.getModel(),
+            auth_requested: current?.auth_requested ?? runtimeProfile?.auth,
+            auth_actual: current?.auth_actual ?? runtimeProfile?.auth,
+            runtime_profile: current?.runtime_profile ?? runtimeProfile,
+            result_ref: {
+              mailbox_path: current?.result_ref?.mailbox_path ?? (task.return_to_session_id ? path75.join(
+                process.cwd(),
+                ".lowcal",
+                "session-messages",
+                `${task.return_to_session_id}.jsonl`
+              ) : void 0),
+              output_path: logPath,
+              child_session_id: config.getSessionId(),
+              message_timestamp: nowIso
+            },
+            pid: current?.pid,
+            tab_name: current?.tab_name,
+            last_error: message
+          })
+        );
         await appendInProcessMailboxMessage(
           task,
           "error",
@@ -351878,7 +352122,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "9a99323f";
+var GIT_COMMIT_INFO = "54a65301";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -360168,11 +360412,16 @@ function textBufferReducer(state, action) {
   const currentLineLen = (r3) => cpLen(currentLine(r3));
   switch (action.type) {
     case "set_text": {
+      const normalizedPayload = action.payload.replace(/\r\n?/g, "\n");
+      const currentText = state.lines.join("\n");
+      if (normalizedPayload === currentText) {
+        return state;
+      }
       let nextState = state;
       if (action.pushToUndo !== false) {
         nextState = pushUndoLocal(state);
       }
-      const newContentLines = action.payload.replace(/\r\n?/g, "\n").split("\n");
+      const newContentLines = normalizedPayload.split("\n");
       const lines = newContentLines.length === 0 ? [""] : newContentLines;
       const lastNewLineIndex = lines.length - 1;
       return {
@@ -365175,7 +365424,8 @@ function toAuthChoice(auth2) {
   if (auth2.providerId === "lmstudio") return "lmstudio";
   if (auth2.providerId === "openai") return "openai";
   if (auth2.selectedType === AuthType2.USE_GEMINI) return "gemini";
-  if (auth2.selectedType === AuthType2.USE_OPENAI && !auth2.providerId) return "openai";
+  if (auth2.selectedType === AuthType2.USE_OPENAI && !auth2.providerId)
+    return "openai";
   return "inherit";
 }
 function authChoiceFromSettings(settings) {
@@ -365315,9 +365565,7 @@ function TaskTemplateEditorDialog({
 }) {
   const [focusSection, setFocusSection] = (0, import_react94.useState)("templates");
   const [selectedField, setSelectedField] = (0, import_react94.useState)("id");
-  const [selectedTemplateKey, setSelectedTemplateKey] = (0, import_react94.useState)(
-    NEW_TEMPLATE_KEY
-  );
+  const [selectedTemplateKey, setSelectedTemplateKey] = (0, import_react94.useState)(NEW_TEMPLATE_KEY);
   const [templates, setTemplates] = (0, import_react94.useState)([]);
   const [draft, setDraft] = (0, import_react94.useState)(
     () => buildEmptyDraft(settings, currentModel)
@@ -365328,7 +365576,11 @@ function TaskTemplateEditorDialog({
   const [isBusy, setIsBusy] = (0, import_react94.useState)(false);
   const [models, setModels] = (0, import_react94.useState)([]);
   const [isFetchingModels, setIsFetchingModels] = (0, import_react94.useState)(false);
-  const manager = (0, import_react94.useMemo)(() => new TaskTemplateManager(projectRoot), [projectRoot]);
+  const [editorResetToken, setEditorResetToken] = (0, import_react94.useState)(0);
+  const manager = (0, import_react94.useMemo)(
+    () => new TaskTemplateManager(projectRoot),
+    [projectRoot]
+  );
   const templatesByKey = (0, import_react94.useMemo)(() => {
     const map2 = /* @__PURE__ */ new Map();
     for (const template of templates) {
@@ -365388,9 +365640,11 @@ function TaskTemplateEditorDialog({
   (0, import_react94.useEffect)(() => {
     if (!selectedTemplate) {
       setDraft(buildEmptyDraft(settings, currentModel));
+      setEditorResetToken((value) => value + 1);
       return;
     }
     setDraft(buildDraftFromTemplate(selectedTemplate, settings, currentModel));
+    setEditorResetToken((value) => value + 1);
   }, [selectedTemplate, settings, currentModel]);
   (0, import_react94.useEffect)(() => {
     let cancelled = false;
@@ -365435,10 +365689,17 @@ function TaskTemplateEditorDialog({
         return;
       }
       if (key.name === "tab") {
-        const order = ["templates", "fields", "editor", "actions"];
-        const currentIndex = order.indexOf(focusSection);
-        const nextIndex = key.shift ? (currentIndex - 1 + order.length) % order.length : (currentIndex + 1) % order.length;
-        setFocusSection(order[nextIndex]);
+        const order = [
+          "templates",
+          "fields",
+          "editor",
+          "actions"
+        ];
+        setFocusSection((current) => {
+          const currentIndex = order.indexOf(current);
+          const nextIndex = key.shift ? (currentIndex - 1 + order.length) % order.length : (currentIndex + 1) % order.length;
+          return order[nextIndex];
+        });
       }
     },
     { isActive: true }
@@ -365528,7 +365789,7 @@ function TaskTemplateEditorDialog({
         value: "action_type"
       },
       {
-        label: `Action Value: ${formatPreview(draft.actionValue)}`,
+        label: `${draft.actionType === "prompt" ? "Prompt" : "Action Value"}: ${formatPreview(draft.actionValue)}`,
         value: "action_value"
       },
       {
@@ -365668,7 +365929,9 @@ function TaskTemplateEditorDialog({
       return;
     }
     if (draft.deployMode === "schedule" && draft.schedule.trim().length === 0) {
-      setErrorMessage("Schedule cron expression is required for scheduled deploys.");
+      setErrorMessage(
+        "Schedule cron expression is required for scheduled deploys."
+      );
       return;
     }
     setIsBusy(true);
@@ -365720,6 +365983,7 @@ function TaskTemplateEditorDialog({
       if (action === "new") {
         setSelectedTemplateKey(NEW_TEMPLATE_KEY);
         setDraft(buildEmptyDraft(settings, currentModel));
+        setEditorResetToken((value) => value + 1);
         setStatusMessage("Switched to new template draft.");
         return;
       }
@@ -365752,7 +366016,8 @@ function TaskTemplateEditorDialog({
             onChange: (value) => updateDraft({ id: value }),
             placeholder: "vision-ocr",
             isActive: !readOnly && focusSection === "editor"
-          }
+          },
+          `task-editor-${selectedField}-${editorResetToken}`
         )
       ] });
     }
@@ -365764,7 +366029,8 @@ function TaskTemplateEditorDialog({
           onChange: (value) => updateDraft({ name: value }),
           placeholder: "Human-friendly display name",
           isActive: focusSection === "editor"
-        }
+        },
+        `task-editor-${selectedField}-${editorResetToken}`
       );
     }
     if (selectedField === "description") {
@@ -365775,7 +366041,8 @@ function TaskTemplateEditorDialog({
           onChange: (value) => updateDraft({ description: value }),
           placeholder: "What this template is for",
           isActive: focusSection === "editor"
-        }
+        },
+        `task-editor-${selectedField}-${editorResetToken}`
       );
     }
     if (selectedField === "tags") {
@@ -365786,36 +366053,42 @@ function TaskTemplateEditorDialog({
           onChange: (value) => updateDraft({ tags: value }),
           placeholder: "vision, ocr, docs",
           isActive: focusSection === "editor"
-        }
+        },
+        `task-editor-${selectedField}-${editorResetToken}`
       );
     }
     if (selectedField === "action_type") {
-      return /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
-        RadioButtonSelect,
-        {
-          items: [
-            { label: "prompt", value: "prompt" },
-            { label: "slash_command", value: "slash_command" }
-          ],
-          initialIndex: draft.actionType === "slash_command" ? 1 : 0,
-          onSelect: (value) => updateDraft({ actionType: value }),
-          isFocused: focusSection === "editor"
-        },
-        `action-type-${draft.actionType}`
-      );
+      return /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: "prompt uses the Prompt field. slash_command runs in in_process mode only." }),
+        /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
+          RadioButtonSelect,
+          {
+            items: [
+              { label: "prompt", value: "prompt" },
+              { label: "slash_command", value: "slash_command" }
+            ],
+            initialIndex: draft.actionType === "slash_command" ? 1 : 0,
+            onSelect: (value) => updateDraft({ actionType: value }),
+            isFocused: focusSection === "editor"
+          },
+          `action-type-${draft.actionType}`
+        )
+      ] });
     }
     if (selectedField === "action_value") {
+      const isPrompt = draft.actionType === "prompt";
       return /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: "Use Shift+Enter for new lines while editing this field." }),
+        /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: isPrompt ? "Enter the task prompt. Use Shift+Enter for new lines." : "Enter the slash command payload. Use Shift+Enter for new lines." }),
         /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
           TextInput,
           {
             value: draft.actionValue,
             onChange: (value) => updateDraft({ actionValue: value }),
-            placeholder: "Task prompt or slash command payload",
+            placeholder: isPrompt ? "Prompt for this task" : "Slash command payload (for example: /compress)",
             height: 5,
             isActive: focusSection === "editor"
-          }
+          },
+          `task-editor-${selectedField}-${editorResetToken}`
         )
       ] });
     }
@@ -365972,7 +366245,8 @@ function TaskTemplateEditorDialog({
           onChange: (value) => updateDraft({ schedule: value }),
           placeholder: "0 * * * *",
           isActive: focusSection === "editor"
-        }
+        },
+        `task-editor-${selectedField}-${editorResetToken}`
       );
     }
     return /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
@@ -365982,7 +366256,8 @@ function TaskTemplateEditorDialog({
         onChange: (value) => updateDraft({ scheduleJobId: value }),
         placeholder: "Optional; defaults to <template>-schedule",
         isActive: focusSection === "editor"
-      }
+      },
+      `task-editor-${selectedField}-${editorResetToken}`
     );
   };
   return /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(
@@ -373656,7 +373931,9 @@ ${queuedText}` : queuedText;
   const initialPrompt = (0, import_react122.useMemo)(() => config.getQuestion(), [config]);
   const geminiClient = config.getGeminiClient();
   (0, import_react122.useEffect)(() => {
-    if (initialPrompt && !initialPromptSubmitted.current && !isAuthenticating && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isTaskTemplateDialogOpen && !isModelSelectionDialogOpen && !isResumeDialogOpen && !isVisionSwitchDialogOpen && !isSubagentCreateDialogOpen && !showPrivacyNotice && !showWelcomeBackDialog && welcomeBackChoice !== "restart" && geminiClient?.isInitialized?.()) {
+    const isSlashInitialPrompt = typeof initialPrompt === "string" && initialPrompt.trim().startsWith("/");
+    const slashCommandsReady = slashCommands.length > 0;
+    if (initialPrompt && !initialPromptSubmitted.current && !isAuthenticating && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isTaskTemplateDialogOpen && !isModelSelectionDialogOpen && !isResumeDialogOpen && !isVisionSwitchDialogOpen && !isSubagentCreateDialogOpen && !showPrivacyNotice && !showWelcomeBackDialog && welcomeBackChoice !== "restart" && geminiClient?.isInitialized?.() && (!isSlashInitialPrompt || slashCommandsReady)) {
       submitQuery(initialPrompt);
       initialPromptSubmitted.current = true;
     }
@@ -373675,7 +373952,8 @@ ${queuedText}` : queuedText;
     geminiClient,
     isModelSelectionDialogOpen,
     isResumeDialogOpen,
-    isVisionSwitchDialogOpen
+    isVisionSwitchDialogOpen,
+    slashCommands
   ]);
   if (quittingMessages) {
     return /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: quittingMessages.map((item) => /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(

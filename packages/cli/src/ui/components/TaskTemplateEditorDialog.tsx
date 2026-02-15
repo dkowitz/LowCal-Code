@@ -350,6 +350,7 @@ export function TaskTemplateEditorDialog({
   const [isBusy, setIsBusy] = useState<boolean>(false);
   const [models, setModels] = useState<AvailableModel[]>([]);
   const [isFetchingModels, setIsFetchingModels] = useState<boolean>(false);
+  const [editorResetToken, setEditorResetToken] = useState<number>(0);
 
   const manager = useMemo(
     () => new TaskTemplateManager(projectRoot),
@@ -432,10 +433,12 @@ export function TaskTemplateEditorDialog({
   useEffect(() => {
     if (!selectedTemplate) {
       setDraft(buildEmptyDraft(settings, currentModel));
+      setEditorResetToken((value) => value + 1);
       return;
     }
 
     setDraft(buildDraftFromTemplate(selectedTemplate, settings, currentModel));
+    setEditorResetToken((value) => value + 1);
   }, [selectedTemplate, settings, currentModel]);
 
   useEffect(() => {
@@ -493,11 +496,13 @@ export function TaskTemplateEditorDialog({
           "editor",
           "actions",
         ];
-        const currentIndex = order.indexOf(focusSection);
-        const nextIndex = key.shift
-          ? (currentIndex - 1 + order.length) % order.length
-          : (currentIndex + 1) % order.length;
-        setFocusSection(order[nextIndex]!);
+        setFocusSection((current) => {
+          const currentIndex = order.indexOf(current);
+          const nextIndex = key.shift
+            ? (currentIndex - 1 + order.length) % order.length
+            : (currentIndex + 1) % order.length;
+          return order[nextIndex]!;
+        });
       }
     },
     { isActive: true },
@@ -836,6 +841,7 @@ export function TaskTemplateEditorDialog({
       if (action === "new") {
         setSelectedTemplateKey(NEW_TEMPLATE_KEY);
         setDraft(buildEmptyDraft(settings, currentModel));
+        setEditorResetToken((value) => value + 1);
         setStatusMessage("Switched to new template draft.");
         return;
       }
@@ -870,6 +876,7 @@ export function TaskTemplateEditorDialog({
               : "Unique id used by launch_task/schedule_task and task_template tools."}
           </Text>
           <TextInput
+            key={`task-editor-${selectedField}-${editorResetToken}`}
             value={readOnly ? (selectedTemplate?.id ?? draft.id) : draft.id}
             onChange={(value) => updateDraft({ id: value })}
             placeholder="vision-ocr"
@@ -882,6 +889,7 @@ export function TaskTemplateEditorDialog({
     if (selectedField === "name") {
       return (
         <TextInput
+          key={`task-editor-${selectedField}-${editorResetToken}`}
           value={draft.name}
           onChange={(value) => updateDraft({ name: value })}
           placeholder="Human-friendly display name"
@@ -893,6 +901,7 @@ export function TaskTemplateEditorDialog({
     if (selectedField === "description") {
       return (
         <TextInput
+          key={`task-editor-${selectedField}-${editorResetToken}`}
           value={draft.description}
           onChange={(value) => updateDraft({ description: value })}
           placeholder="What this template is for"
@@ -904,6 +913,7 @@ export function TaskTemplateEditorDialog({
     if (selectedField === "tags") {
       return (
         <TextInput
+          key={`task-editor-${selectedField}-${editorResetToken}`}
           value={draft.tags}
           onChange={(value) => updateDraft({ tags: value })}
           placeholder="vision, ocr, docs"
@@ -945,6 +955,7 @@ export function TaskTemplateEditorDialog({
               : "Enter the slash command payload. Use Shift+Enter for new lines."}
           </Text>
           <TextInput
+            key={`task-editor-${selectedField}-${editorResetToken}`}
             value={draft.actionValue}
             onChange={(value) => updateDraft({ actionValue: value })}
             placeholder={
@@ -1115,6 +1126,7 @@ export function TaskTemplateEditorDialog({
     if (selectedField === "schedule") {
       return (
         <TextInput
+          key={`task-editor-${selectedField}-${editorResetToken}`}
           value={draft.schedule}
           onChange={(value) => updateDraft({ schedule: value })}
           placeholder="0 * * * *"
@@ -1125,6 +1137,7 @@ export function TaskTemplateEditorDialog({
 
     return (
       <TextInput
+        key={`task-editor-${selectedField}-${editorResetToken}`}
         value={draft.scheduleJobId}
         onChange={(value) => updateDraft({ scheduleJobId: value })}
         placeholder="Optional; defaults to <template>-schedule"

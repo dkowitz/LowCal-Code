@@ -373,6 +373,60 @@ describe("OpenAIContentConverter", () => {
                 description: "Test",
             });
         });
+        it("converts qwen-coder style function blocks to function calls", () => {
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
+            const chunk = converter.convertOpenAIChunkToGemini({
+                id: "chunk-function",
+                object: "chat.completion.chunk",
+                created: 7000,
+                model: "qwen/qwen3-coder",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            content: "<tool_call><function=read_file><parameter=absolute_path>/tmp/example.ts</parameter><parameter=offset>10</parameter></function></tool_call>Continuing.",
+                        },
+                        finish_reason: "stop",
+                    },
+                ],
+            });
+            expect(chunk.functionCalls?.length).toBe(1);
+            expect(chunk.functionCalls?.[0]?.name).toBe("read_file");
+            expect(chunk.functionCalls?.[0]?.args).toMatchObject({
+                absolute_path: "/tmp/example.ts",
+                offset: 10,
+            });
+            const textPart = chunk.candidates?.[0]?.content?.parts?.find((part) => typeof part === "object" && "text" in part && part.text);
+            expect(textPart?.text).toContain("Continuing.");
+            expect(textPart?.text).not.toContain("tool_call");
+            expect(textPart?.text).not.toContain("function=");
+        });
+        it("converts qwen-vl JSON tool_call blocks to function calls", () => {
+            converter.resetStreamingToolCalls(TEST_PROMPT_ID);
+            const chunk = converter.convertOpenAIChunkToGemini({
+                id: "chunk-json-tool-call",
+                object: "chat.completion.chunk",
+                created: 7001,
+                model: "qwen/qwen2.5-vl",
+                choices: [
+                    {
+                        index: 0,
+                        delta: {
+                            content: '<tool_call>{"name":"read_file","arguments":{"absolute_path":"/tmp/bronc.jpg"}}</tool_call>I will inspect it now.',
+                        },
+                        finish_reason: "stop",
+                    },
+                ],
+            });
+            expect(chunk.functionCalls?.length).toBe(1);
+            expect(chunk.functionCalls?.[0]?.name).toBe("read_file");
+            expect(chunk.functionCalls?.[0]?.args).toMatchObject({
+                absolute_path: "/tmp/bronc.jpg",
+            });
+            const textPart = chunk.candidates?.[0]?.content?.parts?.find((part) => typeof part === "object" && "text" in part && part.text);
+            expect(textPart?.text).toContain("I will inspect it now.");
+            expect(textPart?.text).not.toContain("tool_call");
+        });
         it("strips stray parameter tags after tool calls", () => {
             converter.resetStreamingToolCalls(TEST_PROMPT_ID);
             const chunk = converter.convertOpenAIChunkToGemini({

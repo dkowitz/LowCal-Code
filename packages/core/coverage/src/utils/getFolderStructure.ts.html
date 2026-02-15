@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">3.06% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/261</span>
+                <span class='fraction'>8/261</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">100% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/0</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/1</span>
+                <span class='fraction'>0/4</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">3.06% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/261</span>
+                <span class='fraction'>8/261</span>
             </div>
         
             
@@ -451,23 +451,23 @@
 <a name='L386'></a><a href='#L386'>386</a>
 <a name='L387'></a><a href='#L387'>387</a>
 <a name='L388'></a><a href='#L388'>388</a>
-<a name='L389'></a><a href='#L389'>389</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L389'></a><a href='#L389'>389</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -839,23 +839,23 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
  * @license
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-<span class="cstat-no" title="statement not covered" >import * as fs from "node:fs/promises";</span>
+import * as fs from "node:fs/promises";
 import type { Dirent } from "node:fs";
-<span class="cstat-no" title="statement not covered" >import * as path from "node:path";</span>
-<span class="cstat-no" title="statement not covered" >import { getErrorMessage, isNodeError } from "./errors.js";</span>
+import * as path from "node:path";
+import { getErrorMessage, isNodeError } from "./errors.js";
 import type { FileDiscoveryService } from "../services/fileDiscoveryService.js";
 import type { FileFilteringOptions } from "../config/config.js";
-<span class="cstat-no" title="statement not covered" >import { DEFAULT_FILE_FILTERING_OPTIONS } from "../config/config.js";</span>
+import { DEFAULT_FILE_FILTERING_OPTIONS } from "../config/config.js";
 &nbsp;
-<span class="cstat-no" title="statement not covered" >const MAX_ITEMS = 20;</span>
-<span class="cstat-no" title="statement not covered" >const TRUNCATION_INDICATOR = "...";</span>
-<span class="cstat-no" title="statement not covered" >const DEFAULT_IGNORED_FOLDERS = new Set(["node_modules", ".git", "dist"]);</span>
+const MAX_ITEMS = 20;
+const TRUNCATION_INDICATOR = "...";
+const DEFAULT_IGNORED_FOLDERS = new Set(["node_modules", ".git", "dist"]);
 &nbsp;
 // --- Interfaces ---
 &nbsp;
@@ -898,7 +898,7 @@ interface FullFolderInfo {
 &nbsp;
 // --- Helper Functions ---
 &nbsp;
-<span class="cstat-no" title="statement not covered" >async function readFullStructure(</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async function readFullStructure(</span></span>
 <span class="cstat-no" title="statement not covered" >  rootPath: string,</span>
 <span class="cstat-no" title="statement not covered" >  options: MergedFolderStructureOptions,</span>
 <span class="cstat-no" title="statement not covered" >): Promise&lt;FullFolderInfo | null&gt; {</span>
@@ -1062,7 +1062,7 @@ interface FullFolderInfo {
  * @param isLast Sibling indicator.
  * @param builder Array to build the string lines.
  */
-<span class="cstat-no" title="statement not covered" >function formatStructure(</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function formatStructure(</span></span>
 <span class="cstat-no" title="statement not covered" >  node: FullFolderInfo,</span>
 <span class="cstat-no" title="statement not covered" >  currentIndent: string,</span>
 <span class="cstat-no" title="statement not covered" >  isLastChildOfParent: boolean,</span>
@@ -1124,7 +1124,7 @@ interface FullFolderInfo {
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >function collectTruncatedPaths(</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function collectTruncatedPaths(</span></span>
 <span class="cstat-no" title="statement not covered" >  node: FullFolderInfo,</span>
 <span class="cstat-no" title="statement not covered" >  rootPath: string,</span>
 <span class="cstat-no" title="statement not covered" >  acc: Set&lt;string&gt;,</span>
@@ -1151,7 +1151,7 @@ interface FullFolderInfo {
  * @param options Optional configuration settings.
  * @returns A promise resolving to the formatted folder structure string.
  */
-<span class="cstat-no" title="statement not covered" >export async function getFolderStructure(</span>
+<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function getFolderStructure(</span></span>
 <span class="cstat-no" title="statement not covered" >  directory: string,</span>
 <span class="cstat-no" title="statement not covered" >  options?: FolderStructureOptions,</span>
 <span class="cstat-no" title="statement not covered" >): Promise&lt;string&gt; {</span>
@@ -1234,7 +1234,7 @@ interface FullFolderInfo {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-12T02:09:23.957Z
+                at 2026-02-15T11:50:11.432Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
