@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>0/25</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/18</span>
+                <span class='fraction'>0/25</span>
             </div>
         
             
@@ -99,7 +99,16 @@
 <a name='L34'></a><a href='#L34'>34</a>
 <a name='L35'></a><a href='#L35'>35</a>
 <a name='L36'></a><a href='#L36'>36</a>
-<a name='L37'></a><a href='#L37'>37</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L37'></a><a href='#L37'>37</a>
+<a name='L38'></a><a href='#L38'>38</a>
+<a name='L39'></a><a href='#L39'>39</a>
+<a name='L40'></a><a href='#L40'>40</a>
+<a name='L41'></a><a href='#L41'>41</a>
+<a name='L42'></a><a href='#L42'>42</a>
+<a name='L43'></a><a href='#L43'>43</a>
+<a name='L44'></a><a href='#L44'>44</a>
+<a name='L45'></a><a href='#L45'>45</a>
+<a name='L46'></a><a href='#L46'>46</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -120,6 +129,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -141,7 +159,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 &nbsp;
-<span class="cstat-no" title="statement not covered" >import { useEffect } from "react";</span>
+<span class="cstat-no" title="statement not covered" >import { useCallback, useEffect, useRef } from "react";</span>
 import type { KeypressHandler, Key } from "../contexts/KeypressContext.js";
 <span class="cstat-no" title="statement not covered" >import { useKeypressContext } from "../contexts/KeypressContext.js";</span>
 &nbsp;
@@ -159,17 +177,26 @@ export type { Key };
 <span class="cstat-no" title="statement not covered" >  { isActive }: { isActive: boolean },</span>
 <span class="cstat-no" title="statement not covered" >) {</span>
 <span class="cstat-no" title="statement not covered" >  const { subscribe, unsubscribe } = useKeypressContext();</span>
+<span class="cstat-no" title="statement not covered" >  const onKeypressRef = useRef(onKeypress);</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  useEffect(() =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    onKeypressRef.current = onKeypress;</span>
+<span class="cstat-no" title="statement not covered" >  }, [onKeypress]);</span>
+&nbsp;
+<span class="cstat-no" title="statement not covered" >  const stableHandler = useCallback&lt;KeypressHandler&gt;((key) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    onKeypressRef.current(key);</span>
+<span class="cstat-no" title="statement not covered" >  }, []);</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  useEffect(() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    if (!isActive) {</span>
 <span class="cstat-no" title="statement not covered" >      return;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" >    subscribe(onKeypress);</span>
+<span class="cstat-no" title="statement not covered" >    subscribe(stableHandler);</span>
 <span class="cstat-no" title="statement not covered" >    return () =&gt; {</span>
-<span class="cstat-no" title="statement not covered" >      unsubscribe(onKeypress);</span>
+<span class="cstat-no" title="statement not covered" >      unsubscribe(stableHandler);</span>
 <span class="cstat-no" title="statement not covered" >    };</span>
-<span class="cstat-no" title="statement not covered" >  }, [isActive, onKeypress, subscribe, unsubscribe]);</span>
+<span class="cstat-no" title="statement not covered" >  }, [isActive, stableHandler, subscribe, unsubscribe]);</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;</pre></td></tr></table></pre>
 
@@ -178,7 +205,7 @@ export type { Key };
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-14T17:04:36.925Z
+                at 2026-02-15T14:30:52.434Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>

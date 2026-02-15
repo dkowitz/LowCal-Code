@@ -5,7 +5,7 @@
  */
 
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   AuthType,
   TaskTemplateManager,
@@ -329,6 +329,30 @@ function toTemplateLevelValue(level: string): "project" | "user" {
   return "user";
 }
 
+function buildDuplicateTemplateId(
+  sourceId: string,
+  level: "project" | "user",
+  templates: TaskTemplate[],
+): string {
+  const baseId = sourceId.trim() || "template";
+  const existingIds = new Set(
+    templates
+      .filter((template) => template.level === level)
+      .map((template) => template.id),
+  );
+
+  let candidate = `${baseId}-copy`;
+  if (!existingIds.has(candidate)) {
+    return candidate;
+  }
+
+  let suffix = 2;
+  while (existingIds.has(`${candidate}-${suffix}`)) {
+    suffix += 1;
+  }
+  return `${candidate}-${suffix}`;
+}
+
 export function TaskTemplateEditorDialog({
   projectRoot,
   settings,
@@ -351,6 +375,7 @@ export function TaskTemplateEditorDialog({
   const [models, setModels] = useState<AvailableModel[]>([]);
   const [isFetchingModels, setIsFetchingModels] = useState<boolean>(false);
   const [editorResetToken, setEditorResetToken] = useState<number>(0);
+  const pendingNewDraftRef = useRef<DraftTemplate | null>(null);
 
   const manager = useMemo(
     () => new TaskTemplateManager(projectRoot),
@@ -432,14 +457,22 @@ export function TaskTemplateEditorDialog({
 
   useEffect(() => {
     if (!selectedTemplate) {
-      setDraft(buildEmptyDraft(settings, currentModel));
+      if (selectedTemplateKey !== NEW_TEMPLATE_KEY) {
+        return;
+      }
+      if (pendingNewDraftRef.current) {
+        setDraft(pendingNewDraftRef.current);
+        pendingNewDraftRef.current = null;
+      } else {
+        setDraft(buildEmptyDraft(settings, currentModel));
+      }
       setEditorResetToken((value) => value + 1);
       return;
     }
-
     setDraft(buildDraftFromTemplate(selectedTemplate, settings, currentModel));
     setEditorResetToken((value) => value + 1);
-  }, [selectedTemplate, settings, currentModel]);
+    pendingNewDraftRef.current = null;
+  }, [selectedTemplate, selectedTemplateKey, settings, currentModel]);
 
   useEffect(() => {
     let cancelled = false;
@@ -811,6 +844,7 @@ export function TaskTemplateEditorDialog({
   const actionItems: Array<RadioSelectItem<string>> = [
     { label: "Save Template", value: "save" },
     { label: "Deploy", value: "deploy" },
+    { label: "Duplicate Template", value: "duplicate" },
     { label: "Delete Template", value: "delete" },
     { label: "New Template", value: "new" },
     { label: "Reload", value: "reload" },
@@ -833,12 +867,40 @@ export function TaskTemplateEditorDialog({
         return;
       }
 
+      if (action === "duplicate") {
+        if (!selectedTemplate) {
+          setErrorMessage("Select an existing template to duplicate.");
+          return;
+        }
+
+        const duplicatedDraft = buildDraftFromTemplate(
+          selectedTemplate,
+          settings,
+          currentModel,
+        );
+        const duplicateId = buildDuplicateTemplateId(
+          duplicatedDraft.id,
+          duplicatedDraft.level,
+          templates,
+        );
+        duplicatedDraft.id = duplicateId;
+
+        setSelectedTemplateKey(NEW_TEMPLATE_KEY);
+        pendingNewDraftRef.current = duplicatedDraft;
+        setSelectedField("id");
+        setFocusSection("editor");
+        setErrorMessage(null);
+        setStatusMessage(`Duplicating "${selectedTemplate.id}" as "${duplicateId}".`);
+        return;
+      }
+
       if (action === "delete") {
         void handleDeleteTemplate();
         return;
       }
 
       if (action === "new") {
+        pendingNewDraftRef.current = null;
         setSelectedTemplateKey(NEW_TEMPLATE_KEY);
         setDraft(buildEmptyDraft(settings, currentModel));
         setEditorResetToken((value) => value + 1);
@@ -858,6 +920,8 @@ export function TaskTemplateEditorDialog({
       saveTemplate,
       handleDeployTemplate,
       handleDeleteTemplate,
+      selectedTemplate,
+      templates,
       settings,
       currentModel,
       reloadTemplates,
@@ -1167,6 +1231,11 @@ export function TaskTemplateEditorDialog({
             initialIndex={selectedTemplateIndex}
             onSelect={(value) => {
               setSelectedTemplateKey(value);
+              if (value === NEW_TEMPLATE_KEY) {
+                pendingNewDraftRef.current = null;
+                setDraft(buildEmptyDraft(settings, currentModel));
+                setEditorResetToken((token) => token + 1);
+              }
               setFocusSection("fields");
             }}
             isFocused={focusSection === "templates"}
@@ -1209,7 +1278,7 @@ export function TaskTemplateEditorDialog({
             onSelect={handleActionSelect}
             isFocused={focusSection === "actions"}
             key={`actions-${isBusy ? "busy" : "idle"}`}
-            maxItemsToShow={6}
+            maxItemsToShow={7}
           />
         </Box>
 

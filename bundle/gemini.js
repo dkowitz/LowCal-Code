@@ -267866,7 +267866,7 @@ var require_backend = __commonJS({
                     return [b, function() {
                     }];
                   },
-                  useRef: function useRef20(a) {
+                  useRef: function useRef21(a) {
                     var b = C();
                     a = null !== b ? b.memoizedState : {
                       current: a
@@ -353011,7 +353011,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "f8b956b7";
+var GIT_COMMIT_INFO = "ae384faf";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -366454,6 +366454,21 @@ function toTemplateLevelValue(level) {
   }
   return "user";
 }
+function buildDuplicateTemplateId(sourceId, level, templates) {
+  const baseId = sourceId.trim() || "template";
+  const existingIds = new Set(
+    templates.filter((template) => template.level === level).map((template) => template.id)
+  );
+  let candidate = `${baseId}-copy`;
+  if (!existingIds.has(candidate)) {
+    return candidate;
+  }
+  let suffix = 2;
+  while (existingIds.has(`${candidate}-${suffix}`)) {
+    suffix += 1;
+  }
+  return `${candidate}-${suffix}`;
+}
 function TaskTemplateEditorDialog({
   projectRoot,
   settings,
@@ -366475,6 +366490,7 @@ function TaskTemplateEditorDialog({
   const [models, setModels] = (0, import_react94.useState)([]);
   const [isFetchingModels, setIsFetchingModels] = (0, import_react94.useState)(false);
   const [editorResetToken, setEditorResetToken] = (0, import_react94.useState)(0);
+  const pendingNewDraftRef = (0, import_react94.useRef)(null);
   const manager = (0, import_react94.useMemo)(
     () => new TaskTemplateManager(projectRoot),
     [projectRoot]
@@ -366537,13 +366553,22 @@ function TaskTemplateEditorDialog({
   }, [reloadTemplates]);
   (0, import_react94.useEffect)(() => {
     if (!selectedTemplate) {
-      setDraft(buildEmptyDraft(settings, currentModel));
+      if (selectedTemplateKey !== NEW_TEMPLATE_KEY) {
+        return;
+      }
+      if (pendingNewDraftRef.current) {
+        setDraft(pendingNewDraftRef.current);
+        pendingNewDraftRef.current = null;
+      } else {
+        setDraft(buildEmptyDraft(settings, currentModel));
+      }
       setEditorResetToken((value) => value + 1);
       return;
     }
     setDraft(buildDraftFromTemplate(selectedTemplate, settings, currentModel));
     setEditorResetToken((value) => value + 1);
-  }, [selectedTemplate, settings, currentModel]);
+    pendingNewDraftRef.current = null;
+  }, [selectedTemplate, selectedTemplateKey, settings, currentModel]);
   (0, import_react94.useEffect)(() => {
     let cancelled = false;
     setIsFetchingModels(true);
@@ -366856,6 +366881,7 @@ function TaskTemplateEditorDialog({
   const actionItems = [
     { label: "Save Template", value: "save" },
     { label: "Deploy", value: "deploy" },
+    { label: "Duplicate Template", value: "duplicate" },
     { label: "Delete Template", value: "delete" },
     { label: "New Template", value: "new" },
     { label: "Reload", value: "reload" },
@@ -366874,11 +366900,36 @@ function TaskTemplateEditorDialog({
         void handleDeployTemplate();
         return;
       }
+      if (action === "duplicate") {
+        if (!selectedTemplate) {
+          setErrorMessage("Select an existing template to duplicate.");
+          return;
+        }
+        const duplicatedDraft = buildDraftFromTemplate(
+          selectedTemplate,
+          settings,
+          currentModel
+        );
+        const duplicateId = buildDuplicateTemplateId(
+          duplicatedDraft.id,
+          duplicatedDraft.level,
+          templates
+        );
+        duplicatedDraft.id = duplicateId;
+        setSelectedTemplateKey(NEW_TEMPLATE_KEY);
+        pendingNewDraftRef.current = duplicatedDraft;
+        setSelectedField("id");
+        setFocusSection("editor");
+        setErrorMessage(null);
+        setStatusMessage(`Duplicating "${selectedTemplate.id}" as "${duplicateId}".`);
+        return;
+      }
       if (action === "delete") {
         void handleDeleteTemplate();
         return;
       }
       if (action === "new") {
+        pendingNewDraftRef.current = null;
         setSelectedTemplateKey(NEW_TEMPLATE_KEY);
         setDraft(buildEmptyDraft(settings, currentModel));
         setEditorResetToken((value) => value + 1);
@@ -366896,6 +366947,8 @@ function TaskTemplateEditorDialog({
       saveTemplate,
       handleDeployTemplate,
       handleDeleteTemplate,
+      selectedTemplate,
+      templates,
       settings,
       currentModel,
       reloadTemplates,
@@ -367180,6 +367233,11 @@ function TaskTemplateEditorDialog({
               initialIndex: selectedTemplateIndex,
               onSelect: (value) => {
                 setSelectedTemplateKey(value);
+                if (value === NEW_TEMPLATE_KEY) {
+                  pendingNewDraftRef.current = null;
+                  setDraft(buildEmptyDraft(settings, currentModel));
+                  setEditorResetToken((token2) => token2 + 1);
+                }
                 setFocusSection("fields");
               },
               isFocused: focusSection === "templates",
@@ -367228,7 +367286,7 @@ function TaskTemplateEditorDialog({
                 initialIndex: 0,
                 onSelect: handleActionSelect,
                 isFocused: focusSection === "actions",
-                maxItemsToShow: 6
+                maxItemsToShow: 7
               },
               `actions-${isBusy ? "busy" : "idle"}`
             )

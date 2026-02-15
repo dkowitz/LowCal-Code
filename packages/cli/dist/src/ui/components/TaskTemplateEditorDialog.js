@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { AuthType, TaskTemplateManager, } from "@qwen-code/qwen-code-core";
 import { Box, Text } from "ink";
 import { Colors } from "../colors.js";
@@ -200,6 +200,21 @@ function toTemplateLevelValue(level) {
     }
     return "user";
 }
+function buildDuplicateTemplateId(sourceId, level, templates) {
+    const baseId = sourceId.trim() || "template";
+    const existingIds = new Set(templates
+        .filter((template) => template.level === level)
+        .map((template) => template.id));
+    let candidate = `${baseId}-copy`;
+    if (!existingIds.has(candidate)) {
+        return candidate;
+    }
+    let suffix = 2;
+    while (existingIds.has(`${candidate}-${suffix}`)) {
+        suffix += 1;
+    }
+    return `${candidate}-${suffix}`;
+}
 export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, onExit, onDeploy, }) {
     const [focusSection, setFocusSection] = useState("templates");
     const [selectedField, setSelectedField] = useState("id");
@@ -213,6 +228,7 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
     const [models, setModels] = useState([]);
     const [isFetchingModels, setIsFetchingModels] = useState(false);
     const [editorResetToken, setEditorResetToken] = useState(0);
+    const pendingNewDraftRef = useRef(null);
     const manager = useMemo(() => new TaskTemplateManager(projectRoot), [projectRoot]);
     const templatesByKey = useMemo(() => {
         const map = new Map();
@@ -269,13 +285,23 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
     }, [reloadTemplates]);
     useEffect(() => {
         if (!selectedTemplate) {
-            setDraft(buildEmptyDraft(settings, currentModel));
+            if (selectedTemplateKey !== NEW_TEMPLATE_KEY) {
+                return;
+            }
+            if (pendingNewDraftRef.current) {
+                setDraft(pendingNewDraftRef.current);
+                pendingNewDraftRef.current = null;
+            }
+            else {
+                setDraft(buildEmptyDraft(settings, currentModel));
+            }
             setEditorResetToken((value) => value + 1);
             return;
         }
         setDraft(buildDraftFromTemplate(selectedTemplate, settings, currentModel));
         setEditorResetToken((value) => value + 1);
-    }, [selectedTemplate, settings, currentModel]);
+        pendingNewDraftRef.current = null;
+    }, [selectedTemplate, selectedTemplateKey, settings, currentModel]);
     useEffect(() => {
         let cancelled = false;
         setIsFetchingModels(true);
@@ -586,6 +612,7 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
     const actionItems = [
         { label: "Save Template", value: "save" },
         { label: "Deploy", value: "deploy" },
+        { label: "Duplicate Template", value: "duplicate" },
         { label: "Delete Template", value: "delete" },
         { label: "New Template", value: "new" },
         { label: "Reload", value: "reload" },
@@ -603,11 +630,28 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             void handleDeployTemplate();
             return;
         }
+        if (action === "duplicate") {
+            if (!selectedTemplate) {
+                setErrorMessage("Select an existing template to duplicate.");
+                return;
+            }
+            const duplicatedDraft = buildDraftFromTemplate(selectedTemplate, settings, currentModel);
+            const duplicateId = buildDuplicateTemplateId(duplicatedDraft.id, duplicatedDraft.level, templates);
+            duplicatedDraft.id = duplicateId;
+            setSelectedTemplateKey(NEW_TEMPLATE_KEY);
+            pendingNewDraftRef.current = duplicatedDraft;
+            setSelectedField("id");
+            setFocusSection("editor");
+            setErrorMessage(null);
+            setStatusMessage(`Duplicating "${selectedTemplate.id}" as "${duplicateId}".`);
+            return;
+        }
         if (action === "delete") {
             void handleDeleteTemplate();
             return;
         }
         if (action === "new") {
+            pendingNewDraftRef.current = null;
             setSelectedTemplateKey(NEW_TEMPLATE_KEY);
             setDraft(buildEmptyDraft(settings, currentModel));
             setEditorResetToken((value) => value + 1);
@@ -624,6 +668,8 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         saveTemplate,
         handleDeployTemplate,
         handleDeleteTemplate,
+        selectedTemplate,
+        templates,
         settings,
         currentModel,
         reloadTemplates,
@@ -733,10 +779,15 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
     };
     return (_jsxs(Box, { borderStyle: "round", borderColor: Colors.AccentBlue, flexDirection: "row", width: "100%", padding: 1, gap: 1, children: [_jsxs(Box, { flexDirection: "column", width: "40%", paddingRight: 1, children: [_jsxs(Text, { bold: focusSection === "templates", children: [focusSection === "templates" ? "> " : "  ", "Templates"] }), isLoadingTemplates ? (_jsx(Text, { color: Colors.Gray, children: "Loading templates..." })) : (_jsx(RadioButtonSelect, { items: templateOptions, initialIndex: selectedTemplateIndex, onSelect: (value) => {
                             setSelectedTemplateKey(value);
+                            if (value === NEW_TEMPLATE_KEY) {
+                                pendingNewDraftRef.current = null;
+                                setDraft(buildEmptyDraft(settings, currentModel));
+                                setEditorResetToken((token) => token + 1);
+                            }
                             setFocusSection("fields");
                         }, isFocused: focusSection === "templates", maxItemsToShow: 14 }, `templates-${selectedTemplateIndex}-${templateOptions.length}`))] }), _jsxs(Box, { flexDirection: "column", width: "60%", paddingLeft: 1, children: [_jsxs(Text, { bold: focusSection === "fields", children: [focusSection === "fields" ? "> " : "  ", "Fields"] }), _jsx(RadioButtonSelect, { items: fieldItems, initialIndex: selectedFieldIndex, onSelect: (value) => {
                             setSelectedField(value);
                             setFocusSection("editor");
-                        }, isFocused: focusSection === "fields", maxItemsToShow: 7 }, `fields-${selectedFieldIndex}`), _jsxs(Box, { marginTop: 1, flexDirection: "column", children: [_jsxs(Text, { bold: focusSection === "editor", children: [focusSection === "editor" ? "> " : "  ", "Editor (", selectedField, ")"] }), renderFieldEditor()] }), _jsxs(Box, { marginTop: 1, flexDirection: "column", children: [_jsxs(Text, { bold: focusSection === "actions", children: [focusSection === "actions" ? "> " : "  ", "Actions"] }), _jsx(RadioButtonSelect, { items: actionItems, initialIndex: 0, onSelect: handleActionSelect, isFocused: focusSection === "actions", maxItemsToShow: 6 }, `actions-${isBusy ? "busy" : "idle"}`)] }), _jsxs(Box, { marginTop: 1, flexDirection: "column", children: [isBuiltinTemplate && (_jsx(Text, { color: Colors.AccentYellow, children: "Builtin templates are read-only. Saving creates a project/user copy." })), statusMessage && (_jsx(Text, { color: Colors.AccentGreen, children: statusMessage })), errorMessage && _jsx(Text, { color: Colors.AccentRed, children: errorMessage }), _jsx(Text, { color: Colors.Gray, children: "Tab cycles panels. Enter selects. Esc closes." })] })] })] }));
+                        }, isFocused: focusSection === "fields", maxItemsToShow: 7 }, `fields-${selectedFieldIndex}`), _jsxs(Box, { marginTop: 1, flexDirection: "column", children: [_jsxs(Text, { bold: focusSection === "editor", children: [focusSection === "editor" ? "> " : "  ", "Editor (", selectedField, ")"] }), renderFieldEditor()] }), _jsxs(Box, { marginTop: 1, flexDirection: "column", children: [_jsxs(Text, { bold: focusSection === "actions", children: [focusSection === "actions" ? "> " : "  ", "Actions"] }), _jsx(RadioButtonSelect, { items: actionItems, initialIndex: 0, onSelect: handleActionSelect, isFocused: focusSection === "actions", maxItemsToShow: 7 }, `actions-${isBusy ? "busy" : "idle"}`)] }), _jsxs(Box, { marginTop: 1, flexDirection: "column", children: [isBuiltinTemplate && (_jsx(Text, { color: Colors.AccentYellow, children: "Builtin templates are read-only. Saving creates a project/user copy." })), statusMessage && (_jsx(Text, { color: Colors.AccentGreen, children: statusMessage })), errorMessage && _jsx(Text, { color: Colors.AccentRed, children: errorMessage }), _jsx(Text, { color: Colors.Gray, children: "Tab cycles panels. Enter selects. Esc closes." })] })] })] }));
 }
 //# sourceMappingURL=TaskTemplateEditorDialog.js.map

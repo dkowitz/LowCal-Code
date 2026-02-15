@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": "2026-02-15T12:56:47.031Z",
+  "updated_at": "2026-02-15T14:25:30.807Z",
   "tasks": {
     "simple-test-task": {
       "task_id": "simple-test-task",
@@ -482,6 +482,59 @@
         "child_session_id": "48d5b729-aa7f-4655-98f2-0078a0ceea99",
         "message_timestamp": "2026-02-15T12:56:47.031Z"
       }
+    },
+    "vision-ocr-1771165276718": {
+      "task_id": "vision-ocr-1771165276718",
+      "status": "completed",
+      "created_at": "2026-02-15T14:21:16.759Z",
+      "started_at": "2026-02-15T14:21:16.894Z",
+      "finished_at": "2026-02-15T14:25:30.807Z",
+      "last_heartbeat": "2026-02-15T14:25:30.807Z",
+      "prompt_preview": "Find all image files in this directory and describe what's in them.",
+      "parent_session_id": "1d17d791-4b78-4b2d-9e7e-1bce8dc5c1ac",
+      "source_session_id": "1d17d791-4b78-4b2d-9e7e-1bce8dc5c1ac",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "model_requested": "qwen/qwen3-vl-8b",
+      "model_actual": "qwen/qwen3-vl-8b",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "auth_actual": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "vision-ocr",
+        "template_level": "user",
+        "action_type": "prompt",
+        "action_value": "Find all image files in this directory and describe what's in them.",
+        "execution_mode": "zellij_tab",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "lmstudio",
+          "baseUrl": "http://uby:1234/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "qwen/qwen3-vl-8b"
+        },
+        "run": {
+          "returnToSession": true
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/1d17d791-4b78-4b2d-9e7e-1bce8dc5c1ac.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-vision-ocr-1771165276718-1771165276759.log",
+        "child_session_id": "headless-vision-ocr-1771165276718-1771165277318",
+        "message_timestamp": "2026-02-15T14:25:30.807Z"
+      },
+      "tab_name": "task:vision-ocr-1771165276718"
     }
   }
 }

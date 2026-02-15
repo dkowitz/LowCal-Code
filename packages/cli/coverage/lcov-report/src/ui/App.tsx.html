@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/1973</span>
+                <span class='fraction'>0/1981</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/1973</span>
+                <span class='fraction'>0/1981</span>
             </div>
         
             
@@ -2459,7 +2459,15 @@
 <a name='L2394'></a><a href='#L2394'>2394</a>
 <a name='L2395'></a><a href='#L2395'>2395</a>
 <a name='L2396'></a><a href='#L2396'>2396</a>
-<a name='L2397'></a><a href='#L2397'>2397</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L2397'></a><a href='#L2397'>2397</a>
+<a name='L2398'></a><a href='#L2398'>2398</a>
+<a name='L2399'></a><a href='#L2399'>2399</a>
+<a name='L2400'></a><a href='#L2400'>2400</a>
+<a name='L2401'></a><a href='#L2401'>2401</a>
+<a name='L2402'></a><a href='#L2402'>2402</a>
+<a name='L2403'></a><a href='#L2403'>2403</a>
+<a name='L2404'></a><a href='#L2404'>2404</a>
+<a name='L2405'></a><a href='#L2405'>2405</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -3775,6 +3783,9 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -3794,6 +3805,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -3817,6 +3829,7 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -3837,6 +3850,9 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -6171,6 +6187,9 @@ interface AppProps {
 <span class="cstat-no" title="statement not covered" >    },</span>
 <span class="cstat-no" title="statement not covered" >    [closeResumeDialog, handleSlashCommand],</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
+<span class="cstat-no" title="statement not covered" >  const submitQueryForDeployRef = useRef&lt;(query: string) =&gt; Promise&lt;void&gt;&gt;(</span>
+<span class="cstat-no" title="statement not covered" >    async () =&gt; {},</span>
+<span class="cstat-no" title="statement not covered" >  );</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const handleTaskTemplateDeploy = useCallback(</span>
 <span class="cstat-no" title="statement not covered" >    async (request: TaskTemplateDeployRequest) =&gt; {</span>
@@ -6207,16 +6226,18 @@ interface AppProps {
 <span class="cstat-no" title="statement not covered" >        const jobArg = trimmedJobId</span>
 <span class="cstat-no" title="statement not covered" >          ? ` --id "${trimmedJobId.replace(/"/g, '\\"')}"`</span>
 <span class="cstat-no" title="statement not covered" >          : "";</span>
-<span class="cstat-no" title="statement not covered" >        await handleSlashCommand(</span>
+<span class="cstat-no" title="statement not covered" >        await submitQueryForDeployRef.current(</span>
 <span class="cstat-no" title="statement not covered" >          `/tasks schedule ${templateId} "${escapedSchedule}"${jobArg}${levelArg}`,</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
 <span class="cstat-no" title="statement not covered" >      } else {</span>
-<span class="cstat-no" title="statement not covered" >        await handleSlashCommand(`/tasks run ${templateId}${levelArg}`);</span>
+<span class="cstat-no" title="statement not covered" >        await submitQueryForDeployRef.current(</span>
+<span class="cstat-no" title="statement not covered" >          `/tasks run ${templateId}${levelArg}`,</span>
+<span class="cstat-no" title="statement not covered" >        );</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >      setIsTaskTemplateDialogOpen(false);</span>
 <span class="cstat-no" title="statement not covered" >    },</span>
-<span class="cstat-no" title="statement not covered" >    [addItem, handleSlashCommand],</span>
+<span class="cstat-no" title="statement not covered" >    [addItem],</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const buffer = useTextBuffer({</span>
@@ -6259,6 +6280,9 @@ interface AppProps {
 <span class="cstat-no" title="statement not covered" >    handleVisionSwitchRequired,</span>
 <span class="cstat-no" title="statement not covered" >    refreshLmStudioModel,</span>
 <span class="cstat-no" title="statement not covered" >  );</span>
+<span class="cstat-no" title="statement not covered" >  submitQueryForDeployRef.current = async (query: string) =&gt; {</span>
+<span class="cstat-no" title="statement not covered" >    await submitQuery(query);</span>
+<span class="cstat-no" title="statement not covered" >  };</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >  const pendingHistoryItems = useMemo(</span>
 <span class="cstat-no" title="statement not covered" >    () =&gt;</span>
@@ -7258,7 +7282,7 @@ interface AppProps {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-14T17:04:37.018Z
+                at 2026-02-15T14:30:52.530Z
             </div>
         <script src="../../prettify.js"></script>
         <script>
