@@ -30,6 +30,7 @@ import { toolsetCommand } from "../ui/commands/toolsetCommand.js";
 import { ideCommand } from "../ui/commands/ideCommand.js";
 import { initCommand } from "../ui/commands/initCommand.js";
 import { mcpCommand } from "../ui/commands/mcpCommand.js";
+import { mailboxCommand } from "../ui/commands/mailboxCommand.js";
 import { memoryCommand } from "../ui/commands/memoryCommand.js";
 import { modelCommand } from "../ui/commands/modelCommand.js";
 import { loggingCommand } from "../ui/commands/loggingCommand.js";
@@ -86,6 +87,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       ideCommand(this.config),
       initCommand,
       mcpCommand,
+      mailboxCommand,
       memoryCommand,
       modelCommand,
       loggingCommand,

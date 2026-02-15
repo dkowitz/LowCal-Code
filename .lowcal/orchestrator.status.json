@@ -2,7 +2,7 @@
   "running": true,
   "pid": 9622,
   "started_at": "2026-02-13T14:20:24.898Z",
-  "last_tick": "2026-02-15T15:12:35.763Z",
+  "last_tick": "2026-02-15T16:24:07.794Z",
   "tick_interval_ms": 15000,
   "policy_ids": [
     "recover_stalled_session"

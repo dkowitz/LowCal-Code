@@ -863,14 +863,14 @@ var require_url_state_machine = __commonJS({
       return url2.replace(/\u0009|\u000A|\u000D/g, "");
     }
     function shortenPath2(url2) {
-      const path108 = url2.path;
-      if (path108.length === 0) {
+      const path109 = url2.path;
+      if (path109.length === 0) {
         return;
       }
-      if (url2.scheme === "file" && path108.length === 1 && isNormalizedWindowsDriveLetter(path108[0])) {
+      if (url2.scheme === "file" && path109.length === 1 && isNormalizedWindowsDriveLetter(path109[0])) {
         return;
       }
-      path108.pop();
+      path109.pop();
     }
     function includesCredentials(url2) {
       return url2.username !== "" || url2.password !== "";
@@ -10357,12 +10357,12 @@ var require_src5 = __commonJS({
     var _GoogleToken_requestToken;
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.GoogleToken = void 0;
-    var fs93 = __require("fs");
+    var fs94 = __require("fs");
     var gaxios_1 = require_src2();
     var jws = require_jws();
-    var path108 = __require("path");
+    var path109 = __require("path");
     var util_1 = __require("util");
-    var readFile18 = fs93.readFile ? (0, util_1.promisify)(fs93.readFile) : async () => {
+    var readFile19 = fs94.readFile ? (0, util_1.promisify)(fs94.readFile) : async () => {
       throw new ErrorWithCode("use key rather than keyFile.", "MISSING_CREDENTIALS");
     };
     var GOOGLE_TOKEN_URL = "https://www.googleapis.com/oauth2/v4/token";
@@ -10448,10 +10448,10 @@ var require_src5 = __commonJS({
        * @returns an object with privateKey and clientEmail properties
        */
       async getCredentials(keyFile) {
-        const ext2 = path108.extname(keyFile);
+        const ext2 = path109.extname(keyFile);
         switch (ext2) {
           case ".json": {
-            const key = await readFile18(keyFile, "utf8");
+            const key = await readFile19(keyFile, "utf8");
             const body = JSON.parse(key);
             const privateKey = body.private_key;
             const clientEmail = body.client_email;
@@ -10463,7 +10463,7 @@ var require_src5 = __commonJS({
           case ".der":
           case ".crt":
           case ".pem": {
-            const privateKey = await readFile18(keyFile, "utf8");
+            const privateKey = await readFile19(keyFile, "utf8");
             return { privateKey };
           }
           case ".p12":
@@ -11919,12 +11919,12 @@ var require_filesubjecttokensupplier = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.FileSubjectTokenSupplier = void 0;
     var util_1 = __require("util");
-    var fs93 = __require("fs");
-    var readFile18 = (0, util_1.promisify)((_a6 = fs93.readFile) !== null && _a6 !== void 0 ? _a6 : () => {
+    var fs94 = __require("fs");
+    var readFile19 = (0, util_1.promisify)((_a6 = fs94.readFile) !== null && _a6 !== void 0 ? _a6 : () => {
     });
-    var realpath2 = (0, util_1.promisify)((_b2 = fs93.realpath) !== null && _b2 !== void 0 ? _b2 : () => {
+    var realpath2 = (0, util_1.promisify)((_b2 = fs94.realpath) !== null && _b2 !== void 0 ? _b2 : () => {
     });
-    var lstat4 = (0, util_1.promisify)((_c2 = fs93.lstat) !== null && _c2 !== void 0 ? _c2 : () => {
+    var lstat4 = (0, util_1.promisify)((_c2 = fs94.lstat) !== null && _c2 !== void 0 ? _c2 : () => {
     });
     var FileSubjectTokenSupplier = class {
       /**
@@ -11957,7 +11957,7 @@ var require_filesubjecttokensupplier = __commonJS({
           throw err;
         }
         let subjectToken;
-        const rawText = await readFile18(parsedFilePath, { encoding: "utf8" });
+        const rawText = await readFile19(parsedFilePath, { encoding: "utf8" });
         if (this.formatType === "text") {
           subjectToken = rawText;
         } else if (this.formatType === "json" && this.subjectTokenFieldName) {
@@ -12642,7 +12642,7 @@ var require_pluggable_auth_handler = __commonJS({
     var pluggable_auth_client_1 = require_pluggable_auth_client();
     var executable_response_1 = require_executable_response();
     var childProcess3 = __require("child_process");
-    var fs93 = __require("fs");
+    var fs94 = __require("fs");
     var PluggableAuthHandler = class _PluggableAuthHandler {
       /**
        * Instantiates a PluggableAuthHandler instance using the provided
@@ -12712,14 +12712,14 @@ var require_pluggable_auth_handler = __commonJS({
         }
         let filePath;
         try {
-          filePath = await fs93.promises.realpath(this.outputFile);
+          filePath = await fs94.promises.realpath(this.outputFile);
         } catch (_a6) {
           return void 0;
         }
-        if (!(await fs93.promises.lstat(filePath)).isFile()) {
+        if (!(await fs94.promises.lstat(filePath)).isFile()) {
           return void 0;
         }
-        const responseString = await fs93.promises.readFile(filePath, {
+        const responseString = await fs94.promises.readFile(filePath, {
           encoding: "utf8"
         });
         if (responseString === "") {
@@ -13140,10 +13140,10 @@ var require_googleauth = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.GoogleAuth = exports2.GoogleAuthExceptionMessages = exports2.CLOUD_SDK_CLIENT_ID = void 0;
     var child_process_1 = __require("child_process");
-    var fs93 = __require("fs");
+    var fs94 = __require("fs");
     var gcpMetadata = require_src4();
     var os39 = __require("os");
-    var path108 = __require("path");
+    var path109 = __require("path");
     var crypto_1 = require_crypto3();
     var transporters_1 = require_transporters();
     var computeclient_1 = require_computeclient();
@@ -13404,12 +13404,12 @@ var require_googleauth = __commonJS({
         } else {
           const home = process.env["HOME"];
           if (home) {
-            location = path108.join(home, ".config");
+            location = path109.join(home, ".config");
           }
         }
         if (location) {
-          location = path108.join(location, "gcloud", "application_default_credentials.json");
-          if (!fs93.existsSync(location)) {
+          location = path109.join(location, "gcloud", "application_default_credentials.json");
+          if (!fs94.existsSync(location)) {
             location = null;
           }
         }
@@ -13430,8 +13430,8 @@ var require_googleauth = __commonJS({
           throw new Error("The file path is invalid.");
         }
         try {
-          filePath = fs93.realpathSync(filePath);
-          if (!fs93.lstatSync(filePath).isFile()) {
+          filePath = fs94.realpathSync(filePath);
+          if (!fs94.lstatSync(filePath).isFile()) {
             throw new Error();
           }
         } catch (err) {
@@ -13440,7 +13440,7 @@ var require_googleauth = __commonJS({
           }
           throw err;
         }
-        const readStream = fs93.createReadStream(filePath);
+        const readStream = fs94.createReadStream(filePath);
         return this.fromStream(readStream, options2);
       }
       /**
@@ -13826,8 +13826,8 @@ var require_googleauth = __commonJS({
       if (this.jsonContent) {
         return this._cacheClientFromJSON(this.jsonContent, this.clientOptions);
       } else if (this.keyFilename) {
-        const filePath = path108.resolve(this.keyFilename);
-        const stream2 = fs93.createReadStream(filePath);
+        const filePath = path109.resolve(this.keyFilename);
+        const stream2 = fs94.createReadStream(filePath);
         return await this.fromStreamAsync(stream2, this.clientOptions);
       } else if (this.apiKey) {
         const client = await this.fromAPIKey(this.apiKey, this.clientOptions);
@@ -30125,17 +30125,17 @@ var init_node = __esm({
       async createInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = createBatchJobParametersToVertex(this.apiClient, params);
-          path108 = formatMap("batchPredictionJobs", body["_url"]);
+          path109 = formatMap("batchPredictionJobs", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -30150,13 +30150,13 @@ var init_node = __esm({
           });
         } else {
           const body = createBatchJobParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{model}:batchGenerateContent", body["_url"]);
+          path109 = formatMap("{model}:batchGenerateContent", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -30185,17 +30185,17 @@ var init_node = __esm({
       async get(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = getBatchJobParametersToVertex(this.apiClient, params);
-          path108 = formatMap("batchPredictionJobs/{name}", body["_url"]);
+          path109 = formatMap("batchPredictionJobs/{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30210,13 +30210,13 @@ var init_node = __esm({
           });
         } else {
           const body = getBatchJobParametersToMldev(this.apiClient, params);
-          path108 = formatMap("batches/{name}", body["_url"]);
+          path109 = formatMap("batches/{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30244,17 +30244,17 @@ var init_node = __esm({
        */
       async cancel(params) {
         var _a6, _b2, _c2, _d;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = cancelBatchJobParametersToVertex(this.apiClient, params);
-          path108 = formatMap("batchPredictionJobs/{name}:cancel", body["_url"]);
+          path109 = formatMap("batchPredictionJobs/{name}:cancel", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           await this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -30263,13 +30263,13 @@ var init_node = __esm({
           });
         } else {
           const body = cancelBatchJobParametersToMldev(this.apiClient, params);
-          path108 = formatMap("batches/{name}:cancel", body["_url"]);
+          path109 = formatMap("batches/{name}:cancel", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           await this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -30281,17 +30281,17 @@ var init_node = __esm({
       async listInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = listBatchJobsParametersToVertex(params);
-          path108 = formatMap("batchPredictionJobs", body["_url"]);
+          path109 = formatMap("batchPredictionJobs", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30314,13 +30314,13 @@ var init_node = __esm({
           });
         } else {
           const body = listBatchJobsParametersToMldev(params);
-          path108 = formatMap("batches", body["_url"]);
+          path109 = formatMap("batches", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30357,17 +30357,17 @@ var init_node = __esm({
       async delete(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = deleteBatchJobParametersToVertex(this.apiClient, params);
-          path108 = formatMap("batchPredictionJobs/{name}", body["_url"]);
+          path109 = formatMap("batchPredictionJobs/{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -30388,13 +30388,13 @@ var init_node = __esm({
           });
         } else {
           const body = deleteBatchJobParametersToMldev(this.apiClient, params);
-          path108 = formatMap("batches/{name}", body["_url"]);
+          path109 = formatMap("batches/{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -30453,17 +30453,17 @@ var init_node = __esm({
       async create(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = createCachedContentParametersToVertex(this.apiClient, params);
-          path108 = formatMap("cachedContents", body["_url"]);
+          path109 = formatMap("cachedContents", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -30478,13 +30478,13 @@ var init_node = __esm({
           });
         } else {
           const body = createCachedContentParametersToMldev(this.apiClient, params);
-          path108 = formatMap("cachedContents", body["_url"]);
+          path109 = formatMap("cachedContents", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -30513,17 +30513,17 @@ var init_node = __esm({
       async get(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = getCachedContentParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30538,13 +30538,13 @@ var init_node = __esm({
           });
         } else {
           const body = getCachedContentParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30573,17 +30573,17 @@ var init_node = __esm({
       async delete(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = deleteCachedContentParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -30600,13 +30600,13 @@ var init_node = __esm({
           });
         } else {
           const body = deleteCachedContentParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -30640,17 +30640,17 @@ var init_node = __esm({
       async update(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = updateCachedContentParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "PATCH",
@@ -30665,13 +30665,13 @@ var init_node = __esm({
           });
         } else {
           const body = updateCachedContentParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "PATCH",
@@ -30689,17 +30689,17 @@ var init_node = __esm({
       async listInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = listCachedContentsParametersToVertex(params);
-          path108 = formatMap("cachedContents", body["_url"]);
+          path109 = formatMap("cachedContents", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -30722,13 +30722,13 @@ var init_node = __esm({
           });
         } else {
           const body = listCachedContentsParametersToMldev(params);
-          path108 = formatMap("cachedContents", body["_url"]);
+          path109 = formatMap("cachedContents", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -31050,19 +31050,19 @@ var init_node = __esm({
       async listInternal(params) {
         var _a6, _b2;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           throw new Error("This method is only supported by the Gemini Developer API.");
         } else {
           const body = listFilesParametersToMldev(params);
-          path108 = formatMap("files", body["_url"]);
+          path109 = formatMap("files", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -31088,19 +31088,19 @@ var init_node = __esm({
       async createInternal(params) {
         var _a6, _b2;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           throw new Error("This method is only supported by the Gemini Developer API.");
         } else {
           const body = createFileParametersToMldev(params);
-          path108 = formatMap("upload/v1beta/files", body["_url"]);
+          path109 = formatMap("upload/v1beta/files", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -31135,19 +31135,19 @@ var init_node = __esm({
       async get(params) {
         var _a6, _b2;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           throw new Error("This method is only supported by the Gemini Developer API.");
         } else {
           const body = getFileParametersToMldev(params);
-          path108 = formatMap("files/{file}", body["_url"]);
+          path109 = formatMap("files/{file}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -31178,19 +31178,19 @@ var init_node = __esm({
       async delete(params) {
         var _a6, _b2;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           throw new Error("This method is only supported by the Gemini Developer API.");
         } else {
           const body = deleteFileParametersToMldev(params);
-          path108 = formatMap("files/{file}", body["_url"]);
+          path109 = formatMap("files/{file}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -31325,13 +31325,13 @@ var init_node = __esm({
           throw new Error("HTTP options are not correctly set.");
         }
       }
-      constructUrl(path108, httpOptions, prependProjectLocation) {
+      constructUrl(path109, httpOptions, prependProjectLocation) {
         const urlElement = [this.getRequestUrlInternal(httpOptions)];
         if (prependProjectLocation) {
           urlElement.push(this.getBaseResourcePath());
         }
-        if (path108 !== "") {
-          urlElement.push(path108);
+        if (path109 !== "") {
+          urlElement.push(path109);
         }
         const url2 = new URL(`${urlElement.join("/")}`);
         return url2;
@@ -32525,17 +32525,17 @@ var init_node = __esm({
       async generateContentInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = generateContentParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{model}:generateContent", body["_url"]);
+          path109 = formatMap("{model}:generateContent", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32558,13 +32558,13 @@ var init_node = __esm({
           });
         } else {
           const body = generateContentParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{model}:generateContent", body["_url"]);
+          path109 = formatMap("{model}:generateContent", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32590,18 +32590,18 @@ var init_node = __esm({
       async generateContentStreamInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = generateContentParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{model}:streamGenerateContent?alt=sse", body["_url"]);
+          path109 = formatMap("{model}:streamGenerateContent?alt=sse", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           const apiClient = this.apiClient;
           response = apiClient.requestStream({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32637,14 +32637,14 @@ var init_node = __esm({
           });
         } else {
           const body = generateContentParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{model}:streamGenerateContent?alt=sse", body["_url"]);
+          path109 = formatMap("{model}:streamGenerateContent?alt=sse", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           const apiClient = this.apiClient;
           response = apiClient.requestStream({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32704,17 +32704,17 @@ var init_node = __esm({
       async embedContent(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = embedContentParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{model}:predict", body["_url"]);
+          path109 = formatMap("{model}:predict", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32737,13 +32737,13 @@ var init_node = __esm({
           });
         } else {
           const body = embedContentParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{model}:batchEmbedContents", body["_url"]);
+          path109 = formatMap("{model}:batchEmbedContents", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32788,17 +32788,17 @@ var init_node = __esm({
       async generateImagesInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = generateImagesParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{model}:predict", body["_url"]);
+          path109 = formatMap("{model}:predict", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32821,13 +32821,13 @@ var init_node = __esm({
           });
         } else {
           const body = generateImagesParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{model}:predict", body["_url"]);
+          path109 = formatMap("{model}:predict", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32853,17 +32853,17 @@ var init_node = __esm({
       async editImageInternal(params) {
         var _a6, _b2;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = editImageParametersInternalToVertex(this.apiClient, params);
-          path108 = formatMap("{model}:predict", body["_url"]);
+          path109 = formatMap("{model}:predict", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32891,17 +32891,17 @@ var init_node = __esm({
       async upscaleImageInternal(params) {
         var _a6, _b2;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = upscaleImageAPIParametersInternalToVertex(this.apiClient, params);
-          path108 = formatMap("{model}:predict", body["_url"]);
+          path109 = formatMap("{model}:predict", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -32967,17 +32967,17 @@ var init_node = __esm({
       async recontextImage(params) {
         var _a6, _b2;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = recontextImageParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{model}:predict", body["_url"]);
+          path109 = formatMap("{model}:predict", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33007,17 +33007,17 @@ var init_node = __esm({
       async get(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = getModelParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33032,13 +33032,13 @@ var init_node = __esm({
           });
         } else {
           const body = getModelParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33056,17 +33056,17 @@ var init_node = __esm({
       async listInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = listModelsParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{models_url}", body["_url"]);
+          path109 = formatMap("{models_url}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33089,13 +33089,13 @@ var init_node = __esm({
           });
         } else {
           const body = listModelsParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{models_url}", body["_url"]);
+          path109 = formatMap("{models_url}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33138,17 +33138,17 @@ var init_node = __esm({
       async update(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = updateModelParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{model}", body["_url"]);
+          path109 = formatMap("{model}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "PATCH",
@@ -33163,13 +33163,13 @@ var init_node = __esm({
           });
         } else {
           const body = updateModelParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "PATCH",
@@ -33198,17 +33198,17 @@ var init_node = __esm({
       async delete(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = deleteModelParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -33225,13 +33225,13 @@ var init_node = __esm({
           });
         } else {
           const body = deleteModelParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "DELETE",
@@ -33267,17 +33267,17 @@ var init_node = __esm({
       async countTokens(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = countTokensParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{model}:countTokens", body["_url"]);
+          path109 = formatMap("{model}:countTokens", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33300,13 +33300,13 @@ var init_node = __esm({
           });
         } else {
           const body = countTokensParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{model}:countTokens", body["_url"]);
+          path109 = formatMap("{model}:countTokens", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33350,17 +33350,17 @@ var init_node = __esm({
       async computeTokens(params) {
         var _a6, _b2;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = computeTokensParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{model}:computeTokens", body["_url"]);
+          path109 = formatMap("{model}:computeTokens", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33411,17 +33411,17 @@ var init_node = __esm({
       async generateVideosInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = generateVideosParametersToVertex(this.apiClient, params);
-          path108 = formatMap("{model}:predictLongRunning", body["_url"]);
+          path109 = formatMap("{model}:predictLongRunning", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33438,13 +33438,13 @@ var init_node = __esm({
           });
         } else {
           const body = generateVideosParametersToMldev(this.apiClient, params);
-          path108 = formatMap("{model}:predictLongRunning", body["_url"]);
+          path109 = formatMap("{model}:predictLongRunning", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33546,17 +33546,17 @@ var init_node = __esm({
       async getVideosOperationInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = getOperationParametersToVertex(params);
-          path108 = formatMap("{operationName}", body["_url"]);
+          path109 = formatMap("{operationName}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33568,13 +33568,13 @@ var init_node = __esm({
           return response;
         } else {
           const body = getOperationParametersToMldev(params);
-          path108 = formatMap("{operationName}", body["_url"]);
+          path109 = formatMap("{operationName}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33589,17 +33589,17 @@ var init_node = __esm({
       async fetchPredictVideosOperationInternal(params) {
         var _a6, _b2;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = fetchPredictOperationParametersToVertex(params);
-          path108 = formatMap("{resourceName}:fetchPredictOperation", body["_url"]);
+          path109 = formatMap("{resourceName}:fetchPredictOperation", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -33705,20 +33705,20 @@ var init_node = __esm({
       async create(params) {
         var _a6, _b2;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           throw new Error("The client.tokens.create method is only supported by the Gemini Developer API.");
         } else {
           const body = createAuthTokenParametersToMldev(this.apiClient, params);
-          path108 = formatMap("auth_tokens", body["_url"]);
+          path109 = formatMap("auth_tokens", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           const transformedBody = convertBidiSetupToTokenSetup(body, params.config);
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(transformedBody),
             httpMethod: "POST",
@@ -33857,17 +33857,17 @@ var init_node = __esm({
       async getInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = getTuningJobParametersToVertex(params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33888,13 +33888,13 @@ var init_node = __esm({
           });
         } else {
           const body = getTuningJobParametersToMldev(params);
-          path108 = formatMap("{name}", body["_url"]);
+          path109 = formatMap("{name}", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33918,17 +33918,17 @@ var init_node = __esm({
       async listInternal(params) {
         var _a6, _b2, _c2, _d;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = listTuningJobsParametersToVertex(params);
-          path108 = formatMap("tuningJobs", body["_url"]);
+          path109 = formatMap("tuningJobs", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33951,13 +33951,13 @@ var init_node = __esm({
           });
         } else {
           const body = listTuningJobsParametersToMldev(params);
-          path108 = formatMap("tunedModels", body["_url"]);
+          path109 = formatMap("tunedModels", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "GET",
@@ -33983,17 +33983,17 @@ var init_node = __esm({
       async tuneInternal(params) {
         var _a6, _b2;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           const body = createTuningJobParametersToVertex(params);
-          path108 = formatMap("tuningJobs", body["_url"]);
+          path109 = formatMap("tuningJobs", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -34019,19 +34019,19 @@ var init_node = __esm({
       async tuneMldevInternal(params) {
         var _a6, _b2;
         let response;
-        let path108 = "";
+        let path109 = "";
         let queryParams = {};
         if (this.apiClient.isVertexAI()) {
           throw new Error("This method is only supported by the Gemini Developer API.");
         } else {
           const body = createTuningJobParametersToMldev(params);
-          path108 = formatMap("tunedModels", body["_url"]);
+          path109 = formatMap("tunedModels", body["_url"]);
           queryParams = body["_query"];
           delete body["config"];
           delete body["_url"];
           delete body["_query"];
           response = this.apiClient.request({
-            path: path108,
+            path: path109,
             queryParams,
             body: JSON.stringify(body),
             httpMethod: "POST",
@@ -35218,14 +35218,14 @@ var require_util3 = __commonJS({
         }
         const port = url2.port != null ? url2.port : url2.protocol === "https:" ? 443 : 80;
         let origin = url2.origin != null ? url2.origin : `${url2.protocol || ""}//${url2.hostname || ""}:${port}`;
-        let path108 = url2.path != null ? url2.path : `${url2.pathname || ""}${url2.search || ""}`;
+        let path109 = url2.path != null ? url2.path : `${url2.pathname || ""}${url2.search || ""}`;
         if (origin[origin.length - 1] === "/") {
           origin = origin.slice(0, origin.length - 1);
         }
-        if (path108 && path108[0] !== "/") {
-          path108 = `/${path108}`;
+        if (path109 && path109[0] !== "/") {
+          path109 = `/${path109}`;
         }
-        return new URL(`${origin}${path108}`);
+        return new URL(`${origin}${path109}`);
       }
       if (!isHttpOrHttpsPrefixed(url2.origin || url2.protocol)) {
         throw new InvalidArgumentError("Invalid URL protocol: the URL must start with `http:` or `https:`.");
@@ -35787,9 +35787,9 @@ var require_diagnostics = __commonJS({
         "undici:client:sendHeaders",
         (evt) => {
           const {
-            request: { method, path: path108, origin }
+            request: { method, path: path109, origin }
           } = evt;
-          debugLog("sending request to %s %s/%s", method, origin, path108);
+          debugLog("sending request to %s %s/%s", method, origin, path109);
         }
       );
     }
@@ -35803,14 +35803,14 @@ var require_diagnostics = __commonJS({
         "undici:request:headers",
         (evt) => {
           const {
-            request: { method, path: path108, origin },
+            request: { method, path: path109, origin },
             response: { statusCode }
           } = evt;
           debugLog(
             "received response to %s %s/%s - HTTP %d",
             method,
             origin,
-            path108,
+            path109,
             statusCode
           );
         }
@@ -35819,23 +35819,23 @@ var require_diagnostics = __commonJS({
         "undici:request:trailers",
         (evt) => {
           const {
-            request: { method, path: path108, origin }
+            request: { method, path: path109, origin }
           } = evt;
-          debugLog("trailers received from %s %s/%s", method, origin, path108);
+          debugLog("trailers received from %s %s/%s", method, origin, path109);
         }
       );
       diagnosticsChannel.subscribe(
         "undici:request:error",
         (evt) => {
           const {
-            request: { method, path: path108, origin },
+            request: { method, path: path109, origin },
             error
           } = evt;
           debugLog(
             "request to %s %s/%s errored - %s",
             method,
             origin,
-            path108,
+            path109,
             error.message
           );
         }
@@ -35930,7 +35930,7 @@ var require_request = __commonJS({
     var kHandler = Symbol("handler");
     var Request2 = class {
       constructor(origin, {
-        path: path108,
+        path: path109,
         method,
         body,
         headers,
@@ -35945,11 +35945,11 @@ var require_request = __commonJS({
         servername,
         throwOnError
       }, handler) {
-        if (typeof path108 !== "string") {
+        if (typeof path109 !== "string") {
           throw new InvalidArgumentError("path must be a string");
-        } else if (path108[0] !== "/" && !(path108.startsWith("http://") || path108.startsWith("https://")) && method !== "CONNECT") {
+        } else if (path109[0] !== "/" && !(path109.startsWith("http://") || path109.startsWith("https://")) && method !== "CONNECT") {
           throw new InvalidArgumentError("path must be an absolute URL or start with a slash");
-        } else if (invalidPathRegex.test(path108)) {
+        } else if (invalidPathRegex.test(path109)) {
           throw new InvalidArgumentError("invalid request path");
         }
         if (typeof method !== "string") {
@@ -36014,7 +36014,7 @@ var require_request = __commonJS({
         this.completed = false;
         this.aborted = false;
         this.upgrade = upgrade || null;
-        this.path = query ? serializePathWithQuery(path108, query) : path108;
+        this.path = query ? serializePathWithQuery(path109, query) : path109;
         this.origin = origin;
         this.idempotent = idempotent == null ? method === "HEAD" || method === "GET" : idempotent;
         this.blocking = blocking ?? this.method !== "HEAD";
@@ -40799,7 +40799,7 @@ var require_client_h1 = __commonJS({
       return method !== "GET" && method !== "HEAD" && method !== "OPTIONS" && method !== "TRACE" && method !== "CONNECT";
     }
     function writeH1(client, request4) {
-      const { method, path: path108, host, upgrade, blocking, reset } = request4;
+      const { method, path: path109, host, upgrade, blocking, reset } = request4;
       let { body, headers, contentLength } = request4;
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH" || method === "QUERY" || method === "PROPFIND" || method === "PROPPATCH";
       if (util4.isFormDataLike(body)) {
@@ -40865,7 +40865,7 @@ var require_client_h1 = __commonJS({
       if (blocking) {
         socket[kBlocking] = true;
       }
-      let header = `${method} ${path108} HTTP/1.1\r
+      let header = `${method} ${path109} HTTP/1.1\r
 `;
       if (typeof host === "string") {
         header += `host: ${host}\r
@@ -41422,7 +41422,7 @@ var require_client_h2 = __commonJS({
     function writeH2(client, request4) {
       const requestTimeout = request4.bodyTimeout ?? client[kBodyTimeout];
       const session = client[kHTTP2Session];
-      const { method, path: path108, host, upgrade, expectContinue, signal, headers: reqHeaders } = request4;
+      const { method, path: path109, host, upgrade, expectContinue, signal, headers: reqHeaders } = request4;
       let { body } = request4;
       if (upgrade) {
         util4.errorRequest(client, request4, new Error("Upgrade not supported for H2"));
@@ -41493,7 +41493,7 @@ var require_client_h2 = __commonJS({
         stream2.setTimeout(requestTimeout);
         return true;
       }
-      headers[HTTP2_HEADER_PATH] = path108;
+      headers[HTTP2_HEADER_PATH] = path109;
       headers[HTTP2_HEADER_SCHEME] = "https";
       const expectsPayload = method === "PUT" || method === "POST" || method === "PATCH";
       if (body && typeof body.read === "function") {
@@ -44975,20 +44975,20 @@ var require_mock_utils = __commonJS({
       }
       return normalizedQp;
     }
-    function safeUrl(path108) {
-      if (typeof path108 !== "string") {
-        return path108;
+    function safeUrl(path109) {
+      if (typeof path109 !== "string") {
+        return path109;
       }
-      const pathSegments = path108.split("?", 3);
+      const pathSegments = path109.split("?", 3);
       if (pathSegments.length !== 2) {
-        return path108;
+        return path109;
       }
       const qp = new URLSearchParams(pathSegments.pop());
       qp.sort();
       return [...pathSegments, qp.toString()].join("?");
     }
-    function matchKey(mockDispatch2, { path: path108, method, body, headers }) {
-      const pathMatch = matchValue(mockDispatch2.path, path108);
+    function matchKey(mockDispatch2, { path: path109, method, body, headers }) {
+      const pathMatch = matchValue(mockDispatch2.path, path109);
       const methodMatch = matchValue(mockDispatch2.method, method);
       const bodyMatch = typeof mockDispatch2.body !== "undefined" ? matchValue(mockDispatch2.body, body) : true;
       const headersMatch = matchHeaders(mockDispatch2, headers);
@@ -45013,8 +45013,8 @@ var require_mock_utils = __commonJS({
       const basePath = key.query ? serializePathWithQuery(key.path, key.query) : key.path;
       const resolvedPath = typeof basePath === "string" ? safeUrl(basePath) : basePath;
       const resolvedPathWithoutTrailingSlash = removeTrailingSlash(resolvedPath);
-      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path108, ignoreTrailingSlash }) => {
-        return ignoreTrailingSlash ? matchValue(removeTrailingSlash(safeUrl(path108)), resolvedPathWithoutTrailingSlash) : matchValue(safeUrl(path108), resolvedPath);
+      let matchedMockDispatches = mockDispatches.filter(({ consumed }) => !consumed).filter(({ path: path109, ignoreTrailingSlash }) => {
+        return ignoreTrailingSlash ? matchValue(removeTrailingSlash(safeUrl(path109)), resolvedPathWithoutTrailingSlash) : matchValue(safeUrl(path109), resolvedPath);
       });
       if (matchedMockDispatches.length === 0) {
         throw new MockNotMatchedError(`Mock dispatch not matched for path '${resolvedPath}'`);
@@ -45052,19 +45052,19 @@ var require_mock_utils = __commonJS({
         mockDispatches.splice(index, 1);
       }
     }
-    function removeTrailingSlash(path108) {
-      while (path108.endsWith("/")) {
-        path108 = path108.slice(0, -1);
+    function removeTrailingSlash(path109) {
+      while (path109.endsWith("/")) {
+        path109 = path109.slice(0, -1);
       }
-      if (path108.length === 0) {
-        path108 = "/";
+      if (path109.length === 0) {
+        path109 = "/";
       }
-      return path108;
+      return path109;
     }
     function buildKey(opts) {
-      const { path: path108, method, body, headers, query } = opts;
+      const { path: path109, method, body, headers, query } = opts;
       return {
-        path: path108,
+        path: path109,
         method,
         body,
         headers,
@@ -45715,10 +45715,10 @@ var require_pending_interceptors_formatter = __commonJS({
       }
       format(pendingInterceptors) {
         const withPrettyHeaders = pendingInterceptors.map(
-          ({ method, path: path108, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
+          ({ method, path: path109, data: { statusCode }, persist, times, timesInvoked, origin }) => ({
             Method: method,
             Origin: origin,
-            Path: path108,
+            Path: path109,
             "Status code": statusCode,
             Persistent: persist ? PERSISTENT : NOT_PERSISTENT,
             Invocations: timesInvoked,
@@ -45795,9 +45795,9 @@ var require_mock_agent = __commonJS({
         const acceptNonStandardSearchParameters = this[kMockAgentAcceptsNonStandardSearchParameters];
         const dispatchOpts = { ...opts };
         if (acceptNonStandardSearchParameters && dispatchOpts.path) {
-          const [path108, searchParams] = dispatchOpts.path.split("?");
+          const [path109, searchParams] = dispatchOpts.path.split("?");
           const normalizedSearchParams = normalizeSearchParams(searchParams, acceptNonStandardSearchParameters);
-          dispatchOpts.path = `${path108}?${normalizedSearchParams}`;
+          dispatchOpts.path = `${path109}?${normalizedSearchParams}`;
         }
         return this[kAgent].dispatch(dispatchOpts, handler);
       }
@@ -46091,9 +46091,9 @@ var require_redirect_handler = __commonJS({
           return;
         }
         const { origin, pathname, search } = util4.parseURL(new URL(this.location, this.opts.origin && new URL(this.opts.path, this.opts.origin)));
-        const path108 = search ? `${pathname}${search}` : pathname;
+        const path109 = search ? `${pathname}${search}` : pathname;
         this.opts.headers = cleanRequestHeaders(this.opts.headers, statusCode === 303, this.opts.origin !== origin);
-        this.opts.path = path108;
+        this.opts.path = path109;
         this.opts.origin = origin;
         this.opts.maxRedirections = 0;
         this.opts.query = null;
@@ -51795,9 +51795,9 @@ var require_util6 = __commonJS({
         }
       }
     }
-    function validateCookiePath(path108) {
-      for (let i = 0; i < path108.length; ++i) {
-        const code = path108.charCodeAt(i);
+    function validateCookiePath(path109) {
+      for (let i = 0; i < path109.length; ++i) {
+        const code = path109.charCodeAt(i);
         if (code < 32 || // exclude CTLs (0-31)
         code === 127 || // DEL
         code === 59) {
@@ -54837,11 +54837,11 @@ var require_undici = __commonJS({
           if (typeof opts.path !== "string") {
             throw new InvalidArgumentError("invalid opts.path");
           }
-          let path108 = opts.path;
+          let path109 = opts.path;
           if (!opts.path.startsWith("/")) {
-            path108 = `/${path108}`;
+            path109 = `/${path109}`;
           }
-          url2 = new URL(util4.parseOrigin(url2).origin + path108);
+          url2 = new URL(util4.parseOrigin(url2).origin + path109);
         } else {
           if (!opts) {
             opts = typeof url2 === "object" ? url2 : {};
@@ -55341,8 +55341,8 @@ var init_parseUtil = __esm({
     init_errors();
     init_en();
     makeIssue = (params) => {
-      const { data, path: path108, errorMaps, issueData } = params;
-      const fullPath = [...path108, ...issueData.path || []];
+      const { data, path: path109, errorMaps, issueData } = params;
+      const fullPath = [...path109, ...issueData.path || []];
       const fullIssue = {
         ...issueData,
         path: fullPath
@@ -55650,11 +55650,11 @@ var init_types = __esm({
     init_parseUtil();
     init_util();
     ParseInputLazyPath = class {
-      constructor(parent, value, path108, key) {
+      constructor(parent, value, path109, key) {
         this._cachedPath = [];
         this.parent = parent;
         this.data = value;
-        this._path = path108;
+        this._path = path109;
         this._key = key;
       }
       get path() {
@@ -62633,8 +62633,8 @@ var require_schemes = __commonJS({
         wsComponents.secure = void 0;
       }
       if (wsComponents.resourceName) {
-        const [path108, query] = wsComponents.resourceName.split("?");
-        wsComponents.path = path108 && path108 !== "/" ? path108 : void 0;
+        const [path109, query] = wsComponents.resourceName.split("?");
+        wsComponents.path = path109 && path109 !== "/" ? path109 : void 0;
         wsComponents.query = query;
         wsComponents.resourceName = void 0;
       }
@@ -71636,12 +71636,12 @@ var require_dist3 = __commonJS({
         throw new Error(`Unknown format "${name2}"`);
       return f;
     };
-    function addFormats2(ajv, list2, fs93, exportName) {
+    function addFormats2(ajv, list2, fs94, exportName) {
       var _a6;
       var _b2;
       (_a6 = (_b2 = ajv.opts.code).formats) !== null && _a6 !== void 0 ? _a6 : _b2.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list2)
-        ajv.addFormat(f, fs93[f]);
+        ajv.addFormat(f, fs94[f]);
     }
     module2.exports = exports2 = formatsPlugin;
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -71878,9 +71878,9 @@ function hasCycleInSchema(schema) {
     if (!ref.startsWith("#/")) {
       return null;
     }
-    const path108 = ref.substring(2).split("/");
+    const path109 = ref.substring(2).split("/");
     let current = schema;
-    for (const segment of path108) {
+    for (const segment of path109) {
       if (typeof current !== "object" || current === null || !Object.prototype.hasOwnProperty.call(current, segment)) {
         return null;
       }
@@ -72754,11 +72754,11 @@ var init_lib = __esm({
           }
         }
       },
-      addToPath: function addToPath(path108, added, removed, oldPosInc, options2) {
-        var last2 = path108.lastComponent;
+      addToPath: function addToPath(path109, added, removed, oldPosInc, options2) {
+        var last2 = path109.lastComponent;
         if (last2 && !options2.oneChangePerToken && last2.added === added && last2.removed === removed) {
           return {
-            oldPos: path108.oldPos + oldPosInc,
+            oldPos: path109.oldPos + oldPosInc,
             lastComponent: {
               count: last2.count + 1,
               added,
@@ -72768,7 +72768,7 @@ var init_lib = __esm({
           };
         } else {
           return {
-            oldPos: path108.oldPos + oldPosInc,
+            oldPos: path109.oldPos + oldPosInc,
             lastComponent: {
               count: 1,
               added,
@@ -73029,12 +73029,12 @@ var init_diffOptions = __esm({
 import path3 from "node:path";
 import os2 from "node:os";
 import * as crypto7 from "node:crypto";
-function tildeifyPath(path108) {
+function tildeifyPath(path109) {
   const homeDir = os2.homedir();
-  if (path108.startsWith(homeDir)) {
-    return path108.replace(homeDir, "~");
+  if (path109.startsWith(homeDir)) {
+    return path109.replace(homeDir, "~");
   }
-  return path108;
+  return path109;
 }
 function shortenPath(filePath, maxLen = 35) {
   if (filePath.length <= maxLen) {
@@ -83934,12 +83934,12 @@ var init_path = __esm({
   "node_modules/openai/internal/utils/path.mjs"() {
     init_error();
     EMPTY = /* @__PURE__ */ Object.freeze(/* @__PURE__ */ Object.create(null));
-    createPathTagFunction = (pathEncoder = encodeURIPath) => function path108(statics, ...params) {
+    createPathTagFunction = (pathEncoder = encodeURIPath) => function path109(statics, ...params) {
       if (statics.length === 1)
         return statics[0];
       let postPath = false;
       const invalidSegments = [];
-      const path109 = statics.reduce((previousValue, currentValue, index) => {
+      const path110 = statics.reduce((previousValue, currentValue, index) => {
         if (/[?#]/.test(currentValue)) {
           postPath = true;
         }
@@ -83956,7 +83956,7 @@ var init_path = __esm({
         }
         return previousValue + currentValue + (index === params.length ? "" : encoded);
       }, "");
-      const pathOnly = path109.split(/[?#]/, 1)[0];
+      const pathOnly = path110.split(/[?#]/, 1)[0];
       const invalidSegmentPattern = /(?<=^|\/)(?:\.|%2e){1,2}(?=\/|$)/gi;
       let match2;
       while ((match2 = invalidSegmentPattern.exec(pathOnly)) !== null) {
@@ -83977,10 +83977,10 @@ var init_path = __esm({
         }, "");
         throw new OpenAIError(`Path parameters result in path with invalid segments:
 ${invalidSegments.map((e2) => e2.error).join("\n")}
-${path109}
+${path110}
 ${underline}`);
       }
-      return path109;
+      return path110;
     };
     path13 = /* @__PURE__ */ createPathTagFunction(encodeURIPath);
   }
@@ -88949,9 +88949,9 @@ var init_client = __esm({
       makeStatusError(status, error, message, headers) {
         return APIError.generate(status, error, message, headers);
       }
-      buildURL(path108, query, defaultBaseURL) {
+      buildURL(path109, query, defaultBaseURL) {
         const baseURL = !__classPrivateFieldGet(this, _OpenAI_instances, "m", _OpenAI_baseURLOverridden).call(this) && defaultBaseURL || this.baseURL;
-        const url2 = isAbsoluteURL(path108) ? new URL(path108) : new URL(baseURL + (baseURL.endsWith("/") && path108.startsWith("/") ? path108.slice(1) : path108));
+        const url2 = isAbsoluteURL(path109) ? new URL(path109) : new URL(baseURL + (baseURL.endsWith("/") && path109.startsWith("/") ? path109.slice(1) : path109));
         const defaultQuery = this.defaultQuery();
         if (!isEmptyObj(defaultQuery)) {
           query = { ...defaultQuery, ...query };
@@ -88974,24 +88974,24 @@ var init_client = __esm({
        */
       async prepareRequest(request4, { url: url2, options: options2 }) {
       }
-      get(path108, opts) {
-        return this.methodRequest("get", path108, opts);
+      get(path109, opts) {
+        return this.methodRequest("get", path109, opts);
       }
-      post(path108, opts) {
-        return this.methodRequest("post", path108, opts);
+      post(path109, opts) {
+        return this.methodRequest("post", path109, opts);
       }
-      patch(path108, opts) {
-        return this.methodRequest("patch", path108, opts);
+      patch(path109, opts) {
+        return this.methodRequest("patch", path109, opts);
       }
-      put(path108, opts) {
-        return this.methodRequest("put", path108, opts);
+      put(path109, opts) {
+        return this.methodRequest("put", path109, opts);
       }
-      delete(path108, opts) {
-        return this.methodRequest("delete", path108, opts);
+      delete(path109, opts) {
+        return this.methodRequest("delete", path109, opts);
       }
-      methodRequest(method, path108, opts) {
+      methodRequest(method, path109, opts) {
         return this.request(Promise.resolve(opts).then((opts2) => {
-          return { method, path: path108, ...opts2 };
+          return { method, path: path109, ...opts2 };
         }));
       }
       request(options2, remainingRetries = null) {
@@ -89095,8 +89095,8 @@ var init_client = __esm({
         }));
         return { response, options: options2, controller, requestLogID, retryOfRequestLogID, startTime };
       }
-      getAPIList(path108, Page2, opts) {
-        return this.requestAPIList(Page2, { method: "get", path: path108, ...opts });
+      getAPIList(path109, Page2, opts) {
+        return this.requestAPIList(Page2, { method: "get", path: path109, ...opts });
       }
       requestAPIList(Page2, options2) {
         const request4 = this.makeRequest(options2, null, void 0);
@@ -89174,8 +89174,8 @@ var init_client = __esm({
       }
       async buildRequest(inputOptions, { retryCount = 0 } = {}) {
         const options2 = { ...inputOptions };
-        const { method, path: path108, query, defaultBaseURL } = options2;
-        const url2 = this.buildURL(path108, query, defaultBaseURL);
+        const { method, path: path109, query, defaultBaseURL } = options2;
+        const url2 = this.buildURL(path109, query, defaultBaseURL);
         if ("timeout" in options2)
           validatePositiveInteger("timeout", options2.timeout);
         options2.timeout = options2.timeout ?? this.timeout;
@@ -93357,13 +93357,13 @@ var require_tiktoken = __commonJS({
     var wasm2 = require_tiktoken_bg();
     var imports = {};
     imports["./tiktoken_bg.js"] = wasm2;
-    var path108 = __require("path");
-    var fs93 = __require("fs");
-    var candidates = __dirname.split(path108.sep).reduce((memo2, _, index, array) => {
-      const prefix = array.slice(0, index + 1).join(path108.sep) + path108.sep;
-      if (!prefix.includes("node_modules" + path108.sep)) {
+    var path109 = __require("path");
+    var fs94 = __require("fs");
+    var candidates = __dirname.split(path109.sep).reduce((memo2, _, index, array) => {
+      const prefix = array.slice(0, index + 1).join(path109.sep) + path109.sep;
+      if (!prefix.includes("node_modules" + path109.sep)) {
         memo2.unshift(
-          path108.join(
+          path109.join(
             prefix,
             "node_modules",
             "tiktoken",
@@ -93374,11 +93374,11 @@ var require_tiktoken = __commonJS({
       }
       return memo2;
     }, []);
-    candidates.unshift(path108.join(__dirname, "./tiktoken_bg.wasm"));
+    candidates.unshift(path109.join(__dirname, "./tiktoken_bg.wasm"));
     var bytes = null;
     for (const candidate of candidates) {
       try {
-        bytes = fs93.readFileSync(candidate);
+        bytes = fs94.readFileSync(candidate);
         break;
       } catch {
       }
@@ -99384,14 +99384,14 @@ var require_tls_helpers = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.CIPHER_SUITES = void 0;
     exports2.getDefaultRootsData = getDefaultRootsData;
-    var fs93 = __require("fs");
+    var fs94 = __require("fs");
     exports2.CIPHER_SUITES = process.env.GRPC_SSL_CIPHER_SUITES;
     var DEFAULT_ROOTS_FILE_PATH = process.env.GRPC_DEFAULT_SSL_ROOTS_FILE_PATH;
     var defaultRootsData = null;
     function getDefaultRootsData() {
       if (DEFAULT_ROOTS_FILE_PATH) {
         if (defaultRootsData === null) {
-          defaultRootsData = fs93.readFileSync(DEFAULT_ROOTS_FILE_PATH);
+          defaultRootsData = fs94.readFileSync(DEFAULT_ROOTS_FILE_PATH);
         }
         return defaultRootsData;
       }
@@ -99422,19 +99422,19 @@ var require_uri_parser = __commonJS({
       };
     }
     var NUMBER_REGEX = /^\d+$/;
-    function splitHostPort(path108) {
-      if (path108.startsWith("[")) {
-        const hostEnd = path108.indexOf("]");
+    function splitHostPort(path109) {
+      if (path109.startsWith("[")) {
+        const hostEnd = path109.indexOf("]");
         if (hostEnd === -1) {
           return null;
         }
-        const host = path108.substring(1, hostEnd);
+        const host = path109.substring(1, hostEnd);
         if (host.indexOf(":") === -1) {
           return null;
         }
-        if (path108.length > hostEnd + 1) {
-          if (path108[hostEnd + 1] === ":") {
-            const portString = path108.substring(hostEnd + 2);
+        if (path109.length > hostEnd + 1) {
+          if (path109[hostEnd + 1] === ":") {
+            const portString = path109.substring(hostEnd + 2);
             if (NUMBER_REGEX.test(portString)) {
               return {
                 host,
@@ -99452,7 +99452,7 @@ var require_uri_parser = __commonJS({
           };
         }
       } else {
-        const splitPath = path108.split(":");
+        const splitPath = path109.split(":");
         if (splitPath.length === 2) {
           if (NUMBER_REGEX.test(splitPath[1])) {
             return {
@@ -99464,7 +99464,7 @@ var require_uri_parser = __commonJS({
           }
         } else {
           return {
-            host: path108
+            host: path109
           };
         }
       }
@@ -102428,14 +102428,14 @@ var require_client_interceptors = __commonJS({
       }
     };
     exports2.InterceptingCall = InterceptingCall;
-    function getCall(channel, path108, options2) {
+    function getCall(channel, path109, options2) {
       var _a6, _b2;
       const deadline = (_a6 = options2.deadline) !== null && _a6 !== void 0 ? _a6 : Infinity;
       const host = options2.host;
       const parent = (_b2 = options2.parent) !== null && _b2 !== void 0 ? _b2 : null;
       const propagateFlags = options2.propagate_flags;
       const credentials = options2.credentials;
-      const call = channel.createCall(path108, deadline, host, parent, propagateFlags);
+      const call = channel.createCall(path109, deadline, host, parent, propagateFlags);
       if (credentials) {
         call.setCredentials(credentials);
       }
@@ -103002,9 +103002,9 @@ var require_make_client = __commonJS({
       ServiceClientImpl.serviceName = serviceName;
       return ServiceClientImpl;
     }
-    function partial(fn, path108, serialize2, deserialize) {
+    function partial(fn, path109, serialize2, deserialize) {
       return function(...args) {
-        return fn.call(this, path108, serialize2, deserialize, ...args);
+        return fn.call(this, path109, serialize2, deserialize, ...args);
       };
     }
     function isProtobufTypeDefinition(obj) {
@@ -104859,7 +104859,7 @@ var require_fetch2 = __commonJS({
     module2.exports = fetch2;
     var asPromise = require_aspromise();
     var inquire2 = require_inquire();
-    var fs93 = inquire2("fs");
+    var fs94 = inquire2("fs");
     function fetch2(filename, options2, callback) {
       if (typeof options2 === "function") {
         callback = options2;
@@ -104868,8 +104868,8 @@ var require_fetch2 = __commonJS({
         options2 = {};
       if (!callback)
         return asPromise(fetch2, this, filename, options2);
-      if (!options2.xhr && fs93 && fs93.readFile)
-        return fs93.readFile(filename, function fetchReadFileCallback(err, contents) {
+      if (!options2.xhr && fs94 && fs94.readFile)
+        return fs94.readFile(filename, function fetchReadFileCallback(err, contents) {
           return err && typeof XMLHttpRequest !== "undefined" ? fetch2.xhr(filename, options2, callback) : err ? callback(err) : callback(null, options2.binary ? contents : contents.toString("utf8"));
         });
       return fetch2.xhr(filename, options2, callback);
@@ -104907,15 +104907,15 @@ var require_fetch2 = __commonJS({
 var require_path = __commonJS({
   "node_modules/@protobufjs/path/index.js"(exports2) {
     "use strict";
-    var path108 = exports2;
+    var path109 = exports2;
     var isAbsolute6 = (
       /**
        * Tests if the specified path is absolute.
        * @param {string} path Path to test
        * @returns {boolean} `true` if path is absolute
        */
-      path108.isAbsolute = function isAbsolute7(path109) {
-        return /^(?:\/|\w+:)/.test(path109);
+      path109.isAbsolute = function isAbsolute7(path110) {
+        return /^(?:\/|\w+:)/.test(path110);
       }
     );
     var normalize9 = (
@@ -104924,9 +104924,9 @@ var require_path = __commonJS({
        * @param {string} path Path to normalize
        * @returns {string} Normalized path
        */
-      path108.normalize = function normalize10(path109) {
-        path109 = path109.replace(/\\/g, "/").replace(/\/{2,}/g, "/");
-        var parts = path109.split("/"), absolute = isAbsolute6(path109), prefix = "";
+      path109.normalize = function normalize10(path110) {
+        path110 = path110.replace(/\\/g, "/").replace(/\/{2,}/g, "/");
+        var parts = path110.split("/"), absolute = isAbsolute6(path110), prefix = "";
         if (absolute)
           prefix = parts.shift() + "/";
         for (var i = 0; i < parts.length; ) {
@@ -104945,7 +104945,7 @@ var require_path = __commonJS({
         return prefix + parts.join("/");
       }
     );
-    path108.resolve = function resolve28(originPath, includePath, alreadyNormalized) {
+    path109.resolve = function resolve28(originPath, includePath, alreadyNormalized) {
       if (!alreadyNormalized)
         includePath = normalize9(includePath);
       if (isAbsolute6(includePath))
@@ -105096,16 +105096,16 @@ var require_namespace = __commonJS({
       object.onRemove(this);
       return clearCache(this);
     };
-    Namespace.prototype.define = function define2(path108, json2) {
-      if (util4.isString(path108))
-        path108 = path108.split(".");
-      else if (!Array.isArray(path108))
+    Namespace.prototype.define = function define2(path109, json2) {
+      if (util4.isString(path109))
+        path109 = path109.split(".");
+      else if (!Array.isArray(path109))
         throw TypeError("illegal path");
-      if (path108 && path108.length && path108[0] === "")
+      if (path109 && path109.length && path109[0] === "")
         throw Error("path must be relative");
       var ptr = this;
-      while (path108.length > 0) {
-        var part = path108.shift();
+      while (path109.length > 0) {
+        var part = path109.shift();
         if (ptr.nested && ptr.nested[part]) {
           ptr = ptr.nested[part];
           if (!(ptr instanceof Namespace))
@@ -105140,26 +105140,26 @@ var require_namespace = __commonJS({
       });
       return this;
     };
-    Namespace.prototype.lookup = function lookup(path108, filterTypes, parentAlreadyChecked) {
+    Namespace.prototype.lookup = function lookup(path109, filterTypes, parentAlreadyChecked) {
       if (typeof filterTypes === "boolean") {
         parentAlreadyChecked = filterTypes;
         filterTypes = void 0;
       } else if (filterTypes && !Array.isArray(filterTypes))
         filterTypes = [filterTypes];
-      if (util4.isString(path108) && path108.length) {
-        if (path108 === ".")
+      if (util4.isString(path109) && path109.length) {
+        if (path109 === ".")
           return this.root;
-        path108 = path108.split(".");
-      } else if (!path108.length)
+        path109 = path109.split(".");
+      } else if (!path109.length)
         return this;
-      var flatPath = path108.join(".");
-      if (path108[0] === "")
-        return this.root.lookup(path108.slice(1), filterTypes);
+      var flatPath = path109.join(".");
+      if (path109[0] === "")
+        return this.root.lookup(path109.slice(1), filterTypes);
       var found = this.root._fullyQualifiedObjects && this.root._fullyQualifiedObjects["." + flatPath];
       if (found && (!filterTypes || filterTypes.indexOf(found.constructor) > -1)) {
         return found;
       }
-      found = this._lookupImpl(path108, flatPath);
+      found = this._lookupImpl(path109, flatPath);
       if (found && (!filterTypes || filterTypes.indexOf(found.constructor) > -1)) {
         return found;
       }
@@ -105167,7 +105167,7 @@ var require_namespace = __commonJS({
         return null;
       var current = this;
       while (current.parent) {
-        found = current.parent._lookupImpl(path108, flatPath);
+        found = current.parent._lookupImpl(path109, flatPath);
         if (found && (!filterTypes || filterTypes.indexOf(found.constructor) > -1)) {
           return found;
         }
@@ -105175,49 +105175,49 @@ var require_namespace = __commonJS({
       }
       return null;
     };
-    Namespace.prototype._lookupImpl = function lookup(path108, flatPath) {
+    Namespace.prototype._lookupImpl = function lookup(path109, flatPath) {
       if (Object.prototype.hasOwnProperty.call(this._lookupCache, flatPath)) {
         return this._lookupCache[flatPath];
       }
-      var found = this.get(path108[0]);
+      var found = this.get(path109[0]);
       var exact = null;
       if (found) {
-        if (path108.length === 1) {
+        if (path109.length === 1) {
           exact = found;
         } else if (found instanceof Namespace) {
-          path108 = path108.slice(1);
-          exact = found._lookupImpl(path108, path108.join("."));
+          path109 = path109.slice(1);
+          exact = found._lookupImpl(path109, path109.join("."));
         }
       } else {
         for (var i = 0; i < this.nestedArray.length; ++i)
-          if (this._nestedArray[i] instanceof Namespace && (found = this._nestedArray[i]._lookupImpl(path108, flatPath)))
+          if (this._nestedArray[i] instanceof Namespace && (found = this._nestedArray[i]._lookupImpl(path109, flatPath)))
             exact = found;
       }
       this._lookupCache[flatPath] = exact;
       return exact;
     };
-    Namespace.prototype.lookupType = function lookupType(path108) {
-      var found = this.lookup(path108, [Type3]);
+    Namespace.prototype.lookupType = function lookupType(path109) {
+      var found = this.lookup(path109, [Type3]);
       if (!found)
-        throw Error("no such type: " + path108);
+        throw Error("no such type: " + path109);
       return found;
     };
-    Namespace.prototype.lookupEnum = function lookupEnum(path108) {
-      var found = this.lookup(path108, [Enum]);
+    Namespace.prototype.lookupEnum = function lookupEnum(path109) {
+      var found = this.lookup(path109, [Enum]);
       if (!found)
-        throw Error("no such Enum '" + path108 + "' in " + this);
+        throw Error("no such Enum '" + path109 + "' in " + this);
       return found;
     };
-    Namespace.prototype.lookupTypeOrEnum = function lookupTypeOrEnum(path108) {
-      var found = this.lookup(path108, [Type3, Enum]);
+    Namespace.prototype.lookupTypeOrEnum = function lookupTypeOrEnum(path109) {
+      var found = this.lookup(path109, [Type3, Enum]);
       if (!found)
-        throw Error("no such Type or Enum '" + path108 + "' in " + this);
+        throw Error("no such Type or Enum '" + path109 + "' in " + this);
       return found;
     };
-    Namespace.prototype.lookupService = function lookupService(path108) {
-      var found = this.lookup(path108, [Service]);
+    Namespace.prototype.lookupService = function lookupService(path109) {
+      var found = this.lookup(path109, [Service]);
       if (!found)
-        throw Error("no such Service '" + path108 + "' in " + this);
+        throw Error("no such Service '" + path109 + "' in " + this);
       return found;
     };
     Namespace._configure = function(Type_, Service_, Enum_) {
@@ -106580,14 +106580,14 @@ var require_util11 = __commonJS({
       Object.defineProperty(object, "$type", { value: enm, enumerable: false });
       return enm;
     };
-    util4.setProperty = function setProperty2(dst, path108, value, ifNotSet) {
-      function setProp(dst2, path109, value2) {
-        var part = path109.shift();
+    util4.setProperty = function setProperty2(dst, path109, value, ifNotSet) {
+      function setProp(dst2, path110, value2) {
+        var part = path110.shift();
         if (part === "__proto__" || part === "prototype") {
           return dst2;
         }
-        if (path109.length > 0) {
-          dst2[part] = setProp(dst2[part] || {}, path109, value2);
+        if (path110.length > 0) {
+          dst2[part] = setProp(dst2[part] || {}, path110, value2);
         } else {
           var prevValue = dst2[part];
           if (prevValue && ifNotSet)
@@ -106600,10 +106600,10 @@ var require_util11 = __commonJS({
       }
       if (typeof dst !== "object")
         throw TypeError("dst must be an object");
-      if (!path108)
+      if (!path109)
         throw TypeError("path must be specified");
-      path108 = path108.split(".");
-      return setProp(dst, path108, value);
+      path109 = path109.split(".");
+      return setProp(dst, path109, value);
     };
     Object.defineProperty(util4, "decorateRoot", {
       get: function() {
@@ -107149,12 +107149,12 @@ var require_object = __commonJS({
        */
       fullName: {
         get: function() {
-          var path108 = [this.name], ptr = this.parent;
+          var path109 = [this.name], ptr = this.parent;
           while (ptr) {
-            path108.unshift(ptr.name);
+            path109.unshift(ptr.name);
             ptr = ptr.parent;
           }
-          return path108.join(".");
+          return path109.join(".");
         }
       }
     });
@@ -111143,19 +111143,19 @@ var require_util12 = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.addCommonProtos = exports2.loadProtosWithOptionsSync = exports2.loadProtosWithOptions = void 0;
-    var fs93 = __require("fs");
-    var path108 = __require("path");
+    var fs94 = __require("fs");
+    var path109 = __require("path");
     var Protobuf = require_protobufjs();
     function addIncludePathResolver(root2, includePaths) {
       const originalResolvePath = root2.resolvePath;
       root2.resolvePath = (origin, target) => {
-        if (path108.isAbsolute(target)) {
+        if (path109.isAbsolute(target)) {
           return target;
         }
         for (const directory of includePaths) {
-          const fullPath = path108.join(directory, target);
+          const fullPath = path109.join(directory, target);
           try {
-            fs93.accessSync(fullPath, fs93.constants.R_OK);
+            fs94.accessSync(fullPath, fs94.constants.R_OK);
             return fullPath;
           } catch (err) {
             continue;
@@ -117131,9 +117131,9 @@ var require_server_call = __commonJS({
       return status;
     }
     var ServerUnaryCallImpl = class extends events_1.EventEmitter {
-      constructor(path108, call, metadata, request4) {
+      constructor(path109, call, metadata, request4) {
         super();
-        this.path = path108;
+        this.path = path109;
         this.call = call;
         this.metadata = metadata;
         this.request = request4;
@@ -117157,9 +117157,9 @@ var require_server_call = __commonJS({
     };
     exports2.ServerUnaryCallImpl = ServerUnaryCallImpl;
     var ServerReadableStreamImpl = class extends stream_1.Readable {
-      constructor(path108, call, metadata) {
+      constructor(path109, call, metadata) {
         super({ objectMode: true });
-        this.path = path108;
+        this.path = path109;
         this.call = call;
         this.metadata = metadata;
         this.cancelled = false;
@@ -117185,9 +117185,9 @@ var require_server_call = __commonJS({
     };
     exports2.ServerReadableStreamImpl = ServerReadableStreamImpl;
     var ServerWritableStreamImpl = class extends stream_1.Writable {
-      constructor(path108, call, metadata, request4) {
+      constructor(path109, call, metadata, request4) {
         super({ objectMode: true });
-        this.path = path108;
+        this.path = path109;
         this.call = call;
         this.metadata = metadata;
         this.request = request4;
@@ -117235,9 +117235,9 @@ var require_server_call = __commonJS({
     };
     exports2.ServerWritableStreamImpl = ServerWritableStreamImpl;
     var ServerDuplexStreamImpl = class extends stream_1.Duplex {
-      constructor(path108, call, metadata) {
+      constructor(path109, call, metadata) {
         super({ objectMode: true });
-        this.path = path108;
+        this.path = path109;
         this.call = call;
         this.metadata = metadata;
         this.pendingStatus = {
@@ -119107,11 +119107,11 @@ var require_server = __commonJS({
           }
           return true;
         }
-        _retrieveHandler(path108) {
-          serverCallTrace("Received call to method " + path108 + " at address " + this.serverAddressString);
-          const handler = this.handlers.get(path108);
+        _retrieveHandler(path109) {
+          serverCallTrace("Received call to method " + path109 + " at address " + this.serverAddressString);
+          const handler = this.handlers.get(path109);
           if (handler === void 0) {
-            serverCallTrace("No handler registered for method " + path108 + ". Sending UNIMPLEMENTED status.");
+            serverCallTrace("No handler registered for method " + path109 + ". Sending UNIMPLEMENTED status.");
             return null;
           }
           return handler;
@@ -119133,10 +119133,10 @@ var require_server = __commonJS({
             channelzSessionInfo === null || channelzSessionInfo === void 0 ? void 0 : channelzSessionInfo.streamTracker.addCallFailed();
             return;
           }
-          const path108 = headers[HTTP2_HEADER_PATH];
-          const handler = this._retrieveHandler(path108);
+          const path109 = headers[HTTP2_HEADER_PATH];
+          const handler = this._retrieveHandler(path109);
           if (!handler) {
-            this._respondWithError(getUnimplementedStatusResponse(path108), stream2, channelzSessionInfo);
+            this._respondWithError(getUnimplementedStatusResponse(path109), stream2, channelzSessionInfo);
             return;
           }
           const callEventTracker = {
@@ -119184,10 +119184,10 @@ var require_server = __commonJS({
           if (this._verifyContentType(stream2, headers) !== true) {
             return;
           }
-          const path108 = headers[HTTP2_HEADER_PATH];
-          const handler = this._retrieveHandler(path108);
+          const path109 = headers[HTTP2_HEADER_PATH];
+          const handler = this._retrieveHandler(path109);
           if (!handler) {
-            this._respondWithError(getUnimplementedStatusResponse(path108), stream2, null);
+            this._respondWithError(getUnimplementedStatusResponse(path109), stream2, null);
             return;
           }
           const call = (0, server_interceptors_1.getServerInterceptingCall)([...extraInterceptors, ...this.interceptors], stream2, headers, null, handler, this.options);
@@ -120229,7 +120229,7 @@ var require_certificate_provider = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.FileWatcherCertificateProvider = void 0;
-    var fs93 = __require("fs");
+    var fs94 = __require("fs");
     var logging = require_logging();
     var constants_1 = require_constants8();
     var util_1 = __require("util");
@@ -120237,7 +120237,7 @@ var require_certificate_provider = __commonJS({
     function trace2(text) {
       logging.trace(constants_1.LogVerbosity.DEBUG, TRACER_NAME, text);
     }
-    var readFilePromise = (0, util_1.promisify)(fs93.readFile);
+    var readFilePromise = (0, util_1.promisify)(fs94.readFile);
     var FileWatcherCertificateProvider = class {
       constructor(config) {
         this.config = config;
@@ -120481,13 +120481,13 @@ var require_resolver_uds = __commonJS({
         this.listener = listener;
         this.hasReturnedResult = false;
         this.endpoints = [];
-        let path108;
+        let path109;
         if (target.authority === "") {
-          path108 = "/" + target.path;
+          path109 = "/" + target.path;
         } else {
-          path108 = target.path;
+          path109 = target.path;
         }
-        this.endpoints = [{ addresses: [{ path: path108 }] }];
+        this.endpoints = [{ addresses: [{ path: path109 }] }];
       }
       updateResolution() {
         if (!this.hasReturnedResult) {
@@ -120545,12 +120545,12 @@ var require_resolver_ip = __commonJS({
           return;
         }
         const pathList = target.path.split(",");
-        for (const path108 of pathList) {
-          const hostPort = (0, uri_parser_1.splitHostPort)(path108);
+        for (const path109 of pathList) {
+          const hostPort = (0, uri_parser_1.splitHostPort)(path109);
           if (hostPort === null) {
             this.error = {
               code: constants_1.Status.UNAVAILABLE,
-              details: `Failed to parse ${target.scheme} address ${path108}`,
+              details: `Failed to parse ${target.scheme} address ${path109}`,
               metadata: new metadata_1.Metadata()
             };
             return;
@@ -120558,7 +120558,7 @@ var require_resolver_ip = __commonJS({
           if (target.scheme === IPV4_SCHEME && !(0, net_1.isIPv4)(hostPort.host) || target.scheme === IPV6_SCHEME && !(0, net_1.isIPv6)(hostPort.host)) {
             this.error = {
               code: constants_1.Status.UNAVAILABLE,
-              details: `Failed to parse ${target.scheme} address ${path108}`,
+              details: `Failed to parse ${target.scheme} address ${path109}`,
               metadata: new metadata_1.Metadata()
             };
             return;
@@ -121429,10 +121429,10 @@ var require_create_service_client_constructor = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.createServiceClientConstructor = void 0;
     var grpc = require_src11();
-    function createServiceClientConstructor(path108, name2) {
+    function createServiceClientConstructor(path109, name2) {
       const serviceDefinition = {
         export: {
-          path: path108,
+          path: path109,
           requestStream: false,
           responseStream: false,
           requestSerialize: (arg) => {
@@ -122012,7 +122012,7 @@ function appendRootPathToUrlIfNeeded(url2) {
     return void 0;
   }
 }
-function appendResourcePathToUrl(url2, path108) {
+function appendResourcePathToUrl(url2, path109) {
   try {
     new URL(url2);
   } catch {
@@ -122022,11 +122022,11 @@ function appendResourcePathToUrl(url2, path108) {
   if (!url2.endsWith("/")) {
     url2 = url2 + "/";
   }
-  url2 += path108;
+  url2 += path109;
   try {
     new URL(url2);
   } catch {
-    diag2.warn(`Configuration: Provided URL appended with '${path108}' is not a valid URL, using 'undefined' instead of '${url2}'`);
+    diag2.warn(`Configuration: Provided URL appended with '${path109}' is not a valid URL, using 'undefined' instead of '${url2}'`);
     return void 0;
   }
   return url2;
@@ -122123,8 +122123,8 @@ var require_otlp_grpc_env_configuration = __commonJS({
     var core_1 = require_src8();
     var grpc_exporter_transport_1 = require_grpc_exporter_transport();
     var node_http_1 = (init_index_node_http(), __toCommonJS(index_node_http_exports));
-    var fs93 = __require("fs");
-    var path108 = __require("path");
+    var fs94 = __require("fs");
+    var path109 = __require("path");
     var api_1 = (init_esm2(), __toCommonJS(esm_exports2));
     function fallbackIfNullishOrBlank(signalSpecific, nonSignalSpecific) {
       if (signalSpecific != null && signalSpecific !== "") {
@@ -122173,7 +122173,7 @@ var require_otlp_grpc_env_configuration = __commonJS({
       const filePath = fallbackIfNullishOrBlank(signalSpecificPath, nonSignalSpecificPath);
       if (filePath != null) {
         try {
-          return fs93.readFileSync(path108.resolve(process.cwd(), filePath));
+          return fs94.readFileSync(path109.resolve(process.cwd(), filePath));
         } catch {
           api_1.diag.warn(warningMessage);
           return void 0;
@@ -133060,9 +133060,9 @@ var require_getMachineId_linux = __commonJS({
     var api_1 = (init_esm2(), __toCommonJS(esm_exports2));
     async function getMachineId() {
       const paths = ["/etc/machine-id", "/var/lib/dbus/machine-id"];
-      for (const path108 of paths) {
+      for (const path109 of paths) {
         try {
-          const result = await fs_1.promises.readFile(path108, { encoding: "utf8" });
+          const result = await fs_1.promises.readFile(path109, { encoding: "utf8" });
           return result.trim();
         } catch (e2) {
           api_1.diag.debug(`error reading machine id: ${e2}`);
@@ -139200,19 +139200,19 @@ var require_module_details_from_path = __commonJS({
           basedir += segments[i] + sep6;
         }
       }
-      var path108 = "";
+      var path109 = "";
       var lastSegmentIndex = segments.length - 1;
       for (var i2 = index + offset; i2 <= lastSegmentIndex; i2++) {
         if (i2 === lastSegmentIndex) {
-          path108 += segments[i2];
+          path109 += segments[i2];
         } else {
-          path108 += segments[i2] + sep6;
+          path109 += segments[i2] + sep6;
         }
       }
       return {
         name: name2,
         basedir,
-        path: path108
+        path: path109
       };
     };
   }
@@ -139318,8 +139318,8 @@ var require_path_parse = __commonJS({
 // node_modules/resolve/lib/node-modules-paths.js
 var require_node_modules_paths = __commonJS({
   "node_modules/resolve/lib/node-modules-paths.js"(exports2, module2) {
-    var path108 = __require("path");
-    var parse9 = path108.parse || require_path_parse();
+    var path109 = __require("path");
+    var parse9 = path109.parse || require_path_parse();
     var getNodeModulesDirs = function getNodeModulesDirs2(absoluteStart, modules) {
       var prefix = "/";
       if (/^([A-Za-z]:)/.test(absoluteStart)) {
@@ -139335,7 +139335,7 @@ var require_node_modules_paths = __commonJS({
       }
       return paths.reduce(function(dirs, aPath) {
         return dirs.concat(modules.map(function(moduleDir) {
-          return path108.resolve(prefix, aPath, moduleDir);
+          return path109.resolve(prefix, aPath, moduleDir);
         }));
       }, []);
     };
@@ -139696,23 +139696,23 @@ var require_is_core_module = __commonJS({
 // node_modules/resolve/lib/async.js
 var require_async = __commonJS({
   "node_modules/resolve/lib/async.js"(exports2, module2) {
-    var fs93 = __require("fs");
+    var fs94 = __require("fs");
     var getHomedir = require_homedir();
-    var path108 = __require("path");
+    var path109 = __require("path");
     var caller = require_caller();
     var nodeModulesPaths = require_node_modules_paths();
     var normalizeOptions = require_normalize_options();
     var isCore = require_is_core_module();
-    var realpathFS = process.platform !== "win32" && fs93.realpath && typeof fs93.realpath.native === "function" ? fs93.realpath.native : fs93.realpath;
+    var realpathFS = process.platform !== "win32" && fs94.realpath && typeof fs94.realpath.native === "function" ? fs94.realpath.native : fs94.realpath;
     var homedir19 = getHomedir();
     var defaultPaths = function() {
       return [
-        path108.join(homedir19, ".node_modules"),
-        path108.join(homedir19, ".node_libraries")
+        path109.join(homedir19, ".node_modules"),
+        path109.join(homedir19, ".node_libraries")
       ];
     };
     var defaultIsFile = function isFile(file, cb) {
-      fs93.stat(file, function(err, stat8) {
+      fs94.stat(file, function(err, stat8) {
         if (!err) {
           return cb(null, stat8.isFile() || stat8.isFIFO());
         }
@@ -139721,7 +139721,7 @@ var require_async = __commonJS({
       });
     };
     var defaultIsDir = function isDirectory(dir, cb) {
-      fs93.stat(dir, function(err, stat8) {
+      fs94.stat(dir, function(err, stat8) {
         if (!err) {
           return cb(null, stat8.isDirectory());
         }
@@ -139742,8 +139742,8 @@ var require_async = __commonJS({
         cb(null, x);
       }
     };
-    var defaultReadPackage = function defaultReadPackage2(readFile18, pkgfile, cb) {
-      readFile18(pkgfile, function(readFileErr, body) {
+    var defaultReadPackage = function defaultReadPackage2(readFile19, pkgfile, cb) {
+      readFile19(pkgfile, function(readFileErr, body) {
         if (readFileErr) cb(readFileErr);
         else {
           try {
@@ -139758,7 +139758,7 @@ var require_async = __commonJS({
     var getPackageCandidates = function getPackageCandidates2(x, start, opts) {
       var dirs = nodeModulesPaths(start, opts, x);
       for (var i = 0; i < dirs.length; i++) {
-        dirs[i] = path108.join(dirs[i], x);
+        dirs[i] = path109.join(dirs[i], x);
       }
       return dirs;
     };
@@ -139778,7 +139778,7 @@ var require_async = __commonJS({
       opts = normalizeOptions(x, opts);
       var isFile = opts.isFile || defaultIsFile;
       var isDirectory = opts.isDirectory || defaultIsDir;
-      var readFile18 = opts.readFile || fs93.readFile;
+      var readFile19 = opts.readFile || fs94.readFile;
       var realpath2 = opts.realpath || defaultRealpath;
       var readPackage2 = opts.readPackage || defaultReadPackage;
       if (opts.readFile && opts.readPackage) {
@@ -139790,10 +139790,10 @@ var require_async = __commonJS({
       var packageIterator = opts.packageIterator;
       var extensions = opts.extensions || [".js"];
       var includeCoreModules = opts.includeCoreModules !== false;
-      var basedir = opts.basedir || path108.dirname(caller());
+      var basedir = opts.basedir || path109.dirname(caller());
       var parent = opts.filename || basedir;
       opts.paths = opts.paths || defaultPaths();
-      var absoluteStart = path108.resolve(basedir);
+      var absoluteStart = path109.resolve(basedir);
       maybeRealpath(
         realpath2,
         absoluteStart,
@@ -139806,7 +139806,7 @@ var require_async = __commonJS({
       var res;
       function init(basedir2) {
         if (/^(?:\.\.?(?:\/|$)|\/|([A-Za-z]:)?[/\\])/.test(x)) {
-          res = path108.resolve(basedir2, x);
+          res = path109.resolve(basedir2, x);
           if (x === "." || x === ".." || x.slice(-1) === "/") res += "/";
           if (/\/$/.test(x) && res === basedir2) {
             loadAsDirectory(res, opts.package, onfile);
@@ -139864,17 +139864,17 @@ var require_async = __commonJS({
           var file = x3 + exts2[0];
           var pkg3 = loadPackage;
           if (pkg3) onpkg(null, pkg3);
-          else loadpkg(path108.dirname(file), onpkg);
+          else loadpkg(path109.dirname(file), onpkg);
           function onpkg(err2, pkg_, dir) {
             pkg3 = pkg_;
             if (err2) return cb2(err2);
             if (dir && pkg3 && opts.pathFilter) {
-              var rfile = path108.relative(dir, file);
+              var rfile = path109.relative(dir, file);
               var rel = rfile.slice(0, rfile.length - exts2[0].length);
               var r3 = opts.pathFilter(pkg3, x3, rel);
               if (r3) return load(
                 [""].concat(extensions.slice()),
-                path108.resolve(dir, r3),
+                path109.resolve(dir, r3),
                 pkg3
               );
             }
@@ -139894,11 +139894,11 @@ var require_async = __commonJS({
         }
         if (/[/\\]node_modules[/\\]*$/.test(dir)) return cb2(null);
         maybeRealpath(realpath2, dir, opts, function(unwrapErr, pkgdir) {
-          if (unwrapErr) return loadpkg(path108.dirname(dir), cb2);
-          var pkgfile = path108.join(pkgdir, "package.json");
+          if (unwrapErr) return loadpkg(path109.dirname(dir), cb2);
+          var pkgfile = path109.join(pkgdir, "package.json");
           isFile(pkgfile, function(err2, ex) {
-            if (!ex) return loadpkg(path108.dirname(dir), cb2);
-            readPackage2(readFile18, pkgfile, function(err3, pkgParam) {
+            if (!ex) return loadpkg(path109.dirname(dir), cb2);
+            readPackage2(readFile19, pkgfile, function(err3, pkgParam) {
               if (err3) cb2(err3);
               var pkg3 = pkgParam;
               if (pkg3 && opts.packageFilter) {
@@ -139918,11 +139918,11 @@ var require_async = __commonJS({
         }
         maybeRealpath(realpath2, x2, opts, function(unwrapErr, pkgdir) {
           if (unwrapErr) return cb2(unwrapErr);
-          var pkgfile = path108.join(pkgdir, "package.json");
+          var pkgfile = path109.join(pkgdir, "package.json");
           isFile(pkgfile, function(err2, ex) {
             if (err2) return cb2(err2);
-            if (!ex) return loadAsFile(path108.join(x2, "index"), fpkg, cb2);
-            readPackage2(readFile18, pkgfile, function(err3, pkgParam) {
+            if (!ex) return loadAsFile(path109.join(x2, "index"), fpkg, cb2);
+            readPackage2(readFile19, pkgfile, function(err3, pkgParam) {
               if (err3) return cb2(err3);
               var pkg3 = pkgParam;
               if (pkg3 && opts.packageFilter) {
@@ -139937,20 +139937,20 @@ var require_async = __commonJS({
                 if (pkg3.main === "." || pkg3.main === "./") {
                   pkg3.main = "index";
                 }
-                loadAsFile(path108.resolve(x2, pkg3.main), pkg3, function(err4, m, pkg4) {
+                loadAsFile(path109.resolve(x2, pkg3.main), pkg3, function(err4, m, pkg4) {
                   if (err4) return cb2(err4);
                   if (m) return cb2(null, m, pkg4);
-                  if (!pkg4) return loadAsFile(path108.join(x2, "index"), pkg4, cb2);
-                  var dir = path108.resolve(x2, pkg4.main);
+                  if (!pkg4) return loadAsFile(path109.join(x2, "index"), pkg4, cb2);
+                  var dir = path109.resolve(x2, pkg4.main);
                   loadAsDirectory(dir, pkg4, function(err5, n2, pkg5) {
                     if (err5) return cb2(err5);
                     if (n2) return cb2(null, n2, pkg5);
-                    loadAsFile(path108.join(x2, "index"), pkg5, cb2);
+                    loadAsFile(path109.join(x2, "index"), pkg5, cb2);
                   });
                 });
                 return;
               }
-              loadAsFile(path108.join(x2, "/index"), pkg3, cb2);
+              loadAsFile(path109.join(x2, "/index"), pkg3, cb2);
             });
           });
         });
@@ -139958,7 +139958,7 @@ var require_async = __commonJS({
       function processDirs(cb2, dirs) {
         if (dirs.length === 0) return cb2(null, void 0);
         var dir = dirs[0];
-        isDirectory(path108.dirname(dir), isdir);
+        isDirectory(path109.dirname(dir), isdir);
         function isdir(err2, isdir2) {
           if (err2) return cb2(err2);
           if (!isdir2) return processDirs(cb2, dirs.slice(1));
@@ -140187,23 +140187,23 @@ var require_is_core = __commonJS({
 var require_sync = __commonJS({
   "node_modules/resolve/lib/sync.js"(exports2, module2) {
     var isCore = require_is_core_module();
-    var fs93 = __require("fs");
-    var path108 = __require("path");
+    var fs94 = __require("fs");
+    var path109 = __require("path");
     var getHomedir = require_homedir();
     var caller = require_caller();
     var nodeModulesPaths = require_node_modules_paths();
     var normalizeOptions = require_normalize_options();
-    var realpathFS = process.platform !== "win32" && fs93.realpathSync && typeof fs93.realpathSync.native === "function" ? fs93.realpathSync.native : fs93.realpathSync;
+    var realpathFS = process.platform !== "win32" && fs94.realpathSync && typeof fs94.realpathSync.native === "function" ? fs94.realpathSync.native : fs94.realpathSync;
     var homedir19 = getHomedir();
     var defaultPaths = function() {
       return [
-        path108.join(homedir19, ".node_modules"),
-        path108.join(homedir19, ".node_libraries")
+        path109.join(homedir19, ".node_modules"),
+        path109.join(homedir19, ".node_libraries")
       ];
     };
     var defaultIsFile = function isFile(file) {
       try {
-        var stat8 = fs93.statSync(file, { throwIfNoEntry: false });
+        var stat8 = fs94.statSync(file, { throwIfNoEntry: false });
       } catch (e2) {
         if (e2 && (e2.code === "ENOENT" || e2.code === "ENOTDIR")) return false;
         throw e2;
@@ -140212,7 +140212,7 @@ var require_sync = __commonJS({
     };
     var defaultIsDir = function isDirectory(dir) {
       try {
-        var stat8 = fs93.statSync(dir, { throwIfNoEntry: false });
+        var stat8 = fs94.statSync(dir, { throwIfNoEntry: false });
       } catch (e2) {
         if (e2 && (e2.code === "ENOENT" || e2.code === "ENOTDIR")) return false;
         throw e2;
@@ -140246,7 +140246,7 @@ var require_sync = __commonJS({
     var getPackageCandidates = function getPackageCandidates2(x, start, opts) {
       var dirs = nodeModulesPaths(start, opts, x);
       for (var i = 0; i < dirs.length; i++) {
-        dirs[i] = path108.join(dirs[i], x);
+        dirs[i] = path109.join(dirs[i], x);
       }
       return dirs;
     };
@@ -140256,7 +140256,7 @@ var require_sync = __commonJS({
       }
       var opts = normalizeOptions(x, options2);
       var isFile = opts.isFile || defaultIsFile;
-      var readFileSync15 = opts.readFileSync || fs93.readFileSync;
+      var readFileSync15 = opts.readFileSync || fs94.readFileSync;
       var isDirectory = opts.isDirectory || defaultIsDir;
       var realpathSync8 = opts.realpathSync || defaultRealpathSync;
       var readPackageSync2 = opts.readPackageSync || defaultReadPackageSync;
@@ -140266,12 +140266,12 @@ var require_sync = __commonJS({
       var packageIterator = opts.packageIterator;
       var extensions = opts.extensions || [".js"];
       var includeCoreModules = opts.includeCoreModules !== false;
-      var basedir = opts.basedir || path108.dirname(caller());
+      var basedir = opts.basedir || path109.dirname(caller());
       var parent = opts.filename || basedir;
       opts.paths = opts.paths || defaultPaths();
-      var absoluteStart = maybeRealpathSync(realpathSync8, path108.resolve(basedir), opts);
+      var absoluteStart = maybeRealpathSync(realpathSync8, path109.resolve(basedir), opts);
       if (/^(?:\.\.?(?:\/|$)|\/|([A-Za-z]:)?[/\\])/.test(x)) {
-        var res = path108.resolve(absoluteStart, x);
+        var res = path109.resolve(absoluteStart, x);
         if (x === "." || x === ".." || x.slice(-1) === "/") res += "/";
         var m = loadAsFileSync(res) || loadAsDirectorySync(res);
         if (m) return maybeRealpathSync(realpathSync8, m, opts);
@@ -140285,12 +140285,12 @@ var require_sync = __commonJS({
       err.code = "MODULE_NOT_FOUND";
       throw err;
       function loadAsFileSync(x2) {
-        var pkg3 = loadpkg(path108.dirname(x2));
+        var pkg3 = loadpkg(path109.dirname(x2));
         if (pkg3 && pkg3.dir && pkg3.pkg && opts.pathFilter) {
-          var rfile = path108.relative(pkg3.dir, x2);
+          var rfile = path109.relative(pkg3.dir, x2);
           var r3 = opts.pathFilter(pkg3.pkg, x2, rfile);
           if (r3) {
-            x2 = path108.resolve(pkg3.dir, r3);
+            x2 = path109.resolve(pkg3.dir, r3);
           }
         }
         if (isFile(x2)) {
@@ -140309,9 +140309,9 @@ var require_sync = __commonJS({
           return;
         }
         if (/[/\\]node_modules[/\\]*$/.test(dir)) return;
-        var pkgfile = path108.join(maybeRealpathSync(realpathSync8, dir, opts), "package.json");
+        var pkgfile = path109.join(maybeRealpathSync(realpathSync8, dir, opts), "package.json");
         if (!isFile(pkgfile)) {
-          return loadpkg(path108.dirname(dir));
+          return loadpkg(path109.dirname(dir));
         }
         var pkg3 = readPackageSync2(readFileSync15, pkgfile);
         if (pkg3 && opts.packageFilter) {
@@ -140324,7 +140324,7 @@ var require_sync = __commonJS({
         return { pkg: pkg3, dir };
       }
       function loadAsDirectorySync(x2) {
-        var pkgfile = path108.join(maybeRealpathSync(realpathSync8, x2, opts), "/package.json");
+        var pkgfile = path109.join(maybeRealpathSync(realpathSync8, x2, opts), "/package.json");
         if (isFile(pkgfile)) {
           try {
             var pkg3 = readPackageSync2(readFileSync15, pkgfile);
@@ -140347,15 +140347,15 @@ var require_sync = __commonJS({
               pkg3.main = "index";
             }
             try {
-              var m2 = loadAsFileSync(path108.resolve(x2, pkg3.main));
+              var m2 = loadAsFileSync(path109.resolve(x2, pkg3.main));
               if (m2) return m2;
-              var n3 = loadAsDirectorySync(path108.resolve(x2, pkg3.main));
+              var n3 = loadAsDirectorySync(path109.resolve(x2, pkg3.main));
               if (n3) return n3;
             } catch (e2) {
             }
           }
         }
-        return loadAsFileSync(path108.join(x2, "/index"));
+        return loadAsFileSync(path109.join(x2, "/index"));
       }
       function loadNodeModulesSync(x2, start) {
         var thunk = function() {
@@ -140364,7 +140364,7 @@ var require_sync = __commonJS({
         var dirs = packageIterator ? packageIterator(x2, start, thunk, opts) : thunk();
         for (var i = 0; i < dirs.length; i++) {
           var dir = dirs[i];
-          if (isDirectory(path108.dirname(dir))) {
+          if (isDirectory(path109.dirname(dir))) {
             var m2 = loadAsFileSync(dir);
             if (m2) return m2;
             var n3 = loadAsDirectorySync(dir);
@@ -140455,7 +140455,7 @@ var require_package4 = __commonJS({
 var require_require_in_the_middle = __commonJS({
   "node_modules/require-in-the-middle/index.js"(exports2, module2) {
     "use strict";
-    var path108 = __require("path");
+    var path109 = __require("path");
     var Module = __require("module");
     var debug2 = require_src()("require-in-the-middle");
     var moduleDetailsFromPath = require_module_details_from_path();
@@ -140629,7 +140629,7 @@ var require_require_in_the_middle = __commonJS({
           }
           moduleName2 = filename;
         } else if (hasWhitelist === true && modules.includes(filename)) {
-          const parsedPath = path108.parse(filename);
+          const parsedPath = path109.parse(filename);
           moduleName2 = parsedPath.name;
           basedir = parsedPath.dir;
         } else {
@@ -140667,7 +140667,7 @@ var require_require_in_the_middle = __commonJS({
             }
             if (res !== filename) {
               if (internals === true) {
-                moduleName2 = moduleName2 + path108.sep + path108.relative(basedir, filename);
+                moduleName2 = moduleName2 + path109.sep + path109.relative(basedir, filename);
                 debug2("preparing to process require of internal file: %s", moduleName2);
               } else {
                 debug2("ignoring require of non-main module file: %s", res);
@@ -140703,8 +140703,8 @@ var require_require_in_the_middle = __commonJS({
       }
     };
     function resolveModuleName(stat8) {
-      const normalizedPath = path108.sep !== "/" ? stat8.path.split(path108.sep).join("/") : stat8.path;
-      return path108.posix.join(stat8.name, normalizedPath).replace(normalize9, "");
+      const normalizedPath = path109.sep !== "/" ? stat8.path.split(path109.sep).join("/") : stat8.path;
+      return path109.posix.join(stat8.name, normalizedPath).replace(normalize9, "");
     }
   }
 });
@@ -140789,7 +140789,7 @@ var require_RequireInTheMiddleSingleton = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.RequireInTheMiddleSingleton = void 0;
     var require_in_the_middle_1 = require_require_in_the_middle();
-    var path108 = __require("path");
+    var path109 = __require("path");
     var ModuleNameTrie_1 = require_ModuleNameTrie();
     var isMocha = [
       "afterEach",
@@ -140853,7 +140853,7 @@ var require_RequireInTheMiddleSingleton = __commonJS({
     };
     exports2.RequireInTheMiddleSingleton = RequireInTheMiddleSingleton;
     function normalizePathSeparators(moduleNameOrPath) {
-      return path108.sep !== ModuleNameTrie_1.ModuleNameSeparator ? moduleNameOrPath.split(path108.sep).join(ModuleNameTrie_1.ModuleNameSeparator) : moduleNameOrPath;
+      return path109.sep !== ModuleNameTrie_1.ModuleNameSeparator ? moduleNameOrPath.split(path109.sep).join(ModuleNameTrie_1.ModuleNameSeparator) : moduleNameOrPath;
     }
   }
 });
@@ -140913,7 +140913,7 @@ var require_register = __commonJS({
 // node_modules/import-in-the-middle/index.js
 var require_import_in_the_middle = __commonJS({
   "node_modules/import-in-the-middle/index.js"(exports2, module2) {
-    var path108 = __require("path");
+    var path109 = __require("path");
     var parse9 = require_module_details_from_path();
     var { fileURLToPath: fileURLToPath16 } = __require("url");
     var { MessageChannel: MessageChannel2 } = __require("worker_threads");
@@ -141009,7 +141009,7 @@ var require_import_in_the_middle = __commonJS({
             if (moduleName2 === name2) {
               if (baseDir) {
                 if (internals) {
-                  name2 = name2 + path108.sep + path108.relative(baseDir, fileURLToPath16(filename));
+                  name2 = name2 + path109.sep + path109.relative(baseDir, fileURLToPath16(filename));
                 } else {
                   if (!getExperimentalPatchInternals() && !baseDir.endsWith(specifiers.get(filename))) continue;
                 }
@@ -141085,7 +141085,7 @@ var require_instrumentation2 = __commonJS({
     "use strict";
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.InstrumentationBase = void 0;
-    var path108 = __require("path");
+    var path109 = __require("path");
     var util_1 = __require("util");
     var semver_1 = require_semver();
     var shimmer_1 = require_shimmer();
@@ -141183,7 +141183,7 @@ var require_instrumentation2 = __commonJS({
       }
       _extractPackageVersion(baseDir) {
         try {
-          const json2 = (0, fs_1.readFileSync)(path108.join(baseDir, "package.json"), {
+          const json2 = (0, fs_1.readFileSync)(path109.join(baseDir, "package.json"), {
             encoding: "utf8"
           });
           const version3 = JSON.parse(json2).version;
@@ -141225,7 +141225,7 @@ var require_instrumentation2 = __commonJS({
           return exports3;
         }
         const files = module3.files ?? [];
-        const normalizedName = path108.normalize(name2);
+        const normalizedName = path109.normalize(name2);
         const supportedFileInstrumentations = files.filter((f) => f.name === normalizedName).filter((f) => isSupported(f.supportedVersions, version3, module3.includePrerelease));
         return supportedFileInstrumentations.reduce((patchedExports, file) => {
           file.moduleExports = patchedExports;
@@ -141271,8 +141271,8 @@ var require_instrumentation2 = __commonJS({
         this._warnOnPreloadedModules();
         for (const module3 of this._modules) {
           const hookFn = (exports3, name2, baseDir) => {
-            if (!baseDir && path108.isAbsolute(name2)) {
-              const parsedPath = path108.parse(name2);
+            if (!baseDir && path109.isAbsolute(name2)) {
+              const parsedPath = path109.parse(name2);
               name2 = parsedPath.name;
               baseDir = parsedPath.dir;
             }
@@ -141281,7 +141281,7 @@ var require_instrumentation2 = __commonJS({
           const onRequire = (exports3, name2, baseDir) => {
             return this._onRequire(module3, exports3, name2, baseDir);
           };
-          const hook = path108.isAbsolute(module3.name) ? new require_in_the_middle_1.Hook([module3.name], { internals: true }, onRequire) : this._requireInTheMiddleSingleton.register(module3.name, onRequire);
+          const hook = path109.isAbsolute(module3.name) ? new require_in_the_middle_1.Hook([module3.name], { internals: true }, onRequire) : this._requireInTheMiddleSingleton.register(module3.name, onRequire);
           this._hooks.push(hook);
           const esmHook = new import_in_the_middle_1.Hook([module3.name], { internals: false }, hookFn);
           this._hooks.push(esmHook);
@@ -143511,12 +143511,12 @@ var require_utils12 = __commonJS({
       const reqUrlObject = requestUrl || {};
       const protocol = reqUrlObject.protocol || fallbackProtocol;
       const port = (reqUrlObject.port || "").toString();
-      const path108 = reqUrlObject.path || "/";
+      const path109 = reqUrlObject.path || "/";
       let host = reqUrlObject.host || reqUrlObject.hostname || headers.host || "localhost";
       if (host.indexOf(":") === -1 && port && port !== "80" && port !== "443") {
         host += `:${port}`;
       }
-      return `${protocol}//${host}${path108}`;
+      return `${protocol}//${host}${path109}`;
     };
     exports2.getAbsoluteUrl = getAbsoluteUrl;
     var parseResponseStatus = (kind, statusCode) => {
@@ -149788,18 +149788,18 @@ var init_client2 = __esm({
             f
           ]));
           const openedFiles = [];
-          for (const [path108] of currentFiles.entries()) {
-            if (!lastFiles.has(path108)) {
-              openedFiles.push(path108);
+          for (const [path109] of currentFiles.entries()) {
+            if (!lastFiles.has(path109)) {
+              openedFiles.push(path109);
             }
           }
           if (openedFiles.length > 0) {
             changes["filesOpened"] = openedFiles;
           }
           const closedFiles = [];
-          for (const [path108] of lastFiles.entries()) {
-            if (!currentFiles.has(path108)) {
-              closedFiles.push(path108);
+          for (const [path109] of lastFiles.entries()) {
+            if (!currentFiles.has(path109)) {
+              closedFiles.push(path109);
             }
           }
           if (closedFiles.length > 0) {
@@ -152822,8 +152822,8 @@ var require_uri_all = __commonJS({
             wsComponents.secure = void 0;
           }
           if (wsComponents.resourceName) {
-            var _wsComponents$resourc = wsComponents.resourceName.split("?"), _wsComponents$resourc2 = slicedToArray(_wsComponents$resourc, 2), path108 = _wsComponents$resourc2[0], query = _wsComponents$resourc2[1];
-            wsComponents.path = path108 && path108 !== "/" ? path108 : void 0;
+            var _wsComponents$resourc = wsComponents.resourceName.split("?"), _wsComponents$resourc2 = slicedToArray(_wsComponents$resourc, 2), path109 = _wsComponents$resourc2[0], query = _wsComponents$resourc2[1];
+            wsComponents.path = path109 && path109 !== "/" ? path109 : void 0;
             wsComponents.query = query;
             wsComponents.resourceName = void 0;
           }
@@ -153161,12 +153161,12 @@ var require_util15 = __commonJS({
       return "'" + escapeQuotes(str2) + "'";
     }
     function getPathExpr(currentPath, expr, jsonPointers, isNumber3) {
-      var path108 = jsonPointers ? "'/' + " + expr + (isNumber3 ? "" : ".replace(/~/g, '~0').replace(/\\//g, '~1')") : isNumber3 ? "'[' + " + expr + " + ']'" : "'[\\'' + " + expr + " + '\\']'";
-      return joinPaths(currentPath, path108);
+      var path109 = jsonPointers ? "'/' + " + expr + (isNumber3 ? "" : ".replace(/~/g, '~0').replace(/\\//g, '~1')") : isNumber3 ? "'[' + " + expr + " + ']'" : "'[\\'' + " + expr + " + '\\']'";
+      return joinPaths(currentPath, path109);
     }
     function getPath(currentPath, prop, jsonPointers) {
-      var path108 = jsonPointers ? toQuotedString("/" + escapeJsonPointer(prop)) : toQuotedString(getProperty2(prop));
-      return joinPaths(currentPath, path108);
+      var path109 = jsonPointers ? toQuotedString("/" + escapeJsonPointer(prop)) : toQuotedString(getProperty2(prop));
+      return joinPaths(currentPath, path109);
     }
     var JSON_POINTER = /^\/(?:[^~]|~0|~1)*$/;
     var RELATIVE_JSON_POINTER = /^([0-9]+)(#|\/(?:[^~]|~0|~1)*)?$/;
@@ -159442,8 +159442,8 @@ var require_windows = __commonJS({
   "node_modules/isexe/windows.js"(exports2, module2) {
     module2.exports = isexe;
     isexe.sync = sync2;
-    var fs93 = __require("fs");
-    function checkPathExt(path108, options2) {
+    var fs94 = __require("fs");
+    function checkPathExt(path109, options2) {
       var pathext = options2.pathExt !== void 0 ? options2.pathExt : process.env.PATHEXT;
       if (!pathext) {
         return true;
@@ -159454,25 +159454,25 @@ var require_windows = __commonJS({
       }
       for (var i = 0; i < pathext.length; i++) {
         var p = pathext[i].toLowerCase();
-        if (p && path108.substr(-p.length).toLowerCase() === p) {
+        if (p && path109.substr(-p.length).toLowerCase() === p) {
           return true;
         }
       }
       return false;
     }
-    function checkStat(stat8, path108, options2) {
+    function checkStat(stat8, path109, options2) {
       if (!stat8.isSymbolicLink() && !stat8.isFile()) {
         return false;
       }
-      return checkPathExt(path108, options2);
+      return checkPathExt(path109, options2);
     }
-    function isexe(path108, options2, cb) {
-      fs93.stat(path108, function(er, stat8) {
-        cb(er, er ? false : checkStat(stat8, path108, options2));
+    function isexe(path109, options2, cb) {
+      fs94.stat(path109, function(er, stat8) {
+        cb(er, er ? false : checkStat(stat8, path109, options2));
       });
     }
-    function sync2(path108, options2) {
-      return checkStat(fs93.statSync(path108), path108, options2);
+    function sync2(path109, options2) {
+      return checkStat(fs94.statSync(path109), path109, options2);
     }
   }
 });
@@ -159482,14 +159482,14 @@ var require_mode = __commonJS({
   "node_modules/isexe/mode.js"(exports2, module2) {
     module2.exports = isexe;
     isexe.sync = sync2;
-    var fs93 = __require("fs");
-    function isexe(path108, options2, cb) {
-      fs93.stat(path108, function(er, stat8) {
+    var fs94 = __require("fs");
+    function isexe(path109, options2, cb) {
+      fs94.stat(path109, function(er, stat8) {
         cb(er, er ? false : checkStat(stat8, options2));
       });
     }
-    function sync2(path108, options2) {
-      return checkStat(fs93.statSync(path108), options2);
+    function sync2(path109, options2) {
+      return checkStat(fs94.statSync(path109), options2);
     }
     function checkStat(stat8, options2) {
       return stat8.isFile() && checkMode(stat8, options2);
@@ -159513,7 +159513,7 @@ var require_mode = __commonJS({
 // node_modules/isexe/index.js
 var require_isexe = __commonJS({
   "node_modules/isexe/index.js"(exports2, module2) {
-    var fs93 = __require("fs");
+    var fs94 = __require("fs");
     var core;
     if (process.platform === "win32" || global.TESTING_WINDOWS) {
       core = require_windows();
@@ -159522,7 +159522,7 @@ var require_isexe = __commonJS({
     }
     module2.exports = isexe;
     isexe.sync = sync2;
-    function isexe(path108, options2, cb) {
+    function isexe(path109, options2, cb) {
       if (typeof options2 === "function") {
         cb = options2;
         options2 = {};
@@ -159532,7 +159532,7 @@ var require_isexe = __commonJS({
           throw new TypeError("callback not provided");
         }
         return new Promise(function(resolve28, reject) {
-          isexe(path108, options2 || {}, function(er, is) {
+          isexe(path109, options2 || {}, function(er, is) {
             if (er) {
               reject(er);
             } else {
@@ -159541,7 +159541,7 @@ var require_isexe = __commonJS({
           });
         });
       }
-      core(path108, options2 || {}, function(er, is) {
+      core(path109, options2 || {}, function(er, is) {
         if (er) {
           if (er.code === "EACCES" || options2 && options2.ignoreErrors) {
             er = null;
@@ -159551,9 +159551,9 @@ var require_isexe = __commonJS({
         cb(er, is);
       });
     }
-    function sync2(path108, options2) {
+    function sync2(path109, options2) {
       try {
-        return core.sync(path108, options2 || {});
+        return core.sync(path109, options2 || {});
       } catch (er) {
         if (options2 && options2.ignoreErrors || er.code === "EACCES") {
           return false;
@@ -159569,7 +159569,7 @@ var require_isexe = __commonJS({
 var require_which = __commonJS({
   "node_modules/which/which.js"(exports2, module2) {
     var isWindows5 = process.platform === "win32" || process.env.OSTYPE === "cygwin" || process.env.OSTYPE === "msys";
-    var path108 = __require("path");
+    var path109 = __require("path");
     var COLON = isWindows5 ? ";" : ":";
     var isexe = require_isexe();
     var getNotFoundError = (cmd) => Object.assign(new Error(`not found: ${cmd}`), { code: "ENOENT" });
@@ -159607,7 +159607,7 @@ var require_which = __commonJS({
           return opt.all && found.length ? resolve28(found) : reject(getNotFoundError(cmd));
         const ppRaw = pathEnv[i];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path108.join(pathPart, cmd);
+        const pCmd = path109.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         resolve28(subStep(p, i, 0));
       });
@@ -159634,7 +159634,7 @@ var require_which = __commonJS({
       for (let i = 0; i < pathEnv.length; i++) {
         const ppRaw = pathEnv[i];
         const pathPart = /^".*"$/.test(ppRaw) ? ppRaw.slice(1, -1) : ppRaw;
-        const pCmd = path108.join(pathPart, cmd);
+        const pCmd = path109.join(pathPart, cmd);
         const p = !pathPart && /^\.[\\\/]/.test(cmd) ? cmd.slice(0, 2) + pCmd : pCmd;
         for (let j = 0; j < pathExt.length; j++) {
           const cur = p + pathExt[j];
@@ -159682,7 +159682,7 @@ var require_path_key = __commonJS({
 var require_resolveCommand = __commonJS({
   "node_modules/cross-spawn/lib/util/resolveCommand.js"(exports2, module2) {
     "use strict";
-    var path108 = __require("path");
+    var path109 = __require("path");
     var which = require_which();
     var getPathKey = require_path_key();
     function resolveCommandAttempt(parsed, withoutPathExt) {
@@ -159700,7 +159700,7 @@ var require_resolveCommand = __commonJS({
       try {
         resolved = which.sync(parsed.command, {
           path: env9[getPathKey({ env: env9 })],
-          pathExt: withoutPathExt ? path108.delimiter : void 0
+          pathExt: withoutPathExt ? path109.delimiter : void 0
         });
       } catch (e2) {
       } finally {
@@ -159709,7 +159709,7 @@ var require_resolveCommand = __commonJS({
         }
       }
       if (resolved) {
-        resolved = path108.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
+        resolved = path109.resolve(hasCustomCwd ? parsed.options.cwd : "", resolved);
       }
       return resolved;
     }
@@ -159763,8 +159763,8 @@ var require_shebang_command = __commonJS({
       if (!match2) {
         return null;
       }
-      const [path108, argument] = match2[0].replace(/#! ?/, "").split(" ");
-      const binary = path108.split("/").pop();
+      const [path109, argument] = match2[0].replace(/#! ?/, "").split(" ");
+      const binary = path109.split("/").pop();
       if (binary === "env") {
         return argument;
       }
@@ -159777,16 +159777,16 @@ var require_shebang_command = __commonJS({
 var require_readShebang = __commonJS({
   "node_modules/cross-spawn/lib/util/readShebang.js"(exports2, module2) {
     "use strict";
-    var fs93 = __require("fs");
+    var fs94 = __require("fs");
     var shebangCommand = require_shebang_command();
     function readShebang(command2) {
       const size = 150;
       const buffer = Buffer.alloc(size);
       let fd;
       try {
-        fd = fs93.openSync(command2, "r");
-        fs93.readSync(fd, buffer, 0, size, 0);
-        fs93.closeSync(fd);
+        fd = fs94.openSync(command2, "r");
+        fs94.readSync(fd, buffer, 0, size, 0);
+        fs94.closeSync(fd);
       } catch (e2) {
       }
       return shebangCommand(buffer.toString());
@@ -159799,7 +159799,7 @@ var require_readShebang = __commonJS({
 var require_parse4 = __commonJS({
   "node_modules/cross-spawn/lib/parse.js"(exports2, module2) {
     "use strict";
-    var path108 = __require("path");
+    var path109 = __require("path");
     var resolveCommand = require_resolveCommand();
     var escape7 = require_escape();
     var readShebang = require_readShebang();
@@ -159824,7 +159824,7 @@ var require_parse4 = __commonJS({
       const needsShell = !isExecutableRegExp.test(commandFile);
       if (parsed.options.forceShell || needsShell) {
         const needsDoubleEscapeMetaChars = isCmdShimRegExp.test(commandFile);
-        parsed.command = path108.normalize(parsed.command);
+        parsed.command = path109.normalize(parsed.command);
         parsed.command = escape7.command(parsed.command);
         parsed.args = parsed.args.map((arg) => escape7.argument(arg, needsDoubleEscapeMetaChars));
         const shellCommand = [parsed.command].concat(parsed.args).join(" ");
@@ -160139,11 +160139,11 @@ var init_stdio2 = __esm({
 import * as fs19 from "node:fs";
 import * as os11 from "node:os";
 import * as path18 from "node:path";
-function getRealPath(path108) {
+function getRealPath(path109) {
   try {
-    return fs19.realpathSync(path108);
+    return fs19.realpathSync(path109);
   } catch (_e) {
-    return path108;
+    return path109;
   }
 }
 function getIdeServerHost() {
@@ -160894,7 +160894,7 @@ var require_ignore = __commonJS({
       //   path matching.
       // - check `string` either `MODE_IGNORE` or `MODE_CHECK_IGNORE`
       // @returns {TestResult} true if a file is ignored
-      test(path108, checkUnignored, mode) {
+      test(path109, checkUnignored, mode) {
         let ignored = false;
         let unignored = false;
         let matchedRule;
@@ -160903,7 +160903,7 @@ var require_ignore = __commonJS({
           if (unignored === negative && ignored !== unignored || negative && !ignored && !unignored && !checkUnignored) {
             return;
           }
-          const matched = rule[mode].test(path108);
+          const matched = rule[mode].test(path109);
           if (!matched) {
             return;
           }
@@ -160924,17 +160924,17 @@ var require_ignore = __commonJS({
     var throwError = (message, Ctor) => {
       throw new Ctor(message);
     };
-    var checkPath = (path108, originalPath, doThrow) => {
-      if (!isString2(path108)) {
+    var checkPath = (path109, originalPath, doThrow) => {
+      if (!isString2(path109)) {
         return doThrow(
           `path must be a string, but got \`${originalPath}\``,
           TypeError
         );
       }
-      if (!path108) {
+      if (!path109) {
         return doThrow(`path must not be empty`, TypeError);
       }
-      if (checkPath.isNotRelative(path108)) {
+      if (checkPath.isNotRelative(path109)) {
         const r3 = "`path.relative()`d";
         return doThrow(
           `path should be a ${r3} string, but got "${originalPath}"`,
@@ -160943,7 +160943,7 @@ var require_ignore = __commonJS({
       }
       return true;
     };
-    var isNotRelative = (path108) => REGEX_TEST_INVALID_PATH.test(path108);
+    var isNotRelative = (path109) => REGEX_TEST_INVALID_PATH.test(path109);
     checkPath.isNotRelative = isNotRelative;
     checkPath.convert = (p) => p;
     var Ignore3 = class {
@@ -160973,19 +160973,19 @@ var require_ignore = __commonJS({
       }
       // @returns {TestResult}
       _test(originalPath, cache4, checkUnignored, slices) {
-        const path108 = originalPath && checkPath.convert(originalPath);
+        const path109 = originalPath && checkPath.convert(originalPath);
         checkPath(
-          path108,
+          path109,
           originalPath,
           this._strictPathCheck ? throwError : RETURN_FALSE
         );
-        return this._t(path108, cache4, checkUnignored, slices);
+        return this._t(path109, cache4, checkUnignored, slices);
       }
-      checkIgnore(path108) {
-        if (!REGEX_TEST_TRAILING_SLASH.test(path108)) {
-          return this.test(path108);
+      checkIgnore(path109) {
+        if (!REGEX_TEST_TRAILING_SLASH.test(path109)) {
+          return this.test(path109);
         }
-        const slices = path108.split(SLASH).filter(Boolean);
+        const slices = path109.split(SLASH).filter(Boolean);
         slices.pop();
         if (slices.length) {
           const parent = this._t(
@@ -160998,18 +160998,18 @@ var require_ignore = __commonJS({
             return parent;
           }
         }
-        return this._rules.test(path108, false, MODE_CHECK_IGNORE);
+        return this._rules.test(path109, false, MODE_CHECK_IGNORE);
       }
-      _t(path108, cache4, checkUnignored, slices) {
-        if (path108 in cache4) {
-          return cache4[path108];
+      _t(path109, cache4, checkUnignored, slices) {
+        if (path109 in cache4) {
+          return cache4[path109];
         }
         if (!slices) {
-          slices = path108.split(SLASH).filter(Boolean);
+          slices = path109.split(SLASH).filter(Boolean);
         }
         slices.pop();
         if (!slices.length) {
-          return cache4[path108] = this._rules.test(path108, checkUnignored, MODE_IGNORE);
+          return cache4[path109] = this._rules.test(path109, checkUnignored, MODE_IGNORE);
         }
         const parent = this._t(
           slices.join(SLASH) + SLASH,
@@ -161017,29 +161017,29 @@ var require_ignore = __commonJS({
           checkUnignored,
           slices
         );
-        return cache4[path108] = parent.ignored ? parent : this._rules.test(path108, checkUnignored, MODE_IGNORE);
+        return cache4[path109] = parent.ignored ? parent : this._rules.test(path109, checkUnignored, MODE_IGNORE);
       }
-      ignores(path108) {
-        return this._test(path108, this._ignoreCache, false).ignored;
+      ignores(path109) {
+        return this._test(path109, this._ignoreCache, false).ignored;
       }
       createFilter() {
-        return (path108) => !this.ignores(path108);
+        return (path109) => !this.ignores(path109);
       }
       filter(paths) {
         return makeArray(paths).filter(this.createFilter());
       }
       // @returns {TestResult}
-      test(path108) {
-        return this._test(path108, this._testCache, true);
+      test(path109) {
+        return this._test(path109, this._testCache, true);
       }
     };
     var factory = (options2) => new Ignore3(options2);
-    var isPathValid = (path108) => checkPath(path108 && checkPath.convert(path108), path108, RETURN_FALSE);
+    var isPathValid = (path109) => checkPath(path109 && checkPath.convert(path109), path109, RETURN_FALSE);
     var setupWindows = () => {
       const makePosix = (str2) => /^\\\\\?\\/.test(str2) || /["<>|\u0000-\u001F]+/u.test(str2) ? str2 : str2.replace(/\\/g, "/");
       checkPath.convert = makePosix;
       const REGEX_TEST_WINDOWS_PATH_ABSOLUTE = /^[a-z]:\//i;
-      checkPath.isNotRelative = (path108) => REGEX_TEST_WINDOWS_PATH_ABSOLUTE.test(path108) || isNotRelative(path108);
+      checkPath.isNotRelative = (path109) => REGEX_TEST_WINDOWS_PATH_ABSOLUTE.test(path109) || isNotRelative(path109);
     };
     if (
       // Detect `process` so that it can run in browsers.
@@ -161226,10 +161226,10 @@ var require_src36 = __commonJS({
     var fs_1 = __require("fs");
     var debug_1 = __importDefault(require_src());
     var log = debug_1.default("@kwsites/file-exists");
-    function check(path108, isFile, isDirectory) {
-      log(`checking %s`, path108);
+    function check(path109, isFile, isDirectory) {
+      log(`checking %s`, path109);
       try {
-        const stat8 = fs_1.statSync(path108);
+        const stat8 = fs_1.statSync(path109);
         if (stat8.isFile() && isFile) {
           log(`[OK] path represents a file`);
           return true;
@@ -161249,8 +161249,8 @@ var require_src36 = __commonJS({
         throw e2;
       }
     }
-    function exists2(path108, type = exports2.READABLE) {
-      return check(path108, (type & exports2.FILE) > 0, (type & exports2.FOLDER) > 0);
+    function exists2(path109, type = exports2.READABLE) {
+      return check(path109, (type & exports2.FILE) > 0, (type & exports2.FOLDER) > 0);
     }
     exports2.exists = exists2;
     exports2.FILE = 1;
@@ -161322,8 +161322,8 @@ function pathspec(...paths) {
   cache.set(key, paths);
   return key;
 }
-function isPathSpec(path108) {
-  return path108 instanceof String && cache.has(path108);
+function isPathSpec(path109) {
+  return path109 instanceof String && cache.has(path109);
 }
 function toPaths(pathSpec) {
   return cache.get(pathSpec) || [];
@@ -161367,8 +161367,8 @@ function toLinesWithContent(input = "", trimmed2 = true, separator = "\n") {
 function forEachLineWithContent(input, callback) {
   return toLinesWithContent(input, true).map((line) => callback(line));
 }
-function folderExists(path108) {
-  return (0, import_file_exists.exists)(path108, import_file_exists.FOLDER);
+function folderExists(path109) {
+  return (0, import_file_exists.exists)(path109, import_file_exists.FOLDER);
 }
 function append(target, item) {
   if (Array.isArray(target)) {
@@ -161551,8 +161551,8 @@ function checkIsRepoRootTask() {
     commands,
     format: "utf-8",
     onError,
-    parser(path108) {
-      return /^\.(git)?$/.test(path108.trim());
+    parser(path109) {
+      return /^\.(git)?$/.test(path109.trim());
     }
   };
 }
@@ -161808,11 +161808,11 @@ function parseGrep(grep) {
   const paths = /* @__PURE__ */ new Set();
   const results = {};
   forEachLineWithContent(grep, (input) => {
-    const [path108, line, preview] = input.split(NULL2);
-    paths.add(path108);
-    (results[path108] = results[path108] || []).push({
+    const [path109, line, preview] = input.split(NULL2);
+    paths.add(path109);
+    (results[path109] = results[path109] || []).push({
       line: asNumber(line),
-      path: path108,
+      path: path109,
       preview
     });
   });
@@ -162106,14 +162106,14 @@ function hashObjectTask(filePath, write2) {
   }
   return straightThroughStringTask(commands, true);
 }
-function parseInit(bare, path108, text) {
+function parseInit(bare, path109, text) {
   const response = String(text).trim();
   let result;
   if (result = initResponseRegex.exec(response)) {
-    return new InitSummary(bare, path108, false, result[1]);
+    return new InitSummary(bare, path109, false, result[1]);
   }
   if (result = reInitResponseRegex.exec(response)) {
-    return new InitSummary(bare, path108, true, result[1]);
+    return new InitSummary(bare, path109, true, result[1]);
   }
   let gitDir = "";
   const tokens = response.split(" ");
@@ -162124,12 +162124,12 @@ function parseInit(bare, path108, text) {
       break;
     }
   }
-  return new InitSummary(bare, path108, /^re/i.test(response), gitDir);
+  return new InitSummary(bare, path109, /^re/i.test(response), gitDir);
 }
 function hasBareCommand(command2) {
   return command2.includes(bareCommand);
 }
-function initTask(bare = false, path108, customArgs) {
+function initTask(bare = false, path109, customArgs) {
   const commands = ["init", ...customArgs];
   if (bare && !hasBareCommand(commands)) {
     commands.splice(1, 0, bareCommand);
@@ -162138,7 +162138,7 @@ function initTask(bare = false, path108, customArgs) {
     commands,
     format: "utf-8",
     parser(text) {
-      return parseInit(commands.includes("--bare"), path108, text);
+      return parseInit(commands.includes("--bare"), path109, text);
     }
   };
 }
@@ -162417,14 +162417,14 @@ function splitLine(result, lineStr) {
     default:
       return;
   }
-  function data(index, workingDir, path108) {
+  function data(index, workingDir, path109) {
     const raw = `${index}${workingDir}`;
     const handler = parsers6.get(raw);
     if (handler) {
-      handler(result, path108);
+      handler(result, path109);
     }
     if (raw !== "##" && raw !== "!!") {
-      result.files.push(new FileStatusSummary(path108, index, workingDir));
+      result.files.push(new FileStatusSummary(path109, index, workingDir));
     }
   }
 }
@@ -162736,8 +162736,8 @@ function stashListTask(opt = {}, customArgs) {
     parser: parser42
   };
 }
-function addSubModuleTask(repo, path108) {
-  return subModuleTask(["add", repo, path108]);
+function addSubModuleTask(repo, path109) {
+  return subModuleTask(["add", repo, path109]);
 }
 function initSubModuleTask(customArgs) {
   return subModuleTask(["init", ...customArgs]);
@@ -164044,9 +164044,9 @@ var init_esm5 = __esm({
       "src/lib/responses/InitSummary.ts"() {
         "use strict";
         InitSummary = class {
-          constructor(bare, path108, existing, gitDir) {
+          constructor(bare, path109, existing, gitDir) {
             this.bare = bare;
-            this.path = path108;
+            this.path = path109;
             this.existing = existing;
             this.gitDir = gitDir;
           }
@@ -164580,12 +164580,12 @@ var init_esm5 = __esm({
         "use strict";
         fromPathRegex = /^(.+)\0(.+)$/;
         FileStatusSummary = class {
-          constructor(path108, index, working_dir) {
-            this.path = path108;
+          constructor(path109, index, working_dir) {
+            this.path = path109;
             this.index = index;
             this.working_dir = working_dir;
             if (index === "R" || working_dir === "R") {
-              const detail = fromPathRegex.exec(path108) || [null, path108, path108];
+              const detail = fromPathRegex.exec(path109) || [null, path109, path109];
               this.from = detail[2] || "";
               this.path = detail[1] || "";
             }
@@ -164832,9 +164832,9 @@ var init_esm5 = __esm({
               next
             );
           }
-          hashObject(path108, write2) {
+          hashObject(path109, write2) {
             return this._runTask(
-              hashObjectTask(path108, write2 === true),
+              hashObjectTask(path109, write2 === true),
               trailingFunctionArgument(arguments)
             );
           }
@@ -165495,8 +165495,8 @@ var init_esm5 = __esm({
           }
           return this._runTask(straightThroughStringTask2(command2, this._trimmed), next);
         };
-        Git2.prototype.submoduleAdd = function(repo, path108, then) {
-          return this._runTask(addSubModuleTask2(repo, path108), trailingFunctionArgument2(arguments));
+        Git2.prototype.submoduleAdd = function(repo, path109, then) {
+          return this._runTask(addSubModuleTask2(repo, path109), trailingFunctionArgument2(arguments));
         };
         Git2.prototype.submoduleUpdate = function(args, then) {
           return this._runTask(
@@ -176292,11 +176292,11 @@ var require_mime_types = __commonJS({
       }
       return exts[0];
     }
-    function lookup(path108) {
-      if (!path108 || typeof path108 !== "string") {
+    function lookup(path109) {
+      if (!path109 || typeof path109 !== "string") {
         return false;
       }
-      var extension2 = extname5("x." + path108).toLowerCase().slice(1);
+      var extension2 = extname5("x." + path109).toLowerCase().slice(1);
       if (!extension2) {
         return false;
       }
@@ -176930,8 +176930,8 @@ function wrapReason(ex) {
   return new UnknownErrorException(ex.message, ex.toString());
 }
 async function node_utils_fetchData(url2) {
-  const fs93 = process.getBuiltinModule("fs");
-  const data = await fs93.promises.readFile(url2);
+  const fs94 = process.getBuiltinModule("fs");
+  const data = await fs94.promises.readFile(url2);
   return new Uint8Array(data);
 }
 function applyBoundingBox(ctx, bbox) {
@@ -177332,7 +177332,7 @@ function compileType3Glyph(imgData) {
     return null;
   }
   const steps = new Int32Array([0, width1, -1, 0, -width1, 0, 0, 0, 1]);
-  const path108 = new Path2D();
+  const path109 = new Path2D();
   for (i = 0; count && i <= height; i++) {
     let p = i * width1;
     const end = p + width;
@@ -177342,7 +177342,7 @@ function compileType3Glyph(imgData) {
     if (p === end) {
       continue;
     }
-    path108.moveTo(p % width1, i);
+    path109.moveTo(p % width1, i);
     const p0 = p;
     let type = points[p];
     do {
@@ -177358,7 +177358,7 @@ function compileType3Glyph(imgData) {
         type = pp & 51 * type >> 4;
         points[p] &= type >> 2 | type << 2;
       }
-      path108.lineTo(p % width1, p / width1 | 0);
+      path109.lineTo(p % width1, p / width1 | 0);
       if (!points[p]) {
         --count;
       }
@@ -177371,7 +177371,7 @@ function compileType3Glyph(imgData) {
     c3.save();
     c3.scale(1 / width, -1 / height);
     c3.translate(0, -height);
-    c3.fill(path108);
+    c3.fill(path109);
     c3.beginPath();
     c3.restore();
   };
@@ -179756,7 +179756,7 @@ var init_pdf = __esm({
           var defineProperty3 = Object.defineProperty;
           var stringSlice = uncurryThis("".slice);
           var replace = uncurryThis("".replace);
-          var join40 = uncurryThis([].join);
+          var join41 = uncurryThis([].join);
           var CONFIGURABLE_LENGTH = DESCRIPTORS && !fails(function() {
             return defineProperty3(function() {
             }, "length", { value: 8 }).length !== 8;
@@ -179783,7 +179783,7 @@ var init_pdf = __esm({
             }
             var state = enforceInternalState(value);
             if (!hasOwn2(state, "source")) {
-              state.source = join40(TEMPLATE, typeof name2 == "string" ? name2 : "");
+              state.source = join41(TEMPLATE, typeof name2 == "string" ? name2 : "");
             }
             return value;
           };
@@ -186958,11 +186958,11 @@ var init_pdf = __esm({
         } catch (ex) {
           warn(`getPathGenerator - ignoring character: "${ex}".`);
         }
-        const path108 = new Path2D(cmds || "");
+        const path109 = new Path2D(cmds || "");
         if (!this.fontExtraProperties) {
           objs.delete(objId);
         }
-        return this.compiledGlyphs[character] = path108;
+        return this.compiledGlyphs[character] = path109;
       }
     };
     CallbackKind = {
@@ -188973,9 +188973,9 @@ var init_pdf = __esm({
           x,
           y,
           fontSize,
-          path: path108
+          path: path109
         } of paths) {
-          newPath.addPath(path108, new DOMMatrix(transform).preMultiplySelf(invTransf).translate(x, y).scale(fontSize, -fontSize));
+          newPath.addPath(path109, new DOMMatrix(transform).preMultiplySelf(invTransf).translate(x, y).scale(fontSize, -fontSize));
         }
         ctx.clip(newPath);
         ctx.beginPath();
@@ -189055,9 +189055,9 @@ var init_pdf = __esm({
       nextLine() {
         this.moveText(0, this.current.leading);
       }
-      #getScaledPath(path108, currentTransform, transform) {
+      #getScaledPath(path109, currentTransform, transform) {
         const newPath = new Path2D();
-        newPath.addPath(path108, new DOMMatrix(transform).invertSelf().multiplySelf(currentTransform));
+        newPath.addPath(path109, new DOMMatrix(transform).invertSelf().multiplySelf(currentTransform));
         return newPath;
       }
       paintChar(character, x, y, patternFillTransform, patternStrokeTransform) {
@@ -189070,9 +189070,9 @@ var init_pdf = __esm({
         const isAddToPathSet = !!(textRenderingMode & TextRenderingMode.ADD_TO_PATH_FLAG);
         const patternFill = current.patternFill && !font.missingFile;
         const patternStroke = current.patternStroke && !font.missingFile;
-        let path108;
+        let path109;
         if (font.disableFontFace || isAddToPathSet || patternFill || patternStroke) {
-          path108 = font.getPathGenerator(this.commonObjs, character);
+          path109 = font.getPathGenerator(this.commonObjs, character);
         }
         if (font.disableFontFace || patternFill || patternStroke) {
           ctx.save();
@@ -189082,19 +189082,19 @@ var init_pdf = __esm({
             if (patternFillTransform) {
               const currentTransform = ctx.getTransform();
               ctx.setTransform(...patternFillTransform);
-              ctx.fill(this.#getScaledPath(path108, currentTransform, patternFillTransform));
+              ctx.fill(this.#getScaledPath(path109, currentTransform, patternFillTransform));
             } else {
-              ctx.fill(path108);
+              ctx.fill(path109);
             }
           }
           if (fillStrokeMode === TextRenderingMode.STROKE || fillStrokeMode === TextRenderingMode.FILL_STROKE) {
             if (patternStrokeTransform) {
               const currentTransform = ctx.getTransform();
               ctx.setTransform(...patternStrokeTransform);
-              ctx.stroke(this.#getScaledPath(path108, currentTransform, patternStrokeTransform));
+              ctx.stroke(this.#getScaledPath(path109, currentTransform, patternStrokeTransform));
             } else {
               ctx.lineWidth /= fontSize;
-              ctx.stroke(path108);
+              ctx.stroke(path109);
             }
           }
           ctx.restore();
@@ -189113,7 +189113,7 @@ var init_pdf = __esm({
             x,
             y,
             fontSize,
-            path: path108
+            path: path109
           });
         }
       }
@@ -191128,10 +191128,10 @@ var init_pdf = __esm({
         this._readableStream = null;
         this._readCapability = Promise.withResolvers();
         this._headersCapability = Promise.withResolvers();
-        const fs93 = process.getBuiltinModule("fs");
-        fs93.promises.lstat(this._url).then((stat8) => {
+        const fs94 = process.getBuiltinModule("fs");
+        fs94.promises.lstat(this._url).then((stat8) => {
           this._contentLength = stat8.size;
-          this._setReadableStream(fs93.createReadStream(this._url));
+          this._setReadableStream(fs94.createReadStream(this._url));
           this._headersCapability.resolve();
         }, (error) => {
           if (error.code === "ENOENT") {
@@ -191226,8 +191226,8 @@ var init_pdf = __esm({
         this._readCapability = Promise.withResolvers();
         const source2 = stream2.source;
         this._isStreamingSupported = !source2.disableStream;
-        const fs93 = process.getBuiltinModule("fs");
-        this._setReadableStream(fs93.createReadStream(this._url, {
+        const fs94 = process.getBuiltinModule("fs");
+        this._setReadableStream(fs94.createReadStream(this._url, {
           start,
           end: end - 1
         }));
@@ -201451,13 +201451,13 @@ var init_pdf = __esm({
         const root2 = this.#createSVG();
         const defs = _DrawLayer._svgFactory.createElement("defs");
         root2.append(defs);
-        const path108 = _DrawLayer._svgFactory.createElement("path");
-        defs.append(path108);
+        const path109 = _DrawLayer._svgFactory.createElement("path");
+        defs.append(path109);
         const pathId = `path_p${this.pageIndex}_${id}`;
-        path108.setAttribute("id", pathId);
-        path108.setAttribute("vector-effect", "non-scaling-stroke");
+        path109.setAttribute("id", pathId);
+        path109.setAttribute("vector-effect", "non-scaling-stroke");
         if (isPathUpdatable) {
-          this.#toUpdate.set(id, path108);
+          this.#toUpdate.set(id, path109);
         }
         const clipPathId = hasClip ? this.#createClipPath(defs, pathId) : null;
         const use2 = _DrawLayer._svgFactory.createElement("use");
@@ -201475,11 +201475,11 @@ var init_pdf = __esm({
         const root2 = this.#createSVG();
         const defs = _DrawLayer._svgFactory.createElement("defs");
         root2.append(defs);
-        const path108 = _DrawLayer._svgFactory.createElement("path");
-        defs.append(path108);
+        const path109 = _DrawLayer._svgFactory.createElement("path");
+        defs.append(path109);
         const pathId = `path_p${this.pageIndex}_${id}`;
-        path108.setAttribute("id", pathId);
-        path108.setAttribute("vector-effect", "non-scaling-stroke");
+        path109.setAttribute("id", pathId);
+        path109.setAttribute("vector-effect", "non-scaling-stroke");
         let maskId;
         if (mustRemoveSelfIntersections) {
           const mask = _DrawLayer._svgFactory.createElement("mask");
@@ -201526,7 +201526,7 @@ var init_pdf = __esm({
           root: root2,
           bbox,
           rootClass,
-          path: path108
+          path: path109
         } = properties;
         const element = typeof elementOrId === "number" ? this.#mapping.get(elementOrId) : elementOrId;
         if (!element) {
@@ -201546,10 +201546,10 @@ var init_pdf = __esm({
             classList.toggle(className, value);
           }
         }
-        if (path108) {
+        if (path109) {
           const defs = element.firstChild;
           const pathElement = defs.firstChild;
-          this.#updateProperties(pathElement, path108);
+          this.#updateProperties(pathElement, path109);
         }
       }
       updateParent(id, layer) {
@@ -207067,12 +207067,12 @@ var init_esm9 = __esm({
       /**
        * Get the Path object referenced by the string path, resolved from this Path
        */
-      resolve(path108) {
-        if (!path108) {
+      resolve(path109) {
+        if (!path109) {
           return this;
         }
-        const rootPath = this.getRootString(path108);
-        const dir = path108.substring(rootPath.length);
+        const rootPath = this.getRootString(path109);
+        const dir = path109.substring(rootPath.length);
         const dirParts = dir.split(this.splitSep);
         const result = rootPath ? this.getRoot(rootPath).#resolveParts(dirParts) : this.#resolveParts(dirParts);
         return result;
@@ -207824,8 +207824,8 @@ var init_esm9 = __esm({
       /**
        * @internal
        */
-      getRootString(path108) {
-        return win32.parse(path108).root;
+      getRootString(path109) {
+        return win32.parse(path109).root;
       }
       /**
        * @internal
@@ -207871,8 +207871,8 @@ var init_esm9 = __esm({
       /**
        * @internal
        */
-      getRootString(path108) {
-        return path108.startsWith("/") ? "/" : "";
+      getRootString(path109) {
+        return path109.startsWith("/") ? "/" : "";
       }
       /**
        * @internal
@@ -207921,8 +207921,8 @@ var init_esm9 = __esm({
        *
        * @internal
        */
-      constructor(cwd8 = process.cwd(), pathImpl, sep6, { nocase, childrenCacheSize = 16 * 1024, fs: fs93 = defaultFS } = {}) {
-        this.#fs = fsFromOption(fs93);
+      constructor(cwd8 = process.cwd(), pathImpl, sep6, { nocase, childrenCacheSize = 16 * 1024, fs: fs94 = defaultFS } = {}) {
+        this.#fs = fsFromOption(fs94);
         if (cwd8 instanceof URL || cwd8.startsWith("file://")) {
           cwd8 = fileURLToPath2(cwd8);
         }
@@ -207961,11 +207961,11 @@ var init_esm9 = __esm({
       /**
        * Get the depth of a provided path, string, or the cwd
        */
-      depth(path108 = this.cwd) {
-        if (typeof path108 === "string") {
-          path108 = this.cwd.resolve(path108);
+      depth(path109 = this.cwd) {
+        if (typeof path109 === "string") {
+          path109 = this.cwd.resolve(path109);
         }
-        return path108.depth();
+        return path109.depth();
       }
       /**
        * Return the cache of child entries.  Exposed so subclasses can create
@@ -208452,9 +208452,9 @@ var init_esm9 = __esm({
         process56();
         return results;
       }
-      chdir(path108 = this.cwd) {
+      chdir(path109 = this.cwd) {
         const oldCwd = this.cwd;
-        this.cwd = typeof path108 === "string" ? this.cwd.resolve(path108) : path108;
+        this.cwd = typeof path109 === "string" ? this.cwd.resolve(path109) : path109;
         this.cwd[setAsCwd](oldCwd);
       }
     };
@@ -208480,8 +208480,8 @@ var init_esm9 = __esm({
       /**
        * @internal
        */
-      newRoot(fs93) {
-        return new PathWin32(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs93 });
+      newRoot(fs94) {
+        return new PathWin32(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs94 });
       }
       /**
        * Return true if the provided path string is an absolute path
@@ -208509,8 +208509,8 @@ var init_esm9 = __esm({
       /**
        * @internal
        */
-      newRoot(fs93) {
-        return new PathPosix(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs93 });
+      newRoot(fs94) {
+        return new PathPosix(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs94 });
       }
       /**
        * Return true if the provided path string is an absolute path
@@ -208829,8 +208829,8 @@ var init_processor = __esm({
       }
       // match, absolute, ifdir
       entries() {
-        return [...this.store.entries()].map(([path108, n2]) => [
-          path108,
+        return [...this.store.entries()].map(([path109, n2]) => [
+          path109,
           !!(n2 & 2),
           !!(n2 & 1)
         ]);
@@ -209043,9 +209043,9 @@ var init_walker = __esm({
       signal;
       maxDepth;
       includeChildMatches;
-      constructor(patterns, path108, opts) {
+      constructor(patterns, path109, opts) {
         this.patterns = patterns;
-        this.path = path108;
+        this.path = path109;
         this.opts = opts;
         this.#sep = !opts.posix && opts.platform === "win32" ? "\\" : "/";
         this.includeChildMatches = opts.includeChildMatches !== false;
@@ -209064,11 +209064,11 @@ var init_walker = __esm({
           });
         }
       }
-      #ignored(path108) {
-        return this.seen.has(path108) || !!this.#ignore?.ignored?.(path108);
+      #ignored(path109) {
+        return this.seen.has(path109) || !!this.#ignore?.ignored?.(path109);
       }
-      #childrenIgnored(path108) {
-        return !!this.#ignore?.childrenIgnored?.(path108);
+      #childrenIgnored(path109) {
+        return !!this.#ignore?.childrenIgnored?.(path109);
       }
       // backpressure mechanism
       pause() {
@@ -209283,8 +209283,8 @@ var init_walker = __esm({
     };
     GlobWalker = class extends GlobUtil {
       matches = /* @__PURE__ */ new Set();
-      constructor(patterns, path108, opts) {
-        super(patterns, path108, opts);
+      constructor(patterns, path109, opts) {
+        super(patterns, path109, opts);
       }
       matchEmit(e2) {
         this.matches.add(e2);
@@ -209321,8 +209321,8 @@ var init_walker = __esm({
     };
     GlobStream = class extends GlobUtil {
       results;
-      constructor(patterns, path108, opts) {
-        super(patterns, path108, opts);
+      constructor(patterns, path109, opts) {
+        super(patterns, path109, opts);
         this.results = new Minipass({
           signal: this.signal,
           objectMode: true
@@ -210111,8 +210111,8 @@ var require_utils13 = __commonJS({
       }
       return output;
     };
-    exports2.basename = (path108, { windows } = {}) => {
-      const segs = path108.split(windows ? /[\\/]/ : "/");
+    exports2.basename = (path109, { windows } = {}) => {
+      const segs = path109.split(windows ? /[\\/]/ : "/");
       const last2 = segs[segs.length - 1];
       if (last2 === "") {
         return segs[segs.length - 2];
@@ -222351,10 +222351,10 @@ var require_lib3 = __commonJS({
     exports2.analyse = analyse;
     var detectFile = (filepath, opts = {}) => new Promise((resolve28, reject) => {
       let fd;
-      const fs93 = (0, node_1.default)();
+      const fs94 = (0, node_1.default)();
       const handler = (err, buffer) => {
         if (fd) {
-          fs93.closeSync(fd);
+          fs94.closeSync(fd);
         }
         if (err) {
           reject(err);
@@ -222363,26 +222363,26 @@ var require_lib3 = __commonJS({
         }
       };
       if (opts && opts.sampleSize) {
-        fd = fs93.openSync(filepath, "r");
+        fd = fs94.openSync(filepath, "r");
         const sample = Buffer.allocUnsafe(opts.sampleSize);
-        fs93.read(fd, sample, 0, opts.sampleSize, opts.offset, (err) => {
+        fs94.read(fd, sample, 0, opts.sampleSize, opts.offset, (err) => {
           handler(err, sample);
         });
         return;
       }
-      fs93.readFile(filepath, handler);
+      fs94.readFile(filepath, handler);
     });
     exports2.detectFile = detectFile;
     var detectFileSync = (filepath, opts = {}) => {
-      const fs93 = (0, node_1.default)();
+      const fs94 = (0, node_1.default)();
       if (opts && opts.sampleSize) {
-        const fd = fs93.openSync(filepath, "r");
+        const fd = fs94.openSync(filepath, "r");
         const sample = Buffer.allocUnsafe(opts.sampleSize);
-        fs93.readSync(fd, sample, 0, opts.sampleSize, opts.offset);
-        fs93.closeSync(fd);
+        fs94.readSync(fd, sample, 0, opts.sampleSize, opts.offset);
+        fs94.closeSync(fd);
         return (0, exports2.detect)(sample);
       }
-      return (0, exports2.detect)(fs93.readFileSync(filepath));
+      return (0, exports2.detect)(fs94.readFileSync(filepath));
     };
     exports2.detectFileSync = detectFileSync;
     exports2.default = {
@@ -227521,8 +227521,8 @@ function many(p) {
 function many1(p) {
   return ab(p, many(p), (head, tail) => [head, ...tail]);
 }
-function ab(pa, pb, join40) {
-  return (data, i) => mapOuter(pa(data, i), (ma) => mapInner(pb(data, ma.position), (vb, j) => join40(ma.value, vb, data, i, j)));
+function ab(pa, pb, join41) {
+  return (data, i) => mapOuter(pa(data, i), (ma) => mapInner(pb(data, ma.position), (vb, j) => join41(ma.value, vb, data, i, j)));
 }
 function left(pa, pb) {
   return ab(pa, pb, (va) => va);
@@ -227530,8 +227530,8 @@ function left(pa, pb) {
 function right(pa, pb) {
   return ab(pa, pb, (va, vb) => vb);
 }
-function abc(pa, pb, pc, join40) {
-  return (data, i) => mapOuter(pa(data, i), (ma) => mapOuter(pb(data, ma.position), (mb) => mapInner(pc(data, mb.position), (vc, j) => join40(ma.value, mb.value, vc, data, i, j))));
+function abc(pa, pb, pc, join41) {
+  return (data, i) => mapOuter(pa(data, i), (ma) => mapOuter(pb(data, ma.position), (mb) => mapInner(pc(data, mb.position), (vc, j) => join41(ma.value, mb.value, vc, data, i, j))));
 }
 function middle(pa, pb, pc) {
   return abc(pa, pb, pc, (ra, rb) => rb);
@@ -230639,8 +230639,8 @@ function mergeDuplicatesPreferLast(items, getKey) {
   }
   return [...map2.values()].reverse();
 }
-function get(obj, path108) {
-  for (const key of path108) {
+function get(obj, path109) {
+  for (const key of path109) {
     if (!obj) {
       return void 0;
     }
@@ -231019,8 +231019,8 @@ function withBrackets(str2, brackets) {
   const rbr = typeof brackets[1] === "string" ? brackets[1] : "]";
   return lbr + str2 + rbr;
 }
-function pathRewrite(path108, rewriter, baseUrl, metadata, elem) {
-  const modifiedPath = typeof rewriter === "function" ? rewriter(path108, metadata, elem) : path108;
+function pathRewrite(path109, rewriter, baseUrl, metadata, elem) {
+  const modifiedPath = typeof rewriter === "function" ? rewriter(path109, metadata, elem) : path109;
   return modifiedPath[0] === "/" && baseUrl ? trimCharacterEnd(baseUrl, "/") + modifiedPath : modifiedPath;
 }
 function formatImage(elem, walk, builder, formatOptions) {
@@ -231234,9 +231234,9 @@ function handleDeprecatedOptions(options2) {
     options2.selectors.push(...tagDefinitions);
     options2.selectors = mergeDuplicatesPreferLast(options2.selectors, (s2) => s2.selector);
   }
-  function set(obj, path108, value) {
-    const valueKey = path108.pop();
-    for (const key of path108) {
+  function set(obj, path109, value) {
+    const valueKey = path109.pop();
+    for (const key of path109) {
       let nested = obj[key];
       if (!nested) {
         nested = {};
@@ -236863,9 +236863,9 @@ var init_logger = __esm({
           console.error("Logger not initialized or checkpoint file path not set. Cannot save a checkpoint.");
           return;
         }
-        const path108 = this._checkpointPath(tag2);
+        const path109 = this._checkpointPath(tag2);
         try {
-          await fs42.writeFile(path108, JSON.stringify(conversation, null, 2), "utf-8");
+          await fs42.writeFile(path109, JSON.stringify(conversation, null, 2), "utf-8");
         } catch (error) {
           console.error("Error writing to checkpoint file:", error);
         }
@@ -236875,12 +236875,12 @@ var init_logger = __esm({
           console.error("Logger not initialized or checkpoint file path not set. Cannot load checkpoint.");
           return [];
         }
-        const path108 = await this._getCheckpointPath(tag2);
+        const path109 = await this._getCheckpointPath(tag2);
         try {
-          const fileContent = await fs42.readFile(path108, "utf-8");
+          const fileContent = await fs42.readFile(path109, "utf-8");
           const parsedContent = JSON.parse(fileContent);
           if (!Array.isArray(parsedContent)) {
-            console.warn(`Checkpoint file at ${path108} is not a valid JSON array. Returning empty checkpoint.`);
+            console.warn(`Checkpoint file at ${path109} is not a valid JSON array. Returning empty checkpoint.`);
             return [];
           }
           return parsedContent;
@@ -236889,7 +236889,7 @@ var init_logger = __esm({
           if (nodeError.code === "ENOENT") {
             return [];
           }
-          console.error(`Failed to read or parse checkpoint file ${path108}:`, error);
+          console.error(`Failed to read or parse checkpoint file ${path109}:`, error);
           return [];
         }
       }
@@ -240590,34 +240590,34 @@ var require_utils15 = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.normalizePath = exports2.isRootDirectory = exports2.convertSlashes = exports2.cleanPath = void 0;
     var path_1 = __require("path");
-    function cleanPath(path108) {
-      let normalized2 = (0, path_1.normalize)(path108);
+    function cleanPath(path109) {
+      let normalized2 = (0, path_1.normalize)(path109);
       if (normalized2.length > 1 && normalized2[normalized2.length - 1] === path_1.sep)
         normalized2 = normalized2.substring(0, normalized2.length - 1);
       return normalized2;
     }
     exports2.cleanPath = cleanPath;
     var SLASHES_REGEX = /[\\/]/g;
-    function convertSlashes(path108, separator) {
-      return path108.replace(SLASHES_REGEX, separator);
+    function convertSlashes(path109, separator) {
+      return path109.replace(SLASHES_REGEX, separator);
     }
     exports2.convertSlashes = convertSlashes;
     var WINDOWS_ROOT_DIR_REGEX = /^[a-z]:[\\/]$/i;
-    function isRootDirectory(path108) {
-      return path108 === "/" || WINDOWS_ROOT_DIR_REGEX.test(path108);
+    function isRootDirectory(path109) {
+      return path109 === "/" || WINDOWS_ROOT_DIR_REGEX.test(path109);
     }
     exports2.isRootDirectory = isRootDirectory;
-    function normalizePath(path108, options2) {
+    function normalizePath(path109, options2) {
       const { resolvePaths, normalizePath: normalizePath2, pathSeparator } = options2;
-      const pathNeedsCleaning = process.platform === "win32" && path108.includes("/") || path108.startsWith(".");
+      const pathNeedsCleaning = process.platform === "win32" && path109.includes("/") || path109.startsWith(".");
       if (resolvePaths)
-        path108 = (0, path_1.resolve)(path108);
+        path109 = (0, path_1.resolve)(path109);
       if (normalizePath2 || pathNeedsCleaning)
-        path108 = cleanPath(path108);
-      if (path108 === ".")
+        path109 = cleanPath(path109);
+      if (path109 === ".")
         return "";
-      const needsSeperator = path108[path108.length - 1] !== pathSeparator;
-      return convertSlashes(needsSeperator ? path108 + pathSeparator : path108, pathSeparator);
+      const needsSeperator = path109[path109.length - 1] !== pathSeparator;
+      return convertSlashes(needsSeperator ? path109 + pathSeparator : path109, pathSeparator);
     }
     exports2.normalizePath = normalizePath;
   }
@@ -240682,9 +240682,9 @@ var require_push_directory = __commonJS({
       paths.push(directoryPath || ".");
     };
     var pushDirectoryFilter = (directoryPath, paths, filters) => {
-      const path108 = directoryPath || ".";
-      if (filters.every((filter4) => filter4(path108, true))) {
-        paths.push(path108);
+      const path109 = directoryPath || ".";
+      if (filters.every((filter4) => filter4(path109, true))) {
+        paths.push(path109);
       }
     };
     var empty = () => {
@@ -240787,29 +240787,29 @@ var require_resolve_symlink = __commonJS({
     exports2.build = void 0;
     var fs_1 = __importDefault(__require("fs"));
     var path_1 = __require("path");
-    var resolveSymlinksAsync = function(path108, state, callback) {
+    var resolveSymlinksAsync = function(path109, state, callback) {
       const { queue, options: { suppressErrors } } = state;
       queue.enqueue();
-      fs_1.default.realpath(path108, (error, resolvedPath) => {
+      fs_1.default.realpath(path109, (error, resolvedPath) => {
         if (error)
           return queue.dequeue(suppressErrors ? null : error, state);
         fs_1.default.stat(resolvedPath, (error2, stat8) => {
           if (error2)
             return queue.dequeue(suppressErrors ? null : error2, state);
-          if (stat8.isDirectory() && isRecursive(path108, resolvedPath, state))
+          if (stat8.isDirectory() && isRecursive(path109, resolvedPath, state))
             return queue.dequeue(null, state);
           callback(stat8, resolvedPath);
           queue.dequeue(null, state);
         });
       });
     };
-    var resolveSymlinks = function(path108, state, callback) {
+    var resolveSymlinks = function(path109, state, callback) {
       const { queue, options: { suppressErrors } } = state;
       queue.enqueue();
       try {
-        const resolvedPath = fs_1.default.realpathSync(path108);
+        const resolvedPath = fs_1.default.realpathSync(path109);
         const stat8 = fs_1.default.statSync(resolvedPath);
-        if (stat8.isDirectory() && isRecursive(path108, resolvedPath, state))
+        if (stat8.isDirectory() && isRecursive(path109, resolvedPath, state))
           return;
         callback(stat8, resolvedPath);
       } catch (e2) {
@@ -240823,10 +240823,10 @@ var require_resolve_symlink = __commonJS({
       return isSynchronous ? resolveSymlinks : resolveSymlinksAsync;
     }
     exports2.build = build2;
-    function isRecursive(path108, resolved, state) {
+    function isRecursive(path109, resolved, state) {
       if (state.options.useRealPaths)
         return isRecursiveUsingRealPaths(resolved, state);
-      let parent = (0, path_1.dirname)(path108);
+      let parent = (0, path_1.dirname)(path109);
       let depth = 1;
       while (parent !== state.root && depth < 2) {
         const resolvedPath = state.symlinks.get(parent);
@@ -240836,7 +240836,7 @@ var require_resolve_symlink = __commonJS({
         else
           parent = (0, path_1.dirname)(parent);
       }
-      state.symlinks.set(path108, resolved);
+      state.symlinks.set(path109, resolved);
       return depth > 1;
     }
     function isRecursiveUsingRealPaths(resolved, state) {
@@ -241103,21 +241103,21 @@ var require_walker = __commonJS({
             const filename = this.joinPath(entry.name, directoryPath);
             this.pushFile(filename, files, this.state.counts, filters);
           } else if (entry.isDirectory()) {
-            let path108 = joinPath.joinDirectoryPath(entry.name, directoryPath, this.state.options.pathSeparator);
-            if (exclude && exclude(entry.name, path108))
+            let path109 = joinPath.joinDirectoryPath(entry.name, directoryPath, this.state.options.pathSeparator);
+            if (exclude && exclude(entry.name, path109))
               continue;
-            this.pushDirectory(path108, paths, filters);
-            this.walkDirectory(this.state, path108, path108, depth - 1, this.walk);
+            this.pushDirectory(path109, paths, filters);
+            this.walkDirectory(this.state, path109, path109, depth - 1, this.walk);
           } else if (this.resolveSymlink && entry.isSymbolicLink()) {
-            let path108 = joinPath.joinPathWithBasePath(entry.name, directoryPath);
-            this.resolveSymlink(path108, this.state, (stat8, resolvedPath) => {
+            let path109 = joinPath.joinPathWithBasePath(entry.name, directoryPath);
+            this.resolveSymlink(path109, this.state, (stat8, resolvedPath) => {
               if (stat8.isDirectory()) {
                 resolvedPath = (0, utils_1.normalizePath)(resolvedPath, this.state.options);
-                if (exclude && exclude(entry.name, useRealPaths ? resolvedPath : path108 + pathSeparator))
+                if (exclude && exclude(entry.name, useRealPaths ? resolvedPath : path109 + pathSeparator))
                   return;
-                this.walkDirectory(this.state, resolvedPath, useRealPaths ? resolvedPath : path108 + pathSeparator, depth - 1, this.walk);
+                this.walkDirectory(this.state, resolvedPath, useRealPaths ? resolvedPath : path109 + pathSeparator, depth - 1, this.walk);
               } else {
-                resolvedPath = useRealPaths ? resolvedPath : path108;
+                resolvedPath = useRealPaths ? resolvedPath : path109;
                 const filename = (0, path_1.basename)(resolvedPath);
                 const directoryPath2 = (0, utils_1.normalizePath)((0, path_1.dirname)(resolvedPath), this.state.options);
                 resolvedPath = this.joinPath(filename, directoryPath2);
@@ -241331,7 +241331,7 @@ var require_builder = __commonJS({
           isMatch = globFn(patterns, ...options2);
           this.globCache[patterns.join("\0")] = isMatch;
         }
-        this.options.filters.push((path108) => isMatch(path108));
+        this.options.filters.push((path109) => isMatch(path109));
         return this;
       }
     };
@@ -255744,10 +255744,10 @@ var require_react_reconciler_development = __commonJS({
           fiber = fiber.next, id--;
         return fiber;
       }
-      function copyWithSetImpl(obj, path108, index, value) {
-        if (index >= path108.length) return value;
-        var key = path108[index], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
-        updated[key] = copyWithSetImpl(obj[key], path108, index + 1, value);
+      function copyWithSetImpl(obj, path109, index, value) {
+        if (index >= path109.length) return value;
+        var key = path109[index], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
+        updated[key] = copyWithSetImpl(obj[key], path109, index + 1, value);
         return updated;
       }
       function copyWithRename(obj, oldPath, newPath) {
@@ -255774,11 +255774,11 @@ var require_react_reconciler_development = __commonJS({
         );
         return updated;
       }
-      function copyWithDeleteImpl(obj, path108, index) {
-        var key = path108[index], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
-        if (index + 1 === path108.length)
+      function copyWithDeleteImpl(obj, path109, index) {
+        var key = path109[index], updated = isArrayImpl(obj) ? obj.slice() : assign({}, obj);
+        if (index + 1 === path109.length)
           return isArrayImpl(updated) ? updated.splice(key, 1) : delete updated[key], updated;
-        updated[key] = copyWithDeleteImpl(obj[key], path108, index + 1);
+        updated[key] = copyWithDeleteImpl(obj[key], path109, index + 1);
         return updated;
       }
       function shouldSuspendImpl() {
@@ -267163,29 +267163,29 @@ var require_react_reconciler_development = __commonJS({
       var didWarnAboutNestedUpdates = false;
       var didWarnAboutFindNodeInStrictMode = {};
       var overrideHookState = null, overrideHookStateDeletePath = null, overrideHookStateRenamePath = null, overrideProps = null, overridePropsDeletePath = null, overridePropsRenamePath = null, scheduleUpdate = null, setErrorHandler = null, setSuspenseHandler = null;
-      overrideHookState = function(fiber, id, path108, value) {
+      overrideHookState = function(fiber, id, path109, value) {
         id = findHook(fiber, id);
-        null !== id && (path108 = copyWithSetImpl(id.memoizedState, path108, 0, value), id.memoizedState = path108, id.baseState = path108, fiber.memoizedProps = assign({}, fiber.memoizedProps), path108 = enqueueConcurrentRenderForLane(fiber, 2), null !== path108 && scheduleUpdateOnFiber(path108, fiber, 2));
+        null !== id && (path109 = copyWithSetImpl(id.memoizedState, path109, 0, value), id.memoizedState = path109, id.baseState = path109, fiber.memoizedProps = assign({}, fiber.memoizedProps), path109 = enqueueConcurrentRenderForLane(fiber, 2), null !== path109 && scheduleUpdateOnFiber(path109, fiber, 2));
       };
-      overrideHookStateDeletePath = function(fiber, id, path108) {
+      overrideHookStateDeletePath = function(fiber, id, path109) {
         id = findHook(fiber, id);
-        null !== id && (path108 = copyWithDeleteImpl(id.memoizedState, path108, 0), id.memoizedState = path108, id.baseState = path108, fiber.memoizedProps = assign({}, fiber.memoizedProps), path108 = enqueueConcurrentRenderForLane(fiber, 2), null !== path108 && scheduleUpdateOnFiber(path108, fiber, 2));
+        null !== id && (path109 = copyWithDeleteImpl(id.memoizedState, path109, 0), id.memoizedState = path109, id.baseState = path109, fiber.memoizedProps = assign({}, fiber.memoizedProps), path109 = enqueueConcurrentRenderForLane(fiber, 2), null !== path109 && scheduleUpdateOnFiber(path109, fiber, 2));
       };
       overrideHookStateRenamePath = function(fiber, id, oldPath, newPath) {
         id = findHook(fiber, id);
         null !== id && (oldPath = copyWithRename(id.memoizedState, oldPath, newPath), id.memoizedState = oldPath, id.baseState = oldPath, fiber.memoizedProps = assign({}, fiber.memoizedProps), oldPath = enqueueConcurrentRenderForLane(fiber, 2), null !== oldPath && scheduleUpdateOnFiber(oldPath, fiber, 2));
       };
-      overrideProps = function(fiber, path108, value) {
-        fiber.pendingProps = copyWithSetImpl(fiber.memoizedProps, path108, 0, value);
+      overrideProps = function(fiber, path109, value) {
+        fiber.pendingProps = copyWithSetImpl(fiber.memoizedProps, path109, 0, value);
         fiber.alternate && (fiber.alternate.pendingProps = fiber.pendingProps);
-        path108 = enqueueConcurrentRenderForLane(fiber, 2);
-        null !== path108 && scheduleUpdateOnFiber(path108, fiber, 2);
+        path109 = enqueueConcurrentRenderForLane(fiber, 2);
+        null !== path109 && scheduleUpdateOnFiber(path109, fiber, 2);
       };
-      overridePropsDeletePath = function(fiber, path108) {
-        fiber.pendingProps = copyWithDeleteImpl(fiber.memoizedProps, path108, 0);
+      overridePropsDeletePath = function(fiber, path109) {
+        fiber.pendingProps = copyWithDeleteImpl(fiber.memoizedProps, path109, 0);
         fiber.alternate && (fiber.alternate.pendingProps = fiber.pendingProps);
-        path108 = enqueueConcurrentRenderForLane(fiber, 2);
-        null !== path108 && scheduleUpdateOnFiber(path108, fiber, 2);
+        path109 = enqueueConcurrentRenderForLane(fiber, 2);
+        null !== path109 && scheduleUpdateOnFiber(path109, fiber, 2);
       };
       overridePropsRenamePath = function(fiber, oldPath, newPath) {
         fiber.pendingProps = copyWithRename(
@@ -267784,7 +267784,7 @@ var require_backend = __commonJS({
                     return function() {
                     };
                   },
-                  useCallback: function useCallback48(a) {
+                  useCallback: function useCallback49(a) {
                     var b = C();
                     x.push({
                       primitive: "Callback",
@@ -267801,7 +267801,7 @@ var require_backend = __commonJS({
                     });
                     return a._currentValue;
                   },
-                  useEffect: function useEffect53(a) {
+                  useEffect: function useEffect54(a) {
                     C();
                     x.push({
                       primitive: "Effect",
@@ -267842,7 +267842,7 @@ var require_backend = __commonJS({
                       value: a
                     });
                   },
-                  useMemo: function useMemo21(a) {
+                  useMemo: function useMemo22(a) {
                     var b = C();
                     a = null !== b ? b.memoizedState[0] : a();
                     x.push({
@@ -267866,7 +267866,7 @@ var require_backend = __commonJS({
                     return [b, function() {
                     }];
                   },
-                  useRef: function useRef21(a) {
+                  useRef: function useRef22(a) {
                     var b = C();
                     a = null !== b ? b.memoizedState : {
                       current: a
@@ -267878,7 +267878,7 @@ var require_backend = __commonJS({
                     });
                     return a;
                   },
-                  useState: function useState61(a) {
+                  useState: function useState62(a) {
                     var b = C();
                     a = null !== b ? b.memoizedState : "function" === typeof a ? a() : a;
                     x.push({
@@ -272187,8 +272187,8 @@ var require_backend = __commonJS({
               }
               return false;
             }
-            function utils_getInObject(object, path108) {
-              return path108.reduce(function(reduced, attr) {
+            function utils_getInObject(object, path109) {
+              return path109.reduce(function(reduced, attr) {
                 if (reduced) {
                   if (utils_hasOwnProperty.call(reduced, attr)) {
                     return reduced[attr];
@@ -272200,11 +272200,11 @@ var require_backend = __commonJS({
                 return null;
               }, object);
             }
-            function deletePathInObject(object, path108) {
-              var length = path108.length;
-              var last2 = path108[length - 1];
+            function deletePathInObject(object, path109) {
+              var length = path109.length;
+              var last2 = path109[length - 1];
               if (object != null) {
-                var parent = utils_getInObject(object, path108.slice(0, length - 1));
+                var parent = utils_getInObject(object, path109.slice(0, length - 1));
                 if (parent) {
                   if (src_isArray(parent)) {
                     parent.splice(last2, 1);
@@ -272230,11 +272230,11 @@ var require_backend = __commonJS({
                 }
               }
             }
-            function utils_setInObject(object, path108, value) {
-              var length = path108.length;
-              var last2 = path108[length - 1];
+            function utils_setInObject(object, path109, value) {
+              var length = path109.length;
+              var last2 = path109[length - 1];
               if (object != null) {
-                var parent = utils_getInObject(object, path108.slice(0, length - 1));
+                var parent = utils_getInObject(object, path109.slice(0, length - 1));
                 if (parent) {
                   parent[last2] = value;
                 }
@@ -272538,8 +272538,8 @@ var require_backend = __commonJS({
               unserializable: Symbol("unserializable")
             };
             var LEVEL_THRESHOLD = 2;
-            function createDehydrated(type, inspectable, data, cleaned, path108) {
-              cleaned.push(path108);
+            function createDehydrated(type, inspectable, data, cleaned, path109) {
+              cleaned.push(path109);
               var dehydrated = {
                 inspectable,
                 type,
@@ -272557,13 +272557,13 @@ var require_backend = __commonJS({
               }
               return dehydrated;
             }
-            function dehydrate(data, cleaned, unserializable, path108, isPathAllowed) {
+            function dehydrate(data, cleaned, unserializable, path109, isPathAllowed) {
               var level = arguments.length > 5 && arguments[5] !== void 0 ? arguments[5] : 0;
               var type = getDataType(data);
               var isPathAllowedCheck;
               switch (type) {
                 case "html_element":
-                  cleaned.push(path108);
+                  cleaned.push(path109);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -272572,7 +272572,7 @@ var require_backend = __commonJS({
                     type
                   };
                 case "function":
-                  cleaned.push(path108);
+                  cleaned.push(path109);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -272581,14 +272581,14 @@ var require_backend = __commonJS({
                     type
                   };
                 case "string":
-                  isPathAllowedCheck = isPathAllowed(path108);
+                  isPathAllowedCheck = isPathAllowed(path109);
                   if (isPathAllowedCheck) {
                     return data;
                   } else {
                     return data.length <= 500 ? data : data.slice(0, 500) + "...";
                   }
                 case "bigint":
-                  cleaned.push(path108);
+                  cleaned.push(path109);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -272597,7 +272597,7 @@ var require_backend = __commonJS({
                     type
                   };
                 case "symbol":
-                  cleaned.push(path108);
+                  cleaned.push(path109);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -272608,7 +272608,7 @@ var require_backend = __commonJS({
                 // React Elements aren't very inspector-friendly,
                 // and often contain private fields or circular references.
                 case "react_element":
-                  cleaned.push(path108);
+                  cleaned.push(path109);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -272619,7 +272619,7 @@ var require_backend = __commonJS({
                 // ArrayBuffers error if you try to inspect them.
                 case "array_buffer":
                 case "data_view":
-                  cleaned.push(path108);
+                  cleaned.push(path109);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -272629,19 +272629,19 @@ var require_backend = __commonJS({
                     type
                   };
                 case "array":
-                  isPathAllowedCheck = isPathAllowed(path108);
+                  isPathAllowedCheck = isPathAllowed(path109);
                   if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
-                    return createDehydrated(type, true, data, cleaned, path108);
+                    return createDehydrated(type, true, data, cleaned, path109);
                   }
                   return data.map(function(item, i) {
-                    return dehydrate(item, cleaned, unserializable, path108.concat([i]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
+                    return dehydrate(item, cleaned, unserializable, path109.concat([i]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
                   });
                 case "html_all_collection":
                 case "typed_array":
                 case "iterator":
-                  isPathAllowedCheck = isPathAllowed(path108);
+                  isPathAllowedCheck = isPathAllowed(path109);
                   if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
-                    return createDehydrated(type, true, data, cleaned, path108);
+                    return createDehydrated(type, true, data, cleaned, path109);
                   } else {
                     var unserializableValue = {
                       unserializable: true,
@@ -272653,13 +272653,13 @@ var require_backend = __commonJS({
                       name: !data.constructor || data.constructor.name === "Object" ? "" : data.constructor.name
                     };
                     Array.from(data).forEach(function(item, i) {
-                      return unserializableValue[i] = dehydrate(item, cleaned, unserializable, path108.concat([i]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
+                      return unserializableValue[i] = dehydrate(item, cleaned, unserializable, path109.concat([i]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
                     });
-                    unserializable.push(path108);
+                    unserializable.push(path109);
                     return unserializableValue;
                   }
                 case "opaque_iterator":
-                  cleaned.push(path108);
+                  cleaned.push(path109);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -272668,7 +272668,7 @@ var require_backend = __commonJS({
                     type
                   };
                 case "date":
-                  cleaned.push(path108);
+                  cleaned.push(path109);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -272677,7 +272677,7 @@ var require_backend = __commonJS({
                     type
                   };
                 case "regexp":
-                  cleaned.push(path108);
+                  cleaned.push(path109);
                   return {
                     inspectable: false,
                     preview_short: formatDataForPreview(data, false),
@@ -272686,21 +272686,21 @@ var require_backend = __commonJS({
                     type
                   };
                 case "object":
-                  isPathAllowedCheck = isPathAllowed(path108);
+                  isPathAllowedCheck = isPathAllowed(path109);
                   if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
-                    return createDehydrated(type, true, data, cleaned, path108);
+                    return createDehydrated(type, true, data, cleaned, path109);
                   } else {
                     var object = {};
                     getAllEnumerableKeys(data).forEach(function(key) {
                       var name2 = key.toString();
-                      object[name2] = dehydrate(data[key], cleaned, unserializable, path108.concat([name2]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
+                      object[name2] = dehydrate(data[key], cleaned, unserializable, path109.concat([name2]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
                     });
                     return object;
                   }
                 case "class_instance":
-                  isPathAllowedCheck = isPathAllowed(path108);
+                  isPathAllowedCheck = isPathAllowed(path109);
                   if (level >= LEVEL_THRESHOLD && !isPathAllowedCheck) {
-                    return createDehydrated(type, true, data, cleaned, path108);
+                    return createDehydrated(type, true, data, cleaned, path109);
                   }
                   var value = {
                     unserializable: true,
@@ -272712,14 +272712,14 @@ var require_backend = __commonJS({
                   };
                   getAllEnumerableKeys(data).forEach(function(key) {
                     var keyAsString = key.toString();
-                    value[keyAsString] = dehydrate(data[key], cleaned, unserializable, path108.concat([keyAsString]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
+                    value[keyAsString] = dehydrate(data[key], cleaned, unserializable, path109.concat([keyAsString]), isPathAllowed, isPathAllowedCheck ? 1 : level + 1);
                   });
-                  unserializable.push(path108);
+                  unserializable.push(path109);
                   return value;
                 case "infinity":
                 case "nan":
                 case "undefined":
-                  cleaned.push(path108);
+                  cleaned.push(path109);
                   return {
                     type
                   };
@@ -272727,8 +272727,8 @@ var require_backend = __commonJS({
                   return data;
               }
             }
-            function fillInPath(object, data, path108, value) {
-              var target = getInObject(object, path108);
+            function fillInPath(object, data, path109, value) {
+              var target = getInObject(object, path109);
               if (target != null) {
                 if (!target[meta.unserializable]) {
                   delete target[meta.inspectable];
@@ -272743,9 +272743,9 @@ var require_backend = __commonJS({
               }
               if (value !== null && data.unserializable.length > 0) {
                 var unserializablePath = data.unserializable[0];
-                var isMatch = unserializablePath.length === path108.length;
-                for (var i = 0; i < path108.length; i++) {
-                  if (path108[i] !== unserializablePath[i]) {
+                var isMatch = unserializablePath.length === path109.length;
+                for (var i = 0; i < path109.length; i++) {
+                  if (path109[i] !== unserializablePath[i]) {
                     isMatch = false;
                     break;
                   }
@@ -272754,13 +272754,13 @@ var require_backend = __commonJS({
                   upgradeUnserializable(value, value);
                 }
               }
-              setInObject(object, path108, value);
+              setInObject(object, path109, value);
             }
             function hydrate(object, cleaned, unserializable) {
-              cleaned.forEach(function(path108) {
-                var length = path108.length;
-                var last2 = path108[length - 1];
-                var parent = getInObject(object, path108.slice(0, length - 1));
+              cleaned.forEach(function(path109) {
+                var length = path109.length;
+                var last2 = path109[length - 1];
+                var parent = getInObject(object, path109.slice(0, length - 1));
                 if (!parent || !parent.hasOwnProperty(last2)) {
                   return;
                 }
@@ -272786,10 +272786,10 @@ var require_backend = __commonJS({
                   parent[last2] = replaced;
                 }
               });
-              unserializable.forEach(function(path108) {
-                var length = path108.length;
-                var last2 = path108[length - 1];
-                var parent = getInObject(object, path108.slice(0, length - 1));
+              unserializable.forEach(function(path109) {
+                var length = path109.length;
+                var last2 = path109[length - 1];
+                var parent = getInObject(object, path109.slice(0, length - 1));
                 if (!parent || !parent.hasOwnProperty(last2)) {
                   return;
                 }
@@ -272935,11 +272935,11 @@ var require_backend = __commonJS({
               return gte(version3, FIRST_DEVTOOLS_BACKEND_LOCKSTEP_VER);
             }
             function cleanForBridge(data, isPathAllowed) {
-              var path108 = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
+              var path109 = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : [];
               if (data !== null) {
                 var cleanedPaths = [];
                 var unserializablePaths = [];
-                var cleanedData = dehydrate(data, cleanedPaths, unserializablePaths, path108, isPathAllowed);
+                var cleanedData = dehydrate(data, cleanedPaths, unserializablePaths, path109, isPathAllowed);
                 return {
                   data: cleanedData,
                   cleaned: cleanedPaths,
@@ -272949,18 +272949,18 @@ var require_backend = __commonJS({
                 return null;
               }
             }
-            function copyWithDelete(obj, path108) {
+            function copyWithDelete(obj, path109) {
               var index = arguments.length > 2 && arguments[2] !== void 0 ? arguments[2] : 0;
-              var key = path108[index];
+              var key = path109[index];
               var updated = shared_isArray(obj) ? obj.slice() : utils_objectSpread({}, obj);
-              if (index + 1 === path108.length) {
+              if (index + 1 === path109.length) {
                 if (shared_isArray(updated)) {
                   updated.splice(key, 1);
                 } else {
                   delete updated[key];
                 }
               } else {
-                updated[key] = copyWithDelete(obj[key], path108, index + 1);
+                updated[key] = copyWithDelete(obj[key], path109, index + 1);
               }
               return updated;
             }
@@ -272981,14 +272981,14 @@ var require_backend = __commonJS({
               }
               return updated;
             }
-            function copyWithSet(obj, path108, value) {
+            function copyWithSet(obj, path109, value) {
               var index = arguments.length > 3 && arguments[3] !== void 0 ? arguments[3] : 0;
-              if (index >= path108.length) {
+              if (index >= path109.length) {
                 return value;
               }
-              var key = path108[index];
+              var key = path109[index];
               var updated = shared_isArray(obj) ? obj.slice() : utils_objectSpread({}, obj);
-              updated[key] = copyWithSet(obj[key], path108, value, index + 1);
+              updated[key] = copyWithSet(obj[key], path109, value, index + 1);
               return updated;
             }
             function getEffectDurations(root2) {
@@ -276629,9 +276629,9 @@ var require_backend = __commonJS({
                 }
                 return alternate;
               }
-              function prepareViewAttributeSource(id, path108) {
+              function prepareViewAttributeSource(id, path109) {
                 if (isMostRecentlyInspectedElement(id)) {
-                  window.$attribute = utils_getInObject(mostRecentlyInspectedElement, path108);
+                  window.$attribute = utils_getInObject(mostRecentlyInspectedElement, path109);
                 }
               }
               function prepareViewElementSource(id) {
@@ -276881,9 +276881,9 @@ var require_backend = __commonJS({
               function isMostRecentlyInspectedElementCurrent(id) {
                 return isMostRecentlyInspectedElement(id) && !hasElementUpdatedSinceLastInspected;
               }
-              function mergeInspectedPaths(path108) {
+              function mergeInspectedPaths(path109) {
                 var current = currentlyInspectedPaths;
-                path108.forEach(function(key) {
+                path109.forEach(function(key) {
                   if (!current[key]) {
                     current[key] = {};
                   }
@@ -276891,16 +276891,16 @@ var require_backend = __commonJS({
                 });
               }
               function createIsPathAllowed(key, secondaryCategory) {
-                return function isPathAllowed(path108) {
+                return function isPathAllowed(path109) {
                   switch (secondaryCategory) {
                     case "hooks":
-                      if (path108.length === 1) {
+                      if (path109.length === 1) {
                         return true;
                       }
-                      if (path108[path108.length - 2] === "hookSource" && path108[path108.length - 1] === "fileName") {
+                      if (path109[path109.length - 2] === "hookSource" && path109[path109.length - 1] === "fileName") {
                         return true;
                       }
-                      if (path108[path108.length - 1] === "subHooks" || path108[path108.length - 2] === "subHooks") {
+                      if (path109[path109.length - 1] === "subHooks" || path109[path109.length - 2] === "subHooks") {
                         return true;
                       }
                       break;
@@ -276911,8 +276911,8 @@ var require_backend = __commonJS({
                   if (!current) {
                     return false;
                   }
-                  for (var i = 0; i < path108.length; i++) {
-                    current = current[path108[i]];
+                  for (var i = 0; i < path109.length; i++) {
+                    current = current[path109[i]];
                     if (!current) {
                       return false;
                     }
@@ -276961,38 +276961,38 @@ var require_backend = __commonJS({
                     break;
                 }
               }
-              function storeAsGlobal(id, path108, count) {
+              function storeAsGlobal(id, path109, count) {
                 if (isMostRecentlyInspectedElement(id)) {
-                  var value = utils_getInObject(mostRecentlyInspectedElement, path108);
+                  var value = utils_getInObject(mostRecentlyInspectedElement, path109);
                   var key = "$reactTemp".concat(count);
                   window[key] = value;
                   console.log(key);
                   console.log(value);
                 }
               }
-              function getSerializedElementValueByPath(id, path108) {
+              function getSerializedElementValueByPath(id, path109) {
                 if (isMostRecentlyInspectedElement(id)) {
-                  var valueToCopy = utils_getInObject(mostRecentlyInspectedElement, path108);
+                  var valueToCopy = utils_getInObject(mostRecentlyInspectedElement, path109);
                   return serializeToString(valueToCopy);
                 }
               }
-              function inspectElement(requestID, id, path108, forceFullData) {
-                if (path108 !== null) {
-                  mergeInspectedPaths(path108);
+              function inspectElement(requestID, id, path109, forceFullData) {
+                if (path109 !== null) {
+                  mergeInspectedPaths(path109);
                 }
                 if (isMostRecentlyInspectedElement(id) && !forceFullData) {
                   if (!hasElementUpdatedSinceLastInspected) {
-                    if (path108 !== null) {
+                    if (path109 !== null) {
                       var secondaryCategory = null;
-                      if (path108[0] === "hooks") {
+                      if (path109[0] === "hooks") {
                         secondaryCategory = "hooks";
                       }
                       return {
                         id,
                         responseID: requestID,
                         type: "hydrated-path",
-                        path: path108,
-                        value: cleanForBridge(utils_getInObject(mostRecentlyInspectedElement, path108), createIsPathAllowed(null, secondaryCategory), path108)
+                        path: path109,
+                        value: cleanForBridge(utils_getInObject(mostRecentlyInspectedElement, path109), createIsPathAllowed(null, secondaryCategory), path109)
                       };
                     } else {
                       return {
@@ -277108,18 +277108,18 @@ var require_backend = __commonJS({
                   console.groupEnd();
                 }
               }
-              function deletePath(type, id, hookID, path108) {
+              function deletePath(type, id, hookID, path109) {
                 var fiber = findCurrentFiberUsingSlowPathById(id);
                 if (fiber !== null) {
                   var instance = fiber.stateNode;
                   switch (type) {
                     case "context":
-                      path108 = path108.slice(1);
+                      path109 = path109.slice(1);
                       switch (fiber.tag) {
                         case ClassComponent:
-                          if (path108.length === 0) {
+                          if (path109.length === 0) {
                           } else {
-                            deletePathInObject(instance.context, path108);
+                            deletePathInObject(instance.context, path109);
                           }
                           instance.forceUpdate();
                           break;
@@ -277129,21 +277129,21 @@ var require_backend = __commonJS({
                       break;
                     case "hooks":
                       if (typeof overrideHookStateDeletePath === "function") {
-                        overrideHookStateDeletePath(fiber, hookID, path108);
+                        overrideHookStateDeletePath(fiber, hookID, path109);
                       }
                       break;
                     case "props":
                       if (instance === null) {
                         if (typeof overridePropsDeletePath === "function") {
-                          overridePropsDeletePath(fiber, path108);
+                          overridePropsDeletePath(fiber, path109);
                         }
                       } else {
-                        fiber.pendingProps = copyWithDelete(instance.props, path108);
+                        fiber.pendingProps = copyWithDelete(instance.props, path109);
                         instance.forceUpdate();
                       }
                       break;
                     case "state":
-                      deletePathInObject(instance.state, path108);
+                      deletePathInObject(instance.state, path109);
                       instance.forceUpdate();
                       break;
                   }
@@ -277191,19 +277191,19 @@ var require_backend = __commonJS({
                   }
                 }
               }
-              function overrideValueAtPath(type, id, hookID, path108, value) {
+              function overrideValueAtPath(type, id, hookID, path109, value) {
                 var fiber = findCurrentFiberUsingSlowPathById(id);
                 if (fiber !== null) {
                   var instance = fiber.stateNode;
                   switch (type) {
                     case "context":
-                      path108 = path108.slice(1);
+                      path109 = path109.slice(1);
                       switch (fiber.tag) {
                         case ClassComponent:
-                          if (path108.length === 0) {
+                          if (path109.length === 0) {
                             instance.context = value;
                           } else {
-                            utils_setInObject(instance.context, path108, value);
+                            utils_setInObject(instance.context, path109, value);
                           }
                           instance.forceUpdate();
                           break;
@@ -277213,18 +277213,18 @@ var require_backend = __commonJS({
                       break;
                     case "hooks":
                       if (typeof overrideHookState === "function") {
-                        overrideHookState(fiber, hookID, path108, value);
+                        overrideHookState(fiber, hookID, path109, value);
                       }
                       break;
                     case "props":
                       switch (fiber.tag) {
                         case ClassComponent:
-                          fiber.pendingProps = copyWithSet(instance.props, path108, value);
+                          fiber.pendingProps = copyWithSet(instance.props, path109, value);
                           instance.forceUpdate();
                           break;
                         default:
                           if (typeof overrideProps === "function") {
-                            overrideProps(fiber, path108, value);
+                            overrideProps(fiber, path109, value);
                           }
                           break;
                       }
@@ -277232,7 +277232,7 @@ var require_backend = __commonJS({
                     case "state":
                       switch (fiber.tag) {
                         case ClassComponent:
-                          utils_setInObject(instance.state, path108, value);
+                          utils_setInObject(instance.state, path109, value);
                           instance.forceUpdate();
                           break;
                       }
@@ -277418,13 +277418,13 @@ var require_backend = __commonJS({
               var trackedPathMatchFiber = null;
               var trackedPathMatchDepth = -1;
               var mightBeOnTrackedPath = false;
-              function setTrackedPath(path108) {
-                if (path108 === null) {
+              function setTrackedPath(path109) {
+                if (path109 === null) {
                   trackedPathMatchFiber = null;
                   trackedPathMatchDepth = -1;
                   mightBeOnTrackedPath = false;
                 }
-                trackedPath = path108;
+                trackedPath = path109;
               }
               function updateTrackedPathStateBeforeMount(fiber) {
                 if (trackedPath === null || !mightBeOnTrackedPath) {
@@ -278110,12 +278110,12 @@ var require_backend = __commonJS({
                   }
                 });
                 bridge_defineProperty(_assertThisInitialized(_this), "overrideValueAtPath", function(_ref) {
-                  var id = _ref.id, path108 = _ref.path, rendererID = _ref.rendererID, type = _ref.type, value = _ref.value;
+                  var id = _ref.id, path109 = _ref.path, rendererID = _ref.rendererID, type = _ref.type, value = _ref.value;
                   switch (type) {
                     case "context":
                       _this.send("overrideContext", {
                         id,
-                        path: path108,
+                        path: path109,
                         rendererID,
                         wasForwarded: true,
                         value
@@ -278124,7 +278124,7 @@ var require_backend = __commonJS({
                     case "hooks":
                       _this.send("overrideHookState", {
                         id,
-                        path: path108,
+                        path: path109,
                         rendererID,
                         wasForwarded: true,
                         value
@@ -278133,7 +278133,7 @@ var require_backend = __commonJS({
                     case "props":
                       _this.send("overrideProps", {
                         id,
-                        path: path108,
+                        path: path109,
                         rendererID,
                         wasForwarded: true,
                         value
@@ -278142,7 +278142,7 @@ var require_backend = __commonJS({
                     case "state":
                       _this.send("overrideState", {
                         id,
-                        path: path108,
+                        path: path109,
                         rendererID,
                         wasForwarded: true,
                         value
@@ -278358,12 +278358,12 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "copyElementPath", function(_ref4) {
-                  var id = _ref4.id, path108 = _ref4.path, rendererID = _ref4.rendererID;
+                  var id = _ref4.id, path109 = _ref4.path, rendererID = _ref4.rendererID;
                   var renderer2 = _this._rendererInterfaces[rendererID];
                   if (renderer2 == null) {
                     console.warn('Invalid renderer id "'.concat(rendererID, '" for element "').concat(id, '"'));
                   } else {
-                    var value = renderer2.getSerializedElementValueByPath(id, path108);
+                    var value = renderer2.getSerializedElementValueByPath(id, path109);
                     if (value != null) {
                       _this._bridge.send("saveToClipboard", value);
                     } else {
@@ -278372,12 +278372,12 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "deletePath", function(_ref5) {
-                  var hookID = _ref5.hookID, id = _ref5.id, path108 = _ref5.path, rendererID = _ref5.rendererID, type = _ref5.type;
+                  var hookID = _ref5.hookID, id = _ref5.id, path109 = _ref5.path, rendererID = _ref5.rendererID, type = _ref5.type;
                   var renderer2 = _this._rendererInterfaces[rendererID];
                   if (renderer2 == null) {
                     console.warn('Invalid renderer id "'.concat(rendererID, '" for element "').concat(id, '"'));
                   } else {
-                    renderer2.deletePath(type, id, hookID, path108);
+                    renderer2.deletePath(type, id, hookID, path109);
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "getBackendVersion", function() {
@@ -278414,12 +278414,12 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "inspectElement", function(_ref8) {
-                  var forceFullData = _ref8.forceFullData, id = _ref8.id, path108 = _ref8.path, rendererID = _ref8.rendererID, requestID = _ref8.requestID;
+                  var forceFullData = _ref8.forceFullData, id = _ref8.id, path109 = _ref8.path, rendererID = _ref8.rendererID, requestID = _ref8.requestID;
                   var renderer2 = _this._rendererInterfaces[rendererID];
                   if (renderer2 == null) {
                     console.warn('Invalid renderer id "'.concat(rendererID, '" for element "').concat(id, '"'));
                   } else {
-                    _this._bridge.send("inspectedElement", renderer2.inspectElement(requestID, id, path108, forceFullData));
+                    _this._bridge.send("inspectedElement", renderer2.inspectElement(requestID, id, path109, forceFullData));
                     if (_this._persistedSelectionMatch === null || _this._persistedSelectionMatch.id !== id) {
                       _this._persistedSelection = null;
                       _this._persistedSelectionMatch = null;
@@ -278456,20 +278456,20 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "overrideValueAtPath", function(_ref12) {
-                  var hookID = _ref12.hookID, id = _ref12.id, path108 = _ref12.path, rendererID = _ref12.rendererID, type = _ref12.type, value = _ref12.value;
+                  var hookID = _ref12.hookID, id = _ref12.id, path109 = _ref12.path, rendererID = _ref12.rendererID, type = _ref12.type, value = _ref12.value;
                   var renderer2 = _this._rendererInterfaces[rendererID];
                   if (renderer2 == null) {
                     console.warn('Invalid renderer id "'.concat(rendererID, '" for element "').concat(id, '"'));
                   } else {
-                    renderer2.overrideValueAtPath(type, id, hookID, path108, value);
+                    renderer2.overrideValueAtPath(type, id, hookID, path109, value);
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "overrideContext", function(_ref13) {
-                  var id = _ref13.id, path108 = _ref13.path, rendererID = _ref13.rendererID, wasForwarded = _ref13.wasForwarded, value = _ref13.value;
+                  var id = _ref13.id, path109 = _ref13.path, rendererID = _ref13.rendererID, wasForwarded = _ref13.wasForwarded, value = _ref13.value;
                   if (!wasForwarded) {
                     _this.overrideValueAtPath({
                       id,
-                      path: path108,
+                      path: path109,
                       rendererID,
                       type: "context",
                       value
@@ -278477,11 +278477,11 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "overrideHookState", function(_ref14) {
-                  var id = _ref14.id, hookID = _ref14.hookID, path108 = _ref14.path, rendererID = _ref14.rendererID, wasForwarded = _ref14.wasForwarded, value = _ref14.value;
+                  var id = _ref14.id, hookID = _ref14.hookID, path109 = _ref14.path, rendererID = _ref14.rendererID, wasForwarded = _ref14.wasForwarded, value = _ref14.value;
                   if (!wasForwarded) {
                     _this.overrideValueAtPath({
                       id,
-                      path: path108,
+                      path: path109,
                       rendererID,
                       type: "hooks",
                       value
@@ -278489,11 +278489,11 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "overrideProps", function(_ref15) {
-                  var id = _ref15.id, path108 = _ref15.path, rendererID = _ref15.rendererID, wasForwarded = _ref15.wasForwarded, value = _ref15.value;
+                  var id = _ref15.id, path109 = _ref15.path, rendererID = _ref15.rendererID, wasForwarded = _ref15.wasForwarded, value = _ref15.value;
                   if (!wasForwarded) {
                     _this.overrideValueAtPath({
                       id,
-                      path: path108,
+                      path: path109,
                       rendererID,
                       type: "props",
                       value
@@ -278501,11 +278501,11 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "overrideState", function(_ref16) {
-                  var id = _ref16.id, path108 = _ref16.path, rendererID = _ref16.rendererID, wasForwarded = _ref16.wasForwarded, value = _ref16.value;
+                  var id = _ref16.id, path109 = _ref16.path, rendererID = _ref16.rendererID, wasForwarded = _ref16.wasForwarded, value = _ref16.value;
                   if (!wasForwarded) {
                     _this.overrideValueAtPath({
                       id,
-                      path: path108,
+                      path: path109,
                       rendererID,
                       type: "state",
                       value
@@ -278566,12 +278566,12 @@ var require_backend = __commonJS({
                   _this._bridge.send("stopInspectingNative", selected);
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "storeAsGlobal", function(_ref18) {
-                  var count = _ref18.count, id = _ref18.id, path108 = _ref18.path, rendererID = _ref18.rendererID;
+                  var count = _ref18.count, id = _ref18.id, path109 = _ref18.path, rendererID = _ref18.rendererID;
                   var renderer2 = _this._rendererInterfaces[rendererID];
                   if (renderer2 == null) {
                     console.warn('Invalid renderer id "'.concat(rendererID, '" for element "').concat(id, '"'));
                   } else {
-                    renderer2.storeAsGlobal(id, path108, count);
+                    renderer2.storeAsGlobal(id, path109, count);
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "updateConsolePatchSettings", function(_ref19) {
@@ -278591,12 +278591,12 @@ var require_backend = __commonJS({
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "viewAttributeSource", function(_ref20) {
-                  var id = _ref20.id, path108 = _ref20.path, rendererID = _ref20.rendererID;
+                  var id = _ref20.id, path109 = _ref20.path, rendererID = _ref20.rendererID;
                   var renderer2 = _this._rendererInterfaces[rendererID];
                   if (renderer2 == null) {
                     console.warn('Invalid renderer id "'.concat(rendererID, '" for element "').concat(id, '"'));
                   } else {
-                    renderer2.prepareViewAttributeSource(id, path108);
+                    renderer2.prepareViewAttributeSource(id, path109);
                   }
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "viewElementSource", function(_ref21) {
@@ -278650,11 +278650,11 @@ var require_backend = __commonJS({
                 });
                 agent_defineProperty(agent_assertThisInitialized(_this), "_throttledPersistSelection", lodash_throttle_default()(function(rendererID, id) {
                   var renderer2 = _this._rendererInterfaces[rendererID];
-                  var path108 = renderer2 != null ? renderer2.getPathForElement(id) : null;
-                  if (path108 !== null) {
+                  var path109 = renderer2 != null ? renderer2.getPathForElement(id) : null;
+                  if (path109 !== null) {
                     sessionStorageSetItem(SESSION_STORAGE_LAST_SELECTION_KEY, JSON.stringify({
                       rendererID,
-                      path: path108
+                      path: path109
                     }));
                   } else {
                     sessionStorageRemoveItem(SESSION_STORAGE_LAST_SELECTION_KEY);
@@ -279646,9 +279646,9 @@ var require_backend = __commonJS({
               }
               var currentlyInspectedElementID = null;
               var currentlyInspectedPaths = {};
-              function mergeInspectedPaths(path108) {
+              function mergeInspectedPaths(path109) {
                 var current = currentlyInspectedPaths;
-                path108.forEach(function(key) {
+                path109.forEach(function(key) {
                   if (!current[key]) {
                     current[key] = {};
                   }
@@ -279656,13 +279656,13 @@ var require_backend = __commonJS({
                 });
               }
               function createIsPathAllowed(key) {
-                return function isPathAllowed(path108) {
+                return function isPathAllowed(path109) {
                   var current = currentlyInspectedPaths[key];
                   if (!current) {
                     return false;
                   }
-                  for (var i = 0; i < path108.length; i++) {
-                    current = current[path108[i]];
+                  for (var i = 0; i < path109.length; i++) {
+                    current = current[path109[i]];
                     if (!current) {
                       return false;
                     }
@@ -279712,24 +279712,24 @@ var require_backend = __commonJS({
                     break;
                 }
               }
-              function storeAsGlobal(id, path108, count) {
+              function storeAsGlobal(id, path109, count) {
                 var inspectedElement = inspectElementRaw(id);
                 if (inspectedElement !== null) {
-                  var value = utils_getInObject(inspectedElement, path108);
+                  var value = utils_getInObject(inspectedElement, path109);
                   var key = "$reactTemp".concat(count);
                   window[key] = value;
                   console.log(key);
                   console.log(value);
                 }
               }
-              function getSerializedElementValueByPath(id, path108) {
+              function getSerializedElementValueByPath(id, path109) {
                 var inspectedElement = inspectElementRaw(id);
                 if (inspectedElement !== null) {
-                  var valueToCopy = utils_getInObject(inspectedElement, path108);
+                  var valueToCopy = utils_getInObject(inspectedElement, path109);
                   return serializeToString(valueToCopy);
                 }
               }
-              function inspectElement(requestID, id, path108, forceFullData) {
+              function inspectElement(requestID, id, path109, forceFullData) {
                 if (forceFullData || currentlyInspectedElementID !== id) {
                   currentlyInspectedElementID = id;
                   currentlyInspectedPaths = {};
@@ -279742,8 +279742,8 @@ var require_backend = __commonJS({
                     type: "not-found"
                   };
                 }
-                if (path108 !== null) {
-                  mergeInspectedPaths(path108);
+                if (path109 !== null) {
+                  mergeInspectedPaths(path109);
                 }
                 updateSelectedElement(id);
                 inspectedElement.context = cleanForBridge(inspectedElement.context, createIsPathAllowed("context"));
@@ -279871,10 +279871,10 @@ var require_backend = __commonJS({
                   console.groupEnd();
                 }
               }
-              function prepareViewAttributeSource(id, path108) {
+              function prepareViewAttributeSource(id, path109) {
                 var inspectedElement = inspectElementRaw(id);
                 if (inspectedElement !== null) {
-                  window.$attribute = utils_getInObject(inspectedElement, path108);
+                  window.$attribute = utils_getInObject(inspectedElement, path109);
                 }
               }
               function prepareViewElementSource(id) {
@@ -279890,14 +279890,14 @@ var require_backend = __commonJS({
                 }
                 global2.$type = element.type;
               }
-              function deletePath(type, id, hookID, path108) {
+              function deletePath(type, id, hookID, path109) {
                 var internalInstance = idToInternalInstanceMap.get(id);
                 if (internalInstance != null) {
                   var publicInstance = internalInstance._instance;
                   if (publicInstance != null) {
                     switch (type) {
                       case "context":
-                        deletePathInObject(publicInstance.context, path108);
+                        deletePathInObject(publicInstance.context, path109);
                         forceUpdate(publicInstance);
                         break;
                       case "hooks":
@@ -279905,12 +279905,12 @@ var require_backend = __commonJS({
                       case "props":
                         var element = internalInstance._currentElement;
                         internalInstance._currentElement = legacy_renderer_objectSpread(legacy_renderer_objectSpread({}, element), {}, {
-                          props: copyWithDelete(element.props, path108)
+                          props: copyWithDelete(element.props, path109)
                         });
                         forceUpdate(publicInstance);
                         break;
                       case "state":
-                        deletePathInObject(publicInstance.state, path108);
+                        deletePathInObject(publicInstance.state, path109);
                         forceUpdate(publicInstance);
                         break;
                     }
@@ -279944,14 +279944,14 @@ var require_backend = __commonJS({
                   }
                 }
               }
-              function overrideValueAtPath(type, id, hookID, path108, value) {
+              function overrideValueAtPath(type, id, hookID, path109, value) {
                 var internalInstance = idToInternalInstanceMap.get(id);
                 if (internalInstance != null) {
                   var publicInstance = internalInstance._instance;
                   if (publicInstance != null) {
                     switch (type) {
                       case "context":
-                        utils_setInObject(publicInstance.context, path108, value);
+                        utils_setInObject(publicInstance.context, path109, value);
                         forceUpdate(publicInstance);
                         break;
                       case "hooks":
@@ -279959,12 +279959,12 @@ var require_backend = __commonJS({
                       case "props":
                         var element = internalInstance._currentElement;
                         internalInstance._currentElement = legacy_renderer_objectSpread(legacy_renderer_objectSpread({}, element), {}, {
-                          props: copyWithSet(element.props, path108, value)
+                          props: copyWithSet(element.props, path109, value)
                         });
                         forceUpdate(publicInstance);
                         break;
                       case "state":
-                        utils_setInObject(publicInstance.state, path108, value);
+                        utils_setInObject(publicInstance.state, path109, value);
                         forceUpdate(publicInstance);
                         break;
                     }
@@ -280003,7 +280003,7 @@ var require_backend = __commonJS({
               }
               function setTraceUpdatesEnabled(enabled) {
               }
-              function setTrackedPath(path108) {
+              function setTrackedPath(path109) {
               }
               function getOwnersList(id) {
                 return null;
@@ -281360,8 +281360,8 @@ var require_package5 = __commonJS({
 // node_modules/dotenv/lib/main.js
 var require_main = __commonJS({
   "node_modules/dotenv/lib/main.js"(exports2, module2) {
-    var fs93 = __require("fs");
-    var path108 = __require("path");
+    var fs94 = __require("fs");
+    var path109 = __require("path");
     var os39 = __require("os");
     var crypto17 = __require("crypto");
     var packageJson4 = require_package5();
@@ -281490,7 +281490,7 @@ var require_main = __commonJS({
       if (options2 && options2.path && options2.path.length > 0) {
         if (Array.isArray(options2.path)) {
           for (const filepath of options2.path) {
-            if (fs93.existsSync(filepath)) {
+            if (fs94.existsSync(filepath)) {
               possibleVaultPath = filepath.endsWith(".vault") ? filepath : `${filepath}.vault`;
             }
           }
@@ -281498,15 +281498,15 @@ var require_main = __commonJS({
           possibleVaultPath = options2.path.endsWith(".vault") ? options2.path : `${options2.path}.vault`;
         }
       } else {
-        possibleVaultPath = path108.resolve(process.cwd(), ".env.vault");
+        possibleVaultPath = path109.resolve(process.cwd(), ".env.vault");
       }
-      if (fs93.existsSync(possibleVaultPath)) {
+      if (fs94.existsSync(possibleVaultPath)) {
         return possibleVaultPath;
       }
       return null;
     }
     function _resolveHome(envPath) {
-      return envPath[0] === "~" ? path108.join(os39.homedir(), envPath.slice(1)) : envPath;
+      return envPath[0] === "~" ? path109.join(os39.homedir(), envPath.slice(1)) : envPath;
     }
     function _configVault(options2) {
       const debug2 = Boolean(options2 && options2.debug);
@@ -281523,7 +281523,7 @@ var require_main = __commonJS({
       return { parsed };
     }
     function configDotenv(options2) {
-      const dotenvPath = path108.resolve(process.cwd(), ".env");
+      const dotenvPath = path109.resolve(process.cwd(), ".env");
       let encoding = "utf8";
       const debug2 = Boolean(options2 && options2.debug);
       const quiet = Boolean(options2 && options2.quiet);
@@ -281547,13 +281547,13 @@ var require_main = __commonJS({
       }
       let lastError;
       const parsedAll = {};
-      for (const path109 of optionPaths) {
+      for (const path110 of optionPaths) {
         try {
-          const parsed = DotenvModule.parse(fs93.readFileSync(path109, { encoding }));
+          const parsed = DotenvModule.parse(fs94.readFileSync(path110, { encoding }));
           DotenvModule.populate(parsedAll, parsed, options2);
         } catch (e2) {
           if (debug2) {
-            _debug(`Failed to load ${path109} ${e2.message}`);
+            _debug(`Failed to load ${path110} ${e2.message}`);
           }
           lastError = e2;
         }
@@ -281568,7 +281568,7 @@ var require_main = __commonJS({
         const shortPaths = [];
         for (const filePath of optionPaths) {
           try {
-            const relative11 = path108.relative(process.cwd(), filePath);
+            const relative11 = path109.relative(process.cwd(), filePath);
             shortPaths.push(relative11);
           } catch (e2) {
             if (debug2) {
@@ -282650,13 +282650,13 @@ var init_trustedFolders = __esm({
         this.errors = errors;
       }
       get rules() {
-        return Object.entries(this.user.config).map(([path108, trustLevel]) => ({
-          path: path108,
+        return Object.entries(this.user.config).map(([path109, trustLevel]) => ({
+          path: path109,
           trustLevel
         }));
       }
-      setValue(path108, trustLevel) {
-        this.user.config[path108] = trustLevel;
+      setValue(path109, trustLevel) {
+        this.user.config[path109] = trustLevel;
         saveTrustedFolders(this.user);
       }
     };
@@ -284382,8 +284382,8 @@ function getSystemDefaultsPath() {
     "system-defaults.json"
   );
 }
-function setNestedProperty(obj, path108, value) {
-  const keys = path108.split(".");
+function setNestedProperty(obj, path109, value) {
+  const keys = path109.split(".");
   const lastKey = keys.pop();
   if (!lastKey) return;
   let current = obj;
@@ -284436,8 +284436,8 @@ function migrateSettingsToV2(flatSettings) {
   }
   return v2Settings;
 }
-function getNestedProperty(obj, path108) {
-  const keys = path108.split(".");
+function getNestedProperty(obj, path109) {
+  const keys = path109.split(".");
   let current = obj;
   for (const key of keys) {
     if (typeof current !== "object" || current === null || !(key in current)) {
@@ -284447,8 +284447,8 @@ function getNestedProperty(obj, path108) {
   }
   return current;
 }
-function deleteNestedProperty(obj, path108) {
-  const keys = path108.split(".");
+function deleteNestedProperty(obj, path109) {
+  const keys = path109.split(".");
   if (keys.length === 0) {
     return;
   }
@@ -285090,9 +285090,9 @@ var init_settings = __esm({
 var require_build = __commonJS({
   "node_modules/y18n/build/index.cjs"(exports2, module2) {
     "use strict";
-    var fs93 = __require("fs");
+    var fs94 = __require("fs");
     var util4 = __require("util");
-    var path108 = __require("path");
+    var path109 = __require("path");
     var shim3;
     var Y18N2 = class {
       constructor(opts) {
@@ -285254,14 +285254,14 @@ var require_build = __commonJS({
     }
     var nodePlatformShim = {
       fs: {
-        readFileSync: fs93.readFileSync,
-        writeFile: fs93.writeFile
+        readFileSync: fs94.readFileSync,
+        writeFile: fs94.writeFile
       },
       format: util4.format,
-      resolve: path108.resolve,
+      resolve: path109.resolve,
       exists: (file) => {
         try {
-          return fs93.statSync(file).isFile();
+          return fs94.statSync(file).isFile();
         } catch (err) {
           return false;
         }
@@ -285279,8 +285279,8 @@ var require_build2 = __commonJS({
   "node_modules/yargs-parser/build/index.cjs"(exports2, module2) {
     "use strict";
     var util4 = __require("util");
-    var path108 = __require("path");
-    var fs93 = __require("fs");
+    var path109 = __require("path");
+    var fs94 = __require("fs");
     function camelCase3(str2) {
       const isCamelCase = str2 !== str2.toLowerCase() && str2 !== str2.toUpperCase();
       if (!isCamelCase) {
@@ -286223,13 +286223,13 @@ var require_build2 = __commonJS({
         return env9;
       },
       format: util4.format,
-      normalize: path108.normalize,
-      resolve: path108.resolve,
-      require: (path109) => {
+      normalize: path109.normalize,
+      resolve: path109.resolve,
+      require: (path110) => {
         if (typeof __require !== "undefined") {
-          return __require(path109);
-        } else if (path109.match(/\.json$/)) {
-          return JSON.parse(fs93.readFileSync(path109, "utf8"));
+          return __require(path110);
+        } else if (path110.match(/\.json$/)) {
+          return JSON.parse(fs94.readFileSync(path110, "utf8"));
         } else {
           throw Error("only .json config files are supported in ESM");
         }
@@ -287222,15 +287222,15 @@ var require_route = __commonJS({
       };
     }
     function wrapConversion(toModel, graph) {
-      const path108 = [graph[toModel].parent, toModel];
+      const path109 = [graph[toModel].parent, toModel];
       let fn = conversions[graph[toModel].parent][toModel];
       let cur = graph[toModel].parent;
       while (graph[cur].parent) {
-        path108.unshift(graph[cur].parent);
+        path109.unshift(graph[cur].parent);
         fn = link3(conversions[graph[cur].parent][cur], fn);
         cur = graph[cur].parent;
       }
-      fn.conversion = path108;
+      fn.conversion = path109;
       return fn;
     }
     module2.exports = function(fromModel) {
@@ -287933,8 +287933,8 @@ var require_get_caller_file = __commonJS({
 var require_require_directory = __commonJS({
   "node_modules/require-directory/index.js"(exports2, module2) {
     "use strict";
-    var fs93 = __require("fs");
-    var join40 = __require("path").join;
+    var fs94 = __require("fs");
+    var join41 = __require("path").join;
     var resolve28 = __require("path").resolve;
     var dirname23 = __require("path").dirname;
     var defaultOptions2 = {
@@ -287947,21 +287947,21 @@ var require_require_directory = __commonJS({
         return obj;
       }
     };
-    function checkFileInclusion(path108, filename, options2) {
+    function checkFileInclusion(path109, filename, options2) {
       return (
         // verify file has valid extension
         new RegExp("\\.(" + options2.extensions.join("|") + ")$", "i").test(filename) && // if options.include is a RegExp, evaluate it and make sure the path passes
-        !(options2.include && options2.include instanceof RegExp && !options2.include.test(path108)) && // if options.include is a function, evaluate it and make sure the path passes
-        !(options2.include && typeof options2.include === "function" && !options2.include(path108, filename)) && // if options.exclude is a RegExp, evaluate it and make sure the path doesn't pass
-        !(options2.exclude && options2.exclude instanceof RegExp && options2.exclude.test(path108)) && // if options.exclude is a function, evaluate it and make sure the path doesn't pass
-        !(options2.exclude && typeof options2.exclude === "function" && options2.exclude(path108, filename))
+        !(options2.include && options2.include instanceof RegExp && !options2.include.test(path109)) && // if options.include is a function, evaluate it and make sure the path passes
+        !(options2.include && typeof options2.include === "function" && !options2.include(path109, filename)) && // if options.exclude is a RegExp, evaluate it and make sure the path doesn't pass
+        !(options2.exclude && options2.exclude instanceof RegExp && options2.exclude.test(path109)) && // if options.exclude is a function, evaluate it and make sure the path doesn't pass
+        !(options2.exclude && typeof options2.exclude === "function" && options2.exclude(path109, filename))
       );
     }
-    function requireDirectory(m, path108, options2) {
+    function requireDirectory(m, path109, options2) {
       var retval = {};
-      if (path108 && !options2 && typeof path108 !== "string") {
-        options2 = path108;
-        path108 = null;
+      if (path109 && !options2 && typeof path109 !== "string") {
+        options2 = path109;
+        path109 = null;
       }
       options2 = options2 || {};
       for (var prop in defaultOptions2) {
@@ -287969,10 +287969,10 @@ var require_require_directory = __commonJS({
           options2[prop] = defaultOptions2[prop];
         }
       }
-      path108 = !path108 ? dirname23(m.filename) : resolve28(dirname23(m.filename), path108);
-      fs93.readdirSync(path108).forEach(function(filename) {
-        var joined = join40(path108, filename), files, key, obj;
-        if (fs93.statSync(joined).isDirectory() && options2.recurse) {
+      path109 = !path109 ? dirname23(m.filename) : resolve28(dirname23(m.filename), path109);
+      fs94.readdirSync(path109).forEach(function(filename) {
+        var joined = join41(path109, filename), files, key, obj;
+        if (fs94.statSync(joined).isDirectory() && options2.recurse) {
           files = requireDirectory(m, joined, options2);
           if (Object.keys(files).length) {
             retval[options2.rename(filename, joined, filename)] = files;
@@ -293425,13 +293425,13 @@ var require_hosts = __commonJS({
     var defaults3 = {
       sshtemplate: ({ domain, user, project, committish }) => `git@${domain}:${user}/${project}.git${maybeJoin("#", committish)}`,
       sshurltemplate: ({ domain, user, project, committish }) => `git+ssh://git@${domain}/${user}/${project}.git${maybeJoin("#", committish)}`,
-      edittemplate: ({ domain, user, project, committish, editpath, path: path108 }) => `https://${domain}/${user}/${project}${maybeJoin("/", editpath, "/", maybeEncode(committish || "HEAD"), "/", path108)}`,
+      edittemplate: ({ domain, user, project, committish, editpath, path: path109 }) => `https://${domain}/${user}/${project}${maybeJoin("/", editpath, "/", maybeEncode(committish || "HEAD"), "/", path109)}`,
       browsetemplate: ({ domain, user, project, committish, treepath }) => `https://${domain}/${user}/${project}${maybeJoin("/", treepath, "/", maybeEncode(committish))}`,
-      browsetreetemplate: ({ domain, user, project, committish, treepath, path: path108, fragment, hashformat }) => `https://${domain}/${user}/${project}/${treepath}/${maybeEncode(committish || "HEAD")}/${path108}${maybeJoin("#", hashformat(fragment || ""))}`,
-      browseblobtemplate: ({ domain, user, project, committish, blobpath, path: path108, fragment, hashformat }) => `https://${domain}/${user}/${project}/${blobpath}/${maybeEncode(committish || "HEAD")}/${path108}${maybeJoin("#", hashformat(fragment || ""))}`,
+      browsetreetemplate: ({ domain, user, project, committish, treepath, path: path109, fragment, hashformat }) => `https://${domain}/${user}/${project}/${treepath}/${maybeEncode(committish || "HEAD")}/${path109}${maybeJoin("#", hashformat(fragment || ""))}`,
+      browseblobtemplate: ({ domain, user, project, committish, blobpath, path: path109, fragment, hashformat }) => `https://${domain}/${user}/${project}/${blobpath}/${maybeEncode(committish || "HEAD")}/${path109}${maybeJoin("#", hashformat(fragment || ""))}`,
       docstemplate: ({ domain, user, project, treepath, committish }) => `https://${domain}/${user}/${project}${maybeJoin("/", treepath, "/", maybeEncode(committish))}#readme`,
       httpstemplate: ({ auth: auth2, domain, user, project, committish }) => `git+https://${maybeJoin(auth2, "@")}${domain}/${user}/${project}.git${maybeJoin("#", committish)}`,
-      filetemplate: ({ domain, user, project, committish, path: path108 }) => `https://${domain}/${user}/${project}/raw/${maybeEncode(committish || "HEAD")}/${path108}`,
+      filetemplate: ({ domain, user, project, committish, path: path109 }) => `https://${domain}/${user}/${project}/raw/${maybeEncode(committish || "HEAD")}/${path109}`,
       shortcuttemplate: ({ type, user, project, committish }) => `${type}:${user}/${project}${maybeJoin("#", committish)}`,
       pathtemplate: ({ user, project, committish }) => `${user}/${project}${maybeJoin("#", committish)}`,
       bugstemplate: ({ domain, user, project }) => `https://${domain}/${user}/${project}/issues`,
@@ -293446,7 +293446,7 @@ var require_hosts = __commonJS({
       treepath: "tree",
       blobpath: "blob",
       editpath: "edit",
-      filetemplate: ({ auth: auth2, user, project, committish, path: path108 }) => `https://${maybeJoin(auth2, "@")}raw.githubusercontent.com/${user}/${project}/${maybeEncode(committish || "HEAD")}/${path108}`,
+      filetemplate: ({ auth: auth2, user, project, committish, path: path109 }) => `https://${maybeJoin(auth2, "@")}raw.githubusercontent.com/${user}/${project}/${maybeEncode(committish || "HEAD")}/${path109}`,
       gittemplate: ({ auth: auth2, domain, user, project, committish }) => `git://${maybeJoin(auth2, "@")}${domain}/${user}/${project}.git${maybeJoin("#", committish)}`,
       tarballtemplate: ({ domain, user, project, committish }) => `https://codeload.${domain}/${user}/${project}/tar.gz/${maybeEncode(committish || "HEAD")}`,
       extract: (url2) => {
@@ -293472,7 +293472,7 @@ var require_hosts = __commonJS({
       treepath: "src",
       blobpath: "src",
       editpath: "?mode=edit",
-      edittemplate: ({ domain, user, project, committish, treepath, path: path108, editpath }) => `https://${domain}/${user}/${project}${maybeJoin("/", treepath, "/", maybeEncode(committish || "HEAD"), "/", path108, editpath)}`,
+      edittemplate: ({ domain, user, project, committish, treepath, path: path109, editpath }) => `https://${domain}/${user}/${project}${maybeJoin("/", treepath, "/", maybeEncode(committish || "HEAD"), "/", path109, editpath)}`,
       tarballtemplate: ({ domain, user, project, committish }) => `https://${domain}/${user}/${project}/get/${maybeEncode(committish || "HEAD")}.tar.gz`,
       extract: (url2) => {
         let [, user, project, aux] = url2.pathname.split("/", 4);
@@ -293497,11 +293497,11 @@ var require_hosts = __commonJS({
       httpstemplate: ({ auth: auth2, domain, user, project, committish }) => `git+https://${maybeJoin(auth2, "@")}${domain}/${user}/${project}.git${maybeJoin("#", committish)}`,
       tarballtemplate: ({ domain, user, project, committish }) => `https://${domain}/${user}/${project}/repository/archive.tar.gz?ref=${maybeEncode(committish || "HEAD")}`,
       extract: (url2) => {
-        const path108 = url2.pathname.slice(1);
-        if (path108.includes("/-/") || path108.includes("/archive.tar.gz")) {
+        const path109 = url2.pathname.slice(1);
+        if (path109.includes("/-/") || path109.includes("/archive.tar.gz")) {
           return;
         }
-        const segments = path108.split("/");
+        const segments = path109.split("/");
         let project = segments.pop();
         if (project.endsWith(".git")) {
           project = project.slice(0, -4);
@@ -293521,11 +293521,11 @@ var require_hosts = __commonJS({
       sshurltemplate: ({ domain, project, committish }) => `git+ssh://git@${domain}/${project}.git${maybeJoin("#", committish)}`,
       edittemplate: ({ domain, user, project, committish, editpath }) => `https://${domain}/${user}/${project}${maybeJoin("/", maybeEncode(committish))}/${editpath}`,
       browsetemplate: ({ domain, project, committish }) => `https://${domain}/${project}${maybeJoin("/", maybeEncode(committish))}`,
-      browsetreetemplate: ({ domain, project, committish, path: path108, hashformat }) => `https://${domain}/${project}${maybeJoin("/", maybeEncode(committish))}${maybeJoin("#", hashformat(path108))}`,
-      browseblobtemplate: ({ domain, project, committish, path: path108, hashformat }) => `https://${domain}/${project}${maybeJoin("/", maybeEncode(committish))}${maybeJoin("#", hashformat(path108))}`,
+      browsetreetemplate: ({ domain, project, committish, path: path109, hashformat }) => `https://${domain}/${project}${maybeJoin("/", maybeEncode(committish))}${maybeJoin("#", hashformat(path109))}`,
+      browseblobtemplate: ({ domain, project, committish, path: path109, hashformat }) => `https://${domain}/${project}${maybeJoin("/", maybeEncode(committish))}${maybeJoin("#", hashformat(path109))}`,
       docstemplate: ({ domain, project, committish }) => `https://${domain}/${project}${maybeJoin("/", maybeEncode(committish))}`,
       httpstemplate: ({ domain, project, committish }) => `git+https://${domain}/${project}.git${maybeJoin("#", committish)}`,
-      filetemplate: ({ user, project, committish, path: path108 }) => `https://gist.githubusercontent.com/${user}/${project}/raw${maybeJoin("/", maybeEncode(committish))}/${path108}`,
+      filetemplate: ({ user, project, committish, path: path109 }) => `https://gist.githubusercontent.com/${user}/${project}/raw${maybeJoin("/", maybeEncode(committish))}/${path109}`,
       shortcuttemplate: ({ type, project, committish }) => `${type}:${project}${maybeJoin("#", committish)}`,
       pathtemplate: ({ project, committish }) => `${project}${maybeJoin("#", committish)}`,
       bugstemplate: ({ domain, project }) => `https://${domain}/${project}`,
@@ -293557,7 +293557,7 @@ var require_hosts = __commonJS({
       domain: "git.sr.ht",
       treepath: "tree",
       blobpath: "tree",
-      filetemplate: ({ domain, user, project, committish, path: path108 }) => `https://${domain}/${user}/${project}/blob/${maybeEncode(committish) || "HEAD"}/${path108}`,
+      filetemplate: ({ domain, user, project, committish, path: path109 }) => `https://${domain}/${user}/${project}/blob/${maybeEncode(committish) || "HEAD"}/${path109}`,
       httpstemplate: ({ domain, user, project, committish }) => `https://${domain}/${user}/${project}.git${maybeJoin("#", committish)}`,
       tarballtemplate: ({ domain, user, project, committish }) => `https://${domain}/${user}/${project}/archive/${maybeEncode(committish) || "HEAD"}.tar.gz`,
       bugstemplate: () => null,
@@ -293808,25 +293808,25 @@ var require_lib6 = __commonJS({
       sshurl(opts) {
         return this.#fill(this.sshurltemplate, opts);
       }
-      browse(path108, ...args) {
-        if (typeof path108 !== "string") {
-          return this.#fill(this.browsetemplate, path108);
+      browse(path109, ...args) {
+        if (typeof path109 !== "string") {
+          return this.#fill(this.browsetemplate, path109);
         }
         if (typeof args[0] !== "string") {
-          return this.#fill(this.browsetreetemplate, { ...args[0], path: path108 });
+          return this.#fill(this.browsetreetemplate, { ...args[0], path: path109 });
         }
-        return this.#fill(this.browsetreetemplate, { ...args[1], fragment: args[0], path: path108 });
+        return this.#fill(this.browsetreetemplate, { ...args[1], fragment: args[0], path: path109 });
       }
       // If the path is known to be a file, then browseFile should be used. For some hosts
       // the url is the same as browse, but for others like GitHub a file can use both `/tree/`
       // and `/blob/` in the path. When using a default committish of `HEAD` then the `/tree/`
       // path will redirect to a specific commit. Using the `/blob/` path avoids this and
       // does not redirect to a different commit.
-      browseFile(path108, ...args) {
+      browseFile(path109, ...args) {
         if (typeof args[0] !== "string") {
-          return this.#fill(this.browseblobtemplate, { ...args[0], path: path108 });
+          return this.#fill(this.browseblobtemplate, { ...args[0], path: path109 });
         }
-        return this.#fill(this.browseblobtemplate, { ...args[1], fragment: args[0], path: path108 });
+        return this.#fill(this.browseblobtemplate, { ...args[1], fragment: args[0], path: path109 });
       }
       docs(opts) {
         return this.#fill(this.docstemplate, opts);
@@ -293849,11 +293849,11 @@ var require_lib6 = __commonJS({
       tarball(opts) {
         return this.#fill(this.tarballtemplate, { ...opts, noCommittish: false });
       }
-      file(path108, opts) {
-        return this.#fill(this.filetemplate, { ...opts, path: path108 });
+      file(path109, opts) {
+        return this.#fill(this.filetemplate, { ...opts, path: path109 });
       }
-      edit(path108, opts) {
-        return this.#fill(this.edittemplate, { ...opts, path: path108 });
+      edit(path109, opts) {
+        return this.#fill(this.edittemplate, { ...opts, path: path109 });
       }
       getDefaultRepresentation() {
         return this.default;
@@ -294486,11 +294486,11 @@ var require_command_exists = __commonJS({
     "use strict";
     var exec9 = __require("child_process").exec;
     var execSync8 = __require("child_process").execSync;
-    var fs93 = __require("fs");
-    var path108 = __require("path");
-    var access7 = fs93.access;
-    var accessSync = fs93.accessSync;
-    var constants3 = fs93.constants || fs93;
+    var fs94 = __require("fs");
+    var path109 = __require("path");
+    var access7 = fs94.access;
+    var accessSync = fs94.accessSync;
+    var constants3 = fs94.constants || fs94;
     var isUsingWindows = process.platform == "win32";
     var fileNotExists = function(commandName, callback) {
       access7(
@@ -294591,8 +294591,8 @@ var require_command_exists = __commonJS({
       cleanInput = function(s2) {
         var isPathName = /[\\]/.test(s2);
         if (isPathName) {
-          var dirname23 = '"' + path108.dirname(s2) + '"';
-          var basename9 = '"' + path108.basename(s2) + '"';
+          var dirname23 = '"' + path109.dirname(s2) + '"';
+          var basename9 = '"' + path109.basename(s2) + '"';
           return dirname23 + ":" + basename9;
         }
         return '"' + s2 + '"';
@@ -304335,54 +304335,54 @@ var require_polyfills = __commonJS({
     }
     var chdir;
     module2.exports = patch;
-    function patch(fs93) {
+    function patch(fs94) {
       if (constants3.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-        patchLchmod(fs93);
+        patchLchmod(fs94);
       }
-      if (!fs93.lutimes) {
-        patchLutimes(fs93);
+      if (!fs94.lutimes) {
+        patchLutimes(fs94);
       }
-      fs93.chown = chownFix(fs93.chown);
-      fs93.fchown = chownFix(fs93.fchown);
-      fs93.lchown = chownFix(fs93.lchown);
-      fs93.chmod = chmodFix(fs93.chmod);
-      fs93.fchmod = chmodFix(fs93.fchmod);
-      fs93.lchmod = chmodFix(fs93.lchmod);
-      fs93.chownSync = chownFixSync(fs93.chownSync);
-      fs93.fchownSync = chownFixSync(fs93.fchownSync);
-      fs93.lchownSync = chownFixSync(fs93.lchownSync);
-      fs93.chmodSync = chmodFixSync(fs93.chmodSync);
-      fs93.fchmodSync = chmodFixSync(fs93.fchmodSync);
-      fs93.lchmodSync = chmodFixSync(fs93.lchmodSync);
-      fs93.stat = statFix(fs93.stat);
-      fs93.fstat = statFix(fs93.fstat);
-      fs93.lstat = statFix(fs93.lstat);
-      fs93.statSync = statFixSync(fs93.statSync);
-      fs93.fstatSync = statFixSync(fs93.fstatSync);
-      fs93.lstatSync = statFixSync(fs93.lstatSync);
-      if (fs93.chmod && !fs93.lchmod) {
-        fs93.lchmod = function(path108, mode, cb) {
+      fs94.chown = chownFix(fs94.chown);
+      fs94.fchown = chownFix(fs94.fchown);
+      fs94.lchown = chownFix(fs94.lchown);
+      fs94.chmod = chmodFix(fs94.chmod);
+      fs94.fchmod = chmodFix(fs94.fchmod);
+      fs94.lchmod = chmodFix(fs94.lchmod);
+      fs94.chownSync = chownFixSync(fs94.chownSync);
+      fs94.fchownSync = chownFixSync(fs94.fchownSync);
+      fs94.lchownSync = chownFixSync(fs94.lchownSync);
+      fs94.chmodSync = chmodFixSync(fs94.chmodSync);
+      fs94.fchmodSync = chmodFixSync(fs94.fchmodSync);
+      fs94.lchmodSync = chmodFixSync(fs94.lchmodSync);
+      fs94.stat = statFix(fs94.stat);
+      fs94.fstat = statFix(fs94.fstat);
+      fs94.lstat = statFix(fs94.lstat);
+      fs94.statSync = statFixSync(fs94.statSync);
+      fs94.fstatSync = statFixSync(fs94.fstatSync);
+      fs94.lstatSync = statFixSync(fs94.lstatSync);
+      if (fs94.chmod && !fs94.lchmod) {
+        fs94.lchmod = function(path109, mode, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs93.lchmodSync = function() {
+        fs94.lchmodSync = function() {
         };
       }
-      if (fs93.chown && !fs93.lchown) {
-        fs93.lchown = function(path108, uid, gid, cb) {
+      if (fs94.chown && !fs94.lchown) {
+        fs94.lchown = function(path109, uid, gid, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs93.lchownSync = function() {
+        fs94.lchownSync = function() {
         };
       }
       if (platform9 === "win32") {
-        fs93.rename = typeof fs93.rename !== "function" ? fs93.rename : function(fs$rename) {
+        fs94.rename = typeof fs94.rename !== "function" ? fs94.rename : function(fs$rename) {
           function rename2(from, to, cb) {
             var start = Date.now();
             var backoff = 0;
             fs$rename(from, to, function CB(er) {
               if (er && (er.code === "EACCES" || er.code === "EPERM" || er.code === "EBUSY") && Date.now() - start < 6e4) {
                 setTimeout(function() {
-                  fs93.stat(to, function(stater, st) {
+                  fs94.stat(to, function(stater, st) {
                     if (stater && stater.code === "ENOENT")
                       fs$rename(from, to, CB);
                     else
@@ -304398,9 +304398,9 @@ var require_polyfills = __commonJS({
           }
           if (Object.setPrototypeOf) Object.setPrototypeOf(rename2, fs$rename);
           return rename2;
-        }(fs93.rename);
+        }(fs94.rename);
       }
-      fs93.read = typeof fs93.read !== "function" ? fs93.read : function(fs$read) {
+      fs94.read = typeof fs94.read !== "function" ? fs94.read : function(fs$read) {
         function read2(fd, buffer, offset, length, position, callback_) {
           var callback;
           if (callback_ && typeof callback_ === "function") {
@@ -304408,22 +304408,22 @@ var require_polyfills = __commonJS({
             callback = function(er, _, __) {
               if (er && er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
-                return fs$read.call(fs93, fd, buffer, offset, length, position, callback);
+                return fs$read.call(fs94, fd, buffer, offset, length, position, callback);
               }
               callback_.apply(this, arguments);
             };
           }
-          return fs$read.call(fs93, fd, buffer, offset, length, position, callback);
+          return fs$read.call(fs94, fd, buffer, offset, length, position, callback);
         }
         if (Object.setPrototypeOf) Object.setPrototypeOf(read2, fs$read);
         return read2;
-      }(fs93.read);
-      fs93.readSync = typeof fs93.readSync !== "function" ? fs93.readSync : /* @__PURE__ */ function(fs$readSync) {
+      }(fs94.read);
+      fs94.readSync = typeof fs94.readSync !== "function" ? fs94.readSync : /* @__PURE__ */ function(fs$readSync) {
         return function(fd, buffer, offset, length, position) {
           var eagCounter = 0;
           while (true) {
             try {
-              return fs$readSync.call(fs93, fd, buffer, offset, length, position);
+              return fs$readSync.call(fs94, fd, buffer, offset, length, position);
             } catch (er) {
               if (er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
@@ -304433,11 +304433,11 @@ var require_polyfills = __commonJS({
             }
           }
         };
-      }(fs93.readSync);
-      function patchLchmod(fs94) {
-        fs94.lchmod = function(path108, mode, callback) {
-          fs94.open(
-            path108,
+      }(fs94.readSync);
+      function patchLchmod(fs95) {
+        fs95.lchmod = function(path109, mode, callback) {
+          fs95.open(
+            path109,
             constants3.O_WRONLY | constants3.O_SYMLINK,
             mode,
             function(err, fd) {
@@ -304445,80 +304445,80 @@ var require_polyfills = __commonJS({
                 if (callback) callback(err);
                 return;
               }
-              fs94.fchmod(fd, mode, function(err2) {
-                fs94.close(fd, function(err22) {
+              fs95.fchmod(fd, mode, function(err2) {
+                fs95.close(fd, function(err22) {
                   if (callback) callback(err2 || err22);
                 });
               });
             }
           );
         };
-        fs94.lchmodSync = function(path108, mode) {
-          var fd = fs94.openSync(path108, constants3.O_WRONLY | constants3.O_SYMLINK, mode);
+        fs95.lchmodSync = function(path109, mode) {
+          var fd = fs95.openSync(path109, constants3.O_WRONLY | constants3.O_SYMLINK, mode);
           var threw = true;
           var ret;
           try {
-            ret = fs94.fchmodSync(fd, mode);
+            ret = fs95.fchmodSync(fd, mode);
             threw = false;
           } finally {
             if (threw) {
               try {
-                fs94.closeSync(fd);
+                fs95.closeSync(fd);
               } catch (er) {
               }
             } else {
-              fs94.closeSync(fd);
+              fs95.closeSync(fd);
             }
           }
           return ret;
         };
       }
-      function patchLutimes(fs94) {
-        if (constants3.hasOwnProperty("O_SYMLINK") && fs94.futimes) {
-          fs94.lutimes = function(path108, at, mt, cb) {
-            fs94.open(path108, constants3.O_SYMLINK, function(er, fd) {
+      function patchLutimes(fs95) {
+        if (constants3.hasOwnProperty("O_SYMLINK") && fs95.futimes) {
+          fs95.lutimes = function(path109, at, mt, cb) {
+            fs95.open(path109, constants3.O_SYMLINK, function(er, fd) {
               if (er) {
                 if (cb) cb(er);
                 return;
               }
-              fs94.futimes(fd, at, mt, function(er2) {
-                fs94.close(fd, function(er22) {
+              fs95.futimes(fd, at, mt, function(er2) {
+                fs95.close(fd, function(er22) {
                   if (cb) cb(er2 || er22);
                 });
               });
             });
           };
-          fs94.lutimesSync = function(path108, at, mt) {
-            var fd = fs94.openSync(path108, constants3.O_SYMLINK);
+          fs95.lutimesSync = function(path109, at, mt) {
+            var fd = fs95.openSync(path109, constants3.O_SYMLINK);
             var ret;
             var threw = true;
             try {
-              ret = fs94.futimesSync(fd, at, mt);
+              ret = fs95.futimesSync(fd, at, mt);
               threw = false;
             } finally {
               if (threw) {
                 try {
-                  fs94.closeSync(fd);
+                  fs95.closeSync(fd);
                 } catch (er) {
                 }
               } else {
-                fs94.closeSync(fd);
+                fs95.closeSync(fd);
               }
             }
             return ret;
           };
-        } else if (fs94.futimes) {
-          fs94.lutimes = function(_a6, _b2, _c2, cb) {
+        } else if (fs95.futimes) {
+          fs95.lutimes = function(_a6, _b2, _c2, cb) {
             if (cb) process.nextTick(cb);
           };
-          fs94.lutimesSync = function() {
+          fs95.lutimesSync = function() {
           };
         }
       }
       function chmodFix(orig) {
         if (!orig) return orig;
         return function(target, mode, cb) {
-          return orig.call(fs93, target, mode, function(er) {
+          return orig.call(fs94, target, mode, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -304528,7 +304528,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, mode) {
           try {
-            return orig.call(fs93, target, mode);
+            return orig.call(fs94, target, mode);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -304537,7 +304537,7 @@ var require_polyfills = __commonJS({
       function chownFix(orig) {
         if (!orig) return orig;
         return function(target, uid, gid, cb) {
-          return orig.call(fs93, target, uid, gid, function(er) {
+          return orig.call(fs94, target, uid, gid, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -304547,7 +304547,7 @@ var require_polyfills = __commonJS({
         if (!orig) return orig;
         return function(target, uid, gid) {
           try {
-            return orig.call(fs93, target, uid, gid);
+            return orig.call(fs94, target, uid, gid);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -304567,13 +304567,13 @@ var require_polyfills = __commonJS({
             }
             if (cb) cb.apply(this, arguments);
           }
-          return options2 ? orig.call(fs93, target, options2, callback) : orig.call(fs93, target, callback);
+          return options2 ? orig.call(fs94, target, options2, callback) : orig.call(fs94, target, callback);
         };
       }
       function statFixSync(orig) {
         if (!orig) return orig;
         return function(target, options2) {
-          var stats = options2 ? orig.call(fs93, target, options2) : orig.call(fs93, target);
+          var stats = options2 ? orig.call(fs94, target, options2) : orig.call(fs94, target);
           if (stats) {
             if (stats.uid < 0) stats.uid += 4294967296;
             if (stats.gid < 0) stats.gid += 4294967296;
@@ -304602,16 +304602,16 @@ var require_legacy_streams = __commonJS({
   "node_modules/graceful-fs/legacy-streams.js"(exports2, module2) {
     var Stream4 = __require("stream").Stream;
     module2.exports = legacy;
-    function legacy(fs93) {
+    function legacy(fs94) {
       return {
         ReadStream,
         WriteStream
       };
-      function ReadStream(path108, options2) {
-        if (!(this instanceof ReadStream)) return new ReadStream(path108, options2);
+      function ReadStream(path109, options2) {
+        if (!(this instanceof ReadStream)) return new ReadStream(path109, options2);
         Stream4.call(this);
         var self2 = this;
-        this.path = path108;
+        this.path = path109;
         this.fd = null;
         this.readable = true;
         this.paused = false;
@@ -304645,7 +304645,7 @@ var require_legacy_streams = __commonJS({
           });
           return;
         }
-        fs93.open(this.path, this.flags, this.mode, function(err, fd) {
+        fs94.open(this.path, this.flags, this.mode, function(err, fd) {
           if (err) {
             self2.emit("error", err);
             self2.readable = false;
@@ -304656,10 +304656,10 @@ var require_legacy_streams = __commonJS({
           self2._read();
         });
       }
-      function WriteStream(path108, options2) {
-        if (!(this instanceof WriteStream)) return new WriteStream(path108, options2);
+      function WriteStream(path109, options2) {
+        if (!(this instanceof WriteStream)) return new WriteStream(path109, options2);
         Stream4.call(this);
-        this.path = path108;
+        this.path = path109;
         this.fd = null;
         this.writable = true;
         this.flags = "w";
@@ -304684,7 +304684,7 @@ var require_legacy_streams = __commonJS({
         this.busy = false;
         this._queue = [];
         if (this.fd === null) {
-          this._open = fs93.open;
+          this._open = fs94.open;
           this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
           this.flush();
         }
@@ -304719,7 +304719,7 @@ var require_clone = __commonJS({
 // node_modules/graceful-fs/graceful-fs.js
 var require_graceful_fs = __commonJS({
   "node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
-    var fs93 = __require("fs");
+    var fs94 = __require("fs");
     var polyfills = require_polyfills();
     var legacy = require_legacy_streams();
     var clone = require_clone();
@@ -304751,12 +304751,12 @@ var require_graceful_fs = __commonJS({
         m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
         console.error(m);
       };
-    if (!fs93[gracefulQueue]) {
+    if (!fs94[gracefulQueue]) {
       queue = global[gracefulQueue] || [];
-      publishQueue(fs93, queue);
-      fs93.close = function(fs$close) {
+      publishQueue(fs94, queue);
+      fs94.close = function(fs$close) {
         function close(fd, cb) {
-          return fs$close.call(fs93, fd, function(err) {
+          return fs$close.call(fs94, fd, function(err) {
             if (!err) {
               resetQueue();
             }
@@ -304768,48 +304768,48 @@ var require_graceful_fs = __commonJS({
           value: fs$close
         });
         return close;
-      }(fs93.close);
-      fs93.closeSync = function(fs$closeSync) {
+      }(fs94.close);
+      fs94.closeSync = function(fs$closeSync) {
         function closeSync(fd) {
-          fs$closeSync.apply(fs93, arguments);
+          fs$closeSync.apply(fs94, arguments);
           resetQueue();
         }
         Object.defineProperty(closeSync, previousSymbol, {
           value: fs$closeSync
         });
         return closeSync;
-      }(fs93.closeSync);
+      }(fs94.closeSync);
       if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
         process.on("exit", function() {
-          debug2(fs93[gracefulQueue]);
-          __require("assert").equal(fs93[gracefulQueue].length, 0);
+          debug2(fs94[gracefulQueue]);
+          __require("assert").equal(fs94[gracefulQueue].length, 0);
         });
       }
     }
     var queue;
     if (!global[gracefulQueue]) {
-      publishQueue(global, fs93[gracefulQueue]);
+      publishQueue(global, fs94[gracefulQueue]);
     }
-    module2.exports = patch(clone(fs93));
-    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs93.__patched) {
-      module2.exports = patch(fs93);
-      fs93.__patched = true;
+    module2.exports = patch(clone(fs94));
+    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs94.__patched) {
+      module2.exports = patch(fs94);
+      fs94.__patched = true;
     }
-    function patch(fs94) {
-      polyfills(fs94);
-      fs94.gracefulify = patch;
-      fs94.createReadStream = createReadStream;
-      fs94.createWriteStream = createWriteStream4;
-      var fs$readFile = fs94.readFile;
-      fs94.readFile = readFile18;
-      function readFile18(path108, options2, cb) {
+    function patch(fs95) {
+      polyfills(fs95);
+      fs95.gracefulify = patch;
+      fs95.createReadStream = createReadStream;
+      fs95.createWriteStream = createWriteStream4;
+      var fs$readFile = fs95.readFile;
+      fs95.readFile = readFile19;
+      function readFile19(path109, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        return go$readFile(path108, options2, cb);
-        function go$readFile(path109, options3, cb2, startTime) {
-          return fs$readFile(path109, options3, function(err) {
+        return go$readFile(path109, options2, cb);
+        function go$readFile(path110, options3, cb2, startTime) {
+          return fs$readFile(path110, options3, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$readFile, [path109, options3, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$readFile, [path110, options3, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -304817,16 +304817,16 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$writeFile = fs94.writeFile;
-      fs94.writeFile = writeFile16;
-      function writeFile16(path108, data, options2, cb) {
+      var fs$writeFile = fs95.writeFile;
+      fs95.writeFile = writeFile16;
+      function writeFile16(path109, data, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        return go$writeFile(path108, data, options2, cb);
-        function go$writeFile(path109, data2, options3, cb2, startTime) {
-          return fs$writeFile(path109, data2, options3, function(err) {
+        return go$writeFile(path109, data, options2, cb);
+        function go$writeFile(path110, data2, options3, cb2, startTime) {
+          return fs$writeFile(path110, data2, options3, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$writeFile, [path109, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$writeFile, [path110, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -304834,17 +304834,17 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$appendFile = fs94.appendFile;
+      var fs$appendFile = fs95.appendFile;
       if (fs$appendFile)
-        fs94.appendFile = appendFile2;
-      function appendFile2(path108, data, options2, cb) {
+        fs95.appendFile = appendFile2;
+      function appendFile2(path109, data, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        return go$appendFile(path108, data, options2, cb);
-        function go$appendFile(path109, data2, options3, cb2, startTime) {
-          return fs$appendFile(path109, data2, options3, function(err) {
+        return go$appendFile(path109, data, options2, cb);
+        function go$appendFile(path110, data2, options3, cb2, startTime) {
+          return fs$appendFile(path110, data2, options3, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$appendFile, [path109, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$appendFile, [path110, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -304852,9 +304852,9 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$copyFile = fs94.copyFile;
+      var fs$copyFile = fs95.copyFile;
       if (fs$copyFile)
-        fs94.copyFile = copyFile;
+        fs95.copyFile = copyFile;
       function copyFile(src, dest, flags, cb) {
         if (typeof flags === "function") {
           cb = flags;
@@ -304872,34 +304872,34 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      var fs$readdir = fs94.readdir;
-      fs94.readdir = readdir11;
+      var fs$readdir = fs95.readdir;
+      fs95.readdir = readdir11;
       var noReaddirOptionVersions = /^v[0-5]\./;
-      function readdir11(path108, options2, cb) {
+      function readdir11(path109, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path109, options3, cb2, startTime) {
-          return fs$readdir(path109, fs$readdirCallback(
-            path109,
+        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path110, options3, cb2, startTime) {
+          return fs$readdir(path110, fs$readdirCallback(
+            path110,
             options3,
             cb2,
             startTime
           ));
-        } : function go$readdir2(path109, options3, cb2, startTime) {
-          return fs$readdir(path109, options3, fs$readdirCallback(
-            path109,
+        } : function go$readdir2(path110, options3, cb2, startTime) {
+          return fs$readdir(path110, options3, fs$readdirCallback(
+            path110,
             options3,
             cb2,
             startTime
           ));
         };
-        return go$readdir(path108, options2, cb);
-        function fs$readdirCallback(path109, options3, cb2, startTime) {
+        return go$readdir(path109, options2, cb);
+        function fs$readdirCallback(path110, options3, cb2, startTime) {
           return function(err, files) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
               enqueue([
                 go$readdir,
-                [path109, options3, cb2],
+                [path110, options3, cb2],
                 err,
                 startTime || Date.now(),
                 Date.now()
@@ -304914,21 +304914,21 @@ var require_graceful_fs = __commonJS({
         }
       }
       if (process.version.substr(0, 4) === "v0.8") {
-        var legStreams = legacy(fs94);
+        var legStreams = legacy(fs95);
         ReadStream = legStreams.ReadStream;
         WriteStream = legStreams.WriteStream;
       }
-      var fs$ReadStream = fs94.ReadStream;
+      var fs$ReadStream = fs95.ReadStream;
       if (fs$ReadStream) {
         ReadStream.prototype = Object.create(fs$ReadStream.prototype);
         ReadStream.prototype.open = ReadStream$open;
       }
-      var fs$WriteStream = fs94.WriteStream;
+      var fs$WriteStream = fs95.WriteStream;
       if (fs$WriteStream) {
         WriteStream.prototype = Object.create(fs$WriteStream.prototype);
         WriteStream.prototype.open = WriteStream$open;
       }
-      Object.defineProperty(fs94, "ReadStream", {
+      Object.defineProperty(fs95, "ReadStream", {
         get: function() {
           return ReadStream;
         },
@@ -304938,7 +304938,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      Object.defineProperty(fs94, "WriteStream", {
+      Object.defineProperty(fs95, "WriteStream", {
         get: function() {
           return WriteStream;
         },
@@ -304949,7 +304949,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileReadStream = ReadStream;
-      Object.defineProperty(fs94, "FileReadStream", {
+      Object.defineProperty(fs95, "FileReadStream", {
         get: function() {
           return FileReadStream;
         },
@@ -304960,7 +304960,7 @@ var require_graceful_fs = __commonJS({
         configurable: true
       });
       var FileWriteStream = WriteStream;
-      Object.defineProperty(fs94, "FileWriteStream", {
+      Object.defineProperty(fs95, "FileWriteStream", {
         get: function() {
           return FileWriteStream;
         },
@@ -304970,7 +304970,7 @@ var require_graceful_fs = __commonJS({
         enumerable: true,
         configurable: true
       });
-      function ReadStream(path108, options2) {
+      function ReadStream(path109, options2) {
         if (this instanceof ReadStream)
           return fs$ReadStream.apply(this, arguments), this;
         else
@@ -304990,7 +304990,7 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function WriteStream(path108, options2) {
+      function WriteStream(path109, options2) {
         if (this instanceof WriteStream)
           return fs$WriteStream.apply(this, arguments), this;
         else
@@ -305008,22 +305008,22 @@ var require_graceful_fs = __commonJS({
           }
         });
       }
-      function createReadStream(path108, options2) {
-        return new fs94.ReadStream(path108, options2);
+      function createReadStream(path109, options2) {
+        return new fs95.ReadStream(path109, options2);
       }
-      function createWriteStream4(path108, options2) {
-        return new fs94.WriteStream(path108, options2);
+      function createWriteStream4(path109, options2) {
+        return new fs95.WriteStream(path109, options2);
       }
-      var fs$open = fs94.open;
-      fs94.open = open7;
-      function open7(path108, flags, mode, cb) {
+      var fs$open = fs95.open;
+      fs95.open = open7;
+      function open7(path109, flags, mode, cb) {
         if (typeof mode === "function")
           cb = mode, mode = null;
-        return go$open(path108, flags, mode, cb);
-        function go$open(path109, flags2, mode2, cb2, startTime) {
-          return fs$open(path109, flags2, mode2, function(err, fd) {
+        return go$open(path109, flags, mode, cb);
+        function go$open(path110, flags2, mode2, cb2, startTime) {
+          return fs$open(path110, flags2, mode2, function(err, fd) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$open, [path109, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$open, [path110, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -305031,20 +305031,20 @@ var require_graceful_fs = __commonJS({
           });
         }
       }
-      return fs94;
+      return fs95;
     }
     function enqueue(elem) {
       debug2("ENQUEUE", elem[0].name, elem[1]);
-      fs93[gracefulQueue].push(elem);
+      fs94[gracefulQueue].push(elem);
       retry();
     }
     var retryTimer;
     function resetQueue() {
       var now = Date.now();
-      for (var i = 0; i < fs93[gracefulQueue].length; ++i) {
-        if (fs93[gracefulQueue][i].length > 2) {
-          fs93[gracefulQueue][i][3] = now;
-          fs93[gracefulQueue][i][4] = now;
+      for (var i = 0; i < fs94[gracefulQueue].length; ++i) {
+        if (fs94[gracefulQueue][i].length > 2) {
+          fs94[gracefulQueue][i][3] = now;
+          fs94[gracefulQueue][i][4] = now;
         }
       }
       retry();
@@ -305052,9 +305052,9 @@ var require_graceful_fs = __commonJS({
     function retry() {
       clearTimeout(retryTimer);
       retryTimer = void 0;
-      if (fs93[gracefulQueue].length === 0)
+      if (fs94[gracefulQueue].length === 0)
         return;
-      var elem = fs93[gracefulQueue].shift();
+      var elem = fs94[gracefulQueue].shift();
       var fn = elem[0];
       var args = elem[1];
       var err = elem[2];
@@ -305076,7 +305076,7 @@ var require_graceful_fs = __commonJS({
           debug2("RETRY", fn.name, args);
           fn.apply(null, args.concat([startTime]));
         } else {
-          fs93[gracefulQueue].push(elem);
+          fs94[gracefulQueue].push(elem);
         }
       }
       if (retryTimer === void 0) {
@@ -305837,9 +305837,9 @@ var require_strip_json_comments2 = __commonJS({
 var require_utils16 = __commonJS({
   "node_modules/rc/lib/utils.js"(exports2) {
     "use strict";
-    var fs93 = __require("fs");
+    var fs94 = __require("fs");
     var ini3 = require_ini();
-    var path108 = __require("path");
+    var path109 = __require("path");
     var stripJsonComments4 = require_strip_json_comments2();
     var parse9 = exports2.parse = function(content) {
       if (/^\s*{/.test(content))
@@ -305853,10 +305853,10 @@ var require_utils16 = __commonJS({
       for (var i in args)
         if ("string" !== typeof args[i])
           return;
-      var file2 = path108.join.apply(null, args);
+      var file2 = path109.join.apply(null, args);
       var content;
       try {
-        return fs93.readFileSync(file2, "utf-8");
+        return fs94.readFileSync(file2, "utf-8");
       } catch (err) {
         return;
       }
@@ -305891,15 +305891,15 @@ var require_utils16 = __commonJS({
       return obj;
     };
     var find = exports2.find = function() {
-      var rel = path108.join.apply(null, [].slice.call(arguments));
+      var rel = path109.join.apply(null, [].slice.call(arguments));
       function find2(start, rel2) {
-        var file2 = path108.join(start, rel2);
+        var file2 = path109.join(start, rel2);
         try {
-          fs93.statSync(file2);
+          fs94.statSync(file2);
           return file2;
         } catch (err) {
-          if (path108.dirname(start) !== start)
-            return find2(path108.dirname(start), rel2);
+          if (path109.dirname(start) !== start)
+            return find2(path109.dirname(start), rel2);
         }
       }
       return find2(process.cwd(), rel);
@@ -306215,7 +306215,7 @@ var require_minimist = __commonJS({
 var require_rc = __commonJS({
   "node_modules/rc/index.js"(exports2, module2) {
     var cc = require_utils16();
-    var join40 = __require("path").join;
+    var join41 = __require("path").join;
     var deepExtend = require_deep_extend();
     var etc = "/etc";
     var win = process.platform === "win32";
@@ -306240,15 +306240,15 @@ var require_rc = __commonJS({
       }
       if (!win)
         [
-          join40(etc, name2, "config"),
-          join40(etc, name2 + "rc")
+          join41(etc, name2, "config"),
+          join41(etc, name2 + "rc")
         ].forEach(addConfigFile);
       if (home)
         [
-          join40(home, ".config", name2, "config"),
-          join40(home, ".config", name2),
-          join40(home, "." + name2, "config"),
-          join40(home, "." + name2 + "rc")
+          join41(home, ".config", name2, "config"),
+          join41(home, ".config", name2),
+          join41(home, "." + name2, "config"),
+          join41(home, "." + name2 + "rc")
         ].forEach(addConfigFile);
       addConfigFile(cc.find("." + name2 + "rc"));
       if (env9.config) addConfigFile(env9.config);
@@ -306288,54 +306288,54 @@ var require_polyfills2 = __commonJS({
     }
     var chdir;
     module2.exports = patch;
-    function patch(fs93) {
+    function patch(fs94) {
       if (constants3.hasOwnProperty("O_SYMLINK") && process.version.match(/^v0\.6\.[0-2]|^v0\.5\./)) {
-        patchLchmod(fs93);
+        patchLchmod(fs94);
       }
-      if (!fs93.lutimes) {
-        patchLutimes(fs93);
+      if (!fs94.lutimes) {
+        patchLutimes(fs94);
       }
-      fs93.chown = chownFix(fs93.chown);
-      fs93.fchown = chownFix(fs93.fchown);
-      fs93.lchown = chownFix(fs93.lchown);
-      fs93.chmod = chmodFix(fs93.chmod);
-      fs93.fchmod = chmodFix(fs93.fchmod);
-      fs93.lchmod = chmodFix(fs93.lchmod);
-      fs93.chownSync = chownFixSync(fs93.chownSync);
-      fs93.fchownSync = chownFixSync(fs93.fchownSync);
-      fs93.lchownSync = chownFixSync(fs93.lchownSync);
-      fs93.chmodSync = chmodFixSync(fs93.chmodSync);
-      fs93.fchmodSync = chmodFixSync(fs93.fchmodSync);
-      fs93.lchmodSync = chmodFixSync(fs93.lchmodSync);
-      fs93.stat = statFix(fs93.stat);
-      fs93.fstat = statFix(fs93.fstat);
-      fs93.lstat = statFix(fs93.lstat);
-      fs93.statSync = statFixSync(fs93.statSync);
-      fs93.fstatSync = statFixSync(fs93.fstatSync);
-      fs93.lstatSync = statFixSync(fs93.lstatSync);
-      if (fs93.chmod && !fs93.lchmod) {
-        fs93.lchmod = function(path108, mode, cb) {
+      fs94.chown = chownFix(fs94.chown);
+      fs94.fchown = chownFix(fs94.fchown);
+      fs94.lchown = chownFix(fs94.lchown);
+      fs94.chmod = chmodFix(fs94.chmod);
+      fs94.fchmod = chmodFix(fs94.fchmod);
+      fs94.lchmod = chmodFix(fs94.lchmod);
+      fs94.chownSync = chownFixSync(fs94.chownSync);
+      fs94.fchownSync = chownFixSync(fs94.fchownSync);
+      fs94.lchownSync = chownFixSync(fs94.lchownSync);
+      fs94.chmodSync = chmodFixSync(fs94.chmodSync);
+      fs94.fchmodSync = chmodFixSync(fs94.fchmodSync);
+      fs94.lchmodSync = chmodFixSync(fs94.lchmodSync);
+      fs94.stat = statFix(fs94.stat);
+      fs94.fstat = statFix(fs94.fstat);
+      fs94.lstat = statFix(fs94.lstat);
+      fs94.statSync = statFixSync(fs94.statSync);
+      fs94.fstatSync = statFixSync(fs94.fstatSync);
+      fs94.lstatSync = statFixSync(fs94.lstatSync);
+      if (fs94.chmod && !fs94.lchmod) {
+        fs94.lchmod = function(path109, mode, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs93.lchmodSync = function() {
+        fs94.lchmodSync = function() {
         };
       }
-      if (fs93.chown && !fs93.lchown) {
-        fs93.lchown = function(path108, uid, gid, cb) {
+      if (fs94.chown && !fs94.lchown) {
+        fs94.lchown = function(path109, uid, gid, cb) {
           if (cb) process.nextTick(cb);
         };
-        fs93.lchownSync = function() {
+        fs94.lchownSync = function() {
         };
       }
       if (platform9 === "win32") {
-        fs93.rename = typeof fs93.rename !== "function" ? fs93.rename : function(fs$rename) {
+        fs94.rename = typeof fs94.rename !== "function" ? fs94.rename : function(fs$rename) {
           function rename2(from, to, cb) {
             var start = Date.now();
             var backoff = 0;
             fs$rename(from, to, function CB(er) {
               if (er && (er.code === "EACCES" || er.code === "EPERM") && Date.now() - start < 6e4) {
                 setTimeout(function() {
-                  fs93.stat(to, function(stater, st) {
+                  fs94.stat(to, function(stater, st) {
                     if (stater && stater.code === "ENOENT")
                       fs$rename(from, to, CB);
                     else
@@ -306351,9 +306351,9 @@ var require_polyfills2 = __commonJS({
           }
           if (Object.setPrototypeOf) Object.setPrototypeOf(rename2, fs$rename);
           return rename2;
-        }(fs93.rename);
+        }(fs94.rename);
       }
-      fs93.read = typeof fs93.read !== "function" ? fs93.read : function(fs$read) {
+      fs94.read = typeof fs94.read !== "function" ? fs94.read : function(fs$read) {
         function read2(fd, buffer, offset, length, position, callback_) {
           var callback;
           if (callback_ && typeof callback_ === "function") {
@@ -306361,22 +306361,22 @@ var require_polyfills2 = __commonJS({
             callback = function(er, _, __) {
               if (er && er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
-                return fs$read.call(fs93, fd, buffer, offset, length, position, callback);
+                return fs$read.call(fs94, fd, buffer, offset, length, position, callback);
               }
               callback_.apply(this, arguments);
             };
           }
-          return fs$read.call(fs93, fd, buffer, offset, length, position, callback);
+          return fs$read.call(fs94, fd, buffer, offset, length, position, callback);
         }
         if (Object.setPrototypeOf) Object.setPrototypeOf(read2, fs$read);
         return read2;
-      }(fs93.read);
-      fs93.readSync = typeof fs93.readSync !== "function" ? fs93.readSync : /* @__PURE__ */ function(fs$readSync) {
+      }(fs94.read);
+      fs94.readSync = typeof fs94.readSync !== "function" ? fs94.readSync : /* @__PURE__ */ function(fs$readSync) {
         return function(fd, buffer, offset, length, position) {
           var eagCounter = 0;
           while (true) {
             try {
-              return fs$readSync.call(fs93, fd, buffer, offset, length, position);
+              return fs$readSync.call(fs94, fd, buffer, offset, length, position);
             } catch (er) {
               if (er.code === "EAGAIN" && eagCounter < 10) {
                 eagCounter++;
@@ -306386,11 +306386,11 @@ var require_polyfills2 = __commonJS({
             }
           }
         };
-      }(fs93.readSync);
-      function patchLchmod(fs94) {
-        fs94.lchmod = function(path108, mode, callback) {
-          fs94.open(
-            path108,
+      }(fs94.readSync);
+      function patchLchmod(fs95) {
+        fs95.lchmod = function(path109, mode, callback) {
+          fs95.open(
+            path109,
             constants3.O_WRONLY | constants3.O_SYMLINK,
             mode,
             function(err, fd) {
@@ -306398,80 +306398,80 @@ var require_polyfills2 = __commonJS({
                 if (callback) callback(err);
                 return;
               }
-              fs94.fchmod(fd, mode, function(err2) {
-                fs94.close(fd, function(err22) {
+              fs95.fchmod(fd, mode, function(err2) {
+                fs95.close(fd, function(err22) {
                   if (callback) callback(err2 || err22);
                 });
               });
             }
           );
         };
-        fs94.lchmodSync = function(path108, mode) {
-          var fd = fs94.openSync(path108, constants3.O_WRONLY | constants3.O_SYMLINK, mode);
+        fs95.lchmodSync = function(path109, mode) {
+          var fd = fs95.openSync(path109, constants3.O_WRONLY | constants3.O_SYMLINK, mode);
           var threw = true;
           var ret;
           try {
-            ret = fs94.fchmodSync(fd, mode);
+            ret = fs95.fchmodSync(fd, mode);
             threw = false;
           } finally {
             if (threw) {
               try {
-                fs94.closeSync(fd);
+                fs95.closeSync(fd);
               } catch (er) {
               }
             } else {
-              fs94.closeSync(fd);
+              fs95.closeSync(fd);
             }
           }
           return ret;
         };
       }
-      function patchLutimes(fs94) {
-        if (constants3.hasOwnProperty("O_SYMLINK") && fs94.futimes) {
-          fs94.lutimes = function(path108, at, mt, cb) {
-            fs94.open(path108, constants3.O_SYMLINK, function(er, fd) {
+      function patchLutimes(fs95) {
+        if (constants3.hasOwnProperty("O_SYMLINK") && fs95.futimes) {
+          fs95.lutimes = function(path109, at, mt, cb) {
+            fs95.open(path109, constants3.O_SYMLINK, function(er, fd) {
               if (er) {
                 if (cb) cb(er);
                 return;
               }
-              fs94.futimes(fd, at, mt, function(er2) {
-                fs94.close(fd, function(er22) {
+              fs95.futimes(fd, at, mt, function(er2) {
+                fs95.close(fd, function(er22) {
                   if (cb) cb(er2 || er22);
                 });
               });
             });
           };
-          fs94.lutimesSync = function(path108, at, mt) {
-            var fd = fs94.openSync(path108, constants3.O_SYMLINK);
+          fs95.lutimesSync = function(path109, at, mt) {
+            var fd = fs95.openSync(path109, constants3.O_SYMLINK);
             var ret;
             var threw = true;
             try {
-              ret = fs94.futimesSync(fd, at, mt);
+              ret = fs95.futimesSync(fd, at, mt);
               threw = false;
             } finally {
               if (threw) {
                 try {
-                  fs94.closeSync(fd);
+                  fs95.closeSync(fd);
                 } catch (er) {
                 }
               } else {
-                fs94.closeSync(fd);
+                fs95.closeSync(fd);
               }
             }
             return ret;
           };
-        } else if (fs94.futimes) {
-          fs94.lutimes = function(_a6, _b2, _c2, cb) {
+        } else if (fs95.futimes) {
+          fs95.lutimes = function(_a6, _b2, _c2, cb) {
             if (cb) process.nextTick(cb);
           };
-          fs94.lutimesSync = function() {
+          fs95.lutimesSync = function() {
           };
         }
       }
       function chmodFix(orig) {
         if (!orig) return orig;
         return function(target, mode, cb) {
-          return orig.call(fs93, target, mode, function(er) {
+          return orig.call(fs94, target, mode, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -306481,7 +306481,7 @@ var require_polyfills2 = __commonJS({
         if (!orig) return orig;
         return function(target, mode) {
           try {
-            return orig.call(fs93, target, mode);
+            return orig.call(fs94, target, mode);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -306490,7 +306490,7 @@ var require_polyfills2 = __commonJS({
       function chownFix(orig) {
         if (!orig) return orig;
         return function(target, uid, gid, cb) {
-          return orig.call(fs93, target, uid, gid, function(er) {
+          return orig.call(fs94, target, uid, gid, function(er) {
             if (chownErOk(er)) er = null;
             if (cb) cb.apply(this, arguments);
           });
@@ -306500,7 +306500,7 @@ var require_polyfills2 = __commonJS({
         if (!orig) return orig;
         return function(target, uid, gid) {
           try {
-            return orig.call(fs93, target, uid, gid);
+            return orig.call(fs94, target, uid, gid);
           } catch (er) {
             if (!chownErOk(er)) throw er;
           }
@@ -306520,13 +306520,13 @@ var require_polyfills2 = __commonJS({
             }
             if (cb) cb.apply(this, arguments);
           }
-          return options2 ? orig.call(fs93, target, options2, callback) : orig.call(fs93, target, callback);
+          return options2 ? orig.call(fs94, target, options2, callback) : orig.call(fs94, target, callback);
         };
       }
       function statFixSync(orig) {
         if (!orig) return orig;
         return function(target, options2) {
-          var stats = options2 ? orig.call(fs93, target, options2) : orig.call(fs93, target);
+          var stats = options2 ? orig.call(fs94, target, options2) : orig.call(fs94, target);
           if (stats) {
             if (stats.uid < 0) stats.uid += 4294967296;
             if (stats.gid < 0) stats.gid += 4294967296;
@@ -306555,16 +306555,16 @@ var require_legacy_streams2 = __commonJS({
   "node_modules/@pnpm/network.ca-file/node_modules/graceful-fs/legacy-streams.js"(exports2, module2) {
     var Stream4 = __require("stream").Stream;
     module2.exports = legacy;
-    function legacy(fs93) {
+    function legacy(fs94) {
       return {
         ReadStream,
         WriteStream
       };
-      function ReadStream(path108, options2) {
-        if (!(this instanceof ReadStream)) return new ReadStream(path108, options2);
+      function ReadStream(path109, options2) {
+        if (!(this instanceof ReadStream)) return new ReadStream(path109, options2);
         Stream4.call(this);
         var self2 = this;
-        this.path = path108;
+        this.path = path109;
         this.fd = null;
         this.readable = true;
         this.paused = false;
@@ -306598,7 +306598,7 @@ var require_legacy_streams2 = __commonJS({
           });
           return;
         }
-        fs93.open(this.path, this.flags, this.mode, function(err, fd) {
+        fs94.open(this.path, this.flags, this.mode, function(err, fd) {
           if (err) {
             self2.emit("error", err);
             self2.readable = false;
@@ -306609,10 +306609,10 @@ var require_legacy_streams2 = __commonJS({
           self2._read();
         });
       }
-      function WriteStream(path108, options2) {
-        if (!(this instanceof WriteStream)) return new WriteStream(path108, options2);
+      function WriteStream(path109, options2) {
+        if (!(this instanceof WriteStream)) return new WriteStream(path109, options2);
         Stream4.call(this);
-        this.path = path108;
+        this.path = path109;
         this.fd = null;
         this.writable = true;
         this.flags = "w";
@@ -306637,7 +306637,7 @@ var require_legacy_streams2 = __commonJS({
         this.busy = false;
         this._queue = [];
         if (this.fd === null) {
-          this._open = fs93.open;
+          this._open = fs94.open;
           this._queue.push([this._open, this.path, this.flags, this.mode, void 0]);
           this.flush();
         }
@@ -306672,7 +306672,7 @@ var require_clone2 = __commonJS({
 // node_modules/@pnpm/network.ca-file/node_modules/graceful-fs/graceful-fs.js
 var require_graceful_fs2 = __commonJS({
   "node_modules/@pnpm/network.ca-file/node_modules/graceful-fs/graceful-fs.js"(exports2, module2) {
-    var fs93 = __require("fs");
+    var fs94 = __require("fs");
     var polyfills = require_polyfills2();
     var legacy = require_legacy_streams2();
     var clone = require_clone2();
@@ -306704,12 +306704,12 @@ var require_graceful_fs2 = __commonJS({
         m = "GFS4: " + m.split(/\n/).join("\nGFS4: ");
         console.error(m);
       };
-    if (!fs93[gracefulQueue]) {
+    if (!fs94[gracefulQueue]) {
       queue = global[gracefulQueue] || [];
-      publishQueue(fs93, queue);
-      fs93.close = function(fs$close) {
+      publishQueue(fs94, queue);
+      fs94.close = function(fs$close) {
         function close(fd, cb) {
-          return fs$close.call(fs93, fd, function(err) {
+          return fs$close.call(fs94, fd, function(err) {
             if (!err) {
               resetQueue();
             }
@@ -306721,48 +306721,48 @@ var require_graceful_fs2 = __commonJS({
           value: fs$close
         });
         return close;
-      }(fs93.close);
-      fs93.closeSync = function(fs$closeSync) {
+      }(fs94.close);
+      fs94.closeSync = function(fs$closeSync) {
         function closeSync(fd) {
-          fs$closeSync.apply(fs93, arguments);
+          fs$closeSync.apply(fs94, arguments);
           resetQueue();
         }
         Object.defineProperty(closeSync, previousSymbol, {
           value: fs$closeSync
         });
         return closeSync;
-      }(fs93.closeSync);
+      }(fs94.closeSync);
       if (/\bgfs4\b/i.test(process.env.NODE_DEBUG || "")) {
         process.on("exit", function() {
-          debug2(fs93[gracefulQueue]);
-          __require("assert").equal(fs93[gracefulQueue].length, 0);
+          debug2(fs94[gracefulQueue]);
+          __require("assert").equal(fs94[gracefulQueue].length, 0);
         });
       }
     }
     var queue;
     if (!global[gracefulQueue]) {
-      publishQueue(global, fs93[gracefulQueue]);
+      publishQueue(global, fs94[gracefulQueue]);
     }
-    module2.exports = patch(clone(fs93));
-    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs93.__patched) {
-      module2.exports = patch(fs93);
-      fs93.__patched = true;
+    module2.exports = patch(clone(fs94));
+    if (process.env.TEST_GRACEFUL_FS_GLOBAL_PATCH && !fs94.__patched) {
+      module2.exports = patch(fs94);
+      fs94.__patched = true;
     }
-    function patch(fs94) {
-      polyfills(fs94);
-      fs94.gracefulify = patch;
-      fs94.createReadStream = createReadStream;
-      fs94.createWriteStream = createWriteStream4;
-      var fs$readFile = fs94.readFile;
-      fs94.readFile = readFile18;
-      function readFile18(path108, options2, cb) {
+    function patch(fs95) {
+      polyfills(fs95);
+      fs95.gracefulify = patch;
+      fs95.createReadStream = createReadStream;
+      fs95.createWriteStream = createWriteStream4;
+      var fs$readFile = fs95.readFile;
+      fs95.readFile = readFile19;
+      function readFile19(path109, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        return go$readFile(path108, options2, cb);
-        function go$readFile(path109, options3, cb2, startTime) {
-          return fs$readFile(path109, options3, function(err) {
+        return go$readFile(path109, options2, cb);
+        function go$readFile(path110, options3, cb2, startTime) {
+          return fs$readFile(path110, options3, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$readFile, [path109, options3, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$readFile, [path110, options3, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -306770,16 +306770,16 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      var fs$writeFile = fs94.writeFile;
-      fs94.writeFile = writeFile16;
-      function writeFile16(path108, data, options2, cb) {
+      var fs$writeFile = fs95.writeFile;
+      fs95.writeFile = writeFile16;
+      function writeFile16(path109, data, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        return go$writeFile(path108, data, options2, cb);
-        function go$writeFile(path109, data2, options3, cb2, startTime) {
-          return fs$writeFile(path109, data2, options3, function(err) {
+        return go$writeFile(path109, data, options2, cb);
+        function go$writeFile(path110, data2, options3, cb2, startTime) {
+          return fs$writeFile(path110, data2, options3, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$writeFile, [path109, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$writeFile, [path110, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -306787,17 +306787,17 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      var fs$appendFile = fs94.appendFile;
+      var fs$appendFile = fs95.appendFile;
       if (fs$appendFile)
-        fs94.appendFile = appendFile2;
-      function appendFile2(path108, data, options2, cb) {
+        fs95.appendFile = appendFile2;
+      function appendFile2(path109, data, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        return go$appendFile(path108, data, options2, cb);
-        function go$appendFile(path109, data2, options3, cb2, startTime) {
-          return fs$appendFile(path109, data2, options3, function(err) {
+        return go$appendFile(path109, data, options2, cb);
+        function go$appendFile(path110, data2, options3, cb2, startTime) {
+          return fs$appendFile(path110, data2, options3, function(err) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$appendFile, [path109, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$appendFile, [path110, data2, options3, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -306805,9 +306805,9 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      var fs$copyFile = fs94.copyFile;
+      var fs$copyFile = fs95.copyFile;
       if (fs$copyFile)
-        fs94.copyFile = copyFile;
+        fs95.copyFile = copyFile;
       function copyFile(src, dest, flags, cb) {
         if (typeof flags === "function") {
           cb = flags;
@@ -306825,34 +306825,34 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      var fs$readdir = fs94.readdir;
-      fs94.readdir = readdir11;
+      var fs$readdir = fs95.readdir;
+      fs95.readdir = readdir11;
       var noReaddirOptionVersions = /^v[0-5]\./;
-      function readdir11(path108, options2, cb) {
+      function readdir11(path109, options2, cb) {
         if (typeof options2 === "function")
           cb = options2, options2 = null;
-        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path109, options3, cb2, startTime) {
-          return fs$readdir(path109, fs$readdirCallback(
-            path109,
+        var go$readdir = noReaddirOptionVersions.test(process.version) ? function go$readdir2(path110, options3, cb2, startTime) {
+          return fs$readdir(path110, fs$readdirCallback(
+            path110,
             options3,
             cb2,
             startTime
           ));
-        } : function go$readdir2(path109, options3, cb2, startTime) {
-          return fs$readdir(path109, options3, fs$readdirCallback(
-            path109,
+        } : function go$readdir2(path110, options3, cb2, startTime) {
+          return fs$readdir(path110, options3, fs$readdirCallback(
+            path110,
             options3,
             cb2,
             startTime
           ));
         };
-        return go$readdir(path108, options2, cb);
-        function fs$readdirCallback(path109, options3, cb2, startTime) {
+        return go$readdir(path109, options2, cb);
+        function fs$readdirCallback(path110, options3, cb2, startTime) {
           return function(err, files) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
               enqueue([
                 go$readdir,
-                [path109, options3, cb2],
+                [path110, options3, cb2],
                 err,
                 startTime || Date.now(),
                 Date.now()
@@ -306867,21 +306867,21 @@ var require_graceful_fs2 = __commonJS({
         }
       }
       if (process.version.substr(0, 4) === "v0.8") {
-        var legStreams = legacy(fs94);
+        var legStreams = legacy(fs95);
         ReadStream = legStreams.ReadStream;
         WriteStream = legStreams.WriteStream;
       }
-      var fs$ReadStream = fs94.ReadStream;
+      var fs$ReadStream = fs95.ReadStream;
       if (fs$ReadStream) {
         ReadStream.prototype = Object.create(fs$ReadStream.prototype);
         ReadStream.prototype.open = ReadStream$open;
       }
-      var fs$WriteStream = fs94.WriteStream;
+      var fs$WriteStream = fs95.WriteStream;
       if (fs$WriteStream) {
         WriteStream.prototype = Object.create(fs$WriteStream.prototype);
         WriteStream.prototype.open = WriteStream$open;
       }
-      Object.defineProperty(fs94, "ReadStream", {
+      Object.defineProperty(fs95, "ReadStream", {
         get: function() {
           return ReadStream;
         },
@@ -306891,7 +306891,7 @@ var require_graceful_fs2 = __commonJS({
         enumerable: true,
         configurable: true
       });
-      Object.defineProperty(fs94, "WriteStream", {
+      Object.defineProperty(fs95, "WriteStream", {
         get: function() {
           return WriteStream;
         },
@@ -306902,7 +306902,7 @@ var require_graceful_fs2 = __commonJS({
         configurable: true
       });
       var FileReadStream = ReadStream;
-      Object.defineProperty(fs94, "FileReadStream", {
+      Object.defineProperty(fs95, "FileReadStream", {
         get: function() {
           return FileReadStream;
         },
@@ -306913,7 +306913,7 @@ var require_graceful_fs2 = __commonJS({
         configurable: true
       });
       var FileWriteStream = WriteStream;
-      Object.defineProperty(fs94, "FileWriteStream", {
+      Object.defineProperty(fs95, "FileWriteStream", {
         get: function() {
           return FileWriteStream;
         },
@@ -306923,7 +306923,7 @@ var require_graceful_fs2 = __commonJS({
         enumerable: true,
         configurable: true
       });
-      function ReadStream(path108, options2) {
+      function ReadStream(path109, options2) {
         if (this instanceof ReadStream)
           return fs$ReadStream.apply(this, arguments), this;
         else
@@ -306943,7 +306943,7 @@ var require_graceful_fs2 = __commonJS({
           }
         });
       }
-      function WriteStream(path108, options2) {
+      function WriteStream(path109, options2) {
         if (this instanceof WriteStream)
           return fs$WriteStream.apply(this, arguments), this;
         else
@@ -306961,22 +306961,22 @@ var require_graceful_fs2 = __commonJS({
           }
         });
       }
-      function createReadStream(path108, options2) {
-        return new fs94.ReadStream(path108, options2);
+      function createReadStream(path109, options2) {
+        return new fs95.ReadStream(path109, options2);
       }
-      function createWriteStream4(path108, options2) {
-        return new fs94.WriteStream(path108, options2);
+      function createWriteStream4(path109, options2) {
+        return new fs95.WriteStream(path109, options2);
       }
-      var fs$open = fs94.open;
-      fs94.open = open7;
-      function open7(path108, flags, mode, cb) {
+      var fs$open = fs95.open;
+      fs95.open = open7;
+      function open7(path109, flags, mode, cb) {
         if (typeof mode === "function")
           cb = mode, mode = null;
-        return go$open(path108, flags, mode, cb);
-        function go$open(path109, flags2, mode2, cb2, startTime) {
-          return fs$open(path109, flags2, mode2, function(err, fd) {
+        return go$open(path109, flags, mode, cb);
+        function go$open(path110, flags2, mode2, cb2, startTime) {
+          return fs$open(path110, flags2, mode2, function(err, fd) {
             if (err && (err.code === "EMFILE" || err.code === "ENFILE"))
-              enqueue([go$open, [path109, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
+              enqueue([go$open, [path110, flags2, mode2, cb2], err, startTime || Date.now(), Date.now()]);
             else {
               if (typeof cb2 === "function")
                 cb2.apply(this, arguments);
@@ -306984,20 +306984,20 @@ var require_graceful_fs2 = __commonJS({
           });
         }
       }
-      return fs94;
+      return fs95;
     }
     function enqueue(elem) {
       debug2("ENQUEUE", elem[0].name, elem[1]);
-      fs93[gracefulQueue].push(elem);
+      fs94[gracefulQueue].push(elem);
       retry();
     }
     var retryTimer;
     function resetQueue() {
       var now = Date.now();
-      for (var i = 0; i < fs93[gracefulQueue].length; ++i) {
-        if (fs93[gracefulQueue][i].length > 2) {
-          fs93[gracefulQueue][i][3] = now;
-          fs93[gracefulQueue][i][4] = now;
+      for (var i = 0; i < fs94[gracefulQueue].length; ++i) {
+        if (fs94[gracefulQueue][i].length > 2) {
+          fs94[gracefulQueue][i][3] = now;
+          fs94[gracefulQueue][i][4] = now;
         }
       }
       retry();
@@ -307005,9 +307005,9 @@ var require_graceful_fs2 = __commonJS({
     function retry() {
       clearTimeout(retryTimer);
       retryTimer = void 0;
-      if (fs93[gracefulQueue].length === 0)
+      if (fs94[gracefulQueue].length === 0)
         return;
-      var elem = fs93[gracefulQueue].shift();
+      var elem = fs94[gracefulQueue].shift();
       var fn = elem[0];
       var args = elem[1];
       var err = elem[2];
@@ -307029,7 +307029,7 @@ var require_graceful_fs2 = __commonJS({
           debug2("RETRY", fn.name, args);
           fn.apply(null, args.concat([startTime]));
         } else {
-          fs93[gracefulQueue].push(elem);
+          fs94[gracefulQueue].push(elem);
         }
       }
       if (retryTimer === void 0) {
@@ -307351,8 +307351,8 @@ var require_ini2 = __commonJS({
 var require_config_chain = __commonJS({
   "node_modules/config-chain/index.js"(exports2, module2) {
     var ProtoList = require_proto_list();
-    var path108 = __require("path");
-    var fs93 = __require("fs");
+    var path109 = __require("path");
+    var fs94 = __require("fs");
     var ini3 = require_ini2();
     var EE = __require("events").EventEmitter;
     var url2 = __require("url");
@@ -307366,15 +307366,15 @@ var require_config_chain = __commonJS({
       return conf;
     };
     var find = exports2.find = function() {
-      var rel = path108.join.apply(null, [].slice.call(arguments));
+      var rel = path109.join.apply(null, [].slice.call(arguments));
       function find2(start, rel2) {
-        var file = path108.join(start, rel2);
+        var file = path109.join(start, rel2);
         try {
-          fs93.statSync(file);
+          fs94.statSync(file);
           return file;
         } catch (err) {
-          if (path108.dirname(start) !== start)
-            return find2(path108.dirname(start), rel2);
+          if (path109.dirname(start) !== start)
+            return find2(path109.dirname(start), rel2);
         }
       }
       return find2(__dirname, rel);
@@ -307405,10 +307405,10 @@ var require_config_chain = __commonJS({
       var args = [].slice.call(arguments).filter(function(arg) {
         return arg != null;
       });
-      var file = path108.join.apply(null, args);
+      var file = path109.join.apply(null, args);
       var content;
       try {
-        content = fs93.readFileSync(file, "utf-8");
+        content = fs94.readFileSync(file, "utf-8");
       } catch (err) {
         return;
       }
@@ -307501,7 +307501,7 @@ var require_config_chain = __commonJS({
         data = ini3.stringify(data);
       }
       this._saving++;
-      fs93.writeFile(target.path, data, "utf8", function(er) {
+      fs94.writeFile(target.path, data, "utf8", function(er) {
         this._saving--;
         if (er) {
           if (cb) return cb(er);
@@ -307520,7 +307520,7 @@ var require_config_chain = __commonJS({
       this.sources[name2] = { path: file, type };
       this.push(marker);
       this._await();
-      fs93.readFile(file, "utf8", function(er, data) {
+      fs94.readFile(file, "utf8", function(er, data) {
         if (er) this.emit("error", er);
         this.addString(data, file, type, marker);
       }.bind(this));
@@ -307666,8 +307666,8 @@ var require_dist8 = __commonJS({
 var require_util17 = __commonJS({
   "node_modules/@pnpm/npm-conf/lib/util.js"(exports2) {
     "use strict";
-    var fs93 = __require("fs");
-    var path108 = __require("path");
+    var fs94 = __require("fs");
+    var path109 = __require("path");
     var { envReplace } = require_dist8();
     var parseKey = (key) => {
       if (typeof key !== "string") {
@@ -307680,7 +307680,7 @@ var require_util17 = __commonJS({
         return field;
       }
       const typeList = [].concat(types2[key]);
-      const isPath = typeList.indexOf(path108) !== -1;
+      const isPath = typeList.indexOf(path109) !== -1;
       const isBool = typeList.indexOf(Boolean) !== -1;
       const isString2 = typeList.indexOf(String) !== -1;
       const isNumber3 = typeList.indexOf(Number) !== -1;
@@ -307714,9 +307714,9 @@ var require_util17 = __commonJS({
       if (isPath) {
         const regex2 = process.platform === "win32" ? /^~(\/|\\)/ : /^~\//;
         if (regex2.test(field) && process.env.HOME) {
-          field = path108.resolve(process.env.HOME, field.substr(2));
+          field = path109.resolve(process.env.HOME, field.substr(2));
         }
-        field = path108.resolve(field);
+        field = path109.resolve(field);
       }
       if (isNumber3 && !isNaN(field)) {
         field = Number(field);
@@ -307724,10 +307724,10 @@ var require_util17 = __commonJS({
       return field;
     };
     var findPrefix = (name2) => {
-      name2 = path108.resolve(name2);
+      name2 = path109.resolve(name2);
       let walkedUp = false;
-      while (path108.basename(name2) === "node_modules") {
-        name2 = path108.dirname(name2);
+      while (path109.basename(name2) === "node_modules") {
+        name2 = path109.dirname(name2);
         walkedUp = true;
       }
       if (walkedUp) {
@@ -307739,11 +307739,11 @@ var require_util17 = __commonJS({
           return original;
         }
         try {
-          const files = fs93.readdirSync(name3);
+          const files = fs94.readdirSync(name3);
           if (files.includes("node_modules") || files.includes("package.json") || files.includes("package.json5") || files.includes("package.yaml") || files.includes("pnpm-workspace.yaml")) {
             return name3;
           }
-          const dirname23 = path108.dirname(name3);
+          const dirname23 = path109.dirname(name3);
           if (dirname23 === name3) {
             return original;
           }
@@ -307771,7 +307771,7 @@ var require_util17 = __commonJS({
 var require_types9 = __commonJS({
   "node_modules/@pnpm/npm-conf/lib/types.js"(exports2) {
     "use strict";
-    var path108 = __require("path");
+    var path109 = __require("path");
     var Stream4 = __require("stream").Stream;
     var url2 = __require("url");
     var Umask = () => {
@@ -307789,8 +307789,8 @@ var require_types9 = __commonJS({
       "bin-links": Boolean,
       browser: [null, String],
       ca: [null, String, Array],
-      cafile: path108,
-      cache: path108,
+      cafile: path109,
+      cache: path109,
       "cache-lock-stale": Number,
       "cache-lock-retries": Number,
       "cache-lock-wait": Number,
@@ -307814,7 +307814,7 @@ var require_types9 = __commonJS({
       "git-tag-version": Boolean,
       "commit-hooks": Boolean,
       global: Boolean,
-      globalconfig: path108,
+      globalconfig: path109,
       "global-style": Boolean,
       group: [Number, String],
       "https-proxy": [null, url2],
@@ -307824,7 +307824,7 @@ var require_types9 = __commonJS({
       "if-present": Boolean,
       "ignore-prepublish": Boolean,
       "ignore-scripts": Boolean,
-      "init-module": path108,
+      "init-module": path109,
       "init-author-name": String,
       "init-author-email": String,
       "init-author-url": ["", url2],
@@ -307857,7 +307857,7 @@ var require_types9 = __commonJS({
       parseable: Boolean,
       "prefer-offline": Boolean,
       "prefer-online": Boolean,
-      prefix: path108,
+      prefix: path109,
       production: Boolean,
       progress: Boolean,
       proxy: [null, false, url2],
@@ -307890,12 +307890,12 @@ var require_types9 = __commonJS({
       "strict-ssl": Boolean,
       tag: String,
       timing: Boolean,
-      tmp: path108,
+      tmp: path109,
       unicode: Boolean,
       "unsafe-perm": Boolean,
       usage: Boolean,
       user: [Number, String],
-      userconfig: path108,
+      userconfig: path109,
       umask: Umask,
       version: Boolean,
       "tag-version-prefix": String,
@@ -307911,8 +307911,8 @@ var require_conf = __commonJS({
   "node_modules/@pnpm/npm-conf/lib/conf.js"(exports2, module2) {
     "use strict";
     var { readCAFileSync } = require_dist7();
-    var fs93 = __require("fs");
-    var path108 = __require("path");
+    var fs94 = __require("fs");
+    var path109 = __require("path");
     var { ConfigChain } = require_config_chain();
     var envKeyToSetting = require_envKeyToSetting();
     var util4 = require_util17();
@@ -307946,7 +307946,7 @@ var require_conf = __commonJS({
         this.push(marker);
         this._await();
         try {
-          const contents = fs93.readFileSync(file, "utf8");
+          const contents = fs94.readFileSync(file, "utf8");
           this.addString(contents, file, "ini", marker);
         } catch (error) {
           if (error.code === "ENOENT") {
@@ -307990,7 +307990,7 @@ var require_conf = __commonJS({
             this.set("prefix", prefix);
           },
           get: () => {
-            return path108.resolve(this.get("prefix"));
+            return path109.resolve(this.get("prefix"));
           }
         });
         let p;
@@ -308004,7 +308004,7 @@ var require_conf = __commonJS({
           }
         });
         if (Object.prototype.hasOwnProperty.call(cli, "prefix")) {
-          p = path108.resolve(cli.prefix);
+          p = path109.resolve(cli.prefix);
         } else {
           try {
             const prefix = util4.findPrefix(process.cwd());
@@ -308035,9 +308035,9 @@ var require_conf = __commonJS({
           defConf.user = Number(process.env.SUDO_UID);
           return;
         }
-        const prefix = path108.resolve(this.get("prefix"));
+        const prefix = path109.resolve(this.get("prefix"));
         try {
-          const stats = fs93.statSync(prefix);
+          const stats = fs94.statSync(prefix);
           defConf.user = stats.uid;
         } catch (error) {
           if (error.code === "ENOENT") {
@@ -308071,7 +308071,7 @@ var require_defaults3 = __commonJS({
   "node_modules/@pnpm/npm-conf/lib/defaults.js"(exports2) {
     "use strict";
     var os39 = __require("os");
-    var path108 = __require("path");
+    var path109 = __require("path");
     var temp = os39.tmpdir();
     var uidOrPid = process.getuid ? process.getuid() : process.pid;
     var hasUnicode = () => true;
@@ -308087,11 +308087,11 @@ var require_defaults3 = __commonJS({
     if (home) {
       process.env.HOME = home;
     } else {
-      home = path108.resolve(temp, "npm-" + uidOrPid);
+      home = path109.resolve(temp, "npm-" + uidOrPid);
     }
     var cacheExtra = process.platform === "win32" ? "npm-cache" : ".npm";
     var cacheRoot = process.platform === "win32" && process.env.APPDATA || home;
-    var cache4 = path108.resolve(cacheRoot, cacheExtra);
+    var cache4 = path109.resolve(cacheRoot, cacheExtra);
     var defaults3;
     var globalPrefix;
     Object.defineProperty(exports2, "defaults", {
@@ -308100,11 +308100,11 @@ var require_defaults3 = __commonJS({
         if (process.env.PREFIX) {
           globalPrefix = process.env.PREFIX;
         } else if (process.platform === "win32") {
-          globalPrefix = path108.dirname(process.execPath);
+          globalPrefix = path109.dirname(process.execPath);
         } else {
-          globalPrefix = path108.dirname(path108.dirname(process.execPath));
+          globalPrefix = path109.dirname(path109.dirname(process.execPath));
           if (process.env.DESTDIR) {
-            globalPrefix = path108.join(process.env.DESTDIR, globalPrefix);
+            globalPrefix = path109.join(process.env.DESTDIR, globalPrefix);
           }
         }
         defaults3 = {
@@ -308142,7 +308142,7 @@ var require_defaults3 = __commonJS({
           "git-tag-version": true,
           "commit-hooks": true,
           global: false,
-          globalconfig: path108.resolve(globalPrefix, "etc", "npmrc"),
+          globalconfig: path109.resolve(globalPrefix, "etc", "npmrc"),
           "global-style": false,
           group: process.platform === "win32" ? 0 : process.env.SUDO_GID || process.getgid && process.getgid(),
           "ham-it-up": false,
@@ -308150,7 +308150,7 @@ var require_defaults3 = __commonJS({
           "if-present": false,
           "ignore-prepublish": false,
           "ignore-scripts": false,
-          "init-module": path108.resolve(home, ".npm-init.js"),
+          "init-module": path109.resolve(home, ".npm-init.js"),
           "init-author-name": "",
           "init-author-email": "",
           "init-author-url": "",
@@ -308221,7 +308221,7 @@ var require_defaults3 = __commonJS({
           "unsafe-perm": process.platform === "win32" || process.platform === "cygwin" || !(process.getuid && process.setuid && process.getgid && process.setgid) || process.getuid() !== 0,
           usage: false,
           user: process.platform === "win32" ? 0 : "nobody",
-          userconfig: path108.resolve(home, ".npmrc"),
+          userconfig: path109.resolve(home, ".npmrc"),
           umask: process.umask ? process.umask() : umask.fromString("022"),
           version: false,
           versions: false,
@@ -308238,7 +308238,7 @@ var require_defaults3 = __commonJS({
 var require_npm_conf = __commonJS({
   "node_modules/@pnpm/npm-conf/index.js"(exports2, module2) {
     "use strict";
-    var path108 = __require("path");
+    var path109 = __require("path");
     var Conf = require_conf();
     var _defaults2 = require_defaults3();
     module2.exports = (opts, types2, defaults3) => {
@@ -308255,12 +308255,12 @@ var require_npm_conf = __commonJS({
           failedToLoadBuiltInConfig = true;
         }
         if (npmPath) {
-          warnings.push(conf.addFile(path108.resolve(path108.dirname(npmPath), "..", "npmrc"), "builtin"));
+          warnings.push(conf.addFile(path109.resolve(path109.dirname(npmPath), "..", "npmrc"), "builtin"));
         }
       }
       conf.addEnv();
       conf.loadPrefix();
-      const projectConf = path108.resolve(conf.localPrefix, ".npmrc");
+      const projectConf = path109.resolve(conf.localPrefix, ".npmrc");
       const userConf = conf.get("userconfig");
       if (!conf.get("global") && projectConf !== userConf) {
         warnings.push(conf.addFile(projectConf, "project"));
@@ -308268,14 +308268,14 @@ var require_npm_conf = __commonJS({
         conf.add({}, "project");
       }
       if (conf.get("workspace-prefix") && conf.get("workspace-prefix") !== projectConf) {
-        const workspaceConf = path108.resolve(conf.get("workspace-prefix"), ".npmrc");
+        const workspaceConf = path109.resolve(conf.get("workspace-prefix"), ".npmrc");
         warnings.push(conf.addFile(workspaceConf, "workspace"));
       }
       warnings.push(conf.addFile(conf.get("userconfig"), "user"));
       if (conf.get("prefix")) {
-        const etc = path108.resolve(conf.get("prefix"), "etc");
-        conf.root.globalconfig = path108.resolve(etc, "npmrc");
-        conf.root.globalignorefile = path108.resolve(etc, "npmignore");
+        const etc = path109.resolve(conf.get("prefix"), "etc");
+        conf.root.globalconfig = path109.resolve(etc, "npmrc");
+        conf.root.globalignorefile = path109.resolve(etc, "npmignore");
       }
       warnings.push(conf.addFile(conf.get("globalconfig"), "global"));
       conf.loadUser();
@@ -308359,8 +308359,8 @@ var require_registry_auth_token = __commonJS({
       const token2 = replaceEnvironmentVariable(npmrc.get("_auth"));
       return { token: token2, type: "Basic" };
     }
-    function normalizePath(path108) {
-      return path108[path108.length - 1] === "/" ? path108 : path108 + "/";
+    function normalizePath(path109) {
+      return path109[path109.length - 1] === "/" ? path109 : path109 + "/";
     }
     function getAuthInfoForUrl(regUrl, npmrc) {
       const bearerAuth = getBearerToken(npmrc.get(regUrl + tokenKey) || npmrc.get(regUrl + "/" + tokenKey));
@@ -317206,8 +317206,8 @@ function Text3({ color, backgroundColor, dimColor = false, bold = false, italic 
 }
 
 // node_modules/ink/build/components/ErrorOverview.js
-var cleanupPath = (path108) => {
-  return path108?.replace(`file://${cwd3()}/`, "");
+var cleanupPath = (path109) => {
+  return path109?.replace(`file://${cwd3()}/`, "");
 };
 var stackUtils = new import_stack_utils.default({
   cwd: cwd3(),
@@ -318227,7 +318227,7 @@ var measureElement = (node) => ({
 var measure_element_default = measureElement;
 
 // packages/cli/src/gemini.tsx
-var import_react123 = __toESM(require_react(), 1);
+var import_react124 = __toESM(require_react(), 1);
 import { spawn as spawn15 } from "node:child_process";
 import dns from "node:dns";
 import os38 from "node:os";
@@ -319385,11 +319385,11 @@ var parser5 = new YargsParser({
   resolve: resolve17,
   // TODO: figure  out a  way to combine ESM and CJS coverage, such  that
   // we can exercise all the lines below:
-  require: (path108) => {
+  require: (path109) => {
     if (typeof __require !== "undefined") {
-      return __require(path108);
-    } else if (path108.match(/\.json$/)) {
-      return JSON.parse(readFileSync8(path108, "utf8"));
+      return __require(path109);
+    } else if (path109.match(/\.json$/)) {
+      return JSON.parse(readFileSync8(path109, "utf8"));
     } else {
       throw Error("only .json config files are supported in ESM");
     }
@@ -329348,7 +329348,7 @@ ${value.plan}`;
 }
 
 // packages/cli/src/ui/App.tsx
-var import_react122 = __toESM(require_react(), 1);
+var import_react123 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/ViewOverlay.tsx
 var import_react33 = __toESM(require_react(), 1);
@@ -352496,6 +352496,10 @@ function useDialogClose(options2) {
       options2.closeTaskTemplateDialog();
       return true;
     }
+    if (options2.isMailboxDialogOpen) {
+      options2.closeMailboxDialog();
+      return true;
+    }
     if (options2.isSettingsDialogOpen) {
       options2.closeSettingsDialog();
       return true;
@@ -353011,7 +353015,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "5c4eb491";
+var GIT_COMMIT_INFO = "e01b1e10";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -355399,11 +355403,277 @@ var mcpCommand2 = {
   )
 };
 
+// packages/cli/src/ui/commands/mailboxCommand.ts
+init_dist3();
+
+// packages/cli/src/ui/utils/mailbox.ts
+import * as fs72 from "node:fs/promises";
+import * as path84 from "node:path";
+function getMailboxPath2(baseDir, sessionId2) {
+  return path84.join(baseDir, ".lowcal", "session-messages", `${sessionId2}.jsonl`);
+}
+async function readMailboxMessages(mailboxPath) {
+  try {
+    const raw = await fs72.readFile(mailboxPath, "utf-8");
+    return raw.split("\n").map((line) => line.trim()).filter((line) => line.length > 0).map((line) => {
+      try {
+        const parsed = JSON.parse(line);
+        return parsed;
+      } catch {
+        return null;
+      }
+    }).filter((message) => message !== null);
+  } catch (error) {
+    const nodeError = error;
+    if (nodeError?.code === "ENOENT") {
+      return [];
+    }
+    throw error;
+  }
+}
+async function clearMailboxMessages(mailboxPath) {
+  try {
+    await fs72.unlink(mailboxPath);
+  } catch (error) {
+    const nodeError = error;
+    if (nodeError?.code !== "ENOENT") {
+      throw error;
+    }
+  }
+}
+function toMessageTimestampMs(message) {
+  if (!message.timestamp) {
+    return 0;
+  }
+  const parsed = Date.parse(message.timestamp);
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+function sortMailboxMessages(messages) {
+  return [...messages].sort(
+    (a, b) => toMessageTimestampMs(b) - toMessageTimestampMs(a)
+  );
+}
+function summarizeMailboxPayload(message, maxLength = 220) {
+  if (message.result_file_path) {
+    return `Result file: ${message.result_file_path}`;
+  }
+  if (message.return_payload && message.return_payload.trim().length > 0) {
+    return message.return_payload.trim().replace(/\s+/g, " ").slice(0, maxLength);
+  }
+  if (message.preview && message.preview.trim().length > 0) {
+    return message.preview.trim().replace(/\s+/g, " ").slice(0, maxLength);
+  }
+  return "(no payload preview)";
+}
+function mailboxMessageTaskId(message) {
+  return message.from_task_id ?? message.job_id ?? message.from_session_id ?? "unknown-task";
+}
+async function loadMailboxPayloadText(message) {
+  if (message.result_file_path) {
+    try {
+      const raw = await fs72.readFile(message.result_file_path, "utf-8");
+      const content = raw.trim();
+      if (content.length > 0) {
+        return content;
+      }
+      return `Result file is empty: ${message.result_file_path}`;
+    } catch (error) {
+      const details = error instanceof Error ? error.message : String(error);
+      return `Unable to read result file "${message.result_file_path}": ${details}`;
+    }
+  }
+  if (message.return_payload && message.return_payload.trim().length > 0) {
+    return message.return_payload.trim();
+  }
+  if (message.preview && message.preview.trim().length > 0) {
+    return message.preview.trim();
+  }
+  return "No payload available for this mailbox entry.";
+}
+function resolveMailboxSelection(messages, selector) {
+  const trimmed2 = selector.trim();
+  if (!trimmed2) return null;
+  const numericIndex = Number.parseInt(trimmed2, 10);
+  if (Number.isFinite(numericIndex) && String(numericIndex) === trimmed2) {
+    const zeroBased = numericIndex - 1;
+    if (zeroBased < 0 || zeroBased >= messages.length) {
+      return null;
+    }
+    return {
+      message: messages[zeroBased],
+      index: numericIndex
+    };
+  }
+  const foundIndex = messages.findIndex((message) => {
+    return message.from_task_id === trimmed2 || message.job_id === trimmed2 || message.from_session_id === trimmed2;
+  });
+  if (foundIndex < 0) {
+    return null;
+  }
+  return {
+    message: messages[foundIndex],
+    index: foundIndex + 1
+  };
+}
+
+// packages/cli/src/ui/commands/mailboxCommand.ts
+function usageError(content) {
+  return {
+    type: "message",
+    messageType: "error",
+    content
+  };
+}
+function tokenizeArgs2(input) {
+  const tokens = [];
+  const regex2 = /"([^"]*)"|'([^']*)'|(\S+)/g;
+  let match2;
+  while ((match2 = regex2.exec(input)) !== null) {
+    tokens.push(match2[1] ?? match2[2] ?? match2[3] ?? "");
+  }
+  return tokens;
+}
+function formatPendingTask(record) {
+  const mode = record.execution_mode_actual ?? record.execution_mode_requested ?? "default";
+  const activity = record.last_heartbeat ?? record.started_at ?? record.created_at;
+  const timeText = activity ? new Date(activity).toLocaleString() : "unknown-time";
+  const templateText = record.template_id ? ` template=${record.template_id}` : "";
+  return `- ${record.task_id} (${record.status}, mode=${mode}, last=${timeText})${templateText}`;
+}
+function buildMailboxListMessage(sessionId2, messages, pendingTasks) {
+  const lines = [];
+  lines.push(`Mailbox for session "${sessionId2}"`);
+  lines.push("");
+  lines.push(`Received (${messages.length}):`);
+  if (messages.length === 0) {
+    lines.push("- none");
+  } else {
+    messages.forEach((message, idx) => {
+      const taskId = mailboxMessageTaskId(message);
+      const status = message.status ?? "unknown";
+      const time = message.timestamp ? new Date(message.timestamp).toLocaleString() : "unknown-time";
+      lines.push(`[${idx + 1}] ${taskId} (${status}) at ${time}`);
+      lines.push(`    ${summarizeMailboxPayload(message)}`);
+    });
+  }
+  lines.push("");
+  lines.push(`Pending (${pendingTasks.length}):`);
+  if (pendingTasks.length === 0) {
+    lines.push("- none");
+  } else {
+    lines.push(...pendingTasks.map((record) => formatPendingTask(record)));
+  }
+  lines.push("");
+  lines.push("Use:");
+  lines.push("- /mailbox show <index|task_id>   (preview payload in chat)");
+  lines.push("- /mailbox use <index|task_id>    (inject payload into chat/model)");
+  lines.push("- /mailbox clear                  (clear received mailbox entries)");
+  return lines.join("\n");
+}
+var mailboxCommand = {
+  name: "mailbox",
+  description: "view task return payloads and pending task mailbox status",
+  kind: "built-in" /* BUILT_IN */,
+  action: async (context2, args) => {
+    const config = context2.services.config;
+    if (!config) {
+      return usageError("Mailbox is unavailable: missing active configuration.");
+    }
+    const sessionId2 = config.getSessionId();
+    const baseDir = config.getTargetDir();
+    const mailboxPath = getMailboxPath2(baseDir, sessionId2);
+    const tokens = tokenizeArgs2(args.trim());
+    const subcommand = tokens[0] ?? "open";
+    if (subcommand === "open") {
+      return {
+        type: "dialog",
+        dialog: "mailbox"
+      };
+    }
+    if (subcommand === "list") {
+      await reconcileLaunchTaskState(baseDir);
+      const rawMessages = await readMailboxMessages(mailboxPath);
+      const messages = sortMailboxMessages(rawMessages);
+      const pendingTasks = await listLaunchTaskStates(baseDir, {
+        parentSessionId: sessionId2,
+        statuses: ["queued", "running"],
+        limit: 50
+      });
+      return {
+        type: "message",
+        messageType: "info",
+        content: buildMailboxListMessage(sessionId2, messages, pendingTasks)
+      };
+    }
+    if (subcommand === "show" || subcommand === "use") {
+      const selector = tokens[1]?.trim();
+      if (!selector) {
+        return usageError(`Usage: /mailbox ${subcommand} <index|task_id>`);
+      }
+      const rawMessages = await readMailboxMessages(mailboxPath);
+      const messages = sortMailboxMessages(rawMessages);
+      const selected = resolveMailboxSelection(messages, selector);
+      if (!selected) {
+        return usageError(
+          `Mailbox entry "${selector}" not found. Run /mailbox list to inspect available entries.`
+        );
+      }
+      const payload = await loadMailboxPayloadText(selected.message);
+      const taskId = mailboxMessageTaskId(selected.message);
+      const status = selected.message.status ?? "unknown";
+      const time = selected.message.timestamp ? new Date(selected.message.timestamp).toLocaleString() : "unknown-time";
+      const header = [
+        `Mailbox payload [${selected.index}]`,
+        `Task: ${taskId}`,
+        `Status: ${status}`,
+        `Time: ${time}`
+      ].join("\n");
+      const messageContent = `${header}
+
+${payload}`;
+      if (subcommand === "show") {
+        return {
+          type: "message",
+          messageType: "info",
+          content: messageContent
+        };
+      }
+      await config.getGeminiClient()?.addHistory({
+        role: "user",
+        parts: [{ text: messageContent }]
+      });
+      context2.ui.addItem(
+        {
+          type: "gemini_content",
+          text: messageContent
+        },
+        Date.now()
+      );
+      return {
+        type: "message",
+        messageType: "info",
+        content: `Injected mailbox payload [${selected.index}] into chat/model history (display-only).`
+      };
+    }
+    if (subcommand === "clear") {
+      await clearMailboxMessages(mailboxPath);
+      return {
+        type: "message",
+        messageType: "info",
+        content: `Cleared mailbox entries for session "${sessionId2}".`
+      };
+    }
+    return usageError(
+      "Unknown subcommand. Use /mailbox, /mailbox list, /mailbox show <id>, /mailbox use <id>, or /mailbox clear."
+    );
+  }
+};
+
 // packages/cli/src/ui/commands/memoryCommand.ts
 init_dist3();
-import path84 from "node:path";
+import path85 from "node:path";
 import os27 from "os";
-import fs72 from "fs/promises";
+import fs73 from "fs/promises";
 var memoryCommand = {
   name: "memory",
   description: "Commands for interacting with memory.",
@@ -355436,8 +355706,8 @@ ${memoryContent}
           kind: "built-in" /* BUILT_IN */,
           action: async (context2) => {
             try {
-              const projectMemoryPath = path84.join(process.cwd(), "LOWCAL.md");
-              const memoryContent = await fs72.readFile(
+              const projectMemoryPath = path85.join(process.cwd(), "LOWCAL.md");
+              const memoryContent = await fs73.readFile(
                 projectMemoryPath,
                 "utf-8"
               );
@@ -355470,12 +355740,12 @@ ${memoryContent}
           kind: "built-in" /* BUILT_IN */,
           action: async (context2) => {
             try {
-              const globalMemoryPath = path84.join(
+              const globalMemoryPath = path85.join(
                 os27.homedir(),
                 QWEN_DIR,
                 "LOWCAL.md"
               );
-              const globalMemoryContent = await fs72.readFile(
+              const globalMemoryContent = await fs73.readFile(
                 globalMemoryPath,
                 "utf-8"
               );
@@ -355904,8 +356174,8 @@ var quitCommand = {
 };
 
 // packages/cli/src/ui/commands/restoreCommand.ts
-import * as fs73 from "node:fs/promises";
-import path85 from "node:path";
+import * as fs74 from "node:fs/promises";
+import path86 from "node:path";
 async function restoreAction(context2, args) {
   const { services, ui: ui2 } = context2;
   const { config, git: gitService } = services;
@@ -355919,8 +356189,8 @@ async function restoreAction(context2, args) {
     };
   }
   try {
-    await fs73.mkdir(checkpointDir, { recursive: true });
-    const files = await fs73.readdir(checkpointDir);
+    await fs74.mkdir(checkpointDir, { recursive: true });
+    const files = await fs74.readdir(checkpointDir);
     const jsonFiles = files.filter((file) => file.endsWith(".json"));
     if (!args) {
       if (jsonFiles.length === 0) {
@@ -355955,8 +356225,8 @@ ${fileList}`
         content: `File not found: ${selectedFile}`
       };
     }
-    const filePath = path85.join(checkpointDir, selectedFile);
-    const data = await fs73.readFile(filePath, "utf-8");
+    const filePath = path86.join(checkpointDir, selectedFile);
+    const data = await fs74.readFile(filePath, "utf-8");
     const toolCallData = JSON.parse(data);
     if (toolCallData.history) {
       if (!loadHistory) {
@@ -356002,7 +356272,7 @@ async function completion2(context2, _partialArg) {
     return [];
   }
   try {
-    const files = await fs73.readdir(checkpointDir);
+    const files = await fs74.readdir(checkpointDir);
     return files.filter((file) => file.endsWith(".json")).map((file) => file.replace(".json", ""));
   } catch (_err) {
     return [];
@@ -356090,7 +356360,7 @@ var statsCommand = {
 
 // packages/cli/src/ui/commands/summaryCommand.ts
 import * as fsPromises5 from "fs/promises";
-import path86 from "path";
+import path87 from "path";
 init_dist3();
 var summaryCommand = {
   name: "summary",
@@ -356180,12 +356450,12 @@ var summaryCommand = {
         }
       });
       const projectRoot = config.getProjectRoot();
-      const qwenDir = path86.join(projectRoot, ".qwen");
+      const qwenDir = path87.join(projectRoot, ".qwen");
       try {
         await fsPromises5.mkdir(qwenDir, { recursive: true });
       } catch (_err) {
       }
-      const summaryPath = path86.join(qwenDir, "PROJECT_SUMMARY.md");
+      const summaryPath = path87.join(qwenDir, "PROJECT_SUMMARY.md");
       const summaryContent = `${markdownSummary}
 
 ---
@@ -356229,9 +356499,9 @@ var summaryCommand = {
 };
 
 // packages/cli/src/ui/utils/terminalSetup.ts
-import { promises as fs74 } from "node:fs";
+import { promises as fs75 } from "node:fs";
 import * as os28 from "node:os";
-import * as path87 from "node:path";
+import * as path88 from "node:path";
 import { exec as exec4 } from "node:child_process";
 import { promisify as promisify8 } from "node:util";
 
@@ -356344,7 +356614,7 @@ async function backupFile(filePath) {
   try {
     const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
     const backupPath = `${filePath}.backup.${timestamp}`;
-    await fs74.copyFile(filePath, backupPath);
+    await fs75.copyFile(filePath, backupPath);
   } catch (error) {
     console.warn(`Failed to create backup of ${filePath}:`, error);
   }
@@ -356352,7 +356622,7 @@ async function backupFile(filePath) {
 function getVSCodeStyleConfigDir(appName) {
   const platform9 = os28.platform();
   if (platform9 === "darwin") {
-    return path87.join(
+    return path88.join(
       os28.homedir(),
       "Library",
       "Application Support",
@@ -356363,9 +356633,9 @@ function getVSCodeStyleConfigDir(appName) {
     if (!process.env["APPDATA"]) {
       return null;
     }
-    return path87.join(process.env["APPDATA"], appName, "User");
+    return path88.join(process.env["APPDATA"], appName, "User");
   } else {
-    return path87.join(os28.homedir(), ".config", appName, "User");
+    return path88.join(os28.homedir(), ".config", appName, "User");
   }
 }
 async function configureVSCodeStyle(terminalName, appName) {
@@ -356376,12 +356646,12 @@ async function configureVSCodeStyle(terminalName, appName) {
       message: `Could not determine ${terminalName} config path on Windows: APPDATA environment variable is not set.`
     };
   }
-  const keybindingsFile = path87.join(configDir, "keybindings.json");
+  const keybindingsFile = path88.join(configDir, "keybindings.json");
   try {
-    await fs74.mkdir(configDir, { recursive: true });
+    await fs75.mkdir(configDir, { recursive: true });
     let keybindings = [];
     try {
-      const content = await fs74.readFile(keybindingsFile, "utf8");
+      const content = await fs75.readFile(keybindingsFile, "utf8");
       await backupFile(keybindingsFile);
       try {
         const cleanContent = stripJsonComments3(content);
@@ -356451,7 +356721,7 @@ Please check and modify manually if needed: ${keybindingsFile}`
     if (!hasOurShiftEnter || !hasOurCtrlEnter) {
       if (!hasOurShiftEnter) keybindings.unshift(shiftEnterBinding);
       if (!hasOurCtrlEnter) keybindings.unshift(ctrlEnterBinding);
-      await fs74.writeFile(keybindingsFile, JSON.stringify(keybindings, null, 4));
+      await fs75.writeFile(keybindingsFile, JSON.stringify(keybindings, null, 4));
       return {
         success: true,
         message: `Added Shift+Enter and Ctrl+Enter keybindings to ${terminalName}.
@@ -356540,7 +356810,7 @@ var terminalSetupCommand = {
 
 // packages/cli/src/ui/commands/tasksCommand.ts
 init_dist3();
-function tokenizeArgs2(input) {
+function tokenizeArgs3(input) {
   const tokens = [];
   const regex2 = /"([^"]*)"|'([^']*)'|(\S+)/g;
   let match2;
@@ -356558,7 +356828,7 @@ function parseTemplateLevel(value) {
 function getTemplateManager(projectRoot) {
   return new TaskTemplateManager(projectRoot || process.cwd());
 }
-function usageError(content) {
+function usageError2(content) {
   return {
     type: "message",
     messageType: "error",
@@ -356604,7 +356874,7 @@ var tasksCommand2 = {
         dialog: "tasks"
       };
     }
-    const tokens = tokenizeArgs2(rawArgs);
+    const tokens = tokenizeArgs3(rawArgs);
     const [subcommand, ...rest] = tokens;
     if (subcommand === "open") {
       return {
@@ -356635,7 +356905,7 @@ ${lines.join("\n")}`
     if (subcommand === "run") {
       const templateId = rest[0]?.trim();
       if (!templateId) {
-        return usageError(
+        return usageError2(
           "Usage: /tasks run <template_id> [--level project|user|builtin]"
         );
       }
@@ -356652,7 +356922,7 @@ ${lines.join("\n")}`
       const templateId = rest[0]?.trim();
       const schedule = rest[1]?.trim();
       if (!templateId || !schedule) {
-        return usageError(
+        return usageError2(
           'Usage: /tasks schedule <template_id> "<cron>" [--id job-id] [--level project|user|builtin]'
         );
       }
@@ -356671,7 +356941,7 @@ ${lines.join("\n")}`
       }
       return scheduleFromTemplate(templateId, schedule, jobId, level);
     }
-    return usageError(
+    return usageError2(
       'Unknown subcommand. Use /tasks, /tasks list, /tasks run <id>, or /tasks schedule <id> "<cron>".'
     );
   }
@@ -356690,7 +356960,7 @@ var themeCommand = {
 
 // packages/cli/src/ui/commands/tokensCommand.ts
 import { readFileSync as readFileSync14 } from "node:fs";
-import { join as join36 } from "node:path";
+import { join as join37 } from "node:path";
 init_esm10();
 var tokensCommand = {
   name: "tokens",
@@ -356723,7 +356993,7 @@ var tokensCommand = {
     }
     const filePath = args.trim();
     try {
-      const absolutePath = join36(process.cwd(), filePath);
+      const absolutePath = join37(process.cwd(), filePath);
       const fileContent = readFileSync14(absolutePath, "utf-8");
       const maybeGen = config?.getContentGenerator?.();
       const cgConfig = config?.getContentGeneratorConfig?.();
@@ -356834,8 +357104,8 @@ var vimCommand = {
 
 // packages/cli/src/ui/commands/setupGithubCommand.ts
 var import_undici6 = __toESM(require_undici(), 1);
-import path88 from "node:path";
-import * as fs75 from "node:fs";
+import path89 from "node:path";
+import * as fs76 from "node:fs";
 import { Writable } from "node:stream";
 
 // packages/cli/src/utils/gitUtils.ts
@@ -356930,25 +357200,25 @@ function getOpenUrlsCommands(readmeUrl) {
 }
 async function updateGitignore(gitRepoRoot) {
   const gitignoreEntries = [".gemini/", "gha-creds-*.json"];
-  const gitignorePath = path88.join(gitRepoRoot, ".gitignore");
+  const gitignorePath = path89.join(gitRepoRoot, ".gitignore");
   try {
     let existingContent = "";
     let fileExists = true;
     try {
-      existingContent = await fs75.promises.readFile(gitignorePath, "utf8");
+      existingContent = await fs76.promises.readFile(gitignorePath, "utf8");
     } catch (_error) {
       fileExists = false;
     }
     if (!fileExists) {
       const contentToWrite = gitignoreEntries.join("\n") + "\n";
-      await fs75.promises.writeFile(gitignorePath, contentToWrite);
+      await fs76.promises.writeFile(gitignorePath, contentToWrite);
     } else {
       const missingEntries = gitignoreEntries.filter(
         (entry) => !existingContent.split(/\r?\n/).some((line) => line.split("#")[0].trim() === entry)
       );
       if (missingEntries.length > 0) {
         const contentToAdd = "\n" + missingEntries.join("\n") + "\n";
-        await fs75.promises.appendFile(gitignorePath, contentToAdd);
+        await fs76.promises.appendFile(gitignorePath, contentToAdd);
       }
     }
   } catch (error) {
@@ -356978,9 +357248,9 @@ var setupGithubCommand = {
     const proxy = context2?.services?.config?.getProxy();
     const releaseTag = await getLatestGitHubRelease(proxy);
     const readmeUrl = `https://github.com/google-github-actions/run-gemini-cli/blob/${releaseTag}/README.md#quick-start`;
-    const githubWorkflowsDir = path88.join(gitRepoRoot, ".github", "workflows");
+    const githubWorkflowsDir = path89.join(gitRepoRoot, ".github", "workflows");
     try {
-      await fs75.promises.mkdir(githubWorkflowsDir, { recursive: true });
+      await fs76.promises.mkdir(githubWorkflowsDir, { recursive: true });
     } catch (_error) {
       console.debug(
         `Failed to create ${githubWorkflowsDir} directory:`,
@@ -357014,11 +357284,11 @@ var setupGithubCommand = {
               `Empty body while downloading ${endpoint}: ${response.status} - ${response.statusText}`
             );
           }
-          const destination = path88.resolve(
+          const destination = path89.resolve(
             githubWorkflowsDir,
-            path88.basename(workflow)
+            path89.basename(workflow)
           );
-          const fileStream = fs75.createWriteStream(destination, {
+          const fileStream = fs76.createWriteStream(destination, {
             mode: 420,
             // -rw-r--r--, user(rw), group(r), other(r)
             flags: "w",
@@ -357052,8 +357322,8 @@ var setupGithubCommand = {
 };
 
 // packages/cli/src/ui/commands/viewCommand.ts
-import { join as join37 } from "node:path";
-import fs76 from "fs/promises";
+import { join as join38 } from "node:path";
+import fs77 from "fs/promises";
 init_esm10();
 var viewCommand = {
   name: "view",
@@ -357083,9 +357353,9 @@ var viewCommand = {
       return;
     }
     const filename = args.trim();
-    const absolutePath = join37(process.cwd(), filename);
+    const absolutePath = join38(process.cwd(), filename);
     try {
-      const content = await fs76.readFile(absolutePath, "utf8");
+      const content = await fs77.readFile(absolutePath, "utf8");
       let tokenCount = Math.ceil(content.length / 4);
       const maybeGen = context2.services.config?.getContentGenerator?.();
       const cgConfig = context2.services.config?.getContentGeneratorConfig?.();
@@ -357847,6 +358117,7 @@ var BuiltinCommandLoader = class {
       ideCommand(this.config),
       initCommand,
       mcpCommand2,
+      mailboxCommand,
       memoryCommand,
       modelCommand,
       loggingCommand,
@@ -357882,8 +358153,8 @@ var import_toml = __toESM(require_toml(), 1);
 init_esm10();
 init_zod();
 init_dist3();
-import { promises as fs77 } from "node:fs";
-import path89 from "node:path";
+import { promises as fs78 } from "node:fs";
+import path90 from "node:path";
 
 // packages/cli/src/services/prompt-processors/argumentProcessor.ts
 init_dist3();
@@ -358185,7 +358456,7 @@ var FileCommandLoader = class {
         });
         const commandPromises = files.map(
           (file) => this.parseAndAdaptFile(
-            path89.join(dirInfo.path, file),
+            path90.join(dirInfo.path, file),
             dirInfo.path,
             dirInfo.extensionName
           )
@@ -358218,7 +358489,7 @@ var FileCommandLoader = class {
     if (this.config) {
       const activeExtensions = this.config.getExtensions().filter((ext2) => ext2.isActive).sort((a, b) => a.name.localeCompare(b.name));
       const extensionCommandDirs = activeExtensions.map((ext2) => ({
-        path: path89.join(ext2.path, "commands"),
+        path: path90.join(ext2.path, "commands"),
         extensionName: ext2.name
       }));
       dirs.push(...extensionCommandDirs);
@@ -358235,7 +358506,7 @@ var FileCommandLoader = class {
   async parseAndAdaptFile(filePath, baseDir, extensionName) {
     let fileContent;
     try {
-      fileContent = await fs77.readFile(filePath, "utf-8");
+      fileContent = await fs78.readFile(filePath, "utf-8");
     } catch (error) {
       console.error(
         `[FileCommandLoader] Failed to read file ${filePath}:`,
@@ -358262,14 +358533,14 @@ var FileCommandLoader = class {
       return null;
     }
     const validDef = validationResult.data;
-    const relativePathWithExt = path89.relative(baseDir, filePath);
+    const relativePathWithExt = path90.relative(baseDir, filePath);
     const relativePath = relativePathWithExt.substring(
       0,
       relativePathWithExt.length - 5
       // length of '.toml'
     );
-    const baseCommandName = relativePath.split(path89.sep).map((segment) => segment.replaceAll(":", "_")).join(":");
-    const defaultDescription = `Custom command from ${path89.basename(filePath)}`;
+    const baseCommandName = relativePath.split(path90.sep).map((segment) => segment.replaceAll(":", "_")).join(":");
+    const defaultDescription = `Custom command from ${path90.basename(filePath)}`;
     let description = validDef.description || defaultDescription;
     if (extensionName) {
       description = `[${extensionName}] ${description}`;
@@ -358552,7 +358823,7 @@ function quoteForShell(value) {
   const escaped = value.replace(/\\/g, "\\\\").replace(/"/g, '\\"');
   return `"${escaped}"`;
 }
-var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTasksDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openResumeDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController) => {
+var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTasksDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openResumeDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController, openMailboxDialog) => {
   const session = useSessionStats();
   const [commands, setCommands] = (0, import_react62.useState)([]);
   const [reloadTrigger, setReloadTrigger] = (0, import_react62.useState)(0);
@@ -358867,6 +359138,9 @@ var useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHisto
                     case "tasks":
                       openTasksDialog();
                       return { type: "handled" };
+                    case "mailbox":
+                      openMailboxDialog?.();
+                      return { type: "handled" };
                     case "privacy":
                       openPrivacyNotice();
                       return { type: "handled" };
@@ -359159,6 +359433,7 @@ ${commandToExecute.subCommands.map((sc) => `  - ${sc.name}: ${sc.description || 
       openPrivacyNotice,
       openEditorDialog,
       openTasksDialog,
+      openMailboxDialog,
       setQuittingMessages,
       openSettingsDialog,
       openSubagentCreateDialog,
@@ -359191,8 +359466,8 @@ var import_react63 = __toESM(require_react(), 1);
 init_dist3();
 
 // packages/cli/src/services/SessionMarkdownLogger.ts
-import path90 from "node:path";
-import { promises as fs78 } from "node:fs";
+import path91 from "node:path";
+import { promises as fs79 } from "node:fs";
 var SessionMarkdownLogger = class {
   cwd;
   enabled = false;
@@ -359219,13 +359494,13 @@ var SessionMarkdownLogger = class {
     if (this.enabled && this.logFilePath) {
       return this.getStatus();
     }
-    const logDir = path90.join(this.cwd, "logs");
-    await fs78.mkdir(logDir, { recursive: true });
+    const logDir = path91.join(this.cwd, "logs");
+    await fs79.mkdir(logDir, { recursive: true });
     const timestamp = (/* @__PURE__ */ new Date()).toISOString();
     const safeTimestamp = timestamp.replace(/[:]/g, "-");
-    const filePath = path90.join(logDir, `session-log-${safeTimestamp}.md`);
+    const filePath = path91.join(logDir, `session-log-${safeTimestamp}.md`);
     const header = this.buildHeader(metadata, timestamp);
-    await fs78.writeFile(filePath, header, "utf8");
+    await fs79.writeFile(filePath, header, "utf8");
     this.enabled = true;
     this.logFilePath = filePath;
     this.loggingStartedAt = timestamp;
@@ -359446,7 +359721,7 @@ var SessionMarkdownLogger = class {
     if (!this.enabled || !this.logFilePath) {
       return;
     }
-    this.writeQueue = this.writeQueue.then(() => fs78.appendFile(this.logFilePath, `${content}
+    this.writeQueue = this.writeQueue.then(() => fs79.appendFile(this.logFilePath, `${content}
 `, "utf8")).catch((error) => {
       this.lastError = error instanceof Error ? error.message : String(error);
     });
@@ -360197,7 +360472,7 @@ function useInputHistory({
 // packages/cli/src/ui/components/shared/text-buffer.ts
 var import_react73 = __toESM(require_react(), 1);
 import { spawnSync } from "node:child_process";
-import fs79 from "node:fs";
+import fs80 from "node:fs";
 import os29 from "node:os";
 import pathMod from "node:path";
 init_dist3();
@@ -361978,9 +362253,9 @@ function useTextBuffer({
   const openInExternalEditor = (0, import_react73.useCallback)(
     async (opts = {}) => {
       const editor = opts.editor ?? process.env["VISUAL"] ?? process.env["EDITOR"] ?? (process.platform === "win32" ? "notepad" : "vi");
-      const tmpDir = fs79.mkdtempSync(pathMod.join(os29.tmpdir(), "gemini-edit-"));
+      const tmpDir = fs80.mkdtempSync(pathMod.join(os29.tmpdir(), "gemini-edit-"));
       const filePath = pathMod.join(tmpDir, "buffer.txt");
-      fs79.writeFileSync(filePath, text, "utf8");
+      fs80.writeFileSync(filePath, text, "utf8");
       dispatch({ type: "create_undo_snapshot" });
       const wasRaw = stdin3?.isRaw ?? false;
       try {
@@ -361991,7 +362266,7 @@ function useTextBuffer({
         if (error) throw error;
         if (typeof status === "number" && status !== 0)
           throw new Error(`External editor exited with status ${status}`);
-        let newText = fs79.readFileSync(filePath, "utf8");
+        let newText = fs80.readFileSync(filePath, "utf8");
         newText = newText.replace(/\r\n?/g, "\n");
         dispatch({ type: "set_text", payload: newText, pushToUndo: false });
       } catch (err) {
@@ -361999,11 +362274,11 @@ function useTextBuffer({
       } finally {
         if (wasRaw) setRawMode?.(true);
         try {
-          fs79.unlinkSync(filePath);
+          fs80.unlinkSync(filePath);
         } catch {
         }
         try {
-          fs79.rmdirSync(tmpDir);
+          fs80.rmdirSync(tmpDir);
         } catch {
         }
       }
@@ -362142,8 +362417,8 @@ var import_chalk4 = __toESM(require_source(), 1);
 // packages/cli/src/ui/hooks/useShellHistory.ts
 var import_react74 = __toESM(require_react(), 1);
 init_dist3();
-import * as fs80 from "node:fs/promises";
-import * as path91 from "node:path";
+import * as fs81 from "node:fs/promises";
+import * as path92 from "node:path";
 var MAX_HISTORY_LENGTH2 = 100;
 async function getHistoryFilePath(projectRoot, configStorage) {
   const storage = configStorage ?? new Storage(projectRoot);
@@ -362151,7 +362426,7 @@ async function getHistoryFilePath(projectRoot, configStorage) {
 }
 async function readHistoryFile(filePath) {
   try {
-    const text = await fs80.readFile(filePath, "utf-8");
+    const text = await fs81.readFile(filePath, "utf-8");
     const result = [];
     let cur = "";
     for (const raw of text.split(/\r?\n/)) {
@@ -362175,8 +362450,8 @@ async function readHistoryFile(filePath) {
 }
 async function writeHistoryFile(filePath, history) {
   try {
-    await fs80.mkdir(path91.dirname(filePath), { recursive: true });
-    await fs80.writeFile(filePath, history.join("\n"));
+    await fs81.mkdir(path92.dirname(filePath), { recursive: true });
+    await fs81.writeFile(filePath, history.join("\n"));
   } catch (error) {
     console.error("Error writing shell history:", error);
   }
@@ -363188,8 +363463,8 @@ var keyMatchers = createKeyMatchers(defaultKeyBindings);
 // packages/cli/src/ui/utils/clipboardUtils.ts
 import { exec as exec5 } from "node:child_process";
 import { promisify as promisify9 } from "node:util";
-import * as fs81 from "node:fs/promises";
-import * as path92 from "node:path";
+import * as fs82 from "node:fs/promises";
+import * as path93 from "node:path";
 var execAsync3 = promisify9(exec5);
 async function clipboardHasImage() {
   if (process.platform !== "darwin") {
@@ -363211,8 +363486,8 @@ async function saveClipboardImage(targetDir) {
   }
   try {
     const baseDir = targetDir || process.cwd();
-    const tempDir = path92.join(baseDir, ".gemini-clipboard");
-    await fs81.mkdir(tempDir, { recursive: true });
+    const tempDir = path93.join(baseDir, ".gemini-clipboard");
+    await fs82.mkdir(tempDir, { recursive: true });
     const timestamp = (/* @__PURE__ */ new Date()).getTime();
     const formats = [
       { class: "PNGf", extension: "png" },
@@ -363221,7 +363496,7 @@ async function saveClipboardImage(targetDir) {
       { class: "GIFf", extension: "gif" }
     ];
     for (const format4 of formats) {
-      const tempFilePath = path92.join(
+      const tempFilePath = path93.join(
         tempDir,
         `clipboard-${timestamp}.${format4.extension}`
       );
@@ -363242,7 +363517,7 @@ async function saveClipboardImage(targetDir) {
       const { stdout: stdout3 } = await execAsync3(`osascript -e '${script}'`);
       if (stdout3.trim() === "success") {
         try {
-          const stats = await fs81.stat(tempFilePath);
+          const stats = await fs82.stat(tempFilePath);
           if (stats.size > 0) {
             return tempFilePath;
           }
@@ -363250,7 +363525,7 @@ async function saveClipboardImage(targetDir) {
         }
       }
       try {
-        await fs81.unlink(tempFilePath);
+        await fs82.unlink(tempFilePath);
       } catch {
       }
     }
@@ -363263,15 +363538,15 @@ async function saveClipboardImage(targetDir) {
 async function cleanupOldClipboardImages(targetDir) {
   try {
     const baseDir = targetDir || process.cwd();
-    const tempDir = path92.join(baseDir, ".gemini-clipboard");
-    const files = await fs81.readdir(tempDir);
+    const tempDir = path93.join(baseDir, ".gemini-clipboard");
+    const files = await fs82.readdir(tempDir);
     const oneHourAgo = Date.now() - 60 * 60 * 1e3;
     for (const file of files) {
       if (file.startsWith("clipboard-") && (file.endsWith(".png") || file.endsWith(".jpg") || file.endsWith(".tiff") || file.endsWith(".gif"))) {
-        const filePath = path92.join(tempDir, file);
-        const stats = await fs81.stat(filePath);
+        const filePath = path93.join(tempDir, file);
+        const stats = await fs82.stat(filePath);
         if (stats.mtimeMs < oneHourAgo) {
-          await fs81.unlink(filePath);
+          await fs82.unlink(filePath);
         }
       }
     }
@@ -363280,7 +363555,7 @@ async function cleanupOldClipboardImages(targetDir) {
 }
 
 // packages/cli/src/ui/components/InputPrompt.tsx
-import * as path93 from "node:path";
+import * as path94 from "node:path";
 var import_jsx_runtime21 = __toESM(require_jsx_runtime(), 1);
 var InputPrompt = ({
   buffer,
@@ -363410,7 +363685,7 @@ var InputPrompt = ({
         if (imagePath) {
           cleanupOldClipboardImages(config.getTargetDir()).catch(() => {
           });
-          const relativePath = path93.relative(config.getTargetDir(), imagePath);
+          const relativePath = path94.relative(config.getTargetDir(), imagePath);
           const insertText = `@${relativePath}`;
           const currentText = buffer.text;
           const [row, col] = buffer.cursor;
@@ -363925,7 +364200,7 @@ var ConsoleSummaryDisplay = ({
 
 // packages/cli/src/ui/components/Footer.tsx
 import process44 from "node:process";
-import path94 from "node:path";
+import path95 from "node:path";
 
 // packages/cli/src/ui/components/ContextUsageDisplay.tsx
 init_dist3();
@@ -363998,7 +364273,7 @@ var Footer = ({
   const { columns: terminalWidth } = useTerminalSize();
   const isNarrow = isNarrowWidth(terminalWidth);
   const pathLength = Math.max(20, Math.floor(terminalWidth * 0.4));
-  const displayPath = isNarrow ? path94.basename(tildeifyPath(targetDir)) : shortenPath(tildeifyPath(targetDir), pathLength);
+  const displayPath = isNarrow ? path95.basename(tildeifyPath(targetDir)) : shortenPath(tildeifyPath(targetDir), pathLength);
   let promptMode = "auto";
   let activeCollection = "full";
   let customPromptName = null;
@@ -364390,8 +364665,8 @@ function requiresRestart(key) {
 function getDefaultValue(key) {
   return FLATTENED_SCHEMA[key]?.default;
 }
-function getNestedValue(obj, path108) {
-  const [first2, ...rest] = path108;
+function getNestedValue(obj, path109) {
+  const [first2, ...rest] = path109;
   if (!first2 || !(first2 in obj)) {
     return void 0;
   }
@@ -364409,12 +364684,12 @@ function getEffectiveValue(key, settings, mergedSettings) {
   if (!definition) {
     return void 0;
   }
-  const path108 = key.split(".");
-  let value = getNestedValue(settings, path108);
+  const path109 = key.split(".");
+  let value = getNestedValue(settings, path109);
   if (value !== void 0) {
     return value;
   }
-  value = getNestedValue(mergedSettings, path108);
+  value = getNestedValue(mergedSettings, path109);
   if (value !== void 0) {
     return value;
   }
@@ -364439,12 +364714,12 @@ function getSettingValue(key, settings, mergedSettings) {
   return false;
 }
 function settingExistsInScope(key, scopeSettings) {
-  const path108 = key.split(".");
-  const value = getNestedValue(scopeSettings, path108);
+  const path109 = key.split(".");
+  const value = getNestedValue(scopeSettings, path109);
   return value !== void 0;
 }
-function setNestedValue(obj, path108, value) {
-  const [first2, ...rest] = path108;
+function setNestedValue(obj, path109, value) {
+  const [first2, ...rest] = path109;
   if (!first2) {
     return obj;
   }
@@ -364459,15 +364734,15 @@ function setNestedValue(obj, path108, value) {
   return obj;
 }
 function setPendingSettingValue(key, value, pendingSettings) {
-  const path108 = key.split(".");
+  const path109 = key.split(".");
   const newSettings = JSON.parse(JSON.stringify(pendingSettings));
-  setNestedValue(newSettings, path108, value);
+  setNestedValue(newSettings, path109, value);
   return newSettings;
 }
 function setPendingSettingValueAny(key, value, pendingSettings) {
-  const path108 = key.split(".");
+  const path109 = key.split(".");
   const newSettings = structuredClone(pendingSettings);
-  setNestedValue(newSettings, path108, value);
+  setNestedValue(newSettings, path109, value);
   return newSettings;
 }
 function hasRestartRequiredSettings(modifiedSettings) {
@@ -364478,10 +364753,10 @@ function getRestartRequiredFromModified(modifiedSettings) {
 }
 function saveModifiedSettings(modifiedSettings, pendingSettings, loadedSettings, scope) {
   modifiedSettings.forEach((settingKey) => {
-    const path108 = settingKey.split(".");
+    const path109 = settingKey.split(".");
     const value = getNestedValue(
       pendingSettings,
-      path108
+      path109
     );
     if (value === void 0) {
       return;
@@ -367378,8 +367653,555 @@ function TaskTemplateEditorDialog({
   );
 }
 
-// packages/cli/src/ui/components/ResumeDialog.tsx
+// packages/cli/src/ui/components/MailboxDialog.tsx
+var import_react95 = __toESM(require_react(), 1);
+init_dist3();
 var import_jsx_runtime39 = __toESM(require_jsx_runtime(), 1);
+function formatDateTime(value) {
+  if (!value) {
+    return "unknown-time";
+  }
+  const parsed = new Date(value);
+  if (Number.isNaN(parsed.getTime())) {
+    return "unknown-time";
+  }
+  return parsed.toLocaleString();
+}
+function buildReceivedPayloadMessage(index, entry, payload) {
+  return [
+    `### Mailbox Payload [${index}]`,
+    `- Task: \`${entry.taskId}\``,
+    `- Status: \`${entry.status}\``,
+    `- Time: ${entry.timeText}`,
+    "",
+    payload
+  ].join("\n");
+}
+function toPendingEntries(records) {
+  return [...records].sort((a, b) => {
+    const left3 = Date.parse(
+      b.last_heartbeat ?? b.started_at ?? b.created_at ?? "1970-01-01"
+    );
+    const right3 = Date.parse(
+      a.last_heartbeat ?? a.started_at ?? a.created_at ?? "1970-01-01"
+    );
+    return left3 - right3;
+  }).map((record) => ({
+    taskId: record.task_id,
+    status: record.status,
+    mode: record.execution_mode_actual ?? record.execution_mode_requested ?? "default",
+    activityText: formatDateTime(
+      record.last_heartbeat ?? record.started_at ?? record.created_at
+    ),
+    templateId: record.template_id
+  }));
+}
+function toPreviewLines(text, maxLines, maxLineLength) {
+  if (!text) {
+    return ["(empty payload)"];
+  }
+  const sourceLines = text.replace(/\r\n/g, "\n").split("\n");
+  const limited = [];
+  for (const rawLine of sourceLines) {
+    if (limited.length >= maxLines) {
+      break;
+    }
+    if (rawLine.length <= maxLineLength) {
+      limited.push(rawLine);
+      continue;
+    }
+    limited.push(`${rawLine.slice(0, Math.max(0, maxLineLength - 3))}...`);
+  }
+  if (sourceLines.length > maxLines) {
+    limited.push("... (truncated)");
+  }
+  return limited.length > 0 ? limited : ["(empty payload)"];
+}
+function MailboxDialog({
+  baseDir,
+  sessionId: sessionId2,
+  onExit,
+  onUsePayload
+}) {
+  const { columns: terminalColumns2, rows: terminalRows } = useTerminalSize();
+  const [focusSection, setFocusSection] = (0, import_react95.useState)("received");
+  const [receivedMessages, setReceivedMessages] = (0, import_react95.useState)(
+    []
+  );
+  const [pendingTasks, setPendingTasks] = (0, import_react95.useState)([]);
+  const [selectedReceivedKey, setSelectedReceivedKey] = (0, import_react95.useState)(
+    null
+  );
+  const [selectedPendingTaskId, setSelectedPendingTaskId] = (0, import_react95.useState)(
+    null
+  );
+  const [selectedTarget, setSelectedTarget] = (0, import_react95.useState)(null);
+  const [previewText, setPreviewText] = (0, import_react95.useState)(
+    "Select a mailbox item to preview its payload."
+  );
+  const [isLoading, setIsLoading] = (0, import_react95.useState)(true);
+  const [isBusy, setIsBusy] = (0, import_react95.useState)(false);
+  const [isLoadingPreview, setIsLoadingPreview] = (0, import_react95.useState)(false);
+  const [statusMessage, setStatusMessage] = (0, import_react95.useState)("");
+  const [errorMessage, setErrorMessage] = (0, import_react95.useState)(null);
+  const previewCacheRef = (0, import_react95.useRef)(/* @__PURE__ */ new Map());
+  const mailboxPath = (0, import_react95.useMemo)(
+    () => getMailboxPath2(baseDir, sessionId2),
+    [baseDir, sessionId2]
+  );
+  const receivedEntries = (0, import_react95.useMemo)(() => {
+    return receivedMessages.map((message, index) => {
+      const taskId = mailboxMessageTaskId(message);
+      const status = message.status ?? "unknown";
+      const timeText = formatDateTime(message.timestamp);
+      return {
+        key: `${taskId}:${message.timestamp ?? "0"}:${index}`,
+        message,
+        taskId,
+        status,
+        timeText,
+        summary: summarizeMailboxPayload(message, 120)
+      };
+    });
+  }, [receivedMessages]);
+  const effectiveReceivedKey = (0, import_react95.useMemo)(() => {
+    if (selectedReceivedKey && receivedEntries.some((entry) => entry.key === selectedReceivedKey)) {
+      return selectedReceivedKey;
+    }
+    return receivedEntries[0]?.key ?? null;
+  }, [selectedReceivedKey, receivedEntries]);
+  const effectivePendingTaskId = (0, import_react95.useMemo)(() => {
+    if (selectedPendingTaskId && pendingTasks.some((entry) => entry.taskId === selectedPendingTaskId)) {
+      return selectedPendingTaskId;
+    }
+    return pendingTasks[0]?.taskId ?? null;
+  }, [selectedPendingTaskId, pendingTasks]);
+  const effectiveSelectedTarget = (0, import_react95.useMemo)(() => {
+    if (selectedTarget?.type === "received") {
+      if (receivedEntries.some((entry) => entry.key === selectedTarget.key)) {
+        return selectedTarget;
+      }
+    } else if (selectedTarget?.type === "pending") {
+      if (pendingTasks.some((entry) => entry.taskId === selectedTarget.taskId)) {
+        return selectedTarget;
+      }
+    }
+    if (effectiveReceivedKey) {
+      return { type: "received", key: effectiveReceivedKey };
+    }
+    if (effectivePendingTaskId) {
+      return { type: "pending", taskId: effectivePendingTaskId };
+    }
+    return null;
+  }, [
+    selectedTarget,
+    receivedEntries,
+    pendingTasks,
+    effectiveReceivedKey,
+    effectivePendingTaskId
+  ]);
+  const selectedReceivedIndex = (0, import_react95.useMemo)(() => {
+    if (!effectiveReceivedKey) {
+      return 0;
+    }
+    const index = receivedEntries.findIndex((entry) => entry.key === effectiveReceivedKey);
+    return index >= 0 ? index : 0;
+  }, [effectiveReceivedKey, receivedEntries]);
+  const selectedPendingIndex = (0, import_react95.useMemo)(() => {
+    if (!effectivePendingTaskId) {
+      return 0;
+    }
+    const index = pendingTasks.findIndex(
+      (entry) => entry.taskId === effectivePendingTaskId
+    );
+    return index >= 0 ? index : 0;
+  }, [effectivePendingTaskId, pendingTasks]);
+  const receivedItems = (0, import_react95.useMemo)(
+    () => receivedEntries.map((entry) => ({
+      value: entry.key,
+      label: `${entry.taskId} [${entry.status}] - ${entry.summary}`
+    })),
+    [receivedEntries]
+  );
+  const pendingItems = (0, import_react95.useMemo)(
+    () => pendingTasks.map((entry) => ({
+      value: entry.taskId,
+      label: `${entry.taskId} (${entry.status}, ${entry.mode}, ${entry.activityText})`
+    })),
+    [pendingTasks]
+  );
+  const reloadMailbox = (0, import_react95.useCallback)(
+    async (options2) => {
+      setErrorMessage(null);
+      if (!options2?.background) {
+        setIsBusy(true);
+      }
+      try {
+        await reconcileLaunchTaskState(baseDir);
+        const [rawMessages, pendingRecords] = await Promise.all([
+          readMailboxMessages(mailboxPath),
+          listLaunchTaskStates(baseDir, {
+            parentSessionId: sessionId2,
+            statuses: ["queued", "running"],
+            limit: 100
+          })
+        ]);
+        setReceivedMessages(sortMailboxMessages(rawMessages));
+        setPendingTasks(toPendingEntries(pendingRecords));
+        if (options2?.status) {
+          setStatusMessage(options2.status);
+        }
+      } catch (error) {
+        setErrorMessage(
+          `Failed to load mailbox: ${error instanceof Error ? error.message : String(error)}`
+        );
+      } finally {
+        if (!options2?.background) {
+          setIsBusy(false);
+        }
+        setIsLoading(false);
+      }
+    },
+    [baseDir, mailboxPath, sessionId2]
+  );
+  (0, import_react95.useEffect)(() => {
+    void reloadMailbox();
+    const timer = setInterval(() => {
+      void reloadMailbox({ background: true });
+    }, 3e3);
+    return () => {
+      clearInterval(timer);
+    };
+  }, [reloadMailbox]);
+  (0, import_react95.useEffect)(() => {
+    let cancelled = false;
+    if (!effectiveSelectedTarget) {
+      setPreviewText("No mailbox entries available.");
+      setIsLoadingPreview(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+    if (effectiveSelectedTarget.type === "pending") {
+      const entry2 = pendingTasks.find(
+        (item) => item.taskId === effectiveSelectedTarget.taskId
+      );
+      if (!entry2) {
+        setPreviewText("No pending task selected.");
+      } else {
+        const templateInfo = entry2.templateId ? `
+Template: ${entry2.templateId}` : "";
+        setPreviewText(
+          [
+            "Pending Task",
+            `Task: ${entry2.taskId}`,
+            `Status: ${entry2.status}`,
+            `Mode: ${entry2.mode}`,
+            `Last Activity: ${entry2.activityText}${templateInfo}`
+          ].join("\n")
+        );
+      }
+      setIsLoadingPreview(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+    const entry = receivedEntries.find(
+      (item) => item.key === effectiveSelectedTarget.key
+    );
+    if (!entry) {
+      setPreviewText("No mailbox message selected.");
+      setIsLoadingPreview(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+    const cached = previewCacheRef.current.get(entry.key);
+    if (cached) {
+      setPreviewText(cached);
+      setIsLoadingPreview(false);
+      return () => {
+        cancelled = true;
+      };
+    }
+    setIsLoadingPreview(true);
+    void (async () => {
+      try {
+        const payload = await loadMailboxPayloadText(entry.message);
+        if (cancelled) {
+          return;
+        }
+        previewCacheRef.current.set(entry.key, payload);
+        setPreviewText(payload);
+      } catch (error) {
+        if (cancelled) {
+          return;
+        }
+        setPreviewText(
+          `Unable to load payload: ${error instanceof Error ? error.message : String(error)}`
+        );
+      } finally {
+        if (!cancelled) {
+          setIsLoadingPreview(false);
+        }
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [effectiveSelectedTarget, pendingTasks, receivedEntries]);
+  const handleUseSelectedPayload = (0, import_react95.useCallback)(async () => {
+    if (!effectiveSelectedTarget || effectiveSelectedTarget.type !== "received") {
+      setErrorMessage("Select a received payload before using it.");
+      return;
+    }
+    const entry = receivedEntries.find(
+      (item) => item.key === effectiveSelectedTarget.key
+    );
+    if (!entry) {
+      setErrorMessage("Selected payload is no longer available.");
+      return;
+    }
+    setIsBusy(true);
+    setErrorMessage(null);
+    try {
+      const payload = await loadMailboxPayloadText(entry.message);
+      const index = receivedEntries.findIndex((item) => item.key === entry.key) + 1;
+      const message = buildReceivedPayloadMessage(index, entry, payload);
+      await onUsePayload(message);
+      onExit();
+    } catch (error) {
+      setErrorMessage(
+        `Failed to use payload: ${error instanceof Error ? error.message : String(error)}`
+      );
+    } finally {
+      setIsBusy(false);
+    }
+  }, [effectiveSelectedTarget, receivedEntries, onUsePayload, onExit]);
+  const actionItems = [
+    { label: "Use Selected Payload", value: "use" },
+    { label: "Refresh", value: "refresh" },
+    { label: "Clear Received", value: "clear" },
+    { label: "Close", value: "close" }
+  ];
+  const handleActionSelect = (0, import_react95.useCallback)(
+    (value) => {
+      if (isBusy) {
+        return;
+      }
+      if (value === "use") {
+        void handleUseSelectedPayload();
+        return;
+      }
+      if (value === "refresh") {
+        void reloadMailbox({ status: "Mailbox refreshed." });
+        return;
+      }
+      if (value === "clear") {
+        void (async () => {
+          setIsBusy(true);
+          setErrorMessage(null);
+          try {
+            await clearMailboxMessages(mailboxPath);
+            previewCacheRef.current.clear();
+            await reloadMailbox({
+              status: `Cleared mailbox entries for "${sessionId2}".`
+            });
+          } catch (error) {
+            setErrorMessage(
+              `Failed to clear mailbox: ${error instanceof Error ? error.message : String(error)}`
+            );
+          } finally {
+            setIsBusy(false);
+          }
+        })();
+        return;
+      }
+      onExit();
+    },
+    [
+      isBusy,
+      handleUseSelectedPayload,
+      reloadMailbox,
+      mailboxPath,
+      sessionId2,
+      onExit
+    ]
+  );
+  useKeypress(
+    (key) => {
+      if (key.name === "escape") {
+        onExit();
+        return;
+      }
+      if (key.name === "tab") {
+        const order = ["received", "pending", "actions", "preview"];
+        setFocusSection((current) => {
+          const currentIndex = order.indexOf(current);
+          const nextIndex = key.shift ? (currentIndex - 1 + order.length) % order.length : (currentIndex + 1) % order.length;
+          return order[nextIndex];
+        });
+      }
+    },
+    { isActive: true }
+  );
+  const listMaxItems = Math.max(6, Math.min(12, Math.floor(terminalRows * 0.28)));
+  const actionMaxItems = Math.max(4, Math.min(8, Math.floor(terminalRows * 0.2)));
+  const previewMaxLines = Math.max(
+    8,
+    Math.min(20, Math.floor(terminalRows * 0.33))
+  );
+  const previewMaxLineLength = Math.max(
+    48,
+    Math.min(120, Math.floor(terminalColumns2 * 0.44))
+  );
+  const previewLines = (0, import_react95.useMemo)(
+    () => toPreviewLines(previewText, previewMaxLines, previewMaxLineLength),
+    [previewText, previewMaxLines, previewMaxLineLength]
+  );
+  return /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(
+    Box_default,
+    {
+      borderStyle: "round",
+      borderColor: Colors.AccentBlue,
+      flexDirection: "column",
+      width: "100%",
+      padding: 1,
+      gap: 1,
+      children: [
+        /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(Box_default, { flexDirection: "row", gap: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(
+            Box_default,
+            {
+              flexDirection: "column",
+              width: "50%",
+              borderStyle: "single",
+              borderColor: focusSection === "received" ? Colors.AccentBlue : Colors.Gray,
+              paddingX: 1,
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(Text3, { bold: focusSection === "received", children: [
+                  focusSection === "received" ? "> " : "  ",
+                  "Received (",
+                  receivedEntries.length,
+                  ")"
+                ] }),
+                isLoading ? /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { color: Colors.Gray, children: "Loading mailbox..." }) : receivedItems.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { color: Colors.Gray, children: "No received payloads yet." }) : /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(
+                  RadioButtonSelect,
+                  {
+                    items: receivedItems,
+                    initialIndex: selectedReceivedIndex,
+                    onSelect: (key) => {
+                      setSelectedReceivedKey(key);
+                      setSelectedTarget({ type: "received", key });
+                    },
+                    onHighlight: (key) => {
+                      setSelectedReceivedKey(key);
+                      setSelectedTarget({ type: "received", key });
+                    },
+                    isFocused: focusSection === "received",
+                    maxItemsToShow: listMaxItems,
+                    showScrollArrows: true
+                  },
+                  `received-${receivedItems.length}-${selectedReceivedIndex}`
+                )
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(
+            Box_default,
+            {
+              flexDirection: "column",
+              width: "50%",
+              borderStyle: "single",
+              borderColor: focusSection === "pending" ? Colors.AccentBlue : Colors.Gray,
+              paddingX: 1,
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(Text3, { bold: focusSection === "pending", children: [
+                  focusSection === "pending" ? "> " : "  ",
+                  "Pending (",
+                  pendingTasks.length,
+                  ")"
+                ] }),
+                isLoading ? /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { color: Colors.Gray, children: "Loading pending tasks..." }) : pendingItems.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { color: Colors.Gray, children: "No queued/running tasks." }) : /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(
+                  RadioButtonSelect,
+                  {
+                    items: pendingItems,
+                    initialIndex: selectedPendingIndex,
+                    onSelect: (taskId) => {
+                      setSelectedPendingTaskId(taskId);
+                      setSelectedTarget({ type: "pending", taskId });
+                    },
+                    onHighlight: (taskId) => {
+                      setSelectedPendingTaskId(taskId);
+                      setSelectedTarget({ type: "pending", taskId });
+                    },
+                    isFocused: focusSection === "pending",
+                    maxItemsToShow: listMaxItems,
+                    showScrollArrows: true
+                  },
+                  `pending-${pendingItems.length}-${selectedPendingIndex}`
+                )
+              ]
+            }
+          )
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(Box_default, { flexDirection: "row", gap: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(
+            Box_default,
+            {
+              flexDirection: "column",
+              width: "50%",
+              borderStyle: "single",
+              borderColor: focusSection === "actions" ? Colors.AccentBlue : Colors.Gray,
+              paddingX: 1,
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(Text3, { bold: focusSection === "actions", children: [
+                  focusSection === "actions" ? "> " : "  ",
+                  "Actions"
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(
+                  RadioButtonSelect,
+                  {
+                    items: actionItems,
+                    initialIndex: 0,
+                    onSelect: handleActionSelect,
+                    isFocused: focusSection === "actions",
+                    maxItemsToShow: actionMaxItems,
+                    showScrollArrows: true
+                  },
+                  `mailbox-actions-${isBusy ? "busy" : "idle"}`
+                ),
+                statusMessage && /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { color: Colors.AccentGreen, children: statusMessage }),
+                errorMessage && /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { color: Colors.AccentRed, children: errorMessage })
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(
+            Box_default,
+            {
+              flexDirection: "column",
+              width: "50%",
+              borderStyle: "single",
+              borderColor: focusSection === "preview" ? Colors.AccentBlue : Colors.Gray,
+              paddingX: 1,
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(Text3, { bold: focusSection === "preview", children: [
+                  focusSection === "preview" ? "> " : "  ",
+                  "Preview"
+                ] }),
+                isLoadingPreview ? /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { color: Colors.Gray, children: "Loading payload preview..." }) : previewLines.map((line, index) => /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { wrap: "truncate-end", children: line || " " }, `preview-${index}`))
+              ]
+            }
+          )
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { color: Colors.Gray, children: "Tab cycles panels: Received, Pending, Actions, Preview. Enter selects. Esc closes." })
+      ]
+    }
+  );
+}
+
+// packages/cli/src/ui/components/ResumeDialog.tsx
+var import_jsx_runtime40 = __toESM(require_jsx_runtime(), 1);
 var getSessionColor2 = (sessionId2) => {
   const hash = sessionId2.substring(0, 8);
   const num = parseInt(hash, 16) || 0;
@@ -367401,14 +368223,14 @@ function formatCheckpointLabel(checkpoint) {
   const shortSessionId = checkpoint.sessionId.slice(0, 8);
   const sessionColor = getSessionColor2(checkpoint.sessionId);
   const preview = checkpoint.lastMessagePreview ? ` - ${checkpoint.lastMessagePreview}` : "";
-  return /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(Text3, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime40.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime40.jsxs)(Text3, { color: Colors.Gray, children: [
       "[",
       checkpoint.messageCount,
       " messages]"
     ] }),
     " ",
-    /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { color: sessionColor, children: shortSessionId }),
+    /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { color: sessionColor, children: shortSessionId }),
     " ",
     formattedDate,
     preview
@@ -367433,7 +368255,7 @@ var ResumeDialog = ({
       value: checkpoint.id
     })
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime40.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -367443,11 +368265,11 @@ var ResumeDialog = ({
       width: "100%",
       marginLeft: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime39.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { bold: true, children: "Resume Conversation" }),
-          /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { children: "Select a checkpoint to restore:" })
+        /* @__PURE__ */ (0, import_jsx_runtime40.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { bold: true, children: "Resume Conversation" }),
+          /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { children: "Select a checkpoint to restore:" })
         ] }),
-        options2.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { color: Colors.Gray, children: "No saved conversation checkpoints found." }) : /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(
+        options2.length === 0 ? /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { color: Colors.Gray, children: "No saved conversation checkpoints found." }) : /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(
           RadioButtonSelect,
           {
             items: options2,
@@ -367458,7 +368280,7 @@ var ResumeDialog = ({
             maxItemsToShow: 12
           }
         ) }),
-        /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime39.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to select, Esc to cancel" }) })
+        /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to select, Esc to cancel" }) })
       ]
     }
   );
@@ -367468,7 +368290,7 @@ var ResumeDialog = ({
 init_availableModels();
 
 // packages/cli/src/ui/components/subagents/create/AgentCreationWizard.tsx
-var import_react101 = __toESM(require_react(), 1);
+var import_react102 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/subagents/types.ts
 var MANAGEMENT_STEPS = {
@@ -367746,7 +368568,7 @@ function validateStep(step, state) {
 }
 
 // packages/cli/src/ui/components/subagents/create/LocationSelector.tsx
-var import_jsx_runtime40 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime41 = __toESM(require_jsx_runtime(), 1);
 var locationOptions = [
   {
     label: "Project Level (.qwen/agents/)",
@@ -367763,7 +368585,7 @@ function LocationSelector({ state, dispatch, onNext }) {
     dispatch({ type: "SET_LOCATION", location });
     onNext();
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime40.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(
     RadioButtonSelect,
     {
       items: locationOptions.map((option2) => ({
@@ -367780,7 +368602,7 @@ function LocationSelector({ state, dispatch, onNext }) {
 }
 
 // packages/cli/src/ui/components/subagents/create/GenerationMethodSelector.tsx
-var import_jsx_runtime41 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime42 = __toESM(require_jsx_runtime(), 1);
 var generationOptions = [
   {
     label: "Generate with Qwen Code (Recommended)",
@@ -367802,7 +368624,7 @@ function GenerationMethodSelector({
     dispatch({ type: "SET_GENERATION_METHOD", method });
     onNext();
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime41.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(
     RadioButtonSelect,
     {
       items: generationOptions.map((option2) => ({
@@ -367819,17 +368641,17 @@ function GenerationMethodSelector({
 }
 
 // packages/cli/src/ui/components/subagents/create/DescriptionInput.tsx
-var import_react95 = __toESM(require_react(), 1);
+var import_react96 = __toESM(require_react(), 1);
 init_dist3();
-var import_jsx_runtime42 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime43 = __toESM(require_jsx_runtime(), 1);
 function DescriptionInput({
   state,
   dispatch,
   onNext,
   config
 }) {
-  const abortControllerRef = (0, import_react95.useRef)(null);
-  const handleTextChange = (0, import_react95.useCallback)(
+  const abortControllerRef = (0, import_react96.useRef)(null);
+  const handleTextChange = (0, import_react96.useCallback)(
     (text) => {
       const sanitized = sanitizeInput(text);
       dispatch({
@@ -367839,7 +368661,7 @@ function DescriptionInput({
     },
     [dispatch]
   );
-  const handleGenerate = (0, import_react95.useCallback)(
+  const handleGenerate = (0, import_react96.useCallback)(
     async (userDescription, dispatch2, config2) => {
       const abortController = new AbortController();
       abortControllerRef.current = abortController;
@@ -367864,7 +368686,7 @@ function DescriptionInput({
     },
     [onNext]
   );
-  const handleSubmit = (0, import_react95.useCallback)(async () => {
+  const handleSubmit = (0, import_react96.useCallback)(async () => {
     if (!state.canProceed || state.isGenerating) {
       return;
     }
@@ -367898,7 +368720,7 @@ function DescriptionInput({
     config,
     handleGenerate
   ]);
-  const handleGenerationKeypress = (0, import_react95.useCallback)(
+  const handleGenerationKeypress = (0, import_react96.useCallback)(
     (key) => {
       if (keyMatchers["escape" /* ESCAPE */](key)) {
         if (abortControllerRef.current) {
@@ -367913,12 +368735,12 @@ function DescriptionInput({
     isActive: state.isGenerating
   });
   const placeholder = "e.g., Expert code reviewer that reviews code based on best practices...";
-  return /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: Colors.Gray, children: "Describe what this subagent should do and when it should be used. (Be comprehensive for best results)" }) }),
-    state.isGenerating ? /* @__PURE__ */ (0, import_jsx_runtime42.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Box_default, { marginRight: 1, children: /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(build_default, {}) }),
-      /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(Text3, { color: theme.text.accent, children: "Generating subagent configuration..." })
-    ] }) : /* @__PURE__ */ (0, import_jsx_runtime42.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: Colors.Gray, children: "Describe what this subagent should do and when it should be used. (Be comprehensive for best results)" }) }),
+    state.isGenerating ? /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { marginRight: 1, children: /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(build_default, {}) }),
+      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: theme.text.accent, children: "Generating subagent configuration..." })
+    ] }) : /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(
       TextInput,
       {
         value: state.userDescription || "",
@@ -367934,9 +368756,9 @@ function DescriptionInput({
 }
 
 // packages/cli/src/ui/components/subagents/create/ToolSelector.tsx
-var import_react96 = __toESM(require_react(), 1);
+var import_react97 = __toESM(require_react(), 1);
 init_dist3();
-var import_jsx_runtime43 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime44 = __toESM(require_jsx_runtime(), 1);
 function ToolSelector({
   tools = [],
   onSelect,
@@ -367948,7 +368770,7 @@ function ToolSelector({
     editTools,
     executeTools,
     initialCategory
-  } = (0, import_react96.useMemo)(() => {
+  } = (0, import_react97.useMemo)(() => {
     if (!config) {
       return {
         toolCategories: [
@@ -368017,8 +368839,8 @@ function ToolSelector({
       initialCategory: initialCategory2
     };
   }, [config, tools]);
-  const [selectedCategory, setSelectedCategory] = (0, import_react96.useState)(initialCategory);
-  (0, import_react96.useEffect)(() => {
+  const [selectedCategory, setSelectedCategory] = (0, import_react97.useState)(initialCategory);
+  (0, import_react97.useEffect)(() => {
     setSelectedCategory(initialCategory);
   }, [initialCategory]);
   const toolOptions = toolCategories.map((category) => ({
@@ -368042,8 +368864,8 @@ function ToolSelector({
   const currentCategory = toolCategories.find(
     (cat) => cat.id === selectedCategory
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(
       RadioButtonSelect,
       {
         items: toolOptions.map((option2) => ({
@@ -368058,9 +368880,9 @@ function ToolSelector({
         isFocused: true
       }
     ) }),
-    currentCategory && /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { flexDirection: "column", children: currentCategory.id === "all" ? /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: Colors.Gray, children: "All tools selected, including MCP tools" }) : currentCategory.tools.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(import_jsx_runtime43.Fragment, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Text3, { color: Colors.Gray, children: "Selected tools:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime43.jsx)(Box_default, { flexDirection: "column", marginLeft: 2, children: (() => {
+    currentCategory && /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { flexDirection: "column", children: currentCategory.id === "all" ? /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: Colors.Gray, children: "All tools selected, including MCP tools" }) : currentCategory.tools.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(import_jsx_runtime44.Fragment, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: Colors.Gray, children: "Selected tools:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { flexDirection: "column", marginLeft: 2, children: (() => {
         const categoryReadTools = currentCategory.tools.filter(
           (tool) => readTools.includes(tool)
         );
@@ -368070,16 +368892,16 @@ function ToolSelector({
         const categoryExecuteTools = currentCategory.tools.filter(
           (tool) => executeTools.includes(tool)
         );
-        return /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(import_jsx_runtime43.Fragment, { children: [
-          categoryReadTools.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Text3, { color: Colors.Gray, children: [
+        return /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(import_jsx_runtime44.Fragment, { children: [
+          categoryReadTools.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Text3, { color: Colors.Gray, children: [
             "\u2022 Read-only tools: ",
             categoryReadTools.join(", ")
           ] }),
-          categoryEditTools.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Text3, { color: Colors.Gray, children: [
+          categoryEditTools.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Text3, { color: Colors.Gray, children: [
             "\u2022 Edit tools: ",
             categoryEditTools.join(", ")
           ] }),
-          categoryExecuteTools.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime43.jsxs)(Text3, { color: Colors.Gray, children: [
+          categoryExecuteTools.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Text3, { color: Colors.Gray, children: [
             "\u2022 Execution tools: ",
             categoryExecuteTools.join(", ")
           ] })
@@ -368090,16 +368912,16 @@ function ToolSelector({
 }
 
 // packages/cli/src/ui/components/subagents/create/ColorSelector.tsx
-var import_react97 = __toESM(require_react(), 1);
-var import_jsx_runtime44 = __toESM(require_jsx_runtime(), 1);
+var import_react98 = __toESM(require_react(), 1);
+var import_jsx_runtime45 = __toESM(require_jsx_runtime(), 1);
 var colorOptions = COLOR_OPTIONS;
 function ColorSelector({
   color = "auto",
   agentName = "Agent",
   onSelect
 }) {
-  const [selectedColor, setSelectedColor] = (0, import_react97.useState)(color);
-  (0, import_react97.useEffect)(() => {
+  const [selectedColor, setSelectedColor] = (0, import_react98.useState)(color);
+  (0, import_react98.useEffect)(() => {
     setSelectedColor(color);
   }, [color]);
   const handleSelect = (selectedValue) => {
@@ -368119,8 +368941,8 @@ function ColorSelector({
     }
   };
   const currentColor = colorOptions.find((option2) => option2.name === selectedColor) || colorOptions[0];
-  return /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(
       RadioButtonSelect,
       {
         items: colorOptions.map((option2) => ({
@@ -368135,18 +368957,18 @@ function ColorSelector({
         isFocused: true
       }
     ) }),
-    /* @__PURE__ */ (0, import_jsx_runtime44.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: Colors.Gray, children: "Preview:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Box_default, { marginLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime44.jsx)(Text3, { color: currentColor.value, children: ` ${agentName} ` }) })
+    /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: Colors.Gray, children: "Preview:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { marginLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: currentColor.value, children: ` ${agentName} ` }) })
     ] })
   ] });
 }
 
 // packages/cli/src/ui/components/subagents/create/CreationSummary.tsx
-var import_react99 = __toESM(require_react(), 1);
+var import_react100 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/hooks/useLaunchEditor.ts
-var import_react98 = __toESM(require_react(), 1);
+var import_react99 = __toESM(require_react(), 1);
 import { spawnSync as spawnSync2 } from "child_process";
 function getEditorCommand(preferredEditor) {
   if (preferredEditor) {
@@ -368165,7 +368987,7 @@ function getEditorCommand(preferredEditor) {
 function useLaunchEditor() {
   const settings = useSettings();
   const { stdin: stdin3, setRawMode } = use_stdin_default();
-  const launchEditor = (0, import_react98.useCallback)(
+  const launchEditor = (0, import_react99.useCallback)(
     async (filePath) => {
       const preferredEditor = settings.merged.general?.preferredEditor;
       const editor = getEditorCommand(preferredEditor);
@@ -368198,22 +369020,22 @@ function useLaunchEditor() {
 }
 
 // packages/cli/src/ui/components/subagents/create/CreationSummary.tsx
-var import_jsx_runtime45 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime46 = __toESM(require_jsx_runtime(), 1);
 function CreationSummary({
   state,
   onPrevious: _onPrevious,
   onCancel,
   config
 }) {
-  const [saveError, setSaveError] = (0, import_react99.useState)(null);
-  const [saveSuccess, setSaveSuccess] = (0, import_react99.useState)(false);
-  const [warnings, setWarnings] = (0, import_react99.useState)([]);
+  const [saveError, setSaveError] = (0, import_react100.useState)(null);
+  const [saveSuccess, setSaveSuccess] = (0, import_react100.useState)(false);
+  const [warnings, setWarnings] = (0, import_react100.useState)([]);
   const launchEditor = useLaunchEditor();
   const truncateText = (text, maxLength) => {
     if (text.length <= maxLength) return text;
     return text.substring(0, maxLength - 3) + "...";
   };
-  (0, import_react99.useEffect)(() => {
+  (0, import_react100.useEffect)(() => {
     const checkWarnings = async () => {
       if (!config || !state.generatedName) return;
       const allWarnings = [];
@@ -368268,7 +369090,7 @@ function CreationSummary({
     state.location
   ]);
   const toolsDisplay = state.selectedTools.length === 0 ? "*" : state.selectedTools.join(", ");
-  const saveSubagent = (0, import_react99.useCallback)(async () => {
+  const saveSubagent = (0, import_react100.useCallback)(async () => {
     if (!config) {
       throw new Error("Configuration not available");
     }
@@ -368289,13 +369111,13 @@ function CreationSummary({
     });
     return subagentManager;
   }, [state, config]);
-  const showSuccessAndClose = (0, import_react99.useCallback)(() => {
+  const showSuccessAndClose = (0, import_react100.useCallback)(() => {
     setSaveSuccess(true);
     setTimeout(() => {
       onCancel();
     }, 2e3);
   }, [onCancel]);
-  const handleSave = (0, import_react99.useCallback)(async () => {
+  const handleSave = (0, import_react100.useCallback)(async () => {
     setSaveError(null);
     try {
       await saveSubagent();
@@ -368306,7 +369128,7 @@ function CreationSummary({
       );
     }
   }, [saveSubagent, showSuccessAndClose]);
-  const handleEdit = (0, import_react99.useCallback)(async () => {
+  const handleEdit = (0, import_react100.useCallback)(async () => {
     setSaveError(null);
     try {
       const subagentManager = await saveSubagent();
@@ -368340,9 +369162,9 @@ function CreationSummary({
     }
   });
   if (saveSuccess) {
-    return /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { bold: true, color: theme.status.success, children: "\u2705 Subagent Created Successfully!" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { bold: true, color: theme.status.success, children: "\u2705 Subagent Created Successfully!" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { children: [
         'Subagent "',
         state.generatedName,
         '" has been saved to',
@@ -368352,36 +369174,36 @@ function CreationSummary({
       ] }) })
     ] });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: theme.text.primary, children: "Name: " }),
-        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: getColorForDisplay(state.color), children: state.generatedName })
+  return /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: theme.text.primary, children: "Name: " }),
+        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: getColorForDisplay(state.color), children: state.generatedName })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: theme.text.primary, children: "Location: " }),
-        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { children: state.location === "project" ? "Project Level (.qwen/agents/)" : "User Level (~/.qwen/agents/)" })
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: theme.text.primary, children: "Location: " }),
+        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { children: state.location === "project" ? "Project Level (.qwen/agents/)" : "User Level (~/.qwen/agents/)" })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: theme.text.primary, children: "Tools: " }),
-        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { children: toolsDisplay })
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: theme.text.primary, children: "Tools: " }),
+        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { children: toolsDisplay })
       ] }),
-      shouldShowColor(state.color) && /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: theme.text.primary, children: "Color: " }),
-        /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: getColorForDisplay(state.color), children: state.color })
+      shouldShowColor(state.color) && /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: theme.text.primary, children: "Color: " }),
+        /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: getColorForDisplay(state.color), children: state.color })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: theme.text.primary, children: "Description:" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { wrap: "wrap", children: truncateText(state.generatedDescription, 250) }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: theme.text.primary, children: "System Prompt:" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { wrap: "wrap", children: truncateText(state.generatedSystemPrompt, 250) }) })
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: theme.text.primary, children: "Description:" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { wrap: "wrap", children: truncateText(state.generatedDescription, 250) }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: theme.text.primary, children: "System Prompt:" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { wrap: "wrap", children: truncateText(state.generatedSystemPrompt, 250) }) })
     ] }),
-    saveError && /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { bold: true, color: theme.status.error, children: "\u274C Error saving subagent:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { flexDirection: "column", padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { color: theme.status.error, wrap: "wrap", children: saveError }) })
+    saveError && /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { bold: true, color: theme.status.error, children: "\u274C Error saving subagent:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { flexDirection: "column", padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: theme.status.error, wrap: "wrap", children: saveError }) })
     ] }),
-    warnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Text3, { bold: true, color: theme.status.warning, children: "Warnings:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime45.jsx)(Box_default, { flexDirection: "column", padding: 1, paddingBottom: 0, children: warnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime45.jsxs)(Text3, { color: theme.status.warning, wrap: "wrap", children: [
+    warnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { bold: true, color: theme.status.warning, children: "Warnings:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { flexDirection: "column", padding: 1, paddingBottom: 0, children: warnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Text3, { color: theme.status.warning, wrap: "wrap", children: [
         "\u2022 ",
         warning
       ] }, index)) })
@@ -368390,8 +369212,8 @@ function CreationSummary({
 }
 
 // packages/cli/src/ui/components/subagents/create/TextEntryStep.tsx
-var import_react100 = __toESM(require_react(), 1);
-var import_jsx_runtime46 = __toESM(require_jsx_runtime(), 1);
+var import_react101 = __toESM(require_react(), 1);
+var import_jsx_runtime47 = __toESM(require_jsx_runtime(), 1);
 function TextEntryStep({
   state,
   dispatch,
@@ -368403,7 +369225,7 @@ function TextEntryStep({
   onChange,
   validate: validate4
 }) {
-  const submit = (0, import_react100.useCallback)(() => {
+  const submit = (0, import_react101.useCallback)(() => {
     const value = initialText ? initialText.trim() : "";
     const error = validate4 ? validate4(value) : value.length === 0 ? "Please enter a value." : null;
     if (error) {
@@ -368413,9 +369235,9 @@ function TextEntryStep({
     dispatch({ type: "SET_VALIDATION_ERRORS", errors: [] });
     onNext();
   }, [dispatch, onNext, validate4, initialText]);
-  return /* @__PURE__ */ (0, import_jsx_runtime46.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    description && /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(Text3, { color: Colors.Gray, children: description }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime46.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    description && /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { color: Colors.Gray, children: description }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(
       TextInput,
       {
         value: initialText,
@@ -368431,19 +369253,19 @@ function TextEntryStep({
 }
 
 // packages/cli/src/ui/components/subagents/create/AgentCreationWizard.tsx
-var import_jsx_runtime47 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime48 = __toESM(require_jsx_runtime(), 1);
 function AgentCreationWizard({
   onClose,
   config
 }) {
-  const [state, dispatch] = (0, import_react101.useReducer)(wizardReducer, initialWizardState);
-  const handleNext = (0, import_react101.useCallback)(() => {
+  const [state, dispatch] = (0, import_react102.useReducer)(wizardReducer, initialWizardState);
+  const handleNext = (0, import_react102.useCallback)(() => {
     dispatch({ type: "GO_TO_NEXT_STEP" });
   }, []);
-  const handlePrevious = (0, import_react101.useCallback)(() => {
+  const handlePrevious = (0, import_react102.useCallback)(() => {
     dispatch({ type: "GO_TO_PREVIOUS_STEP" });
   }, []);
-  const handleCancel = (0, import_react101.useCallback)(() => {
+  const handleCancel = (0, import_react102.useCallback)(() => {
     dispatch({ type: "RESET_WIZARD" });
     onClose();
   }, [onClose]);
@@ -368464,7 +369286,7 @@ function AgentCreationWizard({
     },
     { isActive: true }
   );
-  const stepProps = (0, import_react101.useMemo)(
+  const stepProps = (0, import_react102.useMemo)(
     () => ({
       state,
       dispatch,
@@ -368475,7 +369297,7 @@ function AgentCreationWizard({
     }),
     [state, dispatch, handleNext, handlePrevious, handleCancel, config]
   );
-  const renderStepHeader = (0, import_react101.useCallback)(() => {
+  const renderStepHeader = (0, import_react102.useCallback)(() => {
     const getStepHeaderText = () => {
       const kind = getStepKind(state.generationMethod, state.currentStep);
       const n2 = state.currentStep;
@@ -368502,35 +369324,35 @@ function AgentCreationWizard({
           return "Unknown Step";
       }
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { bold: true, children: getStepHeaderText() }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { bold: true, children: getStepHeaderText() }) });
   }, [state.currentStep, state.generationMethod]);
-  const renderDebugContent = (0, import_react101.useCallback)(() => {
+  const renderDebugContent = (0, import_react102.useCallback)(() => {
     if (process.env["NODE_ENV"] !== "development") {
       return null;
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { borderStyle: "single", borderColor: theme.status.warning, padding: 1, children: /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { color: theme.status.warning, bold: true, children: "Debug Info:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: Colors.Gray, children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { borderStyle: "single", borderColor: theme.status.warning, padding: 1, children: /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: theme.status.warning, bold: true, children: "Debug Info:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: Colors.Gray, children: [
         "Step: ",
         state.currentStep
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: Colors.Gray, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: Colors.Gray, children: [
         "Can Proceed: ",
         state.canProceed ? "Yes" : "No"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: Colors.Gray, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: Colors.Gray, children: [
         "Generating: ",
         state.isGenerating ? "Yes" : "No"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: Colors.Gray, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: Colors.Gray, children: [
         "Location: ",
         state.location
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: Colors.Gray, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: Colors.Gray, children: [
         "Method: ",
         state.generationMethod
       ] }),
-      state.validationErrors.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: theme.status.error, children: [
+      state.validationErrors.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: theme.status.error, children: [
         "Errors: ",
         state.validationErrors.join(", ")
       ] })
@@ -368543,7 +369365,7 @@ function AgentCreationWizard({
     state.generationMethod,
     state.validationErrors
   ]);
-  const renderStepFooter = (0, import_react101.useCallback)(() => {
+  const renderStepFooter = (0, import_react102.useCallback)(() => {
     const getNavigationInstructions = () => {
       const kind = getStepKind(state.generationMethod, state.currentStep);
       if (kind === "LLM_DESC" && state.isGenerating) {
@@ -368558,19 +369380,19 @@ function AgentCreationWizard({
       const escAction = state.currentStep === WIZARD_STEPS.LOCATION_SELECTION ? "cancel" : "go back";
       return `Press Enter to continue, ${navigationPart}Esc to ${escAction}`;
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Text3, { color: theme.text.secondary, children: getNavigationInstructions() }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: theme.text.secondary, children: getNavigationInstructions() }) });
   }, [state.currentStep, state.isGenerating, state.generationMethod]);
-  const renderStepContent = (0, import_react101.useCallback)(() => {
+  const renderStepContent = (0, import_react102.useCallback)(() => {
     const kind = getStepKind(state.generationMethod, state.currentStep);
     switch (kind) {
       case "LOCATION":
-        return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(LocationSelector, { ...stepProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(LocationSelector, { ...stepProps });
       case "GEN_METHOD":
-        return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(GenerationMethodSelector, { ...stepProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(GenerationMethodSelector, { ...stepProps });
       case "LLM_DESC":
-        return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(DescriptionInput, { ...stepProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(DescriptionInput, { ...stepProps });
       case "MANUAL_NAME":
-        return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(
           TextEntryStep,
           {
             state,
@@ -368589,7 +369411,7 @@ function AgentCreationWizard({
           "manual-name"
         );
       case "MANUAL_PROMPT":
-        return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(
           TextEntryStep,
           {
             state,
@@ -368610,7 +369432,7 @@ function AgentCreationWizard({
           "manual-prompt"
         );
       case "MANUAL_DESC":
-        return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(
           TextEntryStep,
           {
             state,
@@ -368628,7 +369450,7 @@ function AgentCreationWizard({
           "manual-desc"
         );
       case "TOOLS":
-        return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(
           ToolSelector,
           {
             tools: state.selectedTools,
@@ -368640,7 +369462,7 @@ function AgentCreationWizard({
           }
         );
       case "COLOR":
-        return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(
           ColorSelector,
           {
             color: state.color,
@@ -368652,15 +369474,15 @@ function AgentCreationWizard({
           }
         );
       case "FINAL":
-        return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(CreationSummary, { ...stepProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(CreationSummary, { ...stepProps });
       default:
-        return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(Text3, { color: theme.status.error, children: [
+        return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: theme.status.error, children: [
           "Invalid step: ",
           state.currentStep
         ] }) });
     }
   }, [stepProps, state, config, handleNext, dispatch]);
-  return /* @__PURE__ */ (0, import_jsx_runtime47.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime47.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(
     Box_default,
     {
       borderStyle: "single",
@@ -368680,39 +369502,39 @@ function AgentCreationWizard({
 }
 
 // packages/cli/src/ui/components/subagents/manage/AgentsManagerDialog.tsx
-var import_react105 = __toESM(require_react(), 1);
+var import_react106 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/subagents/manage/AgentSelectionStep.tsx
-var import_react102 = __toESM(require_react(), 1);
+var import_react103 = __toESM(require_react(), 1);
 init_dist3();
-var import_jsx_runtime48 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime49 = __toESM(require_jsx_runtime(), 1);
 var AgentSelectionStep = ({
   availableAgents,
   onAgentSelect
 }) => {
-  const [navigation, setNavigation] = (0, import_react102.useState)({
+  const [navigation, setNavigation] = (0, import_react103.useState)({
     currentBlock: "project",
     projectIndex: 0,
     userIndex: 0,
     builtinIndex: 0
   });
-  const projectAgents = (0, import_react102.useMemo)(
+  const projectAgents = (0, import_react103.useMemo)(
     () => availableAgents.filter((agent) => agent.level === "project"),
     [availableAgents]
   );
-  const userAgents = (0, import_react102.useMemo)(
+  const userAgents = (0, import_react103.useMemo)(
     () => availableAgents.filter((agent) => agent.level === "user"),
     [availableAgents]
   );
-  const builtinAgents = (0, import_react102.useMemo)(
+  const builtinAgents = (0, import_react103.useMemo)(
     () => availableAgents.filter((agent) => agent.level === "builtin"),
     [availableAgents]
   );
-  const projectNames = (0, import_react102.useMemo)(
+  const projectNames = (0, import_react103.useMemo)(
     () => new Set(projectAgents.map((agent) => agent.name)),
     [projectAgents]
   );
-  (0, import_react102.useEffect)(() => {
+  (0, import_react103.useEffect)(() => {
     if (projectAgents.length > 0) {
       setNavigation((prev) => ({ ...prev, currentBlock: "project" }));
     } else if (userAgents.length > 0) {
@@ -368833,22 +369655,22 @@ var AgentSelectionStep = ({
     { isActive: true }
   );
   if (availableAgents.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: theme.text.secondary, children: "No subagents found." }),
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: theme.text.secondary, children: "Use '/agents create' to create your first subagent." })
+    return /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: theme.text.secondary, children: "No subagents found." }),
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: theme.text.secondary, children: "Use '/agents create' to create your first subagent." })
     ] });
   }
   const renderAgentItem = (agent, index, isSelected) => {
     const textColor = isSelected ? theme.text.accent : theme.text.primary;
-    return /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { alignItems: "center", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: isSelected ? theme.text.accent : theme.text.primary, children: isSelected ? "\u25CF" : " " }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: textColor, wrap: "truncate", children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { alignItems: "center", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: isSelected ? theme.text.accent : theme.text.primary, children: isSelected ? "\u25CF" : " " }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Text3, { color: textColor, wrap: "truncate", children: [
         agent.name,
-        agent.isBuiltin && /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: isSelected ? theme.text.accent : theme.text.secondary, children: [
+        agent.isBuiltin && /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Text3, { color: isSelected ? theme.text.accent : theme.text.secondary, children: [
           " ",
           "(built-in)"
         ] }),
-        agent.level === "user" && projectNames.has(agent.name) && /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: isSelected ? theme.status.warning : Colors.Gray, children: [
+        agent.level === "user" && projectNames.has(agent.name) && /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Text3, { color: isSelected ? theme.status.warning : Colors.Gray, children: [
           " ",
           "(overridden by project level agent)"
         ] })
@@ -368856,44 +369678,44 @@ var AgentSelectionStep = ({
     ] }, `${agent.name}-${agent.level}`);
   };
   const enabledAgentsCount = projectAgents.length + userAgents.filter((agent) => !projectNames.has(agent.name)).length + builtinAgents.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { flexDirection: "column", children: [
-    projectAgents.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: theme.text.primary, bold: true, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { flexDirection: "column", children: [
+    projectAgents.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Text3, { color: theme.text.primary, bold: true, children: [
         "Project Level (",
         projectAgents[0].filePath.replace(/\/[^/]+$/, ""),
         ")"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { marginTop: 1, flexDirection: "column", children: projectAgents.map((agent, index) => {
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { marginTop: 1, flexDirection: "column", children: projectAgents.map((agent, index) => {
         const isSelected = navigation.currentBlock === "project" && navigation.projectIndex === index;
         return renderAgentItem(agent, index, isSelected);
       }) })
     ] }),
-    userAgents.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(
+    userAgents.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(
       Box_default,
       {
         flexDirection: "column",
         marginBottom: builtinAgents.length > 0 ? 1 : 0,
         children: [
-          /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: theme.text.primary, bold: true, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Text3, { color: theme.text.primary, bold: true, children: [
             "User Level (",
             userAgents[0].filePath.replace(/\/[^/]+$/, ""),
             ")"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { marginTop: 1, flexDirection: "column", children: userAgents.map((agent, index) => {
+          /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { marginTop: 1, flexDirection: "column", children: userAgents.map((agent, index) => {
             const isSelected = navigation.currentBlock === "user" && navigation.userIndex === index;
             return renderAgentItem(agent, index, isSelected);
           }) })
         ]
       }
     ),
-    builtinAgents.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Text3, { color: theme.text.primary, bold: true, children: "Built-in Agents" }),
-      /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { marginTop: 1, flexDirection: "column", children: builtinAgents.map((agent, index) => {
+    builtinAgents.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Text3, { color: theme.text.primary, bold: true, children: "Built-in Agents" }),
+      /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { marginTop: 1, flexDirection: "column", children: builtinAgents.map((agent, index) => {
         const isSelected = navigation.currentBlock === "builtin" && navigation.builtinIndex === index;
         return renderAgentItem(agent, index, isSelected);
       }) })
     ] }),
-    (projectAgents.length > 0 || userAgents.length > 0 || builtinAgents.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime48.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime48.jsxs)(Text3, { color: theme.text.secondary, children: [
+    (projectAgents.length > 0 || userAgents.length > 0 || builtinAgents.length > 0) && /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime49.jsxs)(Text3, { color: theme.text.secondary, children: [
       "Using: ",
       enabledAgentsCount,
       " agents"
@@ -368902,15 +369724,15 @@ var AgentSelectionStep = ({
 };
 
 // packages/cli/src/ui/components/subagents/manage/ActionSelectionStep.tsx
-var import_react103 = __toESM(require_react(), 1);
+var import_react104 = __toESM(require_react(), 1);
 init_dist3();
-var import_jsx_runtime49 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime50 = __toESM(require_jsx_runtime(), 1);
 var ActionSelectionStep = ({
   selectedAgent,
   onNavigateToStep,
   onNavigateBack
 }) => {
-  const [selectedAction, setSelectedAction] = (0, import_react103.useState)(null);
+  const [selectedAction, setSelectedAction] = (0, import_react104.useState)(null);
   const allActions = [
     { label: "View Agent", value: "view" },
     { label: "Edit Agent", value: "edit" },
@@ -368935,7 +369757,7 @@ var ActionSelectionStep = ({
     }
   };
   const selectedIndex = selectedAction ? actions.findIndex((action) => action.value === selectedAction) : 0;
-  return /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime49.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(
     RadioButtonSelect,
     {
       items: actions,
@@ -368948,37 +369770,37 @@ var ActionSelectionStep = ({
 
 // packages/cli/src/ui/components/subagents/manage/AgentViewerStep.tsx
 init_dist3();
-var import_jsx_runtime50 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime51 = __toESM(require_jsx_runtime(), 1);
 var AgentViewerStep = ({ selectedAgent }) => {
   if (!selectedAgent) {
-    return /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color: theme.status.error, children: "No agent selected" }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: theme.status.error, children: "No agent selected" }) });
   }
   const agent = selectedAgent;
   const toolsDisplay = agent.tools ? agent.tools.join(", ") : "*";
-  return /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime50.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color: theme.text.primary, children: "File Path: " }),
-      /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { children: agent.filePath })
+  return /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: theme.text.primary, children: "File Path: " }),
+      /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { children: agent.filePath })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime50.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color: theme.text.primary, children: "Tools: " }),
-      /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { children: toolsDisplay })
+    /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: theme.text.primary, children: "Tools: " }),
+      /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { children: toolsDisplay })
     ] }),
-    shouldShowColor(agent.color) && /* @__PURE__ */ (0, import_jsx_runtime50.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color: theme.text.primary, children: "Color: " }),
-      /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color: getColorForDisplay(agent.color), children: agent.color })
+    shouldShowColor(agent.color) && /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: theme.text.primary, children: "Color: " }),
+      /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: getColorForDisplay(agent.color), children: agent.color })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color: theme.text.primary, children: "Description:" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { wrap: "wrap", children: agent.description }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { color: theme.text.primary, children: "System Prompt:" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime50.jsx)(Text3, { wrap: "wrap", children: agent.systemPrompt }) })
+    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: theme.text.primary, children: "Description:" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { wrap: "wrap", children: agent.description }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: theme.text.primary, children: "System Prompt:" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { wrap: "wrap", children: agent.systemPrompt }) })
   ] }) });
 };
 
 // packages/cli/src/ui/components/subagents/manage/AgentEditStep.tsx
-var import_react104 = __toESM(require_react(), 1);
+var import_react105 = __toESM(require_react(), 1);
 init_dist3();
-var import_jsx_runtime51 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime52 = __toESM(require_jsx_runtime(), 1);
 var editOptions = [
   {
     id: "editor",
@@ -368997,13 +369819,13 @@ function EditOptionsStep({
   selectedAgent,
   onNavigateToStep
 }) {
-  const [selectedOption, setSelectedOption] = (0, import_react104.useState)("editor");
-  const [error, setError] = (0, import_react104.useState)(null);
+  const [selectedOption, setSelectedOption] = (0, import_react105.useState)("editor");
+  const [error, setError] = (0, import_react105.useState)(null);
   const launchEditor = useLaunchEditor();
   const handleHighlight = (selectedValue) => {
     setSelectedOption(selectedValue);
   };
-  const handleSelect = (0, import_react104.useCallback)(
+  const handleSelect = (0, import_react105.useCallback)(
     async (selectedValue) => {
       if (!selectedAgent) return;
       setError(null);
@@ -369023,8 +369845,8 @@ function EditOptionsStep({
     },
     [selectedAgent, onNavigateToStep, launchEditor]
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(
       RadioButtonSelect,
       {
         items: editOptions.map((option2) => ({
@@ -369039,16 +369861,16 @@ function EditOptionsStep({
         isFocused: true
       }
     ) }),
-    error && /* @__PURE__ */ (0, import_jsx_runtime51.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { bold: true, color: theme.status.error, children: "\u274C Error:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Box_default, { flexDirection: "column", padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime51.jsx)(Text3, { color: theme.status.error, wrap: "wrap", children: error }) })
+    error && /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { bold: true, color: theme.status.error, children: "\u274C Error:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexDirection: "column", padding: 1, paddingBottom: 0, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: theme.status.error, wrap: "wrap", children: error }) })
     ] })
   ] });
 }
 
 // packages/cli/src/ui/components/subagents/manage/AgentDeleteStep.tsx
 init_dist3();
-var import_jsx_runtime52 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime53 = __toESM(require_jsx_runtime(), 1);
 function AgentDeleteStep({
   selectedAgent,
   onDelete,
@@ -369070,9 +369892,9 @@ function AgentDeleteStep({
     { isActive: true }
   );
   if (!selectedAgent) {
-    return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Text3, { color: theme.status.error, children: "No agent selected" }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.status.error, children: "No agent selected" }) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime52.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime52.jsxs)(Text3, { color: theme.status.error, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: theme.status.error, children: [
     "Are you sure you want to delete agent \u201C",
     selectedAgent.name,
     "\u201D?"
@@ -369080,41 +369902,41 @@ function AgentDeleteStep({
 }
 
 // packages/cli/src/ui/components/subagents/manage/AgentsManagerDialog.tsx
-var import_jsx_runtime53 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime54 = __toESM(require_jsx_runtime(), 1);
 function AgentsManagerDialog({
   onClose,
   config
 }) {
-  const [availableAgents, setAvailableAgents] = (0, import_react105.useState)([]);
-  const [selectedAgentIndex, setSelectedAgentIndex] = (0, import_react105.useState)(-1);
-  const [navigationStack, setNavigationStack] = (0, import_react105.useState)([
+  const [availableAgents, setAvailableAgents] = (0, import_react106.useState)([]);
+  const [selectedAgentIndex, setSelectedAgentIndex] = (0, import_react106.useState)(-1);
+  const [navigationStack, setNavigationStack] = (0, import_react106.useState)([
     MANAGEMENT_STEPS.AGENT_SELECTION
   ]);
-  const selectedAgent = (0, import_react105.useMemo)(
+  const selectedAgent = (0, import_react106.useMemo)(
     () => selectedAgentIndex >= 0 ? availableAgents[selectedAgentIndex] : null,
     [availableAgents, selectedAgentIndex]
   );
-  const loadAgents = (0, import_react105.useCallback)(async () => {
+  const loadAgents = (0, import_react106.useCallback)(async () => {
     if (!config) return;
     const manager = config.getSubagentManager();
     const allAgents = await manager.listSubagents({ force: true });
     setAvailableAgents(allAgents);
   }, [config]);
-  (0, import_react105.useEffect)(() => {
+  (0, import_react106.useEffect)(() => {
     loadAgents();
   }, [loadAgents]);
-  const getCurrentStep = (0, import_react105.useCallback)(
+  const getCurrentStep = (0, import_react106.useCallback)(
     () => navigationStack[navigationStack.length - 1] || MANAGEMENT_STEPS.AGENT_SELECTION,
     [navigationStack]
   );
-  const handleSelectAgent = (0, import_react105.useCallback)((agentIndex) => {
+  const handleSelectAgent = (0, import_react106.useCallback)((agentIndex) => {
     setSelectedAgentIndex(agentIndex);
     setNavigationStack((prev) => [...prev, MANAGEMENT_STEPS.ACTION_SELECTION]);
   }, []);
-  const handleNavigateToStep = (0, import_react105.useCallback)((step) => {
+  const handleNavigateToStep = (0, import_react106.useCallback)((step) => {
     setNavigationStack((prev) => [...prev, step]);
   }, []);
-  const handleNavigateBack = (0, import_react105.useCallback)(() => {
+  const handleNavigateBack = (0, import_react106.useCallback)(() => {
     setNavigationStack((prev) => {
       if (prev.length <= 1) {
         return prev;
@@ -369122,7 +369944,7 @@ function AgentsManagerDialog({
       return prev.slice(0, -1);
     });
   }, []);
-  const handleDeleteAgent = (0, import_react105.useCallback)(
+  const handleDeleteAgent = (0, import_react106.useCallback)(
     async (agent) => {
       if (!config) return;
       try {
@@ -369152,14 +369974,14 @@ function AgentsManagerDialog({
     },
     { isActive: true }
   );
-  const commonProps = (0, import_react105.useMemo)(
+  const commonProps = (0, import_react106.useMemo)(
     () => ({
       onNavigateToStep: handleNavigateToStep,
       onNavigateBack: handleNavigateBack
     }),
     [handleNavigateToStep, handleNavigateBack]
   );
-  const renderStepHeader = (0, import_react105.useCallback)(() => {
+  const renderStepHeader = (0, import_react106.useCallback)(() => {
     const currentStep = getCurrentStep();
     const getStepHeaderText = () => {
       switch (currentStep) {
@@ -369182,9 +370004,9 @@ function AgentsManagerDialog({
       }
     };
     const headerColor = currentStep === MANAGEMENT_STEPS.AGENT_VIEWER && selectedAgent && shouldShowColor(selectedAgent.color) ? getColorForDisplay(selectedAgent.color) : void 0;
-    return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { bold: true, color: headerColor, children: getStepHeaderText() }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { bold: true, color: headerColor, children: getStepHeaderText() }) });
   }, [getCurrentStep, selectedAgent]);
-  const renderStepFooter = (0, import_react105.useCallback)(() => {
+  const renderStepFooter = (0, import_react106.useCallback)(() => {
     const currentStep = getCurrentStep();
     const getNavigationInstructions = () => {
       if (currentStep === MANAGEMENT_STEPS.AGENT_SELECTION) {
@@ -369201,13 +370023,13 @@ function AgentsManagerDialog({
       }
       return "Enter to select, \u2191\u2193 to navigate, Esc to go back";
     };
-    return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Text3, { color: theme.text.secondary, children: getNavigationInstructions() }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: theme.text.secondary, children: getNavigationInstructions() }) });
   }, [getCurrentStep, availableAgents]);
-  const renderStepContent = (0, import_react105.useCallback)(() => {
+  const renderStepContent = (0, import_react106.useCallback)(() => {
     const currentStep = getCurrentStep();
     switch (currentStep) {
       case MANAGEMENT_STEPS.AGENT_SELECTION:
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
           AgentSelectionStep,
           {
             availableAgents,
@@ -369216,13 +370038,13 @@ function AgentsManagerDialog({
           }
         );
       case MANAGEMENT_STEPS.ACTION_SELECTION:
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(ActionSelectionStep, { selectedAgent, ...commonProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(ActionSelectionStep, { selectedAgent, ...commonProps });
       case MANAGEMENT_STEPS.AGENT_VIEWER:
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(AgentViewerStep, { selectedAgent, ...commonProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(AgentViewerStep, { selectedAgent, ...commonProps });
       case MANAGEMENT_STEPS.EDIT_OPTIONS:
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(EditOptionsStep, { selectedAgent, ...commonProps });
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(EditOptionsStep, { selectedAgent, ...commonProps });
       case MANAGEMENT_STEPS.EDIT_TOOLS:
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
           ToolSelector,
           {
             tools: selectedAgent?.tools || [],
@@ -369246,7 +370068,7 @@ function AgentsManagerDialog({
           }
         ) });
       case MANAGEMENT_STEPS.EDIT_COLOR:
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", gap: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
           ColorSelector,
           {
             color: selectedAgent?.color || "auto",
@@ -369270,7 +370092,7 @@ function AgentsManagerDialog({
           }
         ) });
       case MANAGEMENT_STEPS.DELETE_CONFIRMATION:
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
           AgentDeleteStep,
           {
             selectedAgent,
@@ -369279,7 +370101,7 @@ function AgentsManagerDialog({
           }
         );
       default:
-        return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(Text3, { color: theme.status.error, children: [
+        return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: theme.status.error, children: [
           "Invalid step: ",
           currentStep
         ] }) });
@@ -369295,7 +370117,7 @@ function AgentsManagerDialog({
     handleSelectAgent,
     handleDeleteAgent
   ]);
-  return /* @__PURE__ */ (0, import_jsx_runtime53.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime53.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(
     Box_default,
     {
       borderStyle: "single",
@@ -369314,11 +370136,11 @@ function AgentsManagerDialog({
 }
 
 // packages/cli/src/ui/components/subagents/runtime/AgentExecutionDisplay.tsx
-var import_react106 = __toESM(require_react(), 1);
+var import_react107 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/messages/ToolConfirmationMessage.tsx
 init_dist3();
-var import_jsx_runtime54 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime55 = __toESM(require_jsx_runtime(), 1);
 var ToolConfirmationMessage = ({
   confirmationDetails,
   config,
@@ -369368,9 +370190,9 @@ var ToolConfirmationMessage = ({
         value: ToolConfirmationOutcome.Cancel
       }
     ];
-    return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { wrap: "truncate", children: "Do you want to proceed?" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { wrap: "truncate", children: "Do you want to proceed?" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
         RadioButtonSelect,
         {
           items: compactOptions,
@@ -369400,7 +370222,7 @@ var ToolConfirmationMessage = ({
   }
   if (confirmationDetails.type === "edit") {
     if (confirmationDetails.isModifying) {
-      return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(
+      return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(
         Box_default,
         {
           minWidth: "90%",
@@ -369410,8 +370232,8 @@ var ToolConfirmationMessage = ({
           padding: 1,
           overflow: "hidden",
           children: [
-            /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: "Modify in progress: " }),
-            /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.AccentGreen, children: "Save and close external editor to continue" })
+            /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { children: "Modify in progress: " }),
+            /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.AccentGreen, children: "Save and close external editor to continue" })
           ]
         }
       );
@@ -369442,7 +370264,7 @@ var ToolConfirmationMessage = ({
         value: ToolConfirmationOutcome.Cancel
       });
     }
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
       DiffRenderer,
       {
         diffContent: confirmationDetails.fileDiff,
@@ -369472,12 +370294,12 @@ var ToolConfirmationMessage = ({
     if (bodyContentHeight !== void 0) {
       bodyContentHeight -= 2;
     }
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
       MaxSizedBox,
       {
         maxHeight: bodyContentHeight,
         maxWidth: Math.max(childWidth - 4, 1),
-        children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.AccentCyan, children: executionProps.command }) })
+        children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.AccentCyan, children: executionProps.command }) })
       }
     ) }) });
   } else if (confirmationDetails.type === "plan") {
@@ -369495,7 +370317,7 @@ var ToolConfirmationMessage = ({
       label: "No, keep planning (esc)",
       value: ToolConfirmationOutcome.Cancel
     });
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
       MarkdownDisplay,
       {
         text: planProps.plan,
@@ -369522,25 +370344,25 @@ var ToolConfirmationMessage = ({
       label: "No, suggest changes (esc)",
       value: ToolConfirmationOutcome.Cancel
     });
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { color: Colors.AccentCyan, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(RenderInline, { text: infoProps.prompt }) }),
-      displayUrls && infoProps.urls && infoProps.urls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { children: "URLs to fetch:" }),
-        infoProps.urls.map((url2) => /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { children: [
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.AccentCyan, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(RenderInline, { text: infoProps.prompt }) }),
+      displayUrls && infoProps.urls && infoProps.urls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { children: "URLs to fetch:" }),
+        infoProps.urls.map((url2) => /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
           " ",
           "- ",
-          /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(RenderInline, { text: url2 })
+          /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(RenderInline, { text: url2 })
         ] }, url2))
       ] })
     ] });
   } else {
     const mcpProps = confirmationDetails;
-    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentCyan, children: [
+    bodyContent = /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, marginLeft: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.AccentCyan, children: [
         "MCP Server: ",
         mcpProps.serverName
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Text3, { color: Colors.AccentCyan, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.AccentCyan, children: [
         "Tool: ",
         mcpProps.toolName
       ] })
@@ -369566,10 +370388,10 @@ var ToolConfirmationMessage = ({
       value: ToolConfirmationOutcome.Cancel
     });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime54.jsxs)(Box_default, { flexDirection: "column", padding: 1, width: childWidth, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexGrow: 1, flexShrink: 1, overflow: "hidden", marginBottom: 1, children: bodyContent }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { marginBottom: 1, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Text3, { wrap: "truncate", children: question }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime54.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", padding: 1, width: childWidth, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexGrow: 1, flexShrink: 1, overflow: "hidden", marginBottom: 1, children: bodyContent }),
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { marginBottom: 1, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { wrap: "truncate", children: question }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
       RadioButtonSelect,
       {
         items: options2,
@@ -369581,7 +370403,7 @@ var ToolConfirmationMessage = ({
 };
 
 // packages/cli/src/ui/components/subagents/runtime/AgentExecutionDisplay.tsx
-var import_jsx_runtime55 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime56 = __toESM(require_jsx_runtime(), 1);
 var getStatusColor = (status) => {
   switch (status) {
     case "running":
@@ -369621,14 +370443,14 @@ var AgentExecutionDisplay = ({
   childWidth,
   config
 }) => {
-  const [displayMode, setDisplayMode] = import_react106.default.useState("compact");
-  const agentColor = (0, import_react106.useMemo)(() => {
+  const [displayMode, setDisplayMode] = import_react107.default.useState("compact");
+  const agentColor = (0, import_react107.useMemo)(() => {
     const colorOption = COLOR_OPTIONS.find(
       (option2) => option2.name === data.subagentColor
     );
     return colorOption?.value || theme.text.accent;
   }, [data.subagentColor]);
-  const footerText = import_react106.default.useMemo(() => {
+  const footerText = import_react107.default.useMemo(() => {
     if (data.status !== "running") return "";
     if (displayMode === "default") {
       const hasMoreLines = data.taskPrompt.split("\n").length > MAX_TASK_PROMPT_LINES;
@@ -369658,28 +370480,28 @@ var AgentExecutionDisplay = ({
     { isActive: true }
   );
   if (displayMode === "compact") {
-    return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
-      !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
-        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(StatusDot, { status: data.status }),
-        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(StatusIndicator, { status: data.status })
+    return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", children: [
+      !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
+        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(StatusDot, { status: data.status }),
+        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(StatusIndicator, { status: data.status })
       ] }),
-      data.status === "running" && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(import_jsx_runtime55.Fragment, { children: [
-        data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+      data.status === "running" && /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(import_jsx_runtime56.Fragment, { children: [
+        data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
             ToolCallItem,
             {
               toolCall: data.toolCalls[data.toolCalls.length - 1],
               compact: true
             }
           ),
-          data.toolCalls.length > 1 && !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", paddingLeft: 4, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.Gray, children: [
+          data.toolCalls.length > 1 && !data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "row", paddingLeft: 4, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: Colors.Gray, children: [
             "+",
             data.toolCalls.length - 1,
             " more tool calls (ctrl+r to expand)"
           ] }) })
         ] }),
-        data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+        data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
           ToolConfirmationMessage,
           {
             confirmationDetails: data.pendingConfirmation,
@@ -369691,7 +370513,7 @@ var AgentExecutionDisplay = ({
           }
         ) })
       ] }),
-      data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: theme.text.secondary, children: [
+      data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: theme.text.secondary, children: [
         "Execution Summary: ",
         data.executionSummary.totalToolCalls,
         " tool uses \xB7 ",
@@ -369699,33 +370521,33 @@ var AgentExecutionDisplay = ({
         " tokens \xB7 ",
         fmtDuration(data.executionSummary.totalDurationMs)
       ] }) }),
-      data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: theme.status.error, children: [
+      data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "row", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: theme.status.error, children: [
         "Failed: ",
         data.terminateReason
       ] }) })
     ] });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(StatusDot, { status: data.status }),
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(StatusIndicator, { status: data.status })
+  return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", paddingX: 1, gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { bold: true, color: agentColor, children: data.subagentName }),
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(StatusDot, { status: data.status }),
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(StatusIndicator, { status: data.status })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
       TaskPromptSection,
       {
         taskPrompt: data.taskPrompt,
         displayMode
       }
     ),
-    data.status === "running" && data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+    data.status === "running" && data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
       ToolCallsList,
       {
         toolCalls: data.toolCalls,
         displayMode
       }
     ) }),
-    data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(
+    data.pendingConfirmation && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(
       ToolConfirmationMessage,
       {
         confirmationDetails: data.pendingConfirmation,
@@ -369736,8 +370558,8 @@ var AgentExecutionDisplay = ({
         compactMode: true
       }
     ) }),
-    (data.status === "completed" || data.status === "failed" || data.status === "cancelled") && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(ResultsSection, { data, displayMode }),
-    footerText && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Gray, children: footerText }) })
+    (data.status === "completed" || data.status === "failed" || data.status === "cancelled") && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(ResultsSection, { data, displayMode }),
+    footerText && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.Gray, children: footerText }) })
   ] });
 };
 var TaskPromptSection = ({ taskPrompt, displayMode }) => {
@@ -369745,24 +370567,24 @@ var TaskPromptSection = ({ taskPrompt, displayMode }) => {
   const shouldTruncate = lines.length > 10;
   const showFull = displayMode === "verbose";
   const displayLines = showFull ? lines : lines.slice(0, MAX_TASK_PROMPT_LINES);
-  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.text.primary, children: "Task Detail: " }),
-      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: theme.text.primary, children: "Task Detail: " }),
+      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: Colors.Gray, children: [
         " ",
         "Showing the first ",
         MAX_TASK_PROMPT_LINES,
         " lines."
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { wrap: "wrap", children: displayLines.join("\n") + (shouldTruncate && !showFull ? "..." : "") }) })
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { wrap: "wrap", children: displayLines.join("\n") + (shouldTruncate && !showFull ? "..." : "") }) })
   ] });
 };
-var StatusDot = ({ status }) => /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { marginLeft: 1, marginRight: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: getStatusColor(status), children: "\u25CF" }) });
+var StatusDot = ({ status }) => /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { marginLeft: 1, marginRight: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: getStatusColor(status), children: "\u25CF" }) });
 var StatusIndicator = ({ status }) => {
   const color = getStatusColor(status);
   const text = getStatusText(status);
-  return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color, children: text });
+  return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color, children: text });
 };
 var ToolCallsList = ({ toolCalls, displayMode }) => {
   const calls = toolCalls || [];
@@ -369770,10 +370592,10 @@ var ToolCallsList = ({ toolCalls, displayMode }) => {
   const showAll = displayMode === "verbose";
   const displayCalls = showAll ? calls : calls.slice(-MAX_TOOL_CALLS);
   const reversedDisplayCalls = [...displayCalls].reverse();
-  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.text.primary, children: "Tools:" }),
-      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: theme.text.primary, children: "Tools:" }),
+      shouldTruncate && displayMode === "default" && /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: Colors.Gray, children: [
         " ",
         "Showing the last ",
         MAX_TOOL_CALLS,
@@ -369782,76 +370604,76 @@ var ToolCallsList = ({ toolCalls, displayMode }) => {
         " tools."
       ] })
     ] }),
-    reversedDisplayCalls.map((toolCall, index) => /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(ToolCallItem, { toolCall }, `${toolCall.name}-${index}`))
+    reversedDisplayCalls.map((toolCall, index) => /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(ToolCallItem, { toolCall }, `${toolCall.name}-${index}`))
   ] });
 };
 var ToolCallItem = ({ toolCall, compact = false }) => {
   const STATUS_INDICATOR_WIDTH2 = 3;
-  const statusIcon = import_react106.default.useMemo(() => {
+  const statusIcon = import_react107.default.useMemo(() => {
     const color = getStatusColor(toolCall.status);
     switch (toolCall.status) {
       case "executing":
-        return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color, children: "\u22B7" });
+        return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color, children: "\u22B7" });
       // Using same as ToolMessage
       case "awaiting_approval":
-        return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.status.warning, children: "?" });
+        return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: theme.status.warning, children: "?" });
       case "success":
-        return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color, children: "\u2713" });
+        return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color, children: "\u2713" });
       case "failed":
-        return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color, bold: true, children: "x" });
+        return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color, bold: true, children: "x" });
       default:
-        return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color, children: "o" });
+        return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color, children: "o" });
     }
   }, [toolCall.status]);
-  const description = import_react106.default.useMemo(() => {
+  const description = import_react107.default.useMemo(() => {
     if (!toolCall.description) return "";
     const firstLine = toolCall.description.split("\n")[0];
     return firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
   }, [toolCall.description]);
-  const truncatedOutput = import_react106.default.useMemo(() => {
+  const truncatedOutput = import_react107.default.useMemo(() => {
     if (!toolCall.resultDisplay) return "";
     const firstLine = toolCall.resultDisplay.split("\n")[0];
     return firstLine.length > 80 ? firstLine.substring(0, 80) + "..." : firstLine;
   }, [toolCall.resultDisplay]);
-  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, marginBottom: 0, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH2, children: statusIcon }),
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { wrap: "truncate-end", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { children: toolCall.name }),
+  return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, marginBottom: 0, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "row", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH2, children: statusIcon }),
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { wrap: "truncate-end", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { children: toolCall.name }),
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Gray, children: description }),
-        toolCall.error && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: theme.status.error, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.Gray, children: description }),
+        toolCall.error && /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: theme.status.error, children: [
           " - ",
           toolCall.error
         ] })
       ] })
     ] }),
-    !compact && truncatedOutput && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", paddingLeft: STATUS_INDICATOR_WIDTH2, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Gray, children: truncatedOutput }) })
+    !compact && truncatedOutput && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "row", paddingLeft: STATUS_INDICATOR_WIDTH2, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.Gray, children: truncatedOutput }) })
   ] });
 };
 var ExecutionSummaryDetails = ({ data, displayMode: _displayMode }) => {
   const stats = data.executionSummary;
   if (!stats) {
-    return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No summary available" }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No summary available" }) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { children: [
         "Duration: ",
         fmtDuration(stats.totalDurationMs)
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { children: [
         "Rounds: ",
         stats.rounds
       ] })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { children: [
         "Tokens: ",
         stats.totalTokens.toLocaleString()
       ] })
@@ -369860,32 +370682,32 @@ var ExecutionSummaryDetails = ({ data, displayMode: _displayMode }) => {
 };
 var ToolUsageStats = ({ executionSummary }) => {
   if (!executionSummary) {
-    return /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No tool usage data available" }) });
+    return /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "column", paddingLeft: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.Gray, children: "\u2022 No tool usage data available" }) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", paddingLeft: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { children: "Total Calls:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { children: "Total Calls:" }),
       " ",
       executionSummary.totalToolCalls
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { children: [
       "\u2022 ",
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { children: "Success Rate:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { children: "Success Rate:" }),
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.AccentGreen, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: Colors.AccentGreen, children: [
         executionSummary.successRate.toFixed(1),
         "%"
       ] }),
       " ",
       "(",
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.AccentGreen, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: Colors.AccentGreen, children: [
         executionSummary.successfulToolCalls,
         " success"
       ] }),
       ",",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Text3, { color: Colors.AccentRed, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: Colors.AccentRed, children: [
         executionSummary.failedToolCalls,
         " failed"
       ] }),
@@ -369893,20 +370715,20 @@ var ToolUsageStats = ({ executionSummary }) => {
     ] })
   ] });
 };
-var ResultsSection = ({ data, displayMode }) => /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
-  data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(ToolCallsList, { toolCalls: data.toolCalls, displayMode }),
-  data.status === "completed" && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.text.primary, children: "Execution Summary:" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(ExecutionSummaryDetails, { data, displayMode })
+var ResultsSection = ({ data, displayMode }) => /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", gap: 1, children: [
+  data.toolCalls && data.toolCalls.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(ToolCallsList, { toolCalls: data.toolCalls, displayMode }),
+  data.status === "completed" && /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: theme.text.primary, children: "Execution Summary:" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(ExecutionSummaryDetails, { data, displayMode })
   ] }),
-  data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.text.primary, children: "Tool Usage:" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(ToolUsageStats, { executionSummary: data.executionSummary })
+  data.status === "completed" && data.executionSummary && /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "row", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: theme.text.primary, children: "Tool Usage:" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(ToolUsageStats, { executionSummary: data.executionSummary })
   ] }),
-  data.status === "cancelled" && /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.status.warning, children: "\u23F9 User Cancelled" }) }),
-  data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime55.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.status.error, children: "Task Failed: " }),
-    /* @__PURE__ */ (0, import_jsx_runtime55.jsx)(Text3, { color: theme.status.error, children: data.terminateReason })
+  data.status === "cancelled" && /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Box_default, { flexDirection: "row", children: /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: theme.status.warning, children: "\u23F9 User Cancelled" }) }),
+  data.status === "failed" && /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: theme.status.error, children: "Task Failed: " }),
+    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: theme.status.error, children: data.terminateReason })
   ] })
 ] });
 
@@ -369915,24 +370737,24 @@ init_settings();
 
 // packages/cli/src/ui/components/Tips.tsx
 init_dist3();
-var import_jsx_runtime56 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime57 = __toESM(require_jsx_runtime(), 1);
 var Tips = ({ config }) => {
   const geminiMdFileCount = config.getGeminiMdFileCount();
-  return /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.Foreground, children: "Tips for getting started:" }),
-    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.Foreground, children: "1. Ask questions, edit files, or run commands." }),
-    /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { color: Colors.Foreground, children: "2. Be specific for the best results." }),
-    geminiMdFileCount === 0 && /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: Colors.Foreground, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: Colors.Foreground, children: "Tips for getting started:" }),
+    /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: Colors.Foreground, children: "1. Ask questions, edit files, or run commands." }),
+    /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: Colors.Foreground, children: "2. Be specific for the best results." }),
+    geminiMdFileCount === 0 && /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Text3, { color: Colors.Foreground, children: [
       "3. Create",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "LOWCAL.md" }),
+      /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "LOWCAL.md" }),
       " ",
       "files to customize your interactions with Qwen Code."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime56.jsxs)(Text3, { color: Colors.Foreground, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Text3, { color: Colors.Foreground, children: [
       geminiMdFileCount === 0 ? "4." : "3.",
       " ",
-      /* @__PURE__ */ (0, import_jsx_runtime56.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "/help" }),
+      /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "/help" }),
       " ",
       "for more information."
     ] })
@@ -369940,13 +370762,13 @@ var Tips = ({ config }) => {
 };
 
 // packages/cli/src/ui/components/DetailedMessagesDisplay.tsx
-var import_jsx_runtime57 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime58 = __toESM(require_jsx_runtime(), 1);
 var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
   if (messages.length === 0) {
     return null;
   }
   const borderAndPadding = 4;
-  return /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime58.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -369956,11 +370778,11 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
       paddingX: 1,
       width,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Text3, { bold: true, color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime58.jsxs)(Text3, { bold: true, color: Colors.Foreground, children: [
           "Debug Console ",
-          /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(Text3, { color: Colors.Gray, children: "(ctrl+o to close)" })
+          /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Text3, { color: Colors.Gray, children: "(ctrl+o to close)" })
         ] }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime57.jsx)(MaxSizedBox, { maxHeight, maxWidth: width - borderAndPadding, children: messages.map((msg, index) => {
+        /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(MaxSizedBox, { maxHeight, maxWidth: width - borderAndPadding, children: messages.map((msg, index) => {
           let textColor = Colors.Foreground;
           let icon = "\u2139";
           switch (msg.type) {
@@ -369980,14 +370802,14 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
             default:
               break;
           }
-          return /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Box_default, { flexDirection: "row", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Text3, { color: textColor, children: [
+          return /* @__PURE__ */ (0, import_jsx_runtime58.jsxs)(Box_default, { flexDirection: "row", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime58.jsxs)(Text3, { color: textColor, children: [
               icon,
               " "
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Text3, { color: textColor, wrap: "wrap", children: [
+            /* @__PURE__ */ (0, import_jsx_runtime58.jsxs)(Text3, { color: textColor, wrap: "wrap", children: [
               msg.content,
-              msg.count && msg.count > 1 && /* @__PURE__ */ (0, import_jsx_runtime57.jsxs)(Text3, { color: Colors.Gray, children: [
+              msg.count && msg.count > 1 && /* @__PURE__ */ (0, import_jsx_runtime58.jsxs)(Text3, { color: Colors.Gray, children: [
                 " (x",
                 msg.count,
                 ")"
@@ -370001,17 +370823,17 @@ var DetailedMessagesDisplay = ({ messages, maxHeight, width }) => {
 };
 
 // packages/cli/src/ui/components/HistoryItemDisplay.tsx
-var import_react110 = __toESM(require_react(), 1);
+var import_react111 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/messages/UserMessage.tsx
-var import_jsx_runtime58 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime59 = __toESM(require_jsx_runtime(), 1);
 var UserMessage = ({ text }) => {
   const prefix = "> ";
   const prefixWidth = prefix.length;
   const isSlashCommand2 = isSlashCommand(text);
   const textColor = isSlashCommand2 ? Colors.AccentPurple : Colors.Gray;
   const borderColor = isSlashCommand2 ? Colors.AccentPurple : Colors.Gray;
-  return /* @__PURE__ */ (0, import_jsx_runtime58.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime59.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -370022,25 +370844,25 @@ var UserMessage = ({ text }) => {
       marginY: 1,
       alignSelf: "flex-start",
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Text3, { color: textColor, "aria-label": SCREEN_READER_USER_PREFIX, children: prefix }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime58.jsx)(Text3, { wrap: "wrap", color: textColor, children: text }) })
+        /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Text3, { color: textColor, "aria-label": SCREEN_READER_USER_PREFIX, children: prefix }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Text3, { wrap: "wrap", color: textColor, children: text }) })
       ]
     }
   );
 };
 
 // packages/cli/src/ui/components/messages/UserShellMessage.tsx
-var import_jsx_runtime59 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime60 = __toESM(require_jsx_runtime(), 1);
 var UserShellMessage = ({ text }) => {
   const commandToDisplay = text.startsWith("!") ? text.substring(1) : text;
-  return /* @__PURE__ */ (0, import_jsx_runtime59.jsxs)(Box_default, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Text3, { color: Colors.AccentCyan, children: "$ " }),
-    /* @__PURE__ */ (0, import_jsx_runtime59.jsx)(Text3, { children: commandToDisplay })
+  return /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { color: Colors.AccentCyan, children: "$ " }),
+    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Text3, { children: commandToDisplay })
   ] });
 };
 
 // packages/cli/src/ui/components/messages/GeminiMessage.tsx
-var import_jsx_runtime60 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime61 = __toESM(require_jsx_runtime(), 1);
 var GeminiMessage = ({
   text,
   isPending,
@@ -370049,8 +370871,8 @@ var GeminiMessage = ({
 }) => {
   const prefix = "\u2726 ";
   const prefixWidth = prefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime60.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(
       Text3,
       {
         color: Colors.AccentPurple,
@@ -370058,7 +370880,7 @@ var GeminiMessage = ({
         children: prefix
       }
     ) }),
-    /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(Box_default, { flexGrow: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime60.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { flexGrow: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(
       MarkdownDisplay,
       {
         text,
@@ -370071,38 +370893,38 @@ var GeminiMessage = ({
 };
 
 // packages/cli/src/ui/components/messages/InfoMessage.tsx
-var import_jsx_runtime61 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime62 = __toESM(require_jsx_runtime(), 1);
 var InfoMessage = ({ text }) => {
   if (!text || text.trim() === "") {
     return null;
   }
   const prefix = "\u2139 ";
   const prefixWidth = prefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime61.jsxs)(Box_default, { flexDirection: "row", marginTop: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { color: Colors.AccentYellow, children: prefix }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(Text3, { wrap: "wrap", color: Colors.AccentYellow, children: /* @__PURE__ */ (0, import_jsx_runtime61.jsx)(RenderInline, { text }) }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "row", marginTop: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: Colors.AccentYellow, children: prefix }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { wrap: "wrap", color: Colors.AccentYellow, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(RenderInline, { text }) }) })
   ] });
 };
 
 // packages/cli/src/ui/components/messages/ErrorMessage.tsx
-var import_jsx_runtime62 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime63 = __toESM(require_jsx_runtime(), 1);
 var ErrorMessage = ({ text }) => {
   const prefix = "\u2715 ";
   const prefixWidth = prefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime62.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { color: Colors.AccentRed, children: prefix }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime62.jsx)(Text3, { wrap: "wrap", color: Colors.AccentRed, children: text }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { flexDirection: "row", marginBottom: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: Colors.AccentRed, children: prefix }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { wrap: "wrap", color: Colors.AccentRed, children: text }) })
   ] });
 };
 
 // packages/cli/src/ui/components/messages/ToolGroupMessage.tsx
-var import_react108 = __toESM(require_react(), 1);
+var import_react109 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/messages/ToolMessage.tsx
-var import_react107 = __toESM(require_react(), 1);
+var import_react108 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/components/TodoDisplay.tsx
-var import_jsx_runtime63 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime64 = __toESM(require_jsx_runtime(), 1);
 var STATUS_ICONS = {
   pending: "\u25CB",
   in_progress: "\u25D0",
@@ -370112,30 +370934,30 @@ var TodoDisplay = ({ todos }) => {
   if (!todos || todos.length === 0) {
     return null;
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { flexDirection: "column", children: todos.map((todo) => /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(TodoItemRow, { todo }, todo.id)) });
+  return /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { flexDirection: "column", children: todos.map((todo) => /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(TodoItemRow, { todo }, todo.id)) });
 };
 var TodoItemRow = ({ todo }) => {
   const statusIcon = STATUS_ICONS[todo.status];
   const isCompleted = todo.status === "completed";
   const isInProgress = todo.status === "in_progress";
   const itemColor = isCompleted ? Colors.Foreground : isInProgress ? Colors.AccentGreen : Colors.Foreground;
-  return /* @__PURE__ */ (0, import_jsx_runtime63.jsxs)(Box_default, { flexDirection: "row", minHeight: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { width: 3, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: itemColor, children: statusIcon }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime63.jsx)(Text3, { color: itemColor, strikethrough: isCompleted, wrap: "wrap", children: todo.content }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { flexDirection: "row", minHeight: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { width: 3, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: itemColor, children: statusIcon }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { flexGrow: 1, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: itemColor, strikethrough: isCompleted, wrap: "wrap", children: todo.content }) })
   ] });
 };
 
 // packages/cli/src/ui/components/PlanSummaryDisplay.tsx
-var import_jsx_runtime64 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime65 = __toESM(require_jsx_runtime(), 1);
 var PlanSummaryDisplay = ({
   data,
   availableHeight,
   childWidth
 }) => {
   const { message, plan } = data;
-  return /* @__PURE__ */ (0, import_jsx_runtime64.jsxs)(Box_default, { flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(Text3, { color: Colors.AccentGreen, wrap: "wrap", children: message }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime64.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: Colors.AccentGreen, wrap: "wrap", children: message }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
       MarkdownDisplay,
       {
         text: plan,
@@ -370148,13 +370970,13 @@ var PlanSummaryDisplay = ({
 };
 
 // packages/cli/src/ui/components/messages/ToolMessage.tsx
-var import_jsx_runtime65 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime66 = __toESM(require_jsx_runtime(), 1);
 var STATIC_HEIGHT = 1;
 var RESERVED_LINE_COUNT = 5;
 var STATUS_INDICATOR_WIDTH = 3;
 var MIN_LINES_SHOWN = 2;
 var MAXIMUM_RESULT_DISPLAY_CHARACTERS = 1e6;
-var useResultDisplayRenderer = (resultDisplay) => import_react107.default.useMemo(() => {
+var useResultDisplayRenderer = (resultDisplay) => import_react108.default.useMemo(() => {
   if (!resultDisplay) {
     return { type: "none" };
   }
@@ -370189,8 +371011,8 @@ var useResultDisplayRenderer = (resultDisplay) => import_react107.default.useMem
 }, [resultDisplay]);
 var TodoResultRenderer = ({
   data
-}) => /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(TodoDisplay, { todos: data.todos });
-var PlanResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(TodoDisplay, { todos: data.todos });
+var PlanResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
   PlanSummaryDisplay,
   {
     data,
@@ -370198,7 +371020,7 @@ var PlanResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__
     childWidth
   }
 );
-var SubagentExecutionRenderer = ({ data, availableHeight, childWidth, config }) => /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
+var SubagentExecutionRenderer = ({ data, availableHeight, childWidth, config }) => /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
   AgentExecutionDisplay,
   {
     data,
@@ -370213,7 +371035,7 @@ var StringResultRenderer = ({ data, renderAsMarkdown, availableHeight, childWidt
     displayData = "..." + displayData.slice(-MAXIMUM_RESULT_DISPLAY_CHARACTERS);
   }
   if (renderAsMarkdown) {
-    return /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
       MarkdownDisplay,
       {
         text: displayData,
@@ -370223,9 +371045,9 @@ var StringResultRenderer = ({ data, renderAsMarkdown, availableHeight, childWidt
       }
     ) });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(MaxSizedBox, { maxHeight: availableHeight, maxWidth: childWidth, children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { wrap: "wrap", children: displayData }) }) });
+  return /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(MaxSizedBox, { maxHeight: availableHeight, maxWidth: childWidth, children: /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { wrap: "wrap", children: displayData }) }) });
 };
-var DiffResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
+var DiffResultRenderer = ({ data, availableHeight, childWidth }) => /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
   DiffRenderer,
   {
     diffContent: data.fileDiff,
@@ -370255,10 +371077,10 @@ var ToolMessage = ({
   }
   const childWidth = terminalWidth - 3;
   const displayRenderer = useResultDisplayRenderer(resultDisplay);
-  return /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { paddingX: 1, paddingY: 0, flexDirection: "column", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { minHeight: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(ToolStatusIndicator, { status }),
-      /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Box_default, { paddingX: 1, paddingY: 0, flexDirection: "column", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Box_default, { minHeight: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(ToolStatusIndicator, { status }),
+      /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
         ToolInfo,
         {
           name: name2,
@@ -370267,11 +371089,11 @@ var ToolMessage = ({
           emphasis
         }
       ),
-      emphasis === "high" && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(TrailingIndicator, {})
+      emphasis === "high" && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(TrailingIndicator, {})
     ] }),
-    displayRenderer.type !== "none" && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { paddingLeft: STATUS_INDICATOR_WIDTH, width: "100%", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { flexDirection: "column", children: [
-      displayRenderer.type === "todo" && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(TodoResultRenderer, { data: displayRenderer.data }),
-      displayRenderer.type === "plan" && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
+    displayRenderer.type !== "none" && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { paddingLeft: STATUS_INDICATOR_WIDTH, width: "100%", marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Box_default, { flexDirection: "column", children: [
+      displayRenderer.type === "todo" && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(TodoResultRenderer, { data: displayRenderer.data }),
+      displayRenderer.type === "plan" && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
         PlanResultRenderer,
         {
           data: displayRenderer.data,
@@ -370279,7 +371101,7 @@ var ToolMessage = ({
           childWidth
         }
       ),
-      displayRenderer.type === "task" && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
+      displayRenderer.type === "task" && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
         SubagentExecutionRenderer,
         {
           data: displayRenderer.data,
@@ -370288,7 +371110,7 @@ var ToolMessage = ({
           config
         }
       ),
-      displayRenderer.type === "string" && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
+      displayRenderer.type === "string" && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
         StringResultRenderer,
         {
           data: displayRenderer.data,
@@ -370297,7 +371119,7 @@ var ToolMessage = ({
           childWidth
         }
       ),
-      displayRenderer.type === "diff" && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
+      displayRenderer.type === "diff" && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
         DiffResultRenderer,
         {
           data: displayRenderer.data,
@@ -370310,19 +371132,19 @@ var ToolMessage = ({
 };
 var ToolStatusIndicator = ({
   status
-}) => /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH, children: [
-  status === "Pending" /* Pending */ && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: Colors.AccentGreen, children: TOOL_STATUS.PENDING }),
-  status === "Executing" /* Executing */ && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Box_default, { minWidth: STATUS_INDICATOR_WIDTH, children: [
+  status === "Pending" /* Pending */ && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { color: Colors.AccentGreen, children: TOOL_STATUS.PENDING }),
+  status === "Executing" /* Executing */ && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
     GeminiRespondingSpinner,
     {
       spinnerType: "toggle",
       nonRespondingDisplay: TOOL_STATUS.EXECUTING
     }
   ),
-  status === "Success" /* Success */ && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: Colors.AccentGreen, "aria-label": "Success:", children: TOOL_STATUS.SUCCESS }),
-  status === "Confirming" /* Confirming */ && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Confirming:", children: TOOL_STATUS.CONFIRMING }),
-  status === "Canceled" /* Canceled */ && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Canceled:", bold: true, children: TOOL_STATUS.CANCELED }),
-  status === "Error" /* Error */ && /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: Colors.AccentRed, "aria-label": "Error:", bold: true, children: TOOL_STATUS.ERROR })
+  status === "Success" /* Success */ && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { color: Colors.AccentGreen, "aria-label": "Success:", children: TOOL_STATUS.SUCCESS }),
+  status === "Confirming" /* Confirming */ && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Confirming:", children: TOOL_STATUS.CONFIRMING }),
+  status === "Canceled" /* Canceled */ && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { color: Colors.AccentYellow, "aria-label": "Canceled:", bold: true, children: TOOL_STATUS.CANCELED }),
+  status === "Error" /* Error */ && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { color: Colors.AccentRed, "aria-label": "Error:", bold: true, children: TOOL_STATUS.ERROR })
 ] });
 var ToolInfo = ({
   name: name2,
@@ -370330,7 +371152,7 @@ var ToolInfo = ({
   status,
   emphasis
 }) => {
-  const nameColor = import_react107.default.useMemo(() => {
+  const nameColor = import_react108.default.useMemo(() => {
     switch (emphasis) {
       case "high":
         return Colors.Foreground;
@@ -370344,26 +371166,26 @@ var ToolInfo = ({
       }
     }
   }, [emphasis]);
-  return /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(
     Text3,
     {
       wrap: "truncate-end",
       strikethrough: status === "Canceled" /* Canceled */,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: nameColor, bold: true, children: name2 }),
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { children: " " }),
-        /* @__PURE__ */ (0, import_jsx_runtime65.jsx)(Text3, { color: Colors.Gray, children: description })
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { color: nameColor, bold: true, children: name2 }),
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { children: " " }),
+        /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Text3, { color: Colors.Gray, children: description })
       ]
     }
   ) });
 };
-var TrailingIndicator = () => /* @__PURE__ */ (0, import_jsx_runtime65.jsxs)(Text3, { color: Colors.Foreground, wrap: "truncate", children: [
+var TrailingIndicator = () => /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Text3, { color: Colors.Foreground, wrap: "truncate", children: [
   " ",
   "\u2190"
 ] });
 
 // packages/cli/src/ui/components/messages/ToolGroupMessage.tsx
-var import_jsx_runtime66 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime67 = __toESM(require_jsx_runtime(), 1);
 var ToolGroupMessage = ({
   toolCalls,
   availableTerminalHeight,
@@ -370382,7 +371204,7 @@ var ToolGroupMessage = ({
     1
   );
   const innerWidth = terminalWidth - 4;
-  const toolAwaitingApproval = (0, import_react108.useMemo)(
+  const toolAwaitingApproval = (0, import_react109.useMemo)(
     () => toolCalls.find((tc) => tc.status === "Confirming" /* Confirming */),
     [toolCalls]
   );
@@ -370399,7 +371221,7 @@ var ToolGroupMessage = ({
     ),
     1
   ) : void 0;
-  return /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
     Box_default,
     {
       flexDirection: "column",
@@ -370411,8 +371233,8 @@ var ToolGroupMessage = ({
       gap: 1,
       children: toolCalls.map((tool) => {
         const isConfirming = toolAwaitingApproval?.callId === tool.callId;
-        return /* @__PURE__ */ (0, import_jsx_runtime66.jsxs)(Box_default, { flexDirection: "column", minHeight: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(Box_default, { flexDirection: "row", alignItems: "center", children: /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime67.jsxs)(Box_default, { flexDirection: "column", minHeight: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Box_default, { flexDirection: "row", alignItems: "center", children: /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
             ToolMessage,
             {
               callId: tool.callId,
@@ -370428,7 +371250,7 @@ var ToolGroupMessage = ({
               config
             }
           ) }),
-          tool.status === "Confirming" /* Confirming */ && isConfirming && tool.confirmationDetails && /* @__PURE__ */ (0, import_jsx_runtime66.jsx)(
+          tool.status === "Confirming" /* Confirming */ && isConfirming && tool.confirmationDetails && /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
             ToolConfirmationMessage,
             {
               confirmationDetails: tool.confirmationDetails,
@@ -370445,7 +371267,7 @@ var ToolGroupMessage = ({
 };
 
 // packages/cli/src/ui/components/messages/GeminiMessageContent.tsx
-var import_jsx_runtime67 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime68 = __toESM(require_jsx_runtime(), 1);
 var GeminiMessageContent = ({
   text,
   isPending,
@@ -370454,7 +371276,7 @@ var GeminiMessageContent = ({
 }) => {
   const originalPrefix = "\u2726 ";
   const prefixWidth = originalPrefix.length;
-  return /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(Box_default, { flexDirection: "column", paddingLeft: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime67.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { flexDirection: "column", paddingLeft: prefixWidth, children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
     MarkdownDisplay,
     {
       text,
@@ -370466,14 +371288,14 @@ var GeminiMessageContent = ({
 };
 
 // packages/cli/src/ui/components/messages/CompressionMessage.tsx
-var import_jsx_runtime68 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime69 = __toESM(require_jsx_runtime(), 1);
 var CompressionMessage = ({
   compression
 }) => {
   const text = compression.isPending ? "Compressing chat history" : `Chat history compressed from ${compression.originalTokenCount ?? "unknown"} to ${compression.newTokenCount ?? "unknown"} tokens.`;
-  return /* @__PURE__ */ (0, import_jsx_runtime68.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { marginRight: 1, children: compression.isPending ? /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(build_default, { type: "dots" }) : /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Text3, { color: Colors.AccentPurple, children: "\u2726" }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime68.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { marginRight: 1, children: compression.isPending ? /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(build_default, { type: "dots" }) : /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { color: Colors.AccentPurple, children: "\u2726" }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
       Text3,
       {
         color: compression.isPending ? Colors.AccentPurple : Colors.AccentGreen,
@@ -370485,7 +371307,7 @@ var CompressionMessage = ({
 };
 
 // packages/cli/src/ui/components/messages/SummaryMessage.tsx
-var import_jsx_runtime69 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime70 = __toESM(require_jsx_runtime(), 1);
 var SummaryMessage = ({ summary }) => {
   const getText3 = () => {
     if (summary.isPending) {
@@ -370506,13 +371328,13 @@ var SummaryMessage = ({ summary }) => {
   };
   const getIcon = () => {
     if (summary.isPending) {
-      return /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(build_default, { type: "dots" });
+      return /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(build_default, { type: "dots" });
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Text3, { color: Colors.AccentGreen, children: "\u2705" });
+    return /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { color: Colors.AccentGreen, children: "\u2705" });
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime69.jsxs)(Box_default, { flexDirection: "row", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { marginRight: 1, children: getIcon() }),
-    /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime69.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "row", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { marginRight: 1, children: getIcon() }),
+    /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(
       Text3,
       {
         color: summary.isPending ? Colors.AccentPurple : Colors.AccentGreen,
@@ -370523,7 +371345,7 @@ var SummaryMessage = ({ summary }) => {
 };
 
 // packages/cli/src/ui/components/AboutBox.tsx
-var import_jsx_runtime70 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime71 = __toESM(require_jsx_runtime(), 1);
 var AboutBox = ({
   cliVersion,
   osVersion,
@@ -370532,7 +371354,7 @@ var AboutBox = ({
   selectedAuthType,
   gcpProject,
   ideClient
-}) => /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(
   Box_default,
   {
     borderStyle: "round",
@@ -370542,38 +371364,38 @@ var AboutBox = ({
     marginY: 1,
     width: "100%",
     children: [
-      /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "About Qwen Code" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "CLI Version" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: cliVersion }) })
+      /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "About Qwen Code" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "CLI Version" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: cliVersion }) })
       ] }),
-      GIT_COMMIT_INFO && !["N/A"].includes(GIT_COMMIT_INFO) && /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Git Commit" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: GIT_COMMIT_INFO }) })
+      GIT_COMMIT_INFO && !["N/A"].includes(GIT_COMMIT_INFO) && /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Git Commit" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: GIT_COMMIT_INFO }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Model" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: modelVersion }) })
+      /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Model" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: modelVersion }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Sandbox" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: sandboxEnv }) })
+      /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Sandbox" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: sandboxEnv }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "OS" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: osVersion }) })
+      /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "OS" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: osVersion }) })
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Auth Method" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: selectedAuthType.startsWith("oauth") ? "OAuth" : selectedAuthType }) })
+      /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "Auth Method" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: selectedAuthType.startsWith("oauth") ? "OAuth" : selectedAuthType }) })
       ] }),
-      gcpProject && /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "GCP Project" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: gcpProject }) })
+      gcpProject && /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "GCP Project" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: gcpProject }) })
       ] }),
-      ideClient && /* @__PURE__ */ (0, import_jsx_runtime70.jsxs)(Box_default, { flexDirection: "row", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "IDE Client" }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime70.jsx)(Text3, { children: ideClient }) })
+      ideClient && /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { flexDirection: "row", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: "35%", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: Colors.LightBlue, children: "IDE Client" }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: ideClient }) })
       ] })
     ]
   }
@@ -370653,20 +371475,20 @@ var computeSessionStats = (metrics2) => {
 };
 
 // packages/cli/src/ui/components/StatsDisplay.tsx
-var import_jsx_runtime71 = __toESM(require_jsx_runtime(), 1);
-var StatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { children: [
-  /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: 28, children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: theme.text.link, children: title }) }),
-  /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { flexGrow: 1, children })
+var import_jsx_runtime72 = __toESM(require_jsx_runtime(), 1);
+var StatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { children: [
+  /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: 28, children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: theme.text.link, children: title }) }),
+  /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { flexGrow: 1, children })
 ] });
-var SubStatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { paddingLeft: 2, children: [
-  /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: 26, children: /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { children: [
+var SubStatRow = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { paddingLeft: 2, children: [
+  /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: 26, children: /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { children: [
     "\xBB ",
     title
   ] }) }),
-  /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { flexGrow: 1, children })
+  /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { flexGrow: 1, children })
 ] });
-var Section = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { flexDirection: "column", width: "100%", marginBottom: 1, children: [
-  /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: title }),
+var Section = ({ title, children }) => /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { flexDirection: "column", width: "100%", marginBottom: 1, children: [
+  /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: title }),
   children
 ] });
 var ModelUsageTable = ({ models, totalCachedTokens, cacheEfficiency }) => {
@@ -370674,14 +371496,14 @@ var ModelUsageTable = ({ models, totalCachedTokens, cacheEfficiency }) => {
   const requestsWidth = 8;
   const inputTokensWidth = 15;
   const outputTokensWidth = 15;
-  return /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: "Model Usage" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: "Reqs" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: "Input Tokens" }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: "Output Tokens" }) })
+  return /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: "Model Usage" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: "Reqs" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: "Input Tokens" }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: "Output Tokens" }) })
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
       Box_default,
       {
         borderStyle: "round",
@@ -370692,23 +371514,23 @@ var ModelUsageTable = ({ models, totalCachedTokens, cacheEfficiency }) => {
         width: nameWidth + requestsWidth + inputTokensWidth + outputTokensWidth
       }
     ),
-    Object.entries(models).map(([name2, modelMetrics]) => /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: name2.replace("-001", "") }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: modelMetrics.api.totalRequests }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.prompt.toLocaleString() }) }),
-      /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.candidates.toLocaleString() }) })
+    Object.entries(models).map(([name2, modelMetrics]) => /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: nameWidth, children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: name2.replace("-001", "") }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: requestsWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: modelMetrics.api.totalRequests }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: inputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.prompt.toLocaleString() }) }),
+      /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: outputTokensWidth, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: theme.status.warning, children: modelMetrics.tokens.candidates.toLocaleString() }) })
     ] }, name2)),
-    cacheEfficiency > 0 && /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: theme.status.success, children: "Savings Highlight:" }),
+    cacheEfficiency > 0 && /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: theme.status.success, children: "Savings Highlight:" }),
         " ",
         totalCachedTokens.toLocaleString(),
         " (",
         cacheEfficiency.toFixed(1),
         "%) of input tokens were served from the cache, reducing costs."
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { color: theme.text.secondary, children: "\xBB Tip: For a full token breakdown, run `/stats model`." })
+      /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: theme.text.secondary, children: "\xBB Tip: For a full token breakdown, run `/stats model`." })
     ] })
   ] });
 };
@@ -370735,11 +371557,11 @@ var StatsDisplay = ({
   );
   const renderTitle = () => {
     if (title) {
-      return theme.ui.gradient && theme.ui.gradient.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(dist_default4, { colors: theme.ui.gradient, children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, children: title }) }) : /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: theme.text.accent, children: title });
+      return theme.ui.gradient && theme.ui.gradient.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(dist_default4, { colors: theme.ui.gradient, children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: title }) }) : /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, color: theme.text.accent, children: title });
     }
-    return /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { bold: true, color: theme.text.accent, children: "Session Stats" });
+    return /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, color: theme.text.accent, children: "Session Stats" });
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -370749,73 +371571,73 @@ var StatsDisplay = ({
       paddingX: 2,
       children: [
         renderTitle(),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Section, { title: "Interaction Summary", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(StatRow, { title: "Session ID:", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: stats.sessionId }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(StatRow, { title: "Tool Calls:", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Section, { title: "Interaction Summary", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(StatRow, { title: "Session ID:", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: stats.sessionId }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(StatRow, { title: "Tool Calls:", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { children: [
             tools.totalCalls,
             " (",
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { color: theme.status.success, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { color: theme.status.success, children: [
               "\u2713 ",
               tools.totalSuccess
             ] }),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { color: theme.status.error, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { color: theme.status.error, children: [
               "x ",
               tools.totalFail
             ] }),
             " )"
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(StatRow, { title: "Success Rate:", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { color: successColor, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(StatRow, { title: "Success Rate:", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { color: successColor, children: [
             computed.successRate.toFixed(1),
             "%"
           ] }) }),
-          computed.totalDecisions > 0 && /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(StatRow, { title: "User Agreement:", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { color: agreementColor, children: [
+          computed.totalDecisions > 0 && /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(StatRow, { title: "User Agreement:", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { color: agreementColor, children: [
             computed.agreementRate.toFixed(1),
             "%",
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { color: theme.text.secondary, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { color: theme.text.secondary, children: [
               "(",
               computed.totalDecisions,
               " reviewed)"
             ] })
           ] }) }),
-          files && (files.totalLinesAdded > 0 || files.totalLinesRemoved > 0) && /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(StatRow, { title: "Code Changes:", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { color: theme.status.success, children: [
+          files && (files.totalLinesAdded > 0 || files.totalLinesRemoved > 0) && /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(StatRow, { title: "Code Changes:", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { color: theme.status.success, children: [
               "+",
               files.totalLinesAdded
             ] }),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { color: theme.status.error, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { color: theme.status.error, children: [
               "-",
               files.totalLinesRemoved
             ] })
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Section, { title: "Performance", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(StatRow, { title: "Wall Time:", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: duration }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(StatRow, { title: "Agent Active:", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(Text3, { children: formatDuration(computed.agentActiveTime) }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(SubStatRow, { title: "API Time:", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Section, { title: "Performance", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(StatRow, { title: "Wall Time:", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: duration }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(StatRow, { title: "Agent Active:", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: formatDuration(computed.agentActiveTime) }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(SubStatRow, { title: "API Time:", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { children: [
             formatDuration(computed.totalApiTime),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { color: theme.text.secondary, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { color: theme.text.secondary, children: [
               "(",
               computed.apiTimePercent.toFixed(1),
               "%)"
             ] })
           ] }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(SubStatRow, { title: "Tool Time:", children: /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(SubStatRow, { title: "Tool Time:", children: /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { children: [
             formatDuration(computed.totalToolTime),
             " ",
-            /* @__PURE__ */ (0, import_jsx_runtime71.jsxs)(Text3, { color: theme.text.secondary, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { color: theme.text.secondary, children: [
               "(",
               computed.toolTimePercent.toFixed(1),
               "%)"
             ] })
           ] }) })
         ] }),
-        Object.keys(models).length > 0 && /* @__PURE__ */ (0, import_jsx_runtime71.jsx)(
+        Object.keys(models).length > 0 && /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
           ModelUsageTable,
           {
             models,
@@ -370829,7 +371651,7 @@ var StatsDisplay = ({
 };
 
 // packages/cli/src/ui/components/ModelStatsDisplay.tsx
-var import_jsx_runtime72 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime73 = __toESM(require_jsx_runtime(), 1);
 var METRIC_COL_WIDTH = 28;
 var MODEL_COL_WIDTH = 22;
 var StatRow2 = ({
@@ -370837,9 +371659,9 @@ var StatRow2 = ({
   values,
   isSubtle = false,
   isSection = false
-}) => /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { children: [
-  /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: isSection, color: isSection ? void 0 : Colors.LightBlue, children: isSubtle ? `  \u21B3 ${title}` : title }) }),
-  values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: value }) }, index))
+}) => /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Box_default, { children: [
+  /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: isSection, color: isSection ? void 0 : Colors.LightBlue, children: isSubtle ? `  \u21B3 ${title}` : title }) }),
+  values.map((value, index) => /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { children: value }) }, index))
 ] });
 var ModelStatsDisplay = () => {
   const { stats } = useSessionStats();
@@ -370848,14 +371670,14 @@ var ModelStatsDisplay = () => {
     ([, metrics2]) => metrics2.api.totalRequests > 0
   );
   if (activeModels.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
       Box_default,
       {
         borderStyle: "round",
         borderColor: Colors.Gray,
         paddingY: 1,
         paddingX: 2,
-        children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { children: "No API calls have been made in this session." })
+        children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { children: "No API calls have been made in this session." })
       }
     );
   }
@@ -370868,7 +371690,7 @@ var ModelStatsDisplay = () => {
   const hasCached = activeModels.some(
     ([, metrics2]) => metrics2.tokens.cached > 0
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -370877,13 +371699,13 @@ var ModelStatsDisplay = () => {
       paddingY: 1,
       paddingX: 2,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Model Stats For Nerds" }),
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: "Metric" }) }),
-          modelNames.map((name2) => /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { bold: true, children: name2 }) }, name2))
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Model Stats For Nerds" }),
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: METRIC_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, children: "Metric" }) }),
+          modelNames.map((name2) => /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: MODEL_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, children: name2 }) }, name2))
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
           Box_default,
           {
             borderStyle: "single",
@@ -370893,21 +371715,21 @@ var ModelStatsDisplay = () => {
             borderRight: false
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(StatRow2, { title: "API", values: [], isSection: true }),
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(StatRow2, { title: "API", values: [], isSection: true }),
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
           StatRow2,
           {
             title: "Requests",
             values: getModelValues((m) => m.api.totalRequests.toLocaleString())
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
           StatRow2,
           {
             title: "Errors",
             values: getModelValues((m) => {
               const errorRate = calculateErrorRate(m);
-              return /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(
+              return /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(
                 Text3,
                 {
                   color: m.api.totalErrors > 0 ? Colors.AccentRed : Colors.Foreground,
@@ -370922,7 +371744,7 @@ var ModelStatsDisplay = () => {
             })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
           StatRow2,
           {
             title: "Avg Latency",
@@ -370932,16 +371754,16 @@ var ModelStatsDisplay = () => {
             })
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(StatRow2, { title: "Tokens", values: [], isSection: true }),
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(StatRow2, { title: "Tokens", values: [], isSection: true }),
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
           StatRow2,
           {
             title: "Total",
-            values: getModelValues((m) => /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(Text3, { color: Colors.AccentYellow, children: m.tokens.total.toLocaleString() }))
+            values: getModelValues((m) => /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentYellow, children: m.tokens.total.toLocaleString() }))
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
           StatRow2,
           {
             title: "Prompt",
@@ -370949,14 +371771,14 @@ var ModelStatsDisplay = () => {
             values: getModelValues((m) => m.tokens.prompt.toLocaleString())
           }
         ),
-        hasCached && /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+        hasCached && /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
           StatRow2,
           {
             title: "Cached",
             isSubtle: true,
             values: getModelValues((m) => {
               const cacheHitRate = calculateCacheHitRate(m);
-              return /* @__PURE__ */ (0, import_jsx_runtime72.jsxs)(Text3, { color: Colors.AccentGreen, children: [
+              return /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: Colors.AccentGreen, children: [
                 m.tokens.cached.toLocaleString(),
                 " (",
                 cacheHitRate.toFixed(1),
@@ -370965,7 +371787,7 @@ var ModelStatsDisplay = () => {
             })
           }
         ),
-        hasThoughts && /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+        hasThoughts && /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
           StatRow2,
           {
             title: "Thoughts",
@@ -370973,7 +371795,7 @@ var ModelStatsDisplay = () => {
             values: getModelValues((m) => m.tokens.thoughts.toLocaleString())
           }
         ),
-        hasTool && /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+        hasTool && /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
           StatRow2,
           {
             title: "Tool",
@@ -370981,7 +371803,7 @@ var ModelStatsDisplay = () => {
             values: getModelValues((m) => m.tokens.tool.toLocaleString())
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime72.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
           StatRow2,
           {
             title: "Output",
@@ -370995,7 +371817,7 @@ var ModelStatsDisplay = () => {
 };
 
 // packages/cli/src/ui/components/ToolStatsDisplay.tsx
-var import_jsx_runtime73 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime74 = __toESM(require_jsx_runtime(), 1);
 var TOOL_NAME_COL_WIDTH = 25;
 var CALLS_COL_WIDTH = 8;
 var SUCCESS_RATE_COL_WIDTH = 15;
@@ -371007,14 +371829,14 @@ var StatRow3 = ({ name: name2, stats }) => {
     green: TOOL_SUCCESS_RATE_HIGH,
     yellow: TOOL_SUCCESS_RATE_MEDIUM
   });
-  return /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Box_default, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.LightBlue, children: name2 }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { children: stats.count }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Text3, { color: successColor, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { children: [
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.LightBlue, children: name2 }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { children: stats.count }) }),
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Text3, { color: successColor, children: [
       successRate.toFixed(1),
       "%"
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { children: formatDuration(avgDuration) }) })
+    /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { children: formatDuration(avgDuration) }) })
   ] });
 };
 var ToolStatsDisplay = () => {
@@ -371024,14 +371846,14 @@ var ToolStatsDisplay = () => {
     ([, metrics2]) => metrics2.count > 0
   );
   if (activeTools.length === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(
       Box_default,
       {
         borderStyle: "round",
         borderColor: Colors.Gray,
         paddingY: 1,
         paddingX: 2,
-        children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { children: "No tool calls have been made in this session." })
+        children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { children: "No tool calls have been made in this session." })
       }
     );
   }
@@ -371050,7 +371872,7 @@ var ToolStatsDisplay = () => {
     green: USER_AGREEMENT_RATE_HIGH,
     yellow: USER_AGREEMENT_RATE_MEDIUM
   });
-  return /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(
     Box_default,
     {
       borderStyle: "round",
@@ -371060,15 +371882,15 @@ var ToolStatsDisplay = () => {
       paddingX: 2,
       width: 70,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Tool Stats For Nerds" }),
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, children: "Tool Name" }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, children: "Calls" }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, children: "Success Rate" }) }),
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, children: "Avg Duration" }) })
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Tool Stats For Nerds" }),
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: TOOL_NAME_COL_WIDTH, children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, children: "Tool Name" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: CALLS_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, children: "Calls" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: SUCCESS_RATE_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, children: "Success Rate" }) }),
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, children: "Avg Duration" }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(
           Box_default,
           {
             borderStyle: "single",
@@ -371079,50 +371901,50 @@ var ToolStatsDisplay = () => {
             width: "100%"
           }
         ),
-        activeTools.map(([name2, stats2]) => /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(StatRow3, { name: name2, stats: stats2 }, name2)),
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, children: "User Decision Summary" }),
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+        activeTools.map(([name2, stats2]) => /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(StatRow3, { name: name2, stats: stats2 }, name2)),
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, children: "User Decision Summary" }),
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.LightBlue, children: "Total Reviewed Suggestions:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.LightBlue, children: "Total Reviewed Suggestions:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { children: totalReviewed }) })
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { children: totalReviewed }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { children: " \xBB Accepted:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { children: " \xBB Accepted:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentGreen, children: totalDecisions.accept }) })
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentGreen, children: totalDecisions.accept }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { children: " \xBB Rejected:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { children: " \xBB Rejected:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentRed, children: totalDecisions.reject }) })
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentRed, children: totalDecisions.reject }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { children: " \xBB Modified:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { children: " \xBB Modified:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { color: Colors.AccentYellow, children: totalDecisions.modify }) })
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { color: Colors.AccentYellow, children: totalDecisions.modify }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(
           Box_default,
           {
             borderStyle: "single",
@@ -371133,15 +371955,15 @@ var ToolStatsDisplay = () => {
             width: "100%"
           }
         ),
-        /* @__PURE__ */ (0, import_jsx_runtime73.jsxs)(Box_default, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime74.jsxs)(Box_default, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(
             Box_default,
             {
               width: TOOL_NAME_COL_WIDTH + CALLS_COL_WIDTH + SUCCESS_RATE_COL_WIDTH,
-              children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { children: " Overall Agreement Rate:" })
+              children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { children: " Overall Agreement Rate:" })
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime73.jsx)(Text3, { bold: true, color: totalReviewed > 0 ? agreementColor : void 0, children: totalReviewed > 0 ? `${agreementRate.toFixed(1)}%` : "--" }) })
+          /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Box_default, { width: AVG_DURATION_COL_WIDTH, justifyContent: "flex-end", children: /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(Text3, { bold: true, color: totalReviewed > 0 ? agreementColor : void 0, children: totalReviewed > 0 ? `${agreementRate.toFixed(1)}%` : "--" }) })
         ] })
       ]
     }
@@ -371149,14 +371971,14 @@ var ToolStatsDisplay = () => {
 };
 
 // packages/cli/src/ui/components/SessionSummaryDisplay.tsx
-var import_jsx_runtime74 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime75 = __toESM(require_jsx_runtime(), 1);
 var SessionSummaryDisplay = ({
   duration
-}) => /* @__PURE__ */ (0, import_jsx_runtime74.jsx)(StatsDisplay, { title: "Agent powering down. Goodbye!", duration });
+}) => /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(StatsDisplay, { title: "Agent powering down. Goodbye!", duration });
 
 // packages/cli/src/ui/components/Help.tsx
-var import_jsx_runtime75 = __toESM(require_jsx_runtime(), 1);
-var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(
+var import_jsx_runtime76 = __toESM(require_jsx_runtime(), 1);
+var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(
   Box_default,
   {
     flexDirection: "column",
@@ -371165,119 +371987,119 @@ var Help = ({ commands }) => /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(
     borderStyle: "round",
     padding: 1,
     children: [
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Basics:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Add context" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Basics:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Add context" }),
         ": Use",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@" }),
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@" }),
         " ",
         "to specify files for context (e.g.,",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@src/myFile.ts" }),
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "@src/myFile.ts" }),
         ") to target specific files or folders."
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shell mode" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shell mode" }),
         ": Execute shell commands via",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!" }),
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!" }),
         " ",
         "(e.g.,",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!npm run start" }),
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "!npm run start" }),
         ") or use natural language (e.g.",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "start server" }),
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "start server" }),
         ")."
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Commands:" }),
-      commands.filter((command2) => command2.description).map((command2) => /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Box_default, { flexDirection: "column", children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Commands:" }),
+      commands.filter((command2) => command2.description).map((command2) => /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Box_default, { flexDirection: "column", children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
             " ",
             "/",
             command2.name
           ] }),
           command2.description && " - " + command2.description
         ] }),
-        command2.subCommands && command2.subCommands.map((subCommand) => /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
+        command2.subCommands && command2.subCommands.map((subCommand) => /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
             "   ",
             subCommand.name
           ] }),
           subCommand.description && " - " + subCommand.description
         ] }, subCommand.name))
       ] }, command2.name)),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { bold: true, color: Colors.AccentPurple, children: [
           " ",
           "!",
           " "
         ] }),
         "- shell command"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Keyboard Shortcuts:" }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Alt+Left/Right" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.Foreground, children: "Keyboard Shortcuts:" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Alt+Left/Right" }),
         " ",
         "- Jump through words in the input"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+C" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+C" }),
         " ",
         "- Close dialogs, cancel requests, or quit application"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "win32" ? "Ctrl+Enter" : "Ctrl+J" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "win32" ? "Ctrl+Enter" : "Ctrl+J" }),
         " ",
         process.platform === "linux" ? "- New line (Alt+Enter works for certain linux distros)" : "- New line"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+L" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Ctrl+L" }),
         " ",
         "- Clear the screen"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "darwin" ? "Ctrl+X / Meta+Enter" : "Ctrl+X" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: process.platform === "darwin" ? "Ctrl+X / Meta+Enter" : "Ctrl+X" }),
         " ",
         "- Open input in external editor"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Enter" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Enter" }),
         " ",
         "- Send message"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Esc" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Esc" }),
         " ",
         "- Cancel operation / Clear input (double press)"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shift+Tab" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Shift+Tab" }),
         " ",
         "- Cycle approval modes"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Up/Down" }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Up/Down" }),
         " ",
         "- Cycle through your prompt history"
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Box_default, { height: 1 }),
-      /* @__PURE__ */ (0, import_jsx_runtime75.jsxs)(Text3, { color: Colors.Foreground, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Box_default, { height: 1 }),
+      /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { color: Colors.Foreground, children: [
         "For a full list of shortcuts, see",
         " ",
-        /* @__PURE__ */ (0, import_jsx_runtime75.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "docs/keyboard-shortcuts.md" })
+        /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "docs/keyboard-shortcuts.md" })
       ] })
     ]
   }
 );
 
 // packages/cli/src/ui/components/messages/ViewMessage.tsx
-var import_react109 = __toESM(require_react(), 1);
-var import_jsx_runtime76 = __toESM(require_jsx_runtime(), 1);
+var import_react110 = __toESM(require_react(), 1);
+var import_jsx_runtime77 = __toESM(require_jsx_runtime(), 1);
 var ViewMessage = ({
   text,
   filePath,
@@ -371291,8 +372113,8 @@ var ViewMessage = ({
 }) => {
   const { requestLock, releaseLock: releaseLock4 } = useGlobalInputLock();
   const owner = `view-${filePath}-${text.length}`;
-  const [acquired, setAcquired] = import_react109.default.useState(false);
-  import_react109.default.useEffect(() => {
+  const [acquired, setAcquired] = import_react110.default.useState(false);
+  import_react110.default.useEffect(() => {
     if (!isActive) return;
     let mounted = true;
     try {
@@ -371326,7 +372148,7 @@ var ViewMessage = ({
     },
     { isActive: acquired }
   );
-  import_react109.default.useEffect(
+  import_react110.default.useEffect(
     () => () => {
       try {
         releaseLock4(owner);
@@ -371337,15 +372159,15 @@ var ViewMessage = ({
   );
   const lines = text.split("\n");
   const visibleLines = lines.slice(scrollOffset, scrollOffset + maxHeight);
-  return /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Box_default, { flexDirection: "column", borderStyle: "single", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsxs)(Text3, { bold: true, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", borderStyle: "single", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Text3, { bold: true, children: [
       "Viewing file content for ",
       filePath,
       " - ",
       tokenCount ?? "Unknown",
       " tokens (scroll with \u2191/\u2193 or q to exit)"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(Box_default, { flexDirection: "column", height: maxHeight, children: /* @__PURE__ */ (0, import_jsx_runtime76.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Box_default, { flexDirection: "column", height: maxHeight, children: /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
       MarkdownDisplay,
       {
         text: visibleLines.join("\n"),
@@ -371358,7 +372180,7 @@ var ViewMessage = ({
 };
 
 // packages/cli/src/ui/components/HistoryItemDisplay.tsx
-var import_jsx_runtime77 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime78 = __toESM(require_jsx_runtime(), 1);
 var HistoryItemDisplayComponent = ({
   item,
   availableTerminalHeight,
@@ -371368,10 +372190,10 @@ var HistoryItemDisplayComponent = ({
   commands,
   isFocused = true,
   viewControls
-}) => /* @__PURE__ */ (0, import_jsx_runtime77.jsxs)(Box_default, { flexDirection: "column", children: [
-  item.type === "user" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(UserMessage, { text: item.text }),
-  item.type === "user_shell" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(UserShellMessage, { text: item.text }),
-  item.type === "gemini" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+}) => /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", children: [
+  item.type === "user" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(UserMessage, { text: item.text }),
+  item.type === "user_shell" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(UserShellMessage, { text: item.text }),
+  item.type === "gemini" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
     GeminiMessage,
     {
       text: item.text,
@@ -371380,7 +372202,7 @@ var HistoryItemDisplayComponent = ({
       terminalWidth
     }
   ),
-  item.type === "gemini_content" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+  item.type === "gemini_content" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
     GeminiMessageContent,
     {
       text: item.text,
@@ -371389,9 +372211,9 @@ var HistoryItemDisplayComponent = ({
       terminalWidth
     }
   ),
-  item.type === "info" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(InfoMessage, { text: item.text }),
-  item.type === "error" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(ErrorMessage, { text: item.text }),
-  item.type === "about" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+  item.type === "info" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(InfoMessage, { text: item.text }),
+  item.type === "error" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(ErrorMessage, { text: item.text }),
+  item.type === "about" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
     AboutBox,
     {
       cliVersion: item.cliVersion,
@@ -371403,13 +372225,13 @@ var HistoryItemDisplayComponent = ({
       ideClient: item.ideClient
     }
   ),
-  item.type === "help" && commands && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(Help, { commands }),
-  item.type === "stats" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(StatsDisplay, { duration: item.duration }),
-  item.type === "model_stats" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(ModelStatsDisplay, {}),
-  item.type === "tool_stats" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(ToolStatsDisplay, {}),
-  item.type === "quit" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(SessionSummaryDisplay, { duration: item.duration }),
-  item.type === "quit_confirmation" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(SessionSummaryDisplay, { duration: item.duration }),
-  item.type === "tool_group" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+  item.type === "help" && commands && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Help, { commands }),
+  item.type === "stats" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(StatsDisplay, { duration: item.duration }),
+  item.type === "model_stats" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(ModelStatsDisplay, {}),
+  item.type === "tool_stats" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(ToolStatsDisplay, {}),
+  item.type === "quit" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(SessionSummaryDisplay, { duration: item.duration }),
+  item.type === "quit_confirmation" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(SessionSummaryDisplay, { duration: item.duration }),
+  item.type === "tool_group" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
     ToolGroupMessage,
     {
       toolCalls: item.tools,
@@ -371420,9 +372242,9 @@ var HistoryItemDisplayComponent = ({
       isFocused
     }
   ),
-  item.type === "compression" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(CompressionMessage, { compression: item.compression }),
-  item.type === "summary" && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(SummaryMessage, { summary: item.summary }),
-  item.type === "view" && viewControls && /* @__PURE__ */ (0, import_jsx_runtime77.jsx)(
+  item.type === "compression" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(CompressionMessage, { compression: item.compression }),
+  item.type === "summary" && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(SummaryMessage, { summary: item.summary }),
+  item.type === "view" && viewControls && /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(
     ViewMessage,
     {
       text: item.text,
@@ -371438,11 +372260,11 @@ var HistoryItemDisplayComponent = ({
   )
 ] }, item.id);
 HistoryItemDisplayComponent.displayName = "HistoryItemDisplay";
-var HistoryItemDisplay = (0, import_react110.memo)(HistoryItemDisplayComponent);
+var HistoryItemDisplay = (0, import_react111.memo)(HistoryItemDisplayComponent);
 
 // packages/cli/src/ui/components/ContextSummaryDisplay.tsx
 init_dist3();
-var import_jsx_runtime78 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime79 = __toESM(require_jsx_runtime(), 1);
 var ContextSummaryDisplay = ({
   geminiMdFileCount,
   contextFileNames,
@@ -371457,7 +372279,7 @@ var ContextSummaryDisplay = ({
   const blockedMcpServerCount = blockedMcpServers?.length || 0;
   const openFileCount = ideContext2?.workspaceState?.openFiles?.length ?? 0;
   if (geminiMdFileCount === 0 && mcpServerCount === 0 && blockedMcpServerCount === 0 && openFileCount === 0) {
-    return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { children: " " });
+    return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { children: " " });
   }
   const openFilesText = (() => {
     if (openFileCount === 0) {
@@ -371502,34 +372324,34 @@ var ContextSummaryDisplay = ({
   })();
   const summaryParts = [openFilesText, geminiMdText, mcpText].filter(Boolean);
   if (isNarrow) {
-    return /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Text3, { color: Colors.Gray, children: "Using:" }),
-      summaryParts.map((part, index) => /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { color: Colors.Gray, children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { color: Colors.Gray, children: "Using:" }),
+      summaryParts.map((part, index) => /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { color: Colors.Gray, children: [
         "  ",
         "- ",
         part
       ] }, index))
     ] });
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime78.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime78.jsxs)(Text3, { color: Colors.Gray, children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { color: Colors.Gray, children: [
     "Using: ",
     summaryParts.join(" | ")
   ] }) });
 };
 
 // packages/cli/src/ui/hooks/useHistoryManager.ts
-var import_react111 = __toESM(require_react(), 1);
+var import_react112 = __toESM(require_react(), 1);
 function useHistory() {
-  const [history, setHistory] = (0, import_react111.useState)([]);
-  const messageIdCounterRef = (0, import_react111.useRef)(0);
-  const getNextMessageId = (0, import_react111.useCallback)((baseTimestamp) => {
+  const [history, setHistory] = (0, import_react112.useState)([]);
+  const messageIdCounterRef = (0, import_react112.useRef)(0);
+  const getNextMessageId = (0, import_react112.useCallback)((baseTimestamp) => {
     messageIdCounterRef.current += 1;
     return baseTimestamp + messageIdCounterRef.current;
   }, []);
-  const loadHistory = (0, import_react111.useCallback)((newHistory) => {
+  const loadHistory = (0, import_react112.useCallback)((newHistory) => {
     setHistory(newHistory);
   }, []);
-  const addItem = (0, import_react111.useCallback)(
+  const addItem = (0, import_react112.useCallback)(
     (itemData, baseTimestamp) => {
       const id = getNextMessageId(baseTimestamp);
       const newItem = { ...itemData, id };
@@ -371546,7 +372368,7 @@ function useHistory() {
     },
     [getNextMessageId]
   );
-  const updateItem = (0, import_react111.useCallback)(
+  const updateItem = (0, import_react112.useCallback)(
     (id, updates) => {
       setHistory(
         (prevHistory) => prevHistory.map((item) => {
@@ -371560,7 +372382,7 @@ function useHistory() {
     },
     []
   );
-  const clearItems = (0, import_react111.useCallback)(() => {
+  const clearItems = (0, import_react112.useCallback)(() => {
     setHistory([]);
     messageIdCounterRef.current = 0;
   }, []);
@@ -371579,7 +372401,7 @@ import process46 from "node:process";
 
 // packages/cli/src/ui/IdeIntegrationNudge.tsx
 init_dist3();
-var import_jsx_runtime79 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime80 = __toESM(require_jsx_runtime(), 1);
 function IdeIntegrationNudge({
   ide,
   onComplete
@@ -371621,7 +372443,7 @@ function IdeIntegrationNudge({
     }
   ];
   const installText = isExtensionPreInstalled ? `If you select Yes, the CLI will have access to your open files and display diffs directly in ${ideName ?? "your editor"}.` : `If you select Yes, we'll install an extension that allows the CLI to access your open files and display diffs directly in ${ideName ?? "your editor"}.`;
-  return /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -371631,28 +372453,28 @@ function IdeIntegrationNudge({
       width: "100%",
       marginLeft: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Box_default, { marginBottom: 1, flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime79.jsxs)(Text3, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { color: "yellow", children: "> " }),
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Box_default, { marginBottom: 1, flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime80.jsxs)(Text3, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { color: "yellow", children: "> " }),
             `Do you want to connect ${ideName ?? "your editor"} to Qwen Code?`
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(Text3, { dimColor: true, children: installText })
+          /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(Text3, { dimColor: true, children: installText })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime79.jsx)(RadioButtonSelect, { items: OPTIONS, onSelect: onComplete })
+        /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(RadioButtonSelect, { items: OPTIONS, onSelect: onComplete })
       ]
     }
   );
 }
 
 // packages/cli/src/ui/hooks/useGitBranchName.ts
-var import_react112 = __toESM(require_react(), 1);
+var import_react113 = __toESM(require_react(), 1);
 import { exec as exec6 } from "node:child_process";
-import fs82 from "node:fs";
+import fs83 from "node:fs";
 import fsPromises6 from "node:fs/promises";
-import path95 from "node:path";
+import path96 from "node:path";
 function useGitBranchName(cwd8) {
-  const [branchName, setBranchName] = (0, import_react112.useState)(void 0);
-  const fetchBranchName = (0, import_react112.useCallback)(
+  const [branchName, setBranchName] = (0, import_react113.useState)(void 0);
+  const fetchBranchName = (0, import_react113.useCallback)(
     () => exec6(
       "git rev-parse --abbrev-ref HEAD",
       { cwd: cwd8 },
@@ -371681,14 +372503,14 @@ function useGitBranchName(cwd8) {
     ),
     [cwd8, setBranchName]
   );
-  (0, import_react112.useEffect)(() => {
+  (0, import_react113.useEffect)(() => {
     fetchBranchName();
-    const gitLogsHeadPath = path95.join(cwd8, ".git", "logs", "HEAD");
+    const gitLogsHeadPath = path96.join(cwd8, ".git", "logs", "HEAD");
     let watcher;
     const setupWatcher = async () => {
       try {
-        await fsPromises6.access(gitLogsHeadPath, fs82.constants.F_OK);
-        watcher = fs82.watch(gitLogsHeadPath, (eventType) => {
+        await fsPromises6.access(gitLogsHeadPath, fs83.constants.F_OK);
+        watcher = fs83.watch(gitLogsHeadPath, (eventType) => {
           if (eventType === "change" || eventType === "rename") {
             fetchBranchName();
           }
@@ -371705,14 +372527,14 @@ function useGitBranchName(cwd8) {
 }
 
 // packages/cli/src/ui/hooks/useBracketedPaste.ts
-var import_react113 = __toESM(require_react(), 1);
+var import_react114 = __toESM(require_react(), 1);
 var ENABLE_BRACKETED_PASTE = "\x1B[?2004h";
 var DISABLE_BRACKETED_PASTE = "\x1B[?2004l";
 var useBracketedPaste = () => {
   const cleanup = () => {
     process.stdout.write(DISABLE_BRACKETED_PASTE);
   };
-  (0, import_react113.useEffect)(() => {
+  (0, import_react114.useEffect)(() => {
     process.stdout.write(ENABLE_BRACKETED_PASTE);
     process.on("exit", cleanup);
     process.on("SIGINT", cleanup);
@@ -371727,27 +372549,27 @@ var useBracketedPaste = () => {
 };
 
 // packages/cli/src/ui/contexts/VimModeContext.tsx
-var import_react114 = __toESM(require_react(), 1);
+var import_react115 = __toESM(require_react(), 1);
 init_settings();
-var import_jsx_runtime80 = __toESM(require_jsx_runtime(), 1);
-var VimModeContext = (0, import_react114.createContext)(void 0);
+var import_jsx_runtime81 = __toESM(require_jsx_runtime(), 1);
+var VimModeContext = (0, import_react115.createContext)(void 0);
 var VimModeProvider = ({
   children,
   settings
 }) => {
   const initialVimEnabled = settings.merged.general?.vimMode ?? false;
-  const [vimEnabled, setVimEnabled] = (0, import_react114.useState)(initialVimEnabled);
-  const [vimMode, setVimMode] = (0, import_react114.useState)(
+  const [vimEnabled, setVimEnabled] = (0, import_react115.useState)(initialVimEnabled);
+  const [vimMode, setVimMode] = (0, import_react115.useState)(
     initialVimEnabled ? "NORMAL" : "INSERT"
   );
-  (0, import_react114.useEffect)(() => {
+  (0, import_react115.useEffect)(() => {
     const enabled = settings.merged.general?.vimMode ?? false;
     setVimEnabled(enabled);
     if (enabled) {
       setVimMode("NORMAL");
     }
   }, [settings.merged.general?.vimMode]);
-  const toggleVimEnabled = (0, import_react114.useCallback)(async () => {
+  const toggleVimEnabled = (0, import_react115.useCallback)(async () => {
     const newValue = !vimEnabled;
     setVimEnabled(newValue);
     if (newValue) {
@@ -371762,10 +372584,10 @@ var VimModeProvider = ({
     toggleVimEnabled,
     setVimMode
   };
-  return /* @__PURE__ */ (0, import_jsx_runtime80.jsx)(VimModeContext.Provider, { value, children });
+  return /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(VimModeContext.Provider, { value, children });
 };
 var useVimMode = () => {
-  const context2 = (0, import_react114.useContext)(VimModeContext);
+  const context2 = (0, import_react115.useContext)(VimModeContext);
   if (context2 === void 0) {
     throw new Error("useVimMode must be used within a VimModeProvider");
   }
@@ -371773,7 +372595,7 @@ var useVimMode = () => {
 };
 
 // packages/cli/src/ui/hooks/vim.ts
-var import_react115 = __toESM(require_react(), 1);
+var import_react116 = __toESM(require_react(), 1);
 var DIGIT_MULTIPLIER = 10;
 var DEFAULT_COUNT = 1;
 var DIGIT_1_TO_9 = /^[1-9]$/;
@@ -371836,22 +372658,22 @@ var vimReducer = (state, action) => {
 };
 function useVim(buffer, onSubmit) {
   const { vimEnabled, vimMode, setVimMode } = useVimMode();
-  const [state, dispatch] = (0, import_react115.useReducer)(vimReducer, initialVimState);
-  (0, import_react115.useEffect)(() => {
+  const [state, dispatch] = (0, import_react116.useReducer)(vimReducer, initialVimState);
+  (0, import_react116.useEffect)(() => {
     dispatch({ type: "SET_MODE", mode: vimMode });
   }, [vimMode]);
-  const updateMode = (0, import_react115.useCallback)(
+  const updateMode = (0, import_react116.useCallback)(
     (mode) => {
       setVimMode(mode);
       dispatch({ type: "SET_MODE", mode });
     },
     [setVimMode]
   );
-  const getCurrentCount = (0, import_react115.useCallback)(
+  const getCurrentCount = (0, import_react116.useCallback)(
     () => state.count || DEFAULT_COUNT,
     [state.count]
   );
-  const executeCommand = (0, import_react115.useCallback)(
+  const executeCommand = (0, import_react116.useCallback)(
     (cmdType, count) => {
       switch (cmdType) {
         case CMD_TYPES.DELETE_WORD_FORWARD: {
@@ -371927,7 +372749,7 @@ function useVim(buffer, onSubmit) {
     },
     [buffer, updateMode]
   );
-  const handleInsertModeInput = (0, import_react115.useCallback)(
+  const handleInsertModeInput = (0, import_react116.useCallback)(
     (normalizedKey) => {
       if (normalizedKey.name === "escape") {
         buffer.vimEscapeInsertMode();
@@ -371958,7 +372780,7 @@ function useVim(buffer, onSubmit) {
     },
     [buffer, dispatch, updateMode, onSubmit]
   );
-  const normalizeKey = (0, import_react115.useCallback)(
+  const normalizeKey = (0, import_react116.useCallback)(
     (key) => ({
       name: key.name || "",
       sequence: key.sequence || "",
@@ -371969,7 +372791,7 @@ function useVim(buffer, onSubmit) {
     }),
     []
   );
-  const handleChangeMovement = (0, import_react115.useCallback)(
+  const handleChangeMovement = (0, import_react116.useCallback)(
     (movement) => {
       const count = getCurrentCount();
       dispatch({ type: "CLEAR_COUNT" });
@@ -371990,7 +372812,7 @@ function useVim(buffer, onSubmit) {
     },
     [getCurrentCount, dispatch, buffer, updateMode]
   );
-  const handleOperatorMotion = (0, import_react115.useCallback)(
+  const handleOperatorMotion = (0, import_react116.useCallback)(
     (operator2, motion) => {
       const count = getCurrentCount();
       const commandMap = {
@@ -372017,7 +372839,7 @@ function useVim(buffer, onSubmit) {
     },
     [getCurrentCount, executeCommand, dispatch]
   );
-  const handleInput = (0, import_react115.useCallback)(
+  const handleInput = (0, import_react116.useCallback)(
     (key) => {
       if (!vimEnabled) {
         return false;
@@ -372315,9 +373137,9 @@ function useVim(buffer, onSubmit) {
 }
 
 // packages/cli/src/ui/hooks/useKittyKeyboardProtocol.ts
-var import_react116 = __toESM(require_react(), 1);
+var import_react117 = __toESM(require_react(), 1);
 function useKittyKeyboardProtocol() {
-  const [status] = (0, import_react116.useState)({
+  const [status] = (0, import_react117.useState)({
     supported: isKittyProtocolSupported(),
     enabled: isKittyProtocolEnabled(),
     checking: false
@@ -372326,37 +373148,37 @@ function useKittyKeyboardProtocol() {
 }
 
 // packages/cli/src/ui/App.tsx
-import * as fs84 from "node:fs";
+import * as fs85 from "node:fs";
 
 // packages/cli/src/ui/components/UpdateNotification.tsx
-var import_jsx_runtime81 = __toESM(require_jsx_runtime(), 1);
-var UpdateNotification = ({ message }) => /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(
+var import_jsx_runtime82 = __toESM(require_jsx_runtime(), 1);
+var UpdateNotification = ({ message }) => /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(
   Box_default,
   {
     borderStyle: "round",
     borderColor: Colors.AccentYellow,
     paddingX: 1,
     marginY: 1,
-    children: /* @__PURE__ */ (0, import_jsx_runtime81.jsx)(Text3, { color: Colors.AccentYellow, children: message })
+    children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.AccentYellow, children: message })
   }
 );
 
 // packages/cli/src/ui/components/ShowMoreLines.tsx
-var import_jsx_runtime82 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime83 = __toESM(require_jsx_runtime(), 1);
 var ShowMoreLines = ({ constrainHeight }) => {
   const overflowState = useOverflowState();
   const streamingState = useStreamingContext();
   if (overflowState === void 0 || overflowState.overflowingIds.size === 0 || !constrainHeight || !(streamingState === "idle" /* Idle */ || streamingState === "waiting_for_confirmation" /* WaitingForConfirmation */)) {
     return null;
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime82.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: "Press ctrl-s to show more lines" }) });
+  return /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Box_default, { children: /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.Gray, wrap: "truncate", children: "Press ctrl-s to show more lines" }) });
 };
 
 // packages/cli/src/ui/privacy/PrivacyNotice.tsx
 init_dist3();
 
 // packages/cli/src/ui/privacy/GeminiPrivacyNotice.tsx
-var import_jsx_runtime83 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime84 = __toESM(require_jsx_runtime(), 1);
 var GeminiPrivacyNotice = ({ onExit }) => {
   useKeypress(
     (key) => {
@@ -372366,47 +373188,47 @@ var GeminiPrivacyNotice = ({ onExit }) => {
     },
     { isActive: true }
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini API Key Notice" }),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini API Key Notice" }),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Text3, { children: [
       "By using the Gemini API",
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       ", Google AI Studio",
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
       ', and the other Google developer services that reference these terms (collectively, the "APIs" or "Services"), you are agreeing to Google APIs Terms of Service (the "API Terms")',
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
       ', and the Gemini API Additional Terms of Service (the "Additional Terms")',
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
       "."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " ",
       "https://ai.google.dev/docs/gemini_api_overview"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentRed, children: "[2]" }),
       " https://aistudio.google.com/"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentGreen, children: "[3]" }),
       " ",
       "https://developers.google.com/terms"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentPurple, children: "[4]" }),
       " ",
       "https://ai.google.dev/gemini-api/terms"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime83.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
   ] });
 };
 
 // packages/cli/src/ui/privacy/CloudPaidPrivacyNotice.tsx
-var import_jsx_runtime84 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime85 = __toESM(require_jsx_runtime(), 1);
 var CloudPaidPrivacyNotice = ({
   onExit
 }) => {
@@ -372418,40 +373240,40 @@ var CloudPaidPrivacyNotice = ({
     },
     { isActive: true }
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Vertex AI Notice" }),
-    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Vertex AI Notice" }),
+    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Text3, { children: [
       "Service Specific Terms",
-      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " are incorporated into the agreement under which Google has agreed to provide Google Cloud Platform",
-      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
       " to Customer (the \u201CAgreement\u201D). If the Agreement authorizes the resale or supply of Google Cloud Platform under a Google Cloud partner or reseller program, then except for in the section entitled \u201CPartner-Specific Terms\u201D, all references to Customer in the Service Specific Terms mean Partner or Reseller (as applicable), and all references to Customer Data in the Service Specific Terms mean Partner Data. Capitalized terms used but not defined in the Service Specific Terms have the meaning given to them in the Agreement."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " ",
       "https://cloud.google.com/terms/service-terms"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime84.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.AccentGreen, children: "[2]" }),
       " ",
       "https://cloud.google.com/terms/services"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime84.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
+    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
   ] });
 };
 
 // packages/cli/src/ui/hooks/usePrivacySettings.ts
-var import_react117 = __toESM(require_react(), 1);
+var import_react118 = __toESM(require_react(), 1);
 init_dist3();
 var usePrivacySettings = (config) => {
-  const [privacyState, setPrivacyState] = (0, import_react117.useState)({
+  const [privacyState, setPrivacyState] = (0, import_react118.useState)({
     isLoading: true
   });
-  (0, import_react117.useEffect)(() => {
+  (0, import_react118.useEffect)(() => {
     const fetchInitialState = async () => {
       setPrivacyState({
         isLoading: true
@@ -372481,7 +373303,7 @@ var usePrivacySettings = (config) => {
     };
     fetchInitialState();
   }, [config]);
-  const updateDataCollectionOptIn = (0, import_react117.useCallback)(
+  const updateDataCollectionOptIn = (0, import_react118.useCallback)(
     async (optIn) => {
       try {
         const server = getCodeAssistServer(config);
@@ -372555,7 +373377,7 @@ async function setRemoteDataCollectionOptIn(server, optIn) {
 }
 
 // packages/cli/src/ui/privacy/CloudFreePrivacyNotice.tsx
-var import_jsx_runtime85 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime86 = __toESM(require_jsx_runtime(), 1);
 var CloudFreePrivacyNotice = ({
   config,
   onExit
@@ -372570,40 +373392,40 @@ var CloudFreePrivacyNotice = ({
     { isActive: true }
   );
   if (privacyState.isLoading) {
-    return /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.Gray, children: "Loading..." });
+    return /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { color: Colors.Gray, children: "Loading..." });
   }
   if (privacyState.error) {
-    return /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
-      /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Text3, { color: Colors.AccentRed, children: [
+    return /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
+      /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Text3, { color: Colors.AccentRed, children: [
         "Error loading Opt-in settings: ",
         privacyState.error
       ] }),
-      /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
+      /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { color: Colors.Gray, children: "Press Esc to exit." })
     ] });
   }
   if (privacyState.isFreeTier === false) {
-    return /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(CloudPaidPrivacyNotice, { onExit });
+    return /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(CloudPaidPrivacyNotice, { onExit });
   }
   const items = [
     { label: "Yes", value: true },
     { label: "No", value: false }
   ];
-  return /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini Code Assist for Individuals Privacy Notice" }),
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Text3, { children: [
+  return /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Box_default, { flexDirection: "column", marginY: 1, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { bold: true, color: Colors.AccentPurple, children: "Gemini Code Assist for Individuals Privacy Notice" }),
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Text3, { children: [
       "This notice and our Privacy Policy",
-      /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+      /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " describe how Gemini Code Assist handles your data. Please read them carefully."
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { children: "When you use Gemini Code Assist for individuals with Gemini CLI, Google collects your prompts, related code, generated output, code edits, related feature usage information, and your feedback to provide, improve, and develop Google products and services and machine learning technologies." }),
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { children: "To help with quality and improve our products (such as generative machine-learning models), human reviewers may read, annotate, and process the data collected above. We take steps to protect your privacy as part of this process. This includes disconnecting the data from your Google Account before reviewers see or annotate it, and storing those disconnected copies for up to 18 months. Please don't submit confidential information or any data you wouldn't want a reviewer to see or Google to use to improve our products, services and machine-learning technologies." }),
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Box_default, { flexDirection: "column", children: [
-      /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { children: "Allow Google to use this data to develop and improve our products?" }),
-      /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { children: "When you use Gemini Code Assist for individuals with Gemini CLI, Google collects your prompts, related code, generated output, code edits, related feature usage information, and your feedback to provide, improve, and develop Google products and services and machine learning technologies." }),
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { children: "To help with quality and improve our products (such as generative machine-learning models), human reviewers may read, annotate, and process the data collected above. We take steps to protect your privacy as part of this process. This includes disconnecting the data from your Google Account before reviewers see or annotate it, and storing those disconnected copies for up to 18 months. Please don't submit confidential information or any data you wouldn't want a reviewer to see or Google to use to improve our products, services and machine-learning technologies." }),
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Box_default, { flexDirection: "column", children: [
+      /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { children: "Allow Google to use this data to develop and improve our products?" }),
+      /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(
         RadioButtonSelect,
         {
           items,
@@ -372617,19 +373439,19 @@ var CloudFreePrivacyNotice = ({
         }
       )
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsxs)(Text3, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsxs)(Text3, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { color: Colors.AccentBlue, children: "[1]" }),
       " ",
       "https://policies.google.com/privacy"
     ] }),
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Newline, {}),
-    /* @__PURE__ */ (0, import_jsx_runtime85.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to choose an option and exit." })
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Newline, {}),
+    /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Text3, { color: Colors.Gray, children: "Press Enter to choose an option and exit." })
   ] });
 };
 
 // packages/cli/src/ui/privacy/PrivacyNotice.tsx
-var import_jsx_runtime86 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime87 = __toESM(require_jsx_runtime(), 1);
 var PrivacyNoticeText = ({
   config,
   onExit
@@ -372637,24 +373459,24 @@ var PrivacyNoticeText = ({
   const authType = config.getContentGeneratorConfig()?.authType;
   switch (authType) {
     case AuthType2.USE_GEMINI:
-      return /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(GeminiPrivacyNotice, { onExit });
+      return /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(GeminiPrivacyNotice, { onExit });
     case AuthType2.USE_VERTEX_AI:
-      return /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(CloudPaidPrivacyNotice, { onExit });
+      return /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(CloudPaidPrivacyNotice, { onExit });
     case AuthType2.LOGIN_WITH_GOOGLE:
     default:
-      return /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(CloudFreePrivacyNotice, { config, onExit });
+      return /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(CloudFreePrivacyNotice, { config, onExit });
   }
 };
-var PrivacyNotice = ({ onExit, config }) => /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(Box_default, { borderStyle: "round", padding: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime86.jsx)(PrivacyNoticeText, { config, onExit }) });
+var PrivacyNotice = ({ onExit, config }) => /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { borderStyle: "round", padding: 1, flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(PrivacyNoticeText, { config, onExit }) });
 
 // packages/cli/src/ui/hooks/useSettingsCommand.ts
-var import_react118 = __toESM(require_react(), 1);
+var import_react119 = __toESM(require_react(), 1);
 function useSettingsCommand() {
-  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = (0, import_react118.useState)(false);
-  const openSettingsDialog = (0, import_react118.useCallback)(() => {
+  const [isSettingsDialogOpen, setIsSettingsDialogOpen] = (0, import_react119.useState)(false);
+  const openSettingsDialog = (0, import_react119.useCallback)(() => {
     setIsSettingsDialogOpen(true);
   }, []);
-  const closeSettingsDialog = (0, import_react118.useCallback)(() => {
+  const closeSettingsDialog = (0, import_react119.useCallback)(() => {
     setIsSettingsDialogOpen(false);
   }, []);
   return {
@@ -372665,10 +373487,10 @@ function useSettingsCommand() {
 }
 
 // packages/cli/src/ui/components/SettingsDialog.tsx
-var import_react119 = __toESM(require_react(), 1);
+var import_react120 = __toESM(require_react(), 1);
 init_settings();
 var import_chalk6 = __toESM(require_source(), 1);
-var import_jsx_runtime87 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime88 = __toESM(require_jsx_runtime(), 1);
 var maxItemsToShow = 8;
 function SettingsDialog({
   settings,
@@ -372676,27 +373498,27 @@ function SettingsDialog({
   onRestartRequest
 }) {
   const { vimEnabled, toggleVimEnabled } = useVimMode();
-  const [focusSection, setFocusSection] = (0, import_react119.useState)(
+  const [focusSection, setFocusSection] = (0, import_react120.useState)(
     "settings"
   );
-  const [selectedScope, setSelectedScope] = (0, import_react119.useState)(
+  const [selectedScope, setSelectedScope] = (0, import_react120.useState)(
     "User" /* User */
   );
-  const [activeSettingIndex, setActiveSettingIndex] = (0, import_react119.useState)(0);
-  const [scrollOffset, setScrollOffset] = (0, import_react119.useState)(0);
-  const [showRestartPrompt, setShowRestartPrompt] = (0, import_react119.useState)(false);
-  const [pendingSettings, setPendingSettings] = (0, import_react119.useState)(
+  const [activeSettingIndex, setActiveSettingIndex] = (0, import_react120.useState)(0);
+  const [scrollOffset, setScrollOffset] = (0, import_react120.useState)(0);
+  const [showRestartPrompt, setShowRestartPrompt] = (0, import_react120.useState)(false);
+  const [pendingSettings, setPendingSettings] = (0, import_react120.useState)(
     () => (
       // Deep clone to avoid mutation
       structuredClone(settings.forScope(selectedScope).settings)
     )
   );
-  const [modifiedSettings, setModifiedSettings] = (0, import_react119.useState)(
+  const [modifiedSettings, setModifiedSettings] = (0, import_react120.useState)(
     /* @__PURE__ */ new Set()
   );
-  const [globalPendingChanges, setGlobalPendingChanges] = (0, import_react119.useState)(/* @__PURE__ */ new Map());
-  const [_restartRequiredSettings, setRestartRequiredSettings] = (0, import_react119.useState)(/* @__PURE__ */ new Set());
-  (0, import_react119.useEffect)(() => {
+  const [globalPendingChanges, setGlobalPendingChanges] = (0, import_react120.useState)(/* @__PURE__ */ new Map());
+  const [_restartRequiredSettings, setRestartRequiredSettings] = (0, import_react120.useState)(/* @__PURE__ */ new Set());
+  (0, import_react120.useEffect)(() => {
     let updated = structuredClone(settings.forScope(selectedScope).settings);
     const newModified = /* @__PURE__ */ new Set();
     const newRestartRequired = /* @__PURE__ */ new Set();
@@ -372802,11 +373624,11 @@ function SettingsDialog({
     });
   };
   const items = generateSettingsItems();
-  const [editingKey, setEditingKey] = (0, import_react119.useState)(null);
-  const [editBuffer, setEditBuffer] = (0, import_react119.useState)("");
-  const [editCursorPos, setEditCursorPos] = (0, import_react119.useState)(0);
-  const [cursorVisible, setCursorVisible] = (0, import_react119.useState)(true);
-  (0, import_react119.useEffect)(() => {
+  const [editingKey, setEditingKey] = (0, import_react120.useState)(null);
+  const [editBuffer, setEditBuffer] = (0, import_react120.useState)("");
+  const [editCursorPos, setEditCursorPos] = (0, import_react120.useState)(0);
+  const [cursorVisible, setCursorVisible] = (0, import_react120.useState)(true);
+  (0, import_react120.useEffect)(() => {
     if (!editingKey) {
       setCursorVisible(true);
       return;
@@ -373020,8 +373842,8 @@ function SettingsDialog({
           const definition = currentItem ? getSettingDefinition(currentItem.value) : void 0;
           if (currentItem?.type === "number" || currentItem?.type === "string") {
             if (currentItem?.type === "string" && definition?.options && definition.options.length > 0) {
-              const path108 = currentItem.value.split(".");
-              const currentValue = getNestedValue(pendingSettings, path108);
+              const path109 = currentItem.value.split(".");
+              const currentValue = getNestedValue(pendingSettings, path109);
               const defaultValue = getDefaultValue(currentItem.value);
               const effectiveValue = currentValue ?? (typeof defaultValue === "string" ? defaultValue : void 0) ?? definition.options[0].value;
               const currentIndex = definition.options.findIndex(
@@ -373141,7 +373963,7 @@ function SettingsDialog({
     },
     { isActive: true }
   );
-  return /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
     Box_default,
     {
       borderStyle: "round",
@@ -373150,10 +373972,10 @@ function SettingsDialog({
       padding: 1,
       width: "100%",
       height: "100%",
-      children: /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Box_default, { flexDirection: "column", flexGrow: 1, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "Settings" }),
-        /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { height: 1 }),
-        showScrollUp && /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { color: Colors.Gray, children: "\u25B2" }),
+      children: /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "column", flexGrow: 1, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { bold: true, color: Colors.AccentBlue, children: "Settings" }),
+        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { height: 1 }),
+        showScrollUp && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.Gray, children: "\u25B2" }),
         visibleItems.map((item, idx) => {
           const isActive = focusSection === "settings" && activeSettingIndex === idx + scrollOffset;
           const scopeSettings = settings.forScope(selectedScope).settings;
@@ -373175,8 +373997,8 @@ function SettingsDialog({
               displayValue = editBuffer;
             }
           } else if (item.type === "number" || item.type === "string") {
-            const path108 = item.value.split(".");
-            const currentValue = getNestedValue(pendingSettings, path108);
+            const path109 = item.value.split(".");
+            const currentValue = getNestedValue(pendingSettings, path109);
             const defaultValue = getDefaultValue(item.value);
             const definition = getSettingDefinition(item.value);
             if (currentValue !== void 0 && currentValue !== null) {
@@ -373213,24 +374035,24 @@ function SettingsDialog({
             selectedScope,
             settings
           );
-          return /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(import_react119.default.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Box_default, { flexDirection: "row", alignItems: "center", children: [
-              /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { color: isActive ? Colors.AccentGreen : Colors.Gray, children: isActive ? "\u25CF" : "" }) }),
-              /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { minWidth: 50, children: /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(
+          return /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(import_react120.default.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { flexDirection: "row", alignItems: "center", children: [
+              /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { minWidth: 2, flexShrink: 0, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: isActive ? Colors.AccentGreen : Colors.Gray, children: isActive ? "\u25CF" : "" }) }),
+              /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { minWidth: 50, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(
                 Text3,
                 {
                   color: isActive ? Colors.AccentGreen : Colors.Foreground,
                   children: [
                     item.label,
-                    scopeMessage && /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Text3, { color: Colors.Gray, children: [
+                    scopeMessage && /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { color: Colors.Gray, children: [
                       " ",
                       scopeMessage
                     ] })
                   ]
                 }
               ) }),
-              /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { minWidth: 3 }),
-              /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { minWidth: 3 }),
+              /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
                 Text3,
                 {
                   color: isActive ? Colors.AccentGreen : shouldBeGreyedOut ? Colors.Gray : Colors.Foreground,
@@ -373238,17 +374060,17 @@ function SettingsDialog({
                 }
               )
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { height: 1 })
+            /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { height: 1 })
           ] }, item.value);
         }),
-        showScrollDown && /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { color: Colors.Gray, children: "\u25BC" }),
-        /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime87.jsxs)(Text3, { bold: focusSection === "scope", wrap: "truncate", children: [
+        showScrollDown && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.Gray, children: "\u25BC" }),
+        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { bold: focusSection === "scope", wrap: "truncate", children: [
             focusSection === "scope" ? "> " : "  ",
             "Apply To"
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(
+          /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
             RadioButtonSelect,
             {
               items: scopeItems,
@@ -373260,9 +374082,9 @@ function SettingsDialog({
             }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Box_default, { height: 1 }),
-        /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { color: Colors.Gray, children: "(Use Enter to select, Tab to change focus)" }),
-        showRestartPrompt && /* @__PURE__ */ (0, import_jsx_runtime87.jsx)(Text3, { color: Colors.AccentYellow, children: "To see changes, Qwen Code must be restarted. Press r to exit and apply changes now." })
+        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { height: 1 }),
+        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.Gray, children: "(Use Enter to select, Tab to change focus)" }),
+        showRestartPrompt && /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { color: Colors.AccentYellow, children: "To see changes, Qwen Code must be restarted. Press r to exit and apply changes now." })
       ] })
     }
   );
@@ -373270,8 +374092,8 @@ function SettingsDialog({
 
 // packages/cli/src/utils/installationInfo.ts
 init_dist3();
-import * as fs83 from "node:fs";
-import * as path96 from "node:path";
+import * as fs84 from "node:fs";
+import * as path97 from "node:path";
 import * as childProcess2 from "node:child_process";
 function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
   const cliPath = process.argv[1];
@@ -373279,7 +374101,7 @@ function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
     return { packageManager: "unknown" /* UNKNOWN */, isGlobal: false };
   }
   try {
-    const realPath = fs83.realpathSync(cliPath).replace(/\\/g, "/");
+    const realPath = fs84.realpathSync(cliPath).replace(/\\/g, "/");
     const normalizedProjectRoot = projectRoot?.replace(/\\/g, "/");
     const isGit = isGitRepository(process.cwd());
     if (isGit && normalizedProjectRoot && realPath.startsWith(normalizedProjectRoot) && !realPath.includes("/node_modules/")) {
@@ -373353,11 +374175,11 @@ function getInstallationInfo(projectRoot, isAutoUpdateDisabled) {
     }
     if (normalizedProjectRoot && realPath.startsWith(`${normalizedProjectRoot}/node_modules`)) {
       let pm = "npm" /* NPM */;
-      if (fs83.existsSync(path96.join(projectRoot, "yarn.lock"))) {
+      if (fs84.existsSync(path97.join(projectRoot, "yarn.lock"))) {
         pm = "yarn" /* YARN */;
-      } else if (fs83.existsSync(path96.join(projectRoot, "pnpm-lock.yaml"))) {
+      } else if (fs84.existsSync(path97.join(projectRoot, "pnpm-lock.yaml"))) {
         pm = "pnpm" /* PNPM */;
-      } else if (fs83.existsSync(path96.join(projectRoot, "bun.lockb"))) {
+      } else if (fs84.existsSync(path97.join(projectRoot, "bun.lockb"))) {
         pm = "bun" /* BUN */;
       }
       return {
@@ -373499,15 +374321,15 @@ function setUpdateHandler(addItem, setUpdateInfo) {
 }
 
 // packages/cli/src/ui/hooks/useWorkspaceMigration.ts
-var import_react120 = __toESM(require_react(), 1);
+var import_react121 = __toESM(require_react(), 1);
 init_settings();
 import process45 from "node:process";
 function useWorkspaceMigration(settings) {
-  const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] = (0, import_react120.useState)(false);
-  const [workspaceExtensions, setWorkspaceExtensions] = (0, import_react120.useState)(
+  const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] = (0, import_react121.useState)(false);
+  const [workspaceExtensions, setWorkspaceExtensions] = (0, import_react121.useState)(
     []
   );
-  (0, import_react120.useEffect)(() => {
+  (0, import_react121.useEffect)(() => {
     if (!settings.merged.experimental?.extensionManagement) {
       return;
     }
@@ -373547,12 +374369,12 @@ function useWorkspaceMigration(settings) {
 }
 
 // packages/cli/src/ui/components/WorkspaceMigrationDialog.tsx
-var import_react121 = __toESM(require_react(), 1);
-var import_jsx_runtime88 = __toESM(require_jsx_runtime(), 1);
+var import_react122 = __toESM(require_react(), 1);
+var import_jsx_runtime89 = __toESM(require_jsx_runtime(), 1);
 function WorkspaceMigrationDialog(props) {
   const { workspaceExtensions, onOpen, onClose } = props;
-  const [migrationComplete, setMigrationComplete] = (0, import_react121.useState)(false);
-  const [failedExtensions, setFailedExtensions] = (0, import_react121.useState)([]);
+  const [migrationComplete, setMigrationComplete] = (0, import_react122.useState)(false);
+  const [failedExtensions, setFailedExtensions] = (0, import_react122.useState)([]);
   onOpen();
   const onMigrate = async () => {
     const failed = await performWorkspaceExtensionMigration(workspaceExtensions);
@@ -373565,24 +374387,24 @@ function WorkspaceMigrationDialog(props) {
     }
   });
   if (migrationComplete) {
-    return /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
       Box_default,
       {
         flexDirection: "column",
         borderStyle: "round",
         borderColor: Colors.Gray,
         padding: 1,
-        children: failedExtensions.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(import_jsx_runtime88.Fragment, { children: [
-          /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { children: [
+        children: failedExtensions.length > 0 ? /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(import_jsx_runtime89.Fragment, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Text3, { children: [
             "The following extensions failed to migrate. Please try installing them manually. To see other changes, Qwen Code must be restarted. Press ",
             "'q'",
             " to quit."
           ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: failedExtensions.map((failed) => /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { children: [
+          /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: failedExtensions.map((failed) => /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Text3, { children: [
             "- ",
             failed
           ] }, failed)) })
-        ] }) : /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { children: [
+        ] }) : /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Text3, { children: [
           "Migration complete. To see changes, Qwen Code must be restarted. Press ",
           "'q'",
           " to quit."
@@ -373590,7 +374412,7 @@ function WorkspaceMigrationDialog(props) {
       }
     );
   }
-  return /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -373598,18 +374420,18 @@ function WorkspaceMigrationDialog(props) {
       borderColor: Colors.Gray,
       padding: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { bold: true, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Text3, { bold: true, children: [
           "Workspace-level extensions are deprecated",
           "\n"
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { children: "Would you like to install them at the user level?" }),
-        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { children: "The extension definition will remain in your workspace directory." }),
-        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Text3, { children: "If you opt to skip, you can install them manually using the extensions install command." }),
-        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: workspaceExtensions.map((extension) => /* @__PURE__ */ (0, import_jsx_runtime88.jsxs)(Text3, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { children: "Would you like to install them at the user level?" }),
+        /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { children: "The extension definition will remain in your workspace directory." }),
+        /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { children: "If you opt to skip, you can install them manually using the extensions install command." }),
+        /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { flexDirection: "column", marginTop: 1, marginLeft: 2, children: workspaceExtensions.map((extension) => /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Text3, { children: [
           "- ",
           extension.config.name
         ] }, extension.config.name)) }),
-        /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime88.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(
           RadioButtonSelect,
           {
             items: [
@@ -373632,7 +374454,7 @@ function WorkspaceMigrationDialog(props) {
 
 // packages/cli/src/ui/components/WelcomeBackDialog.tsx
 init_dist3();
-var import_jsx_runtime89 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime90 = __toESM(require_jsx_runtime(), 1);
 function WelcomeBackDialog({
   welcomeBackInfo,
   onSelect,
@@ -373664,7 +374486,7 @@ function WelcomeBackDialog({
     inProgressCount = 0,
     pendingTasks = []
   } = welcomeBackInfo;
-  return /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(
+  return /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(
     Box_default,
     {
       flexDirection: "column",
@@ -373674,18 +374496,18 @@ function WelcomeBackDialog({
       width: "100%",
       marginLeft: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Text3, { color: Colors.AccentBlue, bold: true, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Text3, { color: Colors.AccentBlue, bold: true, children: [
           "\u{1F44B} Welcome back! (Last updated: ",
           timeAgo,
           ")"
         ] }) }),
-        goalContent && /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F3AF} Overall Goal:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { color: Colors.Gray, children: goalContent }) })
+        goalContent && /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F3AF} Overall Goal:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { color: Colors.Gray, children: goalContent }) })
         ] }),
-        totalTasks > 0 && /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F4CB} Current Plan:" }),
-          /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Text3, { color: Colors.Gray, children: [
+        totalTasks > 0 && /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", marginBottom: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "\u{1F4CB} Current Plan:" }),
+          /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { marginTop: 1, paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Text3, { color: Colors.Gray, children: [
             "Progress: ",
             doneCount,
             "/",
@@ -373693,26 +374515,26 @@ function WelcomeBackDialog({
             " tasks completed",
             inProgressCount > 0 && `, ${inProgressCount} in progress`
           ] }) }),
-          pendingTasks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 2, children: [
-            /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "Pending Tasks:" }),
-            pendingTasks.map((task, index) => /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Text3, { color: Colors.Gray, children: [
+          pendingTasks.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, paddingLeft: 2, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { color: Colors.Foreground, bold: true, children: "Pending Tasks:" }),
+            pendingTasks.map((task, index) => /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Text3, { color: Colors.Gray, children: [
               "\u2022 ",
               task
             ] }, index))
           ] })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime89.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { bold: true, children: "What would you like to do?" }),
-          /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Text3, { children: "Choose how to proceed with your session:" })
+        /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { bold: true, children: "What would you like to do?" }),
+          /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { children: "Choose how to proceed with your session:" })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime89.jsx)(RadioButtonSelect, { items: options2, onSelect, isFocused: true }) })
+        /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { marginTop: 1, children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(RadioButtonSelect, { items: options2, onSelect, isFocused: true }) })
       ]
     }
   );
 }
 
 // packages/cli/src/ui/App.tsx
-var import_jsx_runtime90 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime91 = __toESM(require_jsx_runtime(), 1);
 var MAX_DISPLAYED_QUEUED_MESSAGES = 3;
 function isToolExecuting(pendingHistoryItems) {
   return pendingHistoryItems.some((item) => {
@@ -373727,31 +374549,31 @@ function isToolExecuting(pendingHistoryItems) {
 var AppWrapper = (props) => {
   const kittyProtocolStatus = useKittyKeyboardProtocol();
   const nodeMajorVersion = parseInt(process46.versions.node.split(".")[0], 10);
-  return /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
     KeypressProvider,
     {
       kittyProtocolEnabled: kittyProtocolStatus.enabled,
       pasteWorkaround: process46.platform === "win32" || nodeMajorVersion < 20,
       config: props.config,
       debugKeystrokeLogging: props.settings.merged.general?.debugKeystrokeLogging,
-      children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(SessionStatsProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(VimModeProvider, { settings: props.settings, children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(App2, { ...props }) }) })
+      children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(SessionStatsProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(VimModeProvider, { settings: props.settings, children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(App2, { ...props }) }) })
     }
   );
 };
 var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const isFocused = useFocus();
   useBracketedPaste();
-  const [updateInfo, setUpdateInfo] = (0, import_react122.useState)(null);
+  const [updateInfo, setUpdateInfo] = (0, import_react123.useState)(null);
   const { stdout: stdout3 } = use_stdout_default();
   const nightly = version3.includes("nightly");
   const { history, addItem, clearItems, loadHistory } = useHistory();
-  const [idePromptAnswered, setIdePromptAnswered] = (0, import_react122.useState)(false);
+  const [idePromptAnswered, setIdePromptAnswered] = (0, import_react123.useState)(false);
   const currentIDE = config.getIdeClient().getCurrentIde();
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     registerCleanup(() => config.getIdeClient().disconnect());
   }, [config]);
   const shouldShowIdePrompt = currentIDE && !config.getIdeMode() && !settings.merged.ide?.hasSeenNudge && !idePromptAnswered;
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     const cleanup = setUpdateHandler(addItem, setUpdateInfo);
     return cleanup;
   }, [addItem]);
@@ -373760,7 +374582,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     handleNewMessage,
     clearConsoleMessages: clearConsoleMessagesState
   } = useConsoleMessages();
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     const consolePatcher = new ConsolePatcher({
       onNewMessage: handleNewMessage,
       debugMode: config.getDebugMode()
@@ -373774,32 +374596,32 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     config,
     sessionStats
   });
-  const [staticNeedsRefresh, setStaticNeedsRefresh] = (0, import_react122.useState)(false);
-  const [staticKey, setStaticKey] = (0, import_react122.useState)(0);
-  const refreshStatic = (0, import_react122.useCallback)(() => {
+  const [staticNeedsRefresh, setStaticNeedsRefresh] = (0, import_react123.useState)(false);
+  const [staticKey, setStaticKey] = (0, import_react123.useState)(0);
+  const refreshStatic = (0, import_react123.useCallback)(() => {
     stdout3.write(base_exports.clearTerminal);
     setStaticKey((prev) => prev + 1);
   }, [setStaticKey, stdout3]);
-  const [geminiMdFileCount, setGeminiMdFileCount] = (0, import_react122.useState)(0);
-  const [debugMessage, setDebugMessage] = (0, import_react122.useState)("");
-  const [themeError, setThemeError] = (0, import_react122.useState)(null);
-  const [authError, setAuthError] = (0, import_react122.useState)(null);
-  const [editorError, setEditorError] = (0, import_react122.useState)(null);
-  const [footerHeight, setFooterHeight] = (0, import_react122.useState)(0);
-  const [corgiMode, setCorgiMode] = (0, import_react122.useState)(false);
-  const [isTrustedFolderState, setIsTrustedFolder] = (0, import_react122.useState)(
+  const [geminiMdFileCount, setGeminiMdFileCount] = (0, import_react123.useState)(0);
+  const [debugMessage, setDebugMessage] = (0, import_react123.useState)("");
+  const [themeError, setThemeError] = (0, import_react123.useState)(null);
+  const [authError, setAuthError] = (0, import_react123.useState)(null);
+  const [editorError, setEditorError] = (0, import_react123.useState)(null);
+  const [footerHeight, setFooterHeight] = (0, import_react123.useState)(0);
+  const [corgiMode, setCorgiMode] = (0, import_react123.useState)(false);
+  const [isTrustedFolderState, setIsTrustedFolder] = (0, import_react123.useState)(
     config.isTrustedFolder()
   );
-  const [currentModel, setCurrentModel] = (0, import_react122.useState)(config.getModel());
-  const [lmStudioModel, setLmStudioModel] = (0, import_react122.useState)(null);
-  const lastLmStudioModelFetchRef = (0, import_react122.useRef)(0);
-  (0, import_react122.useEffect)(() => {
+  const [currentModel, setCurrentModel] = (0, import_react123.useState)(config.getModel());
+  const [lmStudioModel, setLmStudioModel] = (0, import_react123.useState)(null);
+  const lastLmStudioModelFetchRef = (0, import_react123.useRef)(0);
+  (0, import_react123.useEffect)(() => {
     void lmStudioModel;
   }, [lmStudioModel]);
-  const [modelLimitVersion, setModelLimitVersion] = (0, import_react122.useState)(0);
-  (0, import_react122.useEffect)(() => {
+  const [modelLimitVersion, setModelLimitVersion] = (0, import_react123.useState)(0);
+  (0, import_react123.useEffect)(() => {
   }, [modelLimitVersion]);
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     const savedModel = settings.merged.model?.name;
     if (savedModel && savedModel !== config.getModel()) {
       void (async () => {
@@ -373823,7 +374645,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.model?.name,
     settings.merged.security?.auth?.providerId
   ]);
-  const refreshLmStudioModel = (0, import_react122.useCallback)(
+  const refreshLmStudioModel = (0, import_react123.useCallback)(
     async (force = false) => {
       const contentGeneratorConfig = config.getContentGeneratorConfig();
       if (!contentGeneratorConfig) {
@@ -373853,10 +374675,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [config, settings.merged.security?.auth?.providerId]
   );
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     void refreshLmStudioModel(true);
   }, [refreshLmStudioModel]);
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     const activeModel = config.getModel();
     if (!activeModel) {
       return;
@@ -373924,41 +374746,42 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       cancelled = true;
     };
   }, [config, currentModel, settings.merged.security?.auth?.providerId]);
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     const providerId = settings.merged.security?.auth?.providerId;
     if (providerId !== "lmstudio") {
       setLmStudioModel(null);
     }
   }, [settings.merged.security?.auth?.providerId]);
-  const [shellModeActive, setShellModeActive] = (0, import_react122.useState)(false);
-  const [showErrorDetails, setShowErrorDetails] = (0, import_react122.useState)(false);
-  const [showToolDescriptions, setShowToolDescriptions] = (0, import_react122.useState)(false);
-  const [ctrlCPressedOnce, setCtrlCPressedOnce] = (0, import_react122.useState)(false);
-  const [quittingMessages, setQuittingMessages] = (0, import_react122.useState)(null);
-  const ctrlCTimerRef = (0, import_react122.useRef)(null);
-  const [ctrlDPressedOnce, setCtrlDPressedOnce] = (0, import_react122.useState)(false);
-  const ctrlDTimerRef = (0, import_react122.useRef)(null);
-  const [constrainHeight, setConstrainHeight] = (0, import_react122.useState)(true);
-  const [showPrivacyNotice, setShowPrivacyNotice] = (0, import_react122.useState)(false);
-  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] = (0, import_react122.useState)(false);
-  const [userTier, setUserTier] = (0, import_react122.useState)(void 0);
-  const [ideContextState, setIdeContextState] = (0, import_react122.useState)();
-  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react122.useState)(false);
-  const [isProcessing, setIsProcessing] = (0, import_react122.useState)(false);
+  const [shellModeActive, setShellModeActive] = (0, import_react123.useState)(false);
+  const [showErrorDetails, setShowErrorDetails] = (0, import_react123.useState)(false);
+  const [showToolDescriptions, setShowToolDescriptions] = (0, import_react123.useState)(false);
+  const [ctrlCPressedOnce, setCtrlCPressedOnce] = (0, import_react123.useState)(false);
+  const [quittingMessages, setQuittingMessages] = (0, import_react123.useState)(null);
+  const ctrlCTimerRef = (0, import_react123.useRef)(null);
+  const [ctrlDPressedOnce, setCtrlDPressedOnce] = (0, import_react123.useState)(false);
+  const ctrlDTimerRef = (0, import_react123.useRef)(null);
+  const [constrainHeight, setConstrainHeight] = (0, import_react123.useState)(true);
+  const [showPrivacyNotice, setShowPrivacyNotice] = (0, import_react123.useState)(false);
+  const [modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError] = (0, import_react123.useState)(false);
+  const [userTier, setUserTier] = (0, import_react123.useState)(void 0);
+  const [ideContextState, setIdeContextState] = (0, import_react123.useState)();
+  const [showEscapePrompt, setShowEscapePrompt] = (0, import_react123.useState)(false);
+  const [isProcessing, setIsProcessing] = (0, import_react123.useState)(false);
   const {
     showWorkspaceMigrationDialog,
     workspaceExtensions,
     onWorkspaceMigrationDialogOpen,
     onWorkspaceMigrationDialogClose
   } = useWorkspaceMigration(settings);
-  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = (0, import_react122.useState)(false);
-  const [availableModelsForDialog, setAvailableModelsForDialog] = (0, import_react122.useState)([]);
-  const [allAvailableModels, setAllAvailableModels] = (0, import_react122.useState)([]);
-  const [isFetchingModels, setIsFetchingModels] = (0, import_react122.useState)(false);
-  const [isResumeDialogOpen, setIsResumeDialogOpen] = (0, import_react122.useState)(false);
-  const [resumeCheckpoints, setResumeCheckpoints] = (0, import_react122.useState)([]);
-  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = (0, import_react122.useState)(false);
-  (0, import_react122.useEffect)(() => {
+  const [isModelSelectionDialogOpen, setIsModelSelectionDialogOpen] = (0, import_react123.useState)(false);
+  const [availableModelsForDialog, setAvailableModelsForDialog] = (0, import_react123.useState)([]);
+  const [allAvailableModels, setAllAvailableModels] = (0, import_react123.useState)([]);
+  const [isFetchingModels, setIsFetchingModels] = (0, import_react123.useState)(false);
+  const [isResumeDialogOpen, setIsResumeDialogOpen] = (0, import_react123.useState)(false);
+  const [resumeCheckpoints, setResumeCheckpoints] = (0, import_react123.useState)([]);
+  const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = (0, import_react123.useState)(false);
+  const [isMailboxDialogOpen, setIsMailboxDialogOpen] = (0, import_react123.useState)(false);
+  (0, import_react123.useEffect)(() => {
     setAllAvailableModels([]);
     setAvailableModelsForDialog([]);
     setIsModelSelectionDialogOpen(false);
@@ -373966,14 +374789,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.security?.auth?.selectedType,
     settings.merged.security?.auth?.providerId
   ]);
-  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = (0, import_react122.useState)(false);
-  const [visionSwitchResolver, setVisionSwitchResolver] = (0, import_react122.useState)(null);
-  (0, import_react122.useEffect)(() => {
+  const [isVisionSwitchDialogOpen, setIsVisionSwitchDialogOpen] = (0, import_react123.useState)(false);
+  const [visionSwitchResolver, setVisionSwitchResolver] = (0, import_react123.useState)(null);
+  (0, import_react123.useEffect)(() => {
     const unsubscribe = ideContext.subscribeToIdeContext(setIdeContextState);
     setIdeContextState(ideContext.getIdeContext());
     return unsubscribe;
   }, []);
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     const openDebugConsole = () => {
       setShowErrorDetails(true);
       setConstrainHeight(false);
@@ -374001,20 +374824,26 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       appEvents.off("show-info" /* ShowInfo */, showInfoHandler);
     };
   }, [handleNewMessage]);
-  const openPrivacyNotice = (0, import_react122.useCallback)(() => {
+  const openPrivacyNotice = (0, import_react123.useCallback)(() => {
     setShowPrivacyNotice(true);
   }, []);
-  const openTaskTemplateDialog = (0, import_react122.useCallback)(() => {
+  const openTaskTemplateDialog = (0, import_react123.useCallback)(() => {
     setIsTaskTemplateDialogOpen(true);
   }, []);
-  const closeTaskTemplateDialog = (0, import_react122.useCallback)(() => {
+  const closeTaskTemplateDialog = (0, import_react123.useCallback)(() => {
     setIsTaskTemplateDialogOpen(false);
   }, []);
-  const handleEscapePromptChange = (0, import_react122.useCallback)((showPrompt) => {
+  const openMailboxDialog = (0, import_react123.useCallback)(() => {
+    setIsMailboxDialogOpen(true);
+  }, []);
+  const closeMailboxDialog = (0, import_react123.useCallback)(() => {
+    setIsMailboxDialogOpen(false);
+  }, []);
+  const handleEscapePromptChange = (0, import_react123.useCallback)((showPrompt) => {
     setShowEscapePrompt(showPrompt);
   }, []);
-  const initialPromptSubmitted = (0, import_react122.useRef)(false);
-  const errorCount = (0, import_react122.useMemo)(
+  const initialPromptSubmitted = (0, import_react123.useRef)(false);
+  const errorCount = (0, import_react123.useMemo)(
     () => consoleMessages.filter((msg) => msg.type === "error").reduce((total, msg) => total + msg.count, 0),
     [consoleMessages]
   );
@@ -374052,7 +374881,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     authStatus,
     authMessage
   } = useQwenAuth(settings, isAuthenticating);
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     if (settings.merged.security?.auth?.selectedType && !settings.merged.security?.auth?.useExternal) {
       const error = validateAuthMethod(
         settings.merged.security.auth.selectedType
@@ -374068,12 +374897,12 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     openAuthDialog,
     setAuthError
   ]);
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     if (!isAuthenticating) {
       setUserTier(config.getGeminiClient()?.getUserTier());
     }
   }, [config, isAuthenticating]);
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     if (isQwenAuth && authStatus === "timeout") {
       setAuthError(
         authMessage || "Qwen OAuth authentication timed out. Please try again or select a different authentication method."
@@ -374097,10 +374926,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     handleEditorSelect,
     exitEditorDialog
   } = useEditorSettings(settings, setEditorError, addItem);
-  const toggleCorgiMode = (0, import_react122.useCallback)(() => {
+  const toggleCorgiMode = (0, import_react123.useCallback)(() => {
     setCorgiMode((prev) => !prev);
   }, []);
-  const toggleYoloMode = (0, import_react122.useCallback)(() => {
+  const toggleYoloMode = (0, import_react123.useCallback)(() => {
     if (!config) return;
     const currentMode = config.getApprovalMode();
     const newMode = currentMode === ApprovalMode.YOLO ? ApprovalMode.DEFAULT : ApprovalMode.YOLO;
@@ -374123,7 +374952,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       );
     }
   }, [config, addItem]);
-  const performMemoryRefresh = (0, import_react122.useCallback)(async () => {
+  const performMemoryRefresh = (0, import_react123.useCallback)(async () => {
     addItem(
       {
         type: "info" /* INFO */,
@@ -374170,7 +374999,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       console.error("Error refreshing memory:", error);
     }
   }, [config, addItem, settings.merged]);
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     const checkModelChange = () => {
       const configModel = config.getModel();
       if (configModel !== currentModel) {
@@ -374181,7 +375010,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     const interval = setInterval(checkModelChange, 1e3);
     return () => clearInterval(interval);
   }, [config, currentModel]);
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     const flashFallbackHandler = async (currentModel2, fallbackModel, error) => {
       let message;
       if (config.getContentGeneratorConfig().authType === AuthType2.LOGIN_WITH_GOOGLE) {
@@ -374248,21 +375077,21 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   const { rows: terminalHeight, columns: terminalWidth } = useTerminalSize();
   const isNarrow = isNarrowWidth(terminalWidth);
   const { stdin: stdin3, setRawMode } = use_stdin_default();
-  const isInitialMount = (0, import_react122.useRef)(true);
+  const isInitialMount = (0, import_react123.useRef)(true);
   const widthFraction = 0.9;
   const inputWidth = Math.max(
     20,
     Math.floor(terminalWidth * widthFraction) - 3
   );
   const suggestionsWidth = Math.max(20, Math.floor(terminalWidth * 0.8));
-  const isValidPath = (0, import_react122.useCallback)((filePath) => {
+  const isValidPath = (0, import_react123.useCallback)((filePath) => {
     try {
-      return fs84.existsSync(filePath) && fs84.statSync(filePath).isFile();
+      return fs85.existsSync(filePath) && fs85.statSync(filePath).isFile();
     } catch (_e) {
       return false;
     }
   }, []);
-  const getPreferredEditor = (0, import_react122.useCallback)(() => {
+  const getPreferredEditor = (0, import_react123.useCallback)(() => {
     const editorType = settings.merged.general?.preferredEditor;
     const isValidEditor = isEditorAvailable(editorType);
     if (!isValidEditor) {
@@ -374271,18 +375100,18 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     }
     return editorType;
   }, [settings, openEditorDialog]);
-  const onAuthError = (0, import_react122.useCallback)(() => {
+  const onAuthError = (0, import_react123.useCallback)(() => {
     setAuthError("reauth required");
     openAuthDialog();
   }, [openAuthDialog, setAuthError]);
-  const handleVisionSwitchRequired = (0, import_react122.useCallback)(
+  const handleVisionSwitchRequired = (0, import_react123.useCallback)(
     async (_query) => new Promise((resolve28, reject) => {
       setVisionSwitchResolver({ resolve: resolve28, reject });
       setIsVisionSwitchDialogOpen(true);
     }),
     []
   );
-  const handleVisionSwitchSelect = (0, import_react122.useCallback)(
+  const handleVisionSwitchSelect = (0, import_react123.useCallback)(
     (outcome) => {
       setIsVisionSwitchDialogOpen(false);
       if (visionSwitchResolver) {
@@ -374293,7 +375122,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [visionSwitchResolver]
   );
-  const handleModelSelectionOpen = (0, import_react122.useCallback)(() => {
+  const handleModelSelectionOpen = (0, import_react123.useCallback)(() => {
     (async () => {
       if (allAvailableModels.length > 0) {
         setAvailableModelsForDialog(allAvailableModels);
@@ -374359,14 +375188,14 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     settings.merged.experimental?.visionModelPreview,
     isFetchingModels
   ]);
-  const handleModelSelectionClose = (0, import_react122.useCallback)(() => {
+  const handleModelSelectionClose = (0, import_react123.useCallback)(() => {
     setIsModelSelectionDialogOpen(false);
   }, []);
-  const closeResumeDialog = (0, import_react122.useCallback)(() => {
+  const closeResumeDialog = (0, import_react123.useCallback)(() => {
     setIsResumeDialogOpen(false);
     setResumeCheckpoints([]);
   }, []);
-  const openResumeDialog = (0, import_react122.useCallback)(() => {
+  const openResumeDialog = (0, import_react123.useCallback)(() => {
     try {
       const checkpointService = new CheckpointService(config);
       const checkpoints = checkpointService.listCheckpoints();
@@ -374407,7 +375236,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
       );
     }
   }, [addItem, config]);
-  const handleModelSelect = (0, import_react122.useCallback)(
+  const handleModelSelect = (0, import_react123.useCallback)(
     async (modelId) => {
       try {
         const selectedModel = allAvailableModels.find(
@@ -374574,20 +375403,21 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     setIsProcessing,
     setGeminiMdFileCount,
     showQuitConfirmation,
-    sessionLoggingController
+    sessionLoggingController,
+    openMailboxDialog
   );
-  const handleResumeCheckpointSelect = (0, import_react122.useCallback)(
+  const handleResumeCheckpointSelect = (0, import_react123.useCallback)(
     (checkpointId) => {
       closeResumeDialog();
       void handleSlashCommand(`/resume ${checkpointId}`);
     },
     [closeResumeDialog, handleSlashCommand]
   );
-  const submitQueryForDeployRef = (0, import_react122.useRef)(
+  const submitQueryForDeployRef = (0, import_react123.useRef)(
     async () => {
     }
   );
-  const handleTaskTemplateDeploy = (0, import_react122.useCallback)(
+  const handleTaskTemplateDeploy = (0, import_react123.useCallback)(
     async (request4) => {
       const templateId = request4.templateId.trim();
       if (!templateId) {
@@ -374628,6 +375458,34 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [addItem]
   );
+  const handleMailboxPayloadUse = (0, import_react123.useCallback)(async (payload) => {
+    const text = payload.trim();
+    if (!text) {
+      return;
+    }
+    setIsMailboxDialogOpen(false);
+    addItem(
+      {
+        type: "gemini_content",
+        text
+      },
+      Date.now()
+    );
+    try {
+      await config.getGeminiClient()?.addHistory({
+        role: "user",
+        parts: [{ text }]
+      });
+    } catch (error) {
+      addItem(
+        {
+          type: "error" /* ERROR */,
+          text: `Failed to add mailbox payload to model history: ${error instanceof Error ? error.message : String(error)}`
+        },
+        Date.now()
+      );
+    }
+  }, [addItem, config]);
   const buffer = useTextBuffer({
     initialText: "",
     viewport: { height: 10, width: inputWidth },
@@ -374636,8 +375494,8 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     isValidPath,
     shellModeActive
   });
-  const [userMessages, setUserMessages] = (0, import_react122.useState)([]);
-  const cancelHandlerRef = (0, import_react122.useRef)(() => {
+  const [userMessages, setUserMessages] = (0, import_react123.useState)([]);
+  const cancelHandlerRef = (0, import_react123.useRef)(() => {
   });
   const {
     streamingState,
@@ -374668,7 +375526,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
   submitQueryForDeployRef.current = async (query) => {
     await submitQuery(query);
   };
-  const pendingHistoryItems = (0, import_react122.useMemo)(
+  const pendingHistoryItems = (0, import_react123.useMemo)(
     () => [...pendingSlashCommandHistoryItems, ...pendingGeminiHistoryItems].map(
       (item, index) => ({
         ...item,
@@ -374695,6 +375553,8 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     exitEditorDialog,
     isTaskTemplateDialogOpen,
     closeTaskTemplateDialog,
+    isMailboxDialogOpen,
+    closeMailboxDialog,
     isSettingsDialogOpen,
     closeSettingsDialog,
     isResumeDialogOpen,
@@ -374710,7 +375570,7 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     streamingState,
     submitQuery
   });
-  cancelHandlerRef.current = (0, import_react122.useCallback)(() => {
+  cancelHandlerRef.current = (0, import_react123.useCallback)(() => {
     if (isToolExecuting(pendingHistoryItems)) {
       buffer.setText("");
       return;
@@ -374734,13 +375594,13 @@ ${queuedText}` : queuedText;
     clearQueue,
     pendingHistoryItems
   ]);
-  const handleFinalSubmit = (0, import_react122.useCallback)(
+  const handleFinalSubmit = (0, import_react123.useCallback)(
     (submittedValue) => {
       addMessage(submittedValue);
     },
     [addMessage]
   );
-  const handleIdePromptComplete = (0, import_react122.useCallback)(
+  const handleIdePromptComplete = (0, import_react123.useCallback)(
     (result) => {
       if (result.userSelection === "yes") {
         if (result.isExtensionPreInstalled) {
@@ -374767,7 +375627,7 @@ ${queuedText}` : queuedText;
   const { handleInput: vimHandleInput } = useVim(buffer, handleFinalSubmit);
   const { elapsedTime, currentLoadingPhrase } = useLoadingIndicator(streamingState);
   const showAutoAcceptIndicator = useAutoAcceptIndicator({ config, addItem });
-  const handleExit = (0, import_react122.useCallback)(
+  const handleExit = (0, import_react123.useCallback)(
     (pressedOnce, setPressedOnce, timerRef) => {
       if (pressedOnce) {
         if (timerRef.current) {
@@ -374802,7 +375662,7 @@ ${queuedText}` : queuedText;
       buffer
     ]
   );
-  const handleGlobalKeypress = (0, import_react122.useCallback)(
+  const handleGlobalKeypress = (0, import_react123.useCallback)(
     (key) => {
       if (settings.merged.general?.debugKeystrokeLogging) {
         console.log("[DEBUG] Keystroke:", JSON.stringify(key));
@@ -374863,13 +375723,13 @@ ${queuedText}` : queuedText;
   useKeypress(handleGlobalKeypress, {
     isActive: true
   });
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     if (config) {
       setGeminiMdFileCount(config.getGeminiMdFileCount());
     }
   }, [config, config.getGeminiMdFileCount]);
   const logger6 = useLogger(config.storage);
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     const fetchUserMessages = async () => {
       const pastMessagesRaw = await logger6?.getPreviousUserMessages() || [];
       const currentSessionUserMessages = history.filter(
@@ -374893,13 +375753,13 @@ ${queuedText}` : queuedText;
     fetchUserMessages();
   }, [history, logger6]);
   const isInputActive = (streamingState === "idle" /* Idle */ || streamingState === "responding" /* Responding */) && !initError && !isProcessing && !showWelcomeBackDialog && true;
-  const handleClearScreen = (0, import_react122.useCallback)(() => {
+  const handleClearScreen = (0, import_react123.useCallback)(() => {
     clearItems();
     clearConsoleMessagesState();
     console.clear();
     refreshStatic();
   }, [clearItems, clearConsoleMessagesState, refreshStatic]);
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     if (history.length === 0) {
       setActiveViewId(null);
       setViewScrollOffset(0);
@@ -374921,9 +375781,9 @@ ${queuedText}` : queuedText;
       lastSeenViewIdRef.current = null;
     }
   }, [history, terminalHeight, footerHeight]);
-  const mainControlsRef = (0, import_react122.useRef)(null);
-  const pendingHistoryItemRef = (0, import_react122.useRef)(null);
-  (0, import_react122.useEffect)(() => {
+  const mainControlsRef = (0, import_react123.useRef)(null);
+  const pendingHistoryItemRef = (0, import_react123.useRef)(null);
+  (0, import_react123.useEffect)(() => {
     if (mainControlsRef.current) {
       const fullFooterMeasurement = measure_element_default(mainControlsRef.current);
       setFooterHeight(fullFooterMeasurement.height);
@@ -374933,15 +375793,15 @@ ${queuedText}` : queuedText;
     /* margins and padding */
     3
   );
-  const availableTerminalHeight = (0, import_react122.useMemo)(
+  const availableTerminalHeight = (0, import_react123.useMemo)(
     () => terminalHeight - footerHeight - staticExtraHeight,
     [terminalHeight, footerHeight]
   );
-  const [activeViewId, setActiveViewId] = (0, import_react122.useState)(null);
-  const [viewScrollOffset, setViewScrollOffset] = (0, import_react122.useState)(0);
-  const [availableViewHeight, setAvailableViewHeight] = (0, import_react122.useState)(0);
-  const lastSeenViewIdRef = (0, import_react122.useRef)(null);
-  (0, import_react122.useEffect)(() => {
+  const [activeViewId, setActiveViewId] = (0, import_react123.useState)(null);
+  const [viewScrollOffset, setViewScrollOffset] = (0, import_react123.useState)(0);
+  const [availableViewHeight, setAvailableViewHeight] = (0, import_react123.useState)(0);
+  const lastSeenViewIdRef = (0, import_react123.useRef)(null);
+  (0, import_react123.useEffect)(() => {
     if (isInitialMount.current) {
       isInitialMount.current = false;
       return;
@@ -374954,32 +375814,32 @@ ${queuedText}` : queuedText;
       clearTimeout(handler);
     };
   }, [terminalWidth, terminalHeight, refreshStatic]);
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     if (streamingState === "idle" /* Idle */ && staticNeedsRefresh) {
       setStaticNeedsRefresh(false);
       refreshStatic();
     }
   }, [streamingState, refreshStatic, staticNeedsRefresh]);
-  const filteredConsoleMessages = (0, import_react122.useMemo)(() => {
+  const filteredConsoleMessages = (0, import_react123.useMemo)(() => {
     if (config.getDebugMode()) {
       return consoleMessages;
     }
     return consoleMessages.filter((msg) => msg.type !== "debug");
   }, [consoleMessages, config]);
   const branchName = useGitBranchName(config.getTargetDir());
-  const contextFileNames = (0, import_react122.useMemo)(() => {
+  const contextFileNames = (0, import_react123.useMemo)(() => {
     const fromSettings = settings.merged.context?.fileName;
     if (fromSettings) {
       return Array.isArray(fromSettings) ? fromSettings : [fromSettings];
     }
     return getAllGeminiMdFilenames();
   }, [settings.merged.context?.fileName]);
-  const initialPrompt = (0, import_react122.useMemo)(() => config.getQuestion(), [config]);
+  const initialPrompt = (0, import_react123.useMemo)(() => config.getQuestion(), [config]);
   const geminiClient = config.getGeminiClient();
-  (0, import_react122.useEffect)(() => {
+  (0, import_react123.useEffect)(() => {
     const isSlashInitialPrompt = typeof initialPrompt === "string" && initialPrompt.trim().startsWith("/");
     const slashCommandsReady = slashCommands.length > 0;
-    if (initialPrompt && !initialPromptSubmitted.current && !isAuthenticating && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isTaskTemplateDialogOpen && !isModelSelectionDialogOpen && !isResumeDialogOpen && !isVisionSwitchDialogOpen && !isSubagentCreateDialogOpen && !showPrivacyNotice && !showWelcomeBackDialog && welcomeBackChoice !== "restart" && geminiClient?.isInitialized?.() && (!isSlashInitialPrompt || slashCommandsReady)) {
+    if (initialPrompt && !initialPromptSubmitted.current && !isAuthenticating && !isAuthDialogOpen && !isThemeDialogOpen && !isEditorDialogOpen && !isTaskTemplateDialogOpen && !isMailboxDialogOpen && !isModelSelectionDialogOpen && !isResumeDialogOpen && !isVisionSwitchDialogOpen && !isSubagentCreateDialogOpen && !showPrivacyNotice && !showWelcomeBackDialog && welcomeBackChoice !== "restart" && geminiClient?.isInitialized?.() && (!isSlashInitialPrompt || slashCommandsReady)) {
       submitQuery(initialPrompt);
       initialPromptSubmitted.current = true;
     }
@@ -374991,6 +375851,7 @@ ${queuedText}` : queuedText;
     isThemeDialogOpen,
     isEditorDialogOpen,
     isTaskTemplateDialogOpen,
+    isMailboxDialogOpen,
     isSubagentCreateDialogOpen,
     showPrivacyNotice,
     showWelcomeBackDialog,
@@ -375002,7 +375863,7 @@ ${queuedText}` : queuedText;
     slashCommands
   ]);
   if (quittingMessages) {
-    return /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: quittingMessages.map((item) => /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+    return /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Box_default, { flexDirection: "column", marginBottom: 1, children: quittingMessages.map((item) => /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
       HistoryItemDisplay,
       {
         availableTerminalHeight: constrainHeight ? availableTerminalHeight : void 0,
@@ -375018,16 +375879,16 @@ ${queuedText}` : queuedText;
   const debugConsoleMaxHeight = Math.floor(Math.max(terminalHeight * 0.2, 5));
   const staticAreaMaxItemHeight = Math.max(terminalHeight * 4, 100);
   const placeholder = vimModeEnabled ? "  Press 'i' for INSERT mode and 'Esc' for NORMAL mode." : "  Type your message or @path/to/file";
-  return /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(StreamingContext.Provider, { value: streamingState, children: /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", width: "90%", children: [
-    /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+  return /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(StreamingContext.Provider, { value: streamingState, children: /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Box_default, { flexDirection: "column", width: "90%", children: [
+    /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
       Static,
       {
         items: [
-          /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", children: [
-            !(settings.merged.ui?.hideBanner || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Header, { version: version3, nightly }),
-            !(settings.merged.ui?.hideTips || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Tips, { config })
+          /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Box_default, { flexDirection: "column", children: [
+            !(settings.merged.ui?.hideBanner || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Header, { version: version3, nightly }),
+            !(settings.merged.ui?.hideTips || config.getScreenReader()) && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Tips, { config })
           ] }, "header"),
-          ...history.filter((h) => h.type !== "view").map((h) => /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+          ...history.filter((h) => h.type !== "view").map((h) => /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
             HistoryItemDisplay,
             {
               terminalWidth: mainAreaWidth,
@@ -375044,8 +375905,8 @@ ${queuedText}` : queuedText;
       },
       staticKey
     ),
-    /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { ref: pendingHistoryItemRef, flexDirection: "column", children: [
-      pendingHistoryItems.map((item) => /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Box_default, { ref: pendingHistoryItemRef, flexDirection: "column", children: [
+      pendingHistoryItems.map((item) => /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         HistoryItemDisplay,
         {
           availableTerminalHeight: constrainHeight ? availableTerminalHeight : void 0,
@@ -375053,7 +375914,7 @@ ${queuedText}` : queuedText;
           item,
           isPending: true,
           config,
-          isFocused: !isEditorDialogOpen && !isTaskTemplateDialogOpen,
+          isFocused: !isEditorDialogOpen && !isTaskTemplateDialogOpen && !isMailboxDialogOpen,
           viewControls: item.type === "view" ? {
             isActive: activeViewId === item.id,
             scrollOffset: viewScrollOffset,
@@ -375073,16 +375934,16 @@ ${queuedText}` : queuedText;
         },
         item.id
       )),
-      /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(ShowMoreLines, { constrainHeight })
+      /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(ShowMoreLines, { constrainHeight })
     ] }) }),
-    /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", ref: mainControlsRef, children: [
+    /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Box_default, { flexDirection: "column", ref: mainControlsRef, children: [
       activeViewId !== null && (() => {
         const viewItem = history.find(
           (h) => h.id === activeViewId && h.type === "view"
         );
         if (!viewItem || viewItem.type !== "view") return null;
         if (!viewItem) return null;
-        return /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+        return /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
           ViewOverlay,
           {
             item: viewItem,
@@ -375096,8 +375957,8 @@ ${queuedText}` : queuedText;
           }
         );
       })(),
-      updateInfo && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(UpdateNotification, { message: updateInfo.message }),
-      startupWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      updateInfo && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(UpdateNotification, { message: updateInfo.message }),
+      startupWarnings.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         Box_default,
         {
           borderStyle: "round",
@@ -375105,10 +375966,10 @@ ${queuedText}` : queuedText;
           paddingX: 1,
           marginY: 1,
           flexDirection: "column",
-          children: startupWarnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { color: Colors.AccentYellow, children: warning }, index))
+          children: startupWarnings.map((warning, index) => /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Text3, { color: Colors.AccentYellow, children: warning }, index))
         }
       ),
-      showWelcomeBackDialog && welcomeBackInfo?.hasHistory && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      showWelcomeBackDialog && welcomeBackInfo?.hasHistory && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         WelcomeBackDialog,
         {
           welcomeBackInfo,
@@ -375116,26 +375977,26 @@ ${queuedText}` : queuedText;
           onClose: handleWelcomeBackClose
         }
       ),
-      showWorkspaceMigrationDialog ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      showWorkspaceMigrationDialog ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         WorkspaceMigrationDialog,
         {
           workspaceExtensions,
           onOpen: onWorkspaceMigrationDialogOpen,
           onClose: onWorkspaceMigrationDialogClose
         }
-      ) : shouldShowIdePrompt && currentIDE ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ) : shouldShowIdePrompt && currentIDE ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         IdeIntegrationNudge,
         {
           ide: currentIDE,
           onComplete: handleIdePromptComplete
         }
-      ) : isFolderTrustDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ) : isFolderTrustDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         FolderTrustDialog,
         {
           onSelect: handleFolderTrustSelect,
           isRestarting
         }
-      ) : quitConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ) : quitConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         QuitConfirmationDialog,
         {
           onSelect: (choice2) => {
@@ -375147,9 +376008,9 @@ ${queuedText}` : queuedText;
             }
           }
         }
-      ) : shellConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(ShellConfirmationDialog, { request: shellConfirmationRequest }) : confirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", children: [
+      ) : shellConfirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(ShellConfirmationDialog, { request: shellConfirmationRequest }) : confirmationRequest ? /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Box_default, { flexDirection: "column", children: [
         confirmationRequest.prompt,
-        /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { paddingY: 1, children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+        /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Box_default, { paddingY: 1, children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
           RadioButtonSelect,
           {
             isFocused: !!confirmationRequest,
@@ -375162,9 +376023,9 @@ ${queuedText}` : queuedText;
             }
           }
         ) })
-      ] }) : isThemeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", children: [
-        themeError && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { color: Colors.AccentRed, children: themeError }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ] }) : isThemeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Box_default, { flexDirection: "column", children: [
+        themeError && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Text3, { color: Colors.AccentRed, children: themeError }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
           ThemeDialog,
           {
             onSelect: handleThemeSelect,
@@ -375174,27 +376035,27 @@ ${queuedText}` : queuedText;
             terminalWidth: mainAreaWidth
           }
         )
-      ] }) : isSettingsDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ] }) : isSettingsDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         SettingsDialog,
         {
           settings,
           onSelect: () => closeSettingsDialog(),
           onRestartRequest: () => process46.exit(0)
         }
-      ) }) : isSubagentCreateDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ) }) : isSubagentCreateDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         AgentCreationWizard,
         {
           onClose: closeSubagentCreateDialog,
           config
         }
-      ) }) : isAgentsManagerDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ) }) : isAgentsManagerDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         AgentsManagerDialog,
         {
           onClose: closeAgentsManagerDialog,
           config
         }
-      ) }) : isAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(import_jsx_runtime90.Fragment, { children: [
-        isQwenAuth && isQwenAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ) }) : isAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(import_jsx_runtime91.Fragment, { children: [
+        isQwenAuth && isQwenAuthenticating ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
           QwenOAuthProgress,
           {
             deviceAuth: deviceAuth || void 0,
@@ -375215,7 +376076,7 @@ ${queuedText}` : queuedText;
               openAuthDialog();
             }
           }
-        ) : /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+        ) : /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
           AuthInProgress,
           {
             onTimeout: () => {
@@ -375225,8 +376086,8 @@ ${queuedText}` : queuedText;
             }
           }
         ),
-        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
             DetailedMessagesDisplay,
             {
               messages: filteredConsoleMessages,
@@ -375234,18 +376095,18 @@ ${queuedText}` : queuedText;
               width: inputWidth
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(ShowMoreLines, { constrainHeight })
+          /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(ShowMoreLines, { constrainHeight })
         ] }) })
-      ] }) : isAuthDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ] }) : isAuthDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Box_default, { flexDirection: "column", children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         AuthDialog,
         {
           onSelect: handleAuthSelect,
           settings,
           initialErrorMessage: authError
         }
-      ) }) : isEditorDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", children: [
-        editorError && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { color: Colors.AccentRed, children: editorError }) }),
-        /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ) }) : isEditorDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Box_default, { flexDirection: "column", children: [
+        editorError && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Box_default, { marginBottom: 1, children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Text3, { color: Colors.AccentRed, children: editorError }) }),
+        /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
           EditorSettingsDialog,
           {
             onSelect: handleEditorSelect,
@@ -375253,7 +376114,7 @@ ${queuedText}` : queuedText;
             onExit: exitEditorDialog
           }
         )
-      ] }) : isTaskTemplateDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ] }) : isTaskTemplateDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         TaskTemplateEditorDialog,
         {
           projectRoot: config.getProjectRoot() || process46.cwd(),
@@ -375262,7 +376123,15 @@ ${queuedText}` : queuedText;
           onExit: closeTaskTemplateDialog,
           onDeploy: handleTaskTemplateDeploy
         }
-      ) : isModelSelectionDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ) : isMailboxDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
+        MailboxDialog,
+        {
+          baseDir: config.getTargetDir(),
+          sessionId: config.getSessionId(),
+          onExit: closeMailboxDialog,
+          onUsePayload: handleMailboxPayloadUse
+        }
+      ) : isModelSelectionDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         ModelSelectionDialog,
         {
           availableModels: availableModelsForDialog,
@@ -375270,21 +376139,21 @@ ${queuedText}` : queuedText;
           onSelect: handleModelSelect,
           onCancel: handleModelSelectionClose
         }
-      ) : isResumeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ) : isResumeDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         ResumeDialog,
         {
           checkpoints: resumeCheckpoints,
           onSelect: handleResumeCheckpointSelect,
           onClose: closeResumeDialog
         }
-      ) : isVisionSwitchDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect }) : showPrivacyNotice ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ) : isVisionSwitchDialogOpen ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect }) : showPrivacyNotice ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         PrivacyNotice,
         {
           onExit: () => setShowPrivacyNotice(false),
           config
         }
-      ) : /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(import_jsx_runtime90.Fragment, { children: [
-        /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      ) : /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(import_jsx_runtime91.Fragment, { children: [
+        /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
           LoadingIndicator,
           {
             thought: streamingState === "waiting_for_confirmation" /* WaitingForConfirmation */ || config.getAccessibility()?.disableLoadingPhrases || config.getScreenReader() ? void 0 : thought,
@@ -375292,21 +376161,21 @@ ${queuedText}` : queuedText;
             elapsedTime
           }
         ),
-        messageQueue.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+        messageQueue.length > 0 && /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
           messageQueue.slice(0, MAX_DISPLAYED_QUEUED_MESSAGES).map((message, index) => {
             const preview = message.replace(/\s+/g, " ");
             return (
               // Ensure the Box takes full width so truncation calculates correctly
-              /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { paddingLeft: 2, width: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { dimColor: true, wrap: "truncate", children: preview }) }, index)
+              /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Box_default, { paddingLeft: 2, width: "100%", children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Text3, { dimColor: true, wrap: "truncate", children: preview }) }, index)
             );
           }),
-          messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Box_default, { paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Text3, { dimColor: true, children: [
+          messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Box_default, { paddingLeft: 2, children: /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Text3, { dimColor: true, children: [
             "... (+",
             messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES,
             "more)"
           ] }) })
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(
+        /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(
           Box_default,
           {
             marginTop: 1,
@@ -375315,9 +376184,9 @@ ${queuedText}` : queuedText;
             flexDirection: isNarrow ? "column" : "row",
             alignItems: isNarrow ? "flex-start" : "center",
             children: [
-              /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { children: [
-                process46.env["GEMINI_SYSTEM_MD"] && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " }),
-                ctrlCPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." }) : ctrlDPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." }) : showEscapePrompt ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { color: Colors.Gray, children: "Press Esc again to clear." }) : /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Box_default, { children: [
+                process46.env["GEMINI_SYSTEM_MD"] && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Text3, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " }),
+                ctrlCPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." }) : ctrlDPressedOnce ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Text3, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." }) : showEscapePrompt ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Text3, { color: Colors.Gray, children: "Press Esc again to clear." }) : /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
                   ContextSummaryDisplay,
                   {
                     ideContext: ideContextState,
@@ -375329,20 +376198,20 @@ ${queuedText}` : queuedText;
                   }
                 )
               ] }),
-              /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { paddingTop: isNarrow ? 1 : 0, children: [
-                showAutoAcceptIndicator !== ApprovalMode.DEFAULT && !shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+              /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Box_default, { paddingTop: isNarrow ? 1 : 0, children: [
+                showAutoAcceptIndicator !== ApprovalMode.DEFAULT && !shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
                   AutoAcceptIndicator,
                   {
                     approvalMode: showAutoAcceptIndicator
                   }
                 ),
-                shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(ShellModeIndicator, {})
+                shellModeActive && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(ShellModeIndicator, {})
               ] })
             ]
           }
         ),
-        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Box_default, { flexDirection: "column", children: [
-          /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+        showErrorDetails && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(OverflowProvider, { children: /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Box_default, { flexDirection: "column", children: [
+          /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
             DetailedMessagesDisplay,
             {
               messages: filteredConsoleMessages,
@@ -375350,9 +376219,9 @@ ${queuedText}` : queuedText;
               width: inputWidth
             }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(ShowMoreLines, { constrainHeight })
+          /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(ShowMoreLines, { constrainHeight })
         ] }) }),
-        isInputActive && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+        isInputActive && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
           InputPrompt,
           {
             buffer,
@@ -375373,7 +376242,7 @@ ${queuedText}` : queuedText;
           }
         )
       ] }),
-      initError && streamingState !== "responding" /* Responding */ && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      initError && streamingState !== "responding" /* Responding */ && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         Box_default,
         {
           borderStyle: "round",
@@ -375382,21 +376251,21 @@ ${queuedText}` : queuedText;
           marginBottom: 1,
           children: history.find(
             (item) => item.type === "error" && item.text?.includes(initError)
-          )?.text ? /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(Text3, { color: Colors.AccentRed, children: history.find(
+          )?.text ? /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(Text3, { color: Colors.AccentRed, children: history.find(
             (item) => item.type === "error" && item.text?.includes(initError)
-          )?.text }) : /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(import_jsx_runtime90.Fragment, { children: [
-            /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Text3, { color: Colors.AccentRed, children: [
+          )?.text }) : /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(import_jsx_runtime91.Fragment, { children: [
+            /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Text3, { color: Colors.AccentRed, children: [
               "Initialization Error: ",
               initError
             ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime90.jsxs)(Text3, { color: Colors.AccentRed, children: [
+            /* @__PURE__ */ (0, import_jsx_runtime91.jsxs)(Text3, { color: Colors.AccentRed, children: [
               " ",
               "Please check API key and configuration."
             ] })
           ] })
         }
       ),
-      !settings.merged.ui?.hideFooter && /* @__PURE__ */ (0, import_jsx_runtime90.jsx)(
+      !settings.merged.ui?.hideFooter && /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
         Footer,
         {
           model: currentModel,
@@ -375423,23 +376292,23 @@ ${queuedText}` : queuedText;
 import process55 from "node:process";
 import { spawn as spawn13 } from "node:child_process";
 import { fileURLToPath as fileURLToPath14 } from "node:url";
-import path104 from "node:path";
+import path105 from "node:path";
 import { format as format3 } from "node:util";
 
 // node_modules/configstore/index.js
 var import_graceful_fs = __toESM(require_graceful_fs(), 1);
-import path100 from "node:path";
+import path101 from "node:path";
 import os32 from "node:os";
 
 // node_modules/xdg-basedir/index.js
 import os30 from "os";
-import path97 from "path";
+import path98 from "path";
 var homeDirectory = os30.homedir();
 var { env: env7 } = process;
-var xdgData = env7.XDG_DATA_HOME || (homeDirectory ? path97.join(homeDirectory, ".local", "share") : void 0);
-var xdgConfig = env7.XDG_CONFIG_HOME || (homeDirectory ? path97.join(homeDirectory, ".config") : void 0);
-var xdgState = env7.XDG_STATE_HOME || (homeDirectory ? path97.join(homeDirectory, ".local", "state") : void 0);
-var xdgCache = env7.XDG_CACHE_HOME || (homeDirectory ? path97.join(homeDirectory, ".cache") : void 0);
+var xdgData = env7.XDG_DATA_HOME || (homeDirectory ? path98.join(homeDirectory, ".local", "share") : void 0);
+var xdgConfig = env7.XDG_CONFIG_HOME || (homeDirectory ? path98.join(homeDirectory, ".config") : void 0);
+var xdgState = env7.XDG_STATE_HOME || (homeDirectory ? path98.join(homeDirectory, ".local", "state") : void 0);
+var xdgCache = env7.XDG_CACHE_HOME || (homeDirectory ? path98.join(homeDirectory, ".cache") : void 0);
 var xdgRuntime = env7.XDG_RUNTIME_DIR || void 0;
 var xdgDataDirectories = (env7.XDG_DATA_DIRS || "/usr/local/share/:/usr/share/").split(":");
 if (xdgData) {
@@ -375451,10 +376320,10 @@ if (xdgConfig) {
 }
 
 // node_modules/atomically/dist/index.js
-import path99 from "node:path";
+import path100 from "node:path";
 
 // node_modules/stubborn-fs/dist/index.js
-import fs85 from "node:fs";
+import fs86 from "node:fs";
 import { promisify as promisify10 } from "node:util";
 
 // node_modules/stubborn-fs/dist/attemptify.js
@@ -375613,44 +376482,44 @@ var retryifySync = (fn, isRetriableError) => {
 var FS = {
   attempt: {
     /* ASYNC */
-    chmod: attemptifyAsync(promisify10(fs85.chmod), handlers_default.onChangeError),
-    chown: attemptifyAsync(promisify10(fs85.chown), handlers_default.onChangeError),
-    close: attemptifyAsync(promisify10(fs85.close), NOOP2),
-    fsync: attemptifyAsync(promisify10(fs85.fsync), NOOP2),
-    mkdir: attemptifyAsync(promisify10(fs85.mkdir), NOOP2),
-    realpath: attemptifyAsync(promisify10(fs85.realpath), NOOP2),
-    stat: attemptifyAsync(promisify10(fs85.stat), NOOP2),
-    unlink: attemptifyAsync(promisify10(fs85.unlink), NOOP2),
+    chmod: attemptifyAsync(promisify10(fs86.chmod), handlers_default.onChangeError),
+    chown: attemptifyAsync(promisify10(fs86.chown), handlers_default.onChangeError),
+    close: attemptifyAsync(promisify10(fs86.close), NOOP2),
+    fsync: attemptifyAsync(promisify10(fs86.fsync), NOOP2),
+    mkdir: attemptifyAsync(promisify10(fs86.mkdir), NOOP2),
+    realpath: attemptifyAsync(promisify10(fs86.realpath), NOOP2),
+    stat: attemptifyAsync(promisify10(fs86.stat), NOOP2),
+    unlink: attemptifyAsync(promisify10(fs86.unlink), NOOP2),
     /* SYNC */
-    chmodSync: attemptifySync(fs85.chmodSync, handlers_default.onChangeError),
-    chownSync: attemptifySync(fs85.chownSync, handlers_default.onChangeError),
-    closeSync: attemptifySync(fs85.closeSync, NOOP2),
-    existsSync: attemptifySync(fs85.existsSync, NOOP2),
-    fsyncSync: attemptifySync(fs85.fsync, NOOP2),
-    mkdirSync: attemptifySync(fs85.mkdirSync, NOOP2),
-    realpathSync: attemptifySync(fs85.realpathSync, NOOP2),
-    statSync: attemptifySync(fs85.statSync, NOOP2),
-    unlinkSync: attemptifySync(fs85.unlinkSync, NOOP2)
+    chmodSync: attemptifySync(fs86.chmodSync, handlers_default.onChangeError),
+    chownSync: attemptifySync(fs86.chownSync, handlers_default.onChangeError),
+    closeSync: attemptifySync(fs86.closeSync, NOOP2),
+    existsSync: attemptifySync(fs86.existsSync, NOOP2),
+    fsyncSync: attemptifySync(fs86.fsync, NOOP2),
+    mkdirSync: attemptifySync(fs86.mkdirSync, NOOP2),
+    realpathSync: attemptifySync(fs86.realpathSync, NOOP2),
+    statSync: attemptifySync(fs86.statSync, NOOP2),
+    unlinkSync: attemptifySync(fs86.unlinkSync, NOOP2)
   },
   retry: {
     /* ASYNC */
-    close: retryifyAsync(promisify10(fs85.close), handlers_default.isRetriableError),
-    fsync: retryifyAsync(promisify10(fs85.fsync), handlers_default.isRetriableError),
-    open: retryifyAsync(promisify10(fs85.open), handlers_default.isRetriableError),
-    readFile: retryifyAsync(promisify10(fs85.readFile), handlers_default.isRetriableError),
-    rename: retryifyAsync(promisify10(fs85.rename), handlers_default.isRetriableError),
-    stat: retryifyAsync(promisify10(fs85.stat), handlers_default.isRetriableError),
-    write: retryifyAsync(promisify10(fs85.write), handlers_default.isRetriableError),
-    writeFile: retryifyAsync(promisify10(fs85.writeFile), handlers_default.isRetriableError),
+    close: retryifyAsync(promisify10(fs86.close), handlers_default.isRetriableError),
+    fsync: retryifyAsync(promisify10(fs86.fsync), handlers_default.isRetriableError),
+    open: retryifyAsync(promisify10(fs86.open), handlers_default.isRetriableError),
+    readFile: retryifyAsync(promisify10(fs86.readFile), handlers_default.isRetriableError),
+    rename: retryifyAsync(promisify10(fs86.rename), handlers_default.isRetriableError),
+    stat: retryifyAsync(promisify10(fs86.stat), handlers_default.isRetriableError),
+    write: retryifyAsync(promisify10(fs86.write), handlers_default.isRetriableError),
+    writeFile: retryifyAsync(promisify10(fs86.writeFile), handlers_default.isRetriableError),
     /* SYNC */
-    closeSync: retryifySync(fs85.closeSync, handlers_default.isRetriableError),
-    fsyncSync: retryifySync(fs85.fsyncSync, handlers_default.isRetriableError),
-    openSync: retryifySync(fs85.openSync, handlers_default.isRetriableError),
-    readFileSync: retryifySync(fs85.readFileSync, handlers_default.isRetriableError),
-    renameSync: retryifySync(fs85.renameSync, handlers_default.isRetriableError),
-    statSync: retryifySync(fs85.statSync, handlers_default.isRetriableError),
-    writeSync: retryifySync(fs85.writeSync, handlers_default.isRetriableError),
-    writeFileSync: retryifySync(fs85.writeFileSync, handlers_default.isRetriableError)
+    closeSync: retryifySync(fs86.closeSync, handlers_default.isRetriableError),
+    fsyncSync: retryifySync(fs86.fsyncSync, handlers_default.isRetriableError),
+    openSync: retryifySync(fs86.openSync, handlers_default.isRetriableError),
+    readFileSync: retryifySync(fs86.readFileSync, handlers_default.isRetriableError),
+    renameSync: retryifySync(fs86.renameSync, handlers_default.isRetriableError),
+    statSync: retryifySync(fs86.statSync, handlers_default.isRetriableError),
+    writeSync: retryifySync(fs86.writeSync, handlers_default.isRetriableError),
+    writeFileSync: retryifySync(fs86.writeFileSync, handlers_default.isRetriableError)
   }
 };
 var dist_default6 = FS;
@@ -375681,7 +376550,7 @@ var isUndefined = (value) => {
 };
 
 // node_modules/atomically/dist/utils/temp.js
-import path98 from "node:path";
+import path99 from "node:path";
 
 // node_modules/when-exit/dist/node/interceptor.js
 import process50 from "node:process";
@@ -375785,7 +376654,7 @@ var Temp = {
     }
   },
   truncate: (filePath) => {
-    const basename9 = path98.basename(filePath);
+    const basename9 = path99.basename(filePath);
     if (basename9.length <= LIMIT_BASENAME_LENGTH)
       return filePath;
     const truncable = /^(\.?)(.*?)((?:\.[^.]+)?(?:\.tmp-\d{10}[a-f0-9]{6})?)$/.exec(basename9);
@@ -375826,7 +376695,7 @@ function writeFileSync6(filePath, data, options2 = DEFAULT_WRITE_OPTIONS) {
       }
     }
     if (!filePathExists) {
-      const parentPath = path99.dirname(filePath);
+      const parentPath = path100.dirname(filePath);
       dist_default6.attempt.mkdirSync(parentPath, {
         mode: DEFAULT_FOLDER_MODE,
         recursive: true
@@ -375886,12 +376755,12 @@ var disallowedKeys = /* @__PURE__ */ new Set([
   "constructor"
 ]);
 var digits = new Set("0123456789");
-function getPathSegments(path108) {
+function getPathSegments(path109) {
   const parts = [];
   let currentSegment = "";
   let currentPart = "start";
   let isIgnoring = false;
-  for (const character of path108) {
+  for (const character of path109) {
     switch (character) {
       case "\\": {
         if (currentPart === "index") {
@@ -376013,11 +376882,11 @@ function assertNotStringIndex(object, key) {
     throw new Error("Cannot use string index");
   }
 }
-function getProperty(object, path108, value) {
-  if (!isObject2(object) || typeof path108 !== "string") {
+function getProperty(object, path109, value) {
+  if (!isObject2(object) || typeof path109 !== "string") {
     return value === void 0 ? object : value;
   }
-  const pathArray = getPathSegments(path108);
+  const pathArray = getPathSegments(path109);
   if (pathArray.length === 0) {
     return value;
   }
@@ -376037,12 +376906,12 @@ function getProperty(object, path108, value) {
   }
   return object === void 0 ? value : object;
 }
-function setProperty(object, path108, value) {
-  if (!isObject2(object) || typeof path108 !== "string") {
+function setProperty(object, path109, value) {
+  if (!isObject2(object) || typeof path109 !== "string") {
     return object;
   }
   const root2 = object;
-  const pathArray = getPathSegments(path108);
+  const pathArray = getPathSegments(path109);
   for (let index = 0; index < pathArray.length; index++) {
     const key = pathArray[index];
     assertNotStringIndex(object, key);
@@ -376055,11 +376924,11 @@ function setProperty(object, path108, value) {
   }
   return root2;
 }
-function deleteProperty(object, path108) {
-  if (!isObject2(object) || typeof path108 !== "string") {
+function deleteProperty(object, path109) {
+  if (!isObject2(object) || typeof path109 !== "string") {
     return false;
   }
-  const pathArray = getPathSegments(path108);
+  const pathArray = getPathSegments(path109);
   for (let index = 0; index < pathArray.length; index++) {
     const key = pathArray[index];
     assertNotStringIndex(object, key);
@@ -376073,11 +376942,11 @@ function deleteProperty(object, path108) {
     }
   }
 }
-function hasProperty(object, path108) {
-  if (!isObject2(object) || typeof path108 !== "string") {
+function hasProperty(object, path109) {
+  if (!isObject2(object) || typeof path109 !== "string") {
     return false;
   }
-  const pathArray = getPathSegments(path108);
+  const pathArray = getPathSegments(path109);
   if (pathArray.length === 0) {
     return false;
   }
@@ -376092,9 +376961,9 @@ function hasProperty(object, path108) {
 
 // node_modules/configstore/index.js
 function getConfigDirectory(id, globalConfigPath) {
-  const pathPrefix = globalConfigPath ? path100.join(id, "config.json") : path100.join("configstore", `${id}.json`);
-  const configDirectory = xdgConfig ?? import_graceful_fs.default.mkdtempSync(import_graceful_fs.default.realpathSync(os32.tmpdir()) + path100.sep);
-  return path100.join(configDirectory, pathPrefix);
+  const pathPrefix = globalConfigPath ? path101.join(id, "config.json") : path101.join("configstore", `${id}.json`);
+  const configDirectory = xdgConfig ?? import_graceful_fs.default.mkdtempSync(import_graceful_fs.default.realpathSync(os32.tmpdir()) + path101.sep);
+  return path101.join(configDirectory, pathPrefix);
 }
 var permissionError = "You don't have access to this file.";
 var mkdirOptions = { mode: 448, recursive: true };
@@ -376130,7 +376999,7 @@ ${permissionError}
   }
   set all(value) {
     try {
-      import_graceful_fs.default.mkdirSync(path100.dirname(this._path), mkdirOptions);
+      import_graceful_fs.default.mkdirSync(path101.dirname(this._path), mkdirOptions);
       writeFileSync6(this._path, JSON.stringify(value, void 0, "	"), writeFileOptions);
     } catch (error) {
       if (error.code === "EACCES") {
@@ -377356,50 +378225,50 @@ var isYarn = Boolean(userAgent && userAgent.startsWith("yarn"));
 var isNpmOrYarn = isNpm || isYarn;
 
 // node_modules/is-installed-globally/index.js
-import fs88 from "node:fs";
-import path103 from "node:path";
+import fs89 from "node:fs";
+import path104 from "node:path";
 import { fileURLToPath as fileURLToPath13 } from "node:url";
 
 // node_modules/global-directory/index.js
 var import_ini2 = __toESM(require_ini3(), 1);
 import process53 from "node:process";
-import path101 from "node:path";
+import path102 from "node:path";
 import os34 from "node:os";
-import fs87 from "node:fs";
+import fs88 from "node:fs";
 var isWindows4 = process53.platform === "win32";
 var readRc = (filePath) => {
   try {
-    return import_ini2.default.parse(fs87.readFileSync(filePath, "utf8")).prefix;
+    return import_ini2.default.parse(fs88.readFileSync(filePath, "utf8")).prefix;
   } catch {
   }
 };
 var getEnvNpmPrefix = () => Object.keys(process53.env).reduce((prefix, name2) => /^npm_config_prefix$/i.test(name2) ? process53.env[name2] : prefix, void 0);
 var getGlobalNpmrc = () => {
   if (isWindows4 && process53.env.APPDATA) {
-    return path101.join(process53.env.APPDATA, "/npm/etc/npmrc");
+    return path102.join(process53.env.APPDATA, "/npm/etc/npmrc");
   }
   if (process53.execPath.includes("/Cellar/node")) {
     const homebrewPrefix = process53.execPath.slice(0, process53.execPath.indexOf("/Cellar/node"));
-    return path101.join(homebrewPrefix, "/lib/node_modules/npm/npmrc");
+    return path102.join(homebrewPrefix, "/lib/node_modules/npm/npmrc");
   }
   if (process53.execPath.endsWith("/bin/node")) {
-    const installDir = path101.dirname(path101.dirname(process53.execPath));
-    return path101.join(installDir, "/etc/npmrc");
+    const installDir = path102.dirname(path102.dirname(process53.execPath));
+    return path102.join(installDir, "/etc/npmrc");
   }
 };
 var getDefaultNpmPrefix = () => {
   if (isWindows4) {
     const { APPDATA } = process53.env;
-    return APPDATA ? path101.join(APPDATA, "npm") : path101.dirname(process53.execPath);
+    return APPDATA ? path102.join(APPDATA, "npm") : path102.dirname(process53.execPath);
   }
-  return path101.dirname(path101.dirname(process53.execPath));
+  return path102.dirname(path102.dirname(process53.execPath));
 };
 var getNpmPrefix = () => {
   const envPrefix = getEnvNpmPrefix();
   if (envPrefix) {
     return envPrefix;
   }
-  const homePrefix = readRc(path101.join(os34.homedir(), ".npmrc"));
+  const homePrefix = readRc(path102.join(os34.homedir(), ".npmrc"));
   if (homePrefix) {
     return homePrefix;
   }
@@ -377412,11 +378281,11 @@ var getNpmPrefix = () => {
   }
   return getDefaultNpmPrefix();
 };
-var npmPrefix = path101.resolve(getNpmPrefix());
+var npmPrefix = path102.resolve(getNpmPrefix());
 var getYarnWindowsDirectory = () => {
   if (isWindows4 && process53.env.LOCALAPPDATA) {
-    const dir = path101.join(process53.env.LOCALAPPDATA, "Yarn");
-    if (fs87.existsSync(dir)) {
+    const dir = path102.join(process53.env.LOCALAPPDATA, "Yarn");
+    if (fs88.existsSync(dir)) {
       return dir;
     }
   }
@@ -377430,12 +378299,12 @@ var getYarnPrefix = () => {
   if (windowsPrefix) {
     return windowsPrefix;
   }
-  const configPrefix = path101.join(os34.homedir(), ".config/yarn");
-  if (fs87.existsSync(configPrefix)) {
+  const configPrefix = path102.join(os34.homedir(), ".config/yarn");
+  if (fs88.existsSync(configPrefix)) {
     return configPrefix;
   }
-  const homePrefix = path101.join(os34.homedir(), ".yarn-config");
-  if (fs87.existsSync(homePrefix)) {
+  const homePrefix = path102.join(os34.homedir(), ".yarn-config");
+  if (fs88.existsSync(homePrefix)) {
     return homePrefix;
   }
   return npmPrefix;
@@ -377443,29 +378312,29 @@ var getYarnPrefix = () => {
 var globalDirectory = {};
 globalDirectory.npm = {};
 globalDirectory.npm.prefix = npmPrefix;
-globalDirectory.npm.packages = path101.join(npmPrefix, isWindows4 ? "node_modules" : "lib/node_modules");
-globalDirectory.npm.binaries = isWindows4 ? npmPrefix : path101.join(npmPrefix, "bin");
-var yarnPrefix = path101.resolve(getYarnPrefix());
+globalDirectory.npm.packages = path102.join(npmPrefix, isWindows4 ? "node_modules" : "lib/node_modules");
+globalDirectory.npm.binaries = isWindows4 ? npmPrefix : path102.join(npmPrefix, "bin");
+var yarnPrefix = path102.resolve(getYarnPrefix());
 globalDirectory.yarn = {};
 globalDirectory.yarn.prefix = yarnPrefix;
-globalDirectory.yarn.packages = path101.join(yarnPrefix, getYarnWindowsDirectory() ? "Data/global/node_modules" : "global/node_modules");
-globalDirectory.yarn.binaries = path101.join(globalDirectory.yarn.packages, ".bin");
+globalDirectory.yarn.packages = path102.join(yarnPrefix, getYarnWindowsDirectory() ? "Data/global/node_modules" : "global/node_modules");
+globalDirectory.yarn.binaries = path102.join(globalDirectory.yarn.packages, ".bin");
 var global_directory_default = globalDirectory;
 
 // node_modules/is-path-inside/index.js
-import path102 from "node:path";
+import path103 from "node:path";
 function isPathInside(childPath, parentPath) {
-  const relation = path102.relative(parentPath, childPath);
+  const relation = path103.relative(parentPath, childPath);
   return Boolean(
-    relation && relation !== ".." && !relation.startsWith(`..${path102.sep}`) && relation !== path102.resolve(childPath)
+    relation && relation !== ".." && !relation.startsWith(`..${path103.sep}`) && relation !== path103.resolve(childPath)
   );
 }
 
 // node_modules/is-installed-globally/index.js
-var __dirname6 = path103.dirname(fileURLToPath13(import.meta.url));
+var __dirname6 = path104.dirname(fileURLToPath13(import.meta.url));
 var isInstalledGlobally = (() => {
   try {
-    return isPathInside(__dirname6, global_directory_default.yarn.packages) || isPathInside(__dirname6, fs88.realpathSync(global_directory_default.npm.packages));
+    return isPathInside(__dirname6, global_directory_default.yarn.packages) || isPathInside(__dirname6, fs89.realpathSync(global_directory_default.npm.packages));
   } catch {
     return false;
   }
@@ -378289,7 +379158,7 @@ function pupa(template, data, { ignoreMissing = false, transform = ({ value }) =
 }
 
 // node_modules/update-notifier/update-notifier.js
-var __dirname7 = path104.dirname(fileURLToPath14(import.meta.url));
+var __dirname7 = path105.dirname(fileURLToPath14(import.meta.url));
 var ONE_DAY = 1e3 * 60 * 60 * 24;
 var UpdateNotifier = class {
   // Public
@@ -378348,7 +379217,7 @@ var UpdateNotifier = class {
     if (Date.now() - this.config.get("lastUpdateCheck") < this.#updateCheckInterval) {
       return;
     }
-    spawn13(process55.execPath, [path104.join(__dirname7, "check.js"), JSON.stringify(this.#options)], {
+    spawn13(process55.execPath, [path105.join(__dirname7, "check.js"), JSON.stringify(this.#options)], {
       detached: true,
       stdio: "ignore"
     }).unref();
@@ -378534,9 +379403,9 @@ init_settings();
 init_dist3();
 import { exec as exec8, execSync as execSync7, spawn as spawn14 } from "node:child_process";
 import os35 from "node:os";
-import path105 from "node:path";
-import fs89 from "node:fs";
-import { readFile as readFile17 } from "node:fs/promises";
+import path106 from "node:path";
+import fs90 from "node:fs";
+import { readFile as readFile18 } from "node:fs/promises";
 import { fileURLToPath as fileURLToPath15 } from "node:url";
 import { promisify as promisify11 } from "node:util";
 var execAsync4 = promisify11(exec8);
@@ -378572,7 +379441,7 @@ async function shouldUseCurrentUserInSandbox() {
   }
   if (os35.platform() === "linux") {
     try {
-      const osReleaseContent = await readFile17("/etc/os-release", "utf8");
+      const osReleaseContent = await readFile18("/etc/os-release", "utf8");
       if (osReleaseContent.includes("ID=debian") || osReleaseContent.includes("ID=ubuntu") || osReleaseContent.match(/^ID_LIKE=.*debian.*/m) || // Covers derivatives
       osReleaseContent.match(/^ID_LIKE=.*ubuntu.*/m)) {
         console.error(
@@ -378627,11 +379496,11 @@ function entrypoint(workdir, cliArgs) {
   if (pythonPathSuffix) {
     shellCmds.push(`export PYTHONPATH="$PYTHONPATH${pythonPathSuffix}";`);
   }
-  const projectSandboxBashrc = path105.join(
+  const projectSandboxBashrc = path106.join(
     SETTINGS_DIRECTORY_NAME2,
     "sandbox.bashrc"
   );
-  if (fs89.existsSync(projectSandboxBashrc)) {
+  if (fs90.existsSync(projectSandboxBashrc)) {
     shellCmds.push(`source ${getContainerPath(projectSandboxBashrc)};`);
   }
   ports().forEach(
@@ -378662,12 +379531,12 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
         new URL(`sandbox-macos-${profile}.sb`, import.meta.url)
       );
       if (!BUILTIN_SEATBELT_PROFILES.includes(profile)) {
-        profileFile = path105.join(
+        profileFile = path106.join(
           SETTINGS_DIRECTORY_NAME2,
           `sandbox-macos-${profile}.sb`
         );
       }
-      if (!fs89.existsSync(profileFile)) {
+      if (!fs90.existsSync(profileFile)) {
         throw new FatalSandboxError(
           `Missing macos seatbelt profile file '${profileFile}'`
         );
@@ -378679,22 +379548,22 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
       ].join(" ");
       const args2 = [
         "-D",
-        `TARGET_DIR=${fs89.realpathSync(process.cwd())}`,
+        `TARGET_DIR=${fs90.realpathSync(process.cwd())}`,
         "-D",
-        `TMP_DIR=${fs89.realpathSync(os35.tmpdir())}`,
+        `TMP_DIR=${fs90.realpathSync(os35.tmpdir())}`,
         "-D",
-        `HOME_DIR=${fs89.realpathSync(os35.homedir())}`,
+        `HOME_DIR=${fs90.realpathSync(os35.homedir())}`,
         "-D",
-        `CACHE_DIR=${fs89.realpathSync(execSync7(`getconf DARWIN_USER_CACHE_DIR`).toString().trim())}`
+        `CACHE_DIR=${fs90.realpathSync(execSync7(`getconf DARWIN_USER_CACHE_DIR`).toString().trim())}`
       ];
       const MAX_INCLUDE_DIRS = 5;
-      const targetDir = fs89.realpathSync(cliConfig?.getTargetDir() || "");
+      const targetDir = fs90.realpathSync(cliConfig?.getTargetDir() || "");
       const includedDirs = [];
       if (cliConfig) {
         const workspaceContext = cliConfig.getWorkspaceContext();
         const directories = workspaceContext.getDirectories();
         for (const dir of directories) {
-          const realDir = fs89.realpathSync(dir);
+          const realDir = fs90.realpathSync(dir);
           if (realDir !== targetDir) {
             includedDirs.push(realDir);
           }
@@ -378771,14 +379640,14 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
       return;
     }
     console.error(`hopping into sandbox (command: ${config.command}) ...`);
-    const gcPath = fs89.realpathSync(process.argv[1]);
-    const projectSandboxDockerfile = path105.join(
+    const gcPath = fs90.realpathSync(process.argv[1]);
+    const projectSandboxDockerfile = path106.join(
       SETTINGS_DIRECTORY_NAME2,
       "sandbox.Dockerfile"
     );
-    const isCustomProjectSandbox = fs89.existsSync(projectSandboxDockerfile);
+    const isCustomProjectSandbox = fs90.existsSync(projectSandboxDockerfile);
     const image2 = config.image;
-    const workdir = path105.resolve(process.cwd());
+    const workdir = path106.resolve(process.cwd());
     const containerWorkdir = getContainerPath(workdir);
     if (process.env["BUILD_SANDBOX"]) {
       if (!gcPath.includes("gemini-cli/packages/")) {
@@ -378789,13 +379658,13 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
         console.error("building sandbox ...");
         const gcRoot = gcPath.split("/packages/")[0];
         let buildArgs = "";
-        const projectSandboxDockerfile2 = path105.join(
+        const projectSandboxDockerfile2 = path106.join(
           SETTINGS_DIRECTORY_NAME2,
           "sandbox.Dockerfile"
         );
         if (isCustomProjectSandbox) {
           console.error(`using ${projectSandboxDockerfile2} for sandbox`);
-          buildArgs += `-f ${path105.resolve(projectSandboxDockerfile2)} -i ${image2}`;
+          buildArgs += `-f ${path106.resolve(projectSandboxDockerfile2)} -i ${image2}`;
         }
         execSync7(
           `cd ${gcRoot} && node scripts/build_sandbox.js -s ${buildArgs}`,
@@ -378831,8 +379700,8 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     const userSettingsDirInSandbox = getContainerPath(
       `/home/node/${SETTINGS_DIRECTORY_NAME2}`
     );
-    if (!fs89.existsSync(userSettingsDirOnHost)) {
-      fs89.mkdirSync(userSettingsDirOnHost);
+    if (!fs90.existsSync(userSettingsDirOnHost)) {
+      fs90.mkdirSync(userSettingsDirOnHost);
     }
     args.push(
       "--volume",
@@ -378845,8 +379714,8 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
       );
     }
     args.push("--volume", `${os35.tmpdir()}:${getContainerPath(os35.tmpdir())}`);
-    const gcloudConfigDir = path105.join(os35.homedir(), ".config", "gcloud");
-    if (fs89.existsSync(gcloudConfigDir)) {
+    const gcloudConfigDir = path106.join(os35.homedir(), ".config", "gcloud");
+    if (fs90.existsSync(gcloudConfigDir)) {
       args.push(
         "--volume",
         `${gcloudConfigDir}:${getContainerPath(gcloudConfigDir)}:ro`
@@ -378854,7 +379723,7 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     }
     if (process.env["GOOGLE_APPLICATION_CREDENTIALS"]) {
       const adcFile = process.env["GOOGLE_APPLICATION_CREDENTIALS"];
-      if (fs89.existsSync(adcFile)) {
+      if (fs90.existsSync(adcFile)) {
         args.push("--volume", `${adcFile}:${getContainerPath(adcFile)}:ro`);
         args.push(
           "--env",
@@ -378869,12 +379738,12 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
           to = to || from;
           opts = opts || "ro";
           mount = `${from}:${to}:${opts}`;
-          if (!path105.isAbsolute(from)) {
+          if (!path106.isAbsolute(from)) {
             throw new FatalSandboxError(
               `Path '${from}' listed in SANDBOX_MOUNTS must be absolute`
             );
           }
-          if (!fs89.existsSync(from)) {
+          if (!fs90.existsSync(from)) {
             throw new FatalSandboxError(
               `Missing mount path '${from}' listed in SANDBOX_MOUNTS`
             );
@@ -378987,12 +379856,12 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
       }
     }
     if (process.env["VIRTUAL_ENV"]?.toLowerCase().startsWith(workdir.toLowerCase())) {
-      const sandboxVenvPath = path105.resolve(
+      const sandboxVenvPath = path106.resolve(
         SETTINGS_DIRECTORY_NAME2,
         "sandbox.venv"
       );
-      if (!fs89.existsSync(sandboxVenvPath)) {
-        fs89.mkdirSync(sandboxVenvPath, { recursive: true });
+      if (!fs90.existsSync(sandboxVenvPath)) {
+        fs90.mkdirSync(sandboxVenvPath, { recursive: true });
       }
       args.push(
         "--volume",
@@ -379027,8 +379896,8 @@ async function start_sandbox(config, nodeArgs = [], cliConfig, cliArgs = []) {
     }
     args.push("--env", `SANDBOX=${containerName}`);
     if (config.command === "podman") {
-      const emptyAuthFilePath = path105.join(os35.tmpdir(), "empty_auth.json");
-      fs89.writeFileSync(emptyAuthFilePath, "{}", "utf-8");
+      const emptyAuthFilePath = path106.join(os35.tmpdir(), "empty_auth.json");
+      fs90.writeFileSync(emptyAuthFilePath, "{}", "utf-8");
       args.push("--authfile", emptyAuthFilePath);
     }
     let userFlag = "";
@@ -379222,17 +380091,17 @@ async function ensureSandboxImageIsPresent(sandbox, image2) {
 
 // packages/cli/src/utils/startupWarnings.ts
 init_dist3();
-import fs90 from "node:fs/promises";
+import fs91 from "node:fs/promises";
 import os36 from "node:os";
 import { join as pathJoin } from "node:path";
 var warningsFilePath = pathJoin(os36.tmpdir(), "qwen-code-warnings.txt");
 async function getStartupWarnings() {
   try {
-    await fs90.access(warningsFilePath);
-    const warningsContent = await fs90.readFile(warningsFilePath, "utf-8");
+    await fs91.access(warningsFilePath);
+    const warningsContent = await fs91.readFile(warningsFilePath, "utf-8");
     const warnings = warningsContent.split("\n").filter((line) => line.trim() !== "");
     try {
-      await fs90.unlink(warningsFilePath);
+      await fs91.unlink(warningsFilePath);
     } catch {
       warnings.push("Warning: Could not delete temporary warnings file.");
     }
@@ -379246,16 +380115,16 @@ async function getStartupWarnings() {
 }
 
 // packages/cli/src/utils/userStartupWarnings.ts
-import fs91 from "node:fs/promises";
+import fs92 from "node:fs/promises";
 import * as os37 from "node:os";
-import path106 from "node:path";
+import path107 from "node:path";
 var homeDirectoryCheck = {
   id: "home-directory",
   check: async (workspaceRoot) => {
     try {
       const [workspaceRealPath, homeRealPath] = await Promise.all([
-        fs91.realpath(workspaceRoot),
-        fs91.realpath(os37.homedir())
+        fs92.realpath(workspaceRoot),
+        fs92.realpath(os37.homedir())
       ]);
       if (workspaceRealPath === homeRealPath) {
         return "You are running Qwen Code in your home directory. It is recommended to run in a project-specific directory.";
@@ -379270,9 +380139,9 @@ var rootDirectoryCheck = {
   id: "root-directory",
   check: async (workspaceRoot) => {
     try {
-      const workspaceRealPath = await fs91.realpath(workspaceRoot);
+      const workspaceRealPath = await fs92.realpath(workspaceRoot);
       const errorMessage = "Warning: You are running Qwen Code in the root directory. Your entire folder structure will be used for context. It is strongly recommended to run in a project-specific directory.";
-      if (path106.dirname(workspaceRealPath) === workspaceRealPath) {
+      if (path107.dirname(workspaceRealPath) === workspaceRealPath) {
         return errorMessage;
       }
       return null;
@@ -379339,8 +380208,8 @@ async function validateNonInteractiveAuth(configuredAuthType, useExternalAuth, n
 init_dist3();
 init_zod();
 init_settings();
-import * as fs92 from "node:fs/promises";
-import * as path107 from "node:path";
+import * as fs93 from "node:fs/promises";
+import * as path108 from "node:path";
 import { Readable as Readable3, Writable as Writable2 } from "node:stream";
 
 // packages/cli/src/zed-integration/acp.ts
@@ -380331,9 +381200,9 @@ var Session2 = class {
       let currentPathSpec = pathName;
       let resolvedSuccessfully = false;
       try {
-        const absolutePath = path107.resolve(this.config.getTargetDir(), pathName);
+        const absolutePath = path108.resolve(this.config.getTargetDir(), pathName);
         if (isWithinRoot(absolutePath, this.config.getTargetDir())) {
-          const stats = await fs92.stat(absolutePath);
+          const stats = await fs93.stat(absolutePath);
           if (stats.isDirectory()) {
             currentPathSpec = pathName.endsWith("/") ? `${pathName}**` : `${pathName}/**`;
             this.debug(
@@ -380366,7 +381235,7 @@ var Session2 = class {
                 const lines = globResult.llmContent.split("\n");
                 if (lines.length > 1 && lines[1]) {
                   const firstMatchAbsolute = lines[1].trim();
-                  currentPathSpec = path107.relative(
+                  currentPathSpec = path108.relative(
                     this.config.getTargetDir(),
                     firstMatchAbsolute
                   );
@@ -380669,7 +381538,7 @@ function toPermissionOptions(confirmation) {
 }
 
 // packages/cli/src/gemini.tsx
-var import_jsx_runtime91 = __toESM(require_jsx_runtime(), 1);
+var import_jsx_runtime92 = __toESM(require_jsx_runtime(), 1);
 function validateDnsResolutionOrder(order) {
   const defaultValue = "ipv4first";
   if (order === void 0) {
@@ -380740,7 +381609,7 @@ async function startInteractiveUI(config, settings, startupWarnings, workspaceRo
   await detectAndEnableKittyProtocol();
   setWindowTitle(basename8(workspaceRoot), settings);
   const instance = render_default(
-    /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(import_react123.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(SettingsContext.Provider, { value: settings, children: /* @__PURE__ */ (0, import_jsx_runtime91.jsx)(
+    /* @__PURE__ */ (0, import_jsx_runtime92.jsx)(import_react124.default.StrictMode, { children: /* @__PURE__ */ (0, import_jsx_runtime92.jsx)(SettingsContext.Provider, { value: settings, children: /* @__PURE__ */ (0, import_jsx_runtime92.jsx)(
       AppWrapper,
       {
         config,

@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": "2026-02-15T14:25:30.807Z",
+  "updated_at": "2026-02-15T16:24:00.722Z",
   "tasks": {
     "simple-test-task": {
       "task_id": "simple-test-task",
@@ -535,6 +535,165 @@
         "message_timestamp": "2026-02-15T14:25:30.807Z"
       },
       "tab_name": "task:vision-ocr-1771165276718"
+    },
+    "vision-ocr-copy-1771170792281": {
+      "task_id": "vision-ocr-copy-1771170792281",
+      "status": "completed",
+      "created_at": "2026-02-15T15:53:12.349Z",
+      "started_at": "2026-02-15T15:53:12.478Z",
+      "finished_at": "2026-02-15T15:54:51.556Z",
+      "last_heartbeat": "2026-02-15T15:54:51.556Z",
+      "prompt_preview": "What's in bronc.jpg?",
+      "parent_session_id": "6fe95c8f-2e57-4916-ad73-6d1faf66c73d",
+      "source_session_id": "6fe95c8f-2e57-4916-ad73-6d1faf66c73d",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "model_requested": "qwen/qwen3-vl-8b",
+      "model_actual": "qwen/qwen3-vl-8b",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "auth_actual": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "vision-ocr-copy",
+        "template_level": "user",
+        "action_type": "prompt",
+        "action_value": "What's in bronc.jpg?",
+        "execution_mode": "zellij_tab",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "lmstudio",
+          "baseUrl": "http://uby:1234/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "qwen/qwen3-vl-8b"
+        },
+        "run": {
+          "returnToSession": true
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/6fe95c8f-2e57-4916-ad73-6d1faf66c73d.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-vision-ocr-copy-1771170792281-1771170792350.log",
+        "child_session_id": "headless-vision-ocr-copy-1771170792281-1771170792902",
+        "message_timestamp": "2026-02-15T15:54:51.556Z"
+      },
+      "tab_name": "task:vision-ocr-copy-1771170792281"
+    },
+    "vision-ocr-copy-1771171844828": {
+      "task_id": "vision-ocr-copy-1771171844828",
+      "status": "completed",
+      "created_at": "2026-02-15T16:10:44.895Z",
+      "started_at": "2026-02-15T16:10:45.023Z",
+      "finished_at": "2026-02-15T16:12:24.133Z",
+      "last_heartbeat": "2026-02-15T16:12:24.133Z",
+      "prompt_preview": "What's in bronc.jpg?",
+      "parent_session_id": "5b5350b0-7f66-48d7-b595-4810ab6a89da",
+      "source_session_id": "5b5350b0-7f66-48d7-b595-4810ab6a89da",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "model_requested": "qwen/qwen3-vl-8b",
+      "model_actual": "qwen/qwen3-vl-8b",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "auth_actual": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "vision-ocr-copy",
+        "template_level": "user",
+        "action_type": "prompt",
+        "action_value": "What's in bronc.jpg?",
+        "execution_mode": "zellij_tab",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "lmstudio",
+          "baseUrl": "http://uby:1234/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "qwen/qwen3-vl-8b"
+        },
+        "run": {
+          "returnToSession": true
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/5b5350b0-7f66-48d7-b595-4810ab6a89da.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-vision-ocr-copy-1771171844828-1771171844895.log",
+        "child_session_id": "headless-vision-ocr-copy-1771171844828-1771171845470",
+        "message_timestamp": "2026-02-15T16:12:24.133Z"
+      },
+      "tab_name": "task:vision-ocr-copy-1771171844828"
+    },
+    "vision-ocr-copy-1771172528942": {
+      "task_id": "vision-ocr-copy-1771172528942",
+      "status": "completed",
+      "created_at": "2026-02-15T16:22:09.012Z",
+      "started_at": "2026-02-15T16:22:09.137Z",
+      "finished_at": "2026-02-15T16:23:47.012Z",
+      "last_heartbeat": "2026-02-15T16:23:47.012Z",
+      "prompt_preview": "What's in bronc.jpg?",
+      "parent_session_id": "b73820d2-4ede-4679-a777-9911480c885c",
+      "source_session_id": "b73820d2-4ede-4679-a777-9911480c885c",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "model_requested": "qwen/qwen3-vl-8b",
+      "model_actual": "qwen/qwen3-vl-8b",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "auth_actual": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "vision-ocr-copy",
+        "template_level": "user",
+        "action_type": "prompt",
+        "action_value": "What's in bronc.jpg?",
+        "execution_mode": "zellij_tab",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "lmstudio",
+          "baseUrl": "http://uby:1234/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "qwen/qwen3-vl-8b"
+        },
+        "run": {
+          "returnToSession": true
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/b73820d2-4ede-4679-a777-9911480c885c.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-vision-ocr-copy-1771172528942-1771172529013.log",
+        "child_session_id": "headless-vision-ocr-copy-1771172528942-1771172529568",
+        "message_timestamp": "2026-02-15T16:23:47.012Z"
+      },
+      "tab_name": "task:vision-ocr-copy-1771172528942"
     }
   }
 }

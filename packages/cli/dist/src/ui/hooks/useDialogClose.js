@@ -36,6 +36,10 @@ export function useDialogClose(options) {
             options.closeTaskTemplateDialog();
             return true;
         }
+        if (options.isMailboxDialogOpen) {
+            options.closeMailboxDialog();
+            return true;
+        }
         if (options.isSettingsDialogOpen) {
             // Mimic ESC behavior: onSelect(undefined, selectedScope)
             options.closeSettingsDialog();

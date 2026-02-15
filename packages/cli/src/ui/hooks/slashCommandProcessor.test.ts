@@ -113,6 +113,7 @@ describe("useSlashCommandProcessor", () => {
   const mockOpenAuthDialog = vi.fn();
   const mockOpenModelSelectionDialog = vi.fn();
   const mockOpenResumeDialog = vi.fn();
+  const mockOpenMailboxDialog = vi.fn();
   const mockSetQuittingMessages = vi.fn();
 
   const mockConfig = makeFakeConfig({});
@@ -131,6 +132,7 @@ describe("useSlashCommandProcessor", () => {
     mockMcpLoadCommands.mockResolvedValue([]);
     mockOpenModelSelectionDialog.mockClear();
     mockOpenResumeDialog.mockClear();
+    mockOpenMailboxDialog.mockClear();
     mockRemoveSession.mockClear();
   });
 
@@ -174,6 +176,7 @@ describe("useSlashCommandProcessor", () => {
         vi.fn(), // setGeminiMdFileCount
         vi.fn(), // _showQuitConfirmation
         loggingController,
+        mockOpenMailboxDialog,
       ),
     );
 
@@ -442,6 +445,23 @@ describe("useSlashCommandProcessor", () => {
       });
 
       expect(mockOpenResumeDialog).toHaveBeenCalled();
+    });
+
+    it('should handle "dialog: mailbox" action', async () => {
+      const command = createTestCommand({
+        name: "mailboxcmd",
+        action: vi
+          .fn()
+          .mockResolvedValue({ type: "dialog", dialog: "mailbox" }),
+      });
+      const result = setupProcessorHook([command]);
+      await waitFor(() => expect(result.current.slashCommands).toHaveLength(1));
+
+      await act(async () => {
+        await result.current.handleSlashCommand("/mailboxcmd");
+      });
+
+      expect(mockOpenMailboxDialog).toHaveBeenCalled();
     });
 
     it('should handle "load_history" action', async () => {

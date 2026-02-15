@@ -23,7 +23,7 @@ function quoteForShell(value) {
 /**
  * Hook to define and process slash commands (e.g., /help, /clear).
  */
-export const useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTasksDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openResumeDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController) => {
+export const useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTasksDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openResumeDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController, openMailboxDialog) => {
     const session = useSessionStats();
     const [commands, setCommands] = useState([]);
     const [reloadTrigger, setReloadTrigger] = useState(0);
@@ -348,6 +348,9 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
                                     case "tasks":
                                         openTasksDialog();
                                         return { type: "handled" };
+                                    case "mailbox":
+                                        openMailboxDialog?.();
+                                        return { type: "handled" };
                                     case "privacy":
                                         openPrivacyNotice();
                                         return { type: "handled" };
@@ -638,6 +641,7 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
         openPrivacyNotice,
         openEditorDialog,
         openTasksDialog,
+        openMailboxDialog,
         setQuittingMessages,
         openSettingsDialog,
         openSubagentCreateDialog,

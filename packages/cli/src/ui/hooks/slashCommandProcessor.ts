@@ -76,6 +76,7 @@ export const useSlashCommandProcessor = (
   setGeminiMdFileCount: (count: number) => void,
   _showQuitConfirmation: () => void,
   loggingController: SessionLoggingController,
+  openMailboxDialog?: () => void,
 ) => {
   const session = useSessionStats();
   const [commands, setCommands] = useState<readonly SlashCommand[]>([]);
@@ -459,6 +460,9 @@ export const useSlashCommandProcessor = (
                     case "tasks":
                       openTasksDialog();
                       return { type: "handled" };
+                    case "mailbox":
+                      openMailboxDialog?.();
+                      return { type: "handled" };
                     case "privacy":
                       openPrivacyNotice();
                       return { type: "handled" };
@@ -806,6 +810,7 @@ export const useSlashCommandProcessor = (
       openPrivacyNotice,
       openEditorDialog,
       openTasksDialog,
+      openMailboxDialog,
       setQuittingMessages,
       openSettingsDialog,
       openSubagentCreateDialog,

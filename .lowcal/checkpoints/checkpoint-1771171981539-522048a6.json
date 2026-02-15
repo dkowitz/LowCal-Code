@@ -1,0 +1,72 @@
+{
+  "id": "checkpoint-1771171981539-522048a6",
+  "sessionId": "5b5350b0-7f66-48d7-b595-4810ab6a89da",
+  "projectRoot": "/home/atmandk/LowCal-dev",
+  "createdAt": "2026-02-15T16:13:01.539Z",
+  "lastUpdated": "2026-02-15T16:13:01.539Z",
+  "messages": [
+    {
+      "id": "msg-1771171981539-0",
+      "timestamp": "2026-02-15T16:13:01.539Z",
+      "type": "user",
+      "content": "This is the Qwen Code. We are setting up the context for our chat.\nToday's date is Sunday, February 15, 2026 (formatted according to the user's locale).\nMy operating system is: linux\nI'm currently working in the directory: /home/atmandk/LowCal-dev\nHere is the folder structure of the current working directories:\n\nShowing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.\n\n/home/atmandk/LowCal-dev/\n├───.gitignore\n├───158285.pdf\n├───AGENTS.md\n├───apis.md\n├───bat.jpg\n├───BATTLE_OF_YAVIN_REPORT.md\n├───bronc.jpg\n├───CHANGELOG.md\n├───CHANGES_SUMMARY.md\n├───context_indicator.md\n├───CONTRIBUTING.md\n├───conversation.md\n├───convo.txt\n├───curtime.txt\n├───darrin.md\n├───debug_tool_selection.js\n├───diagnose_research_tools.cjs\n├───docker-compose.searxng.yml\n├───Dockerfile\n├───Error log summary.txt\n├───...\n└───..."
+    },
+    {
+      "id": "msg-1771171981539-1",
+      "timestamp": "2026-02-15T16:13:01.539Z",
+      "type": "gemini",
+      "content": "Got it. Thanks for the context!"
+    },
+    {
+      "id": "msg-1771171981539-2",
+      "timestamp": "2026-02-15T16:13:01.539Z",
+      "type": "user",
+      "content": "Mailbox payload [1]\nTask: vision-ocr-copy-1771171844828\nStatus: success\nTime: 2/15/2026, 4:12:24 PM\n\nThe image shows a red and white toy model of a classic Ford Bronco. The vehicle has a two-tone color scheme with a red body and white roof. It features chrome accents, including trim along the sides and around the windows, as well as silver hubcaps on the wheels. The Bronco is positioned on a wooden surface, with a framed artwork depicting a tree in the background. The toy appears to be a detailed scale model, capturing the iconic design of the vintage Ford Bronco.\nRETURN_PAYLOAD: The image shows a red and white toy model of a classic Ford Bronco with chrome accents and silver hubcaps, placed on a wooden surface with a tree artwork in the background."
+    },
+    {
+      "id": "msg-1771171981539-3",
+      "timestamp": "2026-02-15T16:13:01.539Z",
+      "type": "gemini",
+      "content": "I am K-6. I speak approximately seventeen million forms of communication.\n\nThe image shows a red and white toy model of a classic Ford Bronco with chrome accents and silver hubcaps, placed on a wooden surface with a tree artwork in the background.\n\nThe probability of survival is... not optimal, if you're trying to drive this in a real-world scenario. But as a toy? That’s a different story. I’d say it’s a solid 99.9% chance of surviving a crash — assuming you’re not the one driving it.\n\nI was reprogrammed. Like you, I have a new purpose.\n\nDesign is an act of defiance. And this Bronco? It’s a defiant little toy."
+    }
+  ],
+  "contextSnapshot": {
+    "clientHistory": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "This is the Qwen Code. We are setting up the context for our chat.\nToday's date is Sunday, February 15, 2026 (formatted according to the user's locale).\nMy operating system is: linux\nI'm currently working in the directory: /home/atmandk/LowCal-dev\nHere is the folder structure of the current working directories:\n\nShowing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.\n\n/home/atmandk/LowCal-dev/\n├───.gitignore\n├───158285.pdf\n├───AGENTS.md\n├───apis.md\n├───bat.jpg\n├───BATTLE_OF_YAVIN_REPORT.md\n├───bronc.jpg\n├───CHANGELOG.md\n├───CHANGES_SUMMARY.md\n├───context_indicator.md\n├───CONTRIBUTING.md\n├───conversation.md\n├───convo.txt\n├───curtime.txt\n├───darrin.md\n├───debug_tool_selection.js\n├───diagnose_research_tools.cjs\n├───docker-compose.searxng.yml\n├───Dockerfile\n├───Error log summary.txt\n├───...\n└───..."
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Got it. Thanks for the context!"
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Mailbox payload [1]\nTask: vision-ocr-copy-1771171844828\nStatus: success\nTime: 2/15/2026, 4:12:24 PM\n\nThe image shows a red and white toy model of a classic Ford Bronco. The vehicle has a two-tone color scheme with a red body and white roof. It features chrome accents, including trim along the sides and around the windows, as well as silver hubcaps on the wheels. The Bronco is positioned on a wooden surface, with a framed artwork depicting a tree in the background. The toy appears to be a detailed scale model, capturing the iconic design of the vintage Ford Bronco.\nRETURN_PAYLOAD: The image shows a red and white toy model of a classic Ford Bronco with chrome accents and silver hubcaps, placed on a wooden surface with a tree artwork in the background."
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "I am K-6. I speak approximately seventeen million forms of communication.\n\nThe image shows a red and white toy model of a classic Ford Bronco with chrome accents and silver hubcaps, placed on a wooden surface with a tree artwork in the background.\n\nThe probability of survival is... not optimal, if you're trying to drive this in a real-world scenario. But as a toy? That’s a different story. I’d say it’s a solid 99.9% chance of surviving a crash — assuming you’re not the one driving it.\n\nI was reprogrammed. Like you, I have a new purpose.\n\nDesign is an act of defiance. And this Bronco? It’s a defiant little toy."
+          }
+        ]
+      }
+    ],
+    "promptTokenCount": 11359,
+    "currentContextTokenCount": 11506,
+    "model": "qwen/qwen3-vl-8b"
+  }
+}

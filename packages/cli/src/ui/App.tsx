@@ -61,6 +61,7 @@ import {
   TaskTemplateEditorDialog,
   type TaskTemplateDeployRequest,
 } from "./components/TaskTemplateEditorDialog.js";
+import { MailboxDialog } from "./components/MailboxDialog.js";
 import {
   ResumeDialog,
   type ResumeCheckpointOption,
@@ -487,6 +488,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   >([]);
   const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] =
     useState(false);
+  const [isMailboxDialogOpen, setIsMailboxDialogOpen] = useState(false);
 
   // Invalidate cached model lists when auth/provider changes so discovery is
   // re-run for the currently selected provider. This ensures that after the
@@ -568,6 +570,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const closeTaskTemplateDialog = useCallback(() => {
     setIsTaskTemplateDialogOpen(false);
+  }, []);
+
+  const openMailboxDialog = useCallback(() => {
+    setIsMailboxDialogOpen(true);
+  }, []);
+
+  const closeMailboxDialog = useCallback(() => {
+    setIsMailboxDialogOpen(false);
   }, []);
 
   const handleEscapePromptChange = useCallback((showPrompt: boolean) => {
@@ -1305,6 +1315,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     setGeminiMdFileCount,
     showQuitConfirmation,
     sessionLoggingController,
+    openMailboxDialog,
   );
 
   const handleResumeCheckpointSelect = useCallback(
@@ -1366,6 +1377,39 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     },
     [addItem],
   );
+
+  const handleMailboxPayloadUse = useCallback(async (payload: string) => {
+    const text = payload.trim();
+    if (!text) {
+      return;
+    }
+
+    setIsMailboxDialogOpen(false);
+    addItem(
+      {
+        type: "gemini_content",
+        text,
+      },
+      Date.now(),
+    );
+
+    try {
+      await config.getGeminiClient()?.addHistory({
+        role: "user",
+        parts: [{ text }],
+      });
+    } catch (error) {
+      addItem(
+        {
+          type: MessageType.ERROR,
+          text: `Failed to add mailbox payload to model history: ${
+            error instanceof Error ? error.message : String(error)
+          }`,
+        },
+        Date.now(),
+      );
+    }
+  }, [addItem, config]);
 
   const buffer = useTextBuffer({
     initialText: "",
@@ -1444,6 +1488,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     exitEditorDialog,
     isTaskTemplateDialogOpen,
     closeTaskTemplateDialog,
+    isMailboxDialogOpen,
+    closeMailboxDialog,
     isSettingsDialogOpen,
     closeSettingsDialog,
     isResumeDialogOpen,
@@ -1829,6 +1875,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       !isThemeDialogOpen &&
       !isEditorDialogOpen &&
       !isTaskTemplateDialogOpen &&
+      !isMailboxDialogOpen &&
       !isModelSelectionDialogOpen &&
       !isResumeDialogOpen &&
       !isVisionSwitchDialogOpen &&
@@ -1850,6 +1897,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     isThemeDialogOpen,
     isEditorDialogOpen,
     isTaskTemplateDialogOpen,
+    isMailboxDialogOpen,
     isSubagentCreateDialogOpen,
     showPrivacyNotice,
     showWelcomeBackDialog,
@@ -1943,7 +1991,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 item={item}
                 isPending={true}
                 config={config}
-                isFocused={!isEditorDialogOpen && !isTaskTemplateDialogOpen}
+                isFocused={
+                  !isEditorDialogOpen &&
+                  !isTaskTemplateDialogOpen &&
+                  !isMailboxDialogOpen
+                }
                 viewControls={
                   item.type === "view"
                     ? {
@@ -2185,6 +2237,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               currentModel={currentModel}
               onExit={closeTaskTemplateDialog}
               onDeploy={handleTaskTemplateDeploy}
+            />
+          ) : isMailboxDialogOpen ? (
+            <MailboxDialog
+              baseDir={config.getTargetDir()}
+              sessionId={config.getSessionId()}
+              onExit={closeMailboxDialog}
+              onUsePayload={handleMailboxPayloadUse}
             />
           ) : isModelSelectionDialogOpen ? (
             <ModelSelectionDialog

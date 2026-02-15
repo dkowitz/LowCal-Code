@@ -15,6 +15,8 @@ export interface DialogCloseOptions {
     exitEditorDialog: () => void;
     isTaskTemplateDialogOpen: boolean;
     closeTaskTemplateDialog: () => void;
+    isMailboxDialogOpen: boolean;
+    closeMailboxDialog: () => void;
     isSettingsDialogOpen: boolean;
     closeSettingsDialog: () => void;
     isResumeDialogOpen: boolean;

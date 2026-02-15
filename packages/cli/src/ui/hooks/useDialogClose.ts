@@ -29,6 +29,10 @@ export interface DialogCloseOptions {
   isTaskTemplateDialogOpen: boolean;
   closeTaskTemplateDialog: () => void;
 
+  // Mailbox dialog
+  isMailboxDialogOpen: boolean;
+  closeMailboxDialog: () => void;
+
   // Settings dialog
   isSettingsDialogOpen: boolean;
   closeSettingsDialog: () => void;
@@ -87,6 +91,11 @@ export function useDialogClose(options: DialogCloseOptions) {
 
     if (options.isTaskTemplateDialogOpen) {
       options.closeTaskTemplateDialog();
+      return true;
+    }
+
+    if (options.isMailboxDialogOpen) {
+      options.closeMailboxDialog();
       return true;
     }
 

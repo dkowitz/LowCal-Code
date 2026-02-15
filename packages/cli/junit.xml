@@ -1,15 +1,108 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="5" failures="0" errors="0" time="0.004369576">
-    <testsuite name="src/ui/commands/tasksCommand.test.ts" timestamp="2026-02-15T15:09:23.062Z" hostname="uby" tests="5" failures="0" errors="0" skipped="0" time="0.004369576">
-        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; opens the tasks dialog when no args are supplied" time="0.001640445">
+<testsuites name="vitest tests" tests="44" failures="0" errors="0" time="2.055742418">
+    <testsuite name="src/ui/commands/mailboxCommand.test.ts" timestamp="2026-02-15T16:20:16.183Z" hostname="uby" tests="6" failures="0" errors="0" skipped="0" time="0.019458292">
+        <testcase classname="src/ui/commands/mailboxCommand.test.ts" name="mailboxCommand &gt; returns an error when configuration is unavailable" time="0.003025918">
         </testcase>
-        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; returns a launch_task call for run subcommand" time="0.000780604">
+        <testcase classname="src/ui/commands/mailboxCommand.test.ts" name="mailboxCommand &gt; lists received and pending mailbox entries" time="0.010080852">
         </testcase>
-        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; returns a schedule_task call for schedule subcommand" time="0.000335591">
+        <testcase classname="src/ui/commands/mailboxCommand.test.ts" name="mailboxCommand &gt; opens mailbox dialog by default" time="0.000538867">
         </testcase>
-        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; lists templates" time="0.0004485">
+        <testcase classname="src/ui/commands/mailboxCommand.test.ts" name="mailboxCommand &gt; shows the selected payload by index" time="0.001387156">
         </testcase>
-        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; returns a usage error for unknown subcommands" time="0.000361809">
+        <testcase classname="src/ui/commands/mailboxCommand.test.ts" name="mailboxCommand &gt; injects selected payload into display/model history with use" time="0.002313661">
+        </testcase>
+        <testcase classname="src/ui/commands/mailboxCommand.test.ts" name="mailboxCommand &gt; clears mailbox entries" time="0.001208336">
+        </testcase>
+    </testsuite>
+    <testsuite name="src/ui/hooks/slashCommandProcessor.test.ts" timestamp="2026-02-15T16:20:16.183Z" hostname="uby" tests="38" failures="0" errors="0" skipped="0" time="2.036284126">
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Initialization and Command Loading &gt; should initialize CommandService with all required loaders" time="0.010764487">
+            <system-err>
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Initialization and Command Loading &gt; should call loadCommands and populate state after mounting" time="0.052106919">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Initialization and Command Loading &gt; should provide an immutable array of commands to consumers" time="0.05444755">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Initialization and Command Loading &gt; should override built-in commands with file-based commands of the same name" time="0.054486512">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Execution Logic &gt; should display an error for an unknown command" time="0.001750018">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Execution Logic &gt; should display help for a parent command invoked without a subcommand" time="0.054028245">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Execution Logic &gt; should correctly find and execute a nested subcommand" time="0.054439364">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Execution Logic &gt; sets isProcessing to false if the the input is not a command" time="0.001476041">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Execution Logic &gt; sets isProcessing to false if the command has an error" time="0.001398497">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Execution Logic &gt; should set isProcessing to true during execution and false afterwards" time="0.102135092">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Action Result Handling &gt; should handle &quot;dialog: theme&quot; action" time="0.053763143">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Action Result Handling &gt; should handle &quot;dialog: model&quot; action" time="0.054926225">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Action Result Handling &gt; should handle &quot;dialog: resume&quot; action" time="0.053602927">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Action Result Handling &gt; should handle &quot;dialog: mailbox&quot; action" time="0.054210191">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Action Result Handling &gt; should handle &quot;load_history&quot; action" time="0.055785174">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Action Result Handling &gt; should restore prompt token count for &quot;load_history&quot; action" time="0.053551101">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Action Result Handling &gt; with fake timers &gt; should handle a &quot;quit&quot; action" time="0.053867266">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Action Result Handling &gt; with fake timers &gt; should call runExitCleanup when handling a &quot;quit&quot; action" time="0.051816041">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Action Result Handling &gt; should handle &quot;submit_prompt&quot; action returned from a file-based command" time="0.052441598">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Action Result Handling &gt; should handle &quot;submit_prompt&quot; action returned from a mcp-based command" time="0.052663198">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Shell Command Confirmation Flow &gt; should set confirmation request when action returns confirm_shell_commands" time="0.104411083">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Shell Command Confirmation Flow &gt; should do nothing if user cancels confirmation" time="0.104670884">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Shell Command Confirmation Flow &gt; should re-run command with one-time allowlist on &quot;Proceed Once&quot;" time="0.106759828">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Shell Command Confirmation Flow &gt; should re-run command and update session allowlist on &quot;Proceed Always&quot;" time="0.107615322">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Parsing and Matching &gt; should be case-sensitive" time="0.05303687">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Parsing and Matching &gt; should correctly match an altName" time="0.05246959">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Parsing and Matching &gt; should handle extra whitespace around the command" time="0.053349067">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Parsing and Matching &gt; should handle `?` as a command prefix" time="0.052476282">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Precedence &gt; should override mcp-based commands with file-based commands of the same name" time="0.053063479">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Precedence &gt; should prioritize a command with a primary name over a command with a matching alias" time="0.053124421">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Command Precedence &gt; should add an overridden command to the history" time="0.052641499">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Lifecycle &gt; should abort command loading when the hook unmounts" time="0.001334499">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Slash Command Logging &gt; should log a simple slash command" time="0.053181898">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Slash Command Logging &gt; logs nothing for a bogus command" time="0.052564436">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Slash Command Logging &gt; logs a failure event for a failed command" time="0.051507259">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Slash Command Logging &gt; should log a slash command with a subcommand" time="0.052588601">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Slash Command Logging &gt; should log the command path when an alias is used" time="0.052030789">
+        </testcase>
+        <testcase classname="src/ui/hooks/slashCommandProcessor.test.ts" name="useSlashCommandProcessor &gt; Slash Command Logging &gt; should not log for unknown commands" time="0.054119964">
         </testcase>
     </testsuite>
 </testsuites>
