@@ -74,6 +74,7 @@ export * from "./task-templates/index.js";
 export * from "./prompts/mcp-prompts.js";
 // Export specific tool logic
 export * from "./tools/read-file.js";
+export * from "./tools/read-image.js";
 export * from "./tools/ls.js";
 export * from "./tools/grep.js";
 export * from "./tools/ripGrep.js";

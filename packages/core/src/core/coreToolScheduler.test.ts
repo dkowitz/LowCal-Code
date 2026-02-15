@@ -1726,6 +1726,65 @@ describe("CoreToolScheduler request queueing", () => {
     });
   });
 
+  it("normalizes legacy read_image args from path to absolute_path", async () => {
+    const executeSpy = vi.fn().mockResolvedValue({
+      llmContent: "ok",
+      returnDisplay: "ok",
+    });
+    const tool = new SimpleTool("read_image", Kind.Read, executeSpy);
+
+    const mockToolRegistry = {
+      getTool: vi.fn().mockReturnValue(tool),
+      getAllToolNames: vi.fn().mockReturnValue([tool.name]),
+    } as unknown as ToolRegistry;
+
+    const onAllToolCallsComplete = vi.fn();
+    const onToolCallsUpdate = vi.fn();
+
+    const scheduler = new CoreToolScheduler({
+      config: {
+        getSessionId: () => "test-session-id",
+        getUsageStatisticsEnabled: () => false,
+        getDebugMode: () => false,
+        getApprovalMode: () => ApprovalMode.DEFAULT,
+        getAllowedTools: () => [],
+        getContentGeneratorConfig: () => ({
+          model: "test-model",
+          authType: "oauth-personal",
+        }),
+        getToolRegistry: () => mockToolRegistry,
+      } as unknown as Config,
+      onAllToolCallsComplete,
+      onToolCallsUpdate,
+      getPreferredEditor: () => "vscode",
+      onEditorClose: vi.fn(),
+    });
+
+    await scheduler.schedule(
+      [
+        {
+          callId: "legacy-read-image",
+          name: "read_image",
+          args: { path: "/tmp/bronc.jpg" },
+          isClientInitiated: false,
+          prompt_id: "prompt-legacy-read-image",
+        },
+      ],
+      new AbortController().signal,
+    );
+
+    const successCall = (await waitForStatus(
+      onToolCallsUpdate,
+      "success",
+    )) as SuccessfulToolCall;
+
+    expect(executeSpy).toHaveBeenCalledTimes(1);
+    expect(successCall.request.args).toMatchObject({
+      path: "/tmp/bronc.jpg",
+      absolute_path: "/tmp/bronc.jpg",
+    });
+  });
+
   it("normalizes legacy edit args to file_path/old_string/new_string", async () => {
     const executeSpy = vi.fn().mockResolvedValue({
       llmContent: "ok",

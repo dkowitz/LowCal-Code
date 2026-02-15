@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>22/22</span>
+                <span class='fraction'>0/23</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>22/22</span>
+                <span class='fraction'>0/23</span>
             </div>
         
             
@@ -61,7 +61,7 @@
             </div>
         </template>
     </div>
-    <div class='status-line high'></div>
+    <div class='status-line low'></div>
     <pre><table class="coverage">
 <tr><td class="line-count quiet"><a name='L1'></a><a href='#L1'>1</a>
 <a name='L2'></a><a href='#L2'>2</a>
@@ -95,7 +95,8 @@
 <a name='L30'></a><a href='#L30'>30</a>
 <a name='L31'></a><a href='#L31'>31</a>
 <a name='L32'></a><a href='#L32'>32</a>
-<a name='L33'></a><a href='#L33'>33</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L33'></a><a href='#L33'>33</a>
+<a name='L34'></a><a href='#L34'>34</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -106,28 +107,29 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-yes">1x</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
  * @license
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
@@ -138,27 +140,28 @@
  * These constants are used across multiple files and should be kept in sync
  * with the actual tool class names.
  */
-export const ToolNames = {
-  EDIT: "edit",
-  WRITE_FILE: "write_file",
-  READ_FILE: "read_file",
-  READ_MANY_FILES: "read_many_files",
-  GREP: "search_file_content",
-  GLOB: "glob",
-  SHELL: "run_shell_command",
-  TODO_WRITE: "todo_write",
-  MEMORY: "save_memory",
-  TASK: "task",
-  EXIT_PLAN_MODE: "exit_plan_mode",
-  WEB_FETCH: "web_fetch",
-  WEB_SEARCH: "web_search",
-  SEARXNG_SEARCH: "searxng_search",
-  RESEARCH: "research",
-  SCHEDULE_TASK: "schedule_task",
-  LAUNCH_TASK: "launch_task",
-  TASK_TEMPLATE: "task_template",
-  READ_SESSION_MESSAGES: "read_session_messages",
-} as const;
+<span class="cstat-no" title="statement not covered" >export const ToolNames = {</span>
+<span class="cstat-no" title="statement not covered" >  EDIT: "edit",</span>
+<span class="cstat-no" title="statement not covered" >  WRITE_FILE: "write_file",</span>
+<span class="cstat-no" title="statement not covered" >  READ_FILE: "read_file",</span>
+<span class="cstat-no" title="statement not covered" >  READ_IMAGE: "read_image",</span>
+<span class="cstat-no" title="statement not covered" >  READ_MANY_FILES: "read_many_files",</span>
+<span class="cstat-no" title="statement not covered" >  GREP: "search_file_content",</span>
+<span class="cstat-no" title="statement not covered" >  GLOB: "glob",</span>
+<span class="cstat-no" title="statement not covered" >  SHELL: "run_shell_command",</span>
+<span class="cstat-no" title="statement not covered" >  TODO_WRITE: "todo_write",</span>
+<span class="cstat-no" title="statement not covered" >  MEMORY: "save_memory",</span>
+<span class="cstat-no" title="statement not covered" >  TASK: "task",</span>
+<span class="cstat-no" title="statement not covered" >  EXIT_PLAN_MODE: "exit_plan_mode",</span>
+<span class="cstat-no" title="statement not covered" >  WEB_FETCH: "web_fetch",</span>
+<span class="cstat-no" title="statement not covered" >  WEB_SEARCH: "web_search",</span>
+<span class="cstat-no" title="statement not covered" >  SEARXNG_SEARCH: "searxng_search",</span>
+<span class="cstat-no" title="statement not covered" >  RESEARCH: "research",</span>
+<span class="cstat-no" title="statement not covered" >  SCHEDULE_TASK: "schedule_task",</span>
+<span class="cstat-no" title="statement not covered" >  LAUNCH_TASK: "launch_task",</span>
+<span class="cstat-no" title="statement not covered" >  TASK_TEMPLATE: "task_template",</span>
+<span class="cstat-no" title="statement not covered" >  READ_SESSION_MESSAGES: "read_session_messages",</span>
+<span class="cstat-no" title="statement not covered" >} as const;</span>
 &nbsp;</pre></td></tr></table></pre>
 
                 <div class='push'></div><!-- for sticky footer -->
@@ -166,7 +169,7 @@ export const ToolNames = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-15T11:50:11.432Z
+                at 2026-02-15T13:55:32.709Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

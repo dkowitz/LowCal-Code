@@ -12,6 +12,7 @@ export declare const ToolNames: {
     readonly EDIT: "edit";
     readonly WRITE_FILE: "write_file";
     readonly READ_FILE: "read_file";
+    readonly READ_IMAGE: "read_image";
     readonly READ_MANY_FILES: "read_many_files";
     readonly GREP: "search_file_content";
     readonly GLOB: "glob";

@@ -288,6 +288,25 @@ function normalizeLegacyToolArgs(
       }
       break;
     }
+    case "read_image": {
+      if (
+        typeof normalized["absolute_path"] !== "string" ||
+        normalized["absolute_path"].length === 0
+      ) {
+        if (
+          typeof normalized["path"] === "string" &&
+          normalized["path"].length > 0
+        ) {
+          normalized["absolute_path"] = normalized["path"];
+        } else if (
+          typeof normalized["file_path"] === "string" &&
+          normalized["file_path"].length > 0
+        ) {
+          normalized["absolute_path"] = normalized["file_path"];
+        }
+      }
+      break;
+    }
     case "write_file": {
       if (
         typeof normalized["file_path"] !== "string" ||

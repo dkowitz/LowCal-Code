@@ -13,6 +13,7 @@ export const ToolNames = {
   EDIT: "edit",
   WRITE_FILE: "write_file",
   READ_FILE: "read_file",
+  READ_IMAGE: "read_image",
   READ_MANY_FILES: "read_many_files",
   GREP: "search_file_content",
   GLOB: "glob",

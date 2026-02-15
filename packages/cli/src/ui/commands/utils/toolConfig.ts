@@ -37,6 +37,7 @@ export interface CliToolConfig {
 const DEFAULT_COLLECTIONS: Record<string, string[]> = {
   full: [
     ToolNames.READ_FILE,
+    ToolNames.READ_IMAGE,
     ToolNames.WRITE_FILE,
     ToolNames.READ_MANY_FILES,
     ToolNames.GLOB,
@@ -213,15 +214,23 @@ function applyToolCollectionPolicies(
 
   // launch_task depends on read_session_messages for mailbox-based returns.
   for (const [collectionName, toolList] of Object.entries(normalized)) {
+    let nextToolList = [...toolList];
+
     if (
-      toolList.includes(ToolNames.LAUNCH_TASK) &&
-      !toolList.includes(ToolNames.READ_SESSION_MESSAGES)
+      nextToolList.includes(ToolNames.READ_FILE) &&
+      !nextToolList.includes(ToolNames.READ_IMAGE)
     ) {
-      normalized[collectionName] = [
-        ...toolList,
-        ToolNames.READ_SESSION_MESSAGES,
-      ];
+      nextToolList = [...nextToolList, ToolNames.READ_IMAGE];
     }
+
+    if (
+      nextToolList.includes(ToolNames.LAUNCH_TASK) &&
+      !nextToolList.includes(ToolNames.READ_SESSION_MESSAGES)
+    ) {
+      nextToolList = [...nextToolList, ToolNames.READ_SESSION_MESSAGES];
+    }
+
+    normalized[collectionName] = nextToolList;
   }
 
   return normalized;

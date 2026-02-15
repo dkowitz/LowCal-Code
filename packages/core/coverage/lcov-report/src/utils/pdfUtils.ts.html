@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0.86% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>1/115</span>
+                <span class='fraction'>0/115</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">100% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/0</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/3</span>
+                <span class='fraction'>0/1</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0.86% </span>
+                <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>1/115</span>
+                <span class='fraction'>0/115</span>
             </div>
         
             
@@ -226,7 +226,7 @@
 <a name='L161'></a><a href='#L161'>161</a>
 <a name='L162'></a><a href='#L162'>162</a>
 <a name='L163'></a><a href='#L163'>163</a>
-<a name='L164'></a><a href='#L164'>164</a></td><td class="line-coverage quiet"><span class="cline-any cline-yes">1x</span>
+<a name='L164'></a><a href='#L164'>164</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -389,7 +389,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js">/**
+<span class="cline-any cline-neutral">&nbsp;</span></td><td class="text"><pre class="prettyprint lang-js"><span class="cstat-no" title="statement not covered" >/**<span class="fstat-no" title="function not covered" ><span class="branch-0 cbranch-no" title="branch not covered" ></span></span></span>
  * @license
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
@@ -419,7 +419,7 @@ type PdfjsModule = {
   OPS?: Record&lt;string, number&gt;;
 };
 &nbsp;
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >async function loadPdfjs(): Promise&lt;PdfjsModule | null&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >async function loadPdfjs(): Promise&lt;PdfjsModule | null&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  try {</span>
 <span class="cstat-no" title="statement not covered" >    const mod = (await import(</span>
 <span class="cstat-no" title="statement not covered" >      "pdfjs-dist/legacy/build/pdf.mjs"</span>
@@ -440,7 +440,7 @@ type PdfjsModule = {
 <span class="cstat-no" title="statement not covered" >  }</span>
 <span class="cstat-no" title="statement not covered" >}</span>
 &nbsp;
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function withTimeout&lt;T&gt;(promise: Promise&lt;T&gt;, timeoutMs: number): Promise&lt;T&gt; {</span></span>
+<span class="cstat-no" title="statement not covered" >function withTimeout&lt;T&gt;(promise: Promise&lt;T&gt;, timeoutMs: number): Promise&lt;T&gt; {</span>
 <span class="cstat-no" title="statement not covered" >  return new Promise((resolve, reject) =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >    const timeoutId = setTimeout(() =&gt; {</span>
 <span class="cstat-no" title="statement not covered" >      reject(new Error(`PDF parsing timed out after ${timeoutMs}ms`));</span>
@@ -464,7 +464,7 @@ export type ParsedPdfPage = {
   hasImages: boolean;
 };
 &nbsp;
-<span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >export async function parsePdfBuffer(</span></span>
+<span class="cstat-no" title="statement not covered" >export async function parsePdfBuffer(</span>
 <span class="cstat-no" title="statement not covered" >  buffer: Buffer,</span>
 <span class="cstat-no" title="statement not covered" >  options: { maxPages: number; timeoutMs: number },</span>
 <span class="cstat-no" title="statement not covered" >): Promise&lt;{ text: string; pages: ParsedPdfPage[]; pageCount: number }&gt; {</span>
@@ -559,7 +559,7 @@ export type ParsedPdfPage = {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-15T11:50:11.508Z
+                at 2026-02-15T13:55:32.791Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

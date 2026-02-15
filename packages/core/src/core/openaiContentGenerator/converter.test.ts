@@ -134,6 +134,77 @@ describe("OpenAIContentConverter", () => {
     });
   });
 
+  describe("convertGeminiRequestToOpenAI", () => {
+    it("preserves media emitted with tool responses", () => {
+      const request = {
+        contents: [
+          {
+            role: "model",
+            parts: [
+              {
+                functionCall: {
+                  id: "call-read-image-1",
+                  name: "read_image",
+                  args: { absolute_path: "/tmp/bat.jpg" },
+                },
+              },
+            ],
+          },
+          {
+            role: "user",
+            parts: [
+              {
+                functionResponse: {
+                  id: "call-read-image-1",
+                  name: "read_image",
+                  response: { output: "Tool execution succeeded." },
+                },
+              },
+              {
+                text: "Image loaded from /tmp/bat.jpg. Analyze visual content.",
+              },
+              {
+                inlineData: {
+                  mimeType: "image/jpeg",
+                  data: "dGVzdA==",
+                },
+              },
+            ],
+          },
+        ],
+      } as any;
+
+      const messages = converter.convertGeminiRequestToOpenAI(request);
+      expect(messages.length).toBe(3);
+
+      const assistantMessage = messages[0] as OpenAI.Chat.ChatCompletionMessage;
+      expect(assistantMessage.role).toBe("assistant");
+      expect(
+        (assistantMessage as OpenAI.Chat.ChatCompletionAssistantMessageParam)
+          .tool_calls?.[0]?.function.name,
+      ).toBe("read_image");
+
+      const toolMessage = messages[1] as OpenAI.Chat.ChatCompletionToolMessageParam;
+      expect(toolMessage.role).toBe("tool");
+      expect(toolMessage.tool_call_id).toBe("call-read-image-1");
+
+      const userMessage = messages[2] as OpenAI.Chat.ChatCompletionUserMessageParam;
+      expect(userMessage.role).toBe("user");
+      expect(Array.isArray(userMessage.content)).toBe(true);
+
+      const content = userMessage.content as OpenAI.Chat.ChatCompletionContentPart[];
+      const textPart = content.find((part) => part.type === "text") as
+        | OpenAI.Chat.ChatCompletionContentPartText
+        | undefined;
+      expect(textPart?.text).toContain("Analyze visual content");
+
+      const imagePart = content.find((part) => part.type === "image_url") as
+        | OpenAI.Chat.ChatCompletionContentPartImage
+        | undefined;
+      expect(imagePart?.image_url.url).toBe("data:image/jpeg;base64,dGVzdA==");
+    });
+  });
+
   describe("convertOpenAIChunkToGemini", () => {
     it("should buffer reasoning until finish_reason and emit <think> block", () => {
       converter.resetStreamingToolCalls(TEST_PROMPT_ID);

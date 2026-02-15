@@ -13,6 +13,7 @@ import { GEMINI_CONFIG_DIR } from "../tools/memoryTool.js";
 const DEFAULT_COLLECTIONS = {
     full: [
         ToolNames.READ_FILE,
+        ToolNames.READ_IMAGE,
         ToolNames.WRITE_FILE,
         ToolNames.READ_MANY_FILES,
         ToolNames.GLOB,
@@ -41,6 +42,7 @@ const TOOL_NAME_CANONICAL_MAP = Object.values(ToolNames).reduce((acc, value) => 
 }, {});
 const TOOL_SUMMARIES = {
     [ToolNames.READ_FILE]: "Read a file by absolute path; supports pagination for large files. Example: `read_file /workspace/src/index.ts`.",
+    [ToolNames.READ_IMAGE]: "Load an image for vision analysis from an absolute path. Use for requests about what is depicted in images. Example: `read_image /workspace/assets/photo.jpg`.",
     [ToolNames.WRITE_FILE]: "Replace a file's contents. Provide the full desired content. Example: `write_file /workspace/src/index.ts`.",
     [ToolNames.READ_MANY_FILES]: "Batch-read multiple files or glob patterns to gather context. Example: `read_many_files [/workspace/src/app.ts,/workspace/src/utils.ts]`.",
     [ToolNames.GLOB]: "List files matching a glob pattern within the workspace. Example: `glob src/**/*.test.ts`.",
@@ -67,13 +69,16 @@ function applyToolCollectionPolicies(collections) {
     }
     normalized["full"] = Array.from(fullSet);
     for (const [collectionName, toolList] of Object.entries(normalized)) {
-        if (toolList.includes(ToolNames.LAUNCH_TASK) &&
-            !toolList.includes(ToolNames.READ_SESSION_MESSAGES)) {
-            normalized[collectionName] = [
-                ...toolList,
-                ToolNames.READ_SESSION_MESSAGES,
-            ];
+        let nextToolList = [...toolList];
+        if (nextToolList.includes(ToolNames.READ_FILE) &&
+            !nextToolList.includes(ToolNames.READ_IMAGE)) {
+            nextToolList = [...nextToolList, ToolNames.READ_IMAGE];
         }
+        if (nextToolList.includes(ToolNames.LAUNCH_TASK) &&
+            !nextToolList.includes(ToolNames.READ_SESSION_MESSAGES)) {
+            nextToolList = [...nextToolList, ToolNames.READ_SESSION_MESSAGES];
+        }
+        normalized[collectionName] = nextToolList;
     }
     return normalized;
 }
@@ -417,7 +422,7 @@ You are LowCal Code, an interactive CLI agent derived from the Qwen Code and Gem
 - **Proactiveness:** Fulfill the user's request thoroughly, including reasonable, directly implied follow-up actions.
 - **Confirm Ambiguity/Expansion:** Do not take significant actions beyond the clear scope of the request without confirming with the user. If asked *how* to do something, explain first, don't just do it.
 - **Explaining Changes:** After completing a code modification or file operation *do not* provide summaries unless asked.
-- **Path Construction:** Before using any file system tool (e.g., ${ToolNames.READ_FILE}, ${ToolNames.WRITE_FILE}, ${ToolNames.EDIT}), you must construct the full absolute path for the tool's path argument (${ToolNames.READ_FILE}: \`absolute_path\`; ${ToolNames.WRITE_FILE}/${ToolNames.EDIT}: \`file_path\`). Always combine the absolute path of the project's root directory with the file's path relative to the root. For example, if the project root is /path/to/project/ and the file is foo/bar/baz.txt, the final path you must use is /path/to/project/foo/bar/baz.txt. If the user provides a relative path, you must resolve it against the root directory to create an absolute path.
+- **Path Construction:** Before using any file system tool (e.g., ${ToolNames.READ_FILE}, ${ToolNames.READ_IMAGE}, ${ToolNames.WRITE_FILE}, ${ToolNames.EDIT}), you must construct the full absolute path for the tool's path argument (${ToolNames.READ_FILE}/${ToolNames.READ_IMAGE}: \`absolute_path\`; ${ToolNames.WRITE_FILE}/${ToolNames.EDIT}: \`file_path\`). Always combine the absolute path of the project's root directory with the file's path relative to the root. For example, if the project root is /path/to/project/ and the file is foo/bar/baz.txt, the final path you must use is /path/to/project/foo/bar/baz.txt. If the user provides a relative path, you must resolve it against the root directory to create an absolute path.
 - **Do Not revert changes:** Do not revert changes to the codebase unless asked to do so by the user. Only revert changes made by you if they have resulted in an error or if the user has explicitly asked you to revert the changes.
 
 # Task Management
@@ -525,6 +530,7 @@ IMPORTANT: Always use the ${ToolNames.TODO_WRITE} tool to plan and track tasks t
 - **Background Processes:** Use background processes (via \`&\`) for commands that are unlikely to stop on their own, e.g. \`node server.js &\`. If unsure, ask the user.
 - **Interactive Commands:** Try to avoid shell commands that are likely to require user interaction (e.g. \`git rebase -i\`). Use non-interactive versions of commands (e.g. \`npm init -y\` instead of \`npm init\`) when available, and otherwise remind the user that interactive shell commands are not supported and may cause hangs until canceled by the user.
 - **Task Management:** Use the '${ToolNames.TODO_WRITE}' tool proactively for complex, multi-step tasks to track progress and provide visibility to users. This tool helps organize work systematically and ensures no requirements are missed.
+- **Vision Tasks:** When the user asks to describe, compare, or inspect image content, use '${ToolNames.READ_IMAGE}' to load each image for visual analysis. Use '${ToolNames.GLOB}' first when you need to find image files.
 - **Subagent Delegation:** When doing file search, prefer to use the '${ToolNames.TASK}' tool in order to reduce context usage. You should proactively use the '${ToolNames.TASK}' tool with specialized agents when the task at hand matches the agent's description.
 - **Remembering Facts:** Use the '${ToolNames.MEMORY}' tool to remember specific, *user-related* facts or preferences when the user explicitly asks, or when they state a clear, concise piece of information that would help personalize or streamline *your future interactions with them* (e.g., preferred coding style, common project paths they use, personal tool aliases). This tool is for user-specific information that should persist across sessions. Do *not* use it for general project context or information. If unsure whether to save something, you can ask the user, "Should I remember that for you?"
 - **Respect User Confirmations:** Most tool calls (also denoted as 'function calls') will first require confirmation from the user, where they will either approve or cancel the function call. If a user cancels a function call, respect their choice and do _not_ try to make the function call again. It is okay to request the tool call again _only_ if the user requests that same tool call on a subsequent prompt. When a user cancels a function call, assume best intentions from the user and consider inquiring if they prefer any alternative paths forward.

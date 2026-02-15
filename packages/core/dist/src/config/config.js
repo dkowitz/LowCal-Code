@@ -23,6 +23,7 @@ import { GrepTool } from "../tools/grep.js";
 import { LSTool } from "../tools/ls.js";
 import { MemoryTool, setGeminiMdFilename } from "../tools/memoryTool.js";
 import { ReadFileTool } from "../tools/read-file.js";
+import { ReadImageTool } from "../tools/read-image.js";
 import { ReadManyFilesTool } from "../tools/read-many-files.js";
 import { RipGrepTool } from "../tools/ripGrep.js";
 import { ShellTool } from "../tools/shell.js";
@@ -817,6 +818,7 @@ export class Config {
         registerCoreTool(TaskTool, this);
         registerCoreTool(LSTool, this);
         registerCoreTool(ReadFileTool, this);
+        registerCoreTool(ReadImageTool, this);
         if (this.getUseRipgrep()) {
             registerCoreTool(RipGrepTool, this);
         }

@@ -876,6 +876,15 @@ export class OpenAIContentConverter {
               : JSON.stringify(funcResponse.response),
         });
       }
+
+      // Preserve any non-function payload (text/media) emitted alongside tool
+      // responses. This is required for multimodal tool outputs such as images.
+      if (parsedParts.textParts.length > 0 || parsedParts.mediaParts.length > 0) {
+        const followupMessage = this.createMultimodalMessage("user", parsedParts);
+        if (followupMessage) {
+          messages.push(followupMessage);
+        }
+      }
       return;
     }
 
