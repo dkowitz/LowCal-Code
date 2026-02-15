@@ -80,7 +80,7 @@ LowCal Code's built-in tools can be broadly categorized as follows:
 
 ### Session Communication Tools
 
-- **[Read Session Messages](#read-session-messages)** (`read_session_messages`): Receive messages from launched tasks.
+- **[Read Session Messages](#read-session-messages)** (`read_session_messages`): Receive messages from launched tasks (user-facing counterpart: `/mailbox`).
 
 ### Memory Tools
 
@@ -258,6 +258,8 @@ Receives messages from launched tasks back to the parent session.
 - `task_id`: Optional filter for specific task
 
 **Example Use:** "Get results from my background research task"
+
+**TUI counterpart:** `/mailbox` provides an interactive mailbox viewer for received/pending task payloads.
 
 ---
 

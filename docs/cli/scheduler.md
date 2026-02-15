@@ -113,6 +113,7 @@ Or by calling `schedule_task` directly from a prompt/tool call.
 - Jobs can run in `headless`, `zellij_tab`, or `in_process` mode.
 - `in_process` jobs require a target interactive session (`return_to_session_id` or `run.returnToSession`).
 - Scheduler `get` output includes runtime profile details when present (template, auth/model overrides, action type/value, run settings).
+- For user-visible task returns in an interactive session, use `/mailbox`.
 
 ## Related Commands
 

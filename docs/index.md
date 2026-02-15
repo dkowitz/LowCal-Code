@@ -13,6 +13,7 @@ LowCal Code has been significantly enhanced with:
 - **Subagents**: Specialized AI assistants with custom configurations
 - **Job Scheduler**: Cron-based scheduling for recurring automated tasks
 - **Task Template Library**: Reusable templates with per-task auth/model/runtime profiles
+- **Mailbox Browser**: In-session mailbox UI (`/mailbox`) for received/pending task payloads
 - **Orchestrator**: Automated session management with health monitoring and recovery
 - **Dashboard**: Unified view of all sessions, jobs, and daemon status
 - **MCP Integration**: Model Context Protocol server support

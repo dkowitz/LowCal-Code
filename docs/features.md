@@ -83,6 +83,7 @@ This document provides a comprehensive overview of all LowCal Code features, org
 | **Task Templates**        | Reusable templates for launch/schedule workflows  | ✅ Stable | Project/user scopes, skeleton to fully prefilled  |
 | **Launch Task**           | Spawn or enqueue task runs with runtime overrides | ✅ Stable | `headless`, `zellij_tab`, `in_process`, `default` |
 | **Read Session Messages** | Receive messages from launched tasks              | ✅ Stable | `pull`, `peek`, `clear`, `wait` actions           |
+| **Mailbox Viewer**        | Browse received/pending task payloads in-session  | ✅ Stable | `/mailbox` dialog + `list/show/use/clear`         |
 | **Task State Query**      | Monitor task status and results                   | ✅ Stable | Get, list, clear operations                       |
 
 ---
@@ -148,8 +149,8 @@ This document provides a comprehensive overview of all LowCal Code features, org
 
 ### In-Session Commands
 
-| Command                                                          | Description                                    |
-| ---------------------------------------------------------------- | ---------------------------------------------- | ---------------------- |
+| Command                                                          | Description                                                          |
+| ---------------------------------------------------------------- | -------------------------------------------------------------------- |
 | `/help`, `/h`                                                    | Display available commands                     |
 | `/clear`                                                         | Clear conversation history                     |
 | `/summary`                                                       | Generate project summary                       |
@@ -158,11 +159,12 @@ This document provides a comprehensive overview of all LowCal Code features, org
 | `/resume list/delete <index/id>`                                 | Resume from automatic checkpointing system     |
 | `/model`                                                         | Select a model                                 |
 | `/tasks`                                                         | Open task template editor and deploy templates |
+| `/mailbox [open/list/show/use/clear]`                            | Review task payload mailbox and inject display-only payload context  |
 | `/agents create/manage`                                          | Subagent management                            |
 | `/tools [desc/nodesc]`                                           | List available tools                           |
 | `/prompt list/show/create/delete/activate/disable [--exclusive]` | Custom prompt management                       |
 | `/promptmode set <full/concise/auto>`                            | System prompt mode                             |
-| `/approval-mode <ask/yolo/plan> [--project                       | --user]`                                       | Approval configuration |
+| `/approval-mode <ask/yolo/plan> [--project\|--user]`             | Approval configuration                         |
 | `/directory add/remove/list`                                     | Workspace directory management                 |
 | `/init`                                                          | Generate LOWCAL.md                             |
 | `/bug`                                                           | File an issue                                  |
@@ -199,7 +201,7 @@ This document provides a comprehensive overview of all LowCal Code features, org
 
 1. Set up custom prompts with `/prompt create`
 2. Configure subagents with `/agents create`
-3. Build reusable templates with `/tasks` and deploy via `lowcal tasks schedule`
+3. Build reusable templates with `/tasks`, deploy via `lowcal tasks schedule`, and monitor returns with `/mailbox`
 4. Connect MCP servers for external tools
 5. Create custom commands in `.qwen/commands/`
 

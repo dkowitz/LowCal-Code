@@ -10,6 +10,14 @@ Use `read_session_messages` when you need to:
 - **Collect output**: Gather results from parallel operations
 - **Debug issues**: Review task logs and error messages
 
+### User-Facing Equivalent
+
+If you are operating directly in the TUI (not through tool calls), use `/mailbox`:
+
+- `/mailbox` opens the mailbox dialog (received + pending panels with preview/actions)
+- `/mailbox list/show/use/clear` provides non-dialog mailbox operations
+- `/mailbox use` injects payload context into chat/model history without automatically triggering a model response
+
 ## Parameters
 
 | Parameter | Type | Required | Description |
@@ -156,5 +164,5 @@ Messages returned by `pull` and `wait` contain:
 
 ## Related Tools
 
-- [`launch_task`](#launch-task): For spawning sub-tasks that send messages back
-- [`read_session_messages`](#read-session-messages): The complementary tool for sending results
+- [`launch_task`](./launch-task.md): Spawn sub-tasks that return through mailbox channels
+- [`launch_task_state`](./launch-task-state.md): Inspect task runtime/status when mailbox results are delayed

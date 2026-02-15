@@ -25,6 +25,7 @@ LowCal is a powerful command-line AI workflow tool adapted from Qwen Code, speci
 - **Dashboard**: Unified view of all sessions, jobs, and daemon status
 - **Background Tasks**: Launch parallel tasks with `launch_task` for concurrent work
 - **Task Templates**: Reusable task library with per-task auth/model/runtime overrides
+- **Mailbox Viewer**: Review received/pending task payloads with `/mailbox`
 
 ### 📁 File & Code Management
 
@@ -98,6 +99,7 @@ LowCal Code provides both in-session commands (slash commands) and terminal-leve
 | `/chat save/resume/list/delete <tag>`                | Save and resume conversations                           |
 | `/model`                                             | Select a model                                          |
 | `/tasks [open/list/run/schedule]`                    | Open task template editor, manage templates, and deploy |
+| `/mailbox [open/list/show/use/clear]`                | View task mailbox and inject payload context            |
 | `/agents create/manage`                              | Manage subagents                                        |
 | `/tools [desc/nodesc]`                               | List available tools                                    |
 | `/prompt list/show/create/delete/activate/disable`   | Manage custom prompts                                   |
@@ -114,7 +116,7 @@ LowCal Code provides both in-session commands (slash commands) and terminal-leve
 | `lowcal dashboard [options]`                                              | View all sessions and jobs in a unified interface   |
 | `lowcal sessions list/get/prune [options]`                                | Manage active sessions                              |
 | `lowcal scheduler <start/stop/status/list/get/mode/delete/reset/logs>`    | Manage scheduler daemon and inspect/maintain jobs   |
-| `lowcal tasks <open/list/run/schedule>`                                   | Manage and deploy task templates from terminal mode |
+| `lowcal tasks [open/list/run/schedule]`                                   | Manage and deploy task templates from terminal mode |
 | `lowcal orchestrator <start/stop/status>`                                 | Manage the orchestrator daemon                      |
 | `lowcal extensions <install/uninstall/list/update/disable/enable> <name>` | Manage extensions                                   |
 | `lowcal mcp <add/remove/list>`                                            | Manage MCP servers                                  |
@@ -131,6 +133,7 @@ LowCal Code provides both in-session commands (slash commands) and terminal-leve
 - **`/compress`** - Compress conversation history to continue within token limits
 - **`/clear`** - Clear all conversation history and start fresh
 - **`/summary`** - Generate a comprehensive project summary from the current conversation
+- **`/mailbox`** - Open mailbox viewer for received/pending task payloads; use payloads inline without auto-triggering a model response
 
 ### Custom Prompts & Toolsets
 

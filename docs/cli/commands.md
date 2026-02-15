@@ -90,11 +90,26 @@ Slash commands provide meta-level control over the CLI itself.
     - `/tasks schedule <template_id> "<cron>" [--id job-id] [--level project|user|builtin]` - Create scheduled job from template
   - **Editor capabilities:**
     - Create/edit/delete templates in project (`.qwen/task-templates/`) or user (`~/.qwen/task-templates/`) scope
+    - Duplicate existing templates for rapid specialization workflows
     - Select auth/provider via list (mirrors `/auth`)
     - Select model via list (mirrors `/model` for selected provider)
     - Choose execution mode: `default`, `headless`, `zellij_tab`, `in_process`
     - Deploy directly as immediate launch or scheduled cron job
+  - **Returns workflow:** Use `/mailbox` to inspect received payloads and pending task runs after deployment.
   - **Template flexibility:** Templates can be skeleton-only, partially prefilled, or fully prefilled and deploy-ready.
+
+- **`/mailbox`**
+  - **Description:** Open the task mailbox dialog to review received task payloads and pending launched tasks.
+  - **Usage:**
+    - `/mailbox` or `/mailbox open` - Open the interactive mailbox dialog
+    - `/mailbox list` - Print received/pending mailbox status in chat
+    - `/mailbox show <index|task_id>` - Preview one payload in chat
+    - `/mailbox use <index|task_id>` - Inject one payload into chat/model history (display-only; no immediate model response)
+    - `/mailbox clear` - Clear received mailbox entries for the current session
+  - **Dialog capabilities:**
+    - Browse **Received** payloads and **Pending** task runs in separate scrollable panels
+    - Preview full payload content before use
+    - Use selected payload inline in chat so both user and model can reference it on later turns
 
 - **`/agents`**
   - **Description:** Manage specialized AI subagents for focused tasks. Subagents are independent AI assistants configured with specific expertise and tool access.
@@ -362,7 +377,9 @@ lowcal scheduler logs daily-tests --tail 20
 
 Manage and deploy task templates from terminal mode.
 
-**Usage:** `lowcal tasks <command> [options]`
+**Usage:** `lowcal tasks [command] [options]`
+
+Running `lowcal tasks` with no subcommand opens the interactive tasks editor.
 
 **Sub-commands:**
 

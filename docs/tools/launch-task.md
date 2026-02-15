@@ -70,6 +70,13 @@ For `in_process` tasks:
 - original session runtime is restored automatically after completion/failure
 - `slash_command` action type is supported only in `in_process`
 
+## Getting Results Back
+
+After launching tasks, retrieve returns through the session mailbox:
+
+- For tool-driven flows (LLM): use [`read_session_messages`](./read-session-messages.md) with `action: "wait"`/`"pull"`.
+- For user-driven flows (TUI): use `/mailbox` to browse **Received** and **Pending** entries, preview payloads, and inject selected payloads into chat/model history.
+
 ## Examples
 
 ### Launch Using Template

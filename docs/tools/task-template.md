@@ -53,6 +53,15 @@ Templates may be:
 
 Security note: keep secrets out of template files. Prefer `auth.apiKeyEnvVar` and environment variables instead of embedding credentials.
 
+## TUI / CLI Workflow
+
+You can manage the same template library without direct tool calls:
+
+- `/tasks` opens the interactive task template editor dialog.
+- `lowcal tasks` (or `lowcal tasks open`) opens the same editor from terminal mode.
+- Auth/provider and model are list-select fields in the editor (mirrors `/auth` and `/model` behavior).
+- Templates can be duplicated, then modified and deployed as immediate runs or scheduled jobs.
+
 ## Example
 
 ### Create a Vision Template
