@@ -353011,7 +353011,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "ae384faf";
+var GIT_COMMIT_INFO = "5c4eb491";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -366476,6 +366476,7 @@ function TaskTemplateEditorDialog({
   onExit,
   onDeploy
 }) {
+  const { columns: terminalColumns2, rows: terminalRows } = useTerminalSize();
   const [focusSection, setFocusSection] = (0, import_react94.useState)("templates");
   const [selectedField, setSelectedField] = (0, import_react94.useState)("id");
   const [selectedTemplateKey, setSelectedTemplateKey] = (0, import_react94.useState)(NEW_TEMPLATE_KEY);
@@ -366615,8 +366616,8 @@ function TaskTemplateEditorDialog({
         const order = [
           "templates",
           "fields",
-          "editor",
-          "actions"
+          "actions",
+          "editor"
         ];
         setFocusSection((current) => {
           const currentIndex = order.indexOf(current);
@@ -366758,6 +366759,27 @@ function TaskTemplateEditorDialog({
     const index = fieldItems.findIndex((item) => item.value === selectedField);
     return index >= 0 ? index : 0;
   }, [fieldItems, selectedField]);
+  const templateListMaxItems = Math.max(
+    6,
+    Math.min(12, Math.floor(terminalRows * 0.28))
+  );
+  const fieldListMaxItems = Math.max(
+    6,
+    Math.min(12, Math.floor(terminalRows * 0.28))
+  );
+  const actionListMaxItems = Math.max(
+    5,
+    Math.min(9, Math.floor(terminalRows * 0.2))
+  );
+  const editorInputWidth = Math.max(26, Math.floor(terminalColumns2 * 0.42));
+  const editorLargeHeight = Math.max(
+    7,
+    Math.min(14, Math.floor(terminalRows * 0.34))
+  );
+  const editorMediumHeight = Math.max(
+    4,
+    Math.min(8, Math.floor(editorLargeHeight * 0.6))
+  );
   const saveTemplate = (0, import_react94.useCallback)(async () => {
     const canEditExisting = isExistingEditableTemplate;
     const id = canEditExisting ? selectedTemplate?.id ?? "" : draft.id.trim();
@@ -366966,6 +366988,7 @@ function TaskTemplateEditorDialog({
             value: readOnly ? selectedTemplate?.id ?? draft.id : draft.id,
             onChange: (value) => updateDraft({ id: value }),
             placeholder: "vision-ocr",
+            inputWidth: editorInputWidth,
             isActive: !readOnly && focusSection === "editor"
           },
           `task-editor-${selectedField}-${editorResetToken}`
@@ -366979,6 +367002,7 @@ function TaskTemplateEditorDialog({
           value: draft.name,
           onChange: (value) => updateDraft({ name: value }),
           placeholder: "Human-friendly display name",
+          inputWidth: editorInputWidth,
           isActive: focusSection === "editor"
         },
         `task-editor-${selectedField}-${editorResetToken}`
@@ -366991,6 +367015,8 @@ function TaskTemplateEditorDialog({
           value: draft.description,
           onChange: (value) => updateDraft({ description: value }),
           placeholder: "What this template is for",
+          inputWidth: editorInputWidth,
+          height: editorMediumHeight,
           isActive: focusSection === "editor"
         },
         `task-editor-${selectedField}-${editorResetToken}`
@@ -367003,6 +367029,7 @@ function TaskTemplateEditorDialog({
           value: draft.tags,
           onChange: (value) => updateDraft({ tags: value }),
           placeholder: "vision, ocr, docs",
+          inputWidth: editorInputWidth,
           isActive: focusSection === "editor"
         },
         `task-editor-${selectedField}-${editorResetToken}`
@@ -367036,7 +367063,8 @@ function TaskTemplateEditorDialog({
             value: draft.actionValue,
             onChange: (value) => updateDraft({ actionValue: value }),
             placeholder: isPrompt ? "Prompt for this task" : "Slash command payload (for example: /compress)",
-            height: 5,
+            height: editorLargeHeight,
+            inputWidth: editorInputWidth,
             isActive: focusSection === "editor"
           },
           `task-editor-${selectedField}-${editorResetToken}`
@@ -367098,7 +367126,7 @@ function TaskTemplateEditorDialog({
             initialIndex: selectedModelIndex,
             onSelect: (value) => updateDraft({ modelName: value }),
             isFocused: focusSection === "editor",
-            maxItemsToShow: 7
+            maxItemsToShow: Math.max(6, actionListMaxItems)
           },
           `model-${draft.authChoice}-${selectedModelIndex}-${modelItems.length}`
         )
@@ -367195,6 +367223,7 @@ function TaskTemplateEditorDialog({
           value: draft.schedule,
           onChange: (value) => updateDraft({ schedule: value }),
           placeholder: "0 * * * *",
+          inputWidth: editorInputWidth,
           isActive: focusSection === "editor"
         },
         `task-editor-${selectedField}-${editorResetToken}`
@@ -367206,6 +367235,7 @@ function TaskTemplateEditorDialog({
         value: draft.scheduleJobId,
         onChange: (value) => updateDraft({ scheduleJobId: value }),
         placeholder: "Optional; defaults to <template>-schedule",
+        inputWidth: editorInputWidth,
         isActive: focusSection === "editor"
       },
       `task-editor-${selectedField}-${editorResetToken}`
@@ -367216,88 +367246,133 @@ function TaskTemplateEditorDialog({
     {
       borderStyle: "round",
       borderColor: Colors.AccentBlue,
-      flexDirection: "row",
+      flexDirection: "column",
       width: "100%",
       padding: 1,
       gap: 1,
       children: [
-        /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "column", width: "40%", paddingRight: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Text3, { bold: focusSection === "templates", children: [
-            focusSection === "templates" ? "> " : "  ",
-            "Templates"
-          ] }),
-          isLoadingTemplates ? /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: "Loading templates..." }) : /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
-            RadioButtonSelect,
+        /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "row", gap: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(
+            Box_default,
             {
-              items: templateOptions,
-              initialIndex: selectedTemplateIndex,
-              onSelect: (value) => {
-                setSelectedTemplateKey(value);
-                if (value === NEW_TEMPLATE_KEY) {
-                  pendingNewDraftRef.current = null;
-                  setDraft(buildEmptyDraft(settings, currentModel));
-                  setEditorResetToken((token2) => token2 + 1);
-                }
-                setFocusSection("fields");
-              },
-              isFocused: focusSection === "templates",
-              maxItemsToShow: 14
-            },
-            `templates-${selectedTemplateIndex}-${templateOptions.length}`
+              flexDirection: "column",
+              width: "50%",
+              borderStyle: "single",
+              borderColor: focusSection === "templates" ? Colors.AccentBlue : Colors.Gray,
+              paddingX: 1,
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Text3, { bold: focusSection === "templates", children: [
+                  focusSection === "templates" ? "> " : "  ",
+                  "Templates"
+                ] }),
+                isLoadingTemplates ? /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: "Loading templates..." }) : /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
+                  RadioButtonSelect,
+                  {
+                    items: templateOptions,
+                    initialIndex: selectedTemplateIndex,
+                    onSelect: (value) => {
+                      setSelectedTemplateKey(value);
+                      if (value === NEW_TEMPLATE_KEY) {
+                        pendingNewDraftRef.current = null;
+                        setDraft(buildEmptyDraft(settings, currentModel));
+                        setEditorResetToken((token2) => token2 + 1);
+                      }
+                      setFocusSection("fields");
+                    },
+                    isFocused: focusSection === "templates",
+                    maxItemsToShow: templateListMaxItems,
+                    showScrollArrows: true
+                  },
+                  `templates-${selectedTemplateIndex}-${templateOptions.length}`
+                )
+              ]
+            }
+          ),
+          /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(
+            Box_default,
+            {
+              flexDirection: "column",
+              width: "50%",
+              borderStyle: "single",
+              borderColor: focusSection === "fields" ? Colors.AccentBlue : Colors.Gray,
+              paddingX: 1,
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Text3, { bold: focusSection === "fields", children: [
+                  focusSection === "fields" ? "> " : "  ",
+                  "Fields"
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
+                  RadioButtonSelect,
+                  {
+                    items: fieldItems,
+                    initialIndex: selectedFieldIndex,
+                    onSelect: (value) => {
+                      setSelectedField(value);
+                      setFocusSection("editor");
+                    },
+                    isFocused: focusSection === "fields",
+                    maxItemsToShow: fieldListMaxItems,
+                    showScrollArrows: true
+                  },
+                  `fields-${selectedFieldIndex}`
+                )
+              ]
+            }
           )
         ] }),
-        /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "column", width: "60%", paddingLeft: 1, children: [
-          /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Text3, { bold: focusSection === "fields", children: [
-            focusSection === "fields" ? "> " : "  ",
-            "Fields"
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
-            RadioButtonSelect,
+        /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "row", gap: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(
+            Box_default,
             {
-              items: fieldItems,
-              initialIndex: selectedFieldIndex,
-              onSelect: (value) => {
-                setSelectedField(value);
-                setFocusSection("editor");
-              },
-              isFocused: focusSection === "fields",
-              maxItemsToShow: 7
-            },
-            `fields-${selectedFieldIndex}`
+              flexDirection: "column",
+              width: "50%",
+              borderStyle: "single",
+              borderColor: focusSection === "actions" ? Colors.AccentBlue : Colors.Gray,
+              paddingX: 1,
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Text3, { bold: focusSection === "actions", children: [
+                  focusSection === "actions" ? "> " : "  ",
+                  "Actions"
+                ] }),
+                /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
+                  RadioButtonSelect,
+                  {
+                    items: actionItems,
+                    initialIndex: 0,
+                    onSelect: handleActionSelect,
+                    isFocused: focusSection === "actions",
+                    maxItemsToShow: actionListMaxItems,
+                    showScrollArrows: true
+                  },
+                  `actions-${isBusy ? "busy" : "idle"}`
+                ),
+                isBuiltinTemplate && /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.AccentYellow, children: "Builtin templates are read-only. Saving creates a project/user copy." }),
+                statusMessage && /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.AccentGreen, children: statusMessage }),
+                errorMessage && /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.AccentRed, children: errorMessage })
+              ]
+            }
           ),
-          /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Text3, { bold: focusSection === "editor", children: [
-              focusSection === "editor" ? "> " : "  ",
-              "Editor (",
-              selectedField,
-              ")"
-            ] }),
-            renderFieldEditor()
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
-            /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Text3, { bold: focusSection === "actions", children: [
-              focusSection === "actions" ? "> " : "  ",
-              "Actions"
-            ] }),
-            /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
-              RadioButtonSelect,
-              {
-                items: actionItems,
-                initialIndex: 0,
-                onSelect: handleActionSelect,
-                isFocused: focusSection === "actions",
-                maxItemsToShow: 7
-              },
-              `actions-${isBusy ? "busy" : "idle"}`
-            )
-          ] }),
-          /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { marginTop: 1, flexDirection: "column", children: [
-            isBuiltinTemplate && /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.AccentYellow, children: "Builtin templates are read-only. Saving creates a project/user copy." }),
-            statusMessage && /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.AccentGreen, children: statusMessage }),
-            errorMessage && /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.AccentRed, children: errorMessage }),
-            /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: "Tab cycles panels. Enter selects. Esc closes." })
-          ] })
-        ] })
+          /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(
+            Box_default,
+            {
+              flexDirection: "column",
+              width: "50%",
+              borderStyle: "single",
+              borderColor: focusSection === "editor" ? Colors.AccentBlue : Colors.Gray,
+              paddingX: 1,
+              children: [
+                /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Text3, { bold: focusSection === "editor", children: [
+                  focusSection === "editor" ? "> " : "  ",
+                  "Editor (",
+                  selectedField,
+                  ")"
+                ] }),
+                renderFieldEditor()
+              ]
+            }
+          )
+        ] }),
+        /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: "Tab cycles panels: Templates, Fields, Actions, Editor. Enter selects. Esc closes." })
       ]
     }
   );

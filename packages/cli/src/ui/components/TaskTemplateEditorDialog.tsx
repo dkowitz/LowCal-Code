@@ -22,6 +22,7 @@ import {
   type AvailableModel,
 } from "../models/availableModels.js";
 import { useKeypress } from "../hooks/useKeypress.js";
+import { useTerminalSize } from "../hooks/useTerminalSize.js";
 import {
   RadioButtonSelect,
   type RadioSelectItem,
@@ -360,6 +361,7 @@ export function TaskTemplateEditorDialog({
   onExit,
   onDeploy,
 }: TaskTemplateEditorDialogProps): React.JSX.Element {
+  const { columns: terminalColumns, rows: terminalRows } = useTerminalSize();
   const [focusSection, setFocusSection] = useState<FocusSection>("templates");
   const [selectedField, setSelectedField] = useState<EditableField>("id");
   const [selectedTemplateKey, setSelectedTemplateKey] =
@@ -526,8 +528,8 @@ export function TaskTemplateEditorDialog({
         const order: FocusSection[] = [
           "templates",
           "fields",
-          "editor",
           "actions",
+          "editor",
         ];
         setFocusSection((current) => {
           const currentIndex = order.indexOf(current);
@@ -683,6 +685,28 @@ export function TaskTemplateEditorDialog({
     const index = fieldItems.findIndex((item) => item.value === selectedField);
     return index >= 0 ? index : 0;
   }, [fieldItems, selectedField]);
+
+  const templateListMaxItems = Math.max(
+    6,
+    Math.min(12, Math.floor(terminalRows * 0.28)),
+  );
+  const fieldListMaxItems = Math.max(
+    6,
+    Math.min(12, Math.floor(terminalRows * 0.28)),
+  );
+  const actionListMaxItems = Math.max(
+    5,
+    Math.min(9, Math.floor(terminalRows * 0.2)),
+  );
+  const editorInputWidth = Math.max(26, Math.floor(terminalColumns * 0.42));
+  const editorLargeHeight = Math.max(
+    7,
+    Math.min(14, Math.floor(terminalRows * 0.34)),
+  );
+  const editorMediumHeight = Math.max(
+    4,
+    Math.min(8, Math.floor(editorLargeHeight * 0.6)),
+  );
 
   const saveTemplate = useCallback(async (): Promise<{
     id: string;
@@ -944,6 +968,7 @@ export function TaskTemplateEditorDialog({
             value={readOnly ? (selectedTemplate?.id ?? draft.id) : draft.id}
             onChange={(value) => updateDraft({ id: value })}
             placeholder="vision-ocr"
+            inputWidth={editorInputWidth}
             isActive={!readOnly && focusSection === "editor"}
           />
         </Box>
@@ -957,6 +982,7 @@ export function TaskTemplateEditorDialog({
           value={draft.name}
           onChange={(value) => updateDraft({ name: value })}
           placeholder="Human-friendly display name"
+          inputWidth={editorInputWidth}
           isActive={focusSection === "editor"}
         />
       );
@@ -969,6 +995,8 @@ export function TaskTemplateEditorDialog({
           value={draft.description}
           onChange={(value) => updateDraft({ description: value })}
           placeholder="What this template is for"
+          inputWidth={editorInputWidth}
+          height={editorMediumHeight}
           isActive={focusSection === "editor"}
         />
       );
@@ -981,6 +1009,7 @@ export function TaskTemplateEditorDialog({
           value={draft.tags}
           onChange={(value) => updateDraft({ tags: value })}
           placeholder="vision, ocr, docs"
+          inputWidth={editorInputWidth}
           isActive={focusSection === "editor"}
         />
       );
@@ -1027,7 +1056,8 @@ export function TaskTemplateEditorDialog({
                 ? "Prompt for this task"
                 : "Slash command payload (for example: /compress)"
             }
-            height={5}
+            height={editorLargeHeight}
+            inputWidth={editorInputWidth}
             isActive={focusSection === "editor"}
           />
         </Box>
@@ -1093,7 +1123,7 @@ export function TaskTemplateEditorDialog({
             onSelect={(value) => updateDraft({ modelName: value })}
             isFocused={focusSection === "editor"}
             key={`model-${draft.authChoice}-${selectedModelIndex}-${modelItems.length}`}
-            maxItemsToShow={7}
+            maxItemsToShow={Math.max(6, actionListMaxItems)}
           />
         </Box>
       );
@@ -1194,6 +1224,7 @@ export function TaskTemplateEditorDialog({
           value={draft.schedule}
           onChange={(value) => updateDraft({ schedule: value })}
           placeholder="0 * * * *"
+          inputWidth={editorInputWidth}
           isActive={focusSection === "editor"}
         />
       );
@@ -1205,6 +1236,7 @@ export function TaskTemplateEditorDialog({
         value={draft.scheduleJobId}
         onChange={(value) => updateDraft({ scheduleJobId: value })}
         placeholder="Optional; defaults to <template>-schedule"
+        inputWidth={editorInputWidth}
         isActive={focusSection === "editor"}
       />
     );
@@ -1214,61 +1246,80 @@ export function TaskTemplateEditorDialog({
     <Box
       borderStyle="round"
       borderColor={Colors.AccentBlue}
-      flexDirection="row"
+      flexDirection="column"
       width="100%"
       padding={1}
       gap={1}
     >
-      <Box flexDirection="column" width="40%" paddingRight={1}>
-        <Text bold={focusSection === "templates"}>
-          {focusSection === "templates" ? "> " : "  "}Templates
-        </Text>
-        {isLoadingTemplates ? (
-          <Text color={Colors.Gray}>Loading templates...</Text>
-        ) : (
-          <RadioButtonSelect
-            items={templateOptions}
-            initialIndex={selectedTemplateIndex}
-            onSelect={(value) => {
-              setSelectedTemplateKey(value);
-              if (value === NEW_TEMPLATE_KEY) {
-                pendingNewDraftRef.current = null;
-                setDraft(buildEmptyDraft(settings, currentModel));
-                setEditorResetToken((token) => token + 1);
-              }
-              setFocusSection("fields");
-            }}
-            isFocused={focusSection === "templates"}
-            maxItemsToShow={14}
-            key={`templates-${selectedTemplateIndex}-${templateOptions.length}`}
-          />
-        )}
-      </Box>
-
-      <Box flexDirection="column" width="60%" paddingLeft={1}>
-        <Text bold={focusSection === "fields"}>
-          {focusSection === "fields" ? "> " : "  "}Fields
-        </Text>
-        <RadioButtonSelect
-          items={fieldItems}
-          initialIndex={selectedFieldIndex}
-          onSelect={(value) => {
-            setSelectedField(value);
-            setFocusSection("editor");
-          }}
-          isFocused={focusSection === "fields"}
-          maxItemsToShow={7}
-          key={`fields-${selectedFieldIndex}`}
-        />
-
-        <Box marginTop={1} flexDirection="column">
-          <Text bold={focusSection === "editor"}>
-            {focusSection === "editor" ? "> " : "  "}Editor ({selectedField})
+      <Box flexDirection="row" gap={1}>
+        <Box
+          flexDirection="column"
+          width="50%"
+          borderStyle="single"
+          borderColor={
+            focusSection === "templates" ? Colors.AccentBlue : Colors.Gray
+          }
+          paddingX={1}
+        >
+          <Text bold={focusSection === "templates"}>
+            {focusSection === "templates" ? "> " : "  "}Templates
           </Text>
-          {renderFieldEditor()}
+          {isLoadingTemplates ? (
+            <Text color={Colors.Gray}>Loading templates...</Text>
+          ) : (
+            <RadioButtonSelect
+              items={templateOptions}
+              initialIndex={selectedTemplateIndex}
+              onSelect={(value) => {
+                setSelectedTemplateKey(value);
+                if (value === NEW_TEMPLATE_KEY) {
+                  pendingNewDraftRef.current = null;
+                  setDraft(buildEmptyDraft(settings, currentModel));
+                  setEditorResetToken((token) => token + 1);
+                }
+                setFocusSection("fields");
+              }}
+              isFocused={focusSection === "templates"}
+              maxItemsToShow={templateListMaxItems}
+              showScrollArrows={true}
+              key={`templates-${selectedTemplateIndex}-${templateOptions.length}`}
+            />
+          )}
         </Box>
 
-        <Box marginTop={1} flexDirection="column">
+        <Box
+          flexDirection="column"
+          width="50%"
+          borderStyle="single"
+          borderColor={focusSection === "fields" ? Colors.AccentBlue : Colors.Gray}
+          paddingX={1}
+        >
+          <Text bold={focusSection === "fields"}>
+            {focusSection === "fields" ? "> " : "  "}Fields
+          </Text>
+          <RadioButtonSelect
+            items={fieldItems}
+            initialIndex={selectedFieldIndex}
+            onSelect={(value) => {
+              setSelectedField(value);
+              setFocusSection("editor");
+            }}
+            isFocused={focusSection === "fields"}
+            maxItemsToShow={fieldListMaxItems}
+            showScrollArrows={true}
+            key={`fields-${selectedFieldIndex}`}
+          />
+        </Box>
+      </Box>
+
+      <Box flexDirection="row" gap={1}>
+        <Box
+          flexDirection="column"
+          width="50%"
+          borderStyle="single"
+          borderColor={focusSection === "actions" ? Colors.AccentBlue : Colors.Gray}
+          paddingX={1}
+        >
           <Text bold={focusSection === "actions"}>
             {focusSection === "actions" ? "> " : "  "}Actions
           </Text>
@@ -1278,11 +1329,9 @@ export function TaskTemplateEditorDialog({
             onSelect={handleActionSelect}
             isFocused={focusSection === "actions"}
             key={`actions-${isBusy ? "busy" : "idle"}`}
-            maxItemsToShow={7}
+            maxItemsToShow={actionListMaxItems}
+            showScrollArrows={true}
           />
-        </Box>
-
-        <Box marginTop={1} flexDirection="column">
           {isBuiltinTemplate && (
             <Text color={Colors.AccentYellow}>
               Builtin templates are read-only. Saving creates a project/user
@@ -1293,11 +1342,26 @@ export function TaskTemplateEditorDialog({
             <Text color={Colors.AccentGreen}>{statusMessage}</Text>
           )}
           {errorMessage && <Text color={Colors.AccentRed}>{errorMessage}</Text>}
-          <Text color={Colors.Gray}>
-            Tab cycles panels. Enter selects. Esc closes.
+        </Box>
+
+        <Box
+          flexDirection="column"
+          width="50%"
+          borderStyle="single"
+          borderColor={focusSection === "editor" ? Colors.AccentBlue : Colors.Gray}
+          paddingX={1}
+        >
+          <Text bold={focusSection === "editor"}>
+            {focusSection === "editor" ? "> " : "  "}Editor ({selectedField})
           </Text>
+          {renderFieldEditor()}
         </Box>
       </Box>
+
+      <Text color={Colors.Gray}>
+        Tab cycles panels: Templates, Fields, Actions, Editor. Enter selects. Esc
+        closes.
+      </Text>
     </Box>
   );
 }

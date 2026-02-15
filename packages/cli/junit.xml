@@ -1,15 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="5" failures="0" errors="0" time="0.003819125">
-    <testsuite name="src/ui/commands/tasksCommand.test.ts" timestamp="2026-02-15T14:30:52.404Z" hostname="uby" tests="5" failures="0" errors="0" skipped="0" time="0.003819125">
-        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; opens the tasks dialog when no args are supplied" time="0.001479016">
+<testsuites name="vitest tests" tests="5" failures="0" errors="0" time="0.004369576">
+    <testsuite name="src/ui/commands/tasksCommand.test.ts" timestamp="2026-02-15T15:09:23.062Z" hostname="uby" tests="5" failures="0" errors="0" skipped="0" time="0.004369576">
+        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; opens the tasks dialog when no args are supplied" time="0.001640445">
         </testcase>
-        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; returns a launch_task call for run subcommand" time="0.000712849">
+        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; returns a launch_task call for run subcommand" time="0.000780604">
         </testcase>
-        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; returns a schedule_task call for schedule subcommand" time="0.000312197">
+        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; returns a schedule_task call for schedule subcommand" time="0.000335591">
         </testcase>
-        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; lists templates" time="0.000428272">
+        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; lists templates" time="0.0004485">
         </testcase>
-        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; returns a usage error for unknown subcommands" time="0.000228673">
+        <testcase classname="src/ui/commands/tasksCommand.test.ts" name="tasksCommand &gt; returns a usage error for unknown subcommands" time="0.000361809">
         </testcase>
     </testsuite>
 </testsuites>
