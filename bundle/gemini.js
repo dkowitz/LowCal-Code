@@ -281604,6 +281604,3348 @@ var require_strip_json_comments = __commonJS({
   }
 });
 
+// packages/cli/src/ui/themes/color-utils.ts
+function resolveColor(colorValue) {
+  const lowerColor = colorValue.toLowerCase();
+  if (lowerColor.startsWith("#")) {
+    if (/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/.test(colorValue)) {
+      return lowerColor;
+    } else {
+      return void 0;
+    }
+  } else if (INK_SUPPORTED_NAMES.has(lowerColor)) {
+    return lowerColor;
+  } else if (CSS_NAME_TO_HEX_MAP[lowerColor]) {
+    return CSS_NAME_TO_HEX_MAP[lowerColor];
+  }
+  console.warn(
+    `[ColorUtils] Could not resolve color "${colorValue}" to an Ink-compatible format.`
+  );
+  return void 0;
+}
+var CSS_NAME_TO_HEX_MAP, INK_SUPPORTED_NAMES;
+var init_color_utils = __esm({
+  "packages/cli/src/ui/themes/color-utils.ts"() {
+    "use strict";
+    CSS_NAME_TO_HEX_MAP = {
+      aliceblue: "#f0f8ff",
+      antiquewhite: "#faebd7",
+      aqua: "#00ffff",
+      aquamarine: "#7fffd4",
+      azure: "#f0ffff",
+      beige: "#f5f5dc",
+      bisque: "#ffe4c4",
+      blanchedalmond: "#ffebcd",
+      blueviolet: "#8a2be2",
+      brown: "#a52a2a",
+      burlywood: "#deb887",
+      cadetblue: "#5f9ea0",
+      chartreuse: "#7fff00",
+      chocolate: "#d2691e",
+      coral: "#ff7f50",
+      cornflowerblue: "#6495ed",
+      cornsilk: "#fff8dc",
+      crimson: "#dc143c",
+      darkblue: "#00008b",
+      darkcyan: "#008b8b",
+      darkgoldenrod: "#b8860b",
+      darkgray: "#a9a9a9",
+      darkgrey: "#a9a9a9",
+      darkgreen: "#006400",
+      darkkhaki: "#bdb76b",
+      darkmagenta: "#8b008b",
+      darkolivegreen: "#556b2f",
+      darkorange: "#ff8c00",
+      darkorchid: "#9932cc",
+      darkred: "#8b0000",
+      darksalmon: "#e9967a",
+      darkseagreen: "#8fbc8f",
+      darkslateblue: "#483d8b",
+      darkslategray: "#2f4f4f",
+      darkslategrey: "#2f4f4f",
+      darkturquoise: "#00ced1",
+      darkviolet: "#9400d3",
+      deeppink: "#ff1493",
+      deepskyblue: "#00bfff",
+      dimgray: "#696969",
+      dimgrey: "#696969",
+      dodgerblue: "#1e90ff",
+      firebrick: "#b22222",
+      floralwhite: "#fffaf0",
+      forestgreen: "#228b22",
+      fuchsia: "#ff00ff",
+      gainsboro: "#dcdcdc",
+      ghostwhite: "#f8f8ff",
+      gold: "#ffd700",
+      goldenrod: "#daa520",
+      greenyellow: "#adff2f",
+      honeydew: "#f0fff0",
+      hotpink: "#ff69b4",
+      indianred: "#cd5c5c",
+      indigo: "#4b0082",
+      ivory: "#fffff0",
+      khaki: "#f0e68c",
+      lavender: "#e6e6fa",
+      lavenderblush: "#fff0f5",
+      lawngreen: "#7cfc00",
+      lemonchiffon: "#fffacd",
+      lightblue: "#add8e6",
+      lightcoral: "#f08080",
+      lightcyan: "#e0ffff",
+      lightgoldenrodyellow: "#fafad2",
+      lightgray: "#d3d3d3",
+      lightgrey: "#d3d3d3",
+      lightgreen: "#90ee90",
+      lightpink: "#ffb6c1",
+      lightsalmon: "#ffa07a",
+      lightseagreen: "#20b2aa",
+      lightskyblue: "#87cefa",
+      lightslategray: "#778899",
+      lightslategrey: "#778899",
+      lightsteelblue: "#b0c4de",
+      lightyellow: "#ffffe0",
+      lime: "#00ff00",
+      limegreen: "#32cd32",
+      linen: "#faf0e6",
+      maroon: "#800000",
+      mediumaquamarine: "#66cdaa",
+      mediumblue: "#0000cd",
+      mediumorchid: "#ba55d3",
+      mediumpurple: "#9370db",
+      mediumseagreen: "#3cb371",
+      mediumslateblue: "#7b68ee",
+      mediumspringgreen: "#00fa9a",
+      mediumturquoise: "#48d1cc",
+      mediumvioletred: "#c71585",
+      midnightblue: "#191970",
+      mintcream: "#f5fffa",
+      mistyrose: "#ffe4e1",
+      moccasin: "#ffe4b5",
+      navajowhite: "#ffdead",
+      navy: "#000080",
+      oldlace: "#fdf5e6",
+      olive: "#808000",
+      olivedrab: "#6b8e23",
+      orange: "#ffa500",
+      orangered: "#ff4500",
+      orchid: "#da70d6",
+      palegoldenrod: "#eee8aa",
+      palegreen: "#98fb98",
+      paleturquoise: "#afeeee",
+      palevioletred: "#db7093",
+      papayawhip: "#ffefd5",
+      peachpuff: "#ffdab9",
+      peru: "#cd853f",
+      pink: "#ffc0cb",
+      plum: "#dda0dd",
+      powderblue: "#b0e0e6",
+      purple: "#800080",
+      rebeccapurple: "#663399",
+      rosybrown: "#bc8f8f",
+      royalblue: "#4169e1",
+      saddlebrown: "#8b4513",
+      salmon: "#fa8072",
+      sandybrown: "#f4a460",
+      seagreen: "#2e8b57",
+      seashell: "#fff5ee",
+      sienna: "#a0522d",
+      silver: "#c0c0c0",
+      skyblue: "#87ceeb",
+      slateblue: "#6a5acd",
+      slategray: "#708090",
+      slategrey: "#708090",
+      snow: "#fffafa",
+      springgreen: "#00ff7f",
+      steelblue: "#4682b4",
+      tan: "#d2b48c",
+      teal: "#008080",
+      thistle: "#d8bfd8",
+      tomato: "#ff6347",
+      turquoise: "#40e0d0",
+      violet: "#ee82ee",
+      wheat: "#f5deb3",
+      whitesmoke: "#f5f5f5",
+      yellowgreen: "#9acd32"
+    };
+    INK_SUPPORTED_NAMES = /* @__PURE__ */ new Set([
+      "black",
+      "red",
+      "green",
+      "yellow",
+      "blue",
+      "cyan",
+      "magenta",
+      "white",
+      "gray",
+      "grey",
+      "blackbright",
+      "redbright",
+      "greenbright",
+      "yellowbright",
+      "bluebright",
+      "cyanbright",
+      "magentabright",
+      "whitebright"
+    ]);
+  }
+});
+
+// packages/cli/src/ui/themes/theme.ts
+function createCustomTheme(customTheme) {
+  const colors = {
+    type: "custom",
+    Background: customTheme.background?.primary ?? customTheme.Background ?? "",
+    Foreground: customTheme.text?.primary ?? customTheme.Foreground ?? "",
+    LightBlue: customTheme.text?.link ?? customTheme.LightBlue ?? "",
+    AccentBlue: customTheme.text?.link ?? customTheme.AccentBlue ?? "",
+    AccentPurple: customTheme.text?.accent ?? customTheme.AccentPurple ?? "",
+    AccentCyan: customTheme.text?.link ?? customTheme.AccentCyan ?? "",
+    AccentGreen: customTheme.status?.success ?? customTheme.AccentGreen ?? "",
+    AccentYellow: customTheme.status?.warning ?? customTheme.AccentYellow ?? "",
+    AccentRed: customTheme.status?.error ?? customTheme.AccentRed ?? "",
+    DiffAdded: customTheme.background?.diff?.added ?? customTheme.DiffAdded ?? "",
+    DiffRemoved: customTheme.background?.diff?.removed ?? customTheme.DiffRemoved ?? "",
+    Comment: customTheme.ui?.comment ?? customTheme.Comment ?? "",
+    Gray: customTheme.text?.secondary ?? customTheme.Gray ?? "",
+    GradientColors: customTheme.ui?.gradient ?? customTheme.GradientColors
+  };
+  const rawMappings = {
+    hljs: {
+      display: "block",
+      overflowX: "auto",
+      padding: "0.5em",
+      background: colors.Background,
+      color: colors.Foreground
+    },
+    "hljs-keyword": {
+      color: colors.AccentBlue
+    },
+    "hljs-literal": {
+      color: colors.AccentBlue
+    },
+    "hljs-symbol": {
+      color: colors.AccentBlue
+    },
+    "hljs-name": {
+      color: colors.AccentBlue
+    },
+    "hljs-link": {
+      color: colors.AccentBlue,
+      textDecoration: "underline"
+    },
+    "hljs-built_in": {
+      color: colors.AccentCyan
+    },
+    "hljs-type": {
+      color: colors.AccentCyan
+    },
+    "hljs-number": {
+      color: colors.AccentGreen
+    },
+    "hljs-class": {
+      color: colors.AccentGreen
+    },
+    "hljs-string": {
+      color: colors.AccentYellow
+    },
+    "hljs-meta-string": {
+      color: colors.AccentYellow
+    },
+    "hljs-regexp": {
+      color: colors.AccentRed
+    },
+    "hljs-template-tag": {
+      color: colors.AccentRed
+    },
+    "hljs-subst": {
+      color: colors.Foreground
+    },
+    "hljs-function": {
+      color: colors.Foreground
+    },
+    "hljs-title": {
+      color: colors.Foreground
+    },
+    "hljs-params": {
+      color: colors.Foreground
+    },
+    "hljs-formula": {
+      color: colors.Foreground
+    },
+    "hljs-comment": {
+      color: colors.Comment,
+      fontStyle: "italic"
+    },
+    "hljs-quote": {
+      color: colors.Comment,
+      fontStyle: "italic"
+    },
+    "hljs-doctag": {
+      color: colors.Comment
+    },
+    "hljs-meta": {
+      color: colors.Gray
+    },
+    "hljs-meta-keyword": {
+      color: colors.Gray
+    },
+    "hljs-tag": {
+      color: colors.Gray
+    },
+    "hljs-variable": {
+      color: colors.AccentPurple
+    },
+    "hljs-template-variable": {
+      color: colors.AccentPurple
+    },
+    "hljs-attr": {
+      color: colors.LightBlue
+    },
+    "hljs-attribute": {
+      color: colors.LightBlue
+    },
+    "hljs-builtin-name": {
+      color: colors.LightBlue
+    },
+    "hljs-section": {
+      color: colors.AccentYellow
+    },
+    "hljs-emphasis": {
+      fontStyle: "italic"
+    },
+    "hljs-strong": {
+      fontWeight: "bold"
+    },
+    "hljs-bullet": {
+      color: colors.AccentYellow
+    },
+    "hljs-selector-tag": {
+      color: colors.AccentYellow
+    },
+    "hljs-selector-id": {
+      color: colors.AccentYellow
+    },
+    "hljs-selector-class": {
+      color: colors.AccentYellow
+    },
+    "hljs-selector-attr": {
+      color: colors.AccentYellow
+    },
+    "hljs-selector-pseudo": {
+      color: colors.AccentYellow
+    },
+    "hljs-addition": {
+      backgroundColor: colors.AccentGreen,
+      display: "inline-block",
+      width: "100%"
+    },
+    "hljs-deletion": {
+      backgroundColor: colors.AccentRed,
+      display: "inline-block",
+      width: "100%"
+    }
+  };
+  const semanticColors = {
+    text: {
+      primary: colors.Foreground,
+      secondary: colors.Gray,
+      link: colors.AccentBlue,
+      accent: colors.AccentPurple
+    },
+    background: {
+      primary: colors.Background,
+      diff: {
+        added: colors.DiffAdded,
+        removed: colors.DiffRemoved
+      }
+    },
+    border: {
+      default: colors.Gray,
+      focused: colors.AccentBlue
+    },
+    ui: {
+      comment: colors.Comment,
+      symbol: colors.Gray,
+      gradient: colors.GradientColors
+    },
+    status: {
+      error: colors.AccentRed,
+      success: colors.AccentGreen,
+      warning: colors.AccentYellow
+    }
+  };
+  return new Theme(
+    customTheme.name,
+    "custom",
+    rawMappings,
+    colors,
+    semanticColors
+  );
+}
+function validateCustomTheme(customTheme) {
+  if (customTheme.name && !isValidThemeName(customTheme.name)) {
+    return {
+      isValid: false,
+      error: `Invalid theme name: ${customTheme.name}`
+    };
+  }
+  return {
+    isValid: true
+  };
+}
+function isValidThemeName(name2) {
+  return name2.trim().length > 0 && name2.trim().length <= 50;
+}
+var lightTheme, darkTheme, ansiTheme, Theme;
+var init_theme = __esm({
+  "packages/cli/src/ui/themes/theme.ts"() {
+    "use strict";
+    init_color_utils();
+    lightTheme = {
+      type: "light",
+      Background: "#FAFAFA",
+      Foreground: "#3C3C43",
+      LightBlue: "#89BDCD",
+      AccentBlue: "#3B82F6",
+      AccentPurple: "#8B5CF6",
+      AccentCyan: "#06B6D4",
+      AccentGreen: "#3CA84B",
+      AccentYellow: "#D5A40A",
+      AccentRed: "#DD4C4C",
+      DiffAdded: "#C6EAD8",
+      DiffRemoved: "#FFCCCC",
+      Comment: "#008000",
+      Gray: "#97a0b0",
+      GradientColors: ["#4796E4", "#847ACE", "#C3677F"]
+    };
+    darkTheme = {
+      type: "dark",
+      Background: "#1E1E2E",
+      Foreground: "#CDD6F4",
+      LightBlue: "#ADD8E6",
+      AccentBlue: "#89B4FA",
+      AccentPurple: "#CBA6F7",
+      AccentCyan: "#89DCEB",
+      AccentGreen: "#A6E3A1",
+      AccentYellow: "#F9E2AF",
+      AccentRed: "#F38BA8",
+      DiffAdded: "#28350B",
+      DiffRemoved: "#430000",
+      Comment: "#6C7086",
+      Gray: "#6C7086",
+      GradientColors: ["#4796E4", "#847ACE", "#C3677F"]
+    };
+    ansiTheme = {
+      type: "ansi",
+      Background: "black",
+      Foreground: "white",
+      LightBlue: "blue",
+      AccentBlue: "blue",
+      AccentPurple: "magenta",
+      AccentCyan: "cyan",
+      AccentGreen: "green",
+      AccentYellow: "yellow",
+      AccentRed: "red",
+      DiffAdded: "green",
+      DiffRemoved: "red",
+      Comment: "gray",
+      Gray: "gray"
+    };
+    Theme = class _Theme {
+      /**
+       * Creates a new Theme instance.
+       * @param name The name of the theme.
+       * @param rawMappings The raw CSSProperties mappings from a react-syntax-highlighter theme object.
+       */
+      constructor(name2, type, rawMappings, colors, semanticColors) {
+        this.name = name2;
+        this.type = type;
+        this.colors = colors;
+        this.semanticColors = semanticColors ?? {
+          text: {
+            primary: this.colors.Foreground,
+            secondary: this.colors.Gray,
+            link: this.colors.AccentBlue,
+            accent: this.colors.AccentPurple
+          },
+          background: {
+            primary: this.colors.Background,
+            diff: {
+              added: this.colors.DiffAdded,
+              removed: this.colors.DiffRemoved
+            }
+          },
+          border: {
+            default: this.colors.Gray,
+            focused: this.colors.AccentBlue
+          },
+          ui: {
+            comment: this.colors.Comment,
+            symbol: this.colors.Gray,
+            gradient: this.colors.GradientColors
+          },
+          status: {
+            error: this.colors.AccentRed,
+            success: this.colors.AccentGreen,
+            warning: this.colors.AccentYellow
+          }
+        };
+        this._colorMap = Object.freeze(this._buildColorMap(rawMappings));
+        const rawDefaultColor = rawMappings["hljs"]?.color;
+        this.defaultColor = (rawDefaultColor ? _Theme._resolveColor(rawDefaultColor) : void 0) ?? "";
+      }
+      /**
+       * The default foreground color for text when no specific highlight rule applies.
+       * This is an Ink-compatible color string (hex or name).
+       */
+      defaultColor;
+      /**
+       * Stores the mapping from highlight.js class names (e.g., 'hljs-keyword')
+       * to Ink-compatible color strings (hex or name).
+       */
+      _colorMap;
+      semanticColors;
+      /**
+       * Gets the Ink-compatible color string for a given highlight.js class name.
+       * @param hljsClass The highlight.js class name (e.g., 'hljs-keyword', 'hljs-string').
+       * @returns The corresponding Ink color string (hex or name) if it exists.
+       */
+      getInkColor(hljsClass) {
+        return this._colorMap[hljsClass];
+      }
+      /**
+       * Resolves a CSS color value (name or hex) into an Ink-compatible color string.
+       * @param colorValue The raw color string (e.g., 'blue', '#ff0000', 'darkkhaki').
+       * @returns An Ink-compatible color string (hex or name), or undefined if not resolvable.
+       */
+      static _resolveColor(colorValue) {
+        return resolveColor(colorValue);
+      }
+      /**
+       * Builds the internal map from highlight.js class names to Ink-compatible color strings.
+       * This method is protected and primarily intended for use by the constructor.
+       * @param hljsTheme The raw CSSProperties mappings from a react-syntax-highlighter theme object.
+       * @returns An Ink-compatible theme map (Record<string, string>).
+       */
+      _buildColorMap(hljsTheme) {
+        const inkTheme = {};
+        for (const key in hljsTheme) {
+          if (!key.startsWith("hljs-") && key !== "hljs") {
+            continue;
+          }
+          const style = hljsTheme[key];
+          if (style?.color) {
+            const resolvedColor = _Theme._resolveColor(style.color);
+            if (resolvedColor !== void 0) {
+              inkTheme[key] = resolvedColor;
+            }
+          }
+        }
+        return inkTheme;
+      }
+    };
+  }
+});
+
+// packages/cli/src/ui/themes/default-light.ts
+var DefaultLight;
+var init_default_light = __esm({
+  "packages/cli/src/ui/themes/default-light.ts"() {
+    "use strict";
+    init_theme();
+    DefaultLight = new Theme(
+      "Default Light",
+      "light",
+      {
+        hljs: {
+          display: "block",
+          overflowX: "auto",
+          padding: "0.5em",
+          background: lightTheme.Background,
+          color: lightTheme.Foreground
+        },
+        "hljs-comment": {
+          color: lightTheme.Comment
+        },
+        "hljs-quote": {
+          color: lightTheme.Comment
+        },
+        "hljs-variable": {
+          color: lightTheme.Foreground
+        },
+        "hljs-keyword": {
+          color: lightTheme.AccentBlue
+        },
+        "hljs-selector-tag": {
+          color: lightTheme.AccentBlue
+        },
+        "hljs-built_in": {
+          color: lightTheme.AccentBlue
+        },
+        "hljs-name": {
+          color: lightTheme.AccentBlue
+        },
+        "hljs-tag": {
+          color: lightTheme.AccentBlue
+        },
+        "hljs-string": {
+          color: lightTheme.AccentRed
+        },
+        "hljs-title": {
+          color: lightTheme.AccentRed
+        },
+        "hljs-section": {
+          color: lightTheme.AccentRed
+        },
+        "hljs-attribute": {
+          color: lightTheme.AccentRed
+        },
+        "hljs-literal": {
+          color: lightTheme.AccentRed
+        },
+        "hljs-template-tag": {
+          color: lightTheme.AccentRed
+        },
+        "hljs-template-variable": {
+          color: lightTheme.AccentRed
+        },
+        "hljs-type": {
+          color: lightTheme.AccentRed
+        },
+        "hljs-addition": {
+          color: lightTheme.AccentGreen
+        },
+        "hljs-deletion": {
+          color: lightTheme.AccentRed
+        },
+        "hljs-selector-attr": {
+          color: lightTheme.AccentCyan
+        },
+        "hljs-selector-pseudo": {
+          color: lightTheme.AccentCyan
+        },
+        "hljs-meta": {
+          color: lightTheme.AccentCyan
+        },
+        "hljs-doctag": {
+          color: lightTheme.Gray
+        },
+        "hljs-attr": {
+          color: lightTheme.AccentRed
+        },
+        "hljs-symbol": {
+          color: lightTheme.AccentCyan
+        },
+        "hljs-bullet": {
+          color: lightTheme.AccentCyan
+        },
+        "hljs-link": {
+          color: lightTheme.AccentCyan
+        },
+        "hljs-emphasis": {
+          fontStyle: "italic"
+        },
+        "hljs-strong": {
+          fontWeight: "bold"
+        }
+      },
+      lightTheme
+    );
+  }
+});
+
+// packages/cli/src/ui/themes/default.ts
+var DefaultDark;
+var init_default2 = __esm({
+  "packages/cli/src/ui/themes/default.ts"() {
+    "use strict";
+    init_theme();
+    DefaultDark = new Theme(
+      "Default",
+      "dark",
+      {
+        hljs: {
+          display: "block",
+          overflowX: "auto",
+          padding: "0.5em",
+          background: darkTheme.Background,
+          color: darkTheme.Foreground
+        },
+        "hljs-keyword": {
+          color: darkTheme.AccentBlue
+        },
+        "hljs-literal": {
+          color: darkTheme.AccentBlue
+        },
+        "hljs-symbol": {
+          color: darkTheme.AccentBlue
+        },
+        "hljs-name": {
+          color: darkTheme.AccentBlue
+        },
+        "hljs-link": {
+          color: darkTheme.AccentBlue,
+          textDecoration: "underline"
+        },
+        "hljs-built_in": {
+          color: darkTheme.AccentCyan
+        },
+        "hljs-type": {
+          color: darkTheme.AccentCyan
+        },
+        "hljs-number": {
+          color: darkTheme.AccentGreen
+        },
+        "hljs-class": {
+          color: darkTheme.AccentGreen
+        },
+        "hljs-string": {
+          color: darkTheme.AccentYellow
+        },
+        "hljs-meta-string": {
+          color: darkTheme.AccentYellow
+        },
+        "hljs-regexp": {
+          color: darkTheme.AccentRed
+        },
+        "hljs-template-tag": {
+          color: darkTheme.AccentRed
+        },
+        "hljs-subst": {
+          color: darkTheme.Foreground
+        },
+        "hljs-function": {
+          color: darkTheme.Foreground
+        },
+        "hljs-title": {
+          color: darkTheme.Foreground
+        },
+        "hljs-params": {
+          color: darkTheme.Foreground
+        },
+        "hljs-formula": {
+          color: darkTheme.Foreground
+        },
+        "hljs-comment": {
+          color: darkTheme.Comment,
+          fontStyle: "italic"
+        },
+        "hljs-quote": {
+          color: darkTheme.Comment,
+          fontStyle: "italic"
+        },
+        "hljs-doctag": {
+          color: darkTheme.Comment
+        },
+        "hljs-meta": {
+          color: darkTheme.Gray
+        },
+        "hljs-meta-keyword": {
+          color: darkTheme.Gray
+        },
+        "hljs-tag": {
+          color: darkTheme.Gray
+        },
+        "hljs-variable": {
+          color: darkTheme.AccentPurple
+        },
+        "hljs-template-variable": {
+          color: darkTheme.AccentPurple
+        },
+        "hljs-attr": {
+          color: darkTheme.LightBlue
+        },
+        "hljs-attribute": {
+          color: darkTheme.LightBlue
+        },
+        "hljs-builtin-name": {
+          color: darkTheme.LightBlue
+        },
+        "hljs-section": {
+          color: darkTheme.AccentYellow
+        },
+        "hljs-emphasis": {
+          fontStyle: "italic"
+        },
+        "hljs-strong": {
+          fontWeight: "bold"
+        },
+        "hljs-bullet": {
+          color: darkTheme.AccentYellow
+        },
+        "hljs-selector-tag": {
+          color: darkTheme.AccentYellow
+        },
+        "hljs-selector-id": {
+          color: darkTheme.AccentYellow
+        },
+        "hljs-selector-class": {
+          color: darkTheme.AccentYellow
+        },
+        "hljs-selector-attr": {
+          color: darkTheme.AccentYellow
+        },
+        "hljs-selector-pseudo": {
+          color: darkTheme.AccentYellow
+        },
+        "hljs-addition": {
+          backgroundColor: "#144212",
+          display: "inline-block",
+          width: "100%"
+        },
+        "hljs-deletion": {
+          backgroundColor: "#600",
+          display: "inline-block",
+          width: "100%"
+        }
+      },
+      darkTheme
+    );
+  }
+});
+
+// packages/cli/src/config/trustedFolders.ts
+import * as fs55 from "node:fs";
+import * as path59 from "node:path";
+import { homedir as homedir8 } from "node:os";
+function loadTrustedFolders() {
+  const errors = [];
+  const userConfig = {};
+  const userPath = USER_TRUSTED_FOLDERS_PATH;
+  try {
+    if (fs55.existsSync(userPath)) {
+      const content = fs55.readFileSync(userPath, "utf-8");
+      const parsed = JSON.parse((0, import_strip_json_comments.default)(content));
+      if (parsed) {
+        Object.assign(userConfig, parsed);
+      }
+    }
+  } catch (error) {
+    errors.push({
+      message: getErrorMessage(error),
+      path: userPath
+    });
+  }
+  return new LoadedTrustedFolders(
+    { path: userPath, config: userConfig },
+    errors
+  );
+}
+function saveTrustedFolders(trustedFoldersFile) {
+  try {
+    const dirPath = path59.dirname(trustedFoldersFile.path);
+    if (!fs55.existsSync(dirPath)) {
+      fs55.mkdirSync(dirPath, { recursive: true });
+    }
+    fs55.writeFileSync(
+      trustedFoldersFile.path,
+      JSON.stringify(trustedFoldersFile.config, null, 2),
+      "utf-8"
+    );
+  } catch (error) {
+    console.error("Error saving trusted folders file:", error);
+  }
+}
+function isWorkspaceTrusted(settings) {
+  const folderTrustFeature = settings.security?.folderTrust?.featureEnabled ?? false;
+  const folderTrustSetting = settings.security?.folderTrust?.enabled ?? true;
+  const folderTrustEnabled = folderTrustFeature && folderTrustSetting;
+  if (!folderTrustEnabled) {
+    return true;
+  }
+  const { rules, errors } = loadTrustedFolders();
+  if (errors.length > 0) {
+    for (const error of errors) {
+      console.error(
+        `Error loading trusted folders config from ${error.path}: ${error.message}`
+      );
+    }
+  }
+  const trustedPaths = [];
+  const untrustedPaths = [];
+  for (const rule of rules) {
+    switch (rule.trustLevel) {
+      case "TRUST_FOLDER" /* TRUST_FOLDER */:
+        trustedPaths.push(rule.path);
+        break;
+      case "TRUST_PARENT" /* TRUST_PARENT */:
+        trustedPaths.push(path59.dirname(rule.path));
+        break;
+      case "DO_NOT_TRUST" /* DO_NOT_TRUST */:
+        untrustedPaths.push(rule.path);
+        break;
+      default:
+        break;
+    }
+  }
+  const cwd8 = process.cwd();
+  for (const trustedPath of trustedPaths) {
+    if (isWithinRoot(cwd8, trustedPath)) {
+      return true;
+    }
+  }
+  for (const untrustedPath of untrustedPaths) {
+    if (path59.normalize(cwd8) === path59.normalize(untrustedPath)) {
+      return false;
+    }
+  }
+  return void 0;
+}
+var import_strip_json_comments, TRUSTED_FOLDERS_FILENAME, SETTINGS_DIRECTORY_NAME, USER_SETTINGS_DIR, USER_TRUSTED_FOLDERS_PATH, LoadedTrustedFolders;
+var init_trustedFolders = __esm({
+  "packages/cli/src/config/trustedFolders.ts"() {
+    "use strict";
+    init_dist3();
+    import_strip_json_comments = __toESM(require_strip_json_comments(), 1);
+    TRUSTED_FOLDERS_FILENAME = "trustedFolders.json";
+    SETTINGS_DIRECTORY_NAME = ".qwen";
+    USER_SETTINGS_DIR = path59.join(homedir8(), SETTINGS_DIRECTORY_NAME);
+    USER_TRUSTED_FOLDERS_PATH = path59.join(
+      USER_SETTINGS_DIR,
+      TRUSTED_FOLDERS_FILENAME
+    );
+    LoadedTrustedFolders = class {
+      constructor(user, errors) {
+        this.user = user;
+        this.errors = errors;
+      }
+      get rules() {
+        return Object.entries(this.user.config).map(([path107, trustLevel]) => ({
+          path: path107,
+          trustLevel
+        }));
+      }
+      setValue(path107, trustLevel) {
+        this.user.config[path107] = trustLevel;
+        saveTrustedFolders(this.user);
+      }
+    };
+  }
+});
+
+// node_modules/lodash-es/_freeGlobal.js
+var freeGlobal, freeGlobal_default;
+var init_freeGlobal = __esm({
+  "node_modules/lodash-es/_freeGlobal.js"() {
+    freeGlobal = typeof global == "object" && global && global.Object === Object && global;
+    freeGlobal_default = freeGlobal;
+  }
+});
+
+// node_modules/lodash-es/_root.js
+var freeSelf, root, root_default;
+var init_root = __esm({
+  "node_modules/lodash-es/_root.js"() {
+    init_freeGlobal();
+    freeSelf = typeof self == "object" && self && self.Object === Object && self;
+    root = freeGlobal_default || freeSelf || Function("return this")();
+    root_default = root;
+  }
+});
+
+// node_modules/lodash-es/_Symbol.js
+var Symbol2, Symbol_default;
+var init_Symbol = __esm({
+  "node_modules/lodash-es/_Symbol.js"() {
+    init_root();
+    Symbol2 = root_default.Symbol;
+    Symbol_default = Symbol2;
+  }
+});
+
+// node_modules/lodash-es/_getRawTag.js
+function getRawTag(value) {
+  var isOwn = hasOwnProperty2.call(value, symToStringTag), tag2 = value[symToStringTag];
+  try {
+    value[symToStringTag] = void 0;
+    var unmasked = true;
+  } catch (e2) {
+  }
+  var result = nativeObjectToString.call(value);
+  if (unmasked) {
+    if (isOwn) {
+      value[symToStringTag] = tag2;
+    } else {
+      delete value[symToStringTag];
+    }
+  }
+  return result;
+}
+var objectProto, hasOwnProperty2, nativeObjectToString, symToStringTag, getRawTag_default;
+var init_getRawTag = __esm({
+  "node_modules/lodash-es/_getRawTag.js"() {
+    init_Symbol();
+    objectProto = Object.prototype;
+    hasOwnProperty2 = objectProto.hasOwnProperty;
+    nativeObjectToString = objectProto.toString;
+    symToStringTag = Symbol_default ? Symbol_default.toStringTag : void 0;
+    getRawTag_default = getRawTag;
+  }
+});
+
+// node_modules/lodash-es/_objectToString.js
+function objectToString2(value) {
+  return nativeObjectToString2.call(value);
+}
+var objectProto2, nativeObjectToString2, objectToString_default;
+var init_objectToString = __esm({
+  "node_modules/lodash-es/_objectToString.js"() {
+    objectProto2 = Object.prototype;
+    nativeObjectToString2 = objectProto2.toString;
+    objectToString_default = objectToString2;
+  }
+});
+
+// node_modules/lodash-es/_baseGetTag.js
+function baseGetTag(value) {
+  if (value == null) {
+    return value === void 0 ? undefinedTag : nullTag;
+  }
+  return symToStringTag2 && symToStringTag2 in Object(value) ? getRawTag_default(value) : objectToString_default(value);
+}
+var nullTag, undefinedTag, symToStringTag2, baseGetTag_default;
+var init_baseGetTag = __esm({
+  "node_modules/lodash-es/_baseGetTag.js"() {
+    init_Symbol();
+    init_getRawTag();
+    init_objectToString();
+    nullTag = "[object Null]";
+    undefinedTag = "[object Undefined]";
+    symToStringTag2 = Symbol_default ? Symbol_default.toStringTag : void 0;
+    baseGetTag_default = baseGetTag;
+  }
+});
+
+// node_modules/lodash-es/isObjectLike.js
+function isObjectLike(value) {
+  return value != null && typeof value == "object";
+}
+var isObjectLike_default;
+var init_isObjectLike = __esm({
+  "node_modules/lodash-es/isObjectLike.js"() {
+    isObjectLike_default = isObjectLike;
+  }
+});
+
+// node_modules/lodash-es/isArray.js
+var isArray2, isArray_default;
+var init_isArray = __esm({
+  "node_modules/lodash-es/isArray.js"() {
+    isArray2 = Array.isArray;
+    isArray_default = isArray2;
+  }
+});
+
+// node_modules/lodash-es/isObject.js
+function isObject(value) {
+  var type = typeof value;
+  return value != null && (type == "object" || type == "function");
+}
+var isObject_default;
+var init_isObject = __esm({
+  "node_modules/lodash-es/isObject.js"() {
+    isObject_default = isObject;
+  }
+});
+
+// node_modules/lodash-es/identity.js
+function identity(value) {
+  return value;
+}
+var identity_default;
+var init_identity = __esm({
+  "node_modules/lodash-es/identity.js"() {
+    identity_default = identity;
+  }
+});
+
+// node_modules/lodash-es/isFunction.js
+function isFunction(value) {
+  if (!isObject_default(value)) {
+    return false;
+  }
+  var tag2 = baseGetTag_default(value);
+  return tag2 == funcTag || tag2 == genTag || tag2 == asyncTag || tag2 == proxyTag;
+}
+var asyncTag, funcTag, genTag, proxyTag, isFunction_default;
+var init_isFunction = __esm({
+  "node_modules/lodash-es/isFunction.js"() {
+    init_baseGetTag();
+    init_isObject();
+    asyncTag = "[object AsyncFunction]";
+    funcTag = "[object Function]";
+    genTag = "[object GeneratorFunction]";
+    proxyTag = "[object Proxy]";
+    isFunction_default = isFunction;
+  }
+});
+
+// node_modules/lodash-es/_coreJsData.js
+var coreJsData, coreJsData_default;
+var init_coreJsData = __esm({
+  "node_modules/lodash-es/_coreJsData.js"() {
+    init_root();
+    coreJsData = root_default["__core-js_shared__"];
+    coreJsData_default = coreJsData;
+  }
+});
+
+// node_modules/lodash-es/_isMasked.js
+function isMasked(func) {
+  return !!maskSrcKey && maskSrcKey in func;
+}
+var maskSrcKey, isMasked_default;
+var init_isMasked = __esm({
+  "node_modules/lodash-es/_isMasked.js"() {
+    init_coreJsData();
+    maskSrcKey = function() {
+      var uid = /[^.]+$/.exec(coreJsData_default && coreJsData_default.keys && coreJsData_default.keys.IE_PROTO || "");
+      return uid ? "Symbol(src)_1." + uid : "";
+    }();
+    isMasked_default = isMasked;
+  }
+});
+
+// node_modules/lodash-es/_toSource.js
+function toSource(func) {
+  if (func != null) {
+    try {
+      return funcToString.call(func);
+    } catch (e2) {
+    }
+    try {
+      return func + "";
+    } catch (e2) {
+    }
+  }
+  return "";
+}
+var funcProto, funcToString, toSource_default;
+var init_toSource = __esm({
+  "node_modules/lodash-es/_toSource.js"() {
+    funcProto = Function.prototype;
+    funcToString = funcProto.toString;
+    toSource_default = toSource;
+  }
+});
+
+// node_modules/lodash-es/_baseIsNative.js
+function baseIsNative(value) {
+  if (!isObject_default(value) || isMasked_default(value)) {
+    return false;
+  }
+  var pattern = isFunction_default(value) ? reIsNative : reIsHostCtor;
+  return pattern.test(toSource_default(value));
+}
+var reRegExpChar, reIsHostCtor, funcProto2, objectProto3, funcToString2, hasOwnProperty3, reIsNative, baseIsNative_default;
+var init_baseIsNative = __esm({
+  "node_modules/lodash-es/_baseIsNative.js"() {
+    init_isFunction();
+    init_isMasked();
+    init_isObject();
+    init_toSource();
+    reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
+    reIsHostCtor = /^\[object .+?Constructor\]$/;
+    funcProto2 = Function.prototype;
+    objectProto3 = Object.prototype;
+    funcToString2 = funcProto2.toString;
+    hasOwnProperty3 = objectProto3.hasOwnProperty;
+    reIsNative = RegExp(
+      "^" + funcToString2.call(hasOwnProperty3).replace(reRegExpChar, "\\$&").replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, "$1.*?") + "$"
+    );
+    baseIsNative_default = baseIsNative;
+  }
+});
+
+// node_modules/lodash-es/_getValue.js
+function getValue(object, key) {
+  return object == null ? void 0 : object[key];
+}
+var getValue_default;
+var init_getValue = __esm({
+  "node_modules/lodash-es/_getValue.js"() {
+    getValue_default = getValue;
+  }
+});
+
+// node_modules/lodash-es/_getNative.js
+function getNative(object, key) {
+  var value = getValue_default(object, key);
+  return baseIsNative_default(value) ? value : void 0;
+}
+var getNative_default;
+var init_getNative = __esm({
+  "node_modules/lodash-es/_getNative.js"() {
+    init_baseIsNative();
+    init_getValue();
+    getNative_default = getNative;
+  }
+});
+
+// node_modules/lodash-es/_baseCreate.js
+var objectCreate, baseCreate, baseCreate_default;
+var init_baseCreate = __esm({
+  "node_modules/lodash-es/_baseCreate.js"() {
+    init_isObject();
+    objectCreate = Object.create;
+    baseCreate = /* @__PURE__ */ function() {
+      function object() {
+      }
+      return function(proto3) {
+        if (!isObject_default(proto3)) {
+          return {};
+        }
+        if (objectCreate) {
+          return objectCreate(proto3);
+        }
+        object.prototype = proto3;
+        var result = new object();
+        object.prototype = void 0;
+        return result;
+      };
+    }();
+    baseCreate_default = baseCreate;
+  }
+});
+
+// node_modules/lodash-es/_apply.js
+function apply(func, thisArg, args) {
+  switch (args.length) {
+    case 0:
+      return func.call(thisArg);
+    case 1:
+      return func.call(thisArg, args[0]);
+    case 2:
+      return func.call(thisArg, args[0], args[1]);
+    case 3:
+      return func.call(thisArg, args[0], args[1], args[2]);
+  }
+  return func.apply(thisArg, args);
+}
+var apply_default;
+var init_apply = __esm({
+  "node_modules/lodash-es/_apply.js"() {
+    apply_default = apply;
+  }
+});
+
+// node_modules/lodash-es/_copyArray.js
+function copyArray(source2, array) {
+  var index = -1, length = source2.length;
+  array || (array = Array(length));
+  while (++index < length) {
+    array[index] = source2[index];
+  }
+  return array;
+}
+var copyArray_default;
+var init_copyArray = __esm({
+  "node_modules/lodash-es/_copyArray.js"() {
+    copyArray_default = copyArray;
+  }
+});
+
+// node_modules/lodash-es/_shortOut.js
+function shortOut(func) {
+  var count = 0, lastCalled = 0;
+  return function() {
+    var stamp = nativeNow(), remaining = HOT_SPAN - (stamp - lastCalled);
+    lastCalled = stamp;
+    if (remaining > 0) {
+      if (++count >= HOT_COUNT) {
+        return arguments[0];
+      }
+    } else {
+      count = 0;
+    }
+    return func.apply(void 0, arguments);
+  };
+}
+var HOT_COUNT, HOT_SPAN, nativeNow, shortOut_default;
+var init_shortOut = __esm({
+  "node_modules/lodash-es/_shortOut.js"() {
+    HOT_COUNT = 800;
+    HOT_SPAN = 16;
+    nativeNow = Date.now;
+    shortOut_default = shortOut;
+  }
+});
+
+// node_modules/lodash-es/constant.js
+function constant(value) {
+  return function() {
+    return value;
+  };
+}
+var constant_default;
+var init_constant = __esm({
+  "node_modules/lodash-es/constant.js"() {
+    constant_default = constant;
+  }
+});
+
+// node_modules/lodash-es/_defineProperty.js
+var defineProperty2, defineProperty_default;
+var init_defineProperty = __esm({
+  "node_modules/lodash-es/_defineProperty.js"() {
+    init_getNative();
+    defineProperty2 = function() {
+      try {
+        var func = getNative_default(Object, "defineProperty");
+        func({}, "", {});
+        return func;
+      } catch (e2) {
+      }
+    }();
+    defineProperty_default = defineProperty2;
+  }
+});
+
+// node_modules/lodash-es/_baseSetToString.js
+var baseSetToString, baseSetToString_default;
+var init_baseSetToString = __esm({
+  "node_modules/lodash-es/_baseSetToString.js"() {
+    init_constant();
+    init_defineProperty();
+    init_identity();
+    baseSetToString = !defineProperty_default ? identity_default : function(func, string) {
+      return defineProperty_default(func, "toString", {
+        "configurable": true,
+        "enumerable": false,
+        "value": constant_default(string),
+        "writable": true
+      });
+    };
+    baseSetToString_default = baseSetToString;
+  }
+});
+
+// node_modules/lodash-es/_setToString.js
+var setToString, setToString_default;
+var init_setToString = __esm({
+  "node_modules/lodash-es/_setToString.js"() {
+    init_baseSetToString();
+    init_shortOut();
+    setToString = shortOut_default(baseSetToString_default);
+    setToString_default = setToString;
+  }
+});
+
+// node_modules/lodash-es/_isIndex.js
+function isIndex(value, length) {
+  var type = typeof value;
+  length = length == null ? MAX_SAFE_INTEGER : length;
+  return !!length && (type == "number" || type != "symbol" && reIsUint.test(value)) && (value > -1 && value % 1 == 0 && value < length);
+}
+var MAX_SAFE_INTEGER, reIsUint, isIndex_default;
+var init_isIndex = __esm({
+  "node_modules/lodash-es/_isIndex.js"() {
+    MAX_SAFE_INTEGER = 9007199254740991;
+    reIsUint = /^(?:0|[1-9]\d*)$/;
+    isIndex_default = isIndex;
+  }
+});
+
+// node_modules/lodash-es/_baseAssignValue.js
+function baseAssignValue(object, key, value) {
+  if (key == "__proto__" && defineProperty_default) {
+    defineProperty_default(object, key, {
+      "configurable": true,
+      "enumerable": true,
+      "value": value,
+      "writable": true
+    });
+  } else {
+    object[key] = value;
+  }
+}
+var baseAssignValue_default;
+var init_baseAssignValue = __esm({
+  "node_modules/lodash-es/_baseAssignValue.js"() {
+    init_defineProperty();
+    baseAssignValue_default = baseAssignValue;
+  }
+});
+
+// node_modules/lodash-es/eq.js
+function eq(value, other2) {
+  return value === other2 || value !== value && other2 !== other2;
+}
+var eq_default;
+var init_eq = __esm({
+  "node_modules/lodash-es/eq.js"() {
+    eq_default = eq;
+  }
+});
+
+// node_modules/lodash-es/_assignValue.js
+function assignValue(object, key, value) {
+  var objValue = object[key];
+  if (!(hasOwnProperty4.call(object, key) && eq_default(objValue, value)) || value === void 0 && !(key in object)) {
+    baseAssignValue_default(object, key, value);
+  }
+}
+var objectProto4, hasOwnProperty4, assignValue_default;
+var init_assignValue = __esm({
+  "node_modules/lodash-es/_assignValue.js"() {
+    init_baseAssignValue();
+    init_eq();
+    objectProto4 = Object.prototype;
+    hasOwnProperty4 = objectProto4.hasOwnProperty;
+    assignValue_default = assignValue;
+  }
+});
+
+// node_modules/lodash-es/_copyObject.js
+function copyObject(source2, props, object, customizer) {
+  var isNew = !object;
+  object || (object = {});
+  var index = -1, length = props.length;
+  while (++index < length) {
+    var key = props[index];
+    var newValue = customizer ? customizer(object[key], source2[key], key, object, source2) : void 0;
+    if (newValue === void 0) {
+      newValue = source2[key];
+    }
+    if (isNew) {
+      baseAssignValue_default(object, key, newValue);
+    } else {
+      assignValue_default(object, key, newValue);
+    }
+  }
+  return object;
+}
+var copyObject_default;
+var init_copyObject = __esm({
+  "node_modules/lodash-es/_copyObject.js"() {
+    init_assignValue();
+    init_baseAssignValue();
+    copyObject_default = copyObject;
+  }
+});
+
+// node_modules/lodash-es/_overRest.js
+function overRest(func, start, transform) {
+  start = nativeMax(start === void 0 ? func.length - 1 : start, 0);
+  return function() {
+    var args = arguments, index = -1, length = nativeMax(args.length - start, 0), array = Array(length);
+    while (++index < length) {
+      array[index] = args[start + index];
+    }
+    index = -1;
+    var otherArgs = Array(start + 1);
+    while (++index < start) {
+      otherArgs[index] = args[index];
+    }
+    otherArgs[start] = transform(array);
+    return apply_default(func, this, otherArgs);
+  };
+}
+var nativeMax, overRest_default;
+var init_overRest = __esm({
+  "node_modules/lodash-es/_overRest.js"() {
+    init_apply();
+    nativeMax = Math.max;
+    overRest_default = overRest;
+  }
+});
+
+// node_modules/lodash-es/_baseRest.js
+function baseRest(func, start) {
+  return setToString_default(overRest_default(func, start, identity_default), func + "");
+}
+var baseRest_default;
+var init_baseRest = __esm({
+  "node_modules/lodash-es/_baseRest.js"() {
+    init_identity();
+    init_overRest();
+    init_setToString();
+    baseRest_default = baseRest;
+  }
+});
+
+// node_modules/lodash-es/isLength.js
+function isLength(value) {
+  return typeof value == "number" && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER2;
+}
+var MAX_SAFE_INTEGER2, isLength_default;
+var init_isLength = __esm({
+  "node_modules/lodash-es/isLength.js"() {
+    MAX_SAFE_INTEGER2 = 9007199254740991;
+    isLength_default = isLength;
+  }
+});
+
+// node_modules/lodash-es/isArrayLike.js
+function isArrayLike2(value) {
+  return value != null && isLength_default(value.length) && !isFunction_default(value);
+}
+var isArrayLike_default;
+var init_isArrayLike = __esm({
+  "node_modules/lodash-es/isArrayLike.js"() {
+    init_isFunction();
+    init_isLength();
+    isArrayLike_default = isArrayLike2;
+  }
+});
+
+// node_modules/lodash-es/_isIterateeCall.js
+function isIterateeCall(value, index, object) {
+  if (!isObject_default(object)) {
+    return false;
+  }
+  var type = typeof index;
+  if (type == "number" ? isArrayLike_default(object) && isIndex_default(index, object.length) : type == "string" && index in object) {
+    return eq_default(object[index], value);
+  }
+  return false;
+}
+var isIterateeCall_default;
+var init_isIterateeCall = __esm({
+  "node_modules/lodash-es/_isIterateeCall.js"() {
+    init_eq();
+    init_isArrayLike();
+    init_isIndex();
+    init_isObject();
+    isIterateeCall_default = isIterateeCall;
+  }
+});
+
+// node_modules/lodash-es/_createAssigner.js
+function createAssigner(assigner) {
+  return baseRest_default(function(object, sources) {
+    var index = -1, length = sources.length, customizer = length > 1 ? sources[length - 1] : void 0, guard = length > 2 ? sources[2] : void 0;
+    customizer = assigner.length > 3 && typeof customizer == "function" ? (length--, customizer) : void 0;
+    if (guard && isIterateeCall_default(sources[0], sources[1], guard)) {
+      customizer = length < 3 ? void 0 : customizer;
+      length = 1;
+    }
+    object = Object(object);
+    while (++index < length) {
+      var source2 = sources[index];
+      if (source2) {
+        assigner(object, source2, index, customizer);
+      }
+    }
+    return object;
+  });
+}
+var createAssigner_default;
+var init_createAssigner = __esm({
+  "node_modules/lodash-es/_createAssigner.js"() {
+    init_baseRest();
+    init_isIterateeCall();
+    createAssigner_default = createAssigner;
+  }
+});
+
+// node_modules/lodash-es/_isPrototype.js
+function isPrototype(value) {
+  var Ctor = value && value.constructor, proto3 = typeof Ctor == "function" && Ctor.prototype || objectProto5;
+  return value === proto3;
+}
+var objectProto5, isPrototype_default;
+var init_isPrototype = __esm({
+  "node_modules/lodash-es/_isPrototype.js"() {
+    objectProto5 = Object.prototype;
+    isPrototype_default = isPrototype;
+  }
+});
+
+// node_modules/lodash-es/_baseTimes.js
+function baseTimes(n2, iteratee) {
+  var index = -1, result = Array(n2);
+  while (++index < n2) {
+    result[index] = iteratee(index);
+  }
+  return result;
+}
+var baseTimes_default;
+var init_baseTimes = __esm({
+  "node_modules/lodash-es/_baseTimes.js"() {
+    baseTimes_default = baseTimes;
+  }
+});
+
+// node_modules/lodash-es/_baseIsArguments.js
+function baseIsArguments(value) {
+  return isObjectLike_default(value) && baseGetTag_default(value) == argsTag;
+}
+var argsTag, baseIsArguments_default;
+var init_baseIsArguments = __esm({
+  "node_modules/lodash-es/_baseIsArguments.js"() {
+    init_baseGetTag();
+    init_isObjectLike();
+    argsTag = "[object Arguments]";
+    baseIsArguments_default = baseIsArguments;
+  }
+});
+
+// node_modules/lodash-es/isArguments.js
+var objectProto6, hasOwnProperty5, propertyIsEnumerable, isArguments, isArguments_default;
+var init_isArguments = __esm({
+  "node_modules/lodash-es/isArguments.js"() {
+    init_baseIsArguments();
+    init_isObjectLike();
+    objectProto6 = Object.prototype;
+    hasOwnProperty5 = objectProto6.hasOwnProperty;
+    propertyIsEnumerable = objectProto6.propertyIsEnumerable;
+    isArguments = baseIsArguments_default(/* @__PURE__ */ function() {
+      return arguments;
+    }()) ? baseIsArguments_default : function(value) {
+      return isObjectLike_default(value) && hasOwnProperty5.call(value, "callee") && !propertyIsEnumerable.call(value, "callee");
+    };
+    isArguments_default = isArguments;
+  }
+});
+
+// node_modules/lodash-es/stubFalse.js
+function stubFalse() {
+  return false;
+}
+var stubFalse_default;
+var init_stubFalse = __esm({
+  "node_modules/lodash-es/stubFalse.js"() {
+    stubFalse_default = stubFalse;
+  }
+});
+
+// node_modules/lodash-es/isBuffer.js
+var freeExports, freeModule, moduleExports, Buffer5, nativeIsBuffer, isBuffer, isBuffer_default;
+var init_isBuffer = __esm({
+  "node_modules/lodash-es/isBuffer.js"() {
+    init_root();
+    init_stubFalse();
+    freeExports = typeof exports == "object" && exports && !exports.nodeType && exports;
+    freeModule = freeExports && typeof module == "object" && module && !module.nodeType && module;
+    moduleExports = freeModule && freeModule.exports === freeExports;
+    Buffer5 = moduleExports ? root_default.Buffer : void 0;
+    nativeIsBuffer = Buffer5 ? Buffer5.isBuffer : void 0;
+    isBuffer = nativeIsBuffer || stubFalse_default;
+    isBuffer_default = isBuffer;
+  }
+});
+
+// node_modules/lodash-es/_baseIsTypedArray.js
+function baseIsTypedArray(value) {
+  return isObjectLike_default(value) && isLength_default(value.length) && !!typedArrayTags[baseGetTag_default(value)];
+}
+var argsTag2, arrayTag, boolTag, dateTag, errorTag, funcTag2, mapTag, numberTag, objectTag, regexpTag, setTag, stringTag, weakMapTag, arrayBufferTag, dataViewTag, float32Tag, float64Tag, int8Tag, int16Tag, int32Tag, uint8Tag, uint8ClampedTag, uint16Tag, uint32Tag, typedArrayTags, baseIsTypedArray_default;
+var init_baseIsTypedArray = __esm({
+  "node_modules/lodash-es/_baseIsTypedArray.js"() {
+    init_baseGetTag();
+    init_isLength();
+    init_isObjectLike();
+    argsTag2 = "[object Arguments]";
+    arrayTag = "[object Array]";
+    boolTag = "[object Boolean]";
+    dateTag = "[object Date]";
+    errorTag = "[object Error]";
+    funcTag2 = "[object Function]";
+    mapTag = "[object Map]";
+    numberTag = "[object Number]";
+    objectTag = "[object Object]";
+    regexpTag = "[object RegExp]";
+    setTag = "[object Set]";
+    stringTag = "[object String]";
+    weakMapTag = "[object WeakMap]";
+    arrayBufferTag = "[object ArrayBuffer]";
+    dataViewTag = "[object DataView]";
+    float32Tag = "[object Float32Array]";
+    float64Tag = "[object Float64Array]";
+    int8Tag = "[object Int8Array]";
+    int16Tag = "[object Int16Array]";
+    int32Tag = "[object Int32Array]";
+    uint8Tag = "[object Uint8Array]";
+    uint8ClampedTag = "[object Uint8ClampedArray]";
+    uint16Tag = "[object Uint16Array]";
+    uint32Tag = "[object Uint32Array]";
+    typedArrayTags = {};
+    typedArrayTags[float32Tag] = typedArrayTags[float64Tag] = typedArrayTags[int8Tag] = typedArrayTags[int16Tag] = typedArrayTags[int32Tag] = typedArrayTags[uint8Tag] = typedArrayTags[uint8ClampedTag] = typedArrayTags[uint16Tag] = typedArrayTags[uint32Tag] = true;
+    typedArrayTags[argsTag2] = typedArrayTags[arrayTag] = typedArrayTags[arrayBufferTag] = typedArrayTags[boolTag] = typedArrayTags[dataViewTag] = typedArrayTags[dateTag] = typedArrayTags[errorTag] = typedArrayTags[funcTag2] = typedArrayTags[mapTag] = typedArrayTags[numberTag] = typedArrayTags[objectTag] = typedArrayTags[regexpTag] = typedArrayTags[setTag] = typedArrayTags[stringTag] = typedArrayTags[weakMapTag] = false;
+    baseIsTypedArray_default = baseIsTypedArray;
+  }
+});
+
+// node_modules/lodash-es/_baseUnary.js
+function baseUnary(func) {
+  return function(value) {
+    return func(value);
+  };
+}
+var baseUnary_default;
+var init_baseUnary = __esm({
+  "node_modules/lodash-es/_baseUnary.js"() {
+    baseUnary_default = baseUnary;
+  }
+});
+
+// node_modules/lodash-es/_nodeUtil.js
+var freeExports2, freeModule2, moduleExports2, freeProcess, nodeUtil, nodeUtil_default;
+var init_nodeUtil = __esm({
+  "node_modules/lodash-es/_nodeUtil.js"() {
+    init_freeGlobal();
+    freeExports2 = typeof exports == "object" && exports && !exports.nodeType && exports;
+    freeModule2 = freeExports2 && typeof module == "object" && module && !module.nodeType && module;
+    moduleExports2 = freeModule2 && freeModule2.exports === freeExports2;
+    freeProcess = moduleExports2 && freeGlobal_default.process;
+    nodeUtil = function() {
+      try {
+        var types2 = freeModule2 && freeModule2.require && freeModule2.require("util").types;
+        if (types2) {
+          return types2;
+        }
+        return freeProcess && freeProcess.binding && freeProcess.binding("util");
+      } catch (e2) {
+      }
+    }();
+    nodeUtil_default = nodeUtil;
+  }
+});
+
+// node_modules/lodash-es/isTypedArray.js
+var nodeIsTypedArray, isTypedArray, isTypedArray_default;
+var init_isTypedArray = __esm({
+  "node_modules/lodash-es/isTypedArray.js"() {
+    init_baseIsTypedArray();
+    init_baseUnary();
+    init_nodeUtil();
+    nodeIsTypedArray = nodeUtil_default && nodeUtil_default.isTypedArray;
+    isTypedArray = nodeIsTypedArray ? baseUnary_default(nodeIsTypedArray) : baseIsTypedArray_default;
+    isTypedArray_default = isTypedArray;
+  }
+});
+
+// node_modules/lodash-es/_arrayLikeKeys.js
+function arrayLikeKeys(value, inherited) {
+  var isArr = isArray_default(value), isArg = !isArr && isArguments_default(value), isBuff = !isArr && !isArg && isBuffer_default(value), isType = !isArr && !isArg && !isBuff && isTypedArray_default(value), skipIndexes = isArr || isArg || isBuff || isType, result = skipIndexes ? baseTimes_default(value.length, String) : [], length = result.length;
+  for (var key in value) {
+    if ((inherited || hasOwnProperty6.call(value, key)) && !(skipIndexes && // Safari 9 has enumerable `arguments.length` in strict mode.
+    (key == "length" || // Node.js 0.10 has enumerable non-index properties on buffers.
+    isBuff && (key == "offset" || key == "parent") || // PhantomJS 2 has enumerable non-index properties on typed arrays.
+    isType && (key == "buffer" || key == "byteLength" || key == "byteOffset") || // Skip index properties.
+    isIndex_default(key, length)))) {
+      result.push(key);
+    }
+  }
+  return result;
+}
+var objectProto7, hasOwnProperty6, arrayLikeKeys_default;
+var init_arrayLikeKeys = __esm({
+  "node_modules/lodash-es/_arrayLikeKeys.js"() {
+    init_baseTimes();
+    init_isArguments();
+    init_isArray();
+    init_isBuffer();
+    init_isIndex();
+    init_isTypedArray();
+    objectProto7 = Object.prototype;
+    hasOwnProperty6 = objectProto7.hasOwnProperty;
+    arrayLikeKeys_default = arrayLikeKeys;
+  }
+});
+
+// node_modules/lodash-es/_overArg.js
+function overArg(func, transform) {
+  return function(arg) {
+    return func(transform(arg));
+  };
+}
+var overArg_default;
+var init_overArg = __esm({
+  "node_modules/lodash-es/_overArg.js"() {
+    overArg_default = overArg;
+  }
+});
+
+// node_modules/lodash-es/_nativeKeysIn.js
+function nativeKeysIn(object) {
+  var result = [];
+  if (object != null) {
+    for (var key in Object(object)) {
+      result.push(key);
+    }
+  }
+  return result;
+}
+var nativeKeysIn_default;
+var init_nativeKeysIn = __esm({
+  "node_modules/lodash-es/_nativeKeysIn.js"() {
+    nativeKeysIn_default = nativeKeysIn;
+  }
+});
+
+// node_modules/lodash-es/_baseKeysIn.js
+function baseKeysIn(object) {
+  if (!isObject_default(object)) {
+    return nativeKeysIn_default(object);
+  }
+  var isProto = isPrototype_default(object), result = [];
+  for (var key in object) {
+    if (!(key == "constructor" && (isProto || !hasOwnProperty7.call(object, key)))) {
+      result.push(key);
+    }
+  }
+  return result;
+}
+var objectProto8, hasOwnProperty7, baseKeysIn_default;
+var init_baseKeysIn = __esm({
+  "node_modules/lodash-es/_baseKeysIn.js"() {
+    init_isObject();
+    init_isPrototype();
+    init_nativeKeysIn();
+    objectProto8 = Object.prototype;
+    hasOwnProperty7 = objectProto8.hasOwnProperty;
+    baseKeysIn_default = baseKeysIn;
+  }
+});
+
+// node_modules/lodash-es/keysIn.js
+function keysIn(object) {
+  return isArrayLike_default(object) ? arrayLikeKeys_default(object, true) : baseKeysIn_default(object);
+}
+var keysIn_default;
+var init_keysIn = __esm({
+  "node_modules/lodash-es/keysIn.js"() {
+    init_arrayLikeKeys();
+    init_baseKeysIn();
+    init_isArrayLike();
+    keysIn_default = keysIn;
+  }
+});
+
+// node_modules/lodash-es/_nativeCreate.js
+var nativeCreate, nativeCreate_default;
+var init_nativeCreate = __esm({
+  "node_modules/lodash-es/_nativeCreate.js"() {
+    init_getNative();
+    nativeCreate = getNative_default(Object, "create");
+    nativeCreate_default = nativeCreate;
+  }
+});
+
+// node_modules/lodash-es/_hashClear.js
+function hashClear() {
+  this.__data__ = nativeCreate_default ? nativeCreate_default(null) : {};
+  this.size = 0;
+}
+var hashClear_default;
+var init_hashClear = __esm({
+  "node_modules/lodash-es/_hashClear.js"() {
+    init_nativeCreate();
+    hashClear_default = hashClear;
+  }
+});
+
+// node_modules/lodash-es/_hashDelete.js
+function hashDelete(key) {
+  var result = this.has(key) && delete this.__data__[key];
+  this.size -= result ? 1 : 0;
+  return result;
+}
+var hashDelete_default;
+var init_hashDelete = __esm({
+  "node_modules/lodash-es/_hashDelete.js"() {
+    hashDelete_default = hashDelete;
+  }
+});
+
+// node_modules/lodash-es/_hashGet.js
+function hashGet(key) {
+  var data = this.__data__;
+  if (nativeCreate_default) {
+    var result = data[key];
+    return result === HASH_UNDEFINED ? void 0 : result;
+  }
+  return hasOwnProperty8.call(data, key) ? data[key] : void 0;
+}
+var HASH_UNDEFINED, objectProto9, hasOwnProperty8, hashGet_default;
+var init_hashGet = __esm({
+  "node_modules/lodash-es/_hashGet.js"() {
+    init_nativeCreate();
+    HASH_UNDEFINED = "__lodash_hash_undefined__";
+    objectProto9 = Object.prototype;
+    hasOwnProperty8 = objectProto9.hasOwnProperty;
+    hashGet_default = hashGet;
+  }
+});
+
+// node_modules/lodash-es/_hashHas.js
+function hashHas(key) {
+  var data = this.__data__;
+  return nativeCreate_default ? data[key] !== void 0 : hasOwnProperty9.call(data, key);
+}
+var objectProto10, hasOwnProperty9, hashHas_default;
+var init_hashHas = __esm({
+  "node_modules/lodash-es/_hashHas.js"() {
+    init_nativeCreate();
+    objectProto10 = Object.prototype;
+    hasOwnProperty9 = objectProto10.hasOwnProperty;
+    hashHas_default = hashHas;
+  }
+});
+
+// node_modules/lodash-es/_hashSet.js
+function hashSet(key, value) {
+  var data = this.__data__;
+  this.size += this.has(key) ? 0 : 1;
+  data[key] = nativeCreate_default && value === void 0 ? HASH_UNDEFINED2 : value;
+  return this;
+}
+var HASH_UNDEFINED2, hashSet_default;
+var init_hashSet = __esm({
+  "node_modules/lodash-es/_hashSet.js"() {
+    init_nativeCreate();
+    HASH_UNDEFINED2 = "__lodash_hash_undefined__";
+    hashSet_default = hashSet;
+  }
+});
+
+// node_modules/lodash-es/_Hash.js
+function Hash(entries) {
+  var index = -1, length = entries == null ? 0 : entries.length;
+  this.clear();
+  while (++index < length) {
+    var entry = entries[index];
+    this.set(entry[0], entry[1]);
+  }
+}
+var Hash_default;
+var init_Hash = __esm({
+  "node_modules/lodash-es/_Hash.js"() {
+    init_hashClear();
+    init_hashDelete();
+    init_hashGet();
+    init_hashHas();
+    init_hashSet();
+    Hash.prototype.clear = hashClear_default;
+    Hash.prototype["delete"] = hashDelete_default;
+    Hash.prototype.get = hashGet_default;
+    Hash.prototype.has = hashHas_default;
+    Hash.prototype.set = hashSet_default;
+    Hash_default = Hash;
+  }
+});
+
+// node_modules/lodash-es/_listCacheClear.js
+function listCacheClear() {
+  this.__data__ = [];
+  this.size = 0;
+}
+var listCacheClear_default;
+var init_listCacheClear = __esm({
+  "node_modules/lodash-es/_listCacheClear.js"() {
+    listCacheClear_default = listCacheClear;
+  }
+});
+
+// node_modules/lodash-es/_assocIndexOf.js
+function assocIndexOf(array, key) {
+  var length = array.length;
+  while (length--) {
+    if (eq_default(array[length][0], key)) {
+      return length;
+    }
+  }
+  return -1;
+}
+var assocIndexOf_default;
+var init_assocIndexOf = __esm({
+  "node_modules/lodash-es/_assocIndexOf.js"() {
+    init_eq();
+    assocIndexOf_default = assocIndexOf;
+  }
+});
+
+// node_modules/lodash-es/_listCacheDelete.js
+function listCacheDelete(key) {
+  var data = this.__data__, index = assocIndexOf_default(data, key);
+  if (index < 0) {
+    return false;
+  }
+  var lastIndex = data.length - 1;
+  if (index == lastIndex) {
+    data.pop();
+  } else {
+    splice.call(data, index, 1);
+  }
+  --this.size;
+  return true;
+}
+var arrayProto, splice, listCacheDelete_default;
+var init_listCacheDelete = __esm({
+  "node_modules/lodash-es/_listCacheDelete.js"() {
+    init_assocIndexOf();
+    arrayProto = Array.prototype;
+    splice = arrayProto.splice;
+    listCacheDelete_default = listCacheDelete;
+  }
+});
+
+// node_modules/lodash-es/_listCacheGet.js
+function listCacheGet(key) {
+  var data = this.__data__, index = assocIndexOf_default(data, key);
+  return index < 0 ? void 0 : data[index][1];
+}
+var listCacheGet_default;
+var init_listCacheGet = __esm({
+  "node_modules/lodash-es/_listCacheGet.js"() {
+    init_assocIndexOf();
+    listCacheGet_default = listCacheGet;
+  }
+});
+
+// node_modules/lodash-es/_listCacheHas.js
+function listCacheHas(key) {
+  return assocIndexOf_default(this.__data__, key) > -1;
+}
+var listCacheHas_default;
+var init_listCacheHas = __esm({
+  "node_modules/lodash-es/_listCacheHas.js"() {
+    init_assocIndexOf();
+    listCacheHas_default = listCacheHas;
+  }
+});
+
+// node_modules/lodash-es/_listCacheSet.js
+function listCacheSet(key, value) {
+  var data = this.__data__, index = assocIndexOf_default(data, key);
+  if (index < 0) {
+    ++this.size;
+    data.push([key, value]);
+  } else {
+    data[index][1] = value;
+  }
+  return this;
+}
+var listCacheSet_default;
+var init_listCacheSet = __esm({
+  "node_modules/lodash-es/_listCacheSet.js"() {
+    init_assocIndexOf();
+    listCacheSet_default = listCacheSet;
+  }
+});
+
+// node_modules/lodash-es/_ListCache.js
+function ListCache(entries) {
+  var index = -1, length = entries == null ? 0 : entries.length;
+  this.clear();
+  while (++index < length) {
+    var entry = entries[index];
+    this.set(entry[0], entry[1]);
+  }
+}
+var ListCache_default;
+var init_ListCache = __esm({
+  "node_modules/lodash-es/_ListCache.js"() {
+    init_listCacheClear();
+    init_listCacheDelete();
+    init_listCacheGet();
+    init_listCacheHas();
+    init_listCacheSet();
+    ListCache.prototype.clear = listCacheClear_default;
+    ListCache.prototype["delete"] = listCacheDelete_default;
+    ListCache.prototype.get = listCacheGet_default;
+    ListCache.prototype.has = listCacheHas_default;
+    ListCache.prototype.set = listCacheSet_default;
+    ListCache_default = ListCache;
+  }
+});
+
+// node_modules/lodash-es/_Map.js
+var Map2, Map_default;
+var init_Map = __esm({
+  "node_modules/lodash-es/_Map.js"() {
+    init_getNative();
+    init_root();
+    Map2 = getNative_default(root_default, "Map");
+    Map_default = Map2;
+  }
+});
+
+// node_modules/lodash-es/_mapCacheClear.js
+function mapCacheClear() {
+  this.size = 0;
+  this.__data__ = {
+    "hash": new Hash_default(),
+    "map": new (Map_default || ListCache_default)(),
+    "string": new Hash_default()
+  };
+}
+var mapCacheClear_default;
+var init_mapCacheClear = __esm({
+  "node_modules/lodash-es/_mapCacheClear.js"() {
+    init_Hash();
+    init_ListCache();
+    init_Map();
+    mapCacheClear_default = mapCacheClear;
+  }
+});
+
+// node_modules/lodash-es/_isKeyable.js
+function isKeyable(value) {
+  var type = typeof value;
+  return type == "string" || type == "number" || type == "symbol" || type == "boolean" ? value !== "__proto__" : value === null;
+}
+var isKeyable_default;
+var init_isKeyable = __esm({
+  "node_modules/lodash-es/_isKeyable.js"() {
+    isKeyable_default = isKeyable;
+  }
+});
+
+// node_modules/lodash-es/_getMapData.js
+function getMapData(map2, key) {
+  var data = map2.__data__;
+  return isKeyable_default(key) ? data[typeof key == "string" ? "string" : "hash"] : data.map;
+}
+var getMapData_default;
+var init_getMapData = __esm({
+  "node_modules/lodash-es/_getMapData.js"() {
+    init_isKeyable();
+    getMapData_default = getMapData;
+  }
+});
+
+// node_modules/lodash-es/_mapCacheDelete.js
+function mapCacheDelete(key) {
+  var result = getMapData_default(this, key)["delete"](key);
+  this.size -= result ? 1 : 0;
+  return result;
+}
+var mapCacheDelete_default;
+var init_mapCacheDelete = __esm({
+  "node_modules/lodash-es/_mapCacheDelete.js"() {
+    init_getMapData();
+    mapCacheDelete_default = mapCacheDelete;
+  }
+});
+
+// node_modules/lodash-es/_mapCacheGet.js
+function mapCacheGet(key) {
+  return getMapData_default(this, key).get(key);
+}
+var mapCacheGet_default;
+var init_mapCacheGet = __esm({
+  "node_modules/lodash-es/_mapCacheGet.js"() {
+    init_getMapData();
+    mapCacheGet_default = mapCacheGet;
+  }
+});
+
+// node_modules/lodash-es/_mapCacheHas.js
+function mapCacheHas(key) {
+  return getMapData_default(this, key).has(key);
+}
+var mapCacheHas_default;
+var init_mapCacheHas = __esm({
+  "node_modules/lodash-es/_mapCacheHas.js"() {
+    init_getMapData();
+    mapCacheHas_default = mapCacheHas;
+  }
+});
+
+// node_modules/lodash-es/_mapCacheSet.js
+function mapCacheSet(key, value) {
+  var data = getMapData_default(this, key), size = data.size;
+  data.set(key, value);
+  this.size += data.size == size ? 0 : 1;
+  return this;
+}
+var mapCacheSet_default;
+var init_mapCacheSet = __esm({
+  "node_modules/lodash-es/_mapCacheSet.js"() {
+    init_getMapData();
+    mapCacheSet_default = mapCacheSet;
+  }
+});
+
+// node_modules/lodash-es/_MapCache.js
+function MapCache(entries) {
+  var index = -1, length = entries == null ? 0 : entries.length;
+  this.clear();
+  while (++index < length) {
+    var entry = entries[index];
+    this.set(entry[0], entry[1]);
+  }
+}
+var MapCache_default;
+var init_MapCache = __esm({
+  "node_modules/lodash-es/_MapCache.js"() {
+    init_mapCacheClear();
+    init_mapCacheDelete();
+    init_mapCacheGet();
+    init_mapCacheHas();
+    init_mapCacheSet();
+    MapCache.prototype.clear = mapCacheClear_default;
+    MapCache.prototype["delete"] = mapCacheDelete_default;
+    MapCache.prototype.get = mapCacheGet_default;
+    MapCache.prototype.has = mapCacheHas_default;
+    MapCache.prototype.set = mapCacheSet_default;
+    MapCache_default = MapCache;
+  }
+});
+
+// node_modules/lodash-es/_getPrototype.js
+var getPrototype, getPrototype_default;
+var init_getPrototype = __esm({
+  "node_modules/lodash-es/_getPrototype.js"() {
+    init_overArg();
+    getPrototype = overArg_default(Object.getPrototypeOf, Object);
+    getPrototype_default = getPrototype;
+  }
+});
+
+// node_modules/lodash-es/isPlainObject.js
+function isPlainObject(value) {
+  if (!isObjectLike_default(value) || baseGetTag_default(value) != objectTag2) {
+    return false;
+  }
+  var proto3 = getPrototype_default(value);
+  if (proto3 === null) {
+    return true;
+  }
+  var Ctor = hasOwnProperty10.call(proto3, "constructor") && proto3.constructor;
+  return typeof Ctor == "function" && Ctor instanceof Ctor && funcToString3.call(Ctor) == objectCtorString;
+}
+var objectTag2, funcProto3, objectProto11, funcToString3, hasOwnProperty10, objectCtorString, isPlainObject_default;
+var init_isPlainObject = __esm({
+  "node_modules/lodash-es/isPlainObject.js"() {
+    init_baseGetTag();
+    init_getPrototype();
+    init_isObjectLike();
+    objectTag2 = "[object Object]";
+    funcProto3 = Function.prototype;
+    objectProto11 = Object.prototype;
+    funcToString3 = funcProto3.toString;
+    hasOwnProperty10 = objectProto11.hasOwnProperty;
+    objectCtorString = funcToString3.call(Object);
+    isPlainObject_default = isPlainObject;
+  }
+});
+
+// node_modules/lodash-es/_stackClear.js
+function stackClear() {
+  this.__data__ = new ListCache_default();
+  this.size = 0;
+}
+var stackClear_default;
+var init_stackClear = __esm({
+  "node_modules/lodash-es/_stackClear.js"() {
+    init_ListCache();
+    stackClear_default = stackClear;
+  }
+});
+
+// node_modules/lodash-es/_stackDelete.js
+function stackDelete(key) {
+  var data = this.__data__, result = data["delete"](key);
+  this.size = data.size;
+  return result;
+}
+var stackDelete_default;
+var init_stackDelete = __esm({
+  "node_modules/lodash-es/_stackDelete.js"() {
+    stackDelete_default = stackDelete;
+  }
+});
+
+// node_modules/lodash-es/_stackGet.js
+function stackGet(key) {
+  return this.__data__.get(key);
+}
+var stackGet_default;
+var init_stackGet = __esm({
+  "node_modules/lodash-es/_stackGet.js"() {
+    stackGet_default = stackGet;
+  }
+});
+
+// node_modules/lodash-es/_stackHas.js
+function stackHas(key) {
+  return this.__data__.has(key);
+}
+var stackHas_default;
+var init_stackHas = __esm({
+  "node_modules/lodash-es/_stackHas.js"() {
+    stackHas_default = stackHas;
+  }
+});
+
+// node_modules/lodash-es/_stackSet.js
+function stackSet(key, value) {
+  var data = this.__data__;
+  if (data instanceof ListCache_default) {
+    var pairs = data.__data__;
+    if (!Map_default || pairs.length < LARGE_ARRAY_SIZE - 1) {
+      pairs.push([key, value]);
+      this.size = ++data.size;
+      return this;
+    }
+    data = this.__data__ = new MapCache_default(pairs);
+  }
+  data.set(key, value);
+  this.size = data.size;
+  return this;
+}
+var LARGE_ARRAY_SIZE, stackSet_default;
+var init_stackSet = __esm({
+  "node_modules/lodash-es/_stackSet.js"() {
+    init_ListCache();
+    init_Map();
+    init_MapCache();
+    LARGE_ARRAY_SIZE = 200;
+    stackSet_default = stackSet;
+  }
+});
+
+// node_modules/lodash-es/_Stack.js
+function Stack2(entries) {
+  var data = this.__data__ = new ListCache_default(entries);
+  this.size = data.size;
+}
+var Stack_default;
+var init_Stack = __esm({
+  "node_modules/lodash-es/_Stack.js"() {
+    init_ListCache();
+    init_stackClear();
+    init_stackDelete();
+    init_stackGet();
+    init_stackHas();
+    init_stackSet();
+    Stack2.prototype.clear = stackClear_default;
+    Stack2.prototype["delete"] = stackDelete_default;
+    Stack2.prototype.get = stackGet_default;
+    Stack2.prototype.has = stackHas_default;
+    Stack2.prototype.set = stackSet_default;
+    Stack_default = Stack2;
+  }
+});
+
+// node_modules/lodash-es/_cloneBuffer.js
+function cloneBuffer(buffer, isDeep) {
+  if (isDeep) {
+    return buffer.slice();
+  }
+  var length = buffer.length, result = allocUnsafe ? allocUnsafe(length) : new buffer.constructor(length);
+  buffer.copy(result);
+  return result;
+}
+var freeExports3, freeModule3, moduleExports3, Buffer6, allocUnsafe, cloneBuffer_default;
+var init_cloneBuffer = __esm({
+  "node_modules/lodash-es/_cloneBuffer.js"() {
+    init_root();
+    freeExports3 = typeof exports == "object" && exports && !exports.nodeType && exports;
+    freeModule3 = freeExports3 && typeof module == "object" && module && !module.nodeType && module;
+    moduleExports3 = freeModule3 && freeModule3.exports === freeExports3;
+    Buffer6 = moduleExports3 ? root_default.Buffer : void 0;
+    allocUnsafe = Buffer6 ? Buffer6.allocUnsafe : void 0;
+    cloneBuffer_default = cloneBuffer;
+  }
+});
+
+// node_modules/lodash-es/_Uint8Array.js
+var Uint8Array2, Uint8Array_default;
+var init_Uint8Array = __esm({
+  "node_modules/lodash-es/_Uint8Array.js"() {
+    init_root();
+    Uint8Array2 = root_default.Uint8Array;
+    Uint8Array_default = Uint8Array2;
+  }
+});
+
+// node_modules/lodash-es/_cloneArrayBuffer.js
+function cloneArrayBuffer(arrayBuffer) {
+  var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
+  new Uint8Array_default(result).set(new Uint8Array_default(arrayBuffer));
+  return result;
+}
+var cloneArrayBuffer_default;
+var init_cloneArrayBuffer = __esm({
+  "node_modules/lodash-es/_cloneArrayBuffer.js"() {
+    init_Uint8Array();
+    cloneArrayBuffer_default = cloneArrayBuffer;
+  }
+});
+
+// node_modules/lodash-es/_cloneTypedArray.js
+function cloneTypedArray(typedArray, isDeep) {
+  var buffer = isDeep ? cloneArrayBuffer_default(typedArray.buffer) : typedArray.buffer;
+  return new typedArray.constructor(buffer, typedArray.byteOffset, typedArray.length);
+}
+var cloneTypedArray_default;
+var init_cloneTypedArray = __esm({
+  "node_modules/lodash-es/_cloneTypedArray.js"() {
+    init_cloneArrayBuffer();
+    cloneTypedArray_default = cloneTypedArray;
+  }
+});
+
+// node_modules/lodash-es/_initCloneObject.js
+function initCloneObject(object) {
+  return typeof object.constructor == "function" && !isPrototype_default(object) ? baseCreate_default(getPrototype_default(object)) : {};
+}
+var initCloneObject_default;
+var init_initCloneObject = __esm({
+  "node_modules/lodash-es/_initCloneObject.js"() {
+    init_baseCreate();
+    init_getPrototype();
+    init_isPrototype();
+    initCloneObject_default = initCloneObject;
+  }
+});
+
+// node_modules/lodash-es/_createBaseFor.js
+function createBaseFor(fromRight) {
+  return function(object, iteratee, keysFunc) {
+    var index = -1, iterable = Object(object), props = keysFunc(object), length = props.length;
+    while (length--) {
+      var key = props[fromRight ? length : ++index];
+      if (iteratee(iterable[key], key, iterable) === false) {
+        break;
+      }
+    }
+    return object;
+  };
+}
+var createBaseFor_default;
+var init_createBaseFor = __esm({
+  "node_modules/lodash-es/_createBaseFor.js"() {
+    createBaseFor_default = createBaseFor;
+  }
+});
+
+// node_modules/lodash-es/_baseFor.js
+var baseFor, baseFor_default;
+var init_baseFor = __esm({
+  "node_modules/lodash-es/_baseFor.js"() {
+    init_createBaseFor();
+    baseFor = createBaseFor_default();
+    baseFor_default = baseFor;
+  }
+});
+
+// node_modules/lodash-es/_assignMergeValue.js
+function assignMergeValue(object, key, value) {
+  if (value !== void 0 && !eq_default(object[key], value) || value === void 0 && !(key in object)) {
+    baseAssignValue_default(object, key, value);
+  }
+}
+var assignMergeValue_default;
+var init_assignMergeValue = __esm({
+  "node_modules/lodash-es/_assignMergeValue.js"() {
+    init_baseAssignValue();
+    init_eq();
+    assignMergeValue_default = assignMergeValue;
+  }
+});
+
+// node_modules/lodash-es/isArrayLikeObject.js
+function isArrayLikeObject(value) {
+  return isObjectLike_default(value) && isArrayLike_default(value);
+}
+var isArrayLikeObject_default;
+var init_isArrayLikeObject = __esm({
+  "node_modules/lodash-es/isArrayLikeObject.js"() {
+    init_isArrayLike();
+    init_isObjectLike();
+    isArrayLikeObject_default = isArrayLikeObject;
+  }
+});
+
+// node_modules/lodash-es/_safeGet.js
+function safeGet(object, key) {
+  if (key === "constructor" && typeof object[key] === "function") {
+    return;
+  }
+  if (key == "__proto__") {
+    return;
+  }
+  return object[key];
+}
+var safeGet_default;
+var init_safeGet = __esm({
+  "node_modules/lodash-es/_safeGet.js"() {
+    safeGet_default = safeGet;
+  }
+});
+
+// node_modules/lodash-es/toPlainObject.js
+function toPlainObject(value) {
+  return copyObject_default(value, keysIn_default(value));
+}
+var toPlainObject_default;
+var init_toPlainObject = __esm({
+  "node_modules/lodash-es/toPlainObject.js"() {
+    init_copyObject();
+    init_keysIn();
+    toPlainObject_default = toPlainObject;
+  }
+});
+
+// node_modules/lodash-es/_baseMergeDeep.js
+function baseMergeDeep(object, source2, key, srcIndex, mergeFunc, customizer, stack) {
+  var objValue = safeGet_default(object, key), srcValue = safeGet_default(source2, key), stacked = stack.get(srcValue);
+  if (stacked) {
+    assignMergeValue_default(object, key, stacked);
+    return;
+  }
+  var newValue = customizer ? customizer(objValue, srcValue, key + "", object, source2, stack) : void 0;
+  var isCommon = newValue === void 0;
+  if (isCommon) {
+    var isArr = isArray_default(srcValue), isBuff = !isArr && isBuffer_default(srcValue), isTyped = !isArr && !isBuff && isTypedArray_default(srcValue);
+    newValue = srcValue;
+    if (isArr || isBuff || isTyped) {
+      if (isArray_default(objValue)) {
+        newValue = objValue;
+      } else if (isArrayLikeObject_default(objValue)) {
+        newValue = copyArray_default(objValue);
+      } else if (isBuff) {
+        isCommon = false;
+        newValue = cloneBuffer_default(srcValue, true);
+      } else if (isTyped) {
+        isCommon = false;
+        newValue = cloneTypedArray_default(srcValue, true);
+      } else {
+        newValue = [];
+      }
+    } else if (isPlainObject_default(srcValue) || isArguments_default(srcValue)) {
+      newValue = objValue;
+      if (isArguments_default(objValue)) {
+        newValue = toPlainObject_default(objValue);
+      } else if (!isObject_default(objValue) || isFunction_default(objValue)) {
+        newValue = initCloneObject_default(srcValue);
+      }
+    } else {
+      isCommon = false;
+    }
+  }
+  if (isCommon) {
+    stack.set(srcValue, newValue);
+    mergeFunc(newValue, srcValue, srcIndex, customizer, stack);
+    stack["delete"](srcValue);
+  }
+  assignMergeValue_default(object, key, newValue);
+}
+var baseMergeDeep_default;
+var init_baseMergeDeep = __esm({
+  "node_modules/lodash-es/_baseMergeDeep.js"() {
+    init_assignMergeValue();
+    init_cloneBuffer();
+    init_cloneTypedArray();
+    init_copyArray();
+    init_initCloneObject();
+    init_isArguments();
+    init_isArray();
+    init_isArrayLikeObject();
+    init_isBuffer();
+    init_isFunction();
+    init_isObject();
+    init_isPlainObject();
+    init_isTypedArray();
+    init_safeGet();
+    init_toPlainObject();
+    baseMergeDeep_default = baseMergeDeep;
+  }
+});
+
+// node_modules/lodash-es/_baseMerge.js
+function baseMerge(object, source2, srcIndex, customizer, stack) {
+  if (object === source2) {
+    return;
+  }
+  baseFor_default(source2, function(srcValue, key) {
+    stack || (stack = new Stack_default());
+    if (isObject_default(srcValue)) {
+      baseMergeDeep_default(object, source2, key, srcIndex, baseMerge, customizer, stack);
+    } else {
+      var newValue = customizer ? customizer(safeGet_default(object, key), srcValue, key + "", object, source2, stack) : void 0;
+      if (newValue === void 0) {
+        newValue = srcValue;
+      }
+      assignMergeValue_default(object, key, newValue);
+    }
+  }, keysIn_default);
+}
+var baseMerge_default;
+var init_baseMerge = __esm({
+  "node_modules/lodash-es/_baseMerge.js"() {
+    init_Stack();
+    init_assignMergeValue();
+    init_baseFor();
+    init_baseMergeDeep();
+    init_isObject();
+    init_keysIn();
+    init_safeGet();
+    baseMerge_default = baseMerge;
+  }
+});
+
+// node_modules/lodash-es/mergeWith.js
+var mergeWith, mergeWith_default;
+var init_mergeWith = __esm({
+  "node_modules/lodash-es/mergeWith.js"() {
+    init_baseMerge();
+    init_createAssigner();
+    mergeWith = createAssigner_default(function(object, source2, srcIndex, customizer) {
+      baseMerge_default(object, source2, srcIndex, customizer);
+    });
+    mergeWith_default = mergeWith;
+  }
+});
+
+// node_modules/lodash-es/lodash.js
+var init_lodash = __esm({
+  "node_modules/lodash-es/lodash.js"() {
+    init_mergeWith();
+  }
+});
+
+// packages/cli/src/config/settings.ts
+var settings_exports = {};
+__export(settings_exports, {
+  DEFAULT_EXCLUDED_ENV_VARS: () => DEFAULT_EXCLUDED_ENV_VARS,
+  LoadedSettings: () => LoadedSettings,
+  SETTINGS_DIRECTORY_NAME: () => SETTINGS_DIRECTORY_NAME2,
+  SettingScope: () => SettingScope,
+  USER_SETTINGS_DIR: () => USER_SETTINGS_DIR2,
+  USER_SETTINGS_PATH: () => USER_SETTINGS_PATH,
+  getSystemDefaultsPath: () => getSystemDefaultsPath,
+  getSystemSettingsPath: () => getSystemSettingsPath,
+  loadEnvironment: () => loadEnvironment,
+  loadSettings: () => loadSettings,
+  migrateSettingsToV1: () => migrateSettingsToV1,
+  saveSettings: () => saveSettings,
+  setUpCloudShellEnvironment: () => setUpCloudShellEnvironment
+});
+import * as fs56 from "node:fs";
+import * as path60 from "node:path";
+import { homedir as homedir9, platform as platform6 } from "node:os";
+function getSystemSettingsPath() {
+  if (process.env["QWEN_CODE_SYSTEM_SETTINGS_PATH"]) {
+    return process.env["QWEN_CODE_SYSTEM_SETTINGS_PATH"];
+  }
+  if (platform6() === "darwin") {
+    return "/Library/Application Support/QwenCode/settings.json";
+  } else if (platform6() === "win32") {
+    return "C:\\ProgramData\\qwen-code\\settings.json";
+  } else {
+    return "/etc/qwen-code/settings.json";
+  }
+}
+function getSystemDefaultsPath() {
+  if (process.env["QWEN_CODE_SYSTEM_DEFAULTS_PATH"]) {
+    return process.env["QWEN_CODE_SYSTEM_DEFAULTS_PATH"];
+  }
+  return path60.join(
+    path60.dirname(getSystemSettingsPath()),
+    "system-defaults.json"
+  );
+}
+function setNestedProperty(obj, path107, value) {
+  const keys = path107.split(".");
+  const lastKey = keys.pop();
+  if (!lastKey) return;
+  let current = obj;
+  for (const key of keys) {
+    if (current[key] === void 0) {
+      current[key] = {};
+    }
+    const next = current[key];
+    if (typeof next === "object" && next !== null) {
+      current = next;
+    } else {
+      return;
+    }
+  }
+  current[lastKey] = value;
+}
+function needsMigration(settings) {
+  return !("general" in settings);
+}
+function migrateSettingsToV2(flatSettings) {
+  if (!needsMigration(flatSettings)) {
+    return null;
+  }
+  const v2Settings = {};
+  const flatKeys = new Set(Object.keys(flatSettings));
+  for (const [oldKey, newPath] of Object.entries(MIGRATION_MAP)) {
+    if (flatKeys.has(oldKey)) {
+      setNestedProperty(v2Settings, newPath, flatSettings[oldKey]);
+      flatKeys.delete(oldKey);
+    }
+  }
+  if (flatSettings["mcpServers"]) {
+    v2Settings["mcpServers"] = flatSettings["mcpServers"];
+    flatKeys.delete("mcpServers");
+  }
+  for (const remainingKey of flatKeys) {
+    const remainingValue = flatSettings[remainingKey];
+    if (remainingValue === void 0) {
+      continue;
+    }
+    const existingValue = v2Settings[remainingKey];
+    if (existingValue && typeof existingValue === "object" && existingValue !== null && !Array.isArray(existingValue) && typeof remainingValue === "object" && remainingValue !== null && !Array.isArray(remainingValue)) {
+      v2Settings[remainingKey] = mergePlainObjects(
+        existingValue,
+        remainingValue
+      );
+    } else {
+      v2Settings[remainingKey] = remainingValue;
+    }
+  }
+  return v2Settings;
+}
+function getNestedProperty(obj, path107) {
+  const keys = path107.split(".");
+  let current = obj;
+  for (const key of keys) {
+    if (typeof current !== "object" || current === null || !(key in current)) {
+      return void 0;
+    }
+    current = current[key];
+  }
+  return current;
+}
+function deleteNestedProperty(obj, path107) {
+  const keys = path107.split(".");
+  if (keys.length === 0) {
+    return;
+  }
+  const stack = [];
+  let current = obj;
+  for (let i = 0; i < keys.length - 1; i++) {
+    if (!current) {
+      return;
+    }
+    const key = keys[i];
+    const value = current[key];
+    if (typeof value !== "object" || value === null || Array.isArray(value)) {
+      return;
+    }
+    stack.push({ parent: current, key });
+    current = value;
+  }
+  const lastKey = keys[keys.length - 1];
+  if (!current || !(lastKey in current)) {
+    return;
+  }
+  delete current[lastKey];
+  for (let i = stack.length - 1; i >= 0; i--) {
+    const { parent, key } = stack[i];
+    const child = parent[key];
+    if (child && typeof child === "object" && !Array.isArray(child) && Object.keys(child).length === 0) {
+      delete parent[key];
+    } else {
+      break;
+    }
+  }
+}
+function mergePlainObjects(target, source2) {
+  const result = { ...target };
+  for (const [key, value] of Object.entries(source2)) {
+    const existing = result[key];
+    if (existing && typeof existing === "object" && existing !== null && !Array.isArray(existing) && typeof value === "object" && value !== null && !Array.isArray(value)) {
+      result[key] = mergePlainObjects(
+        existing,
+        value
+      );
+    } else {
+      result[key] = value;
+    }
+  }
+  return result;
+}
+function migrateSettingsToV1(v2Settings) {
+  const v1Settings = {};
+  const remainingSettings = JSON.parse(JSON.stringify(v2Settings));
+  for (const [newPath, oldKey] of Object.entries(REVERSE_MIGRATION_MAP)) {
+    const value = getNestedProperty(v2Settings, newPath);
+    if (value === void 0) {
+      continue;
+    }
+    v1Settings[oldKey] = value;
+    deleteNestedProperty(remainingSettings, newPath);
+  }
+  for (const [key, value] of Object.entries(remainingSettings)) {
+    if (value === void 0) {
+      continue;
+    }
+    if (typeof value === "object" && value !== null && !Array.isArray(value) && Object.keys(value).length === 0) {
+      continue;
+    }
+    v1Settings[key] = value;
+  }
+  return v1Settings;
+}
+function mergeSettings(system, systemDefaults, user, workspace, isTrusted) {
+  function normalizeLegacyModel(s2) {
+    if (!s2) return s2;
+    try {
+      const asAny = s2;
+      if (typeof asAny.model === "string") {
+        return {
+          ...s2,
+          model: { ...s2.model ? {} : {}, name: asAny.model }
+        };
+      }
+    } catch (_e) {
+    }
+    return s2;
+  }
+  system = normalizeLegacyModel(system) || {};
+  systemDefaults = normalizeLegacyModel(systemDefaults) || {};
+  user = normalizeLegacyModel(user) || {};
+  workspace = normalizeLegacyModel(workspace) || {};
+  const safeWorkspace = isTrusted ? workspace : {};
+  const { security, ...restOfWorkspace } = safeWorkspace;
+  const safeWorkspaceWithoutFolderTrust = security ? {
+    ...restOfWorkspace,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    security: (({ folderTrust, ...rest }) => rest)(security)
+  } : {
+    ...restOfWorkspace,
+    security: {}
+  };
+  return {
+    ...systemDefaults,
+    ...user,
+    ...safeWorkspaceWithoutFolderTrust,
+    ...system,
+    general: {
+      ...systemDefaults.general || {},
+      ...user.general || {},
+      ...safeWorkspaceWithoutFolderTrust.general || {},
+      ...system.general || {}
+    },
+    ui: {
+      ...systemDefaults.ui || {},
+      ...user.ui || {},
+      ...safeWorkspaceWithoutFolderTrust.ui || {},
+      ...system.ui || {},
+      customThemes: {
+        ...systemDefaults.ui?.customThemes || {},
+        ...user.ui?.customThemes || {},
+        ...safeWorkspaceWithoutFolderTrust.ui?.customThemes || {},
+        ...system.ui?.customThemes || {}
+      }
+    },
+    ide: {
+      ...systemDefaults.ide || {},
+      ...user.ide || {},
+      ...safeWorkspaceWithoutFolderTrust.ide || {},
+      ...system.ide || {}
+    },
+    privacy: {
+      ...systemDefaults.privacy || {},
+      ...user.privacy || {},
+      ...safeWorkspaceWithoutFolderTrust.privacy || {},
+      ...system.privacy || {}
+    },
+    telemetry: {
+      ...systemDefaults.telemetry || {},
+      ...user.telemetry || {},
+      ...safeWorkspaceWithoutFolderTrust.telemetry || {},
+      ...system.telemetry || {}
+    },
+    security: {
+      ...systemDefaults.security || {},
+      ...user.security || {},
+      ...safeWorkspaceWithoutFolderTrust.security || {},
+      ...system.security || {}
+    },
+    mcp: {
+      ...systemDefaults.mcp || {},
+      ...user.mcp || {},
+      ...safeWorkspaceWithoutFolderTrust.mcp || {},
+      ...system.mcp || {}
+    },
+    mcpServers: {
+      ...systemDefaults.mcpServers || {},
+      ...user.mcpServers || {},
+      ...safeWorkspaceWithoutFolderTrust.mcpServers || {},
+      ...system.mcpServers || {}
+    },
+    tools: {
+      ...systemDefaults.tools || {},
+      ...user.tools || {},
+      ...safeWorkspaceWithoutFolderTrust.tools || {},
+      ...system.tools || {}
+    },
+    context: {
+      ...systemDefaults.context || {},
+      ...user.context || {},
+      ...safeWorkspaceWithoutFolderTrust.context || {},
+      ...system.context || {},
+      includeDirectories: [
+        ...systemDefaults.context?.includeDirectories || [],
+        ...user.context?.includeDirectories || [],
+        ...safeWorkspaceWithoutFolderTrust.context?.includeDirectories || [],
+        ...system.context?.includeDirectories || []
+      ]
+    },
+    model: {
+      ...systemDefaults.model || {},
+      ...user.model || {},
+      ...safeWorkspaceWithoutFolderTrust.model || {},
+      ...system.model || {},
+      chatCompression: {
+        ...systemDefaults.model?.chatCompression || {},
+        ...user.model?.chatCompression || {},
+        ...safeWorkspaceWithoutFolderTrust.model?.chatCompression || {},
+        ...system.model?.chatCompression || {}
+      }
+    },
+    advanced: {
+      ...systemDefaults.advanced || {},
+      ...user.advanced || {},
+      ...safeWorkspaceWithoutFolderTrust.advanced || {},
+      ...system.advanced || {},
+      excludedEnvVars: [
+        .../* @__PURE__ */ new Set([
+          ...systemDefaults.advanced?.excludedEnvVars || [],
+          ...user.advanced?.excludedEnvVars || [],
+          ...safeWorkspaceWithoutFolderTrust.advanced?.excludedEnvVars || [],
+          ...system.advanced?.excludedEnvVars || []
+        ])
+      ]
+    },
+    experimental: {
+      ...systemDefaults.experimental || {},
+      ...user.experimental || {},
+      ...safeWorkspaceWithoutFolderTrust.experimental || {},
+      ...system.experimental || {}
+    },
+    contentGenerator: {
+      ...systemDefaults.contentGenerator || {},
+      ...user.contentGenerator || {},
+      ...safeWorkspaceWithoutFolderTrust.contentGenerator || {},
+      ...system.contentGenerator || {}
+    },
+    systemPromptMappings: {
+      ...systemDefaults.systemPromptMappings || {},
+      ...user.systemPromptMappings || {},
+      ...safeWorkspaceWithoutFolderTrust.systemPromptMappings || {},
+      ...system.systemPromptMappings || {}
+    },
+    extensions: {
+      ...systemDefaults.extensions || {},
+      ...user.extensions || {},
+      ...safeWorkspaceWithoutFolderTrust.extensions || {},
+      ...system.extensions || {},
+      disabled: [
+        .../* @__PURE__ */ new Set([
+          ...systemDefaults.extensions?.disabled || [],
+          ...user.extensions?.disabled || [],
+          ...safeWorkspaceWithoutFolderTrust.extensions?.disabled || [],
+          ...system.extensions?.disabled || []
+        ])
+      ],
+      workspacesWithMigrationNudge: [
+        .../* @__PURE__ */ new Set([
+          ...systemDefaults.extensions?.workspacesWithMigrationNudge || [],
+          ...user.extensions?.workspacesWithMigrationNudge || [],
+          ...safeWorkspaceWithoutFolderTrust.extensions?.workspacesWithMigrationNudge || [],
+          ...system.extensions?.workspacesWithMigrationNudge || []
+        ])
+      ]
+    }
+  };
+}
+function resolveEnvVarsInString(value) {
+  const envVarRegex = /\$(?:(\w+)|{([^}]+)})/g;
+  return value.replace(envVarRegex, (match2, varName1, varName2) => {
+    const varName = varName1 || varName2;
+    if (process && process.env && typeof process.env[varName] === "string") {
+      return process.env[varName];
+    }
+    return match2;
+  });
+}
+function resolveEnvVarsInObject(obj) {
+  if (obj === null || obj === void 0 || typeof obj === "boolean" || typeof obj === "number") {
+    return obj;
+  }
+  if (typeof obj === "string") {
+    return resolveEnvVarsInString(obj);
+  }
+  if (Array.isArray(obj)) {
+    return obj.map((item) => resolveEnvVarsInObject(item));
+  }
+  if (typeof obj === "object") {
+    const newObj = { ...obj };
+    for (const key in newObj) {
+      if (Object.prototype.hasOwnProperty.call(newObj, key)) {
+        newObj[key] = resolveEnvVarsInObject(newObj[key]);
+      }
+    }
+    return newObj;
+  }
+  return obj;
+}
+function findEnvFile(startDir) {
+  let currentDir = path60.resolve(startDir);
+  while (true) {
+    const geminiEnvPath = path60.join(currentDir, GEMINI_CONFIG_DIR, ".env");
+    if (fs56.existsSync(geminiEnvPath)) {
+      return geminiEnvPath;
+    }
+    const envPath = path60.join(currentDir, ".env");
+    if (fs56.existsSync(envPath)) {
+      return envPath;
+    }
+    const parentDir = path60.dirname(currentDir);
+    if (parentDir === currentDir || !parentDir) {
+      const homeGeminiEnvPath = path60.join(homedir9(), GEMINI_CONFIG_DIR, ".env");
+      if (fs56.existsSync(homeGeminiEnvPath)) {
+        return homeGeminiEnvPath;
+      }
+      const homeEnvPath = path60.join(homedir9(), ".env");
+      if (fs56.existsSync(homeEnvPath)) {
+        return homeEnvPath;
+      }
+      return null;
+    }
+    currentDir = parentDir;
+  }
+}
+function setUpCloudShellEnvironment(envFilePath) {
+  if (envFilePath && fs56.existsSync(envFilePath)) {
+    const envFileContent = fs56.readFileSync(envFilePath);
+    const parsedEnv = dotenv.parse(envFileContent);
+    if (parsedEnv["GOOGLE_CLOUD_PROJECT"]) {
+      process.env["GOOGLE_CLOUD_PROJECT"] = parsedEnv["GOOGLE_CLOUD_PROJECT"];
+    } else {
+      process.env["GOOGLE_CLOUD_PROJECT"] = "cloudshell-gca";
+    }
+  } else {
+    process.env["GOOGLE_CLOUD_PROJECT"] = "cloudshell-gca";
+  }
+}
+function loadEnvironment(settings) {
+  const envFilePath = findEnvFile(process.cwd());
+  if (process.env["CLOUD_SHELL"] === "true") {
+    setUpCloudShellEnvironment(envFilePath);
+  }
+  let resolvedSettings = settings;
+  if (!resolvedSettings) {
+    const workspaceSettingsPath = new Storage(
+      process.cwd()
+    ).getWorkspaceSettingsPath();
+    try {
+      if (fs56.existsSync(workspaceSettingsPath)) {
+        const workspaceContent = fs56.readFileSync(
+          workspaceSettingsPath,
+          "utf-8"
+        );
+        const parsedWorkspaceSettings = JSON.parse(
+          (0, import_strip_json_comments2.default)(workspaceContent)
+        );
+        resolvedSettings = resolveEnvVarsInObject(parsedWorkspaceSettings);
+      }
+    } catch (_e) {
+    }
+  }
+  if (envFilePath) {
+    try {
+      const envFileContent = fs56.readFileSync(envFilePath, "utf-8");
+      const parsedEnv = dotenv.parse(envFileContent);
+      const excludedVars = resolvedSettings?.advanced?.excludedEnvVars || DEFAULT_EXCLUDED_ENV_VARS;
+      const isProjectEnvFile = !envFilePath.includes(GEMINI_CONFIG_DIR);
+      for (const key in parsedEnv) {
+        if (Object.hasOwn(parsedEnv, key)) {
+          if (isProjectEnvFile && excludedVars.includes(key)) {
+            continue;
+          }
+          if (!Object.hasOwn(process.env, key)) {
+            process.env[key] = parsedEnv[key];
+          }
+        }
+      }
+    } catch (_e) {
+    }
+  }
+}
+function loadSettings(workspaceDir) {
+  let systemSettings = {};
+  let systemDefaultSettings = {};
+  let userSettings = {};
+  let workspaceSettings = {};
+  const settingsErrors = [];
+  const systemSettingsPath = getSystemSettingsPath();
+  const systemDefaultsPath = getSystemDefaultsPath();
+  const migratedInMemorScopes = /* @__PURE__ */ new Set();
+  const resolvedWorkspaceDir = path60.resolve(workspaceDir);
+  const resolvedHomeDir = path60.resolve(homedir9());
+  let realWorkspaceDir = resolvedWorkspaceDir;
+  try {
+    realWorkspaceDir = fs56.realpathSync(resolvedWorkspaceDir);
+  } catch (_e) {
+  }
+  const realHomeDir = fs56.realpathSync(resolvedHomeDir);
+  const workspaceSettingsPath = new Storage(
+    workspaceDir
+  ).getWorkspaceSettingsPath();
+  const loadAndMigrate = (filePath, scope) => {
+    try {
+      if (fs56.existsSync(filePath)) {
+        const content = fs56.readFileSync(filePath, "utf-8");
+        const rawSettings = JSON.parse((0, import_strip_json_comments2.default)(content));
+        if (typeof rawSettings !== "object" || rawSettings === null || Array.isArray(rawSettings)) {
+          settingsErrors.push({
+            message: "Settings file is not a valid JSON object.",
+            path: filePath
+          });
+          return {};
+        }
+        let settingsObject = rawSettings;
+        if (needsMigration(settingsObject)) {
+          const migratedSettings = migrateSettingsToV2(settingsObject);
+          if (migratedSettings) {
+            if (MIGRATE_V2_OVERWRITE) {
+              try {
+                fs56.renameSync(filePath, `${filePath}.orig`);
+                fs56.writeFileSync(
+                  filePath,
+                  JSON.stringify(migratedSettings, null, 2),
+                  "utf-8"
+                );
+              } catch (e2) {
+                console.error(
+                  `Error migrating settings file on disk: ${getErrorMessage(
+                    e2
+                  )}`
+                );
+              }
+            } else {
+              migratedInMemorScopes.add(scope);
+            }
+            settingsObject = migratedSettings;
+          }
+        }
+        return settingsObject;
+      }
+    } catch (error) {
+      settingsErrors.push({
+        message: getErrorMessage(error),
+        path: filePath
+      });
+    }
+    return {};
+  };
+  systemSettings = loadAndMigrate(systemSettingsPath, "System" /* System */);
+  systemDefaultSettings = loadAndMigrate(
+    systemDefaultsPath,
+    "SystemDefaults" /* SystemDefaults */
+  );
+  userSettings = loadAndMigrate(USER_SETTINGS_PATH, "User" /* User */);
+  if (realWorkspaceDir !== realHomeDir) {
+    workspaceSettings = loadAndMigrate(
+      workspaceSettingsPath,
+      "Workspace" /* Workspace */
+    );
+  }
+  if (userSettings.ui?.theme === "VS") {
+    userSettings.ui.theme = DefaultLight.name;
+  } else if (userSettings.ui?.theme === "VS2015") {
+    userSettings.ui.theme = DefaultDark.name;
+  }
+  if (workspaceSettings.ui?.theme === "VS") {
+    workspaceSettings.ui.theme = DefaultLight.name;
+  } else if (workspaceSettings.ui?.theme === "VS2015") {
+    workspaceSettings.ui.theme = DefaultDark.name;
+  }
+  const initialTrustCheckSettings = mergeWith_default({}, systemSettings, userSettings);
+  const isTrusted = isWorkspaceTrusted(initialTrustCheckSettings) ?? true;
+  const tempMergedSettings = mergeSettings(
+    systemSettings,
+    systemDefaultSettings,
+    userSettings,
+    workspaceSettings,
+    isTrusted
+  );
+  loadEnvironment(tempMergedSettings);
+  systemSettings = resolveEnvVarsInObject(systemSettings);
+  userSettings = resolveEnvVarsInObject(userSettings);
+  workspaceSettings = resolveEnvVarsInObject(workspaceSettings);
+  const loadedSettings = new LoadedSettings(
+    {
+      path: systemSettingsPath,
+      settings: systemSettings
+    },
+    {
+      path: systemDefaultsPath,
+      settings: systemDefaultSettings
+    },
+    {
+      path: USER_SETTINGS_PATH,
+      settings: userSettings
+    },
+    {
+      path: workspaceSettingsPath,
+      settings: workspaceSettings
+    },
+    settingsErrors,
+    isTrusted,
+    migratedInMemorScopes
+  );
+  return loadedSettings;
+}
+function saveSettings(settingsFile) {
+  try {
+    const dirPath = path60.dirname(settingsFile.path);
+    if (!fs56.existsSync(dirPath)) {
+      fs56.mkdirSync(dirPath, { recursive: true });
+    }
+    let settingsToSave = settingsFile.settings;
+    if (!MIGRATE_V2_OVERWRITE) {
+      settingsToSave = migrateSettingsToV1(
+        settingsToSave
+      );
+    }
+    fs56.writeFileSync(
+      settingsFile.path,
+      JSON.stringify(settingsToSave, null, 2),
+      "utf-8"
+    );
+  } catch (error) {
+    console.error("Error saving user settings file:", error);
+  }
+}
+var dotenv, import_strip_json_comments2, SETTINGS_DIRECTORY_NAME2, USER_SETTINGS_PATH, USER_SETTINGS_DIR2, DEFAULT_EXCLUDED_ENV_VARS, MIGRATE_V2_OVERWRITE, MIGRATION_MAP, SettingScope, REVERSE_MIGRATION_MAP, LoadedSettings;
+var init_settings = __esm({
+  "packages/cli/src/config/settings.ts"() {
+    "use strict";
+    dotenv = __toESM(require_main(), 1);
+    init_dist3();
+    import_strip_json_comments2 = __toESM(require_strip_json_comments(), 1);
+    init_default_light();
+    init_default2();
+    init_trustedFolders();
+    init_lodash();
+    SETTINGS_DIRECTORY_NAME2 = ".qwen";
+    USER_SETTINGS_PATH = Storage.getGlobalSettingsPath();
+    USER_SETTINGS_DIR2 = path60.dirname(USER_SETTINGS_PATH);
+    DEFAULT_EXCLUDED_ENV_VARS = ["DEBUG", "DEBUG_MODE"];
+    MIGRATE_V2_OVERWRITE = false;
+    MIGRATION_MAP = {
+      preferredEditor: "general.preferredEditor",
+      vimMode: "general.vimMode",
+      disableAutoUpdate: "general.disableAutoUpdate",
+      disableUpdateNag: "general.disableUpdateNag",
+      checkpointing: "general.checkpointing",
+      theme: "ui.theme",
+      customThemes: "ui.customThemes",
+      hideWindowTitle: "ui.hideWindowTitle",
+      hideTips: "ui.hideTips",
+      hideBanner: "ui.hideBanner",
+      hideFooter: "ui.hideFooter",
+      showMemoryUsage: "ui.showMemoryUsage",
+      showLineNumbers: "ui.showLineNumbers",
+      accessibility: "ui.accessibility",
+      ideMode: "ide.enabled",
+      hasSeenIdeIntegrationNudge: "ide.hasSeenNudge",
+      usageStatisticsEnabled: "privacy.usageStatisticsEnabled",
+      telemetry: "telemetry",
+      model: "model.name",
+      maxSessionTurns: "model.maxSessionTurns",
+      summarizeToolOutput: "model.summarizeToolOutput",
+      chatCompression: "model.chatCompression",
+      skipNextSpeakerCheck: "model.skipNextSpeakerCheck",
+      contextFileName: "context.fileName",
+      memoryImportFormat: "context.importFormat",
+      memoryDiscoveryMaxDirs: "context.discoveryMaxDirs",
+      includeDirectories: "context.includeDirectories",
+      loadMemoryFromIncludeDirectories: "context.loadFromIncludeDirectories",
+      fileFiltering: "context.fileFiltering",
+      sandbox: "tools.sandbox",
+      shouldUseNodePtyShell: "tools.usePty",
+      allowedTools: "tools.allowed",
+      coreTools: "tools.core",
+      excludeTools: "tools.exclude",
+      toolDiscoveryCommand: "tools.discoveryCommand",
+      toolCallCommand: "tools.callCommand",
+      mcpServerCommand: "mcp.serverCommand",
+      allowMCPServers: "mcp.allowed",
+      excludeMCPServers: "mcp.excluded",
+      folderTrustFeature: "security.folderTrust.featureEnabled",
+      folderTrust: "security.folderTrust.enabled",
+      selectedAuthType: "security.auth.selectedType",
+      useExternalAuth: "security.auth.useExternal",
+      autoConfigureMaxOldSpaceSize: "advanced.autoConfigureMemory",
+      dnsResolutionOrder: "advanced.dnsResolutionOrder",
+      excludedProjectEnvVars: "advanced.excludedEnvVars",
+      bugCommand: "advanced.bugCommand",
+      approvalMode: "approvalMode"
+    };
+    SettingScope = /* @__PURE__ */ ((SettingScope2) => {
+      SettingScope2["User"] = "User";
+      SettingScope2["Workspace"] = "Workspace";
+      SettingScope2["System"] = "System";
+      SettingScope2["SystemDefaults"] = "SystemDefaults";
+      return SettingScope2;
+    })(SettingScope || {});
+    REVERSE_MIGRATION_MAP = Object.fromEntries(
+      Object.entries(MIGRATION_MAP).map(([key, value]) => [value, key])
+    );
+    LoadedSettings = class {
+      constructor(system, systemDefaults, user, workspace, errors, isTrusted, migratedInMemorScopes) {
+        this.system = system;
+        this.systemDefaults = systemDefaults;
+        this.user = user;
+        this.workspace = workspace;
+        this.errors = errors;
+        this.isTrusted = isTrusted;
+        this.migratedInMemorScopes = migratedInMemorScopes;
+        this._merged = this.computeMergedSettings();
+      }
+      system;
+      systemDefaults;
+      user;
+      workspace;
+      errors;
+      isTrusted;
+      migratedInMemorScopes;
+      _merged;
+      get merged() {
+        return this._merged;
+      }
+      computeMergedSettings() {
+        return mergeSettings(
+          this.system.settings,
+          this.systemDefaults.settings,
+          this.user.settings,
+          this.workspace.settings,
+          this.isTrusted
+        );
+      }
+      forScope(scope) {
+        switch (scope) {
+          case "User" /* User */:
+            return this.user;
+          case "Workspace" /* Workspace */:
+            return this.workspace;
+          case "System" /* System */:
+            return this.system;
+          case "SystemDefaults" /* SystemDefaults */:
+            return this.systemDefaults;
+          default:
+            throw new Error(`Invalid scope: ${scope}`);
+        }
+      }
+      setValue(scope, key, value) {
+        const settingsFile = this.forScope(scope);
+        setNestedProperty(settingsFile.settings, key, value);
+        this._merged = this.computeMergedSettings();
+        saveSettings(settingsFile);
+        if (key === "scheduler.executionMode" && typeof value === "string") {
+          process.env["LOWCAL_SCHEDULER_DEFAULT_MODE"] = value;
+        }
+      }
+    };
+  }
+});
+
 // node_modules/y18n/build/index.cjs
 var require_build = __commonJS({
   "node_modules/y18n/build/index.cjs"(exports2, module2) {
@@ -314754,2654 +318096,7 @@ import v8 from "node:v8";
 
 // packages/cli/src/config/auth.ts
 init_dist3();
-
-// packages/cli/src/config/settings.ts
-var dotenv = __toESM(require_main(), 1);
-init_dist3();
-var import_strip_json_comments2 = __toESM(require_strip_json_comments(), 1);
-import * as fs56 from "node:fs";
-import * as path60 from "node:path";
-import { homedir as homedir9, platform as platform6 } from "node:os";
-
-// packages/cli/src/ui/themes/color-utils.ts
-var CSS_NAME_TO_HEX_MAP = {
-  aliceblue: "#f0f8ff",
-  antiquewhite: "#faebd7",
-  aqua: "#00ffff",
-  aquamarine: "#7fffd4",
-  azure: "#f0ffff",
-  beige: "#f5f5dc",
-  bisque: "#ffe4c4",
-  blanchedalmond: "#ffebcd",
-  blueviolet: "#8a2be2",
-  brown: "#a52a2a",
-  burlywood: "#deb887",
-  cadetblue: "#5f9ea0",
-  chartreuse: "#7fff00",
-  chocolate: "#d2691e",
-  coral: "#ff7f50",
-  cornflowerblue: "#6495ed",
-  cornsilk: "#fff8dc",
-  crimson: "#dc143c",
-  darkblue: "#00008b",
-  darkcyan: "#008b8b",
-  darkgoldenrod: "#b8860b",
-  darkgray: "#a9a9a9",
-  darkgrey: "#a9a9a9",
-  darkgreen: "#006400",
-  darkkhaki: "#bdb76b",
-  darkmagenta: "#8b008b",
-  darkolivegreen: "#556b2f",
-  darkorange: "#ff8c00",
-  darkorchid: "#9932cc",
-  darkred: "#8b0000",
-  darksalmon: "#e9967a",
-  darkseagreen: "#8fbc8f",
-  darkslateblue: "#483d8b",
-  darkslategray: "#2f4f4f",
-  darkslategrey: "#2f4f4f",
-  darkturquoise: "#00ced1",
-  darkviolet: "#9400d3",
-  deeppink: "#ff1493",
-  deepskyblue: "#00bfff",
-  dimgray: "#696969",
-  dimgrey: "#696969",
-  dodgerblue: "#1e90ff",
-  firebrick: "#b22222",
-  floralwhite: "#fffaf0",
-  forestgreen: "#228b22",
-  fuchsia: "#ff00ff",
-  gainsboro: "#dcdcdc",
-  ghostwhite: "#f8f8ff",
-  gold: "#ffd700",
-  goldenrod: "#daa520",
-  greenyellow: "#adff2f",
-  honeydew: "#f0fff0",
-  hotpink: "#ff69b4",
-  indianred: "#cd5c5c",
-  indigo: "#4b0082",
-  ivory: "#fffff0",
-  khaki: "#f0e68c",
-  lavender: "#e6e6fa",
-  lavenderblush: "#fff0f5",
-  lawngreen: "#7cfc00",
-  lemonchiffon: "#fffacd",
-  lightblue: "#add8e6",
-  lightcoral: "#f08080",
-  lightcyan: "#e0ffff",
-  lightgoldenrodyellow: "#fafad2",
-  lightgray: "#d3d3d3",
-  lightgrey: "#d3d3d3",
-  lightgreen: "#90ee90",
-  lightpink: "#ffb6c1",
-  lightsalmon: "#ffa07a",
-  lightseagreen: "#20b2aa",
-  lightskyblue: "#87cefa",
-  lightslategray: "#778899",
-  lightslategrey: "#778899",
-  lightsteelblue: "#b0c4de",
-  lightyellow: "#ffffe0",
-  lime: "#00ff00",
-  limegreen: "#32cd32",
-  linen: "#faf0e6",
-  maroon: "#800000",
-  mediumaquamarine: "#66cdaa",
-  mediumblue: "#0000cd",
-  mediumorchid: "#ba55d3",
-  mediumpurple: "#9370db",
-  mediumseagreen: "#3cb371",
-  mediumslateblue: "#7b68ee",
-  mediumspringgreen: "#00fa9a",
-  mediumturquoise: "#48d1cc",
-  mediumvioletred: "#c71585",
-  midnightblue: "#191970",
-  mintcream: "#f5fffa",
-  mistyrose: "#ffe4e1",
-  moccasin: "#ffe4b5",
-  navajowhite: "#ffdead",
-  navy: "#000080",
-  oldlace: "#fdf5e6",
-  olive: "#808000",
-  olivedrab: "#6b8e23",
-  orange: "#ffa500",
-  orangered: "#ff4500",
-  orchid: "#da70d6",
-  palegoldenrod: "#eee8aa",
-  palegreen: "#98fb98",
-  paleturquoise: "#afeeee",
-  palevioletred: "#db7093",
-  papayawhip: "#ffefd5",
-  peachpuff: "#ffdab9",
-  peru: "#cd853f",
-  pink: "#ffc0cb",
-  plum: "#dda0dd",
-  powderblue: "#b0e0e6",
-  purple: "#800080",
-  rebeccapurple: "#663399",
-  rosybrown: "#bc8f8f",
-  royalblue: "#4169e1",
-  saddlebrown: "#8b4513",
-  salmon: "#fa8072",
-  sandybrown: "#f4a460",
-  seagreen: "#2e8b57",
-  seashell: "#fff5ee",
-  sienna: "#a0522d",
-  silver: "#c0c0c0",
-  skyblue: "#87ceeb",
-  slateblue: "#6a5acd",
-  slategray: "#708090",
-  slategrey: "#708090",
-  snow: "#fffafa",
-  springgreen: "#00ff7f",
-  steelblue: "#4682b4",
-  tan: "#d2b48c",
-  teal: "#008080",
-  thistle: "#d8bfd8",
-  tomato: "#ff6347",
-  turquoise: "#40e0d0",
-  violet: "#ee82ee",
-  wheat: "#f5deb3",
-  whitesmoke: "#f5f5f5",
-  yellowgreen: "#9acd32"
-};
-var INK_SUPPORTED_NAMES = /* @__PURE__ */ new Set([
-  "black",
-  "red",
-  "green",
-  "yellow",
-  "blue",
-  "cyan",
-  "magenta",
-  "white",
-  "gray",
-  "grey",
-  "blackbright",
-  "redbright",
-  "greenbright",
-  "yellowbright",
-  "bluebright",
-  "cyanbright",
-  "magentabright",
-  "whitebright"
-]);
-function resolveColor(colorValue) {
-  const lowerColor = colorValue.toLowerCase();
-  if (lowerColor.startsWith("#")) {
-    if (/^#[0-9A-Fa-f]{3}([0-9A-Fa-f]{3})?$/.test(colorValue)) {
-      return lowerColor;
-    } else {
-      return void 0;
-    }
-  } else if (INK_SUPPORTED_NAMES.has(lowerColor)) {
-    return lowerColor;
-  } else if (CSS_NAME_TO_HEX_MAP[lowerColor]) {
-    return CSS_NAME_TO_HEX_MAP[lowerColor];
-  }
-  console.warn(
-    `[ColorUtils] Could not resolve color "${colorValue}" to an Ink-compatible format.`
-  );
-  return void 0;
-}
-
-// packages/cli/src/ui/themes/theme.ts
-var lightTheme = {
-  type: "light",
-  Background: "#FAFAFA",
-  Foreground: "#3C3C43",
-  LightBlue: "#89BDCD",
-  AccentBlue: "#3B82F6",
-  AccentPurple: "#8B5CF6",
-  AccentCyan: "#06B6D4",
-  AccentGreen: "#3CA84B",
-  AccentYellow: "#D5A40A",
-  AccentRed: "#DD4C4C",
-  DiffAdded: "#C6EAD8",
-  DiffRemoved: "#FFCCCC",
-  Comment: "#008000",
-  Gray: "#97a0b0",
-  GradientColors: ["#4796E4", "#847ACE", "#C3677F"]
-};
-var darkTheme = {
-  type: "dark",
-  Background: "#1E1E2E",
-  Foreground: "#CDD6F4",
-  LightBlue: "#ADD8E6",
-  AccentBlue: "#89B4FA",
-  AccentPurple: "#CBA6F7",
-  AccentCyan: "#89DCEB",
-  AccentGreen: "#A6E3A1",
-  AccentYellow: "#F9E2AF",
-  AccentRed: "#F38BA8",
-  DiffAdded: "#28350B",
-  DiffRemoved: "#430000",
-  Comment: "#6C7086",
-  Gray: "#6C7086",
-  GradientColors: ["#4796E4", "#847ACE", "#C3677F"]
-};
-var ansiTheme = {
-  type: "ansi",
-  Background: "black",
-  Foreground: "white",
-  LightBlue: "blue",
-  AccentBlue: "blue",
-  AccentPurple: "magenta",
-  AccentCyan: "cyan",
-  AccentGreen: "green",
-  AccentYellow: "yellow",
-  AccentRed: "red",
-  DiffAdded: "green",
-  DiffRemoved: "red",
-  Comment: "gray",
-  Gray: "gray"
-};
-var Theme = class _Theme {
-  /**
-   * Creates a new Theme instance.
-   * @param name The name of the theme.
-   * @param rawMappings The raw CSSProperties mappings from a react-syntax-highlighter theme object.
-   */
-  constructor(name2, type, rawMappings, colors, semanticColors) {
-    this.name = name2;
-    this.type = type;
-    this.colors = colors;
-    this.semanticColors = semanticColors ?? {
-      text: {
-        primary: this.colors.Foreground,
-        secondary: this.colors.Gray,
-        link: this.colors.AccentBlue,
-        accent: this.colors.AccentPurple
-      },
-      background: {
-        primary: this.colors.Background,
-        diff: {
-          added: this.colors.DiffAdded,
-          removed: this.colors.DiffRemoved
-        }
-      },
-      border: {
-        default: this.colors.Gray,
-        focused: this.colors.AccentBlue
-      },
-      ui: {
-        comment: this.colors.Comment,
-        symbol: this.colors.Gray,
-        gradient: this.colors.GradientColors
-      },
-      status: {
-        error: this.colors.AccentRed,
-        success: this.colors.AccentGreen,
-        warning: this.colors.AccentYellow
-      }
-    };
-    this._colorMap = Object.freeze(this._buildColorMap(rawMappings));
-    const rawDefaultColor = rawMappings["hljs"]?.color;
-    this.defaultColor = (rawDefaultColor ? _Theme._resolveColor(rawDefaultColor) : void 0) ?? "";
-  }
-  /**
-   * The default foreground color for text when no specific highlight rule applies.
-   * This is an Ink-compatible color string (hex or name).
-   */
-  defaultColor;
-  /**
-   * Stores the mapping from highlight.js class names (e.g., 'hljs-keyword')
-   * to Ink-compatible color strings (hex or name).
-   */
-  _colorMap;
-  semanticColors;
-  /**
-   * Gets the Ink-compatible color string for a given highlight.js class name.
-   * @param hljsClass The highlight.js class name (e.g., 'hljs-keyword', 'hljs-string').
-   * @returns The corresponding Ink color string (hex or name) if it exists.
-   */
-  getInkColor(hljsClass) {
-    return this._colorMap[hljsClass];
-  }
-  /**
-   * Resolves a CSS color value (name or hex) into an Ink-compatible color string.
-   * @param colorValue The raw color string (e.g., 'blue', '#ff0000', 'darkkhaki').
-   * @returns An Ink-compatible color string (hex or name), or undefined if not resolvable.
-   */
-  static _resolveColor(colorValue) {
-    return resolveColor(colorValue);
-  }
-  /**
-   * Builds the internal map from highlight.js class names to Ink-compatible color strings.
-   * This method is protected and primarily intended for use by the constructor.
-   * @param hljsTheme The raw CSSProperties mappings from a react-syntax-highlighter theme object.
-   * @returns An Ink-compatible theme map (Record<string, string>).
-   */
-  _buildColorMap(hljsTheme) {
-    const inkTheme = {};
-    for (const key in hljsTheme) {
-      if (!key.startsWith("hljs-") && key !== "hljs") {
-        continue;
-      }
-      const style = hljsTheme[key];
-      if (style?.color) {
-        const resolvedColor = _Theme._resolveColor(style.color);
-        if (resolvedColor !== void 0) {
-          inkTheme[key] = resolvedColor;
-        }
-      }
-    }
-    return inkTheme;
-  }
-};
-function createCustomTheme(customTheme) {
-  const colors = {
-    type: "custom",
-    Background: customTheme.background?.primary ?? customTheme.Background ?? "",
-    Foreground: customTheme.text?.primary ?? customTheme.Foreground ?? "",
-    LightBlue: customTheme.text?.link ?? customTheme.LightBlue ?? "",
-    AccentBlue: customTheme.text?.link ?? customTheme.AccentBlue ?? "",
-    AccentPurple: customTheme.text?.accent ?? customTheme.AccentPurple ?? "",
-    AccentCyan: customTheme.text?.link ?? customTheme.AccentCyan ?? "",
-    AccentGreen: customTheme.status?.success ?? customTheme.AccentGreen ?? "",
-    AccentYellow: customTheme.status?.warning ?? customTheme.AccentYellow ?? "",
-    AccentRed: customTheme.status?.error ?? customTheme.AccentRed ?? "",
-    DiffAdded: customTheme.background?.diff?.added ?? customTheme.DiffAdded ?? "",
-    DiffRemoved: customTheme.background?.diff?.removed ?? customTheme.DiffRemoved ?? "",
-    Comment: customTheme.ui?.comment ?? customTheme.Comment ?? "",
-    Gray: customTheme.text?.secondary ?? customTheme.Gray ?? "",
-    GradientColors: customTheme.ui?.gradient ?? customTheme.GradientColors
-  };
-  const rawMappings = {
-    hljs: {
-      display: "block",
-      overflowX: "auto",
-      padding: "0.5em",
-      background: colors.Background,
-      color: colors.Foreground
-    },
-    "hljs-keyword": {
-      color: colors.AccentBlue
-    },
-    "hljs-literal": {
-      color: colors.AccentBlue
-    },
-    "hljs-symbol": {
-      color: colors.AccentBlue
-    },
-    "hljs-name": {
-      color: colors.AccentBlue
-    },
-    "hljs-link": {
-      color: colors.AccentBlue,
-      textDecoration: "underline"
-    },
-    "hljs-built_in": {
-      color: colors.AccentCyan
-    },
-    "hljs-type": {
-      color: colors.AccentCyan
-    },
-    "hljs-number": {
-      color: colors.AccentGreen
-    },
-    "hljs-class": {
-      color: colors.AccentGreen
-    },
-    "hljs-string": {
-      color: colors.AccentYellow
-    },
-    "hljs-meta-string": {
-      color: colors.AccentYellow
-    },
-    "hljs-regexp": {
-      color: colors.AccentRed
-    },
-    "hljs-template-tag": {
-      color: colors.AccentRed
-    },
-    "hljs-subst": {
-      color: colors.Foreground
-    },
-    "hljs-function": {
-      color: colors.Foreground
-    },
-    "hljs-title": {
-      color: colors.Foreground
-    },
-    "hljs-params": {
-      color: colors.Foreground
-    },
-    "hljs-formula": {
-      color: colors.Foreground
-    },
-    "hljs-comment": {
-      color: colors.Comment,
-      fontStyle: "italic"
-    },
-    "hljs-quote": {
-      color: colors.Comment,
-      fontStyle: "italic"
-    },
-    "hljs-doctag": {
-      color: colors.Comment
-    },
-    "hljs-meta": {
-      color: colors.Gray
-    },
-    "hljs-meta-keyword": {
-      color: colors.Gray
-    },
-    "hljs-tag": {
-      color: colors.Gray
-    },
-    "hljs-variable": {
-      color: colors.AccentPurple
-    },
-    "hljs-template-variable": {
-      color: colors.AccentPurple
-    },
-    "hljs-attr": {
-      color: colors.LightBlue
-    },
-    "hljs-attribute": {
-      color: colors.LightBlue
-    },
-    "hljs-builtin-name": {
-      color: colors.LightBlue
-    },
-    "hljs-section": {
-      color: colors.AccentYellow
-    },
-    "hljs-emphasis": {
-      fontStyle: "italic"
-    },
-    "hljs-strong": {
-      fontWeight: "bold"
-    },
-    "hljs-bullet": {
-      color: colors.AccentYellow
-    },
-    "hljs-selector-tag": {
-      color: colors.AccentYellow
-    },
-    "hljs-selector-id": {
-      color: colors.AccentYellow
-    },
-    "hljs-selector-class": {
-      color: colors.AccentYellow
-    },
-    "hljs-selector-attr": {
-      color: colors.AccentYellow
-    },
-    "hljs-selector-pseudo": {
-      color: colors.AccentYellow
-    },
-    "hljs-addition": {
-      backgroundColor: colors.AccentGreen,
-      display: "inline-block",
-      width: "100%"
-    },
-    "hljs-deletion": {
-      backgroundColor: colors.AccentRed,
-      display: "inline-block",
-      width: "100%"
-    }
-  };
-  const semanticColors = {
-    text: {
-      primary: colors.Foreground,
-      secondary: colors.Gray,
-      link: colors.AccentBlue,
-      accent: colors.AccentPurple
-    },
-    background: {
-      primary: colors.Background,
-      diff: {
-        added: colors.DiffAdded,
-        removed: colors.DiffRemoved
-      }
-    },
-    border: {
-      default: colors.Gray,
-      focused: colors.AccentBlue
-    },
-    ui: {
-      comment: colors.Comment,
-      symbol: colors.Gray,
-      gradient: colors.GradientColors
-    },
-    status: {
-      error: colors.AccentRed,
-      success: colors.AccentGreen,
-      warning: colors.AccentYellow
-    }
-  };
-  return new Theme(
-    customTheme.name,
-    "custom",
-    rawMappings,
-    colors,
-    semanticColors
-  );
-}
-function validateCustomTheme(customTheme) {
-  if (customTheme.name && !isValidThemeName(customTheme.name)) {
-    return {
-      isValid: false,
-      error: `Invalid theme name: ${customTheme.name}`
-    };
-  }
-  return {
-    isValid: true
-  };
-}
-function isValidThemeName(name2) {
-  return name2.trim().length > 0 && name2.trim().length <= 50;
-}
-
-// packages/cli/src/ui/themes/default-light.ts
-var DefaultLight = new Theme(
-  "Default Light",
-  "light",
-  {
-    hljs: {
-      display: "block",
-      overflowX: "auto",
-      padding: "0.5em",
-      background: lightTheme.Background,
-      color: lightTheme.Foreground
-    },
-    "hljs-comment": {
-      color: lightTheme.Comment
-    },
-    "hljs-quote": {
-      color: lightTheme.Comment
-    },
-    "hljs-variable": {
-      color: lightTheme.Foreground
-    },
-    "hljs-keyword": {
-      color: lightTheme.AccentBlue
-    },
-    "hljs-selector-tag": {
-      color: lightTheme.AccentBlue
-    },
-    "hljs-built_in": {
-      color: lightTheme.AccentBlue
-    },
-    "hljs-name": {
-      color: lightTheme.AccentBlue
-    },
-    "hljs-tag": {
-      color: lightTheme.AccentBlue
-    },
-    "hljs-string": {
-      color: lightTheme.AccentRed
-    },
-    "hljs-title": {
-      color: lightTheme.AccentRed
-    },
-    "hljs-section": {
-      color: lightTheme.AccentRed
-    },
-    "hljs-attribute": {
-      color: lightTheme.AccentRed
-    },
-    "hljs-literal": {
-      color: lightTheme.AccentRed
-    },
-    "hljs-template-tag": {
-      color: lightTheme.AccentRed
-    },
-    "hljs-template-variable": {
-      color: lightTheme.AccentRed
-    },
-    "hljs-type": {
-      color: lightTheme.AccentRed
-    },
-    "hljs-addition": {
-      color: lightTheme.AccentGreen
-    },
-    "hljs-deletion": {
-      color: lightTheme.AccentRed
-    },
-    "hljs-selector-attr": {
-      color: lightTheme.AccentCyan
-    },
-    "hljs-selector-pseudo": {
-      color: lightTheme.AccentCyan
-    },
-    "hljs-meta": {
-      color: lightTheme.AccentCyan
-    },
-    "hljs-doctag": {
-      color: lightTheme.Gray
-    },
-    "hljs-attr": {
-      color: lightTheme.AccentRed
-    },
-    "hljs-symbol": {
-      color: lightTheme.AccentCyan
-    },
-    "hljs-bullet": {
-      color: lightTheme.AccentCyan
-    },
-    "hljs-link": {
-      color: lightTheme.AccentCyan
-    },
-    "hljs-emphasis": {
-      fontStyle: "italic"
-    },
-    "hljs-strong": {
-      fontWeight: "bold"
-    }
-  },
-  lightTheme
-);
-
-// packages/cli/src/ui/themes/default.ts
-var DefaultDark = new Theme(
-  "Default",
-  "dark",
-  {
-    hljs: {
-      display: "block",
-      overflowX: "auto",
-      padding: "0.5em",
-      background: darkTheme.Background,
-      color: darkTheme.Foreground
-    },
-    "hljs-keyword": {
-      color: darkTheme.AccentBlue
-    },
-    "hljs-literal": {
-      color: darkTheme.AccentBlue
-    },
-    "hljs-symbol": {
-      color: darkTheme.AccentBlue
-    },
-    "hljs-name": {
-      color: darkTheme.AccentBlue
-    },
-    "hljs-link": {
-      color: darkTheme.AccentBlue,
-      textDecoration: "underline"
-    },
-    "hljs-built_in": {
-      color: darkTheme.AccentCyan
-    },
-    "hljs-type": {
-      color: darkTheme.AccentCyan
-    },
-    "hljs-number": {
-      color: darkTheme.AccentGreen
-    },
-    "hljs-class": {
-      color: darkTheme.AccentGreen
-    },
-    "hljs-string": {
-      color: darkTheme.AccentYellow
-    },
-    "hljs-meta-string": {
-      color: darkTheme.AccentYellow
-    },
-    "hljs-regexp": {
-      color: darkTheme.AccentRed
-    },
-    "hljs-template-tag": {
-      color: darkTheme.AccentRed
-    },
-    "hljs-subst": {
-      color: darkTheme.Foreground
-    },
-    "hljs-function": {
-      color: darkTheme.Foreground
-    },
-    "hljs-title": {
-      color: darkTheme.Foreground
-    },
-    "hljs-params": {
-      color: darkTheme.Foreground
-    },
-    "hljs-formula": {
-      color: darkTheme.Foreground
-    },
-    "hljs-comment": {
-      color: darkTheme.Comment,
-      fontStyle: "italic"
-    },
-    "hljs-quote": {
-      color: darkTheme.Comment,
-      fontStyle: "italic"
-    },
-    "hljs-doctag": {
-      color: darkTheme.Comment
-    },
-    "hljs-meta": {
-      color: darkTheme.Gray
-    },
-    "hljs-meta-keyword": {
-      color: darkTheme.Gray
-    },
-    "hljs-tag": {
-      color: darkTheme.Gray
-    },
-    "hljs-variable": {
-      color: darkTheme.AccentPurple
-    },
-    "hljs-template-variable": {
-      color: darkTheme.AccentPurple
-    },
-    "hljs-attr": {
-      color: darkTheme.LightBlue
-    },
-    "hljs-attribute": {
-      color: darkTheme.LightBlue
-    },
-    "hljs-builtin-name": {
-      color: darkTheme.LightBlue
-    },
-    "hljs-section": {
-      color: darkTheme.AccentYellow
-    },
-    "hljs-emphasis": {
-      fontStyle: "italic"
-    },
-    "hljs-strong": {
-      fontWeight: "bold"
-    },
-    "hljs-bullet": {
-      color: darkTheme.AccentYellow
-    },
-    "hljs-selector-tag": {
-      color: darkTheme.AccentYellow
-    },
-    "hljs-selector-id": {
-      color: darkTheme.AccentYellow
-    },
-    "hljs-selector-class": {
-      color: darkTheme.AccentYellow
-    },
-    "hljs-selector-attr": {
-      color: darkTheme.AccentYellow
-    },
-    "hljs-selector-pseudo": {
-      color: darkTheme.AccentYellow
-    },
-    "hljs-addition": {
-      backgroundColor: "#144212",
-      display: "inline-block",
-      width: "100%"
-    },
-    "hljs-deletion": {
-      backgroundColor: "#600",
-      display: "inline-block",
-      width: "100%"
-    }
-  },
-  darkTheme
-);
-
-// packages/cli/src/config/trustedFolders.ts
-init_dist3();
-var import_strip_json_comments = __toESM(require_strip_json_comments(), 1);
-import * as fs55 from "node:fs";
-import * as path59 from "node:path";
-import { homedir as homedir8 } from "node:os";
-var TRUSTED_FOLDERS_FILENAME = "trustedFolders.json";
-var SETTINGS_DIRECTORY_NAME = ".qwen";
-var USER_SETTINGS_DIR = path59.join(homedir8(), SETTINGS_DIRECTORY_NAME);
-var USER_TRUSTED_FOLDERS_PATH = path59.join(
-  USER_SETTINGS_DIR,
-  TRUSTED_FOLDERS_FILENAME
-);
-var LoadedTrustedFolders = class {
-  constructor(user, errors) {
-    this.user = user;
-    this.errors = errors;
-  }
-  get rules() {
-    return Object.entries(this.user.config).map(([path107, trustLevel]) => ({
-      path: path107,
-      trustLevel
-    }));
-  }
-  setValue(path107, trustLevel) {
-    this.user.config[path107] = trustLevel;
-    saveTrustedFolders(this.user);
-  }
-};
-function loadTrustedFolders() {
-  const errors = [];
-  const userConfig = {};
-  const userPath = USER_TRUSTED_FOLDERS_PATH;
-  try {
-    if (fs55.existsSync(userPath)) {
-      const content = fs55.readFileSync(userPath, "utf-8");
-      const parsed = JSON.parse((0, import_strip_json_comments.default)(content));
-      if (parsed) {
-        Object.assign(userConfig, parsed);
-      }
-    }
-  } catch (error) {
-    errors.push({
-      message: getErrorMessage(error),
-      path: userPath
-    });
-  }
-  return new LoadedTrustedFolders(
-    { path: userPath, config: userConfig },
-    errors
-  );
-}
-function saveTrustedFolders(trustedFoldersFile) {
-  try {
-    const dirPath = path59.dirname(trustedFoldersFile.path);
-    if (!fs55.existsSync(dirPath)) {
-      fs55.mkdirSync(dirPath, { recursive: true });
-    }
-    fs55.writeFileSync(
-      trustedFoldersFile.path,
-      JSON.stringify(trustedFoldersFile.config, null, 2),
-      "utf-8"
-    );
-  } catch (error) {
-    console.error("Error saving trusted folders file:", error);
-  }
-}
-function isWorkspaceTrusted(settings) {
-  const folderTrustFeature = settings.security?.folderTrust?.featureEnabled ?? false;
-  const folderTrustSetting = settings.security?.folderTrust?.enabled ?? true;
-  const folderTrustEnabled = folderTrustFeature && folderTrustSetting;
-  if (!folderTrustEnabled) {
-    return true;
-  }
-  const { rules, errors } = loadTrustedFolders();
-  if (errors.length > 0) {
-    for (const error of errors) {
-      console.error(
-        `Error loading trusted folders config from ${error.path}: ${error.message}`
-      );
-    }
-  }
-  const trustedPaths = [];
-  const untrustedPaths = [];
-  for (const rule of rules) {
-    switch (rule.trustLevel) {
-      case "TRUST_FOLDER" /* TRUST_FOLDER */:
-        trustedPaths.push(rule.path);
-        break;
-      case "TRUST_PARENT" /* TRUST_PARENT */:
-        trustedPaths.push(path59.dirname(rule.path));
-        break;
-      case "DO_NOT_TRUST" /* DO_NOT_TRUST */:
-        untrustedPaths.push(rule.path);
-        break;
-      default:
-        break;
-    }
-  }
-  const cwd8 = process.cwd();
-  for (const trustedPath of trustedPaths) {
-    if (isWithinRoot(cwd8, trustedPath)) {
-      return true;
-    }
-  }
-  for (const untrustedPath of untrustedPaths) {
-    if (path59.normalize(cwd8) === path59.normalize(untrustedPath)) {
-      return false;
-    }
-  }
-  return void 0;
-}
-
-// node_modules/lodash-es/_freeGlobal.js
-var freeGlobal = typeof global == "object" && global && global.Object === Object && global;
-var freeGlobal_default = freeGlobal;
-
-// node_modules/lodash-es/_root.js
-var freeSelf = typeof self == "object" && self && self.Object === Object && self;
-var root = freeGlobal_default || freeSelf || Function("return this")();
-var root_default = root;
-
-// node_modules/lodash-es/_Symbol.js
-var Symbol2 = root_default.Symbol;
-var Symbol_default = Symbol2;
-
-// node_modules/lodash-es/_getRawTag.js
-var objectProto = Object.prototype;
-var hasOwnProperty2 = objectProto.hasOwnProperty;
-var nativeObjectToString = objectProto.toString;
-var symToStringTag = Symbol_default ? Symbol_default.toStringTag : void 0;
-function getRawTag(value) {
-  var isOwn = hasOwnProperty2.call(value, symToStringTag), tag2 = value[symToStringTag];
-  try {
-    value[symToStringTag] = void 0;
-    var unmasked = true;
-  } catch (e2) {
-  }
-  var result = nativeObjectToString.call(value);
-  if (unmasked) {
-    if (isOwn) {
-      value[symToStringTag] = tag2;
-    } else {
-      delete value[symToStringTag];
-    }
-  }
-  return result;
-}
-var getRawTag_default = getRawTag;
-
-// node_modules/lodash-es/_objectToString.js
-var objectProto2 = Object.prototype;
-var nativeObjectToString2 = objectProto2.toString;
-function objectToString2(value) {
-  return nativeObjectToString2.call(value);
-}
-var objectToString_default = objectToString2;
-
-// node_modules/lodash-es/_baseGetTag.js
-var nullTag = "[object Null]";
-var undefinedTag = "[object Undefined]";
-var symToStringTag2 = Symbol_default ? Symbol_default.toStringTag : void 0;
-function baseGetTag(value) {
-  if (value == null) {
-    return value === void 0 ? undefinedTag : nullTag;
-  }
-  return symToStringTag2 && symToStringTag2 in Object(value) ? getRawTag_default(value) : objectToString_default(value);
-}
-var baseGetTag_default = baseGetTag;
-
-// node_modules/lodash-es/isObjectLike.js
-function isObjectLike(value) {
-  return value != null && typeof value == "object";
-}
-var isObjectLike_default = isObjectLike;
-
-// node_modules/lodash-es/isArray.js
-var isArray2 = Array.isArray;
-var isArray_default = isArray2;
-
-// node_modules/lodash-es/isObject.js
-function isObject(value) {
-  var type = typeof value;
-  return value != null && (type == "object" || type == "function");
-}
-var isObject_default = isObject;
-
-// node_modules/lodash-es/identity.js
-function identity(value) {
-  return value;
-}
-var identity_default = identity;
-
-// node_modules/lodash-es/isFunction.js
-var asyncTag = "[object AsyncFunction]";
-var funcTag = "[object Function]";
-var genTag = "[object GeneratorFunction]";
-var proxyTag = "[object Proxy]";
-function isFunction(value) {
-  if (!isObject_default(value)) {
-    return false;
-  }
-  var tag2 = baseGetTag_default(value);
-  return tag2 == funcTag || tag2 == genTag || tag2 == asyncTag || tag2 == proxyTag;
-}
-var isFunction_default = isFunction;
-
-// node_modules/lodash-es/_coreJsData.js
-var coreJsData = root_default["__core-js_shared__"];
-var coreJsData_default = coreJsData;
-
-// node_modules/lodash-es/_isMasked.js
-var maskSrcKey = function() {
-  var uid = /[^.]+$/.exec(coreJsData_default && coreJsData_default.keys && coreJsData_default.keys.IE_PROTO || "");
-  return uid ? "Symbol(src)_1." + uid : "";
-}();
-function isMasked(func) {
-  return !!maskSrcKey && maskSrcKey in func;
-}
-var isMasked_default = isMasked;
-
-// node_modules/lodash-es/_toSource.js
-var funcProto = Function.prototype;
-var funcToString = funcProto.toString;
-function toSource(func) {
-  if (func != null) {
-    try {
-      return funcToString.call(func);
-    } catch (e2) {
-    }
-    try {
-      return func + "";
-    } catch (e2) {
-    }
-  }
-  return "";
-}
-var toSource_default = toSource;
-
-// node_modules/lodash-es/_baseIsNative.js
-var reRegExpChar = /[\\^$.*+?()[\]{}|]/g;
-var reIsHostCtor = /^\[object .+?Constructor\]$/;
-var funcProto2 = Function.prototype;
-var objectProto3 = Object.prototype;
-var funcToString2 = funcProto2.toString;
-var hasOwnProperty3 = objectProto3.hasOwnProperty;
-var reIsNative = RegExp(
-  "^" + funcToString2.call(hasOwnProperty3).replace(reRegExpChar, "\\$&").replace(/hasOwnProperty|(function).*?(?=\\\()| for .+?(?=\\\])/g, "$1.*?") + "$"
-);
-function baseIsNative(value) {
-  if (!isObject_default(value) || isMasked_default(value)) {
-    return false;
-  }
-  var pattern = isFunction_default(value) ? reIsNative : reIsHostCtor;
-  return pattern.test(toSource_default(value));
-}
-var baseIsNative_default = baseIsNative;
-
-// node_modules/lodash-es/_getValue.js
-function getValue(object, key) {
-  return object == null ? void 0 : object[key];
-}
-var getValue_default = getValue;
-
-// node_modules/lodash-es/_getNative.js
-function getNative(object, key) {
-  var value = getValue_default(object, key);
-  return baseIsNative_default(value) ? value : void 0;
-}
-var getNative_default = getNative;
-
-// node_modules/lodash-es/_baseCreate.js
-var objectCreate = Object.create;
-var baseCreate = /* @__PURE__ */ function() {
-  function object() {
-  }
-  return function(proto3) {
-    if (!isObject_default(proto3)) {
-      return {};
-    }
-    if (objectCreate) {
-      return objectCreate(proto3);
-    }
-    object.prototype = proto3;
-    var result = new object();
-    object.prototype = void 0;
-    return result;
-  };
-}();
-var baseCreate_default = baseCreate;
-
-// node_modules/lodash-es/_apply.js
-function apply(func, thisArg, args) {
-  switch (args.length) {
-    case 0:
-      return func.call(thisArg);
-    case 1:
-      return func.call(thisArg, args[0]);
-    case 2:
-      return func.call(thisArg, args[0], args[1]);
-    case 3:
-      return func.call(thisArg, args[0], args[1], args[2]);
-  }
-  return func.apply(thisArg, args);
-}
-var apply_default = apply;
-
-// node_modules/lodash-es/_copyArray.js
-function copyArray(source2, array) {
-  var index = -1, length = source2.length;
-  array || (array = Array(length));
-  while (++index < length) {
-    array[index] = source2[index];
-  }
-  return array;
-}
-var copyArray_default = copyArray;
-
-// node_modules/lodash-es/_shortOut.js
-var HOT_COUNT = 800;
-var HOT_SPAN = 16;
-var nativeNow = Date.now;
-function shortOut(func) {
-  var count = 0, lastCalled = 0;
-  return function() {
-    var stamp = nativeNow(), remaining = HOT_SPAN - (stamp - lastCalled);
-    lastCalled = stamp;
-    if (remaining > 0) {
-      if (++count >= HOT_COUNT) {
-        return arguments[0];
-      }
-    } else {
-      count = 0;
-    }
-    return func.apply(void 0, arguments);
-  };
-}
-var shortOut_default = shortOut;
-
-// node_modules/lodash-es/constant.js
-function constant(value) {
-  return function() {
-    return value;
-  };
-}
-var constant_default = constant;
-
-// node_modules/lodash-es/_defineProperty.js
-var defineProperty2 = function() {
-  try {
-    var func = getNative_default(Object, "defineProperty");
-    func({}, "", {});
-    return func;
-  } catch (e2) {
-  }
-}();
-var defineProperty_default = defineProperty2;
-
-// node_modules/lodash-es/_baseSetToString.js
-var baseSetToString = !defineProperty_default ? identity_default : function(func, string) {
-  return defineProperty_default(func, "toString", {
-    "configurable": true,
-    "enumerable": false,
-    "value": constant_default(string),
-    "writable": true
-  });
-};
-var baseSetToString_default = baseSetToString;
-
-// node_modules/lodash-es/_setToString.js
-var setToString = shortOut_default(baseSetToString_default);
-var setToString_default = setToString;
-
-// node_modules/lodash-es/_isIndex.js
-var MAX_SAFE_INTEGER = 9007199254740991;
-var reIsUint = /^(?:0|[1-9]\d*)$/;
-function isIndex(value, length) {
-  var type = typeof value;
-  length = length == null ? MAX_SAFE_INTEGER : length;
-  return !!length && (type == "number" || type != "symbol" && reIsUint.test(value)) && (value > -1 && value % 1 == 0 && value < length);
-}
-var isIndex_default = isIndex;
-
-// node_modules/lodash-es/_baseAssignValue.js
-function baseAssignValue(object, key, value) {
-  if (key == "__proto__" && defineProperty_default) {
-    defineProperty_default(object, key, {
-      "configurable": true,
-      "enumerable": true,
-      "value": value,
-      "writable": true
-    });
-  } else {
-    object[key] = value;
-  }
-}
-var baseAssignValue_default = baseAssignValue;
-
-// node_modules/lodash-es/eq.js
-function eq(value, other2) {
-  return value === other2 || value !== value && other2 !== other2;
-}
-var eq_default = eq;
-
-// node_modules/lodash-es/_assignValue.js
-var objectProto4 = Object.prototype;
-var hasOwnProperty4 = objectProto4.hasOwnProperty;
-function assignValue(object, key, value) {
-  var objValue = object[key];
-  if (!(hasOwnProperty4.call(object, key) && eq_default(objValue, value)) || value === void 0 && !(key in object)) {
-    baseAssignValue_default(object, key, value);
-  }
-}
-var assignValue_default = assignValue;
-
-// node_modules/lodash-es/_copyObject.js
-function copyObject(source2, props, object, customizer) {
-  var isNew = !object;
-  object || (object = {});
-  var index = -1, length = props.length;
-  while (++index < length) {
-    var key = props[index];
-    var newValue = customizer ? customizer(object[key], source2[key], key, object, source2) : void 0;
-    if (newValue === void 0) {
-      newValue = source2[key];
-    }
-    if (isNew) {
-      baseAssignValue_default(object, key, newValue);
-    } else {
-      assignValue_default(object, key, newValue);
-    }
-  }
-  return object;
-}
-var copyObject_default = copyObject;
-
-// node_modules/lodash-es/_overRest.js
-var nativeMax = Math.max;
-function overRest(func, start, transform) {
-  start = nativeMax(start === void 0 ? func.length - 1 : start, 0);
-  return function() {
-    var args = arguments, index = -1, length = nativeMax(args.length - start, 0), array = Array(length);
-    while (++index < length) {
-      array[index] = args[start + index];
-    }
-    index = -1;
-    var otherArgs = Array(start + 1);
-    while (++index < start) {
-      otherArgs[index] = args[index];
-    }
-    otherArgs[start] = transform(array);
-    return apply_default(func, this, otherArgs);
-  };
-}
-var overRest_default = overRest;
-
-// node_modules/lodash-es/_baseRest.js
-function baseRest(func, start) {
-  return setToString_default(overRest_default(func, start, identity_default), func + "");
-}
-var baseRest_default = baseRest;
-
-// node_modules/lodash-es/isLength.js
-var MAX_SAFE_INTEGER2 = 9007199254740991;
-function isLength(value) {
-  return typeof value == "number" && value > -1 && value % 1 == 0 && value <= MAX_SAFE_INTEGER2;
-}
-var isLength_default = isLength;
-
-// node_modules/lodash-es/isArrayLike.js
-function isArrayLike2(value) {
-  return value != null && isLength_default(value.length) && !isFunction_default(value);
-}
-var isArrayLike_default = isArrayLike2;
-
-// node_modules/lodash-es/_isIterateeCall.js
-function isIterateeCall(value, index, object) {
-  if (!isObject_default(object)) {
-    return false;
-  }
-  var type = typeof index;
-  if (type == "number" ? isArrayLike_default(object) && isIndex_default(index, object.length) : type == "string" && index in object) {
-    return eq_default(object[index], value);
-  }
-  return false;
-}
-var isIterateeCall_default = isIterateeCall;
-
-// node_modules/lodash-es/_createAssigner.js
-function createAssigner(assigner) {
-  return baseRest_default(function(object, sources) {
-    var index = -1, length = sources.length, customizer = length > 1 ? sources[length - 1] : void 0, guard = length > 2 ? sources[2] : void 0;
-    customizer = assigner.length > 3 && typeof customizer == "function" ? (length--, customizer) : void 0;
-    if (guard && isIterateeCall_default(sources[0], sources[1], guard)) {
-      customizer = length < 3 ? void 0 : customizer;
-      length = 1;
-    }
-    object = Object(object);
-    while (++index < length) {
-      var source2 = sources[index];
-      if (source2) {
-        assigner(object, source2, index, customizer);
-      }
-    }
-    return object;
-  });
-}
-var createAssigner_default = createAssigner;
-
-// node_modules/lodash-es/_isPrototype.js
-var objectProto5 = Object.prototype;
-function isPrototype(value) {
-  var Ctor = value && value.constructor, proto3 = typeof Ctor == "function" && Ctor.prototype || objectProto5;
-  return value === proto3;
-}
-var isPrototype_default = isPrototype;
-
-// node_modules/lodash-es/_baseTimes.js
-function baseTimes(n2, iteratee) {
-  var index = -1, result = Array(n2);
-  while (++index < n2) {
-    result[index] = iteratee(index);
-  }
-  return result;
-}
-var baseTimes_default = baseTimes;
-
-// node_modules/lodash-es/_baseIsArguments.js
-var argsTag = "[object Arguments]";
-function baseIsArguments(value) {
-  return isObjectLike_default(value) && baseGetTag_default(value) == argsTag;
-}
-var baseIsArguments_default = baseIsArguments;
-
-// node_modules/lodash-es/isArguments.js
-var objectProto6 = Object.prototype;
-var hasOwnProperty5 = objectProto6.hasOwnProperty;
-var propertyIsEnumerable = objectProto6.propertyIsEnumerable;
-var isArguments = baseIsArguments_default(/* @__PURE__ */ function() {
-  return arguments;
-}()) ? baseIsArguments_default : function(value) {
-  return isObjectLike_default(value) && hasOwnProperty5.call(value, "callee") && !propertyIsEnumerable.call(value, "callee");
-};
-var isArguments_default = isArguments;
-
-// node_modules/lodash-es/stubFalse.js
-function stubFalse() {
-  return false;
-}
-var stubFalse_default = stubFalse;
-
-// node_modules/lodash-es/isBuffer.js
-var freeExports = typeof exports == "object" && exports && !exports.nodeType && exports;
-var freeModule = freeExports && typeof module == "object" && module && !module.nodeType && module;
-var moduleExports = freeModule && freeModule.exports === freeExports;
-var Buffer5 = moduleExports ? root_default.Buffer : void 0;
-var nativeIsBuffer = Buffer5 ? Buffer5.isBuffer : void 0;
-var isBuffer = nativeIsBuffer || stubFalse_default;
-var isBuffer_default = isBuffer;
-
-// node_modules/lodash-es/_baseIsTypedArray.js
-var argsTag2 = "[object Arguments]";
-var arrayTag = "[object Array]";
-var boolTag = "[object Boolean]";
-var dateTag = "[object Date]";
-var errorTag = "[object Error]";
-var funcTag2 = "[object Function]";
-var mapTag = "[object Map]";
-var numberTag = "[object Number]";
-var objectTag = "[object Object]";
-var regexpTag = "[object RegExp]";
-var setTag = "[object Set]";
-var stringTag = "[object String]";
-var weakMapTag = "[object WeakMap]";
-var arrayBufferTag = "[object ArrayBuffer]";
-var dataViewTag = "[object DataView]";
-var float32Tag = "[object Float32Array]";
-var float64Tag = "[object Float64Array]";
-var int8Tag = "[object Int8Array]";
-var int16Tag = "[object Int16Array]";
-var int32Tag = "[object Int32Array]";
-var uint8Tag = "[object Uint8Array]";
-var uint8ClampedTag = "[object Uint8ClampedArray]";
-var uint16Tag = "[object Uint16Array]";
-var uint32Tag = "[object Uint32Array]";
-var typedArrayTags = {};
-typedArrayTags[float32Tag] = typedArrayTags[float64Tag] = typedArrayTags[int8Tag] = typedArrayTags[int16Tag] = typedArrayTags[int32Tag] = typedArrayTags[uint8Tag] = typedArrayTags[uint8ClampedTag] = typedArrayTags[uint16Tag] = typedArrayTags[uint32Tag] = true;
-typedArrayTags[argsTag2] = typedArrayTags[arrayTag] = typedArrayTags[arrayBufferTag] = typedArrayTags[boolTag] = typedArrayTags[dataViewTag] = typedArrayTags[dateTag] = typedArrayTags[errorTag] = typedArrayTags[funcTag2] = typedArrayTags[mapTag] = typedArrayTags[numberTag] = typedArrayTags[objectTag] = typedArrayTags[regexpTag] = typedArrayTags[setTag] = typedArrayTags[stringTag] = typedArrayTags[weakMapTag] = false;
-function baseIsTypedArray(value) {
-  return isObjectLike_default(value) && isLength_default(value.length) && !!typedArrayTags[baseGetTag_default(value)];
-}
-var baseIsTypedArray_default = baseIsTypedArray;
-
-// node_modules/lodash-es/_baseUnary.js
-function baseUnary(func) {
-  return function(value) {
-    return func(value);
-  };
-}
-var baseUnary_default = baseUnary;
-
-// node_modules/lodash-es/_nodeUtil.js
-var freeExports2 = typeof exports == "object" && exports && !exports.nodeType && exports;
-var freeModule2 = freeExports2 && typeof module == "object" && module && !module.nodeType && module;
-var moduleExports2 = freeModule2 && freeModule2.exports === freeExports2;
-var freeProcess = moduleExports2 && freeGlobal_default.process;
-var nodeUtil = function() {
-  try {
-    var types2 = freeModule2 && freeModule2.require && freeModule2.require("util").types;
-    if (types2) {
-      return types2;
-    }
-    return freeProcess && freeProcess.binding && freeProcess.binding("util");
-  } catch (e2) {
-  }
-}();
-var nodeUtil_default = nodeUtil;
-
-// node_modules/lodash-es/isTypedArray.js
-var nodeIsTypedArray = nodeUtil_default && nodeUtil_default.isTypedArray;
-var isTypedArray = nodeIsTypedArray ? baseUnary_default(nodeIsTypedArray) : baseIsTypedArray_default;
-var isTypedArray_default = isTypedArray;
-
-// node_modules/lodash-es/_arrayLikeKeys.js
-var objectProto7 = Object.prototype;
-var hasOwnProperty6 = objectProto7.hasOwnProperty;
-function arrayLikeKeys(value, inherited) {
-  var isArr = isArray_default(value), isArg = !isArr && isArguments_default(value), isBuff = !isArr && !isArg && isBuffer_default(value), isType = !isArr && !isArg && !isBuff && isTypedArray_default(value), skipIndexes = isArr || isArg || isBuff || isType, result = skipIndexes ? baseTimes_default(value.length, String) : [], length = result.length;
-  for (var key in value) {
-    if ((inherited || hasOwnProperty6.call(value, key)) && !(skipIndexes && // Safari 9 has enumerable `arguments.length` in strict mode.
-    (key == "length" || // Node.js 0.10 has enumerable non-index properties on buffers.
-    isBuff && (key == "offset" || key == "parent") || // PhantomJS 2 has enumerable non-index properties on typed arrays.
-    isType && (key == "buffer" || key == "byteLength" || key == "byteOffset") || // Skip index properties.
-    isIndex_default(key, length)))) {
-      result.push(key);
-    }
-  }
-  return result;
-}
-var arrayLikeKeys_default = arrayLikeKeys;
-
-// node_modules/lodash-es/_overArg.js
-function overArg(func, transform) {
-  return function(arg) {
-    return func(transform(arg));
-  };
-}
-var overArg_default = overArg;
-
-// node_modules/lodash-es/_nativeKeysIn.js
-function nativeKeysIn(object) {
-  var result = [];
-  if (object != null) {
-    for (var key in Object(object)) {
-      result.push(key);
-    }
-  }
-  return result;
-}
-var nativeKeysIn_default = nativeKeysIn;
-
-// node_modules/lodash-es/_baseKeysIn.js
-var objectProto8 = Object.prototype;
-var hasOwnProperty7 = objectProto8.hasOwnProperty;
-function baseKeysIn(object) {
-  if (!isObject_default(object)) {
-    return nativeKeysIn_default(object);
-  }
-  var isProto = isPrototype_default(object), result = [];
-  for (var key in object) {
-    if (!(key == "constructor" && (isProto || !hasOwnProperty7.call(object, key)))) {
-      result.push(key);
-    }
-  }
-  return result;
-}
-var baseKeysIn_default = baseKeysIn;
-
-// node_modules/lodash-es/keysIn.js
-function keysIn(object) {
-  return isArrayLike_default(object) ? arrayLikeKeys_default(object, true) : baseKeysIn_default(object);
-}
-var keysIn_default = keysIn;
-
-// node_modules/lodash-es/_nativeCreate.js
-var nativeCreate = getNative_default(Object, "create");
-var nativeCreate_default = nativeCreate;
-
-// node_modules/lodash-es/_hashClear.js
-function hashClear() {
-  this.__data__ = nativeCreate_default ? nativeCreate_default(null) : {};
-  this.size = 0;
-}
-var hashClear_default = hashClear;
-
-// node_modules/lodash-es/_hashDelete.js
-function hashDelete(key) {
-  var result = this.has(key) && delete this.__data__[key];
-  this.size -= result ? 1 : 0;
-  return result;
-}
-var hashDelete_default = hashDelete;
-
-// node_modules/lodash-es/_hashGet.js
-var HASH_UNDEFINED = "__lodash_hash_undefined__";
-var objectProto9 = Object.prototype;
-var hasOwnProperty8 = objectProto9.hasOwnProperty;
-function hashGet(key) {
-  var data = this.__data__;
-  if (nativeCreate_default) {
-    var result = data[key];
-    return result === HASH_UNDEFINED ? void 0 : result;
-  }
-  return hasOwnProperty8.call(data, key) ? data[key] : void 0;
-}
-var hashGet_default = hashGet;
-
-// node_modules/lodash-es/_hashHas.js
-var objectProto10 = Object.prototype;
-var hasOwnProperty9 = objectProto10.hasOwnProperty;
-function hashHas(key) {
-  var data = this.__data__;
-  return nativeCreate_default ? data[key] !== void 0 : hasOwnProperty9.call(data, key);
-}
-var hashHas_default = hashHas;
-
-// node_modules/lodash-es/_hashSet.js
-var HASH_UNDEFINED2 = "__lodash_hash_undefined__";
-function hashSet(key, value) {
-  var data = this.__data__;
-  this.size += this.has(key) ? 0 : 1;
-  data[key] = nativeCreate_default && value === void 0 ? HASH_UNDEFINED2 : value;
-  return this;
-}
-var hashSet_default = hashSet;
-
-// node_modules/lodash-es/_Hash.js
-function Hash(entries) {
-  var index = -1, length = entries == null ? 0 : entries.length;
-  this.clear();
-  while (++index < length) {
-    var entry = entries[index];
-    this.set(entry[0], entry[1]);
-  }
-}
-Hash.prototype.clear = hashClear_default;
-Hash.prototype["delete"] = hashDelete_default;
-Hash.prototype.get = hashGet_default;
-Hash.prototype.has = hashHas_default;
-Hash.prototype.set = hashSet_default;
-var Hash_default = Hash;
-
-// node_modules/lodash-es/_listCacheClear.js
-function listCacheClear() {
-  this.__data__ = [];
-  this.size = 0;
-}
-var listCacheClear_default = listCacheClear;
-
-// node_modules/lodash-es/_assocIndexOf.js
-function assocIndexOf(array, key) {
-  var length = array.length;
-  while (length--) {
-    if (eq_default(array[length][0], key)) {
-      return length;
-    }
-  }
-  return -1;
-}
-var assocIndexOf_default = assocIndexOf;
-
-// node_modules/lodash-es/_listCacheDelete.js
-var arrayProto = Array.prototype;
-var splice = arrayProto.splice;
-function listCacheDelete(key) {
-  var data = this.__data__, index = assocIndexOf_default(data, key);
-  if (index < 0) {
-    return false;
-  }
-  var lastIndex = data.length - 1;
-  if (index == lastIndex) {
-    data.pop();
-  } else {
-    splice.call(data, index, 1);
-  }
-  --this.size;
-  return true;
-}
-var listCacheDelete_default = listCacheDelete;
-
-// node_modules/lodash-es/_listCacheGet.js
-function listCacheGet(key) {
-  var data = this.__data__, index = assocIndexOf_default(data, key);
-  return index < 0 ? void 0 : data[index][1];
-}
-var listCacheGet_default = listCacheGet;
-
-// node_modules/lodash-es/_listCacheHas.js
-function listCacheHas(key) {
-  return assocIndexOf_default(this.__data__, key) > -1;
-}
-var listCacheHas_default = listCacheHas;
-
-// node_modules/lodash-es/_listCacheSet.js
-function listCacheSet(key, value) {
-  var data = this.__data__, index = assocIndexOf_default(data, key);
-  if (index < 0) {
-    ++this.size;
-    data.push([key, value]);
-  } else {
-    data[index][1] = value;
-  }
-  return this;
-}
-var listCacheSet_default = listCacheSet;
-
-// node_modules/lodash-es/_ListCache.js
-function ListCache(entries) {
-  var index = -1, length = entries == null ? 0 : entries.length;
-  this.clear();
-  while (++index < length) {
-    var entry = entries[index];
-    this.set(entry[0], entry[1]);
-  }
-}
-ListCache.prototype.clear = listCacheClear_default;
-ListCache.prototype["delete"] = listCacheDelete_default;
-ListCache.prototype.get = listCacheGet_default;
-ListCache.prototype.has = listCacheHas_default;
-ListCache.prototype.set = listCacheSet_default;
-var ListCache_default = ListCache;
-
-// node_modules/lodash-es/_Map.js
-var Map2 = getNative_default(root_default, "Map");
-var Map_default = Map2;
-
-// node_modules/lodash-es/_mapCacheClear.js
-function mapCacheClear() {
-  this.size = 0;
-  this.__data__ = {
-    "hash": new Hash_default(),
-    "map": new (Map_default || ListCache_default)(),
-    "string": new Hash_default()
-  };
-}
-var mapCacheClear_default = mapCacheClear;
-
-// node_modules/lodash-es/_isKeyable.js
-function isKeyable(value) {
-  var type = typeof value;
-  return type == "string" || type == "number" || type == "symbol" || type == "boolean" ? value !== "__proto__" : value === null;
-}
-var isKeyable_default = isKeyable;
-
-// node_modules/lodash-es/_getMapData.js
-function getMapData(map2, key) {
-  var data = map2.__data__;
-  return isKeyable_default(key) ? data[typeof key == "string" ? "string" : "hash"] : data.map;
-}
-var getMapData_default = getMapData;
-
-// node_modules/lodash-es/_mapCacheDelete.js
-function mapCacheDelete(key) {
-  var result = getMapData_default(this, key)["delete"](key);
-  this.size -= result ? 1 : 0;
-  return result;
-}
-var mapCacheDelete_default = mapCacheDelete;
-
-// node_modules/lodash-es/_mapCacheGet.js
-function mapCacheGet(key) {
-  return getMapData_default(this, key).get(key);
-}
-var mapCacheGet_default = mapCacheGet;
-
-// node_modules/lodash-es/_mapCacheHas.js
-function mapCacheHas(key) {
-  return getMapData_default(this, key).has(key);
-}
-var mapCacheHas_default = mapCacheHas;
-
-// node_modules/lodash-es/_mapCacheSet.js
-function mapCacheSet(key, value) {
-  var data = getMapData_default(this, key), size = data.size;
-  data.set(key, value);
-  this.size += data.size == size ? 0 : 1;
-  return this;
-}
-var mapCacheSet_default = mapCacheSet;
-
-// node_modules/lodash-es/_MapCache.js
-function MapCache(entries) {
-  var index = -1, length = entries == null ? 0 : entries.length;
-  this.clear();
-  while (++index < length) {
-    var entry = entries[index];
-    this.set(entry[0], entry[1]);
-  }
-}
-MapCache.prototype.clear = mapCacheClear_default;
-MapCache.prototype["delete"] = mapCacheDelete_default;
-MapCache.prototype.get = mapCacheGet_default;
-MapCache.prototype.has = mapCacheHas_default;
-MapCache.prototype.set = mapCacheSet_default;
-var MapCache_default = MapCache;
-
-// node_modules/lodash-es/_getPrototype.js
-var getPrototype = overArg_default(Object.getPrototypeOf, Object);
-var getPrototype_default = getPrototype;
-
-// node_modules/lodash-es/isPlainObject.js
-var objectTag2 = "[object Object]";
-var funcProto3 = Function.prototype;
-var objectProto11 = Object.prototype;
-var funcToString3 = funcProto3.toString;
-var hasOwnProperty10 = objectProto11.hasOwnProperty;
-var objectCtorString = funcToString3.call(Object);
-function isPlainObject(value) {
-  if (!isObjectLike_default(value) || baseGetTag_default(value) != objectTag2) {
-    return false;
-  }
-  var proto3 = getPrototype_default(value);
-  if (proto3 === null) {
-    return true;
-  }
-  var Ctor = hasOwnProperty10.call(proto3, "constructor") && proto3.constructor;
-  return typeof Ctor == "function" && Ctor instanceof Ctor && funcToString3.call(Ctor) == objectCtorString;
-}
-var isPlainObject_default = isPlainObject;
-
-// node_modules/lodash-es/_stackClear.js
-function stackClear() {
-  this.__data__ = new ListCache_default();
-  this.size = 0;
-}
-var stackClear_default = stackClear;
-
-// node_modules/lodash-es/_stackDelete.js
-function stackDelete(key) {
-  var data = this.__data__, result = data["delete"](key);
-  this.size = data.size;
-  return result;
-}
-var stackDelete_default = stackDelete;
-
-// node_modules/lodash-es/_stackGet.js
-function stackGet(key) {
-  return this.__data__.get(key);
-}
-var stackGet_default = stackGet;
-
-// node_modules/lodash-es/_stackHas.js
-function stackHas(key) {
-  return this.__data__.has(key);
-}
-var stackHas_default = stackHas;
-
-// node_modules/lodash-es/_stackSet.js
-var LARGE_ARRAY_SIZE = 200;
-function stackSet(key, value) {
-  var data = this.__data__;
-  if (data instanceof ListCache_default) {
-    var pairs = data.__data__;
-    if (!Map_default || pairs.length < LARGE_ARRAY_SIZE - 1) {
-      pairs.push([key, value]);
-      this.size = ++data.size;
-      return this;
-    }
-    data = this.__data__ = new MapCache_default(pairs);
-  }
-  data.set(key, value);
-  this.size = data.size;
-  return this;
-}
-var stackSet_default = stackSet;
-
-// node_modules/lodash-es/_Stack.js
-function Stack2(entries) {
-  var data = this.__data__ = new ListCache_default(entries);
-  this.size = data.size;
-}
-Stack2.prototype.clear = stackClear_default;
-Stack2.prototype["delete"] = stackDelete_default;
-Stack2.prototype.get = stackGet_default;
-Stack2.prototype.has = stackHas_default;
-Stack2.prototype.set = stackSet_default;
-var Stack_default = Stack2;
-
-// node_modules/lodash-es/_cloneBuffer.js
-var freeExports3 = typeof exports == "object" && exports && !exports.nodeType && exports;
-var freeModule3 = freeExports3 && typeof module == "object" && module && !module.nodeType && module;
-var moduleExports3 = freeModule3 && freeModule3.exports === freeExports3;
-var Buffer6 = moduleExports3 ? root_default.Buffer : void 0;
-var allocUnsafe = Buffer6 ? Buffer6.allocUnsafe : void 0;
-function cloneBuffer(buffer, isDeep) {
-  if (isDeep) {
-    return buffer.slice();
-  }
-  var length = buffer.length, result = allocUnsafe ? allocUnsafe(length) : new buffer.constructor(length);
-  buffer.copy(result);
-  return result;
-}
-var cloneBuffer_default = cloneBuffer;
-
-// node_modules/lodash-es/_Uint8Array.js
-var Uint8Array2 = root_default.Uint8Array;
-var Uint8Array_default = Uint8Array2;
-
-// node_modules/lodash-es/_cloneArrayBuffer.js
-function cloneArrayBuffer(arrayBuffer) {
-  var result = new arrayBuffer.constructor(arrayBuffer.byteLength);
-  new Uint8Array_default(result).set(new Uint8Array_default(arrayBuffer));
-  return result;
-}
-var cloneArrayBuffer_default = cloneArrayBuffer;
-
-// node_modules/lodash-es/_cloneTypedArray.js
-function cloneTypedArray(typedArray, isDeep) {
-  var buffer = isDeep ? cloneArrayBuffer_default(typedArray.buffer) : typedArray.buffer;
-  return new typedArray.constructor(buffer, typedArray.byteOffset, typedArray.length);
-}
-var cloneTypedArray_default = cloneTypedArray;
-
-// node_modules/lodash-es/_initCloneObject.js
-function initCloneObject(object) {
-  return typeof object.constructor == "function" && !isPrototype_default(object) ? baseCreate_default(getPrototype_default(object)) : {};
-}
-var initCloneObject_default = initCloneObject;
-
-// node_modules/lodash-es/_createBaseFor.js
-function createBaseFor(fromRight) {
-  return function(object, iteratee, keysFunc) {
-    var index = -1, iterable = Object(object), props = keysFunc(object), length = props.length;
-    while (length--) {
-      var key = props[fromRight ? length : ++index];
-      if (iteratee(iterable[key], key, iterable) === false) {
-        break;
-      }
-    }
-    return object;
-  };
-}
-var createBaseFor_default = createBaseFor;
-
-// node_modules/lodash-es/_baseFor.js
-var baseFor = createBaseFor_default();
-var baseFor_default = baseFor;
-
-// node_modules/lodash-es/_assignMergeValue.js
-function assignMergeValue(object, key, value) {
-  if (value !== void 0 && !eq_default(object[key], value) || value === void 0 && !(key in object)) {
-    baseAssignValue_default(object, key, value);
-  }
-}
-var assignMergeValue_default = assignMergeValue;
-
-// node_modules/lodash-es/isArrayLikeObject.js
-function isArrayLikeObject(value) {
-  return isObjectLike_default(value) && isArrayLike_default(value);
-}
-var isArrayLikeObject_default = isArrayLikeObject;
-
-// node_modules/lodash-es/_safeGet.js
-function safeGet(object, key) {
-  if (key === "constructor" && typeof object[key] === "function") {
-    return;
-  }
-  if (key == "__proto__") {
-    return;
-  }
-  return object[key];
-}
-var safeGet_default = safeGet;
-
-// node_modules/lodash-es/toPlainObject.js
-function toPlainObject(value) {
-  return copyObject_default(value, keysIn_default(value));
-}
-var toPlainObject_default = toPlainObject;
-
-// node_modules/lodash-es/_baseMergeDeep.js
-function baseMergeDeep(object, source2, key, srcIndex, mergeFunc, customizer, stack) {
-  var objValue = safeGet_default(object, key), srcValue = safeGet_default(source2, key), stacked = stack.get(srcValue);
-  if (stacked) {
-    assignMergeValue_default(object, key, stacked);
-    return;
-  }
-  var newValue = customizer ? customizer(objValue, srcValue, key + "", object, source2, stack) : void 0;
-  var isCommon = newValue === void 0;
-  if (isCommon) {
-    var isArr = isArray_default(srcValue), isBuff = !isArr && isBuffer_default(srcValue), isTyped = !isArr && !isBuff && isTypedArray_default(srcValue);
-    newValue = srcValue;
-    if (isArr || isBuff || isTyped) {
-      if (isArray_default(objValue)) {
-        newValue = objValue;
-      } else if (isArrayLikeObject_default(objValue)) {
-        newValue = copyArray_default(objValue);
-      } else if (isBuff) {
-        isCommon = false;
-        newValue = cloneBuffer_default(srcValue, true);
-      } else if (isTyped) {
-        isCommon = false;
-        newValue = cloneTypedArray_default(srcValue, true);
-      } else {
-        newValue = [];
-      }
-    } else if (isPlainObject_default(srcValue) || isArguments_default(srcValue)) {
-      newValue = objValue;
-      if (isArguments_default(objValue)) {
-        newValue = toPlainObject_default(objValue);
-      } else if (!isObject_default(objValue) || isFunction_default(objValue)) {
-        newValue = initCloneObject_default(srcValue);
-      }
-    } else {
-      isCommon = false;
-    }
-  }
-  if (isCommon) {
-    stack.set(srcValue, newValue);
-    mergeFunc(newValue, srcValue, srcIndex, customizer, stack);
-    stack["delete"](srcValue);
-  }
-  assignMergeValue_default(object, key, newValue);
-}
-var baseMergeDeep_default = baseMergeDeep;
-
-// node_modules/lodash-es/_baseMerge.js
-function baseMerge(object, source2, srcIndex, customizer, stack) {
-  if (object === source2) {
-    return;
-  }
-  baseFor_default(source2, function(srcValue, key) {
-    stack || (stack = new Stack_default());
-    if (isObject_default(srcValue)) {
-      baseMergeDeep_default(object, source2, key, srcIndex, baseMerge, customizer, stack);
-    } else {
-      var newValue = customizer ? customizer(safeGet_default(object, key), srcValue, key + "", object, source2, stack) : void 0;
-      if (newValue === void 0) {
-        newValue = srcValue;
-      }
-      assignMergeValue_default(object, key, newValue);
-    }
-  }, keysIn_default);
-}
-var baseMerge_default = baseMerge;
-
-// node_modules/lodash-es/mergeWith.js
-var mergeWith = createAssigner_default(function(object, source2, srcIndex, customizer) {
-  baseMerge_default(object, source2, srcIndex, customizer);
-});
-var mergeWith_default = mergeWith;
-
-// packages/cli/src/config/settings.ts
-var SETTINGS_DIRECTORY_NAME2 = ".qwen";
-var USER_SETTINGS_PATH = Storage.getGlobalSettingsPath();
-var USER_SETTINGS_DIR2 = path60.dirname(USER_SETTINGS_PATH);
-var DEFAULT_EXCLUDED_ENV_VARS = ["DEBUG", "DEBUG_MODE"];
-var MIGRATE_V2_OVERWRITE = false;
-var MIGRATION_MAP = {
-  preferredEditor: "general.preferredEditor",
-  vimMode: "general.vimMode",
-  disableAutoUpdate: "general.disableAutoUpdate",
-  disableUpdateNag: "general.disableUpdateNag",
-  checkpointing: "general.checkpointing",
-  theme: "ui.theme",
-  customThemes: "ui.customThemes",
-  hideWindowTitle: "ui.hideWindowTitle",
-  hideTips: "ui.hideTips",
-  hideBanner: "ui.hideBanner",
-  hideFooter: "ui.hideFooter",
-  showMemoryUsage: "ui.showMemoryUsage",
-  showLineNumbers: "ui.showLineNumbers",
-  accessibility: "ui.accessibility",
-  ideMode: "ide.enabled",
-  hasSeenIdeIntegrationNudge: "ide.hasSeenNudge",
-  usageStatisticsEnabled: "privacy.usageStatisticsEnabled",
-  telemetry: "telemetry",
-  model: "model.name",
-  maxSessionTurns: "model.maxSessionTurns",
-  summarizeToolOutput: "model.summarizeToolOutput",
-  chatCompression: "model.chatCompression",
-  skipNextSpeakerCheck: "model.skipNextSpeakerCheck",
-  contextFileName: "context.fileName",
-  memoryImportFormat: "context.importFormat",
-  memoryDiscoveryMaxDirs: "context.discoveryMaxDirs",
-  includeDirectories: "context.includeDirectories",
-  loadMemoryFromIncludeDirectories: "context.loadFromIncludeDirectories",
-  fileFiltering: "context.fileFiltering",
-  sandbox: "tools.sandbox",
-  shouldUseNodePtyShell: "tools.usePty",
-  allowedTools: "tools.allowed",
-  coreTools: "tools.core",
-  excludeTools: "tools.exclude",
-  toolDiscoveryCommand: "tools.discoveryCommand",
-  toolCallCommand: "tools.callCommand",
-  mcpServerCommand: "mcp.serverCommand",
-  allowMCPServers: "mcp.allowed",
-  excludeMCPServers: "mcp.excluded",
-  folderTrustFeature: "security.folderTrust.featureEnabled",
-  folderTrust: "security.folderTrust.enabled",
-  selectedAuthType: "security.auth.selectedType",
-  useExternalAuth: "security.auth.useExternal",
-  autoConfigureMaxOldSpaceSize: "advanced.autoConfigureMemory",
-  dnsResolutionOrder: "advanced.dnsResolutionOrder",
-  excludedProjectEnvVars: "advanced.excludedEnvVars",
-  bugCommand: "advanced.bugCommand",
-  approvalMode: "approvalMode"
-};
-function getSystemSettingsPath() {
-  if (process.env["QWEN_CODE_SYSTEM_SETTINGS_PATH"]) {
-    return process.env["QWEN_CODE_SYSTEM_SETTINGS_PATH"];
-  }
-  if (platform6() === "darwin") {
-    return "/Library/Application Support/QwenCode/settings.json";
-  } else if (platform6() === "win32") {
-    return "C:\\ProgramData\\qwen-code\\settings.json";
-  } else {
-    return "/etc/qwen-code/settings.json";
-  }
-}
-function getSystemDefaultsPath() {
-  if (process.env["QWEN_CODE_SYSTEM_DEFAULTS_PATH"]) {
-    return process.env["QWEN_CODE_SYSTEM_DEFAULTS_PATH"];
-  }
-  return path60.join(
-    path60.dirname(getSystemSettingsPath()),
-    "system-defaults.json"
-  );
-}
-var SettingScope = /* @__PURE__ */ ((SettingScope2) => {
-  SettingScope2["User"] = "User";
-  SettingScope2["Workspace"] = "Workspace";
-  SettingScope2["System"] = "System";
-  SettingScope2["SystemDefaults"] = "SystemDefaults";
-  return SettingScope2;
-})(SettingScope || {});
-function setNestedProperty(obj, path107, value) {
-  const keys = path107.split(".");
-  const lastKey = keys.pop();
-  if (!lastKey) return;
-  let current = obj;
-  for (const key of keys) {
-    if (current[key] === void 0) {
-      current[key] = {};
-    }
-    const next = current[key];
-    if (typeof next === "object" && next !== null) {
-      current = next;
-    } else {
-      return;
-    }
-  }
-  current[lastKey] = value;
-}
-function needsMigration(settings) {
-  return !("general" in settings);
-}
-function migrateSettingsToV2(flatSettings) {
-  if (!needsMigration(flatSettings)) {
-    return null;
-  }
-  const v2Settings = {};
-  const flatKeys = new Set(Object.keys(flatSettings));
-  for (const [oldKey, newPath] of Object.entries(MIGRATION_MAP)) {
-    if (flatKeys.has(oldKey)) {
-      setNestedProperty(v2Settings, newPath, flatSettings[oldKey]);
-      flatKeys.delete(oldKey);
-    }
-  }
-  if (flatSettings["mcpServers"]) {
-    v2Settings["mcpServers"] = flatSettings["mcpServers"];
-    flatKeys.delete("mcpServers");
-  }
-  for (const remainingKey of flatKeys) {
-    const remainingValue = flatSettings[remainingKey];
-    if (remainingValue === void 0) {
-      continue;
-    }
-    const existingValue = v2Settings[remainingKey];
-    if (existingValue && typeof existingValue === "object" && existingValue !== null && !Array.isArray(existingValue) && typeof remainingValue === "object" && remainingValue !== null && !Array.isArray(remainingValue)) {
-      v2Settings[remainingKey] = mergePlainObjects(
-        existingValue,
-        remainingValue
-      );
-    } else {
-      v2Settings[remainingKey] = remainingValue;
-    }
-  }
-  return v2Settings;
-}
-function getNestedProperty(obj, path107) {
-  const keys = path107.split(".");
-  let current = obj;
-  for (const key of keys) {
-    if (typeof current !== "object" || current === null || !(key in current)) {
-      return void 0;
-    }
-    current = current[key];
-  }
-  return current;
-}
-function deleteNestedProperty(obj, path107) {
-  const keys = path107.split(".");
-  if (keys.length === 0) {
-    return;
-  }
-  const stack = [];
-  let current = obj;
-  for (let i = 0; i < keys.length - 1; i++) {
-    if (!current) {
-      return;
-    }
-    const key = keys[i];
-    const value = current[key];
-    if (typeof value !== "object" || value === null || Array.isArray(value)) {
-      return;
-    }
-    stack.push({ parent: current, key });
-    current = value;
-  }
-  const lastKey = keys[keys.length - 1];
-  if (!current || !(lastKey in current)) {
-    return;
-  }
-  delete current[lastKey];
-  for (let i = stack.length - 1; i >= 0; i--) {
-    const { parent, key } = stack[i];
-    const child = parent[key];
-    if (child && typeof child === "object" && !Array.isArray(child) && Object.keys(child).length === 0) {
-      delete parent[key];
-    } else {
-      break;
-    }
-  }
-}
-function mergePlainObjects(target, source2) {
-  const result = { ...target };
-  for (const [key, value] of Object.entries(source2)) {
-    const existing = result[key];
-    if (existing && typeof existing === "object" && existing !== null && !Array.isArray(existing) && typeof value === "object" && value !== null && !Array.isArray(value)) {
-      result[key] = mergePlainObjects(
-        existing,
-        value
-      );
-    } else {
-      result[key] = value;
-    }
-  }
-  return result;
-}
-var REVERSE_MIGRATION_MAP = Object.fromEntries(
-  Object.entries(MIGRATION_MAP).map(([key, value]) => [value, key])
-);
-function migrateSettingsToV1(v2Settings) {
-  const v1Settings = {};
-  const remainingSettings = JSON.parse(JSON.stringify(v2Settings));
-  for (const [newPath, oldKey] of Object.entries(REVERSE_MIGRATION_MAP)) {
-    const value = getNestedProperty(v2Settings, newPath);
-    if (value === void 0) {
-      continue;
-    }
-    v1Settings[oldKey] = value;
-    deleteNestedProperty(remainingSettings, newPath);
-  }
-  for (const [key, value] of Object.entries(remainingSettings)) {
-    if (value === void 0) {
-      continue;
-    }
-    if (typeof value === "object" && value !== null && !Array.isArray(value) && Object.keys(value).length === 0) {
-      continue;
-    }
-    v1Settings[key] = value;
-  }
-  return v1Settings;
-}
-function mergeSettings(system, systemDefaults, user, workspace, isTrusted) {
-  function normalizeLegacyModel(s2) {
-    if (!s2) return s2;
-    try {
-      const asAny = s2;
-      if (typeof asAny.model === "string") {
-        return {
-          ...s2,
-          model: { ...s2.model ? {} : {}, name: asAny.model }
-        };
-      }
-    } catch (_e) {
-    }
-    return s2;
-  }
-  system = normalizeLegacyModel(system) || {};
-  systemDefaults = normalizeLegacyModel(systemDefaults) || {};
-  user = normalizeLegacyModel(user) || {};
-  workspace = normalizeLegacyModel(workspace) || {};
-  const safeWorkspace = isTrusted ? workspace : {};
-  const { security, ...restOfWorkspace } = safeWorkspace;
-  const safeWorkspaceWithoutFolderTrust = security ? {
-    ...restOfWorkspace,
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    security: (({ folderTrust, ...rest }) => rest)(security)
-  } : {
-    ...restOfWorkspace,
-    security: {}
-  };
-  return {
-    ...systemDefaults,
-    ...user,
-    ...safeWorkspaceWithoutFolderTrust,
-    ...system,
-    general: {
-      ...systemDefaults.general || {},
-      ...user.general || {},
-      ...safeWorkspaceWithoutFolderTrust.general || {},
-      ...system.general || {}
-    },
-    ui: {
-      ...systemDefaults.ui || {},
-      ...user.ui || {},
-      ...safeWorkspaceWithoutFolderTrust.ui || {},
-      ...system.ui || {},
-      customThemes: {
-        ...systemDefaults.ui?.customThemes || {},
-        ...user.ui?.customThemes || {},
-        ...safeWorkspaceWithoutFolderTrust.ui?.customThemes || {},
-        ...system.ui?.customThemes || {}
-      }
-    },
-    ide: {
-      ...systemDefaults.ide || {},
-      ...user.ide || {},
-      ...safeWorkspaceWithoutFolderTrust.ide || {},
-      ...system.ide || {}
-    },
-    privacy: {
-      ...systemDefaults.privacy || {},
-      ...user.privacy || {},
-      ...safeWorkspaceWithoutFolderTrust.privacy || {},
-      ...system.privacy || {}
-    },
-    telemetry: {
-      ...systemDefaults.telemetry || {},
-      ...user.telemetry || {},
-      ...safeWorkspaceWithoutFolderTrust.telemetry || {},
-      ...system.telemetry || {}
-    },
-    security: {
-      ...systemDefaults.security || {},
-      ...user.security || {},
-      ...safeWorkspaceWithoutFolderTrust.security || {},
-      ...system.security || {}
-    },
-    mcp: {
-      ...systemDefaults.mcp || {},
-      ...user.mcp || {},
-      ...safeWorkspaceWithoutFolderTrust.mcp || {},
-      ...system.mcp || {}
-    },
-    mcpServers: {
-      ...systemDefaults.mcpServers || {},
-      ...user.mcpServers || {},
-      ...safeWorkspaceWithoutFolderTrust.mcpServers || {},
-      ...system.mcpServers || {}
-    },
-    tools: {
-      ...systemDefaults.tools || {},
-      ...user.tools || {},
-      ...safeWorkspaceWithoutFolderTrust.tools || {},
-      ...system.tools || {}
-    },
-    context: {
-      ...systemDefaults.context || {},
-      ...user.context || {},
-      ...safeWorkspaceWithoutFolderTrust.context || {},
-      ...system.context || {},
-      includeDirectories: [
-        ...systemDefaults.context?.includeDirectories || [],
-        ...user.context?.includeDirectories || [],
-        ...safeWorkspaceWithoutFolderTrust.context?.includeDirectories || [],
-        ...system.context?.includeDirectories || []
-      ]
-    },
-    model: {
-      ...systemDefaults.model || {},
-      ...user.model || {},
-      ...safeWorkspaceWithoutFolderTrust.model || {},
-      ...system.model || {},
-      chatCompression: {
-        ...systemDefaults.model?.chatCompression || {},
-        ...user.model?.chatCompression || {},
-        ...safeWorkspaceWithoutFolderTrust.model?.chatCompression || {},
-        ...system.model?.chatCompression || {}
-      }
-    },
-    advanced: {
-      ...systemDefaults.advanced || {},
-      ...user.advanced || {},
-      ...safeWorkspaceWithoutFolderTrust.advanced || {},
-      ...system.advanced || {},
-      excludedEnvVars: [
-        .../* @__PURE__ */ new Set([
-          ...systemDefaults.advanced?.excludedEnvVars || [],
-          ...user.advanced?.excludedEnvVars || [],
-          ...safeWorkspaceWithoutFolderTrust.advanced?.excludedEnvVars || [],
-          ...system.advanced?.excludedEnvVars || []
-        ])
-      ]
-    },
-    experimental: {
-      ...systemDefaults.experimental || {},
-      ...user.experimental || {},
-      ...safeWorkspaceWithoutFolderTrust.experimental || {},
-      ...system.experimental || {}
-    },
-    contentGenerator: {
-      ...systemDefaults.contentGenerator || {},
-      ...user.contentGenerator || {},
-      ...safeWorkspaceWithoutFolderTrust.contentGenerator || {},
-      ...system.contentGenerator || {}
-    },
-    systemPromptMappings: {
-      ...systemDefaults.systemPromptMappings || {},
-      ...user.systemPromptMappings || {},
-      ...safeWorkspaceWithoutFolderTrust.systemPromptMappings || {},
-      ...system.systemPromptMappings || {}
-    },
-    extensions: {
-      ...systemDefaults.extensions || {},
-      ...user.extensions || {},
-      ...safeWorkspaceWithoutFolderTrust.extensions || {},
-      ...system.extensions || {},
-      disabled: [
-        .../* @__PURE__ */ new Set([
-          ...systemDefaults.extensions?.disabled || [],
-          ...user.extensions?.disabled || [],
-          ...safeWorkspaceWithoutFolderTrust.extensions?.disabled || [],
-          ...system.extensions?.disabled || []
-        ])
-      ],
-      workspacesWithMigrationNudge: [
-        .../* @__PURE__ */ new Set([
-          ...systemDefaults.extensions?.workspacesWithMigrationNudge || [],
-          ...user.extensions?.workspacesWithMigrationNudge || [],
-          ...safeWorkspaceWithoutFolderTrust.extensions?.workspacesWithMigrationNudge || [],
-          ...system.extensions?.workspacesWithMigrationNudge || []
-        ])
-      ]
-    }
-  };
-}
-var LoadedSettings = class {
-  constructor(system, systemDefaults, user, workspace, errors, isTrusted, migratedInMemorScopes) {
-    this.system = system;
-    this.systemDefaults = systemDefaults;
-    this.user = user;
-    this.workspace = workspace;
-    this.errors = errors;
-    this.isTrusted = isTrusted;
-    this.migratedInMemorScopes = migratedInMemorScopes;
-    this._merged = this.computeMergedSettings();
-  }
-  system;
-  systemDefaults;
-  user;
-  workspace;
-  errors;
-  isTrusted;
-  migratedInMemorScopes;
-  _merged;
-  get merged() {
-    return this._merged;
-  }
-  computeMergedSettings() {
-    return mergeSettings(
-      this.system.settings,
-      this.systemDefaults.settings,
-      this.user.settings,
-      this.workspace.settings,
-      this.isTrusted
-    );
-  }
-  forScope(scope) {
-    switch (scope) {
-      case "User" /* User */:
-        return this.user;
-      case "Workspace" /* Workspace */:
-        return this.workspace;
-      case "System" /* System */:
-        return this.system;
-      case "SystemDefaults" /* SystemDefaults */:
-        return this.systemDefaults;
-      default:
-        throw new Error(`Invalid scope: ${scope}`);
-    }
-  }
-  setValue(scope, key, value) {
-    const settingsFile = this.forScope(scope);
-    setNestedProperty(settingsFile.settings, key, value);
-    this._merged = this.computeMergedSettings();
-    saveSettings(settingsFile);
-    if (key === "scheduler.executionMode" && typeof value === "string") {
-      process.env["LOWCAL_SCHEDULER_DEFAULT_MODE"] = value;
-    }
-  }
-};
-function resolveEnvVarsInString(value) {
-  const envVarRegex = /\$(?:(\w+)|{([^}]+)})/g;
-  return value.replace(envVarRegex, (match2, varName1, varName2) => {
-    const varName = varName1 || varName2;
-    if (process && process.env && typeof process.env[varName] === "string") {
-      return process.env[varName];
-    }
-    return match2;
-  });
-}
-function resolveEnvVarsInObject(obj) {
-  if (obj === null || obj === void 0 || typeof obj === "boolean" || typeof obj === "number") {
-    return obj;
-  }
-  if (typeof obj === "string") {
-    return resolveEnvVarsInString(obj);
-  }
-  if (Array.isArray(obj)) {
-    return obj.map((item) => resolveEnvVarsInObject(item));
-  }
-  if (typeof obj === "object") {
-    const newObj = { ...obj };
-    for (const key in newObj) {
-      if (Object.prototype.hasOwnProperty.call(newObj, key)) {
-        newObj[key] = resolveEnvVarsInObject(newObj[key]);
-      }
-    }
-    return newObj;
-  }
-  return obj;
-}
-function findEnvFile(startDir) {
-  let currentDir = path60.resolve(startDir);
-  while (true) {
-    const geminiEnvPath = path60.join(currentDir, GEMINI_CONFIG_DIR, ".env");
-    if (fs56.existsSync(geminiEnvPath)) {
-      return geminiEnvPath;
-    }
-    const envPath = path60.join(currentDir, ".env");
-    if (fs56.existsSync(envPath)) {
-      return envPath;
-    }
-    const parentDir = path60.dirname(currentDir);
-    if (parentDir === currentDir || !parentDir) {
-      const homeGeminiEnvPath = path60.join(homedir9(), GEMINI_CONFIG_DIR, ".env");
-      if (fs56.existsSync(homeGeminiEnvPath)) {
-        return homeGeminiEnvPath;
-      }
-      const homeEnvPath = path60.join(homedir9(), ".env");
-      if (fs56.existsSync(homeEnvPath)) {
-        return homeEnvPath;
-      }
-      return null;
-    }
-    currentDir = parentDir;
-  }
-}
-function setUpCloudShellEnvironment(envFilePath) {
-  if (envFilePath && fs56.existsSync(envFilePath)) {
-    const envFileContent = fs56.readFileSync(envFilePath);
-    const parsedEnv = dotenv.parse(envFileContent);
-    if (parsedEnv["GOOGLE_CLOUD_PROJECT"]) {
-      process.env["GOOGLE_CLOUD_PROJECT"] = parsedEnv["GOOGLE_CLOUD_PROJECT"];
-    } else {
-      process.env["GOOGLE_CLOUD_PROJECT"] = "cloudshell-gca";
-    }
-  } else {
-    process.env["GOOGLE_CLOUD_PROJECT"] = "cloudshell-gca";
-  }
-}
-function loadEnvironment(settings) {
-  const envFilePath = findEnvFile(process.cwd());
-  if (process.env["CLOUD_SHELL"] === "true") {
-    setUpCloudShellEnvironment(envFilePath);
-  }
-  let resolvedSettings = settings;
-  if (!resolvedSettings) {
-    const workspaceSettingsPath = new Storage(
-      process.cwd()
-    ).getWorkspaceSettingsPath();
-    try {
-      if (fs56.existsSync(workspaceSettingsPath)) {
-        const workspaceContent = fs56.readFileSync(
-          workspaceSettingsPath,
-          "utf-8"
-        );
-        const parsedWorkspaceSettings = JSON.parse(
-          (0, import_strip_json_comments2.default)(workspaceContent)
-        );
-        resolvedSettings = resolveEnvVarsInObject(parsedWorkspaceSettings);
-      }
-    } catch (_e) {
-    }
-  }
-  if (envFilePath) {
-    try {
-      const envFileContent = fs56.readFileSync(envFilePath, "utf-8");
-      const parsedEnv = dotenv.parse(envFileContent);
-      const excludedVars = resolvedSettings?.advanced?.excludedEnvVars || DEFAULT_EXCLUDED_ENV_VARS;
-      const isProjectEnvFile = !envFilePath.includes(GEMINI_CONFIG_DIR);
-      for (const key in parsedEnv) {
-        if (Object.hasOwn(parsedEnv, key)) {
-          if (isProjectEnvFile && excludedVars.includes(key)) {
-            continue;
-          }
-          if (!Object.hasOwn(process.env, key)) {
-            process.env[key] = parsedEnv[key];
-          }
-        }
-      }
-    } catch (_e) {
-    }
-  }
-}
-function loadSettings(workspaceDir) {
-  let systemSettings = {};
-  let systemDefaultSettings = {};
-  let userSettings = {};
-  let workspaceSettings = {};
-  const settingsErrors = [];
-  const systemSettingsPath = getSystemSettingsPath();
-  const systemDefaultsPath = getSystemDefaultsPath();
-  const migratedInMemorScopes = /* @__PURE__ */ new Set();
-  const resolvedWorkspaceDir = path60.resolve(workspaceDir);
-  const resolvedHomeDir = path60.resolve(homedir9());
-  let realWorkspaceDir = resolvedWorkspaceDir;
-  try {
-    realWorkspaceDir = fs56.realpathSync(resolvedWorkspaceDir);
-  } catch (_e) {
-  }
-  const realHomeDir = fs56.realpathSync(resolvedHomeDir);
-  const workspaceSettingsPath = new Storage(
-    workspaceDir
-  ).getWorkspaceSettingsPath();
-  const loadAndMigrate = (filePath, scope) => {
-    try {
-      if (fs56.existsSync(filePath)) {
-        const content = fs56.readFileSync(filePath, "utf-8");
-        const rawSettings = JSON.parse((0, import_strip_json_comments2.default)(content));
-        if (typeof rawSettings !== "object" || rawSettings === null || Array.isArray(rawSettings)) {
-          settingsErrors.push({
-            message: "Settings file is not a valid JSON object.",
-            path: filePath
-          });
-          return {};
-        }
-        let settingsObject = rawSettings;
-        if (needsMigration(settingsObject)) {
-          const migratedSettings = migrateSettingsToV2(settingsObject);
-          if (migratedSettings) {
-            if (MIGRATE_V2_OVERWRITE) {
-              try {
-                fs56.renameSync(filePath, `${filePath}.orig`);
-                fs56.writeFileSync(
-                  filePath,
-                  JSON.stringify(migratedSettings, null, 2),
-                  "utf-8"
-                );
-              } catch (e2) {
-                console.error(
-                  `Error migrating settings file on disk: ${getErrorMessage(
-                    e2
-                  )}`
-                );
-              }
-            } else {
-              migratedInMemorScopes.add(scope);
-            }
-            settingsObject = migratedSettings;
-          }
-        }
-        return settingsObject;
-      }
-    } catch (error) {
-      settingsErrors.push({
-        message: getErrorMessage(error),
-        path: filePath
-      });
-    }
-    return {};
-  };
-  systemSettings = loadAndMigrate(systemSettingsPath, "System" /* System */);
-  systemDefaultSettings = loadAndMigrate(
-    systemDefaultsPath,
-    "SystemDefaults" /* SystemDefaults */
-  );
-  userSettings = loadAndMigrate(USER_SETTINGS_PATH, "User" /* User */);
-  if (realWorkspaceDir !== realHomeDir) {
-    workspaceSettings = loadAndMigrate(
-      workspaceSettingsPath,
-      "Workspace" /* Workspace */
-    );
-  }
-  if (userSettings.ui?.theme === "VS") {
-    userSettings.ui.theme = DefaultLight.name;
-  } else if (userSettings.ui?.theme === "VS2015") {
-    userSettings.ui.theme = DefaultDark.name;
-  }
-  if (workspaceSettings.ui?.theme === "VS") {
-    workspaceSettings.ui.theme = DefaultLight.name;
-  } else if (workspaceSettings.ui?.theme === "VS2015") {
-    workspaceSettings.ui.theme = DefaultDark.name;
-  }
-  const initialTrustCheckSettings = mergeWith_default({}, systemSettings, userSettings);
-  const isTrusted = isWorkspaceTrusted(initialTrustCheckSettings) ?? true;
-  const tempMergedSettings = mergeSettings(
-    systemSettings,
-    systemDefaultSettings,
-    userSettings,
-    workspaceSettings,
-    isTrusted
-  );
-  loadEnvironment(tempMergedSettings);
-  systemSettings = resolveEnvVarsInObject(systemSettings);
-  userSettings = resolveEnvVarsInObject(userSettings);
-  workspaceSettings = resolveEnvVarsInObject(workspaceSettings);
-  const loadedSettings = new LoadedSettings(
-    {
-      path: systemSettingsPath,
-      settings: systemSettings
-    },
-    {
-      path: systemDefaultsPath,
-      settings: systemDefaultSettings
-    },
-    {
-      path: USER_SETTINGS_PATH,
-      settings: userSettings
-    },
-    {
-      path: workspaceSettingsPath,
-      settings: workspaceSettings
-    },
-    settingsErrors,
-    isTrusted,
-    migratedInMemorScopes
-  );
-  return loadedSettings;
-}
-function saveSettings(settingsFile) {
-  try {
-    const dirPath = path60.dirname(settingsFile.path);
-    if (!fs56.existsSync(dirPath)) {
-      fs56.mkdirSync(dirPath, { recursive: true });
-    }
-    let settingsToSave = settingsFile.settings;
-    if (!MIGRATE_V2_OVERWRITE) {
-      settingsToSave = migrateSettingsToV1(
-        settingsToSave
-      );
-    }
-    fs56.writeFileSync(
-      settingsFile.path,
-      JSON.stringify(settingsToSave, null, 2),
-      "utf-8"
-    );
-  } catch (error) {
-    console.error("Error saving user settings file:", error);
-  }
-}
-
-// packages/cli/src/config/auth.ts
+init_settings();
 import * as fs57 from "node:fs";
 import * as path61 from "node:path";
 import { homedir as homedir10 } from "node:os";
@@ -319628,6 +320323,7 @@ async function setRegisteredSessionHealth(input) {
 }
 
 // packages/cli/src/scheduler/daemon.ts
+init_settings();
 import * as fs59 from "fs/promises";
 import * as path63 from "path";
 import { spawn as spawn8 } from "child_process";
@@ -321179,6 +321875,7 @@ if (isMainModule2) {
 }
 
 // packages/cli/src/commands/dashboard.ts
+init_settings();
 var DASHBOARD_SECTION_INNER_WIDTH = 77;
 var DASHBOARD_SHORTCUTS_INNER_WIDTH = 80;
 var ALT_SCREEN_ON = "\x1B[?1049h\x1B[2J\x1B[H\x1B[?25l";
@@ -321941,6 +322638,7 @@ Confirm ${getActionVerb(pendingAction)} "${actualId}"? [y/N]: `;
 // packages/cli/src/config/extension.ts
 init_dist3();
 init_esm5();
+init_settings();
 import * as fs61 from "node:fs";
 import * as path65 from "node:path";
 import * as os21 from "node:os";
@@ -325728,6 +326426,7 @@ function isYargsInstance(y) {
 var Yargs2 = YargsFactory(esm_default3);
 
 // packages/cli/src/commands/extensions/disable.ts
+init_settings();
 async function handleDisable(args) {
   try {
     disableExtension(args.name, args.scope);
@@ -325761,6 +326460,7 @@ var disableCommand = {
 
 // packages/cli/src/commands/extensions/enable.ts
 init_dist3();
+init_settings();
 async function handleEnable(args) {
   try {
     const scopes = args.scope ? [args.scope] : ["User" /* User */, "Workspace" /* Workspace */];
@@ -325807,6 +326507,7 @@ var extensionsCommand = {
 };
 
 // packages/cli/src/commands/mcp/add.ts
+init_settings();
 async function addMcpServer(name2, commandOrUrl, args, options2) {
   const {
     scope,
@@ -325979,6 +326680,7 @@ var addCommand = {
 };
 
 // packages/cli/src/commands/mcp/remove.ts
+init_settings();
 async function removeMcpServer(name2, options2) {
   const { scope } = options2;
   const settingsScope = scope === "user" ? "User" /* User */ : "Workspace" /* Workspace */;
@@ -326015,6 +326717,7 @@ var removeCommand = {
 };
 
 // packages/cli/src/commands/mcp/list.ts
+init_settings();
 init_dist3();
 init_client3();
 var COLOR_GREEN = "\x1B[32m";
@@ -326225,6 +326928,7 @@ var researchCommand = {
 // packages/cli/src/commands/scheduler.ts
 import * as process32 from "process";
 init_dist3();
+init_settings();
 var EXECUTION_MODE_VALUES2 = /* @__PURE__ */ new Set([
   "headless",
   "zellij_tab",
@@ -327317,6 +328021,7 @@ import { EventEmitter as EventEmitter8 } from "node:events";
 var appEvents = new EventEmitter8();
 
 // packages/cli/src/config/config.ts
+init_trustedFolders();
 var logger5 = {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   debug: (...args) => console.debug("[DEBUG]", ...args),
@@ -327824,6 +328529,9 @@ function mergeExcludeTools(settings, extensions, extraExcludes) {
   }
   return [...allExcludeTools];
 }
+
+// packages/cli/src/gemini.tsx
+init_settings();
 
 // packages/cli/src/nonInteractiveCli.ts
 init_dist3();
@@ -328509,6 +329217,7 @@ var import_react33 = __toESM(require_react(), 1);
 var import_react32 = __toESM(require_react(), 1);
 
 // packages/cli/src/ui/themes/ayu.ts
+init_theme();
 var ayuDarkColors = {
   type: "dark",
   Background: "#0b0e14",
@@ -328613,6 +329322,7 @@ var AyuDark = new Theme(
 );
 
 // packages/cli/src/ui/themes/ayu-light.ts
+init_theme();
 var ayuLightColors = {
   type: "light",
   Background: "#f8f9fa",
@@ -328743,6 +329453,7 @@ var AyuLight = new Theme(
 );
 
 // packages/cli/src/ui/themes/atom-one-dark.ts
+init_theme();
 var atomOneDarkColors = {
   type: "dark",
   Background: "#282c34",
@@ -328881,6 +329592,7 @@ var AtomOneDark = new Theme(
 );
 
 // packages/cli/src/ui/themes/dracula.ts
+init_theme();
 var draculaColors = {
   type: "dark",
   Background: "#282a36",
@@ -328996,6 +329708,7 @@ var Dracula = new Theme(
 );
 
 // packages/cli/src/ui/themes/github-dark.ts
+init_theme();
 var githubDarkColors = {
   type: "dark",
   Background: "#24292e",
@@ -329134,6 +329847,7 @@ var GitHubDark = new Theme(
 );
 
 // packages/cli/src/ui/themes/github-light.ts
+init_theme();
 var githubLightColors = {
   type: "light",
   Background: "#f8f8f8",
@@ -329274,6 +329988,7 @@ var GitHubLight = new Theme(
 );
 
 // packages/cli/src/ui/themes/googlecode.ts
+init_theme();
 var googleCodeColors = {
   type: "light",
   Background: "white",
@@ -329410,7 +330125,12 @@ var GoogleCode = new Theme(
   googleCodeColors
 );
 
+// packages/cli/src/ui/themes/theme-manager.ts
+init_default_light();
+init_default2();
+
 // packages/cli/src/ui/themes/shades-of-purple.ts
+init_theme();
 var shadesOfPurpleColors = {
   type: "dark",
   // Required colors for ColorsTheme interface
@@ -329729,6 +330449,7 @@ var ShadesOfPurple = new Theme(
 );
 
 // packages/cli/src/ui/themes/xcode.ts
+init_theme();
 var xcodeColors = {
   type: "light",
   Background: "#fff",
@@ -329873,7 +330594,11 @@ var XCode = new Theme(
   xcodeColors
 );
 
+// packages/cli/src/ui/themes/qwen-light.ts
+init_theme();
+
 // packages/cli/src/ui/themes/semantic-tokens.ts
+init_theme();
 var lightSemanticColors = {
   text: {
     primary: lightTheme.Foreground,
@@ -330094,6 +330819,7 @@ var QwenLight = new Theme(
 );
 
 // packages/cli/src/ui/themes/qwen-dark.ts
+init_theme();
 var qwenDarkColors = {
   type: "dark",
   Background: "#0b0e14",
@@ -330199,11 +330925,13 @@ var QwenDark = new Theme(
 );
 
 // packages/cli/src/ui/themes/theme-manager.ts
+init_theme();
 import * as fs64 from "node:fs";
 import * as path73 from "node:path";
 import * as os24 from "node:os";
 
 // packages/cli/src/ui/themes/ansi.ts
+init_theme();
 var ansiColors = {
   type: "dark",
   Background: "black",
@@ -330394,6 +331122,7 @@ var ANSI = new Theme(
 );
 
 // packages/cli/src/ui/themes/ansi-light.ts
+init_theme();
 var ansiLightColors = {
   type: "light",
   Background: "white",
@@ -330536,6 +331265,7 @@ var ANSILight = new Theme(
 );
 
 // packages/cli/src/ui/themes/no-color.ts
+init_theme();
 var noColorColorsTheme = {
   type: "ansi",
   Background: "",
@@ -348974,20 +349704,33 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
       }
       try {
         const runtimeAuth = profile.auth;
-        const runtimeBaseUrl = runtimeAuth?.baseUrl && runtimeAuth.baseUrl.trim().length > 0 ? runtimeAuth.baseUrl.trim() : void 0;
+        const runtimeProviderId = typeof runtimeAuth?.providerId === "string" && runtimeAuth.providerId.trim().length > 0 ? runtimeAuth.providerId.trim() : void 0;
+        let providerBaseUrl;
+        let providerApiKey;
+        if (runtimeProviderId) {
+          try {
+            const { loadSettings: loadSettings2 } = await Promise.resolve().then(() => (init_settings(), settings_exports));
+            const resolvedSettings = loadSettings2(process.cwd());
+            const providers = resolvedSettings.merged.security?.auth?.providers;
+            providerBaseUrl = providers?.[runtimeProviderId]?.baseUrl?.trim();
+            providerApiKey = providers?.[runtimeProviderId]?.apiKey?.trim();
+          } catch {
+          }
+        }
+        const runtimeBaseUrl = runtimeAuth?.baseUrl && runtimeAuth.baseUrl.trim().length > 0 ? runtimeAuth.baseUrl.trim() : providerBaseUrl;
         if (runtimeBaseUrl) {
           process.env["OPENAI_BASE_URL"] = runtimeBaseUrl;
         }
+        const envVarName = runtimeAuth?.apiKeyEnvVar && runtimeAuth.apiKeyEnvVar.trim().length > 0 ? runtimeAuth.apiKeyEnvVar.trim() : void 0;
+        const envApiKey = envVarName ? process.env[envVarName]?.trim() : void 0;
         let runtimeApiKey;
-        if (runtimeAuth?.apiKeyEnvVar && runtimeAuth.apiKeyEnvVar.trim().length > 0) {
-          const envVarName = runtimeAuth.apiKeyEnvVar.trim();
-          const apiKey = process.env[envVarName]?.trim();
-          if (!apiKey) {
-            throw new Error(
-              `Task runtime requires API key env var ${envVarName}, but it is not set.`
-            );
-          }
-          runtimeApiKey = apiKey;
+        runtimeApiKey = providerApiKey || envApiKey || (runtimeProviderId === "lmstudio" ? "lmstudio-local-key" : void 0);
+        if (!runtimeApiKey && envVarName) {
+          throw new Error(
+            `Task runtime requires API key env var ${envVarName}, but it is not set.`
+          );
+        }
+        if (runtimeApiKey) {
           process.env["OPENAI_API_KEY"] = runtimeApiKey;
         }
         const modelOverride = profile.model?.name && profile.model.name.trim().length > 0 ? profile.model.name.trim() : void 0;
@@ -350093,6 +350836,7 @@ var FolderTrustDialog = ({
 };
 
 // packages/cli/src/ui/hooks/useFolderTrust.ts
+init_trustedFolders();
 import * as process39 from "node:process";
 var useFolderTrust = (settings, onTrustChange) => {
   const [isTrusted, setIsTrusted] = (0, import_react52.useState)(void 0);
@@ -351588,6 +352332,7 @@ function useStartupStatus({ addItem }) {
 
 // packages/cli/src/ui/hooks/useDialogClose.ts
 var import_react57 = __toESM(require_react(), 1);
+init_settings();
 function useDialogClose(options2) {
   const closeAnyOpenDialog = (0, import_react57.useCallback)(() => {
     if (options2.isThemeDialogOpen) {
@@ -351775,6 +352520,7 @@ var agentsCommand = {
 
 // packages/cli/src/ui/commands/approvalModeCommand.ts
 init_dist3();
+init_settings();
 var USAGE_MESSAGE = "Usage: /approval-mode <mode> [--session|--user|--project]";
 var normalizeInputMode = (value) => value.trim().toLowerCase();
 var tokenizeArgs = (args) => {
@@ -352122,7 +352868,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "54a65301";
+var GIT_COMMIT_INFO = "20456743";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -353753,6 +354499,7 @@ var toolsetCommand = {
 // packages/cli/src/ui/commands/ideCommand.ts
 init_dist3();
 import path81 from "node:path";
+init_settings();
 function getIdeStatusMessage(ideClient) {
   const connection = ideClient.getConnectionStatus();
   switch (connection.status) {
@@ -363471,6 +364218,12 @@ var getLanguageFromExtension = (extension) => {
   return languageMap[extension] || null;
 };
 
+// packages/cli/src/ui/components/ThemeDialog.tsx
+init_settings();
+
+// packages/cli/src/utils/dialogScopeUtils.ts
+init_settings();
+
 // packages/cli/src/utils/settingsUtils.ts
 function flattenSchema(schema, prefix = "") {
   let result = {};
@@ -363895,6 +364648,7 @@ def fibonacci(n):
 // packages/cli/src/ui/components/AuthDialog.tsx
 var import_react87 = __toESM(require_react(), 1);
 init_dist3();
+init_settings();
 
 // packages/cli/src/ui/components/OpenAIKeyPrompt.tsx
 var import_react84 = __toESM(require_react(), 1);
@@ -364983,6 +365737,7 @@ var EditorSettingsManager = class {
 var editorSettingsManager = new EditorSettingsManager();
 
 // packages/cli/src/ui/components/EditorSettingsDialog.tsx
+init_settings();
 init_dist3();
 var import_jsx_runtime34 = __toESM(require_jsx_runtime(), 1);
 function EditorSettingsDialog({
@@ -368879,6 +369634,9 @@ var ResultsSection = ({ data, displayMode }) => /* @__PURE__ */ (0, import_jsx_r
   ] })
 ] });
 
+// packages/cli/src/ui/App.tsx
+init_settings();
+
 // packages/cli/src/ui/components/Tips.tsx
 init_dist3();
 var import_jsx_runtime56 = __toESM(require_jsx_runtime(), 1);
@@ -370694,6 +371452,7 @@ var useBracketedPaste = () => {
 
 // packages/cli/src/ui/contexts/VimModeContext.tsx
 var import_react114 = __toESM(require_react(), 1);
+init_settings();
 var import_jsx_runtime80 = __toESM(require_jsx_runtime(), 1);
 var VimModeContext = (0, import_react114.createContext)(void 0);
 var VimModeProvider = ({
@@ -371631,6 +372390,7 @@ function useSettingsCommand() {
 
 // packages/cli/src/ui/components/SettingsDialog.tsx
 var import_react119 = __toESM(require_react(), 1);
+init_settings();
 var import_chalk6 = __toESM(require_source(), 1);
 var import_jsx_runtime87 = __toESM(require_jsx_runtime(), 1);
 var maxItemsToShow = 8;
@@ -372464,6 +373224,7 @@ function setUpdateHandler(addItem, setUpdateInfo) {
 
 // packages/cli/src/ui/hooks/useWorkspaceMigration.ts
 var import_react120 = __toESM(require_react(), 1);
+init_settings();
 import process45 from "node:process";
 function useWorkspaceMigration(settings) {
   const [showWorkspaceMigrationDialog, setShowWorkspaceMigrationDialog] = (0, import_react120.useState)(false);
@@ -373546,6 +374307,10 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     },
     [closeResumeDialog, handleSlashCommand]
   );
+  const submitQueryForDeployRef = (0, import_react122.useRef)(
+    async () => {
+    }
+  );
   const handleTaskTemplateDeploy = (0, import_react122.useCallback)(
     async (request4) => {
       const templateId = request4.templateId.trim();
@@ -373575,15 +374340,17 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
         const escapedSchedule = schedule.replace(/"/g, '\\"');
         const trimmedJobId = request4.jobId?.trim();
         const jobArg = trimmedJobId ? ` --id "${trimmedJobId.replace(/"/g, '\\"')}"` : "";
-        await handleSlashCommand(
+        await submitQueryForDeployRef.current(
           `/tasks schedule ${templateId} "${escapedSchedule}"${jobArg}${levelArg}`
         );
       } else {
-        await handleSlashCommand(`/tasks run ${templateId}${levelArg}`);
+        await submitQueryForDeployRef.current(
+          `/tasks run ${templateId}${levelArg}`
+        );
       }
       setIsTaskTemplateDialogOpen(false);
     },
-    [addItem, handleSlashCommand]
+    [addItem]
   );
   const buffer = useTextBuffer({
     initialText: "",
@@ -373622,6 +374389,9 @@ var App2 = ({ config, settings, startupWarnings = [], version: version3 }) => {
     handleVisionSwitchRequired,
     refreshLmStudioModel
   );
+  submitQueryForDeployRef.current = async (query) => {
+    await submitQuery(query);
+  };
   const pendingHistoryItems = (0, import_react122.useMemo)(
     () => [...pendingSlashCommandHistoryItems, ...pendingGeminiHistoryItems].map(
       (item, index) => ({
@@ -377484,13 +378254,14 @@ async function readStdin() {
 
 // packages/cli/src/utils/sandbox.ts
 var import_shell_quote6 = __toESM(require_shell_quote(), 1);
+init_settings();
+init_dist3();
 import { exec as exec8, execSync as execSync7, spawn as spawn14 } from "node:child_process";
 import os35 from "node:os";
 import path104 from "node:path";
 import fs89 from "node:fs";
 import { readFile as readFile17 } from "node:fs/promises";
 import { fileURLToPath as fileURLToPath15 } from "node:url";
-init_dist3();
 import { promisify as promisify11 } from "node:util";
 var execAsync4 = promisify11(exec8);
 function getContainerPath(hostPath) {
@@ -378247,6 +379018,7 @@ async function getUserStartupWarnings(workspaceRoot) {
 
 // packages/cli/src/validateNonInterActiveAuth.ts
 init_dist3();
+init_settings();
 function getAuthTypeFromEnv() {
   if (process.env["GOOGLE_GENAI_USE_GCA"] === "true") {
     return AuthType2.LOGIN_WITH_GOOGLE;
@@ -378290,6 +379062,7 @@ async function validateNonInteractiveAuth(configuredAuthType, useExternalAuth, n
 // packages/cli/src/zed-integration/zedIntegration.ts
 init_dist3();
 init_zod();
+init_settings();
 import * as fs92 from "node:fs/promises";
 import * as path106 from "node:path";
 import { Readable as Readable3, Writable as Writable2 } from "node:stream";
@@ -380218,6 +380991,17 @@ react-devtools-core/dist/backend.js:
    * LICENSE file in the root directory of this source tree.
    *)
 
+lodash-es/lodash.js:
+  (**
+   * @license
+   * Lodash (Custom Build) <https://lodash.com/>
+   * Build: `lodash modularize exports="es" -o ./`
+   * Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
+   * Released under MIT license <https://lodash.com/license>
+   * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
+   * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
+   *)
+
 react/cjs/react-jsx-runtime.production.js:
   (**
    * @license React
@@ -380293,17 +381077,6 @@ deep-extend/lib/deep-extend.js:
    * COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
    * IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
    * CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
-   *)
-
-lodash-es/lodash.js:
-  (**
-   * @license
-   * Lodash (Custom Build) <https://lodash.com/>
-   * Build: `lodash modularize exports="es" -o ./`
-   * Copyright OpenJS Foundation and other contributors <https://openjsf.org/>
-   * Released under MIT license <https://lodash.com/license>
-   * Based on Underscore.js 1.8.3 <http://underscorejs.org/LICENSE>
-   * Copyright Jeremy Ashkenas, DocumentCloud and Investigative Reporters & Editors
    *)
 
 yargs-parser/build/lib/string-utils.js:

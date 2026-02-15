@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": "2026-02-12T00:42:43.730Z",
+  "updated_at": "2026-02-15T12:56:47.031Z",
   "tasks": {
     "simple-test-task": {
       "task_id": "simple-test-task",
@@ -376,6 +376,112 @@
         "message_timestamp": "2026-02-12T00:42:43.730Z"
       },
       "tab_name": "task:web-search-headless-fix"
+    },
+    "vision-ocr-1771159998638": {
+      "task_id": "vision-ocr-1771159998638",
+      "status": "completed",
+      "created_at": "2026-02-15T12:53:18.699Z",
+      "started_at": "2026-02-15T12:53:18.829Z",
+      "finished_at": "2026-02-15T12:54:51.381Z",
+      "last_heartbeat": "2026-02-15T12:54:51.381Z",
+      "prompt_preview": "Find all image files in this directory and describe what's in them.",
+      "parent_session_id": "48d5b729-aa7f-4655-98f2-0078a0ceea99",
+      "source_session_id": "48d5b729-aa7f-4655-98f2-0078a0ceea99",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "model_requested": "qwen/qwen3-vl-8b",
+      "model_actual": "qwen/qwen3-vl-8b",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "auth_actual": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "vision-ocr",
+        "template_level": "user",
+        "action_type": "prompt",
+        "action_value": "Find all image files in this directory and describe what's in them.",
+        "execution_mode": "zellij_tab",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "lmstudio",
+          "baseUrl": "http://uby:1234/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "qwen/qwen3-vl-8b"
+        },
+        "run": {
+          "returnToSession": true
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/48d5b729-aa7f-4655-98f2-0078a0ceea99.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-vision-ocr-1771159998638-1771159998699.log",
+        "child_session_id": "headless-vision-ocr-1771159998638-1771159999283",
+        "message_timestamp": "2026-02-15T12:54:51.381Z"
+      },
+      "tab_name": "task:vision-ocr-1771159998638"
+    },
+    "compress-context-1771160195999": {
+      "task_id": "compress-context-1771160195999",
+      "status": "completed",
+      "created_at": "2026-02-15T12:56:36.034Z",
+      "started_at": "2026-02-15T12:56:36.035Z",
+      "finished_at": "2026-02-15T12:56:47.031Z",
+      "last_heartbeat": "2026-02-15T12:56:47.031Z",
+      "prompt_preview": "/compress",
+      "parent_session_id": "48d5b729-aa7f-4655-98f2-0078a0ceea99",
+      "source_session_id": "48d5b729-aa7f-4655-98f2-0078a0ceea99",
+      "execution_mode_requested": "in_process",
+      "execution_mode_actual": "in_process",
+      "model_requested": "minimax/minimax-m1",
+      "model_actual": "minimax/minimax-m1",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "openrouter",
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "auth_actual": {
+        "selectedType": "openai",
+        "providerId": "openrouter",
+        "baseUrl": "https://openrouter.ai/api/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "compress-context",
+        "template_level": "user",
+        "action_type": "slash_command",
+        "action_value": "/compress",
+        "execution_mode": "in_process",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "openrouter",
+          "baseUrl": "https://openrouter.ai/api/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "minimax/minimax-m1"
+        },
+        "run": {
+          "returnToSession": true,
+          "allowRecursive": false
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/48d5b729-aa7f-4655-98f2-0078a0ceea99.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/in-process-tasks/48d5b729-aa7f-4655-98f2-0078a0ceea99.jsonl",
+        "child_session_id": "48d5b729-aa7f-4655-98f2-0078a0ceea99",
+        "message_timestamp": "2026-02-15T12:56:47.031Z"
+      }
     }
   }
 }

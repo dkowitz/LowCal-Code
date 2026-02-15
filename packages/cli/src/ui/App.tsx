@@ -1314,6 +1314,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     },
     [closeResumeDialog, handleSlashCommand],
   );
+  const submitQueryForDeployRef = useRef<(query: string) => Promise<void>>(
+    async () => {},
+  );
 
   const handleTaskTemplateDeploy = useCallback(
     async (request: TaskTemplateDeployRequest) => {
@@ -1350,16 +1353,18 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         const jobArg = trimmedJobId
           ? ` --id "${trimmedJobId.replace(/"/g, '\\"')}"`
           : "";
-        await handleSlashCommand(
+        await submitQueryForDeployRef.current(
           `/tasks schedule ${templateId} "${escapedSchedule}"${jobArg}${levelArg}`,
         );
       } else {
-        await handleSlashCommand(`/tasks run ${templateId}${levelArg}`);
+        await submitQueryForDeployRef.current(
+          `/tasks run ${templateId}${levelArg}`,
+        );
       }
 
       setIsTaskTemplateDialogOpen(false);
     },
-    [addItem, handleSlashCommand],
+    [addItem],
   );
 
   const buffer = useTextBuffer({
@@ -1402,6 +1407,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     handleVisionSwitchRequired,
     refreshLmStudioModel,
   );
+  submitQueryForDeployRef.current = async (query: string) => {
+    await submitQuery(query);
+  };
 
   const pendingHistoryItems = useMemo(
     () =>

@@ -911,6 +911,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         closeResumeDialog();
         void handleSlashCommand(`/resume ${checkpointId}`);
     }, [closeResumeDialog, handleSlashCommand]);
+    const submitQueryForDeployRef = useRef(async () => { });
     const handleTaskTemplateDeploy = useCallback(async (request) => {
         const templateId = request.templateId.trim();
         if (!templateId) {
@@ -937,13 +938,13 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             const jobArg = trimmedJobId
                 ? ` --id "${trimmedJobId.replace(/"/g, '\\"')}"`
                 : "";
-            await handleSlashCommand(`/tasks schedule ${templateId} "${escapedSchedule}"${jobArg}${levelArg}`);
+            await submitQueryForDeployRef.current(`/tasks schedule ${templateId} "${escapedSchedule}"${jobArg}${levelArg}`);
         }
         else {
-            await handleSlashCommand(`/tasks run ${templateId}${levelArg}`);
+            await submitQueryForDeployRef.current(`/tasks run ${templateId}${levelArg}`);
         }
         setIsTaskTemplateDialogOpen(false);
-    }, [addItem, handleSlashCommand]);
+    }, [addItem]);
     const buffer = useTextBuffer({
         initialText: "",
         viewport: { height: 10, width: inputWidth },
@@ -956,6 +957,9 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     // Stable reference for cancel handler to avoid circular dependency
     const cancelHandlerRef = useRef(() => { });
     const { streamingState, submitQuery, initError, pendingHistoryItems: pendingGeminiHistoryItems, thought, cancelOngoingRequest, } = useGeminiStream(config.getGeminiClient(), history, addItem, config, setDebugMessage, handleSlashCommand, shellModeActive, getPreferredEditor, onAuthError, performMemoryRefresh, modelSwitchedFromQuotaError, setModelSwitchedFromQuotaError, refreshStatic, () => cancelHandlerRef.current(), settings.merged.experimental?.visionModelPreview ?? true, handleVisionSwitchRequired, refreshLmStudioModel);
+    submitQueryForDeployRef.current = async (query) => {
+        await submitQuery(query);
+    };
     const pendingHistoryItems = useMemo(() => [...pendingSlashCommandHistoryItems, ...pendingGeminiHistoryItems].map((item, index) => ({
         ...item,
         id: index,

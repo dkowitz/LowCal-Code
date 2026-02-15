@@ -1043,21 +1043,47 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         }
         try {
             const runtimeAuth = profile.auth;
+            const runtimeProviderId = typeof runtimeAuth?.providerId === "string" &&
+                runtimeAuth.providerId.trim().length > 0
+                ? runtimeAuth.providerId.trim()
+                : undefined;
+            let providerBaseUrl;
+            let providerApiKey;
+            if (runtimeProviderId) {
+                try {
+                    const { loadSettings } = await import("../../config/settings.js");
+                    const resolvedSettings = loadSettings(process.cwd());
+                    const providers = resolvedSettings.merged.security?.auth
+                        ?.providers;
+                    providerBaseUrl = providers?.[runtimeProviderId]?.baseUrl?.trim();
+                    providerApiKey = providers?.[runtimeProviderId]?.apiKey?.trim();
+                }
+                catch {
+                    // Ignore settings load errors and fall back to env vars.
+                }
+            }
             const runtimeBaseUrl = runtimeAuth?.baseUrl && runtimeAuth.baseUrl.trim().length > 0
                 ? runtimeAuth.baseUrl.trim()
-                : undefined;
+                : providerBaseUrl;
             if (runtimeBaseUrl) {
                 process.env["OPENAI_BASE_URL"] = runtimeBaseUrl;
             }
+            const envVarName = runtimeAuth?.apiKeyEnvVar &&
+                runtimeAuth.apiKeyEnvVar.trim().length > 0
+                ? runtimeAuth.apiKeyEnvVar.trim()
+                : undefined;
+            const envApiKey = envVarName
+                ? process.env[envVarName]?.trim()
+                : undefined;
             let runtimeApiKey;
-            if (runtimeAuth?.apiKeyEnvVar &&
-                runtimeAuth.apiKeyEnvVar.trim().length > 0) {
-                const envVarName = runtimeAuth.apiKeyEnvVar.trim();
-                const apiKey = process.env[envVarName]?.trim();
-                if (!apiKey) {
-                    throw new Error(`Task runtime requires API key env var ${envVarName}, but it is not set.`);
-                }
-                runtimeApiKey = apiKey;
+            runtimeApiKey =
+                providerApiKey ||
+                    envApiKey ||
+                    (runtimeProviderId === "lmstudio" ? "lmstudio-local-key" : undefined);
+            if (!runtimeApiKey && envVarName) {
+                throw new Error(`Task runtime requires API key env var ${envVarName}, but it is not set.`);
+            }
+            if (runtimeApiKey) {
                 process.env["OPENAI_API_KEY"] = runtimeApiKey;
             }
             const modelOverride = profile.model?.name && profile.model.name.trim().length > 0
