@@ -1,7 +1,7 @@
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |    2.35 |    38.69 |   19.39 |    2.35 |                   
+All files          |       0 |     2.52 |    2.52 |       0 |                   
  src               |       0 |        0 |       0 |       0 |                   
   index.ts         |       0 |        0 |       0 |       0 | 1-138             
  src/__mocks__/fs  |       0 |        0 |       0 |       0 |                   
@@ -30,14 +30,14 @@ All files          |    2.35 |    38.69 |   19.39 |    2.35 |
   ...getManager.ts |       0 |        0 |       0 |       0 | 1-97              
   tokenLimits.ts   |       0 |      100 |     100 |       0 | 11-282            
   turn.ts          |       0 |        0 |       0 |       0 | 1-545             
- ...ntentGenerator |   33.56 |     63.7 |   66.17 |   33.56 |                   
+ ...ntentGenerator |       0 |     12.5 |    12.5 |       0 |                   
   constants.ts     |       0 |        0 |       0 |       0 | 1-2               
-  converter.ts     |   54.49 |    64.46 |      75 |   54.49 | ...1910,1929-1966 
+  converter.ts     |       0 |        0 |       0 |       0 | 1-1974            
   errorHandler.ts  |       0 |        0 |       0 |       0 | 1-129             
   index.ts         |       0 |        0 |       0 |       0 | 1-92              
   ...tGenerator.ts |       0 |      100 |     100 |       0 | 3-166             
   pipeline.ts      |       0 |        0 |       0 |       0 | 1-760             
-  ...CallParser.ts |   41.31 |    68.18 |      50 |   41.31 | ...63-368,407-413 
+  ...CallParser.ts |       0 |        0 |       0 |       0 | 1-414             
   ...tryService.ts |       0 |        0 |       0 |       0 | 1-314             
  ...rator/provider |       0 |    33.33 |   33.33 |       0 |                   
   dashscope.ts     |       0 |        0 |       0 |       0 | 1-315             
@@ -160,7 +160,7 @@ All files          |    2.35 |    38.69 |   19.39 |    2.35 |
   web-fetch.ts     |       0 |        0 |       0 |       0 | 1-322             
   web-search.ts    |       0 |        0 |       0 |       0 | 1-220             
   write-file.ts    |       0 |        0 |       0 |       0 | 1-481             
- src/utils         |    0.46 |     3.77 |    3.44 |    0.46 |                   
+ src/utils         |       0 |        0 |       0 |       0 |                   
   LruCache.ts      |       0 |        0 |       0 |       0 | 1-41              
   bfsFileSearch.ts |       0 |        0 |       0 |       0 | 1-124             
   browser.ts       |       0 |        0 |       0 |       0 | 1-56              
@@ -196,7 +196,7 @@ All files          |    2.35 |    38.69 |   19.39 |    2.35 |
   ...rDetection.ts |       0 |        0 |       0 |       0 | 1-167             
   ...truncation.ts |       0 |        0 |       0 |       0 | 1-351             
   retry.ts         |       0 |        0 |       0 |       0 | 1-466             
-  safeJsonParse.ts |      12 |      100 |       0 |      12 | 19-45             
+  safeJsonParse.ts |       0 |        0 |       0 |       0 | 1-45              
   ...nStringify.ts |       0 |        0 |       0 |       0 | 1-32              
   ...aValidator.ts |       0 |        0 |       0 |       0 | 1-58              
   ...r-launcher.ts |       0 |        0 |       0 |       0 | 1-191             
@@ -206,7 +206,7 @@ All files          |    2.35 |    38.69 |   19.39 |    2.35 |
   ...tGenerator.ts |       0 |        0 |       0 |       0 | 1-148             
   summarizer.ts    |       0 |        0 |       0 |       0 | 1-96              
   ...emEncoding.ts |       0 |        0 |       0 |       0 | 1-166             
-  testUtils.ts     |   53.33 |      100 |   33.33 |   53.33 | ...53,59-64,70-72 
+  testUtils.ts     |       0 |        0 |       0 |       0 | 1-87              
   textUtils.ts     |       0 |        0 |       0 |       0 | 1-34              
   tool-utils.ts    |       0 |        0 |       0 |       0 | 1-76              
   ...validation.ts |       0 |        0 |       0 |       0 | 1-171             

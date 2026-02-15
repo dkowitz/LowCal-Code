@@ -1,7 +1,7 @@
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |     1.9 |    26.19 |    8.25 |     1.9 |                   
+All files          |    0.36 |     6.26 |    2.53 |    0.36 |                   
  src               |       0 |        0 |       0 |       0 |                   
   gemini.tsx       |       0 |        0 |       0 |       0 | 1-480             
   ...ractiveCli.ts |       0 |        0 |       0 |       0 | 1-368             
@@ -47,9 +47,9 @@ All files          |     1.9 |    26.19 |    8.25 |     1.9 |
  src/scheduler     |       0 |        0 |       0 |       0 |                   
   daemon.ts        |       0 |        0 |       0 |       0 | 1-1134            
   headless.ts      |       0 |        0 |       0 |       0 | 1-790             
- src/services      |    3.94 |    42.85 |    37.5 |    3.94 |                   
+ src/services      |       0 |        0 |       0 |       0 |                   
   ...mandLoader.ts |       0 |        0 |       0 |       0 | 1-120             
-  ...andService.ts |   76.19 |    66.66 |     100 |   76.19 | 60-61,70-80       
+  ...andService.ts |       0 |        0 |       0 |       0 | 1-103             
   ...mandLoader.ts |       0 |        0 |       0 |       0 | 1-307             
   ...omptLoader.ts |       0 |        0 |       0 |       0 | 1-256             
   ...downLogger.ts |       0 |        0 |       0 |       0 | 1-384             
@@ -62,12 +62,12 @@ All files          |     1.9 |    26.19 |    8.25 |     1.9 |
   types.ts         |       0 |        0 |       0 |       0 | 1-54              
  src/session       |       0 |        0 |       0 |       0 |                   
   ...ionManager.ts |       0 |        0 |       0 |       0 | 1-744             
- src/test-utils    |   72.51 |    83.33 |      60 |   72.51 |                   
+ src/test-utils    |   62.59 |       60 |      60 |   62.59 |                   
   ...omMatchers.ts |   21.21 |      100 |       0 |   21.21 | 23-51             
-  ...andContext.ts |     100 |      100 |     100 |     100 |                   
+  ...andContext.ts |   83.11 |    66.66 |     100 |   83.11 | 90-105            
   ...Controller.ts |     100 |      100 |     100 |     100 |                   
   render.tsx       |       0 |        0 |       0 |       0 | 1-18              
- src/ui            |    1.32 |    36.36 |       0 |    1.32 |                   
+ src/ui            |       0 |        0 |       0 |       0 |                   
   App.tsx          |       0 |        0 |       0 |       0 | 1-2463            
   ...tionNudge.tsx |       0 |        0 |       0 |       0 | 1-96              
   colors.ts        |       0 |        0 |       0 |       0 | 1-56              
@@ -75,8 +75,8 @@ All files          |     1.9 |    26.19 |    8.25 |     1.9 |
   keyMatchers.ts   |       0 |        0 |       0 |       0 | 1-98              
   ...tic-colors.ts |       0 |        0 |       0 |       0 | 1-26              
   textConstants.ts |       0 |        0 |       0 |       0 | 1-13              
-  types.ts         |     100 |      100 |     100 |     100 |                   
- src/ui/commands   |    3.03 |     27.5 |    12.5 |    3.03 |                   
+  types.ts         |       0 |        0 |       0 |       0 | 1-206             
+ src/ui/commands   |    1.77 |       25 |    6.66 |    1.77 |                   
   aboutCommand.ts  |       0 |        0 |       0 |       0 | 1-50              
   agentsCommand.ts |       0 |        0 |       0 |       0 | 1-37              
   ...odeCommand.ts |       0 |        0 |       0 |       0 | 1-434             
@@ -96,10 +96,10 @@ All files          |     1.9 |    26.19 |    8.25 |     1.9 |
   ideCommand.ts    |       0 |        0 |       0 |       0 | 1-287             
   initCommand.ts   |       0 |        0 |       0 |       0 | 1-131             
   ...ingCommand.ts |       0 |        0 |       0 |       0 | 1-105             
-  ...boxCommand.ts |   91.61 |    55.55 |     100 |   91.61 | ...58,165,211-213 
+  ...boxCommand.ts |       0 |        0 |       0 |       0 | 1-215             
   mcpCommand.ts    |       0 |        0 |       0 |       0 | 1-531             
   memoryCommand.ts |       0 |        0 |       0 |       0 | 1-303             
-  modelCommand.ts  |       0 |        0 |       0 |       0 | 1-120             
+  modelCommand.ts  |   93.54 |       70 |     100 |   93.54 | 27-32             
   ...acyCommand.ts |       0 |        0 |       0 |       0 | 1-18              
   promptCommand.ts |       0 |        0 |       0 |       0 | 1-422             
   ...nfoCommand.ts |       0 |      100 |     100 |       0 | 6-77              
@@ -227,10 +227,10 @@ All files          |     1.9 |    26.19 |    8.25 |     1.9 |
   ...deContext.tsx |       0 |        0 |       0 |       0 | 1-80              
  src/ui/editors    |       0 |        0 |       0 |       0 |                   
   ...ngsManager.ts |       0 |        0 |       0 |       0 | 1-66              
- src/ui/hooks      |    7.02 |    47.77 |   10.16 |    7.02 |                   
+ src/ui/hooks      |       0 |     2.04 |    2.04 |       0 |                   
   ...dProcessor.ts |       0 |        0 |       0 |       0 | 1-480             
   ...dProcessor.ts |       0 |        0 |       0 |       0 | 1-313             
-  ...dProcessor.ts |   69.76 |    67.88 |   45.45 |   69.76 | ...61-689,691-741 
+  ...dProcessor.ts |       0 |        0 |       0 |       0 | 1-840             
   ...agerDialog.ts |       0 |        0 |       0 |       0 | 1-32              
   ...Completion.ts |       0 |        0 |       0 |       0 | 1-238             
   ...uthCommand.ts |       0 |        0 |       0 |       0 | 1-94              
@@ -278,7 +278,7 @@ All files          |     1.9 |    26.19 |    8.25 |     1.9 |
   ...eMigration.ts |       0 |        0 |       0 |       0 | 1-69              
   vim.ts           |       0 |        0 |       0 |       0 | 1-784             
  src/ui/models     |       0 |       50 |      50 |       0 |                   
-  ...ableModels.ts |       0 |        0 |       0 |       0 | 1-340             
+  ...ableModels.ts |       0 |        0 |       0 |       0 | 1-351             
   ...ingStorage.ts |       0 |      100 |     100 |       0 | 5-52              
  ...dels/__mocks__ |       0 |        0 |       0 |       0 |                   
   ...ableModels.ts |       0 |        0 |       0 |       0 | 1-4               
@@ -308,7 +308,7 @@ All files          |     1.9 |    26.19 |    8.25 |     1.9 |
   theme-manager.ts |       0 |        0 |       0 |       0 | 1-338             
   theme.ts         |       0 |        0 |       0 |       0 | 1-481             
   xcode.ts         |       0 |        0 |       0 |       0 | 1-152             
- src/ui/utils      |    5.03 |    37.25 |   33.33 |    5.03 |                   
+ src/ui/utils      |       0 |        0 |       0 |       0 |                   
   ...Colorizer.tsx |       0 |        0 |       0 |       0 | 1-217             
   ...olePatcher.ts |       0 |        0 |       0 |       0 | 1-71              
   ...nRenderer.tsx |       0 |        0 |       0 |       0 | 1-225             
@@ -318,10 +318,10 @@ All files          |     1.9 |    26.19 |    8.25 |     1.9 |
   commandUtils.ts  |       0 |        0 |       0 |       0 | 1-154             
   computeStats.ts  |       0 |        0 |       0 |       0 | 1-86              
   displayUtils.ts  |       0 |        0 |       0 |       0 | 1-32              
-  formatters.ts    |    7.14 |      100 |       0 |    7.14 | 8-16,25-63        
+  formatters.ts    |       0 |        0 |       0 |       0 | 1-63              
   isNarrowWidth.ts |       0 |        0 |       0 |       0 | 1-9               
   ...olDetector.ts |       0 |        0 |       0 |       0 | 1-105             
-  mailbox.ts       |   66.15 |    54.28 |     100 |   66.15 | ...40-141,148-162 
+  mailbox.ts       |       0 |        0 |       0 |       0 | 1-162             
   ...nUtilities.ts |       0 |        0 |       0 |       0 | 1-125             
   ...mConstants.ts |       0 |        0 |       0 |       0 | 1-60              
   terminalSetup.ts |       0 |        0 |       0 |       0 | 1-342             

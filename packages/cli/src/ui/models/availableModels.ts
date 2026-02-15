@@ -295,6 +295,17 @@ function extractQuantization(
     if (typeof val === "string" && val.trim()) return val.trim();
   }
 
+  // If quantization isn't in metadata, try to extract from model ID
+  // Common patterns: qwen3-coder-next-q4, qwen3-coder-next-Q6_K_M, etc.
+  const id = typeof model["id"] === "string" ? model["id"] : undefined;
+  if (id) {
+    // Match patterns like -q4, -Q6, -q8_K_M, -Q2_0, etc.
+    const match = id.match(/-q([0-9_]+[a-z_]*)/i);
+    if (match) {
+      return `q${match[1]}`;
+    }
+  }
+
   return undefined;
 }
 
