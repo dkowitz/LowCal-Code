@@ -19,6 +19,7 @@ import type {
   CheckpointMessage,
   CheckpointContextSnapshot,
   CheckpointToolCall,
+  CheckpointSessionMeta,
 } from "@qwen-code/qwen-code-core";
 import {
   GeminiEventType as ServerGeminiEventType,
@@ -851,9 +852,19 @@ export const useGeminiStream = (
         }
 
         const checkpointService = new CheckpointService(config);
+        const sessionMeta: CheckpointSessionMeta = {
+          mode: "tui",
+          cwd: process.cwd(),
+          capabilities: {
+            observe: true,
+            control: false,
+            interact: true,
+          },
+        };
         const checkpointId = checkpointService.saveCheckpoint(
           checkpointMessages,
           contextSnapshot,
+          sessionMeta,
         );
         console.debug(
           `[Checkpoint] Saved checkpoint ${checkpointId} with ${checkpointMessages.length} messages`,

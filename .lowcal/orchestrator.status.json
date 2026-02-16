@@ -1,20 +1,14 @@
 {
   "running": true,
-  "pid": 9622,
-  "started_at": "2026-02-13T14:20:24.898Z",
-  "last_tick": "2026-02-15T22:51:15.921Z",
+  "pid": 242441,
+  "started_at": "2026-02-16T21:00:01.732Z",
+  "last_tick": "2026-02-16T21:51:02.675Z",
   "tick_interval_ms": 15000,
   "policy_ids": [
     "recover_stalled_session"
   ],
-  "sessions_scanned": 0,
+  "sessions_scanned": 1,
   "stalled_sessions": 0,
   "recoveries_attempted": 0,
-  "recoveries_succeeded": 0,
-  "last_action": {
-    "timestamp": "2026-02-15T21:01:28.811Z",
-    "session_id": "214f10aa-4999-47bb-ad8c-cbd3bdbfac6e",
-    "outcome": "removed_dead_session_record",
-    "attempt": 1
-  }
+  "recoveries_succeeded": 0
 }

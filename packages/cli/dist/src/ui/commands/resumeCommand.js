@@ -5,6 +5,7 @@
  */
 import { CommandKind } from "./types.js";
 import { CheckpointService } from "@qwen-code/qwen-code-core";
+import { startSessionRegistration } from "../../session/sessionManager.js";
 import { MessageType } from "../types.js";
 const getResumeDetails = async (context) => {
     const config = context.services.config;
@@ -253,10 +254,28 @@ export const resumeCommandGroup = {
                 role: msg.type === "user" ? "user" : "model",
                 parts: [{ text: msg.content }],
             }));
+        // Restore session registration if session metadata is available
+        if (checkpoint.sessionMeta && config) {
+            try {
+                await startSessionRegistration({
+                    id: checkpoint.sessionId,
+                    mode: checkpoint.sessionMeta.mode,
+                    cwd: checkpoint.sessionMeta.cwd,
+                    details: checkpoint.sessionMeta.details,
+                    capabilities: checkpoint.sessionMeta.capabilities,
+                });
+                // Update the config's session ID to match the restored session
+                config.setSessionId(checkpoint.sessionId);
+            }
+            catch (error) {
+                console.debug(`[Resume] Failed to restore session registration:`, error);
+            }
+        }
         return {
             type: "load_history",
             history: uiHistory,
             clientHistory,
+            restoredSessionId: checkpoint.sessionId,
             ...(typeof checkpoint.contextSnapshot?.promptTokenCount === "number"
                 ? {
                     restoredContext: {

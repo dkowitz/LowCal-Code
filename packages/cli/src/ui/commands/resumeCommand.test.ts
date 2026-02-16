@@ -129,6 +129,7 @@ describe("resumeCommandGroup", () => {
         { role: "user", parts: [{ text: "Hello" }] },
         { role: "model", parts: [{ text: "Hi there" }] },
       ],
+      restoredSessionId: checkpointOne.sessionId,
     });
   });
 
@@ -150,6 +151,7 @@ describe("resumeCommandGroup", () => {
       restoredContext: {
         promptTokenCount: 777,
       },
+      restoredSessionId: checkpointWithSnapshot.sessionId,
     });
   });
 
@@ -168,6 +170,7 @@ describe("resumeCommandGroup", () => {
         { role: "user", parts: [{ text: "Hello" }] },
         { role: "model", parts: [{ text: "Hi there" }] },
       ],
+      restoredSessionId: checkpointOne.sessionId,
     });
   });
 

@@ -109,6 +109,7 @@ describe("resumeCommandGroup", () => {
                 { role: "user", parts: [{ text: "Hello" }] },
                 { role: "model", parts: [{ text: "Hi there" }] },
             ],
+            restoredSessionId: checkpointOne.sessionId,
         });
     });
     it("prefers context snapshot client history and restores token context", async () => {
@@ -124,6 +125,7 @@ describe("resumeCommandGroup", () => {
             restoredContext: {
                 promptTokenCount: 777,
             },
+            restoredSessionId: checkpointWithSnapshot.sessionId,
         });
     });
     it("loads a checkpoint when called with a checkpoint index", async () => {
@@ -139,6 +141,7 @@ describe("resumeCommandGroup", () => {
                 { role: "user", parts: [{ text: "Hello" }] },
                 { role: "model", parts: [{ text: "Hi there" }] },
             ],
+            restoredSessionId: checkpointOne.sessionId,
         });
     });
     it("returns an error when checkpoint id is not found", async () => {

@@ -1,7 +1,7 @@
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |       0 |     2.52 |    2.52 |       0 |                   
+All files          |    0.32 |     9.33 |    7.47 |    0.32 |                   
  src               |       0 |        0 |       0 |       0 |                   
   index.ts         |       0 |        0 |       0 |       0 | 1-138             
  src/__mocks__/fs  |       0 |        0 |       0 |       0 |                   
@@ -14,7 +14,7 @@ All files          |       0 |     2.52 |    2.52 |       0 |
   setup.ts         |       0 |        0 |       0 |       0 | 1-124             
   types.ts         |       0 |        0 |       0 |       0 | 1-160             
  src/config        |       0 |        0 |       0 |       0 |                   
-  config.ts        |       0 |        0 |       0 |       0 | 1-1174            
+  config.ts        |       0 |        0 |       0 |       0 | 1-1176            
   models.ts        |       0 |        0 |       0 |       0 | 1-14              
   storage.ts       |       0 |        0 |       0 |       0 | 1-114             
  src/core          |       0 |     8.33 |    8.33 |       0 |                   
@@ -76,9 +76,9 @@ All files          |       0 |     2.52 |    2.52 |       0 |
   index.ts         |       0 |        0 |       0 |       0 | 1-27              
   job-store.ts     |       0 |        0 |       0 |       0 | 1-730             
   types.ts         |       0 |        0 |       0 |       0 | 1-258             
- src/services      |       0 |        0 |       0 |       0 |                   
+ src/services      |    8.84 |    43.75 |   52.94 |    8.84 |                   
   ...ingService.ts |       0 |        0 |       0 |       0 | 1-439             
-  ...intService.ts |       0 |        0 |       0 |       0 | 1-272             
+  ...intService.ts |    79.1 |    53.84 |   81.81 |    79.1 | ...68-269,285-286 
   ...eryService.ts |       0 |        0 |       0 |       0 | 1-112             
   ...temService.ts |       0 |        0 |       0 |       0 | 1-41              
   gitService.ts    |       0 |        0 |       0 |       0 | 1-132             
@@ -147,6 +147,7 @@ All files          |       0 |     2.52 |    2.52 |       0 |
   ...n-messages.ts |       0 |        0 |       0 |       0 | 1-430             
   research.ts      |       0 |        0 |       0 |       0 | 1-2503            
   ripGrep.ts       |       0 |        0 |       0 |       0 | 1-512             
+  rss.ts           |       0 |        0 |       0 |       0 | 1-343             
   schedule-task.ts |       0 |        0 |       0 |       0 | 1-795             
   ...xng-search.ts |       0 |        0 |       0 |       0 | 1-389             
   shell.ts         |       0 |        0 |       0 |       0 | 1-496             
@@ -154,13 +155,13 @@ All files          |       0 |     2.52 |    2.52 |       0 |
   task.ts          |       0 |        0 |       0 |       0 | 1-562             
   todoWrite.ts     |       0 |        0 |       0 |       0 | 1-454             
   tool-error.ts    |       0 |        0 |       0 |       0 | 1-69              
-  tool-names.ts    |       0 |        0 |       0 |       0 | 1-33              
+  tool-names.ts    |       0 |        0 |       0 |       0 | 1-34              
   tool-registry.ts |       0 |        0 |       0 |       0 | 1-476             
   tools.ts         |       0 |        0 |       0 |       0 | 1-579             
   web-fetch.ts     |       0 |        0 |       0 |       0 | 1-322             
   web-search.ts    |       0 |        0 |       0 |       0 | 1-220             
   write-file.ts    |       0 |        0 |       0 |       0 | 1-481             
- src/utils         |       0 |        0 |       0 |       0 |                   
+ src/utils         |    0.41 |      3.7 |    3.44 |    0.41 |                   
   LruCache.ts      |       0 |        0 |       0 |       0 | 1-41              
   bfsFileSearch.ts |       0 |        0 |       0 |       0 | 1-124             
   browser.ts       |       0 |        0 |       0 |       0 | 1-56              
@@ -206,7 +207,7 @@ All files          |       0 |     2.52 |    2.52 |       0 |
   ...tGenerator.ts |       0 |        0 |       0 |       0 | 1-148             
   summarizer.ts    |       0 |        0 |       0 |       0 | 1-96              
   ...emEncoding.ts |       0 |        0 |       0 |       0 | 1-166             
-  testUtils.ts     |       0 |        0 |       0 |       0 | 1-87              
+  testUtils.ts     |   53.33 |      100 |   33.33 |   53.33 | ...53,59-64,70-72 
   textUtils.ts     |       0 |        0 |       0 |       0 | 1-34              
   tool-utils.ts    |       0 |        0 |       0 |       0 | 1-76              
   ...validation.ts |       0 |        0 |       0 |       0 | 1-171             

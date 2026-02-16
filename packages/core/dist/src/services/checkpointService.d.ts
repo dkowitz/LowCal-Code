@@ -25,6 +25,19 @@ export interface CheckpointToolCall {
     result?: PartListUnion | null;
 }
 /**
+ * Session metadata stored in checkpoint for session restoration.
+ */
+export interface CheckpointSessionMeta {
+    mode: string;
+    cwd: string;
+    details?: Record<string, unknown>;
+    capabilities?: {
+        observe: boolean;
+        control: boolean;
+        interact: boolean;
+    };
+}
+/**
  * Complete conversation checkpoint stored at workspace level.
  */
 export interface CheckpointRecord {
@@ -35,6 +48,7 @@ export interface CheckpointRecord {
     lastUpdated: string;
     messages: CheckpointMessage[];
     contextSnapshot?: CheckpointContextSnapshot;
+    sessionMeta?: CheckpointSessionMeta;
 }
 /**
  * Serialized runtime context used to faithfully continue a resumed conversation.
@@ -81,9 +95,11 @@ export declare class CheckpointService {
     /**
      * Saves a checkpoint with the given messages.
      * @param messages The conversation messages to save
+     * @param contextSnapshot Optional context snapshot for faithful conversation restoration
+     * @param sessionMeta Optional session metadata for session restoration
      * @returns The ID of the saved checkpoint
      */
-    saveCheckpoint(messages: CheckpointMessage[], contextSnapshot?: CheckpointContextSnapshot): string;
+    saveCheckpoint(messages: CheckpointMessage[], contextSnapshot?: CheckpointContextSnapshot, sessionMeta?: CheckpointSessionMeta): string;
     /**
      * Loads a checkpoint by its ID.
      * @param checkpointId The ID of the checkpoint to load

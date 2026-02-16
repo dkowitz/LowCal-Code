@@ -39,9 +39,11 @@ export class CheckpointService {
     /**
      * Saves a checkpoint with the given messages.
      * @param messages The conversation messages to save
+     * @param contextSnapshot Optional context snapshot for faithful conversation restoration
+     * @param sessionMeta Optional session metadata for session restoration
      * @returns The ID of the saved checkpoint
      */
-    saveCheckpoint(messages, contextSnapshot) {
+    saveCheckpoint(messages, contextSnapshot, sessionMeta) {
         this.ensureDirectoryExists();
         const checkpointId = `checkpoint-${Date.now()}-${randomUUID().slice(0, 8)}`;
         const filePath = path.join(this.getCheckpointsDir(), `${checkpointId}.json`);
@@ -53,6 +55,7 @@ export class CheckpointService {
             lastUpdated: new Date().toISOString(),
             messages,
             ...(contextSnapshot ? { contextSnapshot } : {}),
+            ...(sessionMeta ? { sessionMeta } : {}),
         };
         fs.writeFileSync(filePath, JSON.stringify(checkpoint, null, 2), "utf-8");
         return checkpointId;

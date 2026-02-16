@@ -556,7 +556,16 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 return false;
             }
             const checkpointService = new CheckpointService(config);
-            const checkpointId = checkpointService.saveCheckpoint(checkpointMessages, contextSnapshot);
+            const sessionMeta = {
+                mode: "tui",
+                cwd: process.cwd(),
+                capabilities: {
+                    observe: true,
+                    control: false,
+                    interact: true,
+                },
+            };
+            const checkpointId = checkpointService.saveCheckpoint(checkpointMessages, contextSnapshot, sessionMeta);
             console.debug(`[Checkpoint] Saved checkpoint ${checkpointId} with ${checkpointMessages.length} messages`);
             return true;
         }

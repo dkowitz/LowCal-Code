@@ -25,7 +25,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>0/1970</span>
+                <span class='fraction'>0/1980</span>
             </div>
         
             
@@ -46,7 +46,7 @@
             <div class='fl pad1y space-right2'>
                 <span class="strong">0% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>0/1970</span>
+                <span class='fraction'>0/1980</span>
             </div>
         
             
@@ -2359,7 +2359,18 @@
 <a name='L2294'></a><a href='#L2294'>2294</a>
 <a name='L2295'></a><a href='#L2295'>2295</a>
 <a name='L2296'></a><a href='#L2296'>2296</a>
-<a name='L2297'></a><a href='#L2297'>2297</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
+<a name='L2297'></a><a href='#L2297'>2297</a>
+<a name='L2298'></a><a href='#L2298'>2298</a>
+<a name='L2299'></a><a href='#L2299'>2299</a>
+<a name='L2300'></a><a href='#L2300'>2300</a>
+<a name='L2301'></a><a href='#L2301'>2301</a>
+<a name='L2302'></a><a href='#L2302'>2302</a>
+<a name='L2303'></a><a href='#L2303'>2303</a>
+<a name='L2304'></a><a href='#L2304'>2304</a>
+<a name='L2305'></a><a href='#L2305'>2305</a>
+<a name='L2306'></a><a href='#L2306'>2306</a>
+<a name='L2307'></a><a href='#L2307'>2307</a>
+<a name='L2308'></a><a href='#L2308'>2308</a></td><td class="line-coverage quiet"><span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -2381,6 +2392,7 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -3211,6 +3223,16 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -4676,6 +4698,7 @@ import type {
   CheckpointMessage,
   CheckpointContextSnapshot,
   CheckpointToolCall,
+  CheckpointSessionMeta,
 } from "@qwen-code/qwen-code-core";
 <span class="cstat-no" title="statement not covered" >import {</span>
   GeminiEventType as ServerGeminiEventType,
@@ -5508,9 +5531,19 @@ import type {
 <span class="cstat-no" title="statement not covered" >        }</span>
 &nbsp;
 <span class="cstat-no" title="statement not covered" >        const checkpointService = new CheckpointService(config);</span>
+<span class="cstat-no" title="statement not covered" >        const sessionMeta: CheckpointSessionMeta = {</span>
+<span class="cstat-no" title="statement not covered" >          mode: "tui",</span>
+<span class="cstat-no" title="statement not covered" >          cwd: process.cwd(),</span>
+<span class="cstat-no" title="statement not covered" >          capabilities: {</span>
+<span class="cstat-no" title="statement not covered" >            observe: true,</span>
+<span class="cstat-no" title="statement not covered" >            control: false,</span>
+<span class="cstat-no" title="statement not covered" >            interact: true,</span>
+<span class="cstat-no" title="statement not covered" >          },</span>
+<span class="cstat-no" title="statement not covered" >        };</span>
 <span class="cstat-no" title="statement not covered" >        const checkpointId = checkpointService.saveCheckpoint(</span>
 <span class="cstat-no" title="statement not covered" >          checkpointMessages,</span>
 <span class="cstat-no" title="statement not covered" >          contextSnapshot,</span>
+<span class="cstat-no" title="statement not covered" >          sessionMeta,</span>
 <span class="cstat-no" title="statement not covered" >        );</span>
 <span class="cstat-no" title="statement not covered" >        console.debug(</span>
 <span class="cstat-no" title="statement not covered" >          `[Checkpoint] Saved checkpoint ${checkpointId} with ${checkpointMessages.length} messages`,</span>
@@ -6958,7 +6991,7 @@ import type {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-15T23:23:34.382Z
+                at 2026-02-16T21:50:56.285Z
             </div>
         <script src="../../../prettify.js"></script>
         <script>
