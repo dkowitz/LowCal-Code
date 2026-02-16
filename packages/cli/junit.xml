@@ -1,23 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="9" failures="0" errors="0" time="0.005196903">
-    <testsuite name="src/ui/commands/modelCommand.test.ts" timestamp="2026-02-15T17:41:24.858Z" hostname="uby" tests="9" failures="0" errors="0" skipped="0" time="0.005196903">
-        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should have the correct name and description" time="0.001284817">
+<testsuites name="vitest tests" tests="9" failures="0" errors="0" time="0.004353573">
+    <testsuite name="src/ui/commands/modelCommand.test.ts" timestamp="2026-02-15T23:23:34.353Z" hostname="uby" tests="9" failures="0" errors="0" skipped="0" time="0.004353573">
+        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should have the correct name and description" time="0.001140107">
         </testcase>
-        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return error when config is not available" time="0.000705605">
+        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return error when config is not available" time="0.000676298">
         </testcase>
-        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return error when content generator config is not available" time="0.000606011">
+        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return error when content generator config is not available" time="0.000378209">
         </testcase>
-        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return error when auth type is not available" time="0.00029721">
+        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return error when auth type is not available" time="0.000247554">
         </testcase>
-        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return dialog action for QWEN_OAUTH auth type" time="0.00037306">
+        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return dialog action for QWEN_OAUTH auth type" time="0.000306695">
         </testcase>
-        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return dialog action for USE_OPENAI auth type when model is available" time="0.00035143">
+        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return dialog action for USE_OPENAI auth type when model is available" time="0.000260077">
         </testcase>
-        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return error for USE_OPENAI auth type when no model is available" time="0.000259811">
+        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return error for USE_OPENAI auth type when no model is available" time="0.000215684">
         </testcase>
-        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return error for unsupported auth types" time="0.000249892">
+        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should return error for unsupported auth types" time="0.000207078">
         </testcase>
-        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should handle undefined auth type" time="0.000284697">
+        <testcase classname="src/ui/commands/modelCommand.test.ts" name="modelCommand &gt; should handle undefined auth type" time="0.000222858">
         </testcase>
     </testsuite>
 </testsuites>

@@ -1,7 +1,7 @@
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |    0.36 |     6.26 |    2.53 |    0.36 |                   
+All files          |    0.35 |     6.21 |    2.53 |    0.35 |                   
  src               |       0 |        0 |       0 |       0 |                   
   gemini.tsx       |       0 |        0 |       0 |       0 | 1-480             
   ...ractiveCli.ts |       0 |        0 |       0 |       0 | 1-368             
@@ -76,7 +76,7 @@ All files          |    0.36 |     6.26 |    2.53 |    0.36 |
   ...tic-colors.ts |       0 |        0 |       0 |       0 | 1-26              
   textConstants.ts |       0 |        0 |       0 |       0 | 1-13              
   types.ts         |       0 |        0 |       0 |       0 | 1-206             
- src/ui/commands   |    1.77 |       25 |    6.66 |    1.77 |                   
+ src/ui/commands   |    1.69 |    23.88 |    6.66 |    1.69 |                   
   aboutCommand.ts  |       0 |        0 |       0 |       0 | 1-50              
   agentsCommand.ts |       0 |        0 |       0 |       0 | 1-37              
   ...odeCommand.ts |       0 |        0 |       0 |       0 | 1-434             
@@ -99,7 +99,7 @@ All files          |    0.36 |     6.26 |    2.53 |    0.36 |
   ...boxCommand.ts |       0 |        0 |       0 |       0 | 1-215             
   mcpCommand.ts    |       0 |        0 |       0 |       0 | 1-531             
   memoryCommand.ts |       0 |        0 |       0 |       0 | 1-303             
-  modelCommand.ts  |   93.54 |       70 |     100 |   93.54 | 27-32             
+  modelCommand.ts  |   89.24 |    60.86 |     100 |   89.24 | 27-32,47-50       
   ...acyCommand.ts |       0 |        0 |       0 |       0 | 1-18              
   promptCommand.ts |       0 |        0 |       0 |       0 | 1-422             
   ...nfoCommand.ts |       0 |      100 |     100 |       0 | 6-77              
@@ -278,7 +278,7 @@ All files          |    0.36 |     6.26 |    2.53 |    0.36 |
   ...eMigration.ts |       0 |        0 |       0 |       0 | 1-69              
   vim.ts           |       0 |        0 |       0 |       0 | 1-784             
  src/ui/models     |       0 |       50 |      50 |       0 |                   
-  ...ableModels.ts |       0 |        0 |       0 |       0 | 1-351             
+  ...ableModels.ts |       0 |        0 |       0 |       0 | 1-588             
   ...ingStorage.ts |       0 |      100 |     100 |       0 | 5-52              
  ...dels/__mocks__ |       0 |        0 |       0 |       0 |                   
   ...ableModels.ts |       0 |        0 |       0 |       0 | 1-4               

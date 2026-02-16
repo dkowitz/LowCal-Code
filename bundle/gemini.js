@@ -295750,9 +295750,7 @@ async function fetchOpenAICompatibleModels(baseUrl, apiKey, options2) {
   try {
     const isLMStudio = options2?.forceLmStudio === true || baseUrl.includes("127.0.0.1:1234") || baseUrl.includes("localhost:1234");
     let url2;
-    if (isLMStudio) {
-      url2 = baseUrl.replace(/\/v1\/?$/, "") + "/api/v0/models";
-    } else if (baseUrl.endsWith("/v1")) {
+    if (baseUrl.endsWith("/v1")) {
       url2 = baseUrl + "/models";
     } else {
       url2 = baseUrl.replace(/\/*$/, "") + "/v1/models";
@@ -295761,23 +295759,16 @@ async function fetchOpenAICompatibleModels(baseUrl, apiKey, options2) {
       "Content-Type": "application/json"
     };
     if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
+    if (isLMStudio) {
+      const lmStudioBaseUrl = baseUrl.replace(/\/v1\/?$/, "").replace(/\/*$/, "");
+      const v1Models = await fetchLMStudioV1Models(lmStudioBaseUrl, headers);
+      if (v1Models.length > 0) return v1Models;
+      return fetchLMStudioV0Models(lmStudioBaseUrl, headers);
+    }
     const resp = await fetch(url2, { headers, method: "GET" });
     if (!resp.ok) return [];
     const data = await resp.json();
     const models = Array.isArray(data?.data) ? data.data : [];
-    if (isLMStudio) {
-      return models.map((m) => ({
-        id: m.id || m.name,
-        label: m.id || m.name,
-        maxContextLength: toNumber2(
-          m.max_context_length ?? m.loaded_context_length ?? m.context_length ?? m.context_window ?? m.context_size
-        ),
-        quantization: extractQuantization(m),
-        modelType: typeof m.type === "string" ? m.type : void 0,
-        capabilities: Array.isArray(m.capabilities) ? m.capabilities.filter((cap) => typeof cap === "string") : void 0,
-        state: typeof m.state === "string" ? m.state : void 0
-      })).filter((m) => !!m.id);
-    }
     const mapped = models.map((m) => ({
       id: m.id || m.name,
       label: m.id || m.name,
@@ -295847,6 +295838,146 @@ function toNumber2(value) {
   }
   return void 0;
 }
+function firstString(...values) {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return void 0;
+}
+function toRecord(value) {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    return void 0;
+  return value;
+}
+function toRecordArray(value) {
+  if (!Array.isArray(value)) return [];
+  return value.map((item) => toRecord(item)).filter((item) => !!item);
+}
+function toStringArray(value) {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item) => typeof item === "string");
+}
+function getModelArray(data) {
+  const asRecord2 = toRecord(data);
+  if (!asRecord2) return [];
+  const dataModels = toRecordArray(asRecord2["data"]);
+  if (dataModels.length > 0) return dataModels;
+  return toRecordArray(asRecord2["models"]);
+}
+function extractCapabilityNames(value) {
+  if (Array.isArray(value)) {
+    return value.filter((item) => typeof item === "string");
+  }
+  const record = toRecord(value);
+  if (!record) return [];
+  return Object.entries(record).filter(([, enabled]) => enabled === true).map(([name2]) => name2);
+}
+function mergeCapabilities2(...sources) {
+  const merged = /* @__PURE__ */ new Set();
+  for (const source2 of sources) {
+    for (const cap of extractCapabilityNames(source2)) {
+      merged.add(cap);
+    }
+  }
+  return merged.size > 0 ? Array.from(merged) : void 0;
+}
+function mapLMStudioModelFromV1(model) {
+  const loadedInstances = toRecordArray(model["loaded_instances"]);
+  const baseId = firstString(
+    model["key"],
+    model["id"],
+    model["name"],
+    model["identifier"]
+  );
+  if (!baseId) return [];
+  const loaded = loadedInstances[0];
+  const loadedConfig = toRecord(loaded?.["config"]);
+  const loadedContextLength = toNumber2(
+    loadedConfig?.["context_length"] ?? loadedConfig?.["contextLength"] ?? loaded?.["context_length"] ?? loaded?.["contextLength"]
+  );
+  const variants = toStringArray(model["variants"]);
+  const selectedVariant = firstString(model["selected_variant"]);
+  const variantIds = Array.from(
+    new Set(
+      variants.length > 0 ? [...variants, ...selectedVariant ? [selectedVariant] : []] : [baseId]
+    )
+  );
+  const loadedVariantIds = /* @__PURE__ */ new Set();
+  for (const instance of loadedInstances) {
+    const instanceVariant = firstString(
+      instance["id"],
+      instance["model"],
+      instance["model_key"],
+      instance["key"],
+      instance["identifier"]
+    );
+    if (instanceVariant) loadedVariantIds.add(instanceVariant);
+  }
+  if (loadedVariantIds.size === 0 && loadedInstances.length > 0 && selectedVariant) {
+    loadedVariantIds.add(selectedVariant);
+  }
+  return variantIds.map((variantId) => {
+    const state = loadedVariantIds.size ? loadedVariantIds.has(variantId) ? "loaded" : "not-loaded" : firstString(model["state"]) ?? void 0;
+    return {
+      id: variantId,
+      label: firstString(model["display_name"], model["name"], baseId) ?? baseId,
+      maxContextLength: toNumber2(
+        loadedContextLength ?? model["max_context_length"] ?? model["loaded_context_length"] ?? model["context_length"] ?? model["context_window"] ?? model["context_size"]
+      ),
+      quantization: extractQuantizationFromId(variantId) ?? extractQuantization(model),
+      modelType: firstString(model["type"]),
+      capabilities: mergeCapabilities2(model["capabilities"], model["compat"]),
+      state
+    };
+  });
+}
+function mapLMStudioModelFromV0(model) {
+  const id = firstString(
+    model["id"],
+    model["key"],
+    model["model_key"],
+    model["identifier"],
+    model["name"]
+  );
+  if (!id) return null;
+  return {
+    id,
+    label: firstString(model["display_name"], model["name"], id) ?? id,
+    maxContextLength: toNumber2(
+      model["max_context_length"] ?? model["loaded_context_length"] ?? model["context_length"] ?? model["context_window"] ?? model["context_size"]
+    ),
+    quantization: extractQuantization(model),
+    modelType: firstString(model["type"]),
+    capabilities: mergeCapabilities2(model["capabilities"], model["compat"]),
+    state: firstString(model["state"]) ?? void 0
+  };
+}
+async function fetchLMStudioV1Models(baseUrl, headers) {
+  try {
+    const resp = await fetch(`${baseUrl}/api/v1/models`, {
+      headers,
+      method: "GET"
+    });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return getModelArray(data).flatMap(mapLMStudioModelFromV1).filter((model) => !!model.id);
+  } catch {
+    return [];
+  }
+}
+async function fetchLMStudioV0Models(baseUrl, headers) {
+  try {
+    const resp = await fetch(`${baseUrl}/api/v0/models`, {
+      headers,
+      method: "GET"
+    });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return getModelArray(data).map(mapLMStudioModelFromV0).filter((model) => !!model);
+  } catch {
+    return [];
+  }
+}
 function extractQuantization(model) {
   const direct = model["quantization"];
   if (typeof direct === "string" && direct.trim()) return direct.trim();
@@ -295868,27 +295999,64 @@ function extractQuantization(model) {
     const val = model[key];
     if (typeof val === "string" && val.trim()) return val.trim();
   }
-  const id = typeof model["id"] === "string" ? model["id"] : void 0;
-  if (id) {
-    const match2 = id.match(/-q([0-9_]+[a-z_]*)/i);
-    if (match2) {
-      return `q${match2[1]}`;
-    }
+  const id = firstString(
+    model["key"],
+    model["id"],
+    model["model_key"],
+    model["identifier"]
+  );
+  return extractQuantizationFromId(id);
+}
+function extractQuantizationFromId(id) {
+  if (!id) return void 0;
+  const match2 = id.match(/[@-](q[0-9]+[a-z0-9_]*)/i);
+  if (match2) {
+    return match2[1].toLowerCase();
   }
   return void 0;
 }
 async function getLMStudioLoadedModel(baseUrl) {
   try {
-    const url2 = baseUrl.replace(/\/v1\/?$/, "") + "/api/v0/models";
-    const resp = await fetch(url2, { method: "GET" });
-    if (!resp.ok) {
-      return null;
+    const normalizedBaseUrl = baseUrl.replace(/\/v1\/?$/, "").replace(/\/*$/, "");
+    const v1Resp = await fetch(`${normalizedBaseUrl}/api/v1/models`, {
+      method: "GET"
+    });
+    if (v1Resp.ok) {
+      const data2 = await v1Resp.json();
+      const models2 = getModelArray(data2);
+      for (const model of models2) {
+        const loadedInstances = toRecordArray(model["loaded_instances"]);
+        if (loadedInstances.length > 0) {
+          const loaded = loadedInstances[0];
+          return firstString(
+            loaded?.["id"],
+            model["key"],
+            model["id"],
+            model["name"]
+          ) ?? null;
+        }
+        if (firstString(model["state"]) === "loaded") {
+          return firstString(model["key"], model["id"], model["name"]) ?? null;
+        }
+      }
     }
-    const data = await resp.json();
-    const models = Array.isArray(data?.data) ? data.data : [];
-    const loadedModel = models.find((m) => m.state === "loaded");
-    return loadedModel?.id || null;
-  } catch (e2) {
+    const v0Resp = await fetch(`${normalizedBaseUrl}/api/v0/models`, {
+      method: "GET"
+    });
+    if (!v0Resp.ok) return null;
+    const data = await v0Resp.json();
+    const models = getModelArray(data);
+    const loadedModel = models.find(
+      (m) => firstString(m["state"]) === "loaded"
+    );
+    if (!loadedModel) return null;
+    return firstString(
+      loadedModel["id"],
+      loadedModel["key"],
+      loadedModel["model_key"],
+      loadedModel["name"]
+    ) ?? null;
+  } catch {
     return null;
   }
 }
@@ -299269,16 +299437,16 @@ var require_source = __commonJS({
     };
     var template;
     var chalkTag = (chalk7, ...strings) => {
-      const [firstString] = strings;
-      if (!isArray3(firstString) || !isArray3(firstString.raw)) {
+      const [firstString2] = strings;
+      if (!isArray3(firstString2) || !isArray3(firstString2.raw)) {
         return strings.join(" ");
       }
       const arguments_ = strings.slice(1);
-      const parts = [firstString.raw[0]];
-      for (let i = 1; i < firstString.length; i++) {
+      const parts = [firstString2.raw[0]];
+      for (let i = 1; i < firstString2.length; i++) {
         parts.push(
           String(arguments_[i - 1]).replace(/[{}\\]/g, "\\$&"),
-          String(firstString.raw[i])
+          String(firstString2.raw[i])
         );
       }
       if (template === void 0) {
@@ -352258,7 +352426,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "0b4f3aa6";
+var GIT_COMMIT_INFO = "81853ed4";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();

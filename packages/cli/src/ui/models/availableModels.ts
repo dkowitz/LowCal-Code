@@ -108,9 +108,7 @@ export async function fetchOpenAICompatibleModels(
     // Normalize the base URL to avoid double /v1 paths
     // If baseUrl already ends with /v1, don't add another /v1
     let url: string;
-    if (isLMStudio) {
-      url = baseUrl.replace(/\/v1\/?$/, "") + "/api/v0/models";
-    } else if (baseUrl.endsWith("/v1")) {
+    if (baseUrl.endsWith("/v1")) {
       url = baseUrl + "/models";
     } else {
       url = baseUrl.replace(/\/*$/, "") + "/v1/models";
@@ -121,33 +119,23 @@ export async function fetchOpenAICompatibleModels(
     };
     if (apiKey) headers["Authorization"] = `Bearer ${apiKey}`;
 
+    if (isLMStudio) {
+      const lmStudioBaseUrl = baseUrl
+        .replace(/\/v1\/?$/, "")
+        .replace(/\/*$/, "");
+
+      // Prefer modern LM Studio manage API schema; fallback to /api/v0 for older versions.
+      const v1Models = await fetchLMStudioV1Models(lmStudioBaseUrl, headers);
+      if (v1Models.length > 0) return v1Models;
+
+      return fetchLMStudioV0Models(lmStudioBaseUrl, headers);
+    }
+
     const resp = await fetch(url, { headers, method: "GET" as const });
     if (!resp.ok) return [];
     const data = await resp.json();
     // OpenAI responses typically have "data" array with id fields
     const models: any[] = Array.isArray(data?.data) ? data.data : [];
-
-    if (isLMStudio) {
-      return models
-        .map((m) => ({
-          id: m.id || m.name,
-          label: m.id || m.name,
-          maxContextLength: toNumber(
-            m.max_context_length ??
-              m.loaded_context_length ??
-              m.context_length ??
-              m.context_window ??
-              m.context_size,
-          ),
-          quantization: extractQuantization(m),
-          modelType: typeof m.type === "string" ? m.type : undefined,
-          capabilities: Array.isArray(m.capabilities)
-            ? m.capabilities.filter((cap: unknown) => typeof cap === "string")
-            : undefined,
-          state: typeof m.state === "string" ? m.state : undefined,
-        }))
-        .filter((m) => !!m.id);
-    }
 
     // Map provider model objects into our AvailableModel shape
     const mapped = models
@@ -269,6 +257,210 @@ function toNumber(value: unknown): number | undefined {
   return undefined;
 }
 
+function firstString(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return undefined;
+}
+
+function toRecord(value: unknown): Record<string, unknown> | undefined {
+  if (!value || typeof value !== "object" || Array.isArray(value))
+    return undefined;
+  return value as Record<string, unknown>;
+}
+
+function toRecordArray(value: unknown): Array<Record<string, unknown>> {
+  if (!Array.isArray(value)) return [];
+  return value
+    .map((item) => toRecord(item))
+    .filter((item): item is Record<string, unknown> => !!item);
+}
+
+function toStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function getModelArray(data: unknown): Array<Record<string, unknown>> {
+  const asRecord = toRecord(data);
+  if (!asRecord) return [];
+
+  const dataModels = toRecordArray(asRecord["data"]);
+  if (dataModels.length > 0) return dataModels;
+
+  return toRecordArray(asRecord["models"]);
+}
+
+function extractCapabilityNames(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((item): item is string => typeof item === "string");
+  }
+
+  const record = toRecord(value);
+  if (!record) return [];
+
+  return Object.entries(record)
+    .filter(([, enabled]) => enabled === true)
+    .map(([name]) => name);
+}
+
+function mergeCapabilities(...sources: unknown[]): string[] | undefined {
+  const merged = new Set<string>();
+  for (const source of sources) {
+    for (const cap of extractCapabilityNames(source)) {
+      merged.add(cap);
+    }
+  }
+  return merged.size > 0 ? Array.from(merged) : undefined;
+}
+
+function mapLMStudioModelFromV1(
+  model: Record<string, unknown>,
+): AvailableModel[] {
+  const loadedInstances = toRecordArray(model["loaded_instances"]);
+  const baseId = firstString(
+    model["key"],
+    model["id"],
+    model["name"],
+    model["identifier"],
+  );
+  if (!baseId) return [];
+
+  const loaded = loadedInstances[0];
+  const loadedConfig = toRecord(loaded?.["config"]);
+  const loadedContextLength = toNumber(
+    loadedConfig?.["context_length"] ??
+      loadedConfig?.["contextLength"] ??
+      loaded?.["context_length"] ??
+      loaded?.["contextLength"],
+  );
+
+  const variants = toStringArray(model["variants"]);
+  const selectedVariant = firstString(model["selected_variant"]);
+
+  const variantIds = Array.from(
+    new Set(
+      variants.length > 0
+        ? [...variants, ...(selectedVariant ? [selectedVariant] : [])]
+        : [baseId],
+    ),
+  );
+
+  const loadedVariantIds = new Set<string>();
+  for (const instance of loadedInstances) {
+    const instanceVariant = firstString(
+      instance["id"],
+      instance["model"],
+      instance["model_key"],
+      instance["key"],
+      instance["identifier"],
+    );
+    if (instanceVariant) loadedVariantIds.add(instanceVariant);
+  }
+  if (
+    loadedVariantIds.size === 0 &&
+    loadedInstances.length > 0 &&
+    selectedVariant
+  ) {
+    loadedVariantIds.add(selectedVariant);
+  }
+
+  return variantIds.map((variantId) => {
+    const state = loadedVariantIds.size
+      ? loadedVariantIds.has(variantId)
+        ? "loaded"
+        : "not-loaded"
+      : (firstString(model["state"]) ?? undefined);
+
+    return {
+      id: variantId,
+      label:
+        firstString(model["display_name"], model["name"], baseId) ?? baseId,
+      maxContextLength: toNumber(
+        loadedContextLength ??
+          model["max_context_length"] ??
+          model["loaded_context_length"] ??
+          model["context_length"] ??
+          model["context_window"] ??
+          model["context_size"],
+      ),
+      quantization:
+        extractQuantizationFromId(variantId) ?? extractQuantization(model),
+      modelType: firstString(model["type"]),
+      capabilities: mergeCapabilities(model["capabilities"], model["compat"]),
+      state,
+    };
+  });
+}
+
+function mapLMStudioModelFromV0(
+  model: Record<string, unknown>,
+): AvailableModel | null {
+  const id = firstString(
+    model["id"],
+    model["key"],
+    model["model_key"],
+    model["identifier"],
+    model["name"],
+  );
+  if (!id) return null;
+
+  return {
+    id,
+    label: firstString(model["display_name"], model["name"], id) ?? id,
+    maxContextLength: toNumber(
+      model["max_context_length"] ??
+        model["loaded_context_length"] ??
+        model["context_length"] ??
+        model["context_window"] ??
+        model["context_size"],
+    ),
+    quantization: extractQuantization(model),
+    modelType: firstString(model["type"]),
+    capabilities: mergeCapabilities(model["capabilities"], model["compat"]),
+    state: firstString(model["state"]) ?? undefined,
+  };
+}
+
+async function fetchLMStudioV1Models(
+  baseUrl: string,
+  headers: Record<string, string>,
+): Promise<AvailableModel[]> {
+  try {
+    const resp = await fetch(`${baseUrl}/api/v1/models`, {
+      headers,
+      method: "GET" as const,
+    });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return getModelArray(data)
+      .flatMap(mapLMStudioModelFromV1)
+      .filter((model) => !!model.id);
+  } catch {
+    return [];
+  }
+}
+
+async function fetchLMStudioV0Models(
+  baseUrl: string,
+  headers: Record<string, string>,
+): Promise<AvailableModel[]> {
+  try {
+    const resp = await fetch(`${baseUrl}/api/v0/models`, {
+      headers,
+      method: "GET" as const,
+    });
+    if (!resp.ok) return [];
+    const data = await resp.json();
+    return getModelArray(data)
+      .map(mapLMStudioModelFromV0)
+      .filter((model): model is AvailableModel => !!model);
+  } catch {
+    return [];
+  }
+}
+
 function extractQuantization(
   model: Record<string, unknown>,
 ): string | undefined {
@@ -297,45 +489,90 @@ function extractQuantization(
 
   // If quantization isn't in metadata, try to extract from model ID
   // Common patterns: qwen3-coder-next-q4, qwen3-coder-next-Q6_K_M, etc.
-  const id = typeof model["id"] === "string" ? model["id"] : undefined;
-  if (id) {
-    // Match patterns like -q4, -Q6, -q8_K_M, -Q2_0, etc.
-    const match = id.match(/-q([0-9_]+[a-z_]*)/i);
-    if (match) {
-      return `q${match[1]}`;
-    }
+  const id = firstString(
+    model["key"],
+    model["id"],
+    model["model_key"],
+    model["identifier"],
+  );
+  return extractQuantizationFromId(id);
+}
+
+function extractQuantizationFromId(id?: string): string | undefined {
+  if (!id) return undefined;
+
+  // Match patterns like -q4, @Q6, -q8_K_M, -Q2_0, etc.
+  const match = id.match(/[@-](q[0-9]+[a-z0-9_]*)/i);
+  if (match) {
+    return match[1].toLowerCase();
   }
 
   return undefined;
 }
 
 /**
- * Read LM Studio user model configuration files from the user's home directory.
- * We traverse ~/.lmstudio/.internal/user-concrete-model-default-config/ recursively
- * and parse JSON files looking for the configured context length at key
- * "llm.load.contextLength" (commonly found under load.fields entries).
- * Only models with an explicit configured contextLength are returned.
+ * Resolve the currently loaded LM Studio model id.
+ * Prefers /api/v1/models (new schema) and falls back to /api/v0/models.
  */
 export async function getLMStudioLoadedModel(
   baseUrl: string,
 ): Promise<string | null> {
   try {
-    // LM Studio endpoint is /api/v0/models, not /v1
-    const url = baseUrl.replace(/\/v1\/?$/, "") + "/api/v0/models";
-    const resp = await fetch(url, { method: "GET" });
-    if (!resp.ok) {
-      return null;
+    const normalizedBaseUrl = baseUrl
+      .replace(/\/v1\/?$/, "")
+      .replace(/\/*$/, "");
+
+    // Prefer /api/v1/models (new LM Studio schema), fallback to /api/v0/models.
+    const v1Resp = await fetch(`${normalizedBaseUrl}/api/v1/models`, {
+      method: "GET",
+    });
+    if (v1Resp.ok) {
+      const data = await v1Resp.json();
+      const models = getModelArray(data);
+      for (const model of models) {
+        const loadedInstances = toRecordArray(model["loaded_instances"]);
+        if (loadedInstances.length > 0) {
+          const loaded = loadedInstances[0];
+          return (
+            firstString(
+              loaded?.["id"],
+              model["key"],
+              model["id"],
+              model["name"],
+            ) ?? null
+          );
+        }
+        if (firstString(model["state"]) === "loaded") {
+          return firstString(model["key"], model["id"], model["name"]) ?? null;
+        }
+      }
     }
-    const data = await resp.json();
-    const models: any[] = Array.isArray(data?.data) ? data.data : [];
-    const loadedModel = models.find((m) => m.state === "loaded");
-    return loadedModel?.id || null;
-  } catch (e) {
+
+    const v0Resp = await fetch(`${normalizedBaseUrl}/api/v0/models`, {
+      method: "GET",
+    });
+    if (!v0Resp.ok) return null;
+
+    const data = await v0Resp.json();
+    const models = getModelArray(data);
+    const loadedModel = models.find(
+      (m) => firstString(m["state"]) === "loaded",
+    );
+    if (!loadedModel) return null;
+
+    return (
+      firstString(
+        loadedModel["id"],
+        loadedModel["key"],
+        loadedModel["model_key"],
+        loadedModel["name"],
+      ) ?? null
+    );
+  } catch {
     return null;
   }
 }
 
-/**
 /**
  * Hard code the default vision model as a string literal,
  * until our coding model supports multimodal.

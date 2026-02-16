@@ -67,14 +67,10 @@ export declare function fetchOpenAICompatibleModels(baseUrl: string, apiKey?: st
  */
 export declare function fetchGeminiModels(apiKey: string, baseUrl?: string): Promise<AvailableModel[]>;
 /**
- * Read LM Studio user model configuration files from the user's home directory.
- * We traverse ~/.lmstudio/.internal/user-concrete-model-default-config/ recursively
- * and parse JSON files looking for the configured context length at key
- * "llm.load.contextLength" (commonly found under load.fields entries).
- * Only models with an explicit configured contextLength are returned.
+ * Resolve the currently loaded LM Studio model id.
+ * Prefers /api/v1/models (new schema) and falls back to /api/v0/models.
  */
 export declare function getLMStudioLoadedModel(baseUrl: string): Promise<string | null>;
-/**
 /**
  * Hard code the default vision model as a string literal,
  * until our coding model supports multimodal.
