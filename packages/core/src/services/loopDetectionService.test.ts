@@ -116,8 +116,9 @@ describe("LoopDetectionService", () => {
       const toolCallEvent = createToolCallRequestEvent("testTool", {
         param: "value",
       });
+      // Use an unhandled event type (not ToolCallRequest, Content, or Thought)
       const otherEvent = {
-        type: "thought",
+        type: "user_cancelled" as GeminiEventType,
       } as unknown as ServerGeminiStreamEvent;
 
       // Send events just below the threshold

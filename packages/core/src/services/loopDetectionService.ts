@@ -104,6 +104,11 @@ export class LoopDetectionService {
       case GeminiEventType.Content:
         this.loopDetected = this.checkContentLoop(event.value);
         break;
+      case GeminiEventType.Thought:
+        // Check for repeated thought messages from thinking models
+        // Thought events contain { subject, description } - use subject as key
+        this.loopDetected = this.checkThoughtLoop(event.value);
+        break;
       default:
         break;
     }
@@ -147,6 +152,39 @@ export class LoopDetectionService {
         this.config,
         new LoopDetectedEvent(
           LoopType.CONSECUTIVE_IDENTICAL_TOOL_CALLS,
+          this.promptId,
+        ),
+      );
+      return true;
+    }
+    return false;
+  }
+
+  // Track thought message repetitions for loop detection
+  private lastThoughtSubject: string | null = null;
+  private thoughtRepetitionCount: number = 0;
+  private static readonly THOUGHT_LOOP_THRESHOLD = 5;
+
+  /**
+   * Detects loops in thought messages from thinking models.
+   * Monitors for repeated thought subjects which indicate the model is stuck
+   * in a thinking loop.
+   */
+  private checkThoughtLoop(thought: { subject: string; description: string }): boolean {
+    const subject = thought.subject;
+    
+    if (this.lastThoughtSubject === subject) {
+      this.thoughtRepetitionCount++;
+    } else {
+      this.lastThoughtSubject = subject;
+      this.thoughtRepetitionCount = 1;
+    }
+    
+    if (this.thoughtRepetitionCount >= LoopDetectionService.THOUGHT_LOOP_THRESHOLD) {
+      logLoopDetected(
+        this.config,
+        new LoopDetectedEvent(
+          LoopType.REPEATED_THOUGHTS,
           this.promptId,
         ),
       );
