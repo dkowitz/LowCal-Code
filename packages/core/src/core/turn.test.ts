@@ -778,6 +778,102 @@ describe("Turn", () => {
         "Plan",
       );
     });
+
+    it("should emit both thought and visible text from the same chunk", async () => {
+      const mockResponseStream = (async function* () {
+        yield {
+          type: StreamEventType.CHUNK,
+          value: {
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    { thought: true, text: "**Plan**Add approval_mode" },
+                    { text: "Applying the change now." },
+                  ],
+                },
+              },
+            ],
+          } as unknown as GenerateContentResponse,
+        };
+      })();
+      mockSendMessageStream.mockResolvedValue(mockResponseStream);
+
+      const events: ServerGeminiStreamEvent[] = [];
+      for await (const event of turn.run(
+        [{ text: "Proceed" }],
+        new AbortController().signal,
+      )) {
+        events.push(event);
+      }
+
+      expect(events).toEqual([
+        {
+          type: GeminiEventType.Thought,
+          value: {
+            subject: "Plan",
+            description: "Add approval_mode",
+          },
+        },
+        {
+          type: GeminiEventType.Content,
+          value: "Applying the change now.",
+        },
+      ]);
+    });
+
+    it("should emit tool calls from content parts even when thought is present", async () => {
+      const mockResponseStream = (async function* () {
+        yield {
+          type: StreamEventType.CHUNK,
+          value: {
+            candidates: [
+              {
+                content: {
+                  parts: [
+                    { thought: true, text: "**Plan**Run edit tool" },
+                    {
+                      functionCall: {
+                        id: "fc-part-1",
+                        name: "edit",
+                        args: { file: "a.ts" },
+                      },
+                    },
+                  ],
+                },
+              },
+            ],
+          } as unknown as GenerateContentResponse,
+        };
+      })();
+      mockSendMessageStream.mockResolvedValue(mockResponseStream);
+
+      const events: ServerGeminiStreamEvent[] = [];
+      for await (const event of turn.run(
+        [{ text: "Edit file" }],
+        new AbortController().signal,
+      )) {
+        events.push(event);
+      }
+
+      expect(events).toHaveLength(2);
+      expect(events[0]).toEqual({
+        type: GeminiEventType.Thought,
+        value: {
+          subject: "Plan",
+          description: "Run edit tool",
+        },
+      });
+
+      const toolEvent = events[1] as ServerGeminiToolCallRequestEvent;
+      expect(toolEvent.type).toBe(GeminiEventType.ToolCallRequest);
+      expect(toolEvent.value).toMatchObject({
+        callId: "fc-part-1",
+        name: "edit",
+        args: { file: "a.ts" },
+      });
+      expect(turn.pendingToolCalls).toHaveLength(1);
+    });
   });
 
   describe("getDebugResponses", () => {

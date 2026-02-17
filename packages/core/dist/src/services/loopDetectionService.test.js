@@ -16,6 +16,8 @@ vi.mock("../telemetry/loggers.js", () => ({
 const TOOL_CALL_LOOP_THRESHOLD = 5;
 const CONTENT_LOOP_THRESHOLD = 10;
 const CONTENT_CHUNK_SIZE = 50;
+const THOUGHT_LOOP_THRESHOLD = 5;
+const THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD = 8;
 describe("LoopDetectionService", () => {
     let service;
     let mockConfig;
@@ -39,6 +41,13 @@ describe("LoopDetectionService", () => {
     const createContentEvent = (content) => ({
         type: GeminiEventType.Content,
         value: content,
+    });
+    const createThoughtEvent = (subject, description) => ({
+        type: GeminiEventType.Thought,
+        value: {
+            subject,
+            description,
+        },
     });
     const createRepetitiveContent = (id, length) => {
         const baseString = `This is a unique sentence, id=${id}. `;
@@ -146,6 +155,59 @@ describe("LoopDetectionService", () => {
                 isLoop = service.addAndCheck(createContentEvent(fillerContent));
             }
             expect(isLoop).toBe(false);
+            expect(loggers.logLoopDetected).not.toHaveBeenCalled();
+        });
+    });
+    describe("Thought Loop Detection", () => {
+        it("should detect a loop for semantically similar thoughts with minor wording changes", () => {
+            service.reset("");
+            const thoughtVariants = [
+                createThoughtEvent("Plan update", "I need to add the approval_mode field after execution_mode. Let me add it."),
+                createThoughtEvent("Plan update", "I need to add approval_mode after execution_mode. Let me add it now."),
+                createThoughtEvent("Updating plan", "Need to add the approval_mode field after execution_mode. Let me do that."),
+                createThoughtEvent("Plan update", "I need to add approval_mode after execution_mode. Let me add it."),
+                createThoughtEvent("Planning", "I need to add the approval_mode field after execution_mode. Let me add it."),
+            ];
+            let isLoop = false;
+            for (const thoughtEvent of thoughtVariants) {
+                isLoop = service.addAndCheck(thoughtEvent);
+            }
+            expect(isLoop).toBe(true);
+            expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);
+        });
+        it("should detect a loop for thought-like content churn with repeated thinking lines", () => {
+            service.reset("");
+            const thoughtLikeContent = [
+                "  💭 Now I can see the fieldItems list. I need to add the approval_mode field after execution_mode. Let me add it.",
+                "  💭 Now I can see fieldItems. I need to add approval_mode after execution_mode. Let me add it.",
+                "  💭 I can now see the fieldItems list. I need to add approval_mode after execution_mode. Let me do that.",
+                "  💭 Now I can see the fieldItems list. I need to add the approval_mode field after execution_mode.",
+                "  💭 Now I can see the fieldItems list. I need to add approval_mode after execution_mode. Let me add it.",
+                "  💭 I can see the fieldItems list now. I need to add the approval_mode field after execution_mode. Let me add it.",
+                "  💭 Now I can see the fieldItems list. I need to add approval_mode after execution_mode. Let me do that.",
+                "  💭 Now I can see the fieldItems list. I need to add approval_mode after execution_mode. Let me add it.",
+            ];
+            let isLoop = false;
+            for (const content of thoughtLikeContent) {
+                isLoop = service.addAndCheck(createContentEvent(content));
+            }
+            expect(thoughtLikeContent).toHaveLength(THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD);
+            expect(isLoop).toBe(true);
+            expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);
+        });
+        it("should reset thought repetition tracking when a tool call indicates progress", () => {
+            service.reset("");
+            const thoughtEvent = createThoughtEvent("Plan update", "I need to add approval_mode after execution_mode. Let me add it.");
+            const toolCallEvent = createToolCallRequestEvent("edit", {
+                file: "TaskTemplateEditorDialog.tsx",
+            });
+            for (let i = 0; i < THOUGHT_LOOP_THRESHOLD - 1; i++) {
+                expect(service.addAndCheck(thoughtEvent)).toBe(false);
+            }
+            expect(service.addAndCheck(toolCallEvent)).toBe(false);
+            for (let i = 0; i < THOUGHT_LOOP_THRESHOLD - 1; i++) {
+                expect(service.addAndCheck(thoughtEvent)).toBe(false);
+            }
             expect(loggers.logLoopDetected).not.toHaveBeenCalled();
         });
     });

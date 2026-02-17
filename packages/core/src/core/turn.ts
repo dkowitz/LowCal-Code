@@ -18,7 +18,6 @@ import type {
   ToolResultDisplay,
 } from "../tools/tools.js";
 import type { ToolErrorType } from "../tools/tool-error.js";
-import { getResponseText } from "../utils/partUtils.js";
 import { reportError } from "../utils/errorReporting.js";
 import {
   getErrorMessage,
@@ -298,33 +297,15 @@ export class Turn {
 
         this.debugResponses.push(resp);
 
-        const thoughtPart = resp.candidates?.[0]?.content?.parts?.[0];
-        if (thoughtPart?.thought) {
-          // Thought always has a bold "subject" part enclosed in double asterisks
-          // (e.g., **Subject**). The rest of the string is considered the description.
-          const rawText = thoughtPart.text ?? "";
-          const subjectStringMatches = rawText.match(/\*\*(.*?)\*\*/s);
-          const subject = subjectStringMatches
-            ? subjectStringMatches[1].trim()
-            : "";
-          const description = rawText.replace(/\*\*(.*?)\*\*/s, "").trim();
-          const thought: ThoughtSummary = {
-            subject,
-            description,
-          };
-
-          if (!this.shouldEmitThought(thought)) {
-            continue;
-          }
-
+        const thought = this.extractThoughtSummary(resp);
+        if (thought && this.shouldEmitThought(thought)) {
           yield {
             type: GeminiEventType.Thought,
             value: thought,
           };
-          continue;
         }
 
-        const text = getResponseText(resp);
+        const text = this.getVisibleResponseText(resp);
         if (text) {
           const candidateIndex = resp.candidates?.[0]?.index ?? 0;
           const previousText =
@@ -359,7 +340,7 @@ export class Turn {
         }
 
         // Handle function calls (requesting tool execution)
-        const functionCalls = resp.functionCalls ?? [];
+        const functionCalls = this.getFunctionCallsFromResponse(resp);
         for (const fnCall of functionCalls) {
           const event = this.handlePendingFunctionCall(fnCall);
           if (event) {
@@ -442,6 +423,66 @@ export class Turn {
 
   getDebugResponses(): GenerateContentResponse[] {
     return this.debugResponses;
+  }
+
+  private extractThoughtSummary(resp: GenerateContentResponse): ThoughtSummary | null {
+    const thoughtPart = resp.candidates?.[0]?.content?.parts?.find(
+      (part) => !!part?.thought,
+    );
+    if (!thoughtPart) {
+      return null;
+    }
+
+    // Thought always has a bold "subject" part enclosed in double asterisks
+    // (e.g., **Subject**). The rest of the string is considered the description.
+    const rawText = thoughtPart.text ?? "";
+    const subjectStringMatches = rawText.match(/\*\*(.*?)\*\*/s);
+    const subject = subjectStringMatches ? subjectStringMatches[1].trim() : "";
+    const description = rawText.replace(/\*\*(.*?)\*\*/s, "").trim();
+
+    return {
+      subject,
+      description,
+    };
+  }
+
+  private getVisibleResponseText(resp: GenerateContentResponse): string | null {
+    const parts = resp.candidates?.[0]?.content?.parts;
+    if (!parts || parts.length === 0) {
+      return null;
+    }
+
+    const textSegments = parts
+      .filter((part) => !part.thought)
+      .map((part) => (typeof part.text === "string" ? part.text : ""))
+      .filter((segment) => segment.length > 0);
+
+    return textSegments.length > 0 ? textSegments.join("") : null;
+  }
+
+  private getFunctionCallsFromResponse(resp: GenerateContentResponse): FunctionCall[] {
+    const responseFunctionCalls = resp.functionCalls ?? [];
+    const partFunctionCalls =
+      resp.candidates?.[0]?.content?.parts
+        ?.map((part) => part.functionCall)
+        .filter((call): call is FunctionCall => !!call) ?? [];
+
+    const mergedCalls = [...responseFunctionCalls, ...partFunctionCalls];
+    const dedupedCalls: FunctionCall[] = [];
+    const seen = new Set<string>();
+
+    for (const call of mergedCalls) {
+      const key = `${call.id ?? ""}:${call.name ?? ""}:${JSON.stringify(
+        call.args ?? {},
+      )}`;
+      if (seen.has(key)) {
+        continue;
+      }
+      seen.add(key);
+      dedupedCalls.push(call);
+    }
+
+    return dedupedCalls;
   }
 
   private shouldEmitThought(thought: ThoughtSummary): boolean {

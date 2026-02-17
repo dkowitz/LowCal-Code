@@ -112857,6 +112857,59 @@ To help you check their settings, I can read their contents. Which one would you
 </example>
 `.trim();
 
+// ../core/dist/src/core/turn.js
+init_errors();
+var GeminiEventType;
+(function(GeminiEventType2) {
+  GeminiEventType2["Content"] = "content";
+  GeminiEventType2["ToolCallRequest"] = "tool_call_request";
+  GeminiEventType2["ToolCallResponse"] = "tool_call_response";
+  GeminiEventType2["ToolCallConfirmation"] = "tool_call_confirmation";
+  GeminiEventType2["UserCancelled"] = "user_cancelled";
+  GeminiEventType2["Error"] = "error";
+  GeminiEventType2["ChatCompressed"] = "chat_compressed";
+  GeminiEventType2["Thought"] = "thought";
+  GeminiEventType2["MaxSessionTurns"] = "max_session_turns";
+  GeminiEventType2["SessionTokenLimitExceeded"] = "session_token_limit_exceeded";
+  GeminiEventType2["Finished"] = "finished";
+  GeminiEventType2["LoopDetected"] = "loop_detected";
+  GeminiEventType2["Citation"] = "citation";
+  GeminiEventType2["Retry"] = "retry";
+  GeminiEventType2["TokenBudgetWarning"] = "token_budget_warning";
+  GeminiEventType2["ContextWindowRecovery"] = "context_window_recovery";
+  GeminiEventType2["ToolOutputTruncated"] = "tool_output_truncated";
+})(GeminiEventType || (GeminiEventType = {}));
+var CompressionStatus;
+(function(CompressionStatus2) {
+  CompressionStatus2[CompressionStatus2["COMPRESSED"] = 1] = "COMPRESSED";
+  CompressionStatus2[CompressionStatus2["COMPRESSION_FAILED_INFLATED_TOKEN_COUNT"] = 2] = "COMPRESSION_FAILED_INFLATED_TOKEN_COUNT";
+  CompressionStatus2[CompressionStatus2["COMPRESSION_FAILED_TOKEN_COUNT_ERROR"] = 3] = "COMPRESSION_FAILED_TOKEN_COUNT_ERROR";
+  CompressionStatus2[CompressionStatus2["NOOP"] = 4] = "NOOP";
+})(CompressionStatus || (CompressionStatus = {}));
+
+// ../core/dist/src/services/loopDetectionService.js
+init_loggers();
+init_types3();
+init_models();
+
+// ../core/dist/src/core/client.js
+init_loggers();
+init_types3();
+
+// ../core/dist/src/tools/task.js
+init_tools();
+init_tools();
+
+// ../core/dist/src/subagents/types.js
+var SubagentTerminateMode;
+(function(SubagentTerminateMode2) {
+  SubagentTerminateMode2["ERROR"] = "ERROR";
+  SubagentTerminateMode2["TIMEOUT"] = "TIMEOUT";
+  SubagentTerminateMode2["GOAL"] = "GOAL";
+  SubagentTerminateMode2["MAX_TURNS"] = "MAX_TURNS";
+  SubagentTerminateMode2["CANCELLED"] = "CANCELLED";
+})(SubagentTerminateMode || (SubagentTerminateMode = {}));
+
 // ../core/dist/src/utils/partUtils.js
 function partToString(value, options2) {
   if (!value) {
@@ -112921,59 +112974,6 @@ function getResponseText(response) {
   }).filter((segment) => segment.length > 0);
   return textSegments.length > 0 ? textSegments.join("") : null;
 }
-
-// ../core/dist/src/core/turn.js
-init_errors();
-var GeminiEventType;
-(function(GeminiEventType2) {
-  GeminiEventType2["Content"] = "content";
-  GeminiEventType2["ToolCallRequest"] = "tool_call_request";
-  GeminiEventType2["ToolCallResponse"] = "tool_call_response";
-  GeminiEventType2["ToolCallConfirmation"] = "tool_call_confirmation";
-  GeminiEventType2["UserCancelled"] = "user_cancelled";
-  GeminiEventType2["Error"] = "error";
-  GeminiEventType2["ChatCompressed"] = "chat_compressed";
-  GeminiEventType2["Thought"] = "thought";
-  GeminiEventType2["MaxSessionTurns"] = "max_session_turns";
-  GeminiEventType2["SessionTokenLimitExceeded"] = "session_token_limit_exceeded";
-  GeminiEventType2["Finished"] = "finished";
-  GeminiEventType2["LoopDetected"] = "loop_detected";
-  GeminiEventType2["Citation"] = "citation";
-  GeminiEventType2["Retry"] = "retry";
-  GeminiEventType2["TokenBudgetWarning"] = "token_budget_warning";
-  GeminiEventType2["ContextWindowRecovery"] = "context_window_recovery";
-  GeminiEventType2["ToolOutputTruncated"] = "tool_output_truncated";
-})(GeminiEventType || (GeminiEventType = {}));
-var CompressionStatus;
-(function(CompressionStatus2) {
-  CompressionStatus2[CompressionStatus2["COMPRESSED"] = 1] = "COMPRESSED";
-  CompressionStatus2[CompressionStatus2["COMPRESSION_FAILED_INFLATED_TOKEN_COUNT"] = 2] = "COMPRESSION_FAILED_INFLATED_TOKEN_COUNT";
-  CompressionStatus2[CompressionStatus2["COMPRESSION_FAILED_TOKEN_COUNT_ERROR"] = 3] = "COMPRESSION_FAILED_TOKEN_COUNT_ERROR";
-  CompressionStatus2[CompressionStatus2["NOOP"] = 4] = "NOOP";
-})(CompressionStatus || (CompressionStatus = {}));
-
-// ../core/dist/src/services/loopDetectionService.js
-init_loggers();
-init_types3();
-init_models();
-
-// ../core/dist/src/core/client.js
-init_loggers();
-init_types3();
-
-// ../core/dist/src/tools/task.js
-init_tools();
-init_tools();
-
-// ../core/dist/src/subagents/types.js
-var SubagentTerminateMode;
-(function(SubagentTerminateMode2) {
-  SubagentTerminateMode2["ERROR"] = "ERROR";
-  SubagentTerminateMode2["TIMEOUT"] = "TIMEOUT";
-  SubagentTerminateMode2["GOAL"] = "GOAL";
-  SubagentTerminateMode2["MAX_TURNS"] = "MAX_TURNS";
-  SubagentTerminateMode2["CANCELLED"] = "CANCELLED";
-})(SubagentTerminateMode || (SubagentTerminateMode = {}));
 
 // ../core/dist/src/tools/modifiable-tool.js
 init_errors();

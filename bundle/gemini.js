@@ -74626,116 +74626,6 @@ To help you check their settings, I can read their contents. Which one would you
   }
 });
 
-// packages/core/dist/src/utils/partUtils.js
-function partToString(value, options2) {
-  if (!value) {
-    return "";
-  }
-  if (typeof value === "string") {
-    return value;
-  }
-  if (Array.isArray(value)) {
-    return value.map((part2) => partToString(part2, options2)).join("");
-  }
-  const part = value;
-  if (options2?.verbose) {
-    if (part.videoMetadata !== void 0) {
-      return `[Video Metadata]`;
-    }
-    if (part.thought !== void 0) {
-      return `[Thought: ${part.thought}]`;
-    }
-    if (part.codeExecutionResult !== void 0) {
-      return `[Code Execution Result]`;
-    }
-    if (part.executableCode !== void 0) {
-      return `[Executable Code]`;
-    }
-    if (part.fileData !== void 0) {
-      return `[File Data]`;
-    }
-    if (part.functionCall !== void 0) {
-      return `[Function Call: ${part.functionCall.name}]`;
-    }
-    if (part.functionResponse !== void 0) {
-      return `[Function Response: ${part.functionResponse.name}]`;
-    }
-    if (part.inlineData !== void 0) {
-      return `<${part.inlineData.mimeType}>`;
-    }
-  }
-  return part.text ?? "";
-}
-function getResponseText(response) {
-  if (!response) {
-    return null;
-  }
-  const rawCandidates = response.response?.candidates ?? response.candidates;
-  if (!Array.isArray(rawCandidates) || rawCandidates.length === 0) {
-    return null;
-  }
-  const candidate = rawCandidates[0];
-  const parts = candidate?.content?.parts;
-  if (!parts || parts.length === 0) {
-    return null;
-  }
-  const textSegments = parts.map((part) => {
-    if (typeof part === "string") {
-      return part;
-    }
-    if (part && typeof part === "object" && "text" in part && typeof part.text === "string") {
-      return part.text;
-    }
-    return "";
-  }).filter((segment) => segment.length > 0);
-  return textSegments.length > 0 ? textSegments.join("") : null;
-}
-async function flatMapTextParts(parts, transform) {
-  const result = [];
-  const partArray = Array.isArray(parts) ? parts : typeof parts === "string" ? [{ text: parts }] : [parts];
-  for (const part of partArray) {
-    let textToProcess;
-    if (typeof part === "string") {
-      textToProcess = part;
-    } else if ("text" in part) {
-      textToProcess = part.text;
-    }
-    if (textToProcess !== void 0) {
-      const transformedParts = await transform(textToProcess);
-      result.push(...transformedParts);
-    } else {
-      result.push(part);
-    }
-  }
-  return result;
-}
-function appendToLastTextPart(prompt, textToAppend, separator = "\n\n") {
-  if (!textToAppend) {
-    return prompt;
-  }
-  if (prompt.length === 0) {
-    return [{ text: textToAppend }];
-  }
-  const newPrompt = [...prompt];
-  const lastPart = newPrompt.at(-1);
-  if (typeof lastPart === "string") {
-    newPrompt[newPrompt.length - 1] = `${lastPart}${separator}${textToAppend}`;
-  } else if (lastPart && "text" in lastPart) {
-    newPrompt[newPrompt.length - 1] = {
-      ...lastPart,
-      text: `${lastPart.text}${separator}${textToAppend}`
-    };
-  } else {
-    newPrompt.push({ text: `${separator}${textToAppend}` });
-  }
-  return newPrompt;
-}
-var init_partUtils = __esm({
-  "packages/core/dist/src/utils/partUtils.js"() {
-    "use strict";
-  }
-});
-
 // packages/core/dist/src/utils/errorReporting.js
 import fs6 from "node:fs/promises";
 import os4 from "node:os";
@@ -74919,7 +74809,6 @@ var GeminiEventType, CompressionStatus, Turn;
 var init_turn = __esm({
   "packages/core/dist/src/core/turn.js"() {
     "use strict";
-    init_partUtils();
     init_errorReporting();
     init_errors2();
     (function(GeminiEventType2) {
@@ -74997,26 +74886,14 @@ var init_turn = __esm({
             if (!resp)
               continue;
             this.debugResponses.push(resp);
-            const thoughtPart = resp.candidates?.[0]?.content?.parts?.[0];
-            if (thoughtPart?.thought) {
-              const rawText = thoughtPart.text ?? "";
-              const subjectStringMatches = rawText.match(/\*\*(.*?)\*\*/s);
-              const subject = subjectStringMatches ? subjectStringMatches[1].trim() : "";
-              const description = rawText.replace(/\*\*(.*?)\*\*/s, "").trim();
-              const thought = {
-                subject,
-                description
-              };
-              if (!this.shouldEmitThought(thought)) {
-                continue;
-              }
+            const thought = this.extractThoughtSummary(resp);
+            if (thought && this.shouldEmitThought(thought)) {
               yield {
                 type: GeminiEventType.Thought,
                 value: thought
               };
-              continue;
             }
-            const text = getResponseText(resp);
+            const text = this.getVisibleResponseText(resp);
             if (text) {
               const candidateIndex = resp.candidates?.[0]?.index ?? 0;
               const previousText = this.lastCandidateTexts.get(candidateIndex) ?? "";
@@ -75036,7 +74913,7 @@ var init_turn = __esm({
                 }
               }
             }
-            const functionCalls = resp.functionCalls ?? [];
+            const functionCalls = this.getFunctionCallsFromResponse(resp);
             for (const fnCall of functionCalls) {
               const event = this.handlePendingFunctionCall(fnCall);
               if (event) {
@@ -75093,6 +74970,44 @@ var init_turn = __esm({
       }
       getDebugResponses() {
         return this.debugResponses;
+      }
+      extractThoughtSummary(resp) {
+        const thoughtPart = resp.candidates?.[0]?.content?.parts?.find((part) => !!part?.thought);
+        if (!thoughtPart) {
+          return null;
+        }
+        const rawText = thoughtPart.text ?? "";
+        const subjectStringMatches = rawText.match(/\*\*(.*?)\*\*/s);
+        const subject = subjectStringMatches ? subjectStringMatches[1].trim() : "";
+        const description = rawText.replace(/\*\*(.*?)\*\*/s, "").trim();
+        return {
+          subject,
+          description
+        };
+      }
+      getVisibleResponseText(resp) {
+        const parts = resp.candidates?.[0]?.content?.parts;
+        if (!parts || parts.length === 0) {
+          return null;
+        }
+        const textSegments = parts.filter((part) => !part.thought).map((part) => typeof part.text === "string" ? part.text : "").filter((segment) => segment.length > 0);
+        return textSegments.length > 0 ? textSegments.join("") : null;
+      }
+      getFunctionCallsFromResponse(resp) {
+        const responseFunctionCalls = resp.functionCalls ?? [];
+        const partFunctionCalls = resp.candidates?.[0]?.content?.parts?.map((part) => part.functionCall).filter((call) => !!call) ?? [];
+        const mergedCalls = [...responseFunctionCalls, ...partFunctionCalls];
+        const dedupedCalls = [];
+        const seen = /* @__PURE__ */ new Set();
+        for (const call of mergedCalls) {
+          const key = `${call.id ?? ""}:${call.name ?? ""}:${JSON.stringify(call.args ?? {})}`;
+          if (seen.has(key)) {
+            continue;
+          }
+          seen.add(key);
+          dedupedCalls.push(call);
+        }
+        return dedupedCalls;
       }
       shouldEmitThought(thought) {
         const normalized2 = this.normalizeThought(thought);
@@ -145510,6 +145425,11 @@ var init_loopDetectionService = __esm({
     MIN_LLM_CHECK_INTERVAL = 5;
     MAX_LLM_CHECK_INTERVAL = 15;
     LoopDetectionService = class _LoopDetectionService {
+      static THOUGHT_LOOP_THRESHOLD = 5;
+      static THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD = 8;
+      static MIN_SEMANTIC_TEXT_LENGTH = 24;
+      static MIN_SEMANTIC_TOKEN_COUNT = 5;
+      static THOUGHT_LIKE_CONTENT_PATTERN = /\b(let me|i need to|i should|i will|now i can|i can see)\b/i;
       config;
       promptId = "";
       // Tool call tracking
@@ -145525,6 +145445,11 @@ var init_loopDetectionService = __esm({
       turnsInCurrentPrompt = 0;
       llmCheckInterval = DEFAULT_LLM_CHECK_INTERVAL;
       lastCheckTurn = 0;
+      // Thought-loop tracking (thought events and thought-like content)
+      lastThoughtFingerprint = null;
+      thoughtRepetitionCount = 0;
+      lastThoughtLikeContentFingerprint = null;
+      thoughtLikeContentRepetitionCount = 0;
       constructor(config) {
         this.config = config;
       }
@@ -145545,10 +145470,11 @@ var init_loopDetectionService = __esm({
         switch (event.type) {
           case GeminiEventType.ToolCallRequest:
             this.resetContentTracking();
+            this.resetThoughtTracking();
             this.loopDetected = this.checkToolCallLoop(event.value);
             break;
           case GeminiEventType.Content:
-            this.loopDetected = this.checkContentLoop(event.value);
+            this.loopDetected = this.checkContentLoop(event.value) || this.checkThoughtLikeContentLoop(event.value);
             break;
           case GeminiEventType.Thought:
             this.loopDetected = this.checkThoughtLoop(event.value);
@@ -145590,26 +145516,51 @@ var init_loopDetectionService = __esm({
         }
         return false;
       }
-      // Track thought message repetitions for loop detection
-      lastThoughtSubject = null;
-      thoughtRepetitionCount = 0;
-      static THOUGHT_LOOP_THRESHOLD = 5;
       /**
        * Detects loops in thought messages from thinking models.
-       * Monitors for repeated thought subjects which indicate the model is stuck
-       * in a thinking loop.
+       * Uses semantic similarity so slight rephrasing still counts toward loop detection.
        */
       checkThoughtLoop(thought) {
-        const subject = thought.subject;
-        if (this.lastThoughtSubject === subject) {
+        const thoughtFingerprint = this.normalizeSemanticText(`${thought.subject} ${thought.description}`);
+        if (!thoughtFingerprint) {
+          return false;
+        }
+        if (this.isSemanticallySimilar(thoughtFingerprint, this.lastThoughtFingerprint)) {
           this.thoughtRepetitionCount++;
         } else {
-          this.lastThoughtSubject = subject;
+          this.lastThoughtFingerprint = thoughtFingerprint;
           this.thoughtRepetitionCount = 1;
         }
         if (this.thoughtRepetitionCount >= _LoopDetectionService.THOUGHT_LOOP_THRESHOLD) {
           logLoopDetected(this.config, new LoopDetectedEvent(LoopType.REPEATED_THOUGHTS, this.promptId));
           return true;
+        }
+        return false;
+      }
+      /**
+       * Detects loops in thought-like content lines (for models that emit thinking text in content).
+       * This catches near-duplicate "let me do X" style churn even when wording varies slightly.
+       */
+      checkThoughtLikeContentLoop(content) {
+        const fragments = this.extractThoughtLikeFragments(content);
+        if (fragments.length === 0) {
+          return false;
+        }
+        for (const fragment of fragments) {
+          const fingerprint = this.normalizeSemanticText(fragment);
+          if (!fingerprint || fingerprint.length < _LoopDetectionService.MIN_SEMANTIC_TEXT_LENGTH) {
+            continue;
+          }
+          if (this.isSemanticallySimilar(fingerprint, this.lastThoughtLikeContentFingerprint)) {
+            this.thoughtLikeContentRepetitionCount++;
+          } else {
+            this.lastThoughtLikeContentFingerprint = fingerprint;
+            this.thoughtLikeContentRepetitionCount = 1;
+          }
+          if (this.thoughtLikeContentRepetitionCount >= _LoopDetectionService.THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD) {
+            logLoopDetected(this.config, new LoopDetectedEvent(LoopType.REPEATED_THOUGHTS, this.promptId));
+            return true;
+          }
         }
         return false;
       }
@@ -145793,6 +145744,7 @@ Please analyze the conversation history to determine the possibility that the co
         this.promptId = promptId;
         this.resetToolCallCount();
         this.resetContentTracking();
+        this.resetThoughtTracking();
         this.resetLlmCheckTracking();
         this.loopDetected = false;
       }
@@ -145811,6 +145763,75 @@ Please analyze the conversation history to determine the possibility that the co
         this.turnsInCurrentPrompt = 0;
         this.llmCheckInterval = DEFAULT_LLM_CHECK_INTERVAL;
         this.lastCheckTurn = 0;
+      }
+      resetThoughtTracking() {
+        this.lastThoughtFingerprint = null;
+        this.thoughtRepetitionCount = 0;
+        this.lastThoughtLikeContentFingerprint = null;
+        this.thoughtLikeContentRepetitionCount = 0;
+      }
+      extractThoughtLikeFragments(content) {
+        const fragments = [];
+        for (const rawLine of content.split(/\n+/)) {
+          const line = rawLine.trim();
+          if (!line) {
+            continue;
+          }
+          const normalizedLine = line.replace(/^[>*\s-]+/, "").replace(/\*/g, " ").trim();
+          if (!normalizedLine) {
+            continue;
+          }
+          if (line.includes("\u{1F4AD}") || _LoopDetectionService.THOUGHT_LIKE_CONTENT_PATTERN.test(normalizedLine)) {
+            fragments.push(normalizedLine);
+          }
+        }
+        return fragments;
+      }
+      normalizeSemanticText(text) {
+        return text.toLowerCase().replace(/💭/g, " ").replace(/[^\p{L}\p{N}\s]/gu, " ").replace(/\s+/g, " ").trim();
+      }
+      tokenizeSemanticText(text) {
+        return text.split(" ").filter((token2) => token2.length >= 3);
+      }
+      isSemanticallySimilar(current, previous) {
+        if (!previous) {
+          return false;
+        }
+        if (current === previous) {
+          return true;
+        }
+        const shorter = current.length < previous.length ? current : previous;
+        const longer = shorter === current ? previous : current;
+        if (shorter.length >= _LoopDetectionService.MIN_SEMANTIC_TEXT_LENGTH && longer.includes(shorter)) {
+          return true;
+        }
+        const currentTokens = this.tokenizeSemanticText(current);
+        const previousTokens = this.tokenizeSemanticText(previous);
+        if (currentTokens.length < _LoopDetectionService.MIN_SEMANTIC_TOKEN_COUNT || previousTokens.length < _LoopDetectionService.MIN_SEMANTIC_TOKEN_COUNT) {
+          return false;
+        }
+        const minTokenLength = Math.min(currentTokens.length, previousTokens.length);
+        let sharedPrefixTokens = 0;
+        while (sharedPrefixTokens < minTokenLength && currentTokens[sharedPrefixTokens] === previousTokens[sharedPrefixTokens]) {
+          sharedPrefixTokens++;
+        }
+        if (sharedPrefixTokens >= 4 && sharedPrefixTokens / minTokenLength >= 0.5) {
+          return true;
+        }
+        const currentTokenSet = new Set(currentTokens);
+        const previousTokenSet = new Set(previousTokens);
+        let overlapCount2 = 0;
+        for (const token2 of currentTokenSet) {
+          if (previousTokenSet.has(token2)) {
+            overlapCount2++;
+          }
+        }
+        const unionSize = (/* @__PURE__ */ new Set([...currentTokenSet, ...previousTokenSet])).size;
+        const minSetSize = Math.min(currentTokenSet.size, previousTokenSet.size);
+        if (minSetSize > 0 && overlapCount2 / minSetSize >= 0.75) {
+          return true;
+        }
+        return unionSize > 0 && overlapCount2 / unionSize >= 0.65;
       }
     };
   }
@@ -145847,6 +145868,116 @@ var init_types6 = __esm({
       SubagentTerminateMode2["MAX_TURNS"] = "MAX_TURNS";
       SubagentTerminateMode2["CANCELLED"] = "CANCELLED";
     })(SubagentTerminateMode || (SubagentTerminateMode = {}));
+  }
+});
+
+// packages/core/dist/src/utils/partUtils.js
+function partToString(value, options2) {
+  if (!value) {
+    return "";
+  }
+  if (typeof value === "string") {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((part2) => partToString(part2, options2)).join("");
+  }
+  const part = value;
+  if (options2?.verbose) {
+    if (part.videoMetadata !== void 0) {
+      return `[Video Metadata]`;
+    }
+    if (part.thought !== void 0) {
+      return `[Thought: ${part.thought}]`;
+    }
+    if (part.codeExecutionResult !== void 0) {
+      return `[Code Execution Result]`;
+    }
+    if (part.executableCode !== void 0) {
+      return `[Executable Code]`;
+    }
+    if (part.fileData !== void 0) {
+      return `[File Data]`;
+    }
+    if (part.functionCall !== void 0) {
+      return `[Function Call: ${part.functionCall.name}]`;
+    }
+    if (part.functionResponse !== void 0) {
+      return `[Function Response: ${part.functionResponse.name}]`;
+    }
+    if (part.inlineData !== void 0) {
+      return `<${part.inlineData.mimeType}>`;
+    }
+  }
+  return part.text ?? "";
+}
+function getResponseText(response) {
+  if (!response) {
+    return null;
+  }
+  const rawCandidates = response.response?.candidates ?? response.candidates;
+  if (!Array.isArray(rawCandidates) || rawCandidates.length === 0) {
+    return null;
+  }
+  const candidate = rawCandidates[0];
+  const parts = candidate?.content?.parts;
+  if (!parts || parts.length === 0) {
+    return null;
+  }
+  const textSegments = parts.map((part) => {
+    if (typeof part === "string") {
+      return part;
+    }
+    if (part && typeof part === "object" && "text" in part && typeof part.text === "string") {
+      return part.text;
+    }
+    return "";
+  }).filter((segment) => segment.length > 0);
+  return textSegments.length > 0 ? textSegments.join("") : null;
+}
+async function flatMapTextParts(parts, transform) {
+  const result = [];
+  const partArray = Array.isArray(parts) ? parts : typeof parts === "string" ? [{ text: parts }] : [parts];
+  for (const part of partArray) {
+    let textToProcess;
+    if (typeof part === "string") {
+      textToProcess = part;
+    } else if ("text" in part) {
+      textToProcess = part.text;
+    }
+    if (textToProcess !== void 0) {
+      const transformedParts = await transform(textToProcess);
+      result.push(...transformedParts);
+    } else {
+      result.push(part);
+    }
+  }
+  return result;
+}
+function appendToLastTextPart(prompt, textToAppend, separator = "\n\n") {
+  if (!textToAppend) {
+    return prompt;
+  }
+  if (prompt.length === 0) {
+    return [{ text: textToAppend }];
+  }
+  const newPrompt = [...prompt];
+  const lastPart = newPrompt.at(-1);
+  if (typeof lastPart === "string") {
+    newPrompt[newPrompt.length - 1] = `${lastPart}${separator}${textToAppend}`;
+  } else if (lastPart && "text" in lastPart) {
+    newPrompt[newPrompt.length - 1] = {
+      ...lastPart,
+      text: `${lastPart.text}${separator}${textToAppend}`
+    };
+  } else {
+    newPrompt.push({ text: `${separator}${textToAppend}` });
+  }
+  return newPrompt;
+}
+var init_partUtils = __esm({
+  "packages/core/dist/src/utils/partUtils.js"() {
+    "use strict";
   }
 });
 
@@ -354386,7 +354517,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "048c1a7c";
+var GIT_COMMIT_INFO = "1f4461f8";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();

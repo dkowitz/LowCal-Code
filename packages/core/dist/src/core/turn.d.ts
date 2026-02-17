@@ -169,6 +169,9 @@ export declare class Turn {
     run(req: PartListUnion, signal: AbortSignal): AsyncGenerator<ServerGeminiStreamEvent>;
     private handlePendingFunctionCall;
     getDebugResponses(): GenerateContentResponse[];
+    private extractThoughtSummary;
+    private getVisibleResponseText;
+    private getFunctionCallsFromResponse;
     private shouldEmitThought;
     private normalizeThought;
     private shouldEmitTextDelta;

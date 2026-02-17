@@ -41,6 +41,11 @@ const MAX_LLM_CHECK_INTERVAL = 15;
  * Monitors tool call repetitions and content sentence repetitions.
  */
 export class LoopDetectionService {
+    static THOUGHT_LOOP_THRESHOLD = 5;
+    static THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD = 8;
+    static MIN_SEMANTIC_TEXT_LENGTH = 24;
+    static MIN_SEMANTIC_TOKEN_COUNT = 5;
+    static THOUGHT_LIKE_CONTENT_PATTERN = /\b(let me|i need to|i should|i will|now i can|i can see)\b/i;
     config;
     promptId = "";
     // Tool call tracking
@@ -56,6 +61,11 @@ export class LoopDetectionService {
     turnsInCurrentPrompt = 0;
     llmCheckInterval = DEFAULT_LLM_CHECK_INTERVAL;
     lastCheckTurn = 0;
+    // Thought-loop tracking (thought events and thought-like content)
+    lastThoughtFingerprint = null;
+    thoughtRepetitionCount = 0;
+    lastThoughtLikeContentFingerprint = null;
+    thoughtLikeContentRepetitionCount = 0;
     constructor(config) {
         this.config = config;
     }
@@ -78,14 +88,15 @@ export class LoopDetectionService {
                 // content chanting only happens in one single stream, reset if there
                 // is a tool call in between
                 this.resetContentTracking();
+                this.resetThoughtTracking();
                 this.loopDetected = this.checkToolCallLoop(event.value);
                 break;
             case GeminiEventType.Content:
-                this.loopDetected = this.checkContentLoop(event.value);
+                this.loopDetected =
+                    this.checkContentLoop(event.value) ||
+                        this.checkThoughtLikeContentLoop(event.value);
                 break;
             case GeminiEventType.Thought:
-                // Check for repeated thought messages from thinking models
-                // Thought events contain { subject, description } - use subject as key
                 this.loopDetected = this.checkThoughtLoop(event.value);
                 break;
             default:
@@ -127,27 +138,56 @@ export class LoopDetectionService {
         }
         return false;
     }
-    // Track thought message repetitions for loop detection
-    lastThoughtSubject = null;
-    thoughtRepetitionCount = 0;
-    static THOUGHT_LOOP_THRESHOLD = 5;
     /**
      * Detects loops in thought messages from thinking models.
-     * Monitors for repeated thought subjects which indicate the model is stuck
-     * in a thinking loop.
+     * Uses semantic similarity so slight rephrasing still counts toward loop detection.
      */
     checkThoughtLoop(thought) {
-        const subject = thought.subject;
-        if (this.lastThoughtSubject === subject) {
+        const thoughtFingerprint = this.normalizeSemanticText(`${thought.subject} ${thought.description}`);
+        if (!thoughtFingerprint) {
+            return false;
+        }
+        if (this.isSemanticallySimilar(thoughtFingerprint, this.lastThoughtFingerprint)) {
             this.thoughtRepetitionCount++;
         }
         else {
-            this.lastThoughtSubject = subject;
+            this.lastThoughtFingerprint = thoughtFingerprint;
             this.thoughtRepetitionCount = 1;
         }
-        if (this.thoughtRepetitionCount >= LoopDetectionService.THOUGHT_LOOP_THRESHOLD) {
+        if (this.thoughtRepetitionCount >=
+            LoopDetectionService.THOUGHT_LOOP_THRESHOLD) {
             logLoopDetected(this.config, new LoopDetectedEvent(LoopType.REPEATED_THOUGHTS, this.promptId));
             return true;
+        }
+        return false;
+    }
+    /**
+     * Detects loops in thought-like content lines (for models that emit thinking text in content).
+     * This catches near-duplicate "let me do X" style churn even when wording varies slightly.
+     */
+    checkThoughtLikeContentLoop(content) {
+        const fragments = this.extractThoughtLikeFragments(content);
+        if (fragments.length === 0) {
+            return false;
+        }
+        for (const fragment of fragments) {
+            const fingerprint = this.normalizeSemanticText(fragment);
+            if (!fingerprint ||
+                fingerprint.length < LoopDetectionService.MIN_SEMANTIC_TEXT_LENGTH) {
+                continue;
+            }
+            if (this.isSemanticallySimilar(fingerprint, this.lastThoughtLikeContentFingerprint)) {
+                this.thoughtLikeContentRepetitionCount++;
+            }
+            else {
+                this.lastThoughtLikeContentFingerprint = fingerprint;
+                this.thoughtLikeContentRepetitionCount = 1;
+            }
+            if (this.thoughtLikeContentRepetitionCount >=
+                LoopDetectionService.THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD) {
+                logLoopDetected(this.config, new LoopDetectedEvent(LoopType.REPEATED_THOUGHTS, this.promptId));
+                return true;
+            }
         }
         return false;
     }
@@ -369,6 +409,7 @@ Please analyze the conversation history to determine the possibility that the co
         this.promptId = promptId;
         this.resetToolCallCount();
         this.resetContentTracking();
+        this.resetThoughtTracking();
         this.resetLlmCheckTracking();
         this.loopDetected = false;
     }
@@ -387,6 +428,88 @@ Please analyze the conversation history to determine the possibility that the co
         this.turnsInCurrentPrompt = 0;
         this.llmCheckInterval = DEFAULT_LLM_CHECK_INTERVAL;
         this.lastCheckTurn = 0;
+    }
+    resetThoughtTracking() {
+        this.lastThoughtFingerprint = null;
+        this.thoughtRepetitionCount = 0;
+        this.lastThoughtLikeContentFingerprint = null;
+        this.thoughtLikeContentRepetitionCount = 0;
+    }
+    extractThoughtLikeFragments(content) {
+        const fragments = [];
+        for (const rawLine of content.split(/\n+/)) {
+            const line = rawLine.trim();
+            if (!line) {
+                continue;
+            }
+            const normalizedLine = line
+                .replace(/^[>*\s-]+/, "")
+                .replace(/\*/g, " ")
+                .trim();
+            if (!normalizedLine) {
+                continue;
+            }
+            if (line.includes("💭") ||
+                LoopDetectionService.THOUGHT_LIKE_CONTENT_PATTERN.test(normalizedLine)) {
+                fragments.push(normalizedLine);
+            }
+        }
+        return fragments;
+    }
+    normalizeSemanticText(text) {
+        return text
+            .toLowerCase()
+            .replace(/💭/g, " ")
+            .replace(/[^\p{L}\p{N}\s]/gu, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+    }
+    tokenizeSemanticText(text) {
+        return text.split(" ").filter((token) => token.length >= 3);
+    }
+    isSemanticallySimilar(current, previous) {
+        if (!previous) {
+            return false;
+        }
+        if (current === previous) {
+            return true;
+        }
+        const shorter = current.length < previous.length ? current : previous;
+        const longer = shorter === current ? previous : current;
+        if (shorter.length >= LoopDetectionService.MIN_SEMANTIC_TEXT_LENGTH &&
+            longer.includes(shorter)) {
+            return true;
+        }
+        const currentTokens = this.tokenizeSemanticText(current);
+        const previousTokens = this.tokenizeSemanticText(previous);
+        if (currentTokens.length < LoopDetectionService.MIN_SEMANTIC_TOKEN_COUNT ||
+            previousTokens.length < LoopDetectionService.MIN_SEMANTIC_TOKEN_COUNT) {
+            return false;
+        }
+        const minTokenLength = Math.min(currentTokens.length, previousTokens.length);
+        let sharedPrefixTokens = 0;
+        while (sharedPrefixTokens < minTokenLength &&
+            currentTokens[sharedPrefixTokens] === previousTokens[sharedPrefixTokens]) {
+            sharedPrefixTokens++;
+        }
+        if (sharedPrefixTokens >= 4 &&
+            sharedPrefixTokens / minTokenLength >= 0.5) {
+            return true;
+        }
+        const currentTokenSet = new Set(currentTokens);
+        const previousTokenSet = new Set(previousTokens);
+        let overlapCount = 0;
+        for (const token of currentTokenSet) {
+            if (previousTokenSet.has(token)) {
+                overlapCount++;
+            }
+        }
+        const unionSize = new Set([...currentTokenSet, ...previousTokenSet]).size;
+        const minSetSize = Math.min(currentTokenSet.size, previousTokenSet.size);
+        if (minSetSize > 0 && overlapCount / minSetSize >= 0.75) {
+            return true;
+        }
+        return unionSize > 0 && overlapCount / unionSize >= 0.65;
     }
 }
 //# sourceMappingURL=loopDetectionService.js.map

@@ -10,6 +10,11 @@ import type { Config } from "../config/config.js";
  * Monitors tool call repetitions and content sentence repetitions.
  */
 export declare class LoopDetectionService {
+    private static readonly THOUGHT_LOOP_THRESHOLD;
+    private static readonly THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD;
+    private static readonly MIN_SEMANTIC_TEXT_LENGTH;
+    private static readonly MIN_SEMANTIC_TOKEN_COUNT;
+    private static readonly THOUGHT_LIKE_CONTENT_PATTERN;
     private readonly config;
     private promptId;
     private lastToolCallKey;
@@ -22,6 +27,10 @@ export declare class LoopDetectionService {
     private turnsInCurrentPrompt;
     private llmCheckInterval;
     private lastCheckTurn;
+    private lastThoughtFingerprint;
+    private thoughtRepetitionCount;
+    private lastThoughtLikeContentFingerprint;
+    private thoughtLikeContentRepetitionCount;
     constructor(config: Config);
     private getToolCallKey;
     /**
@@ -42,15 +51,16 @@ export declare class LoopDetectionService {
      */
     turnStarted(signal: AbortSignal): Promise<boolean>;
     private checkToolCallLoop;
-    private lastThoughtSubject;
-    private thoughtRepetitionCount;
-    private static readonly THOUGHT_LOOP_THRESHOLD;
     /**
      * Detects loops in thought messages from thinking models.
-     * Monitors for repeated thought subjects which indicate the model is stuck
-     * in a thinking loop.
+     * Uses semantic similarity so slight rephrasing still counts toward loop detection.
      */
     private checkThoughtLoop;
+    /**
+     * Detects loops in thought-like content lines (for models that emit thinking text in content).
+     * This catches near-duplicate "let me do X" style churn even when wording varies slightly.
+     */
+    private checkThoughtLikeContentLoop;
     /**
      * Detects content loops by analyzing streaming text for repetitive patterns.
      *
@@ -104,4 +114,9 @@ export declare class LoopDetectionService {
     private resetToolCallCount;
     private resetContentTracking;
     private resetLlmCheckTracking;
+    private resetThoughtTracking;
+    private extractThoughtLikeFragments;
+    private normalizeSemanticText;
+    private tokenizeSemanticText;
+    private isSemanticallySimilar;
 }

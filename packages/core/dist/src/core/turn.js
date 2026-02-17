@@ -3,7 +3,6 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { getResponseText } from "../utils/partUtils.js";
 import { reportError } from "../utils/errorReporting.js";
 import { getErrorMessage, UnauthorizedError, toFriendlyError, } from "../utils/errors.js";
 export var GeminiEventType;
@@ -92,30 +91,14 @@ export class Turn {
                 if (!resp)
                     continue; // Skip if there's no response body
                 this.debugResponses.push(resp);
-                const thoughtPart = resp.candidates?.[0]?.content?.parts?.[0];
-                if (thoughtPart?.thought) {
-                    // Thought always has a bold "subject" part enclosed in double asterisks
-                    // (e.g., **Subject**). The rest of the string is considered the description.
-                    const rawText = thoughtPart.text ?? "";
-                    const subjectStringMatches = rawText.match(/\*\*(.*?)\*\*/s);
-                    const subject = subjectStringMatches
-                        ? subjectStringMatches[1].trim()
-                        : "";
-                    const description = rawText.replace(/\*\*(.*?)\*\*/s, "").trim();
-                    const thought = {
-                        subject,
-                        description,
-                    };
-                    if (!this.shouldEmitThought(thought)) {
-                        continue;
-                    }
+                const thought = this.extractThoughtSummary(resp);
+                if (thought && this.shouldEmitThought(thought)) {
                     yield {
                         type: GeminiEventType.Thought,
                         value: thought,
                     };
-                    continue;
                 }
-                const text = getResponseText(resp);
+                const text = this.getVisibleResponseText(resp);
                 if (text) {
                     const candidateIndex = resp.candidates?.[0]?.index ?? 0;
                     const previousText = this.lastCandidateTexts.get(candidateIndex) ?? "";
@@ -141,7 +124,7 @@ export class Turn {
                     }
                 }
                 // Handle function calls (requesting tool execution)
-                const functionCalls = resp.functionCalls ?? [];
+                const functionCalls = this.getFunctionCallsFromResponse(resp);
                 for (const fnCall of functionCalls) {
                     const event = this.handlePendingFunctionCall(fnCall);
                     if (event) {
@@ -207,6 +190,51 @@ export class Turn {
     }
     getDebugResponses() {
         return this.debugResponses;
+    }
+    extractThoughtSummary(resp) {
+        const thoughtPart = resp.candidates?.[0]?.content?.parts?.find((part) => !!part?.thought);
+        if (!thoughtPart) {
+            return null;
+        }
+        // Thought always has a bold "subject" part enclosed in double asterisks
+        // (e.g., **Subject**). The rest of the string is considered the description.
+        const rawText = thoughtPart.text ?? "";
+        const subjectStringMatches = rawText.match(/\*\*(.*?)\*\*/s);
+        const subject = subjectStringMatches ? subjectStringMatches[1].trim() : "";
+        const description = rawText.replace(/\*\*(.*?)\*\*/s, "").trim();
+        return {
+            subject,
+            description,
+        };
+    }
+    getVisibleResponseText(resp) {
+        const parts = resp.candidates?.[0]?.content?.parts;
+        if (!parts || parts.length === 0) {
+            return null;
+        }
+        const textSegments = parts
+            .filter((part) => !part.thought)
+            .map((part) => (typeof part.text === "string" ? part.text : ""))
+            .filter((segment) => segment.length > 0);
+        return textSegments.length > 0 ? textSegments.join("") : null;
+    }
+    getFunctionCallsFromResponse(resp) {
+        const responseFunctionCalls = resp.functionCalls ?? [];
+        const partFunctionCalls = resp.candidates?.[0]?.content?.parts
+            ?.map((part) => part.functionCall)
+            .filter((call) => !!call) ?? [];
+        const mergedCalls = [...responseFunctionCalls, ...partFunctionCalls];
+        const dedupedCalls = [];
+        const seen = new Set();
+        for (const call of mergedCalls) {
+            const key = `${call.id ?? ""}:${call.name ?? ""}:${JSON.stringify(call.args ?? {})}`;
+            if (seen.has(key)) {
+                continue;
+            }
+            seen.add(key);
+            dedupedCalls.push(call);
+        }
+        return dedupedCalls;
     }
     shouldEmitThought(thought) {
         const normalized = this.normalizeThought(thought);
