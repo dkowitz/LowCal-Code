@@ -29,6 +29,12 @@ esbuild
       "@lydell/node-pty-linux-x64",
       "@lydell/node-pty-win32-arm64",
       "@lydell/node-pty-win32-x64",
+      "@playwright/test",
+      "playwright",
+      "playwright-core",
+      "chromium-bidi",
+      "chromium-bidi/lib/cjs/bidiMapper/BidiMapper",
+      "chromium-bidi/lib/cjs/cdp/CdpConnection",
     ],
     alias: {
       "is-in-ci": path.resolve(

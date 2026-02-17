@@ -88,6 +88,65 @@ const formatElapsed = (milliseconds: number): string => {
   return formatDuration(milliseconds);
 };
 
+const normalizeForSimilarity = (text: string): string =>
+  text
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+const isHighSimilarityRewrite = (current: string, incoming: string): boolean => {
+  if (!current || !incoming) {
+    return false;
+  }
+  if (current.length < 40 || incoming.length < 40) {
+    return false;
+  }
+  if (
+    incoming.startsWith(current) ||
+    current.startsWith(incoming) ||
+    incoming.includes(current) ||
+    current.includes(incoming)
+  ) {
+    return false;
+  }
+
+  const normalizedCurrent = normalizeForSimilarity(current);
+  const normalizedIncoming = normalizeForSimilarity(incoming);
+  if (!normalizedCurrent || !normalizedIncoming) {
+    return false;
+  }
+
+  const currentTokens = normalizedCurrent
+    .split(" ")
+    .filter((token) => token.length >= 3);
+  const incomingTokens = normalizedIncoming
+    .split(" ")
+    .filter((token) => token.length >= 3);
+  if (currentTokens.length < 6 || incomingTokens.length < 6) {
+    return false;
+  }
+
+  const currentSet = new Set(currentTokens);
+  const incomingSet = new Set(incomingTokens);
+  let overlap = 0;
+  for (const token of incomingSet) {
+    if (currentSet.has(token)) {
+      overlap++;
+    }
+  }
+
+  const minSetSize = Math.min(currentSet.size, incomingSet.size);
+  if (minSetSize === 0) {
+    return false;
+  }
+  const overlapRatio = overlap / minSetSize;
+  const lengthRatio = Math.max(current.length, incoming.length) /
+    Math.min(current.length, incoming.length);
+
+  return overlapRatio >= 0.75 && lengthRatio <= 1.5;
+};
+
 enum StreamProcessingStatus {
   Completed,
   UserCancelled,
@@ -497,7 +556,35 @@ export const useGeminiStream = (
         // Prevents additional output after a user initiated cancel.
         return "";
       }
-      let newGeminiMessageBuffer = currentGeminiMessageBuffer + eventValue;
+      // Defensive normalization: handle providers that replay full/cumulative
+      // text chunks instead of strict deltas.
+      let normalizedDelta = eventValue;
+      let shouldReplaceBuffer = false;
+      if (currentGeminiMessageBuffer) {
+        if (
+          eventValue === currentGeminiMessageBuffer ||
+          (eventValue.trim() &&
+            eventValue.trim() === currentGeminiMessageBuffer.trim()) ||
+          currentGeminiMessageBuffer.includes(eventValue)
+        ) {
+          return currentGeminiMessageBuffer;
+        }
+        if (eventValue.startsWith(currentGeminiMessageBuffer)) {
+          normalizedDelta = eventValue.slice(currentGeminiMessageBuffer.length);
+        } else if (
+          isHighSimilarityRewrite(currentGeminiMessageBuffer, eventValue)
+        ) {
+          shouldReplaceBuffer = true;
+          normalizedDelta = eventValue;
+        }
+      }
+      if (!normalizedDelta) {
+        return currentGeminiMessageBuffer;
+      }
+
+      let newGeminiMessageBuffer = shouldReplaceBuffer
+        ? normalizedDelta
+        : currentGeminiMessageBuffer + normalizedDelta;
       if (
         pendingHistoryItemRef.current?.type !== "gemini" &&
         pendingHistoryItemRef.current?.type !== "gemini_content"
@@ -506,7 +593,7 @@ export const useGeminiStream = (
           addItem(pendingHistoryItemRef.current, userMessageTimestamp);
         }
         setPendingHistoryItem({ type: "gemini", text: "" });
-        newGeminiMessageBuffer = eventValue;
+        newGeminiMessageBuffer = normalizedDelta;
       }
       // Split large messages for better rendering performance. Ideally,
       // we should maximize the amount of output sent to <Static />.

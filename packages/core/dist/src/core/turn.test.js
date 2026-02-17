@@ -134,6 +134,57 @@ describe("Turn", () => {
                 { type: GeminiEventType.Content, value: "Hello" },
             ]);
         });
+        it("should ignore duplicate content when candidate index changes", async () => {
+            const mockResponseStream = (async function* () {
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ index: 0, content: { parts: [{ text: "Hello" }] } }],
+                    },
+                };
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ index: 1, content: { parts: [{ text: "Hello" }] } }],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            for await (const event of turn.run([{ text: "Hi" }], new AbortController().signal)) {
+                events.push(event);
+            }
+            expect(events).toEqual([
+                { type: GeminiEventType.Content, value: "Hello" },
+            ]);
+        });
+        it("should emit only incremental tail when candidate index changes", async () => {
+            const mockResponseStream = (async function* () {
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ index: 0, content: { parts: [{ text: "Hello" }] } }],
+                    },
+                };
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [
+                            { index: 1, content: { parts: [{ text: "Hello world" }] } },
+                        ],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            for await (const event of turn.run([{ text: "Hi" }], new AbortController().signal)) {
+                events.push(event);
+            }
+            expect(events).toEqual([
+                { type: GeminiEventType.Content, value: "Hello" },
+                { type: GeminiEventType.Content, value: " world" },
+            ]);
+        });
         it("should ignore chunks that are already contained within previous output", async () => {
             const mockResponseStream = (async function* () {
                 yield {
@@ -588,6 +639,82 @@ describe("Turn", () => {
                 { type: GeminiEventType.Retry },
                 { type: GeminiEventType.Content, value: "Success" },
             ]);
+        });
+        it("should not replay identical content emitted before a retry", async () => {
+            const baseText = "Darrin, screenshot captured.\n\nFile: /home/atmandk/LowCal-dev/browser-screenshot-2026-02-17T21-21-12-522Z.png";
+            const mockResponseStream = (async function* () {
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [{ text: baseText }] } }],
+                    },
+                };
+                yield { type: StreamEventType.RETRY };
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [{ text: baseText }] } }],
+                    },
+                };
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [
+                            {
+                                content: {
+                                    parts: [
+                                        {
+                                            text: `${baseText}\n\nLet me know if you want a focused element shot or a different site.`,
+                                        },
+                                    ],
+                                },
+                            },
+                        ],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            for await (const event of turn.run([{ text: "take screenshot" }], new AbortController().signal)) {
+                events.push(event);
+            }
+            expect(events).toEqual([
+                { type: GeminiEventType.Content, value: baseText },
+                { type: GeminiEventType.Retry },
+                {
+                    type: GeminiEventType.Content,
+                    value: "\n\nLet me know if you want a focused element shot or a different site.",
+                },
+            ]);
+        });
+        it("should not replay identical thought events emitted before a retry", async () => {
+            const thoughtPart = {
+                thought: "**Plan**Apply the edit",
+                text: "**Plan**Apply the edit",
+            };
+            const mockResponseStream = (async function* () {
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [thoughtPart] } }],
+                    },
+                };
+                yield { type: StreamEventType.RETRY };
+                yield {
+                    type: StreamEventType.CHUNK,
+                    value: {
+                        candidates: [{ content: { parts: [thoughtPart] } }],
+                    },
+                };
+            })();
+            mockSendMessageStream.mockResolvedValue(mockResponseStream);
+            const events = [];
+            for await (const event of turn.run([{ text: "Think" }], new AbortController().signal)) {
+                events.push(event);
+            }
+            const thoughtEvents = events.filter((event) => event.type === GeminiEventType.Thought);
+            expect(thoughtEvents).toHaveLength(1);
+            expect(events).toContainEqual({ type: GeminiEventType.Retry });
         });
         it("should suppress duplicate thought events", async () => {
             const thoughtPart = {

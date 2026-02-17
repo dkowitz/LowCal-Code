@@ -51420,6 +51420,7 @@ var init_tools = __esm({
       Kind2["Execute"] = "execute";
       Kind2["Think"] = "think";
       Kind2["Fetch"] = "fetch";
+      Kind2["Browser"] = "browser";
       Kind2["Other"] = "other";
     })(Kind || (Kind = {}));
   }
@@ -136538,6 +136539,12 @@ var WriteFileTool = class _WriteFileTool extends BaseDeclarativeTool {
     };
   }
 };
+
+// ../core/dist/src/tools/browser-control.js
+var import_test = require("@playwright/test");
+init_tools();
+init_tool_error();
+var DEFAULT_MAX_SCREENSHOT_SIZE = 5 * 1024 * 1024;
 
 // ../core/dist/src/utils/workspaceContext.js
 init_errors();

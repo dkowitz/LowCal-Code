@@ -576,6 +576,7 @@ export enum Kind {
   Execute = "execute",
   Think = "think",
   Fetch = "fetch",
+  Browser = "browser",
   Other = "other",
 }
 

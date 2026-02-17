@@ -39,6 +39,7 @@ import { ReadSessionMessagesTool } from "../tools/read-session-messages.js";
 import { TaskTemplateTool } from "../tools/task-template.js";
 import { SearXNGSearchTool } from "../tools/searxng-search.js";
 import { WriteFileTool } from "../tools/write-file.js";
+import { BrowserControlTool } from "../tools/browser-control.js";
 import { shouldAttemptBrowserLaunch } from "../utils/browser.js";
 import { FileExclusions } from "../utils/ignorePatterns.js";
 import { WorkspaceContext } from "../utils/workspaceContext.js";
@@ -848,6 +849,8 @@ export class Config {
         registerCoreTool(LaunchTaskTool, this);
         registerCoreTool(TaskTemplateTool, this);
         registerCoreTool(ReadSessionMessagesTool, this);
+        // Register browser control tool
+        registerCoreTool(BrowserControlTool, this);
         await registry.discoverAllTools();
         return registry;
     }

@@ -1,3 +1,114 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="0" failures="0" errors="0" time="0">
+<testsuites name="vitest tests" tests="40" failures="0" errors="0" time="0.377918049">
+    <testsuite name="src/ui/hooks/useGeminiStream.test.tsx" timestamp="2026-02-17T21:50:46.829Z" hostname="uby" tests="40" failures="0" errors="0" skipped="0" time="0.377918049">
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; should not submit tool responses if not all tool calls are completed" time="0.009869574">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; should submit tool responses when all tool calls are completed and ready" time="0.00597681">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; should handle all tool calls being cancelled" time="0.002290189">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; should group multiple cancelled tool call responses into a single history entry" time="0.002329661">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; should not flicker streaming state to Idle between tool completion and submission" time="0.002924922">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; User Cancellation &gt; should cancel an in-progress stream when escape is pressed" time="0.004416493">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; User Cancellation &gt; should call onCancelSubmit handler when escape is pressed" time="0.001257427">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; User Cancellation &gt; should not do anything if escape is pressed when not responding" time="0.001022542">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; User Cancellation &gt; should prevent further processing after cancellation" time="0.053005982">
+            <system-err>
+An update to TestComponent inside a test was not wrapped in act(...).
+
+When testing, code that causes React state updates should be wrapped into act(...):
+
+act(() =&gt; {
+  /* fire events that update state */
+});
+/* assert on the output */
+
+This ensures that you&apos;re testing the behavior the user would see in the browser. Learn more at https://react.dev/link/wrap-tests-with-act
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; User Cancellation &gt; should not cancel if a tool call is in progress (not just responding)" time="0.001233012">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Slash Command Handling &gt; should schedule a tool call when the command processor returns a schedule_tool action" time="0.002337425">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Slash Command Handling &gt; should stop processing and not call Gemini when a command is handled without a tool call" time="0.001991105">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Slash Command Handling &gt; should call Gemini with prompt content when slash command returns a `submit_prompt` action" time="0.002224877">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Slash Command Handling &gt; should correctly handle a submit_prompt action with empty content" time="0.002257598">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Slash Command Handling &gt; should not call handleSlashCommand for line comments" time="0.002136674">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Slash Command Handling &gt; should not call handleSlashCommand for block comments" time="0.002090489">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Memory Refresh on save_memory &gt; should call performMemoryRefresh when a save_memory tool call completes successfully" time="0.002068468">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Error Handling &gt; should call parseAndFormatApiError with the correct authType on stream initialization failure" time="0.002791516">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; handleFinishedEvent &gt; should add info message for MAX_TOKENS finish reason" time="0.002357673">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; handleFinishedEvent &gt; should not add message for STOP finish reason" time="0.101628261">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; handleFinishedEvent &gt; should not add message for FINISH_REASON_UNSPECIFIED" time="0.101888774">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; handleFinishedEvent &gt; should add appropriate messages for other finish reasons" time="0.018373582">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Content Replay Guard &gt; should not duplicate output when the same content chunk is replayed" time="0.001256155">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Content Replay Guard &gt; should treat cumulative replay as delta and avoid repeated prefix text" time="0.001041969">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Content Replay Guard &gt; should replace buffer when provider emits a corrected rewrite of the same message" time="0.001486541">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; should process @include commands, adding user turn after processing to prevent race conditions" time="0.001272795">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Thought Reset &gt; should reset thought to null when starting a new prompt" time="0.003683607">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Thought Reset &gt; should reset thought to null when user cancels" time="0.002313101">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Thought Reset &gt; should reset thought to null when there is an error" time="0.002918961">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Concurrent Execution Prevention &gt; should prevent concurrent submitQuery calls" time="0.011577395">
+            <system-err>
+You called act(async () =&gt; ...) without await. This could lead to unexpected testing behaviour, interleaving multiple act calls and mixing their scopes. You should - await act(async () =&gt; ...);
+
+            </system-err>
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Concurrent Execution Prevention &gt; should allow subsequent calls after first call completes" time="0.001444754">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Concurrent Execution Prevention &gt; should reset execution flag even when query preparation fails" time="0.007852973">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Vision Auto Switch Integration &gt; should call handleVisionSwitch and proceed to send when allowed" time="0.002639634">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Vision Auto Switch Integration &gt; should gate submission when handleVisionSwitch returns shouldProceed=false" time="0.00220483">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Turn-end checkpointing &gt; saves a checkpoint only after idle with a model response in the current turn" time="0.001979823">
+            <system-out>
+[Checkpoint] Saved checkpoint undefined with 4 messages
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Turn-end checkpointing &gt; does not save checkpoint for user-only history and waits for model output" time="0.001511847">
+            <system-out>
+[Checkpoint] Saved checkpoint undefined with 2 messages
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Turn-end checkpointing &gt; does not save checkpoint when checkpointing is disabled" time="0.001179813">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Turn-end checkpointing &gt; saves checkpoint for tool-only turn output once idle" time="0.001294786">
+            <system-out>
+[Checkpoint] Saved checkpoint undefined with 2 messages
+
+            </system-out>
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Model restore on completion and errors &gt; should restore model after successful stream completion" time="0.002083295">
+        </testcase>
+        <testcase classname="src/ui/hooks/useGeminiStream.test.tsx" name="useGeminiStream &gt; Model restore on completion and errors &gt; should restore model when an error occurs during streaming" time="0.00229627">
+        </testcase>
+    </testsuite>
 </testsuites>

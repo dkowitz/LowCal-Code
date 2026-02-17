@@ -41,7 +41,7 @@ async function main() {
     sourcesContent: false,
     platform: "node",
     outfile: "dist/extension.cjs",
-    external: ["vscode", "pdf-parse", "pdfjs-dist"],
+    external: ["vscode", "pdf-parse", "pdfjs-dist", "@playwright/test", "playwright", "playwright-core"],
     logLevel: "silent",
     plugins: [
       /* add to the end of plugins array */

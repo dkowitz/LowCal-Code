@@ -56,7 +56,9 @@ const MAX_LLM_CHECK_INTERVAL = 15;
  */
 export class LoopDetectionService {
   private static readonly THOUGHT_LOOP_THRESHOLD = 5;
-  private static readonly THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD = 8;
+  private static readonly THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD = 6;
+  private static readonly THOUGHT_RECENT_WINDOW = 8;
+  private static readonly THOUGHT_LIKE_RECENT_WINDOW = 10;
   private static readonly MIN_SEMANTIC_TEXT_LENGTH = 24;
   private static readonly MIN_SEMANTIC_TOKEN_COUNT = 5;
   private static readonly THOUGHT_LIKE_CONTENT_PATTERN =
@@ -86,6 +88,8 @@ export class LoopDetectionService {
   private thoughtRepetitionCount = 0;
   private lastThoughtLikeContentFingerprint: string | null = null;
   private thoughtLikeContentRepetitionCount = 0;
+  private recentThoughtFingerprints: string[] = [];
+  private recentThoughtLikeFingerprints: string[] = [];
 
   constructor(config: Config) {
     this.config = config;
@@ -199,9 +203,17 @@ export class LoopDetectionService {
       this.thoughtRepetitionCount = 1;
     }
 
+    const thoughtClustered = this.hasSemanticCluster(
+      thoughtFingerprint,
+      this.recentThoughtFingerprints,
+      LoopDetectionService.THOUGHT_LOOP_THRESHOLD,
+      LoopDetectionService.THOUGHT_RECENT_WINDOW,
+    );
+
     if (
       this.thoughtRepetitionCount >=
-      LoopDetectionService.THOUGHT_LOOP_THRESHOLD
+        LoopDetectionService.THOUGHT_LOOP_THRESHOLD ||
+      thoughtClustered
     ) {
       logLoopDetected(
         this.config,
@@ -246,9 +258,17 @@ export class LoopDetectionService {
         this.thoughtLikeContentRepetitionCount = 1;
       }
 
+      const thoughtLikeClustered = this.hasSemanticCluster(
+        fingerprint,
+        this.recentThoughtLikeFingerprints,
+        LoopDetectionService.THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD,
+        LoopDetectionService.THOUGHT_LIKE_RECENT_WINDOW,
+      );
+
       if (
         this.thoughtLikeContentRepetitionCount >=
-        LoopDetectionService.THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD
+          LoopDetectionService.THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD ||
+        thoughtLikeClustered
       ) {
         logLoopDetected(
           this.config,
@@ -568,6 +588,8 @@ Please analyze the conversation history to determine the possibility that the co
     this.thoughtRepetitionCount = 0;
     this.lastThoughtLikeContentFingerprint = null;
     this.thoughtLikeContentRepetitionCount = 0;
+    this.recentThoughtFingerprints = [];
+    this.recentThoughtLikeFingerprints = [];
   }
 
   private extractThoughtLikeFragments(content: string): string[] {
@@ -675,5 +697,26 @@ Please analyze the conversation history to determine the possibility that the co
     }
 
     return unionSize > 0 && overlapCount / unionSize >= 0.65;
+  }
+
+  private hasSemanticCluster(
+    fingerprint: string,
+    recentFingerprints: string[],
+    requiredCount: number,
+    maxRecent: number,
+  ): boolean {
+    let similarCount = 1; // include current fingerprint
+    for (const previous of recentFingerprints) {
+      if (this.isSemanticallySimilar(fingerprint, previous)) {
+        similarCount++;
+      }
+    }
+
+    recentFingerprints.push(fingerprint);
+    if (recentFingerprints.length > maxRecent) {
+      recentFingerprints.shift();
+    }
+
+    return similarCount >= requiredCount;
   }
 }

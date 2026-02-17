@@ -56,6 +56,7 @@ export const toolKindSchema = z.union([
     z.literal("execute"),
     z.literal("think"),
     z.literal("fetch"),
+    z.literal("browser"),
     z.literal("other"),
 ]);
 export const toolCallStatusSchema = z.union([

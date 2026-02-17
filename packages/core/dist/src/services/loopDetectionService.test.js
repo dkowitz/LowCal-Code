@@ -17,7 +17,7 @@ const TOOL_CALL_LOOP_THRESHOLD = 5;
 const CONTENT_LOOP_THRESHOLD = 10;
 const CONTENT_CHUNK_SIZE = 50;
 const THOUGHT_LOOP_THRESHOLD = 5;
-const THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD = 8;
+const THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD = 6;
 describe("LoopDetectionService", () => {
     let service;
     let mockConfig;
@@ -184,14 +184,25 @@ describe("LoopDetectionService", () => {
                 "  💭 Now I can see the fieldItems list. I need to add the approval_mode field after execution_mode.",
                 "  💭 Now I can see the fieldItems list. I need to add approval_mode after execution_mode. Let me add it.",
                 "  💭 I can see the fieldItems list now. I need to add the approval_mode field after execution_mode. Let me add it.",
-                "  💭 Now I can see the fieldItems list. I need to add approval_mode after execution_mode. Let me do that.",
-                "  💭 Now I can see the fieldItems list. I need to add approval_mode after execution_mode. Let me add it.",
             ];
             let isLoop = false;
             for (const content of thoughtLikeContent) {
                 isLoop = service.addAndCheck(createContentEvent(content));
             }
             expect(thoughtLikeContent).toHaveLength(THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD);
+            expect(isLoop).toBe(true);
+            expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);
+        });
+        it("should detect a loop for alternating semantically similar thought variants", () => {
+            service.reset("");
+            const variantA = createThoughtEvent("Plan", "Now I can see the fieldItems list. I need to add the approval_mode field after execution_mode. Let me add it.");
+            const variantB = createThoughtEvent("Next step", "I can now see fieldItems; I need to add approval_mode after execution_mode. Let me do that.");
+            let isLoop = false;
+            const sequence = [variantA, variantB, variantA, variantB, variantA];
+            for (const thoughtEvent of sequence) {
+                isLoop = service.addAndCheck(thoughtEvent);
+            }
+            expect(sequence).toHaveLength(THOUGHT_LOOP_THRESHOLD);
             expect(isLoop).toBe(true);
             expect(loggers.logLoopDetected).toHaveBeenCalledTimes(1);
         });

@@ -1558,6 +1558,164 @@ describe("useGeminiStream", () => {
     });
   });
 
+  describe("Content Replay Guard", () => {
+    it("should not duplicate output when the same content chunk is replayed", async () => {
+      mockSendMessageStream.mockReturnValue(
+        (async function* () {
+          yield {
+            type: ServerGeminiEventType.Content,
+            value: "Operational, Darrin. Mood: stable.",
+          };
+          yield {
+            type: ServerGeminiEventType.Content,
+            value: "Operational, Darrin. Mood: stable.",
+          };
+          yield { type: ServerGeminiEventType.Finished, value: "STOP" };
+        })(),
+      );
+
+      const { result } = renderHook(() =>
+        useGeminiStream(
+          new MockedGeminiClientClass(mockConfig),
+          [],
+          mockAddItem,
+          mockConfig,
+          mockOnDebugMessage,
+          mockHandleSlashCommand,
+          false,
+          () => "vscode" as EditorType,
+          () => {},
+          () => Promise.resolve(),
+          false,
+          () => {},
+          () => {},
+          () => {},
+          false,
+          undefined,
+        ),
+      );
+
+      await act(async () => {
+        await result.current.submitQuery("hello");
+      });
+
+      const modelMessages = mockAddItem.mock.calls
+        .map((call) => call[0])
+        .filter((item) => item.type === "gemini" || item.type === "gemini_content");
+
+      expect(modelMessages).toHaveLength(1);
+      expect(modelMessages[0]).toMatchObject({
+        type: "gemini",
+        text: "Operational, Darrin. Mood: stable.",
+      });
+    });
+
+    it("should treat cumulative replay as delta and avoid repeated prefix text", async () => {
+      mockSendMessageStream.mockReturnValue(
+        (async function* () {
+          yield {
+            type: ServerGeminiEventType.Content,
+            value: "Operational, Darrin.",
+          };
+          yield {
+            type: ServerGeminiEventType.Content,
+            value: "Operational, Darrin. How can I help?",
+          };
+          yield { type: ServerGeminiEventType.Finished, value: "STOP" };
+        })(),
+      );
+
+      const { result } = renderHook(() =>
+        useGeminiStream(
+          new MockedGeminiClientClass(mockConfig),
+          [],
+          mockAddItem,
+          mockConfig,
+          mockOnDebugMessage,
+          mockHandleSlashCommand,
+          false,
+          () => "vscode" as EditorType,
+          () => {},
+          () => Promise.resolve(),
+          false,
+          () => {},
+          () => {},
+          () => {},
+          false,
+          undefined,
+        ),
+      );
+
+      await act(async () => {
+        await result.current.submitQuery("hello");
+      });
+
+      const modelMessages = mockAddItem.mock.calls
+        .map((call) => call[0])
+        .filter((item) => item.type === "gemini" || item.type === "gemini_content");
+
+      expect(modelMessages).toHaveLength(1);
+      expect(modelMessages[0]).toMatchObject({
+        type: "gemini",
+        text: "Operational, Darrin. How can I help?",
+      });
+    });
+
+    it("should replace buffer when provider emits a corrected rewrite of the same message", async () => {
+      mockSendMessageStream.mockReturnValue(
+        (async function* () {
+          yield {
+            type: ServerGeminiEventType.Content,
+            value:
+              "Running nominally, Darr. Systems steady casualties zero How can I help?",
+          };
+          yield {
+            type: ServerGeminiEventType.Content,
+            value:
+              "Running nominally, Darrin. Systems steady, casualties zero. How can I help?",
+          };
+          yield { type: ServerGeminiEventType.Finished, value: "STOP" };
+        })(),
+      );
+
+      const { result } = renderHook(() =>
+        useGeminiStream(
+          new MockedGeminiClientClass(mockConfig),
+          [],
+          mockAddItem,
+          mockConfig,
+          mockOnDebugMessage,
+          mockHandleSlashCommand,
+          false,
+          () => "vscode" as EditorType,
+          () => {},
+          () => Promise.resolve(),
+          false,
+          () => {},
+          () => {},
+          () => {},
+          false,
+          undefined,
+        ),
+      );
+
+      await act(async () => {
+        await result.current.submitQuery("hello");
+      });
+
+      const modelMessages = mockAddItem.mock.calls
+        .map((call) => call[0])
+        .filter((item) => item.type === "gemini" || item.type === "gemini_content");
+
+      expect(modelMessages).toHaveLength(1);
+      expect(modelMessages[0]).toMatchObject({
+        type: "gemini",
+        text:
+          "Running nominally, Darrin. Systems steady, casualties zero. How can I help?",
+      });
+    });
+  });
+
   it("should process @include commands, adding user turn after processing to prevent race conditions", async () => {
     const rawQuery = "@include file.txt Summarize this.";
     const processedQueryParts = [

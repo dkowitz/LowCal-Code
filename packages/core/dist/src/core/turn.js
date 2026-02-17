@@ -78,10 +78,8 @@ export class Turn {
                 }
                 // Handle the new RETRY event
                 if (streamEvent.type === "retry") {
-                    this.lastCandidateTexts.clear();
-                    this.textDuplicateTrackers.clear();
-                    this.thinkingBlockTrackers.clear();
-                    this.emittedThoughtHashes.clear(); // CRITICAL: Reset thought deduplication on retry
+                    // Keep deduplication state so replayed chunks from a retried stream
+                    // are not emitted to the UI a second time.
                     this.finishedEventEmitted = false; // Reset finished flag on retry
                     yield { type: GeminiEventType.Retry };
                     continue; // Skip to the next event in the stream
@@ -101,7 +99,7 @@ export class Turn {
                 const text = this.getVisibleResponseText(resp);
                 if (text) {
                     const candidateIndex = resp.candidates?.[0]?.index ?? 0;
-                    const previousText = this.lastCandidateTexts.get(candidateIndex) ?? "";
+                    const previousText = this.getBestPreviousCandidateText(candidateIndex, text);
                     let delta;
                     if (text === previousText ||
                         (text.trim() && text.trim() === previousText.trim()) ||
@@ -246,6 +244,21 @@ export class Turn {
         }
         this.emittedThoughtHashes.add(normalized);
         return true;
+    }
+    getBestPreviousCandidateText(index, text) {
+        let best = this.lastCandidateTexts.get(index) ?? "";
+        for (const previous of this.lastCandidateTexts.values()) {
+            if (!previous) {
+                continue;
+            }
+            if (text === previous) {
+                return previous;
+            }
+            if (text.startsWith(previous) && previous.length > best.length) {
+                best = previous;
+            }
+        }
+        return best;
     }
     normalizeThought(thought) {
         return `${thought.subject}::${thought.description}`

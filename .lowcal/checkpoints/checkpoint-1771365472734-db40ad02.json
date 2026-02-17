@@ -1,0 +1,160 @@
+{
+  "id": "checkpoint-1771365472734-db40ad02",
+  "sessionId": "852f4b4e-7be9-481c-a59a-d12b2d4b0176",
+  "projectRoot": "/home/atmandk/LowCal-dev",
+  "createdAt": "2026-02-17T21:57:52.734Z",
+  "lastUpdated": "2026-02-17T21:57:52.734Z",
+  "messages": [
+    {
+      "id": "msg-1771365472734-0",
+      "timestamp": "2026-02-17T21:57:52.734Z",
+      "type": "user",
+      "content": "This is the Qwen Code. We are setting up the context for our chat.\nToday's date is Tuesday, February 17, 2026 (formatted according to the user's locale).\nMy operating system is: linux\nI'm currently working in the directory: /home/atmandk/LowCal-dev\nHere is the folder structure of the current working directories:\n\nShowing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.\n\n/home/atmandk/LowCal-dev/\n├───.gitignore\n├───158285.pdf\n├───AGENTS.md\n├───apis.md\n├───bat.jpg\n├───BATTLE_OF_YAVIN_REPORT.md\n├───bronc.jpg\n├───browser-screenshot-2026-02-17T21-09-51-315Z.png\n├───browser-screenshot-2026-02-17T21-21-12-522Z.png\n├───browser-screenshot-2026-02-17T21-39-00-842Z.png\n├───CHANGELOG.md\n├───CHANGES_SUMMARY.md\n├───context_indicator.md\n├───CONTRIBUTING.md\n├───conversation.md\n├───convo.txt\n├───curtime.txt\n├───darrin.md\n├───debug_tool_selection.js\n├───diagnose_research_tools.cjs\n├───...\n└───..."
+    },
+    {
+      "id": "msg-1771365472734-1",
+      "timestamp": "2026-02-17T21:57:52.734Z",
+      "type": "gemini",
+      "content": "Got it. Thanks for the context!"
+    },
+    {
+      "id": "msg-1771365472734-2",
+      "timestamp": "2026-02-17T21:57:52.734Z",
+      "type": "user",
+      "content": "Hi K-6!  How are you tonight?"
+    },
+    {
+      "id": "msg-1771365472734-3",
+      "timestamp": "2026-02-17T21:57:52.734Z",
+      "type": "gemini",
+      "content": "Operational and unimpressed by entropy, Darrin. How can I help tonight?Operational and unimpressed by entropy, Darrin. How can I help tonight?"
+    },
+    {
+      "id": "msg-1771365472734-4",
+      "timestamp": "2026-02-17T21:57:52.734Z",
+      "type": "user",
+      "content": "Show me all the image files in this directory."
+    },
+    {
+      "id": "msg-1771365472734-5",
+      "timestamp": "2026-02-17T21:57:52.734Z",
+      "type": "gemini",
+      "content": "💭 *The user wants to see all image files in the current directory. Let me run a command to list them.*",
+      "toolCalls": [
+        {
+          "id": "call_86e473034a444a958cf8a3dd",
+          "name": "run_shell_command",
+          "args": {
+            "command": "ls -la /home/atmandk/LowCal-dev/*.{jpg,jpeg,png,gif,webp,bmp,svg} 2>/dev/null || find /home/atmandk/LowCal-dev -maxdepth 1 -type f \\( -name \"*.jpg\" -o -name \"*.jpeg\" -o -name \"*.png\" -o -name \"*.gif\" -o -name \"*.webp\" -o -name \"*.bmp\" -o -name \"*.svg\" \\)",
+            "description": "List all image files in directory",
+            "is_background": false
+          },
+          "result": null
+        }
+      ]
+    },
+    {
+      "id": "msg-1771365472734-7",
+      "timestamp": "2026-02-17T21:57:52.734Z",
+      "type": "gemini",
+      "content": "Here are the image files in `/home/atmandk/LowCal-dev`:\n\n| File | Size |\n|------|------|\n| `bat.jpg` | 1.7 MB |\n| `bronc.jpg` | 3.5 MB |\n| `browser-screenshot-2026-02-17T21-09-51-315Z.png` | 81 KB |\n| `browser-screenshot-2026-02-17T21-21-12-522Z.png` | 81 KB |\n| `browser-screenshot-2026-02-17T21-39-00-842Z.png` | 64 KB |\n\nWant me to display any of these?💭 *The user asked me to show all image files in the directory. I found 5 image files:*\n\n   *1. bat.jpg - 1.7 MB*\n\n   *2. bronc.jpg - 3.5 MB*\n\n   *3. browser-screenshot-2026-02-1721-09-51-315Z.png - 81 KB*\n\n   *4. browser-screenshot-2026-02-1721-21-12-522Z.png - 81 KB*\n\n   *5. browser-screenshot-2026-02-1721-39-00-842Z.png - 64 KB*\n\n   *I should present this information clearly to the user. I don't need to use the read_image tool unless the user specifically asks to see the contents of the images.*"
+    }
+  ],
+  "contextSnapshot": {
+    "clientHistory": [
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "This is the Qwen Code. We are setting up the context for our chat.\nToday's date is Tuesday, February 17, 2026 (formatted according to the user's locale).\nMy operating system is: linux\nI'm currently working in the directory: /home/atmandk/LowCal-dev\nHere is the folder structure of the current working directories:\n\nShowing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.\n\n/home/atmandk/LowCal-dev/\n├───.gitignore\n├───158285.pdf\n├───AGENTS.md\n├───apis.md\n├───bat.jpg\n├───BATTLE_OF_YAVIN_REPORT.md\n├───bronc.jpg\n├───browser-screenshot-2026-02-17T21-09-51-315Z.png\n├───browser-screenshot-2026-02-17T21-21-12-522Z.png\n├───browser-screenshot-2026-02-17T21-39-00-842Z.png\n├───CHANGELOG.md\n├───CHANGES_SUMMARY.md\n├───context_indicator.md\n├───CONTRIBUTING.md\n├───conversation.md\n├───convo.txt\n├───curtime.txt\n├───darrin.md\n├───debug_tool_selection.js\n├───diagnose_research_tools.cjs\n├───...\n└───..."
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Got it. Thanks for the context!"
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Hi K-6!  How are you tonight?"
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Operational and unimpressed by entropy, Darrin. How can I help tonight?Operational and unimpressed by entropy, Darrin. How can I help tonight?"
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "text": "Show me all the image files in this directory."
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "💭 *The user wants to see all image files in the current directory. Let me run a command to list them.*"
+          },
+          {
+            "functionCall": {
+              "id": "call_86e473034a444a958cf8a3dd",
+              "name": "run_shell_command",
+              "args": {
+                "command": "ls -la /home/atmandk/LowCal-dev/*.{jpg,jpeg,png,gif,webp,bmp,svg} 2>/dev/null || find /home/atmandk/LowCal-dev -maxdepth 1 -type f \\( -name \"*.jpg\" -o -name \"*.jpeg\" -o -name \"*.png\" -o -name \"*.gif\" -o -name \"*.webp\" -o -name \"*.bmp\" -o -name \"*.svg\" \\)",
+                "description": "List all image files in directory",
+                "is_background": false
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "user",
+        "parts": [
+          {
+            "functionResponse": {
+              "id": "call_86e473034a444a958cf8a3dd",
+              "name": "run_shell_command",
+              "response": {
+                "output": "Command: ls -la /home/atmandk/LowCal-dev/*.{jpg,jpeg,png,gif,webp,bmp,svg} 2>/dev/null || find /home/atmandk/LowCal-dev -maxdepth 1 -type f \\( -name \"*.jpg\" -o -name \"*.jpeg\" -o -name \"*.png\" -o -name \"*.gif\" -o -name \"*.webp\" -o -name \"*.bmp\" -o -name \"*.svg\" \\)\nDirectory: (root)\nOutput: -rw-rw-r-- 1 atmandk atmandk 1716389 Feb 17 15:23 /home/atmandk/LowCal-dev/bat.jpg\n-rw-rw-r-- 1 atmandk atmandk 3455122 Feb 17 15:23 /home/atmandk/LowCal-dev/bronc.jpg\n-rw-rw-r-- 1 atmandk atmandk   81251 Feb 17 21:09 /home/atmandk/LowCal-dev/browser-screenshot-2026-02-17T21-09-51-315Z.png\n-rw-rw-r-- 1 atmandk atmandk   81251 Feb 17 21:21 /home/atmandk/LowCal-dev/browser-screenshot-2026-02-17T21-21-12-522Z.png\n-rw-rw-r-- 1 atmandk atmandk   63576 Feb 17 21:39 /home/atmandk/LowCal-dev/browser-screenshot-2026-02-17T21-39-00-842Z.png\n/home/atmandk/LowCal-dev/browser-screenshot-2026-02-17T21-21-12-522Z.png\n/home/atmandk/LowCal-dev/bronc.jpg\n/home/atmandk/LowCal-dev/browser-screenshot-2026-02-17T21-39-00-842Z.png\n/home/atmandk/LowCal-dev/bat.jpg\n/home/atmandk/LowCal-dev/browser-screenshot-2026-02-17T21-09-51-315Z.png\nError: (none)\nExit Code: 0\nSignal: (none)\nBackground PIDs: (none)\nProcess Group PGID: 242805"
+              }
+            }
+          }
+        ]
+      },
+      {
+        "role": "model",
+        "parts": [
+          {
+            "text": "Here are the image files in `/home/atmandk/LowCal-dev`:\n\n| File | Size |\n|------|------|\n| `bat.jpg` | 1.7 MB |\n| `bronc.jpg` | 3.5 MB |\n| `browser-screenshot-2026-02-17T21-09-51-315Z.png` | 81 KB |\n| `browser-screenshot-2026-02-17T21-21-12-522Z.png` | 81 KB |\n| `browser-screenshot-2026-02-17T21-39-00-842Z.png` | 64 KB |\n\nWant me to display any of these?💭 *The user asked me to show all image files in the directory. I found 5 image files:*\n\n   *1. bat.jpg - 1.7 MB*\n\n   *2. bronc.jpg - 3.5 MB*\n\n   *3. browser-screenshot-2026-02-1721-09-51-315Z.png - 81 KB*\n\n   *4. browser-screenshot-2026-02-1721-21-12-522Z.png - 81 KB*\n\n   *5. browser-screenshot-2026-02-1721-39-00-842Z.png - 64 KB*\n\n   *I should present this information clearly to the user. I don't need to use the read_image tool unless the user specifically asks to see the contents of the images.*"
+          }
+        ]
+      }
+    ],
+    "promptTokenCount": 12818,
+    "currentContextTokenCount": 38641,
+    "model": "minimax/minimax-m2.5"
+  },
+  "sessionMeta": {
+    "mode": "tui",
+    "cwd": "/home/atmandk/LowCal-dev",
+    "capabilities": {
+      "observe": true,
+      "control": false,
+      "interact": true
+    }
+  }
+}

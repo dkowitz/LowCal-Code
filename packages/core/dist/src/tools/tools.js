@@ -246,6 +246,7 @@ export var Kind;
     Kind["Execute"] = "execute";
     Kind["Think"] = "think";
     Kind["Fetch"] = "fetch";
+    Kind["Browser"] = "browser";
     Kind["Other"] = "other";
 })(Kind || (Kind = {}));
 //# sourceMappingURL=tools.js.map

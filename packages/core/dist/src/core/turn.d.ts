@@ -173,6 +173,7 @@ export declare class Turn {
     private getVisibleResponseText;
     private getFunctionCallsFromResponse;
     private shouldEmitThought;
+    private getBestPreviousCandidateText;
     private normalizeThought;
     private shouldEmitTextDelta;
     private filterThinkingLineDuplicates;

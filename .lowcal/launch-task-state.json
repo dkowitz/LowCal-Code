@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": "2026-02-17T15:25:43.821Z",
+  "updated_at": "2026-02-17T19:13:12.284Z",
   "tasks": {
     "simple-test-task": {
       "task_id": "simple-test-task",
@@ -718,6 +718,165 @@
       "tab_name": "task:exit-plan-mode",
       "finished_at": "2026-02-17T15:25:25.822Z",
       "last_error": "Marked failed by launch task maintenance: no heartbeat for 60634s."
+    },
+    "Planner-Google-1771344572676": {
+      "task_id": "Planner-Google-1771344572676",
+      "status": "completed",
+      "created_at": "2026-02-17T16:09:32.716Z",
+      "started_at": "2026-02-17T16:09:32.896Z",
+      "finished_at": "2026-02-17T17:08:45.363Z",
+      "last_heartbeat": "2026-02-17T17:08:45.363Z",
+      "prompt_preview": "I want to implement Google (Gmail, Drive, Calendar, etc) into LowCal. You will research, plan, and produce a spec sheet on how to integrate Google into LowCal.",
+      "parent_session_id": "ff05e572-243b-4988-afa6-391b09ab23b8",
+      "source_session_id": "ff05e572-243b-4988-afa6-391b09ab23b8",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "model_requested": "qwen/qwen3-coder-next@q6_k",
+      "model_actual": "qwen/qwen3-coder-next@q6_k",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "auth_actual": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "Planner-Google",
+        "template_level": "user",
+        "action_type": "prompt",
+        "action_value": "I want to implement Google (Gmail, Drive, Calendar, etc) into LowCal. You will research, plan, and produce a spec sheet on how to integrate Google into LowCal.",
+        "execution_mode": "zellij_tab",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "lmstudio",
+          "baseUrl": "http://uby:1234/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "qwen/qwen3-coder-next@q6_k"
+        },
+        "run": {
+          "returnToSession": true
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/ff05e572-243b-4988-afa6-391b09ab23b8.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-Planner-Google-1771344572676-1771344572716.log",
+        "child_session_id": "headless-Planner-Google-1771344572676-1771344573292",
+        "message_timestamp": "2026-02-17T17:08:45.363Z"
+      },
+      "tab_name": "task:Planner-Google-1771344572676"
+    },
+    "Planner-playwright-1771344595388": {
+      "task_id": "Planner-playwright-1771344595388",
+      "status": "completed",
+      "created_at": "2026-02-17T16:09:55.450Z",
+      "started_at": "2026-02-17T16:09:55.604Z",
+      "finished_at": "2026-02-17T17:05:22.789Z",
+      "last_heartbeat": "2026-02-17T17:05:22.789Z",
+      "prompt_preview": "I want to add a browser control tool to LowCal.  You will research, plan, and produce a spec sheet to implement browser control using playwright.",
+      "parent_session_id": "ff05e572-243b-4988-afa6-391b09ab23b8",
+      "source_session_id": "ff05e572-243b-4988-afa6-391b09ab23b8",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "model_requested": "qwen/qwen3-coder-next@q6_k",
+      "model_actual": "qwen/qwen3-coder-next@q6_k",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "auth_actual": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "Planner-playwright",
+        "template_level": "user",
+        "action_type": "prompt",
+        "action_value": "I want to add a browser control tool to LowCal.  You will research, plan, and produce a spec sheet to implement browser control using playwright.",
+        "execution_mode": "zellij_tab",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "lmstudio",
+          "baseUrl": "http://uby:1234/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "qwen/qwen3-coder-next@q6_k"
+        },
+        "run": {
+          "returnToSession": true
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/ff05e572-243b-4988-afa6-391b09ab23b8.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-Planner-playwright-1771344595388-1771344595450.log",
+        "child_session_id": "headless-Planner-playwright-1771344595388-1771344596097",
+        "message_timestamp": "2026-02-17T17:05:22.789Z"
+      },
+      "tab_name": "task:Planner-playwright-1771344595388"
+    },
+    "Planner-Agent-Teams-1771354811917": {
+      "task_id": "Planner-Agent-Teams-1771354811917",
+      "status": "completed",
+      "created_at": "2026-02-17T19:00:11.958Z",
+      "started_at": "2026-02-17T19:00:12.087Z",
+      "finished_at": "2026-02-17T19:08:31.986Z",
+      "last_heartbeat": "2026-02-17T19:08:31.986Z",
+      "prompt_preview": "We currently use the mailbox system for tasks to return payloads to parent sessions.  I want to enhance the inter-session communication system so that sessions (tasks) can 'talk' to each other more freely.  Essentially I want to create an agent team framework, but built upon our existing Task, Session, and Orchestrator systems.  We should be able to define 'teams' of tasks, and those tasks should ",
+      "parent_session_id": "ccd8bd59-bf58-4045-9c83-2744c6f5fb17",
+      "source_session_id": "ccd8bd59-bf58-4045-9c83-2744c6f5fb17",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "model_requested": "qwen/qwen3-coder-next@q6_k",
+      "model_actual": "qwen/qwen3-coder-next@q6_k",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "auth_actual": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "Planner-Agent-Teams",
+        "template_level": "user",
+        "action_type": "prompt",
+        "action_value": "We currently use the mailbox system for tasks to return payloads to parent sessions.  I want to enhance the inter-session communication system so that sessions (tasks) can 'talk' to each other more freely.  Essentially I want to create an agent team framework, but built upon our existing Task, Session, and Orchestrator systems.  We should be able to define 'teams' of tasks, and those tasks should be able to freely communicate with each other, while also keeping their own individual contexts and histories in private.",
+        "execution_mode": "zellij_tab",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "lmstudio",
+          "baseUrl": "http://uby:1234/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "qwen/qwen3-coder-next@q6_k"
+        },
+        "run": {
+          "returnToSession": true
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/ccd8bd59-bf58-4045-9c83-2744c6f5fb17.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-Planner-Agent-Teams-1771354811917-1771354811958.log",
+        "child_session_id": "headless-Planner-Agent-Teams-1771354811917-1771354812518",
+        "message_timestamp": "2026-02-17T19:08:31.986Z"
+      },
+      "tab_name": "task:Planner-Agent-Teams-1771354811917"
     }
   }
 }

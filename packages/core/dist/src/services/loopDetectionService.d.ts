@@ -12,6 +12,8 @@ import type { Config } from "../config/config.js";
 export declare class LoopDetectionService {
     private static readonly THOUGHT_LOOP_THRESHOLD;
     private static readonly THOUGHT_LIKE_CONTENT_LOOP_THRESHOLD;
+    private static readonly THOUGHT_RECENT_WINDOW;
+    private static readonly THOUGHT_LIKE_RECENT_WINDOW;
     private static readonly MIN_SEMANTIC_TEXT_LENGTH;
     private static readonly MIN_SEMANTIC_TOKEN_COUNT;
     private static readonly THOUGHT_LIKE_CONTENT_PATTERN;
@@ -31,6 +33,8 @@ export declare class LoopDetectionService {
     private thoughtRepetitionCount;
     private lastThoughtLikeContentFingerprint;
     private thoughtLikeContentRepetitionCount;
+    private recentThoughtFingerprints;
+    private recentThoughtLikeFingerprints;
     constructor(config: Config);
     private getToolCallKey;
     /**
@@ -119,4 +123,5 @@ export declare class LoopDetectionService {
     private normalizeSemanticText;
     private tokenizeSemanticText;
     private isSemanticallySimilar;
+    private hasSemanticCluster;
 }
