@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AuthType, TaskTemplateManager, } from "@qwen-code/qwen-code-core";
+import { ApprovalMode, AuthType, TaskTemplateManager, } from "@qwen-code/qwen-code-core";
 import { Box, Text } from "ink";
 import { Colors } from "../colors.js";
 import { fetchGeminiModels, fetchOpenAICompatibleModels, getFilteredGeminiModels, getOpenAIAvailableModelFromEnv, } from "../models/availableModels.js";
@@ -74,6 +74,7 @@ function buildEmptyDraft(settings, currentModel) {
         actionType: "prompt",
         actionValue: "",
         executionMode: "default",
+        approvalMode: "inherit",
         authChoice: authChoiceFromSettings(settings),
         modelName: currentModel,
         returnToSession: "inherit",
@@ -107,6 +108,7 @@ function buildDraftFromTemplate(template, settings, currentModel) {
         actionType: template.action?.type ?? "prompt",
         actionValue: template.action?.value ?? template.prompt ?? "",
         executionMode: template.execution?.mode ?? "default",
+        approvalMode: "inherit",
         authChoice: toAuthChoice(template.auth),
         modelName: template.model?.name ?? currentModel,
         returnToSession: returnChoice,
@@ -472,6 +474,10 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             value: "execution_mode",
         },
         {
+            label: `Approval Mode: ${draft.approvalMode}`,
+            value: "approval_mode",
+        },
+        {
             label: `Auth: ${draft.authChoice}`,
             value: "auth",
         },
@@ -747,6 +753,17 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             ];
             const initialIndex = Math.max(0, items.findIndex((item) => item.value === draft.executionMode));
             return (_jsx(RadioButtonSelect, { items: items, initialIndex: initialIndex, onSelect: (value) => updateDraft({ executionMode: value }), isFocused: focusSection === "editor" }, `execution-${draft.executionMode}`));
+        }
+        if (selectedField === "approval_mode") {
+            const items = [
+                { label: "inherit (session approval)", value: "inherit" },
+                { label: "plan", value: ApprovalMode.PLAN },
+                { label: "default", value: ApprovalMode.DEFAULT },
+                { label: "auto-edit", value: ApprovalMode.AUTO_EDIT },
+                { label: "yolo", value: ApprovalMode.YOLO },
+            ];
+            const initialIndex = Math.max(0, items.findIndex((item) => item.value === draft.approvalMode));
+            return (_jsx(RadioButtonSelect, { items: items, initialIndex: initialIndex, onSelect: (value) => updateDraft({ approvalMode: value }), isFocused: focusSection === "editor" }, `approval-${draft.approvalMode}`));
         }
         if (selectedField === "auth") {
             const items = [

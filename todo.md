@@ -7,6 +7,4 @@
 	-https://blog.cloudflare.com/markdown-for-agents/
 	-https://markdown.new/
 	-https://r.jina.ai/
-
-- minimax thinking loop
--testing suite
+- testing suite

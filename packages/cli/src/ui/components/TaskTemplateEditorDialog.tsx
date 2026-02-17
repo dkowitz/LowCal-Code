@@ -7,6 +7,7 @@
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
+  ApprovalMode,
   AuthType,
   TaskTemplateManager,
   type TaskTemplate,
@@ -44,6 +45,7 @@ type TaskAuthChoice =
   | "gemini";
 type ReturnToSessionChoice = "inherit" | "true" | "false" | "current_session";
 type BooleanChoice = "inherit" | "true" | "false";
+type ApprovalModeChoice = "inherit" | ApprovalMode;
 type DeployMode = "launch" | "schedule";
 type EditableField =
   | "id"
@@ -53,6 +55,7 @@ type EditableField =
   | "action_type"
   | "action_value"
   | "execution_mode"
+  | "approval_mode"
   | "auth"
   | "model"
   | "run_return"
@@ -70,6 +73,7 @@ interface DraftTemplate {
   actionType: "prompt" | "slash_command";
   actionValue: string;
   executionMode: "default" | "headless" | "zellij_tab" | "in_process";
+  approvalMode: ApprovalModeChoice;
   authChoice: TaskAuthChoice;
   modelName: string;
   returnToSession: ReturnToSessionChoice;
@@ -159,6 +163,7 @@ function buildEmptyDraft(
     actionType: "prompt",
     actionValue: "",
     executionMode: "default",
+    approvalMode: "inherit",
     authChoice: authChoiceFromSettings(settings),
     modelName: currentModel,
     returnToSession: "inherit",
@@ -201,6 +206,7 @@ function buildDraftFromTemplate(
     actionType: template.action?.type ?? "prompt",
     actionValue: template.action?.value ?? template.prompt ?? "",
     executionMode: template.execution?.mode ?? "default",
+    approvalMode: "inherit",
     authChoice: toAuthChoice(template.auth),
     modelName: template.model?.name ?? currentModel,
     returnToSession: returnChoice,
@@ -678,6 +684,10 @@ export function TaskTemplateEditorDialog({
         value: "execution_mode",
       },
       {
+        label: `Approval Mode: ${draft.approvalMode}`,
+        value: "approval_mode",
+      },
+      {
         label: `Auth: ${draft.authChoice}`,
         value: "auth",
       },
@@ -1114,6 +1124,29 @@ export function TaskTemplateEditorDialog({
           onSelect={(value) => updateDraft({ executionMode: value })}
           isFocused={focusSection === "editor"}
           key={`execution-${draft.executionMode}`}
+        />
+      );
+    }
+
+    if (selectedField === "approval_mode") {
+      const items: Array<RadioSelectItem<ApprovalModeChoice>> = [
+        { label: "inherit (session approval)", value: "inherit" },
+        { label: "plan", value: ApprovalMode.PLAN },
+        { label: "default", value: ApprovalMode.DEFAULT },
+        { label: "auto-edit", value: ApprovalMode.AUTO_EDIT },
+        { label: "yolo", value: ApprovalMode.YOLO },
+      ];
+      const initialIndex = Math.max(
+        0,
+        items.findIndex((item) => item.value === draft.approvalMode),
+      );
+      return (
+        <RadioButtonSelect
+          items={items}
+          initialIndex={initialIndex}
+          onSelect={(value) => updateDraft({ approvalMode: value })}
+          isFocused={focusSection === "editor"}
+          key={`approval-${draft.approvalMode}`}
         />
       );
     }

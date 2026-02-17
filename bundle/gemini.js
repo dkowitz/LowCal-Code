@@ -94772,6 +94772,7 @@ var init_types4 = __esm({
       LoopType2["CONSECUTIVE_IDENTICAL_TOOL_CALLS"] = "consecutive_identical_tool_calls";
       LoopType2["CHANTING_IDENTICAL_SENTENCES"] = "chanting_identical_sentences";
       LoopType2["LLM_DETECTED_LOOP"] = "llm_detected_loop";
+      LoopType2["REPEATED_THOUGHTS"] = "repeated_thoughts";
     })(LoopType || (LoopType = {}));
     LoopDetectedEvent = class {
       "event.name";
@@ -145508,7 +145509,7 @@ var init_loopDetectionService = __esm({
     DEFAULT_LLM_CHECK_INTERVAL = 3;
     MIN_LLM_CHECK_INTERVAL = 5;
     MAX_LLM_CHECK_INTERVAL = 15;
-    LoopDetectionService = class {
+    LoopDetectionService = class _LoopDetectionService {
       config;
       promptId = "";
       // Tool call tracking
@@ -145549,6 +145550,9 @@ var init_loopDetectionService = __esm({
           case GeminiEventType.Content:
             this.loopDetected = this.checkContentLoop(event.value);
             break;
+          case GeminiEventType.Thought:
+            this.loopDetected = this.checkThoughtLoop(event.value);
+            break;
           default:
             break;
         }
@@ -145582,6 +145586,29 @@ var init_loopDetectionService = __esm({
         }
         if (this.toolCallRepetitionCount >= TOOL_CALL_LOOP_THRESHOLD) {
           logLoopDetected(this.config, new LoopDetectedEvent(LoopType.CONSECUTIVE_IDENTICAL_TOOL_CALLS, this.promptId));
+          return true;
+        }
+        return false;
+      }
+      // Track thought message repetitions for loop detection
+      lastThoughtSubject = null;
+      thoughtRepetitionCount = 0;
+      static THOUGHT_LOOP_THRESHOLD = 5;
+      /**
+       * Detects loops in thought messages from thinking models.
+       * Monitors for repeated thought subjects which indicate the model is stuck
+       * in a thinking loop.
+       */
+      checkThoughtLoop(thought) {
+        const subject = thought.subject;
+        if (this.lastThoughtSubject === subject) {
+          this.thoughtRepetitionCount++;
+        } else {
+          this.lastThoughtSubject = subject;
+          this.thoughtRepetitionCount = 1;
+        }
+        if (this.thoughtRepetitionCount >= _LoopDetectionService.THOUGHT_LOOP_THRESHOLD) {
+          logLoopDetected(this.config, new LoopDetectedEvent(LoopType.REPEATED_THOUGHTS, this.promptId));
           return true;
         }
         return false;
@@ -234161,8 +234188,8 @@ var init_rss = __esm({
       }
       async fetchFeed(url2) {
         let fetchUrl = url2;
-        if (url2.includes("reddit.com") && !url2.includes("old.reddit.com")) {
-          fetchUrl = url2.replace("reddit.com", "old.reddit.com");
+        if (url2.includes("www.reddit.com")) {
+          fetchUrl = url2.replace("www.reddit.com", "old.reddit.com");
           console.debug(`[RSSTool] Converted Reddit URL to old.reddit.com: ${fetchUrl}`);
         }
         const controller = new AbortController();
@@ -245069,9 +245096,11 @@ var init_checkpointService = __esm({
       /**
        * Saves a checkpoint with the given messages.
        * @param messages The conversation messages to save
+       * @param contextSnapshot Optional context snapshot for faithful conversation restoration
+       * @param sessionMeta Optional session metadata for session restoration
        * @returns The ID of the saved checkpoint
        */
-      saveCheckpoint(messages, contextSnapshot) {
+      saveCheckpoint(messages, contextSnapshot, sessionMeta) {
         this.ensureDirectoryExists();
         const checkpointId = `checkpoint-${Date.now()}-${randomUUID5().slice(0, 8)}`;
         const filePath = path56.join(this.getCheckpointsDir(), `${checkpointId}.json`);
@@ -245082,7 +245111,8 @@ var init_checkpointService = __esm({
           createdAt: (/* @__PURE__ */ new Date()).toISOString(),
           lastUpdated: (/* @__PURE__ */ new Date()).toISOString(),
           messages,
-          ...contextSnapshot ? { contextSnapshot } : {}
+          ...contextSnapshot ? { contextSnapshot } : {},
+          ...sessionMeta ? { sessionMeta } : {}
         };
         fs49.writeFileSync(filePath, JSON.stringify(checkpoint, null, 2), "utf-8");
         return checkpointId;
@@ -350590,9 +350620,19 @@ var useGeminiStream = (geminiClient, history, addItem, config, onDebugMessage, h
           return false;
         }
         const checkpointService = new CheckpointService(config);
+        const sessionMeta = {
+          mode: "tui",
+          cwd: process.cwd(),
+          capabilities: {
+            observe: true,
+            control: false,
+            interact: true
+          }
+        };
         const checkpointId = checkpointService.saveCheckpoint(
           checkpointMessages,
-          contextSnapshot
+          contextSnapshot,
+          sessionMeta
         );
         console.debug(
           `[Checkpoint] Saved checkpoint ${checkpointId} with ${checkpointMessages.length} messages`
@@ -354346,7 +354386,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "888cda89";
+var GIT_COMMIT_INFO = "048c1a7c";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -359402,10 +359442,28 @@ var resumeCommandGroup = {
       role: msg.type === "user" ? "user" : "model",
       parts: [{ text: msg.content }]
     }));
+    if (checkpoint.sessionMeta && config) {
+      try {
+        await startSessionRegistration({
+          id: checkpoint.sessionId,
+          mode: checkpoint.sessionMeta.mode,
+          cwd: checkpoint.sessionMeta.cwd,
+          details: checkpoint.sessionMeta.details,
+          capabilities: checkpoint.sessionMeta.capabilities
+        });
+        config.setSessionId(checkpoint.sessionId);
+      } catch (error) {
+        console.debug(
+          `[Resume] Failed to restore session registration:`,
+          error
+        );
+      }
+    }
     return {
       type: "load_history",
       history: uiHistory,
       clientHistory,
+      restoredSessionId: checkpoint.sessionId,
       ...typeof checkpoint.contextSnapshot?.promptTokenCount === "number" ? {
         restoredContext: {
           promptTokenCount: checkpoint.contextSnapshot.promptTokenCount
@@ -367959,6 +368017,7 @@ function buildEmptyDraft(settings, currentModel) {
     actionType: "prompt",
     actionValue: "",
     executionMode: "default",
+    approvalMode: "inherit",
     authChoice: authChoiceFromSettings(settings),
     modelName: currentModel,
     returnToSession: "inherit",
@@ -367982,6 +368041,7 @@ function buildDraftFromTemplate(template, settings, currentModel) {
     actionType: template.action?.type ?? "prompt",
     actionValue: template.action?.value ?? template.prompt ?? "",
     executionMode: template.execution?.mode ?? "default",
+    approvalMode: "inherit",
     authChoice: toAuthChoice(template.auth),
     modelName: template.model?.name ?? currentModel,
     returnToSession: returnChoice,
@@ -368274,10 +368334,26 @@ function TaskTemplateEditorDialog({
       }
     ];
     for (const model of models) {
+      const visionIndicator = model.isVision ? " [Vision]" : "";
+      let priceInfo = "";
+      if (model.inputPrice || model.outputPrice) {
+        const formatPrice = (priceStr) => {
+          if (!priceStr) return "?";
+          const pricePerToken = parseFloat(priceStr);
+          const pricePerMillion = pricePerToken * 1e6;
+          return pricePerMillion.toFixed(2);
+        };
+        const inputFormatted = formatPrice(model.inputPrice);
+        const outputFormatted = formatPrice(model.outputPrice);
+        priceInfo = ` ${inputFormatted}/${outputFormatted} per 1M tokens`;
+      }
       const maxCtx = model.maxContextLength ?? model.contextLength;
-      const ctxLabel = maxCtx ? ` (${maxCtx.toLocaleString()} ctx)` : "";
+      const ctxInfo = maxCtx ? ` (${maxCtx.toLocaleString()} ctx)` : "";
+      const quantInfo = model.quantization ? ` [${model.quantization}]` : "";
+      const typeInfo = model.modelType ? ` {${model.modelType}}` : "";
+      const capsInfo = model.capabilities && model.capabilities.length > 0 ? ` <${model.capabilities.join(", ")}>` : "";
       items.push({
-        label: `${model.label}${ctxLabel}`,
+        label: `${model.label}${visionIndicator}${typeInfo}${quantInfo}${capsInfo}${priceInfo}${ctxInfo}`,
         value: model.id
       });
     }
@@ -368325,6 +368401,10 @@ function TaskTemplateEditorDialog({
       {
         label: `Execution Mode: ${draft.executionMode}`,
         value: "execution_mode"
+      },
+      {
+        label: `Approval Mode: ${draft.approvalMode}`,
+        value: "approval_mode"
       },
       {
         label: `Auth: ${draft.authChoice}`,
@@ -368697,6 +368777,29 @@ function TaskTemplateEditorDialog({
           isFocused: focusSection === "editor"
         },
         `execution-${draft.executionMode}`
+      );
+    }
+    if (selectedField === "approval_mode") {
+      const items = [
+        { label: "inherit (session approval)", value: "inherit" },
+        { label: "plan", value: ApprovalMode.PLAN },
+        { label: "default", value: ApprovalMode.DEFAULT },
+        { label: "auto-edit", value: ApprovalMode.AUTO_EDIT },
+        { label: "yolo", value: ApprovalMode.YOLO }
+      ];
+      const initialIndex = Math.max(
+        0,
+        items.findIndex((item) => item.value === draft.approvalMode)
+      );
+      return /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
+        RadioButtonSelect,
+        {
+          items,
+          initialIndex,
+          onSelect: (value) => updateDraft({ approvalMode: value }),
+          isFocused: focusSection === "editor"
+        },
+        `approval-${draft.approvalMode}`
       );
     }
     if (selectedField === "auth") {
