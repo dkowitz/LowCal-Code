@@ -394,10 +394,35 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             },
         ];
         for (const model of models) {
+            // Vision indicator
+            const visionIndicator = model.isVision ? " [Vision]" : "";
+            // Format pricing: convert from per-token to per-million-tokens (primarily for OpenRouter)
+            let priceInfo = "";
+            if (model.inputPrice || model.outputPrice) {
+                const formatPrice = (priceStr) => {
+                    if (!priceStr)
+                        return "?";
+                    const pricePerToken = parseFloat(priceStr);
+                    const pricePerMillion = pricePerToken * 1_000_000;
+                    return pricePerMillion.toFixed(2);
+                };
+                const inputFormatted = formatPrice(model.inputPrice);
+                const outputFormatted = formatPrice(model.outputPrice);
+                priceInfo = ` ${inputFormatted}/${outputFormatted} per 1M tokens`;
+            }
+            // Format context length with comma separators when available
             const maxCtx = model.maxContextLength ?? model.contextLength;
-            const ctxLabel = maxCtx ? ` (${maxCtx.toLocaleString()} ctx)` : "";
+            const ctxInfo = maxCtx ? ` (${maxCtx.toLocaleString()} ctx)` : "";
+            // Quantization (primarily for LM Studio models)
+            const quantInfo = model.quantization ? ` [${model.quantization}]` : "";
+            // Model type (e.g., "llm", "vlm")
+            const typeInfo = model.modelType ? ` {${model.modelType}}` : "";
+            // Capabilities (e.g., "tool_use")
+            const capsInfo = model.capabilities && model.capabilities.length > 0
+                ? ` <${model.capabilities.join(", ")}>`
+                : "";
             items.push({
-                label: `${model.label}${ctxLabel}`,
+                label: `${model.label}${visionIndicator}${typeInfo}${quantInfo}${capsInfo}${priceInfo}${ctxInfo}`,
                 value: model.id,
             });
         }

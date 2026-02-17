@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": "2026-02-15T16:24:00.722Z",
+  "updated_at": "2026-02-16T22:34:50.843Z",
   "tasks": {
     "simple-test-task": {
       "task_id": "simple-test-task",
@@ -694,6 +694,28 @@
         "message_timestamp": "2026-02-15T16:23:47.012Z"
       },
       "tab_name": "task:vision-ocr-copy-1771172528942"
+    },
+    "exit-plan-mode": {
+      "task_id": "exit-plan-mode",
+      "status": "running",
+      "created_at": "2026-02-16T22:33:30.195Z",
+      "started_at": "2026-02-16T22:33:30.393Z",
+      "last_heartbeat": "2026-02-16T22:34:50.843Z",
+      "prompt_preview": "Exit plan mode",
+      "parent_session_id": "fc6ff9c5-7946-4e90-8fc4-815c0169f03d",
+      "source_session_id": "fc6ff9c5-7946-4e90-8fc4-815c0169f03d",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "runtime_profile": {
+        "action_type": "prompt",
+        "action_value": "Exit plan mode",
+        "execution_mode": "zellij_tab"
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/fc6ff9c5-7946-4e90-8fc4-815c0169f03d.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-exit-plan-mode-1771281210199.log"
+      },
+      "tab_name": "task:exit-plan-mode"
     }
   }
 }

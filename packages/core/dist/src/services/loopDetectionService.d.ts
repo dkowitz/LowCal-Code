@@ -42,6 +42,15 @@ export declare class LoopDetectionService {
      */
     turnStarted(signal: AbortSignal): Promise<boolean>;
     private checkToolCallLoop;
+    private lastThoughtSubject;
+    private thoughtRepetitionCount;
+    private static readonly THOUGHT_LOOP_THRESHOLD;
+    /**
+     * Detects loops in thought messages from thinking models.
+     * Monitors for repeated thought subjects which indicate the model is stuck
+     * in a thinking loop.
+     */
+    private checkThoughtLoop;
     /**
      * Detects content loops by analyzing streaming text for repetitive patterns.
      *

@@ -120,7 +120,8 @@ export declare class FlashFallbackEvent implements BaseTelemetryEvent {
 export declare enum LoopType {
     CONSECUTIVE_IDENTICAL_TOOL_CALLS = "consecutive_identical_tool_calls",
     CHANTING_IDENTICAL_SENTENCES = "chanting_identical_sentences",
-    LLM_DETECTED_LOOP = "llm_detected_loop"
+    LLM_DETECTED_LOOP = "llm_detected_loop",
+    REPEATED_THOUGHTS = "repeated_thoughts"
 }
 export declare class LoopDetectedEvent implements BaseTelemetryEvent {
     "event.name": "loop_detected";

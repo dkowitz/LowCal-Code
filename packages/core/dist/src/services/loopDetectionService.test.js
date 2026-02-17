@@ -92,8 +92,9 @@ describe("LoopDetectionService", () => {
             const toolCallEvent = createToolCallRequestEvent("testTool", {
                 param: "value",
             });
+            // Use an unhandled event type (not ToolCallRequest, Content, or Thought)
             const otherEvent = {
-                type: "thought",
+                type: "user_cancelled",
             };
             // Send events just below the threshold
             for (let i = 0; i < TOOL_CALL_LOOP_THRESHOLD - 1; i++) {

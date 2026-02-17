@@ -52454,6 +52454,7 @@ var init_types3 = __esm({
       LoopType2["CONSECUTIVE_IDENTICAL_TOOL_CALLS"] = "consecutive_identical_tool_calls";
       LoopType2["CHANTING_IDENTICAL_SENTENCES"] = "chanting_identical_sentences";
       LoopType2["LLM_DETECTED_LOOP"] = "llm_detected_loop";
+      LoopType2["REPEATED_THOUGHTS"] = "repeated_thoughts";
     })(LoopType || (LoopType = {}));
     (function(SlashCommandStatus2) {
       SlashCommandStatus2["SUCCESS"] = "success";

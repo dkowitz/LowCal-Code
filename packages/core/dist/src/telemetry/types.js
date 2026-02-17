@@ -224,6 +224,7 @@ export var LoopType;
     LoopType["CONSECUTIVE_IDENTICAL_TOOL_CALLS"] = "consecutive_identical_tool_calls";
     LoopType["CHANTING_IDENTICAL_SENTENCES"] = "chanting_identical_sentences";
     LoopType["LLM_DETECTED_LOOP"] = "llm_detected_loop";
+    LoopType["REPEATED_THOUGHTS"] = "repeated_thoughts";
 })(LoopType || (LoopType = {}));
 export class LoopDetectedEvent {
     "event.name";
