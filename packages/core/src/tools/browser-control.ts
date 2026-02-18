@@ -605,6 +605,9 @@ class BrowserControlToolInvocation extends BaseToolInvocation<
         case 'evaluate':
           result = await this.executeEvaluate(opParams);
           break;
+        case 'textContent':
+          result = await this.executeTextContent(opParams);
+          break;
         case 'evaluateHandle':
           result = await this.executeEvaluateHandle(opParams);
           break;
@@ -1176,6 +1179,44 @@ class BrowserControlToolInvocation extends BaseToolInvocation<
     };
   }
 
+  private async executeTextContent(params: Record<string, unknown>): Promise<BrowserControlResult> {
+    const session = this.getSession();
+    const page = session.getPage();
+    if (!page) {
+      throw new Error('No page available');
+    }
+
+    // Get selector (optional - defaults to body)
+    const selector = getParam<string>(params, 'selector') || 'body';
+    
+    // Get maxLength (optional - defaults to 10000)
+    const maxLength = getParam<number>(params, 'maxLength') || 10000;
+
+    // Use Playwright's locator which handles shadow DOM automatically
+    const locator = page.locator(selector);
+    
+    // Get text content (handles shadow DOM automatically)
+    let text = await locator.textContent();
+    
+    // Handle null/undefined
+    if (text === null || text === undefined) {
+      text = '';
+    }
+    
+    // Truncate if needed
+    const truncated = text.length > maxLength;
+    if (truncated) {
+      text = text.substring(0, maxLength) + '\n...[truncated]';
+    }
+
+    // Include actual text in llmContent for display
+    return {
+      llmContent: `Extracted text content from "${selector}" (${text.length} characters)${truncated ? ' (truncated)' : ''}:\n${text}`,
+      returnDisplay: `Text content from "${selector}" (${text.length} chars)${truncated ? ' - truncated' : ''}`,
+      value: text,
+    };
+  }
+
   private async executeScreenshot(params: Record<string, unknown>): Promise<BrowserControlResult> {
     const session = this.getSession();
     const page = session.getPage();
@@ -1520,6 +1561,7 @@ This tool provides comprehensive browser automation capabilities including:
 - Navigate to URLs and manage page history
 - Locate elements by role, text, label, placeholder, or test ID
 - Fill forms, click buttons, check checkboxes
+- Extract text content from elements (handles Shadow DOM automatically)
 - Execute JavaScript in the browser context
 - Capture screenshots of pages or specific elements
 - Manage cookies and browser contexts
@@ -1539,6 +1581,13 @@ Usage notes:
 - Navigation timeouts default to 30 seconds but can be configured
 - Use listPages/switchPage/closePage to manage multi-page flows
 - Tracing output paths are resolved relative to the workspace root
+
+**Best practices (from testing):**
+- **Text extraction works reliably**: Use the textContent operation to extract page content - it returns readable text from any element
+- **Prefer direct navigation over clicking**: Modern sites (Reddit, etc.) often have overlay elements that intercept pointer events, causing clicks to fail. Instead of clicking through to posts/articles, use goto to navigate directly to URLs
+- **Finding elements works, clicking is tricky**: getByRole and getByText can locate elements reliably, but actual clicks may fail due to overlay intercepts
+- **Watch for site blocking**: Many sites (NYTimes, etc.) use geo-blocking/CAPTCHA that blocks automated browsers entirely
+- **Workaround for click failures**: When click fails due to overlays, find the target URL in the page content and navigate directly with goto instead
 
 Example operations:
 1. Navigate: { "operation": "goto", "params": { "url": "https://example.com" } }
@@ -1584,6 +1633,7 @@ Security:
               'dblclick',
               'evaluate',
               'evaluateHandle',
+              'textContent',
               'screenshot',
               'close',
               'newPage',

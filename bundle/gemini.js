@@ -238980,6 +238980,9 @@ var init_browser_control = __esm({
             case "evaluate":
               result = await this.executeEvaluate(opParams);
               break;
+            case "textContent":
+              result = await this.executeTextContent(opParams);
+              break;
             case "evaluateHandle":
               result = await this.executeEvaluateHandle(opParams);
               break;
@@ -239443,6 +239446,30 @@ ${this.buildMetrics(operation, durationMs)}`;
           value: result.toString()
         };
       }
+      async executeTextContent(params) {
+        const session = this.getSession();
+        const page = session.getPage();
+        if (!page) {
+          throw new Error("No page available");
+        }
+        const selector = getParam(params, "selector") || "body";
+        const maxLength = getParam(params, "maxLength") || 1e4;
+        const locator = page.locator(selector);
+        let text = await locator.textContent();
+        if (text === null || text === void 0) {
+          text = "";
+        }
+        const truncated = text.length > maxLength;
+        if (truncated) {
+          text = text.substring(0, maxLength) + "\n...[truncated]";
+        }
+        return {
+          llmContent: `Extracted text content from "${selector}" (${text.length} characters)${truncated ? " (truncated)" : ""}`,
+          returnDisplay: `Text content (${text.length} chars)${truncated ? " - truncated to " + maxLength : ""}:
+${text}`,
+          value: text
+        };
+      }
       async executeScreenshot(params) {
         const session = this.getSession();
         const page = session.getPage();
@@ -239732,6 +239759,7 @@ This tool provides comprehensive browser automation capabilities including:
 - Navigate to URLs and manage page history
 - Locate elements by role, text, label, placeholder, or test ID
 - Fill forms, click buttons, check checkboxes
+- Extract text content from elements (handles Shadow DOM automatically)
 - Execute JavaScript in the browser context
 - Capture screenshots of pages or specific elements
 - Manage cookies and browser contexts
@@ -355847,7 +355875,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "c51c0759";
+var GIT_COMMIT_INFO = "488d254d";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();

@@ -416,6 +416,9 @@ class BrowserControlToolInvocation extends BaseToolInvocation {
                 case 'evaluate':
                     result = await this.executeEvaluate(opParams);
                     break;
+                case 'textContent':
+                    result = await this.executeTextContent(opParams);
+                    break;
                 case 'evaluateHandle':
                     result = await this.executeEvaluateHandle(opParams);
                     break;
@@ -878,6 +881,36 @@ class BrowserControlToolInvocation extends BaseToolInvocation {
             value: result.toString(),
         };
     }
+    async executeTextContent(params) {
+        const session = this.getSession();
+        const page = session.getPage();
+        if (!page) {
+            throw new Error('No page available');
+        }
+        // Get selector (optional - defaults to body)
+        const selector = getParam(params, 'selector') || 'body';
+        // Get maxLength (optional - defaults to 10000)
+        const maxLength = getParam(params, 'maxLength') || 10000;
+        // Use Playwright's locator which handles shadow DOM automatically
+        const locator = page.locator(selector);
+        // Get text content (handles shadow DOM automatically)
+        let text = await locator.textContent();
+        // Handle null/undefined
+        if (text === null || text === undefined) {
+            text = '';
+        }
+        // Truncate if needed
+        const truncated = text.length > maxLength;
+        if (truncated) {
+            text = text.substring(0, maxLength) + '\n...[truncated]';
+        }
+        // Include actual text in llmContent for display
+        return {
+            llmContent: `Extracted text content from "${selector}" (${text.length} characters)${truncated ? ' (truncated)' : ''}:\n${text}`,
+            returnDisplay: `Text content from "${selector}" (${text.length} chars)${truncated ? ' - truncated' : ''}`,
+            value: text,
+        };
+    }
     async executeScreenshot(params) {
         const session = this.getSession();
         const page = session.getPage();
@@ -1168,6 +1201,7 @@ This tool provides comprehensive browser automation capabilities including:
 - Navigate to URLs and manage page history
 - Locate elements by role, text, label, placeholder, or test ID
 - Fill forms, click buttons, check checkboxes
+- Extract text content from elements (handles Shadow DOM automatically)
 - Execute JavaScript in the browser context
 - Capture screenshots of pages or specific elements
 - Manage cookies and browser contexts
@@ -1230,6 +1264,7 @@ Security:
                         'dblclick',
                         'evaluate',
                         'evaluateHandle',
+                        'textContent',
                         'screenshot',
                         'close',
                         'newPage',

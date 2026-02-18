@@ -308,6 +308,13 @@ Usage notes:
 - Navigation timeouts default to 30 seconds but can be configured
 - Tracing outputs are written under the workspace root
 
+**Best practices (learned from testing):**
+- **Text extraction works reliably**: Use `textContent` operation with selector (e.g., "body") to extract page content - it returns readable text
+- **Prefer direct navigation over clicking**: Instead of clicking through overlays, use `goto` to navigate directly to post/article URLs - modern sites often have overlay elements that intercept clicks
+- **Finding elements works, clicking is tricky**: `getByRole` and `getByText` locate elements reliably, but clicking may fail due to overlay intercepts
+- **Watch for site blocking**: Many sites (NYTimes, etc.) use geo-blocking/CAPTCHA that blocks automated browsers - Reddit works well for text extraction
+- **Workaround for click failures**: When click fails due to overlays, find the target URL in the page and navigate directly with `goto`
+
 Example operations:
 1. Navigate: { "operation": "goto", "params": { "url": "https://example.com" } }
 2. Fill form: { "operation": "fill", "params": { "selector": "input[name='email']", "value": "user@example.com" } }
