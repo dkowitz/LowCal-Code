@@ -1,5 +1,5 @@
 - playwright
-- enhanced mailbox/messaging
+- enhanced mailbox/messaging, agent teams talk to each other
 - git tutorial
 - telegram/signal surface
 - Google integration - gmail, calendar, drive
@@ -8,3 +8,7 @@
 	-https://markdown.new/
 	-https://r.jina.ai/
 - testing suite
+- OpenAI direct response format still not working
+- speech/audio
+- orchestrator checks in on idle sessions after x minutes to see if they need coaxing
+- continual research on PI topics, cases, development

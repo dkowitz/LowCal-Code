@@ -13,6 +13,7 @@ export interface BrowserControlConfig {
     headless?: boolean;
     slowMo?: number;
     devtools?: boolean;
+    browser?: 'chromium' | 'firefox';
     navigationTimeout?: number;
     actionTimeout?: number;
     maxPagesPerSession?: number;
@@ -20,6 +21,25 @@ export interface BrowserControlConfig {
     allowedOrigins?: string[];
     blockExternal?: boolean;
     sandbox?: boolean;
+    userAgent?: string;
+    stealth?: boolean;
+    headed?: boolean;
+    disableWebGL?: boolean;
+    acceptCookies?: boolean;
+    proxy?: {
+        server: string;
+        username?: string;
+        password?: string;
+    };
+    viewport?: {
+        width: number;
+        height: number;
+    };
+    locale?: string;
+    timezoneId?: string;
+    deviceScaleFactor?: number;
+    hasTouch?: boolean;
+    permissions?: string[];
 }
 /**
  * Parameters for the BrowserControl tool

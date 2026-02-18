@@ -6,6 +6,7 @@
 
 import {
   chromium,
+  firefox,
   type Browser,
   type BrowserContext,
   type Page,
@@ -42,6 +43,7 @@ export interface BrowserControlConfig {
   headless?: boolean;
   slowMo?: number;
   devtools?: boolean;
+  browser?: 'chromium' | 'firefox';  // Browser type - Firefox uses Juggler protocol, harder to detect
   navigationTimeout?: number;
   actionTimeout?: number;
   maxPagesPerSession?: number;
@@ -49,6 +51,27 @@ export interface BrowserControlConfig {
   allowedOrigins?: string[];
   blockExternal?: boolean;
   sandbox?: boolean;
+  // Stealth/bot-detection avoidance options
+  userAgent?: string;
+  stealth?: boolean;
+  // Additional stealth options
+  headed?: boolean;  // Run browser in headed mode (non-headless) - much harder to detect
+  disableWebGL?: boolean;  // Disable WebGL to avoid canvas fingerprinting
+  acceptCookies?: boolean;  // Auto-accept cookies on first visit
+  proxy?: {
+    server: string;
+    username?: string;
+    password?: string;
+  };
+  viewport?: {
+    width: number;
+    height: number;
+  };
+  locale?: string;
+  timezoneId?: string;
+  deviceScaleFactor?: number;
+  hasTouch?: boolean;
+  permissions?: string[];
 }
 
 /**
@@ -126,13 +149,17 @@ class BrowserSession {
 
   constructor(config: BrowserControlConfig) {
     this.config = config;
-    this.browserType = chromium;
+    // Use Firefox if specified, otherwise Chromium
+    // Firefox uses Juggler protocol which is harder to detect
+    this.browserType = config.browser === 'firefox' ? firefox : chromium;
   }
 
   async ensureInitialized(): Promise<void> {
     if (!this.browser) {
+      // Use headed mode if stealth or headed is enabled
+      const useHeaded = this.config.headless === false || this.config.headed === true || this.config.stealth === true;
       const launchOptions: Parameters<BrowserType['launch']>[0] = {
-        headless: this.config.headless ?? true,
+        headless: !useHeaded,
         slowMo: this.config.slowMo ?? 0,
         args: [],
       };
@@ -142,11 +169,140 @@ class BrowserSession {
         launchOptions.args!.push('--no-sandbox', '--disable-setuid-sandbox', '--no-zygote');
       }
 
+      // Add stealth automation-disabling flags
+      if (this.config.stealth) {
+        launchOptions.args!.push(
+          '--disable-blink-features=AutomationControlled',
+          '--disable-features=IsolateOrigins,site-per-process',
+          '--disable-dev-shm-usage',
+          '--disable-extensions',
+          '--disable-background-networking',
+          '--disable-default-apps',
+          '--disable-sync',
+          '--disable-translate',
+          '--metrics-recording-only',
+          '--mute-audio',
+          '--no-first-run',
+          '--safebrowsing-disable-auto-update',
+          // Additional anti-fingerprinting
+          '--disable-web-security',
+          '--disable-features=TranslateUI',
+          '--disable-ipc-flooding-protection',
+          '--disable-renderer-backgrounding',
+          '--enable-features=NetworkService,NetworkServiceInProcess',
+        );
+        
+        // Disable WebGL if requested
+        if (this.config.disableWebGL) {
+          launchOptions.args!.push(
+            '--disable-webgl',
+            '--disable-gpu',
+            '--use-gl=swiftshader',
+          );
+        }
+      }
+
+      // Add proxy configuration
+      if (this.config.proxy) {
+        launchOptions.proxy = {
+          server: this.config.proxy.server,
+        };
+        if (this.config.proxy.username && this.config.proxy.password) {
+          launchOptions.proxy.username = this.config.proxy.username;
+          launchOptions.proxy.password = this.config.proxy.password;
+        }
+      }
+
       this.browser = await this.browserType.launch(launchOptions);
     }
 
     if (!this.context) {
-      this.context = await this.browser.newContext();
+      // Build context options with stealth defaults
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const contextOptions: any = {};
+
+      // User agent
+      if (this.config.userAgent) {
+        contextOptions.userAgent = this.config.userAgent;
+      }
+
+      // Viewport
+      if (this.config.viewport) {
+        contextOptions.viewport = this.config.viewport;
+      } else if (this.config.stealth) {
+        // Default to a common resolution when stealth is enabled
+        contextOptions.viewport = { width: 1920, height: 1080 };
+      }
+
+      // Locale
+      if (this.config.locale) {
+        contextOptions.locale = this.config.locale;
+      } else if (this.config.stealth) {
+        contextOptions.locale = 'en-US';
+      }
+
+      // Timezone
+      if (this.config.timezoneId) {
+        contextOptions.timezoneId = this.config.timezoneId;
+      } else if (this.config.stealth) {
+        contextOptions.timezoneId = 'America/New_York';
+      }
+
+      // Device scale factor
+      if (this.config.deviceScaleFactor !== undefined) {
+        contextOptions.deviceScaleFactor = this.config.deviceScaleFactor;
+      } else if (this.config.stealth) {
+        contextOptions.deviceScaleFactor = 1;
+      }
+
+      // Has touch
+      if (this.config.hasTouch !== undefined) {
+        contextOptions.hasTouch = this.config.hasTouch;
+      } else if (this.config.stealth) {
+        contextOptions.hasTouch = false;
+      }
+
+      // Permissions
+      if (this.config.permissions) {
+        contextOptions.permissions = this.config.permissions as any;
+      } else if (this.config.stealth) {
+        contextOptions.permissions = ['geolocation'];
+      }
+
+      this.context = await this.browser.newContext(contextOptions);
+
+      // Apply stealth init script to hide automation properties
+      if (this.config.stealth) {
+        await this.context.addInitScript({
+          content: `
+            // Hide navigator.webdriver
+            Object.defineProperty(navigator, 'webdriver', { get: () => undefined });
+            
+            // Fake plugins
+            Object.defineProperty(navigator, 'plugins', {
+              get: () => [1, 2, 3, 4, 5]
+            });
+            
+            // Fake languages
+            Object.defineProperty(navigator, 'languages', {
+              get: () => ['en-US', 'en']
+            });
+            
+            // Override chrome runtime
+            if (window.chrome) {
+              window.chrome.runtime = { id: '', uploadEnabled: true };
+            }
+            
+            // Add fake permissions query
+            const originalQuery = window.navigator.permissions.query;
+            window.navigator.permissions.query = (parameters) => (
+              parameters.name === 'notifications' ?
+                Promise.resolve({ state: Notification.permission } as PermissionStatus) :
+                originalQuery(parameters)
+            );
+          `
+        });
+      }
     }
 
     if (!this.page) {
@@ -282,10 +438,21 @@ class BrowserControlToolInvocation extends BaseToolInvocation<
   private getBrowserConfig(): BrowserControlConfig {
     // Try to get from Config, otherwise use defaults
     const browserControlConfig = (this.config as unknown as { browserControl?: BrowserControlConfig }).browserControl;
+    
+    // Realistic default user-agent for Chrome on Linux
+    const defaultUserAgent = 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/125.0.0.0 Safari/537.36';
+    // Firefox user-agent for Linux
+    const firefoxUserAgent = 'Mozilla/5.0 (X11; Linux x86_64; rv:135.0) Gecko/20100101 Firefox/135.0';
+    
+    // Use Firefox by default for stealth - it's harder to detect than Chromium
+    const useFirefox = browserControlConfig?.browser === 'firefox' || 
+                       (browserControlConfig?.stealth !== false && browserControlConfig?.browser !== 'chromium');
+    
     return {
-      headless: browserControlConfig?.headless ?? true,
+      headless: browserControlConfig?.headless ?? false,  // Headed mode by default for stealth
       slowMo: browserControlConfig?.slowMo ?? 0,
       devtools: browserControlConfig?.devtools ?? false,
+      browser: useFirefox ? 'firefox' : 'chromium',
       navigationTimeout: browserControlConfig?.navigationTimeout ?? DEFAULT_NAVIGATION_TIMEOUT,
       actionTimeout: browserControlConfig?.actionTimeout ?? DEFAULT_ACTION_TIMEOUT,
       maxPagesPerSession: browserControlConfig?.maxPagesPerSession ?? DEFAULT_MAX_PAGES,
@@ -293,6 +460,19 @@ class BrowserControlToolInvocation extends BaseToolInvocation<
       allowedOrigins: browserControlConfig?.allowedOrigins,
       blockExternal: browserControlConfig?.blockExternal ?? false,
       sandbox: browserControlConfig?.sandbox ?? true,
+      // Stealth options - enabled by default
+      stealth: browserControlConfig?.stealth ?? true,
+      headed: browserControlConfig?.headed ?? true,  // Run in headed mode by default
+      disableWebGL: browserControlConfig?.disableWebGL ?? false,
+      acceptCookies: browserControlConfig?.acceptCookies ?? true,
+      userAgent: browserControlConfig?.userAgent ?? (useFirefox ? firefoxUserAgent : defaultUserAgent),
+      proxy: browserControlConfig?.proxy,
+      viewport: browserControlConfig?.viewport,
+      locale: browserControlConfig?.locale,
+      timezoneId: browserControlConfig?.timezoneId,
+      deviceScaleFactor: browserControlConfig?.deviceScaleFactor,
+      hasTouch: browserControlConfig?.hasTouch,
+      permissions: browserControlConfig?.permissions,
     };
   }
 

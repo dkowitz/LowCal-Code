@@ -2,7 +2,7 @@
   "running": true,
   "pid": 192571,
   "started_at": "2026-02-17T18:26:34.992Z",
-  "last_tick": "2026-02-17T21:57:53.181Z",
+  "last_tick": "2026-02-18T11:47:58.237Z",
   "tick_interval_ms": 15000,
   "policy_ids": [
     "recover_stalled_session"
@@ -12,7 +12,7 @@
   "recoveries_attempted": 0,
   "recoveries_succeeded": 0,
   "last_action": {
-    "timestamp": "2026-02-17T20:56:52.497Z",
+    "timestamp": "2026-02-18T00:21:56.639Z",
     "session_id": "ff05e572-243b-4988-afa6-391b09ab23b8",
     "outcome": "sent_sigcont",
     "attempt": 1
