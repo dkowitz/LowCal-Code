@@ -1222,6 +1222,13 @@ Usage notes:
 - Use listPages/switchPage/closePage to manage multi-page flows
 - Tracing output paths are resolved relative to the workspace root
 
+**Best practices (from testing):**
+- **Text extraction works reliably**: Use the textContent operation to extract page content - it returns readable text from any element
+- **Prefer direct navigation over clicking**: Modern sites (Reddit, etc.) often have overlay elements that intercept pointer events, causing clicks to fail. Instead of clicking through to posts/articles, use goto to navigate directly to URLs
+- **Finding elements works, clicking is tricky**: getByRole and getByText can locate elements reliably, but actual clicks may fail due to overlay intercepts
+- **Watch for site blocking**: Many sites (NYTimes, etc.) use geo-blocking/CAPTCHA that blocks automated browsers entirely
+- **Workaround for click failures**: When click fails due to overlays, find the target URL in the page content and navigate directly with goto instead
+
 Example operations:
 1. Navigate: { "operation": "goto", "params": { "url": "https://example.com" } }
 2. Fill form: { "operation": "fill", "params": { "selector": "input[name='email']", "value": "user@example.com" } }

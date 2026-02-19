@@ -1,0 +1,11 @@
+{
+  "running": true,
+  "pid": 915113,
+  "session_id": "team-agent-research-team-Agent",
+  "team_id": "research-team",
+  "agent_id": "Agent",
+  "role": "Agent",
+  "queue_depth": 0,
+  "started_at": "2026-02-19T12:49:20.730Z",
+  "updated_at": "2026-02-19T12:49:20.740Z"
+}

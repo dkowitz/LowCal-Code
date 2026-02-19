@@ -114,6 +114,7 @@ describe("useSlashCommandProcessor", () => {
   const mockOpenModelSelectionDialog = vi.fn();
   const mockOpenResumeDialog = vi.fn();
   const mockOpenMailboxDialog = vi.fn();
+  const mockOpenTeamDialog = vi.fn();
   const mockSetQuittingMessages = vi.fn();
 
   const mockConfig = makeFakeConfig({});
@@ -133,6 +134,7 @@ describe("useSlashCommandProcessor", () => {
     mockOpenModelSelectionDialog.mockClear();
     mockOpenResumeDialog.mockClear();
     mockOpenMailboxDialog.mockClear();
+    mockOpenTeamDialog.mockClear();
     mockRemoveSession.mockClear();
   });
 
@@ -177,6 +179,7 @@ describe("useSlashCommandProcessor", () => {
         vi.fn(), // _showQuitConfirmation
         loggingController,
         mockOpenMailboxDialog,
+        mockOpenTeamDialog,
       ),
     );
 
@@ -462,6 +465,21 @@ describe("useSlashCommandProcessor", () => {
       });
 
       expect(mockOpenMailboxDialog).toHaveBeenCalled();
+    });
+
+    it('should handle "dialog: team" action', async () => {
+      const command = createTestCommand({
+        name: "teamcmd",
+        action: vi.fn().mockResolvedValue({ type: "dialog", dialog: "team" }),
+      });
+      const result = setupProcessorHook([command]);
+      await waitFor(() => expect(result.current.slashCommands).toHaveLength(1));
+
+      await act(async () => {
+        await result.current.handleSlashCommand("/teamcmd");
+      });
+
+      expect(mockOpenTeamDialog).toHaveBeenCalled();
     });
 
     it('should handle "load_history" action', async () => {

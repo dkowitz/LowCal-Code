@@ -24,6 +24,18 @@ import {
   type SessionHealthReason,
 } from "@qwen-code/qwen-code-core";
 import {
+  runTeamCoordinatorPolicy,
+  type TeamCoordinatorActionRecord,
+} from "./policies/team-coordinator.js";
+import {
+  resolvePlannerSettings,
+  resolveDecisionModeFromEnv,
+  runTeamPlanner,
+  type DecisionModeSource,
+  type OrchestratorDecisionMode,
+  type TeamPlannerSource,
+} from "./policies/team-planner.js";
+import {
   setSessionStatus,
   startSessionRegistration,
   stopSessionRegistration,
@@ -55,7 +67,8 @@ const MAX_ATTEMPTS = 3;
 const ATTEMPT_COOLDOWN_MS = 60 * 1000;
 const ATTEMPT_WINDOW_MS = 15 * 60 * 1000;
 
-const TARGET_MODES = new Set(["tui", "headless", "noninteractive"]);
+const TARGET_MODES = new Set(["tui", "headless", "noninteractive", "team_agent"]);
+const POLICY_IDS = ["recover_stalled_session", "coordinate_team"] as const;
 
 interface AttemptState {
   attempts: number;
@@ -68,6 +81,15 @@ interface TickMetrics {
   stalled_sessions: number;
   recoveries_attempted: number;
   recoveries_succeeded: number;
+  teams_scanned: number;
+  teams_updated: number;
+  team_messages_consumed: number;
+  team_delegations_dispatched: number;
+  team_delegations_completed: number;
+  team_delegations_failed: number;
+  team_agent_restart_attempts: number;
+  team_agent_restart_successes: number;
+  team_phase_transitions: number;
 }
 
 interface OrchestratorActionRecord {
@@ -102,26 +124,72 @@ export interface OrchestratorStatus {
   last_tick?: string;
   tick_interval_ms: number;
   policy_ids: string[];
+  decision_mode: OrchestratorDecisionMode;
+  decision_mode_source?: DecisionModeSource;
   sessions_scanned: number;
   stalled_sessions: number;
   recoveries_attempted: number;
   recoveries_succeeded: number;
+  teams_scanned: number;
+  teams_updated: number;
+  team_messages_consumed: number;
+  team_delegations_dispatched: number;
+  team_delegations_completed: number;
+  team_delegations_failed: number;
+  team_agent_restart_attempts: number;
+  team_agent_restart_successes: number;
+  team_phase_transitions: number;
   last_action?: {
     timestamp: string;
     session_id: string;
     outcome: string;
     attempt: number;
   };
+  last_team_action?: {
+    timestamp: string;
+    team_id: string;
+    phase: string;
+    outcome: string;
+    consumed_messages: number;
+  };
+  planner_last_snapshot_at?: string;
+  planner_last_plan_at?: string;
+  planner_last_summary?: string;
+  planner_last_confidence?: number;
+  planner_last_fallback_reason?: string;
+  planner_last_hint_teams?: number;
+  planner_source?: TeamPlannerSource;
 }
 
 const attemptStateBySession = new Map<string, AttemptState>();
 let daemonStartedAt = new Date().toISOString();
 let lastActionRecord: OrchestratorActionRecord | undefined;
+let lastTeamActionRecord: TeamCoordinatorActionRecord | undefined;
+let cachedDecisionMode: OrchestratorDecisionMode = resolveDecisionModeFromEnv();
+let cachedDecisionModeSource: DecisionModeSource = "default";
+let cachedPlannerState: {
+  snapshot_at?: string;
+  plan_at?: string;
+  summary?: string;
+  confidence?: number;
+  fallback_reason?: string;
+  hint_teams?: number;
+  source?: TeamPlannerSource;
+} = {};
 let cachedMetrics: TickMetrics = {
   sessions_scanned: 0,
   stalled_sessions: 0,
   recoveries_attempted: 0,
   recoveries_succeeded: 0,
+  teams_scanned: 0,
+  teams_updated: 0,
+  team_messages_consumed: 0,
+  team_delegations_dispatched: 0,
+  team_delegations_completed: 0,
+  team_delegations_failed: 0,
+  team_agent_restart_attempts: 0,
+  team_agent_restart_successes: 0,
+  team_phase_transitions: 0,
 };
 
 interface SessionApiEnvelope {
@@ -334,6 +402,7 @@ export async function isOrchestratorRunning(): Promise<boolean> {
 
 export async function getOrchestratorStatus(): Promise<OrchestratorStatus> {
   const running = await isOrchestratorRunning();
+  const plannerSettings = await resolvePlannerSettings(process.cwd());
   let persisted: Partial<OrchestratorStatus> = {};
   if (running) {
     try {
@@ -352,7 +421,12 @@ export async function getOrchestratorStatus(): Promise<OrchestratorStatus> {
     started_at: persisted.started_at ?? (running ? daemonStartedAt : undefined),
     last_tick: persisted.last_tick,
     tick_interval_ms: TICK_INTERVAL_MS,
-    policy_ids: ["recover_stalled_session"],
+    policy_ids: [...POLICY_IDS],
+    decision_mode: persisted.decision_mode ??
+      (running ? cachedDecisionMode : plannerSettings.decisionMode),
+    decision_mode_source:
+      persisted.decision_mode_source ??
+      (running ? cachedDecisionModeSource : plannerSettings.decisionModeSource),
     sessions_scanned:
       persisted.sessions_scanned ?? cachedMetrics.sessions_scanned,
     stalled_sessions:
@@ -361,6 +435,26 @@ export async function getOrchestratorStatus(): Promise<OrchestratorStatus> {
       persisted.recoveries_attempted ?? cachedMetrics.recoveries_attempted,
     recoveries_succeeded:
       persisted.recoveries_succeeded ?? cachedMetrics.recoveries_succeeded,
+    teams_scanned: persisted.teams_scanned ?? cachedMetrics.teams_scanned,
+    teams_updated: persisted.teams_updated ?? cachedMetrics.teams_updated,
+    team_messages_consumed:
+      persisted.team_messages_consumed ?? cachedMetrics.team_messages_consumed,
+    team_delegations_dispatched:
+      persisted.team_delegations_dispatched ??
+      cachedMetrics.team_delegations_dispatched,
+    team_delegations_completed:
+      persisted.team_delegations_completed ??
+      cachedMetrics.team_delegations_completed,
+    team_delegations_failed:
+      persisted.team_delegations_failed ?? cachedMetrics.team_delegations_failed,
+    team_agent_restart_attempts:
+      persisted.team_agent_restart_attempts ??
+      cachedMetrics.team_agent_restart_attempts,
+    team_agent_restart_successes:
+      persisted.team_agent_restart_successes ??
+      cachedMetrics.team_agent_restart_successes,
+    team_phase_transitions:
+      persisted.team_phase_transitions ?? cachedMetrics.team_phase_transitions,
     last_action:
       persisted.last_action ??
       (lastActionRecord
@@ -371,6 +465,30 @@ export async function getOrchestratorStatus(): Promise<OrchestratorStatus> {
             attempt: lastActionRecord.attempt,
           }
         : undefined),
+    last_team_action:
+      persisted.last_team_action ??
+      (lastTeamActionRecord
+        ? {
+            timestamp: lastTeamActionRecord.timestamp,
+            team_id: lastTeamActionRecord.team_id,
+            phase: lastTeamActionRecord.phase,
+            outcome: lastTeamActionRecord.outcome,
+            consumed_messages: lastTeamActionRecord.consumed_messages,
+          }
+        : undefined),
+    planner_last_snapshot_at:
+      persisted.planner_last_snapshot_at ?? cachedPlannerState.snapshot_at,
+    planner_last_plan_at:
+      persisted.planner_last_plan_at ?? cachedPlannerState.plan_at,
+    planner_last_summary:
+      persisted.planner_last_summary ?? cachedPlannerState.summary,
+    planner_last_confidence:
+      persisted.planner_last_confidence ?? cachedPlannerState.confidence,
+    planner_last_fallback_reason:
+      persisted.planner_last_fallback_reason ?? cachedPlannerState.fallback_reason,
+    planner_last_hint_teams:
+      persisted.planner_last_hint_teams ?? cachedPlannerState.hint_teams,
+    planner_source: persisted.planner_source ?? cachedPlannerState.source,
   };
 }
 
@@ -847,7 +965,7 @@ async function evaluateSession(
   }
 }
 
-async function tick(): Promise<void> {
+async function tick(orchestratorSessionId: string): Promise<void> {
   const nowMs = Date.now();
   const sessions = await listSessions();
   const targets = sessions.filter((session) => session.mode !== "orchestrator");
@@ -857,10 +975,62 @@ async function tick(): Promise<void> {
     stalled_sessions: 0,
     recoveries_attempted: 0,
     recoveries_succeeded: 0,
+    teams_scanned: 0,
+    teams_updated: 0,
+    team_messages_consumed: 0,
+    team_delegations_dispatched: 0,
+    team_delegations_completed: 0,
+    team_delegations_failed: 0,
+    team_agent_restart_attempts: 0,
+    team_agent_restart_successes: 0,
+    team_phase_transitions: 0,
   };
 
   for (const session of targets) {
     await evaluateSession(session, nowMs, metrics);
+  }
+
+  const plannerSettings = await resolvePlannerSettings(process.cwd());
+  cachedDecisionMode = plannerSettings.decisionMode;
+  cachedDecisionModeSource = plannerSettings.decisionModeSource;
+  const plannerResult = await runTeamPlanner({
+    baseDir: process.cwd(),
+    decisionMode: cachedDecisionMode,
+    assistedPlanFile: plannerSettings.assistedPlanFile,
+  });
+  cachedPlannerState = {
+    snapshot_at: plannerResult.snapshot.generated_at,
+    plan_at:
+      plannerResult.summary || plannerResult.fallback_reason
+        ? new Date().toISOString()
+        : undefined,
+    summary: plannerResult.summary,
+    confidence: plannerResult.confidence,
+    fallback_reason: plannerResult.fallback_reason,
+    hint_teams: Object.keys(plannerResult.hints.by_team_id).length,
+    source: plannerResult.source,
+  };
+
+  const teamCoordinator = await runTeamCoordinatorPolicy({
+    baseDir: process.cwd(),
+    orchestratorSessionId,
+    plannerHints: plannerResult.hints,
+  });
+  metrics.teams_scanned = teamCoordinator.metrics.teams_scanned;
+  metrics.teams_updated = teamCoordinator.metrics.teams_updated;
+  metrics.team_messages_consumed = teamCoordinator.metrics.messages_consumed;
+  metrics.team_delegations_dispatched =
+    teamCoordinator.metrics.delegations_dispatched;
+  metrics.team_delegations_completed =
+    teamCoordinator.metrics.delegations_completed;
+  metrics.team_delegations_failed = teamCoordinator.metrics.delegations_failed;
+  metrics.team_agent_restart_attempts =
+    teamCoordinator.metrics.agent_restart_attempts;
+  metrics.team_agent_restart_successes =
+    teamCoordinator.metrics.agent_restart_successes;
+  metrics.team_phase_transitions = teamCoordinator.metrics.phase_transitions;
+  if (teamCoordinator.last_action) {
+    lastTeamActionRecord = teamCoordinator.last_action;
   }
 
   cachedMetrics = metrics;
@@ -870,11 +1040,22 @@ async function tick(): Promise<void> {
     started_at: daemonStartedAt,
     last_tick: new Date(nowMs).toISOString(),
     tick_interval_ms: TICK_INTERVAL_MS,
-    policy_ids: ["recover_stalled_session"],
+    policy_ids: [...POLICY_IDS],
+    decision_mode: cachedDecisionMode,
+    decision_mode_source: cachedDecisionModeSource,
     sessions_scanned: metrics.sessions_scanned,
     stalled_sessions: metrics.stalled_sessions,
     recoveries_attempted: metrics.recoveries_attempted,
     recoveries_succeeded: metrics.recoveries_succeeded,
+    teams_scanned: metrics.teams_scanned,
+    teams_updated: metrics.teams_updated,
+    team_messages_consumed: metrics.team_messages_consumed,
+    team_delegations_dispatched: metrics.team_delegations_dispatched,
+    team_delegations_completed: metrics.team_delegations_completed,
+    team_delegations_failed: metrics.team_delegations_failed,
+    team_agent_restart_attempts: metrics.team_agent_restart_attempts,
+    team_agent_restart_successes: metrics.team_agent_restart_successes,
+    team_phase_transitions: metrics.team_phase_transitions,
     last_action: lastActionRecord
       ? {
           timestamp: lastActionRecord.timestamp,
@@ -883,6 +1064,22 @@ async function tick(): Promise<void> {
           attempt: lastActionRecord.attempt,
         }
       : undefined,
+    last_team_action: lastTeamActionRecord
+      ? {
+          timestamp: lastTeamActionRecord.timestamp,
+          team_id: lastTeamActionRecord.team_id,
+          phase: lastTeamActionRecord.phase,
+          outcome: lastTeamActionRecord.outcome,
+          consumed_messages: lastTeamActionRecord.consumed_messages,
+        }
+      : undefined,
+    planner_last_snapshot_at: cachedPlannerState.snapshot_at,
+    planner_last_plan_at: cachedPlannerState.plan_at,
+    planner_last_summary: cachedPlannerState.summary,
+    planner_last_confidence: cachedPlannerState.confidence,
+    planner_last_fallback_reason: cachedPlannerState.fallback_reason,
+    planner_last_hint_teams: cachedPlannerState.hint_teams,
+    planner_source: cachedPlannerState.source,
   };
 
   await updateSessionDetails({
@@ -890,7 +1087,25 @@ async function tick(): Promise<void> {
     stalled_sessions: metrics.stalled_sessions,
     recoveries_attempted: metrics.recoveries_attempted,
     recoveries_succeeded: metrics.recoveries_succeeded,
-    policy_ids: ["recover_stalled_session"],
+    teams_scanned: metrics.teams_scanned,
+    teams_updated: metrics.teams_updated,
+    team_messages_consumed: metrics.team_messages_consumed,
+    team_delegations_dispatched: metrics.team_delegations_dispatched,
+    team_delegations_completed: metrics.team_delegations_completed,
+    team_delegations_failed: metrics.team_delegations_failed,
+    team_agent_restart_attempts: metrics.team_agent_restart_attempts,
+    team_agent_restart_successes: metrics.team_agent_restart_successes,
+    team_phase_transitions: metrics.team_phase_transitions,
+    policy_ids: [...POLICY_IDS],
+    decision_mode: cachedDecisionMode,
+    decision_mode_source: cachedDecisionModeSource,
+    planner_last_snapshot_at: cachedPlannerState.snapshot_at,
+    planner_last_plan_at: cachedPlannerState.plan_at,
+    planner_last_summary: cachedPlannerState.summary,
+    planner_last_confidence: cachedPlannerState.confidence,
+    planner_last_hint_teams: cachedPlannerState.hint_teams,
+    planner_source: cachedPlannerState.source,
+    planner_last_fallback_reason: cachedPlannerState.fallback_reason,
   });
   await setSessionStatus(metrics.stalled_sessions > 0 ? "working" : "idle");
   await saveDaemonStatus(status);
@@ -915,15 +1130,18 @@ function registerShutdownHandlers(): void {
 
 async function runDaemon(): Promise<void> {
   daemonStartedAt = new Date().toISOString();
+  const orchestratorSessionId = `orchestrator-${process.pid}`;
   registerShutdownHandlers();
 
   await startSessionRegistration({
-    id: `orchestrator-${process.pid}`,
+    id: orchestratorSessionId,
     mode: "orchestrator",
     status: "idle",
     details: {
-      policy_ids: ["recover_stalled_session"],
+      policy_ids: [...POLICY_IDS],
       tick_interval_ms: TICK_INTERVAL_MS,
+      decision_mode: cachedDecisionMode,
+      decision_mode_source: cachedDecisionModeSource,
     },
     capabilities: {
       observe: true,
@@ -935,9 +1153,9 @@ async function runDaemon(): Promise<void> {
   await fs.mkdir(path.dirname(ORCHESTRATOR_PID_FILE), { recursive: true });
   await fs.writeFile(ORCHESTRATOR_PID_FILE, String(process.pid), "utf-8");
 
-  await tick();
+  await tick(orchestratorSessionId);
   setInterval(() => {
-    tick().catch((error) => {
+    tick(orchestratorSessionId).catch((error) => {
       console.error("[Orchestrator] tick failed:", error);
     });
   }, TICK_INTERVAL_MS);

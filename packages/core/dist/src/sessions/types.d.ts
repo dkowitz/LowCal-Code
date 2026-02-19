@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 export type SessionStatus = "idle" | "working";
-export type SessionMode = "tui" | "headless" | "noninteractive" | "scheduler" | "orchestrator";
+export type SessionMode = "tui" | "headless" | "noninteractive" | "scheduler" | "orchestrator" | "team_agent";
 export type SessionHealthState = "ok" | "degraded" | "stalled" | "loop_fault" | "error" | "recovering" | "offline";
 export type SessionHealthReason = "heartbeat_stale" | "loop_detected" | "no_progress_timeout" | "repeated_tool_failure" | "scheduler_flap" | "unhandled_error" | "manual_pause" | "loop_remediation_attempt" | "error_remediation_attempt";
 export interface SessionHealthSnapshot {

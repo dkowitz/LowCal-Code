@@ -1,35 +1,35 @@
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |    3.95 |    58.04 |   10.31 |    3.95 |                   
+All files          |    1.44 |       25 |   16.47 |    1.44 |                   
  src               |       0 |        0 |       0 |       0 |                   
-  index.ts         |       0 |        0 |       0 |       0 | 1-138             
+  index.ts         |       0 |        0 |       0 |       0 | 1-140             
  src/__mocks__/fs  |       0 |        0 |       0 |       0 |                   
   promises.ts      |       0 |        0 |       0 |       0 | 1-48              
- src/code_assist   |   11.05 |      100 |       0 |   11.05 |                   
-  codeAssist.ts    |   18.51 |      100 |       0 |   18.51 | 15-37             
-  converter.ts     |    4.43 |      100 |       0 |    4.43 | ...32-158,161-283 
-  oauth2.ts        |     9.3 |      100 |       0 |     9.3 | ...88-452,456-457 
-  server.ts        |   11.97 |      100 |       0 |   11.97 | ...75-216,219-222 
-  setup.ts         |    6.66 |      100 |       0 |    6.66 | 19-22,35-124      
-  types.ts         |     100 |      100 |     100 |     100 |                   
- src/config        |     4.6 |        0 |       0 |     4.6 |                   
-  config.ts        |       0 |        0 |       0 |       0 | 1-1180            
-  models.ts        |     100 |      100 |     100 |     100 |                   
-  storage.ts       |   38.82 |      100 |       0 |   38.82 | ...08-109,112-113 
- src/core          |    7.79 |    85.03 |   24.56 |    7.79 |                   
+ src/code_assist   |       0 |        0 |       0 |       0 |                   
+  codeAssist.ts    |       0 |        0 |       0 |       0 | 1-37              
+  converter.ts     |       0 |        0 |       0 |       0 | 1-283             
+  oauth2.ts        |       0 |        0 |       0 |       0 | 1-457             
+  server.ts        |       0 |        0 |       0 |       0 | 1-223             
+  setup.ts         |       0 |        0 |       0 |       0 | 1-124             
+  types.ts         |       0 |        0 |       0 |       0 | 1-160             
+ src/config        |       0 |        0 |       0 |       0 |                   
+  config.ts        |       0 |        0 |       0 |       0 | 1-1182            
+  models.ts        |       0 |        0 |       0 |       0 | 1-14              
+  storage.ts       |       0 |        0 |       0 |       0 | 1-114             
+ src/core          |       0 |     8.33 |    8.33 |       0 |                   
   client.ts        |       0 |        0 |       0 |       0 | 1-1659            
-  ...tGenerator.ts |    9.27 |      100 |       0 |    9.27 | 81-253            
+  ...tGenerator.ts |       0 |        0 |       0 |       0 | 1-253             
   ...lScheduler.ts |       0 |        0 |       0 |       0 | 1-1309            
-  geminiChat.ts    |    6.01 |      100 |       0 |    6.01 | ...1025,1028-1029 
+  geminiChat.ts    |       0 |        0 |       0 |       0 | 1-1029            
   geminiRequest.ts |       0 |        0 |       0 |       0 | 1-19              
   logger.ts        |       0 |        0 |       0 |       0 | 1-459             
-  ...tGenerator.ts |    11.4 |      100 |       0 |    11.4 | ...87-188,191-194 
+  ...tGenerator.ts |       0 |        0 |       0 |       0 | 1-195             
   ...olExecutor.ts |       0 |        0 |       0 |       0 | 1-34              
   prompts.ts       |       0 |        0 |       0 |       0 | 1-1387            
   ...getManager.ts |       0 |        0 |       0 |       0 | 1-97              
   tokenLimits.ts   |       0 |      100 |     100 |       0 | 11-282            
-  turn.ts          |   94.22 |    89.74 |     100 |   94.22 | ...77-578,595-596 
+  turn.ts          |       0 |        0 |       0 |       0 | 1-602             
  ...ntentGenerator |       0 |     12.5 |    12.5 |       0 |                   
   constants.ts     |       0 |        0 |       0 |       0 | 1-2               
   converter.ts     |       0 |        0 |       0 |       0 | 1-1974            
@@ -76,13 +76,13 @@ All files          |    3.95 |    58.04 |   10.31 |    3.95 |
   index.ts         |       0 |        0 |       0 |       0 | 1-27              
   job-store.ts     |       0 |        0 |       0 |       0 | 1-730             
   types.ts         |       0 |        0 |       0 |       0 | 1-258             
- src/services      |   34.66 |    88.48 |   81.81 |   34.66 |                   
+ src/services      |       0 |        0 |       0 |       0 |                   
   ...ingService.ts |       0 |        0 |       0 |       0 | 1-439             
   ...intService.ts |       0 |        0 |       0 |       0 | 1-291             
   ...eryService.ts |       0 |        0 |       0 |       0 | 1-112             
   ...temService.ts |       0 |        0 |       0 |       0 | 1-41              
   gitService.ts    |       0 |        0 |       0 |       0 | 1-132             
-  ...ionService.ts |   97.04 |    92.48 |     100 |   97.04 | ...62-663,717-718 
+  ...ionService.ts |       0 |        0 |       0 |       0 | 1-722             
   ...ionService.ts |       0 |        0 |       0 |       0 | 1-462             
  src/sessions      |       0 |        0 |       0 |       0 |                   
   index.ts         |       0 |        0 |       0 |       0 | 1-9               
@@ -95,7 +95,7 @@ All files          |    3.95 |    58.04 |   10.31 |    3.95 |
   ...ent-events.ts |       0 |        0 |       0 |       0 | 1-130             
   ...gent-hooks.ts |       0 |        0 |       0 |       0 | 1                 
   ...nt-manager.ts |       0 |        0 |       0 |       0 | 1-785             
-  ...statistics.ts |    6.56 |      100 |       0 |    6.56 | ...83-193,196-249 
+  ...statistics.ts |    6.56 |        0 |       0 |    6.56 | ...83-193,196-249 
   subagent.ts      |       0 |        0 |       0 |       0 | 1-895             
   types.ts         |       0 |        0 |       0 |       0 | 1-192             
   validation.ts    |       0 |        0 |       0 |       0 | 1-354             
@@ -104,31 +104,35 @@ All files          |    3.95 |    58.04 |   10.31 |    3.95 |
   manager.ts       |       0 |        0 |       0 |       0 | 1-405             
   runtime.ts       |       0 |        0 |       0 |       0 | 1-160             
   types.ts         |       0 |        0 |       0 |       0 | 1                 
- src/telemetry     |   15.84 |    64.28 |     3.8 |   15.84 |                   
-  constants.ts     |     100 |      100 |     100 |     100 |                   
-  ...-exporters.ts |   33.82 |        0 |       0 |   33.82 | ...84,87-88,91-92 
+ src/team          |   82.94 |    76.74 |    87.5 |   82.94 |                   
+  index.ts         |       0 |        0 |       0 |       0 | 1-8               
+  state-store.ts   |   84.93 |    80.48 |     100 |   84.93 | ...,95,99,195-196 
+  types.ts         |       0 |        0 |       0 |       0 | 1                 
+ src/telemetry     |       0 |        0 |       0 |       0 |                   
+  constants.ts     |       0 |        0 |       0 |       0 | 1-41              
+  ...-exporters.ts |       0 |        0 |       0 |       0 | 1-93              
   index.ts         |       0 |        0 |       0 |       0 | 1-56              
   ...t.circular.ts |       0 |        0 |       0 |       0 | 1-111             
   ...t.circular.ts |       0 |        0 |       0 |       0 | 1-128             
-  loggers.ts       |    5.92 |      100 |       0 |    5.92 | ...61-597,600-625 
-  metrics.ts       |    12.9 |      100 |       0 |    12.9 | ...85-287,293-311 
-  sdk.ts           |   16.43 |      100 |       0 |   16.43 | 47-73,76-193      
+  loggers.ts       |       0 |        0 |       0 |       0 | 1-625             
+  metrics.ts       |       0 |        0 |       0 |       0 | 1-311             
+  sdk.ts           |       0 |        0 |       0 |       0 | 1-193             
   ...etry-utils.ts |       0 |        0 |       0 |       0 | 1-17              
-  ...l-decision.ts |   33.33 |      100 |       0 |   33.33 | 17-32             
-  types.ts         |   21.81 |      100 |       5 |   21.81 | ...42-547,550-565 
-  uiTelemetry.ts   |   24.69 |      100 |   15.38 |   24.69 | ...03-210,213-263 
+  ...l-decision.ts |       0 |        0 |       0 |       0 | 1-32              
+  types.ts         |       0 |        0 |       0 |       0 | 1-566             
+  uiTelemetry.ts   |       0 |        0 |       0 |       0 | 1-266             
  ...learcut-logger |       0 |        0 |       0 |       0 |                   
   ...cut-logger.ts |       0 |        0 |       0 |       0 | 1-1027            
   ...tadata-key.ts |       0 |        0 |       0 |       0 | 1-351             
- ...ry/qwen-logger |    9.91 |    66.66 |    5.12 |    9.91 |                   
+ ...ry/qwen-logger |       0 |       50 |      50 |       0 |                   
   event-types.ts   |       0 |        0 |       0 |       0 |                   
-  qwen-logger.ts   |    9.91 |       50 |    2.63 |    9.91 | ...33-738,742-788 
+  qwen-logger.ts   |       0 |        0 |       0 |       0 | 1-795             
  src/test-utils    |       0 |        0 |       0 |       0 |                   
   config.ts        |       0 |        0 |       0 |       0 | 1-37              
   ...aceContext.ts |       0 |        0 |       0 |       0 | 1-33              
   tools.ts         |       0 |        0 |       0 |       0 | 1-169             
- src/tools         |    0.76 |    11.42 |    1.63 |    0.76 |                   
-  ...er-control.ts |       0 |        0 |       0 |       0 | 1-1437            
+ src/tools         |    2.97 |       38 |   32.81 |    2.97 |                   
+  ...er-control.ts |       0 |        0 |       0 |       0 | 1-1667            
   diffOptions.ts   |       0 |        0 |       0 |       0 | 1-65              
   edit.ts          |       0 |        0 |       0 |       0 | 1-700             
   exitPlanMode.ts  |       0 |        0 |       0 |       0 | 1-191             
@@ -139,7 +143,7 @@ All files          |    3.95 |    58.04 |   10.31 |    3.95 |
   ls.ts            |       0 |        0 |       0 |       0 | 1-349             
   ...nt-manager.ts |       0 |        0 |       0 |       0 | 1-115             
   mcp-client.ts    |       0 |        0 |       0 |       0 | 1-1390            
-  mcp-tool.ts      |    7.84 |      100 |    6.25 |    7.84 | ...26-356,361-370 
+  mcp-tool.ts      |       0 |        0 |       0 |       0 | 1-370             
   memoryTool.ts    |       0 |        0 |       0 |       0 | 1-575             
   ...iable-tool.ts |       0 |        0 |       0 |       0 | 1-175             
   read-file.ts     |       0 |        0 |       0 |       0 | 1-209             
@@ -154,15 +158,16 @@ All files          |    3.95 |    58.04 |   10.31 |    3.95 |
   shell.ts         |       0 |        0 |       0 |       0 | 1-496             
   task-template.ts |       0 |        0 |       0 |       0 | 1-317             
   task.ts          |       0 |        0 |       0 |       0 | 1-562             
+  ...management.ts |   58.68 |       50 |   78.94 |   58.68 | ...15,517-562,565 
   todoWrite.ts     |       0 |        0 |       0 |       0 | 1-454             
   tool-error.ts    |     100 |      100 |     100 |     100 |                   
-  tool-names.ts    |       0 |        0 |       0 |       0 | 1-34              
+  tool-names.ts    |     100 |      100 |     100 |     100 |                   
   tool-registry.ts |       0 |        0 |       0 |       0 | 1-476             
-  tools.ts         |   21.73 |      100 |       0 |   21.73 | ...17-324,357-434 
+  tools.ts         |   34.78 |       80 |   42.85 |   34.78 | ...17-324,357-434 
   web-fetch.ts     |       0 |        0 |       0 |       0 | 1-322             
   web-search.ts    |       0 |        0 |       0 |       0 | 1-220             
   write-file.ts    |       0 |        0 |       0 |       0 | 1-481             
- src/utils         |    2.53 |     8.16 |    4.21 |    2.53 |                   
+ src/utils         |     0.7 |        5 |    5.08 |     0.7 |                   
   LruCache.ts      |       0 |        0 |       0 |       0 | 1-41              
   bfsFileSearch.ts |       0 |        0 |       0 |       0 | 1-124             
   browser.ts       |       0 |        0 |       0 |       0 | 1-56              
@@ -170,8 +175,8 @@ All files          |    3.95 |    58.04 |   10.31 |    3.95 |
   editor.ts        |       0 |        0 |       0 |       0 | 1-229             
   ...entContext.ts |       0 |        0 |       0 |       0 | 1-109             
   errorParsing.ts  |       0 |        0 |       0 |       0 | 1-166             
-  ...rReporting.ts |    5.12 |      100 |       0 |    5.12 | 32-163            
-  errors.ts        |   43.24 |       50 |      20 |   43.24 | ...0,76-92,96-102 
+  ...rReporting.ts |       0 |        0 |       0 |       0 | 1-163             
+  errors.ts        |       0 |        0 |       0 |       0 | 1-102             
   fetch.ts         |       0 |        0 |       0 |       0 | 1-57              
   fileUtils.ts     |       0 |        0 |       0 |       0 | 1-543             
   formatters.ts    |       0 |        0 |       0 |       0 | 1-16              
@@ -181,12 +186,12 @@ All files          |    3.95 |    58.04 |   10.31 |    3.95 |
   ...noreParser.ts |       0 |        0 |       0 |       0 | 1-75              
   gitUtils.ts      |       0 |        0 |       0 |       0 | 1-73              
   ...rePatterns.ts |       0 |        0 |       0 |       0 | 1-276             
-  ...ionManager.ts |   26.19 |      100 |       0 |   26.19 | ...26,29-33,41-57 
+  ...ionManager.ts |       0 |        0 |       0 |       0 | 1-58              
   ...-detection.ts |       0 |        0 |       0 |       0 | 1-103             
   ...yDiscovery.ts |       0 |        0 |       0 |       0 | 1-407             
   ...tProcessor.ts |       0 |        0 |       0 |       0 | 1-418             
-  ...Inspectors.ts |   23.07 |      100 |       0 |   23.07 | 10-15,18-23       
-  networkErrors.ts |      40 |      100 |       0 |      40 | 9-14              
+  ...Inspectors.ts |       0 |        0 |       0 |       0 | 1-23              
+  networkErrors.ts |       0 |        0 |       0 |       0 | 1-15              
   ...kerChecker.ts |       0 |        0 |       0 |       0 | 1-133             
   openaiLogger.ts  |       0 |        0 |       0 |       0 | 1-135             
   partUtils.ts     |       0 |        0 |       0 |       0 | 1-200             
@@ -194,13 +199,13 @@ All files          |    3.95 |    58.04 |   10.31 |    3.95 |
   paths.ts         |       0 |        0 |       0 |       0 | 1-193             
   pdfUtils.ts      |       0 |        0 |       0 |       0 | 1-163             
   ...ectSummary.ts |       0 |        0 |       0 |       0 | 1-119             
-  ...rTelemetry.ts |    5.35 |      100 |       0 |    5.35 | 13-44,50-72       
-  ...rDetection.ts |    6.48 |      100 |       0 |    6.48 | ...04-126,130-167 
+  ...rTelemetry.ts |       0 |        0 |       0 |       0 | 1-72              
+  ...rDetection.ts |       0 |        0 |       0 |       0 | 1-167             
   ...truncation.ts |       0 |        0 |       0 |       0 | 1-351             
-  retry.ts         |     9.9 |      100 |       0 |     9.9 | 79-343,351-466    
+  retry.ts         |       0 |        0 |       0 |       0 | 1-466             
   safeJsonParse.ts |       0 |        0 |       0 |       0 | 1-45              
-  ...nStringify.ts |      10 |      100 |       0 |      10 | 15-32             
-  ...aValidator.ts |   27.02 |        0 |       0 |   27.02 | 26-46,49-58       
+  ...nStringify.ts |       0 |        0 |       0 |       0 | 1-32              
+  ...aValidator.ts |   45.94 |    14.28 |      50 |   45.94 | ...31,36-44,49-58 
   ...r-launcher.ts |       0 |        0 |       0 |       0 | 1-191             
   session.ts       |       0 |        0 |       0 |       0 | 1-9               
   shell-utils.ts   |       0 |        0 |       0 |       0 | 1-488             
@@ -213,7 +218,7 @@ All files          |    3.95 |    58.04 |   10.31 |    3.95 |
   tool-utils.ts    |       0 |        0 |       0 |       0 | 1-76              
   ...validation.ts |       0 |        0 |       0 |       0 | 1-171             
   ...tCompactor.ts |       0 |        0 |       0 |       0 | 1-245             
-  ...untManager.ts |   13.33 |      100 |       0 |   13.33 | ...18-125,128-139 
+  ...untManager.ts |       0 |        0 |       0 |       0 | 1-140             
   ...aceContext.ts |       0 |        0 |       0 |       0 | 1-199             
   yaml-parser.ts   |       0 |        0 |       0 |       0 | 1-192             
  ...ils/filesearch |       0 |        0 |       0 |       0 |                   

@@ -11,7 +11,8 @@ export type SessionMode =
   | "headless"
   | "noninteractive"
   | "scheduler"
-  | "orchestrator";
+  | "orchestrator"
+  | "team_agent";
 
 export type SessionHealthState =
   | "ok"

@@ -30,5 +30,6 @@ export const ToolNames = {
   LAUNCH_TASK: "launch_task",
   TASK_TEMPLATE: "task_template",
   READ_SESSION_MESSAGES: "read_session_messages",
+  TEAM_MANAGEMENT: "team_management",
   RSS: "rss",
 } as const;

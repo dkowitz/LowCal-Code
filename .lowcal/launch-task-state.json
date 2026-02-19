@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "updated_at": "2026-02-17T19:13:12.284Z",
+  "updated_at": "2026-02-19T10:25:16.193Z",
   "tasks": {
     "simple-test-task": {
       "task_id": "simple-test-task",
@@ -877,6 +877,190 @@
         "message_timestamp": "2026-02-17T19:08:31.986Z"
       },
       "tab_name": "task:Planner-Agent-Teams-1771354811917"
+    },
+    "team-research-team-Agent1-1771455523724": {
+      "task_id": "team-research-team-Agent1-1771455523724",
+      "status": "failed",
+      "created_at": "2026-02-18T22:58:43.740Z",
+      "started_at": "2026-02-18T22:58:44.350Z",
+      "finished_at": "2026-02-18T22:59:13.579Z",
+      "last_heartbeat": "2026-02-18T22:59:13.579Z",
+      "prompt_preview": "You are the expert web researcher.  Using the web_search, searxng_search, web_fetch, rss, and browser_control tools, along with shell commands like curl, you scour the internet and find even the most obscure information.  If it's on the net, you can find it.",
+      "parent_session_id": "orchestrator-568098",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "model_requested": "openai/gpt-oss-20b@mxfp4",
+      "model_actual": "openai/gpt-oss-20b@mxfp4",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "auth_actual": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "Agent1",
+        "template_level": "user",
+        "action_type": "prompt",
+        "action_value": "You are the expert web researcher.  Using the web_search, searxng_search, web_fetch, rss, and browser_control tools, along with shell commands like curl, you scour the internet and find even the most obscure information.  If it's on the net, you can find it.",
+        "execution_mode": "zellij_tab",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "lmstudio",
+          "baseUrl": "http://uby:1234/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "openai/gpt-oss-20b@mxfp4"
+        },
+        "run": {
+          "returnToSession": true
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/orchestrator-568098.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-team-research-team-Agent1-1771455523724-1771455523740.log",
+        "child_session_id": "headless-team-research-team-Agent1-1771455523724-1771455525256",
+        "message_timestamp": "2026-02-18T22:59:13.579Z"
+      },
+      "tab_name": "task:team-research-team-Agent1-1771455523724",
+      "last_error": "Cannot truncate prompt with n_keep (9941) >= n_ctx (4096)"
+    },
+    "team-research-team-Agent-1771455523723": {
+      "task_id": "team-research-team-Agent-1771455523723",
+      "status": "failed",
+      "created_at": "2026-02-18T22:58:43.840Z",
+      "started_at": "2026-02-18T22:58:44.351Z",
+      "last_heartbeat": "2026-02-19T10:24:44.691Z",
+      "prompt_preview": "undefined",
+      "parent_session_id": "orchestrator-568098",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "model_requested": "qwen/qwen3-coder-next@q8_0",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "Agent",
+        "template_level": "user",
+        "action_type": "prompt",
+        "action_value": "undefined",
+        "execution_mode": "zellij_tab",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "lmstudio",
+          "baseUrl": "http://uby:1234/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "qwen/qwen3-coder-next@q8_0"
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/orchestrator-568098.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-team-research-team-Agent-1771455523723-1771455523840.log"
+      },
+      "tab_name": "task:team-research-team-Agent-1771455523723",
+      "finished_at": "2026-02-19T10:24:44.691Z",
+      "last_error": "Marked failed by launch task maintenance: no heartbeat for 41070s."
+    },
+    "team-research-team-Agent-1771496684688": {
+      "task_id": "team-research-team-Agent-1771496684688",
+      "status": "running",
+      "created_at": "2026-02-19T10:24:44.692Z",
+      "started_at": "2026-02-19T10:24:44.851Z",
+      "last_heartbeat": "2026-02-19T10:25:16.192Z",
+      "prompt_preview": "undefined",
+      "parent_session_id": "orchestrator-568098",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "headless",
+      "model_requested": "qwen/qwen3-coder-next@q8_0",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "Agent",
+        "template_level": "user",
+        "action_type": "prompt",
+        "action_value": "undefined",
+        "execution_mode": "zellij_tab",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "lmstudio",
+          "baseUrl": "http://uby:1234/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "qwen/qwen3-coder-next@q8_0"
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/orchestrator-568098.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-team-research-team-Agent-1771496684688-1771496684692.log"
+      },
+      "tab_name": "task:team-research-team-Agent-1771496684688"
+    },
+    "team-research-team-Agent1-1771496684689": {
+      "task_id": "team-research-team-Agent1-1771496684689",
+      "status": "running",
+      "created_at": "2026-02-19T10:24:44.792Z",
+      "started_at": "2026-02-19T10:24:44.933Z",
+      "last_heartbeat": "2026-02-19T10:24:44.933Z",
+      "prompt_preview": "You are the expert web researcher.  Using the web_search, searxng_search, web_fetch, rss, and browser_control tools, along with shell commands like curl, you scour the internet and find even the most obscure information.  If it's on the net, you can find it.",
+      "parent_session_id": "orchestrator-568098",
+      "template_id": "Agent1",
+      "template_level": "user",
+      "execution_mode_requested": "zellij_tab",
+      "execution_mode_actual": "zellij_tab",
+      "model_requested": "openai/gpt-oss-20b@mxfp4",
+      "model_actual": "openai/gpt-oss-20b@mxfp4",
+      "auth_requested": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "auth_actual": {
+        "selectedType": "openai",
+        "providerId": "lmstudio",
+        "baseUrl": "http://uby:1234/v1",
+        "apiKeyEnvVar": "OPENAI_API_KEY"
+      },
+      "runtime_profile": {
+        "template_id": "Agent1",
+        "template_level": "user",
+        "action_type": "prompt",
+        "action_value": "You are the expert web researcher.  Using the web_search, searxng_search, web_fetch, rss, and browser_control tools, along with shell commands like curl, you scour the internet and find even the most obscure information.  If it's on the net, you can find it.",
+        "execution_mode": "zellij_tab",
+        "auth": {
+          "selectedType": "openai",
+          "providerId": "lmstudio",
+          "baseUrl": "http://uby:1234/v1",
+          "apiKeyEnvVar": "OPENAI_API_KEY"
+        },
+        "model": {
+          "name": "openai/gpt-oss-20b@mxfp4"
+        },
+        "run": {
+          "returnToSession": true
+        }
+      },
+      "result_ref": {
+        "mailbox_path": "/home/atmandk/LowCal-dev/.lowcal/session-messages/orchestrator-568098.jsonl",
+        "output_path": "/home/atmandk/LowCal-dev/.lowcal/logs/launch-team-research-team-Agent1-1771496684689-1771496684792.log"
+      },
+      "tab_name": "task:team-research-team-Agent1-1771496684689"
     }
   }
 }

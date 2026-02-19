@@ -23,7 +23,7 @@ function quoteForShell(value) {
 /**
  * Hook to define and process slash commands (e.g., /help, /clear).
  */
-export const useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTasksDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openResumeDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController, openMailboxDialog) => {
+export const useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTasksDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openResumeDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController, openMailboxDialog, openTeamDialog) => {
     const session = useSessionStats();
     const [commands, setCommands] = useState([]);
     const [reloadTrigger, setReloadTrigger] = useState(0);
@@ -347,6 +347,9 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
                                         return { type: "handled" };
                                     case "tasks":
                                         openTasksDialog();
+                                        return { type: "handled" };
+                                    case "team":
+                                        openTeamDialog?.();
                                         return { type: "handled" };
                                     case "mailbox":
                                         openMailboxDialog?.();

@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { aboutCommand } from "../ui/commands/aboutCommand.js";
-import { agentsCommand } from "../ui/commands/agentsCommand.js";
 import { approvalModeCommand } from "../ui/commands/approvalModeCommand.js";
 import { authCommand } from "../ui/commands/authCommand.js";
 import { bugCommand } from "../ui/commands/bugCommand.js";
@@ -29,6 +28,7 @@ import { mcpCommand } from "../ui/commands/mcpCommand.js";
 import { mailboxCommand } from "../ui/commands/mailboxCommand.js";
 import { memoryCommand } from "../ui/commands/memoryCommand.js";
 import { modelCommand } from "../ui/commands/modelCommand.js";
+import { orchestratorCommand } from "../ui/commands/orchestratorCommand.js";
 import { loggingCommand } from "../ui/commands/loggingCommand.js";
 import { privacyCommand } from "../ui/commands/privacyCommand.js";
 import { quitCommand, quitConfirmCommand } from "../ui/commands/quitCommand.js";
@@ -38,6 +38,7 @@ import { statsCommand } from "../ui/commands/statsCommand.js";
 import { summaryCommand } from "../ui/commands/summaryCommand.js";
 import { terminalSetupCommand } from "../ui/commands/terminalSetupCommand.js";
 import { tasksCommand } from "../ui/commands/tasksCommand.js";
+import { teamCommand } from "../ui/commands/teamCommand.js";
 import { themeCommand } from "../ui/commands/themeCommand.js";
 import { tokensCommand } from "../ui/commands/tokensCommand.js";
 import { toolsCommand } from "../ui/commands/toolsCommand.js";
@@ -66,7 +67,6 @@ export class BuiltinCommandLoader {
     async loadCommands(_signal) {
         const allDefinitions = [
             aboutCommand,
-            agentsCommand,
             approvalModeCommand,
             authCommand,
             bugCommand,
@@ -87,6 +87,7 @@ export class BuiltinCommandLoader {
             mailboxCommand,
             memoryCommand,
             modelCommand,
+            orchestratorCommand,
             loggingCommand,
             privacyCommand,
             quitCommand,
@@ -97,6 +98,7 @@ export class BuiltinCommandLoader {
             summaryCommand,
             terminalSetupCommand,
             tasksCommand,
+            teamCommand,
             themeCommand,
             tokensCommand,
             toolsCommand,

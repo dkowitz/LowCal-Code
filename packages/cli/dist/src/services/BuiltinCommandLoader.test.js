@@ -73,6 +73,7 @@ vi.mock("../ui/commands/terminalSetupCommand.js", () => ({
     terminalSetupCommand: {},
 }));
 vi.mock("../ui/commands/tasksCommand.js", () => ({ tasksCommand: {} }));
+vi.mock("../ui/commands/teamCommand.js", () => ({ teamCommand: {} }));
 vi.mock("../ui/commands/themeCommand.js", () => ({ themeCommand: {} }));
 vi.mock("../ui/commands/tokensCommand.js", () => ({ tokensCommand: {} }));
 vi.mock("../ui/commands/toolsCommand.js", () => ({ toolsCommand: {} }));
@@ -92,6 +93,9 @@ vi.mock("../ui/commands/modelCommand.js", () => ({
         description: "Model command",
         kind: "BUILT_IN",
     },
+}));
+vi.mock("../ui/commands/orchestratorCommand.js", () => ({
+    orchestratorCommand: {},
 }));
 describe("BuiltinCommandLoader", () => {
     let mockConfig;

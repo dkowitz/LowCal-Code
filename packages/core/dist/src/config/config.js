@@ -36,6 +36,7 @@ import { WebSearchTool } from "../tools/web-search.js";
 import { ScheduleTaskTool } from "../tools/schedule-task.js";
 import { LaunchTaskTool } from "../tools/launch-task.js";
 import { ReadSessionMessagesTool } from "../tools/read-session-messages.js";
+import { TeamManagementTool } from "../tools/team-management.js";
 import { TaskTemplateTool } from "../tools/task-template.js";
 import { SearXNGSearchTool } from "../tools/searxng-search.js";
 import { WriteFileTool } from "../tools/write-file.js";
@@ -849,6 +850,7 @@ export class Config {
         registerCoreTool(LaunchTaskTool, this);
         registerCoreTool(TaskTemplateTool, this);
         registerCoreTool(ReadSessionMessagesTool, this);
+        registerCoreTool(TeamManagementTool, this);
         // Register browser control tool
         registerCoreTool(BrowserControlTool, this);
         await registry.discoverAllTools();

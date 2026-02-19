@@ -77,6 +77,7 @@ export const useSlashCommandProcessor = (
   _showQuitConfirmation: () => void,
   loggingController: SessionLoggingController,
   openMailboxDialog?: () => void,
+  openTeamDialog?: () => void,
 ) => {
   const session = useSessionStats();
   const [commands, setCommands] = useState<readonly SlashCommand[]>([]);
@@ -459,6 +460,9 @@ export const useSlashCommandProcessor = (
                       return { type: "handled" };
                     case "tasks":
                       openTasksDialog();
+                      return { type: "handled" };
+                    case "team":
+                      openTeamDialog?.();
                       return { type: "handled" };
                     case "mailbox":
                       openMailboxDialog?.();

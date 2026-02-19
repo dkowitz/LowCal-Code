@@ -29,5 +29,6 @@ export declare const ToolNames: {
     readonly LAUNCH_TASK: "launch_task";
     readonly TASK_TEMPLATE: "task_template";
     readonly READ_SESSION_MESSAGES: "read_session_messages";
+    readonly TEAM_MANAGEMENT: "team_management";
     readonly RSS: "rss";
 };

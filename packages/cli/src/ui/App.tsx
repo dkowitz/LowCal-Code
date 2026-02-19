@@ -62,6 +62,7 @@ import {
   type TaskTemplateDeployRequest,
 } from "./components/TaskTemplateEditorDialog.js";
 import { MailboxDialog } from "./components/MailboxDialog.js";
+import { TeamManagementDialog } from "./components/TeamManagementDialog.js";
 import {
   ResumeDialog,
   type ResumeCheckpointOption,
@@ -488,6 +489,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   >([]);
   const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] =
     useState(false);
+  const [isTeamManagementDialogOpen, setIsTeamManagementDialogOpen] =
+    useState(false);
   const [isMailboxDialogOpen, setIsMailboxDialogOpen] = useState(false);
 
   // Invalidate cached model lists when auth/provider changes so discovery is
@@ -570,6 +573,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const closeTaskTemplateDialog = useCallback(() => {
     setIsTaskTemplateDialogOpen(false);
+  }, []);
+
+  const openTeamManagementDialog = useCallback(() => {
+    setIsTeamManagementDialogOpen(true);
+  }, []);
+
+  const closeTeamManagementDialog = useCallback(() => {
+    setIsTeamManagementDialogOpen(false);
   }, []);
 
   const openMailboxDialog = useCallback(() => {
@@ -1316,6 +1327,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     showQuitConfirmation,
     sessionLoggingController,
     openMailboxDialog,
+    openTeamManagementDialog,
   );
 
   const handleResumeCheckpointSelect = useCallback(
@@ -1326,6 +1338,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     [closeResumeDialog, handleSlashCommand],
   );
   const submitQueryForDeployRef = useRef<(query: string) => Promise<void>>(
+    async () => {},
+  );
+  const submitQueryForTeamDialogRef = useRef<(query: string) => Promise<void>>(
     async () => {},
   );
 
@@ -1377,6 +1392,14 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     },
     [addItem],
   );
+
+  const handleTeamDialogSubmit = useCallback(async (query: string) => {
+    const trimmed = query.trim();
+    if (!trimmed) {
+      return;
+    }
+    await submitQueryForTeamDialogRef.current(trimmed);
+  }, []);
 
   const handleMailboxPayloadUse = useCallback(async (payload: string) => {
     const text = payload.trim();
@@ -1454,6 +1477,9 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   submitQueryForDeployRef.current = async (query: string) => {
     await submitQuery(query);
   };
+  submitQueryForTeamDialogRef.current = async (query: string) => {
+    await submitQuery(query);
+  };
 
   const pendingHistoryItems = useMemo(
     () =>
@@ -1488,6 +1514,8 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     exitEditorDialog,
     isTaskTemplateDialogOpen,
     closeTaskTemplateDialog,
+    isTeamDialogOpen: isTeamManagementDialogOpen,
+    closeTeamDialog: closeTeamManagementDialog,
     isMailboxDialogOpen,
     closeMailboxDialog,
     isSettingsDialogOpen,
@@ -1875,6 +1903,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       !isThemeDialogOpen &&
       !isEditorDialogOpen &&
       !isTaskTemplateDialogOpen &&
+      !isTeamManagementDialogOpen &&
       !isMailboxDialogOpen &&
       !isModelSelectionDialogOpen &&
       !isResumeDialogOpen &&
@@ -1897,6 +1926,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     isThemeDialogOpen,
     isEditorDialogOpen,
     isTaskTemplateDialogOpen,
+    isTeamManagementDialogOpen,
     isMailboxDialogOpen,
     isSubagentCreateDialogOpen,
     showPrivacyNotice,
@@ -1994,6 +2024,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 isFocused={
                   !isEditorDialogOpen &&
                   !isTaskTemplateDialogOpen &&
+                  !isTeamManagementDialogOpen &&
                   !isMailboxDialogOpen
                 }
                 viewControls={
@@ -2237,6 +2268,13 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               currentModel={currentModel}
               onExit={closeTaskTemplateDialog}
               onDeploy={handleTaskTemplateDeploy}
+            />
+          ) : isTeamManagementDialogOpen ? (
+            <TeamManagementDialog
+              baseDir={config.getTargetDir()}
+              projectRoot={config.getProjectRoot() || process.cwd()}
+              onExit={closeTeamManagementDialog}
+              onSubmitCommand={handleTeamDialogSubmit}
             />
           ) : isMailboxDialogOpen ? (
             <MailboxDialog

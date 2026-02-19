@@ -23,30 +23,30 @@
         <div class='clearfix'>
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">27.02% </span>
+                <span class="strong">45.94% </span>
                 <span class="quiet">Statements</span>
-                <span class='fraction'>10/37</span>
+                <span class='fraction'>17/37</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">14.28% </span>
                 <span class="quiet">Branches</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>1/7</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">0% </span>
+                <span class="strong">50% </span>
                 <span class="quiet">Functions</span>
-                <span class='fraction'>0/2</span>
+                <span class='fraction'>1/2</span>
             </div>
         
             
             <div class='fl pad1y space-right2'>
-                <span class="strong">27.02% </span>
+                <span class="strong">45.94% </span>
                 <span class="quiet">Lines</span>
-                <span class='fraction'>10/37</span>
+                <span class='fraction'>17/37</span>
             </div>
         
             
@@ -146,15 +146,15 @@
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-yes">1x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
@@ -165,8 +165,8 @@
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
-<span class="cline-any cline-no">&nbsp;</span>
+<span class="cline-any cline-yes">4x</span>
+<span class="cline-any cline-yes">4x</span>
 <span class="cline-any cline-yes">1x</span>
 <span class="cline-any cline-neutral">&nbsp;</span>
 <span class="cline-any cline-no">&nbsp;</span>
@@ -203,16 +203,16 @@ export class SchemaValidator {
    * Returns null if the data confroms to the schema described by schema (or if schema
    *  is null). Otherwise, returns a string describing the error.
    */
-  static <span class="fstat-no" title="function not covered" >validate(schema: unknown | undefined, data: unknown): string | null {</span>
-<span class="cstat-no" title="statement not covered" >    if (!schema) {</span>
+  static validate(schema: unknown | undefined, data: unknown): string | null {
+    if (!schema) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      return null;</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >    if (typeof data !== "object" || data === null) {</span>
+    if (typeof data !== "object" || data === null) <span class="branch-0 cbranch-no" title="branch not covered" >{</span>
 <span class="cstat-no" title="statement not covered" >      return "Value of params must be an object";</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >    const validate = ajValidator.compile(schema);</span>
-<span class="cstat-no" title="statement not covered" >    const valid = validate(data);</span>
-<span class="cstat-no" title="statement not covered" >    if (!valid &amp;&amp; validate.errors) {</span>
+    const validate = ajValidator.compile(schema);
+    const valid = validate(data);
+    if (!<span class="branch-0 cbranch-no" title="branch not covered" >valid &amp;&amp; validate.errors) <span class="branch-0 cbranch-no" title="branch not covered" >{</span></span>
       // Find any True or False values and lowercase them
 <span class="cstat-no" title="statement not covered" >      fixBooleanCasing(data as Record&lt;string, unknown&gt;);</span>
 &nbsp;
@@ -223,8 +223,8 @@ export class SchemaValidator {
 <span class="cstat-no" title="statement not covered" >        return ajValidator.errorsText(validate.errors, { dataVar: "params" });</span>
 <span class="cstat-no" title="statement not covered" >      }</span>
 <span class="cstat-no" title="statement not covered" >    }</span>
-<span class="cstat-no" title="statement not covered" >    return null;</span>
-<span class="cstat-no" title="statement not covered" >  }</span>
+    return null;
+  }
 }
 &nbsp;
 <span class="cstat-no" title="statement not covered" ><span class="fstat-no" title="function not covered" >function fixBooleanCasing(data: Record&lt;string, unknown&gt;) {</span></span>
@@ -244,7 +244,7 @@ export class SchemaValidator {
             <div class='footer quiet pad2 space-top1 center small'>
                 Code coverage generated by
                 <a href="https://istanbul.js.org/" target="_blank" rel="noopener noreferrer">istanbul</a>
-                at 2026-02-17T21:43:50.433Z
+                at 2026-02-18T16:18:33.257Z
             </div>
         <script src="../../prettify.js"></script>
         <script>

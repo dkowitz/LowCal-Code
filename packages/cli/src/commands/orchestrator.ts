@@ -79,9 +79,25 @@ const statusCommand: CommandModule = {
     console.log(`Stalled sessions: ${status.stalled_sessions}`);
     console.log(`Recoveries attempted: ${status.recoveries_attempted}`);
     console.log(`Recoveries accepted: ${status.recoveries_succeeded}`);
+    console.log(`Teams scanned: ${status.teams_scanned}`);
+    console.log(`Teams updated: ${status.teams_updated}`);
+    console.log(`Team mailbox messages consumed: ${status.team_messages_consumed}`);
+    console.log(`Team delegations dispatched: ${status.team_delegations_dispatched}`);
+    console.log(
+      `Team delegations completed/failed: ${status.team_delegations_completed}/${status.team_delegations_failed}`,
+    );
+    console.log(
+      `Team agent restarts attempted/succeeded: ${status.team_agent_restart_attempts}/${status.team_agent_restart_successes}`,
+    );
+    console.log(`Team phase transitions: ${status.team_phase_transitions}`);
     if (status.last_action) {
       console.log(
         `Last action: ${status.last_action.outcome} on ${status.last_action.session_id} (attempt ${status.last_action.attempt}) at ${new Date(status.last_action.timestamp).toLocaleString()}`,
+      );
+    }
+    if (status.last_team_action) {
+      console.log(
+        `Last team action: ${status.last_team_action.outcome} on ${status.last_team_action.team_id} (phase ${status.last_team_action.phase}) at ${new Date(status.last_team_action.timestamp).toLocaleString()}`,
       );
     }
   },

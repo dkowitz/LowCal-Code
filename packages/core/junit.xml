@@ -1,157 +1,19 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<testsuites name="vitest tests" tests="66" failures="0" errors="0" time="0.11858248">
-    <testsuite name="src/core/turn.test.ts" timestamp="2026-02-17T21:43:50.323Z" hostname="uby" tests="27" failures="0" errors="0" skipped="0" time="0.01106624">
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; constructor &gt; should initialize pendingToolCalls and debugResponses" time="0.001603448">
+<testsuites name="vitest tests" tests="6" failures="0" errors="0" time="0.048468115">
+    <testsuite name="src/team/state-store.test.ts" timestamp="2026-02-18T16:18:33.148Z" hostname="uby" tests="3" failures="0" errors="0" skipped="0" time="0.012518406">
+        <testcase classname="src/team/state-store.test.ts" name="team state store &gt; upserts and reads team state" time="0.004210431">
         </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should yield content events for text parts" time="0.002447019">
+        <testcase classname="src/team/state-store.test.ts" name="team state store &gt; lists and filters team states" time="0.006221228">
         </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should only emit incremental content when chunks contain accumulated text" time="0.000245775">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should ignore duplicate content chunks with no new text" time="0.000139428">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should ignore duplicate content when candidate index changes" time="0.000130211">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should emit only incremental tail when candidate index changes" time="0.000127856">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should ignore chunks that are already contained within previous output" time="0.000107819">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should suppress repeated large text segments when the provider replays them" time="0.000189832">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should drop repeated thinking lines that are appended over multiple chunks" time="0.000284957">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should drop duplicate thinking lines that arrive within a single chunk" time="0.000177018">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should yield tool_call_request events for function calls" time="0.000526385">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should yield UserCancelled event if signal is aborted" time="0.00037791">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should yield Error event and report if sendMessageStream throws" time="0.000438852">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should handle function calls with undefined name or args" time="0.000673006">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should yield finished event when response has finish reason" time="0.000202625">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should yield finished event for MAX_TOKENS finish reason" time="0.000141121">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should yield finished event for SAFETY finish reason" time="0.000113941">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should not yield finished event when there is no finish reason" time="0.000121395">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should handle multiple responses with different finish reasons" time="0.000139939">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should not crash when cancelled request has malformed error" time="0.000235736">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should yield a Retry event when it receives one from the chat stream" time="0.000164625">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should not replay identical content emitted before a retry" time="0.00024327">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should not replay identical thought events emitted before a retry" time="0.00053523">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should suppress duplicate thought events" time="0.000208135">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should emit both thought and visible text from the same chunk" time="0.00014596">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; run &gt; should emit tool calls from content parts even when thought is present" time="0.000245454">
-        </testcase>
-        <testcase classname="src/core/turn.test.ts" name="Turn &gt; getDebugResponses &gt; should return collected debug responses" time="0.000159185">
+        <testcase classname="src/team/state-store.test.ts" name="team state store &gt; removes team state" time="0.001294602">
         </testcase>
     </testsuite>
-    <testsuite name="src/services/loopDetectionService.test.ts" timestamp="2026-02-17T21:43:50.325Z" hostname="uby" tests="39" failures="0" errors="0" skipped="0" time="0.10751624">
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Tool Call Loop Detection &gt; should not detect a loop for fewer than TOOL_CALL_LOOP_THRESHOLD identical calls" time="0.001660754">
+    <testsuite name="src/tools/team-management.test.ts" timestamp="2026-02-18T16:18:33.149Z" hostname="uby" tests="3" failures="0" errors="0" skipped="0" time="0.035949709">
+        <testcase classname="src/tools/team-management.test.ts" name="team-management tool &gt; lists teams" time="0.023151266">
         </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Tool Call Loop Detection &gt; should detect a loop on the TOOL_CALL_LOOP_THRESHOLD-th identical call" time="0.00061007">
+        <testcase classname="src/tools/team-management.test.ts" name="team-management tool &gt; posts and reads shared channel messages" time="0.01076781">
         </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Tool Call Loop Detection &gt; should detect a loop on subsequent identical calls" time="0.000142473">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Tool Call Loop Detection &gt; should not detect a loop for different tool calls" time="0.000200471">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Tool Call Loop Detection &gt; should not reset tool call counter for other event types" time="0.000175635">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection &gt; should not detect a loop for random content" time="0.062854254">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection &gt; should detect a loop when a chunk of content repeats consecutively" time="0.000889426">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection &gt; should not detect a loop if repetitions are very far apart" time="0.007205324">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Thought Loop Detection &gt; should detect a loop for semantically similar thoughts with minor wording changes" time="0.000871292">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Thought Loop Detection &gt; should detect a loop for thought-like content churn with repeated thinking lines" time="0.001849453">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Thought Loop Detection &gt; should detect a loop for alternating semantically similar thought variants" time="0.000266263">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Thought Loop Detection &gt; should reset thought repetition tracking when a tool call indicates progress" time="0.000203948">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should not detect a loop when repetitive content is inside a code block" time="0.000181186">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should not detect loops when content transitions into a code block" time="0.000496529">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should skip loop detection when already inside a code block (this.inCodeBlock)" time="0.00015643">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should correctly track inCodeBlock state with multiple fence transitions" time="0.000120473">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should detect a loop when repetitive content is outside a code block" time="0.000519">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should handle content with multiple code blocks and no loops" time="0.000056204">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should handle content with mixed code blocks and looping text" time="0.001973924">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should not detect a loop for a long code block with some repeating tokens" time="0.000226379">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should reset tracking when a code fence is found" time="0.000525232">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should reset tracking when a table is detected" time="0.000894525">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should reset tracking when a list item is detected" time="0.000886601">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should reset tracking when a heading is detected" time="0.000882103">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should reset tracking when a blockquote is detected" time="0.000888595">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should reset tracking for various list item formats" time="0.004594383">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should reset tracking for various table formats" time="0.003747886">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Content Loop Detection with Code Blocks &gt; should reset tracking for various heading levels" time="0.005672928">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Edge Cases &gt; should handle empty content" time="0.000062236">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Divider Content Detection &gt; should not detect a loop for repeating divider-like content" time="0.000166298">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Divider Content Detection &gt; should not detect a loop for repeating complex box-drawing dividers" time="0.000230156">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; Reset Functionality &gt; tool call should reset content count" time="0.000186485">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService &gt; General Behavior &gt; should return false for unhandled event types" time="0.000073636">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService LLM Checks &gt; should not trigger LLM check before LLM_CHECK_AFTER_TURNS" time="0.000377027">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService LLM Checks &gt; should trigger LLM check on the 30th turn" time="0.000325121">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService LLM Checks &gt; should detect a cognitive loop when confidence is high" time="0.002338117">
-            <system-err>
-Repetitive actions
-
-            </system-err>
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService LLM Checks &gt; should not detect a loop when confidence is low" time="0.000182188">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService LLM Checks &gt; should adjust the check interval based on confidence" time="0.000128318">
-        </testcase>
-        <testcase classname="src/services/loopDetectionService.test.ts" name="LoopDetectionService LLM Checks &gt; should handle errors from generateJson gracefully" time="0.003196987">
-            <system-out>
-Error: API error
-    at /home/atmandk/LowCal-dev/packages/core/src/services/loopDetectionService.test.ts:837:26
-    at file:///home/atmandk/LowCal-dev/node_modules/@vitest/runner/dist/chunk-hooks.js:155:11
-    at file:///home/atmandk/LowCal-dev/node_modules/@vitest/runner/dist/chunk-hooks.js:752:26
-    at file:///home/atmandk/LowCal-dev/node_modules/@vitest/runner/dist/chunk-hooks.js:1897:20
-    at new Promise (&lt;anonymous&gt;)
-    at runWithTimeout (file:///home/atmandk/LowCal-dev/node_modules/@vitest/runner/dist/chunk-hooks.js:1863:10)
-    at runTest (file:///home/atmandk/LowCal-dev/node_modules/@vitest/runner/dist/chunk-hooks.js:1574:12)
-    at processTicksAndRejections (node:internal/process/task_queues:105:5)
-    at runSuite (file:///home/atmandk/LowCal-dev/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)
-    at runSuite (file:///home/atmandk/LowCal-dev/node_modules/@vitest/runner/dist/chunk-hooks.js:1729:8)
-
-            </system-out>
+        <testcase classname="src/tools/team-management.test.ts" name="team-management tool &gt; rejects delegate_task when agent has no bound session" time="0.001044621">
         </testcase>
     </testsuite>
 </testsuites>

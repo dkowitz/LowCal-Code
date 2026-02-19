@@ -36,6 +36,10 @@ export function useDialogClose(options) {
             options.closeTaskTemplateDialog();
             return true;
         }
+        if (options.isTeamDialogOpen) {
+            options.closeTeamDialog();
+            return true;
+        }
         if (options.isMailboxDialogOpen) {
             options.closeMailboxDialog();
             return true;
