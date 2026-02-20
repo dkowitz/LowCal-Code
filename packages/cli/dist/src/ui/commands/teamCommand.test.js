@@ -148,6 +148,14 @@ describe("teamCommand", () => {
             dialog: "team",
         });
     });
+    it("returns CLI-only hint for runtime monitor", async () => {
+        const result = await teamCommand.action(context, "runtime");
+        expect(result).toEqual({
+            type: "message",
+            messageType: "info",
+            content: 'Team Runtime Console is CLI-only. Run "lowcal team-monitor" (or "qwen team-runtime") in a separate terminal.',
+        });
+    });
     it("lists teams", async () => {
         hoisted.teams.set("team-a", {
             team_id: "team-a",
@@ -191,6 +199,14 @@ describe("teamCommand", () => {
     });
     it("runs a selected team and starts orchestrator if needed", async () => {
         hoisted.isOrchestratorRunningMock.mockResolvedValue(false);
+        const schedulerEnvBefore = process.env["LOWCAL_SCHEDULER_CWD"];
+        hoisted.launchValidateMock.mockImplementation(async () => {
+            expect(process.env["LOWCAL_SCHEDULER_CWD"]).toBe(tempDir);
+            return {
+                llmContent: "ok",
+                returnDisplay: "ok",
+            };
+        });
         hoisted.teams.set("team-run", {
             team_id: "team-run",
             name: "Team Run",
@@ -251,6 +267,7 @@ describe("teamCommand", () => {
         expect(hoisted.teams.get("team-run")?.coordination?.phase).toBe("waiting");
         expect(Object.keys(hoisted.teams.get("team-run")?.coordination?.delegations ?? {})
             .length).toBe(1);
+        expect(process.env["LOWCAL_SCHEDULER_CWD"]).toBe(schedulerEnvBefore);
     });
     it("respects idle startup mode on run", async () => {
         hoisted.teams.set("team-idle", {
@@ -368,6 +385,85 @@ describe("teamCommand", () => {
         expect(result.content).toContain('Prompt accepted for team "team-prompt".');
         expect(hoisted.teams.get("team-prompt")?.coordination?.phase).toBe("planning");
         expect(hoisted.teams.get("team-prompt")?.manifest.description).toBe("Replan and delegate issue triage.");
+    });
+    it("posts DM messages and auto-creates DM channels", async () => {
+        hoisted.teams.set("team-msg", {
+            team_id: "team-msg",
+            name: "Team Msg",
+            status: "active",
+            created_at: new Date().toISOString(),
+            manifest: {
+                version: "1.0",
+                id: "team-msg",
+                name: "Team Msg",
+                agents: [{ id: "agent-a", role: "researcher" }],
+                channels: [{ name: "#general", history: "shared" }],
+            },
+            orchestrator_session_id: "orchestrator-pending",
+            agents: {
+                "agent-a": {
+                    agent_id: "agent-a",
+                    role: "researcher",
+                    status: "idle",
+                    session_id: "team-agent-team-msg-agent-a",
+                },
+            },
+            channels: {
+                "#general": {
+                    channel_name: "#general",
+                    message_count: 0,
+                    path: ".lowcal/team-channels/team-msg-general.jsonl",
+                },
+            },
+        });
+        const result = await teamCommand.action(context, 'dm team-msg --from user --to agent-a --content "Can you summarize findings?"');
+        expect(result.content).toContain('Posted message to team "team-msg".');
+        expect(result.content).toContain("Channel: @dm:agent-a|user (direct)");
+        const dmChannel = hoisted.teams.get("team-msg")?.channels["@dm:agent-a|user"];
+        expect(dmChannel).toBeDefined();
+        expect(dmChannel?.message_count).toBe(1);
+        const dmPath = path.join(tempDir, dmChannel.path);
+        const dmRaw = await fs.readFile(dmPath, "utf-8");
+        expect(dmRaw).toContain('"from_agent":"user"');
+        expect(dmRaw).toContain('"to_agent":"agent-a"');
+        expect(dmRaw).toContain('"visibility":"direct"');
+    });
+    it("reads participant communications across public and DM channels", async () => {
+        hoisted.teams.set("team-read", {
+            team_id: "team-read",
+            name: "Team Read",
+            status: "active",
+            created_at: new Date().toISOString(),
+            manifest: {
+                version: "1.0",
+                id: "team-read",
+                name: "Team Read",
+                agents: [{ id: "agent-a", role: "researcher" }],
+                channels: [{ name: "#general", history: "shared" }],
+            },
+            orchestrator_session_id: "orchestrator-pending",
+            agents: {
+                "agent-a": {
+                    agent_id: "agent-a",
+                    role: "researcher",
+                    status: "idle",
+                    session_id: "team-agent-team-read-agent-a",
+                },
+            },
+            channels: {
+                "#general": {
+                    channel_name: "#general",
+                    message_count: 0,
+                    path: ".lowcal/team-channels/team-read-general.jsonl",
+                },
+            },
+        });
+        await teamCommand.action(context, 'message team-read --from user --content "Public kickoff update"');
+        await teamCommand.action(context, 'dm team-read --from orchestrator --to agent-a --content "Please prioritize bug triage"');
+        const readResult = await teamCommand.action(context, "read team-read --participant agent-a --limit 20");
+        expect(readResult.content).toContain("Read 2 message(s) across 2 channel(s)");
+        expect(readResult.content).toContain("Public kickoff update");
+        expect(readResult.content).toContain("Please prioritize bug triage");
     });
     it("binds an agent session with add-agent", async () => {
         hoisted.teams.set("team-c", {

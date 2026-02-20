@@ -11,6 +11,7 @@ import { CommandKind, } from "./types.js";
 import { TeamManifestError, loadTeamManifestFromFile, } from "../../team/manifest-loader.js";
 import { getDefaultTeamAgentSessionId, startTeamAgentDaemon, stopTeamAgentDaemon, } from "../../team/agent-daemon.js";
 import { isOrchestratorRunning, startOrchestrator, } from "../../orchestrator/daemon.js";
+const DM_CHANNEL_PREFIX = "@dm:";
 function usageError(content) {
     return {
         type: "message",
@@ -43,6 +44,16 @@ function parseOption(tokens, key) {
     return typeof value === "string" && value.trim().length > 0
         ? value.trim()
         : undefined;
+}
+function parseOptionalPositiveInt(value) {
+    if (!value) {
+        return undefined;
+    }
+    const parsed = Number.parseInt(value, 10);
+    if (!Number.isFinite(parsed) || parsed <= 0) {
+        return undefined;
+    }
+    return Math.floor(parsed);
 }
 function splitCsvOrLines(value) {
     return value
@@ -141,7 +152,102 @@ function normalizeChannelName(value) {
     if (!trimmed) {
         return "";
     }
+    if (trimmed.startsWith(DM_CHANNEL_PREFIX)) {
+        return trimmed;
+    }
+    if (trimmed.startsWith("@")) {
+        return trimmed;
+    }
     return trimmed.startsWith("#") ? trimmed : `#${trimmed}`;
+}
+function normalizeParticipant(value) {
+    const trimmed = value.trim();
+    if (!trimmed) {
+        return "";
+    }
+    if (trimmed === "user" || trimmed === "orchestrator") {
+        return trimmed;
+    }
+    if (trimmed.startsWith("agent:")) {
+        return trimmed.slice("agent:".length).trim();
+    }
+    return trimmed;
+}
+function resolveParticipantOrError(team, raw, fieldName) {
+    if (!raw || raw.trim().length === 0) {
+        return new TeamManifestError(`${fieldName} is required.`);
+    }
+    const participant = normalizeParticipant(raw);
+    if (participant === "user" || participant === "orchestrator") {
+        return participant;
+    }
+    if (team.agents[participant]) {
+        return participant;
+    }
+    return new TeamManifestError(`${fieldName} "${raw}" is invalid. Expected user, orchestrator, or an existing team agent id.`);
+}
+function buildDmChannelName(leftRaw, rightRaw) {
+    const left = String(leftRaw).trim();
+    const right = String(rightRaw).trim();
+    const ordered = [left, right].sort((a, b) => a.localeCompare(b));
+    return `${DM_CHANNEL_PREFIX}${ordered[0]}|${ordered[1]}`;
+}
+function parseDmChannelParticipants(channelName) {
+    if (!channelName.startsWith(DM_CHANNEL_PREFIX)) {
+        return undefined;
+    }
+    const payload = channelName.slice(DM_CHANNEL_PREFIX.length);
+    const pieces = payload.split("|");
+    if (pieces.length !== 2) {
+        return undefined;
+    }
+    const left = pieces[0]?.trim();
+    const right = pieces[1]?.trim();
+    if (!left || !right) {
+        return undefined;
+    }
+    return [left, right];
+}
+function resolveTeamObjective(manifest) {
+    const objective = manifest.description?.trim();
+    return objective && objective.length > 0 ? objective : undefined;
+}
+function resolveOrchestratorPrompt(manifest) {
+    const prompt = manifest.orchestrator?.prompt?.trim();
+    if (prompt && prompt.length > 0) {
+        return prompt;
+    }
+    return resolveTeamObjective(manifest);
+}
+function resolveTeamExecutionMode(manifest) {
+    if (manifest.execution?.mode === "headless") {
+        return "headless";
+    }
+    if (manifest.execution?.mode === "interactive") {
+        return "zellij_tab";
+    }
+    return undefined;
+}
+function resolveChannelSpec(team, channelName) {
+    return team.manifest.channels.find((entry) => entry.name === channelName);
+}
+function isParticipantAllowedInChannel(team, channelName, participant) {
+    const participantId = String(participant);
+    if (participantId === "user" || participantId === "orchestrator") {
+        return true;
+    }
+    if (channelName.startsWith(DM_CHANNEL_PREFIX)) {
+        const members = parseDmChannelParticipants(channelName);
+        return members?.includes(participantId) ?? false;
+    }
+    const channelSpec = resolveChannelSpec(team, channelName);
+    if (!channelSpec || channelSpec.visibility !== "restricted") {
+        return true;
+    }
+    return (channelSpec.members ?? []).includes(participantId);
+}
+function isDynamicCommsChannel(channelName) {
+    return channelName.startsWith(DM_CHANNEL_PREFIX);
 }
 function parseInlineChannels(value) {
     const entries = splitCsvOrLines(value)
@@ -184,6 +290,13 @@ function buildInlineManifest(tokens) {
         id,
         name,
         description,
+        ...(description
+            ? {
+                orchestrator: {
+                    prompt: description,
+                },
+            }
+            : {}),
         agents: agentsValue
             ? parseInlineAgents(agentsValue)
             : parseInlineAgentTasks(agentTasksValue, agentTaskModes),
@@ -266,6 +379,8 @@ function formatTeamStatus(state) {
         `Name: ${state.name}`,
         `Status: ${state.status}`,
         `Phase: ${state.coordination?.phase ?? "planning"}`,
+        `Objective: ${resolveTeamObjective(state.manifest) ?? "(unset)"}`,
+        `Orchestrator Prompt: ${resolveOrchestratorPrompt(state.manifest) ?? "(unset)"}`,
         `Created: ${new Date(state.created_at).toLocaleString()}`,
         `Orchestrator Session: ${state.orchestrator_session_id}`,
         "",
@@ -289,6 +404,22 @@ function createRunCoordinationState(nowIso) {
 }
 function sanitizeId(value) {
     return value.replace(/[^a-zA-Z0-9_-]/g, "_");
+}
+const LOWCAL_SCHEDULER_CWD_ENV = "LOWCAL_SCHEDULER_CWD";
+async function withSchedulerWorkspaceRoot(baseDir, operation) {
+    const previous = process.env[LOWCAL_SCHEDULER_CWD_ENV];
+    process.env[LOWCAL_SCHEDULER_CWD_ENV] = baseDir;
+    try {
+        return await operation();
+    }
+    finally {
+        if (previous === undefined) {
+            delete process.env[LOWCAL_SCHEDULER_CWD_ENV];
+        }
+        else {
+            process.env[LOWCAL_SCHEDULER_CWD_ENV] = previous;
+        }
+    }
 }
 function isProcessAlive(pid) {
     try {
@@ -327,6 +458,8 @@ async function launchTeamAgentTasks(team) {
     const baseTs = Date.now();
     const launched = [];
     const failed = [];
+    const executionMode = resolveTeamExecutionMode(team.manifest);
+    const objective = resolveTeamObjective(team.manifest);
     const immediateAgents = team.manifest.agents.filter((agent) => agent.startup !== "idle");
     await Promise.all(immediateAgents.map(async (agent, index) => {
         const taskId = `team-${sanitizeId(team.team_id)}-${sanitizeId(agent.id)}-${baseTs + index}`;
@@ -335,9 +468,14 @@ async function launchTeamAgentTasks(team) {
             id: taskId,
             template_id: agent.id,
             template_level: "auto",
-            description: `Team kickoff task for ${team.team_id}/${agent.id}`,
+            description: objective
+                ? `Team kickoff task for ${team.team_id}/${agent.id}: ${objective}`
+                : `Team kickoff task for ${team.team_id}/${agent.id}`,
             ...(orchestratorSessionId
                 ? { return_to_session_id: orchestratorSessionId }
+                : {}),
+            ...(executionMode
+                ? { execution_mode: executionMode, execution_mode_override: true }
                 : {}),
         }, new AbortController().signal);
         if (result.error) {
@@ -369,6 +507,15 @@ function buildTeamChannelsState(teamId, channels, existing) {
             path: current?.path ?? channelFilePath(teamId, channel.name),
         };
     }
+    for (const [channelName, channelState] of Object.entries(existing ?? {})) {
+        if (next[channelName]) {
+            continue;
+        }
+        if (!isDynamicCommsChannel(channelName)) {
+            continue;
+        }
+        next[channelName] = { ...channelState };
+    }
     return next;
 }
 function buildTeamAgentsState(teamId, agents, existing) {
@@ -399,41 +546,147 @@ async function ensureTeamChannelFiles(baseDir, channels) {
         }
     }));
 }
-function resolveTeamPromptChannel(state) {
+function resolvePublicChannelName(state) {
+    if (state.channels["#public"]) {
+        return "#public";
+    }
     if (state.channels["#general"]) {
-        return state.channels["#general"];
+        return "#general";
     }
-    const first = Object.values(state.channels)[0];
-    return first;
+    const manifestChannel = state.manifest.channels.find((channel) => channel.name.startsWith("#"));
+    if (manifestChannel) {
+        return manifestChannel.name;
+    }
+    const first = Object.keys(state.channels).find((channelName) => !channelName.startsWith(DM_CHANNEL_PREFIX));
+    return first ?? "#public";
 }
-async function appendPromptToTeamChannel(baseDir, state, prompt) {
-    const channel = resolveTeamPromptChannel(state);
-    if (!channel) {
-        return;
+function resolveChannelPath(baseDir, relativeOrAbsolute) {
+    return path.isAbsolute(relativeOrAbsolute)
+        ? relativeOrAbsolute
+        : path.resolve(baseDir, relativeOrAbsolute);
+}
+async function readChannelLog(baseDir, channel) {
+    const channelPath = resolveChannelPath(baseDir, channel.path);
+    try {
+        const raw = await fs.readFile(channelPath, "utf-8");
+        return raw
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0)
+            .map((line) => {
+            try {
+                return JSON.parse(line);
+            }
+            catch {
+                return null;
+            }
+        })
+            .filter((entry) => Boolean(entry));
     }
-    const resolvedPath = path.resolve(baseDir, channel.path);
-    await fs.mkdir(path.dirname(resolvedPath), { recursive: true });
-    const timestamp = new Date().toISOString();
+    catch (error) {
+        const nodeError = error;
+        if (nodeError?.code === "ENOENT") {
+            return [];
+        }
+        throw error;
+    }
+}
+async function ensureTeamChannel(baseDir, team, channelName) {
+    if (team.channels[channelName]) {
+        return team;
+    }
+    const next = await upsertTeamState(baseDir, team.team_id, (current) => {
+        const existing = current ?? team;
+        if (existing.channels[channelName]) {
+            return existing;
+        }
+        return {
+            ...existing,
+            channels: {
+                ...existing.channels,
+                [channelName]: {
+                    channel_name: channelName,
+                    message_count: 0,
+                    path: channelFilePath(existing.team_id, channelName),
+                },
+            },
+        };
+    });
+    await ensureTeamChannelFiles(baseDir, next.channels);
+    return next;
+}
+async function appendTeamChannelMessage(baseDir, team, channelName, payload) {
+    const withChannel = await ensureTeamChannel(baseDir, team, channelName);
+    const channel = withChannel.channels[channelName];
+    if (!channel) {
+        throw new TeamManifestError(`Failed to resolve channel "${channelName}" for team "${team.team_id}".`);
+    }
     const turnNumber = Math.max(0, channel.message_count) + 1;
+    const timestamp = new Date().toISOString();
     const message = {
         channel: channel.channel_name,
-        from_agent: "user",
+        from_agent: String(payload.from),
+        ...(payload.to ? { to_agent: String(payload.to) } : {}),
+        visibility: payload.visibility,
         turn_number: turnNumber,
         timestamp,
-        message_type: "instruction",
+        message_type: payload.messageType,
         content: {
-            text: prompt,
+            text: payload.text,
         },
         metadata: {
-            team_id: state.team_id,
-            source: "team_prompt",
+            team_id: withChannel.team_id,
+            ...(payload.metadata ?? {}),
         },
     };
-    await fs.appendFile(resolvedPath, `${JSON.stringify(message)}\n`, "utf-8");
+    const channelPath = resolveChannelPath(baseDir, channel.path);
+    await fs.mkdir(path.dirname(channelPath), { recursive: true });
+    await fs.appendFile(channelPath, `${JSON.stringify(message)}\n`, "utf-8");
+    const updated = await upsertTeamState(baseDir, withChannel.team_id, (current) => {
+        const existing = current ?? withChannel;
+        const currentChannel = existing.channels[channelName];
+        if (!currentChannel) {
+            return existing;
+        }
+        return {
+            ...existing,
+            channels: {
+                ...existing.channels,
+                [channelName]: {
+                    ...currentChannel,
+                    message_count: turnNumber,
+                    last_message_at: timestamp,
+                },
+            },
+        };
+    });
+    return {
+        updated,
+        turnNumber,
+    };
+}
+async function appendPromptToTeamChannel(baseDir, state, prompt) {
+    const channelName = resolvePublicChannelName(state);
+    await appendTeamChannelMessage(baseDir, state, channelName, {
+        from: "user",
+        text: prompt,
+        visibility: "public",
+        messageType: "instruction",
+        metadata: {
+            source: "team_prompt",
+        },
+    });
 }
 async function createTeamFromManifest(baseDir, manifest, sourceDescription) {
     const normalizedManifest = {
         ...manifest,
+        ...(resolveOrchestratorPrompt(manifest)
+            ? {
+                orchestrator: {
+                    prompt: resolveOrchestratorPrompt(manifest),
+                },
+            }
+            : {}),
         agents: manifest.agents.map((agent) => ({
             ...agent,
             startup: agent.startup ?? "immediate",
@@ -524,6 +777,13 @@ async function updateTeamFromInlineOptions(baseDir, state, tokens) {
         ...state.manifest,
         ...(name ? { name } : {}),
         ...(description ? { description } : {}),
+        ...(description
+            ? {
+                orchestrator: {
+                    prompt: description,
+                },
+            }
+            : {}),
         agents: nextAgents.map((agent) => ({
             ...agent,
             startup: agent.startup ?? "immediate",
@@ -538,6 +798,7 @@ async function updateTeamFromInlineOptions(baseDir, state, tokens) {
     const nextChannelNames = new Set(nextManifest.channels.map((channel) => channel.name));
     const removedChannelPaths = Object.values(state.channels)
         .filter((channel) => !nextChannelNames.has(channel.channel_name))
+        .filter((channel) => !isDynamicCommsChannel(channel.channel_name))
         .map((channel) => channel.path);
     const updated = await upsertTeamState(baseDir, state.team_id, (current) => {
         const existing = current ?? state;
@@ -611,6 +872,93 @@ async function updateTeamFromInlineOptions(baseDir, state, tokens) {
         `Channels: ${nextManifest.channels.length}`,
     ].join("\n"));
 }
+function formatChannelMessage(message) {
+    const toSuffix = message.to_agent ? ` -> ${message.to_agent}` : "";
+    const visibility = message.visibility ?? "public";
+    return [
+        `[turn ${message.turn_number}] [${message.channel}] ${message.from_agent}${toSuffix} (${visibility}) @ ${new Date(message.timestamp).toLocaleString()}`,
+        message.content?.text ?? "",
+    ].join("\n");
+}
+async function readTeamMessagesForChannel(baseDir, team, channelName, options) {
+    const channel = team.channels[channelName];
+    if (!channel) {
+        return [];
+    }
+    const messages = await readChannelLog(baseDir, channel);
+    const afterTurn = Math.max(0, options?.afterTurn ?? 0);
+    const limit = Math.max(1, Math.min(500, options?.limit ?? 50));
+    return messages
+        .filter((message) => message.turn_number > afterTurn)
+        .slice(-limit);
+}
+async function postTeamCommunication(baseDir, team, options) {
+    const content = options.contentRaw?.trim();
+    if (!content) {
+        throw new TeamManifestError("Message content is required (--content).");
+    }
+    const fromResolved = resolveParticipantOrError(team, options.fromRaw ?? String(options.defaultFrom ?? "user"), "--from");
+    if (fromResolved instanceof TeamManifestError) {
+        throw fromResolved;
+    }
+    const channelRawNormalized = options.channelRaw
+        ? normalizeChannelName(options.channelRaw)
+        : undefined;
+    let toResolved;
+    if (options.toRaw) {
+        const to = resolveParticipantOrError(team, options.toRaw, "--to");
+        if (to instanceof TeamManifestError) {
+            throw to;
+        }
+        toResolved = to;
+    }
+    let channelName = channelRawNormalized ?? resolvePublicChannelName(team);
+    let visibility = "public";
+    if (toResolved) {
+        channelName = buildDmChannelName(fromResolved, toResolved);
+        visibility = "direct";
+    }
+    else if (channelName.startsWith(DM_CHANNEL_PREFIX)) {
+        const participants = parseDmChannelParticipants(channelName);
+        if (!participants) {
+            throw new TeamManifestError(`DM channel "${channelName}" is malformed. Expected ${DM_CHANNEL_PREFIX}<participantA>|<participantB>.`);
+        }
+        if (!participants.includes(String(fromResolved))) {
+            throw new TeamManifestError(`Sender "${String(fromResolved)}" is not a participant in DM channel "${channelName}".`);
+        }
+        const other = participants.find((entry) => entry !== String(fromResolved));
+        toResolved = other;
+        visibility = "direct";
+    }
+    else {
+        channelName = normalizeChannelName(channelName);
+    }
+    if (visibility === "public" &&
+        !isParticipantAllowedInChannel(team, channelName, fromResolved)) {
+        throw new TeamManifestError(`Sender "${String(fromResolved)}" is not allowed in channel "${channelName}".`);
+    }
+    if (visibility === "direct" &&
+        toResolved &&
+        !isParticipantAllowedInChannel(team, channelName, toResolved)) {
+        throw new TeamManifestError(`Recipient "${String(toResolved)}" is not allowed in channel "${channelName}".`);
+    }
+    const result = await appendTeamChannelMessage(baseDir, team, channelName, {
+        from: fromResolved,
+        ...(toResolved ? { to: toResolved } : {}),
+        text: content,
+        visibility,
+        messageType: visibility === "direct" ? "dm" : "chat",
+        metadata: {
+            source: "team_message",
+        },
+    });
+    return {
+        updated: result.updated,
+        channelName,
+        turnNumber: result.turnNumber,
+        visibility,
+    };
+}
 export const teamCommand = {
     name: "team",
     description: "create and inspect orchestrator-managed agent teams",
@@ -635,6 +983,9 @@ export const teamCommand = {
                 dialog: "team",
             };
         }
+        if (subcommand === "runtime" || subcommand === "monitor") {
+            return info('Team Runtime Console is CLI-only. Run "lowcal team-monitor" (or "qwen team-runtime") in a separate terminal.');
+        }
         if (subcommand === "help") {
             return info([
                 "Team commands:",
@@ -645,6 +996,10 @@ export const teamCommand = {
                 "- /team update <team_id> [--name <team_name>] [--description <text>] [--channels <#name,...>] [--agent-tasks <task_id,...>] [--agent-task-modes <task_id:immediate|idle,...>]",
                 "- /team list",
                 "- /team status <team_id>",
+                "- /team channels <team_id>",
+                '- /team message <team_id> --from <user|orchestrator|agent_id> --content "<text>" [--channel <#name|@dm:...>] [--to <user|orchestrator|agent_id>]',
+                '- /team dm <team_id> --from <user|orchestrator|agent_id> --to <user|orchestrator|agent_id> --content "<text>"',
+                "- /team read <team_id> [--channel <name>] [--participant <user|orchestrator|agent_id>] [--after-turn <n>] [--limit <n>]",
                 "- /team run <team_id>",
                 "- /team prompt <team_id> <instruction>",
                 "- /team add-agent <team_id> --agent-id <id> [--session-id <session_id>] [--role <role>]",
@@ -717,6 +1072,140 @@ export const teamCommand = {
             }
             return info(formatTeamStatus(state));
         }
+        if (subcommand === "channels") {
+            const teamId = tokens[1]?.trim();
+            if (!teamId) {
+                return usageError("Usage: /team channels <team_id>");
+            }
+            const state = await getTeamState(baseDir, teamId);
+            if (!state) {
+                return usageError(`Team "${teamId}" not found.`);
+            }
+            const rows = Object.values(state.channels)
+                .sort((left, right) => left.channel_name.localeCompare(right.channel_name))
+                .map((channel) => {
+                const dmParticipants = parseDmChannelParticipants(channel.channel_name);
+                const kind = dmParticipants ? "direct" : "public";
+                const participants = dmParticipants
+                    ? ` participants=${dmParticipants.join("<->")}`
+                    : "";
+                return `- ${channel.channel_name} (${kind}) messages=${channel.message_count}${participants}`;
+            });
+            return info(`Channels for team "${teamId}" (${rows.length}):\n${rows.join("\n")}`);
+        }
+        if (subcommand === "message" || subcommand === "dm") {
+            const teamId = tokens[1]?.trim();
+            if (!teamId) {
+                return usageError(subcommand === "dm"
+                    ? 'Usage: /team dm <team_id> --from <participant> --to <participant> --content "<text>"'
+                    : 'Usage: /team message <team_id> --from <participant> --content "<text>" [--channel <name>] [--to <participant>]');
+            }
+            const state = await getTeamState(baseDir, teamId);
+            if (!state) {
+                return usageError(`Team "${teamId}" not found.`);
+            }
+            const fromRaw = parseOption(tokens, "--from") ?? "user";
+            const toRaw = subcommand === "dm"
+                ? parseOption(tokens, "--to")
+                : parseOption(tokens, "--to");
+            const contentRaw = parseOption(tokens, "--content");
+            const channelRaw = parseOption(tokens, "--channel");
+            if (subcommand === "dm" && !toRaw) {
+                return usageError('Usage: /team dm <team_id> --from <participant> --to <participant> --content "<text>"');
+            }
+            try {
+                const posted = await postTeamCommunication(baseDir, state, {
+                    fromRaw,
+                    toRaw,
+                    channelRaw,
+                    contentRaw,
+                    defaultFrom: "user",
+                });
+                return info([
+                    `Posted message to team "${posted.updated.team_id}".`,
+                    `Channel: ${posted.channelName} (${posted.visibility})`,
+                    `Turn: ${posted.turnNumber}`,
+                ].join("\n"));
+            }
+            catch (error) {
+                if (error instanceof TeamManifestError) {
+                    return usageError(error.message);
+                }
+                return usageError(error instanceof Error ? error.message : String(error));
+            }
+        }
+        if (subcommand === "read") {
+            const teamId = tokens[1]?.trim();
+            if (!teamId) {
+                return usageError("Usage: /team read <team_id> [--channel <name>] [--participant <user|orchestrator|agent_id>] [--after-turn <n>] [--limit <n>]");
+            }
+            const state = await getTeamState(baseDir, teamId);
+            if (!state) {
+                return usageError(`Team "${teamId}" not found.`);
+            }
+            const channelRaw = parseOption(tokens, "--channel");
+            const participantRaw = parseOption(tokens, "--participant");
+            const afterTurn = parseOptionalPositiveInt(parseOption(tokens, "--after-turn")) ?? 0;
+            const limit = parseOptionalPositiveInt(parseOption(tokens, "--limit")) ?? 40;
+            let channelNames = [];
+            if (channelRaw) {
+                channelNames = [normalizeChannelName(channelRaw)];
+            }
+            else if (participantRaw) {
+                const participant = resolveParticipantOrError(state, participantRaw, "--participant");
+                if (participant instanceof TeamManifestError) {
+                    return usageError(participant.message);
+                }
+                const participantId = String(participant);
+                channelNames = Object.keys(state.channels).filter((channelName) => {
+                    if (!isParticipantAllowedInChannel(state, channelName, participantId)) {
+                        return false;
+                    }
+                    if (channelName === resolvePublicChannelName(state)) {
+                        return true;
+                    }
+                    const dmParticipants = parseDmChannelParticipants(channelName);
+                    return dmParticipants?.includes(participantId) ?? false;
+                });
+            }
+            else {
+                channelNames = [resolvePublicChannelName(state)];
+            }
+            const uniqueChannelNames = Array.from(new Set(channelNames)).filter((channelName) => state.channels[channelName]);
+            if (uniqueChannelNames.length === 0) {
+                return info("No matching channels found.");
+            }
+            const loaded = await Promise.all(uniqueChannelNames.map(async (channelName) => ({
+                channelName,
+                messages: await readTeamMessagesForChannel(baseDir, state, channelName, {
+                    afterTurn,
+                    limit,
+                }),
+            })));
+            const flattened = loaded
+                .flatMap((entry) => entry.messages.map((message) => ({
+                channelName: entry.channelName,
+                message,
+            })))
+                .sort((left, right) => {
+                const leftTime = Date.parse(left.message.timestamp);
+                const rightTime = Date.parse(right.message.timestamp);
+                const safeLeft = Number.isFinite(leftTime) ? leftTime : 0;
+                const safeRight = Number.isFinite(rightTime) ? rightTime : 0;
+                if (safeLeft !== safeRight) {
+                    return safeLeft - safeRight;
+                }
+                return left.message.turn_number - right.message.turn_number;
+            })
+                .slice(-Math.max(1, Math.min(limit, 500)));
+            if (flattened.length === 0) {
+                return info("No messages matched the selected filters.");
+            }
+            const body = flattened
+                .map((entry) => formatChannelMessage(entry.message))
+                .join("\n\n");
+            return info(`Read ${flattened.length} message(s) across ${uniqueChannelNames.length} channel(s):\n\n${body}`);
+        }
         if (subcommand === "run") {
             const teamId = tokens[1]?.trim();
             if (!teamId) {
@@ -733,7 +1222,7 @@ export const teamCommand = {
                     return usageError("Failed to start orchestrator daemon.");
                 }
             }
-            const launchResult = await launchTeamAgentTasks(state);
+            const launchResult = await withSchedulerWorkspaceRoot(baseDir, () => launchTeamAgentTasks(state));
             const launchByAgentId = new Map(launchResult.launched.map((entry) => [entry.agent_id, entry]));
             const launchFailureByAgentId = new Map(launchResult.failed.map((entry) => [entry.agent_id, entry.error]));
             const immediateConfiguredCount = state.manifest.agents.filter((agent) => (agent.startup ?? "immediate") !== "idle").length;
@@ -874,6 +1363,13 @@ export const teamCommand = {
                     manifest: {
                         ...existing.manifest,
                         description: instruction,
+                        ...(existing.manifest.orchestrator?.prompt
+                            ? {}
+                            : {
+                                orchestrator: {
+                                    prompt: instruction,
+                                },
+                            }),
                     },
                     orchestrator_session_id: orchestratorSessionId ?? existing.orchestrator_session_id,
                     coordination: createRunCoordinationState(nowIso),
@@ -882,25 +1378,6 @@ export const teamCommand = {
                 };
             });
             await appendPromptToTeamChannel(baseDir, updated, instruction);
-            await upsertTeamState(baseDir, teamId, (current, nowIso) => {
-                const existing = current ?? updated;
-                const channel = resolveTeamPromptChannel(existing);
-                if (!channel) {
-                    return existing;
-                }
-                const nextChannels = {
-                    ...existing.channels,
-                    [channel.channel_name]: {
-                        ...channel,
-                        message_count: Math.max(0, channel.message_count) + 1,
-                        last_message_at: nowIso,
-                    },
-                };
-                return {
-                    ...existing,
-                    channels: nextChannels,
-                };
-            });
             return info([
                 `Prompt accepted for team "${teamId}".`,
                 alreadyRunning
@@ -1045,7 +1522,7 @@ export const teamCommand = {
             }
             return info(`Team "${teamId}" dissolved and channel files cleaned up.`);
         }
-        return usageError("Unknown subcommand. Use /team (or /team open), /team help, /team create --file <manifest.yaml>, /team create --id <team_id> --name <team_name> (--agents <id:role,...> | --agent-tasks <task_id,...>) --channels <#name,...> [--description <text>] [--agent-task-modes <task_id:immediate|idle,...>], /team update <team_id> [--name <team_name>] [--description <text>] [--channels <#name,...>] [--agent-tasks <task_id,...>] [--agent-task-modes <task_id:immediate|idle,...>], /team list, /team status <team_id>, /team run <team_id>, /team prompt <team_id> <instruction>, /team add-agent <team_id> --agent-id <id> [--session-id <session_id>] [--role <role>], /team remove-agent <team_id> <agent_id>, or /team dissolve <team_id>.");
+        return usageError("Unknown subcommand. Use /team (or /team open), /team help, /team create --file <manifest.yaml>, /team create --id <team_id> --name <team_name> (--agents <id:role,...> | --agent-tasks <task_id,...>) --channels <#name,...> [--description <text>] [--agent-task-modes <task_id:immediate|idle,...>], /team update <team_id> [--name <team_name>] [--description <text>] [--channels <#name,...>] [--agent-tasks <task_id,...>] [--agent-task-modes <task_id:immediate|idle,...>], /team list, /team status <team_id>, /team channels <team_id>, /team message <team_id> --from <participant> --content <text> [--channel <name>] [--to <participant>], /team dm <team_id> --from <participant> --to <participant> --content <text>, /team read <team_id> [--channel <name>] [--participant <participant>] [--after-turn <n>] [--limit <n>], /team run <team_id>, /team prompt <team_id> <instruction>, /team add-agent <team_id> --agent-id <id> [--session-id <session_id>] [--role <role>], /team remove-agent <team_id> <agent_id>, or /team dissolve <team_id>.");
     },
 };
 //# sourceMappingURL=teamCommand.js.map

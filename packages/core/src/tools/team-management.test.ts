@@ -134,4 +134,76 @@ describe("team-management tool", () => {
     });
     expect(output).toContain("no bound session_id");
   });
+
+  it("respects restricted channel membership when reading participant inbox", async () => {
+    await upsertTeamState(tempRootDir, "team-alpha", (_current, nowIso) => ({
+      team_id: "team-alpha",
+      name: "Team Alpha",
+      status: "active",
+      created_at: nowIso,
+      started_at: nowIso,
+      manifest: {
+        version: "1.0",
+        id: "team-alpha",
+        name: "Team Alpha",
+        agents: [
+          { id: "agent-a", role: "researcher" },
+          { id: "agent-b", role: "coder" },
+        ],
+        channels: [
+          {
+            name: "#private",
+            history: "shared",
+            visibility: "restricted",
+            members: ["agent-a", "orchestrator"],
+          },
+        ],
+      },
+      orchestrator_session_id: "orch-runtime",
+      agents: {
+        "agent-a": {
+          agent_id: "agent-a",
+          role: "researcher",
+          status: "idle",
+        },
+        "agent-b": {
+          agent_id: "agent-b",
+          role: "coder",
+          status: "idle",
+        },
+      },
+      channels: {
+        "#private": {
+          channel_name: "#private",
+          message_count: 0,
+          path: ".lowcal/team-channels/team-alpha-private.jsonl",
+        },
+      },
+    }));
+
+    const postOutput = await run({
+      action: "post_message",
+      team_id: "team-alpha",
+      channel_name: "#private",
+      from_agent: "agent-a",
+      content: "Private researcher update.",
+    });
+    expect(postOutput).toContain("Posted turn");
+
+    const readAllowed = await run({
+      action: "read_messages",
+      team_id: "team-alpha",
+      participant: "agent-a",
+      limit: 10,
+    });
+    expect(readAllowed).toContain("Private researcher update.");
+
+    const readDenied = await run({
+      action: "read_messages",
+      team_id: "team-alpha",
+      participant: "agent-b",
+      limit: 10,
+    });
+    expect(readDenied).toContain("No channel messages found");
+  });
 });

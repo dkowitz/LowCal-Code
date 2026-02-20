@@ -102030,7 +102030,7 @@ var require_view = __commonJS({
     var dirname9 = path33.dirname;
     var basename6 = path33.basename;
     var extname4 = path33.extname;
-    var join16 = path33.join;
+    var join17 = path33.join;
     var resolve6 = path33.resolve;
     module2.exports = View;
     function View(name2, options2) {
@@ -102092,12 +102092,12 @@ var require_view = __commonJS({
     };
     View.prototype.resolve = function resolve7(dir, file) {
       var ext2 = this.ext;
-      var path34 = join16(dir, file);
+      var path34 = join17(dir, file);
       var stat = tryStat(path34);
       if (stat && stat.isFile()) {
         return path34;
       }
-      path34 = join16(dir, basename6(file, ext2), "index" + ext2);
+      path34 = join17(dir, basename6(file, ext2), "index" + ext2);
       stat = tryStat(path34);
       if (stat && stat.isFile()) {
         return path34;
@@ -105751,7 +105751,7 @@ var require_send = __commonJS({
     var Stream3 = require("stream");
     var util2 = require("util");
     var extname4 = path33.extname;
-    var join16 = path33.join;
+    var join17 = path33.join;
     var normalize3 = path33.normalize;
     var resolve6 = path33.resolve;
     var sep2 = path33.sep;
@@ -105923,7 +105923,7 @@ var require_send = __commonJS({
           return res;
         }
         parts = path34.split(sep2);
-        path34 = normalize3(join16(root, path34));
+        path34 = normalize3(join17(root, path34));
       } else {
         if (UP_PATH_REGEXP.test(path34)) {
           debug2('malicious path "%s"', path34);
@@ -106056,7 +106056,7 @@ var require_send = __commonJS({
           if (err) return self2.onStatError(err);
           return self2.error(404);
         }
-        var p = join16(path34, self2._index[i]);
+        var p = join17(path34, self2._index[i]);
         debug2('stat "%s"', p);
         fs22.stat(p, function(err2, stat) {
           if (err2) return next(err2);
@@ -130573,8 +130573,8 @@ function many(p) {
 function many1(p) {
   return ab(p, many(p), (head, tail) => [head, ...tail]);
 }
-function ab(pa, pb, join16) {
-  return (data, i) => mapOuter(pa(data, i), (ma) => mapInner(pb(data, ma.position), (vb, j) => join16(ma.value, vb, data, i, j)));
+function ab(pa, pb, join17) {
+  return (data, i) => mapOuter(pa(data, i), (ma) => mapInner(pb(data, ma.position), (vb, j) => join17(ma.value, vb, data, i, j)));
 }
 function left(pa, pb) {
   return ab(pa, pb, (va) => va);
@@ -130582,8 +130582,8 @@ function left(pa, pb) {
 function right(pa, pb) {
   return ab(pa, pb, (va, vb) => vb);
 }
-function abc(pa, pb, pc, join16) {
-  return (data, i) => mapOuter(pa(data, i), (ma) => mapOuter(pb(data, ma.position), (mb) => mapInner(pc(data, mb.position), (vc, j) => join16(ma.value, mb.value, vc, data, i, j))));
+function abc(pa, pb, pc, join17) {
+  return (data, i) => mapOuter(pa(data, i), (ma) => mapOuter(pb(data, ma.position), (mb) => mapInner(pc(data, mb.position), (vc, j) => join17(ma.value, mb.value, vc, data, i, j))));
 }
 function middle(pa, pb, pc) {
   return abc(pa, pb, pc, (ra, rb) => rb);
@@ -136284,7 +136284,9 @@ var teamManagementSchemaData = {
           "list_teams",
           "get_team_status",
           "post_to_channel",
+          "post_message",
           "read_channel",
+          "read_messages",
           "delegate_task"
         ]
       },
@@ -136295,6 +136297,15 @@ var teamManagementSchemaData = {
         type: "string"
       },
       content: {
+        type: "string"
+      },
+      from_agent: {
+        type: "string"
+      },
+      to_agent: {
+        type: "string"
+      },
+      participant: {
         type: "string"
       },
       thread_id: {
@@ -136331,11 +136342,14 @@ Actions:
 - list_teams: list known teams
 - get_team_status: show one team state
 - post_to_channel: append an orchestrator message to a team shared channel
+- post_message: append a public or direct message (DM channels auto-created)
 - read_channel: read team shared channel messages
+- read_messages: read messages by channel or participant inbox (public + DMs)
 - delegate_task: enqueue a delegated prompt task to a bound agent session
 
 This tool is restricted to sessions registered with mode="orchestrator".
 `;
+var DM_CHANNEL_PREFIX = "@dm:";
 function asString(value, field) {
   if (typeof value !== "string" || value.trim().length === 0) {
     throw new Error(`"${field}" is required and must be a non-empty string.`);
@@ -136344,6 +136358,53 @@ function asString(value, field) {
 }
 function asOptionalString(value) {
   return typeof value === "string" && value.trim().length > 0 ? value.trim() : void 0;
+}
+function normalizeChannelName(name2) {
+  const trimmed2 = name2.trim();
+  if (!trimmed2) {
+    return "";
+  }
+  if (trimmed2.startsWith("#") || trimmed2.startsWith("@")) {
+    return trimmed2;
+  }
+  return `#${trimmed2}`;
+}
+function normalizeParticipant(raw) {
+  const trimmed2 = raw.trim();
+  if (trimmed2.startsWith("agent:")) {
+    return trimmed2.slice("agent:".length).trim();
+  }
+  return trimmed2;
+}
+function resolveParticipant(team, raw, field) {
+  const participant = normalizeParticipant(raw);
+  if (participant === "user" || participant === "orchestrator") {
+    return participant;
+  }
+  if (team.agents[participant]) {
+    return participant;
+  }
+  throw new Error(`"${field}" must be user, orchestrator, or a team agent id (received "${raw}").`);
+}
+function buildDmChannelName(left2, right2) {
+  const ordered = [left2, right2].sort((a, b) => a.localeCompare(b));
+  return `${DM_CHANNEL_PREFIX}${ordered[0]}|${ordered[1]}`;
+}
+function parseDmParticipants(channelName) {
+  if (!channelName.startsWith(DM_CHANNEL_PREFIX)) {
+    return void 0;
+  }
+  const payload = channelName.slice(DM_CHANNEL_PREFIX.length);
+  const entries = payload.split("|");
+  if (entries.length !== 2) {
+    return void 0;
+  }
+  const left2 = entries[0]?.trim();
+  const right2 = entries[1]?.trim();
+  if (!left2 || !right2) {
+    return void 0;
+  }
+  return [left2, right2];
 }
 function asPositiveInt(value, fallback, max) {
   if (typeof value !== "number" || !Number.isFinite(value)) {
@@ -136393,6 +136454,10 @@ async function appendChannelMessage(channelPath, message) {
   await fs18.mkdir(path28.dirname(channelPath), { recursive: true });
   await fs18.appendFile(channelPath, `${JSON.stringify(message)}
 `, "utf-8");
+}
+function buildChannelPath(teamId, channelName) {
+  const safe = channelName.replace(/^#/, "").replace(/[^a-zA-Z0-9._-]/g, "-");
+  return path28.join(".lowcal", "team-channels", `${teamId}-${safe}.jsonl`);
 }
 function parseTeamControlResult(value) {
   if (!value || typeof value !== "object") {
@@ -136524,13 +136589,49 @@ ${teams.map(formatTeamOverview).join("\n")}`;
 ${JSON.stringify(team, null, 2)}
 \`\`\``;
       }
-      case "post_to_channel": {
+      case "post_to_channel":
+      case "post_message": {
         const team = await this.loadTeam(this.params.team_id);
-        const channelName = asString(this.params.channel_name, "channel_name");
         const content = asString(this.params.content, "content");
-        const channel = team.channels[channelName];
+        const fromAgent = resolveParticipant(team, this.params.from_agent ?? "orchestrator", "from_agent");
+        const toAgentRaw = asOptionalString(this.params.to_agent);
+        const toAgent = toAgentRaw ? resolveParticipant(team, toAgentRaw, "to_agent") : void 0;
+        let channelName = asOptionalString(this.params.channel_name);
+        if (toAgent) {
+          channelName = buildDmChannelName(fromAgent, toAgent);
+        }
+        if (!channelName) {
+          if (this.params.action === "post_to_channel") {
+            channelName = asString(this.params.channel_name, "channel_name");
+          } else if (team.channels["#public"]) {
+            channelName = "#public";
+          } else if (team.channels["#general"]) {
+            channelName = "#general";
+          } else {
+            channelName = "#public";
+          }
+        }
+        channelName = normalizeChannelName(channelName);
+        const ensuredTeam = await upsertTeamState(baseDir, team.team_id, (current) => {
+          const existing2 = current ?? team;
+          if (existing2.channels[channelName]) {
+            return existing2;
+          }
+          return {
+            ...existing2,
+            channels: {
+              ...existing2.channels,
+              [channelName]: {
+                channel_name: channelName,
+                message_count: 0,
+                path: buildChannelPath(existing2.team_id, channelName)
+              }
+            }
+          };
+        });
+        const channel = ensuredTeam.channels[channelName];
         if (!channel) {
-          throw new Error(`Channel "${channelName}" is not registered for team "${team.team_id}".`);
+          throw new Error(`Failed to resolve channel "${channelName}".`);
         }
         const channelPath = resolveChannelPath(baseDir, channel.path);
         const existing = await readChannelMessages(channelPath);
@@ -136538,20 +136639,22 @@ ${JSON.stringify(team, null, 2)}
         const nowIso = (/* @__PURE__ */ new Date()).toISOString();
         const message = {
           channel: channelName,
-          from_agent: "orchestrator",
+          from_agent: fromAgent,
+          ...toAgent ? { to_agent: toAgent } : {},
+          visibility: toAgent ? "direct" : "public",
           turn_number: nextTurn,
           timestamp: nowIso,
-          message_type: "instruction",
+          message_type: toAgent ? "dm" : this.params.action === "post_message" ? "chat" : "instruction",
           content: { text: content },
           metadata: {
             thread_id: asOptionalString(this.params.thread_id),
-            team_id: team.team_id
+            team_id: ensuredTeam.team_id
           }
         };
         await appendChannelMessage(channelPath, message);
-        await upsertTeamState(baseDir, team.team_id, (current, nowIsoInner) => {
+        await upsertTeamState(baseDir, ensuredTeam.team_id, (current, nowIsoInner) => {
           if (!current)
-            return team;
+            return ensuredTeam;
           const next = { ...current };
           const existingChannel = next.channels[channelName];
           if (existingChannel) {
@@ -136566,26 +136669,66 @@ ${JSON.stringify(team, null, 2)}
           }
           return next;
         });
-        return `Posted turn ${nextTurn} to ${channelName} for team "${team.team_id}".`;
+        return `Posted turn ${nextTurn} to ${channelName} for team "${ensuredTeam.team_id}".`;
       }
-      case "read_channel": {
+      case "read_channel":
+      case "read_messages": {
         const team = await this.loadTeam(this.params.team_id);
-        const channelName = asString(this.params.channel_name, "channel_name");
-        const channel = team.channels[channelName];
-        if (!channel) {
-          throw new Error(`Channel "${channelName}" is not registered for team "${team.team_id}".`);
-        }
-        const channelPath = resolveChannelPath(baseDir, channel.path);
         const afterTurn = typeof this.params.after_turn === "number" && Number.isFinite(this.params.after_turn) ? Math.max(0, Math.floor(this.params.after_turn)) : 0;
-        const limit2 = asPositiveInt(this.params.limit, 20, 200);
-        const messages = await readChannelMessages(channelPath);
-        const selected = messages.filter((msg) => msg.turn_number > afterTurn).slice(-limit2);
-        if (selected.length === 0) {
-          return `No channel messages found for ${channelName} after turn ${afterTurn}.`;
+        const limit2 = asPositiveInt(this.params.limit, 20, 500);
+        const channelNameRaw = asOptionalString(this.params.channel_name);
+        const participantRaw = asOptionalString(this.params.participant);
+        let channelNames = [];
+        if (channelNameRaw) {
+          channelNames = [normalizeChannelName(channelNameRaw)];
+        } else if (participantRaw) {
+          const participant = resolveParticipant(team, participantRaw, "participant");
+          channelNames = Object.keys(team.channels).filter((name2) => {
+            if (name2 === "#public" || name2 === "#general") {
+              return true;
+            }
+            const dmParticipants = parseDmParticipants(name2);
+            return dmParticipants?.includes(participant) ?? false;
+          });
+        } else if (this.params.action === "read_channel") {
+          const channelName = asString(this.params.channel_name, "channel_name");
+          channelNames = [normalizeChannelName(channelName)];
+        } else if (team.channels["#public"]) {
+          channelNames = ["#public"];
+        } else if (team.channels["#general"]) {
+          channelNames = ["#general"];
+        } else {
+          channelNames = Object.keys(team.channels).slice(0, 1);
         }
-        const body = selected.map((msg) => `[turn ${msg.turn_number}] ${msg.from_agent} @ ${new Date(msg.timestamp).toLocaleString()}
-${msg.content.text}`).join("\n\n");
-        return `Read ${selected.length} message(s) from ${channelName}:
+        const uniqueChannels = Array.from(new Set(channelNames)).filter((name2) => team.channels[name2]);
+        if (uniqueChannels.length === 0) {
+          return "No channel messages found for the selected filters.";
+        }
+        const entries = await Promise.all(uniqueChannels.map(async (name2) => {
+          const channel = team.channels[name2];
+          const channelPath = resolveChannelPath(baseDir, channel.path);
+          const messages = await readChannelMessages(channelPath);
+          return messages.filter((msg) => msg.turn_number > afterTurn).map((message) => ({
+            channel: name2,
+            message
+          }));
+        }));
+        const selected = entries.flat().sort((left2, right2) => {
+          const leftTs = Date.parse(left2.message.timestamp);
+          const rightTs = Date.parse(right2.message.timestamp);
+          const safeLeft = Number.isFinite(leftTs) ? leftTs : 0;
+          const safeRight = Number.isFinite(rightTs) ? rightTs : 0;
+          if (safeLeft !== safeRight) {
+            return safeLeft - safeRight;
+          }
+          return left2.message.turn_number - right2.message.turn_number;
+        }).slice(-limit2);
+        if (selected.length === 0) {
+          return `No channel messages found after turn ${afterTurn}.`;
+        }
+        const body = selected.map(({ channel, message }) => `[turn ${message.turn_number}] [${channel}] ${message.from_agent}${message.to_agent ? ` -> ${message.to_agent}` : ""} @ ${new Date(message.timestamp).toLocaleString()}
+${message.content.text}`).join("\n\n");
+        return `Read ${selected.length} message(s) across ${uniqueChannels.length} channel(s):
 
 ${body}`;
       }

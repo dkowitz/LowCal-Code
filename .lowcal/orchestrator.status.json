@@ -1,37 +1,42 @@
 {
   "running": true,
-  "pid": 568098,
-  "started_at": "2026-02-18T22:44:13.663Z",
-  "last_tick": "2026-02-19T12:50:20.206Z",
+  "pid": 960112,
+  "started_at": "2026-02-19T14:20:57.942Z",
+  "last_tick": "2026-02-20T17:32:38.028Z",
   "tick_interval_ms": 15000,
   "policy_ids": [
     "recover_stalled_session",
     "coordinate_team"
   ],
-  "sessions_scanned": 2,
+  "decision_mode": "deterministic",
+  "decision_mode_source": "default",
+  "sessions_scanned": 1,
   "stalled_sessions": 0,
   "recoveries_attempted": 0,
   "recoveries_succeeded": 0,
-  "teams_scanned": 1,
+  "teams_scanned": 0,
   "teams_updated": 0,
   "team_messages_consumed": 0,
   "team_delegations_dispatched": 0,
   "team_delegations_completed": 0,
   "team_delegations_failed": 0,
-  "team_agent_restart_attempts": 2,
-  "team_agent_restart_successes": 2,
+  "team_agent_restart_attempts": 0,
+  "team_agent_restart_successes": 0,
   "team_phase_transitions": 0,
   "last_action": {
-    "timestamp": "2026-02-19T12:49:20.194Z",
+    "timestamp": "2026-02-19T14:23:28.002Z",
     "session_id": "team-agent-research-team-Agent1",
     "outcome": "removed_dead_session_record",
     "attempt": 1
   },
   "last_team_action": {
-    "timestamp": "2026-02-19T10:24:32.887Z",
+    "timestamp": "2026-02-19T14:21:27.989Z",
     "team_id": "research-team",
-    "phase": "planning",
+    "phase": "done",
     "outcome": "restarted_team_agents",
     "consumed_messages": 0
-  }
+  },
+  "planner_last_snapshot_at": "2026-02-20T17:32:38.030Z",
+  "planner_last_hint_teams": 0,
+  "planner_source": "disabled"
 }

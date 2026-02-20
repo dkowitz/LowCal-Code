@@ -35,6 +35,18 @@ interface TeamMailboxMessage {
   output_path?: string;
 }
 
+interface TeamChannelMessage {
+  channel?: string;
+  from_agent?: string;
+  to_agent?: string;
+  turn_number?: number;
+  timestamp?: string;
+  message_type?: string;
+  content?: {
+    text?: string;
+  };
+}
+
 interface ParsedMailboxLine {
   raw: string;
   parsed?: TeamMailboxMessage;
@@ -303,6 +315,18 @@ function parseFallbackAgentId(taskId: string, teamId: string): string | undefine
   return agentId.length > 0 ? agentId : undefined;
 }
 
+function resolveTeamObjective(team: TeamState): string {
+  const fromDescription = team.manifest.description?.trim();
+  if (fromDescription && fromDescription.length > 0) {
+    return fromDescription;
+  }
+  const fromOrchestratorPrompt = team.manifest.orchestrator?.prompt?.trim();
+  if (fromOrchestratorPrompt && fromOrchestratorPrompt.length > 0) {
+    return fromOrchestratorPrompt;
+  }
+  return `Contribute your role-specific output for team "${team.name}".`;
+}
+
 function isProcessAlive(pid: number): boolean {
   try {
     process.kill(pid, 0);
@@ -317,11 +341,11 @@ function buildDelegationPrompt(
   agentId: string,
   role: string,
   taskDescription: string,
+  channelContext?: string,
 ): string {
   const manifestAgent = team.manifest.agents.find((entry) => entry.id === agentId);
-  const objective =
-    team.manifest.description?.trim() ||
-    `Contribute your role-specific output for team "${team.name}".`;
+  const objective = resolveTeamObjective(team);
+  const orchestratorPrompt = team.manifest.orchestrator?.prompt?.trim();
   const sharedContext = (team.manifest.shared_context ?? [])
     .map((entry) => {
       if (entry.type === "file") {
@@ -330,14 +354,61 @@ function buildDelegationPrompt(
       return `- shared variable: ${entry.name}=${entry.value}`;
     })
     .join("\n");
+  const roster = team.manifest.agents
+    .map((entry) => {
+      const tools =
+        entry.tools && entry.tools.length > 0
+          ? ` tools=${entry.tools.join(",")}`
+          : "";
+      return `- ${entry.id}: role=${entry.role} startup=${entry.startup ?? "immediate"}${tools}`;
+    })
+    .join("\n");
+  const channels = team.manifest.channels
+    .map((entry) => {
+      const visibility = entry.visibility ?? "all";
+      const members =
+        visibility === "restricted" && entry.members && entry.members.length > 0
+          ? ` members=${entry.members.join(",")}`
+          : "";
+      return `- ${entry.name}: visibility=${visibility}${members}`;
+    })
+    .join("\n");
 
   const parts = [
     `You are persistent team agent "${agentId}" with role "${role}" in team "${team.team_id}".`,
     `Team objective: ${objective}`,
     `Assigned task: ${taskDescription}`,
+    "Team context packet:",
+    [
+      `team_id=${team.team_id}`,
+      `team_name=${team.name}`,
+      `agent_id=${agentId}`,
+      `agent_role=${role}`,
+    ].join("\n"),
+    `Team roster:\n${roster}`,
+    `Team channels:\n${channels}`,
+    [
+      "Communication protocol:",
+      "- You cannot directly post to team channels from this session.",
+      "- Return concise status/results in your final output; orchestrator will relay to channels.",
+      "- Reference artifacts using explicit workspace-relative file paths.",
+    ].join("\n"),
   ];
+  if (orchestratorPrompt && orchestratorPrompt.length > 0) {
+    parts.push(`Orchestrator prompt:\n${orchestratorPrompt}`);
+  }
   if (manifestAgent?.instructions && manifestAgent.instructions.trim().length > 0) {
     parts.push(`Agent instructions:\n${manifestAgent.instructions.trim()}`);
+  }
+  if (manifestAgent?.tools && manifestAgent.tools.length > 0) {
+    parts.push(
+      `Allowed tools for this agent:\n${manifestAgent.tools
+        .map((tool) => `- ${tool}`)
+        .join("\n")}\nDo not call tools outside this list unless explicitly required to complete the task.`,
+    );
+  }
+  if (channelContext && channelContext.trim().length > 0) {
+    parts.push(`Recent team communications:\n${channelContext}`);
   }
   if (sharedContext.length > 0) {
     parts.push(`Shared context:\n${sharedContext}`);
@@ -346,6 +417,108 @@ function buildDelegationPrompt(
     "Respond with concise, actionable output and mention any artifacts or files you produced.",
   );
   return parts.join("\n\n");
+}
+
+function resolveDelegationExecutionMode(
+  team: TeamState,
+): TaskRuntimeProfile["execution_mode"] | undefined {
+  if (team.manifest.execution?.mode === "headless") {
+    return "headless";
+  }
+  if (team.manifest.execution?.mode === "interactive") {
+    return "zellij_tab";
+  }
+  return undefined;
+}
+
+function parseChannelLine(line: string): TeamChannelMessage | undefined {
+  const trimmed = line.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+  try {
+    const parsed = JSON.parse(trimmed) as TeamChannelMessage;
+    return parsed;
+  } catch {
+    return undefined;
+  }
+}
+
+function isAgentAllowedInChannel(team: TeamState, channelName: string, agentId: string): boolean {
+  const spec = team.manifest.channels.find((entry) => entry.name === channelName);
+  if (!spec || spec.visibility !== "restricted") {
+    return true;
+  }
+  return (spec.members ?? []).includes(agentId);
+}
+
+async function readRecentChannelMessagesForAgent(
+  baseDir: string,
+  team: TeamState,
+  agentId: string,
+  limit = 8,
+): Promise<TeamChannelMessage[]> {
+  const channelEntries = Object.entries(team.channels).filter(([channelName]) =>
+    !channelName.startsWith("@dm:") && isAgentAllowedInChannel(team, channelName, agentId),
+  );
+
+  if (channelEntries.length === 0) {
+    return [];
+  }
+
+  const loaded = await Promise.all(
+    channelEntries.map(async ([channelName, channel]) => {
+      const channelPath = path.isAbsolute(channel.path)
+        ? channel.path
+        : path.resolve(baseDir, channel.path);
+      try {
+        const raw = await fs.readFile(channelPath, "utf-8");
+        return raw
+          .split("\n")
+          .map((line) => parseChannelLine(line))
+          .filter((entry): entry is TeamChannelMessage => Boolean(entry))
+          .map((entry) => ({
+            ...entry,
+            channel: entry.channel ?? channelName,
+          }));
+      } catch (error) {
+        const nodeError = error as NodeJS.ErrnoException;
+        if (nodeError?.code === "ENOENT") {
+          return [];
+        }
+        throw error;
+      }
+    }),
+  );
+
+  return loaded
+    .flat()
+    .sort((left, right) => {
+      const leftTs = Date.parse(left.timestamp ?? "");
+      const rightTs = Date.parse(right.timestamp ?? "");
+      const safeLeft = Number.isFinite(leftTs) ? leftTs : 0;
+      const safeRight = Number.isFinite(rightTs) ? rightTs : 0;
+      if (safeLeft !== safeRight) {
+        return safeLeft - safeRight;
+      }
+      return (left.turn_number ?? 0) - (right.turn_number ?? 0);
+    })
+    .slice(-Math.max(1, Math.min(limit, 50)));
+}
+
+function buildRecentChannelContext(messages: TeamChannelMessage[]): string | undefined {
+  if (messages.length === 0) {
+    return undefined;
+  }
+  return messages
+    .map((message) => {
+      const ts = message.timestamp ? new Date(message.timestamp).toISOString() : "unknown";
+      const from = message.from_agent ?? "unknown";
+      const channel = message.channel ?? "#unknown";
+      const text = message.content?.text?.trim().replace(/\s+/g, " ") ?? "";
+      return `- [${ts}] [${channel}] ${from}: ${text.slice(0, 260)}`;
+    })
+    .join("\n");
 }
 
 function isTerminalDelegation(status: TeamDelegationState["status"]): boolean {
@@ -588,14 +761,31 @@ async function delegatePlanningTask(
     return { dispatched: false, error: "agent session API transport is unavailable" };
   }
 
-  const taskDescription = team.manifest.description?.trim().length
-    ? `${team.manifest.description?.trim()} (focus on role: ${agent.role})`
-    : `Provide your role-based contribution for "${team.name}"`;
-  const actionValue = buildDelegationPrompt(team, agentId, agent.role, taskDescription);
+  const objective = resolveTeamObjective(team);
+  const taskDescription =
+    objective.trim().length > 0
+      ? `${objective} (focus on role: ${agent.role})`
+      : `Provide your role-based contribution for "${team.name}"`;
+  const recentMessages = await readRecentChannelMessagesForAgent(
+    baseDir,
+    team,
+    agentId,
+    8,
+  );
+  const channelContext = buildRecentChannelContext(recentMessages);
+  const actionValue = buildDelegationPrompt(
+    team,
+    agentId,
+    agent.role,
+    taskDescription,
+    channelContext,
+  );
   const taskId = `team-${team.team_id}-${agentId}-${Date.now()}`;
   const agentSpec = team.manifest.agents.find((entry) => entry.id === agentId);
+  const executionMode = resolveDelegationExecutionMode(team);
   const runtimeProfile: TaskRuntimeProfile = {
     ...(agentSpec?.model ? { model: { name: agentSpec.model } } : {}),
+    ...(executionMode ? { execution_mode: executionMode } : {}),
     run: { returnToSession: orchestratorSessionId },
   };
 
@@ -763,6 +953,62 @@ export async function runTeamCoordinatorPolicy(
       }
     }
 
+    const timeoutMinutesRaw = nextTeam.manifest.execution?.timeout_minutes;
+    const delegationTimeoutMinutes =
+      typeof timeoutMinutesRaw === "number" &&
+      Number.isFinite(timeoutMinutesRaw) &&
+      timeoutMinutesRaw > 0
+        ? timeoutMinutesRaw
+        : undefined;
+    if (delegationTimeoutMinutes) {
+      const timeoutMs = delegationTimeoutMinutes * 60_000;
+      const nowMs = Date.parse(nowIso);
+      for (const [taskId, delegation] of Object.entries(coordination.delegations)) {
+        if (isTerminalDelegation(delegation.status)) {
+          continue;
+        }
+        const delegatedAtMs = Date.parse(delegation.delegated_at);
+        if (!Number.isFinite(delegatedAtMs)) {
+          continue;
+        }
+        if (nowMs - delegatedAtMs < timeoutMs) {
+          continue;
+        }
+
+        const timeoutSummary = `Delegation timed out after ${delegationTimeoutMinutes} minute(s).`;
+        coordination.delegations[taskId] = {
+          ...delegation,
+          status: "failed",
+          completed_at: nowIso,
+          result_summary: timeoutSummary,
+          last_error: timeoutSummary,
+        };
+        const currentAgent = nextTeam.agents[delegation.agent_id];
+        if (currentAgent) {
+          nextTeam.agents = {
+            ...nextTeam.agents,
+            [delegation.agent_id]: {
+              ...currentAgent,
+              status: "failed",
+              last_turn_at: nowIso,
+              result_summary: timeoutSummary,
+              last_error: timeoutSummary,
+            },
+          };
+        }
+        waitingOn.delete(delegation.agent_id);
+        metrics.delegations_failed += 1;
+        changed = true;
+        await appendResultToChannel(baseDir, nextTeam, coordination, nowIso, {
+          agentId: delegation.agent_id,
+          taskId,
+          status: "error",
+          summary: timeoutSummary,
+          timestamp: nowIso,
+        });
+      }
+    }
+
     let teamConsumedMessages = 0;
     for (let index = 0; index < mailbox.length; index += 1) {
       if (consumedIndexes.has(index)) {
@@ -866,79 +1112,101 @@ export async function runTeamCoordinatorPolicy(
       if (plannerHint?.strategy === "hold") {
         transitionPhase("planning");
       } else {
-      transitionPhase("delegating");
-      const candidateAgents = Object.values(nextTeam.agents).filter(
-        (agent) =>
-          Boolean(agent.session_id) &&
-          agent.status !== "failed" &&
-          (agent.status === "idle" || agent.status === "pending"),
-      );
-      let filteredCandidates = candidateAgents;
-      if (
-        plannerHint?.strategy === "delegate_subset" &&
-        plannerHint.target_agent_ids.length > 0
-      ) {
-        const allowed = new Set(plannerHint.target_agent_ids);
-        filteredCandidates = filteredCandidates.filter((agent) =>
-          allowed.has(agent.agent_id),
-        );
-      }
-      if (plannerHint?.preferred_agent_order.length) {
-        const orderIndex = new Map(
-          plannerHint.preferred_agent_order.map((agentId, index) => [
-            agentId,
-            index,
+        transitionPhase("delegating");
+        const startupByAgentId = new Map(
+          nextTeam.manifest.agents.map((agent) => [
+            agent.id,
+            agent.startup ?? "immediate",
           ]),
         );
-        filteredCandidates = [...filteredCandidates].sort((left, right) => {
-          const leftOrder = orderIndex.get(left.agent_id) ?? Number.MAX_SAFE_INTEGER;
-          const rightOrder =
-            orderIndex.get(right.agent_id) ?? Number.MAX_SAFE_INTEGER;
-          if (leftOrder !== rightOrder) {
-            return leftOrder - rightOrder;
-          }
-          return left.agent_id.localeCompare(right.agent_id);
-        });
-      }
-      if (
-        typeof plannerHint?.max_delegations === "number" &&
-        Number.isFinite(plannerHint.max_delegations) &&
-        plannerHint.max_delegations > 0
-      ) {
-        filteredCandidates = filteredCandidates.slice(
-          0,
-          Math.floor(plannerHint.max_delegations),
+        const candidateAgents = Object.values(nextTeam.agents).filter(
+          (agent) =>
+            Boolean(agent.session_id) &&
+            agent.status !== "failed" &&
+            (agent.status === "idle" || agent.status === "pending"),
         );
-      }
+        let filteredCandidates = candidateAgents;
 
-      for (const agent of filteredCandidates) {
-        const outcome = await delegatePlanningTask(
-          baseDir,
-          orchestratorSessionId,
-          nextTeam,
-          coordination,
-          agent.agent_id,
-          nowIso,
-        );
-        if (outcome.dispatched) {
-          delegatedPlanningTasks += 1;
-          metrics.delegations_dispatched += 1;
-          changed = true;
-          waitingOn.add(agent.agent_id);
-          continue;
+        // Deterministic fallback: delegate only immediate-start agents.
+        if (!plannerHint) {
+          filteredCandidates = filteredCandidates.filter(
+            (agent) => startupByAgentId.get(agent.agent_id) !== "idle",
+          );
         }
-        if (outcome.error) {
-          nextTeam.agents = {
-            ...nextTeam.agents,
-            [agent.agent_id]: {
-              ...agent,
-              status: "failed",
-              last_error: outcome.error,
-            },
-          };
-          changed = true;
+        if (
+          plannerHint?.strategy === "delegate_subset" &&
+          plannerHint.target_agent_ids.length > 0
+        ) {
+          const allowed = new Set(plannerHint.target_agent_ids);
+          filteredCandidates = filteredCandidates.filter((agent) =>
+            allowed.has(agent.agent_id),
+          );
         }
-      }
+        if (plannerHint?.preferred_agent_order.length) {
+          const orderIndex = new Map(
+            plannerHint.preferred_agent_order.map((agentId, index) => [
+              agentId,
+              index,
+            ]),
+          );
+          filteredCandidates = [...filteredCandidates].sort((left, right) => {
+            const leftOrder = orderIndex.get(left.agent_id) ?? Number.MAX_SAFE_INTEGER;
+            const rightOrder =
+              orderIndex.get(right.agent_id) ?? Number.MAX_SAFE_INTEGER;
+            if (leftOrder !== rightOrder) {
+              return leftOrder - rightOrder;
+            }
+            return left.agent_id.localeCompare(right.agent_id);
+          });
+        } else {
+          filteredCandidates = [...filteredCandidates].sort((left, right) => {
+            const leftImmediate = startupByAgentId.get(left.agent_id) !== "idle";
+            const rightImmediate = startupByAgentId.get(right.agent_id) !== "idle";
+            if (leftImmediate !== rightImmediate) {
+              return leftImmediate ? -1 : 1;
+            }
+            return left.agent_id.localeCompare(right.agent_id);
+          });
+        }
+        if (
+          typeof plannerHint?.max_delegations === "number" &&
+          Number.isFinite(plannerHint.max_delegations) &&
+          plannerHint.max_delegations > 0
+        ) {
+          filteredCandidates = filteredCandidates.slice(
+            0,
+            Math.floor(plannerHint.max_delegations),
+          );
+        }
+
+        for (const agent of filteredCandidates) {
+          const outcome = await delegatePlanningTask(
+            baseDir,
+            orchestratorSessionId,
+            nextTeam,
+            coordination,
+            agent.agent_id,
+            nowIso,
+          );
+          if (outcome.dispatched) {
+            delegatedPlanningTasks += 1;
+            metrics.delegations_dispatched += 1;
+            changed = true;
+            waitingOn.add(agent.agent_id);
+            continue;
+          }
+          if (outcome.error) {
+            nextTeam.agents = {
+              ...nextTeam.agents,
+              [agent.agent_id]: {
+                ...agent,
+                status: "failed",
+                last_error: outcome.error,
+              },
+            };
+            changed = true;
+          }
+        }
       }
     }
 

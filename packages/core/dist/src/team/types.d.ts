@@ -8,10 +8,14 @@ export interface TeamManifest {
     id: string;
     name: string;
     description?: string;
+    orchestrator?: TeamOrchestratorSpec;
     agents: AgentSpec[];
     channels: ChannelSpec[];
     shared_context?: SharedContextEntry[];
     execution?: TeamExecutionSpec;
+}
+export interface TeamOrchestratorSpec {
+    prompt?: string;
 }
 export interface AgentSpec {
     id: string;
@@ -24,6 +28,8 @@ export interface AgentSpec {
 export interface ChannelSpec {
     name: string;
     history: "shared";
+    visibility?: "all" | "restricted";
+    members?: string[];
 }
 export interface TeamExecutionSpec {
     mode?: "headless" | "interactive";

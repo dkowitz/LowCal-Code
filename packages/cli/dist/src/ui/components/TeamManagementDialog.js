@@ -1,5 +1,5 @@
 import { jsx as _jsx, jsxs as _jsxs, Fragment as _Fragment } from "react/jsx-runtime";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { listTeamStates, TaskTemplateManager, } from "@qwen-code/qwen-code-core";
 import { Box, Text } from "ink";
 import { getOrchestratorStatus, } from "../../orchestrator/daemon.js";
@@ -16,21 +16,21 @@ const TEAM_MEMBER_TAGS = new Set([
 const TEAM_CREATE_FIELD_ORDER = [
     "team_id",
     "team_name",
-    "description",
+    "orchestrator_prompt",
     "agent_tasks",
     "channels",
 ];
 const TEAM_CREATE_FIELD_LABELS = {
     team_id: "Team ID",
     team_name: "Team Name",
-    description: "Description",
+    orchestrator_prompt: "Orchestrator Prompt",
     agent_tasks: "Agent Tasks",
     channels: "Channels",
 };
 const TEAM_CREATE_PLACEHOLDERS = {
     team_id: "Unique team id (e.g., research-team)",
     team_name: "Human-readable team name",
-    description: "Optional team description",
+    orchestrator_prompt: "Initial orchestrator instructions for this team",
     agent_tasks: "Select team-member tasks below",
     channels: "#general,#planning",
 };
@@ -78,7 +78,7 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
     const [teamCreateDraft, setTeamCreateDraft] = useState({
         team_id: "research-team",
         team_name: "Research Team",
-        description: "",
+        orchestrator_prompt: "",
         channels: "#general,#planning",
     });
     const [selectedTeamAgentTaskIds, setSelectedTeamAgentTaskIds] = useState([]);
@@ -90,6 +90,7 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
     const [errorMessage, setErrorMessage] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [isRunningAction, setIsRunningAction] = useState(false);
+    const teamEditInitRef = useRef(null);
     const manager = useMemo(() => new TaskTemplateManager(projectRoot), [projectRoot]);
     const selectedTeam = useMemo(() => teamStates.find((team) => team.team_id === selectedTeamId) ?? null, [teamStates, selectedTeamId]);
     const selectedTask = useMemo(() => teamTasks.find((task) => templateKey(task) === selectedTaskKey) ?? null, [teamTasks, selectedTaskKey]);
@@ -172,12 +173,15 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
     useEffect(() => {
         void reloadData();
         const timer = setInterval(() => {
-            void reloadData({ background: true });
+            const isWizardEditing = selectedAction === "team_create" || selectedAction === "team_edit";
+            if (!isWizardEditing && !isRunningAction) {
+                void reloadData({ background: true });
+            }
         }, 5000);
         return () => {
             clearInterval(timer);
         };
-    }, [reloadData]);
+    }, [isRunningAction, reloadData, selectedAction]);
     useEffect(() => {
         const availableIds = new Set(uniqueTeamAgentTasks.map((task) => task.id));
         setSelectedTeamAgentTaskIds((current) => current.filter((id) => availableIds.has(id)));
@@ -203,9 +207,18 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
         }
     }, [selectedAction]);
     useEffect(() => {
-        if (selectedAction !== "team_edit" || !selectedTeam) {
+        if (selectedAction !== "team_edit") {
+            teamEditInitRef.current = null;
             return;
         }
+        if (!selectedTeam) {
+            return;
+        }
+        const seedKey = selectedTeam.team_id;
+        if (teamEditInitRef.current === seedKey) {
+            return;
+        }
+        teamEditInitRef.current = seedKey;
         const manifest = selectedTeam.manifest;
         const channelNames = manifest.channels.map((channel) => channel.name).join(",");
         const agentIds = manifest.agents.map((agent) => agent.id);
@@ -216,7 +229,7 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
         setTeamCreateDraft({
             team_id: selectedTeam.team_id,
             team_name: selectedTeam.name,
-            description: manifest.description ?? "",
+            orchestrator_prompt: manifest.orchestrator?.prompt ?? manifest.description ?? "",
             channels: channelNames,
         });
         setSelectedTeamAgentTaskIds(agentIds);
@@ -276,7 +289,12 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
             return [...current, task.id];
         });
         setSelectedTeamAgentTaskModes((current) => {
-            const nextMode = current[task.id] === "idle" ? "immediate" : "idle";
+            const currentMode = current[task.id];
+            const nextMode = currentMode === undefined
+                ? "immediate"
+                : currentMode === "idle"
+                    ? "immediate"
+                    : "idle";
             return {
                 ...current,
                 [task.id]: nextMode,
@@ -288,7 +306,7 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
             (selectedAction === "team_create" || selectedAction === "team_edit");
         if (inTeamCreateInput) {
             if (key.ctrl && key.name === "s") {
-                void executeAction(selectedAction);
+                void executeAction(selectedAction === "team_edit" ? "team_edit_save" : "team_create");
                 return;
             }
             if (key.name === "escape" && teamCreateMode !== "field_nav") {
@@ -315,11 +333,19 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
                 }
             }
             else if (teamCreateMode === "select_agent_tasks") {
+                if (key.name === "return") {
+                    toggleCurrentAgentTaskStartupMode();
+                    return;
+                }
                 if (key.name === "space") {
                     toggleCurrentAgentTaskSelection();
                     return;
                 }
-                if (key.name === "m") {
+                if (key.name === "m" ||
+                    key.name === "left" ||
+                    key.name === "right" ||
+                    key.name === "h" ||
+                    key.name === "l") {
                     toggleCurrentAgentTaskStartupMode();
                     return;
                 }
@@ -355,6 +381,10 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
         {
             value: "team_edit",
             label: `Edit selected team (wizard): ${selectedTeam?.team_id ?? "(select a team)"}`,
+        },
+        {
+            value: "team_edit_save",
+            label: `Save edited team changes: ${selectedTeam?.team_id ?? "(select a team)"}`,
         },
         {
             value: "team_status",
@@ -406,11 +436,13 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
         if (action === "refresh") {
             return {};
         }
-        if (action === "team_create" || action === "team_edit") {
+        if (action === "team_create" ||
+            action === "team_edit" ||
+            action === "team_edit_save") {
             const teamId = teamCreateDraft.team_id.trim();
             const teamName = teamCreateDraft.team_name.trim();
             const channels = teamCreateDraft.channels.trim();
-            const description = teamCreateDraft.description.trim();
+            const orchestratorPrompt = teamCreateDraft.orchestrator_prompt.trim();
             const agentTasks = selectedTeamAgentTaskIds;
             const modeEntries = agentTasks.map((taskId) => `${taskId}:${selectedTeamAgentTaskModes[taskId] === "idle" ? "idle" : "immediate"}`);
             if (action === "team_create" && !teamId) {
@@ -429,10 +461,10 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
             }
             const agentTasksArg = quoteForShell(agentTasks.join(","));
             const agentModesArg = quoteForShell(modeEntries.join(","));
-            const descriptionArg = description
-                ? ` --description ${quoteForShell(description)}`
+            const descriptionArg = orchestratorPrompt
+                ? ` --description ${quoteForShell(orchestratorPrompt)}`
                 : "";
-            if (action === "team_edit") {
+            if (action === "team_edit" || action === "team_edit_save") {
                 if (!selectedTeam) {
                     return { error: "Select a team before editing it." };
                 }
@@ -524,6 +556,7 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
             setStatusMessage(`Submitted: ${plan.command}`);
             if (action === "team_create" ||
                 action === "team_edit" ||
+                action === "team_edit_save" ||
                 action === "team_run" ||
                 action === "team_prompt" ||
                 action === "team_dissolve" ||
@@ -551,6 +584,8 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
         return [
             `Team: ${selectedTeam.team_id} (${selectedTeam.status})`,
             `Name: ${selectedTeam.name}`,
+            `Objective: ${formatPreview(selectedTeam.manifest.description, "(unset)")}`,
+            `Orchestrator Prompt: ${formatPreview(selectedTeam.manifest.orchestrator?.prompt ?? selectedTeam.manifest.description, "(unset)")}`,
             `Phase: ${selectedTeam.coordination?.phase ?? "planning"} | Turn: ${selectedTeam.coordination?.turn_number ?? 0}`,
             `Agents: ${Object.keys(selectedTeam.agents).length} | Channels: ${Object.keys(selectedTeam.channels).length} | Delegations: ${delegationCount}`,
             `Startup Modes: immediate=${immediateCount}, idle=${idleCount}`,
@@ -586,7 +621,7 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
     const totalWidth = Math.max(78, terminalColumns - 2);
     const columnWidth = Math.max(24, Math.floor((totalWidth - columnGap * 2) / 3));
     const teamCreateFieldIndex = wizardFieldOrder.indexOf(teamCreateField);
-    const teamCreateInputHeight = teamCreateField === "description"
+    const teamCreateInputHeight = teamCreateField === "orchestrator_prompt"
         ? 3
         : teamCreateField === "agent_tasks" || teamCreateField === "channels"
             ? 4
@@ -599,7 +634,7 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
     const wizardFieldPreview = useMemo(() => ({
         team_id: teamCreateDraft.team_id,
         team_name: teamCreateDraft.team_name,
-        description: teamCreateDraft.description,
+        orchestrator_prompt: teamCreateDraft.orchestrator_prompt,
         channels: teamCreateDraft.channels,
         agent_tasks: selectedAgentTaskSummary,
     }), [selectedAgentTaskSummary, teamCreateDraft]);
@@ -622,7 +657,7 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
         const isFinalField = teamCreateFieldIndex === wizardFieldOrder.length - 1;
         if (isFinalField) {
             setTeamCreateMode("field_nav");
-            void executeAction(selectedAction === "team_edit" ? "team_edit" : "team_create");
+            void executeAction(selectedAction === "team_edit" ? "team_edit_save" : "team_create");
             return;
         }
         setTeamCreateField(wizardFieldOrder[teamCreateFieldIndex + 1]);
@@ -630,16 +665,25 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
     }, [executeAction, selectedAction, teamCreateFieldIndex, wizardFieldOrder]);
     return (_jsxs(Box, { flexDirection: "column", children: [_jsx(Text, { color: Colors.AccentCyan, children: "Team Management" }), _jsx(Text, { color: Colors.Gray, children: "Team members are persistent sessions. Routing is strict orchestrator-mediated and channels are shared-only in v1." }), _jsx(Text, { color: Colors.Gray, children: "Team creation is wizard-driven here; no YAML file is required." }), _jsx(Text, { color: Colors.Gray, children: "Tab/Shift+Tab switch focus. Enter executes selected action. Press r to refresh." }), _jsx(Box, { marginTop: 1, children: _jsxs(Text, { color: Colors.Gray, children: ["Focus: ", focusSection] }) }), _jsxs(Box, { marginTop: 1, children: [_jsxs(Box, { flexDirection: "column", width: columnWidth, marginRight: columnGap, children: [_jsx(Text, { color: focusSection === "teams" ? Colors.AccentGreen : Colors.AccentBlue, children: "Teams" }), isLoading ? (_jsx(Text, { color: Colors.Gray, children: "Loading teams..." })) : teamItems.length === 0 ? (_jsx(Text, { color: Colors.Gray, children: "No teams found." })) : (_jsx(RadioButtonSelect, { items: teamItems, initialIndex: selectedTeamIndex, isFocused: focusSection === "teams", maxItemsToShow: listMaxItems, onHighlight: (value) => setSelectedTeamId(value), onSelect: (value) => setSelectedTeamId(value) }))] }), _jsxs(Box, { flexDirection: "column", width: columnWidth, marginRight: columnGap, children: [_jsx(Text, { color: focusSection === "tasks" ? Colors.AccentGreen : Colors.AccentBlue, children: "Team Agent-Tasks" }), isLoading ? (_jsx(Text, { color: Colors.Gray, children: "Loading task templates..." })) : taskItems.length === 0 ? (_jsx(Text, { color: Colors.Gray, children: "No templates tagged with team_member." })) : (_jsx(RadioButtonSelect, { items: taskItems, initialIndex: selectedTaskIndex, isFocused: focusSection === "tasks", maxItemsToShow: listMaxItems, onHighlight: (value) => setSelectedTaskKey(value), onSelect: (value) => setSelectedTaskKey(value) }))] }), _jsxs(Box, { flexDirection: "column", width: columnWidth, children: [_jsx(Text, { color: focusSection === "actions"
                                     ? Colors.AccentGreen
-                                    : Colors.AccentBlue, children: "Actions" }), _jsx(RadioButtonSelect, { items: actionItems, initialIndex: selectedActionIndex, isFocused: focusSection === "actions", maxItemsToShow: actionMaxItems, onHighlight: (value) => setSelectedAction(value), onSelect: (value) => {
-                                    if (value === "team_create" ||
-                                        value === "team_edit" ||
-                                        value === "team_prompt") {
-                                        if (selectedAction === value) {
-                                            void executeAction(value);
-                                        }
-                                        else {
-                                            setSelectedAction(value);
-                                        }
+                                    : Colors.AccentBlue, children: "Actions" }), _jsx(RadioButtonSelect, { items: actionItems, initialIndex: selectedActionIndex, isFocused: focusSection === "actions", maxItemsToShow: actionMaxItems, onHighlight: (value) => {
+                                    if (value === "team_edit_save" && selectedAction === "team_edit") {
+                                        return;
+                                    }
+                                    setSelectedAction(value);
+                                }, onSelect: (value) => {
+                                    if (value === "team_create" || value === "team_edit") {
+                                        setSelectedAction(value);
+                                        setFocusSection("input");
+                                        setTeamCreateMode("field_nav");
+                                        return;
+                                    }
+                                    if (value === "team_prompt") {
+                                        setSelectedAction(value);
+                                        setFocusSection("input");
+                                        return;
+                                    }
+                                    if (value === "team_edit_save") {
+                                        void executeAction("team_edit_save");
                                         return;
                                     }
                                     setSelectedAction(value);
@@ -659,22 +703,20 @@ export function TeamManagementDialog({ baseDir, projectRoot, onExit, onSubmitCom
                                         }
                                     }, onSelect: (value) => {
                                         setTeamAgentTaskCursor(Math.max(0, uniqueTeamAgentTasks.findIndex((task) => task.id === value)));
-                                        setSelectedTeamAgentTaskIds((current) => {
-                                            if (current.includes(value)) {
-                                                setSelectedTeamAgentTaskModes((modes) => {
-                                                    const next = { ...modes };
-                                                    delete next[value];
-                                                    return next;
-                                                });
-                                                return current.filter((id) => id !== value);
-                                            }
-                                            setSelectedTeamAgentTaskModes((modes) => ({
-                                                ...modes,
-                                                [value]: modes[value] ?? "immediate",
-                                            }));
-                                            return [...current, value];
+                                        setSelectedTeamAgentTaskIds((current) => current.includes(value) ? current : [...current, value]);
+                                        setSelectedTeamAgentTaskModes((current) => {
+                                            const currentMode = current[value];
+                                            const nextMode = currentMode === undefined
+                                                ? "immediate"
+                                                : currentMode === "idle"
+                                                    ? "immediate"
+                                                    : "idle";
+                                            return {
+                                                ...current,
+                                                [value]: nextMode,
+                                            };
                                         });
-                                    } }))) : (_jsx(Text, { color: Colors.Gray, children: "Press Enter to select agent-tasks from Team Agent-Tasks. Space toggles selection. m toggles startup mode (immediate/idle)." })) })) : (_jsx(TextInput, { value: currentTeamCreateValue, onChange: setCurrentTeamCreateValue, onSubmit: handleTeamCreateInputSubmit, placeholder: TEAM_CREATE_PLACEHOLDERS[teamCreateField], inputWidth: actionInputWidth, height: teamCreateInputHeight, isActive: focusSection === "input" && teamCreateMode === "edit_text" }))] })) : selectedAction === "team_prompt" ? (_jsx(TextInput, { value: teamPromptDraft, onChange: (value) => {
+                                    } }))) : (_jsx(Text, { color: Colors.Gray, children: "Press Space to select/deselect team-member tasks. Press Enter, Left/Right, or m to toggle startup mode (immediate/idle) for the highlighted selected task." })) })) : (_jsx(TextInput, { value: currentTeamCreateValue, onChange: setCurrentTeamCreateValue, onSubmit: handleTeamCreateInputSubmit, placeholder: TEAM_CREATE_PLACEHOLDERS[teamCreateField], inputWidth: actionInputWidth, height: teamCreateInputHeight, isActive: focusSection === "input" && teamCreateMode === "edit_text" }))] })) : selectedAction === "team_prompt" ? (_jsx(TextInput, { value: teamPromptDraft, onChange: (value) => {
                             setTeamPromptDraft(value);
                             setErrorMessage(null);
                         }, onSubmit: () => {

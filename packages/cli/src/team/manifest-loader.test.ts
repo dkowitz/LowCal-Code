@@ -50,12 +50,15 @@ shared_context:
 execution:
   mode: headless
   timeout_minutes: 30
+orchestrator:
+  prompt: Delegate to researchers first, then coders.
 `);
 
     expect(manifest.id).toBe("research-team");
     expect(manifest.agents).toHaveLength(1);
     expect(manifest.channels).toHaveLength(1);
     expect(manifest.execution?.mode).toBe("headless");
+    expect(manifest.orchestrator?.prompt).toContain("Delegate to researchers first");
     expect(manifest.agents[0]?.instructions).toContain("Find relevant sources.");
   });
 
@@ -75,7 +78,7 @@ channels:
     ).toThrow(TeamManifestError);
   });
 
-  it("rejects restricted channels in v1", () => {
+  it("rejects restricted channels with missing members", () => {
     expect(() =>
       parseTeamManifest(`
 version: "1.0"
@@ -87,6 +90,47 @@ agents:
 channels:
   - name: "#private"
     visibility: restricted
+    history: shared
+`),
+    ).toThrow(TeamManifestError);
+  });
+
+  it("parses restricted channels with valid members", () => {
+    const manifest = parseTeamManifest(`
+version: "1.0"
+id: comms-team
+name: Comms Team
+agents:
+  - id: worker-1
+    role: researcher
+channels:
+  - name: "#private"
+    visibility: restricted
+    members:
+      - worker-1
+      - orchestrator
+    history: shared
+`);
+
+    expect(manifest.channels[0]?.visibility).toBe("restricted");
+    expect(manifest.channels[0]?.members).toContain("worker-1");
+  });
+
+  it("rejects unknown channel members", () => {
+    expect(() =>
+      parseTeamManifest(`
+version: "1.0"
+id: bad-members
+name: Bad Members
+agents:
+  - id: worker-1
+    role: researcher
+channels:
+  - name: "#private"
+    visibility: restricted
+    members:
+      - worker-1
+      - unknown-agent
     history: shared
 `),
     ).toThrow(TeamManifestError);
@@ -114,4 +158,3 @@ channels:
     expect(manifest.id).toBe("file-team");
   });
 });
-

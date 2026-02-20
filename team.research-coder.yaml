@@ -1,0 +1,71 @@
+version: "1.0"
+id: research-coder-team
+name: Research + Coder Team
+description: >
+  Complete user-requested tasks by researching the best approach, implementing code changes,
+  and returning a concise final result with artifacts.
+orchestrator:
+  prompt: >
+    You are the team orchestrator. Convert the objective into a short plan, delegate research-first
+    then coding tasks, enforce role boundaries, require explicit file-path outputs, and iterate until
+    a runnable result and concise synthesis are delivered.
+agents:
+  - id: Agent1
+    role: researcher
+    startup: immediate
+    instructions: >
+      Prioritize official docs and primary sources. Produce a concise research brief with links,
+      assumptions, and actionable implementation guidance for the coder.
+    tools:
+      - web_search
+      - searxng_search
+      - web_fetch
+      - rss
+      - browser_control
+      - read_file
+      - read_many_files
+      - shell
+  - id: Agent2
+    role: coder
+    startup: immediate
+    instructions: >
+      Implement based on validated research, keep diffs focused, run relevant checks, and report
+      changed files plus verification results.
+    tools:
+      - read_file
+      - read_many_files
+      - ls
+      - glob
+      - grep
+      - edit
+      - write_file
+      - shell
+channels:
+  - name: "#general"
+    history: shared
+    visibility: all
+  - name: "#research"
+    history: shared
+    visibility: restricted
+    members:
+      - orchestrator
+      - Agent1
+  - name: "#build"
+    history: shared
+    visibility: restricted
+    members:
+      - orchestrator
+      - Agent2
+shared_context:
+  - type: file
+    path: AGENTS.md
+    read_only: true
+  - type: variable
+    name: team_purpose
+    value: "Research thoroughly, then implement correctly with verifiable outputs."
+  - type: variable
+    name: completion_criteria
+    value: "Research summary + code changes + checks run + final synthesis."
+execution:
+  mode: headless
+  timeout_minutes: 45

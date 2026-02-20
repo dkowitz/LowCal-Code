@@ -1,7 +1,7 @@
 -------------------|---------|----------|---------|---------|-------------------
 File               | % Stmts | % Branch | % Funcs | % Lines | Uncovered Line #s 
 -------------------|---------|----------|---------|---------|-------------------
-All files          |     1.1 |    15.56 |    6.95 |     1.1 |                   
+All files          |    3.73 |    31.75 |   14.88 |    3.73 |                   
  src               |       0 |        0 |       0 |       0 |                   
   gemini.tsx       |       0 |        0 |       0 |       0 | 1-480             
   ...ractiveCli.ts |       0 |        0 |       0 |       0 | 1-368             
@@ -15,6 +15,7 @@ All files          |     1.1 |    15.56 |    6.95 |     1.1 |
   scheduler.ts     |       0 |        0 |       0 |       0 | 1-536             
   sessions.ts      |       0 |        0 |       0 |       0 | 1-269             
   tasks.ts         |       0 |        0 |       0 |       0 | 1-284             
+  team-runtime.tsx |       0 |        0 |       0 |       0 | 1-230             
  ...nds/extensions |       0 |        0 |       0 |       0 |                   
   disable.ts       |       0 |        0 |       0 |       0 | 1-51              
   enable.ts        |       0 |        0 |       0 |       0 | 1-59              
@@ -26,15 +27,15 @@ All files          |     1.1 |    15.56 |    6.95 |     1.1 |
   add.ts           |       0 |        0 |       0 |       0 | 1-222             
   list.ts          |       0 |        0 |       0 |       0 | 1-136             
   remove.ts        |       0 |        0 |       0 |       0 | 1-60              
- src/config        |       0 |        0 |       0 |       0 |                   
-  auth.ts          |       0 |        0 |       0 |       0 | 1-151             
-  config.ts        |       0 |        0 |       0 |       0 | 1-799             
+ src/config        |    3.86 |    33.33 |       0 |    3.86 |                   
+  auth.ts          |   10.81 |      100 |       0 |   10.81 | ...42,145,148,151 
+  config.ts        |       0 |        0 |       0 |       0 | 1-803             
   extension.ts     |       0 |        0 |       0 |       0 | 1-533             
   keyBindings.ts   |       0 |        0 |       0 |       0 | 1-190             
   sandboxConfig.ts |       0 |        0 |       0 |       0 | 1-105             
-  settings.ts      |       0 |        0 |       0 |       0 | 1-966             
+  settings.ts      |   11.25 |    66.66 |       0 |   11.25 | ...86-941,944-966 
   ...ingsSchema.ts |       0 |        0 |       0 |       0 | 1-1061            
-  ...tedFolders.ts |       0 |        0 |       0 |       0 | 1-168             
+  ...tedFolders.ts |      21 |      100 |       0 |      21 | ...94-111,114-168 
  ...fig/extensions |       0 |        0 |       0 |       0 |                   
   ...ableSchema.ts |       0 |        0 |       0 |       0 | 1-30              
   variables.ts     |       0 |        0 |       0 |       0 | 1-65              
@@ -42,9 +43,9 @@ All files          |     1.1 |    15.56 |    6.95 |     1.1 |
   git-commit.ts    |       0 |        0 |       0 |       0 | 1-10              
  src/orchestrator  |       0 |        0 |       0 |       0 |                   
   daemon.ts        |       0 |        0 |       0 |       0 | 1-1238            
- ...rator/policies |   36.87 |    46.66 |      84 |   36.87 |                   
-  ...oordinator.ts |   68.39 |    46.97 |    87.5 |   68.39 | ...-984,1001-1003 
-  team-planner.ts  |       0 |        0 |       0 |       0 | 1-923             
+ ...rator/policies |   63.44 |       50 |   77.96 |   63.44 |                   
+  ...oordinator.ts |   68.92 |    47.52 |   86.66 |   68.92 | ...1251-1252,1271 
+  team-planner.ts  |   55.26 |    54.16 |   68.96 |   55.26 | ...81-888,890-929 
  src/patches       |       0 |        0 |       0 |       0 |                   
   is-in-ci.ts      |       0 |        0 |       0 |       0 | 1-17              
  src/scheduler     |       0 |        0 |       0 |       0 |                   
@@ -65,9 +66,9 @@ All files          |     1.1 |    15.56 |    6.95 |     1.1 |
   types.ts         |       0 |        0 |       0 |       0 | 1-54              
  src/session       |       0 |        0 |       0 |       0 |                   
   ...ionManager.ts |       0 |        0 |       0 |       0 | 1-744             
- src/team          |       0 |        0 |       0 |       0 |                   
+ src/team          |   29.53 |    67.77 |   91.66 |   29.53 |                   
   agent-daemon.ts  |       0 |        0 |       0 |       0 | 1-597             
-  ...est-loader.ts |       0 |        0 |       0 |       0 | 1-298             
+  ...est-loader.ts |   75.31 |    68.53 |     100 |   75.31 | ...23-327,360-364 
  src/test-utils    |    5.34 |        0 |       0 |    5.34 |                   
   ...omMatchers.ts |   21.21 |      100 |       0 |   21.21 | 23-51             
   ...andContext.ts |       0 |        0 |       0 |       0 | 1-110             
@@ -121,7 +122,7 @@ All files          |     1.1 |    15.56 |    6.95 |     1.1 |
   statsCommand.ts  |       0 |        0 |       0 |       0 | 1-71              
   ...aryCommand.ts |       0 |        0 |       0 |       0 | 1-189             
   tasksCommand.ts  |       0 |        0 |       0 |       0 | 1-187             
-  teamCommand.ts   |       0 |        0 |       0 |       0 | 1-1401            
+  teamCommand.ts   |       0 |        0 |       0 |       0 | 1-2050            
   ...tupCommand.ts |       0 |        0 |       0 |       0 | 1-46              
   themeCommand.ts  |       0 |        0 |       0 |       0 | 1-18              
   tokensCommand.ts |       0 |        0 |       0 |       0 | 1-97              
@@ -174,7 +175,8 @@ All files          |     1.1 |    15.56 |    6.95 |     1.1 |
   StatsDisplay.tsx |       0 |        0 |       0 |       0 | 1-276             
   ...nsDisplay.tsx |       0 |        0 |       0 |       0 | 1-128             
   ...torDialog.tsx |       0 |        0 |       0 |       0 | 1-1432            
-  ...entDialog.tsx |       0 |        0 |       0 |       0 | 1-1120            
+  ...entDialog.tsx |       0 |        0 |       0 |       0 | 1-1176            
+  ...imeDialog.tsx |       0 |        0 |       0 |       0 | 1-1334            
   ThemeDialog.tsx  |       0 |        0 |       0 |       0 | 1-312             
   Tips.tsx         |       0 |        0 |       0 |       0 | 1-45              
   TodoDisplay.tsx  |       0 |        0 |       0 |       0 | 1-72              
@@ -239,7 +241,7 @@ All files          |     1.1 |    15.56 |    6.95 |     1.1 |
  src/ui/hooks      |       0 |     2.04 |    2.04 |       0 |                   
   ...dProcessor.ts |       0 |        0 |       0 |       0 | 1-480             
   ...dProcessor.ts |       0 |        0 |       0 |       0 | 1-313             
-  ...dProcessor.ts |       0 |        0 |       0 |       0 | 1-844             
+  ...dProcessor.ts |       0 |        0 |       0 |       0 | 1-845             
   ...agerDialog.ts |       0 |        0 |       0 |       0 | 1-32              
   ...Completion.ts |       0 |        0 |       0 |       0 | 1-238             
   ...uthCommand.ts |       0 |        0 |       0 |       0 | 1-94              
@@ -296,15 +298,15 @@ All files          |     1.1 |    15.56 |    6.95 |     1.1 |
   ...acyNotice.tsx |       0 |        0 |       0 |       0 | 1-59              
   ...acyNotice.tsx |       0 |        0 |       0 |       0 | 1-62              
   ...acyNotice.tsx |       0 |        0 |       0 |       0 | 1-41              
- src/ui/themes     |       0 |        0 |       0 |       0 |                   
+ src/ui/themes     |   17.49 |       25 |      16 |   17.49 |                   
   ansi-light.ts    |       0 |        0 |       0 |       0 | 1-150             
   ansi.ts          |       0 |        0 |       0 |       0 | 1-159             
   atom-one-dark.ts |       0 |        0 |       0 |       0 | 1-145             
   ayu-light.ts     |       0 |        0 |       0 |       0 | 1-137             
   ayu.ts           |       0 |        0 |       0 |       0 | 1-111             
-  color-utils.ts   |       0 |        0 |       0 |       0 | 1-231             
-  default-light.ts |       0 |        0 |       0 |       0 | 1-106             
-  default.ts       |       0 |        0 |       0 |       0 | 1-149             
+  color-utils.ts   |   87.11 |    33.33 |      50 |   87.11 | ...14-215,218-231 
+  default-light.ts |     100 |      100 |     100 |     100 |                   
+  default.ts       |     100 |      100 |     100 |     100 |                   
   dracula.ts       |       0 |        0 |       0 |       0 | 1-122             
   github-dark.ts   |       0 |        0 |       0 |       0 | 1-145             
   github-light.ts  |       0 |        0 |       0 |       0 | 1-147             
@@ -315,7 +317,7 @@ All files          |     1.1 |    15.56 |    6.95 |     1.1 |
   ...tic-tokens.ts |       0 |        0 |       0 |       0 | 1-127             
   ...-of-purple.ts |       0 |        0 |       0 |       0 | 1-350             
   theme-manager.ts |       0 |        0 |       0 |       0 | 1-338             
-  theme.ts         |       0 |        0 |       0 |       0 | 1-481             
+  theme.ts         |   36.25 |    66.66 |   42.85 |   36.25 | ...53-448,459-481 
   xcode.ts         |       0 |        0 |       0 |       0 | 1-152             
  src/ui/utils      |       0 |        0 |       0 |       0 |                   
   ...Colorizer.tsx |       0 |        0 |       0 |       0 | 1-217             

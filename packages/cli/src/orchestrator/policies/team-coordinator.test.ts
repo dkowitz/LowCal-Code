@@ -343,4 +343,190 @@ describe("team-coordinator policy", () => {
     expect(updated?.agents[agentId]?.status).toBe("idle");
     expect(updated?.agents[agentId]?.last_error).toBeUndefined();
   });
+
+  it("delegates only immediate-start agents in deterministic fallback mode", async () => {
+    const teamId = "team-startup";
+    const immediateAgent = "agent-now";
+    const idleAgent = "agent-later";
+    const socketNow = path.join(tempRootDir, "agent-now.sock");
+    const socketLater = path.join(tempRootDir, "agent-later.sock");
+    const accepted = JSON.stringify({
+      ok: true,
+      result: { accepted: true, action_id: "action-startup" },
+    });
+    const serverNow = net.createServer((socket) => {
+      socket.on("data", () => socket.write(`${accepted}\n`));
+    });
+    const serverLater = net.createServer((socket) => {
+      socket.on("data", () => socket.write(`${accepted}\n`));
+    });
+    await new Promise<void>((resolve, reject) => {
+      serverNow.once("error", reject);
+      serverNow.listen(socketNow, () => resolve());
+    });
+    await new Promise<void>((resolve, reject) => {
+      serverLater.once("error", reject);
+      serverLater.listen(socketLater, () => resolve());
+    });
+
+    hoisted.sessions.set("agent-session-now", {
+      id: "agent-session-now",
+      pid: process.pid,
+      mode: "team_agent",
+      cwd: tempRootDir,
+      started_at: new Date().toISOString(),
+      last_seen: new Date().toISOString(),
+      status: "idle",
+      api: {
+        transport: "unix",
+        address: socketNow,
+        version: "v1",
+      },
+    });
+    hoisted.sessions.set("agent-session-later", {
+      id: "agent-session-later",
+      pid: process.pid,
+      mode: "team_agent",
+      cwd: tempRootDir,
+      started_at: new Date().toISOString(),
+      last_seen: new Date().toISOString(),
+      status: "idle",
+      api: {
+        transport: "unix",
+        address: socketLater,
+        version: "v1",
+      },
+    });
+
+    await upsertTeamState(tempRootDir, teamId, (_current, nowIso) => ({
+      team_id: teamId,
+      name: "Team Startup",
+      status: "active",
+      created_at: nowIso,
+      started_at: nowIso,
+      manifest: {
+        version: "1.0",
+        id: teamId,
+        name: "Team Startup",
+        description: "Produce the first draft.",
+        agents: [
+          { id: immediateAgent, role: "researcher", startup: "immediate" },
+          { id: idleAgent, role: "coder", startup: "idle" },
+        ],
+        channels: [{ name: "#general", history: "shared" }],
+      },
+      orchestrator_session_id: "orchestrator-pending",
+      agents: {
+        [immediateAgent]: {
+          agent_id: immediateAgent,
+          session_id: "agent-session-now",
+          role: "researcher",
+          status: "idle",
+        },
+        [idleAgent]: {
+          agent_id: idleAgent,
+          session_id: "agent-session-later",
+          role: "coder",
+          status: "idle",
+        },
+      },
+      channels: {
+        "#general": {
+          channel_name: "#general",
+          message_count: 0,
+          path: `.lowcal/team-channels/${teamId}-general.jsonl`,
+        },
+      },
+      coordination: {
+        phase: "planning",
+        turn_number: 0,
+        waiting_on_agent_ids: [],
+        last_transition_at: nowIso,
+        last_updated_at: nowIso,
+        delegations: {},
+      },
+    }));
+
+    const result = await runTeamCoordinatorPolicy({
+      baseDir: tempRootDir,
+      orchestratorSessionId: "orch-startup",
+    });
+
+    await new Promise<void>((resolve) => serverNow.close(() => resolve()));
+    await new Promise<void>((resolve) => serverLater.close(() => resolve()));
+
+    expect(result.metrics.delegations_dispatched).toBe(1);
+    const updated = await getTeamState(tempRootDir, teamId);
+    const delegations = Object.values(updated?.coordination?.delegations ?? {});
+    expect(delegations).toHaveLength(1);
+    expect(delegations[0]?.agent_id).toBe(immediateAgent);
+  });
+
+  it("fails long-running delegations when timeout_minutes is exceeded", async () => {
+    const teamId = "team-timeout";
+    const agentId = "agent-timeout";
+    const pastIso = new Date(Date.now() - 20 * 60_000).toISOString();
+    await createSession({ id: "agent-session-timeout", mode: "team_agent" });
+
+    await upsertTeamState(tempRootDir, teamId, (_current, nowIso) => ({
+      team_id: teamId,
+      name: "Team Timeout",
+      status: "active",
+      created_at: nowIso,
+      started_at: nowIso,
+      manifest: {
+        version: "1.0",
+        id: teamId,
+        name: "Team Timeout",
+        agents: [{ id: agentId, role: "researcher" }],
+        channels: [{ name: "#general", history: "shared" }],
+        execution: {
+          timeout_minutes: 1,
+        },
+      },
+      orchestrator_session_id: "orchestrator-pending",
+      agents: {
+        [agentId]: {
+          agent_id: agentId,
+          session_id: "agent-session-timeout",
+          role: "researcher",
+          status: "working",
+        },
+      },
+      channels: {
+        "#general": {
+          channel_name: "#general",
+          message_count: 0,
+          path: `.lowcal/team-channels/${teamId}-general.jsonl`,
+        },
+      },
+      coordination: {
+        phase: "waiting",
+        turn_number: 1,
+        waiting_on_agent_ids: [agentId],
+        last_transition_at: nowIso,
+        last_updated_at: nowIso,
+        delegations: {
+          [`team-${teamId}-${agentId}-long`]: {
+            task_id: `team-${teamId}-${agentId}-long`,
+            agent_id: agentId,
+            delegated_at: pastIso,
+            status: "running",
+            task_description: "Long running task",
+          },
+        },
+      },
+    }));
+
+    const result = await runTeamCoordinatorPolicy({
+      baseDir: tempRootDir,
+      orchestratorSessionId: "orch-timeout",
+    });
+
+    expect(result.metrics.delegations_failed).toBe(1);
+    const updated = await getTeamState(tempRootDir, teamId);
+    const delegation = Object.values(updated?.coordination?.delegations ?? {})[0];
+    expect(delegation?.status).toBe("failed");
+    expect(delegation?.result_summary).toContain("timed out");
+  });
 });

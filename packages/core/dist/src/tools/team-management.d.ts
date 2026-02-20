@@ -6,12 +6,15 @@
 import type { Config } from "../config/config.js";
 import { BaseDeclarativeTool, BaseToolInvocation } from "./tools.js";
 import type { ToolResult } from "./tools.js";
-type TeamManagementAction = "list_teams" | "get_team_status" | "post_to_channel" | "read_channel" | "delegate_task";
+type TeamManagementAction = "list_teams" | "get_team_status" | "post_to_channel" | "post_message" | "read_channel" | "read_messages" | "delegate_task";
 export interface TeamManagementParams {
     action: TeamManagementAction;
     team_id?: string;
     channel_name?: string;
     content?: string;
+    from_agent?: string;
+    to_agent?: string;
+    participant?: string;
     thread_id?: string;
     after_turn?: number;
     limit?: number;

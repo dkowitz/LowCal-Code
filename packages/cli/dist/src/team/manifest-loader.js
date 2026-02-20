@@ -86,11 +86,24 @@ function parseChannels(raw, sourcePath) {
         if (history !== "shared") {
             throw new TeamManifestError(`channels[${index}].history must be "shared" in v1.`, sourcePath);
         }
-        if ("visibility" in record && record["visibility"] !== "all") {
-            throw new TeamManifestError(`channels[${index}].visibility must be "all" in v1.`, sourcePath);
+        const visibilityRaw = asString(record["visibility"], sourcePath, `channels[${index}].visibility`, false);
+        const visibility = visibilityRaw === "all" || visibilityRaw === "restricted"
+            ? visibilityRaw
+            : undefined;
+        if (visibilityRaw && !visibility) {
+            throw new TeamManifestError(`channels[${index}].visibility must be "all" or "restricted" when provided.`, sourcePath);
         }
-        if ("members" in record) {
-            throw new TeamManifestError(`channels[${index}].members is not supported in v1 (shared channels only).`, sourcePath);
+        const membersRaw = record["members"];
+        const members = Array.isArray(membersRaw) &&
+            membersRaw.every((member) => typeof member === "string")
+            ? membersRaw.map((member) => member.trim()).filter((member) => member.length > 0)
+            : undefined;
+        if (membersRaw !== undefined &&
+            (!Array.isArray(membersRaw) || !members || members.length === 0)) {
+            throw new TeamManifestError(`channels[${index}].members must be a non-empty string array when provided.`, sourcePath);
+        }
+        if (visibility === "restricted" && !members?.length) {
+            throw new TeamManifestError(`channels[${index}] with visibility "restricted" must define members.`, sourcePath);
         }
         if (seen.has(name)) {
             throw new TeamManifestError(`Duplicate channel name "${name}".`, sourcePath);
@@ -99,7 +112,34 @@ function parseChannels(raw, sourcePath) {
         return {
             name,
             history: "shared",
+            visibility: visibility ?? "all",
+            ...(members && members.length > 0 ? { members } : {}),
         };
+    });
+}
+function parseOrchestrator(raw, sourcePath) {
+    if (raw === undefined || raw === null) {
+        return undefined;
+    }
+    const record = asObject(raw, sourcePath, "orchestrator");
+    const prompt = asString(record["prompt"], sourcePath, "orchestrator.prompt", false);
+    if (!prompt) {
+        return undefined;
+    }
+    return { prompt };
+}
+function validateChannelMemberships(agents, channels, sourcePath) {
+    const knownParticipants = new Set(["user", "orchestrator"]);
+    for (const agent of agents) {
+        knownParticipants.add(agent.id);
+    }
+    channels.forEach((channel, index) => {
+        const members = channel.members ?? [];
+        for (const member of members) {
+            if (!knownParticipants.has(member)) {
+                throw new TeamManifestError(`channels[${index}].members contains unknown participant "${member}".`, sourcePath);
+            }
+        }
     });
 }
 function parseSharedContext(raw, sourcePath) {
@@ -169,8 +209,10 @@ export function parseTeamManifest(content, sourcePath = "<inline>") {
     const id = asString(record["id"], sourcePath, "id");
     const name = asString(record["name"], sourcePath, "name");
     const description = asString(record["description"], sourcePath, "description", false);
+    const orchestrator = parseOrchestrator(record["orchestrator"], sourcePath);
     const agents = parseAgents(record["agents"], sourcePath);
     const channels = parseChannels(record["channels"], sourcePath);
+    validateChannelMemberships(agents, channels, sourcePath);
     const shared_context = parseSharedContext(record["shared_context"], sourcePath);
     const execution = parseExecution(record["execution"], sourcePath);
     return {
@@ -178,6 +220,7 @@ export function parseTeamManifest(content, sourcePath = "<inline>") {
         id,
         name,
         description,
+        orchestrator,
         agents,
         channels,
         shared_context,

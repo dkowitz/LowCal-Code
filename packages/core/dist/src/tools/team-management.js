@@ -23,7 +23,9 @@ const teamManagementSchemaData = {
                     "list_teams",
                     "get_team_status",
                     "post_to_channel",
+                    "post_message",
                     "read_channel",
+                    "read_messages",
                     "delegate_task",
                 ],
             },
@@ -34,6 +36,15 @@ const teamManagementSchemaData = {
                 type: "string",
             },
             content: {
+                type: "string",
+            },
+            from_agent: {
+                type: "string",
+            },
+            to_agent: {
+                type: "string",
+            },
+            participant: {
                 type: "string",
             },
             thread_id: {
@@ -70,11 +81,14 @@ Actions:
 - list_teams: list known teams
 - get_team_status: show one team state
 - post_to_channel: append an orchestrator message to a team shared channel
+- post_message: append a public or direct message (DM channels auto-created)
 - read_channel: read team shared channel messages
+- read_messages: read messages by channel or participant inbox (public + DMs)
 - delegate_task: enqueue a delegated prompt task to a bound agent session
 
 This tool is restricted to sessions registered with mode="orchestrator".
 `;
+const DM_CHANNEL_PREFIX = "@dm:";
 function asString(value, field) {
     if (typeof value !== "string" || value.trim().length === 0) {
         throw new Error(`"${field}" is required and must be a non-empty string.`);
@@ -85,6 +99,70 @@ function asOptionalString(value) {
     return typeof value === "string" && value.trim().length > 0
         ? value.trim()
         : undefined;
+}
+function normalizeChannelName(name) {
+    const trimmed = name.trim();
+    if (!trimmed) {
+        return "";
+    }
+    if (trimmed.startsWith("#") || trimmed.startsWith("@")) {
+        return trimmed;
+    }
+    return `#${trimmed}`;
+}
+function normalizeParticipant(raw) {
+    const trimmed = raw.trim();
+    if (trimmed.startsWith("agent:")) {
+        return trimmed.slice("agent:".length).trim();
+    }
+    return trimmed;
+}
+function resolveParticipant(team, raw, field) {
+    const participant = normalizeParticipant(raw);
+    if (participant === "user" || participant === "orchestrator") {
+        return participant;
+    }
+    if (team.agents[participant]) {
+        return participant;
+    }
+    throw new Error(`"${field}" must be user, orchestrator, or a team agent id (received "${raw}").`);
+}
+function buildDmChannelName(left, right) {
+    const ordered = [left, right].sort((a, b) => a.localeCompare(b));
+    return `${DM_CHANNEL_PREFIX}${ordered[0]}|${ordered[1]}`;
+}
+function parseDmParticipants(channelName) {
+    if (!channelName.startsWith(DM_CHANNEL_PREFIX)) {
+        return undefined;
+    }
+    const payload = channelName.slice(DM_CHANNEL_PREFIX.length);
+    const entries = payload.split("|");
+    if (entries.length !== 2) {
+        return undefined;
+    }
+    const left = entries[0]?.trim();
+    const right = entries[1]?.trim();
+    if (!left || !right) {
+        return undefined;
+    }
+    return [left, right];
+}
+function resolveManifestChannel(team, channelName) {
+    return team.manifest.channels.find((entry) => entry.name === channelName);
+}
+function isParticipantAllowedInChannel(team, channelName, participant) {
+    if (participant === "user" || participant === "orchestrator") {
+        return true;
+    }
+    if (channelName.startsWith(DM_CHANNEL_PREFIX)) {
+        const dmParticipants = parseDmParticipants(channelName);
+        return dmParticipants?.includes(participant) ?? false;
+    }
+    const channelSpec = resolveManifestChannel(team, channelName);
+    if (!channelSpec || channelSpec.visibility !== "restricted") {
+        return true;
+    }
+    return (channelSpec.members ?? []).includes(participant);
 }
 function asPositiveInt(value, fallback, max) {
     if (typeof value !== "number" || !Number.isFinite(value)) {
@@ -140,6 +218,10 @@ async function readChannelMessages(channelPath) {
 async function appendChannelMessage(channelPath, message) {
     await fs.mkdir(path.dirname(channelPath), { recursive: true });
     await fs.appendFile(channelPath, `${JSON.stringify(message)}\n`, "utf-8");
+}
+function buildChannelPath(teamId, channelName) {
+    const safe = channelName.replace(/^#/, "").replace(/[^a-zA-Z0-9._-]/g, "-");
+    return path.join(".lowcal", "team-channels", `${teamId}-${safe}.jsonl`);
 }
 function parseTeamControlResult(value) {
     if (!value || typeof value !== "object") {
@@ -269,13 +351,61 @@ class TeamManagementInvocation extends BaseToolInvocation {
                 const team = await this.loadTeam(this.params.team_id);
                 return `\`\`\`json\n${JSON.stringify(team, null, 2)}\n\`\`\``;
             }
-            case "post_to_channel": {
+            case "post_to_channel":
+            case "post_message": {
                 const team = await this.loadTeam(this.params.team_id);
-                const channelName = asString(this.params.channel_name, "channel_name");
                 const content = asString(this.params.content, "content");
-                const channel = team.channels[channelName];
+                const fromAgent = resolveParticipant(team, this.params.from_agent ?? "orchestrator", "from_agent");
+                const toAgentRaw = asOptionalString(this.params.to_agent);
+                const toAgent = toAgentRaw
+                    ? resolveParticipant(team, toAgentRaw, "to_agent")
+                    : undefined;
+                let channelName = asOptionalString(this.params.channel_name);
+                if (toAgent) {
+                    channelName = buildDmChannelName(fromAgent, toAgent);
+                }
+                if (!channelName) {
+                    if (this.params.action === "post_to_channel") {
+                        channelName = asString(this.params.channel_name, "channel_name");
+                    }
+                    else if (team.channels["#public"]) {
+                        channelName = "#public";
+                    }
+                    else if (team.channels["#general"]) {
+                        channelName = "#general";
+                    }
+                    else {
+                        channelName = "#public";
+                    }
+                }
+                channelName = normalizeChannelName(channelName);
+                if (!isParticipantAllowedInChannel(team, channelName, fromAgent)) {
+                    throw new Error(`Participant "${fromAgent}" is not allowed in channel "${channelName}".`);
+                }
+                if (toAgent &&
+                    !isParticipantAllowedInChannel(team, channelName, toAgent)) {
+                    throw new Error(`Participant "${toAgent}" is not allowed in channel "${channelName}".`);
+                }
+                const ensuredTeam = await upsertTeamState(baseDir, team.team_id, (current) => {
+                    const existing = current ?? team;
+                    if (existing.channels[channelName]) {
+                        return existing;
+                    }
+                    return {
+                        ...existing,
+                        channels: {
+                            ...existing.channels,
+                            [channelName]: {
+                                channel_name: channelName,
+                                message_count: 0,
+                                path: buildChannelPath(existing.team_id, channelName),
+                            },
+                        },
+                    };
+                });
+                const channel = ensuredTeam.channels[channelName];
                 if (!channel) {
-                    throw new Error(`Channel "${channelName}" is not registered for team "${team.team_id}".`);
+                    throw new Error(`Failed to resolve channel "${channelName}".`);
                 }
                 const channelPath = resolveChannelPath(baseDir, channel.path);
                 const existing = await readChannelMessages(channelPath);
@@ -283,20 +413,22 @@ class TeamManagementInvocation extends BaseToolInvocation {
                 const nowIso = new Date().toISOString();
                 const message = {
                     channel: channelName,
-                    from_agent: "orchestrator",
+                    from_agent: fromAgent,
+                    ...(toAgent ? { to_agent: toAgent } : {}),
+                    visibility: toAgent ? "direct" : "public",
                     turn_number: nextTurn,
                     timestamp: nowIso,
-                    message_type: "instruction",
+                    message_type: toAgent ? "dm" : this.params.action === "post_message" ? "chat" : "instruction",
                     content: { text: content },
                     metadata: {
                         thread_id: asOptionalString(this.params.thread_id),
-                        team_id: team.team_id,
+                        team_id: ensuredTeam.team_id,
                     },
                 };
                 await appendChannelMessage(channelPath, message);
-                await upsertTeamState(baseDir, team.team_id, (current, nowIsoInner) => {
+                await upsertTeamState(baseDir, ensuredTeam.team_id, (current, nowIsoInner) => {
                     if (!current)
-                        return team;
+                        return ensuredTeam;
                     const next = { ...current };
                     const existingChannel = next.channels[channelName];
                     if (existingChannel) {
@@ -311,31 +443,83 @@ class TeamManagementInvocation extends BaseToolInvocation {
                     }
                     return next;
                 });
-                return `Posted turn ${nextTurn} to ${channelName} for team "${team.team_id}".`;
+                return `Posted turn ${nextTurn} to ${channelName} for team "${ensuredTeam.team_id}".`;
             }
-            case "read_channel": {
+            case "read_channel":
+            case "read_messages": {
                 const team = await this.loadTeam(this.params.team_id);
-                const channelName = asString(this.params.channel_name, "channel_name");
-                const channel = team.channels[channelName];
-                if (!channel) {
-                    throw new Error(`Channel "${channelName}" is not registered for team "${team.team_id}".`);
-                }
-                const channelPath = resolveChannelPath(baseDir, channel.path);
-                const afterTurn = typeof this.params.after_turn === "number" && Number.isFinite(this.params.after_turn)
+                const afterTurn = typeof this.params.after_turn === "number" &&
+                    Number.isFinite(this.params.after_turn)
                     ? Math.max(0, Math.floor(this.params.after_turn))
                     : 0;
-                const limit = asPositiveInt(this.params.limit, 20, 200);
-                const messages = await readChannelMessages(channelPath);
-                const selected = messages
-                    .filter((msg) => msg.turn_number > afterTurn)
+                const limit = asPositiveInt(this.params.limit, 20, 500);
+                const channelNameRaw = asOptionalString(this.params.channel_name);
+                const participantRaw = asOptionalString(this.params.participant);
+                let channelNames = [];
+                if (channelNameRaw) {
+                    channelNames = [normalizeChannelName(channelNameRaw)];
+                }
+                else if (participantRaw) {
+                    const participant = resolveParticipant(team, participantRaw, "participant");
+                    channelNames = Object.keys(team.channels).filter((name) => {
+                        if (!isParticipantAllowedInChannel(team, name, participant)) {
+                            return false;
+                        }
+                        if (name === "#public" || name === "#general") {
+                            return true;
+                        }
+                        const dmParticipants = parseDmParticipants(name);
+                        return dmParticipants?.includes(participant) ?? false;
+                    });
+                }
+                else if (this.params.action === "read_channel") {
+                    const channelName = asString(this.params.channel_name, "channel_name");
+                    channelNames = [normalizeChannelName(channelName)];
+                }
+                else if (team.channels["#public"]) {
+                    channelNames = ["#public"];
+                }
+                else if (team.channels["#general"]) {
+                    channelNames = ["#general"];
+                }
+                else {
+                    channelNames = Object.keys(team.channels).slice(0, 1);
+                }
+                const uniqueChannels = Array.from(new Set(channelNames)).filter((name) => team.channels[name]);
+                if (uniqueChannels.length === 0) {
+                    return "No channel messages found for the selected filters.";
+                }
+                const entries = await Promise.all(uniqueChannels.map(async (name) => {
+                    const channel = team.channels[name];
+                    const channelPath = resolveChannelPath(baseDir, channel.path);
+                    const messages = await readChannelMessages(channelPath);
+                    return messages
+                        .filter((msg) => msg.turn_number > afterTurn)
+                        .map((message) => ({
+                        channel: name,
+                        message,
+                    }));
+                }));
+                const selected = entries
+                    .flat()
+                    .sort((left, right) => {
+                    const leftTs = Date.parse(left.message.timestamp);
+                    const rightTs = Date.parse(right.message.timestamp);
+                    const safeLeft = Number.isFinite(leftTs) ? leftTs : 0;
+                    const safeRight = Number.isFinite(rightTs) ? rightTs : 0;
+                    if (safeLeft !== safeRight) {
+                        return safeLeft - safeRight;
+                    }
+                    return left.message.turn_number - right.message.turn_number;
+                })
                     .slice(-limit);
                 if (selected.length === 0) {
-                    return `No channel messages found for ${channelName} after turn ${afterTurn}.`;
+                    return `No channel messages found after turn ${afterTurn}.`;
                 }
                 const body = selected
-                    .map((msg) => `[turn ${msg.turn_number}] ${msg.from_agent} @ ${new Date(msg.timestamp).toLocaleString()}\n${msg.content.text}`)
+                    .map(({ channel, message }) => `[turn ${message.turn_number}] [${channel}] ${message.from_agent}${message.to_agent ? ` -> ${message.to_agent}` : ""} @ ${new Date(message.timestamp).toLocaleString()}\n${message.content.text}`)
                     .join("\n\n");
-                return `Read ${selected.length} message(s) from ${channelName}:\n\n${body}`;
+                return `Read ${selected.length} message(s) across ${uniqueChannels.length} channel(s):\n\n${body}`;
             }
             case "delegate_task": {
                 const orchestratorSessionId = this.config.getSessionId();

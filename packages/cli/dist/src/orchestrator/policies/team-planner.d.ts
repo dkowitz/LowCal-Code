@@ -30,6 +30,7 @@ export interface TeamPlannerSnapshotTeam {
     status: string;
     phase: TeamCoordinationState["phase"];
     objective: string;
+    orchestrator_prompt?: string;
     waiting_on_agent_ids: string[];
     active_delegations: number;
     completed_delegations: number;

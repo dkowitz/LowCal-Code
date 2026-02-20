@@ -38,6 +38,7 @@ import { researchCommand } from "../commands/research.js";
 import { schedulerCommand } from "../commands/scheduler.js";
 import { sessionsCommand } from "../commands/sessions.js";
 import { tasksCommand } from "../commands/tasks.js";
+import { teamRuntimeCommand } from "../commands/team-runtime.js";
 import type { Settings } from "./settings.js";
 
 import { resolvePath } from "../utils/resolvePath.js";
@@ -318,6 +319,7 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     .command(schedulerCommand)
     .command(sessionsCommand)
     .command(tasksCommand)
+    .command(teamRuntimeCommand)
     .command(dashboardCommand);
 
   if (settings?.experimental?.extensionManagement ?? false) {
@@ -345,6 +347,8 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
       result._[0] === "orchestrator" ||
       result._[0] === "sessions" ||
       result._[0] === "tasks" ||
+      result._[0] === "team-runtime" ||
+      result._[0] === "team-monitor" ||
       result._[0] === "dashboard")
   ) {
     const isSessionsWatch =

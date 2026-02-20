@@ -18,6 +18,7 @@ import { researchCommand } from "../commands/research.js";
 import { schedulerCommand } from "../commands/scheduler.js";
 import { sessionsCommand } from "../commands/sessions.js";
 import { tasksCommand } from "../commands/tasks.js";
+import { teamRuntimeCommand } from "../commands/team-runtime.js";
 import { resolvePath } from "../utils/resolvePath.js";
 import { getCliVersion } from "../utils/version.js";
 import { annotateActiveExtensions } from "./extension.js";
@@ -231,6 +232,7 @@ export async function parseArguments(settings) {
         .command(schedulerCommand)
         .command(sessionsCommand)
         .command(tasksCommand)
+        .command(teamRuntimeCommand)
         .command(dashboardCommand);
     if (settings?.experimental?.extensionManagement ?? false) {
         yargsInstance.command(extensionsCommand);
@@ -253,6 +255,8 @@ export async function parseArguments(settings) {
             result._[0] === "orchestrator" ||
             result._[0] === "sessions" ||
             result._[0] === "tasks" ||
+            result._[0] === "team-runtime" ||
+            result._[0] === "team-monitor" ||
             result._[0] === "dashboard")) {
         const isSessionsWatch = result._[0] === "sessions" && Boolean(result.watch);
         if (isSessionsWatch) {

@@ -814,6 +814,7 @@ export const useSlashCommandProcessor = (
       openPrivacyNotice,
       openEditorDialog,
       openTasksDialog,
+      openTeamDialog,
       openMailboxDialog,
       setQuittingMessages,
       openSettingsDialog,

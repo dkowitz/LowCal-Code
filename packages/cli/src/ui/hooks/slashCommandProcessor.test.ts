@@ -1037,6 +1037,8 @@ describe("useSlashCommandProcessor", () => {
           vi.fn(), // setGeminiMdFileCount
           vi.fn(), // _showQuitConfirmation
           loggingController,
+          undefined,
+          undefined,
         ),
       );
 

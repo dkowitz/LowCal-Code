@@ -5,7 +5,7 @@
  */
 
 import type React from "react";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   listTeamStates,
   TaskTemplateManager,
@@ -33,7 +33,7 @@ type AgentStartupMode = "immediate" | "idle";
 type TeamCreateField =
   | "team_id"
   | "team_name"
-  | "description"
+  | "orchestrator_prompt"
   | "agent_tasks"
   | "channels";
 
@@ -41,6 +41,7 @@ type TeamDialogAction =
   | "refresh"
   | "team_create"
   | "team_edit"
+  | "team_edit_save"
   | "team_status"
   | "team_dissolve"
   | "team_run"
@@ -64,7 +65,7 @@ interface ActionPlan {
 interface TeamCreateDraft {
   team_id: string;
   team_name: string;
-  description: string;
+  orchestrator_prompt: string;
   channels: string;
 }
 
@@ -77,7 +78,7 @@ const TEAM_MEMBER_TAGS = new Set([
 const TEAM_CREATE_FIELD_ORDER: TeamCreateField[] = [
   "team_id",
   "team_name",
-  "description",
+  "orchestrator_prompt",
   "agent_tasks",
   "channels",
 ];
@@ -85,7 +86,7 @@ const TEAM_CREATE_FIELD_ORDER: TeamCreateField[] = [
 const TEAM_CREATE_FIELD_LABELS: Record<TeamCreateField, string> = {
   team_id: "Team ID",
   team_name: "Team Name",
-  description: "Description",
+  orchestrator_prompt: "Orchestrator Prompt",
   agent_tasks: "Agent Tasks",
   channels: "Channels",
 };
@@ -93,7 +94,7 @@ const TEAM_CREATE_FIELD_LABELS: Record<TeamCreateField, string> = {
 const TEAM_CREATE_PLACEHOLDERS: Record<TeamCreateField, string> = {
   team_id: "Unique team id (e.g., research-team)",
   team_name: "Human-readable team name",
-  description: "Optional team description",
+  orchestrator_prompt: "Initial orchestrator instructions for this team",
   agent_tasks: "Select team-member tasks below",
   channels: "#general,#planning",
 };
@@ -155,7 +156,7 @@ export function TeamManagementDialog({
   const [teamCreateDraft, setTeamCreateDraft] = useState<TeamCreateDraft>({
     team_id: "research-team",
     team_name: "Research Team",
-    description: "",
+    orchestrator_prompt: "",
     channels: "#general,#planning",
   });
   const [selectedTeamAgentTaskIds, setSelectedTeamAgentTaskIds] = useState<
@@ -172,6 +173,7 @@ export function TeamManagementDialog({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [isRunningAction, setIsRunningAction] = useState<boolean>(false);
+  const teamEditInitRef = useRef<string | null>(null);
 
   const manager = useMemo(
     () => new TaskTemplateManager(projectRoot),
@@ -290,12 +292,16 @@ export function TeamManagementDialog({
   useEffect(() => {
     void reloadData();
     const timer = setInterval(() => {
-      void reloadData({ background: true });
+      const isWizardEditing =
+        selectedAction === "team_create" || selectedAction === "team_edit";
+      if (!isWizardEditing && !isRunningAction) {
+        void reloadData({ background: true });
+      }
     }, 5000);
     return () => {
       clearInterval(timer);
     };
-  }, [reloadData]);
+  }, [isRunningAction, reloadData, selectedAction]);
 
   useEffect(() => {
     const availableIds = new Set(uniqueTeamAgentTasks.map((task) => task.id));
@@ -326,9 +332,19 @@ export function TeamManagementDialog({
   }, [selectedAction]);
 
   useEffect(() => {
-    if (selectedAction !== "team_edit" || !selectedTeam) {
+    if (selectedAction !== "team_edit") {
+      teamEditInitRef.current = null;
       return;
     }
+    if (!selectedTeam) {
+      return;
+    }
+    const seedKey = selectedTeam.team_id;
+    if (teamEditInitRef.current === seedKey) {
+      return;
+    }
+    teamEditInitRef.current = seedKey;
+
     const manifest = selectedTeam.manifest;
     const channelNames = manifest.channels.map((channel) => channel.name).join(",");
     const agentIds = manifest.agents.map((agent) => agent.id);
@@ -340,7 +356,7 @@ export function TeamManagementDialog({
     setTeamCreateDraft({
       team_id: selectedTeam.team_id,
       team_name: selectedTeam.name,
-      description: manifest.description ?? "",
+      orchestrator_prompt: manifest.orchestrator?.prompt ?? manifest.description ?? "",
       channels: channelNames,
     });
     setSelectedTeamAgentTaskIds(agentIds);
@@ -405,7 +421,13 @@ export function TeamManagementDialog({
       return [...current, task.id];
     });
     setSelectedTeamAgentTaskModes((current) => {
-      const nextMode = current[task.id] === "idle" ? "immediate" : "idle";
+      const currentMode = current[task.id];
+      const nextMode: AgentStartupMode =
+        currentMode === undefined
+          ? "immediate"
+          : currentMode === "idle"
+            ? "immediate"
+            : "idle";
       return {
         ...current,
         [task.id]: nextMode,
@@ -421,7 +443,9 @@ export function TeamManagementDialog({
 
       if (inTeamCreateInput) {
         if (key.ctrl && key.name === "s") {
-          void executeAction(selectedAction);
+          void executeAction(
+            selectedAction === "team_edit" ? "team_edit_save" : "team_create",
+          );
           return;
         }
 
@@ -448,11 +472,21 @@ export function TeamManagementDialog({
             return;
           }
         } else if (teamCreateMode === "select_agent_tasks") {
+          if (key.name === "return") {
+            toggleCurrentAgentTaskStartupMode();
+            return;
+          }
           if (key.name === "space") {
             toggleCurrentAgentTaskSelection();
             return;
           }
-          if (key.name === "m") {
+          if (
+            key.name === "m" ||
+            key.name === "left" ||
+            key.name === "right" ||
+            key.name === "h" ||
+            key.name === "l"
+          ) {
             toggleCurrentAgentTaskStartupMode();
             return;
           }
@@ -496,6 +530,10 @@ export function TeamManagementDialog({
       {
         value: "team_edit",
         label: `Edit selected team (wizard): ${selectedTeam?.team_id ?? "(select a team)"}`,
+      },
+      {
+        value: "team_edit_save",
+        label: `Save edited team changes: ${selectedTeam?.team_id ?? "(select a team)"}`,
       },
       {
         value: "team_status",
@@ -565,11 +603,15 @@ export function TeamManagementDialog({
         return {};
       }
 
-      if (action === "team_create" || action === "team_edit") {
+      if (
+        action === "team_create" ||
+        action === "team_edit" ||
+        action === "team_edit_save"
+      ) {
         const teamId = teamCreateDraft.team_id.trim();
         const teamName = teamCreateDraft.team_name.trim();
         const channels = teamCreateDraft.channels.trim();
-        const description = teamCreateDraft.description.trim();
+        const orchestratorPrompt = teamCreateDraft.orchestrator_prompt.trim();
         const agentTasks = selectedTeamAgentTaskIds;
         const modeEntries = agentTasks.map(
           (taskId) =>
@@ -594,10 +636,10 @@ export function TeamManagementDialog({
 
         const agentTasksArg = quoteForShell(agentTasks.join(","));
         const agentModesArg = quoteForShell(modeEntries.join(","));
-        const descriptionArg = description
-          ? ` --description ${quoteForShell(description)}`
+        const descriptionArg = orchestratorPrompt
+          ? ` --description ${quoteForShell(orchestratorPrompt)}`
           : "";
-        if (action === "team_edit") {
+        if (action === "team_edit" || action === "team_edit_save") {
           if (!selectedTeam) {
             return { error: "Select a team before editing it." };
           }
@@ -710,6 +752,7 @@ export function TeamManagementDialog({
         if (
           action === "team_create" ||
           action === "team_edit" ||
+          action === "team_edit_save" ||
           action === "team_run" ||
           action === "team_prompt" ||
           action === "team_dissolve" ||
@@ -745,6 +788,8 @@ export function TeamManagementDialog({
     return [
       `Team: ${selectedTeam.team_id} (${selectedTeam.status})`,
       `Name: ${selectedTeam.name}`,
+      `Objective: ${formatPreview(selectedTeam.manifest.description, "(unset)")}`,
+      `Orchestrator Prompt: ${formatPreview(selectedTeam.manifest.orchestrator?.prompt ?? selectedTeam.manifest.description, "(unset)")}`,
       `Phase: ${selectedTeam.coordination?.phase ?? "planning"} | Turn: ${
         selectedTeam.coordination?.turn_number ?? 0
       }`,
@@ -794,7 +839,7 @@ export function TeamManagementDialog({
   );
   const teamCreateFieldIndex = wizardFieldOrder.indexOf(teamCreateField);
   const teamCreateInputHeight =
-    teamCreateField === "description"
+    teamCreateField === "orchestrator_prompt"
       ? 3
       : teamCreateField === "agent_tasks" || teamCreateField === "channels"
         ? 4
@@ -812,7 +857,7 @@ export function TeamManagementDialog({
     () => ({
       team_id: teamCreateDraft.team_id,
       team_name: teamCreateDraft.team_name,
-      description: teamCreateDraft.description,
+      orchestrator_prompt: teamCreateDraft.orchestrator_prompt,
       channels: teamCreateDraft.channels,
       agent_tasks: selectedAgentTaskSummary,
     }),
@@ -842,7 +887,9 @@ export function TeamManagementDialog({
     const isFinalField = teamCreateFieldIndex === wizardFieldOrder.length - 1;
     if (isFinalField) {
       setTeamCreateMode("field_nav");
-      void executeAction(selectedAction === "team_edit" ? "team_edit" : "team_create");
+      void executeAction(
+        selectedAction === "team_edit" ? "team_edit_save" : "team_create",
+      );
       return;
     }
     setTeamCreateField(wizardFieldOrder[teamCreateFieldIndex + 1]!);
@@ -934,18 +981,26 @@ export function TeamManagementDialog({
             initialIndex={selectedActionIndex}
             isFocused={focusSection === "actions"}
             maxItemsToShow={actionMaxItems}
-            onHighlight={(value) => setSelectedAction(value)}
-              onSelect={(value) => {
-              if (
-                value === "team_create" ||
-                value === "team_edit" ||
-                value === "team_prompt"
-              ) {
-                if (selectedAction === value) {
-                  void executeAction(value);
-                } else {
-                  setSelectedAction(value);
-                }
+            onHighlight={(value) => {
+              if (value === "team_edit_save" && selectedAction === "team_edit") {
+                return;
+              }
+              setSelectedAction(value);
+            }}
+            onSelect={(value) => {
+              if (value === "team_create" || value === "team_edit") {
+                setSelectedAction(value);
+                setFocusSection("input");
+                setTeamCreateMode("field_nav");
+                return;
+              }
+              if (value === "team_prompt") {
+                setSelectedAction(value);
+                setFocusSection("input");
+                return;
+              }
+              if (value === "team_edit_save") {
+                void executeAction("team_edit_save");
                 return;
               }
               setSelectedAction(value);
@@ -1036,27 +1091,28 @@ export function TeamManagementDialog({
                             ),
                           ),
                         );
-                        setSelectedTeamAgentTaskIds((current) => {
-                          if (current.includes(value)) {
-                            setSelectedTeamAgentTaskModes((modes) => {
-                              const next = { ...modes };
-                              delete next[value];
-                              return next;
-                            });
-                            return current.filter((id) => id !== value);
-                          }
-                          setSelectedTeamAgentTaskModes((modes) => ({
-                            ...modes,
-                            [value]: modes[value] ?? "immediate",
-                          }));
-                          return [...current, value];
+                        setSelectedTeamAgentTaskIds((current) =>
+                          current.includes(value) ? current : [...current, value],
+                        );
+                        setSelectedTeamAgentTaskModes((current) => {
+                          const currentMode = current[value];
+                          const nextMode: AgentStartupMode =
+                            currentMode === undefined
+                              ? "immediate"
+                              : currentMode === "idle"
+                                ? "immediate"
+                                : "idle";
+                          return {
+                            ...current,
+                            [value]: nextMode,
+                          };
                         });
                       }}
                     />
                   )
                 ) : (
                   <Text color={Colors.Gray}>
-                    Press Enter to select agent-tasks from Team Agent-Tasks. Space toggles selection. m toggles startup mode (immediate/idle).
+                    Press Space to select/deselect team-member tasks. Press Enter, Left/Right, or m to toggle startup mode (immediate/idle) for the highlighted selected task.
                   </Text>
                 )}
               </>

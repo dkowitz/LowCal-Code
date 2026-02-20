@@ -162,6 +162,10 @@ function normalizeObjective(team) {
     if (fromManifest) {
         return fromManifest;
     }
+    const fromOrchestrator = asNonEmptyString(team.manifest.orchestrator?.prompt);
+    if (fromOrchestrator) {
+        return fromOrchestrator;
+    }
     return `Deliver role-specific output for team "${team.name}".`;
 }
 function buildTeamSnapshot(team) {
@@ -177,6 +181,7 @@ function buildTeamSnapshot(team) {
         status: team.status,
         phase: coordination?.phase ?? "planning",
         objective: normalizeObjective(team),
+        orchestrator_prompt: asNonEmptyString(team.manifest.orchestrator?.prompt),
         waiting_on_agent_ids: [...(coordination?.waiting_on_agent_ids ?? [])],
         active_delegations: activeDelegations,
         completed_delegations: completedDelegations,
@@ -331,6 +336,7 @@ function buildSnapshotPlanningKey(snapshot) {
         status: team.status,
         phase: team.phase,
         objective: team.objective,
+        orchestrator_prompt: team.orchestrator_prompt,
         waiting_on_agent_ids: [...team.waiting_on_agent_ids].sort(),
         active_delegations: team.active_delegations,
         completed_delegations: team.completed_delegations,

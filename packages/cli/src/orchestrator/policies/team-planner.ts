@@ -59,6 +59,7 @@ export interface TeamPlannerSnapshotTeam {
   status: string;
   phase: TeamCoordinationState["phase"];
   objective: string;
+  orchestrator_prompt?: string;
   waiting_on_agent_ids: string[];
   active_delegations: number;
   completed_delegations: number;
@@ -314,6 +315,10 @@ function normalizeObjective(team: TeamState): string {
   if (fromManifest) {
     return fromManifest;
   }
+  const fromOrchestrator = asNonEmptyString(team.manifest.orchestrator?.prompt);
+  if (fromOrchestrator) {
+    return fromOrchestrator;
+  }
   return `Deliver role-specific output for team "${team.name}".`;
 }
 
@@ -341,6 +346,7 @@ function buildTeamSnapshot(team: TeamState): TeamPlannerSnapshotTeam {
     status: team.status,
     phase: coordination?.phase ?? "planning",
     objective: normalizeObjective(team),
+    orchestrator_prompt: asNonEmptyString(team.manifest.orchestrator?.prompt),
     waiting_on_agent_ids: [...(coordination?.waiting_on_agent_ids ?? [])],
     active_delegations: activeDelegations,
     completed_delegations: completedDelegations,
@@ -520,6 +526,7 @@ function buildSnapshotPlanningKey(snapshot: TeamPlannerSnapshot): string {
       status: team.status,
       phase: team.phase,
       objective: team.objective,
+      orchestrator_prompt: team.orchestrator_prompt,
       waiting_on_agent_ids: [...team.waiting_on_agent_ids].sort(),
       active_delegations: team.active_delegations,
       completed_delegations: team.completed_delegations,
