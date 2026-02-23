@@ -18,14 +18,22 @@ import type { Config } from "../config/config.js";
 
 const mockPlatform = vi.hoisted(() => vi.fn());
 const mockHomedir = vi.hoisted(() => vi.fn());
-vi.mock("os", () => ({
-  default: {
+const mockTmpdir = vi.hoisted(() => vi.fn(() => "/tmp"));
+vi.mock("node:os", async (importOriginal) => {
+  const os = await importOriginal<typeof import("node:os")>();
+  return {
+    ...os,
+    default: {
+      ...os,
+      platform: mockPlatform,
+      homedir: mockHomedir,
+      tmpdir: mockTmpdir,
+    },
     platform: mockPlatform,
     homedir: mockHomedir,
-  },
-  platform: mockPlatform,
-  homedir: mockHomedir,
-}));
+    tmpdir: mockTmpdir,
+  };
+});
 
 const mockQuote = vi.hoisted(() => vi.fn());
 const mockParse = vi.hoisted(() => vi.fn());
@@ -38,6 +46,7 @@ let config: Config;
 
 beforeEach(() => {
   mockPlatform.mockReturnValue("linux");
+  mockHomedir.mockReturnValue("/home/test-user");
   mockQuote.mockImplementation((args: string[]) =>
     args.map((arg) => `'${arg}'`).join(" "),
   );

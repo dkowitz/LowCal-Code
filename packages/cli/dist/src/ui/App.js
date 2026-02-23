@@ -22,8 +22,6 @@ import { useStartupStatus } from "./hooks/useStartupStatus.js";
 import { useDialogClose } from "./hooks/useDialogClose.js";
 import { useSlashCommandProcessor } from "./hooks/slashCommandProcessor.js";
 import { useSessionLoggingController } from "./hooks/useSessionLoggingController.js";
-import { useSubagentCreateDialog } from "./hooks/useSubagentCreateDialog.js";
-import { useAgentsManagerDialog } from "./hooks/useAgentsManagerDialog.js";
 import { useAutoAcceptIndicator } from "./hooks/useAutoAcceptIndicator.js";
 import { useMessageQueue } from "./hooks/useMessageQueue.js";
 import { useConsoleMessages } from "./hooks/useConsoleMessages.js";
@@ -45,12 +43,10 @@ import { RadioButtonSelect } from "./components/shared/RadioButtonSelect.js";
 import { ModelSelectionDialog } from "./components/ModelSelectionDialog.js";
 import { TaskTemplateEditorDialog, } from "./components/TaskTemplateEditorDialog.js";
 import { MailboxDialog } from "./components/MailboxDialog.js";
-import { TeamManagementDialog } from "./components/TeamManagementDialog.js";
 import { ResumeDialog, } from "./components/ResumeDialog.js";
 import { ModelSwitchDialog, } from "./components/ModelSwitchDialog.js";
 import { getOpenAIAvailableModelFromEnv, getFilteredGeminiModels, getFilteredQwenModels, fetchOpenAICompatibleModels, fetchGeminiModels, getLMStudioLoadedModel, } from "./models/availableModels.js";
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
-import { AgentCreationWizard, AgentsManagerDialog, } from "./components/subagents/index.js";
 import { Colors } from "./colors.js";
 import { loadHierarchicalGeminiMemory } from "../config/config.js";
 import { setOpenAIModel, validateAuthMethod } from "../config/auth.js";
@@ -157,20 +153,10 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [corgiMode, setCorgiMode] = useState(false);
     const [isTrustedFolderState, setIsTrustedFolder] = useState(config.isTrustedFolder());
     const [currentModel, setCurrentModel] = useState(config.getModel());
-    const [lmStudioModel, setLmStudioModel] = useState(null);
+    const [, setLmStudioModel] = useState(null);
     const lastLmStudioModelFetchRef = useRef(0);
-    // reference used only for LM Studio live model polling; keep to avoid re-fetching more than once/min
-    useEffect(() => {
-        // no-op using lmStudioModel to avoid unused variable build errors in some toolchains
-        // real usage happens below where lmStudioModel is updated when polling succeeds
-        void lmStudioModel;
-    }, [lmStudioModel]);
     // bump this to force re-render when model-level context limits change
-    const [modelLimitVersion, setModelLimitVersion] = useState(0);
-    // Silence unused variable warning in some builds by referencing it in effect below
-    useEffect(() => {
-        // no-op that references modelLimitVersion to ensure TypeScript doesn't report it as unused
-    }, [modelLimitVersion]);
+    const [, setModelLimitVersion] = useState(0);
     // If the user has a saved model in settings, ensure the config and UI
     // reflect it on startup. This will restore the last-used model across
     // restarts.
@@ -344,7 +330,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const [isResumeDialogOpen, setIsResumeDialogOpen] = useState(false);
     const [resumeCheckpoints, setResumeCheckpoints] = useState([]);
     const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] = useState(false);
-    const [isTeamManagementDialogOpen, setIsTeamManagementDialogOpen] = useState(false);
     const [isMailboxDialogOpen, setIsMailboxDialogOpen] = useState(false);
     // Invalidate cached model lists when auth/provider changes so discovery is
     // re-run for the currently selected provider. This ensures that after the
@@ -409,12 +394,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     const closeTaskTemplateDialog = useCallback(() => {
         setIsTaskTemplateDialogOpen(false);
     }, []);
-    const openTeamManagementDialog = useCallback(() => {
-        setIsTeamManagementDialogOpen(true);
-    }, []);
-    const closeTeamManagementDialog = useCallback(() => {
-        setIsTeamManagementDialogOpen(false);
-    }, []);
     const openMailboxDialog = useCallback(() => {
         setIsMailboxDialogOpen(true);
     }, []);
@@ -430,8 +409,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         .reduce((total, msg) => total + msg.count, 0), [consoleMessages]);
     const { isThemeDialogOpen, openThemeDialog, handleThemeSelect, handleThemeHighlight, } = useThemeCommand(settings, setThemeError, addItem);
     const { isSettingsDialogOpen, openSettingsDialog, closeSettingsDialog } = useSettingsCommand();
-    const { isSubagentCreateDialogOpen, openSubagentCreateDialog, closeSubagentCreateDialog, } = useSubagentCreateDialog();
-    const { isAgentsManagerDialogOpen, openAgentsManagerDialog, closeAgentsManagerDialog, } = useAgentsManagerDialog();
     const { isFolderTrustDialogOpen, handleFolderTrustSelect, isRestarting } = useFolderTrust(settings, setIsTrustedFolder);
     const { showQuitConfirmation, handleQuitConfirmationSelect } = useQuitConfirmation();
     const { isAuthDialogOpen, openAuthDialog, handleAuthSelect, isAuthenticating, cancelAuthentication, } = useAuthCommand(settings, setAuthError, config);
@@ -922,13 +899,12 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     // available models for dialog are populated via handleModelSelectionOpen
     // Core hooks and processors
     const { vimEnabled: vimModeEnabled, vimMode, toggleVimEnabled, } = useVimMode();
-    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTaskTemplateDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openResumeDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController, openMailboxDialog, openTeamManagementDialog);
+    const { handleSlashCommand, slashCommands, pendingHistoryItems: pendingSlashCommandHistoryItems, commandContext, shellConfirmationRequest, confirmationRequest, quitConfirmationRequest, } = useSlashCommandProcessor(config, settings, addItem, clearItems, loadHistory, history, refreshStatic, setDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTaskTemplateDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, handleModelSelectionOpen, openResumeDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, showQuitConfirmation, sessionLoggingController, openMailboxDialog);
     const handleResumeCheckpointSelect = useCallback((checkpointId) => {
         closeResumeDialog();
         void handleSlashCommand(`/resume ${checkpointId}`);
     }, [closeResumeDialog, handleSlashCommand]);
     const submitQueryForDeployRef = useRef(async () => { });
-    const submitQueryForTeamDialogRef = useRef(async () => { });
     const handleTaskTemplateDeploy = useCallback(async (request) => {
         const templateId = request.templateId.trim();
         if (!templateId) {
@@ -962,13 +938,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         }
         setIsTaskTemplateDialogOpen(false);
     }, [addItem]);
-    const handleTeamDialogSubmit = useCallback(async (query) => {
-        const trimmed = query.trim();
-        if (!trimmed) {
-            return;
-        }
-        await submitQueryForTeamDialogRef.current(trimmed);
-    }, []);
     const handleMailboxPayloadUse = useCallback(async (payload) => {
         const text = payload.trim();
         if (!text) {
@@ -1007,9 +976,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
     submitQueryForDeployRef.current = async (query) => {
         await submitQuery(query);
     };
-    submitQueryForTeamDialogRef.current = async (query) => {
-        await submitQuery(query);
-    };
     const pendingHistoryItems = useMemo(() => [...pendingSlashCommandHistoryItems, ...pendingGeminiHistoryItems].map((item, index) => ({
         ...item,
         id: index,
@@ -1029,8 +995,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         exitEditorDialog,
         isTaskTemplateDialogOpen,
         closeTaskTemplateDialog,
-        isTeamDialogOpen: isTeamManagementDialogOpen,
-        closeTeamDialog: closeTeamManagementDialog,
         isMailboxDialogOpen,
         closeMailboxDialog,
         isSettingsDialogOpen,
@@ -1342,12 +1306,10 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
             !isThemeDialogOpen &&
             !isEditorDialogOpen &&
             !isTaskTemplateDialogOpen &&
-            !isTeamManagementDialogOpen &&
             !isMailboxDialogOpen &&
             !isModelSelectionDialogOpen &&
             !isResumeDialogOpen &&
             !isVisionSwitchDialogOpen &&
-            !isSubagentCreateDialogOpen &&
             !showPrivacyNotice &&
             !showWelcomeBackDialog &&
             welcomeBackChoice !== "restart" &&
@@ -1364,9 +1326,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
         isThemeDialogOpen,
         isEditorDialogOpen,
         isTaskTemplateDialogOpen,
-        isTeamManagementDialogOpen,
         isMailboxDialogOpen,
-        isSubagentCreateDialogOpen,
         showPrivacyNotice,
         showWelcomeBackDialog,
         welcomeBackChoice,
@@ -1394,7 +1354,6 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                             .map((h) => (_jsx(HistoryItemDisplay, { terminalWidth: mainAreaWidth, availableTerminalHeight: staticAreaMaxItemHeight, item: h, isPending: false, config: config, commands: slashCommands }, h.id))),
                     ], children: (item) => item }, staticKey), _jsx(OverflowProvider, { children: _jsxs(Box, { ref: pendingHistoryItemRef, flexDirection: "column", children: [pendingHistoryItems.map((item) => (_jsx(HistoryItemDisplay, { availableTerminalHeight: constrainHeight ? availableTerminalHeight : undefined, terminalWidth: mainAreaWidth, item: item, isPending: true, config: config, isFocused: !isEditorDialogOpen &&
                                     !isTaskTemplateDialogOpen &&
-                                    !isTeamManagementDialogOpen &&
                                     !isMailboxDialogOpen, viewControls: item.type === "view"
                                     ? {
                                         isActive: activeViewId === item.id,
@@ -1435,7 +1394,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                             confirmationRequest.onConfirm(value);
                                         } }) })] })) : isThemeDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [themeError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: themeError }) })), _jsx(ThemeDialog, { onSelect: handleThemeSelect, onHighlight: handleThemeHighlight, settings: settings, availableTerminalHeight: constrainHeight
                                         ? terminalHeight - staticExtraHeight
-                                        : undefined, terminalWidth: mainAreaWidth })] })) : isSettingsDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(SettingsDialog, { settings: settings, onSelect: () => closeSettingsDialog(), onRestartRequest: () => process.exit(0) }) })) : isSubagentCreateDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AgentCreationWizard, { onClose: closeSubagentCreateDialog, config: config }) })) : isAgentsManagerDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AgentsManagerDialog, { onClose: closeAgentsManagerDialog, config: config }) })) : isAuthenticating ? (_jsxs(_Fragment, { children: [isQwenAuth && isQwenAuthenticating ? (_jsx(QwenOAuthProgress, { deviceAuth: deviceAuth || undefined, authStatus: authStatus, authMessage: authMessage, onTimeout: () => {
+                                        : undefined, terminalWidth: mainAreaWidth })] })) : isSettingsDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(SettingsDialog, { settings: settings, onSelect: () => closeSettingsDialog(), onRestartRequest: () => process.exit(0) }) })) : isAuthenticating ? (_jsxs(_Fragment, { children: [isQwenAuth && isQwenAuthenticating ? (_jsx(QwenOAuthProgress, { deviceAuth: deviceAuth || undefined, authStatus: authStatus, authMessage: authMessage, onTimeout: () => {
                                         setAuthError("Qwen OAuth authentication timed out. Please try again.");
                                         cancelQwenAuth();
                                         cancelAuthentication();
@@ -1449,7 +1408,7 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                         setAuthError("Authentication timed out. Please try again.");
                                         cancelAuthentication();
                                         openAuthDialog();
-                                    } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isTaskTemplateDialogOpen ? (_jsx(TaskTemplateEditorDialog, { projectRoot: config.getProjectRoot() || process.cwd(), settings: settings, currentModel: currentModel, onExit: closeTaskTemplateDialog, onDeploy: handleTaskTemplateDeploy })) : isTeamManagementDialogOpen ? (_jsx(TeamManagementDialog, { baseDir: config.getTargetDir(), projectRoot: config.getProjectRoot() || process.cwd(), onExit: closeTeamManagementDialog, onSubmitCommand: handleTeamDialogSubmit })) : isMailboxDialogOpen ? (_jsx(MailboxDialog, { baseDir: config.getTargetDir(), sessionId: config.getSessionId(), onExit: closeMailboxDialog, onUsePayload: handleMailboxPayloadUse })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: availableModelsForDialog, currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose })) : isResumeDialogOpen ? (_jsx(ResumeDialog, { checkpoints: resumeCheckpoints, onSelect: handleResumeCheckpointSelect, onClose: closeResumeDialog })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : showPrivacyNotice ? (_jsx(PrivacyNotice, { onExit: () => setShowPrivacyNotice(false), config: config })) : (_jsxs(_Fragment, { children: [_jsx(LoadingIndicator, { thought: streamingState === StreamingState.WaitingForConfirmation ||
+                                    } })), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) }))] })) : isAuthDialogOpen ? (_jsx(Box, { flexDirection: "column", children: _jsx(AuthDialog, { onSelect: handleAuthSelect, settings: settings, initialErrorMessage: authError }) })) : isEditorDialogOpen ? (_jsxs(Box, { flexDirection: "column", children: [editorError && (_jsx(Box, { marginBottom: 1, children: _jsx(Text, { color: Colors.AccentRed, children: editorError }) })), _jsx(EditorSettingsDialog, { onSelect: handleEditorSelect, settings: settings, onExit: exitEditorDialog })] })) : isTaskTemplateDialogOpen ? (_jsx(TaskTemplateEditorDialog, { projectRoot: config.getProjectRoot() || process.cwd(), settings: settings, currentModel: currentModel, onExit: closeTaskTemplateDialog, onDeploy: handleTaskTemplateDeploy })) : isMailboxDialogOpen ? (_jsx(MailboxDialog, { baseDir: config.getTargetDir(), sessionId: config.getSessionId(), onExit: closeMailboxDialog, onUsePayload: handleMailboxPayloadUse })) : isModelSelectionDialogOpen ? (_jsx(ModelSelectionDialog, { availableModels: availableModelsForDialog, currentModel: currentModel, onSelect: handleModelSelect, onCancel: handleModelSelectionClose })) : isResumeDialogOpen ? (_jsx(ResumeDialog, { checkpoints: resumeCheckpoints, onSelect: handleResumeCheckpointSelect, onClose: closeResumeDialog })) : isVisionSwitchDialogOpen ? (_jsx(ModelSwitchDialog, { onSelect: handleVisionSwitchSelect })) : showPrivacyNotice ? (_jsx(PrivacyNotice, { onExit: () => setShowPrivacyNotice(false), config: config })) : (_jsxs(_Fragment, { children: [_jsx(LoadingIndicator, { thought: streamingState === StreamingState.WaitingForConfirmation ||
                                         config.getAccessibility()?.disableLoadingPhrases ||
                                         config.getScreenReader()
                                         ? undefined
@@ -1466,11 +1425,18 @@ const App = ({ config, settings, startupWarnings = [], version }) => {
                                             // Ensure the Box takes full width so truncation calculates correctly
                                             _jsx(Box, { paddingLeft: 2, width: "100%", children: _jsx(Text, { dimColor: true, wrap: "truncate", children: preview }) }, index));
                                         }), messageQueue.length > MAX_DISPLAYED_QUEUED_MESSAGES && (_jsx(Box, { paddingLeft: 2, children: _jsxs(Text, { dimColor: true, children: ["... (+", messageQueue.length - MAX_DISPLAYED_QUEUED_MESSAGES, "more)"] }) }))] })), _jsxs(Box, { marginTop: 1, justifyContent: "space-between", width: "100%", flexDirection: isNarrow ? "column" : "row", alignItems: isNarrow ? "flex-start" : "center", children: [_jsxs(Box, { children: [process.env["GEMINI_SYSTEM_MD"] && (_jsx(Text, { color: Colors.AccentRed, children: "|\u2310\u25A0_\u25A0| " })), ctrlCPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+C again to confirm exit." })) : ctrlDPressedOnce ? (_jsx(Text, { color: Colors.AccentYellow, children: "Press Ctrl+D again to exit." })) : showEscapePrompt ? (_jsx(Text, { color: Colors.Gray, children: "Press Esc again to clear." })) : (_jsx(ContextSummaryDisplay, { ideContext: ideContextState, geminiMdFileCount: geminiMdFileCount, contextFileNames: contextFileNames, mcpServers: config.getMcpServers(), blockedMcpServers: config.getBlockedMcpServers(), showToolDescriptions: showToolDescriptions }))] }), _jsxs(Box, { paddingTop: isNarrow ? 1 : 0, children: [showAutoAcceptIndicator !== ApprovalMode.DEFAULT &&
-                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [" ", "Please check API key and configuration."] })] })) })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModel, modelLimit: typeof config.getEffectiveContextLimit === "function"
-                                ? config.getEffectiveContextLimit(currentModel)
-                                : typeof config.getModelContextLimit === "function"
-                                    ? config.getModelContextLimit(currentModel)
-                                    : undefined, targetDir: config.getTargetDir(), debugMode: config.getDebugMode(), branchName: branchName, debugMessage: debugMessage, corgiMode: corgiMode, errorCount: errorCount, showErrorDetails: showErrorDetails, showMemoryUsage: config.getDebugMode() ||
+                                                    !shellModeActive && (_jsx(AutoAcceptIndicator, { approvalMode: showAutoAcceptIndicator })), shellModeActive && _jsx(ShellModeIndicator, {})] })] }), showErrorDetails && (_jsx(OverflowProvider, { children: _jsxs(Box, { flexDirection: "column", children: [_jsx(DetailedMessagesDisplay, { messages: filteredConsoleMessages, maxHeight: constrainHeight ? debugConsoleMaxHeight : undefined, width: inputWidth }), _jsx(ShowMoreLines, { constrainHeight: constrainHeight })] }) })), isInputActive && (_jsx(InputPrompt, { buffer: buffer, inputWidth: inputWidth, suggestionsWidth: suggestionsWidth, onSubmit: handleFinalSubmit, userMessages: userMessages, onClearScreen: handleClearScreen, config: config, slashCommands: slashCommands, commandContext: commandContext, shellModeActive: shellModeActive, setShellModeActive: setShellModeActive, onEscapePromptChange: handleEscapePromptChange, focus: isFocused, vimHandleInput: vimHandleInput, placeholder: placeholder }))] })), initError && streamingState !== StreamingState.Responding && (_jsx(Box, { borderStyle: "round", borderColor: Colors.AccentRed, paddingX: 1, marginBottom: 1, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text ? (_jsx(Text, { color: Colors.AccentRed, children: history.find((item) => item.type === "error" && item.text?.includes(initError))?.text })) : (_jsxs(_Fragment, { children: [_jsxs(Text, { color: Colors.AccentRed, children: ["Initialization Error: ", initError] }), _jsxs(Text, { color: Colors.AccentRed, children: [" ", "Please check API key and configuration."] })] })) })), !settings.merged.ui?.hideFooter && (_jsx(Footer, { model: currentModel, modelLimit: (() => {
+                                const configWithContextLimit = config;
+                                if (typeof configWithContextLimit.getEffectiveContextLimit ===
+                                    "function") {
+                                    return configWithContextLimit.getEffectiveContextLimit(currentModel);
+                                }
+                                if (typeof configWithContextLimit.getModelContextLimit ===
+                                    "function") {
+                                    return configWithContextLimit.getModelContextLimit(currentModel);
+                                }
+                                return undefined;
+                            })(), targetDir: config.getTargetDir(), debugMode: config.getDebugMode(), branchName: branchName, debugMessage: debugMessage, corgiMode: corgiMode, errorCount: errorCount, showErrorDetails: showErrorDetails, showMemoryUsage: config.getDebugMode() ||
                                 settings.merged.ui?.showMemoryUsage ||
                                 false, promptTokenCount: sessionStats.lastPromptTokenCount, nightly: nightly, vimMode: vimModeEnabled ? vimMode : undefined, isTrustedFolder: isTrustedFolderState }))] })] }) }));
 };

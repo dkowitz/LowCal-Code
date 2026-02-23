@@ -24,14 +24,18 @@ export class DefaultTelemetryService {
     }
     async logError(context, error, openaiRequest) {
         const errorMessage = error instanceof Error ? error.message : String(error);
+        const errorRecord = typeof error === "object" && error !== null
+            ? error
+            : null;
+        const requestIdRaw = errorRecord?.["requestID"];
+        const errorTypeRaw = errorRecord?.["type"];
+        const statusCodeRaw = errorRecord?.["code"];
         // Log API error event for UI telemetry
-        const errorEvent = new ApiErrorEvent(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        error?.requestID || "unknown", context.model, errorMessage, context.duration, context.userPromptId, context.authType, 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        error?.type, 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        error?.code);
+        const errorEvent = new ApiErrorEvent(typeof requestIdRaw === "string" && requestIdRaw.length > 0
+            ? requestIdRaw
+            : "unknown", context.model, errorMessage, context.duration, context.userPromptId, context.authType, typeof errorTypeRaw === "string" ? errorTypeRaw : undefined, typeof statusCodeRaw === "string" || typeof statusCodeRaw === "number"
+            ? statusCodeRaw
+            : undefined);
         logApiError(this.config, errorEvent);
         // Log error interaction if enabled
         if (this.enableOpenAILogging && openaiRequest) {

@@ -3,13 +3,18 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
+/// <reference types="vitest/globals" />
+/**
+ * @license
+ * Copyright 2025 Google LLC
+ * SPDX-License-Identifier: Apache-2.0
+ */
 import { expect } from "vitest";
 // RegExp to detect invalid characters: backspace, and ANSI escape codes
 // eslint-disable-next-line no-control-regex
 const invalidCharsRegex = /[\b\x1b]/;
 function toHaveOnlyValidCharacters(buffer) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { isNot } = this;
+    const isNot = Boolean(this.isNot);
     let pass = true;
     const invalidLines = [];
     for (let i = 0; i < buffer.lines.length; i++) {
@@ -35,6 +40,5 @@ function toHaveOnlyValidCharacters(buffer) {
 }
 expect.extend({
     toHaveOnlyValidCharacters,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
 });
 //# sourceMappingURL=customMatchers.js.map

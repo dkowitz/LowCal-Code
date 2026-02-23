@@ -18,21 +18,27 @@ export const ViewOverlay = ({ item, height, width, scrollOffset, onScroll, onExi
     const [acquired, setAcquired] = React.useState(false);
     React.useEffect(() => {
         let mounted = true;
+        let hasLock = false;
         try {
             const ok = requestLock(owner);
-            if (mounted && ok)
+            if (mounted && ok) {
+                hasLock = true;
                 setAcquired(true);
+            }
         }
-        catch (e) {
-            // ignore
+        catch {
+            // Ignore lock acquisition errors.
         }
         return () => {
             mounted = false;
             try {
-                if (acquired)
+                if (hasLock) {
                     releaseLock(owner);
+                }
             }
-            catch (e) { }
+            catch {
+                // Ignore lock release errors.
+            }
         };
     }, [requestLock, releaseLock, owner]);
     // Register input handler only when we have the lock
@@ -48,7 +54,9 @@ export const ViewOverlay = ({ item, height, width, scrollOffset, onScroll, onExi
             try {
                 releaseLock(owner);
             }
-            catch (e) { }
+            catch {
+                // Ignore lock release errors.
+            }
             setAcquired(false);
         }
     }, { isActive: acquired });

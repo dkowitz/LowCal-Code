@@ -30,6 +30,7 @@ import {
 import { MockModifiableTool, MockTool } from "../test-utils/tools.js";
 import type {
   ToolCall,
+  CompletedToolCall,
   WaitingToolCall,
   ErroredToolCall,
 } from "./coreToolScheduler.js";
@@ -253,7 +254,7 @@ describe("CoreToolScheduler", () => {
 
     expect(onAllToolCallsComplete).toHaveBeenCalled();
     const completedCalls = onAllToolCallsComplete.mock
-      .calls[0][0] as ToolCall[];
+      .calls[0][0] as CompletedToolCall[];
     expect(completedCalls[0].status).toBe("cancelled");
   });
 
@@ -1018,18 +1019,20 @@ describe("CoreToolScheduler edit cancellation", () => {
 
     expect(onAllToolCallsComplete).toHaveBeenCalled();
     const completedCalls = onAllToolCallsComplete.mock
-      .calls[0][0] as ToolCall[];
+      .calls[0][0] as CompletedToolCall[];
 
     expect(completedCalls[0].status).toBe("cancelled");
 
     // Check that the diff is preserved
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cancelledCall = completedCalls[0] as any;
-    expect(cancelledCall.response.resultDisplay).toBeDefined();
-    expect(cancelledCall.response.resultDisplay.fileDiff).toBe(
+    const cancelledCall = completedCalls[0];
+    const resultDisplay = cancelledCall.response.resultDisplay as
+      | { fileDiff?: string; fileName?: string }
+      | undefined;
+    expect(resultDisplay).toBeDefined();
+    expect(resultDisplay?.fileDiff).toBe(
       "--- test.txt\n+++ test.txt\n@@ -1,1 +1,1 @@\n-old content\n+new content",
     );
-    expect(cancelledCall.response.resultDisplay.fileName).toBe("test.txt");
+    expect(resultDisplay?.fileName).toBe("test.txt");
   });
 });
 
@@ -1247,10 +1250,9 @@ describe("CoreToolScheduler cancellation during executing with live output", () 
       expect(onAllToolCallsComplete).toHaveBeenCalled();
     });
     const completedCalls = onAllToolCallsComplete.mock
-      .calls[0][0] as ToolCall[];
+      .calls[0][0] as CompletedToolCall[];
     expect(completedCalls[0].status).toBe("cancelled");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const cancelled: any = completedCalls[0];
+    const cancelled = completedCalls[0];
     expect(cancelled.response.resultDisplay).toBe("hello");
   });
 });

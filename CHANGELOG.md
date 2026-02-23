@@ -1,5 +1,16 @@
 # Changelog
 
+## Unreleased
+
+- **Breaking (core integrators):** Removed deprecated command-era subagent CRUD API surface from `@qwen-code/qwen-code-core`:
+  - `SubagentManager.createSubagent(...)`
+  - `SubagentManager.updateSubagent(...)`
+  - `SubagentManager.deleteSubagent(...)`
+  - `SubagentManager.mergeConfigurations(...)`
+  - `SubagentManager.getSubagentPath(...)`
+  - `CreateSubagentOptions`
+- **Migration:** Manage subagent files directly in `.qwen/agents/` (project) and `~/.qwen/agents/` (user). Keep using `SubagentManager.listSubagents(...)`, `SubagentManager.loadSubagent(...)`, and `SubagentManager.createSubagentScope(...)` for discovery/loading/runtime execution.
+
 ## 0.0.13
 
 - **Added intelligent context management system to prevent "unable to compress history" errors:**

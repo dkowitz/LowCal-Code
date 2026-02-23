@@ -13,6 +13,7 @@ import { createMockLoggingController } from "./mockLoggingController.js";
  * @returns A complete, mocked CommandContext object.
  */
 export const createMockCommandContext = (overrides = {}) => {
+    const isPlainObject = (value) => Object.prototype.toString.call(value) === "[object Object]";
     const defaultMocks = {
         invocation: {
             raw: "",
@@ -31,8 +32,7 @@ export const createMockCommandContext = (overrides = {}) => {
                 logMessage: vi.fn(),
                 saveCheckpoint: vi.fn(),
                 loadCheckpoint: vi.fn().mockResolvedValue([]),
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            }, // Cast because Logger is a class.
+            }, // Logger is a class with many non-essential members for tests.
             logging: createMockLoggingController(),
         },
         ui: {
@@ -42,9 +42,11 @@ export const createMockCommandContext = (overrides = {}) => {
             pendingItem: null,
             setPendingItem: vi.fn(),
             loadHistory: vi.fn(),
+            getHistory: vi.fn().mockReturnValue([]),
             toggleCorgiMode: vi.fn(),
             toggleVimEnabled: vi.fn(),
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            setGeminiMdFileCount: vi.fn(),
+            reloadCommands: vi.fn(),
         },
         session: {
             sessionShellAllowlist: new Set(),
@@ -66,17 +68,18 @@ export const createMockCommandContext = (overrides = {}) => {
             },
         },
     };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const merge = (target, source) => {
+        if (!isPlainObject(target) || !isPlainObject(source)) {
+            return source;
+        }
         const output = { ...target };
-        for (const key in source) {
+        for (const [key, sourceValue] of Object.entries(source)) {
             if (Object.prototype.hasOwnProperty.call(source, key)) {
-                const sourceValue = source[key];
                 const targetValue = output[key];
                 if (
                 // We only want to recursivlty merge plain objects
-                Object.prototype.toString.call(sourceValue) === "[object Object]" &&
-                    Object.prototype.toString.call(targetValue) === "[object Object]") {
+                isPlainObject(sourceValue) &&
+                    isPlainObject(targetValue)) {
                     output[key] = merge(targetValue, sourceValue);
                 }
                 else {

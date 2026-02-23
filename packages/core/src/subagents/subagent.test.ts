@@ -178,8 +178,7 @@ describe("subagent.ts", () => {
       ]);
       vi.mocked(createContentGenerator).mockResolvedValue({
         getGenerativeModel: vi.fn(),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+      } as unknown as Awaited<ReturnType<typeof createContentGenerator>>);
       vi.mocked(createContentGeneratorConfig).mockReturnValue({
         model: DEFAULT_GEMINI_MODEL,
         authType: undefined,
@@ -251,8 +250,9 @@ describe("subagent.ts", () => {
         };
 
         const { config } = await createMockConfig({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          getTool: vi.fn().mockReturnValue(mockTool as any),
+          getTool: vi
+            .fn()
+            .mockReturnValue(mockTool as unknown as AnyDeclarativeTool),
         });
 
         const toolConfig: ToolConfig = { tools: ["risky_tool"] };
@@ -277,8 +277,9 @@ describe("subagent.ts", () => {
           }),
         };
         const { config } = await createMockConfig({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          getTool: vi.fn().mockReturnValue(mockTool as any),
+          getTool: vi
+            .fn()
+            .mockReturnValue(mockTool as unknown as AnyDeclarativeTool),
         });
 
         const toolConfig: ToolConfig = { tools: ["safe_tool"] };
@@ -657,8 +658,7 @@ describe("subagent.ts", () => {
         const streamPromise = new Promise<
           AsyncGenerator<unknown, void, unknown>
         >((resolve) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          resolveStream = resolve as any;
+          resolveStream = resolve;
         });
 
         // The LLM call will hang until we resolve the promise.
@@ -678,8 +678,7 @@ describe("subagent.ts", () => {
         await vi.advanceTimersByTimeAsync(6 * 60 * 1000);
 
         // Now resolve the stream. The model returns 'stop'.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        resolveStream!(createMockStream(["stop"])() as any);
+        resolveStream!(await createMockStream(["stop"])());
 
         await runPromise;
 

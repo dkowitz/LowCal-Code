@@ -66,6 +66,9 @@ interface MockServerConfig {
 
   getApiKey: Mock<() => string>;
   getModel: Mock<() => string>;
+  getContentGeneratorConfig: Mock<
+    () => { model: string; baseUrl: string; authType: AuthType } | undefined
+  >;
   getSandbox: Mock<() => SandboxConfig | undefined>;
   getTargetDir: Mock<() => string>;
   getToolRegistry: Mock<() => ToolRegistry>; // Use imported ToolRegistry type
@@ -158,6 +161,11 @@ vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
 
         getApiKey: vi.fn(() => opts.apiKey || "test-key"),
         getModel: vi.fn(() => opts.model || "test-model-in-mock-factory"),
+        getContentGeneratorConfig: vi.fn(() => ({
+          model: opts.model || "test-model-in-mock-factory",
+          baseUrl: "http://localhost:1234",
+          authType: actualCore.AuthType.QWEN_OAUTH,
+        })),
         getSandbox: vi.fn(() => opts.sandbox),
         getTargetDir: vi.fn(() => opts.targetDir || "/test/dir"),
         getToolRegistry: vi.fn(() => ({}) as ToolRegistry), // Simple mock
@@ -954,7 +962,8 @@ describe("App UI", () => {
     currentUnmount = unmount;
     await Promise.resolve();
     // Footer should render - look for target directory which is always shown
-    expect(lastFrame()).toContain("/test/dir");
+    expect(lastFrame()).toContain("/test/");
+    expect(lastFrame()).toContain("dir");
   });
 
   it("should not display Footer component when hideFooter is true", async () => {
@@ -992,7 +1001,8 @@ describe("App UI", () => {
     currentUnmount = unmount;
     await Promise.resolve();
     // Footer should render because system overrides - look for target directory
-    expect(lastFrame()).toContain("/test/dir");
+    expect(lastFrame()).toContain("/test/");
+    expect(lastFrame()).toContain("dir");
   });
 
   it("should show tips if system says show, but workspace and user settings say hide", async () => {

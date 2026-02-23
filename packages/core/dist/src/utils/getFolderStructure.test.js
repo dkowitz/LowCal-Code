@@ -63,7 +63,7 @@ ${testRootDir}${path.sep}
         await createTestFile("subfolderA", "subfolderB", "fileB1.md");
         const structure = await getFolderStructure(testRootDir);
         expect(structure.trim()).toBe(`
-Showing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.
+Showing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached. Truncated directories to inspect further: node_modules. Consider running /list_directory <path> or /glob for deeper listings.
 
 ${testRootDir}${path.sep}
 ├───.hiddenfile
@@ -87,7 +87,7 @@ ${testRootDir}${path.sep}
             ignoredFolders: new Set(["subfolderA", "node_modules"]),
         });
         const expected = `
-Showing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached.
+Showing up to 20 items (files + folders). Folders or files indicated with ... contain more items not shown, were ignored, or the display limit (20 items) was reached. Truncated directories to inspect further: node_modules, subfolderA. Consider running /list_directory <path> or /glob for deeper listings.
 
 ${testRootDir}${path.sep}
 ├───.hiddenfile

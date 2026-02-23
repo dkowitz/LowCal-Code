@@ -76,6 +76,7 @@ export function logUserPrompt(config, event) {
     logger.emit(logRecord);
 }
 export function logToolCall(config, event) {
+    const { metadata, ...eventWithoutMetadata } = event;
     const uiEvent = {
         ...event,
         "event.name": EVENT_TOOL_CALL,
@@ -87,11 +88,14 @@ export function logToolCall(config, event) {
         return;
     const attributes = {
         ...getCommonAttributes(config),
-        ...event,
+        ...eventWithoutMetadata,
         "event.name": EVENT_TOOL_CALL,
         "event.timestamp": new Date().toISOString(),
         function_args: safeJsonStringify(event.function_args, 2),
     };
+    if (metadata) {
+        attributes["metadata"] = safeJsonStringify(metadata);
+    }
     if (event.error) {
         attributes["error.message"] = event.error;
         if (event.error_type) {

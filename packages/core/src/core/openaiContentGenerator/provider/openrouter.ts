@@ -80,22 +80,39 @@ export class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICompatibleP
    * apply dynamic context limits reported by the provider. This ensures the
    * UI and TokenBudgetManager use the accurate context window sizes.
    */
-  static applyProviderContextLimits(models: any[]): void {
+  static applyProviderContextLimits(models: unknown[]): void {
     if (!Array.isArray(models)) return;
-    for (const m of models) {
+    for (const model of models) {
       try {
-        const id = m.id || m.name;
+        const m =
+          typeof model === "object" && model !== null
+            ? (model as Record<string, unknown>)
+            : null;
+        if (!m) {
+          continue;
+        }
+
+        const id =
+          typeof m["id"] === "string"
+            ? m["id"]
+            : typeof m["name"] === "string"
+              ? m["name"]
+              : undefined;
+        const topProvider =
+          typeof m["top_provider"] === "object" && m["top_provider"] !== null
+            ? (m["top_provider"] as Record<string, unknown>)
+            : null;
         const ctx =
-          typeof m.context_length === "number"
-            ? m.context_length
-            : typeof m.top_provider?.context_length === "number"
-              ? m.top_provider.context_length
+          typeof m["context_length"] === "number"
+            ? m["context_length"]
+            : typeof topProvider?.["context_length"] === "number"
+              ? topProvider["context_length"]
               : undefined;
         if (id && typeof ctx === "number" && Number.isFinite(ctx) && ctx > 0) {
           // Persist dynamic limit in core tokenLimits map
           setModelContextLimit(id, ctx);
         }
-      } catch (e) {
+      } catch {
         // ignore per-model failures
         continue;
       }

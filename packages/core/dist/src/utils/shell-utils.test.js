@@ -7,14 +7,22 @@ import { expect, describe, it, beforeEach, vi, afterEach } from "vitest";
 import { checkCommandPermissions, escapeShellArg, getCommandRoots, getShellConfiguration, isCommandAllowed, isCommandNeedsPermission, stripShellWrapper, } from "./shell-utils.js";
 const mockPlatform = vi.hoisted(() => vi.fn());
 const mockHomedir = vi.hoisted(() => vi.fn());
-vi.mock("os", () => ({
-    default: {
+const mockTmpdir = vi.hoisted(() => vi.fn(() => "/tmp"));
+vi.mock("node:os", async (importOriginal) => {
+    const os = await importOriginal();
+    return {
+        ...os,
+        default: {
+            ...os,
+            platform: mockPlatform,
+            homedir: mockHomedir,
+            tmpdir: mockTmpdir,
+        },
         platform: mockPlatform,
         homedir: mockHomedir,
-    },
-    platform: mockPlatform,
-    homedir: mockHomedir,
-}));
+        tmpdir: mockTmpdir,
+    };
+});
 const mockQuote = vi.hoisted(() => vi.fn());
 const mockParse = vi.hoisted(() => vi.fn());
 vi.mock("shell-quote", () => ({
@@ -24,6 +32,7 @@ vi.mock("shell-quote", () => ({
 let config;
 beforeEach(() => {
     mockPlatform.mockReturnValue("linux");
+    mockHomedir.mockReturnValue("/home/test-user");
     mockQuote.mockImplementation((args) => args.map((arg) => `'${arg}'`).join(" "));
     mockParse.mockImplementation((cmd) => cmd.split(" "));
     config = {

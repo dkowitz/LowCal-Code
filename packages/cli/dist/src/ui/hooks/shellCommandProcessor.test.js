@@ -7,17 +7,15 @@ import { act, renderHook } from "@testing-library/react";
 import { vi, describe, it, expect, beforeEach, afterEach, } from "vitest";
 const mockIsBinary = vi.hoisted(() => vi.fn());
 const mockShellExecutionService = vi.hoisted(() => vi.fn());
-vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
-    const original = await importOriginal();
+vi.mock("@qwen-code/qwen-code-core", () => {
     return {
-        ...original,
         ShellExecutionService: { execute: mockShellExecutionService },
         isBinary: mockIsBinary,
     };
 });
-vi.mock("fs");
-vi.mock("os");
-vi.mock("crypto");
+vi.mock("node:fs");
+vi.mock("node:os");
+vi.mock("node:crypto");
 vi.mock("../utils/textUtils.js");
 import { useShellCommandProcessor, OUTPUT_UPDATE_INTERVAL_MS, } from "./shellCommandProcessor.js";
 import {} from "@qwen-code/qwen-code-core";

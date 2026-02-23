@@ -6,12 +6,37 @@
 
 import AjvPkg from "ajv";
 import * as addFormats from "ajv-formats";
-// Ajv's ESM/CJS interop: use 'any' for compatibility as recommended by Ajv docs
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const AjvClass = (AjvPkg as any).default || AjvPkg;
+
+interface AjvValidationFunction {
+  (data: unknown): boolean;
+  errors?: unknown[];
+}
+
+interface AjvLike {
+  compile(schema: unknown): AjvValidationFunction;
+  errorsText(errors: unknown[], options: { dataVar: string }): string;
+}
+
+type AjvConstructor = new (options: { coerceTypes: boolean }) => AjvLike;
+type AddFormatsFunction = (ajv: AjvLike) => void;
+
+function getDefaultExport<T>(module: T): T {
+  const candidate = module as T | { default?: T };
+  if (
+    typeof candidate === "object" &&
+    candidate !== null &&
+    "default" in candidate &&
+    candidate.default !== undefined
+  ) {
+    return candidate.default;
+  }
+  return module;
+}
+
+const AjvClass = getDefaultExport(AjvPkg) as unknown as AjvConstructor;
 const ajValidator = new AjvClass({ coerceTypes: true });
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const addFormatsFunc = (addFormats as any).default || addFormats;
+const addFormatsFunc =
+  getDefaultExport(addFormats) as unknown as AddFormatsFunction;
 addFormatsFunc(ajValidator);
 
 /**

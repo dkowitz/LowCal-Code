@@ -3,9 +3,7 @@
  * Copyright 2026 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import process from "node:process";
 import { getOrchestratorStatus, isOrchestratorRunning, startOrchestrator, stopOrchestrator, } from "../../orchestrator/daemon.js";
-import { setOrchestratorDecisionModeConfig, } from "../../orchestrator/policies/team-planner.js";
 import { CommandKind, } from "./types.js";
 function info(content) {
     return {
@@ -34,20 +32,10 @@ function formatStatusSummary(status) {
     const lines = [
         `Running: ${status.running ? "yes" : "no"}`,
         `PID: ${status.pid ?? "n/a"}`,
-        `Decision mode: ${status.decision_mode} (${status.decision_mode_source ?? "unknown"})`,
         `Last tick: ${status.last_tick ? new Date(status.last_tick).toLocaleString() : "n/a"}`,
-        `Teams scanned/updated: ${status.teams_scanned}/${status.teams_updated}`,
-        `Team delegations dispatched: ${status.team_delegations_dispatched}`,
-        `Team delegations completed/failed: ${status.team_delegations_completed}/${status.team_delegations_failed}`,
-        `Team agent restarts attempted/succeeded: ${status.team_agent_restart_attempts}/${status.team_agent_restart_successes}`,
-        `Team phase transitions: ${status.team_phase_transitions}`,
-        `Planner source: ${status.planner_source ?? "n/a"}`,
-        `Planner hint teams: ${status.planner_last_hint_teams ?? 0}`,
-        `Planner confidence: ${typeof status.planner_last_confidence === "number"
-            ? status.planner_last_confidence.toFixed(2)
-            : "n/a"}`,
-        `Planner summary: ${status.planner_last_summary ?? "n/a"}`,
-        `Planner fallback: ${status.planner_last_fallback_reason ?? "none"}`,
+        `Sessions scanned: ${status.sessions_scanned}`,
+        `Stalled sessions: ${status.stalled_sessions}`,
+        `Recoveries attempted/succeeded: ${status.recoveries_attempted}/${status.recoveries_succeeded}`,
     ];
     return lines.join("\n");
 }
@@ -64,7 +52,6 @@ export const orchestratorCommand = {
                 "- /orchestrator status",
                 "- /orchestrator start",
                 "- /orchestrator stop",
-                "- /orchestrator mode [deterministic|assisted]",
             ].join("\n"));
         }
         if (subcommand === "status") {
@@ -99,30 +86,7 @@ export const orchestratorCommand = {
             }
             return info("Orchestrator daemon stopped.");
         }
-        if (subcommand === "mode") {
-            const mode = tokens[1]?.trim().toLowerCase();
-            if (!mode) {
-                const status = await getOrchestratorStatus();
-                return info([
-                    `Current decision mode: ${status.decision_mode} (${status.decision_mode_source ?? "unknown"})`,
-                    "Set mode with: /orchestrator mode deterministic|assisted",
-                ].join("\n"));
-            }
-            if (mode !== "deterministic" && mode !== "assisted") {
-                return usageError('Invalid mode. Use "/orchestrator mode deterministic" or "/orchestrator mode assisted".');
-            }
-            const baseDir = context.services.config?.getTargetDir() ?? process.cwd();
-            await setOrchestratorDecisionModeConfig(baseDir, mode);
-            const status = await getOrchestratorStatus();
-            return info([
-                `Orchestrator decision mode saved as "${mode}".`,
-                status.running
-                    ? "The daemon is running; the new mode will apply on the next tick."
-                    : "The daemon is not running; start it when ready.",
-                formatStatusSummary(status),
-            ].join("\n"));
-        }
-        return usageError("Unknown subcommand. Use /orchestrator status, /orchestrator start, /orchestrator stop, or /orchestrator mode deterministic|assisted.");
+        return usageError("Unknown subcommand. Use /orchestrator status, /orchestrator start, or /orchestrator stop.");
     },
 };
 //# sourceMappingURL=orchestratorCommand.js.map

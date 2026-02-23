@@ -34,7 +34,7 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         try {
             settings.setValue(SettingScope.User, "security.auth.selectedType", authType);
         }
-        catch (e) {
+        catch {
             // ignore persistence failures; continue flow
         }
     };
@@ -42,7 +42,7 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         try {
             settings.setValue(SettingScope.User, "security.auth.providerId", providerId);
         }
-        catch (e) {
+        catch {
             // ignore persistence failures; continue flow
         }
     };
@@ -53,7 +53,7 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         try {
             settings.setValue(SettingScope.User, `security.auth.providers.${provider}.${key}`, value);
         }
-        catch (e) {
+        catch {
             // ignore persistence failures; continue flow
         }
     };
@@ -218,7 +218,7 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
                 appEvents.emit(AppEvent.ShowInfo, `Cleared OPENAI_MODEL in: ${modelPath}`);
             }
         }
-        catch (e) {
+        catch {
             // ignore emission errors
         }
         setShowOpenAIKeyPrompt(false);
@@ -232,7 +232,7 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
         try {
             appEvents.emit(AppEvent.ShowInfo, `Saved GEMINI_API_KEY to: ${apiKeyPath}`);
         }
-        catch (e) {
+        catch {
             // ignore emissions
         }
         setShowGeminiKeyPrompt(false);
@@ -262,7 +262,7 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
                     appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_BASE_URL to: ${baseUrlPath}`);
                 }
             }
-            catch (e) {
+            catch {
                 // ignore emissions
             }
             onSelect(AuthType.USE_OPENAI, SettingScope.User);
@@ -284,7 +284,7 @@ export function AuthDialog({ onSelect, settings, initialErrorMessage, }) {
                     appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_BASE_URL to: ${baseUrlPath}`);
                 }
             }
-            catch (e) {
+            catch {
                 // ignore emissions
             }
             onSelect(AuthType.USE_OPENAI, SettingScope.User);

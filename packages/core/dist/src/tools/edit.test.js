@@ -3,7 +3,6 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 const mockOpenDiff = vi.hoisted(() => vi.fn());
 import { IDEConnectionStatus } from "../ide/ide-client.js";
 vi.mock("../utils/editor.js", () => ({
@@ -55,7 +54,7 @@ describe("EditTool", () => {
             setUserMemory: vi.fn(),
             getGeminiMdFileCount: () => 0,
             setGeminiMdFileCount: vi.fn(),
-            getToolRegistry: () => ({}), // Minimal mock for ToolRegistry
+            getToolRegistry: () => ({}),
         };
         // Reset mocks before each test
         mockConfig.getApprovalMode.mockClear();
@@ -177,10 +176,6 @@ describe("EditTool", () => {
                 fileName: newFileName,
                 fileDiff: expect.any(String),
             }));
-        });
-        // This test is no longer relevant since editCorrector functionality was removed
-        it.skip("should use corrected params from ensureCorrectEdit for diff generation", async () => {
-            // Test skipped - editCorrector functionality removed
         });
     });
     describe("execute", () => {
@@ -572,8 +567,9 @@ describe("EditTool", () => {
                     status: IDEConnectionStatus.Connected,
                 }),
             };
-            mockConfig.getIdeMode = () => true;
-            mockConfig.getIdeClient = () => ideClient;
+            const configWithIde = mockConfig;
+            configWithIde.getIdeMode = () => true;
+            configWithIde.getIdeClient = () => ideClient;
         });
         it("should call ideClient.openDiff and update params on confirmation", async () => {
             const initialContent = "some old content here";

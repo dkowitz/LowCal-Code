@@ -41,7 +41,7 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation {
             execSync("docker --version", { stdio: "ignore" });
             return true;
         }
-        catch (error) {
+        catch {
             return false;
         }
     }
@@ -57,7 +57,7 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation {
             // Check if searxng container is in the list
             return output.includes("searxng");
         }
-        catch (error) {
+        catch {
             return false;
         }
     }
@@ -97,7 +97,7 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation {
                     return; // Service is ready
                 }
             }
-            catch (error) {
+            catch {
                 // Ignore errors and continue waiting
             }
             retries++;

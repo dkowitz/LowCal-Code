@@ -362,18 +362,18 @@ function mergeSettings(
   // { model: { name: string } } so downstream code can always read
   // settings.model?.name.
   function normalizeLegacyModel(s: Settings | undefined): Settings | undefined {
-    if (!s) return s;
-    try {
-      const asAny = s as any;
-      if (typeof asAny.model === "string") {
-        return {
-          ...s,
-          model: { ...((s.model as any) ? {} : {}), name: asAny.model },
-        } as Settings;
-      }
-    } catch (_e) {
-      // ignore
+    if (!s) {
+      return s;
     }
+
+    const modelValue = (s as { model?: unknown }).model;
+    if (typeof modelValue === "string") {
+      return {
+        ...s,
+        model: { name: modelValue },
+      } as Settings;
+    }
+
     return s;
   }
 

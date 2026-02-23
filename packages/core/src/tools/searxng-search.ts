@@ -55,7 +55,7 @@ interface SearXNGSearchResponse {
   infoboxes?: Array<{
     infobox: string;
     id: string;
-    content: any;
+    content: unknown;
   }>;
   suggestions?: string[];
   unresponsive_engines?: string[];
@@ -120,7 +120,7 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
     try {
       execSync("docker --version", { stdio: "ignore" });
       return true;
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -137,7 +137,7 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
 
       // Check if searxng container is in the list
       return output.includes("searxng");
-    } catch (error) {
+    } catch {
       return false;
     }
   }
@@ -189,7 +189,7 @@ class SearXNGSearchToolInvocation extends BaseToolInvocation<
         if (response.ok) {
           return; // Service is ready
         }
-      } catch (error) {
+      } catch {
         // Ignore errors and continue waiting
       }
 

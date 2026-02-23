@@ -3,3 +3,12 @@ node_modules
 reports
 conversations
 logs
+
+# runtime + generated artifacts
+.lowcal/
+**/coverage/
+**/junit.xml
+**/tsconfig.tsbuildinfo
+*.bak
+*.backup
+*.fixed

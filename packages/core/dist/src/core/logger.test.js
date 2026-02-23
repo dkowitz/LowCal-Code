@@ -9,14 +9,13 @@ import { Storage } from "../config/storage.js";
 import { promises as fs, existsSync } from "node:fs";
 import path from "node:path";
 import crypto from "node:crypto";
-import os from "node:os";
-const GEMINI_DIR_NAME = ".qwen";
 const TMP_DIR_NAME = "tmp";
 const LOG_FILE_NAME = "logs.json";
 const CHECKPOINT_FILE_NAME = "checkpoint.json";
 const projectDir = process.cwd();
 const hash = crypto.createHash("sha256").update(projectDir).digest("hex");
-const TEST_GEMINI_DIR = path.join(os.homedir(), GEMINI_DIR_NAME, TMP_DIR_NAME, hash);
+const TEST_GLOBAL_GEMINI_DIR = path.join(projectDir, ".qwen-test-home");
+const TEST_GEMINI_DIR = path.join(TEST_GLOBAL_GEMINI_DIR, TMP_DIR_NAME, hash);
 const TEST_LOG_FILE_PATH = path.join(TEST_GEMINI_DIR, LOG_FILE_NAME);
 const TEST_CHECKPOINT_FILE_PATH = path.join(TEST_GEMINI_DIR, CHECKPOINT_FILE_NAME);
 async function cleanupLogAndCheckpointFiles() {
@@ -49,6 +48,7 @@ describe("Logger", () => {
         vi.resetAllMocks();
         vi.useFakeTimers();
         vi.setSystemTime(new Date("2025-01-01T12:00:00.000Z"));
+        vi.spyOn(Storage, "getGlobalGeminiDir").mockReturnValue(TEST_GLOBAL_GEMINI_DIR);
         // Clean up before the test
         await cleanupLogAndCheckpointFiles();
         // Ensure the directory exists for the test

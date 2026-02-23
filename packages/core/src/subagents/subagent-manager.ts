@@ -18,7 +18,6 @@ import type {
   SubagentRuntimeConfig,
   SubagentLevel,
   ListSubagentsOptions,
-  CreateSubagentOptions,
   PromptConfig,
   ModelConfig,
   RunConfig,
@@ -35,7 +34,7 @@ const AGENT_CONFIG_DIR = "agents";
 
 /**
  * Manages subagent configurations stored as Markdown files with YAML frontmatter.
- * Provides CRUD operations, validation, and integration with the runtime system.
+ * Provides loading, discovery, validation, and runtime integration.
  */
 export class SubagentManager {
   private readonly validator: SubagentValidator;
@@ -43,65 +42,6 @@ export class SubagentManager {
 
   constructor(private readonly config: Config) {
     this.validator = new SubagentValidator();
-  }
-
-  /**
-   * Creates a new subagent configuration.
-   *
-   * @param config - Subagent configuration to create
-   * @param options - Creation options
-   * @throws SubagentError if creation fails
-   */
-  async createSubagent(
-    config: SubagentConfig,
-    options: CreateSubagentOptions,
-  ): Promise<void> {
-    this.validator.validateOrThrow(config);
-
-    // Determine file path
-    const filePath =
-      options.customPath || this.getSubagentPath(config.name, options.level);
-
-    // Check if file already exists
-    if (!options.overwrite) {
-      try {
-        await fs.access(filePath);
-        throw new SubagentError(
-          `Subagent "${config.name}" already exists at ${filePath}`,
-          SubagentErrorCode.ALREADY_EXISTS,
-          config.name,
-        );
-      } catch (error) {
-        if (error instanceof SubagentError) throw error;
-        // File doesn't exist, which is what we want
-      }
-    }
-
-    // Ensure directory exists
-    const dir = path.dirname(filePath);
-    await fs.mkdir(dir, { recursive: true });
-
-    // Update config with actual file path and level
-    const finalConfig: SubagentConfig = {
-      ...config,
-      level: options.level,
-      filePath,
-    };
-
-    // Serialize and write the file
-    const content = this.serializeSubagent(finalConfig);
-
-    try {
-      await fs.writeFile(filePath, content, "utf8");
-      // Clear cache after successful creation
-      this.clearCache();
-    } catch (error) {
-      throw new SubagentError(
-        `Failed to write subagent file: ${error instanceof Error ? error.message : "Unknown error"}`,
-        SubagentErrorCode.FILE_ERROR,
-        config.name,
-      );
-    }
   }
 
   /**
@@ -140,110 +80,6 @@ export class SubagentManager {
 
     // Try built-in agents as fallback
     return BuiltinAgentRegistry.getBuiltinAgent(name);
-  }
-
-  /**
-   * Updates an existing subagent configuration.
-   *
-   * @param name - Name of the subagent to update
-   * @param updates - Partial configuration updates
-   * @throws SubagentError if subagent not found or update fails
-   */
-  async updateSubagent(
-    name: string,
-    updates: Partial<SubagentConfig>,
-    level?: SubagentLevel,
-  ): Promise<void> {
-    const existing = await this.loadSubagent(name, level);
-    if (!existing) {
-      throw new SubagentError(
-        `Subagent "${name}" not found`,
-        SubagentErrorCode.NOT_FOUND,
-        name,
-      );
-    }
-
-    // Prevent updating built-in agents
-    if (existing.isBuiltin) {
-      throw new SubagentError(
-        `Cannot update built-in subagent "${name}"`,
-        SubagentErrorCode.INVALID_CONFIG,
-        name,
-      );
-    }
-
-    // Merge updates with existing configuration
-    const updatedConfig = this.mergeConfigurations(existing, updates);
-
-    // Validate the updated configuration
-    this.validator.validateOrThrow(updatedConfig);
-
-    // Write the updated configuration
-    const content = this.serializeSubagent(updatedConfig);
-
-    try {
-      await fs.writeFile(existing.filePath, content, "utf8");
-      // Clear cache after successful update
-      this.clearCache();
-    } catch (error) {
-      throw new SubagentError(
-        `Failed to update subagent file: ${error instanceof Error ? error.message : "Unknown error"}`,
-        SubagentErrorCode.FILE_ERROR,
-        name,
-      );
-    }
-  }
-
-  /**
-   * Deletes a subagent configuration.
-   *
-   * @param name - Name of the subagent to delete
-   * @param level - Specific level to delete from, or undefined to delete from both
-   * @throws SubagentError if deletion fails
-   */
-  async deleteSubagent(name: string, level?: SubagentLevel): Promise<void> {
-    // Check if it's a built-in agent first
-    if (BuiltinAgentRegistry.isBuiltinAgent(name)) {
-      throw new SubagentError(
-        `Cannot delete built-in subagent "${name}"`,
-        SubagentErrorCode.INVALID_CONFIG,
-        name,
-      );
-    }
-
-    const levelsToCheck: SubagentLevel[] = level
-      ? [level]
-      : ["project", "user"];
-    let deleted = false;
-
-    for (const currentLevel of levelsToCheck) {
-      // Skip builtin level for deletion
-      if (currentLevel === "builtin") {
-        continue;
-      }
-
-      // Find the actual subagent file by scanning and parsing
-      const config = await this.findSubagentByNameAtLevel(name, currentLevel);
-      if (config && config.filePath) {
-        try {
-          await fs.unlink(config.filePath);
-          deleted = true;
-        } catch (_error) {
-          // File might not exist or be accessible, continue
-        }
-      }
-    }
-
-    if (!deleted) {
-      throw new SubagentError(
-        `Subagent "${name}" not found`,
-        SubagentErrorCode.NOT_FOUND,
-        name,
-      );
-    }
-
-    // Clear cache after successful deletion
-    this.clearCache();
   }
 
   /**
@@ -634,55 +470,6 @@ export class SubagentManager {
     }
 
     return result;
-  }
-
-  /**
-   * Merges partial configurations with defaults, useful for updating
-   * existing configurations.
-   *
-   * @param base - Base configuration
-   * @param updates - Partial updates to apply
-   * @returns New configuration with updates applied
-   */
-  mergeConfigurations(
-    base: SubagentConfig,
-    updates: Partial<SubagentConfig>,
-  ): SubagentConfig {
-    return {
-      ...base,
-      ...updates,
-      // Handle nested objects specially
-      modelConfig: updates.modelConfig
-        ? { ...base.modelConfig, ...updates.modelConfig }
-        : base.modelConfig,
-      runConfig: updates.runConfig
-        ? { ...base.runConfig, ...updates.runConfig }
-        : base.runConfig,
-    };
-  }
-
-  /**
-   * Gets the file path for a subagent at a specific level.
-   *
-   * @param name - Subagent name
-   * @param level - Storage level
-   * @returns Absolute file path
-   */
-  getSubagentPath(name: string, level: SubagentLevel): string {
-    if (level === "builtin") {
-      return `<builtin:${name}>`;
-    }
-
-    const baseDir =
-      level === "project"
-        ? path.join(
-            this.config.getProjectRoot(),
-            QWEN_CONFIG_DIR,
-            AGENT_CONFIG_DIR,
-          )
-        : path.join(os.homedir(), QWEN_CONFIG_DIR, AGENT_CONFIG_DIR);
-
-    return path.join(baseDir, `${name}.md`);
   }
 
   /**

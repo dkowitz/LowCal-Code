@@ -1,7 +1,0 @@
-{
-  "job_id": "test",
-  "timestamp": "2026-02-08T18:59:18.013Z",
-  "prompt": "\"date\"",
-  "result": "\u001b[1m\u001b[94mAGENT\u001b[0m Starting new prompt: headless...\n\u001b[1m\u001b[94mAGENT\u001b[0m Turn 1 (model: qwen/qwen3-coder-next)\n\u001b[1m\u001b[94mAGENT\u001b[0m Sending request to model...\n\u001b[1m\u001b[94mAGENT\u001b[0m Model started responding...\n\u001b[1m\u001b[94mAGENT\u001b[0m Model finished responding (10 chunks)\n[OpenAIContentGenerator] Raw completion response: {\"id\":\"chatcmpl-xgju7monmbmj7ppxxa1sxq\",\"object\":\"chat.completion\",\"created\":1770577133,\"model\":\"qwen/qwen3-coder-next\",\"choices\":[{\"index\":0,\"message\":{\"role\":\"assistant\",\"content\":\"\",\"tool_calls\":[{\"type\":\"function\",\"id\":\"933077655\",\"function\":{\"name\":\"respond_in_schema\",\"arguments\":\"{\\\"reasoning\\\":\\\"My last response was \\\\\\\"Sunday, February 8, 2026\\\\\\\" - a complete statement that answers the timestamp query. It does not state any intended next action I will take, nor does it ask a question to the user. The response is complete and implies waiting for further input from the user.\\\",\\\"next_speaker\\\":\\\"user\\\"}\"}}]},\"logprobs\":null,\"finish_reason\":\"tool_calls\"}],\"usage\":{\"prompt_tokens\":2855,\"completion_tokens\":98,\"total_tokens\":2953},\"stats\":{},\"system_fingerprint\":\"qwen/qwen3-coder-next\"}\n\u001b[1m\u001b[96m┌─ LLM\u001b[0m\n\u001b[96m│\u001b[0m \u001b[3mSunday, February8, 2026\u001b[0m\n\u001b[96m└────────────────────────\u001b[0m\n\n",
-  "status": "success"
-}

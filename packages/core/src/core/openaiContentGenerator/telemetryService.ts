@@ -89,20 +89,28 @@ export class DefaultTelemetryService implements TelemetryService {
     openaiRequest?: OpenAI.Chat.ChatCompletionCreateParams,
   ): Promise<void> {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorRecord =
+      typeof error === "object" && error !== null
+        ? (error as Record<string, unknown>)
+        : null;
+    const requestIdRaw = errorRecord?.["requestID"];
+    const errorTypeRaw = errorRecord?.["type"];
+    const statusCodeRaw = errorRecord?.["code"];
 
     // Log API error event for UI telemetry
     const errorEvent = new ApiErrorEvent(
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (error as any)?.requestID || "unknown",
+      typeof requestIdRaw === "string" && requestIdRaw.length > 0
+        ? requestIdRaw
+        : "unknown",
       context.model,
       errorMessage,
       context.duration,
       context.userPromptId,
       context.authType,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (error as any)?.type,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (error as any)?.code,
+      typeof errorTypeRaw === "string" ? errorTypeRaw : undefined,
+      typeof statusCodeRaw === "string" || typeof statusCodeRaw === "number"
+        ? statusCodeRaw
+        : undefined,
     );
     logApiError(this.config, errorEvent);
 

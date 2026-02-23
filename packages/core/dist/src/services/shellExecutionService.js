@@ -214,7 +214,10 @@ export class ShellExecutionService {
             const args = isWindows
                 ? `/c ${commandToExecute}`
                 : ["-c", commandToExecute];
-            const ptyProcess = ptyInfo?.module.spawn(shell, args, {
+            if (!ptyInfo) {
+                throw new Error("No PTY implementation available");
+            }
+            const ptyProcess = ptyInfo.module.spawn(shell, args, {
                 cwd,
                 name: "xterm-color",
                 cols,

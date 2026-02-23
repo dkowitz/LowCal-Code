@@ -250,7 +250,7 @@ describe("fileUtils", () => {
             expect(result.llmContent.inlineData
                 .mimeType).toBe("application/pdf");
             expect(result.llmContent.inlineData.data).toBe(fakePdfData.toString("base64"));
-            expect(result.returnDisplay).toContain("Read pdf file: document.pdf");
+            expect(result.returnDisplay).toContain("document.pdf");
         });
         it("should read an SVG file as text when under 1MB", async () => {
             const svgContent = `

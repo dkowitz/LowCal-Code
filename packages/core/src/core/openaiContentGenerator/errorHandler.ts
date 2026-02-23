@@ -63,14 +63,16 @@ export class EnhancedErrorHandler implements ErrorHandler {
   private isTimeoutError(error: unknown): boolean {
     if (!error) return false;
 
+    const errorRecord =
+      typeof error === "object" && error !== null
+        ? (error as Record<string, unknown>)
+        : null;
     const errorMessage =
       error instanceof Error
         ? error.message.toLowerCase()
         : String(error).toLowerCase();
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const errorCode = (error as any)?.code;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const errorType = (error as any)?.type;
+    const errorCode = errorRecord?.["code"];
+    const errorType = errorRecord?.["type"];
 
     // Check for common timeout indicators
     return (
@@ -81,9 +83,9 @@ export class EnhancedErrorHandler implements ErrorHandler {
       errorMessage.includes("read timeout") ||
       errorMessage.includes("etimedout") ||
       errorMessage.includes("esockettimedout") ||
-      errorCode === "ETIMEDOUT" ||
-      errorCode === "ESOCKETTIMEDOUT" ||
-      errorType === "timeout" ||
+      (typeof errorCode === "string" &&
+        (errorCode === "ETIMEDOUT" || errorCode === "ESOCKETTIMEDOUT")) ||
+      (typeof errorType === "string" && errorType === "timeout") ||
       errorMessage.includes("request timed out") ||
       errorMessage.includes("deadline exceeded")
     );

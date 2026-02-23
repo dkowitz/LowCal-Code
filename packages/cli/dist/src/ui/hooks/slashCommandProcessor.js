@@ -23,7 +23,7 @@ function quoteForShell(value) {
 /**
  * Hook to define and process slash commands (e.g., /help, /clear).
  */
-export const useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTasksDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openResumeDialog, openSubagentCreateDialog, openAgentsManagerDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController, openMailboxDialog, openTeamDialog) => {
+export const useSlashCommandProcessor = (config, settings, addItem, clearItems, loadHistory, history, refreshStatic, onDebugMessage, openThemeDialog, openAuthDialog, openEditorDialog, openTasksDialog, toggleCorgiMode, setQuittingMessages, openPrivacyNotice, openSettingsDialog, openModelSelectionDialog, openResumeDialog, toggleVimEnabled, setIsProcessing, setGeminiMdFileCount, _showQuitConfirmation, loggingController, openMailboxDialog) => {
     const session = useSessionStats();
     const [commands, setCommands] = useState([]);
     const [reloadTrigger, setReloadTrigger] = useState(0);
@@ -348,9 +348,6 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
                                     case "tasks":
                                         openTasksDialog();
                                         return { type: "handled" };
-                                    case "team":
-                                        openTeamDialog?.();
-                                        return { type: "handled" };
                                     case "mailbox":
                                         openMailboxDialog?.();
                                         return { type: "handled" };
@@ -365,12 +362,6 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
                                         return { type: "handled" };
                                     case "resume":
                                         openResumeDialog();
-                                        return { type: "handled" };
-                                    case "subagent_create":
-                                        openSubagentCreateDialog();
-                                        return { type: "handled" };
-                                    case "subagent_list":
-                                        openAgentsManagerDialog();
                                         return { type: "handled" };
                                     case "help":
                                         return { type: "handled" };
@@ -644,12 +635,9 @@ export const useSlashCommandProcessor = (config, settings, addItem, clearItems, 
         openPrivacyNotice,
         openEditorDialog,
         openTasksDialog,
-        openTeamDialog,
         openMailboxDialog,
         setQuittingMessages,
         openSettingsDialog,
-        openSubagentCreateDialog,
-        openAgentsManagerDialog,
         setShellConfirmationRequest,
         setSessionShellAllowlist,
         setIsProcessing,

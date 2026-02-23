@@ -4,11 +4,11 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import type { Part, PartListUnion } from "@google/genai";
 import { AuthType, type Config, ApprovalMode } from "@qwen-code/qwen-code-core";
+import type { UseHistoryManagerReturn } from "./useHistoryManager.js";
 
 // Mock the image format functions from core package
 vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
@@ -217,10 +217,10 @@ describe("useVisionAutoSwitch helpers", () => {
 });
 
 describe("useVisionAutoSwitch hook", () => {
-  type AddItemFn = (
-    item: { type: MessageType; text: string },
-    ts: number,
-  ) => any;
+  type AddItemFn = UseHistoryManagerReturn["addItem"];
+  type HandleVisionSwitchResult = Awaited<
+    ReturnType<ReturnType<typeof useVisionAutoSwitch>["handleVisionSwitch"]>
+  >;
 
   const createMockConfig = (
     authType: AuthType,
@@ -234,6 +234,7 @@ describe("useVisionAutoSwitch hook", () => {
       setModel: vi.fn(async (m: string) => {
         currentModel = m;
       }),
+      setModelContextLimit: vi.fn(),
       getApprovalMode: vi.fn(() => approvalMode),
       getVlmSwitchMode: vi.fn(() => vlmSwitchMode),
       getContentGeneratorConfig: vi.fn(() => ({
@@ -250,19 +251,19 @@ describe("useVisionAutoSwitch hook", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    addItem = vi.fn();
+    addItem = vi.fn(() => 1);
   });
 
   it("returns shouldProceed=true immediately for continuations", async () => {
     const config = createMockConfig(AuthType.QWEN_OAUTH, "qwen3-coder-plus");
     const { result } = renderHook(() =>
-      useVisionAutoSwitch(config, addItem as any, true, vi.fn()),
+      useVisionAutoSwitch(config, addItem, true, vi.fn()),
     );
 
     const parts: PartListUnion = [
       { inlineData: { mimeType: "image/png", data: "..." } },
     ];
-    let res: any;
+    let res: HandleVisionSwitchResult | undefined;
     await act(async () => {
       res = await result.current.handleVisionSwitch(parts, Date.now(), true);
     });
@@ -274,13 +275,13 @@ describe("useVisionAutoSwitch hook", () => {
     const config = createMockConfig(AuthType.USE_GEMINI, "qwen3-coder-plus");
     const onVisionSwitchRequired = vi.fn();
     const { result } = renderHook(() =>
-      useVisionAutoSwitch(config, addItem as any, true, onVisionSwitchRequired),
+      useVisionAutoSwitch(config, addItem, true, onVisionSwitchRequired),
     );
 
     const parts: PartListUnion = [
       { inlineData: { mimeType: "image/png", data: "..." } },
     ];
-    let res: any;
+    let res: HandleVisionSwitchResult | undefined;
     await act(async () => {
       res = await result.current.handleVisionSwitch(parts, 123, false);
     });
@@ -292,11 +293,11 @@ describe("useVisionAutoSwitch hook", () => {
     const config = createMockConfig(AuthType.QWEN_OAUTH, "qwen3-coder-plus");
     const onVisionSwitchRequired = vi.fn();
     const { result } = renderHook(() =>
-      useVisionAutoSwitch(config, addItem as any, true, onVisionSwitchRequired),
+      useVisionAutoSwitch(config, addItem, true, onVisionSwitchRequired),
     );
 
     const parts: PartListUnion = [{ text: "no images here" }];
-    let res: any;
+    let res: HandleVisionSwitchResult | undefined;
     await act(async () => {
       res = await result.current.handleVisionSwitch(parts, 456, false);
     });
@@ -308,7 +309,7 @@ describe("useVisionAutoSwitch hook", () => {
     const config = createMockConfig(AuthType.QWEN_OAUTH, "qwen3-coder-plus");
     const onVisionSwitchRequired = vi.fn().mockResolvedValue({}); // Empty result for ContinueWithCurrentModel
     const { result } = renderHook(() =>
-      useVisionAutoSwitch(config, addItem as any, true, onVisionSwitchRequired),
+      useVisionAutoSwitch(config, addItem, true, onVisionSwitchRequired),
     );
 
     const parts: PartListUnion = [
@@ -316,7 +317,7 @@ describe("useVisionAutoSwitch hook", () => {
     ];
 
     const userTs = 1010;
-    let res: any;
+    let res: HandleVisionSwitchResult | undefined;
     await act(async () => {
       res = await result.current.handleVisionSwitch(parts, userTs, false);
     });
@@ -337,14 +338,14 @@ describe("useVisionAutoSwitch hook", () => {
       .fn()
       .mockResolvedValue({ modelOverride: "coder-model" });
     const { result } = renderHook(() =>
-      useVisionAutoSwitch(config, addItem as any, true, onVisionSwitchRequired),
+      useVisionAutoSwitch(config, addItem, true, onVisionSwitchRequired),
     );
 
     const parts: PartListUnion = [
       { inlineData: { mimeType: "image/png", data: "..." } },
     ];
 
-    let res: any;
+    let res: HandleVisionSwitchResult | undefined;
     await act(async () => {
       res = await result.current.handleVisionSwitch(parts, 2020, false);
     });
@@ -371,14 +372,14 @@ describe("useVisionAutoSwitch hook", () => {
       .fn()
       .mockResolvedValue({ persistSessionModel: "coder-model" });
     const { result } = renderHook(() =>
-      useVisionAutoSwitch(config, addItem as any, true, onVisionSwitchRequired),
+      useVisionAutoSwitch(config, addItem, true, onVisionSwitchRequired),
     );
 
     const parts: PartListUnion = [
       { inlineData: { mimeType: "image/png", data: "..." } },
     ];
 
-    let res: any;
+    let res: HandleVisionSwitchResult | undefined;
     await act(async () => {
       res = await result.current.handleVisionSwitch(parts, 3030, false);
     });
@@ -394,20 +395,21 @@ describe("useVisionAutoSwitch hook", () => {
       await result.current.restoreOriginalModel();
     });
     // Last call should still be the persisted model set
-    expect((config.setModel as any).mock.calls.pop()?.[0]).toBe("coder-model");
+    const setModelMock = vi.mocked(config.setModel);
+    expect(setModelMock.mock.calls.pop()?.[0]).toBe("coder-model");
   });
 
   it("returns shouldProceed=true when dialog returns no special flags", async () => {
     const config = createMockConfig(AuthType.QWEN_OAUTH, "qwen3-coder-plus");
     const onVisionSwitchRequired = vi.fn().mockResolvedValue({});
     const { result } = renderHook(() =>
-      useVisionAutoSwitch(config, addItem as any, true, onVisionSwitchRequired),
+      useVisionAutoSwitch(config, addItem, true, onVisionSwitchRequired),
     );
 
     const parts: PartListUnion = [
       { inlineData: { mimeType: "image/png", data: "..." } },
     ];
-    let res: any;
+    let res: HandleVisionSwitchResult | undefined;
     await act(async () => {
       res = await result.current.handleVisionSwitch(parts, 4040, false);
     });
@@ -419,13 +421,13 @@ describe("useVisionAutoSwitch hook", () => {
     const config = createMockConfig(AuthType.QWEN_OAUTH, "qwen3-coder-plus");
     const onVisionSwitchRequired = vi.fn().mockRejectedValue(new Error("x"));
     const { result } = renderHook(() =>
-      useVisionAutoSwitch(config, addItem as any, true, onVisionSwitchRequired),
+      useVisionAutoSwitch(config, addItem, true, onVisionSwitchRequired),
     );
 
     const parts: PartListUnion = [
       { inlineData: { mimeType: "image/png", data: "..." } },
     ];
-    let res: any;
+    let res: HandleVisionSwitchResult | undefined;
     await act(async () => {
       res = await result.current.handleVisionSwitch(parts, 5050, false);
     });
@@ -439,7 +441,7 @@ describe("useVisionAutoSwitch hook", () => {
     const { result } = renderHook(() =>
       useVisionAutoSwitch(
         config,
-        addItem as any,
+        addItem,
         false,
         onVisionSwitchRequired,
       ),
@@ -448,7 +450,7 @@ describe("useVisionAutoSwitch hook", () => {
     const parts: PartListUnion = [
       { inlineData: { mimeType: "image/png", data: "..." } },
     ];
-    let res: any;
+    let res: HandleVisionSwitchResult | undefined;
     await act(async () => {
       res = await result.current.handleVisionSwitch(parts, 6060, false);
     });
@@ -468,7 +470,7 @@ describe("useVisionAutoSwitch hook", () => {
       const { result } = renderHook(() =>
         useVisionAutoSwitch(
           config,
-          addItem as any,
+          addItem,
           true,
           onVisionSwitchRequired,
         ),
@@ -478,7 +480,7 @@ describe("useVisionAutoSwitch hook", () => {
         { inlineData: { mimeType: "image/png", data: "..." } },
       ];
 
-      let res: any;
+      let res: HandleVisionSwitchResult | undefined;
       await act(async () => {
         res = await result.current.handleVisionSwitch(parts, 7070, false);
       });
@@ -505,7 +507,7 @@ describe("useVisionAutoSwitch hook", () => {
       const { result } = renderHook(() =>
         useVisionAutoSwitch(
           config,
-          addItem as any,
+          addItem,
           true,
           onVisionSwitchRequired,
         ),
@@ -513,7 +515,7 @@ describe("useVisionAutoSwitch hook", () => {
 
       const parts: PartListUnion = [{ text: "no images here" }];
 
-      let res: any;
+      let res: HandleVisionSwitchResult | undefined;
       await act(async () => {
         res = await result.current.handleVisionSwitch(parts, 8080, false);
       });
@@ -533,7 +535,7 @@ describe("useVisionAutoSwitch hook", () => {
       const { result } = renderHook(() =>
         useVisionAutoSwitch(
           config,
-          addItem as any,
+          addItem,
           true,
           onVisionSwitchRequired,
         ),
@@ -543,7 +545,7 @@ describe("useVisionAutoSwitch hook", () => {
         { inlineData: { mimeType: "image/png", data: "..." } },
       ];
 
-      let res: any;
+      let res: HandleVisionSwitchResult | undefined;
       await act(async () => {
         res = await result.current.handleVisionSwitch(parts, 9090, false);
       });
@@ -564,7 +566,7 @@ describe("useVisionAutoSwitch hook", () => {
       const { result } = renderHook(() =>
         useVisionAutoSwitch(
           config,
-          addItem as any,
+          addItem,
           true,
           onVisionSwitchRequired,
         ),
@@ -607,7 +609,7 @@ describe("useVisionAutoSwitch hook", () => {
       const { result } = renderHook(() =>
         useVisionAutoSwitch(
           config,
-          addItem as any,
+          addItem,
           true,
           onVisionSwitchRequired,
         ),
@@ -617,7 +619,7 @@ describe("useVisionAutoSwitch hook", () => {
         { inlineData: { mimeType: "image/png", data: "..." } },
       ];
 
-      let res: any;
+      let res: HandleVisionSwitchResult | undefined;
       await act(async () => {
         res = await result.current.handleVisionSwitch(parts, 11110, false);
       });
@@ -637,7 +639,7 @@ describe("useVisionAutoSwitch hook", () => {
       const { result } = renderHook(() =>
         useVisionAutoSwitch(
           config,
-          addItem as any,
+          addItem,
           false,
           onVisionSwitchRequired,
         ),
@@ -647,7 +649,7 @@ describe("useVisionAutoSwitch hook", () => {
         { inlineData: { mimeType: "image/png", data: "..." } },
       ];
 
-      let res: any;
+      let res: HandleVisionSwitchResult | undefined;
       await act(async () => {
         res = await result.current.handleVisionSwitch(parts, 12120, false);
       });
@@ -668,7 +670,7 @@ describe("useVisionAutoSwitch hook", () => {
       const { result } = renderHook(() =>
         useVisionAutoSwitch(
           config,
-          addItem as any,
+          addItem,
           true,
           onVisionSwitchRequired,
         ),
@@ -681,7 +683,7 @@ describe("useVisionAutoSwitch hook", () => {
         { text: "Please analyze them." },
       ];
 
-      let res: any;
+      let res: HandleVisionSwitchResult | undefined;
       await act(async () => {
         res = await result.current.handleVisionSwitch(parts, 13130, false);
       });
@@ -710,7 +712,7 @@ describe("useVisionAutoSwitch hook", () => {
       const { result } = renderHook(() =>
         useVisionAutoSwitch(
           config,
-          addItem as any,
+          addItem,
           true,
           onVisionSwitchRequired,
         ),
@@ -746,7 +748,7 @@ describe("useVisionAutoSwitch hook", () => {
       const { result } = renderHook(() =>
         useVisionAutoSwitch(
           config,
-          addItem as any,
+          addItem,
           true,
           onVisionSwitchRequired,
         ),
@@ -782,7 +784,7 @@ describe("useVisionAutoSwitch hook", () => {
       const { result } = renderHook(() =>
         useVisionAutoSwitch(
           config,
-          addItem as any,
+          addItem,
           true,
           onVisionSwitchRequired,
         ),
@@ -817,7 +819,7 @@ describe("useVisionAutoSwitch hook", () => {
       const { result } = renderHook(() =>
         useVisionAutoSwitch(
           config,
-          addItem as any,
+          addItem,
           true,
           onVisionSwitchRequired,
         ),
@@ -848,7 +850,7 @@ describe("useVisionAutoSwitch hook", () => {
       const { result } = renderHook(() =>
         useVisionAutoSwitch(
           config,
-          addItem as any,
+          addItem,
           true,
           onVisionSwitchRequired,
         ),

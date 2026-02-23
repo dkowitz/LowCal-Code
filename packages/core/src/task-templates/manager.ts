@@ -20,6 +20,7 @@ import type {
   TaskTemplateLevel,
   TaskTemplateModelProfile,
   TaskTemplateRunProfile,
+  TaskTemplateSystemPromptProfile,
 } from "./types.js";
 
 const QWEN_CONFIG_DIR = ".qwen";
@@ -117,6 +118,27 @@ function parseRun(value: unknown): TaskTemplateRunProfile | undefined {
   };
 }
 
+function parseSystemPrompt(
+  value: unknown,
+): TaskTemplateSystemPromptProfile | undefined {
+  if (!isRecord(value)) return undefined;
+  const names = asStringArray(value["names"]);
+  const exclusive =
+    typeof value["exclusive"] === "boolean" ? value["exclusive"] : undefined;
+  const disable =
+    typeof value["disable"] === "boolean" ? value["disable"] : undefined;
+  if (disable === true) {
+    return { disable: true };
+  }
+  if (!names || names.length === 0) {
+    return undefined;
+  }
+  return {
+    names,
+    exclusive: exclusive === true,
+  };
+}
+
 function mergeTemplate(base: TaskTemplate, updates: Partial<TaskTemplate>): TaskTemplate {
   return {
     ...base,
@@ -128,6 +150,9 @@ function mergeTemplate(base: TaskTemplate, updates: Partial<TaskTemplate>): Task
     auth: updates.auth ? { ...base.auth, ...updates.auth } : base.auth,
     model: updates.model ? { ...base.model, ...updates.model } : base.model,
     run: updates.run ? { ...base.run, ...updates.run } : base.run,
+    systemPrompt: updates.systemPrompt
+      ? { ...base.systemPrompt, ...updates.systemPrompt }
+      : base.systemPrompt,
   };
 }
 
@@ -206,6 +231,7 @@ export class TaskTemplateManager {
       auth: parseAuth(frontmatter["auth"]),
       model: parseModel(frontmatter["model"]),
       run: parseRun(frontmatter["run"]),
+      systemPrompt: parseSystemPrompt(frontmatter["systemPrompt"]),
       level,
       filePath,
       isBuiltin: isBuiltin || undefined,
@@ -242,6 +268,9 @@ export class TaskTemplateManager {
     }
     if (template.run) {
       frontmatter["run"] = template.run;
+    }
+    if (template.systemPrompt) {
+      frontmatter["systemPrompt"] = template.systemPrompt;
     }
 
     const yaml = stringifyYaml(frontmatter, {
@@ -403,4 +432,3 @@ export class TaskTemplateManager {
     this.clearCache();
   }
 }
-

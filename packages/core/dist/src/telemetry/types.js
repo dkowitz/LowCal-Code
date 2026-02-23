@@ -100,7 +100,6 @@ export class ToolCallEvent {
     error_type;
     prompt_id;
     tool_type;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     metadata;
     constructor(call) {
         this["event.name"] = "tool_call";

@@ -1,6 +1,6 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { ApprovalMode, AuthType, TaskTemplateManager, } from "@qwen-code/qwen-code-core";
+import { ApprovalMode, AuthType, TaskTemplateManager, listJobs, sanitizeRuntimeProfile, updateJob, validateCronExpression, } from "@qwen-code/qwen-code-core";
 import { Box, Text } from "ink";
 import { Colors } from "../colors.js";
 import { fetchGeminiModels, fetchOpenAICompatibleModels, getFilteredGeminiModels, getOpenAIAvailableModelFromEnv, } from "../models/availableModels.js";
@@ -12,8 +12,22 @@ const OPENROUTER_DEFAULT_BASE_URL = "https://openrouter.ai/api/v1";
 const OPENAI_DEFAULT_BASE_URL = "https://api.openai.com/v1";
 const LM_STUDIO_DEFAULT_BASE_URL = "http://127.0.0.1:1234/v1";
 const NEW_TEMPLATE_KEY = "__new__";
+const JOB_TEMPLATE_KEY_PREFIX = "__job__:";
+let lastTaskEditorSelectionKey;
 function templateKeyFor(template) {
     return `${template.id}:${template.level}`;
+}
+function jobKeyFor(jobId) {
+    return `${JOB_TEMPLATE_KEY_PREFIX}${jobId}`;
+}
+function isJobKey(key) {
+    return key.startsWith(JOB_TEMPLATE_KEY_PREFIX);
+}
+function jobIdFromKey(key) {
+    if (!isJobKey(key))
+        return undefined;
+    const id = key.slice(JOB_TEMPLATE_KEY_PREFIX.length).trim();
+    return id.length > 0 ? id : undefined;
 }
 function trimOrUndefined(value) {
     const trimmed = value.trim();
@@ -65,6 +79,86 @@ function formatPreview(value, fallback = "(unset)") {
         return normalized;
     return `${normalized.slice(0, 40)}...`;
 }
+function formatSystemPromptSpec(profile) {
+    if (!profile) {
+        return "";
+    }
+    if (profile.disable === true) {
+        return "disable";
+    }
+    const names = Array.isArray(profile.names)
+        ? profile.names
+            .map((entry) => entry.trim())
+            .filter((entry) => entry.length > 0)
+        : [];
+    if (names.length === 0) {
+        return "";
+    }
+    const namesCsv = names.join(",");
+    return profile.exclusive === true ? `${namesCsv} --exclusive` : namesCsv;
+}
+function parseSystemPromptSpec(value) {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.toLowerCase() === "inherit") {
+        return {};
+    }
+    let working = trimmed;
+    if (working.startsWith("/")) {
+        working = working.slice(1).trim();
+    }
+    const lower = working.toLowerCase();
+    if (lower === "prompt disable" || lower === "disable") {
+        return {
+            profile: { disable: true },
+        };
+    }
+    if (lower.startsWith("prompt ")) {
+        working = working.slice("prompt ".length).trim();
+    }
+    if (working.toLowerCase().startsWith("activate ")) {
+        working = working.slice("activate ".length).trim();
+    }
+    else if (working.toLowerCase().startsWith("use ")) {
+        working = working.slice("use ".length).trim();
+    }
+    else if (working.toLowerCase().startsWith("set ")) {
+        working = working.slice("set ".length).trim();
+    }
+    const hasExclusive = /\s--exclusive(\s|$)/.test(` ${working} `);
+    working = working.replace(/\s*--exclusive(\s|$)/g, " ").trim();
+    if (!working) {
+        return {
+            error: "System prompt value must include prompt names, or use 'disable' or 'inherit'.",
+        };
+    }
+    const tokens = working.split(/\s+/);
+    if (tokens.length > 1) {
+        return {
+            error: "System prompt format must match /prompt activate: name1,name2 [--exclusive].",
+        };
+    }
+    const names = tokens[0]
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0);
+    if (names.length === 0) {
+        return {
+            error: "System prompt value must include at least one prompt name (for example: reviewer,security).",
+        };
+    }
+    const invalid = names.find((name) => !/^[a-zA-Z0-9_-]+$/.test(name));
+    if (invalid) {
+        return {
+            error: `Invalid prompt name "${invalid}". Use alphanumeric, hyphen, or underscore names only.`,
+        };
+    }
+    return {
+        profile: {
+            names,
+            exclusive: hasExclusive,
+        },
+    };
+}
 function buildEmptyDraft(settings, currentModel) {
     return {
         id: "",
@@ -79,6 +173,7 @@ function buildEmptyDraft(settings, currentModel) {
         modelName: currentModel,
         returnToSession: "inherit",
         allowRecursive: "inherit",
+        systemPromptSpec: "",
         level: "user",
         deployMode: "launch",
         schedule: "0 * * * *",
@@ -113,12 +208,61 @@ function buildDraftFromTemplate(template, settings, currentModel) {
         modelName: template.model?.name ?? currentModel,
         returnToSession: returnChoice,
         allowRecursive: recursiveChoice,
+        systemPromptSpec: formatSystemPromptSpec(template.systemPrompt),
         level: template.level === "project" || template.level === "user"
             ? template.level
             : "user",
         deployMode: "launch",
         schedule: "0 * * * *",
         scheduleJobId: `${template.id}-schedule`,
+    };
+}
+function buildRuntimeProfileFromJob(job) {
+    return (sanitizeRuntimeProfile(job.runtime_profile ?? {
+        template_id: job.template_id,
+        template_level: job.template_level,
+        action_type: job.action_type,
+        action_value: job.action_value ?? job.prompt,
+        execution_mode: job.execution_mode,
+        run: job.return_to_session_id
+            ? { returnToSession: job.return_to_session_id }
+            : undefined,
+    }) ?? { action_type: "prompt", action_value: job.prompt });
+}
+function buildDraftFromJob(job, currentModel) {
+    const runtimeProfile = buildRuntimeProfileFromJob(job);
+    const returnToSession = runtimeProfile.run?.returnToSession ?? job.return_to_session_id;
+    const returnChoice = returnToSession === true
+        ? "true"
+        : returnToSession === false
+            ? "false"
+            : typeof returnToSession === "string"
+                ? "current_session"
+                : "inherit";
+    const allowRecursive = runtimeProfile.run?.allowRecursive;
+    const recursiveChoice = allowRecursive === true
+        ? "true"
+        : allowRecursive === false
+            ? "false"
+            : "inherit";
+    return {
+        id: job.id,
+        name: "",
+        description: job.description ?? "",
+        tags: "",
+        actionType: runtimeProfile.action_type ?? job.action_type ?? "prompt",
+        actionValue: runtimeProfile.action_value ?? job.action_value ?? job.prompt ?? "",
+        executionMode: runtimeProfile.execution_mode ?? job.execution_mode ?? "default",
+        approvalMode: "inherit",
+        authChoice: toAuthChoice(runtimeProfile.auth),
+        modelName: runtimeProfile.model?.name ?? currentModel,
+        returnToSession: returnChoice,
+        allowRecursive: recursiveChoice,
+        systemPromptSpec: formatSystemPromptSpec(runtimeProfile.system_prompt),
+        level: "user",
+        deployMode: "schedule",
+        schedule: job.schedule,
+        scheduleJobId: job.id,
     };
 }
 function buildAuthProfile(choice, settings) {
@@ -208,7 +352,7 @@ function buildDuplicateTemplateId(sourceId, level, templates) {
     const existingIds = new Set(templates
         .filter((template) => template.level === level)
         .map((template) => template.id));
-    let candidate = `${baseId}-copy`;
+    const candidate = `${baseId}-copy`;
     if (!existingIds.has(candidate)) {
         return candidate;
     }
@@ -222,8 +366,9 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
     const { columns: terminalColumns, rows: terminalRows } = useTerminalSize();
     const [focusSection, setFocusSection] = useState("templates");
     const [selectedField, setSelectedField] = useState("id");
-    const [selectedTemplateKey, setSelectedTemplateKey] = useState(NEW_TEMPLATE_KEY);
+    const [selectedTemplateKey, setSelectedTemplateKey] = useState(lastTaskEditorSelectionKey ?? NEW_TEMPLATE_KEY);
     const [templates, setTemplates] = useState([]);
+    const [jobs, setJobs] = useState([]);
     const [draft, setDraft] = useState(() => buildEmptyDraft(settings, currentModel));
     const [statusMessage, setStatusMessage] = useState("");
     const [errorMessage, setErrorMessage] = useState(null);
@@ -244,7 +389,22 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
     const selectedTemplate = selectedTemplateKey === NEW_TEMPLATE_KEY
         ? null
         : (templatesByKey.get(selectedTemplateKey) ?? null);
+    const jobsById = useMemo(() => {
+        const map = new Map();
+        for (const job of jobs) {
+            map.set(job.id, job);
+        }
+        return map;
+    }, [jobs]);
+    const selectedJob = useMemo(() => {
+        const jobId = jobIdFromKey(selectedTemplateKey);
+        if (!jobId)
+            return null;
+        return jobsById.get(jobId) ?? null;
+    }, [selectedTemplateKey, jobsById]);
+    const selectedJobId = useMemo(() => jobIdFromKey(selectedTemplateKey), [selectedTemplateKey]);
     const isBuiltinTemplate = selectedTemplate?.level === "builtin";
+    const isSelectedScheduledJob = selectedJobId !== undefined;
     const isExistingEditableTemplate = selectedTemplate !== null && selectedTemplate.level !== "builtin";
     const reloadTemplates = useCallback(async (preferred) => {
         setIsLoadingTemplates(true);
@@ -253,7 +413,11 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             const levels = ["project", "user", "builtin"];
             // Force a cache refresh first, then list by level so we can edit each scope.
             await manager.listTemplates({ force: true });
-            const byLevel = await Promise.all(levels.map((level) => manager.listTemplates({ level })));
+            const [byLevel, scheduledJobs] = await Promise.all([
+                Promise.all(levels.map((level) => manager.listTemplates({ level }))),
+                listJobs(),
+            ]);
+            const sortedJobs = [...scheduledJobs].sort((a, b) => a.id.localeCompare(b.id));
             const all = byLevel.flat().sort((a, b) => {
                 const idComparison = a.id.localeCompare(b.id);
                 if (idComparison !== 0) {
@@ -262,23 +426,39 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
                 return a.level.localeCompare(b.level);
             });
             setTemplates(all);
-            let nextSelected = NEW_TEMPLATE_KEY;
-            if (preferred?.id) {
+            setJobs(sortedJobs);
+            let nextSelected = preferred?.key ?? lastTaskEditorSelectionKey ?? NEW_TEMPLATE_KEY;
+            if (preferred?.jobId) {
+                nextSelected = jobKeyFor(preferred.jobId);
+            }
+            else if (preferred?.id) {
                 const exact = all.find((template) => template.id === preferred.id &&
                     (!preferred.level || template.level === preferred.level));
                 if (exact) {
                     nextSelected = templateKeyFor(exact);
                 }
             }
-            if (nextSelected === NEW_TEMPLATE_KEY && all.length > 0) {
+            const nextSelectedExists = nextSelected === NEW_TEMPLATE_KEY ||
+                all.some((template) => templateKeyFor(template) === nextSelected) ||
+                sortedJobs.some((job) => jobKeyFor(job.id) === nextSelected);
+            if (!nextSelectedExists) {
+                nextSelected = NEW_TEMPLATE_KEY;
+            }
+            if (nextSelected === NEW_TEMPLATE_KEY && sortedJobs.length > 0) {
+                nextSelected = jobKeyFor(sortedJobs[0].id);
+            }
+            else if (nextSelected === NEW_TEMPLATE_KEY && all.length > 0) {
                 nextSelected = templateKeyFor(all[0]);
             }
             setSelectedTemplateKey(nextSelected);
+            lastTaskEditorSelectionKey = nextSelected;
         }
         catch (error) {
             setErrorMessage(`Failed to load task templates: ${error instanceof Error ? error.message : String(error)}`);
             setTemplates([]);
+            setJobs([]);
             setSelectedTemplateKey(NEW_TEMPLATE_KEY);
+            lastTaskEditorSelectionKey = NEW_TEMPLATE_KEY;
         }
         finally {
             setIsLoadingTemplates(false);
@@ -288,6 +468,12 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         void reloadTemplates();
     }, [reloadTemplates]);
     useEffect(() => {
+        if (selectedJob) {
+            setDraft(buildDraftFromJob(selectedJob, currentModel));
+            setEditorResetToken((value) => value + 1);
+            pendingNewDraftRef.current = null;
+            return;
+        }
         if (!selectedTemplate) {
             if (selectedTemplateKey !== NEW_TEMPLATE_KEY) {
                 return;
@@ -305,7 +491,13 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         setDraft(buildDraftFromTemplate(selectedTemplate, settings, currentModel));
         setEditorResetToken((value) => value + 1);
         pendingNewDraftRef.current = null;
-    }, [selectedTemplate, selectedTemplateKey, settings, currentModel]);
+    }, [
+        selectedJob,
+        selectedTemplate,
+        selectedTemplateKey,
+        settings,
+        currentModel,
+    ]);
     useEffect(() => {
         let cancelled = false;
         setIsFetchingModels(true);
@@ -362,21 +554,30 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         }
     }, { isActive: true });
     const templateOptions = useMemo(() => {
+        const jobIds = new Set(jobs.map((job) => job.id));
         const items = [
             {
                 label: "+ New Template",
                 value: NEW_TEMPLATE_KEY,
             },
         ];
+        for (const job of jobs) {
+            const title = job.description ? ` - ${job.description}` : "";
+            items.push({
+                label: `@job ${job.id} [scheduled]${title}`,
+                value: jobKeyFor(job.id),
+            });
+        }
         for (const template of templates) {
             const title = template.name ? ` - ${template.name}` : "";
+            const conflictSuffix = jobIds.has(template.id) ? " [id also used by @job]" : "";
             items.push({
-                label: `${template.id} [${template.level}]${title}`,
+                label: `template ${template.id} [${template.level}]${conflictSuffix}${title}`,
                 value: templateKeyFor(template),
             });
         }
         return items;
-    }, [templates]);
+    }, [templates, jobs]);
     const selectedTemplateIndex = useMemo(() => {
         const index = templateOptions.findIndex((item) => item.value === selectedTemplateKey);
         return index >= 0 ? index : 0;
@@ -494,6 +695,10 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             value: "run_recursive",
         },
         {
+            label: `System Prompt: ${formatPreview(draft.systemPromptSpec, "inherit")}`,
+            value: "system_prompt",
+        },
+        {
             label: `Save Level: ${draft.level}`,
             value: "level",
         },
@@ -546,6 +751,12 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         const runAllowRecursive = draft.allowRecursive === "inherit"
             ? undefined
             : draft.allowRecursive === "true";
+        const systemPromptResult = parseSystemPromptSpec(draft.systemPromptSpec);
+        if (systemPromptResult.error) {
+            setErrorMessage(systemPromptResult.error);
+            return null;
+        }
+        const systemPrompt = systemPromptResult.profile;
         const finalTemplate = {
             id,
             name: trimOrUndefined(draft.name),
@@ -569,6 +780,7 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
                     returnToSession: runReturnToSession,
                     allowRecursive: runAllowRecursive,
                 },
+            systemPrompt,
             level,
             filePath: "",
             isBuiltin: undefined,
@@ -599,6 +811,125 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         manager,
         reloadTemplates,
     ]);
+    const saveScheduledJob = useCallback(async () => {
+        let job = selectedJob;
+        if (!job && selectedJobId) {
+            const allJobs = await listJobs();
+            job = allJobs.find((entry) => entry.id === selectedJobId) ?? null;
+        }
+        if (!job) {
+            setErrorMessage("Select a scheduled job to update.");
+            return null;
+        }
+        const schedule = draft.schedule.trim();
+        if (!schedule) {
+            setErrorMessage("Schedule cron expression is required.");
+            return null;
+        }
+        if (!validateCronExpression(schedule)) {
+            setErrorMessage(`Invalid cron expression "${schedule}". Use 5-field format (minute hour day month day_of_week).`);
+            return null;
+        }
+        const actionValue = draft.actionValue;
+        if (actionValue.trim().length === 0) {
+            setErrorMessage("Action value is required.");
+            return null;
+        }
+        if (actionValue.length > 10000) {
+            setErrorMessage(`Action value is too long (${actionValue.length} characters). Maximum is 10000.`);
+            return null;
+        }
+        if (draft.actionType === "slash_command" &&
+            draft.executionMode !== "in_process") {
+            setErrorMessage("slash_command action type requires execution mode in_process.");
+            return null;
+        }
+        const systemPromptResult = parseSystemPromptSpec(draft.systemPromptSpec);
+        if (systemPromptResult.error) {
+            setErrorMessage(systemPromptResult.error);
+            return null;
+        }
+        const existingRuntime = buildRuntimeProfileFromJob(job);
+        const existingStringTarget = typeof job.return_to_session_id === "string" &&
+            job.return_to_session_id.trim().length > 0
+            ? job.return_to_session_id.trim()
+            : typeof existingRuntime.run?.returnToSession === "string"
+                ? existingRuntime.run.returnToSession
+                : undefined;
+        const returnToSession = draft.returnToSession === "true"
+            ? true
+            : draft.returnToSession === "false"
+                ? false
+                : draft.returnToSession === "current_session"
+                    ? existingStringTarget
+                    : undefined;
+        const allowRecursive = draft.allowRecursive === "inherit"
+            ? undefined
+            : draft.allowRecursive === "true";
+        const runtimeRun = returnToSession === undefined && allowRecursive === undefined
+            ? undefined
+            : {
+                returnToSession,
+                allowRecursive,
+            };
+        const executionMode = draft.executionMode === "default" ? undefined : draft.executionMode;
+        const auth = buildAuthProfile(draft.authChoice, settings);
+        const model = trimOrUndefined(draft.modelName)
+            ? { name: draft.modelName.trim() }
+            : undefined;
+        const runtimeProfile = sanitizeRuntimeProfile({
+            ...existingRuntime,
+            action_type: draft.actionType,
+            action_value: actionValue,
+            execution_mode: executionMode,
+            auth,
+            model,
+            run: runtimeRun,
+            system_prompt: systemPromptResult.profile,
+        });
+        const returnToSessionIdUpdate = draft.returnToSession === "false" || draft.returnToSession === "inherit"
+            ? null
+            : typeof returnToSession === "string"
+                ? returnToSession
+                : job.return_to_session_id;
+        const effectiveSessionTarget = (typeof returnToSessionIdUpdate === "string" &&
+            returnToSessionIdUpdate.trim().length > 0
+            ? returnToSessionIdUpdate.trim()
+            : undefined) ??
+            (typeof runtimeProfile?.run?.returnToSession === "string" &&
+                runtimeProfile.run.returnToSession.trim().length > 0
+                ? runtimeProfile.run.returnToSession.trim()
+                : undefined);
+        if (executionMode === "in_process" && !effectiveSessionTarget) {
+            setErrorMessage("in_process execution requires a target session (return_to_session_id or run.returnToSession).");
+            return null;
+        }
+        setIsBusy(true);
+        setErrorMessage(null);
+        try {
+            const updated = await updateJob({
+                id: job.id,
+                schedule,
+                prompt: actionValue,
+                description: draft.description.trim(),
+                action_type: draft.actionType,
+                action_value: actionValue,
+                execution_mode: executionMode ?? null,
+                return_to_session_id: returnToSessionIdUpdate,
+                runtime_profile: runtimeProfile ?? null,
+            });
+            setStatusMessage(`Updated scheduled job "${updated.id}".`);
+            await reloadTemplates({ jobId: updated.id });
+            return { id: updated.id };
+        }
+        catch (error) {
+            setErrorMessage(`Failed to update scheduled job: ${error instanceof Error ? error.message : String(error)}`);
+            return null;
+        }
+        finally {
+            setIsBusy(false);
+        }
+    }, [draft, reloadTemplates, selectedJob, selectedJobId, settings]);
     const handleDeleteTemplate = useCallback(async () => {
         if (!selectedTemplate || selectedTemplate.level === "builtin") {
             setErrorMessage("Select a non-builtin template to delete.");
@@ -648,21 +979,26 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             setIsBusy(false);
         }
     }, [saveTemplate, draft, onDeploy]);
-    const actionItems = [
-        { label: "Save Template", value: "save" },
+    const actionItems = useMemo(() => [
+        { label: isSelectedScheduledJob ? "Save Scheduled Job" : "Save Template", value: "save" },
         { label: "Deploy", value: "deploy" },
         { label: "Duplicate Template", value: "duplicate" },
         { label: "Delete Template", value: "delete" },
         { label: "New Template", value: "new" },
         { label: "Reload", value: "reload" },
         { label: "Close", value: "close" },
-    ];
+    ], [isSelectedScheduledJob]);
     const handleActionSelect = useCallback((action) => {
         if (isBusy) {
             return;
         }
         if (action === "save") {
-            void saveTemplate();
+            if (selectedJobId) {
+                void saveScheduledJob();
+            }
+            else {
+                void saveTemplate();
+            }
             return;
         }
         if (action === "deploy") {
@@ -704,6 +1040,8 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         onExit();
     }, [
         isBusy,
+        selectedJobId,
+        saveScheduledJob,
         saveTemplate,
         handleDeployTemplate,
         handleDeleteTemplate,
@@ -716,10 +1054,17 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
     ]);
     const renderFieldEditor = () => {
         if (selectedField === "id") {
-            const readOnly = isExistingEditableTemplate;
+            const readOnly = isExistingEditableTemplate || isSelectedScheduledJob;
+            const value = isSelectedScheduledJob
+                ? (selectedJob?.id ?? draft.id)
+                : readOnly
+                    ? (selectedTemplate?.id ?? draft.id)
+                    : draft.id;
             return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { color: Colors.Gray, children: readOnly
-                            ? "ID is fixed for existing project/user templates."
-                            : "Unique id used by launch_task/schedule_task and task_template tools." }), _jsx(TextInput, { value: readOnly ? (selectedTemplate?.id ?? draft.id) : draft.id, onChange: (value) => updateDraft({ id: value }), placeholder: "vision-ocr", inputWidth: editorInputWidth, isActive: !readOnly && focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`)] }));
+                            ? isSelectedScheduledJob
+                                ? "ID is fixed for scheduled jobs."
+                                : "ID is fixed for existing project/user templates."
+                            : "Unique id used by launch_task/schedule_task and task_template tools." }), _jsx(TextInput, { value: value, onChange: (value) => updateDraft({ id: value }), placeholder: "vision-ocr", inputWidth: editorInputWidth, isActive: !readOnly && focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`)] }));
         }
         if (selectedField === "name") {
             return (_jsx(TextInput, { value: draft.name, onChange: (value) => updateDraft({ name: value }), placeholder: "Human-friendly display name", inputWidth: editorInputWidth, isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`));
@@ -800,15 +1145,20 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             const initialIndex = Math.max(0, items.findIndex((item) => item.value === draft.allowRecursive));
             return (_jsx(RadioButtonSelect, { items: items, initialIndex: initialIndex, onSelect: (value) => updateDraft({ allowRecursive: value }), isFocused: focusSection === "editor" }, `recursive-${draft.allowRecursive}`));
         }
+        if (selectedField === "system_prompt") {
+            return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { color: Colors.Gray, children: "Use /prompt format: \"name1,name2 [--exclusive]\", \"/prompt activate name1,name2\", \"disable\", or \"inherit\"." }), _jsx(TextInput, { value: draft.systemPromptSpec, onChange: (value) => updateDraft({ systemPromptSpec: value }), placeholder: "reviewer,security --exclusive", inputWidth: editorInputWidth, isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`)] }));
+        }
         if (selectedField === "level") {
-            const readOnly = isExistingEditableTemplate;
+            const readOnly = isExistingEditableTemplate || isSelectedScheduledJob;
             const items = [
                 { label: "project", value: "project" },
                 { label: "user", value: "user" },
             ];
             const initialIndex = draft.level === "project" ? 0 : 1;
             return (_jsxs(Box, { flexDirection: "column", children: [_jsx(Text, { color: Colors.Gray, children: readOnly
-                            ? "Save level is fixed for existing project/user templates."
+                            ? isSelectedScheduledJob
+                                ? "Scheduled jobs are not saved as templates unless you deploy."
+                                : "Save level is fixed for existing project/user templates."
                             : "Choose where this template is saved." }), _jsx(RadioButtonSelect, { items: items, initialIndex: initialIndex, onSelect: (value) => {
                             if (!readOnly) {
                                 updateDraft({ level: value });
@@ -823,12 +1173,16 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             return (_jsx(RadioButtonSelect, { items: items, initialIndex: draft.deployMode === "schedule" ? 1 : 0, onSelect: (value) => updateDraft({ deployMode: value }), isFocused: focusSection === "editor" }, `deploy-${draft.deployMode}`));
         }
         if (selectedField === "schedule") {
-            return (_jsx(TextInput, { value: draft.schedule, onChange: (value) => updateDraft({ schedule: value }), placeholder: "0 * * * *", inputWidth: editorInputWidth, isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`));
+            return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { color: Colors.Gray, children: "Cron format: minute hour day month day_of_week (0-6, Sun=0). Examples: \u00A0`0 * * * *` hourly,\u00A0`*/15 * * * *` every 15 min,\u00A0`0 2 * * *` daily at 2:00." }), _jsx(TextInput, { value: draft.schedule, onChange: (value) => updateDraft({ schedule: value }), placeholder: "0 * * * *", inputWidth: editorInputWidth, isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`)] }));
         }
-        return (_jsx(TextInput, { value: draft.scheduleJobId, onChange: (value) => updateDraft({ scheduleJobId: value }), placeholder: "Optional; defaults to <template>-schedule", inputWidth: editorInputWidth, isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`));
+        if (selectedField === "schedule_job_id") {
+            return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [isSelectedScheduledJob && (_jsx(Text, { color: Colors.Gray, children: "Job ID is fixed for existing scheduled jobs." })), _jsx(TextInput, { value: draft.scheduleJobId, onChange: (value) => updateDraft({ scheduleJobId: value }), placeholder: "Optional; defaults to <template>-schedule", inputWidth: editorInputWidth, isActive: focusSection === "editor" && !isSelectedScheduledJob }, `task-editor-${selectedField}-${editorResetToken}`)] }));
+        }
+        return null;
     };
     return (_jsxs(Box, { borderStyle: "round", borderColor: Colors.AccentBlue, flexDirection: "column", width: "100%", padding: 1, gap: 1, children: [_jsxs(Box, { flexDirection: "row", gap: 1, children: [_jsxs(Box, { flexDirection: "column", width: "50%", borderStyle: "single", borderColor: focusSection === "templates" ? Colors.AccentBlue : Colors.Gray, paddingX: 1, children: [_jsxs(Text, { bold: focusSection === "templates", children: [focusSection === "templates" ? "> " : "  ", "Templates"] }), isLoadingTemplates ? (_jsx(Text, { color: Colors.Gray, children: "Loading templates..." })) : (_jsx(RadioButtonSelect, { items: templateOptions, initialIndex: selectedTemplateIndex, onSelect: (value) => {
                                     setSelectedTemplateKey(value);
+                                    lastTaskEditorSelectionKey = value;
                                     if (value === NEW_TEMPLATE_KEY) {
                                         pendingNewDraftRef.current = null;
                                         setDraft(buildEmptyDraft(settings, currentModel));

@@ -3,7 +3,6 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, act } from "@testing-library/react";
 import { AuthType, ApprovalMode } from "@qwen-code/qwen-code-core";
@@ -135,6 +134,7 @@ describe("useVisionAutoSwitch hook", () => {
             setModel: vi.fn(async (m) => {
                 currentModel = m;
             }),
+            setModelContextLimit: vi.fn(),
             getApprovalMode: vi.fn(() => approvalMode),
             getVlmSwitchMode: vi.fn(() => vlmSwitchMode),
             getContentGeneratorConfig: vi.fn(() => ({
@@ -149,7 +149,7 @@ describe("useVisionAutoSwitch hook", () => {
     let addItem;
     beforeEach(() => {
         vi.clearAllMocks();
-        addItem = vi.fn();
+        addItem = vi.fn(() => 1);
     });
     it("returns shouldProceed=true immediately for continuations", async () => {
         const config = createMockConfig(AuthType.QWEN_OAUTH, "qwen3-coder-plus");
@@ -258,7 +258,8 @@ describe("useVisionAutoSwitch hook", () => {
             await result.current.restoreOriginalModel();
         });
         // Last call should still be the persisted model set
-        expect(config.setModel.mock.calls.pop()?.[0]).toBe("coder-model");
+        const setModelMock = vi.mocked(config.setModel);
+        expect(setModelMock.mock.calls.pop()?.[0]).toBe("coder-model");
     });
     it("returns shouldProceed=true when dialog returns no special flags", async () => {
         const config = createMockConfig(AuthType.QWEN_OAUTH, "qwen3-coder-plus");

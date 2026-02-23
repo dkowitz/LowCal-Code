@@ -3,6 +3,15 @@ import { MessageType } from "../types.js";
 // Import core utilities and CLI config sync helpers.
 import { toolConfig, getCoreSystemPrompt } from "@qwen-code/qwen-code-core";
 import { loadCliToolConfig, syncCoreToolConfig } from "./utils/toolConfig.js";
+function isTokenCounter(value) {
+    return (typeof value === "object" &&
+        value !== null &&
+        typeof value.countTokens === "function");
+}
+function getGlobalGeminiClient() {
+    const globalObj = globalThis;
+    return globalObj.geminiClient;
+}
 /**
  * Helper to estimate token count if the genai client is unavailable.
  */
@@ -36,9 +45,32 @@ export const promptInfoCommand = {
         // Helper to count tokens using genai client or fallback.
         const countTokens = async (text) => {
             try {
-                const maybeGen = global.geminiClient ?? null;
+                const configModel = context.services.config?.getContentGeneratorConfig?.()?.model ??
+                    "gpt-3.5-turbo";
+                let maybeGen = null;
+                const geminiClient = context.services.config?.getGeminiClient?.();
+                if (geminiClient?.isInitialized?.()) {
+                    const generator = geminiClient.getContentGenerator?.();
+                    if (isTokenCounter(generator)) {
+                        maybeGen = generator;
+                    }
+                }
+                if (!maybeGen) {
+                    const fallbackGenerator = getGlobalGeminiClient();
+                    if (isTokenCounter(fallbackGenerator)) {
+                        maybeGen = fallbackGenerator;
+                    }
+                }
                 if (maybeGen && typeof maybeGen.countTokens === "function") {
-                    const request = { content: text };
+                    const request = {
+                        model: configModel,
+                        contents: [
+                            {
+                                role: "user",
+                                parts: [{ text }],
+                            },
+                        ],
+                    };
                     const response = await maybeGen.countTokens(request);
                     return response?.totalTokens ?? estimateTokens(text);
                 }

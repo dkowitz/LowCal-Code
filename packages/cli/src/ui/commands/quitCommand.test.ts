@@ -23,7 +23,7 @@ describe("quitCommand", () => {
     vi.clearAllMocks();
   });
 
-  it("returns a QuitActionReturn object with the correct messages", () => {
+  it("returns a QuitActionReturn object with the correct messages", async () => {
     const mockContext = createMockCommandContext({
       session: {
         stats: {
@@ -33,7 +33,7 @@ describe("quitCommand", () => {
     });
 
     if (!quitCommand.action) throw new Error("Action is not defined");
-    const result = quitCommand.action(mockContext, "quit");
+    const result = await quitCommand.action(mockContext, "quit");
 
     expect(formatDuration).toHaveBeenCalledWith(3600000); // 1 hour in ms
     expect(result).toEqual({

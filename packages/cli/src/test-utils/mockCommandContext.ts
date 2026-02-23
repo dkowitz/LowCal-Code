@@ -28,6 +28,11 @@ type DeepPartial<T> = T extends object
 export const createMockCommandContext = (
   overrides: DeepPartial<CommandContext> = {},
 ): CommandContext => {
+  const isPlainObject = (
+    value: unknown,
+  ): value is Record<string, unknown> =>
+    Object.prototype.toString.call(value) === "[object Object]";
+
   const defaultMocks: CommandContext = {
     invocation: {
       raw: "",
@@ -46,8 +51,7 @@ export const createMockCommandContext = (
         logMessage: vi.fn(),
         saveCheckpoint: vi.fn(),
         loadCheckpoint: vi.fn().mockResolvedValue([]),
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any, // Cast because Logger is a class.
+      } as unknown as CommandContext["services"]["logger"], // Logger is a class with many non-essential members for tests.
       logging: createMockLoggingController(),
     },
     ui: {
@@ -57,10 +61,12 @@ export const createMockCommandContext = (
       pendingItem: null,
       setPendingItem: vi.fn(),
       loadHistory: vi.fn(),
+      getHistory: vi.fn().mockReturnValue([]),
       toggleCorgiMode: vi.fn(),
       toggleVimEnabled: vi.fn(),
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    } as any,
+      setGeminiMdFileCount: vi.fn(),
+      reloadCommands: vi.fn(),
+    },
     session: {
       sessionShellAllowlist: new Set<string>(),
       stats: {
@@ -82,19 +88,21 @@ export const createMockCommandContext = (
     },
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const merge = (target: any, source: any): any => {
-    const output = { ...target };
+  const merge = (target: unknown, source: unknown): unknown => {
+    if (!isPlainObject(target) || !isPlainObject(source)) {
+      return source;
+    }
 
-    for (const key in source) {
+    const output: Record<string, unknown> = { ...target };
+
+    for (const [key, sourceValue] of Object.entries(source)) {
       if (Object.prototype.hasOwnProperty.call(source, key)) {
-        const sourceValue = source[key];
         const targetValue = output[key];
 
         if (
           // We only want to recursivlty merge plain objects
-          Object.prototype.toString.call(sourceValue) === "[object Object]" &&
-          Object.prototype.toString.call(targetValue) === "[object Object]"
+          isPlainObject(sourceValue) &&
+          isPlainObject(targetValue)
         ) {
           output[key] = merge(targetValue, sourceValue);
         } else {
@@ -106,5 +114,5 @@ export const createMockCommandContext = (
     return output;
   };
 
-  return merge(defaultMocks, overrides);
+  return merge(defaultMocks, overrides) as CommandContext;
 };

@@ -219,14 +219,14 @@ describe("MemoryTool", () => {
     });
     describe("shouldConfirmExecute", () => {
         let memoryTool;
+        const getAllowlist = (invocation) => invocation.constructor.allowlist;
         beforeEach(() => {
             memoryTool = new MemoryTool();
             // Mock fs.readFile to return empty string (file doesn't exist)
             vi.mocked(fs.readFile).mockResolvedValue("");
             // Clear allowlist before each test to ensure clean state
             const invocation = memoryTool.build({ fact: "test", scope: "global" });
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            invocation.constructor.allowlist.clear();
+            getAllowlist(invocation).clear();
         });
         it("should return confirmation details when memory file is not allowlisted for global scope", async () => {
             const params = { fact: "Test fact", scope: "global" };
@@ -270,8 +270,7 @@ describe("MemoryTool", () => {
             const memoryFilePath = path.join(os.homedir(), ".qwen", getCurrentGeminiMdFilename());
             const invocation = memoryTool.build(params);
             // Add the memory file to the allowlist with the scope-specific key format
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            invocation.constructor.allowlist.add(`${memoryFilePath}_global`);
+            getAllowlist(invocation).add(`${memoryFilePath}_global`);
             const result = await invocation.shouldConfirmExecute(mockAbortSignal);
             expect(result).toBe(false);
         });
@@ -280,8 +279,7 @@ describe("MemoryTool", () => {
             const memoryFilePath = path.join(process.cwd(), getCurrentGeminiMdFilename());
             const invocation = memoryTool.build(params);
             // Add the memory file to the allowlist with the scope-specific key format
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            invocation.constructor.allowlist.add(`${memoryFilePath}_project`);
+            getAllowlist(invocation).add(`${memoryFilePath}_project`);
             const result = await invocation.shouldConfirmExecute(mockAbortSignal);
             expect(result).toBe(false);
         });
@@ -296,9 +294,7 @@ describe("MemoryTool", () => {
                 // Simulate the onConfirm callback
                 await result.onConfirm(ToolConfirmationOutcome.ProceedAlways);
                 // Check that the memory file was added to the allowlist with the scope-specific key format
-                expect(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                invocation.constructor.allowlist.has(`${memoryFilePath}_global`)).toBe(true);
+                expect(getAllowlist(invocation).has(`${memoryFilePath}_global`)).toBe(true);
             }
         });
         it("should add memory file to allowlist when ProceedAlways is confirmed for project scope", async () => {
@@ -312,9 +308,7 @@ describe("MemoryTool", () => {
                 // Simulate the onConfirm callback
                 await result.onConfirm(ToolConfirmationOutcome.ProceedAlways);
                 // Check that the memory file was added to the allowlist with the scope-specific key format
-                expect(
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                invocation.constructor.allowlist.has(`${memoryFilePath}_project`)).toBe(true);
+                expect(getAllowlist(invocation).has(`${memoryFilePath}_project`)).toBe(true);
             }
         });
         it("should not add memory file to allowlist when other outcomes are confirmed", async () => {
@@ -327,8 +321,7 @@ describe("MemoryTool", () => {
             if (result && result.type === "edit") {
                 // Simulate the onConfirm callback with different outcomes
                 await result.onConfirm(ToolConfirmationOutcome.ProceedOnce);
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                const allowlist = invocation.constructor.allowlist;
+                const allowlist = getAllowlist(invocation);
                 expect(allowlist.has(`${memoryFilePath}_global`)).toBe(false);
                 await result.onConfirm(ToolConfirmationOutcome.Cancel);
                 expect(allowlist.has(`${memoryFilePath}_global`)).toBe(false);

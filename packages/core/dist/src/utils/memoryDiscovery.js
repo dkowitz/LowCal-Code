@@ -14,11 +14,8 @@ import { DEFAULT_MEMORY_FILE_FILTERING_OPTIONS } from "../config/config.js";
 // Simple console logger, similar to the one previously in CLI's config.ts
 // TODO: Integrate with a more robust server-side logger if available/appropriate.
 const logger = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     debug: (...args) => console.debug("[DEBUG] [MemoryDiscovery]", ...args),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     warn: (...args) => console.warn("[WARN] [MemoryDiscovery]", ...args),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error: (...args) => console.error("[ERROR] [MemoryDiscovery]", ...args),
 };
 async function findProjectRoot(startDir) {

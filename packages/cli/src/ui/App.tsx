@@ -36,8 +36,6 @@ import { useStartupStatus } from "./hooks/useStartupStatus.js";
 import { useDialogClose } from "./hooks/useDialogClose.js";
 import { useSlashCommandProcessor } from "./hooks/slashCommandProcessor.js";
 import { useSessionLoggingController } from "./hooks/useSessionLoggingController.js";
-import { useSubagentCreateDialog } from "./hooks/useSubagentCreateDialog.js";
-import { useAgentsManagerDialog } from "./hooks/useAgentsManagerDialog.js";
 import { useAutoAcceptIndicator } from "./hooks/useAutoAcceptIndicator.js";
 import { useMessageQueue } from "./hooks/useMessageQueue.js";
 import { useConsoleMessages } from "./hooks/useConsoleMessages.js";
@@ -62,7 +60,6 @@ import {
   type TaskTemplateDeployRequest,
 } from "./components/TaskTemplateEditorDialog.js";
 import { MailboxDialog } from "./components/MailboxDialog.js";
-import { TeamManagementDialog } from "./components/TeamManagementDialog.js";
 import {
   ResumeDialog,
   type ResumeCheckpointOption,
@@ -81,10 +78,6 @@ import {
   type AvailableModel,
 } from "./models/availableModels.js";
 import { processVisionSwitchOutcome } from "./hooks/useVisionAutoSwitch.js";
-import {
-  AgentCreationWizard,
-  AgentsManagerDialog,
-} from "./components/subagents/index.js";
 import { Colors } from "./colors.js";
 import { loadHierarchicalGeminiMemory } from "../config/config.js";
 import { setOpenAIModel, validateAuthMethod } from "../config/auth.js";
@@ -253,20 +246,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     config.isTrustedFolder(),
   );
   const [currentModel, setCurrentModel] = useState(config.getModel());
-  const [lmStudioModel, setLmStudioModel] = useState<string | null>(null);
+  const [, setLmStudioModel] = useState<string | null>(null);
   const lastLmStudioModelFetchRef = useRef<number>(0);
-  // reference used only for LM Studio live model polling; keep to avoid re-fetching more than once/min
-  useEffect(() => {
-    // no-op using lmStudioModel to avoid unused variable build errors in some toolchains
-    // real usage happens below where lmStudioModel is updated when polling succeeds
-    void lmStudioModel;
-  }, [lmStudioModel]);
   // bump this to force re-render when model-level context limits change
-  const [modelLimitVersion, setModelLimitVersion] = useState(0);
-  // Silence unused variable warning in some builds by referencing it in effect below
-  useEffect(() => {
-    // no-op that references modelLimitVersion to ensure TypeScript doesn't report it as unused
-  }, [modelLimitVersion]);
+  const [, setModelLimitVersion] = useState(0);
 
   // If the user has a saved model in settings, ensure the config and UI
   // reflect it on startup. This will restore the last-used model across
@@ -489,8 +472,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   >([]);
   const [isTaskTemplateDialogOpen, setIsTaskTemplateDialogOpen] =
     useState(false);
-  const [isTeamManagementDialogOpen, setIsTeamManagementDialogOpen] =
-    useState(false);
   const [isMailboxDialogOpen, setIsMailboxDialogOpen] = useState(false);
 
   // Invalidate cached model lists when auth/provider changes so discovery is
@@ -575,14 +556,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     setIsTaskTemplateDialogOpen(false);
   }, []);
 
-  const openTeamManagementDialog = useCallback(() => {
-    setIsTeamManagementDialogOpen(true);
-  }, []);
-
-  const closeTeamManagementDialog = useCallback(() => {
-    setIsTeamManagementDialogOpen(false);
-  }, []);
-
   const openMailboxDialog = useCallback(() => {
     setIsMailboxDialogOpen(true);
   }, []);
@@ -614,18 +587,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
 
   const { isSettingsDialogOpen, openSettingsDialog, closeSettingsDialog } =
     useSettingsCommand();
-
-  const {
-    isSubagentCreateDialogOpen,
-    openSubagentCreateDialog,
-    closeSubagentCreateDialog,
-  } = useSubagentCreateDialog();
-
-  const {
-    isAgentsManagerDialogOpen,
-    openAgentsManagerDialog,
-    closeAgentsManagerDialog,
-  } = useAgentsManagerDialog();
 
   const { isFolderTrustDialogOpen, handleFolderTrustSelect, isRestarting } =
     useFolderTrust(settings, setIsTrustedFolder);
@@ -1319,15 +1280,12 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     openSettingsDialog,
     handleModelSelectionOpen,
     openResumeDialog,
-    openSubagentCreateDialog,
-    openAgentsManagerDialog,
     toggleVimEnabled,
     setIsProcessing,
     setGeminiMdFileCount,
     showQuitConfirmation,
     sessionLoggingController,
     openMailboxDialog,
-    openTeamManagementDialog,
   );
 
   const handleResumeCheckpointSelect = useCallback(
@@ -1338,9 +1296,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     [closeResumeDialog, handleSlashCommand],
   );
   const submitQueryForDeployRef = useRef<(query: string) => Promise<void>>(
-    async () => {},
-  );
-  const submitQueryForTeamDialogRef = useRef<(query: string) => Promise<void>>(
     async () => {},
   );
 
@@ -1392,14 +1347,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     },
     [addItem],
   );
-
-  const handleTeamDialogSubmit = useCallback(async (query: string) => {
-    const trimmed = query.trim();
-    if (!trimmed) {
-      return;
-    }
-    await submitQueryForTeamDialogRef.current(trimmed);
-  }, []);
 
   const handleMailboxPayloadUse = useCallback(async (payload: string) => {
     const text = payload.trim();
@@ -1477,9 +1424,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
   submitQueryForDeployRef.current = async (query: string) => {
     await submitQuery(query);
   };
-  submitQueryForTeamDialogRef.current = async (query: string) => {
-    await submitQuery(query);
-  };
 
   const pendingHistoryItems = useMemo(
     () =>
@@ -1514,8 +1458,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     exitEditorDialog,
     isTaskTemplateDialogOpen,
     closeTaskTemplateDialog,
-    isTeamDialogOpen: isTeamManagementDialogOpen,
-    closeTeamDialog: closeTeamManagementDialog,
     isMailboxDialogOpen,
     closeMailboxDialog,
     isSettingsDialogOpen,
@@ -1903,12 +1845,10 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
       !isThemeDialogOpen &&
       !isEditorDialogOpen &&
       !isTaskTemplateDialogOpen &&
-      !isTeamManagementDialogOpen &&
       !isMailboxDialogOpen &&
       !isModelSelectionDialogOpen &&
       !isResumeDialogOpen &&
       !isVisionSwitchDialogOpen &&
-      !isSubagentCreateDialogOpen &&
       !showPrivacyNotice &&
       !showWelcomeBackDialog &&
       welcomeBackChoice !== "restart" &&
@@ -1926,9 +1866,7 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
     isThemeDialogOpen,
     isEditorDialogOpen,
     isTaskTemplateDialogOpen,
-    isTeamManagementDialogOpen,
     isMailboxDialogOpen,
-    isSubagentCreateDialogOpen,
     showPrivacyNotice,
     showWelcomeBackDialog,
     welcomeBackChoice,
@@ -2024,7 +1962,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 isFocused={
                   !isEditorDialogOpen &&
                   !isTaskTemplateDialogOpen &&
-                  !isTeamManagementDialogOpen &&
                   !isMailboxDialogOpen
                 }
                 viewControls={
@@ -2180,20 +2117,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
                 onRestartRequest={() => process.exit(0)}
               />
             </Box>
-          ) : isSubagentCreateDialogOpen ? (
-            <Box flexDirection="column">
-              <AgentCreationWizard
-                onClose={closeSubagentCreateDialog}
-                config={config}
-              />
-            </Box>
-          ) : isAgentsManagerDialogOpen ? (
-            <Box flexDirection="column">
-              <AgentsManagerDialog
-                onClose={closeAgentsManagerDialog}
-                config={config}
-              />
-            </Box>
           ) : isAuthenticating ? (
             <>
               {isQwenAuth && isQwenAuthenticating ? (
@@ -2268,13 +2191,6 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
               currentModel={currentModel}
               onExit={closeTaskTemplateDialog}
               onDeploy={handleTaskTemplateDeploy}
-            />
-          ) : isTeamManagementDialogOpen ? (
-            <TeamManagementDialog
-              baseDir={config.getTargetDir()}
-              projectRoot={config.getProjectRoot() || process.cwd()}
-              onExit={closeTeamManagementDialog}
-              onSubmitCommand={handleTeamDialogSubmit}
             />
           ) : isMailboxDialogOpen ? (
             <MailboxDialog
@@ -2470,11 +2386,29 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
             <Footer
               model={currentModel}
               modelLimit={
-                typeof (config as any).getEffectiveContextLimit === "function"
-                  ? (config as any).getEffectiveContextLimit(currentModel)
-                  : typeof (config as any).getModelContextLimit === "function"
-                    ? (config as any).getModelContextLimit(currentModel)
-                    : undefined
+                (() => {
+                  const configWithContextLimit = config as unknown as {
+                    getEffectiveContextLimit?: (model?: string) => number;
+                    getModelContextLimit?: (model?: string) => number | undefined;
+                  };
+                  if (
+                    typeof configWithContextLimit.getEffectiveContextLimit ===
+                    "function"
+                  ) {
+                    return configWithContextLimit.getEffectiveContextLimit(
+                      currentModel,
+                    );
+                  }
+                  if (
+                    typeof configWithContextLimit.getModelContextLimit ===
+                    "function"
+                  ) {
+                    return configWithContextLimit.getModelContextLimit(
+                      currentModel,
+                    );
+                  }
+                  return undefined;
+                })()
               }
               targetDir={config.getTargetDir()}
               debugMode={config.getDebugMode()}

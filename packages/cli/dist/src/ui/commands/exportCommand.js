@@ -6,6 +6,51 @@
 import { CommandKind } from "./types.js";
 import fs from "node:fs";
 import path from "node:path";
+function asRecord(value) {
+    return typeof value === "object" && value !== null
+        ? value
+        : null;
+}
+function readText(item) {
+    const record = asRecord(item);
+    const textValue = record?.["text"];
+    return typeof textValue === "string" ? textValue : undefined;
+}
+function extractToolDisplays(item) {
+    const record = asRecord(item);
+    if (!record) {
+        return [];
+    }
+    const toolsValue = record["tools"];
+    if (Array.isArray(toolsValue)) {
+        const toolDisplays = [];
+        for (const tool of toolsValue) {
+            const toolRecord = asRecord(tool);
+            if (!toolRecord) {
+                continue;
+            }
+            const name = toolRecord["name"];
+            if (typeof name !== "string") {
+                continue;
+            }
+            toolDisplays.push({
+                name,
+                resultDisplay: toolRecord["resultDisplay"] ?? toolRecord["result"],
+            });
+        }
+        return toolDisplays;
+    }
+    const name = record["name"];
+    if (typeof name === "string") {
+        return [
+            {
+                name,
+                resultDisplay: record["resultDisplay"] ?? record["result"],
+            },
+        ];
+    }
+    return [];
+}
 export const exportCommand = {
     name: "export",
     description: "save the current conversation to a markdown file in ./conversations. Options: [compact] (user/assistant only), [report] (first user + final assistant responses), [filename.md]",
@@ -115,28 +160,30 @@ export const exportCommand = {
         }
         // Process filtered history
         for (const item of filteredHistory) {
-            switch (item.type) {
+            const itemType = String(item.type);
+            const text = readText(item);
+            switch (itemType) {
                 case "user":
-                    if (item.text) {
+                    if (text) {
                         // Preserve original formatting of user messages
-                        markdownContent += `## User Message\n\n${item.text}\n\n---\n\n`;
+                        markdownContent += `## User Message\n\n${text}\n\n---\n\n`;
                     }
                     break;
                 case "gemini":
                 case "gemini_content":
-                    if (item.text) {
+                    if (text) {
                         // Preserve original formatting of assistant responses
-                        markdownContent += `## Assistant Response\n\n${item.text}\n\n---\n\n`;
+                        markdownContent += `## Assistant Response\n\n${text}\n\n---\n\n`;
                     }
                     break;
                 case "info":
-                    if (item.text) {
-                        markdownContent += `### Info\n\n> ${item.text.trim()}\n\n`;
+                    if (text) {
+                        markdownContent += `### Info\n\n> ${text.trim()}\n\n`;
                     }
                     break;
                 case "error":
-                    if (item.text) {
-                        markdownContent += `### Error\n\n**Error:** ${item.text.trim()}\n\n`;
+                    if (text) {
+                        markdownContent += `### Error\n\n**Error:** ${text.trim()}\n\n`;
                     }
                     break;
                 case "tool_group":
@@ -146,19 +193,7 @@ export const exportCommand = {
                 case "tool_stats":
                     // Normalize to an array of tool displays
                     markdownContent += `### Tool Execution\n\n`;
-                    const toolsArray = [];
-                    if (item.tools && Array.isArray(item.tools)) {
-                        toolsArray.push(...item.tools);
-                    }
-                    else if (item.name) {
-                        // Single-tool shape
-                        toolsArray.push({
-                            name: item.name,
-                            resultDisplay: item.resultDisplay ||
-                                item.result ||
-                                undefined,
-                        });
-                    }
+                    const toolsArray = extractToolDisplays(item);
                     for (const tool of toolsArray) {
                         markdownContent += `**Tool:** ${tool.name}\n`;
                         if (tool.resultDisplay) {
@@ -169,8 +204,8 @@ export const exportCommand = {
                     markdownContent += `---\n\n`;
                     break;
                 default:
-                    if (item.text) {
-                        markdownContent += `### ${String(item.type).toUpperCase()}\n\n${item.text.trim()}\n\n---\n\n`;
+                    if (text) {
+                        markdownContent += `### ${itemType.toUpperCase()}\n\n${text.trim()}\n\n---\n\n`;
                     }
                     break;
             }

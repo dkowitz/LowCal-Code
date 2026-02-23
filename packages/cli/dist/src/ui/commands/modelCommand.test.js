@@ -109,7 +109,7 @@ describe("modelCommand", () => {
         expect(result).toEqual({
             type: "message",
             messageType: "error",
-            content: "No models available for the current authentication type (USE_OPENAI).",
+            content: "No models available for the current authentication type (openai).",
         });
     });
     it("should return error for unsupported auth types", async () => {

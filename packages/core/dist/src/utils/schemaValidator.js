@@ -5,12 +5,19 @@
  */
 import AjvPkg from "ajv";
 import * as addFormats from "ajv-formats";
-// Ajv's ESM/CJS interop: use 'any' for compatibility as recommended by Ajv docs
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const AjvClass = AjvPkg.default || AjvPkg;
+function getDefaultExport(module) {
+    const candidate = module;
+    if (typeof candidate === "object" &&
+        candidate !== null &&
+        "default" in candidate &&
+        candidate.default !== undefined) {
+        return candidate.default;
+    }
+    return module;
+}
+const AjvClass = getDefaultExport(AjvPkg);
 const ajValidator = new AjvClass({ coerceTypes: true });
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const addFormatsFunc = addFormats.default || addFormats;
+const addFormatsFunc = getDefaultExport(addFormats);
 addFormatsFunc(ajValidator);
 /**
  * Simple utility to validate objects against JSON Schemas

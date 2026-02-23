@@ -11,11 +11,9 @@ import { QwenLogger } from "./qwen-logger/qwen-logger.js";
 describe("Circular Reference Integration Test", () => {
     beforeEach(() => {
         // Clear singleton instance before each test
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         QwenLogger.instance = undefined;
     });
     afterEach(() => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         QwenLogger.instance = undefined;
     });
     it("should handle HttpsProxyAgent-like circular references in qwen logging", () => {
@@ -30,20 +28,20 @@ describe("Circular Reference Integration Test", () => {
             getProxy: () => "http://proxy.example.com:8080",
         };
         // Simulate the structure that causes the circular reference error
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const proxyAgentLike = {
             sockets: {},
             options: { proxy: "http://proxy.example.com:8080" },
         };
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const socketLike = {
             _httpMessage: {
                 agent: proxyAgentLike,
                 socket: null,
             },
         };
-        socketLike._httpMessage.socket = socketLike; // Create circular reference
-        proxyAgentLike.sockets["cloudcode-pa.googleapis.com:443"] = [socketLike];
+        const httpMessage = socketLike["_httpMessage"];
+        httpMessage["socket"] = socketLike; // Create circular reference
+        const sockets = proxyAgentLike["sockets"];
+        sockets["cloudcode-pa.googleapis.com:443"] = [socketLike];
         // Create an event that would contain this circular structure
         const problematicEvent = {
             timestamp: Date.now(),
@@ -59,7 +57,6 @@ describe("Circular Reference Integration Test", () => {
         // Test that QwenLogger can handle this
         const logger = QwenLogger.getInstance(mockConfig);
         expect(() => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             logger?.enqueueLogEvent(problematicEvent);
         }).not.toThrow();
     });

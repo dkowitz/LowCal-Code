@@ -2483,12 +2483,27 @@ export class ResearchTool extends BaseDeclarativeTool<
 /**
  * Helper function to extract response text from a Gemini content generation result
  */
-async function getResponseText(result: any): Promise<string | null> {
-  if (!result || !result.response) {
+async function getResponseText(result: unknown): Promise<string | null> {
+  const responseContainer =
+    typeof result === "object" && result !== null
+      ? (result as { response?: unknown })
+      : null;
+  const response =
+    responseContainer &&
+    typeof responseContainer.response === "object" &&
+    responseContainer.response !== null
+      ? (responseContainer.response as {
+          candidates?: Array<{
+            content?: { parts?: Array<{ text?: string }> };
+          }>;
+        })
+      : null;
+
+  if (!response) {
     return null;
   }
 
-  const parts = result.response.candidates?.[0]?.content?.parts;
+  const parts = response.candidates?.[0]?.content?.parts;
   if (!parts || !Array.isArray(parts)) {
     return null;
   }

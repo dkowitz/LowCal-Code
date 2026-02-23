@@ -97,7 +97,7 @@ describe("CheckpointService", () => {
     expect(loaded?.contextSnapshot?.model).toBe("gemini-2.5-pro");
   });
 
-  it("should list checkpoints in chronological order (newest first)", () => {
+  it("should list checkpoints in chronological order (newest first)", async () => {
     // Save multiple checkpoints with different timestamps
     const messages: CheckpointMessage[] = [
       { id: "msg-1", timestamp: new Date().toISOString(), type: "user", content: "First" },
@@ -106,7 +106,7 @@ describe("CheckpointService", () => {
     checkpointService.saveCheckpoint(messages);
     
     // Wait a bit to ensure different timestamps (use longer delay for CI)
-    sleep(200);
+    await sleep(200);
 
     const messages2: CheckpointMessage[] = [
       { id: "msg-2", timestamp: new Date().toISOString(), type: "user", content: "Second" },

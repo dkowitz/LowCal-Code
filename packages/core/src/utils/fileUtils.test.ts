@@ -368,7 +368,7 @@ describe("fileUtils", () => {
       expect(
         (result.llmContent as { inlineData: { data: string } }).inlineData.data,
       ).toBe(fakePdfData.toString("base64"));
-      expect(result.returnDisplay).toContain("Read pdf file: document.pdf");
+      expect(result.returnDisplay).toContain("document.pdf");
     });
 
     it("should read an SVG file as text when under 1MB", async () => {

@@ -15,9 +15,7 @@ import * as os from "node:os";
 import * as path from "node:path";
 import { EnvHttpProxyAgent } from "undici";
 const logger = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     debug: (...args) => console.debug("[DEBUG] [IDEClient]", ...args),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error: (...args) => console.error("[ERROR] [IDEClient]", ...args),
 };
 export var IDEConnectionStatus;

@@ -34,6 +34,12 @@ export interface TaskTemplateRunProfile {
   allowRecursive?: boolean;
 }
 
+export interface TaskTemplateSystemPromptProfile {
+  names?: string[];
+  exclusive?: boolean;
+  disable?: boolean;
+}
+
 export interface TaskTemplateExecutionProfile {
   mode?: TaskExecutionModeWithDefault;
 }
@@ -52,6 +58,7 @@ export interface TaskTemplate {
   auth?: TaskTemplateAuthProfile;
   model?: TaskTemplateModelProfile;
   run?: TaskTemplateRunProfile;
+  systemPrompt?: TaskTemplateSystemPromptProfile;
   level: TaskTemplateLevel;
   filePath: string;
   isBuiltin?: boolean;
@@ -69,6 +76,7 @@ export interface TaskRuntimeProfile {
   auth?: TaskTemplateAuthProfile;
   model?: TaskTemplateModelProfile;
   run?: TaskTemplateRunProfile;
+  system_prompt?: TaskTemplateSystemPromptProfile;
 }
 
 export interface ListTaskTemplatesOptions {
@@ -86,4 +94,3 @@ export interface CreateTaskTemplateOptions {
 export interface ResolveTaskTemplateOptions {
   level?: TaskTemplateLevel;
 }
-

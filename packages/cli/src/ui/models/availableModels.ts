@@ -135,29 +135,31 @@ export async function fetchOpenAICompatibleModels(
     if (!resp.ok) return [];
     const data = await resp.json();
     // OpenAI responses typically have "data" array with id fields
-    const models: any[] = Array.isArray(data?.data) ? data.data : [];
+    const models = getModelArray(data);
 
     // Map provider model objects into our AvailableModel shape
-    const mapped = models
-      .map((m) => ({
-        id: m.id || m.name,
-        label: m.id || m.name,
+    const mapped: AvailableModel[] = [];
+    for (const model of models) {
+      const id = firstString(model["id"], model["name"]);
+      if (!id) {
+        continue;
+      }
+
+      const pricing = toRecord(model["pricing"]);
+      const topProvider = toRecord(model["top_provider"]);
+
+      mapped.push({
+        id,
+        label: id,
         // OpenRouter includes pricing and context_length in the model object
         // pricing.prompt is for input tokens, pricing.completion is for output tokens
-        inputPrice:
-          typeof m.pricing?.prompt === "string" ? m.pricing.prompt : undefined,
-        outputPrice:
-          typeof m.pricing?.completion === "string"
-            ? m.pricing.completion
-            : undefined,
-        contextLength:
-          typeof m.context_length === "number"
-            ? m.context_length
-            : typeof m.top_provider?.context_length === "number"
-              ? m.top_provider.context_length
-              : undefined,
-      }))
-      .filter((m) => !!m.id);
+        inputPrice: firstString(pricing?.["prompt"]),
+        outputPrice: firstString(pricing?.["completion"]),
+        contextLength: toNumber(
+          model["context_length"] ?? topProvider?.["context_length"],
+        ),
+      });
+    }
 
     // If provider reported explicit context lengths (e.g., OpenRouter), register them
     try {
@@ -173,18 +175,18 @@ export async function fetchOpenAICompatibleModels(
           mm.contextLength > 0
         ) {
           try {
-            setLimit(mm.id, mm.contextLength as number);
-          } catch (e) {
+            setLimit(mm.id, mm.contextLength);
+          } catch {
             // ignore per-model set failures
           }
         }
       }
-    } catch (e) {
+    } catch {
       // ignore dynamic set failures
     }
 
     return mapped;
-  } catch (e) {
+  } catch {
     // swallow errors and return empty list
     return [];
   }
@@ -206,33 +208,27 @@ export async function fetchGeminiModels(
     const resp = await fetch(url, { method: "GET" as const });
     if (!resp.ok) return [];
     const data = await resp.json();
-    const models: any[] = Array.isArray(data?.models) ? data.models : [];
+    const models = getModelArray(data);
     return models
-      .map((m) => {
-        const rawName = typeof m.name === "string" ? m.name : "";
+      .map((model) => {
+        const rawName = firstString(model["name"]) ?? "";
         const id = rawName.startsWith("models/")
           ? rawName.slice("models/".length)
           : rawName;
-        const label =
-          typeof m.displayName === "string" && m.displayName.trim()
-            ? `${m.displayName} (${id})`
-            : id;
-        const methods = Array.isArray(m.supportedGenerationMethods)
-          ? m.supportedGenerationMethods
-          : [];
+        const displayName = firstString(model["displayName"]);
+        const label = displayName ? `${displayName} (${id})` : id;
+        const methods = toStringArray(model["supportedGenerationMethods"]);
         const isVision = methods.some(
-          (method: unknown) =>
-            typeof method === "string" &&
-            method.toLowerCase().includes("image"),
+          (method) => method.toLowerCase().includes("image"),
         );
         if (!id) return null;
         const maxContextLength = toNumber(
-          m.inputTokenLimit ??
-            m.input_token_limit ??
-            m.contextWindow ??
-            m.context_window ??
-            m.contextLength ??
-            m.context_length,
+          model["inputTokenLimit"] ??
+            model["input_token_limit"] ??
+            model["contextWindow"] ??
+            model["context_window"] ??
+            model["contextLength"] ??
+            model["context_length"],
         );
         const item: AvailableModel = {
           id,
@@ -243,7 +239,7 @@ export async function fetchGeminiModels(
         return item;
       })
       .filter((m): m is AvailableModel => !!m);
-  } catch (e) {
+  } catch {
     return [];
   }
 }

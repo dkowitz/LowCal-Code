@@ -66,6 +66,28 @@ export function normalizeRunProfile(value) {
     }
     return { returnToSession, allowRecursive };
 }
+export function normalizeSystemPromptProfile(value) {
+    if (!isRecord(value))
+        return undefined;
+    const namesRaw = value["names"];
+    const names = Array.isArray(namesRaw)
+        ? namesRaw
+            .map((entry) => asTrimmedString(entry))
+            .filter((entry) => typeof entry === "string")
+        : undefined;
+    const exclusive = typeof value["exclusive"] === "boolean" ? value["exclusive"] : undefined;
+    const disable = typeof value["disable"] === "boolean" ? value["disable"] : undefined;
+    if (disable === true) {
+        return { disable: true };
+    }
+    if (!names || names.length === 0) {
+        return undefined;
+    }
+    return {
+        names,
+        exclusive: exclusive === true,
+    };
+}
 export function normalizeRuntimeProfile(value) {
     if (!isRecord(value))
         return {};
@@ -78,6 +100,7 @@ export function normalizeRuntimeProfile(value) {
         auth: normalizeAuthProfile(value["auth"]),
         model: normalizeModelProfile(value["model"]),
         run: normalizeRunProfile(value["run"]),
+        system_prompt: normalizeSystemPromptProfile(value["system_prompt"]),
     };
 }
 export function runtimeProfileFromTemplate(template) {
@@ -90,6 +113,7 @@ export function runtimeProfileFromTemplate(template) {
         auth: template.auth,
         model: template.model,
         run: template.run,
+        system_prompt: template.systemPrompt,
     };
 }
 export function mergeRuntimeProfiles(...profiles) {
@@ -113,6 +137,12 @@ export function mergeRuntimeProfiles(...profiles) {
             merged.model = { ...merged.model, ...profile.model };
         if (profile.run)
             merged.run = { ...merged.run, ...profile.run };
+        if (profile.system_prompt) {
+            merged.system_prompt = {
+                ...merged.system_prompt,
+                ...profile.system_prompt,
+            };
+        }
     }
     return merged;
 }
@@ -136,6 +166,9 @@ export function sanitizeRuntimeProfile(profile) {
         auth,
         model: profile.model ? { ...profile.model } : undefined,
         run: profile.run ? { ...profile.run } : undefined,
+        system_prompt: profile.system_prompt
+            ? { ...profile.system_prompt }
+            : undefined,
     };
 }
 //# sourceMappingURL=runtime.js.map

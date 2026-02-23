@@ -326,7 +326,11 @@ export class ShellExecutionService {
         ? `/c ${commandToExecute}`
         : ["-c", commandToExecute];
 
-      const ptyProcess = ptyInfo?.module.spawn(shell, args, {
+      if (!ptyInfo) {
+        throw new Error("No PTY implementation available");
+      }
+
+      const ptyProcess = ptyInfo.module.spawn(shell, args, {
         cwd,
         name: "xterm-color",
         cols,

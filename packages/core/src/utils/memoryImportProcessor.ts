@@ -11,13 +11,11 @@ import { marked } from "marked";
 
 // Simple console logger for import processing
 const logger = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  debug: (...args: any[]) =>
+  debug: (...args: unknown[]) =>
     console.debug("[DEBUG] [ImportProcessor]", ...args),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  warn: (...args: any[]) => console.warn("[WARN] [ImportProcessor]", ...args),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  error: (...args: any[]) =>
+  warn: (...args: unknown[]) =>
+    console.warn("[WARN] [ImportProcessor]", ...args),
+  error: (...args: unknown[]) =>
     console.error("[ERROR] [ImportProcessor]", ...args),
 };
 

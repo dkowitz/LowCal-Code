@@ -6,7 +6,12 @@
 
 import { describe, it, expect, beforeEach } from "vitest";
 import { SubagentValidator } from "./validation.js";
-import { type SubagentConfig, SubagentError } from "./types.js";
+import {
+  type ModelConfig,
+  type RunConfig,
+  type SubagentConfig,
+  SubagentError,
+} from "./types.js";
 
 describe("SubagentValidator", () => {
   let validator: SubagentValidator;
@@ -191,8 +196,9 @@ describe("SubagentValidator", () => {
     });
 
     it("should reject non-array inputs", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = validator.validateTools("not-an-array" as any);
+      const result = validator.validateTools(
+        "not-an-array" as unknown as string[],
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain("Tools must be an array of strings");
     });
@@ -218,8 +224,9 @@ describe("SubagentValidator", () => {
     });
 
     it("should reject non-string tool names", () => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const result = validator.validateTools([123, "read_file"] as any);
+      const result = validator.validateTools(
+        [123, "read_file"] as unknown as string[],
+      );
       expect(result.isValid).toBe(false);
       expect(result.errors).toContain(
         "Tool name must be a string, got: number",
@@ -259,8 +266,9 @@ describe("SubagentValidator", () => {
       const invalidTemps = [-0.1, 2.1, "not-a-number"];
 
       for (const temp of invalidTemps) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result = validator.validateModelConfig({ temp: temp as any });
+        const result = validator.validateModelConfig({
+          temp,
+        } as unknown as ModelConfig);
         expect(result.isValid).toBe(false);
       }
     });
@@ -277,8 +285,9 @@ describe("SubagentValidator", () => {
       const invalidTopP = [-0.1, 1.1, "not-a-number"];
 
       for (const top_p of invalidTopP) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result = validator.validateModelConfig({ top_p: top_p as any });
+        const result = validator.validateModelConfig({
+          top_p,
+        } as unknown as ModelConfig);
         expect(result.isValid).toBe(false);
       }
     });
@@ -304,10 +313,9 @@ describe("SubagentValidator", () => {
       const invalidTimes = [0, -1, "not-a-number"];
 
       for (const time of invalidTimes) {
-        const result = validator.validateRunConfig({
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          max_time_minutes: time as any,
-        });
+        const result = validator.validateRunConfig(
+          { max_time_minutes: time } as unknown as RunConfig,
+        );
         expect(result.isValid).toBe(false);
       }
     });
@@ -324,8 +332,9 @@ describe("SubagentValidator", () => {
       const invalidTurns = [0, -1, 1.5, "not-a-number"];
 
       for (const turns of invalidTurns) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const result = validator.validateRunConfig({ max_turns: turns as any });
+        const result = validator.validateRunConfig({
+          max_turns: turns,
+        } as unknown as RunConfig);
         expect(result.isValid).toBe(false);
       }
     });

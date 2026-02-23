@@ -6,16 +6,16 @@
 
 import { defineConfig } from "vitest/config";
 
+const includeJunit = process.env.VITEST_JUNIT === "1";
+
 export default defineConfig({
   test: {
-    reporters: ["default", "junit"],
+    exclude: ["**/node_modules/**", "**/dist/**", "**/cypress/**"],
+    reporters: includeJunit ? ["default", "junit"] : ["default"],
     silent: true,
     setupFiles: ["./test-setup.ts"],
-    outputFile: {
-      junit: "junit.xml",
-    },
+    outputFile: includeJunit ? { junit: "junit.xml" } : undefined,
     coverage: {
-      enabled: true,
       provider: "v8",
       reportsDirectory: "./coverage",
       include: ["src/**/*"],

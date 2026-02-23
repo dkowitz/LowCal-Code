@@ -4,8 +4,9 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi } from "vitest";
 import { SearXNGSearchTool } from "./searxng-search.js";
+import type { Config } from "../config/config.js";
 
 describe("SearXNGSearchTool", () => {
   describe("construction", () => {
@@ -17,7 +18,7 @@ describe("SearXNGSearchTool", () => {
         setApprovalMode: vi.fn(),
       };
 
-      const tool = new SearXNGSearchTool(mockConfig as any);
+      const tool = new SearXNGSearchTool(mockConfig as unknown as Config);
       expect(tool).toBeDefined();
       // Check that the static name property is correct
       expect(SearXNGSearchTool.Name).toBe("searxng_search");

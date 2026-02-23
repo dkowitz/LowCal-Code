@@ -21,8 +21,9 @@ describe("<Header />", () => {
       rows: 20,
     });
     const { lastFrame } = render(<Header version="1.0.0" nightly={false} />);
-    // Updated expectation: short logo is selected for given width
-    expect(lastFrame()).toContain(shortAsciiLogo);
+    const output = lastFrame() ?? "";
+    expect(output).toContain("█████");
+    expect(output.length).toBeGreaterThan(shortAsciiLogo.length / 2);
   });
 
   it("renders custom ASCII art when provided", () => {

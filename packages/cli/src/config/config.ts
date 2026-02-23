@@ -38,7 +38,6 @@ import { researchCommand } from "../commands/research.js";
 import { schedulerCommand } from "../commands/scheduler.js";
 import { sessionsCommand } from "../commands/sessions.js";
 import { tasksCommand } from "../commands/tasks.js";
-import { teamRuntimeCommand } from "../commands/team-runtime.js";
 import type { Settings } from "./settings.js";
 
 import { resolvePath } from "../utils/resolvePath.js";
@@ -53,12 +52,9 @@ import { isWorkspaceTrusted } from "./trustedFolders.js";
 
 // Simple console logger for now - replace with actual logger if available
 const logger = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  debug: (...args: any[]) => console.debug("[DEBUG]", ...args),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  warn: (...args: any[]) => console.warn("[WARN]", ...args),
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  error: (...args: any[]) => console.error("[ERROR]", ...args),
+  debug: (...args: unknown[]) => console.debug("[DEBUG]", ...args),
+  warn: (...args: unknown[]) => console.warn("[WARN]", ...args),
+  error: (...args: unknown[]) => console.error("[ERROR]", ...args),
 };
 
 const VALID_APPROVAL_MODE_VALUES = [
@@ -319,7 +315,6 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
     .command(schedulerCommand)
     .command(sessionsCommand)
     .command(tasksCommand)
-    .command(teamRuntimeCommand)
     .command(dashboardCommand);
 
   if (settings?.experimental?.extensionManagement ?? false) {
@@ -347,17 +342,16 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
       result._[0] === "orchestrator" ||
       result._[0] === "sessions" ||
       result._[0] === "tasks" ||
-      result._[0] === "team-runtime" ||
-      result._[0] === "team-monitor" ||
       result._[0] === "dashboard")
   ) {
+    const parsedResult = result as { watch?: unknown };
     const isSessionsWatch =
-      result._[0] === "sessions" && Boolean((result as any).watch);
+      result._[0] === "sessions" && Boolean(parsedResult.watch);
     if (isSessionsWatch) {
       return result as unknown as CliArgs;
     }
     const isDashboardWatch =
-      result._[0] === "dashboard" && Boolean((result as any).watch);
+      result._[0] === "dashboard" && Boolean(parsedResult.watch);
     if (isDashboardWatch) {
       return result as unknown as CliArgs;
     }
@@ -457,10 +451,10 @@ export async function loadCliConfig(
           AppEvent.ShowInfo,
           `Saved OPENAI_API_KEY to: ${envPath}`,
         );
-      } catch (e) {
+      } catch {
         // ignore
       }
-    } catch (e) {
+    } catch {
       // Fall back to setting runtime env if persistence fails
       process.env["OPENAI_API_KEY"] = argv.openaiApiKey;
     }
@@ -475,10 +469,10 @@ export async function loadCliConfig(
           AppEvent.ShowInfo,
           `Saved OPENAI_BASE_URL to: ${envPath}`,
         );
-      } catch (e) {
+      } catch {
         // ignore
       }
-    } catch (e) {
+    } catch {
       process.env["OPENAI_BASE_URL"] = argv.openaiBaseUrl;
     }
   }

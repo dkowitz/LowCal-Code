@@ -100,7 +100,8 @@ LowCal Code provides both in-session commands (slash commands) and terminal-leve
 | `/model`                                             | Select a model                                          |
 | `/tasks [open/list/run/schedule]`                    | Open task template editor, manage templates, and deploy |
 | `/mailbox [open/list/show/use/clear]`                | View task mailbox and inject payload context            |
-| `/agents create/manage`                              | Manage subagents                                        |
+| `/collab [view/list/post]`                           | View/post inter-session coordination messages            |
+| `Subagents (file-based)`                             | Configure subagents via `.qwen/agents/*.md` or `~/.qwen/agents/*.md` |
 | `/tools [desc/nodesc]`                               | List available tools                                    |
 | `/prompt list/show/create/delete/activate/disable`   | Manage custom prompts                                   |
 | `/promptmode set <full/concise/auto>`                | Set system prompt mode                                  |
@@ -134,6 +135,7 @@ LowCal Code provides both in-session commands (slash commands) and terminal-leve
 - **`/clear`** - Clear all conversation history and start fresh
 - **`/summary`** - Generate a comprehensive project summary from the current conversation
 - **`/mailbox`** - Open mailbox viewer for received/pending task payloads; use payloads inline without auto-triggering a model response
+- **`/collab`** - View and post short inter-session coordination messages, with optional wake notifications
 
 ### Custom Prompts & Toolsets
 

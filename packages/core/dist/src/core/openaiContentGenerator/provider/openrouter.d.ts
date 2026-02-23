@@ -12,5 +12,5 @@ export declare class OpenRouterOpenAICompatibleProvider extends DefaultOpenAICom
      * apply dynamic context limits reported by the provider. This ensures the
      * UI and TokenBudgetManager use the accurate context window sizes.
      */
-    static applyProviderContextLimits(models: any[]): void;
+    static applyProviderContextLimits(models: unknown[]): void;
 }

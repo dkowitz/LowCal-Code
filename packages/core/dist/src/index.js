@@ -70,7 +70,6 @@ export { ToolNames } from "./tools/tool-names.js";
 // Export subagents (Phase 1)
 export * from "./subagents/index.js";
 export * from "./task-templates/index.js";
-export * from "./team/index.js";
 // Export prompt logic
 export * from "./prompts/mcp-prompts.js";
 // Export specific tool logic
@@ -94,8 +93,10 @@ export * from "./tools/launch-task.js";
 export * from "./tools/schedule-task.js";
 export * from "./tools/task-template.js";
 export * from "./tools/read-session-messages.js";
-export * from "./tools/team-management.js";
+export * from "./tools/read-collab-messages.js";
+export * from "./tools/post-collab-message.js";
 export * from "./tools/launch-task-state.js";
+export * from "./collab/index.js";
 // Export scheduler
 export * from "./scheduler/index.js";
 // Export sessions

@@ -257,19 +257,15 @@ function mergeSettings(system, systemDefaults, user, workspace, isTrusted) {
     // { model: { name: string } } so downstream code can always read
     // settings.model?.name.
     function normalizeLegacyModel(s) {
-        if (!s)
+        if (!s) {
             return s;
-        try {
-            const asAny = s;
-            if (typeof asAny.model === "string") {
-                return {
-                    ...s,
-                    model: { ...(s.model ? {} : {}), name: asAny.model },
-                };
-            }
         }
-        catch (_e) {
-            // ignore
+        const modelValue = s.model;
+        if (typeof modelValue === "string") {
+            return {
+                ...s,
+                model: { name: modelValue },
+            };
         }
         return s;
     }

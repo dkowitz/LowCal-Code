@@ -24,9 +24,9 @@ vi.mock("os", async (importOriginal) => {
     };
 });
 vi.mock("google-auth-library");
-vi.mock("http");
+vi.mock("node:http");
 vi.mock("open");
-vi.mock("crypto");
+vi.mock("node:crypto");
 vi.mock("node:readline");
 vi.mock("../utils/browser.js", () => ({
     shouldAttemptBrowserLaunch: () => true,
@@ -51,6 +51,7 @@ describe("oauth2", () => {
         vi.unstubAllEnvs();
     });
     it("should perform a web login", async () => {
+        vi.stubEnv("OAUTH_CALLBACK_PORT", "43123");
         const mockAuthUrl = "https://example.com/auth";
         const mockCode = "test-code";
         const mockState = "test-state";

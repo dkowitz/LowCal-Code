@@ -6,6 +6,7 @@
 
 import { describe, it, expect } from "vitest";
 import { ResearchTool } from "./research.js";
+import type { Config } from "../config/config.js";
 
 describe("ResearchTool", () => {
   it("should be defined with correct properties", () => {
@@ -13,7 +14,7 @@ describe("ResearchTool", () => {
     expect(ResearchTool.Name).toBe("research");
 
     // Check that we can create an instance
-    const tool = new ResearchTool(null as any);
+    const tool = new ResearchTool(null as unknown as Config);
     expect(tool).toBeDefined();
     expect(tool.name).toBe("research");
   });

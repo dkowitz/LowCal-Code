@@ -71,7 +71,7 @@ export class TaskTool extends BaseDeclarativeTool {
         let subagentDescriptions = "";
         if (this.availableSubagents.length === 0) {
             subagentDescriptions =
-                "No subagents are currently configured. You can create subagents using the /agents command.";
+                "No subagents are currently configured. Add subagent markdown files under .qwen/agents/ (project) or ~/.qwen/agents/ (user) to enable custom delegation.";
         }
         else {
             subagentDescriptions = this.availableSubagents

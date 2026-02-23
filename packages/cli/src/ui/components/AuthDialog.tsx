@@ -84,7 +84,7 @@ export function AuthDialog({
         "security.auth.selectedType",
         authType,
       );
-    } catch (e) {
+    } catch {
       // ignore persistence failures; continue flow
     }
   };
@@ -96,7 +96,7 @@ export function AuthDialog({
         "security.auth.providerId",
         providerId,
       );
-    } catch (e) {
+    } catch {
       // ignore persistence failures; continue flow
     }
   };
@@ -115,7 +115,7 @@ export function AuthDialog({
         `security.auth.providers.${provider}.${key}`,
         value,
       );
-    } catch (e) {
+    } catch {
       // ignore persistence failures; continue flow
     }
   };
@@ -205,7 +205,7 @@ export function AuthDialog({
     items.findIndex((item) => item.value === preferredValue),
   );
 
-  const handleAuthSelect = (value: any) => {
+  const handleAuthSelect = (value: unknown) => {
     // Support both AuthType values and provider strings
     if (value === "openrouter") {
       const openrouterConfig =
@@ -321,7 +321,7 @@ export function AuthDialog({
           `Cleared OPENAI_MODEL in: ${modelPath}`,
         );
       }
-    } catch (e) {
+    } catch {
       // ignore emission errors
     }
     setShowOpenAIKeyPrompt(false);
@@ -338,7 +338,7 @@ export function AuthDialog({
         AppEvent.ShowInfo,
         `Saved GEMINI_API_KEY to: ${apiKeyPath}`,
       );
-    } catch (e) {
+    } catch {
       // ignore emissions
     }
     setShowGeminiKeyPrompt(false);
@@ -377,7 +377,7 @@ export function AuthDialog({
             `Saved OPENAI_BASE_URL to: ${baseUrlPath}`,
           );
         }
-      } catch (e) {
+      } catch {
         // ignore emissions
       }
       onSelect(AuthType.USE_OPENAI, SettingScope.User);
@@ -404,7 +404,7 @@ export function AuthDialog({
             `Saved OPENAI_BASE_URL to: ${baseUrlPath}`,
           );
         }
-      } catch (e) {
+      } catch {
         // ignore emissions
       }
       onSelect(AuthType.USE_OPENAI, SettingScope.User);

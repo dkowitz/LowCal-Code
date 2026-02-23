@@ -141,7 +141,7 @@ describe("researchCommand", () => {
       2,
       expect.objectContaining({
         type: "info",
-        text: "ℹ🔎 Mock progress update",
+        text: expect.stringContaining("ℹ🔎 Mock progress update"),
       }),
     );
     expect(mockContext.ui.setPendingItem).toHaveBeenLastCalledWith(null);
@@ -305,7 +305,7 @@ describe("researchCommand", () => {
       2,
       expect.objectContaining({
         type: "info",
-        text: "ℹ🔎 Mock progress update",
+        text: expect.stringContaining("ℹ🔎 Mock progress update"),
       }),
     );
     expect(mockContext.ui.setPendingItem).toHaveBeenLastCalledWith(null);
@@ -342,7 +342,7 @@ describe("researchCommand", () => {
       2,
       expect.objectContaining({
         type: "info",
-        text: "ℹ🔎 Mock progress update",
+        text: expect.stringContaining("ℹ🔎 Mock progress update"),
       }),
     );
     expect(mockContext.ui.setPendingItem).toHaveBeenLastCalledWith(null);

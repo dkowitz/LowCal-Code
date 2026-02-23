@@ -5,12 +5,29 @@
  */
 import { vi, describe, it, expect, beforeEach, afterEach, } from "vitest";
 const mockShellExecutionService = vi.hoisted(() => vi.fn());
+const mockOsHomedir = vi.hoisted(() => vi.fn(() => "/home/test-user"));
+const mockOsTmpdir = vi.hoisted(() => vi.fn(() => "/tmp"));
+const mockOsPlatform = vi.hoisted(() => vi.fn(() => "linux"));
 vi.mock("../services/shellExecutionService.js", () => ({
     ShellExecutionService: { execute: mockShellExecutionService },
 }));
-vi.mock("fs");
-vi.mock("os");
-vi.mock("crypto");
+vi.mock("node:fs");
+vi.mock("node:os", async (importOriginal) => {
+    const os = await importOriginal();
+    return {
+        ...os,
+        default: {
+            ...os,
+            homedir: mockOsHomedir,
+            tmpdir: mockOsTmpdir,
+            platform: mockOsPlatform,
+        },
+        homedir: mockOsHomedir,
+        tmpdir: mockOsTmpdir,
+        platform: mockOsPlatform,
+    };
+});
+vi.mock("node:crypto");
 vi.mock("../utils/summarizer.js");
 import { isCommandAllowed } from "../utils/shell-utils.js";
 import { ShellTool } from "./shell.js";
@@ -539,7 +556,9 @@ describe("ShellTool", () => {
             const confirmation = await invocation.shouldConfirmExecute(new AbortController().signal);
             expect(confirmation).not.toBe(false);
             expect(confirmation && confirmation.type).toBe("exec");
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            if (!confirmation || confirmation.type !== "exec") {
+                throw new Error("Expected exec confirmation details");
+            }
             await confirmation.onConfirm(ToolConfirmationOutcome.ProceedAlways);
             // Should now be whitelisted
             const secondInvocation = shellTool.build({

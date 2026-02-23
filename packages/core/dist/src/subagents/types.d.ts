@@ -97,17 +97,6 @@ export interface ListSubagentsOptions {
     force?: boolean;
 }
 /**
- * Options for creating a new subagent.
- */
-export interface CreateSubagentOptions {
-    /** Storage level for the new subagent */
-    level: SubagentLevel;
-    /** Whether to overwrite existing subagent with same name */
-    overwrite?: boolean;
-    /** Custom directory path (overrides default level-based path) */
-    customPath?: string;
-}
-/**
  * Error thrown when a subagent operation fails.
  */
 export declare class SubagentError extends Error {

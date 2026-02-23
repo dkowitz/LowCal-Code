@@ -193,10 +193,14 @@ export class GeminiClient {
     );
     this.tokenBudgetManager = new TokenBudgetManager(
       this.getContentGenerator(),
-      (model) =>
-        typeof (this.config as any).getEffectiveContextLimit === "function"
-          ? (this.config as any).getEffectiveContextLimit(model)
-          : undefined,
+      (model) => {
+        const configWithLimits = this.config as unknown as {
+          getEffectiveContextLimit?: (model?: string) => number;
+        };
+        return typeof configWithLimits.getEffectiveContextLimit === "function"
+          ? configWithLimits.getEffectiveContextLimit(model)
+          : undefined;
+      },
     );
     /**
      * Always take the model from contentGeneratorConfig to initialize,

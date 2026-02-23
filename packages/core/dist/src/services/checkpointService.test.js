@@ -83,14 +83,14 @@ describe("CheckpointService", () => {
         expect(loaded?.contextSnapshot?.currentContextTokenCount).toBe(2345);
         expect(loaded?.contextSnapshot?.model).toBe("gemini-2.5-pro");
     });
-    it("should list checkpoints in chronological order (newest first)", () => {
+    it("should list checkpoints in chronological order (newest first)", async () => {
         // Save multiple checkpoints with different timestamps
         const messages = [
             { id: "msg-1", timestamp: new Date().toISOString(), type: "user", content: "First" },
         ];
         checkpointService.saveCheckpoint(messages);
         // Wait a bit to ensure different timestamps (use longer delay for CI)
-        sleep(200);
+        await sleep(200);
         const messages2 = [
             { id: "msg-2", timestamp: new Date().toISOString(), type: "user", content: "Second" },
         ];

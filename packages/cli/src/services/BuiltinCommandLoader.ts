@@ -13,6 +13,7 @@ import { authCommand } from "../ui/commands/authCommand.js";
 import { bugCommand } from "../ui/commands/bugCommand.js";
 import { chatCommand } from "../ui/commands/chatCommand.js";
 import { clearCommand } from "../ui/commands/clearCommand.js";
+import { collabCommand } from "../ui/commands/collabCommand.js";
 import { compressCommand } from "../ui/commands/compressCommand.js";
 import { copyCommand } from "../ui/commands/copyCommand.js";
 import { corgiCommand } from "../ui/commands/corgiCommand.js";
@@ -42,7 +43,6 @@ import { statsCommand } from "../ui/commands/statsCommand.js";
 import { summaryCommand } from "../ui/commands/summaryCommand.js";
 import { terminalSetupCommand } from "../ui/commands/terminalSetupCommand.js";
 import { tasksCommand } from "../ui/commands/tasksCommand.js";
-import { teamCommand } from "../ui/commands/teamCommand.js";
 import { themeCommand } from "../ui/commands/themeCommand.js";
 import { tokensCommand } from "../ui/commands/tokensCommand.js";
 import { toolsCommand } from "../ui/commands/toolsCommand.js";
@@ -75,6 +75,7 @@ export class BuiltinCommandLoader implements ICommandLoader {
       bugCommand,
       chatCommand,
       clearCommand,
+      collabCommand,
       compressCommand,
       copyCommand,
       corgiCommand,
@@ -101,7 +102,6 @@ export class BuiltinCommandLoader implements ICommandLoader {
       summaryCommand,
       terminalSetupCommand,
       tasksCommand,
-      teamCommand,
       themeCommand,
       tokensCommand,
       toolsCommand,

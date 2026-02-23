@@ -18,8 +18,12 @@ async function getAvailableModelsForAuthType(authType, context) {
             const { providerId, providers } = context.services.settings.merged.security?.auth || {};
             const provider = providers?.[providerId];
             const baseUrl = provider?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
-            const apiKey = provider?.apiKey?.trim() ||
-                process.env["OPENAI_API_KEY"]?.trim();
+            const providerApiKey = provider &&
+                "apiKey" in provider &&
+                typeof provider.apiKey === "string"
+                ? provider.apiKey.trim()
+                : undefined;
+            const apiKey = providerApiKey || process.env["OPENAI_API_KEY"]?.trim();
             let models = [];
             if (baseUrl) {
                 models = await fetchOpenAICompatibleModels(baseUrl, apiKey, {

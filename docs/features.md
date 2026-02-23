@@ -84,6 +84,7 @@ This document provides a comprehensive overview of all LowCal Code features, org
 | **Launch Task**           | Spawn or enqueue task runs with runtime overrides | ✅ Stable | `headless`, `zellij_tab`, `in_process`, `default` |
 | **Read Session Messages** | Receive messages from launched tasks              | ✅ Stable | `pull`, `peek`, `clear`, `wait` actions           |
 | **Mailbox Viewer**        | Browse received/pending task payloads in-session  | ✅ Stable | `/mailbox` dialog + `list/show/use/clear`         |
+| **Collab Board**          | Coordinate across sessions via shared message board | ✅ Stable | `/collab` + `read_collab_messages`/`post_collab_message` |
 | **Task State Query**      | Monitor task status and results                   | ✅ Stable | Get, list, clear operations                       |
 
 ---
@@ -160,7 +161,8 @@ This document provides a comprehensive overview of all LowCal Code features, org
 | `/model`                                                         | Select a model                                 |
 | `/tasks`                                                         | Open task template editor and deploy templates |
 | `/mailbox [open/list/show/use/clear]`                            | Review task payload mailbox and inject display-only payload context  |
-| `/agents create/manage`                                          | Subagent management                            |
+| `/collab [view/list/post]`                                       | View/post inter-session coordination messages and wake peers         |
+| `Subagents (file-based)`                                         | Configure subagents via `.qwen/agents/*.md` and `~/.qwen/agents/*.md` |
 | `/tools [desc/nodesc]`                                           | List available tools                           |
 | `/prompt list/show/create/delete/activate/disable [--exclusive]` | Custom prompt management                       |
 | `/promptmode set <full/concise/auto>`                            | System prompt mode                             |
@@ -200,7 +202,7 @@ This document provides a comprehensive overview of all LowCal Code features, org
 ### For Advanced Users
 
 1. Set up custom prompts with `/prompt create`
-2. Configure subagents with `/agents create`
+2. Configure subagents by creating markdown files under `.qwen/agents/` (project) or `~/.qwen/agents/` (user)
 3. Build reusable templates with `/tasks`, deploy via `lowcal tasks schedule`, and monitor returns with `/mailbox`
 4. Connect MCP servers for external tools
 5. Create custom commands in `.qwen/commands/`

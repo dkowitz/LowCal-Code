@@ -7,20 +7,19 @@
 /// <reference types="vitest" />
 import { defineConfig } from "vitest/config";
 
+const includeJunit = process.env.VITEST_JUNIT === "1";
+
 export default defineConfig({
   test: {
     include: ["**/*.{test,spec}.?(c|m)[jt]s?(x)", "config.test.ts"],
     exclude: ["**/node_modules/**", "**/dist/**", "**/cypress/**"],
     environment: "jsdom",
     globals: true,
-    reporters: ["default", "junit"],
+    reporters: includeJunit ? ["default", "junit"] : ["default"],
     silent: true,
-    outputFile: {
-      junit: "junit.xml",
-    },
+    outputFile: includeJunit ? { junit: "junit.xml" } : undefined,
     setupFiles: ["./test-setup.ts"],
     coverage: {
-      enabled: true,
       provider: "v8",
       reportsDirectory: "./coverage",
       include: ["src/**/*"],

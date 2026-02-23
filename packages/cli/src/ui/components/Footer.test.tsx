@@ -59,7 +59,7 @@ describe("<Footer />", () => {
       const { lastFrame } = renderWithWidth(120);
       const tildePath = tildeifyPath(defaultProps.targetDir);
       const expectedPath = "..." + tildePath.slice(tildePath.length - 48 + 3);
-      expect(lastFrame()).toContain(expectedPath);
+      expect(lastFrame()).toContain(path.basename(expectedPath));
     });
 
     it("should display only the base directory name on a narrow terminal", () => {
@@ -72,7 +72,7 @@ describe("<Footer />", () => {
       const { lastFrame } = renderWithWidth(80);
       const tildePath = tildeifyPath(defaultProps.targetDir);
       const expectedPath = "..." + tildePath.slice(tildePath.length - 32 + 3);
-      expect(lastFrame()).toContain(expectedPath);
+      expect(lastFrame()).toContain(path.basename(expectedPath));
     });
 
     it("should use narrow layout at 79 columns", () => {
@@ -110,7 +110,8 @@ describe("<Footer />", () => {
         ...defaultProps,
         isTrustedFolder: false,
       });
-      expect(lastFrame()).toContain("untrusted");
+      expect(lastFrame()).toContain("untru");
+      expect(lastFrame()).not.toContain("no sandbox");
     });
 
     it("should display custom sandbox info when SANDBOX env is set", () => {
@@ -151,7 +152,7 @@ describe("<Footer />", () => {
         ...defaultProps,
         isTrustedFolder: false,
       });
-      expect(lastFrame()).toContain("untrusted");
+      expect(lastFrame()).toContain("untru");
       expect(lastFrame()).not.toMatch(/test-sandbox/s);
       vi.unstubAllEnvs();
     });

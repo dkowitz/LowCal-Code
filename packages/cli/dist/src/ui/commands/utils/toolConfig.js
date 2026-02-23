@@ -27,6 +27,8 @@ const DEFAULT_COLLECTIONS = {
         ToolNames.SCHEDULE_TASK,
         ToolNames.LAUNCH_TASK,
         ToolNames.READ_SESSION_MESSAGES,
+        ToolNames.READ_COLLAB_MESSAGES,
+        ToolNames.POST_COLLAB_MESSAGE,
     ],
     minimal: [ToolNames.READ_FILE, ToolNames.WRITE_FILE, ToolNames.SHELL],
     "shell-only": [ToolNames.SHELL],
@@ -162,6 +164,10 @@ function applyToolCollectionPolicies(collections) {
         if (nextToolList.includes(ToolNames.LAUNCH_TASK) &&
             !nextToolList.includes(ToolNames.READ_SESSION_MESSAGES)) {
             nextToolList = [...nextToolList, ToolNames.READ_SESSION_MESSAGES];
+        }
+        if (nextToolList.includes(ToolNames.POST_COLLAB_MESSAGE) &&
+            !nextToolList.includes(ToolNames.READ_COLLAB_MESSAGES)) {
+            nextToolList = [...nextToolList, ToolNames.READ_COLLAB_MESSAGES];
         }
         normalized[collectionName] = nextToolList;
     }

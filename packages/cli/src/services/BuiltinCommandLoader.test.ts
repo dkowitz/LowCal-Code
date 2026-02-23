@@ -37,10 +37,10 @@ import { ideCommand } from "../ui/commands/ideCommand.js";
 import { restoreCommand } from "../ui/commands/restoreCommand.js";
 
 vi.mock("../ui/commands/authCommand.js", () => ({ authCommand: {} }));
-vi.mock("../ui/commands/agentsCommand.js", () => ({ agentsCommand: {} }));
 vi.mock("../ui/commands/bugCommand.js", () => ({ bugCommand: {} }));
 vi.mock("../ui/commands/chatCommand.js", () => ({ chatCommand: {} }));
 vi.mock("../ui/commands/clearCommand.js", () => ({ clearCommand: {} }));
+vi.mock("../ui/commands/collabCommand.js", () => ({ collabCommand: {} }));
 vi.mock("../ui/commands/compressCommand.js", () => ({ compressCommand: {} }));
 vi.mock("../ui/commands/corgiCommand.js", () => ({ corgiCommand: {} }));
 vi.mock("../ui/commands/docsCommand.js", () => ({ docsCommand: {} }));
@@ -80,7 +80,6 @@ vi.mock("../ui/commands/terminalSetupCommand.js", () => ({
   terminalSetupCommand: {},
 }));
 vi.mock("../ui/commands/tasksCommand.js", () => ({ tasksCommand: {} }));
-vi.mock("../ui/commands/teamCommand.js", () => ({ teamCommand: {} }));
 vi.mock("../ui/commands/themeCommand.js", () => ({ themeCommand: {} }));
 vi.mock("../ui/commands/tokensCommand.js", () => ({ tokensCommand: {} }));
 vi.mock("../ui/commands/toolsCommand.js", () => ({ toolsCommand: {} }));

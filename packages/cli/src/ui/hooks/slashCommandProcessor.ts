@@ -69,15 +69,12 @@ export const useSlashCommandProcessor = (
   openSettingsDialog: () => void,
   openModelSelectionDialog: () => void,
   openResumeDialog: () => void,
-  openSubagentCreateDialog: () => void,
-  openAgentsManagerDialog: () => void,
   toggleVimEnabled: () => Promise<boolean>,
   setIsProcessing: (isProcessing: boolean) => void,
   setGeminiMdFileCount: (count: number) => void,
   _showQuitConfirmation: () => void,
   loggingController: SessionLoggingController,
   openMailboxDialog?: () => void,
-  openTeamDialog?: () => void,
 ) => {
   const session = useSessionStats();
   const [commands, setCommands] = useState<readonly SlashCommand[]>([]);
@@ -461,9 +458,6 @@ export const useSlashCommandProcessor = (
                     case "tasks":
                       openTasksDialog();
                       return { type: "handled" };
-                    case "team":
-                      openTeamDialog?.();
-                      return { type: "handled" };
                     case "mailbox":
                       openMailboxDialog?.();
                       return { type: "handled" };
@@ -478,12 +472,6 @@ export const useSlashCommandProcessor = (
                       return { type: "handled" };
                     case "resume":
                       openResumeDialog();
-                      return { type: "handled" };
-                    case "subagent_create":
-                      openSubagentCreateDialog();
-                      return { type: "handled" };
-                    case "subagent_list":
-                      openAgentsManagerDialog();
                       return { type: "handled" };
                     case "help":
                       return { type: "handled" };
@@ -814,12 +802,9 @@ export const useSlashCommandProcessor = (
       openPrivacyNotice,
       openEditorDialog,
       openTasksDialog,
-      openTeamDialog,
       openMailboxDialog,
       setQuittingMessages,
       openSettingsDialog,
-      openSubagentCreateDialog,
-      openAgentsManagerDialog,
       setShellConfirmationRequest,
       setSessionShellAllowlist,
       setIsProcessing,

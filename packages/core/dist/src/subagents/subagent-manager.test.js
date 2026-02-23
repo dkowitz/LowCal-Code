@@ -12,7 +12,22 @@ import { SubagentError } from "./types.js";
 import { makeFakeConfig } from "../test-utils/config.js";
 // Mock file system operations
 vi.mock("fs/promises");
-vi.mock("os");
+vi.mock("os", async (importOriginal) => {
+    const os = await importOriginal();
+    return {
+        ...os,
+        homedir: vi.fn(() => "/home/user"),
+        tmpdir: vi.fn(() => "/tmp"),
+    };
+});
+vi.mock("node:os", async (importOriginal) => {
+    const os = await importOriginal();
+    return {
+        ...os,
+        homedir: vi.fn(() => "/home/user"),
+        tmpdir: vi.fn(() => "/tmp"),
+    };
+});
 // Mock yaml parser - use vi.hoisted for proper hoisting
 const mockParseYaml = vi.hoisted(() => vi.fn());
 const mockStringifyYaml = vi.hoisted(() => vi.fn());
@@ -155,6 +170,7 @@ description: A test subagent
 
 You are a helpful assistant.
 `;
+    const asReaddirResult = (entries) => entries;
     describe("parseSubagentContent", () => {
         it("should parse valid markdown content", () => {
             const config = manager.parseSubagentContent(validMarkdown, validConfig.filePath, "project");
@@ -309,49 +325,9 @@ You are a helpful assistant.
             expect(serialized).not.toContain("runConfig:");
         });
     });
-    describe("createSubagent", () => {
-        beforeEach(() => {
-            // Mock successful file operations
-            vi.mocked(fs.access).mockRejectedValue(new Error("File not found"));
-            vi.mocked(fs.mkdir).mockResolvedValue(undefined);
-            vi.mocked(fs.writeFile).mockResolvedValue(undefined);
-        });
-        it("should create subagent successfully", async () => {
-            await manager.createSubagent(validConfig, { level: "project" });
-            expect(fs.mkdir).toHaveBeenCalledWith(path.normalize(path.dirname(validConfig.filePath)), { recursive: true });
-            expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining("test-agent.md"), expect.stringContaining("name: test-agent"), "utf8");
-        });
-        it("should throw error if file already exists and overwrite is false", async () => {
-            vi.mocked(fs.access).mockResolvedValue(undefined); // File exists
-            await expect(manager.createSubagent(validConfig, { level: "project" })).rejects.toThrow(SubagentError);
-            await expect(manager.createSubagent(validConfig, { level: "project" })).rejects.toThrow(/already exists/);
-        });
-        it("should overwrite file when overwrite is true", async () => {
-            vi.mocked(fs.access).mockResolvedValue(undefined); // File exists
-            await manager.createSubagent(validConfig, {
-                level: "project",
-                overwrite: true,
-            });
-            expect(fs.writeFile).toHaveBeenCalled();
-        });
-        it("should use custom path when provided", async () => {
-            const customPath = "/custom/path/agent.md";
-            await manager.createSubagent(validConfig, {
-                level: "project",
-                customPath,
-            });
-            expect(fs.writeFile).toHaveBeenCalledWith(customPath, expect.any(String), "utf8");
-        });
-        it("should throw error on file write failure", async () => {
-            vi.mocked(fs.writeFile).mockRejectedValue(new Error("Write failed"));
-            await expect(manager.createSubagent(validConfig, { level: "project" })).rejects.toThrow(SubagentError);
-            await expect(manager.createSubagent(validConfig, { level: "project" })).rejects.toThrow(/Failed to write subagent file/);
-        });
-    });
     describe("loadSubagent", () => {
         it("should load subagent from project level first", async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            vi.mocked(fs.readdir).mockResolvedValue(["test-agent.md"]);
+            vi.mocked(fs.readdir).mockResolvedValue(asReaddirResult(["test-agent.md"]));
             vi.mocked(fs.readFile).mockResolvedValue(validMarkdown);
             const config = await manager.loadSubagent("test-agent");
             expect(config).toBeDefined();
@@ -362,8 +338,7 @@ You are a helpful assistant.
         it("should fall back to user level if project level fails", async () => {
             vi.mocked(fs.readdir)
                 .mockRejectedValueOnce(new Error("Project dir not found")) // project level fails
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .mockResolvedValueOnce(["test-agent.md"]); // user level succeeds
+                .mockResolvedValueOnce(asReaddirResult(["test-agent.md"])); // user level succeeds
             vi.mocked(fs.readFile).mockResolvedValue(validMarkdown);
             const config = await manager.loadSubagent("test-agent");
             expect(config).toBeDefined();
@@ -378,11 +353,7 @@ You are a helpful assistant.
         });
         it("should load subagent even when filename does not match name", async () => {
             // Mock readdir to return files with different names
-            vi.mocked(fs.readdir).mockResolvedValue([
-                "wrong-filename.md",
-                "another-file.md",
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ]);
+            vi.mocked(fs.readdir).mockResolvedValue(asReaddirResult(["wrong-filename.md", "another-file.md"]));
             // Mock readFile to return content with different name
             const mismatchedMarkdown = `---
 name: correct-agent-name
@@ -419,10 +390,8 @@ You are another assistant.`;
         it("should search user level when filename mismatch at project level", async () => {
             // Mock project level to have no matching files
             vi.mocked(fs.readdir)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .mockResolvedValueOnce(["other-file.md"]) // project level
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .mockResolvedValueOnce(["user-agent.md"]); // user level
+                .mockResolvedValueOnce(asReaddirResult(["other-file.md"])) // project level
+                .mockResolvedValueOnce(asReaddirResult(["user-agent.md"])); // user level
             const projectMarkdown = `---
 name: wrong-agent
 description: Wrong agent
@@ -455,8 +424,7 @@ You are a helpful assistant.`;
             expect(config.level).toBe("user");
         });
         it("should handle specific level search with filename mismatch", async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            vi.mocked(fs.readdir).mockResolvedValue(["misnamed-file.md"]);
+            vi.mocked(fs.readdir).mockResolvedValue(asReaddirResult(["misnamed-file.md"]));
             const levelMarkdown = `---
 name: specific-agent
 description: A test subagent for specific level
@@ -474,142 +442,12 @@ You are a helpful assistant.`;
             expect(config.filePath).toBe(path.normalize("/test/project/.qwen/agents/misnamed-file.md"));
         });
     });
-    describe("updateSubagent", () => {
-        beforeEach(() => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            vi.mocked(fs.readdir).mockResolvedValue(["test-agent.md"]);
-            vi.mocked(fs.readFile).mockResolvedValue(validMarkdown);
-            vi.mocked(fs.writeFile).mockResolvedValue(undefined);
-        });
-        it("should update existing subagent", async () => {
-            const updates = { description: "Updated description" };
-            await manager.updateSubagent("test-agent", updates);
-            expect(fs.writeFile).toHaveBeenCalledWith(expect.stringContaining("test-agent.md"), expect.stringContaining("Updated description"), "utf8");
-        });
-        it("should throw error if subagent not found", async () => {
-            vi.mocked(fs.readdir).mockRejectedValue(new Error("Directory not found"));
-            await expect(manager.updateSubagent("nonexistent", {})).rejects.toThrow(SubagentError);
-            await expect(manager.updateSubagent("nonexistent", {})).rejects.toThrow(/not found/);
-        });
-        it("should throw error on write failure", async () => {
-            vi.mocked(fs.writeFile).mockRejectedValue(new Error("Write failed"));
-            await expect(manager.updateSubagent("test-agent", {})).rejects.toThrow(SubagentError);
-            await expect(manager.updateSubagent("test-agent", {})).rejects.toThrow(/Failed to update subagent file/);
-        });
-    });
-    describe("deleteSubagent", () => {
-        it("should delete subagent from specified level", async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            vi.mocked(fs.readdir).mockResolvedValue(["test-agent.md"]);
-            vi.mocked(fs.readFile).mockResolvedValue(validMarkdown);
-            vi.mocked(fs.unlink).mockResolvedValue(undefined);
-            await manager.deleteSubagent("test-agent", "project");
-            expect(fs.unlink).toHaveBeenCalledWith(path.normalize("/test/project/.qwen/agents/test-agent.md"));
-        });
-        it("should delete from both levels if no level specified", async () => {
-            vi.mocked(fs.readdir)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .mockResolvedValueOnce(["test-agent.md"]) // project level
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .mockResolvedValueOnce(["test-agent.md"]); // user level
-            vi.mocked(fs.readFile).mockResolvedValue(validMarkdown);
-            vi.mocked(fs.unlink).mockResolvedValue(undefined);
-            await manager.deleteSubagent("test-agent");
-            expect(fs.unlink).toHaveBeenCalledTimes(2);
-            expect(fs.unlink).toHaveBeenCalledWith(path.normalize("/test/project/.qwen/agents/test-agent.md"));
-            expect(fs.unlink).toHaveBeenCalledWith(path.normalize("/home/user/.qwen/agents/test-agent.md"));
-        });
-        it("should throw error if subagent not found", async () => {
-            vi.mocked(fs.readdir).mockRejectedValue(new Error("Directory not found"));
-            await expect(manager.deleteSubagent("nonexistent")).rejects.toThrow(SubagentError);
-            await expect(manager.deleteSubagent("nonexistent")).rejects.toThrow(/not found/);
-        });
-        it("should succeed if deleted from at least one level", async () => {
-            vi.mocked(fs.readdir)
-                .mockRejectedValueOnce(new Error("Project dir not found")) // project level fails
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .mockResolvedValueOnce(["test-agent.md"]); // user level succeeds
-            vi.mocked(fs.readFile).mockResolvedValue(validMarkdown);
-            vi.mocked(fs.unlink).mockResolvedValue(undefined);
-            await expect(manager.deleteSubagent("test-agent")).resolves.not.toThrow();
-        });
-        it("should delete subagent with mismatched filename", async () => {
-            // Mock directory listing to return files with different names
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            vi.mocked(fs.readdir).mockResolvedValue(["wrong-name.md"]);
-            const mismatchedMarkdown = `---
-name: correct-name
-description: A test subagent with mismatched filename
----
-
-You are a helpful assistant.`;
-            vi.mocked(fs.readFile).mockResolvedValue(mismatchedMarkdown);
-            vi.mocked(fs.unlink).mockResolvedValue(undefined);
-            mockParseYaml.mockReturnValue({
-                name: "correct-name",
-                description: "A test subagent with mismatched filename",
-            });
-            await manager.deleteSubagent("correct-name", "project");
-            // Should delete the actual file, not the expected filename
-            expect(fs.unlink).toHaveBeenCalledWith(path.normalize("/test/project/.qwen/agents/wrong-name.md"));
-        });
-        it("should handle deletion when multiple files exist but only one matches", async () => {
-            // Mock directory listing with multiple files
-            vi.mocked(fs.readdir).mockResolvedValue([
-                "file1.md",
-                "file2.md",
-                "target-file.md",
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            ]);
-            const markdowns = [
-                `---
-name: other-agent-1
-description: First other agent
----
-Content 1`,
-                `---
-name: other-agent-2
-description: Second other agent
----
-Content 2`,
-                `---
-name: target-agent
-description: The target agent
----
-Target content`,
-            ];
-            vi.mocked(fs.readFile)
-                .mockResolvedValueOnce(markdowns[0])
-                .mockResolvedValueOnce(markdowns[1])
-                .mockResolvedValueOnce(markdowns[2]);
-            vi.mocked(fs.unlink).mockResolvedValue(undefined);
-            mockParseYaml
-                .mockReturnValueOnce({
-                name: "other-agent-1",
-                description: "First other agent",
-            })
-                .mockReturnValueOnce({
-                name: "other-agent-2",
-                description: "Second other agent",
-            })
-                .mockReturnValueOnce({
-                name: "target-agent",
-                description: "The target agent",
-            });
-            await manager.deleteSubagent("target-agent", "project");
-            // Should only delete the matching file
-            expect(fs.unlink).toHaveBeenCalledTimes(1);
-            expect(fs.unlink).toHaveBeenCalledWith(path.normalize("/test/project/.qwen/agents/target-file.md"));
-        });
-    });
     describe("listSubagents", () => {
         beforeEach(() => {
             // Mock directory listing
             vi.mocked(fs.readdir)
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .mockResolvedValueOnce(["agent1.md", "agent2.md", "not-md.txt"])
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .mockResolvedValueOnce(["agent3.md", "agent1.md"]); // user level
+                .mockResolvedValueOnce(asReaddirResult(["agent1.md", "agent2.md", "not-md.txt"]))
+                .mockResolvedValueOnce(asReaddirResult(["agent3.md", "agent1.md"])); // user level
             // Mock file reading for valid agents
             vi.mocked(fs.readFile).mockImplementation((filePath) => {
                 const pathStr = String(filePath);
@@ -669,8 +507,7 @@ System prompt 3`);
         });
         it("should handle empty directories", async () => {
             // Reset all mocks for this specific test
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            vi.mocked(fs.readdir).mockResolvedValue([]);
+            vi.mocked(fs.readdir).mockResolvedValue(asReaddirResult([]));
             vi.mocked(fs.readFile).mockRejectedValue(new Error("No files"));
             const subagents = await manager.listSubagents();
             expect(subagents).toHaveLength(1); // Only built-in agents remain
@@ -689,8 +526,7 @@ System prompt 3`);
     });
     describe("findSubagentByName", () => {
         it("should find existing subagent", async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            vi.mocked(fs.readdir).mockResolvedValue(["test-agent.md"]);
+            vi.mocked(fs.readdir).mockResolvedValue(asReaddirResult(["test-agent.md"]));
             vi.mocked(fs.readFile).mockResolvedValue(validMarkdown);
             const metadata = await manager.findSubagentByName("test-agent");
             expect(metadata).toBeDefined();
@@ -710,8 +546,7 @@ System prompt 3`);
             expect(available).toBe(true);
         });
         it("should return false for existing names", async () => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            vi.mocked(fs.readdir).mockResolvedValue(["test-agent.md"]);
+            vi.mocked(fs.readdir).mockResolvedValue(asReaddirResult(["test-agent.md"]));
             vi.mocked(fs.readFile).mockResolvedValue(validMarkdown);
             const available = await manager.isNameAvailable("test-agent");
             expect(available).toBe(false);
@@ -721,14 +556,12 @@ System prompt 3`);
             // First call: loads subagent (found at user level), checks if it's at project level (different) -> available
             vi.mocked(fs.readdir)
                 .mockRejectedValueOnce(new Error("Project dir not found")) // project level
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                .mockResolvedValueOnce(["test-agent.md"]); // user level - found here
+                .mockResolvedValueOnce(asReaddirResult(["test-agent.md"])); // user level - found here
             vi.mocked(fs.readFile).mockResolvedValue(validMarkdown);
             const availableAtProject = await manager.isNameAvailable("test-agent", "project");
             expect(availableAtProject).toBe(true); // Available at project because found at user level
             // Second call: loads subagent (found at user level), checks if it's at user level (same) -> not available
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            vi.mocked(fs.readdir).mockResolvedValue(["test-agent.md"]); // user level - found here
+            vi.mocked(fs.readdir).mockResolvedValue(asReaddirResult(["test-agent.md"])); // user level - found here
             vi.mocked(fs.readFile).mockResolvedValue(validMarkdown);
             const availableAtUser = await manager.isNameAvailable("test-agent", "user");
             expect(availableAtUser).toBe(false); // Not available at user because found at user level
@@ -787,34 +620,6 @@ System prompt 3`);
                 expect(Object.keys(runtimeConfig.runConfig)).toEqual([
                     "max_time_minutes",
                 ]);
-            });
-        });
-        describe("mergeConfigurations", () => {
-            it("should merge basic properties", () => {
-                const updates = {
-                    description: "Updated description",
-                    systemPrompt: "Updated prompt",
-                };
-                const merged = manager.mergeConfigurations(validConfig, updates);
-                expect(merged.description).toBe("Updated description");
-                expect(merged.systemPrompt).toBe("Updated prompt");
-                expect(merged.name).toBe(validConfig.name); // Should keep original
-            });
-            it("should merge nested configurations", () => {
-                const configWithNested = {
-                    ...validConfig,
-                    modelConfig: { model: "original-model", temp: 0.7 },
-                    runConfig: { max_time_minutes: 10, max_turns: 20 },
-                };
-                const updates = {
-                    modelConfig: { temp: 0.5 },
-                    runConfig: { max_time_minutes: 5 },
-                };
-                const merged = manager.mergeConfigurations(configWithNested, updates);
-                expect(merged.modelConfig.model).toBe("original-model"); // Should keep original
-                expect(merged.modelConfig.temp).toBe(0.5); // Should update
-                expect(merged.runConfig.max_time_minutes).toBe(5); // Should update
-                expect(merged.runConfig.max_turns).toBe(20); // Should keep original
             });
         });
     });

@@ -218,8 +218,8 @@ class BrowserSession {
 
     if (!this.context) {
       // Build context options with stealth defaults
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const contextOptions: any = {};
+      const contextOptions: NonNullable<Parameters<Browser['newContext']>[0]> =
+        {};
 
       // User agent
       if (this.config.userAgent) {
@@ -264,7 +264,7 @@ class BrowserSession {
 
       // Permissions
       if (this.config.permissions) {
-        contextOptions.permissions = this.config.permissions as any;
+        contextOptions.permissions = this.config.permissions;
       } else if (this.config.stealth) {
         contextOptions.permissions = ['geolocation'];
       }

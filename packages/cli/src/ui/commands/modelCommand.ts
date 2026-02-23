@@ -38,9 +38,14 @@ async function getAvailableModelsForAuthType(
         providers?.[providerId as "openrouter" | "lmstudio" | "openai"];
       const baseUrl =
         provider?.baseUrl?.trim() || process.env["OPENAI_BASE_URL"]?.trim();
+      const providerApiKey =
+        provider &&
+        "apiKey" in provider &&
+        typeof provider.apiKey === "string"
+          ? provider.apiKey.trim()
+          : undefined;
       const apiKey =
-        (provider as any)?.apiKey?.trim() ||
-        process.env["OPENAI_API_KEY"]?.trim();
+        providerApiKey || process.env["OPENAI_API_KEY"]?.trim();
 
       let models: AvailableModel[] = [];
       if (baseUrl) {

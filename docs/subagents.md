@@ -33,19 +33,16 @@ Subagents are independent AI assistants that:
 
 1. **Create your first subagent**:
 
-   ```
-   /agents create
-   ```
+   Create a markdown file in one of these directories:
 
-   Follow the guided wizard to create a specialized agent.
+   - `.qwen/agents/` (project-level, shared with the repo)
+   - `~/.qwen/agents/` (user-level, available across projects)
+
+   Start from the format shown in [File Format](#file-format).
 
 2. **Manage existing agents**:
 
-   ```
-   /agents manage
-   ```
-
-   View and manage your configured subagents.
+   Edit, rename, or remove those markdown files directly with your editor.
 
 3. **Use subagents automatically**:
    Simply ask the main AI to perform tasks that match your subagents' specializations. The AI will automatically delegate appropriate work.
@@ -63,29 +60,18 @@ AI: I'll delegate this to your testing specialist subagent.
 
 ## Management
 
-### CLI Commands
+### File-Based Management
 
-Subagents are managed through the `/agents` slash command and its subcommands:
+Subagents are managed directly through markdown files in `.qwen/agents/` and `~/.qwen/agents/`.
+Create, update, and delete those files to manage your subagent catalog.
 
-#### `/agents create`
+### API Migration Note (Core Integrators)
 
-Creates a new subagent through a guided step wizard.
+If you consume `@qwen-code/qwen-code-core` directly, note that command-era subagent CRUD helper methods were removed from `SubagentManager`:
 
-**Usage:**
-
-```
-/agents create
-```
-
-#### `/agents manage`
-
-Opens an interactive management dialog for viewing and managing existing subagents.
-
-**Usage:**
-
-```
-/agents manage
-```
+- Removed: `createSubagent`, `updateSubagent`, `deleteSubagent`, `mergeConfigurations`, `getSubagentPath`, and `CreateSubagentOptions`.
+- Use file operations in `.qwen/agents/` and `~/.qwen/agents/` for create/update/delete lifecycle management.
+- Continue using `listSubagents`, `loadSubagent`, and `createSubagentScope` for discovery/loading/runtime execution.
 
 ### Storage Locations
 

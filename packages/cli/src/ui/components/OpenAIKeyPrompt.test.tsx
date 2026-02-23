@@ -18,9 +18,7 @@ describe("OpenAIKeyPrompt", () => {
     );
 
     expect(lastFrame()).toContain("OpenAI Configuration Required");
-    expect(lastFrame()).toContain(
-      "https://bailian.console.aliyun.com/?tab=model#/api-key",
-    );
+    expect(lastFrame()).toContain("Use /model to choose an OpenAI model.");
     expect(lastFrame()).toContain(
       "Press Enter to continue, Tab/↑↓ to navigate, Esc to cancel",
     );
@@ -38,7 +36,7 @@ describe("OpenAIKeyPrompt", () => {
     expect(output).toContain("OpenAI Configuration Required");
     expect(output).toContain("API Key:");
     expect(output).toContain("Base URL:");
-    expect(output).toContain("Model:");
+    expect(output).toContain("Use /model to choose an OpenAI model.");
     expect(output).toContain(
       "Press Enter to continue, Tab/↑↓ to navigate, Esc to cancel",
     );

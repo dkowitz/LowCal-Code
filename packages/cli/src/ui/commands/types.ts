@@ -119,14 +119,11 @@ export interface OpenDialogActionReturn {
     | "theme"
     | "editor"
     | "tasks"
-    | "team"
     | "mailbox"
     | "privacy"
     | "settings"
     | "model"
-    | "resume"
-    | "subagent_create"
-    | "subagent_list";
+    | "resume";
 }
 
 /**

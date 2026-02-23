@@ -16,13 +16,11 @@ import { QwenLogger } from "./qwen-logger/qwen-logger.js";
 describe("Circular Reference Integration Test", () => {
   beforeEach(() => {
     // Clear singleton instance before each test
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (QwenLogger as any).instance = undefined;
+    (QwenLogger as unknown as { instance?: unknown }).instance = undefined;
   });
 
   afterEach(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (QwenLogger as any).instance = undefined;
+    (QwenLogger as unknown as { instance?: unknown }).instance = undefined;
   });
 
   it("should handle HttpsProxyAgent-like circular references in qwen logging", () => {
@@ -38,22 +36,22 @@ describe("Circular Reference Integration Test", () => {
     } as unknown as Config;
 
     // Simulate the structure that causes the circular reference error
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const proxyAgentLike: any = {
+    const proxyAgentLike: Record<string, unknown> = {
       sockets: {},
       options: { proxy: "http://proxy.example.com:8080" },
     };
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const socketLike: any = {
+    const socketLike: Record<string, unknown> = {
       _httpMessage: {
         agent: proxyAgentLike,
         socket: null,
       },
     };
 
-    socketLike._httpMessage.socket = socketLike; // Create circular reference
-    proxyAgentLike.sockets["cloudcode-pa.googleapis.com:443"] = [socketLike];
+    const httpMessage = socketLike["_httpMessage"] as Record<string, unknown>;
+    httpMessage["socket"] = socketLike; // Create circular reference
+    const sockets = proxyAgentLike["sockets"] as Record<string, unknown>;
+    sockets["cloudcode-pa.googleapis.com:443"] = [socketLike];
 
     // Create an event that would contain this circular structure
     const problematicEvent: RumEvent = {
@@ -72,8 +70,7 @@ describe("Circular Reference Integration Test", () => {
     const logger = QwenLogger.getInstance(mockConfig);
 
     expect(() => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      logger?.enqueueLogEvent(problematicEvent as any);
+      logger?.enqueueLogEvent(problematicEvent);
     }).not.toThrow();
   });
 

@@ -12,6 +12,18 @@ import { MessageType } from "../types.js";
 import type { CountTokensParameters, CountTokensResponse } from "@google/genai";
 import { glob } from "glob";
 
+type TokenCounter = {
+  countTokens: (request: CountTokensParameters) => Promise<CountTokensResponse>;
+};
+
+function isTokenCounter(value: unknown): value is TokenCounter {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { countTokens?: unknown }).countTokens === "function"
+  );
+}
+
 export const tokensCommand: SlashCommand = {
   name: "tokens",
   description: "count tokens in a file (use @ for file completion)",
@@ -52,9 +64,20 @@ export const tokensCommand: SlashCommand = {
       const fileContent = readFileSync(absolutePath, "utf-8");
 
       // Try to obtain a content generator if available via config, else fallback
-      const maybeGen = (config as any)?.getContentGenerator?.();
-      const cgConfig = (config as any)?.getContentGeneratorConfig?.();
+      const cgConfig = config?.getContentGeneratorConfig?.();
       const model = cgConfig?.model ?? "gpt-3.5-turbo";
+      let maybeGen: TokenCounter | null = null;
+      try {
+        const geminiClient = config?.getGeminiClient?.();
+        if (geminiClient?.isInitialized?.()) {
+          const generator = geminiClient.getContentGenerator?.();
+          if (isTokenCounter(generator)) {
+            maybeGen = generator;
+          }
+        }
+      } catch {
+        maybeGen = null;
+      }
       let tokenCountValue = 0;
 
       if (maybeGen && typeof maybeGen.countTokens === "function") {

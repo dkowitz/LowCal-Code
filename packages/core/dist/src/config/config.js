@@ -36,7 +36,8 @@ import { WebSearchTool } from "../tools/web-search.js";
 import { ScheduleTaskTool } from "../tools/schedule-task.js";
 import { LaunchTaskTool } from "../tools/launch-task.js";
 import { ReadSessionMessagesTool } from "../tools/read-session-messages.js";
-import { TeamManagementTool } from "../tools/team-management.js";
+import { ReadCollabMessagesTool } from "../tools/read-collab-messages.js";
+import { PostCollabMessageTool } from "../tools/post-collab-message.js";
 import { TaskTemplateTool } from "../tools/task-template.js";
 import { SearXNGSearchTool } from "../tools/searxng-search.js";
 import { WriteFileTool } from "../tools/write-file.js";
@@ -47,7 +48,7 @@ import { WorkspaceContext } from "../utils/workspaceContext.js";
 import { DEFAULT_GEMINI_EMBEDDING_MODEL, DEFAULT_GEMINI_FLASH_MODEL, } from "./models.js";
 import { Storage } from "./storage.js";
 import { Logger } from "../core/logger.js";
-import { tokenLimit } from "../core/tokenLimits.js";
+import { getModelContextLimit as getCoreModelContextLimit, setModelContextLimit as setCoreModelContextLimit, tokenLimit, } from "../core/tokenLimits.js";
 export var ApprovalMode;
 (function (ApprovalMode) {
     ApprovalMode["PLAN"] = "plan";
@@ -393,38 +394,16 @@ export class Config {
     // provider-reported dynamic limits (set via tokenLimits.setModelContextLimit)
     // are visible via Config APIs and vice-versa.
     setModelContextLimit(model, limit) {
-        // Import tokenLimits functions lazily to avoid circular import issues at module load time
-        let coreSet;
-        try {
-            coreSet = require("../core/tokenLimits.js").setModelContextLimit;
-        }
-        catch (e) {
-            coreSet = undefined;
-        }
         if (!model) {
             return;
         }
         if (typeof limit === "number" && Number.isFinite(limit) && limit > 0) {
             this.modelContextLimits.set(model, limit);
-            if (coreSet) {
-                try {
-                    coreSet(model, limit);
-                }
-                catch (e) {
-                    // ignore
-                }
-            }
+            setCoreModelContextLimit(model, limit);
         }
         else {
             this.modelContextLimits.delete(model);
-            if (coreSet) {
-                try {
-                    coreSet(model, undefined);
-                }
-                catch (e) {
-                    // ignore
-                }
-            }
+            setCoreModelContextLimit(model, undefined);
         }
     }
     getModelContextLimit(model) {
@@ -437,34 +416,18 @@ export class Config {
         if (typeof local === "number")
             return local;
         // Fall back to core token limits dynamic map if available
-        try {
-            const coreGet = require("../core/tokenLimits.js")
-                .getModelContextLimit;
-            if (typeof coreGet === "function") {
-                const v = coreGet(key);
-                if (typeof v === "number" && Number.isFinite(v) && v > 0)
-                    return v;
-            }
-        }
-        catch (e) {
-            // ignore
+        const v = getCoreModelContextLimit(key);
+        if (typeof v === "number" && Number.isFinite(v) && v > 0) {
+            return v;
         }
         return undefined;
     }
     getEffectiveContextLimit(model) {
         const key = model ?? this.getModel();
         // Check for dynamic/provider-supplied limit via core token limits map first
-        try {
-            const coreGet = require("../core/tokenLimits.js")
-                .getModelContextLimit;
-            if (typeof coreGet === "function") {
-                const v = coreGet(key ?? "");
-                if (typeof v === "number" && Number.isFinite(v) && v > 0)
-                    return v;
-            }
-        }
-        catch (e) {
-            // ignore
+        const v = getCoreModelContextLimit(key ?? "");
+        if (typeof v === "number" && Number.isFinite(v) && v > 0) {
+            return v;
         }
         const override = key ? this.modelContextLimits.get(key) : undefined;
         if (override && override > 0) {
@@ -797,7 +760,6 @@ export class Config {
     async createToolRegistry() {
         const registry = new ToolRegistry(this);
         // helper to create & register core tools that are enabled
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const registerCoreTool = (ToolClass, ...args) => {
             const className = ToolClass.name;
             const toolName = ToolClass.Name || className;
@@ -850,7 +812,8 @@ export class Config {
         registerCoreTool(LaunchTaskTool, this);
         registerCoreTool(TaskTemplateTool, this);
         registerCoreTool(ReadSessionMessagesTool, this);
-        registerCoreTool(TeamManagementTool, this);
+        registerCoreTool(ReadCollabMessagesTool, this);
+        registerCoreTool(PostCollabMessageTool, this);
         // Register browser control tool
         registerCoreTool(BrowserControlTool, this);
         await registry.discoverAllTools();

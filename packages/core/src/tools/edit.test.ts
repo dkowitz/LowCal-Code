@@ -4,8 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 const mockOpenDiff = vi.hoisted(() => vi.fn());
 
 import { IDEConnectionStatus } from "../ide/ide-client.js";
@@ -67,7 +65,7 @@ describe("EditTool", () => {
       setUserMemory: vi.fn(),
       getGeminiMdFileCount: () => 0,
       setGeminiMdFileCount: vi.fn(),
-      getToolRegistry: () => ({}) as any, // Minimal mock for ToolRegistry
+      getToolRegistry: () => ({}),
     } as unknown as Config;
 
     // Reset mocks before each test
@@ -229,10 +227,6 @@ describe("EditTool", () => {
       );
     });
 
-    // This test is no longer relevant since editCorrector functionality was removed
-    it.skip("should use corrected params from ensureCorrectEdit for diff generation", async () => {
-      // Test skipped - editCorrector functionality removed
-    });
   });
 
   describe("execute", () => {
@@ -717,7 +711,10 @@ describe("EditTool", () => {
   describe("IDE mode", () => {
     const testFile = "edit_me.txt";
     let filePath: string;
-    let ideClient: any;
+    let ideClient: {
+      openDiff: Mock;
+      getConnectionStatus: Mock;
+    };
 
     beforeEach(() => {
       filePath = path.join(rootDir, testFile);
@@ -727,8 +724,12 @@ describe("EditTool", () => {
           status: IDEConnectionStatus.Connected,
         }),
       };
-      (mockConfig as any).getIdeMode = () => true;
-      (mockConfig as any).getIdeClient = () => ideClient;
+      const configWithIde = mockConfig as unknown as {
+        getIdeMode: () => boolean;
+        getIdeClient: () => unknown;
+      };
+      configWithIde.getIdeMode = () => true;
+      configWithIde.getIdeClient = () => ideClient;
     });
 
     it("should call ideClient.openDiff and update params on confirmation", async () => {

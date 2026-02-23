@@ -68,8 +68,7 @@ describe("QwenLogger", () => {
     vi.setSystemTime(new Date("2025-01-01T12:00:00.000Z"));
     mockConfig = makeFakeConfig();
     // Clear singleton instance
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (QwenLogger as any).instance = undefined;
+    (QwenLogger as unknown as { instance?: unknown }).instance = undefined;
   });
 
   afterEach(() => {
@@ -78,8 +77,7 @@ describe("QwenLogger", () => {
   });
 
   afterAll(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (QwenLogger as any).instance = undefined;
+    (QwenLogger as unknown as { instance?: unknown }).instance = undefined;
   });
 
   describe("getInstance", () => {
@@ -204,9 +202,12 @@ describe("QwenLogger", () => {
         });
       }
 
-      // Call the private method using bracket notation
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (logger as any).requeueFailedEvents(failedEvents);
+      // Call the private method through a test-only structural type.
+      (
+        logger as unknown as {
+          requeueFailedEvents: (events: RumEvent[]) => void;
+        }
+      ).requeueFailedEvents(failedEvents);
 
       // Should have logged about dropping events due to retry limit
       expect(consoleSpy).toHaveBeenCalledWith(
@@ -241,8 +242,11 @@ describe("QwenLogger", () => {
         },
       ];
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (logger as any).requeueFailedEvents(failedEvents);
+      (
+        logger as unknown as {
+          requeueFailedEvents: (events: RumEvent[]) => void;
+        }
+      ).requeueFailedEvents(failedEvents);
 
       expect(consoleSpy).toHaveBeenCalledWith(
         expect.stringContaining("QwenLogger: No events re-queued"),

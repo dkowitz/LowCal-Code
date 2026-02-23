@@ -66,9 +66,7 @@ export declare class ToolCallEvent implements BaseTelemetryEvent {
     error_type?: string;
     prompt_id: string;
     tool_type: "native" | "mcp";
-    metadata?: {
-        [key: string]: any;
-    };
+    metadata?: Record<string, unknown>;
     constructor(call: CompletedToolCall);
 }
 export declare class ApiRequestEvent implements BaseTelemetryEvent {

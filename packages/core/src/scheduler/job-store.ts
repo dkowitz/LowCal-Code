@@ -21,11 +21,13 @@ import { DEFAULT_SCHEDULER_CONFIG } from "./types.js";
 const LOCK_FILE = path.join(QWEN_DIR, "cron.lock");
 const CRON_FILE = path.join(QWEN_DIR, "cron.json");
 const LOGS_DIR = path.join(QWEN_DIR, "logs");
+const MIN_STALE_LOCK_MS = 60000;
 
 /**
  * Acquire a file lock with timeout
  */
 async function acquireLock(timeoutMs: number = 5000): Promise<void> {
+  await ensureDirectories();
   const startTime = Date.now();
 
   while (Date.now() - startTime < timeoutMs) {
@@ -36,9 +38,31 @@ async function acquireLock(timeoutMs: number = 5000): Promise<void> {
       await fd.close();
       return;
     } catch (error) {
+      const nodeError = error as NodeJS.ErrnoException;
+      if (nodeError?.code === "ENOENT") {
+        // Directory disappeared between attempts (or was never created).
+        await ensureDirectories();
+        continue;
+      }
+
       // Lock file exists, check if it's stale
       try {
-        const pid = parseInt(await fs.readFile(LOCK_FILE, "utf-8"), 10);
+        const [rawPid, stats] = await Promise.all([
+          fs.readFile(LOCK_FILE, "utf-8"),
+          fs.stat(LOCK_FILE),
+        ]);
+        const staleAfterMs = Math.max(timeoutMs * 2, MIN_STALE_LOCK_MS);
+        if (Date.now() - stats.mtimeMs > staleAfterMs) {
+          await fs.unlink(LOCK_FILE).catch(() => {});
+          continue;
+        }
+
+        const pid = parseInt(rawPid, 10);
+        if (Number.isNaN(pid)) {
+          await fs.unlink(LOCK_FILE).catch(() => {});
+          continue;
+        }
+
         // Check if process is still running (this is platform-specific)
         try {
           process.kill(pid, 0); // Signal 0 checks if process exists

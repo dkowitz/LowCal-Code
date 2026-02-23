@@ -55,7 +55,6 @@ describe("useAutoAcceptIndicator", () => {
         mockedUseKeypress.mockImplementation((handler, _options) => {
             capturedUseKeypressHandler = handler;
         });
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         mockConfigInstance = new Config();
     });
     it("should initialize with ApprovalMode.AUTO_EDIT if config.getApprovalMode returns ApprovalMode.AUTO_EDIT", () => {

@@ -1669,10 +1669,18 @@ export class ResearchTool extends BaseDeclarativeTool {
  * Helper function to extract response text from a Gemini content generation result
  */
 async function getResponseText(result) {
-    if (!result || !result.response) {
+    const responseContainer = typeof result === "object" && result !== null
+        ? result
+        : null;
+    const response = responseContainer &&
+        typeof responseContainer.response === "object" &&
+        responseContainer.response !== null
+        ? responseContainer.response
+        : null;
+    if (!response) {
         return null;
     }
-    const parts = result.response.candidates?.[0]?.content?.parts;
+    const parts = response.candidates?.[0]?.content?.parts;
     if (!parts || !Array.isArray(parts)) {
         return null;
     }

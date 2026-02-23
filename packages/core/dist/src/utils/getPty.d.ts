@@ -4,7 +4,16 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 export type PtyImplementation = {
-    module: any;
+    module: {
+        spawn: (file: string, args: string | string[], options: {
+            cwd?: string;
+            name?: string;
+            cols?: number;
+            rows?: number;
+            env?: NodeJS.ProcessEnv;
+            handleFlowControl?: boolean;
+        }) => PtyProcess;
+    };
     name: "lydell-node-pty" | "node-pty";
 } | null;
 export interface PtyProcess {

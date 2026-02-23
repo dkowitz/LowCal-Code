@@ -14,7 +14,7 @@
  * - Type definitions for file-based subagent configurations
  * - Validation system for configuration integrity
  * - Runtime conversion functions integrated into the manager
- * - Manager class for CRUD operations on subagent files
+ * - Manager class for loading and resolving subagent files
  *
  * The implementation follows the Markdown + YAML frontmatter format , with storage at both project and user levels.
  */
@@ -26,7 +26,6 @@ export type {
   SubagentRuntimeConfig,
   ValidationResult,
   ListSubagentsOptions,
-  CreateSubagentOptions,
   SubagentErrorCode,
 } from "./types.js";
 

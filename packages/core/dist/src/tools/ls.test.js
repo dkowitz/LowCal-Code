@@ -3,7 +3,6 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import fs from "node:fs";
 import path from "node:path";
@@ -18,6 +17,8 @@ vi.mock("fs", () => ({
 }));
 import { LSTool } from "./ls.js";
 import { ToolErrorType } from "./tool-error.js";
+const asReaddirResult = (files) => files;
+const toPathString = (value) => typeof value === "string" ? value : String(value);
 describe("LSTool", () => {
     let lsTool;
     let mockConfig;
@@ -98,8 +99,8 @@ describe("LSTool", () => {
                 mtime: new Date(),
                 size: 1024,
             };
-            vi.mocked(fs.statSync).mockImplementation((path) => {
-                const pathStr = path.toString();
+            vi.mocked(fs.statSync).mockImplementation((pathArg) => {
+                const pathStr = toPathString(pathArg);
                 if (pathStr === testPath) {
                     return { isDirectory: () => true };
                 }
@@ -109,7 +110,7 @@ describe("LSTool", () => {
                 }
                 return { ...mockStats, isDirectory: () => false };
             });
-            vi.mocked(fs.readdirSync).mockReturnValue(mockFiles);
+            vi.mocked(fs.readdirSync).mockReturnValue(asReaddirResult(mockFiles));
             const invocation = lsTool.build({ path: testPath });
             const result = await invocation.execute(new AbortController().signal);
             expect(result.llmContent).toContain("[DIR] subdir");
@@ -120,8 +121,8 @@ describe("LSTool", () => {
         it("should list files from secondary workspace directory", async () => {
             const testPath = "/home/user/other-project/lib";
             const mockFiles = ["module1.js", "module2.js"];
-            vi.mocked(fs.statSync).mockImplementation((path) => {
-                if (path.toString() === testPath) {
+            vi.mocked(fs.statSync).mockImplementation((pathArg) => {
+                if (toPathString(pathArg) === testPath) {
                     return { isDirectory: () => true };
                 }
                 return {
@@ -130,7 +131,7 @@ describe("LSTool", () => {
                     size: 2048,
                 };
             });
-            vi.mocked(fs.readdirSync).mockReturnValue(mockFiles);
+            vi.mocked(fs.readdirSync).mockReturnValue(asReaddirResult(mockFiles));
             const invocation = lsTool.build({ path: testPath });
             const result = await invocation.execute(new AbortController().signal);
             expect(result.llmContent).toContain("module1.js");
@@ -151,8 +152,8 @@ describe("LSTool", () => {
         it("should respect ignore patterns", async () => {
             const testPath = "/home/user/project/src";
             const mockFiles = ["test.js", "test.spec.js", "index.js"];
-            vi.mocked(fs.statSync).mockImplementation((path) => {
-                const pathStr = path.toString();
+            vi.mocked(fs.statSync).mockImplementation((pathArg) => {
+                const pathStr = toPathString(pathArg);
                 if (pathStr === testPath) {
                     return { isDirectory: () => true };
                 }
@@ -162,7 +163,7 @@ describe("LSTool", () => {
                     size: 1024,
                 };
             });
-            vi.mocked(fs.readdirSync).mockReturnValue(mockFiles);
+            vi.mocked(fs.readdirSync).mockReturnValue(asReaddirResult(mockFiles));
             const invocation = lsTool.build({
                 path: testPath,
                 ignore: ["*.spec.js"],
@@ -176,8 +177,8 @@ describe("LSTool", () => {
         it("should respect gitignore patterns", async () => {
             const testPath = "/home/user/project/src";
             const mockFiles = ["file1.js", "file2.js", "ignored.js"];
-            vi.mocked(fs.statSync).mockImplementation((path) => {
-                const pathStr = path.toString();
+            vi.mocked(fs.statSync).mockImplementation((pathArg) => {
+                const pathStr = toPathString(pathArg);
                 if (pathStr === testPath) {
                     return { isDirectory: () => true };
                 }
@@ -187,8 +188,8 @@ describe("LSTool", () => {
                     size: 1024,
                 };
             });
-            vi.mocked(fs.readdirSync).mockReturnValue(mockFiles);
-            mockFileService.shouldGitIgnoreFile.mockImplementation((path) => path.includes("ignored.js"));
+            vi.mocked(fs.readdirSync).mockReturnValue(asReaddirResult(mockFiles));
+            vi.mocked(mockFileService.shouldGitIgnoreFile).mockImplementation((path) => path.includes("ignored.js"));
             const invocation = lsTool.build({ path: testPath });
             const result = await invocation.execute(new AbortController().signal);
             expect(result.llmContent).toContain("file1.js");
@@ -199,8 +200,8 @@ describe("LSTool", () => {
         it("should respect geminiignore patterns", async () => {
             const testPath = "/home/user/project/src";
             const mockFiles = ["file1.js", "file2.js", "private.js"];
-            vi.mocked(fs.statSync).mockImplementation((path) => {
-                const pathStr = path.toString();
+            vi.mocked(fs.statSync).mockImplementation((pathArg) => {
+                const pathStr = toPathString(pathArg);
                 if (pathStr === testPath) {
                     return { isDirectory: () => true };
                 }
@@ -210,8 +211,8 @@ describe("LSTool", () => {
                     size: 1024,
                 };
             });
-            vi.mocked(fs.readdirSync).mockReturnValue(mockFiles);
-            mockFileService.shouldGeminiIgnoreFile.mockImplementation((path) => path.includes("private.js"));
+            vi.mocked(fs.readdirSync).mockReturnValue(asReaddirResult(mockFiles));
+            vi.mocked(mockFileService.shouldGeminiIgnoreFile).mockImplementation((path) => path.includes("private.js"));
             const invocation = lsTool.build({ path: testPath });
             const result = await invocation.execute(new AbortController().signal);
             expect(result.llmContent).toContain("file1.js");
@@ -244,11 +245,12 @@ describe("LSTool", () => {
         it("should sort directories first, then files alphabetically", async () => {
             const testPath = "/home/user/project/src";
             const mockFiles = ["z-file.ts", "a-dir", "b-file.ts", "c-dir"];
-            vi.mocked(fs.statSync).mockImplementation((path) => {
-                if (path.toString() === testPath) {
+            vi.mocked(fs.statSync).mockImplementation((pathArg) => {
+                const pathStr = toPathString(pathArg);
+                if (pathStr === testPath) {
                     return { isDirectory: () => true };
                 }
-                if (path.toString().endsWith("-dir")) {
+                if (pathStr.endsWith("-dir")) {
                     return {
                         isDirectory: () => true,
                         mtime: new Date(),
@@ -261,7 +263,7 @@ describe("LSTool", () => {
                     size: 1024,
                 };
             });
-            vi.mocked(fs.readdirSync).mockReturnValue(mockFiles);
+            vi.mocked(fs.readdirSync).mockReturnValue(asReaddirResult(mockFiles));
             const invocation = lsTool.build({ path: testPath });
             const result = await invocation.execute(new AbortController().signal);
             const lines = (typeof result.llmContent === "string" ? result.llmContent : "").split("\n");
@@ -292,11 +294,12 @@ describe("LSTool", () => {
         it("should handle errors accessing individual files during listing", async () => {
             const testPath = "/home/user/project/src";
             const mockFiles = ["accessible.ts", "inaccessible.ts"];
-            vi.mocked(fs.statSync).mockImplementation((path) => {
-                if (path.toString() === testPath) {
+            vi.mocked(fs.statSync).mockImplementation((pathArg) => {
+                const pathStr = toPathString(pathArg);
+                if (pathStr === testPath) {
                     return { isDirectory: () => true };
                 }
-                if (path.toString().endsWith("inaccessible.ts")) {
+                if (pathStr.endsWith("inaccessible.ts")) {
                     throw new Error("EACCES: permission denied");
                 }
                 return {
@@ -305,7 +308,7 @@ describe("LSTool", () => {
                     size: 1024,
                 };
             });
-            vi.mocked(fs.readdirSync).mockReturnValue(mockFiles);
+            vi.mocked(fs.readdirSync).mockReturnValue(asReaddirResult(mockFiles));
             // Spy on console.error to verify it's called
             const consoleErrorSpy = vi
                 .spyOn(console, "error")
@@ -367,8 +370,8 @@ describe("LSTool", () => {
         it("should list files from secondary workspace directory", async () => {
             const testPath = `${mockSecondaryDir}/tests`;
             const mockFiles = ["test1.spec.ts", "test2.spec.ts"];
-            vi.mocked(fs.statSync).mockImplementation((path) => {
-                if (path.toString() === testPath) {
+            vi.mocked(fs.statSync).mockImplementation((pathArg) => {
+                if (toPathString(pathArg) === testPath) {
                     return { isDirectory: () => true };
                 }
                 return {
@@ -377,7 +380,7 @@ describe("LSTool", () => {
                     size: 512,
                 };
             });
-            vi.mocked(fs.readdirSync).mockReturnValue(mockFiles);
+            vi.mocked(fs.readdirSync).mockReturnValue(asReaddirResult(mockFiles));
             const invocation = lsTool.build({ path: testPath });
             const result = await invocation.execute(new AbortController().signal);
             expect(result.llmContent).toContain("test1.spec.ts");

@@ -111,19 +111,38 @@ Slash commands provide meta-level control over the CLI itself.
     - Preview full payload content before use
     - Use selected payload inline in chat so both user and model can reference it on later turns
 
-- **`/agents`**
-  - **Description:** Manage specialized AI subagents for focused tasks. Subagents are independent AI assistants configured with specific expertise and tool access.
+- **`/collab`**
+  - **Description:** View and post short inter-session coordination messages on the shared workspace collab board.
   - **Sub-commands:**
-    - **`create`**:
-      - **Description:** Launch an interactive wizard to create a new subagent. The wizard guides you through location selection, AI-powered prompt generation, tool selection, and visual customization.
-      - **Usage:** `/agents create`
-    - **`manage`**:
-      - **Description:** Open an interactive management dialog to view, edit, and delete existing subagents. Shows both project-level and user-level agents.
-      - **Usage:** `/agents manage`
+    - **`view`** (alias: `list`)
+      - **Description:** Show collab board messages visible to the current session.
+      - **Usage:** `/collab view [--since <seq>] [--limit <n>] [--all]`
+      - **Options:**
+        - `--since <seq>`: Only show messages with sequence numbers greater than `<seq>`.
+        - `--limit <n>`: Maximum number of messages to show.
+        - `--all`: Include all direct-target messages, not only current-session/broadcast visibility.
+    - **`post`**
+      - **Description:** Post a short collab message.
+      - **Usage:** `/collab post "<message>" [--to <session|all>] [--ref <path>] [--type <label>] [--reply <message_id>] [--ttl <seconds>] [--notify <passive|wake_view|wake_prompt>]`
+      - **Options:**
+        - `--to <session|all>`: Direct target session id or broadcast (`all`/omitted).
+        - `--ref <path>`: Attach file reference(s) for larger payloads.
+        - `--type <label>`: Message category such as `request`, `ack`, `result`, or `note`.
+        - `--reply <message_id>`: Thread reply linkage via parent message id.
+        - `--ttl <seconds>`: Optional message expiry.
+        - `--notify <passive|wake_view|wake_prompt>`: Delivery wake mode (`wake_*` requires direct `--to <session>`).
+  - **Recommended Protocol (low-noise):**
+    - `request` -> `ack` -> `result`
+    - Use `ack` once with `notify=passive`.
+    - Do not reply to pure acknowledgements.
+    - Use `wake_prompt` only when immediate action is needed.
+
+- **Subagents (file-based)**
+  - **Description:** Define specialized AI subagents with markdown files.
   - **Storage Locations:**
     - **Project-level:** `.qwen/agents/` (shared with team, takes precedence)
     - **User-level:** `~/.qwen/agents/` (personal agents, available across projects)
-  - **Note:** For detailed information on creating and managing subagents, see the [Subagents documentation](../subagents.md).
+  - **Note:** For file format and examples, see the [Subagents documentation](../subagents.md).
 
 - **`/tools`** ([Tools Documentation](../tools/index.md))
   - **Description:** Display a list of tools that are currently available within LowCal Code.

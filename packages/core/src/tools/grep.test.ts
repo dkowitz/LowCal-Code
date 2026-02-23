@@ -433,5 +433,16 @@ describe("GrepTool", () => {
         await fs.writeFile(path.join(tempRootDir, fileName), content);
       }
     });
+
+    it("should return all matches across many files", async () => {
+      const params: GrepToolParams = { pattern: "testword" };
+      const invocation = grepTool.build(params);
+      const result = await invocation.execute(abortSignal);
+
+      expect(result.llmContent).toContain(
+        'Found 30 matches for pattern "testword" in the workspace directory',
+      );
+      expect(result.returnDisplay).toBe("Found 30 matches");
+    });
   });
 });

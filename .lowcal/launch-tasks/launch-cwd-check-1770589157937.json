@@ -1,7 +1,0 @@
-{
-  "job_id": "launch-cwd-check-1770589157937",
-  "timestamp": "2026-02-08T22:19:18.559Z",
-  "prompt": "date",
-  "error": "Cannot truncate prompt with n_keep (8675) >= n_ctx (4096)",
-  "status": "error"
-}

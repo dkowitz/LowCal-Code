@@ -12,6 +12,18 @@ import { MessageType, type HistoryItemView } from "../types.js";
 import { glob } from "glob";
 import type { CountTokensParameters, CountTokensResponse } from "@google/genai";
 
+type TokenCounter = {
+  countTokens: (request: CountTokensParameters) => Promise<CountTokensResponse>;
+};
+
+function isTokenCounter(value: unknown): value is TokenCounter {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { countTokens?: unknown }).countTokens === "function"
+  );
+}
+
 export const viewCommand: SlashCommand = {
   name: "view",
   description: "View a text file inline in the chat (markdown formatted)",
@@ -49,13 +61,20 @@ export const viewCommand: SlashCommand = {
       const content = await fs.readFile(absolutePath, "utf8");
 
       let tokenCount = Math.ceil(content.length / 4);
-      const maybeGen = (
-        context.services.config as any
-      )?.getContentGenerator?.();
-      const cgConfig = (
-        context.services.config as any
-      )?.getContentGeneratorConfig?.();
+      const cgConfig = context.services.config?.getContentGeneratorConfig?.();
       const model = cgConfig?.model ?? "gpt-3.5-turbo";
+      let maybeGen: TokenCounter | null = null;
+      try {
+        const geminiClient = context.services.config?.getGeminiClient?.();
+        if (geminiClient?.isInitialized?.()) {
+          const generator = geminiClient.getContentGenerator?.();
+          if (isTokenCounter(generator)) {
+            maybeGen = generator;
+          }
+        }
+      } catch {
+        maybeGen = null;
+      }
 
       if (maybeGen && typeof maybeGen.countTokens === "function") {
         try {

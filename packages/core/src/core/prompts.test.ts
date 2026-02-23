@@ -42,6 +42,7 @@ describe("Core System Prompt (prompts.ts)", () => {
     vi.resetAllMocks();
     vi.stubEnv("GEMINI_SYSTEM_MD", undefined);
     vi.stubEnv("GEMINI_WRITE_SYSTEM_MD", undefined);
+    vi.stubEnv("LOWCAL_TASK_SYSTEM_PROMPT_B64", undefined);
   });
 
   it("should return the base prompt when no userMemory is provided", () => {
@@ -273,6 +274,82 @@ describe("Core System Prompt (prompts.ts)", () => {
         expect.any(String),
       );
     });
+  });
+});
+
+describe("Runtime system prompt overrides", () => {
+  it("applies task runtime prompt names in supplemental mode", () => {
+    const runtimeOverride = Buffer.from(
+      JSON.stringify({
+        names: ["task-reviewer"],
+        exclusive: false,
+      }),
+      "utf-8",
+    ).toString("base64");
+    vi.stubEnv("LOWCAL_TASK_SYSTEM_PROMPT_B64", runtimeOverride);
+    vi.spyOn(os, "homedir").mockReturnValue("/Users/test");
+    vi.mocked(fs.existsSync).mockImplementation((filePath) =>
+      String(filePath).includes(path.join(".qwen", "tool-config.json")),
+    );
+    vi.mocked(fs.readFileSync).mockImplementation((filePath) => {
+      if (String(filePath).includes(path.join(".qwen", "tool-config.json"))) {
+        return JSON.stringify({
+          customPrompts: {
+            "task-reviewer": {
+              content: "Task reviewer prompt",
+              exclusive: false,
+              createdAt: Date.now(),
+              tokenCount: 4,
+            },
+          },
+          activeCustomPrompt: {
+            name: ["global-default"],
+            exclusive: false,
+          },
+        });
+      }
+      return "";
+    });
+
+    const prompt = getCoreSystemPrompt();
+    expect(prompt).toContain("Task reviewer prompt");
+    expect(prompt).not.toContain("global-default");
+  });
+
+  it("can disable active custom prompts for a runtime task", () => {
+    const runtimeOverride = Buffer.from(
+      JSON.stringify({
+        disable: true,
+      }),
+      "utf-8",
+    ).toString("base64");
+    vi.stubEnv("LOWCAL_TASK_SYSTEM_PROMPT_B64", runtimeOverride);
+    vi.spyOn(os, "homedir").mockReturnValue("/Users/test");
+    vi.mocked(fs.existsSync).mockImplementation((filePath) =>
+      String(filePath).includes(path.join(".qwen", "tool-config.json")),
+    );
+    vi.mocked(fs.readFileSync).mockImplementation((filePath) => {
+      if (String(filePath).includes(path.join(".qwen", "tool-config.json"))) {
+        return JSON.stringify({
+          customPrompts: {
+            global: {
+              content: "Global prompt should not apply",
+              exclusive: false,
+              createdAt: Date.now(),
+              tokenCount: 6,
+            },
+          },
+          activeCustomPrompt: {
+            name: ["global"],
+            exclusive: false,
+          },
+        });
+      }
+      return "";
+    });
+
+    const prompt = getCoreSystemPrompt();
+    expect(prompt).not.toContain("Global prompt should not apply");
   });
 });
 

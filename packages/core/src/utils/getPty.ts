@@ -5,8 +5,20 @@
  */
 
 export type PtyImplementation = {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  module: any;
+  module: {
+    spawn: (
+      file: string,
+      args: string | string[],
+      options: {
+        cwd?: string;
+        name?: string;
+        cols?: number;
+        rows?: number;
+        env?: NodeJS.ProcessEnv;
+        handleFlowControl?: boolean;
+      },
+    ) => PtyProcess;
+  };
   name: "lydell-node-pty" | "node-pty";
 } | null;
 

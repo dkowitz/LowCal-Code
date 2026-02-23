@@ -8,7 +8,6 @@ import * as path from "node:path";
 // Simple console logger for now.
 // TODO: Integrate with a more robust server-side logger.
 const logger = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     debug: (...args) => console.debug("[DEBUG] [BfsFileSearch]", ...args),
 };
 /**

@@ -3,26 +3,18 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { SubagentConfig, SubagentRuntimeConfig, SubagentLevel, ListSubagentsOptions, CreateSubagentOptions } from "./types.js";
+import type { SubagentConfig, SubagentRuntimeConfig, SubagentLevel, ListSubagentsOptions } from "./types.js";
 import { SubAgentScope } from "./subagent.js";
 import type { Config } from "../config/config.js";
 /**
  * Manages subagent configurations stored as Markdown files with YAML frontmatter.
- * Provides CRUD operations, validation, and integration with the runtime system.
+ * Provides loading, discovery, validation, and runtime integration.
  */
 export declare class SubagentManager {
     private readonly config;
     private readonly validator;
     private subagentsCache;
     constructor(config: Config);
-    /**
-     * Creates a new subagent configuration.
-     *
-     * @param config - Subagent configuration to create
-     * @param options - Creation options
-     * @throws SubagentError if creation fails
-     */
-    createSubagent(config: SubagentConfig, options: CreateSubagentOptions): Promise<void>;
     /**
      * Loads a subagent configuration by name.
      * If level is specified, only searches that level.
@@ -33,22 +25,6 @@ export declare class SubagentManager {
      * @returns SubagentConfig or null if not found
      */
     loadSubagent(name: string, level?: SubagentLevel): Promise<SubagentConfig | null>;
-    /**
-     * Updates an existing subagent configuration.
-     *
-     * @param name - Name of the subagent to update
-     * @param updates - Partial configuration updates
-     * @throws SubagentError if subagent not found or update fails
-     */
-    updateSubagent(name: string, updates: Partial<SubagentConfig>, level?: SubagentLevel): Promise<void>;
-    /**
-     * Deletes a subagent configuration.
-     *
-     * @param name - Name of the subagent to delete
-     * @param level - Specific level to delete from, or undefined to delete from both
-     * @throws SubagentError if deletion fails
-     */
-    deleteSubagent(name: string, level?: SubagentLevel): Promise<void>;
     /**
      * Lists all available subagents.
      *
@@ -126,23 +102,6 @@ export declare class SubagentManager {
      * @private
      */
     private transformToToolNames;
-    /**
-     * Merges partial configurations with defaults, useful for updating
-     * existing configurations.
-     *
-     * @param base - Base configuration
-     * @param updates - Partial updates to apply
-     * @returns New configuration with updates applied
-     */
-    mergeConfigurations(base: SubagentConfig, updates: Partial<SubagentConfig>): SubagentConfig;
-    /**
-     * Gets the file path for a subagent at a specific level.
-     *
-     * @param name - Subagent name
-     * @param level - Storage level
-     * @returns Absolute file path
-     */
-    getSubagentPath(name: string, level: SubagentLevel): string;
     /**
      * Lists subagent files at a specific level.
      * Handles both builtin agents and file-based agents.

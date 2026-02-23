@@ -70,7 +70,6 @@ class BrowserSession {
         }
         if (!this.context) {
             // Build context options with stealth defaults
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
             const contextOptions = {};
             // User agent
             if (this.config.userAgent) {

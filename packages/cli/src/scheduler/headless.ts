@@ -37,6 +37,7 @@ import {
 const RETURN_PAYLOAD_MARKER = "RETURN_PAYLOAD:";
 const ENV_DISABLE_LAUNCH_TASK = "LOWCAL_DISABLE_LAUNCH_TASK";
 const ENV_TASK_RUNTIME_B64 = "LOWCAL_TASK_RUNTIME_B64";
+const ENV_TASK_SYSTEM_PROMPT_B64 = "LOWCAL_TASK_SYSTEM_PROMPT_B64";
 
 function decodeRuntimeProfileFromEnv(): TaskRuntimeProfile | undefined {
   const encoded = process.env[ENV_TASK_RUNTIME_B64];
@@ -53,6 +54,39 @@ function decodeRuntimeProfileFromEnv(): TaskRuntimeProfile | undefined {
   } catch {
     return undefined;
   }
+}
+
+function applyRuntimeSystemPromptEnv(
+  runtimeProfile: TaskRuntimeProfile | undefined,
+): void {
+  const profile = runtimeProfile?.system_prompt;
+  if (!profile) {
+    delete process.env[ENV_TASK_SYSTEM_PROMPT_B64];
+    return;
+  }
+  if (profile.disable === true) {
+    process.env[ENV_TASK_SYSTEM_PROMPT_B64] = Buffer.from(
+      JSON.stringify({ disable: true }),
+      "utf-8",
+    ).toString("base64");
+    return;
+  }
+  const names = Array.isArray(profile.names)
+    ? profile.names
+        .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+        .filter((entry) => entry.length > 0)
+    : [];
+  if (names.length === 0) {
+    delete process.env[ENV_TASK_SYSTEM_PROMPT_B64];
+    return;
+  }
+  process.env[ENV_TASK_SYSTEM_PROMPT_B64] = Buffer.from(
+    JSON.stringify({
+      names,
+      exclusive: profile.exclusive === true,
+    }),
+    "utf-8",
+  ).toString("base64");
 }
 
 function getAuthLabel(auth: TaskTemplateAuthProfile | undefined): string | undefined {
@@ -260,6 +294,7 @@ function parseArgs(): { prompt: string; jobId: string; output: string } {
 async function main(): Promise<void> {
   const { prompt, jobId, output } = parseArgs();
   const runtimeProfile = decodeRuntimeProfileFromEnv();
+  applyRuntimeSystemPromptEnv(runtimeProfile);
   const runtimeAuthLabel = getAuthLabel(runtimeProfile?.auth);
   const runtimeModel = runtimeProfile?.model?.name;
   const prettyOutput = process.env["LOWCAL_HEADLESS_PRETTY"] === "1";

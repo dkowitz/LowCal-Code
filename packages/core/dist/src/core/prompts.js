@@ -31,6 +31,8 @@ const DEFAULT_COLLECTIONS = {
         ToolNames.LAUNCH_TASK,
         ToolNames.TASK_TEMPLATE,
         ToolNames.READ_SESSION_MESSAGES,
+        ToolNames.READ_COLLAB_MESSAGES,
+        ToolNames.POST_COLLAB_MESSAGE,
     ],
     minimal: [ToolNames.READ_FILE, ToolNames.WRITE_FILE, ToolNames.SHELL],
     "shell-only": [ToolNames.SHELL],
@@ -60,6 +62,8 @@ const TOOL_SUMMARIES = {
     [ToolNames.LAUNCH_TASK]: "Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: `launch_task action=create id=task-1 prompt='...'`.",
     [ToolNames.TASK_TEMPLATE]: "Manage reusable task templates (list/get/create/update/delete/resolve) used by launch_task and schedule_task. Example: `task_template action=list`.",
     [ToolNames.READ_SESSION_MESSAGES]: "Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: `read_session_messages action=wait`.",
+    [ToolNames.READ_COLLAB_MESSAGES]: "Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: `read_collab_messages since_seq=120 limit=20`.",
+    [ToolNames.POST_COLLAB_MESSAGE]: "Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set `notify='wake_prompt'` with `to_session_id`. Example: `post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']`.",
 };
 function applyToolCollectionPolicies(collections) {
     const normalized = Object.fromEntries(Object.entries(collections).map(([name, tools]) => [name, [...tools]]));
@@ -77,6 +81,10 @@ function applyToolCollectionPolicies(collections) {
         if (nextToolList.includes(ToolNames.LAUNCH_TASK) &&
             !nextToolList.includes(ToolNames.READ_SESSION_MESSAGES)) {
             nextToolList = [...nextToolList, ToolNames.READ_SESSION_MESSAGES];
+        }
+        if (nextToolList.includes(ToolNames.POST_COLLAB_MESSAGE) &&
+            !nextToolList.includes(ToolNames.READ_COLLAB_MESSAGES)) {
+            nextToolList = [...nextToolList, ToolNames.READ_COLLAB_MESSAGES];
         }
         normalized[collectionName] = nextToolList;
     }
@@ -127,31 +135,78 @@ function loadToolConfig() {
             };
         }
     }
-    catch (e) {
+    catch (_error) {
         // ignore errors, fallback to defaults
     }
     return defaultConfig;
 }
 export const toolConfig = loadToolConfig();
+const ENV_TASK_SYSTEM_PROMPT_B64 = "LOWCAL_TASK_SYSTEM_PROMPT_B64";
+function decodeRuntimeSystemPromptOverride() {
+    const encoded = process.env[ENV_TASK_SYSTEM_PROMPT_B64];
+    if (!encoded || encoded.trim().length === 0) {
+        return undefined;
+    }
+    try {
+        const raw = Buffer.from(encoded, "base64").toString("utf-8");
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") {
+            return undefined;
+        }
+        return parsed;
+    }
+    catch {
+        return undefined;
+    }
+}
+function applyRuntimeSystemPromptOverride(config) {
+    const override = decodeRuntimeSystemPromptOverride();
+    if (!override) {
+        return config;
+    }
+    if (override.disable === true) {
+        return {
+            ...config,
+            activeCustomPrompt: null,
+        };
+    }
+    const names = Array.isArray(override.names)
+        ? override.names
+            .map((entry) => (typeof entry === "string" ? entry.trim() : ""))
+            .filter((entry) => entry.length > 0)
+        : [];
+    if (names.length === 0) {
+        return config;
+    }
+    return {
+        ...config,
+        activeCustomPrompt: {
+            name: names,
+            exclusive: override.exclusive === true,
+        },
+    };
+}
 function loadCustomPromptConfig() {
+    let baseConfig = {};
     try {
         const homeDir = os.homedir();
         if (!homeDir) {
-            return {};
+            return applyRuntimeSystemPromptOverride(baseConfig);
         }
         const configPath = path.join(homeDir, ".qwen", "tool-config.json");
         if (!fs.existsSync(configPath)) {
-            return {};
+            return applyRuntimeSystemPromptOverride(baseConfig);
         }
         const raw = fs.readFileSync(configPath, "utf8");
         const parsed = JSON.parse(raw) ?? {};
-        return {
+        baseConfig = {
             customPrompts: parsed.customPrompts ?? {},
             activeCustomPrompt: parsed.activeCustomPrompt ?? null,
         };
+        return applyRuntimeSystemPromptOverride(baseConfig);
     }
     catch {
-        return {};
+        return applyRuntimeSystemPromptOverride(baseConfig);
     }
 }
 function normalizePromptMode(value) {

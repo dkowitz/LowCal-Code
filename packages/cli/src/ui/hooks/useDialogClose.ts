@@ -29,10 +29,6 @@ export interface DialogCloseOptions {
   isTaskTemplateDialogOpen: boolean;
   closeTaskTemplateDialog: () => void;
 
-  // Team management dialog
-  isTeamDialogOpen: boolean;
-  closeTeamDialog: () => void;
-
   // Mailbox dialog
   isMailboxDialogOpen: boolean;
   closeMailboxDialog: () => void;
@@ -95,11 +91,6 @@ export function useDialogClose(options: DialogCloseOptions) {
 
     if (options.isTaskTemplateDialogOpen) {
       options.closeTaskTemplateDialog();
-      return true;
-    }
-
-    if (options.isTeamDialogOpen) {
-      options.closeTeamDialog();
       return true;
     }
 

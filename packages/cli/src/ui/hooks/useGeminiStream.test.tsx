@@ -22,6 +22,8 @@ import type {
   Config,
   EditorType,
   GeminiClient,
+  ToolRegistry,
+  AnyDeclarativeTool,
   AnyToolInvocation,
 } from "@qwen-code/qwen-code-core";
 import {
@@ -66,7 +68,7 @@ const mockRestoreOriginalModel = vi.hoisted(() =>
 );
 
 vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
-  const actualCoreModule = (await importOriginal()) as any;
+  const actualCoreModule = (await importOriginal()) as Record<string, unknown>;
   return {
     ...actualCoreModule,
     GitService: vi.fn(),
@@ -81,7 +83,8 @@ vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
 
 const mockUseReactToolScheduler = useReactToolScheduler as Mock;
 vi.mock("./useReactToolScheduler.js", async (importOriginal) => {
-  const actualSchedulerModule = (await importOriginal()) as any;
+  const actualSchedulerModule =
+    (await importOriginal()) as Record<string, unknown>;
   return {
     ...(actualSchedulerModule || {}),
     useReactToolScheduler: vi.fn(),
@@ -205,7 +208,10 @@ describe("useGeminiStream", () => {
       showMemoryUsage: false,
       contextFileName: undefined,
       getToolRegistry: vi.fn(
-        () => ({ getToolSchemaList: vi.fn(() => []) }) as any,
+        () =>
+          ({
+            getToolSchemaList: vi.fn(() => []),
+          }) as unknown as ToolRegistry,
       ),
       getProjectRoot: vi.fn(() => "/test/dir"),
       getCheckpointingEnabled: vi.fn(() => false),
@@ -245,7 +251,7 @@ describe("useGeminiStream", () => {
     // The GeminiClient constructor itself is mocked at the module level.
     mockStartChat.mockClear().mockResolvedValue({
       sendMessageStream: mockSendMessageStream,
-    } as unknown as any); // GeminiChat -> any
+    });
     mockSendMessageStream
       .mockClear()
       .mockReturnValue((async function* () {})());
@@ -365,7 +371,7 @@ describe("useGeminiStream", () => {
           displayName: "tool1",
           description: "desc1",
           build: vi.fn(),
-        } as any,
+        } as unknown as AnyDeclarativeTool,
         invocation: {
           getDescription: () => `Mock description`,
         } as unknown as AnyToolInvocation,
@@ -386,7 +392,7 @@ describe("useGeminiStream", () => {
           displayName: "tool2",
           description: "desc2",
           build: vi.fn(),
-        } as any,
+        } as unknown as AnyDeclarativeTool,
         invocation: {
           getDescription: () => `Mock description`,
         } as unknown as AnyToolInvocation,
@@ -593,7 +599,7 @@ describe("useGeminiStream", () => {
         displayName: "toolA",
         description: "descA",
         build: vi.fn(),
-      } as any,
+      } as unknown as AnyDeclarativeTool,
       invocation: {
         getDescription: () => `Mock description`,
       } as unknown as AnyToolInvocation,
@@ -622,7 +628,7 @@ describe("useGeminiStream", () => {
         displayName: "toolB",
         description: "descB",
         build: vi.fn(),
-      } as any,
+      } as unknown as AnyDeclarativeTool,
       invocation: {
         getDescription: () => `Mock description`,
       } as unknown as AnyToolInvocation,
@@ -723,7 +729,7 @@ describe("useGeminiStream", () => {
           displayName: "tool1",
           description: "desc",
           build: vi.fn(),
-        } as any,
+        } as unknown as AnyDeclarativeTool,
         invocation: {
           getDescription: () => `Mock description`,
         } as unknown as AnyToolInvocation,
@@ -996,7 +1002,7 @@ describe("useGeminiStream", () => {
             build: vi.fn().mockImplementation((_) => ({
               getDescription: () => `Mock description`,
             })),
-          } as any,
+          } as unknown as AnyDeclarativeTool,
           invocation: {
             getDescription: () => `Mock description`,
           },
@@ -1189,7 +1195,7 @@ describe("useGeminiStream", () => {
           displayName: "save_memory",
           description: "Saves memory",
           build: vi.fn(),
-        } as any,
+        } as unknown as AnyDeclarativeTool,
         invocation: {
           getDescription: () => `Mock description`,
         } as unknown as AnyToolInvocation,

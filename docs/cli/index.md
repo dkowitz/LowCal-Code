@@ -5,7 +5,7 @@ Within LowCal Code, `packages/cli` is the frontend for users to send and receive
 ## Navigating this section
 
 - **[Authentication](./authentication.md):** A guide to setting up authentication with Qwen OAuth and OpenAI-compatible providers.
-- **[Commands](./commands.md):** A reference for Qwen Code CLI commands (e.g., `/help`, `/tools`, `/theme`, `/tasks`, `/mailbox`, `lowcal tasks`).
+- **[Commands](./commands.md):** A reference for Qwen Code CLI commands (e.g., `/help`, `/tools`, `/tasks`, `/mailbox`, `/collab`, `lowcal tasks`).
 - **[Configuration](./configuration.md):** A guide to tailoring Qwen Code CLI behavior using configuration files.
 - **[Token Caching](./token-caching.md):** Optimize API costs through token caching.
 - **[Themes](./themes.md)**: A guide to customizing the CLI's appearance with different themes.

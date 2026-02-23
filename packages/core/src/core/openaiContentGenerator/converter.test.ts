@@ -172,7 +172,9 @@ describe("OpenAIContentConverter", () => {
             ],
           },
         ],
-      } as any;
+      } as unknown as Parameters<
+        OpenAIContentConverter["convertGeminiRequestToOpenAI"]
+      >[0];
 
       const messages = converter.convertGeminiRequestToOpenAI(request);
       expect(messages.length).toBe(3);

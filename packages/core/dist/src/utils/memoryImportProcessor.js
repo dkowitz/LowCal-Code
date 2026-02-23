@@ -9,11 +9,8 @@ import { isSubpath } from "./paths.js";
 import { marked } from "marked";
 // Simple console logger for import processing
 const logger = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     debug: (...args) => console.debug("[DEBUG] [ImportProcessor]", ...args),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     warn: (...args) => console.warn("[WARN] [ImportProcessor]", ...args),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error: (...args) => console.error("[ERROR] [ImportProcessor]", ...args),
 };
 // Helper to find the project root (looks for .git directory)

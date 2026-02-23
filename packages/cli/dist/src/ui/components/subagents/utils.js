@@ -3,7 +3,7 @@
  * Copyright 2025 Qwen
  * SPDX-License-Identifier: Apache-2.0
  */
-import { COLOR_OPTIONS, TOTAL_WIZARD_STEPS } from "./constants.js";
+import { COLOR_OPTIONS } from "./constants.js";
 export const shouldShowColor = (color) => color !== undefined && color !== "auto";
 export const getColorForDisplay = (colorName) => !colorName || colorName === "auto"
     ? undefined
@@ -32,48 +32,5 @@ export function fmtDuration(ms) {
     const h = Math.floor(ms / 3600000);
     const m = Math.floor((ms % 3600000) / 60000);
     return `${h}h ${m}m`;
-}
-export function getTotalSteps(method) {
-    return method === "manual" ? 8 : TOTAL_WIZARD_STEPS;
-}
-export function getStepKind(method, stepNumber) {
-    if (method === "manual") {
-        switch (stepNumber) {
-            case 1:
-                return "LOCATION";
-            case 2:
-                return "GEN_METHOD";
-            case 3:
-                return "MANUAL_NAME";
-            case 4:
-                return "MANUAL_PROMPT";
-            case 5:
-                return "MANUAL_DESC";
-            case 6:
-                return "TOOLS";
-            case 7:
-                return "COLOR";
-            case 8:
-                return "FINAL";
-            default:
-                return "FINAL";
-        }
-    }
-    switch (stepNumber) {
-        case 1:
-            return "LOCATION";
-        case 2:
-            return "GEN_METHOD";
-        case 3:
-            return "LLM_DESC";
-        case 4:
-            return "TOOLS";
-        case 5:
-            return "COLOR";
-        case 6:
-            return "FINAL";
-        default:
-            return "FINAL";
-    }
 }
 //# sourceMappingURL=utils.js.map

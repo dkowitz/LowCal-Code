@@ -5,10 +5,28 @@
 import type { SlashCommand } from "./types.js";
 import { CommandKind } from "./types.js";
 import { MessageType, type HistoryItemInfo } from "../types.js";
+import type { CountTokensParameters, CountTokensResponse } from "@google/genai";
 
 // Import core utilities and CLI config sync helpers.
 import { toolConfig, getCoreSystemPrompt } from "@qwen-code/qwen-code-core";
 import { loadCliToolConfig, syncCoreToolConfig } from "./utils/toolConfig.js";
+
+type TokenCounter = {
+  countTokens: (request: CountTokensParameters) => Promise<CountTokensResponse>;
+};
+
+function isTokenCounter(value: unknown): value is TokenCounter {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    typeof (value as { countTokens?: unknown }).countTokens === "function"
+  );
+}
+
+function getGlobalGeminiClient(): unknown {
+  const globalObj = globalThis as { geminiClient?: unknown };
+  return globalObj.geminiClient;
+}
 
 /**
  * Helper to estimate token count if the genai client is unavailable.
@@ -48,9 +66,33 @@ export const promptInfoCommand: SlashCommand = {
     // Helper to count tokens using genai client or fallback.
     const countTokens = async (text: string): Promise<number> => {
       try {
-        const maybeGen = (global as any).geminiClient ?? null;
+        const configModel =
+          context.services.config?.getContentGeneratorConfig?.()?.model ??
+          "gpt-3.5-turbo";
+        let maybeGen: TokenCounter | null = null;
+        const geminiClient = context.services.config?.getGeminiClient?.();
+        if (geminiClient?.isInitialized?.()) {
+          const generator = geminiClient.getContentGenerator?.();
+          if (isTokenCounter(generator)) {
+            maybeGen = generator;
+          }
+        }
+        if (!maybeGen) {
+          const fallbackGenerator = getGlobalGeminiClient();
+          if (isTokenCounter(fallbackGenerator)) {
+            maybeGen = fallbackGenerator;
+          }
+        }
         if (maybeGen && typeof maybeGen.countTokens === "function") {
-          const request = { content: text } as any;
+          const request: CountTokensParameters = {
+            model: configModel,
+            contents: [
+              {
+                role: "user",
+                parts: [{ text }],
+              },
+            ],
+          } as unknown as CountTokensParameters;
           const response = await maybeGen.countTokens(request);
           return response?.totalTokens ?? estimateTokens(text);
         }

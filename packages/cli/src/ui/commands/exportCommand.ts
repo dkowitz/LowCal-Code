@@ -10,6 +10,64 @@ import { CommandKind } from "./types.js";
 import fs from "node:fs";
 import path from "node:path";
 
+type ExportToolDisplay = {
+  name: string;
+  resultDisplay?: unknown;
+};
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null
+    ? (value as Record<string, unknown>)
+    : null;
+}
+
+function readText(item: unknown): string | undefined {
+  const record = asRecord(item);
+  const textValue = record?.["text"];
+  return typeof textValue === "string" ? textValue : undefined;
+}
+
+function extractToolDisplays(item: unknown): ExportToolDisplay[] {
+  const record = asRecord(item);
+  if (!record) {
+    return [];
+  }
+
+  const toolsValue = record["tools"];
+  if (Array.isArray(toolsValue)) {
+    const toolDisplays: ExportToolDisplay[] = [];
+    for (const tool of toolsValue) {
+      const toolRecord = asRecord(tool);
+      if (!toolRecord) {
+        continue;
+      }
+
+      const name = toolRecord["name"];
+      if (typeof name !== "string") {
+        continue;
+      }
+
+      toolDisplays.push({
+        name,
+        resultDisplay: toolRecord["resultDisplay"] ?? toolRecord["result"],
+      });
+    }
+    return toolDisplays;
+  }
+
+  const name = record["name"];
+  if (typeof name === "string") {
+    return [
+      {
+        name,
+        resultDisplay: record["resultDisplay"] ?? record["result"],
+      },
+    ];
+  }
+
+  return [];
+}
+
 export const exportCommand: SlashCommand = {
   name: "export",
   description:
@@ -87,7 +145,7 @@ export const exportCommand: SlashCommand = {
     markdownContent += `**Session ID:** ${context.services.config?.getSessionId() || "unknown"}\n`;
     markdownContent += `**Mode:** ${option || "full"}\n\n`;
 
-    let filteredHistory: any[] = [];
+    let filteredHistory: typeof history = [];
 
     if (option === "compact") {
       // Only user and assistant messages
@@ -144,28 +202,30 @@ export const exportCommand: SlashCommand = {
 
     // Process filtered history
     for (const item of filteredHistory) {
-      switch (item.type) {
+      const itemType = String(item.type);
+      const text = readText(item);
+      switch (itemType) {
         case "user":
-          if (item.text) {
+          if (text) {
             // Preserve original formatting of user messages
-            markdownContent += `## User Message\n\n${item.text}\n\n---\n\n`;
+            markdownContent += `## User Message\n\n${text}\n\n---\n\n`;
           }
           break;
         case "gemini":
         case "gemini_content":
-          if (item.text) {
+          if (text) {
             // Preserve original formatting of assistant responses
-            markdownContent += `## Assistant Response\n\n${item.text}\n\n---\n\n`;
+            markdownContent += `## Assistant Response\n\n${text}\n\n---\n\n`;
           }
           break;
         case "info":
-          if (item.text) {
-            markdownContent += `### Info\n\n> ${item.text.trim()}\n\n`;
+          if (text) {
+            markdownContent += `### Info\n\n> ${text.trim()}\n\n`;
           }
           break;
         case "error":
-          if (item.text) {
-            markdownContent += `### Error\n\n**Error:** ${item.text.trim()}\n\n`;
+          if (text) {
+            markdownContent += `### Error\n\n**Error:** ${text.trim()}\n\n`;
           }
           break;
         case "tool_group":
@@ -175,20 +235,7 @@ export const exportCommand: SlashCommand = {
         case "tool_stats":
           // Normalize to an array of tool displays
           markdownContent += `### Tool Execution\n\n`;
-          const toolsArray: any[] = [];
-          if ((item as any).tools && Array.isArray((item as any).tools)) {
-            toolsArray.push(...(item as any).tools);
-          } else if ((item as any).name) {
-            // Single-tool shape
-            toolsArray.push({
-              name: (item as any).name,
-              resultDisplay:
-                (item as any).resultDisplay ||
-                (item as any).result ||
-                undefined,
-            });
-          }
-
+          const toolsArray = extractToolDisplays(item);
           for (const tool of toolsArray) {
             markdownContent += `**Tool:** ${tool.name}\n`;
             if (tool.resultDisplay) {
@@ -200,8 +247,8 @@ export const exportCommand: SlashCommand = {
           markdownContent += `---\n\n`;
           break;
         default:
-          if (item.text) {
-            markdownContent += `### ${String(item.type).toUpperCase()}\n\n${item.text.trim()}\n\n---\n\n`;
+          if (text) {
+            markdownContent += `### ${itemType.toUpperCase()}\n\n${text.trim()}\n\n---\n\n`;
           }
           break;
       }

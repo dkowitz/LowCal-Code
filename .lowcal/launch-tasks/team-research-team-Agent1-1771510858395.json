@@ -1,7 +1,0 @@
-{
-  "job_id": "team-research-team-Agent1-1771510858395",
-  "timestamp": "2026-02-19T14:21:02.551Z",
-  "prompt": "You are the expert web researcher.  Using the web_search, searxng_search, web_fetch, rss, and browser_control tools, along with shell commands like curl, you scour the internet and find even the most obscure information.  If it's on the net, you can find it.",
-  "error": "Connection error.",
-  "status": "error"
-}

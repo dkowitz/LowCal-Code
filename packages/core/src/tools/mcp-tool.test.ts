@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Mocked } from "vitest";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { safeJsonStringify } from "../utils/safeJsonStringify.js";
@@ -20,8 +19,8 @@ const mockCallTool = vi.fn();
 const mockToolMethod = vi.fn();
 
 const mockCallableToolInstance: Mocked<CallableTool> = {
-  tool: mockToolMethod as any, // Not directly used by DiscoveredMCPTool instance methods
-  callTool: mockCallTool as any,
+  tool: mockToolMethod as unknown as Mocked<CallableTool>["tool"],
+  callTool: mockCallTool as unknown as Mocked<CallableTool>["callTool"],
   // Add other methods if DiscoveredMCPTool starts using them
 };
 
@@ -70,6 +69,14 @@ describe("DiscoveredMCPTool", () => {
   };
 
   let tool: DiscoveredMCPTool;
+  const getAllowlist = (
+    invocation: ReturnType<DiscoveredMCPTool["build"]>,
+  ): Set<string> =>
+    (
+      invocation.constructor as unknown as {
+        allowlist: Set<string>;
+      }
+    ).allowlist;
 
   beforeEach(() => {
     mockCallTool.mockClear();
@@ -82,8 +89,8 @@ describe("DiscoveredMCPTool", () => {
       inputSchema,
     );
     // Clear allowlist before each relevant test, especially for shouldConfirmExecute
-    const invocation = tool.build({ param: "mock" }) as any;
-    invocation.constructor.allowlist.clear();
+    const invocation = tool.build({ param: "mock" });
+    getAllowlist(invocation).clear();
   });
 
   afterEach(() => {
@@ -606,8 +613,8 @@ describe("DiscoveredMCPTool", () => {
     });
 
     it("should return false if server is allowlisted", async () => {
-      const invocation = tool.build({ param: "mock" }) as any;
-      invocation.constructor.allowlist.add(serverName);
+      const invocation = tool.build({ param: "mock" });
+      getAllowlist(invocation).add(serverName);
       expect(
         await invocation.shouldConfirmExecute(new AbortController().signal),
       ).toBe(false);
@@ -615,8 +622,8 @@ describe("DiscoveredMCPTool", () => {
 
     it("should return false if tool is allowlisted", async () => {
       const toolAllowlistKey = `${serverName}.${serverToolName}`;
-      const invocation = tool.build({ param: "mock" }) as any;
-      invocation.constructor.allowlist.add(toolAllowlistKey);
+      const invocation = tool.build({ param: "mock" });
+      getAllowlist(invocation).add(toolAllowlistKey);
       expect(
         await invocation.shouldConfirmExecute(new AbortController().signal),
       ).toBe(false);
@@ -646,7 +653,7 @@ describe("DiscoveredMCPTool", () => {
     });
 
     it("should add server to allowlist on ProceedAlwaysServer", async () => {
-      const invocation = tool.build({ param: "mock" }) as any;
+      const invocation = tool.build({ param: "mock" });
       const confirmation = await invocation.shouldConfirmExecute(
         new AbortController().signal,
       );
@@ -660,7 +667,7 @@ describe("DiscoveredMCPTool", () => {
         await confirmation.onConfirm(
           ToolConfirmationOutcome.ProceedAlwaysServer,
         );
-        expect(invocation.constructor.allowlist.has(serverName)).toBe(true);
+        expect(getAllowlist(invocation).has(serverName)).toBe(true);
       } else {
         throw new Error(
           "Confirmation details or onConfirm not in expected format",
@@ -670,7 +677,7 @@ describe("DiscoveredMCPTool", () => {
 
     it("should add tool to allowlist on ProceedAlwaysTool", async () => {
       const toolAllowlistKey = `${serverName}.${serverToolName}`;
-      const invocation = tool.build({ param: "mock" }) as any;
+      const invocation = tool.build({ param: "mock" });
       const confirmation = await invocation.shouldConfirmExecute(
         new AbortController().signal,
       );
@@ -682,9 +689,7 @@ describe("DiscoveredMCPTool", () => {
         typeof confirmation.onConfirm === "function"
       ) {
         await confirmation.onConfirm(ToolConfirmationOutcome.ProceedAlwaysTool);
-        expect(invocation.constructor.allowlist.has(toolAllowlistKey)).toBe(
-          true,
-        );
+        expect(getAllowlist(invocation).has(toolAllowlistKey)).toBe(true);
       } else {
         throw new Error(
           "Confirmation details or onConfirm not in expected format",
@@ -693,7 +698,7 @@ describe("DiscoveredMCPTool", () => {
     });
 
     it("should handle Cancel confirmation outcome", async () => {
-      const invocation = tool.build({ param: "mock" }) as any;
+      const invocation = tool.build({ param: "mock" });
       const confirmation = await invocation.shouldConfirmExecute(
         new AbortController().signal,
       );
@@ -706,12 +711,10 @@ describe("DiscoveredMCPTool", () => {
       ) {
         // Cancel should not add anything to allowlist
         await confirmation.onConfirm(ToolConfirmationOutcome.Cancel);
-        expect(invocation.constructor.allowlist.has(serverName)).toBe(false);
-        expect(
-          invocation.constructor.allowlist.has(
-            `${serverName}.${serverToolName}`,
-          ),
-        ).toBe(false);
+        expect(getAllowlist(invocation).has(serverName)).toBe(false);
+        expect(getAllowlist(invocation).has(`${serverName}.${serverToolName}`)).toBe(
+          false,
+        );
       } else {
         throw new Error(
           "Confirmation details or onConfirm not in expected format",
@@ -720,7 +723,7 @@ describe("DiscoveredMCPTool", () => {
     });
 
     it("should handle ProceedOnce confirmation outcome", async () => {
-      const invocation = tool.build({ param: "mock" }) as any;
+      const invocation = tool.build({ param: "mock" });
       const confirmation = await invocation.shouldConfirmExecute(
         new AbortController().signal,
       );
@@ -733,12 +736,10 @@ describe("DiscoveredMCPTool", () => {
       ) {
         // ProceedOnce should not add anything to allowlist
         await confirmation.onConfirm(ToolConfirmationOutcome.ProceedOnce);
-        expect(invocation.constructor.allowlist.has(serverName)).toBe(false);
-        expect(
-          invocation.constructor.allowlist.has(
-            `${serverName}.${serverToolName}`,
-          ),
-        ).toBe(false);
+        expect(getAllowlist(invocation).has(serverName)).toBe(false);
+        expect(getAllowlist(invocation).has(`${serverName}.${serverToolName}`)).toBe(
+          false,
+        );
       } else {
         throw new Error(
           "Confirmation details or onConfirm not in expected format",

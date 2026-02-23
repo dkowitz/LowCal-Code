@@ -18,7 +18,6 @@ import { researchCommand } from "../commands/research.js";
 import { schedulerCommand } from "../commands/scheduler.js";
 import { sessionsCommand } from "../commands/sessions.js";
 import { tasksCommand } from "../commands/tasks.js";
-import { teamRuntimeCommand } from "../commands/team-runtime.js";
 import { resolvePath } from "../utils/resolvePath.js";
 import { getCliVersion } from "../utils/version.js";
 import { annotateActiveExtensions } from "./extension.js";
@@ -28,11 +27,8 @@ import { appEvents, AppEvent } from "../utils/events.js";
 import { isWorkspaceTrusted } from "./trustedFolders.js";
 // Simple console logger for now - replace with actual logger if available
 const logger = {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     debug: (...args) => console.debug("[DEBUG]", ...args),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     warn: (...args) => console.warn("[WARN]", ...args),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     error: (...args) => console.error("[ERROR]", ...args),
 };
 const VALID_APPROVAL_MODE_VALUES = [
@@ -232,7 +228,6 @@ export async function parseArguments(settings) {
         .command(schedulerCommand)
         .command(sessionsCommand)
         .command(tasksCommand)
-        .command(teamRuntimeCommand)
         .command(dashboardCommand);
     if (settings?.experimental?.extensionManagement ?? false) {
         yargsInstance.command(extensionsCommand);
@@ -255,14 +250,13 @@ export async function parseArguments(settings) {
             result._[0] === "orchestrator" ||
             result._[0] === "sessions" ||
             result._[0] === "tasks" ||
-            result._[0] === "team-runtime" ||
-            result._[0] === "team-monitor" ||
             result._[0] === "dashboard")) {
-        const isSessionsWatch = result._[0] === "sessions" && Boolean(result.watch);
+        const parsedResult = result;
+        const isSessionsWatch = result._[0] === "sessions" && Boolean(parsedResult.watch);
         if (isSessionsWatch) {
             return result;
         }
-        const isDashboardWatch = result._[0] === "dashboard" && Boolean(result.watch);
+        const isDashboardWatch = result._[0] === "dashboard" && Boolean(parsedResult.watch);
         if (isDashboardWatch) {
             return result;
         }
@@ -314,11 +308,11 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
             try {
                 appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_API_KEY to: ${envPath}`);
             }
-            catch (e) {
+            catch {
                 // ignore
             }
         }
-        catch (e) {
+        catch {
             // Fall back to setting runtime env if persistence fails
             process.env["OPENAI_API_KEY"] = argv.openaiApiKey;
         }
@@ -330,11 +324,11 @@ export async function loadCliConfig(settings, extensions, sessionId, argv, cwd =
             try {
                 appEvents.emit(AppEvent.ShowInfo, `Saved OPENAI_BASE_URL to: ${envPath}`);
             }
-            catch (e) {
+            catch {
                 // ignore
             }
         }
-        catch (e) {
+        catch {
             process.env["OPENAI_BASE_URL"] = argv.openaiBaseUrl;
         }
     }

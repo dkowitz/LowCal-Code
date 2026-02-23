@@ -9,6 +9,28 @@ import { ToolErrorType } from "./tool-error.js";
 import { ToolNames } from "./tool-names.js";
 const RSS_FETCH_TIMEOUT_MS = 15000;
 const DEFAULT_MAX_ITEMS = 25;
+function asRecord(value) {
+    return typeof value === "object" && value !== null && !Array.isArray(value)
+        ? value
+        : null;
+}
+function valueToString(value) {
+    if (typeof value === "string") {
+        return value;
+    }
+    if (typeof value === "number" || typeof value === "boolean") {
+        return String(value);
+    }
+    return undefined;
+}
+function toRecordArray(value) {
+    if (!Array.isArray(value)) {
+        return [];
+    }
+    return value
+        .map((item) => asRecord(item))
+        .filter((item) => !!item);
+}
 /**
  * Implementation of the RSS tool invocation logic
  */
@@ -52,15 +74,18 @@ class RSSToolInvocation extends BaseToolInvocation {
         }
     }
     parseRSS(xml) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const parsed = this.parser.parse(xml);
+        const parsed = asRecord(this.parser.parse(xml));
+        if (!parsed) {
+            throw new Error("Unknown feed format");
+        }
         // Handle RSS 2.0
-        if (parsed.rss?.channel) {
-            return this.parseRSS2(parsed.rss.channel);
+        const rss = asRecord(parsed["rss"]);
+        if (rss?.["channel"]) {
+            return this.parseRSS2(rss["channel"]);
         }
         // Handle Atom
-        if (parsed.feed) {
-            return this.parseAtom(parsed.feed);
+        if (parsed["feed"]) {
+            return this.parseAtom(parsed["feed"]);
         }
         // Handle RSS 1.0 (RDF)
         if (parsed["rdf:RDF"]) {
@@ -68,47 +93,54 @@ class RSSToolInvocation extends BaseToolInvocation {
         }
         throw new Error("Unknown feed format");
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     parseRSS2(channel) {
-        const items = channel.item;
+        const channelRecord = asRecord(channel) ?? {};
+        const items = channelRecord["item"];
         return {
-            title: channel.title ?? "Untitled",
-            link: channel.link ?? "",
-            description: channel.description,
+            title: valueToString(channelRecord["title"]) ?? "Untitled",
+            link: valueToString(channelRecord["link"]) ?? "",
+            description: valueToString(channelRecord["description"]),
             items: this.normalizeItems(items),
         };
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     parseAtom(feed) {
+        const feedRecord = asRecord(feed) ?? {};
         // Atom links can be an array or single object
         let link = "";
-        const links = feed.link;
+        const links = feedRecord["link"];
         if (Array.isArray(links)) {
-            const alternate = links.find((l) => l["@_rel"] === "alternate");
-            link = alternate?.["@_href"] || alternate?.["#text"] || "";
+            const alternate = toRecordArray(links).find((l) => valueToString(l["@_rel"]) === "alternate");
+            link =
+                valueToString(alternate?.["@_href"]) ??
+                    valueToString(alternate?.["#text"]) ??
+                    "";
         }
         else if (links) {
-            link = links["@_href"] || links["#text"] || String(links);
+            const linksRecord = asRecord(links);
+            link =
+                valueToString(linksRecord?.["@_href"]) ??
+                    valueToString(linksRecord?.["#text"]) ??
+                    valueToString(links) ??
+                    "";
         }
-        const entries = feed.entry;
+        const entries = feedRecord["entry"];
         return {
-            title: feed.title ?? "Untitled",
+            title: valueToString(feedRecord["title"]) ?? "Untitled",
             link,
-            description: feed.subtitle,
+            description: valueToString(feedRecord["subtitle"]),
             items: this.normalizeAtomItems(entries),
         };
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     parseRSS1(rdf) {
-        const channel = rdf.channel;
-        const items = rdf.items?.item;
+        const rdfRecord = asRecord(rdf) ?? {};
+        const channel = asRecord(rdfRecord["channel"]) ?? {};
+        const items = asRecord(rdfRecord["items"])?.["item"];
         return {
-            title: channel?.title ?? "Untitled",
-            link: channel?.link ?? "",
+            title: valueToString(channel["title"]) ?? "Untitled",
+            link: valueToString(channel["link"]) ?? "",
             items: this.normalizeItems(items),
         };
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     normalizeItems(items) {
         if (!items)
             return [];
@@ -119,30 +151,33 @@ class RSSToolInvocation extends BaseToolInvocation {
         for (const item of itemArray) {
             if (normalized.length >= maxItems)
                 break;
+            const itemRecord = asRecord(item) ?? {};
             // Handle both array and single category
             let categories;
-            const category = item.category;
+            const category = itemRecord["category"];
             if (category) {
                 if (Array.isArray(category)) {
-                    categories = category.map((c) => c);
+                    categories = category
+                        .map((c) => valueToString(c))
+                        .filter((c) => typeof c === "string");
                 }
                 else {
-                    categories = [String(category)];
+                    const categoryValue = valueToString(category);
+                    categories = categoryValue ? [categoryValue] : undefined;
                 }
             }
             normalized.push({
-                title: item.title ?? "Untitled",
-                link: item.link ?? "",
-                description: item.description,
-                pubDate: item.pubDate,
-                author: item.author,
+                title: valueToString(itemRecord["title"]) ?? "Untitled",
+                link: valueToString(itemRecord["link"]) ?? "",
+                description: valueToString(itemRecord["description"]),
+                pubDate: valueToString(itemRecord["pubDate"]),
+                author: valueToString(itemRecord["author"]),
                 categories,
-                guid: item.guid,
+                guid: valueToString(itemRecord["guid"]),
             });
         }
         return normalized;
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     normalizeAtomItems(entries) {
         if (!entries)
             return [];
@@ -153,32 +188,40 @@ class RSSToolInvocation extends BaseToolInvocation {
         for (const entry of entryArray) {
             if (normalized.length >= maxItems)
                 break;
+            const entryRecord = asRecord(entry) ?? {};
             // Atom links can be array or string
             let link = "";
-            const linkData = entry.link;
+            const linkData = entryRecord["link"];
             if (Array.isArray(linkData)) {
-                const alternate = linkData.find((l) => l["@_rel"] === "alternate");
-                link = alternate?.["@_href"] || "";
+                const alternate = toRecordArray(linkData).find((l) => valueToString(l["@_rel"]) === "alternate");
+                link = valueToString(alternate?.["@_href"]) ?? "";
             }
             else if (linkData) {
-                link = linkData["@_href"] || linkData["#text"] || String(linkData);
+                const linkRecord = asRecord(linkData);
+                link =
+                    valueToString(linkRecord?.["@_href"]) ??
+                        valueToString(linkRecord?.["#text"]) ??
+                        valueToString(linkData) ??
+                        "";
             }
             // Handle content:encoded or description
-            const description = entry.content?.["#text"]
-                ? entry.content["#text"]
-                : entry.description;
+            const content = asRecord(entryRecord["content"]);
+            const description = valueToString(content?.["#text"]) ??
+                valueToString(entryRecord["description"]);
+            const author = asRecord(entryRecord["author"]);
             normalized.push({
-                title: entry.title ?? "Untitled",
+                title: valueToString(entryRecord["title"]) ?? "Untitled",
                 link,
                 description,
-                pubDate: entry.published || entry.updated,
-                author: entry.author?.name,
-                guid: entry.id,
+                pubDate: valueToString(entryRecord["published"]) ??
+                    valueToString(entryRecord["updated"]),
+                author: valueToString(author?.["name"]),
+                guid: valueToString(entryRecord["id"]),
             });
         }
         return normalized;
     }
-    async execute(signal) {
+    async execute(_signal) {
         try {
             const xml = await this.fetchFeed(this.params.url);
             const feed = this.parseRSS(xml);

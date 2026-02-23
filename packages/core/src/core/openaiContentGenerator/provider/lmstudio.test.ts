@@ -46,7 +46,7 @@ describe("LMStudioOpenAICompatibleProvider", () => {
       );
     });
 
-    it("should return false for non-LM Studio base URLs", () => {
+    it("should return false for non-local base URLs", () => {
       const config1: ContentGeneratorConfig = {
         model: "test-model",
         baseUrl: "http://openai.com/v1",
@@ -54,7 +54,7 @@ describe("LMStudioOpenAICompatibleProvider", () => {
 
       const config2: ContentGeneratorConfig = {
         model: "test-model",
-        baseUrl: "http://localhost:5678/v1",
+        baseUrl: "https://api.example.com/v1",
       };
 
       expect(LMStudioOpenAICompatibleProvider.isLMStudioProvider(config1)).toBe(
@@ -62,6 +62,17 @@ describe("LMStudioOpenAICompatibleProvider", () => {
       );
       expect(LMStudioOpenAICompatibleProvider.isLMStudioProvider(config2)).toBe(
         false,
+      );
+    });
+
+    it("should return true for localhost URLs even on non-default ports", () => {
+      const config: ContentGeneratorConfig = {
+        model: "test-model",
+        baseUrl: "http://localhost:5678/v1",
+      };
+
+      expect(LMStudioOpenAICompatibleProvider.isLMStudioProvider(config)).toBe(
+        true,
       );
     });
   });

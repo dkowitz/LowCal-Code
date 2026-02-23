@@ -13,7 +13,7 @@ import { ToolErrorType } from "./tool-error.js";
 const mockCallTool = vi.fn();
 const mockToolMethod = vi.fn();
 const mockCallableToolInstance = {
-    tool: mockToolMethod, // Not directly used by DiscoveredMCPTool instance methods
+    tool: mockToolMethod,
     callTool: mockCallTool,
     // Add other methods if DiscoveredMCPTool starts using them
 };
@@ -50,13 +50,14 @@ describe("DiscoveredMCPTool", () => {
         required: ["param"],
     };
     let tool;
+    const getAllowlist = (invocation) => invocation.constructor.allowlist;
     beforeEach(() => {
         mockCallTool.mockClear();
         mockToolMethod.mockClear();
         tool = new DiscoveredMCPTool(mockCallableToolInstance, serverName, serverToolName, baseDescription, inputSchema);
         // Clear allowlist before each relevant test, especially for shouldConfirmExecute
         const invocation = tool.build({ param: "mock" });
-        invocation.constructor.allowlist.clear();
+        getAllowlist(invocation).clear();
     });
     afterEach(() => {
         vi.restoreAllMocks();
@@ -471,13 +472,13 @@ describe("DiscoveredMCPTool", () => {
         });
         it("should return false if server is allowlisted", async () => {
             const invocation = tool.build({ param: "mock" });
-            invocation.constructor.allowlist.add(serverName);
+            getAllowlist(invocation).add(serverName);
             expect(await invocation.shouldConfirmExecute(new AbortController().signal)).toBe(false);
         });
         it("should return false if tool is allowlisted", async () => {
             const toolAllowlistKey = `${serverName}.${serverToolName}`;
             const invocation = tool.build({ param: "mock" });
-            invocation.constructor.allowlist.add(toolAllowlistKey);
+            getAllowlist(invocation).add(toolAllowlistKey);
             expect(await invocation.shouldConfirmExecute(new AbortController().signal)).toBe(false);
         });
         it("should return confirmation details if not trusted and not allowlisted", async () => {
@@ -507,7 +508,7 @@ describe("DiscoveredMCPTool", () => {
                 "onConfirm" in confirmation &&
                 typeof confirmation.onConfirm === "function") {
                 await confirmation.onConfirm(ToolConfirmationOutcome.ProceedAlwaysServer);
-                expect(invocation.constructor.allowlist.has(serverName)).toBe(true);
+                expect(getAllowlist(invocation).has(serverName)).toBe(true);
             }
             else {
                 throw new Error("Confirmation details or onConfirm not in expected format");
@@ -523,7 +524,7 @@ describe("DiscoveredMCPTool", () => {
                 "onConfirm" in confirmation &&
                 typeof confirmation.onConfirm === "function") {
                 await confirmation.onConfirm(ToolConfirmationOutcome.ProceedAlwaysTool);
-                expect(invocation.constructor.allowlist.has(toolAllowlistKey)).toBe(true);
+                expect(getAllowlist(invocation).has(toolAllowlistKey)).toBe(true);
             }
             else {
                 throw new Error("Confirmation details or onConfirm not in expected format");
@@ -539,8 +540,8 @@ describe("DiscoveredMCPTool", () => {
                 typeof confirmation.onConfirm === "function") {
                 // Cancel should not add anything to allowlist
                 await confirmation.onConfirm(ToolConfirmationOutcome.Cancel);
-                expect(invocation.constructor.allowlist.has(serverName)).toBe(false);
-                expect(invocation.constructor.allowlist.has(`${serverName}.${serverToolName}`)).toBe(false);
+                expect(getAllowlist(invocation).has(serverName)).toBe(false);
+                expect(getAllowlist(invocation).has(`${serverName}.${serverToolName}`)).toBe(false);
             }
             else {
                 throw new Error("Confirmation details or onConfirm not in expected format");
@@ -556,8 +557,8 @@ describe("DiscoveredMCPTool", () => {
                 typeof confirmation.onConfirm === "function") {
                 // ProceedOnce should not add anything to allowlist
                 await confirmation.onConfirm(ToolConfirmationOutcome.ProceedOnce);
-                expect(invocation.constructor.allowlist.has(serverName)).toBe(false);
-                expect(invocation.constructor.allowlist.has(`${serverName}.${serverToolName}`)).toBe(false);
+                expect(getAllowlist(invocation).has(serverName)).toBe(false);
+                expect(getAllowlist(invocation).has(`${serverName}.${serverToolName}`)).toBe(false);
             }
             else {
                 throw new Error("Confirmation details or onConfirm not in expected format");

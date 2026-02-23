@@ -2,22 +2,45 @@
 
 exports[`App UI > should render correctly with the prompt input box 1`] = `
 "
+ℹ📋 Status: Prompt Mode: concise (concise (always short)) | Custom Prompt: k-6, darrin
+  (SUPPLEMENTAL) | Active Toolset: mid (17 tools)
+
+  🔧 Tools: run_shell_command, todo_write, write_file, read_file, edit, searxng_search,
+  web_fetch, web_search, schedule_task, launch_task, read_session_messages, save_memory,
+  search_file_content, task_template, read_image, rss, browser_control
+
 
 ╭────────────────────────────────────────────────────────────────────────────────────────╮
 │ >   Type your message or @path/to/file                                                 │
 ╰────────────────────────────────────────────────────────────────────────────────────────╯
-/test/dir                no sandbox (see /docs)                  model (100% context left)"
+/test/ no sandbox (see |conci /k-6,      /mid  model (131,072/131,072 tokens available)
+dir    /docs)           e      darrin✓        (100% context left)"
 `;
 
 exports[`App UI > should render the initial UI correctly 1`] = `
-" I'm Feeling Lucky (esc to cancel, 0s)
+"
+ℹ📋 Status: Prompt Mode: concise (concise (always short)) | Custom Prompt: k-6, darrin
+  (SUPPLEMENTAL) | Active Toolset: mid (17 tools)
+
+  🔧 Tools: run_shell_command, todo_write, write_file, read_file, edit, searxng_search,
+  web_fetch, web_search, schedule_task, launch_task, read_session_messages, save_memory,
+  search_file_content, task_template, read_image, rss, browser_control
+ I'm Feeling Lucky (esc to cancel, 0s)
 
 
-/test/dir                no sandbox (see /docs)                  model (100% context left)"
+/test/ no sandbox (see |conci /k-6,      /mid  model (131,072/131,072 tokens available)
+dir    /docs)           e      darrin✓        (100% context left)"
 `;
 
 exports[`App UI > when in a narrow terminal > should render with a column layout 1`] = `
 "
+ℹ📋 Status: Prompt Mode: concise (concise (always short)) | Custom Prompt: k-6, darrin
+  (SUPPLEMENTAL) | Active Toolset: mid (17 tools)
+
+  🔧 Tools: run_shell_command, todo_write, write_file, read_file, edit, searxng_search,
+  web_fetch, web_search, schedule_task, launch_task, read_session_messages, save_memory,
+  search_file_content, task_template, read_image, rss, browser_control
+
 
 
 ╭────────────────────────────────────────────────────────────────────────────────────────╮
@@ -25,7 +48,7 @@ exports[`App UI > when in a narrow terminal > should render with a column layout
 ╰────────────────────────────────────────────────────────────────────────────────────────╯
 dir
 
-no sandbox (see /docs)
+no sandbox (see /docs) | concise / k-6, darrin✓ / mid
 
-model (100% context left)| ✖ 5 errors (ctrl+o for details)"
+model (131,072/131,072 tokens available) (100% context left)| ✖ 5 errors (ctrl+o for details)"
 `;

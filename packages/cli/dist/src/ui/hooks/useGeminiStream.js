@@ -8,6 +8,7 @@ import { GeminiEventType as ServerGeminiEventType, getErrorMessage, isNodeError,
 import { FinishReason, } from "@google/genai";
 import { StreamingState, MessageType, ToolCallStatus } from "../types.js";
 import { isAtCommand, isSlashCommand } from "../utils/commandUtils.js";
+import { injectCollabContextForTurn } from "../utils/collabContext.js";
 import { useShellCommandProcessor } from "./shellCommandProcessor.js";
 import { useVisionAutoSwitch } from "./useVisionAutoSwitch.js";
 import { handleAtCommand } from "./atCommandProcessor.js";
@@ -22,6 +23,7 @@ import { formatDuration } from "../utils/formatters.js";
 import { useKeypress } from "./useKeypress.js";
 import { setSessionControlHandlers, setSessionStatus, setRegisteredSessionHealth, } from "../../session/sessionManager.js";
 import { normalizeAuthType } from "../../config/auth.js";
+const ENV_TASK_SYSTEM_PROMPT_B64 = "LOWCAL_TASK_SYSTEM_PROMPT_B64";
 const formatElapsed = (milliseconds) => {
     if (!Number.isFinite(milliseconds) || milliseconds <= 0) {
         return "0s";
@@ -33,6 +35,33 @@ const normalizeForSimilarity = (text) => text
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
+const extractHistoryMessageText = (message) => {
+    if (typeof message === "string") {
+        return message;
+    }
+    if (typeof message !== "object" || message === null) {
+        return "";
+    }
+    const messageRecord = message;
+    const contentValue = messageRecord["content"];
+    if (typeof contentValue === "string") {
+        return contentValue;
+    }
+    const textValue = messageRecord["text"];
+    if (typeof textValue === "string") {
+        return textValue;
+    }
+    const partsValue = messageRecord["parts"];
+    if (!Array.isArray(partsValue) || partsValue.length === 0) {
+        return "";
+    }
+    const firstPart = partsValue[0];
+    if (typeof firstPart !== "object" || firstPart === null) {
+        return "";
+    }
+    const firstPartText = firstPart["text"];
+    return typeof firstPartText === "string" ? firstPartText : "";
+};
 const isHighSimilarityRewrite = (current, incoming) => {
     if (!current || !incoming) {
         return false;
@@ -921,13 +950,27 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         if (!options?.isContinuation) {
             lastRestartableQueryRef.current = queryToSend;
         }
+        let finalQueryToSend = queryToSend;
+        if (!options?.isContinuation) {
+            try {
+                const injected = await injectCollabContextForTurn({
+                    baseDir: config.getTargetDir(),
+                    sessionId: config.getSessionId(),
+                    query: finalQueryToSend,
+                });
+                finalQueryToSend = injected.query;
+                onDebugMessage(`[Collab] Injected context (sessions=${injected.sessionsCount}, unread=${injected.unreadCount}, cursor=${injected.cursorBefore}->${injected.cursorAfter}).`);
+            }
+            catch (error) {
+                onDebugMessage(`[Collab] Context injection failed: ${getErrorMessage(error)}`);
+            }
+        }
         // Handle vision switch requirement
-        const visionSwitchResult = await handleVisionSwitch(queryToSend, userMessageTimestamp, options?.isContinuation || false);
+        const visionSwitchResult = await handleVisionSwitch(finalQueryToSend, userMessageTimestamp, options?.isContinuation || false);
         if (!visionSwitchResult.shouldProceed) {
             isSubmittingQueryRef.current = false;
             return;
         }
-        const finalQueryToSend = queryToSend;
         if (!options?.isContinuation) {
             startNewPrompt();
             setThought(null); // Reset thought when starting a new prompt
@@ -1087,6 +1130,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         const previousOpenAIBaseUrl = process.env["OPENAI_BASE_URL"];
         const previousOpenAIApiKey = process.env["OPENAI_API_KEY"];
         const previousOpenAIModel = process.env["OPENAI_MODEL"];
+        const previousTaskSystemPrompt = process.env[ENV_TASK_SYSTEM_PROMPT_B64];
         let runtimeAuthRefreshed = false;
         const restore = async () => {
             if (previousOpenAIBaseUrl === undefined) {
@@ -1106,6 +1150,12 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             }
             else {
                 process.env["OPENAI_MODEL"] = previousOpenAIModel;
+            }
+            if (previousTaskSystemPrompt === undefined) {
+                delete process.env[ENV_TASK_SYSTEM_PROMPT_B64];
+            }
+            else {
+                process.env[ENV_TASK_SYSTEM_PROMPT_B64] = previousTaskSystemPrompt;
             }
             const currentAuthType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
             if (previousAuthType &&
@@ -1157,11 +1207,9 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             const envApiKey = envVarName
                 ? process.env[envVarName]?.trim()
                 : undefined;
-            let runtimeApiKey;
-            runtimeApiKey =
-                providerApiKey ||
-                    envApiKey ||
-                    (runtimeProviderId === "lmstudio" ? "lmstudio-local-key" : undefined);
+            const runtimeApiKey = providerApiKey ||
+                envApiKey ||
+                (runtimeProviderId === "lmstudio" ? "lmstudio-local-key" : undefined);
             if (!runtimeApiKey && envVarName) {
                 throw new Error(`Task runtime requires API key env var ${envVarName}, but it is not set.`);
             }
@@ -1173,6 +1221,28 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 : undefined;
             if ((modelOverride ?? previousModel)?.trim().length > 0) {
                 process.env["OPENAI_MODEL"] = (modelOverride ?? previousModel).trim();
+            }
+            const runtimeSystemPrompt = profile.system_prompt;
+            if (runtimeSystemPrompt) {
+                if (runtimeSystemPrompt.disable === true) {
+                    process.env[ENV_TASK_SYSTEM_PROMPT_B64] = Buffer.from(JSON.stringify({ disable: true }), "utf-8").toString("base64");
+                }
+                else {
+                    const names = Array.isArray(runtimeSystemPrompt.names)
+                        ? runtimeSystemPrompt.names
+                            .map((entry) => typeof entry === "string" ? entry.trim() : "")
+                            .filter((entry) => entry.length > 0)
+                        : [];
+                    if (names.length > 0) {
+                        process.env[ENV_TASK_SYSTEM_PROMPT_B64] = Buffer.from(JSON.stringify({
+                            names,
+                            exclusive: runtimeSystemPrompt.exclusive === true,
+                        }), "utf-8").toString("base64");
+                    }
+                    else {
+                        delete process.env[ENV_TASK_SYSTEM_PROMPT_B64];
+                    }
+                }
             }
             const authOverride = normalizeAuthType(runtimeAuth?.selectedType ?? runtimeAuth?.providerId);
             const currentAuthType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
@@ -1381,12 +1451,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 const recentMessages = clientHistory.slice(-3);
                 const contextText = recentMessages
                     .map((msg) => {
-                    if (typeof msg === "string")
-                        return msg;
-                    // Try to get content from the message
-                    const content = msg.content ||
-                        msg.text ||
-                        msg.parts?.[0]?.text;
+                    const content = extractHistoryMessageText(msg);
                     if (content && typeof content === "string") {
                         return content.substring(0, 200);
                     }

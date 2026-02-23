@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { HttpError } from "./retry.js";
 import { retryWithBackoff } from "./retry.js";
@@ -117,7 +116,7 @@ describe("retryWithBackoff", () => {
 
   it("should use default shouldRetry if not provided, retrying on 429", async () => {
     const mockFn = vi.fn(async () => {
-      const error = new Error("Too Many Requests") as any;
+      const error: HttpError = new Error("Too Many Requests");
       error.status = 429;
       throw error;
     });
@@ -142,7 +141,7 @@ describe("retryWithBackoff", () => {
 
   it("should use default shouldRetry if not provided, not retrying on 400", async () => {
     const mockFn = vi.fn(async () => {
-      const error = new Error("Bad Request") as any;
+      const error: HttpError = new Error("Bad Request");
       error.status = 400;
       throw error;
     });

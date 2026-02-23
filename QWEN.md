@@ -58,7 +58,7 @@ Content is merged with separators to indicate origin. The UI displays the loaded
 
 - read_file, write_file, list_directory, glob, search_file_content, edit, web_fetch, web_search, save_memory are core tools.
 - The core orchestrates model calls, tool usage, and memory management.
-- Slot-based subagents provide specialized tasks via /agents commands.
+- Slot-based subagents provide specialized tasks via markdown configs in `.qwen/agents/` and `~/.qwen/agents/`.
 
 ## Development Plan (High-Level)
 

@@ -16,7 +16,12 @@ import {
 import * as os from "node:os";
 import * as path from "node:path";
 import { ShellTool, EditTool, WriteFileTool } from "@qwen-code/qwen-code-core";
-import { loadCliConfig, parseArguments, type CliArgs } from "./config.js";
+import {
+  loadCliConfig,
+  loadHierarchicalGeminiMemory,
+  parseArguments,
+  type CliArgs,
+} from "./config.js";
 import type { Settings } from "./settings.js";
 import type { Extension } from "./extension.js";
 import * as ServerConfig from "@qwen-code/qwen-code-core";
@@ -58,8 +63,8 @@ vi.mock("fs", async (importOriginal) => {
   };
 });
 
-vi.mock("os", async (importOriginal) => {
-  const actualOs = await importOriginal<typeof os>();
+vi.mock("node:os", async (importOriginal) => {
+  const actualOs = await importOriginal<typeof import("node:os")>();
   return {
     ...actualOs,
     homedir: vi.fn(() => "/mock/home/user"),
@@ -770,29 +775,27 @@ describe("Hierarchical Memory Loading (config.ts) - Placeholder Suite", () => {
     );
   });
 
-  // NOTE TO FUTURE DEVELOPERS:
-  // To re-enable tests for loadHierarchicalGeminiMemory, ensure that:
-  // 1. os.homedir() is reliably mocked *before* the config.ts module is loaded
-  //    and its functions (which use os.homedir()) are called.
-  // 2. fs/promises and fs mocks correctly simulate file/directory existence,
-  //    readability, and content based on paths derived from the mocked os.homedir().
-  // 3. Spies on console functions (for logger output) are correctly set up if needed.
-  // Example of a previously failing test structure:
-  it.skip("should correctly use mocked homedir for global path", async () => {
-    const MOCK_GEMINI_DIR_LOCAL = path.join("/mock/home/user", ".qwen");
-    const MOCK_GLOBAL_PATH_LOCAL = path.join(
-      MOCK_GEMINI_DIR_LOCAL,
-      "LOWCAL.md",
+  it("should pass empty cwd to server memory loader when cwd is home directory", async () => {
+    const mockFileService = {} as ServerConfig.FileDiscoveryService;
+    const actualOs = await vi.importActual<typeof import("node:os")>("node:os");
+    const homeDir = path.resolve(actualOs.homedir());
+    await loadHierarchicalGeminiMemory(
+      homeDir,
+      [],
+      false,
+      mockFileService,
+      {} as Settings,
     );
-    mockFs({
-      [MOCK_GLOBAL_PATH_LOCAL]: { type: "file", content: "GlobalContentOnly" },
-    });
-    const memory = await loadHierarchicalGeminiMemory("/some/other/cwd", false);
-    expect(memory).toBe("GlobalContentOnly");
-    expect(vi.mocked(os.homedir)).toHaveBeenCalled();
-    expect(fsPromises.readFile).toHaveBeenCalledWith(
-      MOCK_GLOBAL_PATH_LOCAL,
-      "utf-8",
+
+    expect(ServerConfig.loadServerHierarchicalMemory).toHaveBeenCalledWith(
+      "",
+      [],
+      false,
+      mockFileService,
+      [],
+      "tree",
+      undefined,
+      undefined,
     );
   });
 });

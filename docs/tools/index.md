@@ -81,6 +81,8 @@ LowCal Code's built-in tools can be broadly categorized as follows:
 ### Session Communication Tools
 
 - **[Read Session Messages](#read-session-messages)** (`read_session_messages`): Receive messages from launched tasks (user-facing counterpart: `/mailbox`).
+- **[Read Collab Messages](#read-collab-messages)** (`read_collab_messages`): Read collab board messages for coordination across sessions.
+- **[Post Collab Message](#post-collab-message)** (`post_collab_message`): Post short collab board messages and optionally wake target sessions.
 
 ### Memory Tools
 
@@ -260,6 +262,51 @@ Receives messages from launched tasks back to the parent session.
 **Example Use:** "Get results from my background research task"
 
 **TUI counterpart:** `/mailbox` provides an interactive mailbox viewer for received/pending task payloads.
+
+---
+
+### Read Collab Messages (`read_collab_messages`)
+
+Reads inter-session collaboration messages from the shared collab board.
+
+**Parameters:**
+
+- `since_seq`: Optional lower bound sequence number (exclusive)
+- `limit`: Maximum number of messages to return
+- `include_all_targets`: Include all target sessions instead of current-session visibility scope
+- `include_expired`: Include TTL-expired messages
+- `session_id`: Optional explicit session scope when `include_all_targets` is false
+
+**Example Use:** "Show collab messages since sequence 120 for my session"
+
+**TUI counterpart:** `/collab view --since 120 --limit 20`
+
+---
+
+### Post Collab Message (`post_collab_message`)
+
+Posts short coordination messages to the shared workspace collab board.
+
+**Parameters:**
+
+- `text`: Required short message body
+- `to_session_id`: Optional direct target session id (`all`/omitted for broadcast)
+- `type`: Optional message type label (`request`, `ack`, `result`, `note`, etc.)
+- `refs`: Optional file references for larger payloads
+- `in_reply_to`: Optional parent message id for threaded replies
+- `ttl_seconds`: Optional expiry
+- `notify`: `passive` (default), `wake_view`, or `wake_prompt` (wake modes require direct target)
+
+**Example Use:** "Ask another session to review a file and wake it for immediate action"
+
+**Recommended Protocol (low-noise):**
+
+- `request` -> `ack` -> `result`
+- Send one `ack` with `notify='passive'`
+- Do not reply to pure acknowledgements
+- Use `wake_prompt` for requests or urgent results requiring immediate action
+
+**TUI counterpart:** `/collab post "..." [flags]`
 
 ---
 

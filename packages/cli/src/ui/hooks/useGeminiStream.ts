@@ -52,6 +52,7 @@ import type {
 } from "../types.js";
 import { StreamingState, MessageType, ToolCallStatus } from "../types.js";
 import { isAtCommand, isSlashCommand } from "../utils/commandUtils.js";
+import { injectCollabContextForTurn } from "../utils/collabContext.js";
 import { useShellCommandProcessor } from "./shellCommandProcessor.js";
 import { useVisionAutoSwitch } from "./useVisionAutoSwitch.js";
 import { handleAtCommand } from "./atCommandProcessor.js";
@@ -81,6 +82,8 @@ import {
 } from "../../session/sessionManager.js";
 import { normalizeAuthType } from "../../config/auth.js";
 
+const ENV_TASK_SYSTEM_PROMPT_B64 = "LOWCAL_TASK_SYSTEM_PROMPT_B64";
+
 const formatElapsed = (milliseconds: number): string => {
   if (!Number.isFinite(milliseconds) || milliseconds <= 0) {
     return "0s";
@@ -94,6 +97,40 @@ const normalizeForSimilarity = (text: string): string =>
     .replace(/[^\p{L}\p{N}\s]/gu, " ")
     .replace(/\s+/g, " ")
     .trim();
+
+const extractHistoryMessageText = (message: unknown): string => {
+  if (typeof message === "string") {
+    return message;
+  }
+
+  if (typeof message !== "object" || message === null) {
+    return "";
+  }
+
+  const messageRecord = message as Record<string, unknown>;
+  const contentValue = messageRecord["content"];
+  if (typeof contentValue === "string") {
+    return contentValue;
+  }
+
+  const textValue = messageRecord["text"];
+  if (typeof textValue === "string") {
+    return textValue;
+  }
+
+  const partsValue = messageRecord["parts"];
+  if (!Array.isArray(partsValue) || partsValue.length === 0) {
+    return "";
+  }
+
+  const firstPart = partsValue[0];
+  if (typeof firstPart !== "object" || firstPart === null) {
+    return "";
+  }
+
+  const firstPartText = (firstPart as Record<string, unknown>)["text"];
+  return typeof firstPartText === "string" ? firstPartText : "";
+};
 
 const isHighSimilarityRewrite = (current: string, incoming: string): boolean => {
   if (!current || !incoming) {
@@ -1380,9 +1417,28 @@ export const useGeminiStream = (
         lastRestartableQueryRef.current = queryToSend;
       }
 
+      let finalQueryToSend = queryToSend;
+      if (!options?.isContinuation) {
+        try {
+          const injected = await injectCollabContextForTurn({
+            baseDir: config.getTargetDir(),
+            sessionId: config.getSessionId(),
+            query: finalQueryToSend,
+          });
+          finalQueryToSend = injected.query;
+          onDebugMessage(
+            `[Collab] Injected context (sessions=${injected.sessionsCount}, unread=${injected.unreadCount}, cursor=${injected.cursorBefore}->${injected.cursorAfter}).`,
+          );
+        } catch (error) {
+          onDebugMessage(
+            `[Collab] Context injection failed: ${getErrorMessage(error)}`,
+          );
+        }
+      }
+
       // Handle vision switch requirement
       const visionSwitchResult = await handleVisionSwitch(
-        queryToSend,
+        finalQueryToSend,
         userMessageTimestamp,
         options?.isContinuation || false,
       );
@@ -1391,8 +1447,6 @@ export const useGeminiStream = (
         isSubmittingQueryRef.current = false;
         return;
       }
-
-      const finalQueryToSend = queryToSend;
 
       if (!options?.isContinuation) {
         startNewPrompt();
@@ -1622,6 +1676,7 @@ export const useGeminiStream = (
       const previousOpenAIBaseUrl = process.env["OPENAI_BASE_URL"];
       const previousOpenAIApiKey = process.env["OPENAI_API_KEY"];
       const previousOpenAIModel = process.env["OPENAI_MODEL"];
+      const previousTaskSystemPrompt = process.env[ENV_TASK_SYSTEM_PROMPT_B64];
       let runtimeAuthRefreshed = false;
 
       const restore = async () => {
@@ -1639,6 +1694,11 @@ export const useGeminiStream = (
           delete process.env["OPENAI_MODEL"];
         } else {
           process.env["OPENAI_MODEL"] = previousOpenAIModel;
+        }
+        if (previousTaskSystemPrompt === undefined) {
+          delete process.env[ENV_TASK_SYSTEM_PROMPT_B64];
+        } else {
+          process.env[ENV_TASK_SYSTEM_PROMPT_B64] = previousTaskSystemPrompt;
         }
 
         const currentAuthType = normalizeAuthType(
@@ -1701,8 +1761,7 @@ export const useGeminiStream = (
         const envApiKey = envVarName
           ? process.env[envVarName]?.trim()
           : undefined;
-        let runtimeApiKey: string | undefined;
-        runtimeApiKey =
+        const runtimeApiKey =
           providerApiKey ||
           envApiKey ||
           (runtimeProviderId === "lmstudio" ? "lmstudio-local-key" : undefined);
@@ -1721,6 +1780,35 @@ export const useGeminiStream = (
             : undefined;
         if ((modelOverride ?? previousModel)?.trim().length > 0) {
           process.env["OPENAI_MODEL"] = (modelOverride ?? previousModel).trim();
+        }
+
+        const runtimeSystemPrompt = profile.system_prompt;
+        if (runtimeSystemPrompt) {
+          if (runtimeSystemPrompt.disable === true) {
+            process.env[ENV_TASK_SYSTEM_PROMPT_B64] = Buffer.from(
+              JSON.stringify({ disable: true }),
+              "utf-8",
+            ).toString("base64");
+          } else {
+            const names = Array.isArray(runtimeSystemPrompt.names)
+              ? runtimeSystemPrompt.names
+                  .map((entry) =>
+                    typeof entry === "string" ? entry.trim() : "",
+                  )
+                  .filter((entry) => entry.length > 0)
+              : [];
+            if (names.length > 0) {
+              process.env[ENV_TASK_SYSTEM_PROMPT_B64] = Buffer.from(
+                JSON.stringify({
+                  names,
+                  exclusive: runtimeSystemPrompt.exclusive === true,
+                }),
+                "utf-8",
+              ).toString("base64");
+            } else {
+              delete process.env[ENV_TASK_SYSTEM_PROMPT_B64];
+            }
+          }
         }
 
         const authOverride = normalizeAuthType(
@@ -2008,12 +2096,7 @@ export const useGeminiStream = (
           const recentMessages = clientHistory.slice(-3);
           const contextText = recentMessages
             .map((msg) => {
-              if (typeof msg === "string") return msg;
-              // Try to get content from the message
-              const content =
-                (msg as any).content ||
-                (msg as any).text ||
-                (msg as { parts?: Array<{ text?: string }> }).parts?.[0]?.text;
+              const content = extractHistoryMessageText(msg);
               if (content && typeof content === "string") {
                 return content.substring(0, 200);
               }

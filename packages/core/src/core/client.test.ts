@@ -249,6 +249,7 @@ describe("Gemini Client (client.ts)", () => {
         .mockReturnValue(contentGeneratorConfig),
       getToolRegistry: vi.fn().mockReturnValue(mockToolRegistry),
       getModel: vi.fn().mockReturnValue("test-model"),
+      getEffectiveContextLimit: vi.fn().mockReturnValue(1000),
       getEmbeddingModel: vi.fn().mockReturnValue("test-embedding-model"),
       getApiKey: vi.fn().mockReturnValue("test-key"),
       getVertexAI: vi.fn().mockReturnValue(false),
@@ -456,8 +457,7 @@ describe("Gemini Client (client.ts)", () => {
       );
     });
 
-    /* We now use model in contentGeneratorConfig in most cases. */
-    it.skip("should allow overriding model and config", async () => {
+    it("should merge config overrides while keeping the active client model", async () => {
       const contents: Content[] = [
         { role: "user", parts: [{ text: "hello" }] },
       ];
@@ -483,7 +483,7 @@ describe("Gemini Client (client.ts)", () => {
 
       expect(mockGenerateContentFn).toHaveBeenCalledWith(
         {
-          model: customModel,
+          model: "test-model",
           config: {
             abortSignal,
             systemInstruction: getCoreSystemPrompt(""),
@@ -617,7 +617,6 @@ describe("Gemini Client (client.ts)", () => {
           compressionStatus: CompressionStatus.COMPRESSED,
           newTokenCount: 1000,
           originalTokenCount: 1000,
-          model: "test-model",
         });
       });
 
@@ -630,7 +629,6 @@ describe("Gemini Client (client.ts)", () => {
             CompressionStatus.COMPRESSION_FAILED_INFLATED_TOKEN_COUNT,
           newTokenCount: 5000,
           originalTokenCount: 1000,
-          model: "test-model",
         });
       });
 
@@ -679,7 +677,6 @@ describe("Gemini Client (client.ts)", () => {
           compressionStatus: CompressionStatus.NOOP,
           newTokenCount: 0,
           originalTokenCount: 0,
-          model: "test-model",
         });
       });
     });
@@ -727,12 +724,11 @@ describe("Gemini Client (client.ts)", () => {
       const result = await client.tryCompressChat("prompt-id-2");
       const newChat = client.getChat();
 
-      expect(tokenLimit).toHaveBeenCalled();
+      expect(mockConfigObject.getEffectiveContextLimit).toHaveBeenCalled();
       expect(result).toEqual({
         compressionStatus: CompressionStatus.NOOP,
         newTokenCount: 699,
         originalTokenCount: 699,
-        model: "test-model",
       });
       expect(newChat).toBe(initialChat);
     });
@@ -803,7 +799,7 @@ describe("Gemini Client (client.ts)", () => {
       const result = await client.tryCompressChat("prompt-id-3");
       const newChat = client.getChat();
 
-      expect(tokenLimit).toHaveBeenCalled();
+      expect(mockConfigObject.getEffectiveContextLimit).toHaveBeenCalled();
       expect(mockSendMessage).toHaveBeenCalled();
 
       // Assert that summarization happened and returned the correct stats
@@ -856,7 +852,7 @@ describe("Gemini Client (client.ts)", () => {
       const result = await client.tryCompressChat("prompt-id-3");
       const newChat = client.getChat();
 
-      expect(tokenLimit).toHaveBeenCalled();
+      expect(mockConfigObject.getEffectiveContextLimit).toHaveBeenCalled();
       expect(mockSendMessage).toHaveBeenCalled();
 
       // Assert that summarization happened and returned the correct stats

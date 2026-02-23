@@ -19,6 +19,12 @@ interface ViewOverlayProps {
   onExit: () => void;
 }
 
+type InputKey = {
+  upArrow?: boolean;
+  downArrow?: boolean;
+  escape?: boolean;
+};
+
 export const ViewOverlay: React.FC<ViewOverlayProps> = ({
   item,
   height,
@@ -38,23 +44,31 @@ export const ViewOverlay: React.FC<ViewOverlayProps> = ({
 
   React.useEffect(() => {
     let mounted = true;
+    let hasLock = false;
     try {
       const ok = requestLock(owner);
-      if (mounted && ok) setAcquired(true);
-    } catch (e) {
-      // ignore
+      if (mounted && ok) {
+        hasLock = true;
+        setAcquired(true);
+      }
+    } catch {
+      // Ignore lock acquisition errors.
     }
     return () => {
       mounted = false;
       try {
-        if (acquired) releaseLock(owner);
-      } catch (e) {}
+        if (hasLock) {
+          releaseLock(owner);
+        }
+      } catch {
+        // Ignore lock release errors.
+      }
     };
   }, [requestLock, releaseLock, owner]);
 
   // Register input handler only when we have the lock
   useInput(
-    (input: string, key: any) => {
+    (input: string, key: InputKey) => {
       if (!acquired) return;
       if (key.upArrow || input === "k") onScroll("up");
       else if (key.downArrow || input === "j") onScroll("down");
@@ -62,7 +76,9 @@ export const ViewOverlay: React.FC<ViewOverlayProps> = ({
         onExit();
         try {
           releaseLock(owner);
-        } catch (e) {}
+        } catch {
+          // Ignore lock release errors.
+        }
         setAcquired(false);
       }
     },

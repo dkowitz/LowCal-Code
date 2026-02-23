@@ -4,7 +4,6 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
 import type { Mocked } from "vitest";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import type { ConfigParameters } from "../config/config.js";
@@ -49,7 +48,7 @@ const mockSseTransportClose = vi.fn();
 vi.mock("@modelcontextprotocol/sdk/client/index.js", () => {
   const MockClient = vi.fn().mockImplementation(() => ({
     connect: mockMcpClientConnect,
-    set onerror(handler: any) {
+    set onerror(handler: unknown) {
       mockMcpClientOnError(handler);
     },
   }));
@@ -139,7 +138,7 @@ describe("ToolRegistry", () => {
     vi.spyOn(config, "getPromptRegistry").mockReturnValue({
       clear: vi.fn(),
       removePromptsByServer: vi.fn(),
-    } as any);
+    } as unknown as ReturnType<Config["getPromptRegistry"]>);
   });
 
   afterEach(() => {
@@ -282,7 +281,9 @@ describe("ToolRegistry", () => {
         stderr: { on: vi.fn() },
         on: vi.fn(),
       };
-      mockSpawn.mockReturnValue(mockChildProcess as any);
+      mockSpawn.mockReturnValue(
+        mockChildProcess as unknown as ReturnType<typeof spawn>,
+      );
 
       // Simulate stdout data
       mockChildProcess.stdout.on.mockImplementation((event, callback) => {
@@ -295,7 +296,7 @@ describe("ToolRegistry", () => {
             ),
           );
         }
-        return mockChildProcess as any;
+        return mockChildProcess;
       });
 
       // Simulate process close
@@ -303,7 +304,7 @@ describe("ToolRegistry", () => {
         if (event === "close") {
           callback(0);
         }
-        return mockChildProcess as any;
+        return mockChildProcess;
       });
 
       await toolRegistry.discoverAllTools();
@@ -345,7 +346,9 @@ describe("ToolRegistry", () => {
         stderr: { on: vi.fn(), removeListener: vi.fn() },
         on: vi.fn(),
       };
-      mockSpawn.mockReturnValueOnce(discoveryProcess as any);
+      mockSpawn.mockReturnValueOnce(
+        discoveryProcess as unknown as ReturnType<typeof spawn>,
+      );
 
       discoveryProcess.stdout.on.mockImplementation((event, callback) => {
         if (event === "data") {
@@ -376,7 +379,9 @@ describe("ToolRegistry", () => {
         disconnect: vi.fn(),
         removeListener: vi.fn(),
       };
-      mockSpawn.mockReturnValueOnce(executionProcess as any);
+      mockSpawn.mockReturnValueOnce(
+        executionProcess as unknown as ReturnType<typeof spawn>,
+      );
 
       executionProcess.stderr.on.mockImplementation((event, callback) => {
         if (event === "data") {

@@ -1,7 +1,0 @@
-{
-  "job_id": "launch-zellij-check-1770589114667",
-  "timestamp": "2026-02-08T22:18:35.456Z",
-  "prompt": "date",
-  "error": "Cannot truncate prompt with n_keep (8675) >= n_ctx (4096)",
-  "status": "error"
-}

@@ -88,7 +88,7 @@ export class UiTelemetryService extends EventEmitter {
                 currentContextTokenCount += m.tokens.total || 0;
             }
         }
-        catch (e) {
+        catch {
             currentContextTokenCount = 0;
         }
         this.emit("update", {
@@ -164,11 +164,13 @@ export class UiTelemetryService extends EventEmitter {
         }
         // Aggregate line count data from metadata
         if (event.metadata) {
-            if (event.metadata["ai_added_lines"] !== undefined) {
-                files.totalLinesAdded += event.metadata["ai_added_lines"];
+            const aiAddedLines = event.metadata["ai_added_lines"];
+            if (typeof aiAddedLines === "number") {
+                files.totalLinesAdded += aiAddedLines;
             }
-            if (event.metadata["ai_removed_lines"] !== undefined) {
-                files.totalLinesRemoved += event.metadata["ai_removed_lines"];
+            const aiRemovedLines = event.metadata["ai_removed_lines"];
+            if (typeof aiRemovedLines === "number") {
+                files.totalLinesRemoved += aiRemovedLines;
             }
         }
         this.emitUpdate();

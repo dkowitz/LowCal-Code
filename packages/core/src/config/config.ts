@@ -46,14 +46,15 @@ import { ShellTool } from "../tools/shell.js";
 import { TaskTool } from "../tools/task.js";
 import { TodoWriteTool } from "../tools/todoWrite.js";
 import { ToolRegistry } from "../tools/tool-registry.js";
-import type { AnyToolInvocation } from "../tools/tools.js";
+import type { AnyDeclarativeTool, AnyToolInvocation } from "../tools/tools.js";
 import { WebFetchTool } from "../tools/web-fetch.js";
 import { RSSTool } from "../tools/rss.js";
 import { WebSearchTool } from "../tools/web-search.js";
 import { ScheduleTaskTool } from "../tools/schedule-task.js";
 import { LaunchTaskTool } from "../tools/launch-task.js";
 import { ReadSessionMessagesTool } from "../tools/read-session-messages.js";
-import { TeamManagementTool } from "../tools/team-management.js";
+import { ReadCollabMessagesTool } from "../tools/read-collab-messages.js";
+import { PostCollabMessageTool } from "../tools/post-collab-message.js";
 import { TaskTemplateTool } from "../tools/task-template.js";
 import { SearXNGSearchTool } from "../tools/searxng-search.js";
 import { WriteFileTool } from "../tools/write-file.js";
@@ -67,7 +68,11 @@ import {
 } from "./models.js";
 import { Storage } from "./storage.js";
 import { Logger, type ModelSwitchEvent } from "../core/logger.js";
-import { tokenLimit } from "../core/tokenLimits.js";
+import {
+  getModelContextLimit as getCoreModelContextLimit,
+  setModelContextLimit as setCoreModelContextLimit,
+  tokenLimit,
+} from "../core/tokenLimits.js";
 
 // Re-export OAuth config type
 export type { AnyToolInvocation, MCPOAuthConfig };
@@ -593,35 +598,15 @@ export class Config {
   // provider-reported dynamic limits (set via tokenLimits.setModelContextLimit)
   // are visible via Config APIs and vice-versa.
   setModelContextLimit(model: string, limit?: number): void {
-    // Import tokenLimits functions lazily to avoid circular import issues at module load time
-    let coreSet: ((m: string, l?: number) => void) | undefined;
-    try {
-      coreSet = require("../core/tokenLimits.js").setModelContextLimit;
-    } catch (e) {
-      coreSet = undefined;
-    }
-
     if (!model) {
       return;
     }
     if (typeof limit === "number" && Number.isFinite(limit) && limit > 0) {
       this.modelContextLimits.set(model, limit);
-      if (coreSet) {
-        try {
-          coreSet(model, limit);
-        } catch (e) {
-          // ignore
-        }
-      }
+      setCoreModelContextLimit(model, limit);
     } else {
       this.modelContextLimits.delete(model);
-      if (coreSet) {
-        try {
-          coreSet(model, undefined);
-        } catch (e) {
-          // ignore
-        }
-      }
+      setCoreModelContextLimit(model, undefined);
     }
   }
 
@@ -636,15 +621,9 @@ export class Config {
     if (typeof local === "number") return local;
 
     // Fall back to core token limits dynamic map if available
-    try {
-      const coreGet = require("../core/tokenLimits.js")
-        .getModelContextLimit as (m: string) => number | undefined;
-      if (typeof coreGet === "function") {
-        const v = coreGet(key);
-        if (typeof v === "number" && Number.isFinite(v) && v > 0) return v;
-      }
-    } catch (e) {
-      // ignore
+    const v = getCoreModelContextLimit(key);
+    if (typeof v === "number" && Number.isFinite(v) && v > 0) {
+      return v;
     }
 
     return undefined;
@@ -654,15 +633,9 @@ export class Config {
     const key = model ?? this.getModel();
 
     // Check for dynamic/provider-supplied limit via core token limits map first
-    try {
-      const coreGet = require("../core/tokenLimits.js")
-        .getModelContextLimit as (m: string) => number | undefined;
-      if (typeof coreGet === "function") {
-        const v = coreGet(key ?? "");
-        if (typeof v === "number" && Number.isFinite(v) && v > 0) return v;
-      }
-    } catch (e) {
-      // ignore
+    const v = getCoreModelContextLimit(key ?? "");
+    if (typeof v === "number" && Number.isFinite(v) && v > 0) {
+      return v;
     }
 
     const override = key ? this.modelContextLimits.get(key) : undefined;
@@ -1104,8 +1077,14 @@ export class Config {
     const registry = new ToolRegistry(this);
 
     // helper to create & register core tools that are enabled
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const registerCoreTool = (ToolClass: any, ...args: unknown[]) => {
+    const registerCoreTool = <TArgs extends unknown[]>(
+      ToolClass: {
+        new (...args: TArgs): AnyDeclarativeTool;
+        name: string;
+        Name?: string;
+      },
+      ...args: TArgs
+    ) => {
       const className = ToolClass.name;
       const toolName = ToolClass.Name || className;
       const coreTools = this.getCoreTools();
@@ -1171,7 +1150,8 @@ export class Config {
     registerCoreTool(LaunchTaskTool, this);
     registerCoreTool(TaskTemplateTool, this);
     registerCoreTool(ReadSessionMessagesTool, this);
-    registerCoreTool(TeamManagementTool, this);
+    registerCoreTool(ReadCollabMessagesTool, this);
+    registerCoreTool(PostCollabMessageTool, this);
 
     // Register browser control tool
     registerCoreTool(BrowserControlTool, this);
