@@ -29,6 +29,7 @@ export const ToolNames = {
     LAUNCH_TASK: "launch_task",
     TASK_TEMPLATE: "task_template",
     READ_SESSION_MESSAGES: "read_session_messages",
+    READ_SESSIONS: "read_sessions",
     READ_COLLAB_MESSAGES: "read_collab_messages",
     POST_COLLAB_MESSAGE: "post_collab_message",
     RSS: "rss",

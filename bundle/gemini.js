@@ -59162,6 +59162,7 @@ var init_tool_names = __esm({
       LAUNCH_TASK: "launch_task",
       TASK_TEMPLATE: "task_template",
       READ_SESSION_MESSAGES: "read_session_messages",
+      READ_SESSIONS: "read_sessions",
       READ_COLLAB_MESSAGES: "read_collab_messages",
       POST_COLLAB_MESSAGE: "post_collab_message",
       RSS: "rss"
@@ -74319,6 +74320,7 @@ var init_prompts = __esm({
         ToolNames.LAUNCH_TASK,
         ToolNames.TASK_TEMPLATE,
         ToolNames.READ_SESSION_MESSAGES,
+        ToolNames.READ_SESSIONS,
         ToolNames.READ_COLLAB_MESSAGES,
         ToolNames.POST_COLLAB_MESSAGE
       ],
@@ -74350,6 +74352,7 @@ var init_prompts = __esm({
       [ToolNames.LAUNCH_TASK]: "Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: `launch_task action=create id=task-1 prompt='...'`.",
       [ToolNames.TASK_TEMPLATE]: "Manage reusable task templates (list/get/create/update/delete/resolve) used by launch_task and schedule_task. Example: `task_template action=list`.",
       [ToolNames.READ_SESSION_MESSAGES]: "Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: `read_session_messages action=wait`.",
+      [ToolNames.READ_SESSIONS]: "Read active session registry entries (list/get) without invoking /sessions via shell. Example: `read_sessions action=list`.",
       [ToolNames.READ_COLLAB_MESSAGES]: "Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: `read_collab_messages since_seq=120 limit=20`.",
       [ToolNames.POST_COLLAB_MESSAGE]: "Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set `notify='wake_prompt'` with `to_session_id`. Example: `post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']`."
     };
@@ -237863,6 +237866,210 @@ ${body}`;
   }
 });
 
+// packages/core/dist/src/tools/read-sessions.js
+function normalizePositiveInteger(value, fieldName) {
+  if (value === void 0) {
+    return void 0;
+  }
+  if (!Number.isFinite(value)) {
+    throw new Error(`${fieldName} must be a finite number.`);
+  }
+  const normalized2 = Math.floor(value);
+  if (normalized2 < 1) {
+    throw new Error(`${fieldName} must be >= 1.`);
+  }
+  return normalized2;
+}
+function normalizeTtlSeconds(ttlSeconds) {
+  const normalized2 = normalizePositiveInteger(ttlSeconds, "ttl_seconds");
+  return normalized2 ?? DEFAULT_TTL_SECONDS;
+}
+function isSessionStale(session, nowMs, ttlMs) {
+  const lastSeen = Date.parse(session.last_seen);
+  return Number.isFinite(lastSeen) && nowMs - lastSeen > ttlMs;
+}
+function sortSessions(sessions, nowMs, ttlMs) {
+  return [...sessions].sort((a, b) => {
+    const aLast = Date.parse(a.last_seen);
+    const bLast = Date.parse(b.last_seen);
+    const aStale = isSessionStale(a, nowMs, ttlMs);
+    const bStale = isSessionStale(b, nowMs, ttlMs);
+    const aRank = aStale ? 2 : a.status === "working" ? 0 : 1;
+    const bRank = bStale ? 2 : b.status === "working" ? 0 : 1;
+    if (aRank !== bRank) {
+      return aRank - bRank;
+    }
+    if (Number.isFinite(aLast) && Number.isFinite(bLast)) {
+      return bLast - aLast;
+    }
+    return 0;
+  });
+}
+function formatSessionLine(session, nowMs, ttlMs) {
+  const stale = isSessionStale(session, nowMs, ttlMs);
+  const status = stale ? "stale" : session.status;
+  const details = session.details ?? {};
+  const jobId = typeof details["job_id"] === "string" ? details["job_id"] : void 0;
+  const activeExecutions2 = typeof details["active_executions"] === "number" ? details["active_executions"] : void 0;
+  const parts = [
+    `[${status.toUpperCase()}]`,
+    session.id,
+    `mode=${session.mode}`,
+    `pid=${session.pid}`,
+    `cwd=${session.cwd}`,
+    `started_at=${session.started_at}`,
+    `last_seen=${session.last_seen}`
+  ];
+  if (jobId) {
+    parts.push(`job_id=${jobId}`);
+  }
+  if (typeof activeExecutions2 === "number") {
+    parts.push(`active_executions=${activeExecutions2}`);
+  }
+  if (session.health) {
+    parts.push(`health=${session.health.state}`);
+    if (session.health.reason) {
+      parts.push(`reason=${session.health.reason}`);
+    }
+  }
+  return parts.join(" ");
+}
+var DEFAULT_TTL_SECONDS, MAX_LIMIT, readSessionsToolSchemaData, readSessionsToolDescription, ReadSessionsInvocation, ReadSessionsTool;
+var init_read_sessions = __esm({
+  "packages/core/dist/src/tools/read-sessions.js"() {
+    "use strict";
+    init_session_store();
+    init_tool_error();
+    init_tool_names();
+    init_tools();
+    DEFAULT_TTL_SECONDS = 180;
+    MAX_LIMIT = 200;
+    readSessionsToolSchemaData = {
+      name: ToolNames.READ_SESSIONS,
+      description: "Read active LowCal sessions from the global session store. Use this instead of shelling out to /sessions.",
+      parametersJsonSchema: {
+        type: "object",
+        properties: {
+          action: {
+            type: "string",
+            enum: ["list", "get"],
+            description: "Session action. list = list active sessions (default), get = return one session record by session_id."
+          },
+          session_id: {
+            type: "string",
+            description: "Session id for action=get. Optional for list (ignored unless supplied for get)."
+          },
+          ttl_seconds: {
+            type: "number",
+            description: "Stale threshold in seconds used for active/stale status. Default 180."
+          },
+          include_stale: {
+            type: "boolean",
+            description: "For list action: include stale sessions in results. Default false."
+          },
+          limit: {
+            type: "number",
+            description: "For list action: maximum sessions to return. Default: unlimited, max 200."
+          }
+        },
+        $schema: "http://json-schema.org/draft-07/schema#"
+      }
+    };
+    readSessionsToolDescription = `
+Read LowCal sessions from the shared session registry.
+
+Use this tool when you need a readout similar to \`/sessions\` from inside a model tool call.
+
+## Actions
+
+- \`list\` (default): list active sessions (stale entries excluded unless \`include_stale=true\`).
+- \`get\`: fetch one full session record by \`session_id\`.
+`;
+    ReadSessionsInvocation = class extends BaseToolInvocation {
+      getDescription() {
+        const action = this.params.action ?? "list";
+        if (action === "get") {
+          return `Reading session record for ${this.params.session_id ?? "(missing session_id)"}`;
+        }
+        return "Reading active session list";
+      }
+      async execute() {
+        try {
+          const action = this.params.action ?? "list";
+          if (action === "get") {
+            const sessionId2 = typeof this.params.session_id === "string" ? this.params.session_id.trim() : "";
+            if (!sessionId2) {
+              throw new Error('session_id is required for action="get".');
+            }
+            const session = await getSession(sessionId2);
+            if (!session) {
+              const notFound = `Session not found: ${sessionId2}`;
+              return {
+                llmContent: notFound,
+                returnDisplay: notFound
+              };
+            }
+            const output2 = JSON.stringify(session, null, 2);
+            return {
+              llmContent: output2,
+              returnDisplay: output2
+            };
+          }
+          const nowMs = Date.now();
+          const ttlSeconds = normalizeTtlSeconds(this.params.ttl_seconds);
+          const ttlMs = ttlSeconds * 1e3;
+          const includeStale = this.params.include_stale === true;
+          const limit2 = normalizePositiveInteger(this.params.limit, "limit");
+          if (limit2 && limit2 > MAX_LIMIT) {
+            throw new Error(`limit must be <= ${MAX_LIMIT}.`);
+          }
+          const sessions = await listSessions();
+          const filtered = includeStale ? sessions : sessions.filter((session) => !isSessionStale(session, nowMs, ttlMs));
+          if (filtered.length === 0) {
+            const emptyMessage = includeStale ? "No sessions found." : `No active sessions found (ttl=${ttlSeconds}s).`;
+            return {
+              llmContent: emptyMessage,
+              returnDisplay: emptyMessage
+            };
+          }
+          const sorted2 = sortSessions(filtered, nowMs, ttlMs);
+          const limited = limit2 ? sorted2.slice(0, limit2) : sorted2;
+          const scope = includeStale ? "total" : "active";
+          const truncated = limited.length < sorted2.length ? ` (showing ${limited.length})` : "";
+          const lines = [
+            `Sessions (${sorted2.length} ${scope})${truncated}:`,
+            ...limited.map((session) => formatSessionLine(session, nowMs, ttlMs))
+          ];
+          const output = lines.join("\n");
+          return {
+            llmContent: output,
+            returnDisplay: output
+          };
+        } catch (error) {
+          const errorMessage = error instanceof Error ? error.message : String(error);
+          return {
+            llmContent: `Error: ${errorMessage}`,
+            returnDisplay: `Error: ${errorMessage}`,
+            error: {
+              message: errorMessage,
+              type: ToolErrorType.INVALID_TOOL_PARAMS
+            }
+          };
+        }
+      }
+    };
+    ReadSessionsTool = class extends BaseDeclarativeTool {
+      static Name = ToolNames.READ_SESSIONS;
+      constructor() {
+        super(ToolNames.READ_SESSIONS, "Read Sessions", readSessionsToolDescription, Kind.Other, readSessionsToolSchemaData.parametersJsonSchema, true, false);
+      }
+      createInvocation(params) {
+        return new ReadSessionsInvocation(params);
+      }
+    };
+  }
+});
+
 // packages/core/dist/src/collab/store.js
 import * as fs40 from "node:fs/promises";
 import * as path44 from "node:path";
@@ -237918,7 +238125,7 @@ function normalizeRefs(refs) {
   }
   return normalized2.length > 0 ? normalized2 : void 0;
 }
-function normalizeTtlSeconds(value) {
+function normalizeTtlSeconds2(value) {
   if (value === void 0) {
     return void 0;
   }
@@ -238109,7 +238316,7 @@ async function postCollabMessage(input) {
   const text = normalizeText(input.text);
   const refs = normalizeRefs(input.refs);
   const inReplyTo = input.inReplyTo && input.inReplyTo.trim().length > 0 ? input.inReplyTo.trim() : void 0;
-  const ttlSeconds = normalizeTtlSeconds(input.ttlSeconds);
+  const ttlSeconds = normalizeTtlSeconds2(input.ttlSeconds);
   const notify = normalizeNotify(input.notify);
   const paths = getCollabPaths(input.baseDir);
   await fs40.mkdir(paths.collabDir, { recursive: true });
@@ -238222,7 +238429,7 @@ function normalizeNonNegativeInteger(value, fieldName) {
   }
   return normalized2;
 }
-function normalizePositiveInteger(value, fieldName) {
+function normalizePositiveInteger2(value, fieldName) {
   if (value === void 0) {
     return void 0;
   }
@@ -238304,7 +238511,7 @@ When responding, prefer \`post_collab_message\` with \`in_reply_to\` so message 
       async execute() {
         try {
           const sinceSeq = normalizeNonNegativeInteger(this.params.since_seq, "since_seq");
-          const limit2 = normalizePositiveInteger(this.params.limit, "limit");
+          const limit2 = normalizePositiveInteger2(this.params.limit, "limit");
           const includeAllTargets = this.params.include_all_targets === true;
           const includeExpired = this.params.include_expired === true;
           const fallbackSessionId = this.config.getSessionId();
@@ -241503,6 +241710,7 @@ var init_config2 = __esm({
     init_schedule_task();
     init_launch_task();
     init_read_session_messages();
+    init_read_sessions();
     init_read_collab_messages();
     init_post_collab_message();
     init_task_template();
@@ -242216,6 +242424,7 @@ var init_config2 = __esm({
         registerCoreTool(LaunchTaskTool, this);
         registerCoreTool(TaskTemplateTool, this);
         registerCoreTool(ReadSessionMessagesTool, this);
+        registerCoreTool(ReadSessionsTool);
         registerCoreTool(ReadCollabMessagesTool, this);
         registerCoreTool(PostCollabMessageTool, this);
         registerCoreTool(BrowserControlTool, this);
@@ -249486,6 +249695,7 @@ var init_src2 = __esm({
     init_schedule_task();
     init_task_template();
     init_read_session_messages();
+    init_read_sessions();
     init_read_collab_messages();
     init_post_collab_message();
     init_launch_task_state();
@@ -249734,6 +249944,7 @@ __export(dist_exports, {
   ReadImageTool: () => ReadImageTool,
   ReadManyFilesTool: () => ReadManyFilesTool,
   ReadSessionMessagesTool: () => ReadSessionMessagesTool,
+  ReadSessionsTool: () => ReadSessionsTool,
   ResearchTool: () => ResearchTool,
   RipGrepTool: () => RipGrepTool,
   SHELL_SPECIAL_CHARS: () => SHELL_SPECIAL_CHARS,
@@ -324171,6 +324382,7 @@ init_settings();
 import * as fs61 from "fs/promises";
 import * as path66 from "path";
 import { spawn as spawn8 } from "child_process";
+import { existsSync as existsSync13 } from "node:fs";
 import * as net5 from "node:net";
 import * as process29 from "process";
 import { fileURLToPath as fileURLToPath8 } from "url";
@@ -324190,6 +324402,11 @@ var EXECUTION_MODE_VALUES = /* @__PURE__ */ new Set([
   "in_process"
 ]);
 var ENV_TASK_RUNTIME_B642 = "LOWCAL_TASK_RUNTIME_B64";
+var DAEMON_MODULE_PATH = fileURLToPath8(import.meta.url);
+var MODULE_HEADLESS_PATH = path66.join(
+  path66.dirname(DAEMON_MODULE_PATH),
+  "headless.js"
+);
 var cachedDefaultExecutionMode = null;
 function normalizeExecutionMode2(value) {
   if (typeof value !== "string") return null;
@@ -324284,6 +324501,25 @@ async function callSessionApi2(socketPath, method, authToken, params) {
 }
 function getSchedulerCwd() {
   return process29.env["LOWCAL_SCHEDULER_CWD"] || process29.cwd();
+}
+function resolveHeadlessScriptPath(schedulerCwd) {
+  const override = process29.env["LOWCAL_HEADLESS_SCRIPT"];
+  if (typeof override === "string" && override.trim().length > 0) {
+    return override.trim();
+  }
+  if (existsSync13(MODULE_HEADLESS_PATH)) {
+    return MODULE_HEADLESS_PATH;
+  }
+  const legacyPath = path66.join(
+    schedulerCwd,
+    "packages",
+    "cli",
+    "dist",
+    "src",
+    "scheduler",
+    "headless.js"
+  );
+  return legacyPath;
 }
 function isRunningInZellij() {
   return Boolean(
@@ -324389,15 +324625,7 @@ function spawnHeadlessJob(job, actionValue, runtimeProfile) {
     );
     fs61.mkdir(path66.dirname(logPath), { recursive: true }).catch(() => {
     });
-    const cliPath = path66.join(
-      schedulerCwd,
-      "packages",
-      "cli",
-      "dist",
-      "src",
-      "scheduler",
-      "headless.js"
-    );
+    const cliPath = resolveHeadlessScriptPath(schedulerCwd);
     const child = spawn8(
       "node",
       [
@@ -324579,15 +324807,7 @@ async function spawnZellijJob(job, actionValue, runtimeProfile) {
     `${job.id}-${Date.now()}.log`
   );
   await fs61.mkdir(path66.dirname(logPath), { recursive: true });
-  const cliPath = path66.join(
-    schedulerCwd,
-    "packages",
-    "cli",
-    "dist",
-    "src",
-    "scheduler",
-    "headless.js"
-  );
+  const cliPath = resolveHeadlessScriptPath(schedulerCwd);
   const cwd8 = schedulerCwd;
   const tabName = `job:${job.id}`;
   await ensureZellijTab(tabName, cwd8);
@@ -350831,7 +351051,7 @@ function clampMaxSessions(value) {
   }
   return Math.max(1, Math.floor(value));
 }
-function formatSessionLine(session, currentSessionId) {
+function formatSessionLine2(session, currentSessionId) {
   const marker = session.id === currentSessionId ? " (current)" : "";
   const status = session.status?.toUpperCase?.() ?? "UNKNOWN";
   return `- [${status}] ${session.id}${marker} mode=${session.mode} pid=${session.pid}`;
@@ -350848,7 +351068,7 @@ function formatSessionsBlock(sessions, currentSessionId, maxSessions) {
   if (selected.length === 0) {
     lines.push("- none");
   } else {
-    lines.push(...selected.map((session) => formatSessionLine(session, currentSessionId)));
+    lines.push(...selected.map((session) => formatSessionLine2(session, currentSessionId)));
   }
   return lines.join("\n");
 }
@@ -357011,7 +357231,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "15402ecd";
+var GIT_COMMIT_INFO = "8fdcc701";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -362224,7 +362444,7 @@ ${query}
 
 // packages/cli/src/ui/commands/sessionsCommand.ts
 init_dist3();
-function formatSessionLine2(session, now, ttlMs) {
+function formatSessionLine3(session, now, ttlMs) {
   const lastSeen = Date.parse(session.last_seen);
   const isStale = Number.isFinite(lastSeen) && now - lastSeen > ttlMs;
   const status = isStale ? "stale" : session.status;
@@ -362272,7 +362492,7 @@ var sessionsCommand2 = {
     const lines = [
       `Sessions (${sessions.length} total):`,
       ...sessions.map(
-        (session) => formatSessionLine2(session, now, DEFAULT_SESSION_TTL_MS)
+        (session) => formatSessionLine3(session, now, DEFAULT_SESSION_TTL_MS)
       )
     ];
     context2.ui.addItem(
@@ -371001,6 +371221,7 @@ var LM_STUDIO_DEFAULT_BASE_URL2 = "http://127.0.0.1:1234/v1";
 var NEW_TEMPLATE_KEY = "__new__";
 var JOB_TEMPLATE_KEY_PREFIX = "__job__:";
 var lastTaskEditorSelectionKey;
+var templateDeployPrefsByKey = /* @__PURE__ */ new Map();
 function templateKeyFor(template) {
   return `${template.id}:${template.level}`;
 }
@@ -371426,7 +371647,22 @@ function TaskTemplateEditorDialog({
       setEditorResetToken((value) => value + 1);
       return;
     }
-    setDraft(buildDraftFromTemplate(selectedTemplate, settings, currentModel));
+    const templateDraft = buildDraftFromTemplate(
+      selectedTemplate,
+      settings,
+      currentModel
+    );
+    const savedDeployPrefs = templateDeployPrefsByKey.get(
+      templateKeyFor(selectedTemplate)
+    );
+    setDraft(
+      savedDeployPrefs ? {
+        ...templateDraft,
+        deployMode: savedDeployPrefs.deployMode,
+        schedule: savedDeployPrefs.schedule,
+        scheduleJobId: savedDeployPrefs.scheduleJobId
+      } : templateDraft
+    );
     setEditorResetToken((value) => value + 1);
     pendingNewDraftRef.current = null;
   }, [
@@ -371531,9 +371767,28 @@ function TaskTemplateEditorDialog({
         ...previous,
         ...updates
       }));
+      if (!isSelectedScheduledJob && selectedTemplateKey !== NEW_TEMPLATE_KEY) {
+        const current = templateDeployPrefsByKey.get(selectedTemplateKey) ?? {
+          deployMode: draft.deployMode,
+          schedule: draft.schedule,
+          scheduleJobId: draft.scheduleJobId
+        };
+        templateDeployPrefsByKey.set(selectedTemplateKey, {
+          deployMode: updates.deployMode ?? current.deployMode,
+          schedule: updates.schedule ?? current.schedule,
+          scheduleJobId: updates.scheduleJobId ?? current.scheduleJobId
+        });
+      }
       setErrorMessage(null);
     },
-    [setDraft]
+    [
+      isSelectedScheduledJob,
+      selectedTemplateKey,
+      draft.deployMode,
+      draft.schedule,
+      draft.scheduleJobId,
+      setDraft
+    ]
   );
   const modelItems = (0, import_react92.useMemo)(() => {
     const items = [
@@ -371734,6 +371989,11 @@ function TaskTemplateEditorDialog({
         level,
         overwrite: true
       });
+      templateDeployPrefsByKey.set(templateKeyFor(finalTemplate), {
+        deployMode: draft.deployMode,
+        schedule: draft.schedule,
+        scheduleJobId: draft.scheduleJobId
+      });
       setStatusMessage(`Saved task template "${id}" (${level}).`);
       await reloadTemplates({ id, level });
       return { id, level };
@@ -371894,7 +372154,7 @@ function TaskTemplateEditorDialog({
         jobId: trimOrUndefined(draft.scheduleJobId)
       });
       setStatusMessage(
-        draft.deployMode === "schedule" ? `Scheduled template "${saved.id}".` : `Launched template "${saved.id}".`
+        draft.deployMode === "schedule" ? `Scheduled template "${saved.id}". Jobs are stored under ${projectRoot}/.qwen; run "lowcal scheduler start" from that directory.` : `Launched template "${saved.id}".`
       );
     } catch (error) {
       setErrorMessage(
@@ -371903,7 +372163,7 @@ function TaskTemplateEditorDialog({
     } finally {
       setIsBusy(false);
     }
-  }, [saveTemplate, draft, onDeploy]);
+  }, [saveTemplate, draft, onDeploy, projectRoot]);
   const actionItems = (0, import_react92.useMemo)(
     () => [
       { label: isSelectedScheduledJob ? "Save Scheduled Job" : "Save Template", value: "save" },
@@ -372254,20 +372514,39 @@ function TaskTemplateEditorDialog({
       ] });
     }
     if (selectedField === "deploy_mode") {
+      if (isSelectedScheduledJob) {
+        return /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+          /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: "Existing @job entries are always scheduled jobs." }),
+          /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
+            RadioButtonSelect,
+            {
+              items: [{ label: "schedule", value: "schedule" }],
+              initialIndex: 0,
+              onSelect: () => {
+              },
+              isFocused: false
+            },
+            "deploy-job-readonly"
+          )
+        ] });
+      }
       const items = [
         { label: "launch", value: "launch" },
         { label: "schedule", value: "schedule" }
       ];
-      return /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
-        RadioButtonSelect,
-        {
-          items,
-          initialIndex: draft.deployMode === "schedule" ? 1 : 0,
-          onSelect: (value) => updateDraft({ deployMode: value }),
-          isFocused: focusSection === "editor"
-        },
-        `deploy-${draft.deployMode}`
-      );
+      return /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: "Save stores the template only. Deploy applies launch/schedule using this mode." }),
+        /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
+          RadioButtonSelect,
+          {
+            items,
+            initialIndex: draft.deployMode === "schedule" ? 1 : 0,
+            onSelect: (value) => updateDraft({ deployMode: value }),
+            isFocused: focusSection === "editor"
+          },
+          `deploy-${draft.deployMode}`
+        )
+      ] });
     }
     if (selectedField === "schedule") {
       return /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [

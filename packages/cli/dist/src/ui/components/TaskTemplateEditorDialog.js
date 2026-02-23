@@ -14,6 +14,7 @@ const LM_STUDIO_DEFAULT_BASE_URL = "http://127.0.0.1:1234/v1";
 const NEW_TEMPLATE_KEY = "__new__";
 const JOB_TEMPLATE_KEY_PREFIX = "__job__:";
 let lastTaskEditorSelectionKey;
+const templateDeployPrefsByKey = new Map();
 function templateKeyFor(template) {
     return `${template.id}:${template.level}`;
 }
@@ -488,7 +489,16 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             setEditorResetToken((value) => value + 1);
             return;
         }
-        setDraft(buildDraftFromTemplate(selectedTemplate, settings, currentModel));
+        const templateDraft = buildDraftFromTemplate(selectedTemplate, settings, currentModel);
+        const savedDeployPrefs = templateDeployPrefsByKey.get(templateKeyFor(selectedTemplate));
+        setDraft(savedDeployPrefs
+            ? {
+                ...templateDraft,
+                deployMode: savedDeployPrefs.deployMode,
+                schedule: savedDeployPrefs.schedule,
+                scheduleJobId: savedDeployPrefs.scheduleJobId,
+            }
+            : templateDraft);
         setEditorResetToken((value) => value + 1);
         pendingNewDraftRef.current = null;
     }, [
@@ -587,8 +597,27 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             ...previous,
             ...updates,
         }));
+        if (!isSelectedScheduledJob && selectedTemplateKey !== NEW_TEMPLATE_KEY) {
+            const current = templateDeployPrefsByKey.get(selectedTemplateKey) ?? {
+                deployMode: draft.deployMode,
+                schedule: draft.schedule,
+                scheduleJobId: draft.scheduleJobId,
+            };
+            templateDeployPrefsByKey.set(selectedTemplateKey, {
+                deployMode: (updates.deployMode ?? current.deployMode),
+                schedule: updates.schedule ?? current.schedule,
+                scheduleJobId: updates.scheduleJobId ?? current.scheduleJobId,
+            });
+        }
         setErrorMessage(null);
-    }, [setDraft]);
+    }, [
+        isSelectedScheduledJob,
+        selectedTemplateKey,
+        draft.deployMode,
+        draft.schedule,
+        draft.scheduleJobId,
+        setDraft,
+    ]);
     const modelItems = useMemo(() => {
         const items = [
             {
@@ -792,6 +821,11 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
                 level,
                 overwrite: true,
             });
+            templateDeployPrefsByKey.set(templateKeyFor(finalTemplate), {
+                deployMode: draft.deployMode,
+                schedule: draft.schedule,
+                scheduleJobId: draft.scheduleJobId,
+            });
             setStatusMessage(`Saved task template "${id}" (${level}).`);
             await reloadTemplates({ id, level });
             return { id, level };
@@ -969,7 +1003,7 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
                 jobId: trimOrUndefined(draft.scheduleJobId),
             });
             setStatusMessage(draft.deployMode === "schedule"
-                ? `Scheduled template "${saved.id}".`
+                ? `Scheduled template "${saved.id}". Jobs are stored under ${projectRoot}/.qwen; run "lowcal scheduler start" from that directory.`
                 : `Launched template "${saved.id}".`);
         }
         catch (error) {
@@ -978,7 +1012,7 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         finally {
             setIsBusy(false);
         }
-    }, [saveTemplate, draft, onDeploy]);
+    }, [saveTemplate, draft, onDeploy, projectRoot]);
     const actionItems = useMemo(() => [
         { label: isSelectedScheduledJob ? "Save Scheduled Job" : "Save Template", value: "save" },
         { label: "Deploy", value: "deploy" },
@@ -1166,11 +1200,16 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
                         }, isFocused: focusSection === "editor" && !readOnly }, `level-${draft.level}-${readOnly ? "ro" : "rw"}`)] }));
         }
         if (selectedField === "deploy_mode") {
+            if (isSelectedScheduledJob) {
+                return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { color: Colors.Gray, children: "Existing @job entries are always scheduled jobs." }), _jsx(RadioButtonSelect, { items: [{ label: "schedule", value: "schedule" }], initialIndex: 0, onSelect: () => {
+                                // Intentionally read-only for scheduled job records.
+                            }, isFocused: false }, "deploy-job-readonly")] }));
+            }
             const items = [
                 { label: "launch", value: "launch" },
                 { label: "schedule", value: "schedule" },
             ];
-            return (_jsx(RadioButtonSelect, { items: items, initialIndex: draft.deployMode === "schedule" ? 1 : 0, onSelect: (value) => updateDraft({ deployMode: value }), isFocused: focusSection === "editor" }, `deploy-${draft.deployMode}`));
+            return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { color: Colors.Gray, children: "Save stores the template only. Deploy applies launch/schedule using this mode." }), _jsx(RadioButtonSelect, { items: items, initialIndex: draft.deployMode === "schedule" ? 1 : 0, onSelect: (value) => updateDraft({ deployMode: value }), isFocused: focusSection === "editor" }, `deploy-${draft.deployMode}`)] }));
         }
         if (selectedField === "schedule") {
             return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { color: Colors.Gray, children: "Cron format: minute hour day month day_of_week (0-6, Sun=0). Examples: \u00A0`0 * * * *` hourly,\u00A0`*/15 * * * *` every 15 min,\u00A0`0 2 * * *` daily at 2:00." }), _jsx(TextInput, { value: draft.schedule, onChange: (value) => updateDraft({ schedule: value }), placeholder: "0 * * * *", inputWidth: editorInputWidth, isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`)] }));

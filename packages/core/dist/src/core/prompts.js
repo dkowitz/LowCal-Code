@@ -31,6 +31,7 @@ const DEFAULT_COLLECTIONS = {
         ToolNames.LAUNCH_TASK,
         ToolNames.TASK_TEMPLATE,
         ToolNames.READ_SESSION_MESSAGES,
+        ToolNames.READ_SESSIONS,
         ToolNames.READ_COLLAB_MESSAGES,
         ToolNames.POST_COLLAB_MESSAGE,
     ],
@@ -62,6 +63,7 @@ const TOOL_SUMMARIES = {
     [ToolNames.LAUNCH_TASK]: "Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: `launch_task action=create id=task-1 prompt='...'`.",
     [ToolNames.TASK_TEMPLATE]: "Manage reusable task templates (list/get/create/update/delete/resolve) used by launch_task and schedule_task. Example: `task_template action=list`.",
     [ToolNames.READ_SESSION_MESSAGES]: "Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: `read_session_messages action=wait`.",
+    [ToolNames.READ_SESSIONS]: "Read active session registry entries (list/get) without invoking /sessions via shell. Example: `read_sessions action=list`.",
     [ToolNames.READ_COLLAB_MESSAGES]: "Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: `read_collab_messages since_seq=120 limit=20`.",
     [ToolNames.POST_COLLAB_MESSAGE]: "Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set `notify='wake_prompt'` with `to_session_id`. Example: `post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']`.",
 };

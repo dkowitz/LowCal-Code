@@ -44,6 +44,10 @@ const LM_STUDIO_DEFAULT_BASE_URL = "http://127.0.0.1:1234/v1";
 const NEW_TEMPLATE_KEY = "__new__";
 const JOB_TEMPLATE_KEY_PREFIX = "__job__:";
 let lastTaskEditorSelectionKey: string | undefined;
+const templateDeployPrefsByKey = new Map<
+  string,
+  Pick<DraftTemplate, "deployMode" | "schedule" | "scheduleJobId">
+>();
 
 type FocusSection = "templates" | "fields" | "editor" | "actions";
 type TaskAuthChoice =
@@ -720,7 +724,24 @@ export function TaskTemplateEditorDialog({
       setEditorResetToken((value) => value + 1);
       return;
     }
-    setDraft(buildDraftFromTemplate(selectedTemplate, settings, currentModel));
+    const templateDraft = buildDraftFromTemplate(
+      selectedTemplate,
+      settings,
+      currentModel,
+    );
+    const savedDeployPrefs = templateDeployPrefsByKey.get(
+      templateKeyFor(selectedTemplate),
+    );
+    setDraft(
+      savedDeployPrefs
+        ? {
+            ...templateDraft,
+            deployMode: savedDeployPrefs.deployMode,
+            schedule: savedDeployPrefs.schedule,
+            scheduleJobId: savedDeployPrefs.scheduleJobId,
+          }
+        : templateDraft,
+    );
     setEditorResetToken((value) => value + 1);
     pendingNewDraftRef.current = null;
   }, [
@@ -840,9 +861,28 @@ export function TaskTemplateEditorDialog({
         ...previous,
         ...updates,
       }));
+      if (!isSelectedScheduledJob && selectedTemplateKey !== NEW_TEMPLATE_KEY) {
+        const current = templateDeployPrefsByKey.get(selectedTemplateKey) ?? {
+          deployMode: draft.deployMode,
+          schedule: draft.schedule,
+          scheduleJobId: draft.scheduleJobId,
+        };
+        templateDeployPrefsByKey.set(selectedTemplateKey, {
+          deployMode: (updates.deployMode ?? current.deployMode) as DeployMode,
+          schedule: updates.schedule ?? current.schedule,
+          scheduleJobId: updates.scheduleJobId ?? current.scheduleJobId,
+        });
+      }
       setErrorMessage(null);
     },
-    [setDraft],
+    [
+      isSelectedScheduledJob,
+      selectedTemplateKey,
+      draft.deployMode,
+      draft.schedule,
+      draft.scheduleJobId,
+      setDraft,
+    ],
   );
 
   const modelItems = useMemo(() => {
@@ -1096,6 +1136,11 @@ export function TaskTemplateEditorDialog({
         overwrite: true,
       });
 
+      templateDeployPrefsByKey.set(templateKeyFor(finalTemplate), {
+        deployMode: draft.deployMode,
+        schedule: draft.schedule,
+        scheduleJobId: draft.scheduleJobId,
+      });
       setStatusMessage(`Saved task template "${id}" (${level}).`);
       await reloadTemplates({ id, level });
       return { id, level };
@@ -1315,7 +1360,7 @@ export function TaskTemplateEditorDialog({
       });
       setStatusMessage(
         draft.deployMode === "schedule"
-          ? `Scheduled template "${saved.id}".`
+          ? `Scheduled template "${saved.id}". Jobs are stored under ${projectRoot}/.qwen; run "lowcal scheduler start" from that directory.`
           : `Launched template "${saved.id}".`,
       );
     } catch (error) {
@@ -1325,7 +1370,7 @@ export function TaskTemplateEditorDialog({
     } finally {
       setIsBusy(false);
     }
-  }, [saveTemplate, draft, onDeploy]);
+  }, [saveTemplate, draft, onDeploy, projectRoot]);
 
   const actionItems: Array<RadioSelectItem<string>> = useMemo(
     () => [
@@ -1725,18 +1770,42 @@ export function TaskTemplateEditorDialog({
     }
 
     if (selectedField === "deploy_mode") {
+      if (isSelectedScheduledJob) {
+        return (
+          <Box flexDirection="column" marginTop={1}>
+            <Text color={Colors.Gray}>
+              Existing @job entries are always scheduled jobs.
+            </Text>
+            <RadioButtonSelect
+              items={[{ label: "schedule", value: "schedule" as const }]}
+              initialIndex={0}
+              onSelect={() => {
+                // Intentionally read-only for scheduled job records.
+              }}
+              isFocused={false}
+              key="deploy-job-readonly"
+            />
+          </Box>
+        );
+      }
       const items: Array<RadioSelectItem<DeployMode>> = [
         { label: "launch", value: "launch" },
         { label: "schedule", value: "schedule" },
       ];
       return (
-        <RadioButtonSelect
-          items={items}
-          initialIndex={draft.deployMode === "schedule" ? 1 : 0}
-          onSelect={(value) => updateDraft({ deployMode: value })}
-          isFocused={focusSection === "editor"}
-          key={`deploy-${draft.deployMode}`}
-        />
+        <Box flexDirection="column" marginTop={1}>
+          <Text color={Colors.Gray}>
+            Save stores the template only. Deploy applies launch/schedule using
+            this mode.
+          </Text>
+          <RadioButtonSelect
+            items={items}
+            initialIndex={draft.deployMode === "schedule" ? 1 : 0}
+            onSelect={(value) => updateDraft({ deployMode: value })}
+            isFocused={focusSection === "editor"}
+            key={`deploy-${draft.deployMode}`}
+          />
+        </Box>
       );
     }
 

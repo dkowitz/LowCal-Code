@@ -111087,6 +111087,7 @@ var ToolNames = {
   LAUNCH_TASK: "launch_task",
   TASK_TEMPLATE: "task_template",
   READ_SESSION_MESSAGES: "read_session_messages",
+  READ_SESSIONS: "read_sessions",
   READ_COLLAB_MESSAGES: "read_collab_messages",
   POST_COLLAB_MESSAGE: "post_collab_message",
   RSS: "rss"
@@ -112430,6 +112431,7 @@ var DEFAULT_COLLECTIONS = {
     ToolNames.LAUNCH_TASK,
     ToolNames.TASK_TEMPLATE,
     ToolNames.READ_SESSION_MESSAGES,
+    ToolNames.READ_SESSIONS,
     ToolNames.READ_COLLAB_MESSAGES,
     ToolNames.POST_COLLAB_MESSAGE
   ],
@@ -112461,6 +112463,7 @@ var TOOL_SUMMARIES = {
   [ToolNames.LAUNCH_TASK]: "Launch an immediate background LowCal session. Prefer default execution mode unless the user explicitly requests one. Example: `launch_task action=create id=task-1 prompt='...'`.",
   [ToolNames.TASK_TEMPLATE]: "Manage reusable task templates (list/get/create/update/delete/resolve) used by launch_task and schedule_task. Example: `task_template action=list`.",
   [ToolNames.READ_SESSION_MESSAGES]: "Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: `read_session_messages action=wait`.",
+  [ToolNames.READ_SESSIONS]: "Read active session registry entries (list/get) without invoking /sessions via shell. Example: `read_sessions action=list`.",
   [ToolNames.READ_COLLAB_MESSAGES]: "Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: `read_collab_messages since_seq=120 limit=20`.",
   [ToolNames.POST_COLLAB_MESSAGE]: "Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set `notify='wake_prompt'` with `to_session_id`. Example: `post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']`."
 };
@@ -135679,6 +135682,9 @@ async function withStoreReadOnly(fn) {
 async function getSession(sessionId2) {
   return await withStoreReadOnly(async (store) => store.sessions.find((s2) => s2.id === sessionId2) ?? null);
 }
+async function listSessions() {
+  return await withStoreReadOnly(async (store) => store.sessions.slice());
+}
 
 // ../core/dist/src/tools/launch-task-state.js
 var fs15 = __toESM(require("node:fs/promises"), 1);
@@ -136175,6 +136181,202 @@ var ReadSessionMessagesTool = class extends BaseDeclarativeTool {
   }
 };
 
+// ../core/dist/src/tools/read-sessions.js
+init_tool_error();
+init_tools();
+var DEFAULT_TTL_SECONDS = 180;
+var MAX_LIMIT = 200;
+var readSessionsToolSchemaData = {
+  name: ToolNames.READ_SESSIONS,
+  description: "Read active LowCal sessions from the global session store. Use this instead of shelling out to /sessions.",
+  parametersJsonSchema: {
+    type: "object",
+    properties: {
+      action: {
+        type: "string",
+        enum: ["list", "get"],
+        description: "Session action. list = list active sessions (default), get = return one session record by session_id."
+      },
+      session_id: {
+        type: "string",
+        description: "Session id for action=get. Optional for list (ignored unless supplied for get)."
+      },
+      ttl_seconds: {
+        type: "number",
+        description: "Stale threshold in seconds used for active/stale status. Default 180."
+      },
+      include_stale: {
+        type: "boolean",
+        description: "For list action: include stale sessions in results. Default false."
+      },
+      limit: {
+        type: "number",
+        description: "For list action: maximum sessions to return. Default: unlimited, max 200."
+      }
+    },
+    $schema: "http://json-schema.org/draft-07/schema#"
+  }
+};
+var readSessionsToolDescription = `
+Read LowCal sessions from the shared session registry.
+
+Use this tool when you need a readout similar to \`/sessions\` from inside a model tool call.
+
+## Actions
+
+- \`list\` (default): list active sessions (stale entries excluded unless \`include_stale=true\`).
+- \`get\`: fetch one full session record by \`session_id\`.
+`;
+function normalizePositiveInteger(value, fieldName) {
+  if (value === void 0) {
+    return void 0;
+  }
+  if (!Number.isFinite(value)) {
+    throw new Error(`${fieldName} must be a finite number.`);
+  }
+  const normalized = Math.floor(value);
+  if (normalized < 1) {
+    throw new Error(`${fieldName} must be >= 1.`);
+  }
+  return normalized;
+}
+function normalizeTtlSeconds(ttlSeconds) {
+  const normalized = normalizePositiveInteger(ttlSeconds, "ttl_seconds");
+  return normalized ?? DEFAULT_TTL_SECONDS;
+}
+function isSessionStale(session, nowMs, ttlMs) {
+  const lastSeen = Date.parse(session.last_seen);
+  return Number.isFinite(lastSeen) && nowMs - lastSeen > ttlMs;
+}
+function sortSessions(sessions, nowMs, ttlMs) {
+  return [...sessions].sort((a, b) => {
+    const aLast = Date.parse(a.last_seen);
+    const bLast = Date.parse(b.last_seen);
+    const aStale = isSessionStale(a, nowMs, ttlMs);
+    const bStale = isSessionStale(b, nowMs, ttlMs);
+    const aRank = aStale ? 2 : a.status === "working" ? 0 : 1;
+    const bRank = bStale ? 2 : b.status === "working" ? 0 : 1;
+    if (aRank !== bRank) {
+      return aRank - bRank;
+    }
+    if (Number.isFinite(aLast) && Number.isFinite(bLast)) {
+      return bLast - aLast;
+    }
+    return 0;
+  });
+}
+function formatSessionLine(session, nowMs, ttlMs) {
+  const stale = isSessionStale(session, nowMs, ttlMs);
+  const status = stale ? "stale" : session.status;
+  const details = session.details ?? {};
+  const jobId = typeof details["job_id"] === "string" ? details["job_id"] : void 0;
+  const activeExecutions = typeof details["active_executions"] === "number" ? details["active_executions"] : void 0;
+  const parts = [
+    `[${status.toUpperCase()}]`,
+    session.id,
+    `mode=${session.mode}`,
+    `pid=${session.pid}`,
+    `cwd=${session.cwd}`,
+    `started_at=${session.started_at}`,
+    `last_seen=${session.last_seen}`
+  ];
+  if (jobId) {
+    parts.push(`job_id=${jobId}`);
+  }
+  if (typeof activeExecutions === "number") {
+    parts.push(`active_executions=${activeExecutions}`);
+  }
+  if (session.health) {
+    parts.push(`health=${session.health.state}`);
+    if (session.health.reason) {
+      parts.push(`reason=${session.health.reason}`);
+    }
+  }
+  return parts.join(" ");
+}
+var ReadSessionsInvocation = class extends BaseToolInvocation {
+  getDescription() {
+    const action = this.params.action ?? "list";
+    if (action === "get") {
+      return `Reading session record for ${this.params.session_id ?? "(missing session_id)"}`;
+    }
+    return "Reading active session list";
+  }
+  async execute() {
+    try {
+      const action = this.params.action ?? "list";
+      if (action === "get") {
+        const sessionId2 = typeof this.params.session_id === "string" ? this.params.session_id.trim() : "";
+        if (!sessionId2) {
+          throw new Error('session_id is required for action="get".');
+        }
+        const session = await getSession(sessionId2);
+        if (!session) {
+          const notFound = `Session not found: ${sessionId2}`;
+          return {
+            llmContent: notFound,
+            returnDisplay: notFound
+          };
+        }
+        const output2 = JSON.stringify(session, null, 2);
+        return {
+          llmContent: output2,
+          returnDisplay: output2
+        };
+      }
+      const nowMs = Date.now();
+      const ttlSeconds = normalizeTtlSeconds(this.params.ttl_seconds);
+      const ttlMs = ttlSeconds * 1e3;
+      const includeStale = this.params.include_stale === true;
+      const limit2 = normalizePositiveInteger(this.params.limit, "limit");
+      if (limit2 && limit2 > MAX_LIMIT) {
+        throw new Error(`limit must be <= ${MAX_LIMIT}.`);
+      }
+      const sessions = await listSessions();
+      const filtered = includeStale ? sessions : sessions.filter((session) => !isSessionStale(session, nowMs, ttlMs));
+      if (filtered.length === 0) {
+        const emptyMessage = includeStale ? "No sessions found." : `No active sessions found (ttl=${ttlSeconds}s).`;
+        return {
+          llmContent: emptyMessage,
+          returnDisplay: emptyMessage
+        };
+      }
+      const sorted2 = sortSessions(filtered, nowMs, ttlMs);
+      const limited = limit2 ? sorted2.slice(0, limit2) : sorted2;
+      const scope = includeStale ? "total" : "active";
+      const truncated = limited.length < sorted2.length ? ` (showing ${limited.length})` : "";
+      const lines = [
+        `Sessions (${sorted2.length} ${scope})${truncated}:`,
+        ...limited.map((session) => formatSessionLine(session, nowMs, ttlMs))
+      ];
+      const output = lines.join("\n");
+      return {
+        llmContent: output,
+        returnDisplay: output
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return {
+        llmContent: `Error: ${errorMessage}`,
+        returnDisplay: `Error: ${errorMessage}`,
+        error: {
+          message: errorMessage,
+          type: ToolErrorType.INVALID_TOOL_PARAMS
+        }
+      };
+    }
+  }
+};
+var ReadSessionsTool = class extends BaseDeclarativeTool {
+  static Name = ToolNames.READ_SESSIONS;
+  constructor() {
+    super(ToolNames.READ_SESSIONS, "Read Sessions", readSessionsToolDescription, Kind.Other, readSessionsToolSchemaData.parametersJsonSchema, true, false);
+  }
+  createInvocation(params) {
+    return new ReadSessionsInvocation(params);
+  }
+};
+
 // ../core/dist/src/collab/store.js
 var fs17 = __toESM(require("node:fs/promises"), 1);
 var path27 = __toESM(require("node:path"), 1);
@@ -136246,7 +136448,7 @@ function normalizeRefs(refs) {
   }
   return normalized.length > 0 ? normalized : void 0;
 }
-function normalizeTtlSeconds(value) {
+function normalizeTtlSeconds2(value) {
   if (value === void 0) {
     return void 0;
   }
@@ -136437,7 +136639,7 @@ async function postCollabMessage(input) {
   const text = normalizeText(input.text);
   const refs = normalizeRefs(input.refs);
   const inReplyTo = input.inReplyTo && input.inReplyTo.trim().length > 0 ? input.inReplyTo.trim() : void 0;
-  const ttlSeconds = normalizeTtlSeconds(input.ttlSeconds);
+  const ttlSeconds = normalizeTtlSeconds2(input.ttlSeconds);
   const notify = normalizeNotify(input.notify);
   const paths = getCollabPaths(input.baseDir);
   await fs17.mkdir(paths.collabDir, { recursive: true });
@@ -136566,7 +136768,7 @@ function normalizeNonNegativeInteger(value, fieldName) {
   }
   return normalized;
 }
-function normalizePositiveInteger(value, fieldName) {
+function normalizePositiveInteger2(value, fieldName) {
   if (value === void 0) {
     return void 0;
   }
@@ -136604,7 +136806,7 @@ var ReadCollabMessagesInvocation = class extends BaseToolInvocation {
   async execute() {
     try {
       const sinceSeq = normalizeNonNegativeInteger(this.params.since_seq, "since_seq");
-      const limit2 = normalizePositiveInteger(this.params.limit, "limit");
+      const limit2 = normalizePositiveInteger2(this.params.limit, "limit");
       const includeAllTargets = this.params.include_all_targets === true;
       const includeExpired = this.params.include_expired === true;
       const fallbackSessionId = this.config.getSessionId();

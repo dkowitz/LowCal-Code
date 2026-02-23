@@ -93,6 +93,7 @@ export * from "./tools/launch-task.js";
 export * from "./tools/schedule-task.js";
 export * from "./tools/task-template.js";
 export * from "./tools/read-session-messages.js";
+export * from "./tools/read-sessions.js";
 export * from "./tools/read-collab-messages.js";
 export * from "./tools/post-collab-message.js";
 export * from "./tools/launch-task-state.js";

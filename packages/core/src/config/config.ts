@@ -53,6 +53,7 @@ import { WebSearchTool } from "../tools/web-search.js";
 import { ScheduleTaskTool } from "../tools/schedule-task.js";
 import { LaunchTaskTool } from "../tools/launch-task.js";
 import { ReadSessionMessagesTool } from "../tools/read-session-messages.js";
+import { ReadSessionsTool } from "../tools/read-sessions.js";
 import { ReadCollabMessagesTool } from "../tools/read-collab-messages.js";
 import { PostCollabMessageTool } from "../tools/post-collab-message.js";
 import { TaskTemplateTool } from "../tools/task-template.js";
@@ -1150,6 +1151,7 @@ export class Config {
     registerCoreTool(LaunchTaskTool, this);
     registerCoreTool(TaskTemplateTool, this);
     registerCoreTool(ReadSessionMessagesTool, this);
+    registerCoreTool(ReadSessionsTool);
     registerCoreTool(ReadCollabMessagesTool, this);
     registerCoreTool(PostCollabMessageTool, this);
 

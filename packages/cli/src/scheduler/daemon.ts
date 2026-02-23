@@ -17,6 +17,7 @@
 import * as fs from "fs/promises";
 import * as path from "path";
 import { spawn } from "child_process";
+import { existsSync } from "node:fs";
 import * as net from "node:net";
 import * as process from "process";
 import { fileURLToPath } from "url";
@@ -68,6 +69,11 @@ const EXECUTION_MODE_VALUES = new Set<JobExecutionMode>([
   "in_process",
 ]);
 const ENV_TASK_RUNTIME_B64 = "LOWCAL_TASK_RUNTIME_B64";
+const DAEMON_MODULE_PATH = fileURLToPath(import.meta.url);
+const MODULE_HEADLESS_PATH = path.join(
+  path.dirname(DAEMON_MODULE_PATH),
+  "headless.js",
+);
 
 type JobActionType = "prompt" | "slash_command";
 
@@ -191,6 +197,29 @@ async function callSessionApi(
 
 function getSchedulerCwd(): string {
   return process.env["LOWCAL_SCHEDULER_CWD"] || process.cwd();
+}
+
+function resolveHeadlessScriptPath(schedulerCwd: string): string {
+  const override = process.env["LOWCAL_HEADLESS_SCRIPT"];
+  if (typeof override === "string" && override.trim().length > 0) {
+    return override.trim();
+  }
+
+  if (existsSync(MODULE_HEADLESS_PATH)) {
+    return MODULE_HEADLESS_PATH;
+  }
+
+  // Legacy fallback for developer setups that run scheduler from repo root.
+  const legacyPath = path.join(
+    schedulerCwd,
+    "packages",
+    "cli",
+    "dist",
+    "src",
+    "scheduler",
+    "headless.js",
+  );
+  return legacyPath;
 }
 
 function isRunningInZellij(): boolean {
@@ -343,16 +372,8 @@ function spawnHeadlessJob(
     // Ensure logs directory exists
     fs.mkdir(path.dirname(logPath), { recursive: true }).catch(() => {});
 
-    // Find the CLI entry point
-    const cliPath = path.join(
-      schedulerCwd,
-      "packages",
-      "cli",
-      "dist",
-      "src",
-      "scheduler",
-      "headless.js",
-    );
+    // Resolve headless runner from the installed CLI location.
+    const cliPath = resolveHeadlessScriptPath(schedulerCwd);
 
     const child = spawn(
       "node",
@@ -590,15 +611,7 @@ async function spawnZellijJob(
 
   await fs.mkdir(path.dirname(logPath), { recursive: true });
 
-  const cliPath = path.join(
-    schedulerCwd,
-    "packages",
-    "cli",
-    "dist",
-    "src",
-    "scheduler",
-    "headless.js",
-  );
+  const cliPath = resolveHeadlessScriptPath(schedulerCwd);
   const cwd = schedulerCwd;
   const tabName = `job:${job.id}`;
 
@@ -674,7 +687,7 @@ async function enqueueInProcessJob(
       completed_at: new Date().toISOString(),
       status: "error",
       output: "",
-      error: `Target session \"${targetSessionId}\" is unavailable`,
+      error: `Target session "${targetSessionId}" is unavailable`,
     };
   }
   if (session.api.transport !== "unix") {

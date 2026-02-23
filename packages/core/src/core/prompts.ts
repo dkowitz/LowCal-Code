@@ -43,6 +43,7 @@ const DEFAULT_COLLECTIONS: Record<string, string[]> = {
     ToolNames.LAUNCH_TASK,
     ToolNames.TASK_TEMPLATE,
     ToolNames.READ_SESSION_MESSAGES,
+    ToolNames.READ_SESSIONS,
     ToolNames.READ_COLLAB_MESSAGES,
     ToolNames.POST_COLLAB_MESSAGE,
   ],
@@ -97,6 +98,8 @@ const TOOL_SUMMARIES: Record<string, string> = {
     "Manage reusable task templates (list/get/create/update/delete/resolve) used by launch_task and schedule_task. Example: `task_template action=list`.",
   [ToolNames.READ_SESSION_MESSAGES]:
     "Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: `read_session_messages action=wait`.",
+  [ToolNames.READ_SESSIONS]:
+    "Read active session registry entries (list/get) without invoking /sessions via shell. Example: `read_sessions action=list`.",
   [ToolNames.READ_COLLAB_MESSAGES]:
     "Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: `read_collab_messages since_seq=120 limit=20`.",
   [ToolNames.POST_COLLAB_MESSAGE]:
