@@ -6,6 +6,7 @@
 
 import type {
   TaskActionType,
+  TaskTemplateApprovalMode,
   TaskRuntimeProfile,
   TaskTemplateAuthProfile,
   TaskTemplateLevel,
@@ -149,6 +150,7 @@ export interface CreateJobParams {
   execution_mode?: JobExecutionMode;
   action_type?: TaskActionType;
   action_value?: string;
+  approval_mode?: TaskTemplateApprovalMode;
   template_id?: string;
   template_level?: TaskTemplateLevel;
   return_to_session_id?: string;
@@ -205,6 +207,7 @@ export interface ScheduleTaskParams {
   execution_mode_override?: boolean;
   action_type?: TaskActionType;
   action_value?: string;
+  approval_mode?: TaskTemplateApprovalMode;
   template_id?: string;
   template_level?: TaskTemplateLevel | "auto";
   template_overrides?: TaskRuntimeProfile;

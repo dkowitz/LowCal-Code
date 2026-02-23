@@ -8,6 +8,7 @@ export type TaskTemplateLevel = "project" | "user" | "builtin";
 export type TaskExecutionMode = "headless" | "zellij_tab" | "in_process";
 export type TaskExecutionModeWithDefault = TaskExecutionMode | "default";
 export type TaskActionType = "prompt" | "slash_command";
+export type TaskTemplateApprovalMode = "plan" | "default" | "auto-edit" | "yolo";
 export interface TaskTemplateAction {
     type?: TaskActionType;
     value?: string;
@@ -41,6 +42,7 @@ export interface TaskTemplate {
     name?: string;
     description?: string;
     tags?: string[];
+    approvalMode?: TaskTemplateApprovalMode;
     prompt?: string;
     action?: TaskTemplateAction;
     execution?: TaskTemplateExecutionProfile;
@@ -60,6 +62,7 @@ export interface TaskRuntimeProfile {
     template_level?: TaskTemplateLevel;
     action_type?: TaskActionType;
     action_value?: string;
+    approval_mode?: TaskTemplateApprovalMode;
     execution_mode?: TaskExecutionModeWithDefault;
     auth?: TaskTemplateAuthProfile;
     model?: TaskTemplateModelProfile;

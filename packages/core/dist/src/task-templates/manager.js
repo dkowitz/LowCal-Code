@@ -29,6 +29,20 @@ function asStringArray(value) {
         .filter((item) => item.length > 0);
     return parsed.length > 0 ? parsed : undefined;
 }
+function asStringArrayOrCsv(value) {
+    const fromArray = asStringArray(value);
+    if (fromArray) {
+        return fromArray;
+    }
+    if (typeof value !== "string") {
+        return undefined;
+    }
+    const parsed = value
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0);
+    return parsed.length > 0 ? parsed : undefined;
+}
 function parseAction(value) {
     if (!isRecord(value))
         return undefined;
@@ -53,6 +67,16 @@ function parseExecution(value) {
         return undefined;
     }
     return { mode };
+}
+function parseApprovalMode(value) {
+    const mode = asString(value);
+    if (mode === "plan" ||
+        mode === "default" ||
+        mode === "auto-edit" ||
+        mode === "yolo") {
+        return mode;
+    }
+    return undefined;
 }
 function parseAuth(value) {
     if (!isRecord(value))
@@ -99,7 +123,7 @@ function parseRun(value) {
 function parseSystemPrompt(value) {
     if (!isRecord(value))
         return undefined;
-    const names = asStringArray(value["names"]);
+    const names = asStringArrayOrCsv(value["names"]);
     const exclusive = typeof value["exclusive"] === "boolean" ? value["exclusive"] : undefined;
     const disable = typeof value["disable"] === "boolean" ? value["disable"] : undefined;
     if (disable === true) {
@@ -189,6 +213,7 @@ export class TaskTemplateManager {
             name: asString(frontmatter["name"]),
             description: asString(frontmatter["description"]),
             tags: asStringArray(frontmatter["tags"]),
+            approvalMode: parseApprovalMode(frontmatter["approvalMode"]),
             prompt,
             action: parseAction(frontmatter["action"]),
             execution: parseExecution(frontmatter["execution"]),
@@ -203,8 +228,12 @@ export class TaskTemplateManager {
         if (!template.action && template.prompt) {
             template.action = { type: "prompt", value: template.prompt };
         }
-        else if (template.action && !template.action.value && template.prompt) {
-            template.action.value = template.prompt;
+        else if (template.action && template.prompt) {
+            // For prompt actions, body content is canonical. This preserves multiline
+            // prompts even if frontmatter parsing only captured the first line.
+            if (template.action.type === "prompt" || !template.action.value) {
+                template.action.value = template.prompt;
+            }
         }
         return template;
     }
@@ -218,8 +247,22 @@ export class TaskTemplateManager {
             frontmatter["description"] = template.description;
         if (template.tags && template.tags.length > 0)
             frontmatter["tags"] = template.tags;
+        if (template.approvalMode)
+            frontmatter["approvalMode"] = template.approvalMode;
         if (template.action && (template.action.type || template.action.value)) {
-            frontmatter["action"] = template.action;
+            const action = {};
+            if (template.action.type) {
+                action.type = template.action.type;
+            }
+            const actionValue = asString(template.action.value);
+            // Prompt action value is duplicated in markdown body (`prompt`), so omit
+            // it from frontmatter to avoid multiline truncation in minimal YAML parsing.
+            if (!(action.type === "prompt" && template.prompt) && actionValue) {
+                action.value = actionValue;
+            }
+            if (action.type || action.value) {
+                frontmatter["action"] = action;
+            }
         }
         if (template.execution && template.execution.mode) {
             frontmatter["execution"] = template.execution;

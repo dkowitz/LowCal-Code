@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import type { TaskActionType, TaskRuntimeProfile, TaskTemplateAuthProfile, TaskTemplateLevel, TaskTemplateModelProfile, TaskTemplateRunProfile } from "../task-templates/types.js";
+import type { TaskActionType, TaskTemplateApprovalMode, TaskRuntimeProfile, TaskTemplateAuthProfile, TaskTemplateLevel, TaskTemplateModelProfile, TaskTemplateRunProfile } from "../task-templates/types.js";
 /**
  * Status of a scheduled job
  */
@@ -102,6 +102,7 @@ export interface CreateJobParams {
     execution_mode?: JobExecutionMode;
     action_type?: TaskActionType;
     action_value?: string;
+    approval_mode?: TaskTemplateApprovalMode;
     template_id?: string;
     template_level?: TaskTemplateLevel;
     return_to_session_id?: string;
@@ -147,6 +148,7 @@ export interface ScheduleTaskParams {
     execution_mode_override?: boolean;
     action_type?: TaskActionType;
     action_value?: string;
+    approval_mode?: TaskTemplateApprovalMode;
     template_id?: string;
     template_level?: TaskTemplateLevel | "auto";
     template_overrides?: TaskRuntimeProfile;

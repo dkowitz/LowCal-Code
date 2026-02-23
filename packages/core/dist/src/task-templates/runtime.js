@@ -32,6 +32,15 @@ export function normalizeExecutionMode(value) {
     }
     return undefined;
 }
+export function normalizeApprovalMode(value) {
+    if (value === "plan" ||
+        value === "default" ||
+        value === "auto-edit" ||
+        value === "yolo") {
+        return value;
+    }
+    return undefined;
+}
 export function normalizeAuthProfile(value) {
     if (!isRecord(value))
         return undefined;
@@ -96,6 +105,7 @@ export function normalizeRuntimeProfile(value) {
         template_level: normalizeTemplateLevel(value["template_level"]),
         action_type: normalizeActionType(value["action_type"]),
         action_value: asTrimmedString(value["action_value"]),
+        approval_mode: normalizeApprovalMode(value["approval_mode"]),
         execution_mode: normalizeExecutionMode(value["execution_mode"]),
         auth: normalizeAuthProfile(value["auth"]),
         model: normalizeModelProfile(value["model"]),
@@ -109,6 +119,7 @@ export function runtimeProfileFromTemplate(template) {
         template_level: template.level,
         action_type: template.action?.type,
         action_value: template.action?.value ?? template.prompt,
+        approval_mode: template.approvalMode,
         execution_mode: template.execution?.mode,
         auth: template.auth,
         model: template.model,
@@ -129,6 +140,8 @@ export function mergeRuntimeProfiles(...profiles) {
             merged.action_type = profile.action_type;
         if (profile.action_value)
             merged.action_value = profile.action_value;
+        if (profile.approval_mode)
+            merged.approval_mode = profile.approval_mode;
         if (profile.execution_mode)
             merged.execution_mode = profile.execution_mode;
         if (profile.auth)
@@ -162,6 +175,7 @@ export function sanitizeRuntimeProfile(profile) {
         template_level: profile.template_level,
         action_type: profile.action_type,
         action_value: profile.action_value,
+        approval_mode: profile.approval_mode,
         execution_mode: profile.execution_mode,
         auth,
         model: profile.model ? { ...profile.model } : undefined,

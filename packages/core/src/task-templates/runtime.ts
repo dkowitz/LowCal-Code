@@ -6,6 +6,7 @@
 
 import type {
   TaskActionType,
+  TaskTemplateApprovalMode,
   TaskExecutionModeWithDefault,
   TaskRuntimeProfile,
   TaskTemplateSystemPromptProfile,
@@ -48,6 +49,20 @@ export function normalizeExecutionMode(
     value === "headless" ||
     value === "zellij_tab" ||
     value === "in_process"
+  ) {
+    return value;
+  }
+  return undefined;
+}
+
+export function normalizeApprovalMode(
+  value: unknown,
+): TaskTemplateApprovalMode | undefined {
+  if (
+    value === "plan" ||
+    value === "default" ||
+    value === "auto-edit" ||
+    value === "yolo"
   ) {
     return value;
   }
@@ -125,6 +140,7 @@ export function normalizeRuntimeProfile(value: unknown): TaskRuntimeProfile {
     template_level: normalizeTemplateLevel(value["template_level"]),
     action_type: normalizeActionType(value["action_type"]),
     action_value: asTrimmedString(value["action_value"]),
+    approval_mode: normalizeApprovalMode(value["approval_mode"]),
     execution_mode: normalizeExecutionMode(value["execution_mode"]),
     auth: normalizeAuthProfile(value["auth"]),
     model: normalizeModelProfile(value["model"]),
@@ -139,6 +155,7 @@ export function runtimeProfileFromTemplate(template: TaskTemplate): TaskRuntimeP
     template_level: template.level,
     action_type: template.action?.type,
     action_value: template.action?.value ?? template.prompt,
+    approval_mode: template.approvalMode,
     execution_mode: template.execution?.mode,
     auth: template.auth,
     model: template.model,
@@ -157,6 +174,7 @@ export function mergeRuntimeProfiles(
     if (profile.template_level) merged.template_level = profile.template_level;
     if (profile.action_type) merged.action_type = profile.action_type;
     if (profile.action_value) merged.action_value = profile.action_value;
+    if (profile.approval_mode) merged.approval_mode = profile.approval_mode;
     if (profile.execution_mode) merged.execution_mode = profile.execution_mode;
     if (profile.auth) merged.auth = { ...merged.auth, ...profile.auth };
     if (profile.model) merged.model = { ...merged.model, ...profile.model };
@@ -188,6 +206,7 @@ export function sanitizeRuntimeProfile(
     template_level: profile.template_level,
     action_type: profile.action_type,
     action_value: profile.action_value,
+    approval_mode: profile.approval_mode,
     execution_mode: profile.execution_mode,
     auth,
     model: profile.model ? { ...profile.model } : undefined,

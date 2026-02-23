@@ -235186,6 +235186,12 @@ function normalizeExecutionMode(value) {
   }
   return void 0;
 }
+function normalizeApprovalMode(value) {
+  if (value === "plan" || value === "default" || value === "auto-edit" || value === "yolo") {
+    return value;
+  }
+  return void 0;
+}
 function normalizeAuthProfile(value) {
   if (!isRecord2(value))
     return void 0;
@@ -235244,6 +235250,7 @@ function normalizeRuntimeProfile(value) {
     template_level: normalizeTemplateLevel(value["template_level"]),
     action_type: normalizeActionType(value["action_type"]),
     action_value: asTrimmedString(value["action_value"]),
+    approval_mode: normalizeApprovalMode(value["approval_mode"]),
     execution_mode: normalizeExecutionMode(value["execution_mode"]),
     auth: normalizeAuthProfile(value["auth"]),
     model: normalizeModelProfile(value["model"]),
@@ -235257,6 +235264,7 @@ function runtimeProfileFromTemplate(template) {
     template_level: template.level,
     action_type: template.action?.type,
     action_value: template.action?.value ?? template.prompt,
+    approval_mode: template.approvalMode,
     execution_mode: template.execution?.mode,
     auth: template.auth,
     model: template.model,
@@ -235277,6 +235285,8 @@ function mergeRuntimeProfiles(...profiles) {
       merged.action_type = profile.action_type;
     if (profile.action_value)
       merged.action_value = profile.action_value;
+    if (profile.approval_mode)
+      merged.approval_mode = profile.approval_mode;
     if (profile.execution_mode)
       merged.execution_mode = profile.execution_mode;
     if (profile.auth)
@@ -235308,6 +235318,7 @@ function sanitizeRuntimeProfile(profile) {
     template_level: profile.template_level,
     action_type: profile.action_type,
     action_value: profile.action_value,
+    approval_mode: profile.approval_mode,
     execution_mode: profile.execution_mode,
     auth: auth2,
     model: profile.model ? { ...profile.model } : void 0,
@@ -235339,6 +235350,17 @@ function asStringArray2(value) {
   const parsed = value.map((item) => typeof item === "string" ? item.trim() : "").filter((item) => item.length > 0);
   return parsed.length > 0 ? parsed : void 0;
 }
+function asStringArrayOrCsv(value) {
+  const fromArray = asStringArray2(value);
+  if (fromArray) {
+    return fromArray;
+  }
+  if (typeof value !== "string") {
+    return void 0;
+  }
+  const parsed = value.split(",").map((entry) => entry.trim()).filter((entry) => entry.length > 0);
+  return parsed.length > 0 ? parsed : void 0;
+}
 function parseAction(value) {
   if (!isRecord3(value))
     return void 0;
@@ -235360,6 +235382,13 @@ function parseExecution(value) {
     return void 0;
   }
   return { mode };
+}
+function parseApprovalMode(value) {
+  const mode = asString(value);
+  if (mode === "plan" || mode === "default" || mode === "auto-edit" || mode === "yolo") {
+    return mode;
+  }
+  return void 0;
 }
 function parseAuth(value) {
   if (!isRecord3(value))
@@ -235404,7 +235433,7 @@ function parseRun(value) {
 function parseSystemPrompt(value) {
   if (!isRecord3(value))
     return void 0;
-  const names = asStringArray2(value["names"]);
+  const names = asStringArrayOrCsv(value["names"]);
   const exclusive = typeof value["exclusive"] === "boolean" ? value["exclusive"] : void 0;
   const disable = typeof value["disable"] === "boolean" ? value["disable"] : void 0;
   if (disable === true) {
@@ -235496,6 +235525,7 @@ var init_manager = __esm({
           name: asString(frontmatter["name"]),
           description: asString(frontmatter["description"]),
           tags: asStringArray2(frontmatter["tags"]),
+          approvalMode: parseApprovalMode(frontmatter["approvalMode"]),
           prompt,
           action: parseAction(frontmatter["action"]),
           execution: parseExecution(frontmatter["execution"]),
@@ -235509,8 +235539,10 @@ var init_manager = __esm({
         };
         if (!template.action && template.prompt) {
           template.action = { type: "prompt", value: template.prompt };
-        } else if (template.action && !template.action.value && template.prompt) {
-          template.action.value = template.prompt;
+        } else if (template.action && template.prompt) {
+          if (template.action.type === "prompt" || !template.action.value) {
+            template.action.value = template.prompt;
+          }
         }
         return template;
       }
@@ -235524,8 +235556,20 @@ var init_manager = __esm({
           frontmatter["description"] = template.description;
         if (template.tags && template.tags.length > 0)
           frontmatter["tags"] = template.tags;
+        if (template.approvalMode)
+          frontmatter["approvalMode"] = template.approvalMode;
         if (template.action && (template.action.type || template.action.value)) {
-          frontmatter["action"] = template.action;
+          const action = {};
+          if (template.action.type) {
+            action.type = template.action.type;
+          }
+          const actionValue = asString(template.action.value);
+          if (!(action.type === "prompt" && template.prompt) && actionValue) {
+            action.value = actionValue;
+          }
+          if (action.type || action.value) {
+            frontmatter["action"] = action;
+          }
         }
         if (template.execution && template.execution.mode) {
           frontmatter["execution"] = template.execution;
@@ -235685,7 +235729,7 @@ ${body}` : "\n"}`;
 
 // packages/core/dist/src/tools/schedule-task.js
 function isRuntimeFieldPresent(params) {
-  return params.prompt !== void 0 || params.action_type !== void 0 || params.action_value !== void 0 || params.execution_mode !== void 0 || params.execution_mode_override !== void 0 || params.template_id !== void 0 || params.template_level !== void 0 || params.template_overrides !== void 0 || params.auth !== void 0 || params.model !== void 0 || params.run !== void 0 || params.return_to_session_id !== void 0;
+  return params.prompt !== void 0 || params.action_type !== void 0 || params.action_value !== void 0 || params.approval_mode !== void 0 || params.execution_mode !== void 0 || params.execution_mode_override !== void 0 || params.template_id !== void 0 || params.template_level !== void 0 || params.template_overrides !== void 0 || params.auth !== void 0 || params.model !== void 0 || params.run !== void 0 || params.return_to_session_id !== void 0;
 }
 var scheduleTaskToolSchemaData, scheduleTaskToolDescription, ScheduleTaskInvocation, ScheduleTaskTool;
 var init_schedule_task = __esm({
@@ -235761,6 +235805,11 @@ var init_schedule_task = __esm({
           action_value: {
             type: "string",
             description: "Optional action payload. If omitted, prompt is used as action_value."
+          },
+          approval_mode: {
+            type: "string",
+            enum: ["plan", "default", "auto-edit", "yolo"],
+            description: "Optional approval mode override for this job runtime."
           },
           template_id: {
             type: "string",
@@ -235924,6 +235973,7 @@ Jobs support:
         const explicitRuntime = {
           action_type: directActionType ?? (directActionValue ? "prompt" : void 0),
           action_value: directActionValue,
+          approval_mode: normalizeApprovalMode(params.approval_mode),
           execution_mode: explicitExecutionMode,
           auth: normalizeAuthProfile(params.auth),
           model: normalizeModelProfile(params.model),
@@ -239202,6 +239252,7 @@ function parseTemplatePatch(value) {
     name: asString3(value["name"]),
     description: asString3(value["description"]),
     tags: parseTags(value["tags"]),
+    approvalMode: normalizeApprovalMode(value["approvalMode"]),
     prompt: asString3(value["prompt"]),
     action: parseAction2(value["action"]),
     execution: parseExecution2(value["execution"]),
@@ -250147,6 +250198,7 @@ __export(dist_exports, {
   mergeRuntimeProfiles: () => mergeRuntimeProfiles,
   normalize: () => normalize,
   normalizeActionType: () => normalizeActionType,
+  normalizeApprovalMode: () => normalizeApprovalMode,
   normalizeAuthProfile: () => normalizeAuthProfile,
   normalizeExecutionMode: () => normalizeExecutionMode,
   normalizeModelProfile: () => normalizeModelProfile,
@@ -356898,7 +356950,7 @@ var tokenizeArgs = (args) => {
     return token2;
   });
 };
-var parseApprovalMode = (value) => {
+var parseApprovalMode2 = (value) => {
   if (!value) {
     return null;
   }
@@ -357065,7 +357117,7 @@ var approvalModeCommand = {
         content: USAGE_MESSAGE
       };
     }
-    const requestedMode = parseApprovalMode(parsed.mode);
+    const requestedMode = parseApprovalMode2(parsed.mode);
     if (!requestedMode) {
       let message = `Invalid approval mode: ${parsed.mode}
 
@@ -357146,7 +357198,7 @@ ${USAGE_MESSAGE}`;
             content: `${parsed.error}. ${USAGE_MESSAGE}`
           };
         }
-        const normalizedMode = parseApprovalMode(parsed.mode);
+        const normalizedMode = parseApprovalMode2(parsed.mode);
         if (!normalizedMode) {
           return {
             type: "message",
@@ -357231,7 +357283,7 @@ init_open();
 import process41 from "node:process";
 
 // packages/cli/src/generated/git-commit.ts
-var GIT_COMMIT_INFO = "8fdcc701";
+var GIT_COMMIT_INFO = "a2446d1f";
 
 // packages/cli/src/ui/commands/bugCommand.ts
 init_dist3();
@@ -371272,6 +371324,13 @@ function formatPreview(value, fallback = "(unset)") {
   if (normalized2.length <= 40) return normalized2;
   return `${normalized2.slice(0, 40)}...`;
 }
+function toApprovalModeChoice(value) {
+  if (value === ApprovalMode.PLAN) return ApprovalMode.PLAN;
+  if (value === ApprovalMode.DEFAULT) return ApprovalMode.DEFAULT;
+  if (value === ApprovalMode.AUTO_EDIT) return ApprovalMode.AUTO_EDIT;
+  if (value === ApprovalMode.YOLO) return ApprovalMode.YOLO;
+  return "inherit";
+}
 function formatSystemPromptSpec(profile) {
   if (!profile) {
     return "";
@@ -371365,6 +371424,7 @@ function buildEmptyDraft(settings, currentModel) {
   };
 }
 function buildDraftFromTemplate(template, settings, currentModel) {
+  const approvalMode = toApprovalModeChoice(template.approvalMode);
   const returnToSession = template.run?.returnToSession;
   const returnChoice = returnToSession === true ? "true" : returnToSession === false ? "false" : typeof returnToSession === "string" ? "current_session" : "inherit";
   const allowRecursive = template.run?.allowRecursive;
@@ -371377,7 +371437,7 @@ function buildDraftFromTemplate(template, settings, currentModel) {
     actionType: template.action?.type ?? "prompt",
     actionValue: template.action?.value ?? template.prompt ?? "",
     executionMode: template.execution?.mode ?? "default",
-    approvalMode: "inherit",
+    approvalMode,
     authChoice: toAuthChoice(template.auth),
     modelName: template.model?.name ?? currentModel,
     returnToSession: returnChoice,
@@ -371403,6 +371463,7 @@ function buildRuntimeProfileFromJob(job) {
 }
 function buildDraftFromJob(job, currentModel) {
   const runtimeProfile = buildRuntimeProfileFromJob(job);
+  const approvalMode = toApprovalModeChoice(runtimeProfile.approval_mode);
   const returnToSession = runtimeProfile.run?.returnToSession ?? job.return_to_session_id;
   const returnChoice = returnToSession === true ? "true" : returnToSession === false ? "false" : typeof returnToSession === "string" ? "current_session" : "inherit";
   const allowRecursive = runtimeProfile.run?.allowRecursive;
@@ -371415,7 +371476,7 @@ function buildDraftFromJob(job, currentModel) {
     actionType: runtimeProfile.action_type ?? job.action_type ?? "prompt",
     actionValue: runtimeProfile.action_value ?? job.action_value ?? job.prompt ?? "",
     executionMode: runtimeProfile.execution_mode ?? job.execution_mode ?? "default",
-    approvalMode: "inherit",
+    approvalMode,
     authChoice: toAuthChoice(runtimeProfile.auth),
     modelName: runtimeProfile.model?.name ?? currentModel,
     returnToSession: returnChoice,
@@ -371836,24 +371897,30 @@ function TaskTemplateEditorDialog({
     const index = modelItems.findIndex((item) => item.value === targetModel);
     return index >= 0 ? index : 0;
   }, [modelItems, draft.modelName]);
-  const fieldItems = (0, import_react92.useMemo)(
-    () => [
+  const fieldItems = (0, import_react92.useMemo)(() => {
+    const items = [
       {
         label: `ID: ${formatPreview(draft.id)}`,
         value: "id"
-      },
-      {
+      }
+    ];
+    if (!isSelectedScheduledJob) {
+      items.push({
         label: `Name: ${formatPreview(draft.name)}`,
         value: "name"
-      },
-      {
-        label: `Description: ${formatPreview(draft.description)}`,
-        value: "description"
-      },
-      {
+      });
+    }
+    items.push({
+      label: `Description: ${formatPreview(draft.description)}`,
+      value: "description"
+    });
+    if (!isSelectedScheduledJob) {
+      items.push({
         label: `Tags: ${formatPreview(draft.tags)}`,
         value: "tags"
-      },
+      });
+    }
+    items.push(
       {
         label: `Action Type: ${draft.actionType}`,
         value: "action_type"
@@ -371891,24 +371958,33 @@ function TaskTemplateEditorDialog({
         value: "system_prompt"
       },
       {
-        label: `Save Level: ${draft.level}`,
-        value: "level"
-      },
-      {
-        label: `Deploy Mode: ${draft.deployMode}`,
-        value: "deploy_mode"
-      },
-      {
         label: `Schedule: ${draft.schedule}`,
         value: "schedule"
-      },
-      {
-        label: `Schedule Job ID: ${formatPreview(draft.scheduleJobId, "auto")}`,
-        value: "schedule_job_id"
       }
-    ],
-    [draft]
-  );
+    );
+    if (!isSelectedScheduledJob) {
+      items.push(
+        {
+          label: `Save Level: ${draft.level}`,
+          value: "level"
+        },
+        {
+          label: `Deploy Mode: ${draft.deployMode}`,
+          value: "deploy_mode"
+        },
+        {
+          label: `Schedule Job ID: ${formatPreview(draft.scheduleJobId, "auto")}`,
+          value: "schedule_job_id"
+        }
+      );
+    }
+    return items;
+  }, [draft, isSelectedScheduledJob]);
+  (0, import_react92.useEffect)(() => {
+    if (!fieldItems.some((item) => item.value === selectedField)) {
+      setSelectedField(fieldItems[0]?.value ?? "id");
+    }
+  }, [fieldItems, selectedField]);
   const selectedFieldIndex = (0, import_react92.useMemo)(() => {
     const index = fieldItems.findIndex((item) => item.value === selectedField);
     return index >= 0 ? index : 0;
@@ -371963,6 +372039,7 @@ function TaskTemplateEditorDialog({
       name: trimOrUndefined(draft.name),
       description: trimOrUndefined(draft.description),
       tags: parseTags2(draft.tags),
+      approvalMode: draft.approvalMode === "inherit" ? void 0 : draft.approvalMode,
       prompt: actionValue,
       action: {
         type: draft.actionType,
@@ -372071,6 +372148,7 @@ function TaskTemplateEditorDialog({
       ...existingRuntime,
       action_type: draft.actionType,
       action_value: actionValue,
+      approval_mode: draft.approvalMode === "inherit" ? void 0 : draft.approvalMode,
       execution_mode: executionMode,
       auth: auth2,
       model,
@@ -372330,7 +372408,7 @@ function TaskTemplateEditorDialog({
     if (selectedField === "action_value") {
       const isPrompt = draft.actionType === "prompt";
       return /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
-        /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: isPrompt ? "Enter the task prompt. Use Shift+Enter for new lines." : "Enter the slash command payload. Use Shift+Enter for new lines." }),
+        /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: isPrompt ? "Enter the task prompt. Use Ctrl+J for new lines (Shift+Enter also works in terminals that report it)." : "Enter the slash command payload. Use Ctrl+J for new lines (Shift+Enter also works in terminals that report it)." }),
         /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
           TextInput,
           {
@@ -372550,6 +372628,7 @@ function TaskTemplateEditorDialog({
     }
     if (selectedField === "schedule") {
       return /* @__PURE__ */ (0, import_jsx_runtime38.jsxs)(Box_default, { flexDirection: "column", marginTop: 1, children: [
+        /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: isSelectedScheduledJob ? "Editing an @job schedule updates cron.json immediately on Save Scheduled Job." : "For templates, schedule is used for deploy defaults in this session." }),
         /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(Text3, { color: Colors.Gray, children: "Cron format: minute hour day month day_of_week (0-6, Sun=0). Examples: \xA0`0 * * * *` hourly,\xA0`*/15 * * * *` every 15 min,\xA0`0 2 * * *` daily at 2:00." }),
         /* @__PURE__ */ (0, import_jsx_runtime38.jsx)(
           TextInput,

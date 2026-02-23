@@ -6,7 +6,7 @@
 import { BaseDeclarativeTool, BaseToolInvocation, Kind } from "./tools.js";
 import { ToolErrorType } from "./tool-error.js";
 import { createJob, getJob, listJobs, updateJob, deleteJob, pauseJob, resumeJob, getJobLogs, validateCronExpression, } from "../scheduler/job-store.js";
-import { mergeRuntimeProfiles, normalizeActionType, normalizeAuthProfile, normalizeExecutionMode, normalizeModelProfile, normalizeRunProfile, normalizeRuntimeProfile, normalizeTemplateLevel, runtimeProfileFromTemplate, sanitizeRuntimeProfile, } from "../task-templates/runtime.js";
+import { mergeRuntimeProfiles, normalizeActionType, normalizeApprovalMode, normalizeAuthProfile, normalizeExecutionMode, normalizeModelProfile, normalizeRunProfile, normalizeRuntimeProfile, normalizeTemplateLevel, runtimeProfileFromTemplate, sanitizeRuntimeProfile, } from "../task-templates/runtime.js";
 import { TaskTemplateManager } from "../task-templates/manager.js";
 const scheduleTaskToolSchemaData = {
     name: "schedule_task",
@@ -74,6 +74,11 @@ const scheduleTaskToolSchemaData = {
                 type: "string",
                 description: "Optional action payload. If omitted, prompt is used as action_value.",
             },
+            approval_mode: {
+                type: "string",
+                enum: ["plan", "default", "auto-edit", "yolo"],
+                description: "Optional approval mode override for this job runtime.",
+            },
             template_id: {
                 type: "string",
                 description: "Optional task template id used to pre-fill job runtime fields.",
@@ -132,6 +137,7 @@ function isRuntimeFieldPresent(params) {
     return (params.prompt !== undefined ||
         params.action_type !== undefined ||
         params.action_value !== undefined ||
+        params.approval_mode !== undefined ||
         params.execution_mode !== undefined ||
         params.execution_mode_override !== undefined ||
         params.template_id !== undefined ||
@@ -265,6 +271,7 @@ class ScheduleTaskInvocation extends BaseToolInvocation {
         const explicitRuntime = {
             action_type: directActionType ?? (directActionValue ? "prompt" : undefined),
             action_value: directActionValue,
+            approval_mode: normalizeApprovalMode(params.approval_mode),
             execution_mode: explicitExecutionMode,
             auth: normalizeAuthProfile(params.auth),
             model: normalizeModelProfile(params.model),

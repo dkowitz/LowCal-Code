@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { mergeRuntimeProfiles, normalizeActionType, normalizeExecutionMode, normalizeRuntimeProfile, normalizeAuthProfile, normalizeModelProfile, normalizeRunProfile, runtimeProfileFromTemplate, } from "../task-templates/runtime.js";
+import { mergeRuntimeProfiles, normalizeActionType, normalizeApprovalMode, normalizeExecutionMode, normalizeRuntimeProfile, normalizeAuthProfile, normalizeModelProfile, normalizeRunProfile, runtimeProfileFromTemplate, } from "../task-templates/runtime.js";
 import { TaskTemplateManager } from "../task-templates/manager.js";
 import { ToolErrorType } from "./tool-error.js";
 import { BaseDeclarativeTool, BaseToolInvocation, Kind } from "./tools.js";
@@ -99,6 +99,7 @@ function parseTemplatePatch(value) {
         name: asString(value["name"]),
         description: asString(value["description"]),
         tags: parseTags(value["tags"]),
+        approvalMode: normalizeApprovalMode(value["approvalMode"]),
         prompt: asString(value["prompt"]),
         action: parseAction(value["action"]),
         execution: parseExecution(value["execution"]),

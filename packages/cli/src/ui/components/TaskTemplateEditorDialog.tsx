@@ -187,6 +187,14 @@ function formatPreview(
   return `${normalized.slice(0, 40)}...`;
 }
 
+function toApprovalModeChoice(value: unknown): ApprovalModeChoice {
+  if (value === ApprovalMode.PLAN) return ApprovalMode.PLAN;
+  if (value === ApprovalMode.DEFAULT) return ApprovalMode.DEFAULT;
+  if (value === ApprovalMode.AUTO_EDIT) return ApprovalMode.AUTO_EDIT;
+  if (value === ApprovalMode.YOLO) return ApprovalMode.YOLO;
+  return "inherit";
+}
+
 function formatSystemPromptSpec(
   profile: TaskTemplateSystemPromptProfile | undefined,
 ): string {
@@ -312,6 +320,8 @@ function buildDraftFromTemplate(
   settings: LoadedSettings,
   currentModel: string,
 ): DraftTemplate {
+  const approvalMode = toApprovalModeChoice(template.approvalMode);
+
   const returnToSession = template.run?.returnToSession;
   const returnChoice: ReturnToSessionChoice =
     returnToSession === true
@@ -338,7 +348,7 @@ function buildDraftFromTemplate(
     actionType: template.action?.type ?? "prompt",
     actionValue: template.action?.value ?? template.prompt ?? "",
     executionMode: template.execution?.mode ?? "default",
-    approvalMode: "inherit",
+    approvalMode,
     authChoice: toAuthChoice(template.auth),
     modelName: template.model?.name ?? currentModel,
     returnToSession: returnChoice,
@@ -376,6 +386,7 @@ function buildDraftFromJob(
   currentModel: string,
 ): DraftTemplate {
   const runtimeProfile = buildRuntimeProfileFromJob(job);
+  const approvalMode = toApprovalModeChoice(runtimeProfile.approval_mode);
   const returnToSession =
     runtimeProfile.run?.returnToSession ?? job.return_to_session_id;
   const returnChoice: ReturnToSessionChoice =
@@ -405,7 +416,7 @@ function buildDraftFromJob(
       runtimeProfile.action_value ?? job.action_value ?? job.prompt ?? "",
     executionMode:
       runtimeProfile.execution_mode ?? job.execution_mode ?? "default",
-    approvalMode: "inherit",
+    approvalMode,
     authChoice: toAuthChoice(runtimeProfile.auth),
     modelName: runtimeProfile.model?.name ?? currentModel,
     returnToSession: returnChoice,
@@ -952,24 +963,34 @@ export function TaskTemplateEditorDialog({
     return index >= 0 ? index : 0;
   }, [modelItems, draft.modelName]);
 
-  const fieldItems: Array<RadioSelectItem<EditableField>> = useMemo(
-    () => [
+  const fieldItems: Array<RadioSelectItem<EditableField>> = useMemo(() => {
+    const items: Array<RadioSelectItem<EditableField>> = [
       {
         label: `ID: ${formatPreview(draft.id)}`,
         value: "id",
       },
-      {
+    ];
+
+    if (!isSelectedScheduledJob) {
+      items.push({
         label: `Name: ${formatPreview(draft.name)}`,
         value: "name",
-      },
-      {
-        label: `Description: ${formatPreview(draft.description)}`,
-        value: "description",
-      },
-      {
+      });
+    }
+
+    items.push({
+      label: `Description: ${formatPreview(draft.description)}`,
+      value: "description",
+    });
+
+    if (!isSelectedScheduledJob) {
+      items.push({
         label: `Tags: ${formatPreview(draft.tags)}`,
         value: "tags",
-      },
+      });
+    }
+
+    items.push(
       {
         label: `Action Type: ${draft.actionType}`,
         value: "action_type",
@@ -1007,24 +1028,36 @@ export function TaskTemplateEditorDialog({
         value: "system_prompt",
       },
       {
-        label: `Save Level: ${draft.level}`,
-        value: "level",
-      },
-      {
-        label: `Deploy Mode: ${draft.deployMode}`,
-        value: "deploy_mode",
-      },
-      {
         label: `Schedule: ${draft.schedule}`,
         value: "schedule",
       },
-      {
-        label: `Schedule Job ID: ${formatPreview(draft.scheduleJobId, "auto")}`,
-        value: "schedule_job_id",
-      },
-    ],
-    [draft],
-  );
+    );
+
+    if (!isSelectedScheduledJob) {
+      items.push(
+        {
+          label: `Save Level: ${draft.level}`,
+          value: "level",
+        },
+        {
+          label: `Deploy Mode: ${draft.deployMode}`,
+          value: "deploy_mode",
+        },
+        {
+          label: `Schedule Job ID: ${formatPreview(draft.scheduleJobId, "auto")}`,
+          value: "schedule_job_id",
+        },
+      );
+    }
+
+    return items;
+  }, [draft, isSelectedScheduledJob]);
+
+  useEffect(() => {
+    if (!fieldItems.some((item) => item.value === selectedField)) {
+      setSelectedField(fieldItems[0]?.value ?? "id");
+    }
+  }, [fieldItems, selectedField]);
 
   const selectedFieldIndex = useMemo(() => {
     const index = fieldItems.findIndex((item) => item.value === selectedField);
@@ -1102,6 +1135,8 @@ export function TaskTemplateEditorDialog({
       name: trimOrUndefined(draft.name),
       description: trimOrUndefined(draft.description),
       tags: parseTags(draft.tags),
+      approvalMode:
+        draft.approvalMode === "inherit" ? undefined : draft.approvalMode,
       prompt: actionValue,
       action: {
         type: draft.actionType,
@@ -1254,6 +1289,8 @@ export function TaskTemplateEditorDialog({
       ...existingRuntime,
       action_type: draft.actionType,
       action_value: actionValue,
+      approval_mode:
+        draft.approvalMode === "inherit" ? undefined : draft.approvalMode,
       execution_mode: executionMode,
       auth,
       model,
@@ -1567,8 +1604,8 @@ export function TaskTemplateEditorDialog({
         <Box flexDirection="column" marginTop={1}>
           <Text color={Colors.Gray}>
             {isPrompt
-              ? "Enter the task prompt. Use Shift+Enter for new lines."
-              : "Enter the slash command payload. Use Shift+Enter for new lines."}
+              ? "Enter the task prompt. Use Ctrl+J for new lines (Shift+Enter also works in terminals that report it)."
+              : "Enter the slash command payload. Use Ctrl+J for new lines (Shift+Enter also works in terminals that report it)."}
           </Text>
           <TextInput
             key={`task-editor-${selectedField}-${editorResetToken}`}
@@ -1812,6 +1849,11 @@ export function TaskTemplateEditorDialog({
     if (selectedField === "schedule") {
       return (
         <Box flexDirection="column" marginTop={1}>
+          <Text color={Colors.Gray}>
+            {isSelectedScheduledJob
+              ? "Editing an @job schedule updates cron.json immediately on Save Scheduled Job."
+              : "For templates, schedule is used for deploy defaults in this session."}
+          </Text>
           <Text color={Colors.Gray}>
             Cron format: minute hour day month day_of_week (0-6, Sun=0). Examples:
             &nbsp;`0 * * * *` hourly,&nbsp;`*/15 * * * *` every 15 min,&nbsp;`0 2 * * *`

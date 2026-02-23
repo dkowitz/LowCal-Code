@@ -28,6 +28,7 @@ import {
 import {
   mergeRuntimeProfiles,
   normalizeActionType,
+  normalizeApprovalMode,
   normalizeAuthProfile,
   normalizeExecutionMode,
   normalizeModelProfile,
@@ -119,6 +120,12 @@ const scheduleTaskToolSchemaData: FunctionDeclaration = {
         description:
           "Optional action payload. If omitted, prompt is used as action_value.",
       },
+      approval_mode: {
+        type: "string",
+        enum: ["plan", "default", "auto-edit", "yolo"],
+        description:
+          "Optional approval mode override for this job runtime.",
+      },
       template_id: {
         type: "string",
         description:
@@ -185,6 +192,7 @@ function isRuntimeFieldPresent(params: ScheduleTaskParams): boolean {
     params.prompt !== undefined ||
     params.action_type !== undefined ||
     params.action_value !== undefined ||
+    params.approval_mode !== undefined ||
     params.execution_mode !== undefined ||
     params.execution_mode_override !== undefined ||
     params.template_id !== undefined ||
@@ -369,6 +377,7 @@ class ScheduleTaskInvocation extends BaseToolInvocation<
     const explicitRuntime: TaskRuntimeProfile = {
       action_type: directActionType ?? (directActionValue ? "prompt" : undefined),
       action_value: directActionValue,
+      approval_mode: normalizeApprovalMode(params.approval_mode),
       execution_mode: explicitExecutionMode,
       auth: normalizeAuthProfile(params.auth),
       model: normalizeModelProfile(params.model),

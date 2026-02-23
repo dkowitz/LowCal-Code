@@ -9,6 +9,7 @@ import type { Config } from "../config/config.js";
 import {
   mergeRuntimeProfiles,
   normalizeActionType,
+  normalizeApprovalMode,
   normalizeExecutionMode,
   normalizeRuntimeProfile,
   normalizeAuthProfile,
@@ -142,6 +143,7 @@ function parseTemplatePatch(value: unknown): Partial<TaskTemplate> {
     name: asString(value["name"]),
     description: asString(value["description"]),
     tags: parseTags(value["tags"]),
+    approvalMode: normalizeApprovalMode(value["approvalMode"]),
     prompt: asString(value["prompt"]),
     action: parseAction(value["action"]),
     execution: parseExecution(value["execution"]),
