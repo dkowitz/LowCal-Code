@@ -14,12 +14,14 @@ import {
   logIdeConnection,
   logUserPrompt,
   sessionId,
+  Storage,
 } from "@qwen-code/qwen-code-core";
 import { render } from "ink";
 import { spawn } from "node:child_process";
 import dns from "node:dns";
+import fs from "node:fs";
 import os from "node:os";
-import { basename } from "node:path";
+import path, { basename } from "node:path";
 import v8 from "node:v8";
 import React from "react";
 import { normalizeAuthType, validateAuthMethod } from "./config/auth.js";
@@ -54,6 +56,23 @@ import {
   stopSessionRegistration,
 } from "./session/sessionManager.js";
 
+const INSTANCE_ID_ENV_VAR = "LOWCAL_INSTANCE_ID";
+const INSTANCE_ID_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
+const INSTANCE_DIR_NAME = "instances";
+
+function normalizeInstanceId(
+  value: string | undefined | null,
+): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (!INSTANCE_ID_PATTERN.test(trimmed)) {
+    return undefined;
+  }
+  return trimmed;
+}
+
 export function validateDnsResolutionOrder(
   order: string | undefined,
 ): DnsResolutionOrder {
@@ -69,6 +88,90 @@ export function validateDnsResolutionOrder(
     `Invalid value for dnsResolutionOrder in settings: "${order}". Using default "${defaultValue}".`,
   );
   return defaultValue;
+}
+
+function getInstanceIdFromArgv(argv: string[]): string | undefined {
+  for (let i = 0; i < argv.length; i++) {
+    const arg = argv[i];
+    if (arg === "--instance") {
+      return argv[i + 1];
+    }
+    if (arg.startsWith("--instance=")) {
+      return arg.slice("--instance=".length);
+    }
+  }
+  return undefined;
+}
+
+function copyFileIfMissing(sourcePath: string, targetPath: string): void {
+  if (fs.existsSync(targetPath) || !fs.existsSync(sourcePath)) {
+    return;
+  }
+  fs.mkdirSync(path.dirname(targetPath), { recursive: true });
+  fs.copyFileSync(sourcePath, targetPath);
+}
+
+function seedInstanceStateFromLegacyDefaults(instanceId: string): void {
+  const globalQwenDir = Storage.getGlobalGeminiDir();
+  const globalInstanceDir = path.join(
+    globalQwenDir,
+    INSTANCE_DIR_NAME,
+    instanceId,
+  );
+
+  copyFileIfMissing(
+    path.join(globalQwenDir, "settings.json"),
+    path.join(globalInstanceDir, "settings.json"),
+  );
+  copyFileIfMissing(
+    path.join(globalQwenDir, "tool-config.json"),
+    path.join(globalInstanceDir, "tool-config.json"),
+  );
+
+  const workspaceQwenDir = path.join(process.cwd(), ".qwen");
+  const workspaceInstanceDir = path.join(
+    workspaceQwenDir,
+    INSTANCE_DIR_NAME,
+    instanceId,
+  );
+  copyFileIfMissing(
+    path.join(workspaceQwenDir, "settings.json"),
+    path.join(workspaceInstanceDir, "settings.json"),
+  );
+}
+
+function bootstrapInstanceNamespace(): void {
+  const envInstanceId = process.env[INSTANCE_ID_ENV_VAR];
+  const normalizedEnvInstanceId = normalizeInstanceId(envInstanceId);
+  if (normalizedEnvInstanceId) {
+    process.env[INSTANCE_ID_ENV_VAR] = normalizedEnvInstanceId;
+    seedInstanceStateFromLegacyDefaults(normalizedEnvInstanceId);
+    return;
+  }
+
+  const rawArgInstanceId = getInstanceIdFromArgv(process.argv.slice(2));
+  if (rawArgInstanceId === undefined) {
+    if (envInstanceId !== undefined) {
+      console.error(
+        `Invalid ${INSTANCE_ID_ENV_VAR} value "${envInstanceId}". Use 1-64 characters: letters, numbers, dot, underscore, hyphen.`,
+      );
+      process.exit(1);
+    }
+    const autoInstanceId = `session-${sessionId}`;
+    process.env[INSTANCE_ID_ENV_VAR] = autoInstanceId;
+    seedInstanceStateFromLegacyDefaults(autoInstanceId);
+    return;
+  }
+
+  const normalizedArgInstanceId = normalizeInstanceId(rawArgInstanceId);
+  if (!normalizedArgInstanceId) {
+    console.error(
+      "Invalid value for --instance. Use 1-64 characters: letters, numbers, dot, underscore, hyphen.",
+    );
+    process.exit(1);
+  }
+  process.env[INSTANCE_ID_ENV_VAR] = normalizedArgInstanceId;
+  seedInstanceStateFromLegacyDefaults(normalizedArgInstanceId);
 }
 
 function getNodeMemoryArgs(config: Config): string[] {
@@ -180,6 +283,7 @@ export async function startInteractiveUI(
 
 export async function main() {
   setupUnhandledRejectionHandler();
+  bootstrapInstanceNamespace();
   const workspaceRoot = process.cwd();
   const settings = loadSettings(workspaceRoot);
 
@@ -219,6 +323,7 @@ export async function main() {
     details: {
       model: config.getModel(),
       approval_mode: String(config.getApprovalMode()),
+      auth_type: normalizeAuthType(config.getContentGeneratorConfig()?.authType),
     },
     capabilities: {
       observe: true,

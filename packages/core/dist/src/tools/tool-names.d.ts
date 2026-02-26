@@ -30,6 +30,7 @@ export declare const ToolNames: {
     readonly TASK_TEMPLATE: "task_template";
     readonly READ_SESSION_MESSAGES: "read_session_messages";
     readonly READ_SESSIONS: "read_sessions";
+    readonly INSPECT_SESSIONS: "inspect_sessions";
     readonly READ_COLLAB_MESSAGES: "read_collab_messages";
     readonly POST_COLLAB_MESSAGE: "post_collab_message";
     readonly RSS: "rss";

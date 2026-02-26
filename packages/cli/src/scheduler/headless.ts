@@ -322,7 +322,12 @@ async function main(): Promise<void> {
     id: sessionRunId,
     mode: "headless",
     status: "working",
-    details: { job_id: jobId, phase: "initializing" },
+    details: {
+      job_id: jobId,
+      phase: "initializing",
+      model: runtimeModel,
+      auth_type: runtimeAuthLabel,
+    },
     capabilities: {
       observe: true,
       control: true,
@@ -580,6 +585,7 @@ async function main(): Promise<void> {
     const cliToolConfig = loadCliToolConfig();
     const launchTaskDisabledInChild =
       process.env[ENV_DISABLE_LAUNCH_TASK] === "1";
+    let effectiveToolConfig = cliToolConfig;
     if (launchTaskDisabledInChild) {
       const prunedCollections = Object.fromEntries(
         Object.entries(cliToolConfig.collections).map(([name, tools]) => [
@@ -587,13 +593,31 @@ async function main(): Promise<void> {
           tools.filter((toolName) => toolName !== "launch_task"),
         ]),
       );
-      syncCoreToolConfig({
+      effectiveToolConfig = {
         ...cliToolConfig,
         collections: prunedCollections,
-      });
-    } else {
-      syncCoreToolConfig(cliToolConfig);
+      };
     }
+    const runtimeToolsetCollection =
+      runtimeProfile?.toolset?.collection?.trim();
+    if (
+      runtimeToolsetCollection &&
+      runtimeToolsetCollection.length > 0
+    ) {
+      if (!effectiveToolConfig.collections[runtimeToolsetCollection]) {
+        const available = Object.keys(effectiveToolConfig.collections)
+          .sort()
+          .join(", ");
+        throw new Error(
+          `Runtime toolset collection "${runtimeToolsetCollection}" was not found. Available collections: ${available || "(none)"}.`,
+        );
+      }
+      effectiveToolConfig = {
+        ...effectiveToolConfig,
+        activeCollection: runtimeToolsetCollection,
+      };
+    }
+    syncCoreToolConfig(effectiveToolConfig);
 
     // Initialize config
     await config.initialize();

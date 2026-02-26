@@ -14,8 +14,15 @@ import { DefaultDark } from "../ui/themes/default.js";
 import { isWorkspaceTrusted } from "./trustedFolders.js";
 import { mergeWith } from "lodash-es";
 export const SETTINGS_DIRECTORY_NAME = ".qwen";
-export const USER_SETTINGS_PATH = Storage.getGlobalSettingsPath();
-export const USER_SETTINGS_DIR = path.dirname(USER_SETTINGS_PATH);
+export function getUserSettingsPath() {
+    return Storage.getGlobalSettingsPath();
+}
+export function getUserSettingsDir() {
+    return path.dirname(getUserSettingsPath());
+}
+// Backward-compatible constants for callers/tests that import these directly.
+export const USER_SETTINGS_PATH = getUserSettingsPath();
+export const USER_SETTINGS_DIR = getUserSettingsDir();
 export const DEFAULT_EXCLUDED_ENV_VARS = ["DEBUG", "DEBUG_MODE"];
 const MIGRATE_V2_OVERWRITE = false;
 const MIGRATION_MAP = {
@@ -635,6 +642,7 @@ export function loadSettings(workspaceDir) {
     const settingsErrors = [];
     const systemSettingsPath = getSystemSettingsPath();
     const systemDefaultsPath = getSystemDefaultsPath();
+    const userSettingsPath = getUserSettingsPath();
     const migratedInMemorScopes = new Set();
     // Resolve paths to their canonical representation to handle symlinks
     const resolvedWorkspaceDir = path.resolve(workspaceDir);
@@ -696,7 +704,7 @@ export function loadSettings(workspaceDir) {
     };
     systemSettings = loadAndMigrate(systemSettingsPath, SettingScope.System);
     systemDefaultSettings = loadAndMigrate(systemDefaultsPath, SettingScope.SystemDefaults);
-    userSettings = loadAndMigrate(USER_SETTINGS_PATH, SettingScope.User);
+    userSettings = loadAndMigrate(userSettingsPath, SettingScope.User);
     if (realWorkspaceDir !== realHomeDir) {
         workspaceSettings = loadAndMigrate(workspaceSettingsPath, SettingScope.Workspace);
     }
@@ -733,7 +741,7 @@ export function loadSettings(workspaceDir) {
         path: systemDefaultsPath,
         settings: systemDefaultSettings,
     }, {
-        path: USER_SETTINGS_PATH,
+        path: userSettingsPath,
         settings: userSettings,
     }, {
         path: workspaceSettingsPath,

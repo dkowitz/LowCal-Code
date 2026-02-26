@@ -47,15 +47,32 @@ const DEFAULT_CONFIG = {
     customPrompts: {},
     activeCustomPrompt: null,
 };
+const INSTANCE_ID_ENV_VAR = "LOWCAL_INSTANCE_ID";
+const INSTANCE_ID_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
 /**
  * Get the global tool config path in ~/.qwen/tool-config.json
  */
 export function resolveToolConfigPath() {
     const homeDir = homedir();
-    if (!homeDir) {
-        return path.join("/tmp", ".qwen", "tool-config.json");
+    const baseDir = homeDir
+        ? path.join(homeDir, ".qwen")
+        : path.join("/tmp", ".qwen");
+    const rawInstanceId = process.env[INSTANCE_ID_ENV_VAR];
+    const instanceId = typeof rawInstanceId === "string" ? rawInstanceId.trim() : "";
+    if (INSTANCE_ID_PATTERN.test(instanceId)) {
+        return path.join(baseDir, "instances", instanceId, "tool-config.json");
     }
-    return path.join(homeDir, ".qwen", "tool-config.json");
+    return path.join(baseDir, "tool-config.json");
+}
+/**
+ * Get the shared tool config path in ~/.qwen/tool-config.json
+ */
+export function resolveSharedToolConfigPath() {
+    const homeDir = homedir();
+    const baseDir = homeDir
+        ? path.join(homeDir, ".qwen")
+        : path.join("/tmp", ".qwen");
+    return path.join(baseDir, "tool-config.json");
 }
 /**
  * Estimate token count (roughly 1 token per 4 characters)
@@ -64,45 +81,39 @@ export function estimateTokenCount(text) {
     return Math.ceil(text.length / 4);
 }
 export function loadCliToolConfig() {
-    const configPath = resolveToolConfigPath();
-    if (!fs.existsSync(configPath)) {
-        return {
-            ...DEFAULT_CONFIG,
-            collections: cloneCollections(DEFAULT_CONFIG.collections),
-        };
+    const sharedPath = resolveSharedToolConfigPath();
+    const sessionPath = resolveToolConfigPath();
+    const sharedConfig = readToolConfigFile(sharedPath);
+    const sessionConfig = sessionPath === sharedPath ? sharedConfig : readToolConfigFile(sessionPath);
+    const sharedState = normalizeSharedState(sharedConfig ?? sessionConfig ?? undefined);
+    const sessionState = normalizeSessionState(sessionConfig ?? sharedConfig ?? undefined, sharedState.collections, sharedState.customPrompts);
+    return {
+        promptMode: sessionState.promptMode,
+        activeCollection: sessionState.activeCollection,
+        collections: sharedState.collections,
+        customPrompts: sharedState.customPrompts,
+        activeCustomPrompt: sessionState.activeCustomPrompt,
+    };
+}
+export function saveCliToolConfig(cfg, options = {}) {
+    const sessionPath = resolveToolConfigPath();
+    const sharedPath = resolveSharedToolConfigPath();
+    const pathsCollide = sessionPath === sharedPath;
+    const persistShared = options.persistShared ?? true;
+    const persistSession = options.persistSession ?? true;
+    const shouldPersistShared = persistShared || pathsCollide;
+    if (shouldPersistShared) {
+        const existingShared = readToolConfigFile(sharedPath);
+        const sharedPayload = buildSharedPayload(cfg, existingShared);
+        writeConfigFile(sharedPath, sharedPayload);
     }
-    try {
-        const raw = fs.readFileSync(configPath, "utf8");
-        const parsed = JSON.parse(raw) ?? {};
-        const promptMode = normalizePromptMode(parsed.promptMode);
-        const mergedCollections = applyToolCollectionPolicies({
-            ...cloneCollections(DEFAULT_COLLECTIONS),
-            ...normalizeCollections(parsed.collections ?? {}),
-        });
-        const active = typeof parsed.activeCollection === "string" &&
-            mergedCollections[parsed.activeCollection]
-            ? parsed.activeCollection
-            : DEFAULT_CONFIG.activeCollection;
-        const customPrompts = normalizeCustomPrompts(parsed.customPrompts ?? {});
-        const activeCustomPrompt = normalizeActiveCustomPrompt(parsed.activeCustomPrompt, customPrompts);
-        return {
-            promptMode,
-            activeCollection: active,
-            collections: mergedCollections,
-            customPrompts,
-            activeCustomPrompt,
-        };
-    }
-    catch {
-        return {
-            ...DEFAULT_CONFIG,
-            collections: cloneCollections(DEFAULT_CONFIG.collections),
-        };
+    if (persistSession && !pathsCollide) {
+        const sessionPayload = buildSessionPayload(cfg);
+        writeConfigFile(sessionPath, sessionPayload);
     }
 }
-export function saveCliToolConfig(cfg) {
-    const configPath = resolveToolConfigPath();
-    fs.mkdirSync(path.dirname(configPath), { recursive: true });
+export function saveCliToolConfigAsGlobalDefault(cfg) {
+    const sharedPath = resolveSharedToolConfigPath();
     const payload = {
         promptMode: cfg.promptMode,
         activeCollection: cfg.activeCollection,
@@ -110,7 +121,7 @@ export function saveCliToolConfig(cfg) {
         customPrompts: cfg.customPrompts ?? {},
         activeCustomPrompt: cfg.activeCustomPrompt ?? null,
     };
-    fs.writeFileSync(configPath, JSON.stringify(payload, null, 2), "utf8");
+    writeConfigFile(sharedPath, payload);
 }
 export function syncCoreToolConfig(cfg) {
     toolConfig.promptMode = cfg.promptMode;
@@ -181,6 +192,77 @@ function normalizePromptMode(value) {
     return lower === "full" || lower === "concise" || lower === "auto"
         ? lower
         : DEFAULT_CONFIG.promptMode;
+}
+function readToolConfigFile(configPath) {
+    if (!fs.existsSync(configPath)) {
+        return undefined;
+    }
+    try {
+        const raw = fs.readFileSync(configPath, "utf8");
+        const parsed = JSON.parse(raw);
+        if (typeof parsed === "object" && parsed !== null) {
+            return parsed;
+        }
+    }
+    catch {
+        // ignore and fall back to defaults
+    }
+    return undefined;
+}
+function normalizeSharedState(source) {
+    const collections = applyToolCollectionPolicies({
+        ...cloneCollections(DEFAULT_COLLECTIONS),
+        ...normalizeCollections(source && typeof source["collections"] === "object"
+            ? source["collections"]
+            : {}),
+    });
+    const customPrompts = normalizeCustomPrompts(source && typeof source["customPrompts"] === "object"
+        ? source["customPrompts"]
+        : {});
+    return {
+        collections,
+        customPrompts,
+    };
+}
+function normalizeSessionState(source, collections, customPrompts) {
+    const promptMode = normalizePromptMode(source?.["promptMode"]);
+    const activeCollection = typeof source?.["activeCollection"] === "string" &&
+        collections[source["activeCollection"]]
+        ? source["activeCollection"]
+        : DEFAULT_CONFIG.activeCollection;
+    const activeCustomPrompt = normalizeActiveCustomPrompt(source?.["activeCustomPrompt"], customPrompts);
+    return {
+        promptMode,
+        activeCollection,
+        activeCustomPrompt,
+    };
+}
+function buildSharedPayload(cfg, existingShared) {
+    const customPrompts = cfg.customPrompts ?? {};
+    const preservedPromptMode = normalizePromptMode(existingShared?.["promptMode"]);
+    const preservedActiveCollection = typeof existingShared?.["activeCollection"] === "string" &&
+        cfg.collections[existingShared["activeCollection"]]
+        ? existingShared["activeCollection"]
+        : DEFAULT_CONFIG.activeCollection;
+    const preservedActiveCustomPrompt = normalizeActiveCustomPrompt(existingShared?.["activeCustomPrompt"], customPrompts);
+    return {
+        promptMode: preservedPromptMode,
+        activeCollection: preservedActiveCollection,
+        collections: cloneCollections(cfg.collections),
+        customPrompts,
+        activeCustomPrompt: preservedActiveCustomPrompt,
+    };
+}
+function buildSessionPayload(cfg) {
+    return {
+        promptMode: cfg.promptMode,
+        activeCollection: cfg.activeCollection,
+        activeCustomPrompt: cfg.activeCustomPrompt ?? null,
+    };
+}
+function writeConfigFile(configPath, payload) {
+    fs.mkdirSync(path.dirname(configPath), { recursive: true });
+    fs.writeFileSync(configPath, JSON.stringify(payload, null, 2), "utf8");
 }
 function normalizeCustomPrompts(prompts) {
     const normalized = {};

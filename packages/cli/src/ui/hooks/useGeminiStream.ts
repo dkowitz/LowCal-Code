@@ -37,6 +37,7 @@ import {
   parseAndFormatApiError,
   CheckpointService,
   upsertLaunchTaskState,
+  toolConfig,
 } from "@qwen-code/qwen-code-core";
 import {
   type Content,
@@ -78,6 +79,7 @@ import {
   setSessionControlHandlers,
   type SessionEnqueueTaskPayload,
   setSessionStatus,
+  updateSessionDetails,
   setRegisteredSessionHealth,
 } from "../../session/sessionManager.js";
 import { normalizeAuthType } from "../../config/auth.js";
@@ -131,6 +133,85 @@ const extractHistoryMessageText = (message: unknown): string => {
   const firstPartText = (firstPart as Record<string, unknown>)["text"];
   return typeof firstPartText === "string" ? firstPartText : "";
 };
+
+const LOOP_RECOVERY_PROMPT =
+  "Loop detected. Do not repeat the same actions. Summarize what was already tried and why it did not work, then choose a materially different next step that gathers new evidence. Continue autonomously and only ask the user if you are blocked.";
+
+const buildRecoveryContextSnippet = (
+  messages: unknown[],
+  maxItems = 3,
+  maxChars = 300,
+): string => {
+  if (!Array.isArray(messages) || messages.length === 0) {
+    return "";
+  }
+
+  const recent = messages
+    .slice(-maxItems)
+    .map((message) => extractHistoryMessageText(message))
+    .filter((text) => typeof text === "string" && text.trim().length > 0)
+    .map((text) => text.trim())
+    .join(" ... ");
+
+  if (!recent) {
+    return "";
+  }
+
+  return recent.length > maxChars ? `${recent.slice(0, maxChars)}...` : recent;
+};
+
+const MAX_SESSION_RECENT_HISTORY_ITEMS = 24;
+const MAX_SESSION_HISTORY_ITEM_CHARS = 800;
+
+type SessionHistoryRole = "system" | "user" | "assistant" | "tool" | "unknown";
+
+function clipSessionHistoryText(text: string): string {
+  const compact = text.replace(/\s+/g, " ").trim();
+  if (compact.length <= MAX_SESSION_HISTORY_ITEM_CHARS) {
+    return compact;
+  }
+  return `${compact.slice(0, MAX_SESSION_HISTORY_ITEM_CHARS)}...`;
+}
+
+function toSessionHistoryItem(
+  item: HistoryItem,
+): { timestamp: string; role: SessionHistoryRole; content: string } | null {
+  if (item.type === MessageType.USER || item.type === "user_shell") {
+    return {
+      timestamp: new Date(item.id).toISOString(),
+      role: "user",
+      content: clipSessionHistoryText(item.text),
+    };
+  }
+  if (item.type === MessageType.GEMINI || item.type === "gemini_content") {
+    return {
+      timestamp: new Date(item.id).toISOString(),
+      role: "assistant",
+      content: clipSessionHistoryText(item.text),
+    };
+  }
+  if (item.type === "tool_group") {
+    const summary = item.tools
+      .map((tool) => `${tool.name}:${tool.status}`)
+      .join(", ");
+    if (!summary) {
+      return null;
+    }
+    return {
+      timestamp: new Date(item.id).toISOString(),
+      role: "tool",
+      content: clipSessionHistoryText(`Tools: ${summary}`),
+    };
+  }
+  if (item.type === MessageType.ERROR || item.type === MessageType.INFO) {
+    return {
+      timestamp: new Date(item.id).toISOString(),
+      role: "unknown",
+      content: clipSessionHistoryText(item.text),
+    };
+  }
+  return null;
+}
 
 const isHighSimilarityRewrite = (current: string, incoming: string): boolean => {
   if (!current || !incoming) {
@@ -320,6 +401,7 @@ export const useGeminiStream = (
   const loopDetectedRef = useRef(false);
   const lastRestartableQueryRef = useRef<PartListUnion | null>(null);
   const recoveryRetryCountRef = useRef(0);
+  const pendingSelfRecoveryPromptRef = useRef<string | null>(null);
 
   const onExec = useCallback(async (done: Promise<void>) => {
     setIsResponding(true);
@@ -369,6 +451,72 @@ export const useGeminiStream = (
     const status = streamingState === StreamingState.Idle ? "idle" : "working";
     void setSessionStatus(status);
   }, [streamingState]);
+
+  useEffect(() => {
+    const details: Record<string, unknown> = {
+      model: config.getModel(),
+      approval_mode: String(config.getApprovalMode()),
+      phase: streamingState === StreamingState.Idle ? "idle" : "responding",
+      active_tool_calls: toolCalls.filter(
+        (toolCall) =>
+          toolCall.status === "executing" ||
+          toolCall.status === "scheduled" ||
+          toolCall.status === "validating",
+      ).length,
+      last_prompt_tokens: stats.lastPromptTokenCount,
+    };
+
+    const authType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
+    if (authType) {
+      details["auth_type"] = authType;
+    }
+
+    if (
+      typeof stats.currentContextTokenCount === "number" &&
+      Number.isFinite(stats.currentContextTokenCount)
+    ) {
+      details["current_context_tokens"] = stats.currentContextTokenCount;
+    }
+
+    const sessionTokenLimit = config.getSessionTokenLimit();
+    if (Number.isFinite(sessionTokenLimit) && sessionTokenLimit > 0) {
+      details["session_token_limit"] = sessionTokenLimit;
+      if (
+        typeof stats.currentContextTokenCount === "number" &&
+        Number.isFinite(stats.currentContextTokenCount)
+      ) {
+        details["token_budget"] = {
+          current_tokens: stats.currentContextTokenCount,
+          effective_limit: sessionTokenLimit,
+          utilization_ratio: stats.currentContextTokenCount / sessionTokenLimit,
+        };
+      }
+    }
+
+    details["turn_started_at"] = turnStartTimestampRef.current
+      ? new Date(turnStartTimestampRef.current).toISOString()
+      : null;
+
+    const recentHistory = history
+      .map(toSessionHistoryItem)
+      .filter(
+        (
+          item,
+        ): item is { timestamp: string; role: SessionHistoryRole; content: string } =>
+          item !== null,
+      )
+      .slice(-MAX_SESSION_RECENT_HISTORY_ITEMS);
+    details["recent_history"] = recentHistory;
+
+    void updateSessionDetails(details);
+  }, [
+    config,
+    history,
+    stats.currentContextTokenCount,
+    stats.lastPromptTokenCount,
+    streamingState,
+    toolCalls,
+  ]);
 
   useEffect(() => {
     streamingStateRef.current = streamingState;
@@ -734,6 +882,7 @@ export const useGeminiStream = (
     (eventValue: ErrorEvent["value"], userMessageTimestamp: number) => {
       checkpointPendingForTurnRef.current = false;
       checkpointTurnStartTimestampRef.current = null;
+      const errorMessage = getErrorMessage(eventValue.error);
 
       // Signal the orchestrator that we've encountered an error
       setRegisteredSessionHealth({
@@ -743,6 +892,10 @@ export const useGeminiStream = (
         evidence: {
           error_message: eventValue.error,
         },
+      });
+      void updateSessionDetails({
+        last_error: errorMessage,
+        last_error_at: new Date().toISOString(),
       });
 
       if (pendingHistoryItemRef.current) {
@@ -782,7 +935,7 @@ export const useGeminiStream = (
       setThought(null); // Reset thought when there's an error
 
       // Trigger self-recovery for the error with context
-      handleSelfRecovery("error", getErrorMessage(eventValue.error));
+      handleSelfRecovery("error", errorMessage);
     },
     [
       addItem,
@@ -1215,13 +1368,18 @@ export const useGeminiStream = (
       evidence: {
         message:
           "A potential loop was detected. This can happen due to repetitive tool calls or other model behavior.",
-      },
+        },
+    });
+    void updateSessionDetails({
+      last_error: "Potential loop detected",
+      last_error_at: new Date().toISOString(),
     });
 
     addItem(
       {
         type: "info",
-        text: `A potential loop was detected. This can happen due to repetitive tool calls or other model behavior. The request has been halted.`,
+        text:
+          "A potential loop was detected. Triggering an automatic recovery prompt to continue with a different approach.",
       },
       Date.now(),
     );
@@ -1542,6 +1700,13 @@ export const useGeminiStream = (
       } finally {
         setIsResponding(false);
         isSubmittingQueryRef.current = false;
+        const queuedPrompt = pendingSelfRecoveryPromptRef.current;
+        if (queuedPrompt) {
+          pendingSelfRecoveryPromptRef.current = null;
+          setTimeout(() => {
+            void submitQuery(queuedPrompt, { isContinuation: true });
+          }, 0);
+        }
       }
     },
     [
@@ -1677,6 +1842,7 @@ export const useGeminiStream = (
       const previousOpenAIApiKey = process.env["OPENAI_API_KEY"];
       const previousOpenAIModel = process.env["OPENAI_MODEL"];
       const previousTaskSystemPrompt = process.env[ENV_TASK_SYSTEM_PROMPT_B64];
+      const previousToolsetCollection = toolConfig.activeCollection;
       let runtimeAuthRefreshed = false;
 
       const restore = async () => {
@@ -1700,6 +1866,7 @@ export const useGeminiStream = (
         } else {
           process.env[ENV_TASK_SYSTEM_PROMPT_B64] = previousTaskSystemPrompt;
         }
+        toolConfig.activeCollection = previousToolsetCollection;
 
         const currentAuthType = normalizeAuthType(
           config.getContentGeneratorConfig()?.authType,
@@ -1809,6 +1976,20 @@ export const useGeminiStream = (
               delete process.env[ENV_TASK_SYSTEM_PROMPT_B64];
             }
           }
+        }
+
+        const runtimeToolsetCollection =
+          profile.toolset?.collection?.trim();
+        if (runtimeToolsetCollection && runtimeToolsetCollection.length > 0) {
+          if (!toolConfig.collections[runtimeToolsetCollection]) {
+            const available = Object.keys(toolConfig.collections)
+              .sort()
+              .join(", ");
+            throw new Error(
+              `Task runtime toolset "${runtimeToolsetCollection}" was not found. Available collections: ${available || "(none)"}.`,
+            );
+          }
+          toolConfig.activeCollection = runtimeToolsetCollection;
         }
 
         const authOverride = normalizeAuthType(
@@ -2066,10 +2247,18 @@ export const useGeminiStream = (
   const handleSelfRecovery = useCallback(
     (errorType: "loop" | "error", errorMessage?: string) => {
       if (errorType === "loop") {
-        // For loop detection, submit a specific recovery prompt
-        void submitQuery(
-          "You appear to be stuck in a loop. Please try a different approach or ask for help.",
-        );
+        let loopRecoveryPrompt = LOOP_RECOVERY_PROMPT;
+        try {
+          const contextSnippet = buildRecoveryContextSnippet(
+            geminiClient.getHistory(),
+          );
+          if (contextSnippet) {
+            loopRecoveryPrompt += ` Recent context: "${contextSnippet}".`;
+          }
+        } catch {
+          // Ignore context extraction errors and use the default recovery prompt.
+        }
+        pendingSelfRecoveryPromptRef.current = loopRecoveryPrompt;
       } else if (errorMessage) {
         // Increment retry counter for errors
         recoveryRetryCountRef.current += 1;
@@ -2090,32 +2279,21 @@ export const useGeminiStream = (
         }
 
         // For hard errors, get recent history and include context
-        const clientHistory = geminiClient.getHistory();
         let contextSnippet = "";
-        if (Array.isArray(clientHistory) && clientHistory.length > 0) {
-          const recentMessages = clientHistory.slice(-3);
-          const contextText = recentMessages
-            .map((msg) => {
-              const content = extractHistoryMessageText(msg);
-              if (content && typeof content === "string") {
-                return content.substring(0, 200);
-              }
-              return "";
-            })
-            .filter((text) => text.length > 0)
-            .join("... ");
-          contextSnippet = ` Here's recent context: "${contextText.substring(
-            0,
-            300,
-          )}".`;
+        try {
+          const summary = buildRecoveryContextSnippet(geminiClient.getHistory());
+          if (summary) {
+            contextSnippet = ` Here's recent context: "${summary}".`;
+          }
+        } catch {
+          // Ignore context extraction errors and continue with error-only prompt.
         }
 
-        void submitQuery(
-          `An error occurred: ${errorMessage}.${contextSnippet} Please continue with your task or ask for help.`,
-        );
+        pendingSelfRecoveryPromptRef.current =
+          `An error occurred: ${errorMessage}.${contextSnippet} Please continue with your task or ask for help.`;
       }
     },
-    [geminiClient, submitQuery],
+    [addItem, geminiClient],
   );
 
   useEffect(() => {

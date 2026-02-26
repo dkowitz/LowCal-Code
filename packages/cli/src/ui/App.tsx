@@ -1337,6 +1337,11 @@ const App = ({ config, settings, startupWarnings = [], version }: AppProps) => {
         await submitQueryForDeployRef.current(
           `/tasks schedule ${templateId} "${escapedSchedule}"${jobArg}${levelArg}`,
         );
+        if (request.scheduleStartMode === "run_immediately") {
+          await submitQueryForDeployRef.current(
+            `/tasks run ${templateId}${levelArg}`,
+          );
+        }
       } else {
         await submitQueryForDeployRef.current(
           `/tasks run ${templateId}${levelArg}`,

@@ -81,6 +81,74 @@ describe("TaskTemplateManager systemPrompt persistence", () => {
     expect(resolved?.approvalMode).toBe("auto-edit");
   });
 
+  it("round-trips toolset collection across save and reload", async () => {
+    const manager = new TaskTemplateManager(projectRoot);
+    await manager.createTemplate(
+      {
+        id: "toolset-template",
+        level: "project",
+        filePath: "",
+        prompt: "Run with restricted tools",
+        action: {
+          type: "prompt",
+          value: "Run with restricted tools",
+        },
+        toolset: {
+          collection: "minimal",
+        },
+      },
+      {
+        level: "project",
+        overwrite: true,
+      },
+    );
+
+    const resolved = await manager.resolveTemplate("toolset-template", {
+      level: "project",
+    });
+
+    expect(resolved?.toolset).toEqual({
+      collection: "minimal",
+    });
+  });
+
+  it("round-trips deploy settings across save and reload", async () => {
+    const manager = new TaskTemplateManager(projectRoot);
+    await manager.createTemplate(
+      {
+        id: "deploy-template",
+        level: "project",
+        filePath: "",
+        prompt: "Run checks",
+        action: {
+          type: "prompt",
+          value: "Run checks",
+        },
+        deploy: {
+          mode: "schedule",
+          schedule: "15 2 * * *",
+          jobId: "nightly-check",
+          scheduleStart: "run_immediately",
+        },
+      },
+      {
+        level: "project",
+        overwrite: true,
+      },
+    );
+
+    const resolved = await manager.resolveTemplate("deploy-template", {
+      level: "project",
+    });
+
+    expect(resolved?.deploy).toEqual({
+      mode: "schedule",
+      schedule: "15 2 * * *",
+      jobId: "nightly-check",
+      scheduleStart: "run_immediately",
+    });
+  });
+
   it("preserves multiline prompt action values across save and reload", async () => {
     const manager = new TaskTemplateManager(projectRoot);
     const multilinePrompt = "line 1\nline 2\nline 3";

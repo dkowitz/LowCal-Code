@@ -97,6 +97,18 @@ export function normalizeSystemPromptProfile(value) {
         exclusive: exclusive === true,
     };
 }
+export function normalizeToolsetProfile(value) {
+    if (typeof value === "string") {
+        const collection = asTrimmedString(value);
+        return collection ? { collection } : undefined;
+    }
+    if (!isRecord(value))
+        return undefined;
+    const collection = asTrimmedString(value["collection"]);
+    if (!collection)
+        return undefined;
+    return { collection };
+}
 export function normalizeRuntimeProfile(value) {
     if (!isRecord(value))
         return {};
@@ -111,6 +123,7 @@ export function normalizeRuntimeProfile(value) {
         model: normalizeModelProfile(value["model"]),
         run: normalizeRunProfile(value["run"]),
         system_prompt: normalizeSystemPromptProfile(value["system_prompt"]),
+        toolset: normalizeToolsetProfile(value["toolset"]),
     };
 }
 export function runtimeProfileFromTemplate(template) {
@@ -125,6 +138,7 @@ export function runtimeProfileFromTemplate(template) {
         model: template.model,
         run: template.run,
         system_prompt: template.systemPrompt,
+        toolset: template.toolset,
     };
 }
 export function mergeRuntimeProfiles(...profiles) {
@@ -156,6 +170,12 @@ export function mergeRuntimeProfiles(...profiles) {
                 ...profile.system_prompt,
             };
         }
+        if (profile.toolset) {
+            merged.toolset = {
+                ...merged.toolset,
+                ...profile.toolset,
+            };
+        }
     }
     return merged;
 }
@@ -183,6 +203,7 @@ export function sanitizeRuntimeProfile(profile) {
         system_prompt: profile.system_prompt
             ? { ...profile.system_prompt }
             : undefined,
+        toolset: profile.toolset ? { ...profile.toolset } : undefined,
     };
 }
 //# sourceMappingURL=runtime.js.map

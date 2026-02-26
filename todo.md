@@ -1,0 +1,10 @@
+- git tutorial
+- telegram/signal surface
+- Google integration - gmail, calendar, drive
+- markdown conversion for web_fetch:
+	-https://blog.cloudflare.com/markdown-for-agents/
+	-https://markdown.new/
+	-https://r.jina.ai/
+- OpenAI direct response format still not working
+- speech/audio
+- continual research on PI topics, cases, development

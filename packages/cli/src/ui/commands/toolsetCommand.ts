@@ -209,9 +209,12 @@ export const toolsetCommand: SlashCommand = {
       }
     };
 
-    const persist = async (message: string) => {
+    const persist = async (
+      message: string,
+      options: { persistShared: boolean; persistSession: boolean },
+    ) => {
       synchronizeFullCollection(cfg, toolRegistry);
-      saveCliToolConfig(cfg);
+      saveCliToolConfig(cfg, options);
       syncCoreToolConfig(cfg);
       cfg = loadCliToolConfig();
       synchronizeFullCollection(cfg, toolRegistry);
@@ -265,9 +268,10 @@ export const toolsetCommand: SlashCommand = {
           ...cfg,
           activeCollection: target,
         };
-        await persist(
-          `Active collection set to "${target}". Tool availability updated.`,
-        );
+        await persist(`Active collection set to "${target}". Tool availability updated.`, {
+          persistShared: false,
+          persistSession: true,
+        });
         break;
       }
       case "create": {
@@ -298,9 +302,10 @@ export const toolsetCommand: SlashCommand = {
           },
           activeCollection: cfg.activeCollection || name,
         };
-        await persist(
-          `Created collection "${name}" with ${tools.length} tool(s).`,
-        );
+        await persist(`Created collection "${name}" with ${tools.length} tool(s).`, {
+          persistShared: true,
+          persistSession: true,
+        });
         break;
       }
       case "add": {
@@ -337,9 +342,10 @@ export const toolsetCommand: SlashCommand = {
           );
           break;
         }
-        await persist(
-          `Added ${added.join(", ")} to collection "${collection}".`,
-        );
+        await persist(`Added ${added.join(", ")} to collection "${collection}".`, {
+          persistShared: true,
+          persistSession: true,
+        });
         break;
       }
       case "remove": {
@@ -384,7 +390,10 @@ export const toolsetCommand: SlashCommand = {
         if (missing.length) {
           message += ` (Not present: ${missing.join(", ")})`;
         }
-        await persist(message);
+        await persist(message, {
+          persistShared: true,
+          persistSession: true,
+        });
         break;
       }
       default: {

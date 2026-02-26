@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { AuthType } from "@qwen-code/qwen-code-core";
-import { USER_SETTINGS_PATH } from "./config/settings.js";
+import { getUserSettingsPath } from "./config/settings.js";
 import { normalizeAuthType, validateAuthMethod } from "./config/auth.js";
 function getAuthTypeFromEnv() {
     if (process.env["GOOGLE_GENAI_USE_GCA"] === "true") {
@@ -30,7 +30,7 @@ export async function validateNonInteractiveAuth(configuredAuthType, useExternal
         return nonInteractiveConfig;
     }
     if (!effectiveAuthType) {
-        console.error(`Please set an Auth method in your ${USER_SETTINGS_PATH} or specify one of the following environment variables before running: GEMINI_API_KEY, OPENAI_API_KEY, GOOGLE_GENAI_USE_VERTEXAI, GOOGLE_GENAI_USE_GCA`);
+        console.error(`Please set an Auth method in your ${getUserSettingsPath()} or specify one of the following environment variables before running: GEMINI_API_KEY, OPENAI_API_KEY, GOOGLE_GENAI_USE_VERTEXAI, GOOGLE_GENAI_USE_GCA`);
         process.exit(1);
     }
     if (!useExternalAuth) {

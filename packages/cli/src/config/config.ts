@@ -91,6 +91,7 @@ function parseApprovalModeValue(value: string): ApprovalMode {
 }
 
 export interface CliArgs {
+  instance: string | undefined;
   model: string | undefined;
   sandbox: boolean | string | undefined;
   sandboxImage: string | undefined;
@@ -138,6 +139,12 @@ export async function parseArguments(settings: Settings): Promise<CliArgs> {
           type: "string",
           description: `Model`,
           default: process.env["GEMINI_MODEL"],
+        })
+        .option("instance", {
+          type: "string",
+          description:
+            "Instance namespace used to isolate persisted settings per concurrent session.",
+          default: process.env["LOWCAL_INSTANCE_ID"],
         })
         .option("prompt", {
           alias: "p",

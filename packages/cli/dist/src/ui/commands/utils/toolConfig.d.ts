@@ -24,16 +24,26 @@ export interface CliToolConfig {
     customPrompts?: Record<string, CustomPromptMetadata>;
     activeCustomPrompt?: ActiveCustomPrompt | null;
 }
+interface SaveCliToolConfigOptions {
+    persistShared?: boolean;
+    persistSession?: boolean;
+}
 /**
  * Get the global tool config path in ~/.qwen/tool-config.json
  */
 export declare function resolveToolConfigPath(): string;
 /**
+ * Get the shared tool config path in ~/.qwen/tool-config.json
+ */
+export declare function resolveSharedToolConfigPath(): string;
+/**
  * Estimate token count (roughly 1 token per 4 characters)
  */
 export declare function estimateTokenCount(text: string): number;
 export declare function loadCliToolConfig(): CliToolConfig;
-export declare function saveCliToolConfig(cfg: CliToolConfig): void;
+export declare function saveCliToolConfig(cfg: CliToolConfig, options?: SaveCliToolConfigOptions): void;
+export declare function saveCliToolConfigAsGlobalDefault(cfg: CliToolConfig): void;
 export declare function syncCoreToolConfig(cfg: CliToolConfig): void;
 export declare function normalizeToolName(name: string): string;
 export declare function normalizeToolList(toolNames: string[]): string[];
+export {};

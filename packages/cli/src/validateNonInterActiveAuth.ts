@@ -5,7 +5,7 @@
  */
 
 import { AuthType, type Config } from "@qwen-code/qwen-code-core";
-import { USER_SETTINGS_PATH } from "./config/settings.js";
+import { getUserSettingsPath } from "./config/settings.js";
 import { normalizeAuthType, validateAuthMethod } from "./config/auth.js";
 
 function getAuthTypeFromEnv(): AuthType | undefined {
@@ -41,7 +41,7 @@ export async function validateNonInteractiveAuth(
 
   if (!effectiveAuthType) {
     console.error(
-      `Please set an Auth method in your ${USER_SETTINGS_PATH} or specify one of the following environment variables before running: GEMINI_API_KEY, OPENAI_API_KEY, GOOGLE_GENAI_USE_VERTEXAI, GOOGLE_GENAI_USE_GCA`,
+      `Please set an Auth method in your ${getUserSettingsPath()} or specify one of the following environment variables before running: GEMINI_API_KEY, OPENAI_API_KEY, GOOGLE_GENAI_USE_VERTEXAI, GOOGLE_GENAI_USE_GCA`,
     );
     process.exit(1);
   }

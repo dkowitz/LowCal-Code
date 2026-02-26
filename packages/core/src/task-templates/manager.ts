@@ -17,11 +17,13 @@ import type {
   TaskTemplateApprovalMode,
   TaskTemplateAction,
   TaskTemplateAuthProfile,
+  TaskTemplateDeployProfile,
   TaskTemplateExecutionProfile,
   TaskTemplateLevel,
   TaskTemplateModelProfile,
   TaskTemplateRunProfile,
   TaskTemplateSystemPromptProfile,
+  TaskTemplateToolsetProfile,
 } from "./types.js";
 
 const QWEN_CONFIG_DIR = ".qwen";
@@ -168,6 +170,41 @@ function parseSystemPrompt(
   };
 }
 
+function parseToolset(value: unknown): TaskTemplateToolsetProfile | undefined {
+  if (typeof value === "string") {
+    const collection = asString(value);
+    return collection ? { collection } : undefined;
+  }
+  if (!isRecord(value)) return undefined;
+  const collection = asString(value["collection"]);
+  if (!collection) return undefined;
+  return { collection };
+}
+
+function parseDeploy(value: unknown): TaskTemplateDeployProfile | undefined {
+  if (!isRecord(value)) return undefined;
+  const mode = asString(value["mode"]);
+  const deployMode = mode === "launch" || mode === "schedule" ? mode : undefined;
+  const schedule = asString(value["schedule"]);
+  const jobId = asString(value["jobId"]);
+  const scheduleStartRaw = asString(value["scheduleStart"]);
+  const scheduleStart =
+    scheduleStartRaw === "start_idle" || scheduleStartRaw === "run_immediately"
+      ? scheduleStartRaw
+      : undefined;
+
+  if (!deployMode && !schedule && !jobId && !scheduleStart) {
+    return undefined;
+  }
+
+  return {
+    mode: deployMode,
+    schedule,
+    jobId,
+    scheduleStart,
+  };
+}
+
 function mergeTemplate(base: TaskTemplate, updates: Partial<TaskTemplate>): TaskTemplate {
   return {
     ...base,
@@ -182,6 +219,7 @@ function mergeTemplate(base: TaskTemplate, updates: Partial<TaskTemplate>): Task
     systemPrompt: updates.systemPrompt
       ? { ...base.systemPrompt, ...updates.systemPrompt }
       : base.systemPrompt,
+    deploy: updates.deploy ? { ...base.deploy, ...updates.deploy } : base.deploy,
   };
 }
 
@@ -255,6 +293,7 @@ export class TaskTemplateManager {
       description: asString(frontmatter["description"]),
       tags: asStringArray(frontmatter["tags"]),
       approvalMode: parseApprovalMode(frontmatter["approvalMode"]),
+      deploy: parseDeploy(frontmatter["deploy"]),
       prompt,
       action: parseAction(frontmatter["action"]),
       execution: parseExecution(frontmatter["execution"]),
@@ -262,6 +301,7 @@ export class TaskTemplateManager {
       model: parseModel(frontmatter["model"]),
       run: parseRun(frontmatter["run"]),
       systemPrompt: parseSystemPrompt(frontmatter["systemPrompt"]),
+      toolset: parseToolset(frontmatter["toolset"]),
       level,
       filePath,
       isBuiltin: isBuiltin || undefined,
@@ -289,6 +329,7 @@ export class TaskTemplateManager {
     if (template.description) frontmatter["description"] = template.description;
     if (template.tags && template.tags.length > 0) frontmatter["tags"] = template.tags;
     if (template.approvalMode) frontmatter["approvalMode"] = template.approvalMode;
+    if (template.deploy) frontmatter["deploy"] = template.deploy;
     if (template.action && (template.action.type || template.action.value)) {
       const action: TaskTemplateAction = {};
       if (template.action.type) {
@@ -320,6 +361,9 @@ export class TaskTemplateManager {
     }
     if (template.systemPrompt) {
       frontmatter["systemPrompt"] = template.systemPrompt;
+    }
+    if (template.toolset?.collection) {
+      frontmatter["toolset"] = template.toolset.collection;
     }
 
     const yaml = stringifyYaml(frontmatter, {

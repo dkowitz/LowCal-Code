@@ -88,6 +88,15 @@ vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
   return {
     ...actualCore,
     AuthType,
+    LOWCAL_INSTANCE_ID_ENV_VAR:
+      actualCore.LOWCAL_INSTANCE_ID_ENV_VAR ?? "LOWCAL_INSTANCE_ID",
+    normalizeInstanceId:
+      actualCore.normalizeInstanceId ??
+      ((value: string | undefined | null) => {
+        if (!value) return undefined;
+        const trimmed = value.trim();
+        return /^[A-Za-z0-9._-]{1,64}$/.test(trimmed) ? trimmed : undefined;
+      }),
     Config: MockConfig,
     postCollabMessage: vi.fn(
       actualCore.postCollabMessage
@@ -96,7 +105,9 @@ vi.mock("@qwen-code/qwen-code-core", async (importOriginal) => {
           ): ReturnType<typeof actualCore.postCollabMessage> =>
             actualCore.postCollabMessage(...args)
         : async () => {
-            throw new Error("postCollabMessage is not implemented in this test.");
+            throw new Error(
+              "postCollabMessage is not implemented in this test.",
+            );
           },
     ),
     readCollabMessages: vi.fn(

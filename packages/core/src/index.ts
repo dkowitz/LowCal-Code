@@ -109,6 +109,7 @@ export * from "./tools/schedule-task.js";
 export * from "./tools/task-template.js";
 export * from "./tools/read-session-messages.js";
 export * from "./tools/read-sessions.js";
+export * from "./tools/inspect-sessions.js";
 export * from "./tools/read-collab-messages.js";
 export * from "./tools/post-collab-message.js";
 export * from "./tools/launch-task-state.js";
@@ -139,4 +140,8 @@ export { sessionId } from "./utils/session.js";
 export * from "./utils/browser.js";
 // OpenAI Logging Utilities
 export { OpenAILogger, openaiLogger } from "./utils/openaiLogger.js";
-export { Storage } from "./config/storage.js";
+export {
+  LOWCAL_INSTANCE_ID_ENV_VAR,
+  normalizeInstanceId,
+  Storage,
+} from "./config/storage.js";

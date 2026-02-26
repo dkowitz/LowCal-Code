@@ -230,6 +230,7 @@ describe("useGeminiStream", () => {
         .fn()
         .mockReturnValue(contentGeneratorConfig),
       getMaxSessionTurns: vi.fn(() => 50),
+      getSessionTokenLimit: vi.fn(() => Number.NaN),
     } as unknown as Config;
     mockOnDebugMessage = vi.fn();
     mockHandleSlashCommand = vi.fn().mockResolvedValue(false);
@@ -1302,6 +1303,100 @@ describe("useGeminiStream", () => {
           "gemini-2.5-flash",
         );
       });
+    });
+  });
+
+  describe("Automatic Recovery", () => {
+    it("queues and submits a corrective prompt after loop detection", async () => {
+      mockSendMessageStream
+        .mockReturnValueOnce(
+          (async function* () {
+            yield { type: ServerGeminiEventType.LoopDetected };
+          })(),
+        )
+        .mockReturnValueOnce(
+          (async function* () {
+            yield {
+              type: ServerGeminiEventType.Content,
+              value: "Recovered and continuing.",
+            };
+            yield { type: ServerGeminiEventType.Finished, value: "STOP" };
+          })(),
+        );
+
+      const { result } = renderTestHook();
+      await act(async () => {
+        await result.current.submitQuery("Investigate blank page rendering");
+      });
+
+      await waitFor(() => {
+        expect(mockSendMessageStream).toHaveBeenCalledTimes(2);
+      });
+
+      expect(mockSendMessageStream).toHaveBeenNthCalledWith(
+        1,
+        "Investigate blank page rendering",
+        expect.any(AbortSignal),
+        expect.any(String),
+      );
+      expect(mockSendMessageStream).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining("Loop detected"),
+        expect.any(AbortSignal),
+        expect.any(String),
+      );
+      expect(mockAddItem).toHaveBeenCalledWith(
+        expect.objectContaining({
+          type: MessageType.INFO,
+          text: expect.stringContaining("automatic recovery prompt"),
+        }),
+        expect.any(Number),
+      );
+      expect(
+        mockAddItem.mock.calls.some(
+          (call) =>
+            call[0]?.type === MessageType.INFO &&
+            typeof call[0]?.text === "string" &&
+            call[0].text.includes("halted"),
+        ),
+      ).toBe(false);
+    });
+
+    it("queues and submits an error recovery prompt after stream errors", async () => {
+      mockSendMessageStream
+        .mockReturnValueOnce(
+          (async function* () {
+            yield {
+              type: ServerGeminiEventType.Error,
+              value: { error: { message: "Transient backend failure" } },
+            };
+          })(),
+        )
+        .mockReturnValueOnce(
+          (async function* () {
+            yield {
+              type: ServerGeminiEventType.Content,
+              value: "Recovered after retry.",
+            };
+            yield { type: ServerGeminiEventType.Finished, value: "STOP" };
+          })(),
+        );
+
+      const { result } = renderTestHook();
+      await act(async () => {
+        await result.current.submitQuery("Continue task");
+      });
+
+      await waitFor(() => {
+        expect(mockSendMessageStream).toHaveBeenCalledTimes(2);
+      });
+
+      expect(mockSendMessageStream).toHaveBeenNthCalledWith(
+        2,
+        expect.stringContaining("An error occurred:"),
+        expect.any(AbortSignal),
+        expect.any(String),
+      );
     });
   });
 

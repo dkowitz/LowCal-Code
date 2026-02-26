@@ -460,9 +460,9 @@ async function handleSessionApiRequest(
         const description = request.params?.["description"];
         const source_session_id = request.params?.["source_session_id"];
         const return_to_session_id = request.params?.["return_to_session_id"];
-        const runtime_profile = request.params?.[
-          "runtime_profile"
-        ] as TaskRuntimeProfile | undefined;
+        const runtime_profile = request.params?.["runtime_profile"] as
+          | TaskRuntimeProfile
+          | undefined;
 
         if (
           typeof task_id !== "string" ||
@@ -484,26 +484,29 @@ async function handleSessionApiRequest(
         return {
           id,
           ok: true,
-          result: await invokeControlHandler(sessionControlHandlers.enqueueTask, {
-            task_id: task_id.trim(),
-            action_type,
-            action_value,
-            description:
-              typeof description === "string" && description.trim().length > 0
-                ? description.trim()
-                : undefined,
-            source_session_id:
-              typeof source_session_id === "string" &&
-              source_session_id.trim().length > 0
-                ? source_session_id.trim()
-                : undefined,
-            return_to_session_id:
-              typeof return_to_session_id === "string" &&
-              return_to_session_id.trim().length > 0
-                ? return_to_session_id.trim()
-                : undefined,
-            runtime_profile,
-          }),
+          result: await invokeControlHandler(
+            sessionControlHandlers.enqueueTask,
+            {
+              task_id: task_id.trim(),
+              action_type,
+              action_value,
+              description:
+                typeof description === "string" && description.trim().length > 0
+                  ? description.trim()
+                  : undefined,
+              source_session_id:
+                typeof source_session_id === "string" &&
+                source_session_id.trim().length > 0
+                  ? source_session_id.trim()
+                  : undefined,
+              return_to_session_id:
+                typeof return_to_session_id === "string" &&
+                return_to_session_id.trim().length > 0
+                  ? return_to_session_id.trim()
+                  : undefined,
+              runtime_profile,
+            },
+          ),
         };
       }
       default:
@@ -633,12 +636,31 @@ export async function startSessionRegistration(options: {
   pid?: number;
   heartbeatIntervalMs?: number;
 }): Promise<void> {
-  if (registeredSessionId && registeredSessionId !== options.id) {
+  const currentPid = options.pid ?? process.pid;
+  let resolvedSessionId = options.id;
+
+  const existingByRequestedId = await getSession(options.id);
+  if (existingByRequestedId && existingByRequestedId.pid !== currentPid) {
+    let existingProcessAlive = true;
+    try {
+      process.kill(existingByRequestedId.pid, 0);
+    } catch {
+      existingProcessAlive = false;
+    }
+
+    if (existingProcessAlive) {
+      resolvedSessionId = `${options.id}-${currentPid}`;
+    } else {
+      await removeSession(existingByRequestedId.id);
+    }
+  }
+
+  if (registeredSessionId && registeredSessionId !== resolvedSessionId) {
     await stopSessionApiServer();
     await removeSession(registeredSessionId);
   }
 
-  registeredSessionId = options.id;
+  registeredSessionId = resolvedSessionId;
   const capabilities = options.capabilities ?? {
     observe: true,
     control: false,
@@ -647,15 +669,15 @@ export async function startSessionRegistration(options: {
   let endpoint = options.api;
   if (!endpoint) {
     try {
-      endpoint = await startSessionApiServer(options.id, capabilities);
+      endpoint = await startSessionApiServer(resolvedSessionId, capabilities);
     } catch {
       endpoint = undefined;
     }
   }
   const now = new Date().toISOString();
   const session: SessionRecord = {
-    id: options.id,
-    pid: options.pid ?? process.pid,
+    id: resolvedSessionId,
+    pid: currentPid,
     mode: options.mode,
     cwd: options.cwd ?? process.cwd(),
     started_at: now,

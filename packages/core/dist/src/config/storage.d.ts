@@ -5,12 +5,15 @@
  */
 export declare const GEMINI_DIR = ".qwen";
 export declare const GOOGLE_ACCOUNTS_FILENAME = "google_accounts.json";
+export declare const LOWCAL_INSTANCE_ID_ENV_VAR = "LOWCAL_INSTANCE_ID";
+export declare function normalizeInstanceId(value: string | undefined | null): string | undefined;
 export declare class Storage {
     private readonly targetDir;
     constructor(targetDir: string);
     static getGlobalGeminiDir(): string;
     static getMcpOAuthTokensPath(): string;
     static getGlobalSettingsPath(): string;
+    static getGlobalToolConfigPath(): string;
     static getInstallationIdPath(): string;
     static getGoogleAccountsPath(): string;
     static getUserCommandsDir(): string;

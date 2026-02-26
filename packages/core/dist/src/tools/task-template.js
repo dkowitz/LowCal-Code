@@ -3,7 +3,7 @@
  * Copyright 2025 Google LLC
  * SPDX-License-Identifier: Apache-2.0
  */
-import { mergeRuntimeProfiles, normalizeActionType, normalizeApprovalMode, normalizeExecutionMode, normalizeRuntimeProfile, normalizeAuthProfile, normalizeModelProfile, normalizeRunProfile, runtimeProfileFromTemplate, } from "../task-templates/runtime.js";
+import { mergeRuntimeProfiles, normalizeActionType, normalizeApprovalMode, normalizeExecutionMode, normalizeRuntimeProfile, normalizeAuthProfile, normalizeModelProfile, normalizeRunProfile, normalizeToolsetProfile, runtimeProfileFromTemplate, } from "../task-templates/runtime.js";
 import { TaskTemplateManager } from "../task-templates/manager.js";
 import { ToolErrorType } from "./tool-error.js";
 import { BaseDeclarativeTool, BaseToolInvocation, Kind } from "./tools.js";
@@ -36,7 +36,7 @@ const taskTemplateToolSchemaData = {
             },
             overrides: {
                 type: "object",
-                description: "Optional runtime override profile for resolve action (execution_mode, auth, model, run, action fields).",
+                description: "Optional runtime override profile for resolve action (execution_mode, auth, model, run, system_prompt, toolset, action fields).",
             },
         },
         required: ["action"],
@@ -91,6 +91,27 @@ function parseExecution(value) {
         return undefined;
     return { mode };
 }
+function parseDeploy(value) {
+    if (!isRecord(value))
+        return undefined;
+    const modeRaw = asString(value["mode"]);
+    const mode = modeRaw === "launch" || modeRaw === "schedule" ? modeRaw : undefined;
+    const schedule = asString(value["schedule"]);
+    const jobId = asString(value["jobId"]);
+    const scheduleStartRaw = asString(value["scheduleStart"]);
+    const scheduleStart = scheduleStartRaw === "start_idle" || scheduleStartRaw === "run_immediately"
+        ? scheduleStartRaw
+        : undefined;
+    if (!mode && !schedule && !jobId && !scheduleStart) {
+        return undefined;
+    }
+    return {
+        mode,
+        schedule,
+        jobId,
+        scheduleStart,
+    };
+}
 function parseTemplatePatch(value) {
     if (!isRecord(value)) {
         return {};
@@ -100,12 +121,14 @@ function parseTemplatePatch(value) {
         description: asString(value["description"]),
         tags: parseTags(value["tags"]),
         approvalMode: normalizeApprovalMode(value["approvalMode"]),
+        deploy: parseDeploy(value["deploy"]),
         prompt: asString(value["prompt"]),
         action: parseAction(value["action"]),
         execution: parseExecution(value["execution"]),
         auth: normalizeAuthProfile(value["auth"]),
         model: normalizeModelProfile(value["model"]),
         run: normalizeRunProfile(value["run"]),
+        toolset: normalizeToolsetProfile(value["toolset"]),
     };
     return patch;
 }

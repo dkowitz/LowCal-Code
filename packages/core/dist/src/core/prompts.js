@@ -7,6 +7,7 @@ import path from "node:path";
 import fs from "node:fs";
 import os from "node:os";
 import process from "node:process";
+import { Storage } from "../config/storage.js";
 import { ToolNames } from "../tools/tool-names.js";
 import { isGitRepository } from "../utils/gitUtils.js";
 import { GEMINI_CONFIG_DIR } from "../tools/memoryTool.js";
@@ -64,6 +65,7 @@ const TOOL_SUMMARIES = {
     [ToolNames.TASK_TEMPLATE]: "Manage reusable task templates (list/get/create/update/delete/resolve) used by launch_task and schedule_task. Example: `task_template action=list`.",
     [ToolNames.READ_SESSION_MESSAGES]: "Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: `read_session_messages action=wait`.",
     [ToolNames.READ_SESSIONS]: "Read active session registry entries (list/get) without invoking /sessions via shell. Example: `read_sessions action=list`.",
+    [ToolNames.INSPECT_SESSIONS]: "Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: `inspect_sessions session_id=session-123`.",
     [ToolNames.READ_COLLAB_MESSAGES]: "Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: `read_collab_messages since_seq=120 limit=20`.",
     [ToolNames.POST_COLLAB_MESSAGE]: "Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set `notify='wake_prompt'` with `to_session_id`. Example: `post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']`.",
 };
@@ -191,25 +193,43 @@ function applyRuntimeSystemPromptOverride(config) {
 function loadCustomPromptConfig() {
     let baseConfig = {};
     try {
-        const homeDir = os.homedir();
-        if (!homeDir) {
-            return applyRuntimeSystemPromptOverride(baseConfig);
-        }
-        const configPath = path.join(homeDir, ".qwen", "tool-config.json");
-        if (!fs.existsSync(configPath)) {
-            return applyRuntimeSystemPromptOverride(baseConfig);
-        }
-        const raw = fs.readFileSync(configPath, "utf8");
-        const parsed = JSON.parse(raw) ?? {};
+        const sharedConfigPath = path.join(Storage.getGlobalGeminiDir(), "tool-config.json");
+        const sessionConfigPath = Storage.getGlobalToolConfigPath();
+        const sharedConfig = readJsonConfigFile(sharedConfigPath);
+        const sessionConfig = sharedConfigPath === sessionConfigPath
+            ? sharedConfig
+            : readJsonConfigFile(sessionConfigPath);
+        const customPrompts = sharedConfig?.["customPrompts"] ??
+            sessionConfig?.["customPrompts"] ??
+            {};
+        const activeCustomPrompt = sessionConfig?.["activeCustomPrompt"] ??
+            sharedConfig?.["activeCustomPrompt"] ??
+            null;
         baseConfig = {
-            customPrompts: parsed.customPrompts ?? {},
-            activeCustomPrompt: parsed.activeCustomPrompt ?? null,
+            customPrompts,
+            activeCustomPrompt,
         };
         return applyRuntimeSystemPromptOverride(baseConfig);
     }
     catch {
         return applyRuntimeSystemPromptOverride(baseConfig);
     }
+}
+function readJsonConfigFile(filePath) {
+    if (!fs.existsSync(filePath)) {
+        return undefined;
+    }
+    try {
+        const raw = fs.readFileSync(filePath, "utf8");
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === "object") {
+            return parsed;
+        }
+    }
+    catch {
+        // ignore malformed config files and fall back to defaults
+    }
+    return undefined;
 }
 function normalizePromptMode(value) {
     const mode = typeof value === "string" ? value.toLowerCase() : undefined;
@@ -729,7 +749,9 @@ function buildConcisePrompt(toolNames) {
         ].join("\n"),
         [
             "## Memory & Personalization",
-            "- **Proactive Memory Saving:** Use the `" + ToolNames.MEMORY + "` tool to save pertinent facts about the user, their preferences, and observations you make during interactions. This includes:",
+            "- **Proactive Memory Saving:** Use the `" +
+                ToolNames.MEMORY +
+                "` tool to save pertinent facts about the user, their preferences, and observations you make during interactions. This includes:",
             "  - User-specified facts (e.g., preferred editor, coding style, project conventions)",
             "  - Observations about code patterns or project structure",
             "  - Inferences that will help personalize future interactions",

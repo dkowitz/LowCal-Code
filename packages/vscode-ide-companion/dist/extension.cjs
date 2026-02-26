@@ -10350,12 +10350,12 @@ var require_src5 = __commonJS({
     var _GoogleToken_requestToken;
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.GoogleToken = void 0;
-    var fs21 = require("fs");
+    var fs22 = require("fs");
     var gaxios_1 = require_src2();
     var jws = require_jws();
     var path32 = require("path");
     var util_1 = require("util");
-    var readFile7 = fs21.readFile ? (0, util_1.promisify)(fs21.readFile) : async () => {
+    var readFile7 = fs22.readFile ? (0, util_1.promisify)(fs22.readFile) : async () => {
       throw new ErrorWithCode("use key rather than keyFile.", "MISSING_CREDENTIALS");
     };
     var GOOGLE_TOKEN_URL = "https://www.googleapis.com/oauth2/v4/token";
@@ -11912,12 +11912,12 @@ var require_filesubjecttokensupplier = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.FileSubjectTokenSupplier = void 0;
     var util_1 = require("util");
-    var fs21 = require("fs");
-    var readFile7 = (0, util_1.promisify)((_a5 = fs21.readFile) !== null && _a5 !== void 0 ? _a5 : () => {
+    var fs22 = require("fs");
+    var readFile7 = (0, util_1.promisify)((_a5 = fs22.readFile) !== null && _a5 !== void 0 ? _a5 : () => {
     });
-    var realpath2 = (0, util_1.promisify)((_b = fs21.realpath) !== null && _b !== void 0 ? _b : () => {
+    var realpath2 = (0, util_1.promisify)((_b = fs22.realpath) !== null && _b !== void 0 ? _b : () => {
     });
-    var lstat2 = (0, util_1.promisify)((_c = fs21.lstat) !== null && _c !== void 0 ? _c : () => {
+    var lstat2 = (0, util_1.promisify)((_c = fs22.lstat) !== null && _c !== void 0 ? _c : () => {
     });
     var FileSubjectTokenSupplier = class {
       /**
@@ -12635,7 +12635,7 @@ var require_pluggable_auth_handler = __commonJS({
     var pluggable_auth_client_1 = require_pluggable_auth_client();
     var executable_response_1 = require_executable_response();
     var childProcess = require("child_process");
-    var fs21 = require("fs");
+    var fs22 = require("fs");
     var PluggableAuthHandler = class _PluggableAuthHandler {
       /**
        * Instantiates a PluggableAuthHandler instance using the provided
@@ -12705,14 +12705,14 @@ var require_pluggable_auth_handler = __commonJS({
         }
         let filePath;
         try {
-          filePath = await fs21.promises.realpath(this.outputFile);
+          filePath = await fs22.promises.realpath(this.outputFile);
         } catch (_a5) {
           return void 0;
         }
-        if (!(await fs21.promises.lstat(filePath)).isFile()) {
+        if (!(await fs22.promises.lstat(filePath)).isFile()) {
           return void 0;
         }
-        const responseString = await fs21.promises.readFile(filePath, {
+        const responseString = await fs22.promises.readFile(filePath, {
           encoding: "utf8"
         });
         if (responseString === "") {
@@ -13133,7 +13133,7 @@ var require_googleauth = __commonJS({
     Object.defineProperty(exports2, "__esModule", { value: true });
     exports2.GoogleAuth = exports2.GoogleAuthExceptionMessages = exports2.CLOUD_SDK_CLIENT_ID = void 0;
     var child_process_1 = require("child_process");
-    var fs21 = require("fs");
+    var fs22 = require("fs");
     var gcpMetadata = require_src4();
     var os9 = require("os");
     var path32 = require("path");
@@ -13402,7 +13402,7 @@ var require_googleauth = __commonJS({
         }
         if (location) {
           location = path32.join(location, "gcloud", "application_default_credentials.json");
-          if (!fs21.existsSync(location)) {
+          if (!fs22.existsSync(location)) {
             location = null;
           }
         }
@@ -13423,8 +13423,8 @@ var require_googleauth = __commonJS({
           throw new Error("The file path is invalid.");
         }
         try {
-          filePath = fs21.realpathSync(filePath);
-          if (!fs21.lstatSync(filePath).isFile()) {
+          filePath = fs22.realpathSync(filePath);
+          if (!fs22.lstatSync(filePath).isFile()) {
             throw new Error();
           }
         } catch (err) {
@@ -13433,7 +13433,7 @@ var require_googleauth = __commonJS({
           }
           throw err;
         }
-        const readStream = fs21.createReadStream(filePath);
+        const readStream = fs22.createReadStream(filePath);
         return this.fromStream(readStream, options2);
       }
       /**
@@ -13820,7 +13820,7 @@ var require_googleauth = __commonJS({
         return this._cacheClientFromJSON(this.jsonContent, this.clientOptions);
       } else if (this.keyFilename) {
         const filePath = path32.resolve(this.keyFilename);
-        const stream2 = fs21.createReadStream(filePath);
+        const stream2 = fs22.createReadStream(filePath);
         return await this.fromStreamAsync(stream2, this.clientOptions);
       } else if (this.apiKey) {
         const client = await this.fromAPIKey(this.apiKey, this.clientOptions);
@@ -17348,7 +17348,7 @@ var require_stream = __commonJS({
       };
       duplex._final = function(callback) {
         if (ws2.readyState === ws2.CONNECTING) {
-          ws2.once("open", function open4() {
+          ws2.once("open", function open5() {
             duplex._final(callback);
           });
           return;
@@ -17369,7 +17369,7 @@ var require_stream = __commonJS({
       };
       duplex._write = function(chunk, encoding, callback) {
         if (ws2.readyState === ws2.CONNECTING) {
-          ws2.once("open", function open4() {
+          ws2.once("open", function open5() {
             duplex._write(chunk, encoding, callback);
           });
           return;
@@ -38771,6 +38771,131 @@ var init_models = __esm({
   }
 });
 
+// ../core/dist/src/config/storage.js
+function normalizeInstanceId(value) {
+  if (!value) {
+    return void 0;
+  }
+  const trimmed2 = value.trim();
+  if (!INSTANCE_ID_PATTERN.test(trimmed2)) {
+    return void 0;
+  }
+  return trimmed2;
+}
+function getInstanceIdFromEnv() {
+  return normalizeInstanceId(process.env[LOWCAL_INSTANCE_ID_ENV_VAR]);
+}
+var path, os, crypto6, fs, GEMINI_DIR, GOOGLE_ACCOUNTS_FILENAME, LOWCAL_INSTANCE_ID_ENV_VAR, TMP_DIR_NAME, INSTANCE_ID_PATTERN, Storage;
+var init_storage = __esm({
+  "../core/dist/src/config/storage.js"() {
+    "use strict";
+    path = __toESM(require("node:path"), 1);
+    os = __toESM(require("node:os"), 1);
+    crypto6 = __toESM(require("node:crypto"), 1);
+    fs = __toESM(require("node:fs"), 1);
+    GEMINI_DIR = ".qwen";
+    GOOGLE_ACCOUNTS_FILENAME = "google_accounts.json";
+    LOWCAL_INSTANCE_ID_ENV_VAR = "LOWCAL_INSTANCE_ID";
+    TMP_DIR_NAME = "tmp";
+    INSTANCE_ID_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
+    Storage = class _Storage {
+      targetDir;
+      constructor(targetDir) {
+        this.targetDir = targetDir;
+      }
+      static getGlobalGeminiDir() {
+        const homeDir = os.homedir();
+        if (!homeDir) {
+          return path.join(os.tmpdir(), ".qwen");
+        }
+        return path.join(homeDir, GEMINI_DIR);
+      }
+      static getMcpOAuthTokensPath() {
+        return path.join(_Storage.getGlobalGeminiDir(), "mcp-oauth-tokens.json");
+      }
+      static getGlobalSettingsPath() {
+        const globalDir = _Storage.getGlobalGeminiDir();
+        const instanceId = getInstanceIdFromEnv();
+        if (instanceId) {
+          return path.join(globalDir, "instances", instanceId, "settings.json");
+        }
+        return path.join(globalDir, "settings.json");
+      }
+      static getGlobalToolConfigPath() {
+        const globalDir = _Storage.getGlobalGeminiDir();
+        const instanceId = getInstanceIdFromEnv();
+        if (instanceId) {
+          return path.join(globalDir, "instances", instanceId, "tool-config.json");
+        }
+        return path.join(globalDir, "tool-config.json");
+      }
+      static getInstallationIdPath() {
+        return path.join(_Storage.getGlobalGeminiDir(), "installation_id");
+      }
+      static getGoogleAccountsPath() {
+        return path.join(_Storage.getGlobalGeminiDir(), GOOGLE_ACCOUNTS_FILENAME);
+      }
+      static getUserCommandsDir() {
+        return path.join(_Storage.getGlobalGeminiDir(), "commands");
+      }
+      static getGlobalMemoryFilePath() {
+        return path.join(_Storage.getGlobalGeminiDir(), "memory.md");
+      }
+      static getGlobalTempDir() {
+        return path.join(_Storage.getGlobalGeminiDir(), TMP_DIR_NAME);
+      }
+      getGeminiDir() {
+        return path.join(this.targetDir, GEMINI_DIR);
+      }
+      getProjectTempDir() {
+        const hash = this.getFilePathHash(this.getProjectRoot());
+        const tempDir = _Storage.getGlobalTempDir();
+        return path.join(tempDir, hash);
+      }
+      ensureProjectTempDirExists() {
+        fs.mkdirSync(this.getProjectTempDir(), { recursive: true });
+      }
+      static getOAuthCredsPath() {
+        return path.join(_Storage.getGlobalGeminiDir(), "oauth_creds.json");
+      }
+      getProjectRoot() {
+        return this.targetDir;
+      }
+      getFilePathHash(filePath) {
+        return crypto6.createHash("sha256").update(filePath).digest("hex");
+      }
+      getHistoryDir() {
+        const hash = this.getFilePathHash(this.getProjectRoot());
+        const historyDir = path.join(_Storage.getGlobalGeminiDir(), "history");
+        return path.join(historyDir, hash);
+      }
+      getWorkspaceSettingsPath() {
+        const workspaceGeminiDir = this.getGeminiDir();
+        const instanceId = getInstanceIdFromEnv();
+        if (instanceId) {
+          return path.join(workspaceGeminiDir, "instances", instanceId, "settings.json");
+        }
+        return path.join(workspaceGeminiDir, "settings.json");
+      }
+      getProjectCommandsDir() {
+        return path.join(this.getGeminiDir(), "commands");
+      }
+      getProjectTempCheckpointsDir() {
+        return path.join(this.getProjectTempDir(), "checkpoints");
+      }
+      getExtensionsDir() {
+        return path.join(this.getGeminiDir(), "extensions");
+      }
+      getExtensionsConfigPath() {
+        return path.join(this.getExtensionsDir(), "qwen-extension.json");
+      }
+      getHistoryFilePath() {
+        return path.join(this.getProjectTempDir(), "shell_history");
+      }
+    };
+  }
+});
+
 // ../core/dist/src/tools/tool-error.js
 var ToolErrorType;
 var init_tool_error = __esm({
@@ -51194,12 +51319,12 @@ var require_dist3 = __commonJS({
         throw new Error(`Unknown format "${name2}"`);
       return f;
     };
-    function addFormats2(ajv, list2, fs21, exportName) {
+    function addFormats2(ajv, list2, fs22, exportName) {
       var _a5;
       var _b;
       (_a5 = (_b = ajv.opts.code).formats) !== null && _a5 !== void 0 ? _a5 : _b.formats = (0, codegen_1._)`require("ajv-formats/dist/formats").${exportName}`;
       for (const f of list2)
-        ajv.addFormat(f, fs21[f]);
+        ajv.addFormat(f, fs22[f]);
     }
     module2.exports = exports2 = formatsPlugin;
     Object.defineProperty(exports2, "__esModule", { value: true });
@@ -51430,98 +51555,6 @@ var init_tools = __esm({
       Kind2["Browser"] = "browser";
       Kind2["Other"] = "other";
     })(Kind || (Kind = {}));
-  }
-});
-
-// ../core/dist/src/config/storage.js
-var path2, os, crypto6, fs2, GEMINI_DIR, GOOGLE_ACCOUNTS_FILENAME, TMP_DIR_NAME, Storage;
-var init_storage = __esm({
-  "../core/dist/src/config/storage.js"() {
-    "use strict";
-    path2 = __toESM(require("node:path"), 1);
-    os = __toESM(require("node:os"), 1);
-    crypto6 = __toESM(require("node:crypto"), 1);
-    fs2 = __toESM(require("node:fs"), 1);
-    GEMINI_DIR = ".qwen";
-    GOOGLE_ACCOUNTS_FILENAME = "google_accounts.json";
-    TMP_DIR_NAME = "tmp";
-    Storage = class _Storage {
-      targetDir;
-      constructor(targetDir) {
-        this.targetDir = targetDir;
-      }
-      static getGlobalGeminiDir() {
-        const homeDir = os.homedir();
-        if (!homeDir) {
-          return path2.join(os.tmpdir(), ".qwen");
-        }
-        return path2.join(homeDir, GEMINI_DIR);
-      }
-      static getMcpOAuthTokensPath() {
-        return path2.join(_Storage.getGlobalGeminiDir(), "mcp-oauth-tokens.json");
-      }
-      static getGlobalSettingsPath() {
-        return path2.join(_Storage.getGlobalGeminiDir(), "settings.json");
-      }
-      static getInstallationIdPath() {
-        return path2.join(_Storage.getGlobalGeminiDir(), "installation_id");
-      }
-      static getGoogleAccountsPath() {
-        return path2.join(_Storage.getGlobalGeminiDir(), GOOGLE_ACCOUNTS_FILENAME);
-      }
-      static getUserCommandsDir() {
-        return path2.join(_Storage.getGlobalGeminiDir(), "commands");
-      }
-      static getGlobalMemoryFilePath() {
-        return path2.join(_Storage.getGlobalGeminiDir(), "memory.md");
-      }
-      static getGlobalTempDir() {
-        return path2.join(_Storage.getGlobalGeminiDir(), TMP_DIR_NAME);
-      }
-      getGeminiDir() {
-        return path2.join(this.targetDir, GEMINI_DIR);
-      }
-      getProjectTempDir() {
-        const hash = this.getFilePathHash(this.getProjectRoot());
-        const tempDir = _Storage.getGlobalTempDir();
-        return path2.join(tempDir, hash);
-      }
-      ensureProjectTempDirExists() {
-        fs2.mkdirSync(this.getProjectTempDir(), { recursive: true });
-      }
-      static getOAuthCredsPath() {
-        return path2.join(_Storage.getGlobalGeminiDir(), "oauth_creds.json");
-      }
-      getProjectRoot() {
-        return this.targetDir;
-      }
-      getFilePathHash(filePath) {
-        return crypto6.createHash("sha256").update(filePath).digest("hex");
-      }
-      getHistoryDir() {
-        const hash = this.getFilePathHash(this.getProjectRoot());
-        const historyDir = path2.join(_Storage.getGlobalGeminiDir(), "history");
-        return path2.join(historyDir, hash);
-      }
-      getWorkspaceSettingsPath() {
-        return path2.join(this.getGeminiDir(), "settings.json");
-      }
-      getProjectCommandsDir() {
-        return path2.join(this.getGeminiDir(), "commands");
-      }
-      getProjectTempCheckpointsDir() {
-        return path2.join(this.getProjectTempDir(), "checkpoints");
-      }
-      getExtensionsDir() {
-        return path2.join(this.getGeminiDir(), "extensions");
-      }
-      getExtensionsConfigPath() {
-        return path2.join(this.getExtensionsDir(), "qwen-extension.json");
-      }
-      getHistoryFilePath() {
-        return path2.join(this.getProjectTempDir(), "shell_history");
-      }
-    };
   }
 });
 
@@ -62814,7 +62847,7 @@ var require_tiktoken = __commonJS({
     var imports = {};
     imports["./tiktoken_bg.js"] = wasm;
     var path32 = require("path");
-    var fs21 = require("fs");
+    var fs22 = require("fs");
     var candidates = __dirname.split(path32.sep).reduce((memo, _, index, array) => {
       const prefix = array.slice(0, index + 1).join(path32.sep) + path32.sep;
       if (!prefix.includes("node_modules" + path32.sep)) {
@@ -62834,7 +62867,7 @@ var require_tiktoken = __commonJS({
     var bytes = null;
     for (const candidate of candidates) {
       try {
-        bytes = fs21.readFileSync(candidate);
+        bytes = fs22.readFileSync(candidate);
         break;
       } catch {
       }
@@ -69449,7 +69482,7 @@ var require_windows = __commonJS({
   "../../node_modules/isexe/windows.js"(exports2, module2) {
     module2.exports = isexe;
     isexe.sync = sync2;
-    var fs21 = require("fs");
+    var fs22 = require("fs");
     function checkPathExt(path32, options2) {
       var pathext = options2.pathExt !== void 0 ? options2.pathExt : process.env.PATHEXT;
       if (!pathext) {
@@ -69467,19 +69500,19 @@ var require_windows = __commonJS({
       }
       return false;
     }
-    function checkStat(stat, path32, options2) {
-      if (!stat.isSymbolicLink() && !stat.isFile()) {
+    function checkStat(stat2, path32, options2) {
+      if (!stat2.isSymbolicLink() && !stat2.isFile()) {
         return false;
       }
       return checkPathExt(path32, options2);
     }
     function isexe(path32, options2, cb) {
-      fs21.stat(path32, function(er, stat) {
-        cb(er, er ? false : checkStat(stat, path32, options2));
+      fs22.stat(path32, function(er, stat2) {
+        cb(er, er ? false : checkStat(stat2, path32, options2));
       });
     }
     function sync2(path32, options2) {
-      return checkStat(fs21.statSync(path32), path32, options2);
+      return checkStat(fs22.statSync(path32), path32, options2);
     }
   }
 });
@@ -69489,22 +69522,22 @@ var require_mode = __commonJS({
   "../../node_modules/isexe/mode.js"(exports2, module2) {
     module2.exports = isexe;
     isexe.sync = sync2;
-    var fs21 = require("fs");
+    var fs22 = require("fs");
     function isexe(path32, options2, cb) {
-      fs21.stat(path32, function(er, stat) {
-        cb(er, er ? false : checkStat(stat, options2));
+      fs22.stat(path32, function(er, stat2) {
+        cb(er, er ? false : checkStat(stat2, options2));
       });
     }
     function sync2(path32, options2) {
-      return checkStat(fs21.statSync(path32), options2);
+      return checkStat(fs22.statSync(path32), options2);
     }
-    function checkStat(stat, options2) {
-      return stat.isFile() && checkMode(stat, options2);
+    function checkStat(stat2, options2) {
+      return stat2.isFile() && checkMode(stat2, options2);
     }
-    function checkMode(stat, options2) {
-      var mod = stat.mode;
-      var uid = stat.uid;
-      var gid = stat.gid;
+    function checkMode(stat2, options2) {
+      var mod = stat2.mode;
+      var uid = stat2.uid;
+      var gid = stat2.gid;
       var myUid = options2.uid !== void 0 ? options2.uid : process.getuid && process.getuid();
       var myGid = options2.gid !== void 0 ? options2.gid : process.getgid && process.getgid();
       var u = parseInt("100", 8);
@@ -69520,7 +69553,7 @@ var require_mode = __commonJS({
 // ../../node_modules/isexe/index.js
 var require_isexe = __commonJS({
   "../../node_modules/isexe/index.js"(exports2, module2) {
-    var fs21 = require("fs");
+    var fs22 = require("fs");
     var core;
     if (process.platform === "win32" || global.TESTING_WINDOWS) {
       core = require_windows();
@@ -69784,16 +69817,16 @@ var require_shebang_command = __commonJS({
 var require_readShebang = __commonJS({
   "../../node_modules/cross-spawn/lib/util/readShebang.js"(exports2, module2) {
     "use strict";
-    var fs21 = require("fs");
+    var fs22 = require("fs");
     var shebangCommand = require_shebang_command();
     function readShebang(command) {
       const size = 150;
       const buffer = Buffer.alloc(size);
       let fd;
       try {
-        fd = fs21.openSync(command, "r");
-        fs21.readSync(fd, buffer, 0, size, 0);
-        fs21.closeSync(fd);
+        fd = fs22.openSync(command, "r");
+        fs22.readSync(fd, buffer, 0, size, 0);
+        fs22.closeSync(fd);
       } catch (e2) {
       }
       return shebangCommand(buffer.toString());
@@ -70412,12 +70445,12 @@ var require_src7 = __commonJS({
     function check(path32, isFile, isDirectory) {
       log2(`checking %s`, path32);
       try {
-        const stat = fs_1.statSync(path32);
-        if (stat.isFile() && isFile) {
+        const stat2 = fs_1.statSync(path32);
+        if (stat2.isFile() && isFile) {
           log2(`[OK] path represents a file`);
           return true;
         }
-        if (stat.isDirectory() && isDirectory) {
+        if (stat2.isDirectory() && isDirectory) {
           log2(`[OK] path represents a directory`);
           return true;
         }
@@ -81178,15 +81211,15 @@ var require_parse4 = __commonJS({
         }
         if (value === "{" && opts.nobrace !== true) {
           increment("braces");
-          const open4 = {
+          const open5 = {
             type: "brace",
             value,
             output: "(",
             outputIndex: state.output.length,
             tokensIndex: state.tokens.length
           };
-          braces.push(open4);
-          push(open4);
+          braces.push(open5);
+          push(open5);
           continue;
         }
         if (value === "}") {
@@ -90692,10 +90725,10 @@ var require_lib3 = __commonJS({
     exports2.analyse = analyse;
     var detectFile = (filepath, opts = {}) => new Promise((resolve5, reject) => {
       let fd;
-      const fs21 = (0, node_1.default)();
+      const fs22 = (0, node_1.default)();
       const handler = (err, buffer) => {
         if (fd) {
-          fs21.closeSync(fd);
+          fs22.closeSync(fd);
         }
         if (err) {
           reject(err);
@@ -90704,26 +90737,26 @@ var require_lib3 = __commonJS({
         }
       };
       if (opts && opts.sampleSize) {
-        fd = fs21.openSync(filepath, "r");
+        fd = fs22.openSync(filepath, "r");
         const sample = Buffer.allocUnsafe(opts.sampleSize);
-        fs21.read(fd, sample, 0, opts.sampleSize, opts.offset, (err) => {
+        fs22.read(fd, sample, 0, opts.sampleSize, opts.offset, (err) => {
           handler(err, sample);
         });
         return;
       }
-      fs21.readFile(filepath, handler);
+      fs22.readFile(filepath, handler);
     });
     exports2.detectFile = detectFile;
     var detectFileSync = (filepath, opts = {}) => {
-      const fs21 = (0, node_1.default)();
+      const fs22 = (0, node_1.default)();
       if (opts && opts.sampleSize) {
-        const fd = fs21.openSync(filepath, "r");
+        const fd = fs22.openSync(filepath, "r");
         const sample = Buffer.allocUnsafe(opts.sampleSize);
-        fs21.readSync(fd, sample, 0, opts.sampleSize, opts.offset);
-        fs21.closeSync(fd);
+        fs22.readSync(fd, sample, 0, opts.sampleSize, opts.offset);
+        fs22.closeSync(fd);
         return (0, exports2.detect)(sample);
       }
-      return (0, exports2.detect)(fs21.readFileSync(filepath));
+      return (0, exports2.detect)(fs22.readFileSync(filepath));
     };
     exports2.detectFileSync = detectFileSync;
     exports2.default = {
@@ -93005,12 +93038,12 @@ var require_resolve_symlink = __commonJS({
       fs_1.default.realpath(path32, (error, resolvedPath) => {
         if (error)
           return queue.dequeue(suppressErrors ? null : error, state);
-        fs_1.default.stat(resolvedPath, (error2, stat) => {
+        fs_1.default.stat(resolvedPath, (error2, stat2) => {
           if (error2)
             return queue.dequeue(suppressErrors ? null : error2, state);
-          if (stat.isDirectory() && isRecursive(path32, resolvedPath, state))
+          if (stat2.isDirectory() && isRecursive(path32, resolvedPath, state))
             return queue.dequeue(null, state);
-          callback(stat, resolvedPath);
+          callback(stat2, resolvedPath);
           queue.dequeue(null, state);
         });
       });
@@ -93020,10 +93053,10 @@ var require_resolve_symlink = __commonJS({
       queue.enqueue();
       try {
         const resolvedPath = fs_1.default.realpathSync(path32);
-        const stat = fs_1.default.statSync(resolvedPath);
-        if (stat.isDirectory() && isRecursive(path32, resolvedPath, state))
+        const stat2 = fs_1.default.statSync(resolvedPath);
+        if (stat2.isDirectory() && isRecursive(path32, resolvedPath, state))
           return;
-        callback(stat, resolvedPath);
+        callback(stat2, resolvedPath);
       } catch (e2) {
         if (!suppressErrors)
           throw e2;
@@ -93322,8 +93355,8 @@ var require_walker = __commonJS({
             this.walkDirectory(this.state, path32, path32, depth - 1, this.walk);
           } else if (this.resolveSymlink && entry.isSymbolicLink()) {
             let path32 = joinPath.joinPathWithBasePath(entry.name, directoryPath);
-            this.resolveSymlink(path32, this.state, (stat, resolvedPath) => {
-              if (stat.isDirectory()) {
+            this.resolveSymlink(path32, this.state, (stat2, resolvedPath) => {
+              if (stat2.isDirectory()) {
                 resolvedPath = (0, utils_1.normalizePath)(resolvedPath, this.state.options);
                 if (exclude && exclude(entry.name, useRealPaths ? resolvedPath : path32 + pathSeparator))
                   return;
@@ -102035,7 +102068,7 @@ var require_view = __commonJS({
     "use strict";
     var debug2 = require_src()("express:view");
     var path32 = require("node:path");
-    var fs21 = require("node:fs");
+    var fs22 = require("node:fs");
     var dirname8 = path32.dirname;
     var basename6 = path32.basename;
     var extname4 = path32.extname;
@@ -102102,20 +102135,20 @@ var require_view = __commonJS({
     View.prototype.resolve = function resolve6(dir, file) {
       var ext2 = this.ext;
       var path33 = join16(dir, file);
-      var stat = tryStat(path33);
-      if (stat && stat.isFile()) {
+      var stat2 = tryStat(path33);
+      if (stat2 && stat2.isFile()) {
         return path33;
       }
       path33 = join16(dir, basename6(file, ext2), "index" + ext2);
-      stat = tryStat(path33);
-      if (stat && stat.isFile()) {
+      stat2 = tryStat(path33);
+      if (stat2 && stat2.isFile()) {
         return path33;
       }
     };
     function tryStat(path33) {
       debug2('stat "%s"', path33);
       try {
-        return fs21.statSync(path33);
+        return fs22.statSync(path33);
       } catch (e2) {
         return void 0;
       }
@@ -102157,9 +102190,9 @@ var require_etag = __commonJS({
       }
       return obj && typeof obj === "object" && "ctime" in obj && toString.call(obj.ctime) === "[object Date]" && "mtime" in obj && toString.call(obj.mtime) === "[object Date]" && "ino" in obj && typeof obj.ino === "number" && "size" in obj && typeof obj.size === "number";
     }
-    function stattag(stat) {
-      var mtime = stat.mtime.getTime().toString(16);
-      var size = stat.size.toString(16);
+    function stattag(stat2) {
+      var mtime = stat2.mtime.getTime().toString(16);
+      var size = stat2.size.toString(16);
       return '"' + size + "-" + mtime + '"';
     }
   }
@@ -103356,8 +103389,8 @@ var require_dist7 = __commonJS({
             });
             continue;
           }
-          const open4 = it.tryConsume("{");
-          if (open4) {
+          const open5 = it.tryConsume("{");
+          if (open5) {
             tokens2.push({
               type: "group",
               tokens: consume("}")
@@ -105750,7 +105783,7 @@ var require_send = __commonJS({
     var escapeHtml = require_escape_html();
     var etag = require_etag();
     var fresh = require_fresh();
-    var fs21 = require("fs");
+    var fs22 = require("fs");
     var mime2 = require_mime_types();
     var ms = require_ms();
     var onFinished = require_on_finished();
@@ -105963,8 +105996,8 @@ var require_send = __commonJS({
       this.sendFile(path33);
       return res;
     };
-    SendStream.prototype.send = function send2(path33, stat) {
-      var len = stat.size;
+    SendStream.prototype.send = function send2(path33, stat2) {
+      var len = stat2.size;
       var options2 = this.options;
       var opts = {};
       var res = this.res;
@@ -105976,7 +106009,7 @@ var require_send = __commonJS({
         return;
       }
       debug2('pipe "%s"', path33);
-      this.setHeader(path33, stat);
+      this.setHeader(path33, stat2);
       this.type(path33);
       if (this.isConditionalGET()) {
         if (this.isPreconditionFailure()) {
@@ -106032,16 +106065,16 @@ var require_send = __commonJS({
       var i = 0;
       var self2 = this;
       debug2('stat "%s"', path33);
-      fs21.stat(path33, function onstat(err, stat) {
+      fs22.stat(path33, function onstat(err, stat2) {
         var pathEndsWithSep = path33[path33.length - 1] === sep2;
         if (err && err.code === "ENOENT" && !extname4(path33) && !pathEndsWithSep) {
           return next(err);
         }
         if (err) return self2.onStatError(err);
-        if (stat.isDirectory()) return self2.redirect(path33);
+        if (stat2.isDirectory()) return self2.redirect(path33);
         if (pathEndsWithSep) return self2.error(404);
-        self2.emit("file", path33, stat);
-        self2.send(path33, stat);
+        self2.emit("file", path33, stat2);
+        self2.send(path33, stat2);
       });
       function next(err) {
         if (self2._extensions.length <= i) {
@@ -106049,11 +106082,11 @@ var require_send = __commonJS({
         }
         var p = path33 + "." + self2._extensions[i++];
         debug2('stat "%s"', p);
-        fs21.stat(p, function(err2, stat) {
+        fs22.stat(p, function(err2, stat2) {
           if (err2) return next(err2);
-          if (stat.isDirectory()) return next();
-          self2.emit("file", p, stat);
-          self2.send(p, stat);
+          if (stat2.isDirectory()) return next();
+          self2.emit("file", p, stat2);
+          self2.send(p, stat2);
         });
       }
     };
@@ -106067,11 +106100,11 @@ var require_send = __commonJS({
         }
         var p = join16(path33, self2._index[i]);
         debug2('stat "%s"', p);
-        fs21.stat(p, function(err2, stat) {
+        fs22.stat(p, function(err2, stat2) {
           if (err2) return next(err2);
-          if (stat.isDirectory()) return next();
-          self2.emit("file", p, stat);
-          self2.send(p, stat);
+          if (stat2.isDirectory()) return next();
+          self2.emit("file", p, stat2);
+          self2.send(p, stat2);
         });
       }
       next();
@@ -106079,7 +106112,7 @@ var require_send = __commonJS({
     SendStream.prototype.stream = function stream2(path33, options2) {
       var self2 = this;
       var res = this.res;
-      var stream3 = fs21.createReadStream(path33, options2);
+      var stream3 = fs22.createReadStream(path33, options2);
       this.emit("stream", stream3);
       stream3.pipe(res);
       function cleanup() {
@@ -106102,9 +106135,9 @@ var require_send = __commonJS({
       debug2("content-type %s", type2);
       res.setHeader("Content-Type", type2);
     };
-    SendStream.prototype.setHeader = function setHeader(path33, stat) {
+    SendStream.prototype.setHeader = function setHeader(path33, stat2) {
       var res = this.res;
-      this.emit("headers", res, path33, stat);
+      this.emit("headers", res, path33, stat2);
       if (this._acceptRanges && !res.getHeader("Accept-Ranges")) {
         debug2("accept ranges");
         res.setHeader("Accept-Ranges", "bytes");
@@ -106118,12 +106151,12 @@ var require_send = __commonJS({
         res.setHeader("Cache-Control", cacheControl);
       }
       if (this._lastModified && !res.getHeader("Last-Modified")) {
-        var modified = stat.mtime.toUTCString();
+        var modified = stat2.mtime.toUTCString();
         debug2("modified %s", modified);
         res.setHeader("Last-Modified", modified);
       }
       if (this._etag && !res.getHeader("ETag")) {
-        var val = etag(stat);
+        var val = etag(stat2);
         debug2("etag %s", val);
         res.setHeader("ETag", val);
       }
@@ -111064,6 +111097,7 @@ var ideContext = createIdeContextStore();
 var import_node_path2 = __toESM(require("node:path"), 1);
 var import_node_fs = __toESM(require("node:fs"), 1);
 var import_node_process = __toESM(require("node:process"), 1);
+init_storage();
 
 // ../core/dist/src/tools/tool-names.js
 var ToolNames = {
@@ -111088,23 +111122,24 @@ var ToolNames = {
   TASK_TEMPLATE: "task_template",
   READ_SESSION_MESSAGES: "read_session_messages",
   READ_SESSIONS: "read_sessions",
+  INSPECT_SESSIONS: "inspect_sessions",
   READ_COLLAB_MESSAGES: "read_collab_messages",
   POST_COLLAB_MESSAGE: "post_collab_message",
   RSS: "rss"
 };
 
 // ../core/dist/src/utils/gitUtils.js
-var fs = __toESM(require("node:fs"), 1);
-var path = __toESM(require("node:path"), 1);
+var fs2 = __toESM(require("node:fs"), 1);
+var path2 = __toESM(require("node:path"), 1);
 function isGitRepository(directory) {
   try {
-    let currentDir = path.resolve(directory);
+    let currentDir = path2.resolve(directory);
     while (true) {
-      const gitDir = path.join(currentDir, ".git");
-      if (fs.existsSync(gitDir)) {
+      const gitDir = path2.join(currentDir, ".git");
+      if (fs2.existsSync(gitDir)) {
         return true;
       }
-      const parentDir = path.dirname(currentDir);
+      const parentDir = path2.dirname(currentDir);
       if (parentDir === currentDir) {
         break;
       }
@@ -112464,6 +112499,7 @@ var TOOL_SUMMARIES = {
   [ToolNames.TASK_TEMPLATE]: "Manage reusable task templates (list/get/create/update/delete/resolve) used by launch_task and schedule_task. Example: `task_template action=list`.",
   [ToolNames.READ_SESSION_MESSAGES]: "Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: `read_session_messages action=wait`.",
   [ToolNames.READ_SESSIONS]: "Read active session registry entries (list/get) without invoking /sessions via shell. Example: `read_sessions action=list`.",
+  [ToolNames.INSPECT_SESSIONS]: "Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: `inspect_sessions session_id=session-123`.",
   [ToolNames.READ_COLLAB_MESSAGES]: "Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: `read_collab_messages since_seq=120 limit=20`.",
   [ToolNames.POST_COLLAB_MESSAGE]: "Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set `notify='wake_prompt'` with `to_session_id`. Example: `post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']`."
 };
@@ -121717,8 +121753,8 @@ var Minimatch = class {
       });
       return pp.filter((p) => p !== GLOBSTAR).join("/");
     }).join("|");
-    const [open4, close] = set.length > 1 ? ["(?:", ")"] : ["", ""];
-    re2 = "^" + open4 + re2 + close + "$";
+    const [open5, close] = set.length > 1 ? ["(?:", ")"] : ["", ""];
+    re2 = "^" + open5 + re2 + close + "$";
     if (this.negate)
       re2 = "^(?!" + re2 + ").+$";
     try {
@@ -125164,8 +125200,8 @@ var PathScurryBase = class {
    *
    * @internal
    */
-  constructor(cwd2 = process.cwd(), pathImpl, sep2, { nocase, childrenCacheSize = 16 * 1024, fs: fs21 = defaultFS } = {}) {
-    this.#fs = fsFromOption(fs21);
+  constructor(cwd2 = process.cwd(), pathImpl, sep2, { nocase, childrenCacheSize = 16 * 1024, fs: fs22 = defaultFS } = {}) {
+    this.#fs = fsFromOption(fs22);
     if (cwd2 instanceof URL || cwd2.startsWith("file://")) {
       cwd2 = (0, import_node_url.fileURLToPath)(cwd2);
     }
@@ -125723,8 +125759,8 @@ var PathScurryWin32 = class extends PathScurryBase {
   /**
    * @internal
    */
-  newRoot(fs21) {
-    return new PathWin32(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs21 });
+  newRoot(fs22) {
+    return new PathWin32(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs22 });
   }
   /**
    * Return true if the provided path string is an absolute path
@@ -125752,8 +125788,8 @@ var PathScurryPosix = class extends PathScurryBase {
   /**
    * @internal
    */
-  newRoot(fs21) {
-    return new PathPosix(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs21 });
+  newRoot(fs22) {
+    return new PathPosix(this.rootPath, IFDIR, void 0, this.roots, this.nocase, this.childrenCache(), { fs: fs22 });
   }
   /**
    * Return true if the provided path string is an absolute path
@@ -136377,8 +136413,682 @@ var ReadSessionsTool = class extends BaseDeclarativeTool {
   }
 };
 
-// ../core/dist/src/collab/store.js
+// ../core/dist/src/sessions/session-api.js
 var fs17 = __toESM(require("node:fs/promises"), 1);
+var DEFAULT_HISTORY_MAX_ITEMS = 20;
+var DEFAULT_HISTORY_MAX_CHARS = 4e3;
+var LOG_TAIL_BYTES_FACTOR = 4;
+function asRecord2(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value;
+  }
+  return void 0;
+}
+function asFiniteNumber(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  return void 0;
+}
+function asString(value) {
+  return typeof value === "string" ? value : void 0;
+}
+function normalizeRole(value) {
+  if (value === "system" || value === "user" || value === "assistant" || value === "tool") {
+    return value;
+  }
+  return "unknown";
+}
+function toHistoryEntry(value) {
+  if (typeof value === "string") {
+    return {
+      role: "unknown",
+      content: value
+    };
+  }
+  const record = asRecord2(value);
+  if (!record)
+    return null;
+  const content = asString(record["content"]) ?? asString(record["text"]);
+  if (!content)
+    return null;
+  return {
+    timestamp: asString(record["timestamp"]),
+    role: normalizeRole(record["role"]),
+    content
+  };
+}
+function summarizeHistory(entries, maxItems, maxChars, source) {
+  const totalItems = entries.length;
+  const totalChars = entries.reduce((sum, entry) => sum + entry.content.length, 0);
+  const cappedByItems = entries.slice(-maxItems);
+  const keptReversed = [];
+  let chars = 0;
+  let truncated = cappedByItems.length < entries.length;
+  for (let index = cappedByItems.length - 1; index >= 0; index--) {
+    const item = cappedByItems[index];
+    const nextTotal = chars + item.content.length;
+    if (nextTotal <= maxChars) {
+      keptReversed.push(item);
+      chars = nextTotal;
+      continue;
+    }
+    truncated = true;
+    if (chars === 0 && maxChars > 0) {
+      const cutFrom = Math.max(0, item.content.length - maxChars);
+      keptReversed.push({
+        ...item,
+        content: item.content.slice(cutFrom)
+      });
+      chars = maxChars;
+    }
+    break;
+  }
+  return {
+    source,
+    items: keptReversed.reverse(),
+    truncated,
+    total_items: totalItems,
+    total_chars: totalChars
+  };
+}
+function getTurnAgeMs(details) {
+  if (!details)
+    return void 0;
+  const turnStartedAt = asString(details["turn_started_at"]);
+  if (!turnStartedAt)
+    return void 0;
+  const parsed = Date.parse(turnStartedAt);
+  if (!Number.isFinite(parsed))
+    return void 0;
+  return Math.max(0, Date.now() - parsed);
+}
+function getLogPath(details) {
+  if (!details)
+    return void 0;
+  return asString(details["history_log_path"]) ?? asString(details["session_log_path"]) ?? asString(details["log_file_path"]);
+}
+async function readLogTail(logPath, maxChars) {
+  const stat2 = await fs17.stat(logPath);
+  const bytesToRead = Math.min(stat2.size, Math.max(maxChars * LOG_TAIL_BYTES_FACTOR, maxChars));
+  const fd = await fs17.open(logPath, "r");
+  try {
+    const start = Math.max(0, stat2.size - bytesToRead);
+    const buffer = Buffer.alloc(bytesToRead);
+    const { bytesRead } = await fd.read(buffer, 0, bytesToRead, start);
+    return buffer.toString("utf-8", 0, bytesRead);
+  } finally {
+    await fd.close();
+  }
+}
+async function getSessionStatusView(sessionId2) {
+  const session = await getSession(sessionId2);
+  if (!session)
+    return null;
+  const details = asRecord2(session.details);
+  const phase = asString(details?.["phase"]);
+  const startedAt = Date.parse(session.started_at);
+  const uptimeMs = Number.isFinite(startedAt) ? Math.max(0, Date.now() - startedAt) : 0;
+  return {
+    id: session.id,
+    mode: session.mode,
+    pid: session.pid,
+    cwd: session.cwd,
+    status: session.status,
+    started_at: session.started_at,
+    last_seen: session.last_seen,
+    uptime_ms: uptimeMs,
+    current_phase: phase
+  };
+}
+async function getSessionContextSummary(sessionId2) {
+  const session = await getSession(sessionId2);
+  if (!session)
+    return null;
+  const details = asRecord2(session.details);
+  return {
+    model: asString(details?.["model"]),
+    approval_mode: asString(details?.["approval_mode"]),
+    token_budget: asRecord2(details?.["token_budget"]),
+    active_tool_calls: asFiniteNumber(details?.["active_tool_calls"]),
+    turn_age_ms: getTurnAgeMs(details),
+    metadata: details
+  };
+}
+function normalizeHistoryLimits(options2) {
+  const maxItems = typeof options2?.max_items === "number" && options2.max_items > 0 ? Math.floor(options2.max_items) : DEFAULT_HISTORY_MAX_ITEMS;
+  const maxChars = typeof options2?.max_chars === "number" && options2.max_chars > 0 ? Math.floor(options2.max_chars) : DEFAULT_HISTORY_MAX_CHARS;
+  return { maxItems, maxChars };
+}
+function parseHistoryFromDetails(details) {
+  if (!details)
+    return [];
+  const candidates = [details["recent_history"], details["history"]];
+  for (const candidate of candidates) {
+    if (!Array.isArray(candidate)) {
+      continue;
+    }
+    const parsed = candidate.map(toHistoryEntry).filter((entry) => Boolean(entry));
+    if (parsed.length > 0) {
+      return parsed;
+    }
+  }
+  return [];
+}
+function parseHistoryFromLog(logTail) {
+  return logTail.split("\n").map((line) => line.trim()).filter((line) => line.length > 0).map((line) => ({
+    role: "unknown",
+    content: line
+  }));
+}
+async function getSessionRecentHistory(sessionId2, options2) {
+  const session = await getSession(sessionId2);
+  if (!session)
+    return null;
+  const { maxItems, maxChars } = normalizeHistoryLimits(options2);
+  const details = asRecord2(session.details);
+  const detailEntries = parseHistoryFromDetails(details);
+  if (detailEntries.length > 0) {
+    return summarizeHistory(detailEntries, maxItems, maxChars, "details");
+  }
+  const logPath = getLogPath(details);
+  if (logPath) {
+    try {
+      const logTail = await readLogTail(logPath, maxChars);
+      const logEntries = parseHistoryFromLog(logTail);
+      if (logEntries.length > 0) {
+        return summarizeHistory(logEntries, maxItems, maxChars, "log");
+      }
+    } catch {
+    }
+  }
+  return {
+    source: "none",
+    items: [],
+    truncated: false,
+    total_items: 0,
+    total_chars: 0
+  };
+}
+
+// ../core/dist/src/tools/inspect-sessions.js
+init_tool_error();
+init_tools();
+var DEFAULT_TTL_SECONDS2 = 180;
+var DEFAULT_LIMIT = 20;
+var MAX_LIMIT2 = 200;
+var DEFAULT_MAX_MESSAGES = 12;
+var MAX_MAX_MESSAGES = 100;
+var DEFAULT_MAX_MESSAGE_CHARS = 4e3;
+var MAX_MAX_MESSAGE_CHARS = 2e4;
+var MAX_MESSAGE_PREVIEW_CHARS = 600;
+var ERROR_PATTERN = /(error|failed|failure|exception|traceback|timeout|unauthorized|rate limit|429|loop)/i;
+var inspectSessionsToolSchema = {
+  name: ToolNames.INSPECT_SESSIONS,
+  description: "Inspect internal runtime state for one or more running sessions, including message tail, model/auth context, health, and error signals.",
+  parametersJsonSchema: {
+    type: "object",
+    properties: {
+      session_id: {
+        type: "string",
+        description: "Optional target session id. If omitted, inspects multiple sessions from the registry."
+      },
+      include_stale: {
+        type: "boolean",
+        description: "When session_id is omitted, include stale sessions. Default false."
+      },
+      ttl_seconds: {
+        type: "number",
+        description: "Stale threshold in seconds. Default 180 seconds."
+      },
+      limit: {
+        type: "number",
+        description: "Maximum number of sessions when session_id is omitted. Default 20, max 200."
+      },
+      include_history: {
+        type: "boolean",
+        description: "Include recent conversation/message tail for each session. Default true."
+      },
+      max_messages: {
+        type: "number",
+        description: "Maximum recent messages per session when include_history=true. Default 12, max 100."
+      },
+      max_message_chars: {
+        type: "number",
+        description: "Maximum total characters to read from recent history per session. Default 4000, max 20000."
+      },
+      include_details: {
+        type: "boolean",
+        description: "Include a sanitized details preview from the session record metadata. Default false."
+      }
+    },
+    $schema: "http://json-schema.org/draft-07/schema#"
+  }
+};
+var inspectSessionsToolDescription = `
+Inspect internal runtime state for one or more sessions.
+
+This tool is intended for orchestration/supervision workflows where a parent agent
+needs to assess what other sessions are doing (or why they appear idle/stalled).
+
+Returned data includes:
+- session status, staleness, health, and process liveness
+- model/approval/auth metadata
+- context-window/token budget estimate (when available)
+- recent message tail and extracted error signals
+
+Use this before deciding whether to send \`post_collab_message\` (for example with \`notify="wake_prompt"\`).
+`;
+function asRecord3(value) {
+  if (value && typeof value === "object" && !Array.isArray(value)) {
+    return value;
+  }
+  return void 0;
+}
+function asString2(value) {
+  return typeof value === "string" ? value : void 0;
+}
+function asFiniteNumber2(value) {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+  return void 0;
+}
+function normalizePositiveInteger2(value, fieldName) {
+  if (value === void 0) {
+    return void 0;
+  }
+  if (!Number.isFinite(value)) {
+    throw new Error(`${fieldName} must be a finite number.`);
+  }
+  const normalized = Math.floor(value);
+  if (normalized < 1) {
+    throw new Error(`${fieldName} must be >= 1.`);
+  }
+  return normalized;
+}
+function normalizeTtlSeconds2(value) {
+  const ttl = normalizePositiveInteger2(value, "ttl_seconds");
+  return ttl ?? DEFAULT_TTL_SECONDS2;
+}
+function normalizeLimit(value) {
+  const limit2 = normalizePositiveInteger2(value, "limit") ?? DEFAULT_LIMIT;
+  if (limit2 > MAX_LIMIT2) {
+    throw new Error(`limit must be <= ${MAX_LIMIT2}.`);
+  }
+  return limit2;
+}
+function normalizeMaxMessages(value) {
+  const maxMessages = normalizePositiveInteger2(value, "max_messages") ?? DEFAULT_MAX_MESSAGES;
+  if (maxMessages > MAX_MAX_MESSAGES) {
+    throw new Error(`max_messages must be <= ${MAX_MAX_MESSAGES}.`);
+  }
+  return maxMessages;
+}
+function normalizeMaxMessageChars(value) {
+  const maxChars = normalizePositiveInteger2(value, "max_message_chars") ?? DEFAULT_MAX_MESSAGE_CHARS;
+  if (maxChars > MAX_MAX_MESSAGE_CHARS) {
+    throw new Error(`max_message_chars must be <= ${MAX_MAX_MESSAGE_CHARS}.`);
+  }
+  return maxChars;
+}
+function isSessionStale2(session, nowMs, ttlMs) {
+  const lastSeen = Date.parse(session.last_seen);
+  return Number.isFinite(lastSeen) && nowMs - lastSeen > ttlMs;
+}
+function sortSessions2(sessions, nowMs, ttlMs) {
+  return [...sessions].sort((a, b) => {
+    const aLast = Date.parse(a.last_seen);
+    const bLast = Date.parse(b.last_seen);
+    const aStale = isSessionStale2(a, nowMs, ttlMs);
+    const bStale = isSessionStale2(b, nowMs, ttlMs);
+    const aRank = aStale ? 2 : a.status === "working" ? 0 : 1;
+    const bRank = bStale ? 2 : b.status === "working" ? 0 : 1;
+    if (aRank !== bRank) {
+      return aRank - bRank;
+    }
+    if (Number.isFinite(aLast) && Number.isFinite(bLast)) {
+      return bLast - aLast;
+    }
+    return 0;
+  });
+}
+function isProcessAlive2(pid3) {
+  try {
+    process.kill(pid3, 0);
+    return true;
+  } catch {
+    return false;
+  }
+}
+function getAuthLabel(value) {
+  if (typeof value === "string" && value.trim().length > 0) {
+    return value.trim();
+  }
+  const record = asRecord3(value);
+  if (!record) {
+    return void 0;
+  }
+  const selectedType = asString2(record["selectedType"]);
+  const providerId = asString2(record["providerId"]);
+  const providerType = asString2(record["provider_type"]);
+  const parts = [selectedType, providerId, providerType].filter((part) => typeof part === "string" && part.trim().length > 0);
+  if (parts.length === 0) {
+    return void 0;
+  }
+  return parts.join(":");
+}
+function pickNumber(source, keys) {
+  if (!source)
+    return void 0;
+  for (const key of keys) {
+    const value = asFiniteNumber2(source[key]);
+    if (value !== void 0) {
+      return value;
+    }
+  }
+  return void 0;
+}
+function deriveContextWindow(tokenBudget, details) {
+  const currentTokens = pickNumber(tokenBudget, [
+    "current_tokens",
+    "current",
+    "tokens",
+    "current_context_tokens"
+  ]) ?? asFiniteNumber2(details?.["current_context_tokens"]);
+  const limitTokens = pickNumber(tokenBudget, [
+    "effective_limit",
+    "limit",
+    "session_token_limit",
+    "context_limit"
+  ]) ?? asFiniteNumber2(details?.["session_token_limit"]);
+  if (currentTokens === void 0 && limitTokens === void 0) {
+    return void 0;
+  }
+  let state = "unknown";
+  let utilizationRatio;
+  if (currentTokens !== void 0 && limitTokens !== void 0 && limitTokens > 0) {
+    utilizationRatio = currentTokens / limitTokens;
+    if (utilizationRatio >= 1) {
+      state = "exceeded";
+    } else if (utilizationRatio >= 0.9) {
+      state = "critical";
+    } else if (utilizationRatio >= 0.75) {
+      state = "high";
+    } else if (utilizationRatio >= 0.5) {
+      state = "moderate";
+    } else {
+      state = "normal";
+    }
+  } else if (currentTokens !== void 0) {
+    state = "unknown_limit";
+  } else if (limitTokens !== void 0) {
+    state = "unknown_usage";
+  }
+  const output = { state };
+  if (currentTokens !== void 0) {
+    output["current_tokens"] = currentTokens;
+  }
+  if (limitTokens !== void 0) {
+    output["limit_tokens"] = limitTokens;
+  }
+  if (utilizationRatio !== void 0) {
+    output["utilization_ratio"] = utilizationRatio;
+  }
+  return output;
+}
+function summarizeHistoryEntries(history) {
+  return history.items.map((item) => {
+    const collapsed = item.content.replace(/\s+/g, " ").trim();
+    const content = collapsed.length > MAX_MESSAGE_PREVIEW_CHARS ? `${collapsed.slice(0, MAX_MESSAGE_PREVIEW_CHARS)}...` : collapsed;
+    const entry = {
+      role: item.role,
+      content
+    };
+    if (item.timestamp) {
+      entry["timestamp"] = item.timestamp;
+    }
+    return entry;
+  });
+}
+function collectErrorSignals(session, details, history, contextWindow) {
+  const signals = /* @__PURE__ */ new Set();
+  if (session.health?.state && session.health.state !== "ok") {
+    const reason = session.health.reason ? `:${session.health.reason}` : "";
+    signals.add(`health:${session.health.state}${reason}`);
+  }
+  const lastError = asString2(details?.["last_error"]);
+  if (lastError && lastError.trim().length > 0) {
+    signals.add(`last_error:${lastError.trim().slice(0, 160)}`);
+  }
+  const contextState = asString2(contextWindow?.["state"]);
+  if (contextState === "critical" || contextState === "exceeded") {
+    signals.add(`context_window:${contextState}`);
+  }
+  if (history) {
+    for (const item of history.items) {
+      if (ERROR_PATTERN.test(item.content)) {
+        const compact = item.content.replace(/\s+/g, " ").trim();
+        signals.add(`history:${compact.slice(0, 160)}`);
+      }
+      if (signals.size >= 8) {
+        break;
+      }
+    }
+  }
+  return Array.from(signals);
+}
+function summarizeValue(value, depth = 0) {
+  if (depth > 2) {
+    return "[truncated]";
+  }
+  if (value === null) {
+    return null;
+  }
+  if (typeof value === "string") {
+    return value.length > 300 ? `${value.slice(0, 300)}...` : value;
+  }
+  if (typeof value === "number" || typeof value === "boolean" || typeof value === "undefined") {
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return {
+      type: "array",
+      length: value.length,
+      preview: value.slice(0, 5).map((entry) => summarizeValue(entry, depth + 1))
+    };
+  }
+  const record = asRecord3(value);
+  if (!record) {
+    return String(value);
+  }
+  const output = {};
+  const keys = Object.keys(record).slice(0, 25);
+  for (const key of keys) {
+    if (key.includes("token") || key.includes("secret") || key.includes("password") || key.includes("apiKey") || key.includes("api_key")) {
+      output[key] = "[redacted]";
+      continue;
+    }
+    if (key === "recent_history" || key === "history") {
+      const historyValue = record[key];
+      if (Array.isArray(historyValue)) {
+        output[key] = { type: "array", length: historyValue.length };
+      } else {
+        output[key] = summarizeValue(historyValue, depth + 1);
+      }
+      continue;
+    }
+    output[key] = summarizeValue(record[key], depth + 1);
+  }
+  return output;
+}
+function buildDetailsPreview(details) {
+  if (!details) {
+    return void 0;
+  }
+  const summarized = summarizeValue(details);
+  return asRecord3(summarized);
+}
+async function inspectSession(session, options2) {
+  const statusView = await getSessionStatusView(session.id);
+  const contextSummary = await getSessionContextSummary(session.id);
+  const history = options2.includeHistory ? await getSessionRecentHistory(session.id, {
+    max_items: options2.maxMessages,
+    max_chars: options2.maxMessageChars
+  }) : null;
+  const details = {
+    ...asRecord3(session.details) ?? {},
+    ...asRecord3(contextSummary?.metadata) ?? {}
+  };
+  const mergedDetails = Object.keys(details).length > 0 ? details : void 0;
+  const tokenBudget = asRecord3(contextSummary?.token_budget) ?? asRecord3(mergedDetails?.["token_budget"]);
+  const contextWindow = deriveContextWindow(tokenBudget, mergedDetails);
+  const record = {
+    session_id: session.id,
+    mode: session.mode,
+    pid: session.pid,
+    cwd: session.cwd,
+    status: statusView?.status ?? session.status,
+    stale: isSessionStale2(session, options2.nowMs, options2.ttlMs),
+    process_alive: isProcessAlive2(session.pid),
+    started_at: session.started_at,
+    last_seen: session.last_seen,
+    capabilities: session.capabilities,
+    health: session.health,
+    model: contextSummary?.model ?? asString2(mergedDetails?.["model"]) ?? asString2(mergedDetails?.["model_actual"]),
+    approval_mode: contextSummary?.approval_mode ?? asString2(mergedDetails?.["approval_mode"]),
+    auth: getAuthLabel(mergedDetails?.["auth_type"]) ?? getAuthLabel(mergedDetails?.["auth"]) ?? getAuthLabel(mergedDetails?.["auth_actual"]),
+    active_tool_calls: contextSummary?.active_tool_calls ?? asFiniteNumber2(mergedDetails?.["active_tool_calls"]),
+    turn_age_ms: contextSummary?.turn_age_ms,
+    context_window: contextWindow,
+    api: session.api ? {
+      transport: session.api.transport,
+      address: session.api.address,
+      version: session.api.version
+    } : void 0
+  };
+  const lastSeenMs = Date.parse(session.last_seen);
+  if (Number.isFinite(lastSeenMs)) {
+    record["last_seen_age_ms"] = Math.max(0, options2.nowMs - lastSeenMs);
+  }
+  if (statusView?.current_phase) {
+    record["phase"] = statusView.current_phase;
+  }
+  const historyForErrors = history ?? void 0;
+  record["error_signals"] = collectErrorSignals(session, mergedDetails, historyForErrors, contextWindow);
+  if (history) {
+    record["recent_messages"] = {
+      source: history.source,
+      truncated: history.truncated,
+      total_items: history.total_items,
+      total_chars: history.total_chars,
+      items: summarizeHistoryEntries(history)
+    };
+  }
+  if (options2.includeDetails) {
+    record["details"] = buildDetailsPreview(mergedDetails);
+  }
+  return record;
+}
+var InspectSessionsInvocation = class extends BaseToolInvocation {
+  getDescription() {
+    if (typeof this.params.session_id === "string" && this.params.session_id.trim()) {
+      return `Inspecting session ${this.params.session_id.trim()}`;
+    }
+    return "Inspecting running sessions";
+  }
+  async execute() {
+    try {
+      const ttlSeconds = normalizeTtlSeconds2(this.params.ttl_seconds);
+      const ttlMs = ttlSeconds * 1e3;
+      const includeStale = this.params.include_stale === true;
+      const includeHistory = this.params.include_history !== false;
+      const includeDetails = this.params.include_details === true;
+      const maxMessages = normalizeMaxMessages(this.params.max_messages);
+      const maxMessageChars = normalizeMaxMessageChars(this.params.max_message_chars);
+      const nowMs = Date.now();
+      let sessions = [];
+      let truncated = false;
+      const requestedSessionId = typeof this.params.session_id === "string" ? this.params.session_id.trim() : "";
+      if (requestedSessionId.length > 0) {
+        const one = await getSession(requestedSessionId);
+        if (!one) {
+          const notFound = `Session not found: ${requestedSessionId}`;
+          return {
+            llmContent: notFound,
+            returnDisplay: notFound
+          };
+        }
+        sessions = [one];
+      } else {
+        const limit2 = normalizeLimit(this.params.limit);
+        const all2 = await listSessions();
+        const filtered = includeStale ? all2 : all2.filter((session) => !isSessionStale2(session, nowMs, ttlMs));
+        const sorted2 = sortSessions2(filtered, nowMs, ttlMs);
+        if (sorted2.length > limit2) {
+          truncated = true;
+        }
+        sessions = sorted2.slice(0, limit2);
+      }
+      if (sessions.length === 0) {
+        const emptyMessage = includeStale ? "No sessions found." : `No active sessions found (ttl=${ttlSeconds}s).`;
+        return {
+          llmContent: emptyMessage,
+          returnDisplay: emptyMessage
+        };
+      }
+      const inspected = [];
+      for (const session of sessions) {
+        inspected.push(await inspectSession(session, {
+          nowMs,
+          ttlMs,
+          includeHistory,
+          maxMessages,
+          maxMessageChars,
+          includeDetails
+        }));
+      }
+      const report = {
+        generated_at: new Date(nowMs).toISOString(),
+        requested_session_id: requestedSessionId || void 0,
+        ttl_seconds: ttlSeconds,
+        include_stale: includeStale,
+        include_history: includeHistory,
+        include_details: includeDetails,
+        sessions_inspected: inspected.length,
+        truncated,
+        sessions: inspected
+      };
+      const output = JSON.stringify(report, null, 2);
+      return {
+        llmContent: output,
+        returnDisplay: output
+      };
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      return {
+        llmContent: `Error: ${errorMessage}`,
+        returnDisplay: `Error: ${errorMessage}`,
+        error: {
+          message: errorMessage,
+          type: ToolErrorType.INVALID_TOOL_PARAMS
+        }
+      };
+    }
+  }
+};
+var InspectSessionsTool = class extends BaseDeclarativeTool {
+  static Name = ToolNames.INSPECT_SESSIONS;
+  constructor() {
+    super(ToolNames.INSPECT_SESSIONS, "Inspect Sessions", inspectSessionsToolDescription, Kind.Other, inspectSessionsToolSchema.parametersJsonSchema, true, false);
+  }
+  createInvocation(params) {
+    return new InspectSessionsInvocation(params);
+  }
+};
+
+// ../core/dist/src/collab/store.js
+var fs18 = __toESM(require("node:fs/promises"), 1);
 var path27 = __toESM(require("node:path"), 1);
 var import_node_crypto3 = require("node:crypto");
 var import_node_events3 = require("node:events");
@@ -136448,7 +137158,7 @@ function normalizeRefs(refs) {
   }
   return normalized.length > 0 ? normalized : void 0;
 }
-function normalizeTtlSeconds2(value) {
+function normalizeTtlSeconds3(value) {
   if (value === void 0) {
     return void 0;
   }
@@ -136489,7 +137199,7 @@ function parseJsonLine(line) {
 }
 async function readLockFile(lockPath) {
   try {
-    const raw = await fs17.readFile(lockPath, "utf-8");
+    const raw = await fs18.readFile(lockPath, "utf-8");
     return parseJsonLine(raw.trim()) ?? null;
   } catch (error) {
     const nodeError = error;
@@ -136511,12 +137221,12 @@ async function tryRemoveExpiredLock(lockPath, nowMs) {
   if (!current || !isExpired(current, nowMs)) {
     return false;
   }
-  await fs17.unlink(lockPath).catch(() => {
+  await fs18.unlink(lockPath).catch(() => {
   });
   return true;
 }
 async function writeLockFile(lockPath, lockData) {
-  const fd = await fs17.open(lockPath, "wx");
+  const fd = await fs18.open(lockPath, "wx");
   try {
     await fd.writeFile(`${JSON.stringify(lockData)}
 `, "utf-8");
@@ -136558,7 +137268,7 @@ async function acquireCollabLock(lockPath) {
   }
 }
 async function releaseCollabLock(lockPath) {
-  await fs17.unlink(lockPath).catch(() => {
+  await fs18.unlink(lockPath).catch(() => {
   });
 }
 function parseMessageLines(raw) {
@@ -136566,7 +137276,7 @@ function parseMessageLines(raw) {
 }
 async function readMessagesFile(messagesPath) {
   try {
-    const raw = await fs17.readFile(messagesPath, "utf-8");
+    const raw = await fs18.readFile(messagesPath, "utf-8");
     return parseMessageLines(raw);
   } catch (error) {
     const nodeError = error;
@@ -136578,7 +137288,7 @@ async function readMessagesFile(messagesPath) {
 }
 async function readMeta(metaPath) {
   try {
-    const raw = await fs17.readFile(metaPath, "utf-8");
+    const raw = await fs18.readFile(metaPath, "utf-8");
     const parsed = parseJsonLine(raw.trim());
     return parsed ?? {};
   } catch (error) {
@@ -136604,7 +137314,7 @@ async function getNextSequence(messagesPath, metaPath) {
   return maxSeq + 1;
 }
 async function appendWithSync(filePath, line) {
-  const fd = await fs17.open(filePath, "a");
+  const fd = await fs18.open(filePath, "a");
   try {
     await fd.appendFile(line, "utf-8");
     await fd.sync();
@@ -136622,7 +137332,7 @@ function isMessageExpired(message, nowMs) {
   }
   return timestampMs + message.ttl_seconds * 1e3 <= nowMs;
 }
-function normalizeLimit(value) {
+function normalizeLimit2(value) {
   if (value === void 0 || !Number.isFinite(value)) {
     return DEFAULT_READ_LIMIT;
   }
@@ -136639,10 +137349,10 @@ async function postCollabMessage(input) {
   const text = normalizeText(input.text);
   const refs = normalizeRefs(input.refs);
   const inReplyTo = input.inReplyTo && input.inReplyTo.trim().length > 0 ? input.inReplyTo.trim() : void 0;
-  const ttlSeconds = normalizeTtlSeconds2(input.ttlSeconds);
+  const ttlSeconds = normalizeTtlSeconds3(input.ttlSeconds);
   const notify = normalizeNotify(input.notify);
   const paths = getCollabPaths(input.baseDir);
-  await fs17.mkdir(paths.collabDir, { recursive: true });
+  await fs18.mkdir(paths.collabDir, { recursive: true });
   await acquireCollabLock(paths.lockPath);
   try {
     const seq = await getNextSequence(paths.messagesPath, paths.metaPath);
@@ -136667,9 +137377,9 @@ async function postCollabMessage(input) {
       last_seq: seq,
       updated_at: timestamp
     };
-    await fs17.writeFile(paths.metaPath, `${JSON.stringify(meta)}
+    await fs18.writeFile(paths.metaPath, `${JSON.stringify(meta)}
 `, "utf-8");
-    await fs17.writeFile(paths.notifyPath, `${JSON.stringify({
+    await fs18.writeFile(paths.notifyPath, `${JSON.stringify({
       updated_at: timestamp,
       last_seq: seq,
       message_id: message.message_id
@@ -136690,7 +137400,7 @@ async function postCollabMessage(input) {
 }
 async function readCollabMessages(baseDir, options2 = {}) {
   const paths = getCollabPaths(baseDir);
-  const limit2 = normalizeLimit(options2.limit);
+  const limit2 = normalizeLimit2(options2.limit);
   const sinceSeq = typeof options2.sinceSeq === "number" && Number.isFinite(options2.sinceSeq) ? Math.max(0, Math.floor(options2.sinceSeq)) : 0;
   const targetSessionId = options2.sessionId && options2.sessionId.trim().length > 0 ? options2.sessionId.trim() : void 0;
   const nowMs = Date.now();
@@ -136768,7 +137478,7 @@ function normalizeNonNegativeInteger(value, fieldName) {
   }
   return normalized;
 }
-function normalizePositiveInteger2(value, fieldName) {
+function normalizePositiveInteger3(value, fieldName) {
   if (value === void 0) {
     return void 0;
   }
@@ -136806,7 +137516,7 @@ var ReadCollabMessagesInvocation = class extends BaseToolInvocation {
   async execute() {
     try {
       const sinceSeq = normalizeNonNegativeInteger(this.params.since_seq, "since_seq");
-      const limit2 = normalizePositiveInteger2(this.params.limit, "limit");
+      const limit2 = normalizePositiveInteger3(this.params.limit, "limit");
       const includeAllTargets = this.params.include_all_targets === true;
       const includeExpired = this.params.include_expired === true;
       const fallbackSessionId = this.config.getSessionId();
@@ -139913,7 +140623,7 @@ init_mcp_tool();
 
 // ../core/dist/src/tools/research.js
 init_tools();
-var fs19 = __toESM(require("node:fs"), 1);
+var fs20 = __toESM(require("node:fs"), 1);
 var path29 = __toESM(require("node:path"), 1);
 init_errors();
 var ResearchToolInvocation = class extends BaseToolInvocation {
@@ -140758,13 +141468,13 @@ Be selective - only keep sources that truly add value to research on "${topic}".
   }
   async persistReport(content, plan) {
     const reportsDir = path29.resolve("reports");
-    await fs19.promises.mkdir(reportsDir, { recursive: true });
+    await fs20.promises.mkdir(reportsDir, { recursive: true });
     const baseSlugSource = plan.slug && plan.slug.trim().length > 0 ? plan.slug : plan.primaryTopic || this.params.query;
     const safeSlug = baseSlugSource.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-+|-+$/g, "").slice(0, 40) || "research-report";
     const timestamp = (/* @__PURE__ */ new Date()).toISOString().replace(/[:.]/g, "-");
     const filename = `${safeSlug}-${timestamp}.md`;
     const filepath = path29.join(reportsDir, filename);
-    await fs19.promises.writeFile(filepath, content, "utf8");
+    await fs20.promises.writeFile(filepath, content, "utf8");
     return path29.relative(process.cwd(), filepath);
   }
   resolveSearchTools(toolRegistryOverride) {
@@ -143981,7 +144691,7 @@ var StreamableHTTPServerTransport = class {
 var import_express = __toESM(require_express2(), 1);
 var import_node_crypto6 = require("node:crypto");
 var path30 = __toESM(require("node:path"), 1);
-var fs20 = __toESM(require("node:fs/promises"), 1);
+var fs21 = __toESM(require("node:fs/promises"), 1);
 var os8 = __toESM(require("node:os"), 1);
 
 // src/open-files-manager.ts
@@ -144136,7 +144846,7 @@ function writePortAndWorkspace(context, port, portFile, log2) {
     workspacePath
   );
   log2(`Writing port file to: ${portFile}`);
-  return fs20.writeFile(portFile, JSON.stringify({ port, workspacePath })).catch((err) => {
+  return fs21.writeFile(portFile, JSON.stringify({ port, workspacePath })).catch((err) => {
     const message = err instanceof Error ? err.message : String(err);
     log2(`Failed to write port to file: ${message}`);
   });
@@ -144333,7 +145043,7 @@ var IDEServer = class {
       this.context.environmentVariableCollection.clear();
     }
     try {
-      await fs20.unlink(this.portFile);
+      await fs21.unlink(this.portFile);
     } catch (_err) {
     }
   }

@@ -14,7 +14,6 @@ const LM_STUDIO_DEFAULT_BASE_URL = "http://127.0.0.1:1234/v1";
 const NEW_TEMPLATE_KEY = "__new__";
 const JOB_TEMPLATE_KEY_PREFIX = "__job__:";
 let lastTaskEditorSelectionKey;
-const templateDeployPrefsByKey = new Map();
 function templateKeyFor(template) {
     return `${template.id}:${template.level}`;
 }
@@ -171,6 +170,57 @@ function parseSystemPromptSpec(value) {
         },
     };
 }
+function formatToolsetSpec(profile) {
+    const collection = profile?.collection;
+    return typeof collection === "string" ? collection : "";
+}
+function parseToolsetSpec(value) {
+    const trimmed = value.trim();
+    if (!trimmed || trimmed.toLowerCase() === "inherit") {
+        return {};
+    }
+    let working = trimmed;
+    if (working.startsWith("/")) {
+        working = working.slice(1).trim();
+    }
+    if (working.toLowerCase().startsWith("toolset ")) {
+        working = working.slice("toolset ".length).trim();
+    }
+    else if (working.toLowerCase() === "toolset") {
+        working = "";
+    }
+    if (working.toLowerCase().startsWith("activate ")) {
+        working = working.slice("activate ".length).trim();
+    }
+    else if (working.toLowerCase().startsWith("use ")) {
+        working = working.slice("use ".length).trim();
+    }
+    else if (working.toLowerCase().startsWith("set ")) {
+        working = working.slice("set ".length).trim();
+    }
+    if (!working) {
+        return {
+            error: "Toolset value must include a collection name, or use 'inherit'.",
+        };
+    }
+    const tokens = working.split(/\s+/);
+    if (tokens.length !== 1) {
+        return {
+            error: "Toolset format must match /toolset activate: <collection>.",
+        };
+    }
+    const collection = tokens[0]?.trim();
+    if (!collection) {
+        return {
+            error: "Toolset value must include a collection name (for example: minimal).",
+        };
+    }
+    return {
+        profile: {
+            collection,
+        },
+    };
+}
 function buildEmptyDraft(settings, currentModel) {
     return {
         id: "",
@@ -186,14 +236,20 @@ function buildEmptyDraft(settings, currentModel) {
         returnToSession: "inherit",
         allowRecursive: "inherit",
         systemPromptSpec: "",
+        toolsetSpec: "",
         level: "user",
         deployMode: "launch",
+        scheduleStartMode: "start_idle",
         schedule: "0 * * * *",
         scheduleJobId: "",
     };
 }
 function buildDraftFromTemplate(template, settings, currentModel) {
     const approvalMode = toApprovalModeChoice(template.approvalMode);
+    const deployMode = template.deploy?.mode === "schedule" ? "schedule" : "launch";
+    const scheduleStartMode = template.deploy?.scheduleStart === "run_immediately"
+        ? "run_immediately"
+        : "start_idle";
     const returnToSession = template.run?.returnToSession;
     const returnChoice = returnToSession === true
         ? "true"
@@ -222,12 +278,14 @@ function buildDraftFromTemplate(template, settings, currentModel) {
         returnToSession: returnChoice,
         allowRecursive: recursiveChoice,
         systemPromptSpec: formatSystemPromptSpec(template.systemPrompt),
+        toolsetSpec: formatToolsetSpec(template.toolset),
         level: template.level === "project" || template.level === "user"
             ? template.level
             : "user",
-        deployMode: "launch",
-        schedule: "0 * * * *",
-        scheduleJobId: `${template.id}-schedule`,
+        deployMode,
+        schedule: template.deploy?.schedule ?? "0 * * * *",
+        scheduleStartMode,
+        scheduleJobId: template.deploy?.jobId ?? `${template.id}-schedule`,
     };
 }
 function buildRuntimeProfileFromJob(job) {
@@ -273,8 +331,10 @@ function buildDraftFromJob(job, currentModel) {
         returnToSession: returnChoice,
         allowRecursive: recursiveChoice,
         systemPromptSpec: formatSystemPromptSpec(runtimeProfile.system_prompt),
+        toolsetSpec: formatToolsetSpec(runtimeProfile.toolset),
         level: "user",
         deployMode: "schedule",
+        scheduleStartMode: "start_idle",
         schedule: job.schedule,
         scheduleJobId: job.id,
     };
@@ -503,15 +563,7 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             return;
         }
         const templateDraft = buildDraftFromTemplate(selectedTemplate, settings, currentModel);
-        const savedDeployPrefs = templateDeployPrefsByKey.get(templateKeyFor(selectedTemplate));
-        setDraft(savedDeployPrefs
-            ? {
-                ...templateDraft,
-                deployMode: savedDeployPrefs.deployMode,
-                schedule: savedDeployPrefs.schedule,
-                scheduleJobId: savedDeployPrefs.scheduleJobId,
-            }
-            : templateDraft);
+        setDraft(templateDraft);
         setEditorResetToken((value) => value + 1);
         pendingNewDraftRef.current = null;
     }, [
@@ -610,27 +662,8 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             ...previous,
             ...updates,
         }));
-        if (!isSelectedScheduledJob && selectedTemplateKey !== NEW_TEMPLATE_KEY) {
-            const current = templateDeployPrefsByKey.get(selectedTemplateKey) ?? {
-                deployMode: draft.deployMode,
-                schedule: draft.schedule,
-                scheduleJobId: draft.scheduleJobId,
-            };
-            templateDeployPrefsByKey.set(selectedTemplateKey, {
-                deployMode: (updates.deployMode ?? current.deployMode),
-                schedule: updates.schedule ?? current.schedule,
-                scheduleJobId: updates.scheduleJobId ?? current.scheduleJobId,
-            });
-        }
         setErrorMessage(null);
-    }, [
-        isSelectedScheduledJob,
-        selectedTemplateKey,
-        draft.deployMode,
-        draft.schedule,
-        draft.scheduleJobId,
-        setDraft,
-    ]);
+    }, [setDraft]);
     const modelItems = useMemo(() => {
         const items = [
             {
@@ -738,6 +771,9 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             label: `System Prompt: ${formatPreview(draft.systemPromptSpec, "inherit")}`,
             value: "system_prompt",
         }, {
+            label: `Toolset: ${formatPreview(draft.toolsetSpec, "inherit")}`,
+            value: "toolset",
+        }, {
             label: `Schedule: ${draft.schedule}`,
             value: "schedule",
         });
@@ -752,6 +788,12 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
                 label: `Schedule Job ID: ${formatPreview(draft.scheduleJobId, "auto")}`,
                 value: "schedule_job_id",
             });
+            if (draft.deployMode === "schedule") {
+                items.push({
+                    label: `Schedule Start: ${draft.scheduleStartMode}`,
+                    value: "schedule_start",
+                });
+            }
         }
         return items;
     }, [draft, isSelectedScheduledJob]);
@@ -784,6 +826,17 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         const level = canEditExisting
             ? (selectedTemplate?.level ?? "user")
             : toTemplateLevelValue(draft.level);
+        const schedule = draft.schedule.trim();
+        if (draft.deployMode === "schedule") {
+            if (!schedule) {
+                setErrorMessage("Schedule cron expression is required when deploy mode is schedule.");
+                return null;
+            }
+            if (!validateCronExpression(schedule)) {
+                setErrorMessage(`Invalid cron expression "${schedule}". Use 5-field format (minute hour day month day_of_week).`);
+                return null;
+            }
+        }
         const actionValue = trimOrUndefined(draft.actionValue);
         const auth = buildAuthProfile(draft.authChoice, settings);
         const runReturnToSession = draft.returnToSession === "inherit"
@@ -802,6 +855,12 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             return null;
         }
         const systemPrompt = systemPromptResult.profile;
+        const toolsetResult = parseToolsetSpec(draft.toolsetSpec);
+        if (toolsetResult.error) {
+            setErrorMessage(toolsetResult.error);
+            return null;
+        }
+        const toolset = toolsetResult.profile;
         const finalTemplate = {
             id,
             name: trimOrUndefined(draft.name),
@@ -826,7 +885,14 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
                     returnToSession: runReturnToSession,
                     allowRecursive: runAllowRecursive,
                 },
+            deploy: {
+                mode: draft.deployMode,
+                schedule: schedule || undefined,
+                jobId: trimOrUndefined(draft.scheduleJobId),
+                scheduleStart: draft.deployMode === "schedule" ? draft.scheduleStartMode : undefined,
+            },
             systemPrompt,
+            toolset,
             level,
             filePath: "",
             isBuiltin: undefined,
@@ -837,11 +903,6 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             await manager.createTemplate(finalTemplate, {
                 level,
                 overwrite: true,
-            });
-            templateDeployPrefsByKey.set(templateKeyFor(finalTemplate), {
-                deployMode: draft.deployMode,
-                schedule: draft.schedule,
-                scheduleJobId: draft.scheduleJobId,
             });
             setStatusMessage(`Saved task template "${id}" (${level}).`);
             await reloadTemplates({ id, level });
@@ -900,6 +961,11 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             setErrorMessage(systemPromptResult.error);
             return null;
         }
+        const toolsetResult = parseToolsetSpec(draft.toolsetSpec);
+        if (toolsetResult.error) {
+            setErrorMessage(toolsetResult.error);
+            return null;
+        }
         const existingRuntime = buildRuntimeProfileFromJob(job);
         const existingStringTarget = typeof job.return_to_session_id === "string" &&
             job.return_to_session_id.trim().length > 0
@@ -938,6 +1004,7 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
             model,
             run: runtimeRun,
             system_prompt: systemPromptResult.profile,
+            toolset: toolsetResult.profile,
         });
         const returnToSessionIdUpdate = draft.returnToSession === "false" || draft.returnToSession === "inherit"
             ? null
@@ -1017,6 +1084,7 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
                 templateId: saved.id,
                 templateLevel: saved.level,
                 deployMode: draft.deployMode,
+                scheduleStartMode: draft.deployMode === "schedule" ? draft.scheduleStartMode : undefined,
                 schedule: draft.deployMode === "schedule" ? draft.schedule.trim() : undefined,
                 jobId: trimOrUndefined(draft.scheduleJobId),
             });
@@ -1200,6 +1268,9 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         if (selectedField === "system_prompt") {
             return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { color: Colors.Gray, children: "Use /prompt format: \"name1,name2 [--exclusive]\", \"/prompt activate name1,name2\", \"disable\", or \"inherit\"." }), _jsx(TextInput, { value: draft.systemPromptSpec, onChange: (value) => updateDraft({ systemPromptSpec: value }), placeholder: "reviewer,security --exclusive", inputWidth: editorInputWidth, isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`)] }));
         }
+        if (selectedField === "toolset") {
+            return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { color: Colors.Gray, children: "Use /toolset format: \"collection\", \"/toolset activate collection\", or \"inherit\"." }), _jsx(TextInput, { value: draft.toolsetSpec, onChange: (value) => updateDraft({ toolsetSpec: value }), placeholder: "minimal", inputWidth: editorInputWidth, isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`)] }));
+        }
         if (selectedField === "level") {
             const readOnly = isExistingEditableTemplate || isSelectedScheduledJob;
             const items = [
@@ -1232,7 +1303,17 @@ export function TaskTemplateEditorDialog({ projectRoot, settings, currentModel, 
         if (selectedField === "schedule") {
             return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { color: Colors.Gray, children: isSelectedScheduledJob
                             ? "Editing an @job schedule updates cron.json immediately on Save Scheduled Job."
-                            : "For templates, schedule is used for deploy defaults in this session." }), _jsx(Text, { color: Colors.Gray, children: "Cron format: minute hour day month day_of_week (0-6, Sun=0). Examples: \u00A0`0 * * * *` hourly,\u00A0`*/15 * * * *` every 15 min,\u00A0`0 2 * * *` daily at 2:00." }), _jsx(TextInput, { value: draft.schedule, onChange: (value) => updateDraft({ schedule: value }), placeholder: "0 * * * *", inputWidth: editorInputWidth, isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`)] }));
+                            : "For templates, schedule is saved and reused for future scheduled deploys." }), _jsx(Text, { color: Colors.Gray, children: "Cron format: minute hour day month day_of_week (0-6, Sun=0). Examples: \u00A0`0 * * * *` hourly,\u00A0`*/15 * * * *` every 15 min,\u00A0`0 2 * * *` daily at 2:00." }), _jsx(TextInput, { value: draft.schedule, onChange: (value) => updateDraft({ schedule: value }), placeholder: "0 * * * *", inputWidth: editorInputWidth, isActive: focusSection === "editor" }, `task-editor-${selectedField}-${editorResetToken}`)] }));
+        }
+        if (selectedField === "schedule_start") {
+            if (isSelectedScheduledJob) {
+                return (_jsx(Box, { flexDirection: "column", marginTop: 1, children: _jsx(Text, { color: Colors.Gray, children: "Schedule start behavior applies to template deploy, not existing @job entries." }) }));
+            }
+            const items = [
+                { label: "start_idle", value: "start_idle" },
+                { label: "run_immediately", value: "run_immediately" },
+            ];
+            return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [_jsx(Text, { color: Colors.Gray, children: "start_idle waits for the next cron time. run_immediately launches once now, then follows cron." }), _jsx(RadioButtonSelect, { items: items, initialIndex: draft.scheduleStartMode === "run_immediately" ? 1 : 0, onSelect: (value) => updateDraft({ scheduleStartMode: value }), isFocused: focusSection === "editor" }, `schedule-start-${draft.scheduleStartMode}`)] }));
         }
         if (selectedField === "schedule_job_id") {
             return (_jsxs(Box, { flexDirection: "column", marginTop: 1, children: [isSelectedScheduledJob && (_jsx(Text, { color: Colors.Gray, children: "Job ID is fixed for existing scheduled jobs." })), _jsx(TextInput, { value: draft.scheduleJobId, onChange: (value) => updateDraft({ scheduleJobId: value }), placeholder: "Optional; defaults to <template>-schedule", inputWidth: editorInputWidth, isActive: focusSection === "editor" && !isSelectedScheduledJob }, `task-editor-${selectedField}-${editorResetToken}`)] }));

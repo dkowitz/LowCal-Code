@@ -57,7 +57,10 @@ export const promptModeCommand: SlashCommand = {
         return;
       }
       cfg.promptMode = mode;
-      saveCliToolConfig(cfg);
+      saveCliToolConfig(cfg, {
+        persistShared: false,
+        persistSession: true,
+      });
       syncCoreToolConfig(cfg);
 
       const geminiConfig = context.services.config;

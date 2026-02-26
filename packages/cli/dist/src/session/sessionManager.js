@@ -415,11 +415,29 @@ function registerExitHandlers() {
     });
 }
 export async function startSessionRegistration(options) {
-    if (registeredSessionId && registeredSessionId !== options.id) {
+    const currentPid = options.pid ?? process.pid;
+    let resolvedSessionId = options.id;
+    const existingByRequestedId = await getSession(options.id);
+    if (existingByRequestedId && existingByRequestedId.pid !== currentPid) {
+        let existingProcessAlive = true;
+        try {
+            process.kill(existingByRequestedId.pid, 0);
+        }
+        catch {
+            existingProcessAlive = false;
+        }
+        if (existingProcessAlive) {
+            resolvedSessionId = `${options.id}-${currentPid}`;
+        }
+        else {
+            await removeSession(existingByRequestedId.id);
+        }
+    }
+    if (registeredSessionId && registeredSessionId !== resolvedSessionId) {
         await stopSessionApiServer();
         await removeSession(registeredSessionId);
     }
-    registeredSessionId = options.id;
+    registeredSessionId = resolvedSessionId;
     const capabilities = options.capabilities ?? {
         observe: true,
         control: false,
@@ -428,7 +446,7 @@ export async function startSessionRegistration(options) {
     let endpoint = options.api;
     if (!endpoint) {
         try {
-            endpoint = await startSessionApiServer(options.id, capabilities);
+            endpoint = await startSessionApiServer(resolvedSessionId, capabilities);
         }
         catch {
             endpoint = undefined;
@@ -436,8 +454,8 @@ export async function startSessionRegistration(options) {
     }
     const now = new Date().toISOString();
     const session = {
-        id: options.id,
-        pid: options.pid ?? process.pid,
+        id: resolvedSessionId,
+        pid: currentPid,
         mode: options.mode,
         cwd: options.cwd ?? process.cwd(),
         started_at: now,

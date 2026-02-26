@@ -203,7 +203,10 @@ Examples:
                 tokenCount,
             };
             cfg.customPrompts = { ...prompts, [name]: metadata };
-            saveCliToolConfig(cfg);
+            saveCliToolConfig(cfg, {
+                persistShared: true,
+                persistSession: false,
+            });
             reply(`✓ Prompt "${name}" created (${tokenCount} tokens, ${metadata.exclusive ? "EXCLUSIVE" : "SUPPLEMENTAL"})`);
             return;
         }
@@ -236,7 +239,10 @@ Examples:
             }
             delete prompts[name];
             cfg.customPrompts = prompts;
-            saveCliToolConfig(cfg);
+            saveCliToolConfig(cfg, {
+                persistShared: true,
+                persistSession: true,
+            });
             reply(`✓ Prompt "${name}" deleted.`);
             return;
         }
@@ -294,7 +300,10 @@ Examples:
                 ? true
                 : (prompts[names[0]]?.exclusive ?? false);
             cfg.activeCustomPrompt = { name: names, exclusive };
-            saveCliToolConfig(cfg);
+            saveCliToolConfig(cfg, {
+                persistShared: false,
+                persistSession: true,
+            });
             syncCoreToolConfig(cfg);
             // Reinitialize the Gemini client to pick up the new prompt(s)
             const geminiConfig = context.services.config;
@@ -320,7 +329,10 @@ Examples:
                 ? cfg.activeCustomPrompt.name.join(", ")
                 : cfg.activeCustomPrompt?.name;
             cfg.activeCustomPrompt = null;
-            saveCliToolConfig(cfg);
+            saveCliToolConfig(cfg, {
+                persistShared: false,
+                persistSession: true,
+            });
             syncCoreToolConfig(cfg);
             // Reinitialize the Gemini client to pick up the base prompt
             const geminiConfig = context.services.config;

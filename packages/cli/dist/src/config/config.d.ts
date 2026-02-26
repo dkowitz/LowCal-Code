@@ -8,6 +8,7 @@ import { Config, FileDiscoveryService } from "@qwen-code/qwen-code-core";
 import type { Settings } from "./settings.js";
 import type { Extension } from "./extension.js";
 export interface CliArgs {
+    instance: string | undefined;
     model: string | undefined;
     sandbox: boolean | string | undefined;
     sandboxImage: string | undefined;

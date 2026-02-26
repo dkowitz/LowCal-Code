@@ -23,8 +23,17 @@ import { mergeWith } from "lodash-es";
 export type { Settings, MemoryImportFormat };
 
 export const SETTINGS_DIRECTORY_NAME = ".qwen";
-export const USER_SETTINGS_PATH = Storage.getGlobalSettingsPath();
-export const USER_SETTINGS_DIR = path.dirname(USER_SETTINGS_PATH);
+export function getUserSettingsPath(): string {
+  return Storage.getGlobalSettingsPath();
+}
+
+export function getUserSettingsDir(): string {
+  return path.dirname(getUserSettingsPath());
+}
+
+// Backward-compatible constants for callers/tests that import these directly.
+export const USER_SETTINGS_PATH = getUserSettingsPath();
+export const USER_SETTINGS_DIR = getUserSettingsDir();
 export const DEFAULT_EXCLUDED_ENV_VARS = ["DEBUG", "DEBUG_MODE"];
 
 const MIGRATE_V2_OVERWRITE = false;
@@ -790,6 +799,7 @@ export function loadSettings(workspaceDir: string): LoadedSettings {
   const settingsErrors: SettingsError[] = [];
   const systemSettingsPath = getSystemSettingsPath();
   const systemDefaultsPath = getSystemDefaultsPath();
+  const userSettingsPath = getUserSettingsPath();
   const migratedInMemorScopes = new Set<SettingScope>();
 
   // Resolve paths to their canonical representation to handle symlinks
@@ -870,7 +880,7 @@ export function loadSettings(workspaceDir: string): LoadedSettings {
     systemDefaultsPath,
     SettingScope.SystemDefaults,
   );
-  userSettings = loadAndMigrate(USER_SETTINGS_PATH, SettingScope.User);
+  userSettings = loadAndMigrate(userSettingsPath, SettingScope.User);
 
   if (realWorkspaceDir !== realHomeDir) {
     workspaceSettings = loadAndMigrate(
@@ -925,7 +935,7 @@ export function loadSettings(workspaceDir: string): LoadedSettings {
       settings: systemDefaultSettings,
     },
     {
-      path: USER_SETTINGS_PATH,
+      path: userSettingsPath,
       settings: userSettings,
     },
     {

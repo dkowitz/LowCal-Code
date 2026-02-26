@@ -11,7 +11,26 @@ import * as fs from "node:fs";
 
 export const GEMINI_DIR = ".qwen";
 export const GOOGLE_ACCOUNTS_FILENAME = "google_accounts.json";
+export const LOWCAL_INSTANCE_ID_ENV_VAR = "LOWCAL_INSTANCE_ID";
 const TMP_DIR_NAME = "tmp";
+const INSTANCE_ID_PATTERN = /^[A-Za-z0-9._-]{1,64}$/;
+
+export function normalizeInstanceId(
+  value: string | undefined | null,
+): string | undefined {
+  if (!value) {
+    return undefined;
+  }
+  const trimmed = value.trim();
+  if (!INSTANCE_ID_PATTERN.test(trimmed)) {
+    return undefined;
+  }
+  return trimmed;
+}
+
+function getInstanceIdFromEnv(): string | undefined {
+  return normalizeInstanceId(process.env[LOWCAL_INSTANCE_ID_ENV_VAR]);
+}
 
 export class Storage {
   private readonly targetDir: string;
@@ -33,7 +52,21 @@ export class Storage {
   }
 
   static getGlobalSettingsPath(): string {
-    return path.join(Storage.getGlobalGeminiDir(), "settings.json");
+    const globalDir = Storage.getGlobalGeminiDir();
+    const instanceId = getInstanceIdFromEnv();
+    if (instanceId) {
+      return path.join(globalDir, "instances", instanceId, "settings.json");
+    }
+    return path.join(globalDir, "settings.json");
+  }
+
+  static getGlobalToolConfigPath(): string {
+    const globalDir = Storage.getGlobalGeminiDir();
+    const instanceId = getInstanceIdFromEnv();
+    if (instanceId) {
+      return path.join(globalDir, "instances", instanceId, "tool-config.json");
+    }
+    return path.join(globalDir, "tool-config.json");
   }
 
   static getInstallationIdPath(): string {
@@ -89,7 +122,17 @@ export class Storage {
   }
 
   getWorkspaceSettingsPath(): string {
-    return path.join(this.getGeminiDir(), "settings.json");
+    const workspaceGeminiDir = this.getGeminiDir();
+    const instanceId = getInstanceIdFromEnv();
+    if (instanceId) {
+      return path.join(
+        workspaceGeminiDir,
+        "instances",
+        instanceId,
+        "settings.json",
+      );
+    }
+    return path.join(workspaceGeminiDir, "settings.json");
   }
 
   getProjectCommandsDir(): string {

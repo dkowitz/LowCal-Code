@@ -90,7 +90,7 @@ const scheduleTaskToolSchemaData = {
             },
             template_overrides: {
                 type: "object",
-                description: "Optional runtime overrides merged on top of template/runtime values.",
+                description: "Optional runtime overrides merged on top of template/runtime values (execution_mode, auth, model, run, system_prompt, toolset, action fields).",
             },
             auth: {
                 type: "object",

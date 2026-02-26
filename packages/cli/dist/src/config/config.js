@@ -70,6 +70,11 @@ export async function parseArguments(settings) {
         description: `Model`,
         default: process.env["GEMINI_MODEL"],
     })
+        .option("instance", {
+        type: "string",
+        description: "Instance namespace used to isolate persisted settings per concurrent session.",
+        default: process.env["LOWCAL_INSTANCE_ID"],
+    })
         .option("prompt", {
         alias: "p",
         type: "string",

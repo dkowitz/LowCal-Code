@@ -15,10 +15,12 @@ import {
   normalizeAuthProfile,
   normalizeModelProfile,
   normalizeRunProfile,
+  normalizeToolsetProfile,
   runtimeProfileFromTemplate,
 } from "../task-templates/runtime.js";
 import type {
   TaskActionType,
+  TaskTemplateDeployProfile,
   TaskRuntimeProfile,
   TaskTemplate,
   TaskTemplateExecutionProfile,
@@ -78,7 +80,7 @@ const taskTemplateToolSchemaData: FunctionDeclaration = {
       overrides: {
         type: "object",
         description:
-          "Optional runtime override profile for resolve action (execution_mode, auth, model, run, action fields).",
+          "Optional runtime override profile for resolve action (execution_mode, auth, model, run, system_prompt, toolset, action fields).",
       },
     },
     required: ["action"],
@@ -135,6 +137,30 @@ function parseExecution(value: unknown): TaskTemplateExecutionProfile | undefine
   return { mode };
 }
 
+function parseDeploy(value: unknown): TaskTemplateDeployProfile | undefined {
+  if (!isRecord(value)) return undefined;
+  const modeRaw = asString(value["mode"]);
+  const mode = modeRaw === "launch" || modeRaw === "schedule" ? modeRaw : undefined;
+  const schedule = asString(value["schedule"]);
+  const jobId = asString(value["jobId"]);
+  const scheduleStartRaw = asString(value["scheduleStart"]);
+  const scheduleStart =
+    scheduleStartRaw === "start_idle" || scheduleStartRaw === "run_immediately"
+      ? scheduleStartRaw
+      : undefined;
+
+  if (!mode && !schedule && !jobId && !scheduleStart) {
+    return undefined;
+  }
+
+  return {
+    mode,
+    schedule,
+    jobId,
+    scheduleStart,
+  };
+}
+
 function parseTemplatePatch(value: unknown): Partial<TaskTemplate> {
   if (!isRecord(value)) {
     return {};
@@ -144,12 +170,14 @@ function parseTemplatePatch(value: unknown): Partial<TaskTemplate> {
     description: asString(value["description"]),
     tags: parseTags(value["tags"]),
     approvalMode: normalizeApprovalMode(value["approvalMode"]),
+    deploy: parseDeploy(value["deploy"]),
     prompt: asString(value["prompt"]),
     action: parseAction(value["action"]),
     execution: parseExecution(value["execution"]),
     auth: normalizeAuthProfile(value["auth"]),
     model: normalizeModelProfile(value["model"]),
     run: normalizeRunProfile(value["run"]),
+    toolset: normalizeToolsetProfile(value["toolset"]),
   };
   return patch;
 }

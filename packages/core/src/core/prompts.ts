@@ -8,6 +8,7 @@ import path from "node:path";
 import fs from "node:fs";
 import os from "node:os";
 import process from "node:process";
+import { Storage } from "../config/storage.js";
 import { ToolNames } from "../tools/tool-names.js";
 import { isGitRepository } from "../utils/gitUtils.js";
 import { GEMINI_CONFIG_DIR } from "../tools/memoryTool.js";
@@ -100,6 +101,8 @@ const TOOL_SUMMARIES: Record<string, string> = {
     "Read mailbox returns from launched sessions. Use wait/pull to collect launch_task results instead of polling logs. Example: `read_session_messages action=wait`.",
   [ToolNames.READ_SESSIONS]:
     "Read active session registry entries (list/get) without invoking /sessions via shell. Example: `read_sessions action=list`.",
+  [ToolNames.INSPECT_SESSIONS]:
+    "Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: `inspect_sessions session_id=session-123`.",
   [ToolNames.READ_COLLAB_MESSAGES]:
     "Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: `read_collab_messages since_seq=120 limit=20`.",
   [ToolNames.POST_COLLAB_MESSAGE]:
@@ -304,24 +307,57 @@ function applyRuntimeSystemPromptOverride(
 function loadCustomPromptConfig(): CustomPromptConfig {
   let baseConfig: CustomPromptConfig = {};
   try {
-    const homeDir = os.homedir();
-    if (!homeDir) {
-      return applyRuntimeSystemPromptOverride(baseConfig);
-    }
-    const configPath = path.join(homeDir, ".qwen", "tool-config.json");
-    if (!fs.existsSync(configPath)) {
-      return applyRuntimeSystemPromptOverride(baseConfig);
-    }
-    const raw = fs.readFileSync(configPath, "utf8");
-    const parsed = JSON.parse(raw) ?? {};
+    const sharedConfigPath = path.join(
+      Storage.getGlobalGeminiDir(),
+      "tool-config.json",
+    );
+    const sessionConfigPath = Storage.getGlobalToolConfigPath();
+    const sharedConfig = readJsonConfigFile(sharedConfigPath);
+    const sessionConfig =
+      sharedConfigPath === sessionConfigPath
+        ? sharedConfig
+        : readJsonConfigFile(sessionConfigPath);
+    const customPrompts =
+      (sharedConfig?.["customPrompts"] as Record<
+        string,
+        CustomPromptMetadata
+      >) ??
+      (sessionConfig?.["customPrompts"] as Record<
+        string,
+        CustomPromptMetadata
+      >) ??
+      {};
+    const activeCustomPrompt =
+      (sessionConfig?.["activeCustomPrompt"] as ActiveCustomPrompt | null) ??
+      (sharedConfig?.["activeCustomPrompt"] as ActiveCustomPrompt | null) ??
+      null;
+
     baseConfig = {
-      customPrompts: parsed.customPrompts ?? {},
-      activeCustomPrompt: parsed.activeCustomPrompt ?? null,
+      customPrompts,
+      activeCustomPrompt,
     };
     return applyRuntimeSystemPromptOverride(baseConfig);
   } catch {
     return applyRuntimeSystemPromptOverride(baseConfig);
   }
+}
+
+function readJsonConfigFile(
+  filePath: string,
+): Record<string, unknown> | undefined {
+  if (!fs.existsSync(filePath)) {
+    return undefined;
+  }
+  try {
+    const raw = fs.readFileSync(filePath, "utf8");
+    const parsed = JSON.parse(raw);
+    if (parsed && typeof parsed === "object") {
+      return parsed as Record<string, unknown>;
+    }
+  } catch {
+    // ignore malformed config files and fall back to defaults
+  }
+  return undefined;
 }
 
 function normalizePromptMode(value: unknown): PromptMode {
@@ -931,7 +967,9 @@ function buildConcisePrompt(toolNames: string[]): string {
     ].join("\n"),
     [
       "## Memory & Personalization",
-      "- **Proactive Memory Saving:** Use the `" + ToolNames.MEMORY + "` tool to save pertinent facts about the user, their preferences, and observations you make during interactions. This includes:",
+      "- **Proactive Memory Saving:** Use the `" +
+        ToolNames.MEMORY +
+        "` tool to save pertinent facts about the user, their preferences, and observations you make during interactions. This includes:",
       "  - User-specified facts (e.g., preferred editor, coding style, project conventions)",
       "  - Observations about code patterns or project structure",
       "  - Inferences that will help personalize future interactions",

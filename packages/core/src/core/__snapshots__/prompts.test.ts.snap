@@ -149,6 +149,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -394,6 +395,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -649,6 +651,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -889,6 +892,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -1129,6 +1133,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -1369,6 +1374,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -1609,6 +1615,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -1849,6 +1856,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -2089,6 +2097,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -2329,6 +2338,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -2592,6 +2602,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -2915,6 +2926,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -3178,6 +3190,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -3497,6 +3510,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details
@@ -3737,6 +3751,7 @@ IMPORTANT: Always use the todo_write tool to plan and track tasks throughout the
 - \`read_collab_messages\` — Read collab board traffic from the shared workspace. Use this to inspect peer messages instead of trying to run /collab as a shell command. Example: \`read_collab_messages since_seq=120 limit=20\`.
 - \`post_collab_message\` — Post short coordination messages to the shared collab board. Keep text concise and reference larger files via refs. Recommended protocol: type='request' to ask, type='ack' once with notify='passive', type='result' when complete; do not reply to pure acknowledgements. For proactive follow-up, set \`notify='wake_prompt'\` with \`to_session_id\`. Example: \`post_collab_message text='Please review src/api.ts' to_session_id='session-b' notify='wake_prompt' type='request' refs=['src/api.ts']\`.
 - \`research\` — Project or extension-provided tool; inspect its schema before use.
+- \`inspect_sessions\` — Inspect runtime diagnostics for one or more sessions (message tail, model/auth, health/error signals, context-window estimate). Example: \`inspect_sessions session_id=session-123\`.
 - \`rss\` — Project or extension-provided tool; inspect its schema before use.
 
 ## Interaction Details

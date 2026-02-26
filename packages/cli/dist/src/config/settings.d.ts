@@ -6,6 +6,8 @@
 import type { Settings, MemoryImportFormat } from "./settingsSchema.js";
 export type { Settings, MemoryImportFormat };
 export declare const SETTINGS_DIRECTORY_NAME = ".qwen";
+export declare function getUserSettingsPath(): string;
+export declare function getUserSettingsDir(): string;
 export declare const USER_SETTINGS_PATH: string;
 export declare const USER_SETTINGS_DIR: string;
 export declare const DEFAULT_EXCLUDED_ENV_VARS: string[];

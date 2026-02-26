@@ -137,6 +137,39 @@ function parseSystemPrompt(value) {
         exclusive: exclusive === true,
     };
 }
+function parseToolset(value) {
+    if (typeof value === "string") {
+        const collection = asString(value);
+        return collection ? { collection } : undefined;
+    }
+    if (!isRecord(value))
+        return undefined;
+    const collection = asString(value["collection"]);
+    if (!collection)
+        return undefined;
+    return { collection };
+}
+function parseDeploy(value) {
+    if (!isRecord(value))
+        return undefined;
+    const mode = asString(value["mode"]);
+    const deployMode = mode === "launch" || mode === "schedule" ? mode : undefined;
+    const schedule = asString(value["schedule"]);
+    const jobId = asString(value["jobId"]);
+    const scheduleStartRaw = asString(value["scheduleStart"]);
+    const scheduleStart = scheduleStartRaw === "start_idle" || scheduleStartRaw === "run_immediately"
+        ? scheduleStartRaw
+        : undefined;
+    if (!deployMode && !schedule && !jobId && !scheduleStart) {
+        return undefined;
+    }
+    return {
+        mode: deployMode,
+        schedule,
+        jobId,
+        scheduleStart,
+    };
+}
 function mergeTemplate(base, updates) {
     return {
         ...base,
@@ -151,6 +184,7 @@ function mergeTemplate(base, updates) {
         systemPrompt: updates.systemPrompt
             ? { ...base.systemPrompt, ...updates.systemPrompt }
             : base.systemPrompt,
+        deploy: updates.deploy ? { ...base.deploy, ...updates.deploy } : base.deploy,
     };
 }
 /**
@@ -214,6 +248,7 @@ export class TaskTemplateManager {
             description: asString(frontmatter["description"]),
             tags: asStringArray(frontmatter["tags"]),
             approvalMode: parseApprovalMode(frontmatter["approvalMode"]),
+            deploy: parseDeploy(frontmatter["deploy"]),
             prompt,
             action: parseAction(frontmatter["action"]),
             execution: parseExecution(frontmatter["execution"]),
@@ -221,6 +256,7 @@ export class TaskTemplateManager {
             model: parseModel(frontmatter["model"]),
             run: parseRun(frontmatter["run"]),
             systemPrompt: parseSystemPrompt(frontmatter["systemPrompt"]),
+            toolset: parseToolset(frontmatter["toolset"]),
             level,
             filePath,
             isBuiltin: isBuiltin || undefined,
@@ -249,6 +285,8 @@ export class TaskTemplateManager {
             frontmatter["tags"] = template.tags;
         if (template.approvalMode)
             frontmatter["approvalMode"] = template.approvalMode;
+        if (template.deploy)
+            frontmatter["deploy"] = template.deploy;
         if (template.action && (template.action.type || template.action.value)) {
             const action = {};
             if (template.action.type) {
@@ -278,6 +316,9 @@ export class TaskTemplateManager {
         }
         if (template.systemPrompt) {
             frontmatter["systemPrompt"] = template.systemPrompt;
+        }
+        if (template.toolset?.collection) {
+            frontmatter["toolset"] = template.toolset.collection;
         }
         const yaml = stringifyYaml(frontmatter, {
             lineWidth: 0,

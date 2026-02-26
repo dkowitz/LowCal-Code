@@ -15,6 +15,7 @@ import type {
   TaskTemplateLevel,
   TaskTemplateModelProfile,
   TaskTemplateRunProfile,
+  TaskTemplateToolsetProfile,
 } from "./types.js";
 
 function isRecord(value: unknown): value is Record<string, unknown> {
@@ -133,6 +134,19 @@ export function normalizeSystemPromptProfile(
   };
 }
 
+export function normalizeToolsetProfile(
+  value: unknown,
+): TaskTemplateToolsetProfile | undefined {
+  if (typeof value === "string") {
+    const collection = asTrimmedString(value);
+    return collection ? { collection } : undefined;
+  }
+  if (!isRecord(value)) return undefined;
+  const collection = asTrimmedString(value["collection"]);
+  if (!collection) return undefined;
+  return { collection };
+}
+
 export function normalizeRuntimeProfile(value: unknown): TaskRuntimeProfile {
   if (!isRecord(value)) return {};
   return {
@@ -146,6 +160,7 @@ export function normalizeRuntimeProfile(value: unknown): TaskRuntimeProfile {
     model: normalizeModelProfile(value["model"]),
     run: normalizeRunProfile(value["run"]),
     system_prompt: normalizeSystemPromptProfile(value["system_prompt"]),
+    toolset: normalizeToolsetProfile(value["toolset"]),
   };
 }
 
@@ -161,6 +176,7 @@ export function runtimeProfileFromTemplate(template: TaskTemplate): TaskRuntimeP
     model: template.model,
     run: template.run,
     system_prompt: template.systemPrompt,
+    toolset: template.toolset,
   };
 }
 
@@ -183,6 +199,12 @@ export function mergeRuntimeProfiles(
       merged.system_prompt = {
         ...merged.system_prompt,
         ...profile.system_prompt,
+      };
+    }
+    if (profile.toolset) {
+      merged.toolset = {
+        ...merged.toolset,
+        ...profile.toolset,
       };
     }
   }
@@ -214,5 +236,6 @@ export function sanitizeRuntimeProfile(
     system_prompt: profile.system_prompt
       ? { ...profile.system_prompt }
       : undefined,
+    toolset: profile.toolset ? { ...profile.toolset } : undefined,
   };
 }

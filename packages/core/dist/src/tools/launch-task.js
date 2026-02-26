@@ -61,7 +61,7 @@ const launchTaskToolSchemaData = {
             },
             template_overrides: {
                 type: "object",
-                description: "Optional runtime overrides merged on top of template values (execution_mode, auth, model, run, action fields).",
+                description: "Optional runtime overrides merged on top of template values (execution_mode, auth, model, run, system_prompt, toolset, action fields).",
             },
             auth: {
                 type: "object",

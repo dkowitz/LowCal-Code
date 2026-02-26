@@ -15,11 +15,17 @@ describe("task runtime profile system prompt support", () => {
                 names: ["reviewer", "security"],
                 exclusive: true,
             },
+            toolset: {
+                collection: "minimal",
+            },
         });
         expect(profile.approval_mode).toBe("plan");
         expect(profile.system_prompt).toEqual({
             names: ["reviewer", "security"],
             exclusive: true,
+        });
+        expect(profile.toolset).toEqual({
+            collection: "minimal",
         });
     });
     it("maps template systemPrompt into runtime profile", () => {
@@ -37,12 +43,18 @@ describe("task runtime profile system prompt support", () => {
                 names: ["reviewer"],
                 exclusive: false,
             },
+            toolset: {
+                collection: "full",
+            },
         };
         const profile = runtimeProfileFromTemplate(template);
         expect(profile.approval_mode).toBe("auto-edit");
         expect(profile.system_prompt).toEqual({
             names: ["reviewer"],
             exclusive: false,
+        });
+        expect(profile.toolset).toEqual({
+            collection: "full",
         });
     });
     it("merges and sanitizes system_prompt", () => {
@@ -52,16 +64,25 @@ describe("task runtime profile system prompt support", () => {
                 names: ["reviewer"],
                 exclusive: false,
             },
+            toolset: {
+                collection: "full",
+            },
         }, {
             approval_mode: "yolo",
             system_prompt: {
                 exclusive: true,
+            },
+            toolset: {
+                collection: "minimal",
             },
         });
         expect(merged.approval_mode).toBe("yolo");
         expect(merged.system_prompt).toEqual({
             names: ["reviewer"],
             exclusive: true,
+        });
+        expect(merged.toolset).toEqual({
+            collection: "minimal",
         });
         expect(sanitizeRuntimeProfile(merged)).toEqual({
             template_id: undefined,
@@ -76,6 +97,9 @@ describe("task runtime profile system prompt support", () => {
             system_prompt: {
                 names: ["reviewer"],
                 exclusive: true,
+            },
+            toolset: {
+                collection: "minimal",
             },
         });
     });

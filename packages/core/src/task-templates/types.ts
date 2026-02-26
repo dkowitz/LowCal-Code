@@ -17,6 +17,8 @@ export type TaskTemplateApprovalMode =
   | "default"
   | "auto-edit"
   | "yolo";
+export type TaskTemplateDeployMode = "launch" | "schedule";
+export type TaskTemplateScheduleStartMode = "start_idle" | "run_immediately";
 
 export interface TaskTemplateAction {
   type?: TaskActionType;
@@ -49,6 +51,17 @@ export interface TaskTemplateExecutionProfile {
   mode?: TaskExecutionModeWithDefault;
 }
 
+export interface TaskTemplateToolsetProfile {
+  collection?: string;
+}
+
+export interface TaskTemplateDeployProfile {
+  mode?: TaskTemplateDeployMode;
+  schedule?: string;
+  jobId?: string;
+  scheduleStart?: TaskTemplateScheduleStartMode;
+}
+
 /**
  * File-backed task template model.
  */
@@ -58,6 +71,7 @@ export interface TaskTemplate {
   description?: string;
   tags?: string[];
   approvalMode?: TaskTemplateApprovalMode;
+  deploy?: TaskTemplateDeployProfile;
   prompt?: string;
   action?: TaskTemplateAction;
   execution?: TaskTemplateExecutionProfile;
@@ -65,6 +79,7 @@ export interface TaskTemplate {
   model?: TaskTemplateModelProfile;
   run?: TaskTemplateRunProfile;
   systemPrompt?: TaskTemplateSystemPromptProfile;
+  toolset?: TaskTemplateToolsetProfile;
   level: TaskTemplateLevel;
   filePath: string;
   isBuiltin?: boolean;
@@ -84,6 +99,7 @@ export interface TaskRuntimeProfile {
   model?: TaskTemplateModelProfile;
   run?: TaskTemplateRunProfile;
   system_prompt?: TaskTemplateSystemPromptProfile;
+  toolset?: TaskTemplateToolsetProfile;
 }
 
 export interface ListTaskTemplatesOptions {

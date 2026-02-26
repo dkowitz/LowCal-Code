@@ -4,7 +4,7 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
-import { GeminiEventType as ServerGeminiEventType, getErrorMessage, isNodeError, MessageSenderType, logUserPrompt, GitService, UnauthorizedError, UserPromptEvent, DEFAULT_GEMINI_FLASH_MODEL, logConversationFinishedEvent, ConversationFinishedEvent, ApprovalMode, parseAndFormatApiError, CheckpointService, upsertLaunchTaskState, } from "@qwen-code/qwen-code-core";
+import { GeminiEventType as ServerGeminiEventType, getErrorMessage, isNodeError, MessageSenderType, logUserPrompt, GitService, UnauthorizedError, UserPromptEvent, DEFAULT_GEMINI_FLASH_MODEL, logConversationFinishedEvent, ConversationFinishedEvent, ApprovalMode, parseAndFormatApiError, CheckpointService, upsertLaunchTaskState, toolConfig, } from "@qwen-code/qwen-code-core";
 import { FinishReason, } from "@google/genai";
 import { StreamingState, MessageType, ToolCallStatus } from "../types.js";
 import { isAtCommand, isSlashCommand } from "../utils/commandUtils.js";
@@ -21,7 +21,7 @@ import { useReactToolScheduler, mapToDisplay as mapTrackedToolCallsToDisplay, } 
 import { useSessionStats } from "../contexts/SessionContext.js";
 import { formatDuration } from "../utils/formatters.js";
 import { useKeypress } from "./useKeypress.js";
-import { setSessionControlHandlers, setSessionStatus, setRegisteredSessionHealth, } from "../../session/sessionManager.js";
+import { setSessionControlHandlers, setSessionStatus, updateSessionDetails, setRegisteredSessionHealth, } from "../../session/sessionManager.js";
 import { normalizeAuthType } from "../../config/auth.js";
 const ENV_TASK_SYSTEM_PROMPT_B64 = "LOWCAL_TASK_SYSTEM_PROMPT_B64";
 const formatElapsed = (milliseconds) => {
@@ -62,6 +62,68 @@ const extractHistoryMessageText = (message) => {
     const firstPartText = firstPart["text"];
     return typeof firstPartText === "string" ? firstPartText : "";
 };
+const LOOP_RECOVERY_PROMPT = "Loop detected. Do not repeat the same actions. Summarize what was already tried and why it did not work, then choose a materially different next step that gathers new evidence. Continue autonomously and only ask the user if you are blocked.";
+const buildRecoveryContextSnippet = (messages, maxItems = 3, maxChars = 300) => {
+    if (!Array.isArray(messages) || messages.length === 0) {
+        return "";
+    }
+    const recent = messages
+        .slice(-maxItems)
+        .map((message) => extractHistoryMessageText(message))
+        .filter((text) => typeof text === "string" && text.trim().length > 0)
+        .map((text) => text.trim())
+        .join(" ... ");
+    if (!recent) {
+        return "";
+    }
+    return recent.length > maxChars ? `${recent.slice(0, maxChars)}...` : recent;
+};
+const MAX_SESSION_RECENT_HISTORY_ITEMS = 24;
+const MAX_SESSION_HISTORY_ITEM_CHARS = 800;
+function clipSessionHistoryText(text) {
+    const compact = text.replace(/\s+/g, " ").trim();
+    if (compact.length <= MAX_SESSION_HISTORY_ITEM_CHARS) {
+        return compact;
+    }
+    return `${compact.slice(0, MAX_SESSION_HISTORY_ITEM_CHARS)}...`;
+}
+function toSessionHistoryItem(item) {
+    if (item.type === MessageType.USER || item.type === "user_shell") {
+        return {
+            timestamp: new Date(item.id).toISOString(),
+            role: "user",
+            content: clipSessionHistoryText(item.text),
+        };
+    }
+    if (item.type === MessageType.GEMINI || item.type === "gemini_content") {
+        return {
+            timestamp: new Date(item.id).toISOString(),
+            role: "assistant",
+            content: clipSessionHistoryText(item.text),
+        };
+    }
+    if (item.type === "tool_group") {
+        const summary = item.tools
+            .map((tool) => `${tool.name}:${tool.status}`)
+            .join(", ");
+        if (!summary) {
+            return null;
+        }
+        return {
+            timestamp: new Date(item.id).toISOString(),
+            role: "tool",
+            content: clipSessionHistoryText(`Tools: ${summary}`),
+        };
+    }
+    if (item.type === MessageType.ERROR || item.type === MessageType.INFO) {
+        return {
+            timestamp: new Date(item.id).toISOString(),
+            role: "unknown",
+            content: clipSessionHistoryText(item.text),
+        };
+    }
+    return null;
+}
 const isHighSimilarityRewrite = (current, incoming) => {
     if (!current || !incoming) {
         return false;
@@ -186,6 +248,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
     const loopDetectedRef = useRef(false);
     const lastRestartableQueryRef = useRef(null);
     const recoveryRetryCountRef = useRef(0);
+    const pendingSelfRecoveryPromptRef = useRef(null);
     const onExec = useCallback(async (done) => {
         setIsResponding(true);
         await done;
@@ -214,6 +277,53 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         const status = streamingState === StreamingState.Idle ? "idle" : "working";
         void setSessionStatus(status);
     }, [streamingState]);
+    useEffect(() => {
+        const details = {
+            model: config.getModel(),
+            approval_mode: String(config.getApprovalMode()),
+            phase: streamingState === StreamingState.Idle ? "idle" : "responding",
+            active_tool_calls: toolCalls.filter((toolCall) => toolCall.status === "executing" ||
+                toolCall.status === "scheduled" ||
+                toolCall.status === "validating").length,
+            last_prompt_tokens: stats.lastPromptTokenCount,
+        };
+        const authType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
+        if (authType) {
+            details["auth_type"] = authType;
+        }
+        if (typeof stats.currentContextTokenCount === "number" &&
+            Number.isFinite(stats.currentContextTokenCount)) {
+            details["current_context_tokens"] = stats.currentContextTokenCount;
+        }
+        const sessionTokenLimit = config.getSessionTokenLimit();
+        if (Number.isFinite(sessionTokenLimit) && sessionTokenLimit > 0) {
+            details["session_token_limit"] = sessionTokenLimit;
+            if (typeof stats.currentContextTokenCount === "number" &&
+                Number.isFinite(stats.currentContextTokenCount)) {
+                details["token_budget"] = {
+                    current_tokens: stats.currentContextTokenCount,
+                    effective_limit: sessionTokenLimit,
+                    utilization_ratio: stats.currentContextTokenCount / sessionTokenLimit,
+                };
+            }
+        }
+        details["turn_started_at"] = turnStartTimestampRef.current
+            ? new Date(turnStartTimestampRef.current).toISOString()
+            : null;
+        const recentHistory = history
+            .map(toSessionHistoryItem)
+            .filter((item) => item !== null)
+            .slice(-MAX_SESSION_RECENT_HISTORY_ITEMS);
+        details["recent_history"] = recentHistory;
+        void updateSessionDetails(details);
+    }, [
+        config,
+        history,
+        stats.currentContextTokenCount,
+        stats.lastPromptTokenCount,
+        streamingState,
+        toolCalls,
+    ]);
     useEffect(() => {
         streamingStateRef.current = streamingState;
     }, [streamingState]);
@@ -482,6 +592,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
     const handleErrorEvent = useCallback((eventValue, userMessageTimestamp) => {
         checkpointPendingForTurnRef.current = false;
         checkpointTurnStartTimestampRef.current = null;
+        const errorMessage = getErrorMessage(eventValue.error);
         // Signal the orchestrator that we've encountered an error
         setRegisteredSessionHealth({
             state: "error",
@@ -490,6 +601,10 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             evidence: {
                 error_message: eventValue.error,
             },
+        });
+        void updateSessionDetails({
+            last_error: errorMessage,
+            last_error_at: new Date().toISOString(),
         });
         if (pendingHistoryItemRef.current) {
             addItem(pendingHistoryItemRef.current, userMessageTimestamp);
@@ -513,7 +628,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         }
         setThought(null); // Reset thought when there's an error
         // Trigger self-recovery for the error with context
-        handleSelfRecovery("error", getErrorMessage(eventValue.error));
+        handleSelfRecovery("error", errorMessage);
     }, [
         addItem,
         pendingHistoryItemRef,
@@ -802,9 +917,13 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 message: "A potential loop was detected. This can happen due to repetitive tool calls or other model behavior.",
             },
         });
+        void updateSessionDetails({
+            last_error: "Potential loop detected",
+            last_error_at: new Date().toISOString(),
+        });
         addItem({
             type: "info",
-            text: `A potential loop was detected. This can happen due to repetitive tool calls or other model behavior. The request has been halted.`,
+            text: "A potential loop was detected. Triggering an automatic recovery prompt to continue with a different approach.",
         }, Date.now());
     }, [addItem]);
     const processGeminiStreamEvents = useCallback(async (stream, userMessageTimestamp, signal) => {
@@ -1043,6 +1162,13 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         finally {
             setIsResponding(false);
             isSubmittingQueryRef.current = false;
+            const queuedPrompt = pendingSelfRecoveryPromptRef.current;
+            if (queuedPrompt) {
+                pendingSelfRecoveryPromptRef.current = null;
+                setTimeout(() => {
+                    void submitQuery(queuedPrompt, { isContinuation: true });
+                }, 0);
+            }
         }
     }, [
         streamingState,
@@ -1131,6 +1257,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
         const previousOpenAIApiKey = process.env["OPENAI_API_KEY"];
         const previousOpenAIModel = process.env["OPENAI_MODEL"];
         const previousTaskSystemPrompt = process.env[ENV_TASK_SYSTEM_PROMPT_B64];
+        const previousToolsetCollection = toolConfig.activeCollection;
         let runtimeAuthRefreshed = false;
         const restore = async () => {
             if (previousOpenAIBaseUrl === undefined) {
@@ -1157,6 +1284,7 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
             else {
                 process.env[ENV_TASK_SYSTEM_PROMPT_B64] = previousTaskSystemPrompt;
             }
+            toolConfig.activeCollection = previousToolsetCollection;
             const currentAuthType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
             if (previousAuthType &&
                 (runtimeAuthRefreshed ||
@@ -1243,6 +1371,16 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                         delete process.env[ENV_TASK_SYSTEM_PROMPT_B64];
                     }
                 }
+            }
+            const runtimeToolsetCollection = profile.toolset?.collection?.trim();
+            if (runtimeToolsetCollection && runtimeToolsetCollection.length > 0) {
+                if (!toolConfig.collections[runtimeToolsetCollection]) {
+                    const available = Object.keys(toolConfig.collections)
+                        .sort()
+                        .join(", ");
+                    throw new Error(`Task runtime toolset "${runtimeToolsetCollection}" was not found. Available collections: ${available || "(none)"}.`);
+                }
+                toolConfig.activeCollection = runtimeToolsetCollection;
             }
             const authOverride = normalizeAuthType(runtimeAuth?.selectedType ?? runtimeAuth?.providerId);
             const currentAuthType = normalizeAuthType(config.getContentGeneratorConfig()?.authType);
@@ -1427,8 +1565,17 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
     // Self-recovery function - called when loop detection or hard error occurs
     const handleSelfRecovery = useCallback((errorType, errorMessage) => {
         if (errorType === "loop") {
-            // For loop detection, submit a specific recovery prompt
-            void submitQuery("You appear to be stuck in a loop. Please try a different approach or ask for help.");
+            let loopRecoveryPrompt = LOOP_RECOVERY_PROMPT;
+            try {
+                const contextSnippet = buildRecoveryContextSnippet(geminiClient.getHistory());
+                if (contextSnippet) {
+                    loopRecoveryPrompt += ` Recent context: "${contextSnippet}".`;
+                }
+            }
+            catch {
+                // Ignore context extraction errors and use the default recovery prompt.
+            }
+            pendingSelfRecoveryPromptRef.current = loopRecoveryPrompt;
         }
         else if (errorMessage) {
             // Increment retry counter for errors
@@ -1445,25 +1592,20 @@ export const useGeminiStream = (geminiClient, history, addItem, config, onDebugM
                 return;
             }
             // For hard errors, get recent history and include context
-            const clientHistory = geminiClient.getHistory();
             let contextSnippet = "";
-            if (Array.isArray(clientHistory) && clientHistory.length > 0) {
-                const recentMessages = clientHistory.slice(-3);
-                const contextText = recentMessages
-                    .map((msg) => {
-                    const content = extractHistoryMessageText(msg);
-                    if (content && typeof content === "string") {
-                        return content.substring(0, 200);
-                    }
-                    return "";
-                })
-                    .filter((text) => text.length > 0)
-                    .join("... ");
-                contextSnippet = ` Here's recent context: "${contextText.substring(0, 300)}".`;
+            try {
+                const summary = buildRecoveryContextSnippet(geminiClient.getHistory());
+                if (summary) {
+                    contextSnippet = ` Here's recent context: "${summary}".`;
+                }
             }
-            void submitQuery(`An error occurred: ${errorMessage}.${contextSnippet} Please continue with your task or ask for help.`);
+            catch {
+                // Ignore context extraction errors and continue with error-only prompt.
+            }
+            pendingSelfRecoveryPromptRef.current =
+                `An error occurred: ${errorMessage}.${contextSnippet} Please continue with your task or ask for help.`;
         }
-    }, [geminiClient, submitQuery]);
+    }, [addItem, geminiClient]);
     useEffect(() => {
         if (streamingState === StreamingState.Idle) {
             void drainInProcessTaskQueue();

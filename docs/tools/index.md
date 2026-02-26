@@ -81,6 +81,7 @@ LowCal Code's built-in tools can be broadly categorized as follows:
 ### Session Communication Tools
 
 - **[Read Sessions](./read-sessions.md)** (`read_sessions`): List/get active session registry entries (user-facing counterpart: `/sessions`).
+- **[Inspect Sessions](./inspect-sessions.md)** (`inspect_sessions`): Pull deep runtime diagnostics for one or more sessions (history tail, model/auth, health/errors, context status).
 - **[Read Session Messages](#read-session-messages)** (`read_session_messages`): Receive messages from launched tasks (user-facing counterpart: `/mailbox`).
 - **[Read Collab Messages](#read-collab-messages)** (`read_collab_messages`): Read collab board messages for coordination across sessions.
 - **[Post Collab Message](#post-collab-message)** (`post_collab_message`): Post short collab board messages and optionally wake target sessions.
